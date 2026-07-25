@@ -52,6 +52,10 @@ export async function fetchAnticiposProveedor(
   if (filtros.estado) query = query.eq("estado", filtros.estado);
   if (filtros.proveedorId) query = query.eq("proveedor_id", filtros.proveedorId);
 
+  // SAFE-CAST: unwrapOr devuelve el shape crudo de Supabase con la relación
+  // embebida `proveedores(nombre)`; el tipo generado no incluye esa join,
+  // así que degradamos el cast — el mapper de la siguiente línea consume
+  // exactamente esa forma.
   const rows = (await unwrapOr(query, [])) as unknown as AnticipoRow[];
   return rows.map((r) => ({ ...r, proveedor_nombre: r.proveedores?.nombre ?? null }));
 }

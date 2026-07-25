@@ -1,64 +1,104 @@
 ## Contexto
 
-El único job que rompió el aggregator es **`Architecture & audits → audit:migrations`**. Todo lo demás (Build, ESLint, TypeScript, Edge Functions, Tests, Coverage) pasó en verde. El script `scripts/audit-migrations.ts` reporta 9 violaciones acumuladas ayer en el sprint de performance:
+El CI aggregator falló en 3 jobs de tests (shards 6, 7 y 9). Son 3 caídas independientes, todas causadas por cambios de este mismo sprint de performance (Olas 1-2). Ninguna es un bug funcional en la app; son gaps de propagación entre el cambio y sus tests/registros.
 
-- **H1 (1)**: nombre de archivo inválido en `20260725080000_qw7_cxp_por_pagar_fecha_programada.sql`. El regex del auditor exige `^\d{14}_[a-z0-9-]+\.sql$` (sólo minúsculas, dígitos y guiones), pero mi migración QW7 usó snake_case con `_`.
-- **H6 (8)**: tres funciones `SECURITY DEFINER` fueron re-creadas sin `REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE … TO {authenticated|service_role|postgres}` en el mismo archivo:
-  - `public.cxp_aging_proveedores(uuid, date)` — migración `…172648_c2e8e649…` (P9 aging CxP).
-  - `public.cxc_aging_clientes(uuid, date)` + `public.cxp_aging_proveedores(uuid, date)` + `public.profit_por_embarque()` — migración `…174719_0f7952b2…` (P9/P10 empuje de tenant a CTE).
+### Falla 1 · shard 9 · `agregador.test.ts` (4 tests, todos fallando)
 
-Las tres migraciones ya se aplicaron a la base, así que **no puedo editarlas** — Supabase rastrea por nombre de archivo y una edición o rename dispararía re-aplicación. Por eso el propio script documenta la vía correcta: *"Bump manual cuando aparezca legacy imposible de corregir; nunca a la baja."*
+```
+Unknown Error: permission denied for function current_user_org_id
+```
+
+**Diagnóstico** (verificado leyendo `src/features/dashboardEjecutivo/services/agregador.ts` y el test): en P8 añadí `supabase.rpc("eerr_resumen_anual", …)` dentro de la nueva helper `fetchTendencia12m`. El test mockea todos los servicios upstream (`fetchEstadoResultadosDevengado`, `fetchSaldosCuentas`, …) pero **no mockea `supabase.rpc` directo**, así que la llamada sale a la BD real y truena por RLS (`current_user_org_id`). Además el test espera `fetchEstadoResultadosDevengado.toHaveBeenCalledTimes(14)` — con P8 sólo se llama 2 veces (actual + anterior); la tendencia 12m ya no pasa por ese servicio.
+
+### Falla 2 · shard 7 · `architecture.test.ts` (regla `as unknown as` sin SAFE-CAST)
+
+```
+src/features/anticipos-proveedor/services/anticiposProveedorService.ts:55
+  const rows = (await unwrapOr(query, [])) as unknown as AnticipoRow[];
+```
+
+Este cast entró en QW6 (v13.316.0) sin el marcador `// SAFE-CAST:` requerido por `mem://principles/safe-cast`. La misma línea también rompe `safe-casts-services.test.ts` (shard 6, 2 tests HIGH/CRITICAL).
+
+### Falla 3 · shard 6 · `lcCodeCoverage.test.ts`
+
+```
+Faltan mensajes amigables para códigos LC_*:
+LC_EERR_FUENTE_INVALIDA
+```
+
+En P8 añadí la migración `eerr_resumen_anual` con `RAISE EXCEPTION 'LC_EERR_FUENTE_INVALIDA'` pero no registré el mensaje amigable en `src/lib/errors/lcCodeMessages.ts`.
+
+Todo lo demás (Build, ESLint, TypeScript, Edge Functions, `audit:migrations`, Coverage merge, shards 1-5/8/10) pasó en verde.
 
 ## Plan
 
-### 1. Migración compensatoria (fixear la BD real, no sólo el gate)
+### 1. Mockear `supabase.rpc` en `agregador.test.ts` + ajustar expectativa
 
-Nueva migración `…_h6_fix_aging_profit_grants.sql` que aplica el patrón H6 canónico a las tres funciones ya en BD:
+Añadir mock en la cabecera del test:
 
-```sql
-REVOKE ALL ON FUNCTION public.cxc_aging_clientes(uuid, date) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.cxc_aging_clientes(uuid, date) TO authenticated, service_role;
-
-REVOKE ALL ON FUNCTION public.cxp_aging_proveedores(uuid, date) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.cxp_aging_proveedores(uuid, date) TO authenticated, service_role;
-
-REVOKE ALL ON FUNCTION public.profit_por_embarque() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.profit_por_embarque() TO authenticated, service_role;
+```ts
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { rpc: vi.fn().mockResolvedValue({ data: [], error: null }) },
+}));
 ```
 
-Analogía: las funciones ya viven con la puerta abierta a "PUBLIC"; esta migración cierra la puerta y sólo da llave a `authenticated` y `service_role`. Es un fix real de seguridad, no cosmético.
+Cambiar la aserción del test "invoca EERR para periodo, periodo anterior y 12 meses hacia atrás":
 
-### 2. Bump del `BASELINE` en `scripts/audit-migrations.ts`
+- Antes: `toHaveBeenCalledTimes(14)` sobre `fetchEstadoResultadosDevengado`.
+- Después: `toHaveBeenCalledTimes(2)` sobre `fetchEstadoResultadosDevengado` (actual + previo) **y** `expect(supabase.rpc).toHaveBeenCalledWith("eerr_resumen_anual", { p_year: <year>, p_fuente: "facturas" })` para los años involucrados en la tendencia.
 
-Mover `BASELINE` de `20260724180738` → **`20260725184834`** (justo después del último migration file de este sprint, `…184833_cefe9d2d…`). Esto excluye del auditor las tres migraciones ya aplicadas — H6 queda como legacy documentado, cerrado en BD por el paso 1. Este bump es el patrón que el propio script prescribe.
+Los otros 3 tests del mismo archivo también fallan por el mismo `permission denied` — con el mock de `supabase.rpc` a nivel de módulo, los 4 pasan sin más cambios.
 
-### 3. Fix del H1 (nombre inválido)
+### 2. Marcar el cast HIGH con `// SAFE-CAST:` en `anticiposProveedorService.ts`
 
-Dos opciones y prefiero (a):
+Añadir el comentario justificando la degradación (row shape de Supabase con relación embebida), sin cambiar la lógica:
 
-- **(a)** El regex `FNAME_RE` actual (`[a-z0-9-]+`) es más estricto que el docstring, que dice literalmente "snake_case" y admite uuid. Actualizarlo a `^(\d{14})_[a-z0-9_-]+\.sql$` — snake_case + guiones. No es aflojar la regla; es alinear código y documentación, y matchea el propio ejemplo H1 del docstring.
-- **(b)** Renombrar el archivo QW7. Rechazado: la migración ya está aplicada; renombrar dispara re-aplicación (potencial corrupción del historial).
+```ts
+// SAFE-CAST: unwrapOr devuelve el shape crudo de Supabase con la relación
+// embebida `proveedores(nombre)`; el tipo generado no incluye esa join,
+// así que degradamos el cast — el mapper de la siguiente línea consume
+// exactamente esa forma.
+const rows = (await unwrapOr(query, [])) as unknown as AnticipoRow[];
+```
 
-El bump de baseline del paso 2 también dejaría al archivo QW7 fuera de auditoría, pero mantener la regla activa hacia adelante es mejor: no queremos aceptar futuros nombres inconsistentes. Con (a), la regla sigue activa y el archivo QW7 pasa limpio.
+Esto cierra los 3 tests de arquitectura (`architecture.test.ts` + `safe-casts-services.test.ts` × 2).
 
-### 4. Test unitario del auditor
+### 3. Registrar `LC_EERR_FUENTE_INVALIDA` en `lcCodeMessages.ts`
 
-Agregar caso en `scripts/__tests__/audit-migrations.test.ts` (si existe; si no, crearlo) que valide:
-- `20260725080000_qw7_cxp_por_pagar_fecha_programada.sql` es aceptado por el nuevo `FNAME_RE`.
-- `20260725_bad name.sql` sigue siendo rechazado.
+Añadir entrada junto al resto de códigos:
 
-### 5. Versión + CHANGELOG
+```ts
+LC_EERR_FUENTE_INVALIDA: {
+  title: "Fuente EERR inválida",
+  description: "La fuente del Estado de Resultados debe ser 'facturas' o 'embarques'.",
+},
+```
 
-- Bump `APP_VERSION` → `13.317.6`.
-- Entrada en `CHANGELOG.md` explicando: fix H6 en BD (revoke/grant real), bump baseline, ajuste `FNAME_RE` alineado con docstring.
+Cierra `lcCodeCoverage.test.ts`.
+
+### 4. Versión + CHANGELOG
+
+- Bump `APP_VERSION` → `13.317.7`.
+- Entrada en `CHANGELOG.md`:
+  - Fix tests P8: mock `supabase.rpc` + ajuste tendencia 12m.
+  - `SAFE-CAST` marker en `anticiposProveedorService.ts`.
+  - Mensaje amigable `LC_EERR_FUENTE_INVALIDA`.
 
 ## Verificación
 
-- `bun run audit:migrations` local debe salir con exit 0.
-- No se modifica ninguna migración ya aplicada (contrato con Supabase intacto).
-- El fix H6 es un cambio de permisos real: después de aplicar, `\df+` sobre las tres funciones debe mostrar `authenticated=X/postgres`, `service_role=X/postgres`, sin `=X/…` para `PUBLIC` o `anon`.
+- `bun run test src/features/dashboardEjecutivo/services/__tests__/agregador.test.ts` → 4/4 verde.
+- `bun run test src/__tests__/architecture/safe-casts-services.test.ts src/lib/__tests__/architecture.test.ts src/lib/errors/__tests__/lcCodeCoverage.test.ts` → verde.
+- No se toca lógica productiva; sólo tests, un comentario `SAFE-CAST` y una entrada en el catálogo de mensajes LC_*.
+
+## Analogía
+
+Piénsalo como tres puertas que quedaron abiertas después del último sprint:
+
+1. **El test del dashboard** llamaba a una función que ahora usa una "vía directa" a la base de datos que el test no había preparado — hay que decirle al test que finja también esa vía.
+2. **Un cast tipo `as unknown as`** entró sin la etiqueta "SAFE-CAST" que exige el linter arquitectónico — la etiqueta ya justifica el porqué, no hay que cambiar el código.
+3. **Un código de error nuevo** (`LC_EERR_FUENTE_INVALIDA`) no tiene aún mensaje en español para el usuario — lo agregamos al catálogo.
 
 ## Fuera de alcance
 
-- No toco lógica de las funciones ni el trigger `recalcular_estado_factura` de v13.317.5.
-- No toco los warnings de linter Supabase preexistentes (search_path mutable en ~249 funciones legacy) — son ruido histórico, no bloquean CI.
+- No toco lógica de agregador ni de la migración `eerr_resumen_anual`.
+- No refactorizo el shape crudo de `anticipos_proveedor` (implicaría reescribir el select de Supabase; fuera del scope de este fix).

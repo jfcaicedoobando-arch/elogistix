@@ -84,6 +84,9 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "No se permite cancelar directamente; usa la opción de eliminar/reversar según corresponda.",
   LC_CXP_UUID_NO_VERIFICADO:
     "El UUID del CFDI aún no ha sido verificado con el SAT. Intenta más tarde.",
+  LC_EERR_FUENTE_INVALIDA:
+    "La fuente del Estado de Resultados debe ser 'facturas' o 'embarques'.",
+
 
   // ── NC de proveedor ────────────────────────────────────────────────────
   LC_NC_PROV_ESTADO_TERMINAL: "La nota de crédito ya está en un estado final.",
