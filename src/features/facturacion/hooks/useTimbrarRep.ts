@@ -30,15 +30,13 @@ async function autoEnviarRepPorCorreo(pagoId: string): Promise<void> {
 
   const { data: contactos, error: cErr } = await supabase
     .from("contactos_cliente")
-    .select("email, tipo")
+    .select("email")
     .eq("cliente_id", factura.cliente_id)
     .not("email", "is", null)
-    .is("deleted_at", null);
+    .is("deleted_at", null)
+    .limit(1);
   if (cErr || !contactos || contactos.length === 0) return;
-  // Preferir contacto de facturación/administración; si no, tomar el primero con email.
-  const preferido = contactos.find((c) => c.tipo === "facturacion" || c.tipo === "administracion")
-    ?? contactos[0];
-  const email = preferido?.email;
+  const email = contactos[0]?.email;
   if (!email) return;
 
   await supabase.functions.invoke("facturapi-enviar-email", {
