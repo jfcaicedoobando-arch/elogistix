@@ -3,7 +3,6 @@
  * (≤ 200 líneas por archivo) y para poder testear el copy/feedback sin montar
  * la clase completa.
  */
-import * as Sentry from "@sentry/react";
 import { logger } from "@/lib/observability/logger";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { APP_VERSION } from "@/constants/appVersion";
@@ -38,7 +37,10 @@ export function buildDetailsText(snap: ErrorBoundarySnapshot): string {
 }
 
 /** Garantiza un eventId (captura un mensaje si no existe). */
-export function ensureEventId(snap: ErrorBoundarySnapshot): string | null {
+export function ensureEventId(
+  snap: ErrorBoundarySnapshot,
+  Sentry: typeof import("@sentry/react"),
+): string | null {
   if (snap.eventId) return snap.eventId;
   try {
     const id = Sentry.captureMessage(
@@ -55,7 +57,8 @@ export async function openReportFeedback(
   snap: ErrorBoundarySnapshot,
   onEventId: (id: string) => void,
 ): Promise<void> {
-  const eventId = ensureEventId(snap) ?? undefined;
+  const Sentry = await import("@sentry/react");
+  const eventId = ensureEventId(snap, Sentry) ?? undefined;
   if (eventId && eventId !== snap.eventId) onEventId(eventId);
 
   try {

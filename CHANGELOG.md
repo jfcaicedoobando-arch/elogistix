@@ -1,5 +1,29 @@
 # Changelog
 
+## [13.317.1] - 2026-07-25
+- **chore · Lint clean tras Ola 0.** Resueltos 20 errores/1 warning pre-existentes que quedaron pendientes al cerrar `v13.317.0` de performance:
+  - `src/__tests__/architecture/no-hardcoded-tcs.test.ts`: quitados escapes innecesarios en el regex `[*/+-]`.
+  - `SelectorFacturaAbierta.tsx`: `queryKey` inline → nueva key canónica `cxp.facturasAbiertasProveedor(id)`; `eslint-disable react-refresh/only-export-components` para permitir el hook exportado junto al componente.
+  - `AnticiposProveedor.tsx`: 6 `any` de `cell:` reemplazados por un tipo local `CellCtx` con `AnticipoProveedorRow`.
+  - `ComprasReportes.tsx`: `queryKey: ["exchange-rates-dof-today"]` → `compras.exchangeRatesDofToday()` en `queryKeys.ts`.
+  - `useCxpAging.ts`: `rows` envuelto en `useMemo` para estabilizar las dependencias de los `useMemo` río abajo (regla `react-hooks/exhaustive-deps`).
+  - `cxp/services/conciliacionBancaria.ts` ya no importa de `features/tesoreria/domain/tolerancia`; los helpers puros se movieron a `src/lib/domain/tolerancia.ts` y el archivo original quedó como shim de re-export para retro-compatibilidad.
+
+
+
+## [13.317.0] - 2026-07-25
+- **perf · Ola 0 de auditoría performance (P1–P6).** Aplicados los 6 quick wins de la auditoría del 2026-07-25:
+  - **P1 · Caché de `Intl.NumberFormat`.** `src/lib/formatters/numbers.ts` construía un `NumberFormat` nuevo en cada llamada (~600 por render de CxP, ~4,000 en conciliación). Ahora hay un `Map` interno por moneda + variantes compact/número; API pública idéntica. Test de idempotencia en `numbers.extra.test.ts`.
+  - **P2 · CxP `/compras/facturas` sin lag al teclear.** Debounce de 300 ms en `useCxpPageState.ts` (con `useDebounce` de `@/hooks/shared`), columnas memoizadas con `useMemo`, un solo `TooltipProvider` envolviendo la tabla, `EstadoFacturaCxPCell` sin provider interno, KPIs con `useMemo`, paginación 100/pág. Test nuevo: 5 setSearch = 1 query tras 300 ms.
+  - **P3 · Conciliación bancaria virtualizada.** `TesoreriaConciliacion.tsx` migrado a `VirtualDataTable` (scroll fluido con 2,000 movimientos); matching/`.limit(2000)` intactos. Tests nuevos siguiendo `DataTable.virtual.test.tsx`.
+  - **P4 · Saldos bancarios en SQL.** Nueva vista `v_saldos_cuentas_bancarias` (security_invoker) que agrega abonos/cargos por cuenta; `resumen.ts` deja de traer TODOS los movimientos al browser y `agregador.ts` reutiliza `cuentas` en `fetchResumenTesoreria` + paraleliza tesorería/flujo con `Promise.all`.
+  - **P5 · 10 índices de tenant/FK.** `clientes.organization_id`, `bbva_movimientos (org, cuenta+fecha)`, `conceptos_venta/factura`, `conceptos_factura.embarque_id`, `proveedor_facturas_conceptos`, `proveedor_notas_credito`, `factura_embarques`, `embarques (org, created_at desc)` — todos `IF NOT EXISTS`.
+  - **P6 · Sentry fuera del chunk inicial.** `ErrorBoundary.tsx` y `errorBoundary/reportFeedback.ts` cargan `@sentry/react` con `import()` dinámico (~30 KB gz menos en el entry inicial). El eventId del boundary se llena de forma asíncrona; la UI ya lo manejaba nulo.
+  
+  Analogía: el frontend antes fabricaba una regla de medir nueva cada vez que quería medir un peso, y bajaba TODA la cartilla del banco para calcular el saldo — ahora tiene una sola regla en el cajón y le pide al banco directamente el saldo agregado.
+
+
+
 ## [13.316.2] - 2026-07-25
 - **fix(ci) · Smoke test de `user-management` dejaba caer el runner nightly.** `dotenv/load.ts` de `std@0.224.0` compara `.env` contra `.env.example` y lanza `MissingEnvVarsError` si alguna variable del ejemplo no está en el env — CI no tiene `VITE_SENTRY_DSN` seteado y el runner moría antes de correr el único test del archivo. Cambié a `load({ envPath: ".env", examplePath: null, export: true })` para no exigir paridad con el ejemplo (el smoke tiene fallbacks hardcodeados para las 2 vars que realmente usa). Analogía: el runner traía un cotejo de "lista completa" contra el machote y se plantaba si faltaba un renglón, aunque el test ni usara ese renglón.
 

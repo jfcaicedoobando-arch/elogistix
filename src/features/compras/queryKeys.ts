@@ -42,4 +42,5 @@ export const compras = {
     ["compras", "pagos-global", filtros] as const,
   reportes: (filtros: ReportesFiltros) =>
     ["compras", "reportes", filtros] as const,
+  exchangeRatesDofToday: () => ["compras", "exchange-rates-dof-today"] as const,
 } as const;

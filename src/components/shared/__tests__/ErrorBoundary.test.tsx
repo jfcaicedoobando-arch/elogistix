@@ -6,7 +6,7 @@
  *  3) Reporta también a `logClientError` (persistencia paralela).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import * as React from "react";
 
 const mocks = vi.hoisted(() => {
@@ -74,7 +74,7 @@ describe("ErrorBoundary", () => {
     expect(screen.getByRole("button", { name: /reintentar/i })).toBeInTheDocument();
   });
 
-  it("captura en Sentry con tag crashed_route = pathname actual", () => {
+  it("captura en Sentry con tag crashed_route = pathname actual", async () => {
     Object.defineProperty(window, "location", {
       configurable: true,
       value: { ...window.location, pathname: "/embarques/123" },
@@ -86,7 +86,7 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>,
     );
 
-    expect(mocks.withScope).toHaveBeenCalled();
+    await waitFor(() => expect(mocks.withScope).toHaveBeenCalled());
     expect(mocks.setTag).toHaveBeenCalledWith("crashed_route", "/embarques/123");
     expect(mocks.setTag).toHaveBeenCalledWith("source", "react-error-boundary");
     expect(mocks.captureException).toHaveBeenCalledWith(expect.objectContaining({ message: "ui-explota" }));

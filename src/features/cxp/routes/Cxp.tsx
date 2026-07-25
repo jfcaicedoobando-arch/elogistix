@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Plus, FileText, Inbox, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { DialogRegistrarPagoProveedor } from "@/features/cxp/components/DialogRe
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import { CxpFiltros } from "@/features/cxp/components/CxpFiltros";
 import { CxpKpiCards } from "@/features/cxp/components/CxpKpiCards";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { CXP_COL_DEFAULTS, CXP_COL_OPTIONS } from "@/features/cxp/routes/_config/cxpColumnConfig";
 
 import { useCobranza } from "@/features/facturacion/hooks";
@@ -86,8 +87,14 @@ export default function Cxp() {
     f.setAEliminar(fact);
   }, [f]);
 
-  const columns = buildCxPColumns();
+  const columns = useMemo(() => buildCxPColumns(), []);
   const colVis = useColumnVisibility("cxp-facturas-columns", CXP_COL_DEFAULTS);
+
+  const totalPages = Math.max(1, Math.ceil(data.length / f.pageSize));
+  const pageData = useMemo(
+    () => data.slice(f.page * f.pageSize, (f.page + 1) * f.pageSize),
+    [data, f.page, f.pageSize],
+  );
 
   return (
     <PageContainer>
@@ -155,24 +162,32 @@ export default function Cxp() {
               )}
             </div>
           ) : (
-            <DataTable
-              columns={columns}
-              data={data}
-              isLoading={isLoading}
-              isError={isError}
-              onRetry={() => refetch()}
-              emptyMessage="No hay facturas que coincidan con los filtros"
-              rowKey={(f) => f.id}
-              density="compact"
-              initialSort={{ key: "folio_interno", dir: "desc" }}
-              onRowClick={(fact) => f.setDetalle(fact)}
-              stickyHeader
-              columnVisibility={colVis.visibility}
-              onColumnVisibilityChange={(updater) => {
-                const next = typeof updater === "function" ? updater(colVis.visibility) : updater;
-                colVis.setVisibility(next);
-              }}
-            />
+            <TooltipProvider delayDuration={200}>
+              <DataTable
+                columns={columns}
+                data={pageData}
+                isLoading={isLoading}
+                isError={isError}
+                onRetry={() => refetch()}
+                emptyMessage="No hay facturas que coincidan con los filtros"
+                rowKey={(f) => f.id}
+                density="compact"
+                initialSort={{ key: "folio_interno", dir: "desc" }}
+                onRowClick={(fact) => f.setDetalle(fact)}
+                stickyHeader
+                columnVisibility={colVis.visibility}
+                onColumnVisibilityChange={(updater) => {
+                  const next = typeof updater === "function" ? updater(colVis.visibility) : updater;
+                  colVis.setVisibility(next);
+                }}
+                pagination={{
+                  page: f.page,
+                  totalPages,
+                  onPageChange: f.setPage,
+                  pageSize: f.pageSize,
+                }}
+              />
+            </TooltipProvider>
           )}
         </CardContent>
       </Card>

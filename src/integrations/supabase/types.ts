@@ -6760,6 +6760,22 @@ export type Database = {
         }
         Relationships: []
       }
+      v_saldos_cuentas_bancarias: {
+        Row: {
+          cuenta_bancaria_id: string | null
+          total_abonos: number | null
+          total_cargos: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bbva_movimientos_cuenta_bancaria_id_fkey"
+            columns: ["cuenta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _assert_facturapi_admin: {

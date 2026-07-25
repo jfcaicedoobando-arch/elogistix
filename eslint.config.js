@@ -599,8 +599,6 @@ export default tseslint.config(
     ],
     ignores: [
       "src/lib/observability/sentry/**",
-      "src/components/shared/ErrorBoundary.tsx",
-      "src/components/shared/errorBoundary/**",
       "src/components/feedback/**",
       "src/features/admin/routes/SentryDiagnostico.tsx",
       "src/lib/observability/hooks/**",

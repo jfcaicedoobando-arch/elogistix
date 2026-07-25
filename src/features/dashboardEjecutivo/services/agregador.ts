@@ -77,12 +77,16 @@ export async function fetchDashboardEjecutivo(
   const tipoCambioUsd = tipoCambio.usdMxn;
   // A1/A2 fix (v13.300.49): tesorería y flujo reciben el TC para
   // convertir a MXN los saldos y flujos en USD.
-  const tesoreria = await fetchResumenTesoreria({
-    cobranza, cxp, organizationId, tipoCambioUsd,
-  });
-  const flujo = await fetchFlujoProyectado({
-    cuentas, cobranza, cxp, dias: 28, organizationId, tipoCambioUsd,
-  });
+  // P4: reutilizamos `cuentas` (ya fetched arriba) en vez de re-fetch dentro
+  // de fetchResumenTesoreria; P8-lite: paralelizamos tesoreria/flujo.
+  const [tesoreria, flujo] = await Promise.all([
+    fetchResumenTesoreria({
+      cobranza, cxp, organizationId, tipoCambioUsd, cuentas,
+    }),
+    fetchFlujoProyectado({
+      cuentas, cobranza, cxp, dias: 28, organizationId, tipoCambioUsd,
+    }),
+  ]);
 
   const eerr12m: PuntoEERR[] = meses.map((m, i) => {
     const er = eerrMensuales[i];

@@ -13,7 +13,7 @@ describe("Arquitectura: Sin TCs hardcodeados", () => {
     });
     
     const violators: string[] = [];
-    const pattern = /[\*\/\+\-]\s*20\b|\b20\s*[\*\/\+\-]/;
+    const pattern = /[*/+-]\s*20\b|\b20\s*[*/+-]/;
 
     for (const rel of files) {
       const src = readFileSync(path.join(ROOT, rel), "utf-8");

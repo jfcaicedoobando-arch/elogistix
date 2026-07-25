@@ -1,8 +1,48 @@
 /** Formatos numéricos y de moneda. */
 
+// Caché de Intl.NumberFormat por moneda: construir uno por render costaba
+// ~600 constructores en CxP y ~4,000 en conciliación. Mantén el Map interno
+// (no exportar) para preservar la API pública.
+const currencyFormatterCache = new Map<string, Intl.NumberFormat>();
+const getCurrencyFormatter = (currency: string): Intl.NumberFormat => {
+  let f = currencyFormatterCache.get(currency);
+  if (!f) {
+    f = new Intl.NumberFormat("es-MX", { style: "currency", currency, minimumFractionDigits: 2 });
+    currencyFormatterCache.set(currency, f);
+  }
+  return f;
+};
+
+const compactFormatterCache = new Map<string, Intl.NumberFormat>();
+const getCompactFormatter = (key: string): Intl.NumberFormat => {
+  let f = compactFormatterCache.get(key);
+  if (!f) {
+    f = new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+      minimumFractionDigits: 0,
+    });
+    compactFormatterCache.set(key, f);
+  }
+  return f;
+};
+
+const numberFormatterCache = new Map<string, Intl.NumberFormat>();
+const getNumberFormatter = (min: number, max: number): Intl.NumberFormat => {
+  const key = `${min}:${max}`;
+  let f = numberFormatterCache.get(key);
+  if (!f) {
+    f = new Intl.NumberFormat("es-MX", {
+      minimumFractionDigits: min,
+      maximumFractionDigits: max,
+    });
+    numberFormatterCache.set(key, f);
+  }
+  return f;
+};
+
 export const formatCurrency = (amount: number, currency: string = 'MXN'): string => {
-  const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 });
-  const formatted = formatter.format(amount);
+  const formatted = getCurrencyFormatter(currency).format(amount);
   // Intl con MXN devuelve "$57,000.00" (sin código). Forzamos el prefijo "MXN " para
   // mantener consistencia con USD/EUR y evitar ambigüedad entre USD y MXN.
   if (currency === 'MXN' && !formatted.startsWith('MXN')) {
@@ -32,11 +72,7 @@ export const formatCurrencySafe = (value: unknown, currency: string = "MXN"): st
  */
 export const formatCurrencyCompact = (amount: number, currency: string = "MXN"): string => {
   const safe = Number.isFinite(amount) ? amount : 0;
-  const formatted = new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-  }).format(safe);
+  const formatted = getCompactFormatter("compact:1").format(safe);
   return `${currency} ${formatted}`;
 };
 
@@ -47,10 +83,9 @@ export const formatNumber = (
 ): string => {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   const { decimals, suffix } = options;
-  const formatted = new Intl.NumberFormat("es-MX", {
-    minimumFractionDigits: decimals ?? 0,
-    maximumFractionDigits: decimals ?? (Number.isInteger(value) ? 0 : 2),
-  }).format(value);
+  const min = decimals ?? 0;
+  const max = decimals ?? (Number.isInteger(value) ? 0 : 2);
+  const formatted = getNumberFormatter(min, max).format(value);
   return suffix ? `${formatted} ${suffix}` : formatted;
 };
 

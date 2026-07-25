@@ -42,7 +42,7 @@ export default function ComprasReportes() {
   });
 
   const { data: rates } = useQuery({
-    queryKey: ["exchange-rates-dof-today"],
+    queryKey: compras.exchangeRatesDofToday(),
     queryFn: () => fetchExchangeRates(todayLocalISO()),
     staleTime: 1000 * 60 * 60,
   });

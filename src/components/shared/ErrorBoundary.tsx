@@ -1,5 +1,4 @@
 import React from "react";
-import * as Sentry from "@sentry/react";
 import { logClientError } from "@/services/observability";
 import { logger } from "@/lib/observability/logger";
 import {
@@ -55,23 +54,27 @@ export class ErrorBoundary extends React.Component<Props, State> {
     }
 
     const timestamp = new Date().toISOString();
-    let eventId: string | null = null;
-    Sentry.withScope((scope) => {
-      scope.setTag("source", "react-error-boundary");
-      if (typeof window !== "undefined") {
-        scope.setTag("crashed_route", window.location.pathname || "/");
-      }
-      scope.setTag("app_version", APP_VERSION);
-      if (errorInfo.componentStack) {
-        scope.setContext("react", { componentStack: errorInfo.componentStack });
-      }
-      eventId = Sentry.captureException(error);
-    });
 
     this.setState({
-      eventId,
+      eventId: null,
       componentStack: errorInfo.componentStack ?? null,
       timestamp,
+    });
+
+    void import("@sentry/react").then((Sentry) => {
+      let eventId: string | null = null;
+      Sentry.withScope((scope) => {
+        scope.setTag("source", "react-error-boundary");
+        if (typeof window !== "undefined") {
+          scope.setTag("crashed_route", window.location.pathname || "/");
+        }
+        scope.setTag("app_version", APP_VERSION);
+        if (errorInfo.componentStack) {
+          scope.setContext("react", { componentStack: errorInfo.componentStack });
+        }
+        eventId = Sentry.captureException(error);
+      });
+      this.setState({ eventId });
     });
 
     logClientError({
