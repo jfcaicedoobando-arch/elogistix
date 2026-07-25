@@ -24,6 +24,7 @@ import { NotasCreditoSection } from "./NotasCreditoSection";
 import { InfoFacturaSection } from "./InfoFacturaSection";
 import { HistorialFacturaSection } from "./HistorialFacturaSection";
 import { ConceptosFacturaSection } from "./ConceptosFacturaSection";
+import { AnticiposAplicadosSection } from "@/features/anticipos-proveedor/components/AnticiposAplicadosSection";
 import { usePermissions } from "@/hooks/shared";
 import { formatDate } from "@/lib/formatters/dates";
 
@@ -136,6 +137,7 @@ function BodySections({
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
       {f && <InfoFacturaSection factura={f} canEdit={canEdit} />}
       {f && <ConceptosFacturaSection facturaId={f.id} moneda={f.moneda} />}
+      {f && <AnticiposAplicadosSection facturaId={f.id} />}
       {f && <HistorialFacturaSection facturaId={f.id} />}
       <PagosTable pagos={pagos} isLoading={isLoading} canEdit={canEdit} onEliminarPago={onEliminarPago} />
       {f && (

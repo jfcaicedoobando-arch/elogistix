@@ -7636,6 +7636,7 @@ export type Database = {
           expediente: string
           factura_id: string
           fecha_emision: string
+          fecha_programada_pago: string | null
           fecha_vencimiento: string
           folio_proveedor: string
           moneda: string

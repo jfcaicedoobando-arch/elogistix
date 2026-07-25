@@ -37,6 +37,7 @@ import {
   Wallet,
   Banknote,
   ArrowRightLeft,
+  CalendarCheck,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -62,6 +63,7 @@ export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Cobranza", url: "/cartera", icon: HandCoins },
   { title: "Antigüedad A/R", url: "/cobranza/aging", icon: LayoutList },
   { title: "Tesorería", url: "/tesoreria", icon: Landmark },
+  { title: "Pagos programados", url: "/tesoreria/pagos-programados", icon: CalendarCheck },
   { title: "Comisiones", url: "/comisiones", icon: Percent },
 ];
 
@@ -111,9 +113,6 @@ export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
   { title: "Cartera", url: "/cartera", icon: Wallet },
 ];
 
-
-
-
 /**
  * v13.175.0 — Módulo Compras unificado. Todas las rutas viven bajo `/compras/*`
  * y esta lista es la única fuente de verdad del sidebar para el módulo.
@@ -125,6 +124,7 @@ export const SIDEBAR_COMPRAS_ITEMS: SidebarItem[] = [
   { title: "Por aprobar", url: "/compras/por-aprobar", icon: ClipboardCheck },
   { title: "Por pagar", url: "/compras/por-pagar", icon: Banknote },
   { title: "Facturas", url: "/compras/facturas", icon: Receipt },
+  { title: "Anticipos", url: "/compras/anticipos", icon: HandCoins },
   { title: "Pagos", url: "/compras/pagos", icon: ArrowRightLeft },
   { title: "Notas de crédito", url: "/compras/notas-credito", icon: ReceiptText },
   { title: "Proveedores", url: "/compras/proveedores", icon: Truck },

@@ -11,7 +11,7 @@ import {
   TOLERANCIA_DIAS,
   rangoFechasIso,
   deltaDiasIso,
-} from "@/features/tesoreria/services/tolerancia";
+} from "@/features/tesoreria/domain/tolerancia";
 
 export interface MovimientoCandidato {
   id: string;
