@@ -1,78 +1,90 @@
+# Plan · Tanda 1 Quick Wins Facturación (QW1–QW4)
 
-# Investigación de rollbacks masivos — 82.6M (89%) en 39 días
+Aviso: `.lovable/` está en `.gitignore`, así que este plan no se versiona. ¿Quieres que quite esa entrada para que el plan quede persistido en el repo? Puedo hacerlo al inicio del build si lo confirmas.
 
-## Hallazgos iniciales (ya verificados)
+Objetivo: cerrar 4 gaps visibles sin tocar lógica financiera. Cada QW es un commit independiente detrás del mismo bump de versión.
 
-Analogía: la base de datos comete 1 de cada 10 pedidos y rechaza 9. Aunque cada rechazo es barato (~microsegundos), sumados a **~24 rollbacks/seg sostenidos por 39 días** queman CPU.
+---
 
-Datos confirmados con `psql` y Sentry:
+## QW1 · Conectar PDF y CSV de Estado de Cuenta
 
-| Métrica | Valor | Fuente |
-|---|---|---|
-| Commits desde boot | 9,901,297 | `pg_stat_database` |
-| **Rollbacks desde boot** | **82,614,717 (89.3%)** | `pg_stat_database` |
-| Uptime | 38 días 23 h | `pg_postmaster_start_time` |
-| Ratio rollback/seg | ~24.6/s sostenido | derivado |
-| Errores en Sentry (7d) | ~50 eventos totales | `search_events` |
-| Errores en `app_logs` (24h) | 22 client-side, 0 server | tabla `app_logs` |
+**Problema:** `ExportActions.tsx` tiene los dos botones (`PDF`, `Excel`) `disabled` con TODO. El generador `src/generators/estadoCuentaPdf.ts` ya existe y funciona (tiene tests).
 
-**Conclusión preliminar**: los rollbacks NO se corresponden con excepciones que llegan a Sentry ni con `app_logs`. Esto indica que son **rollbacks "silenciosos"** — transacciones abortadas que la app trata como flujo normal. Sospechosos:
+**Cambios:**
 
-1. **PostgREST envuelve cada request en `BEGIN…COMMIT`**. Cualquier `SELECT ... .single()` que devuelve 0 filas (PGRST116), 401/403 por RLS en INSERT/UPDATE, o `RAISE EXCEPTION` en trigger produce ROLLBACK. El cliente lo maneja como "no encontrado" sin log.
-2. **Triggers con `RAISE EXCEPTION` de negocio**: `guard_pago_proveedor` (LC_PAGO_EXCEDE_SALDO), `tg_bloquear_si_embarque_cerrado`, `LC_ROL_LEGACY_BLOQUEADO`, etc. Si algún flujo los dispara "de prueba" antes de la operación real, cada intento fallido = 1 rollback.
-3. **Realtime / PgBouncer health checks** que abren transacciones cortas.
-4. **Idempotency checks**: `idempotency_commit` que falló 4 veces en Sentry ("function does not exist") — cada intento = rollback.
+- `src/features/facturacion/estadoCuenta/components/ExportActions.tsx`: recibir por props `clienteIds`, `desde`, `hasta`, `rows`, `kpis`. Habilitar botones cuando `clienteIds.length===1` (PDF firma un cliente) y siempre para CSV.
+- Botón PDF → llama a `generarEstadoCuentaPdf` (leer su firma y armar el header cliente desde `useEstadoCuenta` o un fetch mínimo).
+- Botón Excel → renombrar a **CSV** (rótulo + ícono `FileSpreadsheet`) y usar el helper puro existente `src/generators/exportCsv.ts`. Nombre: `EstadoCuenta_{Cliente}_{YYYYMMDD}.csv`.
+- `EstadoCuentaModule.tsx`: pasar props a `<ExportActions/>`.
+- Feedback con `notifySuccess`/`notifyError` (los helpers unificados).
 
-## Plan de investigación (3 fases)
+**Tests:** unit test que renderiza `ExportActions` habilitado/deshabilitado y verifica que se invoquen los generadores (mock).
 
-### Fase 1 — Instrumentar para atribuir los rollbacks (sin cambios de negocio)
+---
 
-1. **Extensión `pg_stat_statements`**: no está activa. Solicitar activación (o confirmar si Lovable Cloud la expone). Sin ella no podemos saber *qué query* está rollbackeando.
-2. **Snapshot temporal**: registrar `pg_stat_database.xact_rollback` en dos momentos separados por 10 min para medir la **tasa real actual** (vs. cumulativa). Si la tasa bajó tras las policies de v13.312.24, puede que ya no sea prioritario.
-3. **Query a `pg_stat_activity`** durante 1 minuto en loop (cada 2 s) filtrando `state = 'idle in transaction (aborted)'` para capturar in-flight qué query dejó la transacción abortada.
-4. **Sampling de errores PostgREST**: revisar logs del edge proxy Supabase (si accesibles vía `edge_function_logs` de `postgrest`) buscando patrones 4xx/5xx.
+## QW2 · REP descargable en portal + auto-envío al timbrar
 
-### Fase 2 — Correlacionar con Sentry + edge logs
+**Problema:** `pagos_factura.rep_pdf_url / rep_xml_url` se pueblan al timbrar el REP, pero el portal del cliente no los muestra y no se dispara email automático (aunque la edge `facturapi-enviar-email` ya acepta `pago_id`).
 
-1. Listar top 20 errores de Sentry por frecuencia (últimos 30d) — ya obtenidos:
-   - `agente_nombre column not found` (10) — schema cache stale
-   - `generar_expediente does not exist` (5) — RPC ausente
-   - `idempotency_commit does not exist` (4) — RPC ausente
-   - `column pp.factura_id does not exist` (1)
-   - `AprobacionFacturaError: conceptos no cuadran` (5+2+1=8) — validación esperada
-   - Cada uno de estos causó rollback en PG. Si `generar_expediente` se llama en cada creación de embarque → decenas de miles de rollbacks/día por sí sola.
-2. Cruzar con `ai_gateway_logs` y `edge_function_logs` de las funciones más ruidosas (`process-email-queue`, `facturapi-*`, `parse-invoice-pdf`) para ver ratio de fallos.
-3. Auditar triggers con `RAISE EXCEPTION` que actúan como validación de UI:
-   - Si UI pre-valida y aun así llega al trigger, es doble trabajo.
-   - Candidatos: `guard_pago_proveedor`, `tg_bloquear_si_embarque_cerrado`, guardas de proformas/NC.
+**Cambios:**
 
-### Fase 3 — Remediación priorizada
+- `src/features/portal/services/queries.ts` (query de pagos): agregar `rep_pdf_url, rep_xml_url, rep_uuid, id` al select whitelist (respetar `portal-columns-whitelist.test.ts` — actualizar si falla).
+- `PortalFacturaPagosCard.tsx`: cuando el pago tenga REP timbrado, mostrar dos botones **REP PDF / REP XML** que abran signed URL vía `openFacturaInNewTab` (o análogo si el bucket es distinto — verificar en build). Si el REP aún no está timbrado, sin botón.
+- `src/features/facturacion/hooks/useTimbrarRep.ts`: tras `onSuccess`, llamar `supabase.functions.invoke('facturapi-enviar-email', { body: { pago_id } })` de forma **fire-and-forget** con `notifyInfo` de resultado; los errores caen a `notifyWarning` sin bloquear el toast de éxito. Documentar que el envío es best-effort (el usuario puede reenviar manual).
 
-Según lo que emerja de Fases 1-2, aplicar (en release aparte v13.312.25):
+**Tests:** actualizar `queries.test.ts` para las nuevas columnas + un test conductual del hook que verifica que se llame `functions.invoke` con `{ pago_id }`.
 
-- **Crear RPCs faltantes** o eliminar las llamadas huérfanas (`generar_expediente`, `idempotency_commit`, columna `agente_nombre`).
-- **Refrescar `pg_notify('pgrst', 'reload schema')`** para el error de schema cache.
-- **Convertir `SELECT ... .single()`** en `.maybeSingle()` donde el "0 filas" es legítimo (no debe rollback silencioso).
-- **Mover validaciones de trigger a `CHECK` constraints** cuando sean estrictamente estructurales (evita el `RAISE EXCEPTION` con costo de plpgsql).
-- **Retry con backoff** en cliente para los flujos que hoy reintentan agresivamente.
+---
 
-## Detalles técnicos
+## QW3 · Badge "Enviada" en Emitidas
 
-- `pg_stat_database` es cumulativo; para tasa actual hay que hacer 2 snapshots.
-- PostgREST usa `SET LOCAL role = authenticated`. Cualquier `permission denied` dentro del BEGIN aborta la transacción y produce rollback contable, aunque el usuario final vea un simple 403.
-- `pg_stat_statements` requiere `shared_preload_libraries` — en Lovable Cloud puede requerir soporte.
-- No proponemos `resize_compute`: la saturación es de patrón, no de recursos.
+**Problema:** ya escribimos `enviada_cliente_at` al enviar, pero la tabla de Emitidas no lo distingue.
 
-## Entregable esperado
+**Cambios:**
 
-Al final de Fase 1-2, un **reporte de 3-5 causas raíz con % de rollbacks atribuido a cada una** en `.lovable/plan.md`. Fase 3 se implementa en release posterior con el fix concreto por causa.
+- `src/features/facturacion/routes/facturacionColumns.tsx`: en la columna `estado` (o adyacente), agregar un pequeño chip secundario **"Enviada"** (variant `outline`, ícono `Send`) cuando `enviada_cliente_at` no sea `null` y el estado sea `Vigente/Cobrada/Vencida`. Tooltip: `Enviada el {formatFechaHora}`.
+- Añadir a `Factura` type/select si falta (verificar `useFacturas` select).
+- Filtro opcional en `FacturasFilters` (checkbox "Sólo no enviadas") — sólo si el archivo de filtros lo permite en <1 diff.
 
-## Riesgo
+**Tests:** snapshot/unit de la columna con dos casos (con/sin fecha).
 
-Bajo. Fases 1 y 2 son **solo lectura**. Los cambios de Fase 3 se planifican después con su propio review.
+---
 
-## Requisitos previos (necesito confirmación tuya antes de ejecutar)
+## QW4 · Columna Archivos visible desde ≥lg
 
-1. ¿Confirmas que puedo intentar activar `pg_stat_statements` vía migración (`CREATE EXTENSION IF NOT EXISTS pg_stat_statements`) para poder atribuir queries?
-2. ¿Autorizas correr un loop de sampling de 1-2 minutos contra `pg_stat_activity` (solo lectura, ninguna escritura)?
-3. ¿Prefieres que arranque por Fase 1 (instrumentación) o directamente Fase 2 (correlación Sentry + logs) que puedo hacer sin cambios de infra?
+**Problema:** `facturacionColumns.tsx:96` esconde la columna `archivos` con `hidden xl:table-cell`.
+
+**Cambios:**
+
+- Cambiar `hidden xl:table-cell` → `hidden lg:table-cell` en la meta de la columna `archivos` (dos ocurrencias: `className` y `headerClassName`).
+- Verificar densidad: si en `lg` (1024px) la fila se rompe, mover expediente/proforma a `hidden xl:` (ya lo están) y dejar archivos en `lg`. Confirmar visualmente con Playwright a 1280×1800.
+
+---
+
+## Versionado, changelog y verificación
+
+- Bump `APP_VERSION` a **13.312.26** en `src/constants/appVersion.ts`.
+- Entrada en `CHANGELOG.md` bajo `## [13.312.26] - 2026-07-25` con 4 bullets breves (uno por QW) referenciando el doc `quickwins-facturacion-2026-07-24.md`.
+- CI: `bun run lint -- --max-warnings 0` + tests unitarios afectados. Playwright: capturar `/facturacion` a 1080p para confirmar la columna Archivos en laptop.
+
+---
+
+## Detalles técnicos (no-user-facing)
+
+- `ExportActions` pasa a `"use client"`-friendly (ya lo es, sólo hooks); mantener `TooltipProvider` para el caso deshabilitado (PDF requiere 1 solo cliente).
+- La firma exacta de `generarEstadoCuentaPdf` la resuelvo al abrir el archivo en build; probablemente pide `{cliente, facturas, rangoFechas}` y lo alimento con `useEstadoCuenta` + un fetch adicional de cabecera de cliente (RFC/dirección) si el hook no lo trae.
+- Auto-envío REP: usar `pago_id` (no `factura_id`) para que la edge tome la ruta REP y adjunte PDF+XML del complemento.
+- `enviada_cliente_at` ya está en `facturas`; sólo hay que asegurarse de seleccionarlo en el listado. No requiere migración.
+
+---
+
+## Fuera de alcance
+
+- Wizard/RHF migrations (Ola 1 estructural).
+- QW5–QW12 (Tandas 2 y 3).
+- Nuevos endpoints / edge functions.
+- Cambios en el layout general del módulo.
+
+¿Aprobado? Al pasar a build ejecuto los 4 QW en un solo turno, con tests y bump de versión.
+
+Quita el git ignore 
