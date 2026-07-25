@@ -1,15 +1,11 @@
 /**
  * QW1 Tanda 1 — Exports reales del Estado de Cuenta.
- * PDF (print-to-PDF, requiere un solo cliente) y CSV (planos, cualquier
- * cantidad de clientes). Los datos vienen ya normalizados desde
- * `useEstadoCuenta`; sólo hace falta un adapter a filas planas para CSV.
- *
  * QW12 Tanda 3 — Envío del estado de cuenta por email.
  */
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { FileDown, Sheet, Loader2 } from "lucide-react";
+import { FileDown, Sheet } from "lucide-react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { formatDate } from "@/lib/formatters";
+import { ExportFileButton } from "./ExportFileButton";
 import { ExportEmailButton } from "./ExportEmailButton";
 import { useExportActions } from "../hooks/useExportActions";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
@@ -30,50 +26,22 @@ export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Prop
   return (
     <TooltipProvider>
       <div className="flex items-center gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onPdf}
-                disabled={!soloUnCliente || sinFilas || isBusy}
-              >
-                {busy === "pdf"
-                  ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                  : <FileDown className="h-4 w-4 mr-1.5" />}
-                PDF
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {!soloUnCliente
-              ? "El PDF requiere un solo cliente"
-              : sinFilas
-                ? "Sin facturas para exportar"
-                : "Descargar estado de cuenta en PDF"}
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onCsv}
-                disabled={sinFilas || isBusy}
-              >
-                {busy === "csv"
-                  ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                  : <Sheet className="h-4 w-4 mr-1.5" />}
-                CSV
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {sinFilas ? "Sin facturas para exportar" : "Descargar filas visibles en CSV"}
-          </TooltipContent>
-        </Tooltip>
+        <ExportFileButton
+          label="PDF"
+          icon={FileDown}
+          tooltip={!soloUnCliente ? "El PDF requiere un solo cliente" : sinFilas ? "Sin facturas para exportar" : "Descargar estado de cuenta en PDF"}
+          busy={busy === "pdf"}
+          onClick={onPdf}
+          disabled={!soloUnCliente || sinFilas || isBusy}
+        />
+        <ExportFileButton
+          label="CSV"
+          icon={Sheet}
+          tooltip={sinFilas ? "Sin facturas para exportar" : "Descargar filas visibles en CSV"}
+          busy={busy === "csv"}
+          onClick={onCsv}
+          disabled={sinFilas || isBusy}
+        />
         {soloUnCliente && (
           <ExportEmailButton
             clienteId={clienteIds[0]}
