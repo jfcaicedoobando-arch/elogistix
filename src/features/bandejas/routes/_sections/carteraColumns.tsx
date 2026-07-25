@@ -2,8 +2,11 @@
  * Columnas de la tabla Cartera (`/facturacion/cartera`).
  * v13.200.0: sin `<Link>` inline. La navegación al detalle de factura
  * se hace por row-click accesible desde `Cartera.tsx` (getRowHref).
+ * v13.313.1: agregada columna de acción "Recordatorio".
  */
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Mail } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
@@ -11,7 +14,7 @@ import type { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas"
 
 export type CarteraRow = NonNullable<ReturnType<typeof useCarteraPendiente>["data"]>[number];
 
-export function buildCarteraColumns(): ColumnDef<CarteraRow, unknown>[] {
+export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void): ColumnDef<CarteraRow, unknown>[] {
   return defineColumns<CarteraRow>([
     {
       id: "numero",
@@ -90,6 +93,26 @@ export function buildCarteraColumns(): ColumnDef<CarteraRow, unknown>[] {
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
+    },
+    {
+      id: "acciones",
+      header: "",
+      enableSorting: false,
+      meta: { width: "w-[60px]", align: "right" },
+      cell: ({ row }) =>
+        onRecordatorio ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Enviar recordatorio de pago para ${row.original.numero ?? ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRecordatorio(row.original);
+            }}
+          >
+            <Mail className="h-4 w-4" />
+          </Button>
+        ) : null,
     },
   ]);
 }

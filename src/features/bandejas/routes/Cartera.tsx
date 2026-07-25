@@ -5,7 +5,9 @@
  * `useClientPagedList` — search, filtros (moneda / vencidas), rango de fechas
  * de vencimiento, orden y paginación sincronizados con la URL vía `nuqs`, y
  * barra `<UnifiedFiltersBar />` compartida con Facturación/Embarques.
+ * v13.313.1: agregado diálogo de recordatorio de cobranza.
  */
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -21,6 +23,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { CarteraMobileList } from "./_sections/CarteraMobileList";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
 
 /** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
 function formatNativos(b: SaldosPorMonedaCartera): string {
@@ -34,6 +37,7 @@ function formatNativos(b: SaldosPorMonedaCartera): string {
 }
 
 export default function Cartera() {
+  const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
   const {
     paged,
     monedas,
@@ -45,7 +49,7 @@ export default function Cartera() {
     eqVencido,
     isLoading,
     columns,
-  } = useCarteraPage();
+  } = useCarteraPage((row) => setRecordatorio(row));
 
   return (
     <PageContainer>
@@ -157,6 +161,12 @@ export default function Cartera() {
           />
         </CardContent>
       </Card>
+
+      <DialogRecordatorioCobranza
+        open={recordatorio !== null}
+        onOpenChange={(open) => !open && setRecordatorio(null)}
+        factura={recordatorio}
+      />
     </PageContainer>
   );
 }

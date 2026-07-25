@@ -24,7 +24,7 @@ import {
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
   Facturacion, FacturaDetalle, EstadoCuentaInterno, ProformaDetalle, ProformasListado,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
-  Cxp, Compras, CxpAging, CxpPorCapturar, CxpPorPagar, Cartera,
+  Cxp, Compras, CxpAging, CxcAging, CxpPorCapturar, CxpPorPagar, Cartera,
   ComprasPagos, ComprasNotasCredito, ComprasReportes, ComprasPorAprobar, ComprasConciliacion,
   Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
   CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta,
@@ -98,6 +98,7 @@ export const appRoutes = (
     {/* v13.145.10 — bandeja eliminada; se redirige a /proformas con filtro Aceptada. */}
     <Route path="/facturacion/por-emitir" element={<Navigate to="/proformas?estado=aceptada" replace />} />
     <Route path="/cartera" element={guarded(["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"], <Cartera />)} />
+    <Route path="/cobranza/aging" element={guarded(["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"], <CxcAging />)} />
 
     <Route path="/tesoreria" element={guarded(TESORERIA_READ_ROLES, <Tesoreria />)} />
     <Route path="/tesoreria/cuentas" element={guarded(TESORERIA_READ_ROLES, <TesoreriaCuentas />)} />

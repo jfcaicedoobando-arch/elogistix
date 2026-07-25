@@ -13,7 +13,7 @@ export interface CarteraFilters extends Record<string, string> {
 
 export const DEFAULT_FILTERS: CarteraFilters = { moneda: "todas", urgencia: "accionable" };
 
-export function useCarteraPage() {
+export function useCarteraPage(onRecordatorio?: (row: CarteraRow) => void) {
   const { data = [], isLoading } = useCarteraPendiente();
   const { data: rates } = useExchangeRates();
   const tcUsdMxn = rates?.usdMxn ?? 0;
@@ -61,7 +61,7 @@ export function useCarteraPage() {
   const { saldosNativos, vencidasCount, vencidoNativo } = resumirCartera(scoped);
   const eqTotal = equivalenteMxn(saldosNativos, tcUsdMxn);
   const eqVencido = equivalenteMxn(vencidoNativo, tcUsdMxn);
-  const columns = useMemo(() => buildCarteraColumns(), []);
+  const columns = useMemo(() => buildCarteraColumns(onRecordatorio), [onRecordatorio]);
 
   return {
     data,

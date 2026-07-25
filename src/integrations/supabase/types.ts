@@ -7557,6 +7557,20 @@ export type Database = {
       current_agente_org: { Args: never; Returns: string }
       current_user_client_ids: { Args: never; Returns: string[] }
       current_user_org_id: { Args: never; Returns: string }
+      cxc_aging_clientes: {
+        Args: { p_fecha?: string; p_org?: string }
+        Returns: {
+          cliente_id: string
+          cliente_nombre: string
+          d_1_30: number
+          d_31_60: number
+          d_61_90: number
+          mas_90: number
+          num_facturas: number
+          saldo_total: number
+          vigente: number
+        }[]
+      }
       cxp_aging_proveedores: {
         Args: { p_fecha?: string; p_org?: string }
         Returns: {
