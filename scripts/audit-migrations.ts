@@ -46,7 +46,7 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  */
 const BASELINE = "20260725184834";
 
-const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
+export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
 
 type Violation = { file: string; check: string; detail: string };
 
