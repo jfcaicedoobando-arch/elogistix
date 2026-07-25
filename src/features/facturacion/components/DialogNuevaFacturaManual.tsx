@@ -142,15 +142,20 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
   };
 
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
-      <Button variant="secondary" onClick={() => handleSubmit(false)} disabled={!puedeGuardar || crear.isPending}>
-        Guardar borrador
-      </Button>
-      <Button onClick={() => handleSubmit(true)} disabled={!puedeTimbrar || crear.isPending}>
-        {crear.isPending ? "Procesando…" : "Crear y timbrar"}
-      </Button>
-    </>
+    <div className="flex w-full flex-wrap items-center gap-2">
+      {!puedeTimbrar && (
+        <FaltantesHint items={faltantesTimbrar} className="mr-auto" />
+      )}
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
+        <Button variant="secondary" onClick={() => handleSubmit(false)} disabled={!puedeGuardar || crear.isPending}>
+          Guardar borrador
+        </Button>
+        <Button onClick={() => handleSubmit(true)} disabled={!puedeTimbrar || crear.isPending}>
+          {crear.isPending ? "Procesando…" : "Crear y timbrar"}
+        </Button>
+      </div>
+    </div>
   );
 
   return (
