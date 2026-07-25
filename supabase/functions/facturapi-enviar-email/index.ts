@@ -187,9 +187,15 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 
-  const email = await resolveEmail(supabase, target.data.clienteId, body.email);
+  const resolucion = await resolveEmail(supabase, target.data.clienteId, body.email);
+  const email = resolucion.email;
   if (!email) return jsonResponse({ error: "missing_email", message: "El cliente no tiene email registrado." }, 422);
   if (!isValidEmail(email)) return jsonResponse({ error: "invalid_email", message: "Email inválido." }, 400);
+
+  const overrideManual = resolucion.fuente === "override";
+  const emailDistintoSugerido = Boolean(
+    resolucion.emailSugerido && email.toLowerCase() !== resolucion.emailSugerido.toLowerCase(),
+  );
 
   const resolved = await resolveFacturapiKey(supabase, target.data.organizationId);
   if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
@@ -214,8 +220,18 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
       modulo: "facturacion",
       accion: "cfdi_envio_failed",
       entidadId: target.data.entidadId,
-      detalles: { email, tipo: target.data.tipo, status: fapiRes.status, detail },
+      detalles: {
+        email_enviado: email,
+        email_sugerido: resolucion.emailSugerido,
+        fuente_email: resolucion.fuente,
+        override_manual: overrideManual,
+        email_distinto_sugerido: emailDistintoSugerido,
+        tipo: target.data.tipo,
+        status: fapiRes.status,
+        detail,
+      },
     });
+
     const message = fapiRes.status === 404
       ? "CFDI no encontrado en FacturApi (puede estar cancelado)."
       : `FacturApi rechazó el envío (${fapiRes.status}).`;
