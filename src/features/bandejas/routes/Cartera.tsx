@@ -5,7 +5,9 @@
  * `useClientPagedList` — search, filtros (moneda / vencidas), rango de fechas
  * de vencimiento, orden y paginación sincronizados con la URL vía `nuqs`, y
  * barra `<UnifiedFiltersBar />` compartida con Facturación/Embarques.
+ * v13.313.1: agregado diálogo de recordatorio de cobranza.
  */
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -21,6 +23,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { CarteraMobileList } from "./_sections/CarteraMobileList";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
 
 /** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
 function formatNativos(b: SaldosPorMonedaCartera): string {
