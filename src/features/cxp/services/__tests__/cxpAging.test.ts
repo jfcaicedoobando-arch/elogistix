@@ -10,6 +10,7 @@ function row(over: Partial<CxpAgingRow> = {}): CxpAgingRow {
   return {
     proveedor_id: "p",
     proveedor_nombre: "Prov",
+    moneda: "MXN",
     saldo_total: 0,
     vigente: 0,
     d_1_30: 0,
