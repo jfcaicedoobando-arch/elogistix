@@ -7,8 +7,9 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../queryKeys";
 import {
-  BarChart3, Download, TrendingUp, Banknote, Coins, Building2,
+  BarChart3, Download, TrendingUp, Banknote, Coins,
 } from "lucide-react";
+import { TopProveedoresCard } from "./_sections/TopProveedoresCard";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer,
   CartesianGrid, Legend,
