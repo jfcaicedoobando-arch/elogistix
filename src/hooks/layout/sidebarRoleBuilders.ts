@@ -95,7 +95,7 @@ const buildTesorero: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Compras", items: filterCompras(COMPRAS_TESORERO) },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
-  { label: "Facturación", items: filterGestion(["/cartera", "/comisiones"]) },
+  { label: "Facturación", items: filterGestion(["/cartera", "/comisiones", "/cobranza/aging"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
@@ -109,7 +109,7 @@ const buildAuxiliarContable: Builder = ({ sistemaItems }) => [
 const buildEjecutivoCobranza: Builder = ({ sistemaItems }) => [
   {
     label: "Facturación",
-    items: filterGestion(["/cartera", "/facturacion", "/proformas"]),
+    items: filterGestion(["/cartera", "/facturacion", "/proformas", "/cobranza/aging"]),
   },
   { label: "Directorio", items: filterDirectorio(["/clientes"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
@@ -143,7 +143,7 @@ export const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Gestión operativa", items: filterGestion(["/cotizaciones", "/embarques"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
   { label: "Compras", items: filterCompras(COMPRAS_FULL) },
-  { label: "Facturación", items: filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]) },
+  { label: "Facturación", items: filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones", "/cobranza/aging"]) },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "CRM", items: crmItems },
