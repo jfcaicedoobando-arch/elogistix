@@ -98,8 +98,22 @@ export function useNuevaFacturaProveedorForm(
   };
 
 
-  const handleProveedor = (id: string, nombre: string) => {
-    setValues((p) => ({ ...p, provId: id, provNombre: nombre }));
+  const handleProveedor = (id: string, nombre: string, diasCreditoProv?: number) => {
+    setValues((p) => {
+      // v13.315.8 (QW2) — heredamos días de crédito del proveedor y recalculamos
+      // vencimiento. Si el proveedor no trae días definidos (undefined) o es 0,
+      // conservamos el valor actual del formulario para no perder edits manuales.
+      const nextDias = typeof diasCreditoProv === "number" && diasCreditoProv > 0
+        ? diasCreditoProv
+        : p.diasCredito;
+      return {
+        ...p,
+        provId: id,
+        provNombre: nombre,
+        diasCredito: nextDias,
+        vencimiento: addDays(p.emision, Number(nextDias) || 0),
+      };
+    });
     if (errors.provId) setErrors((e) => ({ ...e, provId: undefined }));
     setVinculos({});
     setEmbarqueAdHoc(null);

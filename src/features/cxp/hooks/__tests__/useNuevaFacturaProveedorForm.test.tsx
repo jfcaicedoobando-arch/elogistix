@@ -84,6 +84,30 @@ describe("useNuevaFacturaProveedorForm", () => {
     expect(result.current.vinculos).toEqual({});
   });
 
+  // v13.315.8 (QW2) — al seleccionar proveedor con dias_credito, se hereda al form.
+  it("handleProveedor hereda dias_credito del proveedor y recalcula vencimiento", () => {
+    const onDone = vi.fn();
+    const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });
+    const emisionInicial = result.current.values.emision;
+    act(() => result.current.handleProveedor("p1", "ACME 15", 15));
+    expect(result.current.values.diasCredito).toBe(15);
+    // vencimiento = emision + 15 días
+    const [y, m, d] = emisionInicial.split("-").map(Number);
+    const esperado = new Date(Date.UTC(y, m - 1, d));
+    esperado.setUTCDate(esperado.getUTCDate() + 15);
+    const iso = esperado.toISOString().slice(0, 10);
+    expect(result.current.values.vencimiento).toBe(iso);
+  });
+
+  it("handleProveedor sin dias_credito conserva el valor previo del form", () => {
+    const onDone = vi.fn();
+    const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });
+    // El default de initialValues es 30; seleccionamos proveedor SIN dias_credito.
+    act(() => result.current.handleProveedor("p2", "Contado", 0));
+    expect(result.current.values.diasCredito).toBe(30);
+  });
+
+
   it("submit con validación fallida no llama mutateAsync y muestra toast", async () => {
     const onDone = vi.fn();
     const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });

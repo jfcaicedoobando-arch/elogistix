@@ -36,6 +36,9 @@ export const EMPTY_PROVEEDOR_FORM = {
   telefono: "",
   moneda_preferida: "MXN" as Moneda,
   origen_proveedor: null as "Nacional" | "Extranjero" | null,
+  // v13.315.8 (QW2) — días de crédito por defecto que heredarán las facturas
+  // capturadas contra este proveedor.
+  dias_credito: 0,
   // Datos fiscales (CSF) — opcionales, solo para registro interno.
   cp: "",
   direccion: "",

@@ -5929,6 +5929,7 @@ export type Database = {
           contacto: string
           cp: string | null
           created_at: string
+          dias_credito: number
           direccion: string | null
           email: string
           estado: string | null
@@ -5966,6 +5967,7 @@ export type Database = {
           contacto?: string
           cp?: string | null
           created_at?: string
+          dias_credito?: number
           direccion?: string | null
           email?: string
           estado?: string | null
@@ -6003,6 +6005,7 @@ export type Database = {
           contacto?: string
           cp?: string | null
           created_at?: string
+          dias_credito?: number
           direccion?: string | null
           email?: string
           estado?: string | null
