@@ -78,6 +78,7 @@ export function TabVsReal() {
     if (!data || generandoPdf) return;
     setGenerandoPdf(true);
     try {
+      const { ReportePresupuestoDocument } = await import("@/pdf/documents/ReportePresupuestoDocument");
       await descargarPdf(
         <ReportePresupuestoDocument resumen={data} />,
         await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),
