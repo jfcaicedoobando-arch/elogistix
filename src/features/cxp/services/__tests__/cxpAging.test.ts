@@ -63,7 +63,9 @@ describe("calcularTotalesAging", () => {
     ]);
     expect(tot.total).toBe(999);
     expect(tot.vigente + tot.d_1_30).toBe(150);
+  });
 });
+
 
 // v13.315.9 (QW3) — la RPC ahora devuelve una fila por moneda; el aging debe
 // separar MXN/USD/EUR para no reportar saldos económicamente incorrectos.
