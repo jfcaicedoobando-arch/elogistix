@@ -3,16 +3,19 @@
  * PDF (print-to-PDF, requiere un solo cliente) y CSV (planos, cualquier
  * cantidad de clientes). Los datos vienen ya normalizados desde
  * `useEstadoCuenta`; sólo hace falta un adapter a filas planas para CSV.
+ *
+ * QW12 Tanda 3 — Envío del estado de cuenta por email.
  */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { FileDown, Sheet, Loader2 } from "lucide-react";
+import { FileDown, Sheet, Loader2, Mail } from "lucide-react";
 import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatDate } from "@/lib/formatters";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { DialogEnviarEstadoCuenta } from "@/features/cobranza/components/DialogEnviarEstadoCuenta";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 
 interface Props {
