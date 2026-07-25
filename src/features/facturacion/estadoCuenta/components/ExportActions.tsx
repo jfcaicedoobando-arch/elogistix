@@ -146,41 +146,19 @@ export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Prop
             {sinFilas ? "Sin facturas para exportar" : "Descargar filas visibles en CSV"}
           </TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setEmailDialogOpen(true)}
-                disabled={!soloUnCliente || sinFilas || busy !== null}
-              >
-                <Mail className="h-4 w-4 mr-1.5" />
-                Enviar
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {!soloUnCliente
-              ? "El envío requiere un solo cliente"
-              : sinFilas
-                ? "Sin facturas para enviar"
-                : "Enviar estado de cuenta por email"}
-          </TooltipContent>
-        </Tooltip>
-      </div>
         {soloUnCliente && (
-        <DialogEnviarEstadoCuenta
-          open={emailDialogOpen}
-          onOpenChange={setEmailDialogOpen}
-          clienteId={clienteIds[0]}
-          clienteNombre={rows[0]?.cliente_nombre ?? null}
-          periodo={periodo ?? ""}
-          desde={desde ?? ""}
-          hasta={hasta ?? ""}
-          rows={rows}
-        />
-      )}
+          <ExportEmailButton
+            clienteId={clienteIds[0]}
+            clienteNombre={rows[0]?.cliente_nombre ?? null}
+            periodo={periodo ?? ""}
+            desde={desde ?? ""}
+            hasta={hasta ?? ""}
+            rows={rows}
+            sinFilas={sinFilas}
+            busy={busy !== null}
+          />
+        )}
+      </div>
     </TooltipProvider>
   );
 }
