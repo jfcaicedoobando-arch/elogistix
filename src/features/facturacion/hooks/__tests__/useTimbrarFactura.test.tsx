@@ -41,6 +41,7 @@ vi.mock("@/features/facturacion/services/facturapi", () => {
   };
 });
 vi.mock("@/lib/ui/appFeedback", () => ({
+  notifySuccess: (...a: unknown[]) => notifySuccess(...(a as [unknown, { title: string; description?: string }])),
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
 
