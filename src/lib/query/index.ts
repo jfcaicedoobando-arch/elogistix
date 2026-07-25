@@ -80,6 +80,7 @@ export const queryKeys = {
   appLogs,
   facturacion,
   profit,
+  cxc,
   cxp,
   proveedorFacturas,
   proveedorNotasCredito,
