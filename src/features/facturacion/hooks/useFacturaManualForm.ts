@@ -95,7 +95,7 @@ export function useFacturaManualForm(open: boolean) {
   const conceptosValidos = conceptos.every(
     (c) => c.descripcion.trim().length > 0 && Number(c.cantidad) > 0 && Number(c.precio_unitario) >= 0,
   );
-  const puedeGuardar = !!cliente && conceptosValidos && !!fiscal.fechaEmision && fiscal.tipoCambio > 0;
+  const puedeGuardar = !!cliente && conceptosValidos && fiscal.tipoCambio > 0;
   const puedeTimbrar = puedeGuardar && !clienteIncompleto;
   const faltantesTimbrar = useFaltantesTimbrar(cliente, conceptosValidos, fiscal);
 
