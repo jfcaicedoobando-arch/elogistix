@@ -9,13 +9,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { FileDown, Sheet, Loader2, Mail } from "lucide-react";
+import { FileDown, Sheet, Loader2 } from "lucide-react";
 import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatDate } from "@/lib/formatters";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { DialogEnviarEstadoCuenta } from "@/features/cobranza/components/DialogEnviarEstadoCuenta";
+import { ExportEmailButton } from "./ExportEmailButton";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 
 interface Props {
