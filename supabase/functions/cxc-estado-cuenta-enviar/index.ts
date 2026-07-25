@@ -1,0 +1,227 @@
+import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { z } from 'npm:zod@3.23.8';
+import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
+import { wrapEdgeHandler } from '../_shared/sentry.ts';
+import { authenticate } from '../_shared/auth.ts';
+
+const BodySchema = z.object({
+  cliente_id: z.string().uuid(),
+  periodo: z.string().max(100).optional().nullable(),
+  contacto_email: z.string().email().optional().nullable(),
+  mensaje: z.string().max(2000).optional().nullable(),
+  fecha_desde: z.string().optional().nullable(),
+  fecha_hasta: z.string().optional().nullable(),
+});
+
+interface FacturaCliente {
+  total: number | null;
+  saldo: number | null;
+  moneda: string | null;
+  fecha_vencimiento: string | null;
+  estado: string | null;
+}
+
+interface ClienteOrg {
+  id: string;
+  organization_id: string;
+  nombre: string | null;
+}
+
+function corsJson(body: unknown, status: number, req: Request) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...buildCors(req), 'Content-Type': 'application/json' },
+  });
+}
+
+function formatCurrency(value: number, moneda: string): string {
+  return `${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${moneda}`;
+}
+
+function diasEntre(isoVencimiento: string | null, isoHoy: string | null): number | null {
+  if (!isoVencimiento) return null;
+  const venc = new Date(isoVencimiento);
+  const hoy = isoHoy ? new Date(isoHoy) : new Date();
+  if (Number.isNaN(venc.getTime()) || Number.isNaN(hoy.getTime())) return null;
+  return Math.floor((hoy.getTime() - venc.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+async function loadCliente(
+  adminClient: SupabaseClient,
+  clienteId: string,
+): Promise<{ cliente: ClienteOrg | null; error: string | null }> {
+  const { data, error } = await adminClient
+    .from('clientes')
+    .select('id, organization_id, nombre')
+    .eq('id', clienteId)
+    .maybeSingle();
+  if (error) return { cliente: null, error: `Error al leer cliente: ${error.message}` };
+  return { cliente: data as ClienteOrg | null, error: null };
+}
+
+async function authorizeOrg(
+  adminClient: SupabaseClient,
+  userId: string,
+  organizationId: string,
+): Promise<boolean> {
+  const [member, admin] = await Promise.all([
+    adminClient.from('organization_members').select('id').eq('user_id', userId).eq('organization_id', organizationId).maybeSingle(),
+    adminClient.from('user_roles').select('id').eq('user_id', userId).in('role', ['admin', 'super_admin']).maybeSingle(),
+  ]);
+  return !!member.data || !!admin.data;
+}
+
+async function loadFacturasVivas(
+  adminClient: SupabaseClient,
+  clienteId: string,
+  desde: string | null | undefined,
+  hasta: string | null | undefined,
+): Promise<FacturaCliente[]> {
+  const estadosExcluidos = ['Borrador', 'Cancelada', 'Sustituida'];
+  let q = adminClient
+    .from('facturas')
+    .select('total, saldo, moneda, fecha_vencimiento, estado')
+    .eq('cliente_id', clienteId)
+    .not('estado', 'in', `(${estadosExcluidos.join(',')})`);
+  if (desde) q = q.gte('fecha_emision', desde);
+  if (hasta) q = q.lte('fecha_emision', hasta);
+  const { data, error } = await q;
+  if (error) throw new Error(`Error al leer facturas: ${error.message}`);
+  return (data ?? []) as FacturaCliente[];
+}
+
+function calcularTotales(facturas: FacturaCliente[], monedaDominante: string) {
+  const fMoneda = facturas.filter((f) => f.moneda === monedaDominante || (!f.moneda && monedaDominante === 'MXN'));
+  const total = fMoneda.reduce((acc, f) => acc + (f.total ?? 0), 0);
+  const saldo = fMoneda.reduce((acc, f) => acc + (f.saldo ?? 0), 0);
+  const hoy = new Date().toISOString();
+  const vencido = fMoneda.reduce((acc, f) => {
+    if (f.estado === 'Pagada' || f.estado === 'Parcialmente pagada') return acc;
+    const dias = diasEntre(f.fecha_vencimiento, hoy) ?? 0;
+    return dias > 0 ? acc + (f.saldo ?? 0) : acc;
+  }, 0);
+  return { total, saldo, vencido };
+}
+
+async function resolveDestinatario(
+  adminClient: SupabaseClient,
+  clienteId: string,
+  contactoEmail?: string | null,
+): Promise<string | null> {
+  if (contactoEmail) return contactoEmail;
+  const { data } = await adminClient
+    .from('contactos_cliente')
+    .select('email')
+    .eq('cliente_id', clienteId)
+    .not('email', 'is', null)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data?.email ?? null;
+}
+
+async function loadPerfil(adminClient: SupabaseClient, userId: string) {
+  const { data } = await adminClient.from('profiles').select('nombre, email, telefono').eq('id', userId).maybeSingle();
+  return data;
+}
+
+async function loadOrgName(adminClient: SupabaseClient, organizationId: string) {
+  const { data } = await adminClient.from('organizations').select('nombre').eq('id', organizationId).maybeSingle();
+  return data?.nombre ?? null;
+}
+
+async function sendEstadoCuenta(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  destinatario: string,
+  templateData: Record<string, unknown>,
+): Promise<void> {
+  const messageId = `estado-cuenta-${templateData.cliente}-${Date.now()}`;
+  const sendUrl = `${supabaseUrl}/functions/v1/send-transactional-email`;
+  const sendResp = await fetch(sendUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      templateName: 'estado-cuenta-cliente',
+      recipientEmail: destinatario,
+      messageId,
+      idempotencyKey: messageId,
+      templateData,
+    }),
+  });
+  const sendResult = await sendResp.json().catch(() => ({ error: 'No se pudo enviar el correo' }));
+  if (!sendResp.ok || !sendResult.success) {
+    throw new Error(`Error al enviar correo: ${sendResult.error ?? 'desconocido'}`);
+  }
+}
+
+Deno.serve(wrapEdgeHandler('cxc-estado-cuenta-enviar', async (req) => {
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+
+  try {
+    const { userId, adminClient } = await authenticate(req);
+
+    const body = await req.json().catch(() => ({}));
+    const parsed = BodySchema.safeParse(body);
+    if (!parsed.success) {
+      return corsJson({ error: 'Datos inválidos', details: parsed.error.flatten().fieldErrors }, 400, req);
+    }
+    const { cliente_id, periodo, contacto_email, mensaje, fecha_desde, fecha_hasta } = parsed.data;
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    const { cliente, error: clienteError } = await loadCliente(supabaseAdmin, cliente_id);
+    if (clienteError) throw new Error(`500:${clienteError}`);
+    if (!cliente) return corsJson({ error: 'Cliente no encontrado' }, 404, req);
+
+    const autorizado = await authorizeOrg(supabaseAdmin, userId, cliente.organization_id);
+    if (!autorizado) {
+      return corsJson({ error: 'No autorizado para esta organización' }, 403, req);
+    }
+
+    const facturas = await loadFacturasVivas(supabaseAdmin, cliente_id, fecha_desde, fecha_hasta);
+    const moneda = facturas.length > 0 ? facturas[0].moneda ?? 'MXN' : 'MXN';
+    const { total, saldo, vencido } = calcularTotales(facturas, moneda);
+
+    const destinatario = await resolveDestinatario(supabaseAdmin, cliente_id, contacto_email);
+    if (!destinatario) {
+      return corsJson({ error: 'No hay correo de contacto para enviar el estado de cuenta' }, 400, req);
+    }
+
+    const [perfil, orgName] = await Promise.all([
+      loadPerfil(supabaseAdmin, userId),
+      loadOrgName(supabaseAdmin, cliente.organization_id),
+    ]);
+
+    const publicSiteUrl = Deno.env.get('PUBLIC_SITE_URL') ?? 'https://librecarga.com';
+    const templateData = {
+      cliente: cliente.nombre ?? orgName ?? 'Cliente',
+      periodo: periodo ?? '',
+      totalFacturas: formatCurrency(total, moneda),
+      totalSaldo: formatCurrency(saldo, moneda),
+      totalVencido: formatCurrency(vencido, moneda),
+      moneda,
+      mensaje: mensaje ?? '',
+      enlacePortal: `${publicSiteUrl}/portal/estado-de-cuenta`,
+      ejecutivoNombre: perfil?.nombre ?? '',
+      ejecutivoEmail: perfil?.email ?? '',
+      ejecutivoTelefono: perfil?.telefono ?? '',
+    };
+
+    await sendEstadoCuenta(supabaseUrl, serviceRoleKey, destinatario, templateData);
+
+    return corsJson({ ok: true, enviado_a: destinatario }, 200, req);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.startsWith('401:')) return corsJson({ error: msg.slice(4) }, 401, req);
+    if (msg.startsWith('500:')) return corsJson({ error: msg.slice(4) }, 500, req);
+    console.error('cxc-estado-cuenta-enviar error', err);
+    return corsJson({ error: 'Error interno del servidor' }, 500, req);
+  }
+}));
