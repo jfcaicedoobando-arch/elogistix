@@ -43,12 +43,13 @@ function KpiBucket({ label, value, moneda, tone = "default" }: { label: string; 
   );
 }
 
-function exportarCsv(rows: readonly CxpAgingRow[]) {
+function exportarCsv(rows: readonly CxpAgingRow[], moneda: string) {
   if (!rows || rows.length === 0) return;
-  const headers = ["Proveedor", "Facturas", "Vigente", "1-30", "31-60", "61-90", ">90", "Total"];
+  const headers = ["Proveedor", "Moneda", "Facturas", "Vigente", "1-30", "31-60", "61-90", ">90", "Total"];
   const lines = rows.map((r) =>
     [
       `"${r.proveedor_nombre.replace(/"/g, '""')}"`,
+      r.moneda,
       r.num_facturas, r.vigente, r.d_1_30, r.d_31_60, r.d_61_90, r.mas_90, r.saldo_total,
     ].join(","),
   );
@@ -57,7 +58,7 @@ function exportarCsv(rows: readonly CxpAgingRow[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `aging-cxp-${todayLocalISO()}.csv`;
+  a.download = `aging-cxp-${moneda}-${todayLocalISO()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
