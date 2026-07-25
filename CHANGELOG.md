@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.316.1] - 2026-07-25
+- **fix(compras) · Aging CxP volvía a cargar.** La RPC `cxp_aging_proveedores` declaraba `moneda text` en la firma, pero desde QW3 el CTE devolvía la columna real (`pf.moneda`) cuyo tipo en la BD es el dominio `moneda`, no `text`. Postgres lanzaba `42804: Returned type moneda does not match expected type text in column 3`, la página `/compras` mostraba el toast rojo "No pudimos cargar la información" y ningún aging se listaba. Añadí un `::text` explícito en el CoALESCE del CTE `saldos`. Sin cambios de firma pública ni de cliente. Analogía: la función prometía entregar la moneda en una bolsa de "texto plano", pero al abrir la bolsa venía en su empaque original de fábrica — Postgres es estricto con el empaque aunque el contenido sea el mismo.
+
+
 ## [13.316.0] - 2026-07-25
 - **feat(compras/tesoreria · QW4–QW8) · Ola 0 Compras completa.** Cerré los 5 quick wins restantes del roadmap (QW1–QW3 ya venían de v13.315.7–13.315.9):
   - **QW4 · CSV en bandeja CxP + TC ×20 fuera.** Botón "Exportar CSV" en la bandeja principal de CxP (mismo patrón que `CxpAging`); reporte `/compras/reportes` deja de multiplicar por 20 hardcoded y consolida con `tipo_cambio_usd` de la factura o fallback al TC DOF (Banxico) que ya usa el diálogo de pago; si no hay TC confiable, muestra totales por moneda sin convertir. Meta-test tipo grep evita que vuelvan TCs literales al repo.
