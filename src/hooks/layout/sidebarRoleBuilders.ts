@@ -83,7 +83,7 @@ const buildContador: Builder = ({ sistemaItems }) => [
   // v13.141.14 — contador con acceso de viewer al módulo de embarques
   { label: "Operaciones", items: filterGestion(["/embarques"]) },
   { label: "Compras", items: filterCompras(COMPRAS_CONTADOR) },
-  { label: "Facturación", items: [...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]), ...SIDEBAR_ADMIN_ITEMS.filter((it) => it.url === "/configuracion")] },
+  { label: "Facturación", items: [...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones", "/cobranza/aging"]), ...SIDEBAR_ADMIN_ITEMS.filter((it) => it.url === "/configuracion")] },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
