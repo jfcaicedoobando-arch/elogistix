@@ -31,7 +31,7 @@ export default function Compras() {
   const { canEdit } = usePermissions();
   const { data: cxp = [], kpis } = useFacturasCxP();
   const { data: porCapturar = [] } = useCxpPorCapturar();
-  const { data: aging = [], totales: agingTotales } = useCxpAging();
+  const { rowsFiltradas: aging, totales: agingTotales, monedaActiva: agingMoneda } = useCxpAging();
   const { data: pendientesAprob = 0 } = useCxpPendientesAprobacion();
   const [openNueva, setOpenNueva] = useState(false);
 
