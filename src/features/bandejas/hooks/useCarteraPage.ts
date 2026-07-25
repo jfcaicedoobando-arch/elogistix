@@ -61,7 +61,7 @@ export function useCarteraPage(onRecordatorio?: (row: CarteraRow) => void) {
   const { saldosNativos, vencidasCount, vencidoNativo } = resumirCartera(scoped);
   const eqTotal = equivalenteMxn(saldosNativos, tcUsdMxn);
   const eqVencido = equivalenteMxn(vencidoNativo, tcUsdMxn);
-  const columns = useMemo(() => buildCarteraColumns(), []);
+  const columns = useMemo(() => buildCarteraColumns(onRecordatorio), [onRecordatorio]);
 
   return {
     data,
