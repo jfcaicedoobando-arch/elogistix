@@ -28,17 +28,21 @@ async function autoEnviarRepPorCorreo(pagoId: string): Promise<void> {
     .maybeSingle();
   if (factErr || !factura?.cliente_id) return;
 
-  const { data: contacto, error: cErr } = await supabase
+  const { data: contactos, error: cErr } = await supabase
     .from("contactos_cliente")
-    .select("email")
+    .select("email, tipo")
     .eq("cliente_id", factura.cliente_id)
-    .eq("es_principal", true)
     .not("email", "is", null)
-    .maybeSingle();
-  if (cErr || !contacto?.email) return;
+    .is("deleted_at", null);
+  if (cErr || !contactos || contactos.length === 0) return;
+  // Preferir contacto de facturación/administración; si no, tomar el primero con email.
+  const preferido = contactos.find((c) => c.tipo === "facturacion" || c.tipo === "administracion")
+    ?? contactos[0];
+  const email = preferido?.email;
+  if (!email) return;
 
   await supabase.functions.invoke("facturapi-enviar-email", {
-    body: { pago_id: pagoId, email: contacto.email },
+    body: { pago_id: pagoId, email },
   });
 }
 

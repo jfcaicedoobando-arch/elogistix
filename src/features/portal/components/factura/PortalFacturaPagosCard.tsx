@@ -42,7 +42,6 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
           <ul className="divide-y">
             {pagos.map((p) => {
               const pRep = p as typeof p & {
-                rep_uuid?: string | null;
                 rep_pdf_url?: string | null;
                 rep_xml_url?: string | null;
               };

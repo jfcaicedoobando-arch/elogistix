@@ -71,7 +71,7 @@ export function ExportActions({ clienteIds, rows }: Props) {
           expediente: r.expediente ?? "",
           fecha_emision: r.fecha_emision ? formatDate(r.fecha_emision) : "",
           fecha_vencimiento: r.fecha_vencimiento ? formatDate(r.fecha_vencimiento) : "",
-          estado: r.estado ?? "",
+          estado: r.estado_factura ?? "",
           estatus_cobranza: r.estatus_cobranza ?? "",
           moneda: r.moneda ?? "",
           total: r.total ?? 0,
