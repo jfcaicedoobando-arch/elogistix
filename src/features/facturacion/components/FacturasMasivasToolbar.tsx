@@ -76,9 +76,42 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
   };
 
   const reenviarEmail = async () => {
-    // Pendiente: se habilita junto con el template `factura-reenvio` y el
-    // resolutor de destinatarios (contacto principal del cliente).
-    toast.info(`Reenvío masivo en preparación — disponible con el template factura-reenvio (${ids.length} facturas pendientes)`);
+    // v13.312.27 (QW8 Tanda 2): flujo real. Iteramos IDs seleccionados y
+    // llamamos `facturapi-enviar-email` uno a uno (el edge resuelve el email
+    // del contacto principal del cliente cuando no se pasa uno explícito).
+    // No usamos plantilla `factura-reenvio` para evitar sobreescribir
+    // adjuntos PDF/XML — FacturApi ya los adjunta desde su lado.
+    if (!confirm(`Se reenviará por correo ${ids.length} factura(s). ¿Continuar?`)) return;
+    setBusy("email");
+    let ok = 0;
+    const errores: string[] = [];
+    try {
+      const { enviarCfdiFactura } = await import("@/features/facturacion/services/enviarCfdiEmail");
+      for (const id of ids) {
+        try {
+          await enviarCfdiFactura(id);
+          ok++;
+        } catch (e) {
+          errores.push(`${id.slice(0, 8)}…: ${(e as Error).message}`);
+        }
+      }
+      if (ok > 0) qc.invalidateQueries({ queryKey: facturasKeys.all });
+      if (errores.length === 0) {
+        toast.success(`${ok} factura(s) reenviadas`);
+      } else if (ok === 0) {
+        notifyError(toast, {
+          title: `No se pudo reenviar ninguna factura (${errores.length} error(es))`,
+          description: errores.slice(0, 3).join(" · "),
+          method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_REENVIAR",
+        });
+      } else {
+        toast.warning(`${ok} enviadas · ${errores.length} con error`, {
+          description: errores.slice(0, 3).join(" · "),
+        });
+      }
+    } finally {
+      setBusy(null);
+    }
   };
 
   const marcarEnviada = async () => {

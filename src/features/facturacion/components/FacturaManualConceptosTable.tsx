@@ -17,7 +17,7 @@ import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosF
 
 interface Props {
   conceptos: ConceptoManualInput[];
-  moneda: "MXN" | "USD";
+  moneda: "MXN" | "USD" | "EUR";
   tasaIva: number;
   onChange: (next: ConceptoManualInput[]) => void;
 }

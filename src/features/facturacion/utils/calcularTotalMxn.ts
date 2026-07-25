@@ -6,7 +6,7 @@ import type { ConceptoManualInput } from "@/features/facturacion/services/factur
  */
 export function calcularTotalMxn(
   conceptos: ConceptoManualInput[],
-  moneda: "MXN" | "USD",
+  moneda: "MXN" | "USD" | "EUR",
   tipoCambio: number,
   tasaIva: number,
 ): number {

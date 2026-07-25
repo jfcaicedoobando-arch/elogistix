@@ -17,6 +17,7 @@ import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesF
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import { FacturaManualDatosFiscales, type DatosFiscalesValue } from "./FacturaManualDatosFiscales";
+import { FaltantesHint } from "./FaltantesHint";
 import { FacturaManualConceptosTable } from "./FacturaManualConceptosTable";
 import {
   useValidarLimiteCredito,
@@ -73,8 +74,10 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
   const conceptosValidos = conceptos.every(
     (c) => c.descripcion.trim().length > 0 && Number(c.cantidad) > 0 && Number(c.precio_unitario) >= 0,
   );
-  const puedeGuardar = !!cliente && conceptosValidos && fiscal.fechaEmision && fiscal.tipoCambio > 0;
+  const puedeGuardar = !!cliente && conceptosValidos && !!fiscal.fechaEmision && fiscal.tipoCambio > 0;
   const puedeTimbrar = puedeGuardar && !clienteIncompleto;
+
+  const faltantesTimbrar = [!cliente && "cliente", !conceptosValidos && "conceptos válidos", !fiscal.fechaEmision && "fecha de emisión", fiscal.tipoCambio <= 0 && "tipo de cambio", clienteIncompleto && "datos fiscales del cliente (RFC · CP · régimen)"].filter((x): x is string => !!x);
 
   const reset = () => {
     setClienteId("");
@@ -132,15 +135,14 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
   };
 
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
-      <Button variant="secondary" onClick={() => handleSubmit(false)} disabled={!puedeGuardar || crear.isPending}>
-        Guardar borrador
-      </Button>
-      <Button onClick={() => handleSubmit(true)} disabled={!puedeTimbrar || crear.isPending}>
-        {crear.isPending ? "Procesando…" : "Crear y timbrar"}
-      </Button>
-    </>
+    <div className="flex w-full flex-wrap items-center gap-2">
+      {!puedeTimbrar && <FaltantesHint items={faltantesTimbrar} className="mr-auto" />}
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
+        <Button variant="secondary" onClick={() => handleSubmit(false)} disabled={!puedeGuardar || crear.isPending}>Guardar borrador</Button>
+        <Button onClick={() => handleSubmit(true)} disabled={!puedeTimbrar || crear.isPending}>{crear.isPending ? "Procesando…" : "Crear y timbrar"}</Button>
+      </div>
+    </div>
   );
 
   return (

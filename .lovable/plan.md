@@ -1,90 +1,94 @@
-# Plan · Tanda 1 Quick Wins Facturación (QW1–QW4)
+# Plan — Tanda 2 (QW5-QW8) del módulo Facturación
 
-Aviso: `.lovable/` está en `.gitignore`, así que este plan no se versiona. ¿Quieres que quite esa entrada para que el plan quede persistido en el repo? Puedo hacerlo al inicio del build si lo confirmas.
-
-Objetivo: cerrar 4 gaps visibles sin tocar lógica financiera. Cada QW es un commit independiente detrás del mismo bump de versión.
+Continuación de Tanda 1 (v13.312.26 ya en producción). Este PR ataca la **fricción diaria** con 4 quick wins independientes.
 
 ---
 
-## QW1 · Conectar PDF y CSV de Estado de Cuenta
+## QW5 · Botón "TC DOF Banxico" en Nueva Factura (+ EUR)
 
-**Problema:** `ExportActions.tsx` tiene los dos botones (`PDF`, `Excel`) `disabled` con TODO. El generador `src/generators/estadoCuentaPdf.ts` ya existe y funciona (tiene tests).
+**Objetivo:** que al capturar una factura manual en USD o EUR, un botón traiga automáticamente el tipo de cambio publicado por Banxico (DOF), como ya existe en el detalle.
 
 **Cambios:**
 
-- `src/features/facturacion/estadoCuenta/components/ExportActions.tsx`: recibir por props `clienteIds`, `desde`, `hasta`, `rows`, `kpis`. Habilitar botones cuando `clienteIds.length===1` (PDF firma un cliente) y siempre para CSV.
-- Botón PDF → llama a `generarEstadoCuentaPdf` (leer su firma y armar el header cliente desde `useEstadoCuenta` o un fetch mínimo).
-- Botón Excel → renombrar a **CSV** (rótulo + ícono `FileSpreadsheet`) y usar el helper puro existente `src/generators/exportCsv.ts`. Nombre: `EstadoCuenta_{Cliente}_{YYYYMMDD}.csv`.
-- `EstadoCuentaModule.tsx`: pasar props a `<ExportActions/>`.
-- Feedback con `notifySuccess`/`notifyError` (los helpers unificados).
+- `DialogNuevaFactura` (y su sección de moneda): añadir botón "Traer TC DOF" junto al input `tipo_cambio`, visible sólo cuando `moneda ∈ {USD, EUR}`.
+- Ampliar `useBanxicoTipoCambio` para soportar `EUR` (hoy sólo `USD`) usando la misma serie SF57923 pattern o serie EUR/MXN de Banxico.
+- Feedback: `notifyInfo`/`notifySuccess` con la fecha del TC.
 
-**Tests:** unit test que renderiza `ExportActions` habilitado/deshabilitado y verifica que se invoquen los generadores (mock).
+**Analogía:** hoy el usuario copia el TC de otra pestaña; con esto es un botón, como el que ya usa cuando la factura ya existe.
 
 ---
 
-## QW2 · REP descargable en portal + auto-envío al timbrar
+## QW6 · Resumen de "qué falta" junto al botón deshabilitado
 
-**Problema:** `pagos_factura.rep_pdf_url / rep_xml_url` se pueblan al timbrar el REP, pero el portal del cliente no los muestra y no se dispara email automático (aunque la edge `facturapi-enviar-email` ya acepta `pago_id`).
+**Objetivo:** cuando el submit de un diálogo del módulo está `disabled`, mostrar en línea qué campos faltan (sin migrar a RHF+Zod — eso es Ola 1).
+
+**Alcance (los 3 diálogos de más fricción):**
+
+- `DialogNuevaFactura`
+- `DialogTimbrar`
+- `DialogRegistrarPago`
+
+**Cómo:** helper `useFaltantes(campos)` que devuelva `string[]` de labels vacíos y un componente `<FaltantesHint items={...} />` que se renderiza sólo cuando el botón está `disabled`.
+
+---
+
+## QW7 · Menú ⋮ por fila con acciones no destructivas
+
+**Objetivo:** reducir 2 navegaciones por documento a 0 en bandejas de alto volumen.
+
+**Alcance:**
+
+- Tablas: **Emitidas**, **Por Timbrar**, **Por Enviar**, **Por Cobrar**.
+- Acciones en el menú (según estado de la fila):
+  - Timbrar (fast-path, sólo borradores válidos)
+  - Registrar pago (sólo emitidas con saldo)
+  - Enviar por email
+  - Descargar PDF / XML
+- **NO se incluyen** Cancelar ni Eliminar (siguen únicamente en el detalle) — se documenta el nuevo criterio en `CHANGELOG` porque revierte parcialmente v13.172.12.
+
+**Reuso:** los diálogos (`DialogTimbrar`, `DialogRegistrarPago`, `EnviarDocumentoDialog`) ya son componentes independientes; sólo se abren desde el nuevo menú.
+
+**Guardas UX:** `e.stopPropagation()` en el trigger del menú (regla Core de la memoria).
+
+---
+
+## QW8 · Envío masivo de email + acción "Enviar" en bandeja PorEnviar
+
+**Objetivo:** terminar el stub actual de reenvío masivo y dar botón "Enviar" a la bandeja PorEnviar (hoy no envía nada).
 
 **Cambios:**
 
-- `src/features/portal/services/queries.ts` (query de pagos): agregar `rep_pdf_url, rep_xml_url, rep_uuid, id` al select whitelist (respetar `portal-columns-whitelist.test.ts` — actualizar si falla).
-- `PortalFacturaPagosCard.tsx`: cuando el pago tenga REP timbrado, mostrar dos botones **REP PDF / REP XML** que abran signed URL vía `openFacturaInNewTab` (o análogo si el bucket es distinto — verificar en build). Si el REP aún no está timbrado, sin botón.
-- `src/features/facturacion/hooks/useTimbrarRep.ts`: tras `onSuccess`, llamar `supabase.functions.invoke('facturapi-enviar-email', { body: { pago_id } })` de forma **fire-and-forget** con `notifyInfo` de resultado; los errores caen a `notifyWarning` sin bloquear el toast de éxito. Documentar que el envío es best-effort (el usuario puede reenviar manual).
+- Reemplazar el `toast.info("en preparación")` por el flujo real:
+  1. Selección múltiple en la tabla.
+  2. `AlertDialog` de confirmación con conteo y preview del destinatario principal.
+  3. Encolar N envíos vía `process-email-queue` usando la plantilla `factura-reenvio` (ya existe).
+  4. Reporte final: toast con `X enviadas / Y con error` y detalle en `bitacora_actividad`.
+- En bandeja **Por Enviar**: botón "Enviar" por fila y toolbar "Enviar seleccionadas" que reutilizan el mismo flujo.
 
-**Tests:** actualizar `queries.test.ts` para las nuevas columnas + un test conductual del hook que verifica que se llame `functions.invoke` con `{ pago_id }`.
-
----
-
-## QW3 · Badge "Enviada" en Emitidas
-
-**Problema:** ya escribimos `enviada_cliente_at` al enviar, pero la tabla de Emitidas no lo distingue.
-
-**Cambios:**
-
-- `src/features/facturacion/routes/facturacionColumns.tsx`: en la columna `estado` (o adyacente), agregar un pequeño chip secundario **"Enviada"** (variant `outline`, ícono `Send`) cuando `enviada_cliente_at` no sea `null` y el estado sea `Vigente/Cobrada/Vencida`. Tooltip: `Enviada el {formatFechaHora}`.
-- Añadir a `Factura` type/select si falta (verificar `useFacturas` select).
-- Filtro opcional en `FacturasFilters` (checkbox "Sólo no enviadas") — sólo si el archivo de filtros lo permite en <1 diff.
-
-**Tests:** snapshot/unit de la columna con dos casos (con/sin fecha).
+**Sin automatización** (dunning automático es Ola 1 / QW10).
 
 ---
 
-## QW4 · Columna Archivos visible desde ≥lg
+## Detalles técnicos
 
-**Problema:** `facturacionColumns.tsx:96` esconde la columna `archivos` con `hidden xl:table-cell`.
+- **Archivos previstos** (a confirmar al implementar):
+  - `src/features/facturacion/components/dialogs/DialogNuevaFactura/*`
+  - `src/features/facturacion/hooks/useBanxicoTipoCambio.ts`
+  - `src/features/facturacion/components/FaltantesHint.tsx` (nuevo)
+  - `src/features/facturacion/components/tables/*RowActions.tsx` (nuevo, compartido)
+  - `src/features/facturacion/hooks/useEnviarFacturasMasivo.ts` (nuevo)
+- **DB / edges:** no requiere migraciones nuevas — todas las tablas, RPCs (`facturapi-enviar-email`, `process-email-queue`) y campos ya existen.
+- **Tests:**
+  - Unit: `useBanxicoTipoCambio` (rama EUR), helper de faltantes, hook de envío masivo (mock cola).
+  - Behavioral: menú ⋮ dispara el diálogo correcto; el submit masivo confirma y reporta.
+- **Changelog + `APP_VERSION`:** bump a `13.313.0` (nueva mini-tanda visible).
+- **A11y:** los nuevos triggers de menú/botón siguen el patrón `FormDialogShell` + `aria-label` estándar.
 
-**Cambios:**
+## Fuera de alcance (siguiente Tanda)
 
-- Cambiar `hidden xl:table-cell` → `hidden lg:table-cell` en la meta de la columna `archivos` (dos ocurrencias: `className` y `headerClassName`).
-- Verificar densidad: si en `lg` (1024px) la fila se rompe, mover expediente/proforma a `hidden xl:` (ya lo están) y dejar archivos en `lg`. Confirmar visualmente con Playwright a 1280×1800.
+- QW9 Aging A/R
+- QW10 Recordatorios de cobranza
+- QW11 Fixes a11y fiscales
+- QW12 Envío del estado de cuenta por email
 
----
-
-## Versionado, changelog y verificación
-
-- Bump `APP_VERSION` a **13.312.26** en `src/constants/appVersion.ts`.
-- Entrada en `CHANGELOG.md` bajo `## [13.312.26] - 2026-07-25` con 4 bullets breves (uno por QW) referenciando el doc `quickwins-facturacion-2026-07-24.md`.
-- CI: `bun run lint -- --max-warnings 0` + tests unitarios afectados. Playwright: capturar `/facturacion` a 1080p para confirmar la columna Archivos en laptop.
-
----
-
-## Detalles técnicos (no-user-facing)
-
-- `ExportActions` pasa a `"use client"`-friendly (ya lo es, sólo hooks); mantener `TooltipProvider` para el caso deshabilitado (PDF requiere 1 solo cliente).
-- La firma exacta de `generarEstadoCuentaPdf` la resuelvo al abrir el archivo en build; probablemente pide `{cliente, facturas, rangoFechas}` y lo alimento con `useEstadoCuenta` + un fetch adicional de cabecera de cliente (RFC/dirección) si el hook no lo trae.
-- Auto-envío REP: usar `pago_id` (no `factura_id`) para que la edge tome la ruta REP y adjunte PDF+XML del complemento.
-- `enviada_cliente_at` ya está en `facturas`; sólo hay que asegurarse de seleccionarlo en el listado. No requiere migración.
-
----
-
-## Fuera de alcance
-
-- Wizard/RHF migrations (Ola 1 estructural).
-- QW5–QW12 (Tandas 2 y 3).
-- Nuevos endpoints / edge functions.
-- Cambios en el layout general del módulo.
-
-¿Aprobado? Al pasar a build ejecuto los 4 QW en un solo turno, con tests y bump de versión.
-
-Quita el git ignore 
+No hacemos el qw7

@@ -1,18 +1,29 @@
 /**
  * Grid de datos fiscales para `DialogNuevaFacturaManual`.
  * Extraído para mantener el dialog principal < 200 LOC.
+ *
+ * v13.312.27 (QW5 Tanda 2):
+ * - Se agrega EUR como moneda soportada (multi-moneda manual).
+ * - Botón "Traer TC DOF" al lado del input `tipo_cambio`, sólo visible cuando
+ *   `moneda ∈ {USD, EUR}`. Reutiliza `useBanxicoTipoCambio`, que ya conoce
+ *   ambas series (SF43718 para USD, SF46410 para EUR).
  */
 import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { RefreshCcw, Loader2 } from "lucide-react";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { useBanxicoTipoCambio } from "@/features/facturacion/hooks/useBanxicoTipoCambio";
+
+export type MonedaManual = "MXN" | "USD" | "EUR";
 
 export interface DatosFiscalesValue {
   serie: string;
   fechaEmision: string;
   diasCredito: number;
-  moneda: "MXN" | "USD";
+  moneda: MonedaManual;
   usoCfdi: string;
   formaPago: string;
   metodoPago: string;
@@ -28,6 +39,10 @@ interface Props {
 }
 
 export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, diasReadonlyReason }: Props) {
+  const traerTc = useBanxicoTipoCambio(value.moneda, (tc) => {
+    if (tc && tc > 0) onChange({ tipoCambio: tc });
+  });
+  const requiereTc = value.moneda !== "MXN";
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div>
@@ -57,11 +72,12 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
       </div>
       <div>
         <Label>Moneda</Label>
-        <Select value={value.moneda} onValueChange={(v) => onChange({ moneda: v as "MXN" | "USD" })}>
+        <Select value={value.moneda} onValueChange={(v) => onChange({ moneda: v as MonedaManual })}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="MXN">MXN</SelectItem>
             <SelectItem value="USD">USD</SelectItem>
+            <SelectItem value="EUR">EUR</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -95,12 +111,29 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
       </div>
       <div>
         <Label>Tipo de cambio</Label>
-        <Input
-          type="number" step="0.0001" min={0.0001}
-          value={value.tipoCambio}
-          onChange={(e) => onChange({ tipoCambio: Number(e.target.value) || 1 })}
-          disabled={value.moneda === "MXN"}
-        />
+        <div className="flex gap-1">
+          <Input
+            type="number" step="0.0001" min={0.0001}
+            value={value.tipoCambio}
+            onChange={(e) => onChange({ tipoCambio: Number(e.target.value) || 1 })}
+            disabled={!requiereTc}
+          />
+          {requiereTc && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 px-2"
+              onClick={() => traerTc.mutate()}
+              disabled={traerTc.isPending}
+              title={`Traer TC DOF Banxico (${value.moneda}/MXN)`}
+            >
+              {traerTc.isPending
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <RefreshCcw className="h-4 w-4" />}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
