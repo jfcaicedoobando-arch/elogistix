@@ -11,7 +11,6 @@ import { Inbox, CalendarCheck } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ProgramarPagoDialog } from "./_sections/ProgramarPagoDialog";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
@@ -24,16 +23,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { useProgramarPagoLote } from "@/features/cxp/hooks/useProgramarPagoLote";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { todayLocalISO } from "@/lib/date/today";
 
 
