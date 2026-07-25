@@ -108,13 +108,18 @@ export function useFacturaManualForm(open: boolean) {
 
   const buildInput = () => {
     if (!cliente || !organizationId) return null;
+    // Serie y fecha de emisión se resuelven aquí (nunca los edita el usuario):
+    // — serie deriva de la moneda para no contaminar folios fiscales.
+    // — fecha = hoy local MX en el momento del submit (SAT: timbrar dentro de 72 h).
+    const serie = serieForMoneda(fiscal.moneda);
+    const fechaEmision = todayLocalISO();
     return {
       input: {
         organizationId, clienteId: cliente.id, clienteNombre: cliente.nombre,
         rfcCliente: cliente.rfc ?? "",
-        serie: fiscal.serie, usoCfdi: fiscal.usoCfdi,
+        serie, usoCfdi: fiscal.usoCfdi,
         formaPago: fiscal.formaPago, metodoPago: fiscal.metodoPago,
-        diasCredito: fiscal.diasCredito, fechaEmision: fiscal.fechaEmision,
+        diasCredito: fiscal.diasCredito, fechaEmision,
         moneda: fiscal.moneda, tipoCambio: fiscal.tipoCambio,
         notas, conceptos, tasaIva,
       },
