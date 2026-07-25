@@ -27,7 +27,6 @@ interface Props {
 
 export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Props) {
   const [busy, setBusy] = useState<"pdf" | "csv" | null>(null);
-  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const soloUnCliente = clienteIds.length === 1;
 
   const onPdf = async () => {
