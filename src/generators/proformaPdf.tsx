@@ -6,8 +6,7 @@
  */
 import type { Tables } from "@/integrations/supabase/types";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
-import { ProformaDocument } from "@/pdf/documents/ProformaDocument";
-import { ProformaConsolidadaDocument } from "@/pdf/documents/ProformaConsolidadaDocument";
+// P12: los Documents se importan dinámicamente dentro de la función.
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 import { slugifyOrg } from "@/lib/filenames";
@@ -35,6 +34,7 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
     params.conceptosConsolidados &&
     params.conceptosConsolidados.length > 0
   ) {
+    const { ProformaConsolidadaDocument } = await import("@/pdf/documents/ProformaConsolidadaDocument");
     await descargarPdf(
       <ProformaConsolidadaDocument
         proforma={proforma}
@@ -47,6 +47,7 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
     );
     return;
   }
+  const { ProformaDocument } = await import("@/pdf/documents/ProformaDocument");
   await descargarPdf(
     <ProformaDocument
       proforma={proforma}

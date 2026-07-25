@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.317.5] - 2026-07-25
+- **perf · Cierre de Ola 2 (P12 completo, P13, P17 higiene).**
+  - **P12 · Últimos Documents `@react-pdf` fuera del bundle inicial.** `ProfitEstadoResultados`, `Tesoreria` y `TabVsReal` ya cargaban su Document dinámicamente; ahora también `Cxp` (`ReporteCarteraDocument`) y los tres generadores thin `cotizacionPdf`, `proformaPdf` y `rentabilidadPdf`. En `Cxp` esto va acompañado de P18: `useCobranza({})` sale del cuerpo del componente (ya no se pide en cada montaje del módulo) y ahora la cartera CxC se resuelve on-demand con `queryClient.fetchQuery` usando la misma `queryKey` que ya cachea el hook, así que si el usuario nunca descarga el reporte no se paga el fetch ni el bundle del renderer. Analogía: antes cada vez que abrías CxP se calentaba el horno "por si acaso"; ahora solo se calienta cuando de verdad vas a hornear.
+  - **P13 · Dedupe del trigger `recalcular_estado_factura`.** El trigger llamaba a `saldo_factura()` (que ya escanea `pagos_factura` + `factura_notas_credito`) y después repetía por su cuenta `SUM(monto_aplicado_factura)` para saber cuánto se había pagado. Ahora suma pagos y NC una sola vez dentro del trigger y deriva el saldo localmente (`total - v_pagado - v_ncs`). Mismo resultado observable, misma seguridad (`SECURITY DEFINER`, mismo `search_path`, mismos permisos), pero cada evento de pago/NC hace la mitad de escaneos.
+  - **P17 · Higiene: `experimentalMinChunkSize` en Vite.** Se activa la opción de Rollup para consolidar chunks minúsculos (<10 kB) automáticamente. No se reintroduce `manualChunks` (sigue prohibido por los circulares de recharts/@react-pdf/sentry); solo se fusionan hojas pequeñas para reducir la cascada de requests HTTP en rutas con muchos micro-módulos.
+
 ## [13.317.4] - 2026-07-25
 - **perf · Ola 2 batch inicial (P11, P12, P16).**
   - **P11 · `ResponsiveDataTable` monta una sola rama por viewport.** Antes renderizaba las dos ramas (mobile lista + desktop tabla) y las ocultaba con `hidden sm:block` / `sm:hidden`, así que en móvil se pagaba el costo de montar la `DataTable` completa aunque estuviera invisible. Ahora consulta `useIsMobile()` (breakpoint 767 px) y devuelve exactamente una: en desktop sólo `DataTable`, en móvil sólo el listado card. Analogía: antes cocinábamos dos platillos y tirábamos el que no ibas a comer; ahora sólo cocinamos el tuyo.

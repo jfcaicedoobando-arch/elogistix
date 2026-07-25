@@ -15,7 +15,7 @@ import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensu
 import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
-import { ReportePresupuestoDocument } from "@/pdf/documents/ReportePresupuestoDocument";
+// P12: ReportePresupuestoDocument se carga dinámicamente en el handler.
 import { withOrgPrefix } from "@/lib/filenames";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
@@ -78,6 +78,7 @@ export function TabVsReal() {
     if (!data || generandoPdf) return;
     setGenerandoPdf(true);
     try {
+      const { ReportePresupuestoDocument } = await import("@/pdf/documents/ReportePresupuestoDocument");
       await descargarPdf(
         <ReportePresupuestoDocument resumen={data} />,
         await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),

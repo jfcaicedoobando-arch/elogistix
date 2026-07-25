@@ -3,6 +3,7 @@ import { Plus, FileText, Inbox, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/shared/DataTable";
 import { ColumnVisibilityMenu } from "@/components/shared/ColumnVisibilityMenu";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -25,9 +26,11 @@ import { CxpKpiCards } from "@/features/cxp/components/CxpKpiCards";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CXP_COL_DEFAULTS, CXP_COL_OPTIONS } from "@/features/cxp/routes/_config/cxpColumnConfig";
 
-import { useCobranza } from "@/features/facturacion/hooks";
+// P18: `useCobranza({})` sale del cuerpo — se resuelve on-demand con queryClient.fetchQuery.
+import { fetchCobranza } from "@/features/facturacion/services";
+import { queryKeys } from "@/lib/query";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
-import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
+// P12: ReporteCarteraDocument se carga dinámicamente en el handler.
 import type { FacturaCxP } from "@/features/cxp/services";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { withOrgPrefix } from "@/lib/filenames";
@@ -64,15 +67,24 @@ function exportarCxpCsv(rows: readonly FacturaCxP[]) {
 export default function Cxp() {
   const { canEdit } = usePermissions();
   const f = useCxpPageState();
+  const queryClient = useQueryClient();
 
   const { data = [], isLoading, isError, refetch, kpis } = useFacturasCxP(f.queryArgs);
-  const { data: cxc = [] } = useCobranza({});
   const eliminar = useEliminarFacturaProveedor();
 
   useCxpDeepLinks({ data, isLoading, onOpenDetalle: f.setDetalle, onSetAprobacion: f.setAprobacion });
 
   const handlePdf = async () => {
     const fecha = todayLocalISO();
+    // P18: Se pide la cartera CxC solo al presionar el botón (fetchQuery cachea con la misma queryKey).
+    const cobranzaKey = queryKeys.facturas.cobranza({});
+    const cxc = await queryClient.fetchQuery({
+      queryKey: cobranzaKey,
+      queryFn: () => fetchCobranza({}),
+      staleTime: 30_000,
+    });
+    // P12: import dinámico del Document — solo entra al bundle si el usuario descarga.
+    const { ReporteCarteraDocument } = await import("@/pdf/documents/ReporteCarteraDocument");
     await descargarPdf(
       <ReporteCarteraDocument fechaCorte={fecha} cxc={cxc} cxp={data} />,
       await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),

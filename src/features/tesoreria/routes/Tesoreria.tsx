@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useResumenTesoreria } from "@/features/tesoreria/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
-import { ReporteTesoreriaDocument } from "@/pdf/documents/ReporteTesoreriaDocument";
+// P12: ReporteTesoreriaDocument se carga dinámicamente en el handler.
 import { PageContainer } from "@/components/shared/PageContainer";
 import { withOrgPrefix } from "@/lib/filenames";
 import { ROUTES } from "@/constants/routes";
@@ -31,6 +31,7 @@ export default function Tesoreria() {
   const handlePdf = async () => {
     if (!data) return;
     const fecha = todayLocalISO();
+    const { ReporteTesoreriaDocument } = await import("@/pdf/documents/ReporteTesoreriaDocument");
     await descargarPdf(
       <ReporteTesoreriaDocument
         fechaCorte={fecha}
