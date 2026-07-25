@@ -54,12 +54,20 @@ describe('useLayout Hooks', () => {
   it('returns restricted sections for vendedor', () => {
     (useAuth as any).mockReturnValue({ role: 'vendedor', effectiveRole: 'vendedor' });
     const { result } = renderHook(() => useAppSidebarSections());
-    
+
     const labels = result.current.map(s => s.label);
-    expect(labels).toContain('CRM');
-    expect(labels).toContain('Directorio');
+    // v13.318.0 — Sidebar Etapa 2: CRM se integra en "Operación";
+    // Clientes vive dentro de "Ventas (CxC)".
+    expect(labels).toContain('Operación');
+    expect(labels).toContain('Ventas (CxC)');
     expect(labels).toContain('Sistema');
     expect(labels).not.toContain('Administración');
     expect(labels).not.toContain('Super Admin');
+    // El item CRM sigue existiendo, ahora dentro de Operación.
+    const operacion = result.current.find(s => s.label === 'Operación');
+    expect(operacion?.items.some(it => it.url === '/crm')).toBe(true);
+    // Clientes se movió de Directorio a Ventas.
+    const ventas = result.current.find(s => s.label === 'Ventas (CxC)');
+    expect(ventas?.items.some(it => it.url === '/clientes')).toBe(true);
   });
 });
