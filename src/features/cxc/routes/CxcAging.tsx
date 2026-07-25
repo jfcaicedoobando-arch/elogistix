@@ -27,7 +27,7 @@ import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
 
 function KpiBucket({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "warn" | "danger" }) {
   const toneCls =
-    tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : "text-foreground";
+    tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning-foreground" : "text-foreground";
   return (
     <Card>
       <CardContent className="p-4">
