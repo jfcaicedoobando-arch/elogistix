@@ -1,8 +1,12 @@
 /**
  * Cuerpo de pasos del wizard de cotización — extraído de CotizacionWizardLayout.tsx
  * para cumplir Power of 10 (≤200 líneas).
+ *
+ * P16 (perf 2026-07-25): reemplazados los 8 `form.watch()` globales por
+ * `useWatch` por campo para evitar re-renders del wizard completo al teclear.
  */
 import { Info } from "lucide-react";
+import { useWatch } from "react-hook-form";
 import SeccionConceptosVentaCotizacion from "@/features/cotizacion/components/SeccionConceptosVentaCotizacion";
 import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
 import PasoResumenCotizacion from "@/features/cotizacion/components/PasoResumenCotizacion";
@@ -22,6 +26,16 @@ interface Props {
 
 export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag, irACargarCostos }: Props) {
   const { form } = w;
+  // Suscripciones puntuales: solo re-renderea el resumen cuando cambia ese campo.
+  const control = form.control;
+  const esProspecto = useWatch({ control, name: "esProspecto" });
+  const prospectoEmpresa = useWatch({ control, name: "prospectoEmpresa" });
+  const origen = useWatch({ control, name: "origen" });
+  const destino = useWatch({ control, name: "destino" });
+  const numContenedores = useWatch({ control, name: "numContenedores" });
+  const modo = useWatch({ control, name: "modo" });
+  const incoterm = useWatch({ control, name: "incoterm" });
+  const tipo = useWatch({ control, name: "tipo" });
 
   if (w.currentStep === 1) {
     return (
