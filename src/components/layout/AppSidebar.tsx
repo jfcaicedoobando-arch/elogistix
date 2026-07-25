@@ -19,6 +19,7 @@ import { OrgBadge } from "@/components/layout/OrgBadge";
 import { SidebarGroupBlock } from "@/components/layout/SidebarGroupBlock";
 import { SidebarUserMenu } from "@/components/layout/SidebarUserMenu";
 import { useAppSidebarSections } from "@/hooks/layout";
+import { useSidebarCollapse } from "@/hooks/layout/useSidebarCollapse";
 
 function computeUserInitials(email: string | undefined): string {
   return (email ?? "?")
@@ -44,6 +45,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
   
   const { theme, toggleTheme } = useTheme();
   const sections = useAppSidebarSections();
+  const { isCollapsed: isSectionCollapsed, toggle: toggleSection } = useSidebarCollapse();
 
   const userInitials = computeUserInitials(user?.email ?? undefined);
   const roleLabel = computeRoleLabel(effectiveRole);
@@ -72,6 +74,9 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
             items={section.items}
             collapsed={collapsed}
             pathname={pathname}
+            role={effectiveRole}
+            isSectionCollapsed={isSectionCollapsed(section.label)}
+            onToggleSection={toggleSection}
           />
         ))}
       </SidebarContent>
