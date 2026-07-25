@@ -1,56 +1,69 @@
-# Fix: envío de CFDI a destinatario equivocado desde "Por enviar"
+# Rediseño modal "Nueva factura manual"
 
-## Qué pasó (analogía)
-Hoy el botón **Enviar** de la tabla "Por enviar" funciona como un sobre pre-dirigido que se manda solo al presionar. La dirección la pone la edge function `facturapi-enviar-email`, que toma **el contacto más antiguo del cliente que tenga email** (`contactos_cliente` ordenado por `created_at` ASC). Si el contacto más viejo es "logística" u "operaciones" y no "facturación/pagos", la factura sale al buzón equivocado — y el usuario nunca vio a dónde iba.
+Reorganizar el modal en 4 secciones-tarjeta apiladas + un panel de resumen en navy junto a las notas. Sin cambios de lógica, sólo composición visual.
 
-Diagnóstico **no confirmado con datos de la factura específica** (no me diste el folio); lo que sí está confirmado leyendo el código es que:
-- `BandejaPorEnviar.tsx` dispara `enviarCfdiFactura(id)` sin pedir confirmación ni mostrar el email destino.
-- `resolveEmail()` en la edge function usa `order created_at asc limit 1` sobre `contactos_cliente`, sin distinguir tipo de contacto.
-- `contactos_cliente.tipo` existe pero hoy no se usa para elegir destinatario.
+## Analogía
 
-## Objetivo
-Que sea **imposible** mandar un CFDI a la persona equivocada sin darse cuenta desde esta bandeja, y mejorar la heurística de "a quién le corresponde".
+Hoy el modal es una hoja apretada con 12 casillas en una sola cuadrícula. Después será una **carpeta con 4 pestañas apiladas**: Cliente, Datos fiscales, Conceptos, Notas + Total. Cada bloque respira y el Total queda como una **placa navy** que llama la atención, aunque siga marcando $0.00.
 
-## Cambios propuestos
+## Alcance
 
-### 1. Confirmación con destinatario visible (frontend)
-- Reemplazar el botón que dispara inmediato en `BandejaPorEnviar.tsx` por un pequeño diálogo (`ConfirmarEnvioCfdiDialog`) que:
-  - Muestra folio, cliente y **email sugerido** (lo obtiene con una consulta ligera al abrir).
-  - Permite **editar el email** antes de confirmar (mismo campo `email` que ya acepta la edge).
-  - Muestra la lista de contactos del cliente con email para elegir con un clic.
-  - Botón **Enviar** solo se activa con email válido.
-- Reusar este diálogo en cualquier otro lugar del detalle de factura que dispare `enviarCfdiFactura` sin confirmación (auditar 1–2 call sites).
+Sólo cambios de UI (Tailwind / composición) en 3 archivos. Ningún cambio en:
+- Hook `useFacturaManualForm.ts` (contrato inalterado).
+- Servicios, RPC, validaciones, timbrado, alerta de crédito.
+- Campos del formulario (mismos 8 fiscales + tabla + notas + 3 botones).
 
-### 2. Mejor heurística en `resolveEmail` (edge function)
-Nuevo orden de preferencia dentro de `contactos_cliente` del cliente:
-1. `tipo` que empate con roles de cobranza/facturación (ej. `Facturación`, `Cobranza`, `Contabilidad`, `Pagador`) — orden por `created_at` DESC (el más reciente gana).
-2. Cualquier otro contacto con email — orden por `created_at` DESC (antes era ASC, que es lo peor porque congela al contacto original aunque haya cambiado).
-3. Fallback a `clientes.email`.
+## Cambios
 
-Nota: hoy `contactos_cliente.tipo` está poblado con valores tipo "Exportador"; el matching será *tolerante* (case-insensitive, incluye variantes) y si nada empata, seguimos al paso 2. No rompe datos existentes.
+### 1. `DialogNuevaFacturaManual.tsx`
+- Envolver cada zona en `<section className="rounded-lg border bg-card p-5 space-y-4">` con `<h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">`.
+- 4 secciones: **Información del Cliente**, **Datos fiscales**, **Conceptos**, y bloque de dos columnas **Notas / Resumen**.
+- Fondo del área scrollable en `bg-muted/30` para que las tarjetas resalten en `bg-card`.
+- Alert de "cliente incompleto" se queda dentro de la tarjeta de cliente.
+- Footer sin cambios estructurales (ya lo maneja `FormDialogShell`).
 
-### 3. Registro en bitácora del "email sugerido vs enviado"
-Ampliar el `detalles` del evento `cfdi_enviado` para guardar `email_sugerido`, `email_enviado` y `override_manual: boolean`. Sirve para auditar futuros incidentes similares.
+### 2. `FacturaManualDatosFiscales.tsx`
+- Mantener grid 4 columnas actual, pero:
+  - Labels a `text-xs font-medium text-muted-foreground`.
+  - Inputs a `h-9` (más compactos y consistentes).
+  - "Moneda" pasa a **chips seleccionables** (MXN · USD · EUR) usando `Badge`/botones tipo toggle — más rápido y comunica mejor la moneda activa.
+  - Botón "Traer TC DOF" se queda al lado de Tipo de cambio (sin cambios funcionales).
 
-### 4. Post-mortem del envío reportado
-Consultar `bitacora_actividad` filtrando `accion = 'cfdi_enviado'` recientes del usuario para identificar el folio afectado y avisarle al cliente correcto (no automatizable — te reporto qué encontramos).
+### 3. `FacturaManualConceptosTable.tsx`
+- Cabecera de tabla real (`<thead>` con `bg-muted text-muted-foreground uppercase text-[11px]`) en lugar del layout grid con labels por fila.
+- Padding vertical a `py-2.5` para reducir densidad visual manteniendo compacto.
+- Botón "Agregar concepto" pasa a link-style azul (`text-primary hover:underline`) alineado a la derecha del título.
+- Bloque de totales queda **fuera** de la tabla, dentro del panel navy nuevo.
 
-## Fuera de alcance
-- No se toca el flujo masivo/reenvío desde el detalle de factura, ni el envío de REP/NC (mismos servicios pero fuera de la bandeja "Por enviar").
-- No se agrega un campo nuevo "contacto de facturación" en el schema (usa `tipo` existente).
+### 4. Nuevo panel de Total (dentro del dialog, no archivo separado)
+Bloque `bg-[hsl(var(--primary))] text-primary-foreground rounded-lg p-6 shadow` con:
+- Subtotal (texto muted-claro).
+- IVA (texto muted-claro).
+- Divisor.
+- **Total** con `text-2xl font-bold` + código de moneda pequeño al lado.
+
+Se coloca en `grid md:grid-cols-2 gap-6` junto al textarea de Notas.
 
 ## Detalles técnicos
-- Archivos a editar:
-  - `src/features/facturacion/components/bandejas/BandejaPorEnviar.tsx` — quitar `EnviarButton` inline, abrir diálogo.
-  - Nuevo `src/features/facturacion/components/dialogs/ConfirmarEnvioCfdiDialog.tsx`.
-  - Nuevo hook `useContactosClienteParaEnvio.ts` (consulta `contactos_cliente` + `clientes.email`).
-  - `supabase/functions/facturapi-enviar-email/index.ts` — refactor `resolveEmail` + bitácora enriquecida.
-- Deploy: `supabase--deploy_edge_functions(["facturapi-enviar-email"])`.
-- Version bump: `APP_VERSION` a `13.315.1` y entrada nueva en `CHANGELOG.md`.
-- Tests: unit del nuevo diálogo (email válido habilita botón, editar override, fallback correcto) y un test del hook con Supabase mockeado.
+
+- Se usan tokens semánticos (`bg-card`, `border`, `text-muted-foreground`, `bg-primary`, `text-primary-foreground`) — nada hardcodeado en hex. La paleta locked ya define `--primary: #1B2B4B`.
+- El totales panel deriva `subtotalR`, `ivaR`, `total` del cálculo actual en `FacturaManualConceptosTable`. Para exponerlos al dialog sin duplicar lógica: extraer una función pura `calcularTotalesConceptos(conceptos, tasaIva)` en un archivo utilitario nuevo (`src/features/facturacion/utils/totalesConceptos.ts`, ~20 LOC) y consumirla desde ambos lugares.
+- `FormDialogShell size="xl"` se mantiene; se conservan `<FormDialogSection>` si aplica según convención — de lo contrario, secciones locales con `<section>` (mem `form-dialog-shell` permite ambos cuando el shell ya está en uso).
+- Todos los archivos siguen ≤200 LOC (Power of 10).
 
 ## Verificación
-- `bun run lint -- --max-warnings 0`
+
 - `bun run typecheck`
-- Test unitario del nuevo diálogo.
-- Deploy y prueba manual: abrir "Por enviar", clic en **Enviar**, verificar que aparezca el email antes de mandar y que se pueda cambiar.
+- `bun run lint -- --max-warnings 0`
+- Playwright FullHD (1920×1080) screenshot del modal antes/después.
+- Test unitario nuevo para `calcularTotalesConceptos` (3 casos: MXN 16%, tasa 0%, exento).
+- Manual: abrir modal, elegir cliente sin RFC → alert; añadir 2 conceptos con IVA distinto → total navy actualiza; cambiar moneda con chips → TC habilita botón DOF.
+
+## Changelog
+
+Bump `APP_VERSION` a `13.315.1` y añadir entrada:
+
+```
+### UI
+- Rediseño del modal "Nueva factura manual": secciones en tarjetas, resumen del total en panel navy y chips de moneda.
+```
