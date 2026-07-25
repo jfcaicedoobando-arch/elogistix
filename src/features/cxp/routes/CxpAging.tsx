@@ -66,12 +66,12 @@ interface Filters extends Record<string, string> { cubeta: string }
 const DEFAULTS: Filters = { cubeta: "todas" };
 
 export default function CxpAging() {
-  const { data = [], isLoading, totales } = useCxpAging();
+  const { rowsFiltradas, isLoading, totales, monedas, monedaActiva, setMoneda } = useCxpAging();
   const columns = useMemo(() => buildCxpAgingColumns(), []);
   const [drilldown, setDrilldown] = useState<{ prov: CxpAgingRow; cubeta: CubetaAging | "todas" } | null>(null);
 
   const paged = useClientPagedList<CxpAgingRow, Filters>({
-    data,
+    data: rowsFiltradas,
     isLoading,
     defaultFilters: DEFAULTS,
     filterLabels: { cubeta: "Con saldo en" },
@@ -99,27 +99,48 @@ export default function CxpAging() {
     },
   });
 
+  const monedasVisibles = monedas.length > 0 ? monedas : ["MXN"];
+
   return (
     <PageContainer>
       <PageHeader
         icon={<LayoutList className="h-6 w-6 text-accent" />}
         title="Antigüedad de Saldos"
-        description="Saldos por proveedor agrupados por días de vencimiento (MXN)."
+        description={`Saldos por proveedor agrupados por días de vencimiento (${monedaActiva}).`}
         actions={
-          <Button variant="outline" size="sm" onClick={() => exportarCsv(data)} disabled={data.length === 0}>
+          <Button variant="outline" size="sm" onClick={() => exportarCsv(rowsFiltradas, monedaActiva)} disabled={rowsFiltradas.length === 0}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
         }
       />
 
-
+      {/* v13.315.9 (QW3) — selector de moneda: MXN, USD, EUR no se mezclan. */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-xs text-muted-foreground mr-1">Moneda:</span>
+        {monedasVisibles.map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMoneda(m)}
+            className={cn(
+              "text-xs font-medium px-2.5 py-1 rounded-full border transition-colors",
+              monedaActiva === m
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background hover:bg-muted text-muted-foreground border-border",
+            )}
+            aria-pressed={monedaActiva === m}
+          >
+            {m}
+          </button>
+        ))}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        <KpiBucket label="Vigente" value={totales.vigente} />
-        <KpiBucket label="1-30 días" value={totales.d_1_30} tone={totales.d_1_30 > 0 ? "warn" : "default"} />
-        <KpiBucket label="31-60 días" value={totales.d_31_60} tone={totales.d_31_60 > 0 ? "warn" : "default"} />
-        <KpiBucket label="61-90 días" value={totales.d_61_90} tone={totales.d_61_90 > 0 ? "danger" : "default"} />
-        <KpiBucket label=">90 días" value={totales.mas_90} tone={totales.mas_90 > 0 ? "danger" : "default"} />
+        <KpiBucket label="Vigente" value={totales.vigente} moneda={monedaActiva} />
+        <KpiBucket label="1-30 días" value={totales.d_1_30} moneda={monedaActiva} tone={totales.d_1_30 > 0 ? "warn" : "default"} />
+        <KpiBucket label="31-60 días" value={totales.d_31_60} moneda={monedaActiva} tone={totales.d_31_60 > 0 ? "warn" : "default"} />
+        <KpiBucket label="61-90 días" value={totales.d_61_90} moneda={monedaActiva} tone={totales.d_61_90 > 0 ? "danger" : "default"} />
+        <KpiBucket label=">90 días" value={totales.mas_90} moneda={monedaActiva} tone={totales.mas_90 > 0 ? "danger" : "default"} />
       </div>
 
       <UnifiedFiltersBar
