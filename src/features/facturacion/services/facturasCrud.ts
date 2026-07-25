@@ -17,6 +17,8 @@ export type FacturaListItem = Pick<
   | "acuse_cancelacion_status" | "cancellation_status"
 > & {
   proformas: { numero: string } | null;
+  /** QW3 Tanda 1 — timestamp del último envío por correo al cliente. */
+  enviada_cliente_at: string | null;
 };
 
 export interface FacturasListadoFilters {
@@ -57,6 +59,7 @@ export async function fetchFacturasListado(f: FacturasListadoFilters): Promise<F
     ambiente: FacturaRow["ambiente"];
     acuse_cancelacion_status: string | null;
     cancellation_status: string | null;
+    enviada_cliente_at: string | null;
     total_count: number | string;
   }>;
   const count = rows.length > 0 ? Number(rows[0].total_count) : 0;
@@ -76,6 +79,7 @@ export async function fetchFacturasListado(f: FacturasListadoFilters): Promise<F
     ambiente: r.ambiente,
     acuse_cancelacion_status: r.acuse_cancelacion_status,
     cancellation_status: r.cancellation_status ?? null,
+    enviada_cliente_at: r.enviada_cliente_at ?? null,
     proformas: r.proforma_numero ? { numero: r.proforma_numero } : null,
   }));
   return { data: items, count };

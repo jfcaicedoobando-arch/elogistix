@@ -50,7 +50,7 @@ export function EstadoCuentaModule({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-end gap-2">
         {headerRight}
-        <ExportActions />
+        <ExportActions clienteIds={clienteIds} rows={rows} />
       </div>
 
       <EstadoCuentaKpiCards kpis={kpis} loading={isLoading} />

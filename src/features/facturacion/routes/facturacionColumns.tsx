@@ -2,7 +2,10 @@
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, formatFechaHora } from "@/lib/formatters";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MailCheck } from "lucide-react";
 import {
   statusColumn,
   clientColumn,
@@ -33,12 +36,24 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
       cell: ({ row }) => {
         const numero = row.original.numero ?? "";
         const esBorradorSinFolio = numero.startsWith("BORRADOR-");
+        const enviadaAt = (row.original as { enviada_cliente_at?: string | null }).enviada_cliente_at ?? null;
         return (
           <div className="flex items-center gap-1.5">
             {esBorradorSinFolio
               ? <span className="text-muted-foreground italic">Sin folio (borrador)</span>
               : <span>{numero}</span>}
             <AmbienteBadge ambiente={row.original.ambiente} />
+            {enviadaAt && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="gap-1 border-success/40 text-success h-5 px-1.5">
+                    <MailCheck className="h-3 w-3" />
+                    <span className="text-2xs">Enviada</span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>Enviada al cliente · {formatFechaHora(enviadaAt)}</TooltipContent>
+              </Tooltip>
+            )}
           </div>
         );
       },
@@ -92,8 +107,8 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
     }),
     {
       id: "archivos", header: "Archivos",
-      // Oculto en tableta (<xl) — descargas disponibles en el detalle.
-      meta: { width: "w-[110px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      // QW4 Tanda 1 — visible desde tableta (>=lg) para descarga rápida.
+      meta: { width: "w-[110px]", className: "hidden lg:table-cell", headerClassName: "hidden lg:table-cell" },
       cell: ({ row }) => {
         const f = row.original;
         const timbrada = !!(f as { uuid_fiscal?: string | null }).uuid_fiscal;

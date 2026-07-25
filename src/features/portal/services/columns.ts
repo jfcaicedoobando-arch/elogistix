@@ -33,4 +33,4 @@ export const PORTAL_FACTURA_DETAIL_COLUMNS =
   'id, numero, expediente, cliente_id, cliente_nombre, estado, moneda, subtotal, iva, total, tipo_cambio, fecha_emision, fecha_vencimiento, referencia_bl, notas, embarque_id, factura_pdf_url, factura_xml_url, snapshot_emision' as const;
 
 export const PORTAL_PAGO_FACTURA_COLUMNS =
-  'id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura, forma_pago, referencia' as const;
+  'id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura, forma_pago, referencia, rep_pdf_url, rep_xml_url' as const;
