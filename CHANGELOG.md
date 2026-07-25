@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.315.4] - 2026-07-25
+- **fix(facturacion) · Automatizar Serie y Fecha de emisión en Nueva factura manual.** El modal ya no muestra los campos "Serie" ni "Fecha emisión". La serie se deriva de la moneda (`MXN`→`A`, `USD`→`SF43718`, `EUR`→`SF46410`) y la fecha se fija a hoy local MX en el instante del submit. Evita dos incidentes recurrentes: (1) folios contaminados por series escritas a mano (ver v13.301.58) y (2) rechazos del PAC porque el SAT exige timbrar dentro de 72 h de `fecha_emision`. Cero cambios en el RPC — el hook sigue enviando ambos campos, sólo que ya no los tocan los usuarios. Nuevo test `useFacturaManualForm.serie.test.ts`. Analogía: antes te dejábamos escribir a mano el folio y la fecha en el cheque; ahora la caja los estampa automáticamente y ya no puedes equivocarte.
+
 ## [13.315.3] - 2026-07-25
 - **security(db · FIX-45) · Revocar EXECUTE anónimo de funciones SECURITY DEFINER fuera de whitelist.** El guardrail `supabase/tests/fix45_anon_execute_whitelist.sql` detectó 7 funciones ejecutables por `anon` que no debían estarlo: `cxc_aging_clientes`, `assert_pago_sin_rep_vivo_delete`, `calc_pago_retenciones`, `calcular_comision_pago` (dos firmas), `is_org_member`, `tg_facturas_link_proforma` y `tg_liberar_folio_proveedor_factura`. Migración `REVOKE EXECUTE ... FROM PUBLIC, anon` en cada una. Sin cambios de comportamiento para usuarios autenticados. Analogía: la puerta de servicio del edificio estaba con la chapa abierta; sólo le pusimos llave, los inquilinos siguen entrando igual.
 

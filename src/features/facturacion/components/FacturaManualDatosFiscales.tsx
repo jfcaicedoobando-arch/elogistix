@@ -9,7 +9,6 @@
  *   ambas series (SF43718 para USD, SF46410 para EUR).
  */
 import { Input } from "@/components/ui/input";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -47,19 +46,6 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
   const labelCls = "text-xs font-medium text-muted-foreground";
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-4">
-      <div className="space-y-1.5">
-        <Label className={labelCls}>Serie</Label>
-        <Input
-          value={value.serie}
-          onChange={(e) => onChange({ serie: e.target.value.toUpperCase().slice(0, 5) })}
-          maxLength={5}
-          className="h-9"
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label className={labelCls}>Fecha emisión</Label>
-        <DatePickerMx value={value.fechaEmision} onChange={(v) => onChange({ fechaEmision: v })} className="w-full h-9" />
-      </div>
       <div className="space-y-1.5">
         <Label className={labelCls}>Días crédito</Label>
         <Input

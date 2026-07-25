@@ -16,8 +16,18 @@ import { todayLocalISO } from "@/lib/date/today";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { DatosFiscalesValue } from "@/features/facturacion/components/FacturaManualDatosFiscales";
 
+/**
+ * Serie oficial por moneda. La numeración fiscal es responsabilidad del sistema
+ * — nunca se deja al usuario porque contamina folios (ver v13.301.58).
+ */
+export function serieForMoneda(m: DatosFiscalesValue["moneda"]): string {
+  if (m === "USD") return "SF43718";
+  if (m === "EUR") return "SF46410";
+  return "A";
+}
+
 const INITIAL_FISCAL: DatosFiscalesValue = {
-  serie: "A", fechaEmision: todayLocalISO(), diasCredito: 0, moneda: "MXN",
+  serie: serieForMoneda("MXN"), fechaEmision: todayLocalISO(), diasCredito: 0, moneda: "MXN",
   usoCfdi: "G03", formaPago: "99", metodoPago: "PPD", tipoCambio: 1,
 };
 
@@ -35,12 +45,12 @@ function useFaltantesTimbrar(
       [
         !cliente && "cliente",
         !conceptosValidos && "conceptos válidos",
-        !fiscal.fechaEmision && "fecha de emisión",
+        
         fiscal.tipoCambio <= 0 && "tipo de cambio",
         cliente && (!cliente.rfc || !cliente.codigo_postal || !cliente.regimen_fiscal) &&
           "datos fiscales del cliente (RFC · CP · régimen)",
       ].filter((x): x is string => !!x),
-    [cliente, conceptosValidos, fiscal.fechaEmision, fiscal.tipoCambio],
+    [cliente, conceptosValidos, fiscal.tipoCambio],
   );
 }
 
@@ -72,13 +82,20 @@ export function useFacturaManualForm(open: boolean) {
   };
 
   const updateFiscal = (patch: Partial<DatosFiscalesValue>) =>
-    setFiscal((prev) => ({ ...prev, ...patch }));
+    setFiscal((prev) => {
+      const next = { ...prev, ...patch };
+      // Serie es derivada de la moneda: si cambió moneda, recalculamos serie.
+      if (patch.moneda && patch.moneda !== prev.moneda) {
+        next.serie = serieForMoneda(patch.moneda);
+      }
+      return next;
+    });
 
   const clienteIncompleto = !!cliente && (!cliente.rfc || !cliente.codigo_postal || !cliente.regimen_fiscal);
   const conceptosValidos = conceptos.every(
     (c) => c.descripcion.trim().length > 0 && Number(c.cantidad) > 0 && Number(c.precio_unitario) >= 0,
   );
-  const puedeGuardar = !!cliente && conceptosValidos && !!fiscal.fechaEmision && fiscal.tipoCambio > 0;
+  const puedeGuardar = !!cliente && conceptosValidos && fiscal.tipoCambio > 0;
   const puedeTimbrar = puedeGuardar && !clienteIncompleto;
   const faltantesTimbrar = useFaltantesTimbrar(cliente, conceptosValidos, fiscal);
 
@@ -91,13 +108,18 @@ export function useFacturaManualForm(open: boolean) {
 
   const buildInput = () => {
     if (!cliente || !organizationId) return null;
+    // Serie y fecha de emisión se resuelven aquí (nunca los edita el usuario):
+    // — serie deriva de la moneda para no contaminar folios fiscales.
+    // — fecha = hoy local MX en el momento del submit (SAT: timbrar dentro de 72 h).
+    const serie = serieForMoneda(fiscal.moneda);
+    const fechaEmision = todayLocalISO();
     return {
       input: {
         organizationId, clienteId: cliente.id, clienteNombre: cliente.nombre,
         rfcCliente: cliente.rfc ?? "",
-        serie: fiscal.serie, usoCfdi: fiscal.usoCfdi,
+        serie, usoCfdi: fiscal.usoCfdi,
         formaPago: fiscal.formaPago, metodoPago: fiscal.metodoPago,
-        diasCredito: fiscal.diasCredito, fechaEmision: fiscal.fechaEmision,
+        diasCredito: fiscal.diasCredito, fechaEmision,
         moneda: fiscal.moneda, tipoCambio: fiscal.tipoCambio,
         notas, conceptos, tasaIva,
       },
