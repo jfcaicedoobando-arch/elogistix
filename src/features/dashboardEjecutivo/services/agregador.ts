@@ -100,20 +100,23 @@ export async function fetchDashboardEjecutivo(
   const fetchEerr = fuente === "facturas" ? fetchEstadoResultadosDevengado : fetchEstadoResultadosMes;
 
   const meses = meses12Atras(periodo);
+  // P8: la tendencia 12m ahora usa 1 RPC (`eerr_resumen_anual`) en vez de
+  // 12 fetch mensuales. `eerrPeriodo` y `eerrPrev` siguen usando el fetch
+  // completo porque necesitan el pivot por concepto/modo.
   const [
     cuentas,
     eerrPeriodo,
     eerrPrev,
     presupuesto,
     tipoCambio,
-    ...eerrMensuales
+    eerr12m,
   ] = await Promise.all([
     fetchSaldosCuentas(organizationId),
     fetchEerr({ organizationId, year, month }),
     fetchEerr({ organizationId, year: prevY, month: prevM }),
     fetchPresupuestoVsReal(periodo, organizationId),
     fetchExchangeRates().catch(() => ({ usdMxn: 17.25, eurMxn: 18.5 })),
-    ...meses.map((m) => fetchEerr({ organizationId, year: m.year, month: m.month })),
+    fetchTendencia12m(meses, fuente),
   ]);
   const tipoCambioUsd = tipoCambio.usdMxn;
   // A1/A2 fix (v13.300.49): tesorería y flujo reciben el TC para
@@ -128,16 +131,6 @@ export async function fetchDashboardEjecutivo(
       cuentas, cobranza, cxp, dias: 28, organizationId, tipoCambioUsd,
     }),
   ]);
-
-  const eerr12m: PuntoEERR[] = meses.map((m, i) => {
-    const er = eerrMensuales[i];
-    return {
-      periodo: m.key,
-      ingresos: er.totalIngresos.total,
-      costos: er.totalCostos.total,
-      utilidad: er.utilidad.total,
-    };
-  });
 
   const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto };
   const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total, eerrPrev);
