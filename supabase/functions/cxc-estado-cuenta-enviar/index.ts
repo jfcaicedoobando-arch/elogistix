@@ -158,35 +158,16 @@ async function sendEstadoCuenta(
   }
 }
 
-async function runEnvio(
-  req: Request,
+async function buildTemplateData(
+  cliente: ClienteOrg,
+  facturas: FacturaCliente[],
   userId: string,
-  adminClient: SupabaseClient,
+  supabaseAdmin: SupabaseClient,
   input: z.infer<typeof BodySchema>,
-): Promise<Response> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
-  const { cliente_id, periodo, contacto_email, mensaje, fecha_desde, fecha_hasta } = input;
-
-  const { cliente, error: clienteError } = await loadCliente(supabaseAdmin, cliente_id);
-  if (clienteError) throw new Error(`500:${clienteError}`);
-  if (!cliente) return corsJson({ error: 'Cliente no encontrado' }, 404, req);
-
-  const autorizado = await authorizeOrg(supabaseAdmin, userId, cliente.organization_id);
-  if (!autorizado) {
-    return corsJson({ error: 'No autorizado para esta organización' }, 403, req);
-  }
-
-  const facturas = await loadFacturasVivas(supabaseAdmin, cliente_id, fecha_desde, fecha_hasta);
+): Promise<Record<string, unknown>> {
+  const { periodo, mensaje } = input;
   const moneda = facturas.length > 0 ? facturas[0].moneda ?? 'MXN' : 'MXN';
   const { total, saldo, vencido } = calcularTotales(facturas, moneda);
-
-  const destinatario = await resolveDestinatario(supabaseAdmin, cliente_id, contacto_email);
-  if (!destinatario) {
-    return corsJson({ error: 'No hay correo de contacto para enviar el estado de cuenta' }, 400, req);
-  }
 
   const [perfil, orgName] = await Promise.all([
     loadPerfil(supabaseAdmin, userId),
@@ -194,7 +175,7 @@ async function runEnvio(
   ]);
 
   const publicSiteUrl = Deno.env.get('PUBLIC_SITE_URL') ?? 'https://librecarga.com';
-  const templateData = {
+  return {
     cliente: cliente.nombre ?? orgName ?? 'Cliente',
     periodo: periodo ?? '',
     totalFacturas: formatCurrency(total, moneda),
@@ -207,7 +188,33 @@ async function runEnvio(
     ejecutivoEmail: perfil?.email ?? '',
     ejecutivoTelefono: perfil?.telefono ?? '',
   };
+}
 
+async function runEnvio(
+  req: Request,
+  userId: string,
+  adminClient: SupabaseClient,
+  input: z.infer<typeof BodySchema>,
+): Promise<Response> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+  const { cliente_id, contacto_email, fecha_desde, fecha_hasta } = input;
+
+  const { cliente, error: clienteError } = await loadCliente(supabaseAdmin, cliente_id);
+  if (clienteError) throw new Error(`500:${clienteError}`);
+  if (!cliente) return corsJson({ error: 'Cliente no encontrado' }, 404, req);
+
+  const autorizado = await authorizeOrg(supabaseAdmin, userId, cliente.organization_id);
+  if (!autorizado) return corsJson({ error: 'No autorizado para esta organización' }, 403, req);
+
+  const facturas = await loadFacturasVivas(supabaseAdmin, cliente_id, fecha_desde, fecha_hasta);
+  const destinatario = await resolveDestinatario(supabaseAdmin, cliente_id, contacto_email);
+  if (!destinatario) {
+    return corsJson({ error: 'No hay correo de contacto para enviar el estado de cuenta' }, 400, req);
+  }
+
+  const templateData = await buildTemplateData(cliente, facturas, userId, supabaseAdmin, input);
   await sendEstadoCuenta(supabaseUrl, serviceRoleKey, destinatario, templateData);
   return corsJson({ ok: true, enviado_a: destinatario }, 200, req);
 }
