@@ -36,6 +36,7 @@ export default function ProfitEstadoResultados() {
 
   const handleExportPdf = async () => {
     if (!data) return;
+    const { ReporteEERRDocument } = await import("@/pdf/documents/ReporteEERRDocument");
     await descargarPdf(
       <ReporteEERRDocument periodo={c.mesActual.key} fuente={c.fuente} data={data} />,
       await withOrgPrefix(`Reporte_EERR_${c.mesActual.key}.pdf`),
