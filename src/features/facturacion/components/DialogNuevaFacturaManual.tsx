@@ -1,4 +1,4 @@
-/** Wizard de factura manual (sin embarque/proforma). FormDialogShell v13.120.0. */
+/** Wizard de factura manual (sin embarque/proforma). v13.315.2: rediseño UI. */
 import { FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,10 +13,25 @@ import { useFacturaManualForm } from "@/features/facturacion/hooks/useFacturaMan
 import { FacturaManualDatosFiscales } from "./FacturaManualDatosFiscales";
 import { FaltantesHint } from "./FaltantesHint";
 import { FacturaManualConceptosTable } from "./FacturaManualConceptosTable";
+import { calcularTotalesConceptos } from "@/features/facturacion/utils/totalesConceptos";
+import { formatCurrency } from "@/lib/formatters";
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+}
+
+interface SectionProps { title: string; children: React.ReactNode; action?: React.ReactNode }
+function Section({ title, children, action }: SectionProps) {
+  return (
+    <section className="rounded-lg border bg-card p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">{title}</h3>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
 }
 
 export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
@@ -29,6 +44,8 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
     puedeGuardar, puedeTimbrar, faltantesTimbrar,
     handleSubmit, onConfirmarExceso, isPending,
   } = useFacturaManualForm(open);
+
+  const totales = calcularTotalesConceptos(conceptos, tasaIva);
 
   const footer = (
     <div className="flex w-full flex-wrap items-center gap-2">
@@ -48,47 +65,77 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
       description="Para anticipos, servicios extra o cobros que no provienen de un embarque cerrado. Lo normal es facturar desde una proforma aprobada."
       size="xl" footer={footer}
     >
-      <div>
-        <Label>Cliente *</Label>
-        <Select value={cliente?.id ?? ""} onValueChange={onClienteChange}>
-          <SelectTrigger><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
-          <SelectContent>
-            {clientes.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.nombre} {c.rfc ? `· ${c.rfc}` : "· sin RFC"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {clienteIncompleto && (
-          <Alert variant="destructive" className="mt-2">
-            <AlertDescription>
-              Este cliente no tiene datos fiscales completos (RFC, CP y régimen).
-              Puedes guardar borrador, pero no podrás timbrar hasta completarlos en el detalle del cliente.
-            </AlertDescription>
-          </Alert>
-        )}
+      <div className="-mx-6 -my-5 px-6 py-5 bg-muted/30 space-y-5">
+        <Section title="Información del Cliente">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Cliente *</Label>
+            <Select value={cliente?.id ?? ""} onValueChange={onClienteChange}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
+              <SelectContent>
+                {clientes.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.nombre} {c.rfc ? `· ${c.rfc}` : "· sin RFC"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {clienteIncompleto && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  Este cliente no tiene datos fiscales completos (RFC, CP y régimen).
+                  Puedes guardar borrador, pero no podrás timbrar hasta completarlos en el detalle del cliente.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </Section>
+
+        <Section title="Datos fiscales">
+          <FacturaManualDatosFiscales
+            value={fiscal} onChange={updateFiscal} diasReadonly={!!cliente}
+            diasReadonlyReason={cliente ? "Los días de crédito se toman del perfil del cliente. Cámbialos en el detalle del cliente." : undefined}
+          />
+        </Section>
+
+        <FacturaManualConceptosTable
+          conceptos={conceptos} moneda={fiscal.moneda} onChange={setConceptos}
+        />
+
+        <div className="grid gap-5 md:grid-cols-2">
+          <Section title="Notas internas">
+            <Textarea
+              value={notas}
+              onChange={(e) => setNotas(e.target.value)}
+              rows={4}
+              placeholder="Añadir notas u observaciones (opcional)…"
+              className="resize-none"
+            />
+          </Section>
+          <div className="rounded-lg bg-primary text-primary-foreground p-6 shadow-md flex flex-col justify-center gap-3">
+            <div className="flex justify-between text-sm opacity-80">
+              <span>Subtotal</span>
+              <span className="tabular-nums">{formatCurrency(totales.subtotal, fiscal.moneda)}</span>
+            </div>
+            <div className="flex justify-between text-sm opacity-80">
+              <span>IVA ({Math.round(tasaIva * 100)}%)</span>
+              <span className="tabular-nums">{formatCurrency(totales.iva, fiscal.moneda)}</span>
+            </div>
+            <div className="pt-3 border-t border-primary-foreground/20 flex justify-between items-baseline">
+              <span className="text-base font-medium">Total</span>
+              <span className="text-2xl font-bold tabular-nums">
+                {formatCurrency(totales.total, fiscal.moneda)}
+                <span className="text-xs font-normal opacity-70 ml-1">{fiscal.moneda}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <CreditoExcesoConfirmDialog
+          alerta={creditoAlerta} clienteNombre={cliente?.nombre}
+          onOpenChange={(o) => { if (!o) setCreditoAlerta(null); }}
+          onConfirm={onConfirmarExceso}
+        />
       </div>
-
-      <FacturaManualDatosFiscales
-        value={fiscal} onChange={updateFiscal} diasReadonly={!!cliente}
-        diasReadonlyReason={cliente ? "Los días de crédito se toman del perfil del cliente. Cámbialos en el detalle del cliente." : undefined}
-      />
-
-      <FacturaManualConceptosTable
-        conceptos={conceptos} moneda={fiscal.moneda} tasaIva={tasaIva} onChange={setConceptos}
-      />
-
-      <div>
-        <Label>Notas (opcional)</Label>
-        <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
-      </div>
-
-      <CreditoExcesoConfirmDialog
-        alerta={creditoAlerta} clienteNombre={cliente?.nombre}
-        onOpenChange={(o) => { if (!o) setCreditoAlerta(null); }}
-        onConfirm={onConfirmarExceso}
-      />
     </FormDialogShell>
   );
 }
