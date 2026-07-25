@@ -58,6 +58,7 @@ beforeEach(() => {
   emitirFacturapi.mockReset();
   cancelarFacturapi.mockReset();
   toastSuccess.mockReset();
+  notifySuccess.mockClear();
   notifyError.mockReset();
 });
 
