@@ -17,7 +17,7 @@ import {
 interface ProveedorYFolioProps {
   values: FacturaFormValues;
   onChange: <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => void;
-  onProveedor: (id: string, nombre: string) => void;
+  onProveedor: (id: string, nombre: string, diasCredito?: number) => void;
   errors: Partial<Record<keyof FacturaFormValues, string>>;
   proveedorReadOnly: boolean;
   proveedorNombre?: string;
