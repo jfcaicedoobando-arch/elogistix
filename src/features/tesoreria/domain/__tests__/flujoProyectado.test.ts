@@ -110,4 +110,49 @@ describe("calcularFlujoProyectado", () => {
     const r = calcularFlujoProyectado({ cuentas, cobranza: [], cxp, liquidaciones, dias: 14, hoy });
     expect(r.total_salidas_mxn).toBe(0);
   });
+
+  // v13.315.7 (QW1) — la fecha programada de pago debe ganar sobre vencimiento.
+  it("usa fecha_programada_pago cuando existe para ubicar la salida CxP", () => {
+    const hoy = new Date("2026-06-15T00:00:00");
+    const cxpProgramada: CxpRow[] = [
+      {
+        id: "x1",
+        folio_proveedor: "P-1",
+        proveedor_nombre: "P",
+        moneda: "MXN",
+        saldo: 3_000,
+        // Vence en semana 1 (2026-06-18) pero se programó para semana 3 (2026-07-02)
+        fecha_vencimiento: "2026-06-18",
+        fecha_programada_pago: "2026-07-02",
+      },
+    ];
+    const r = calcularFlujoProyectado({
+      cuentas, cobranza: [], cxp: cxpProgramada, liquidaciones: [], dias: 30, hoy,
+    });
+    expect(r.total_salidas_mxn).toBe(3_000);
+    const detalle = r.semanas.flatMap((s) => s.detalle_salidas);
+    expect(detalle).toHaveLength(1);
+    expect(detalle[0].fecha_vencimiento).toBe("2026-07-02");
+    const semanaConSalida = r.semanas.find((s) => s.salidas_mxn > 0);
+    expect(semanaConSalida?.inicio.startsWith("2026-06-29")).toBe(true);
+  });
+
+  it("si fecha_programada_pago es null, cae a fecha_vencimiento", () => {
+    const hoy = new Date("2026-06-15T00:00:00");
+    const cxp: CxpRow[] = [
+      {
+        id: "x1",
+        folio_proveedor: "P-1",
+        proveedor_nombre: "P",
+        moneda: "MXN",
+        saldo: 1_000,
+        fecha_vencimiento: "2026-06-18",
+        fecha_programada_pago: null,
+      },
+    ];
+    const r = calcularFlujoProyectado({
+      cuentas, cobranza: [], cxp, liquidaciones: [], dias: 14, hoy,
+    });
+    expect(r.total_salidas_mxn).toBe(1_000);
+  });
 });

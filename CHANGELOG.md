@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.315.7] - 2026-07-25
+- **feat(tesoreria · QW1) · Flujo proyectado respeta `fecha_programada_pago`.** El proyector de tesorería ubicaba las salidas CxP siempre en la semana de `fecha_vencimiento`, ignorando la fecha que el usuario programa desde el módulo de compras. Ahora se usa `COALESCE(fecha_programada_pago, fecha_vencimiento)`: si programaste pagar una factura el viernes 2026-07-02 aunque venza el 2026-06-18, la salida cae en la semana correcta (2026-06-29 → 07-05). Cambios: `CxpRow` gana el campo opcional `fecha_programada_pago` y `aplicarCxp` selecciona la fecha efectiva. `FacturaCxP` ya traía el dato, así que los callers (`useFlujoProyectado`) no cambiaron. Tests nuevos en `flujoProyectado.test.ts` cubren "programada gana" y "fallback a vencimiento cuando es null" — 14 casos verdes. Analogía: antes el pizarrón de tesorería mostraba la deuda en el día que se supone debía pagarse; ahora la mueve al día que decidimos pagarla, que es lo que realmente importa para el flujo.
+
 ## [13.315.6] - 2026-07-25
 - **fix(tests) · Resolver duplicate-title en audit-report.** El nuevo `totalesConceptos.test.ts` (factura manual) compartía el título `describe("calcularTotalesConceptos")` con `cotizacionDetalle.test.ts`. Renombré el describe a `calcularTotalesConceptos (factura manual)` para desambiguar. `bun run test:fast` con `-t "test hygiene baseline"` en verde. Analogía: dos hermanos llamados igual en la misma escuela — le puse un segundo nombre al nuevo para que el pase de lista no marque duplicado.
 

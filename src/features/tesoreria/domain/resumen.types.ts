@@ -67,6 +67,12 @@ export interface CxpRow {
   moneda: string;
   saldo: number;
   fecha_vencimiento: string | null;
+  /**
+   * v13.315.7 (QW1) — Fecha programada de pago. Cuando existe, el flujo
+   * proyectado la usa en lugar de `fecha_vencimiento` para colocar la salida
+   * en la semana correcta (tesorería programa pagos anticipados/diferidos).
+   */
+  fecha_programada_pago?: string | null;
   estatus?: string;
   dias_vencido?: number;
   tipo_cambio_usd?: number;
