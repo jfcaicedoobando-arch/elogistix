@@ -21,8 +21,8 @@ import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 interface Props {
   clienteIds: string[];
   rows: ReadonlyArray<FacturaEstadoCuenta>;
-  desde?: string;
-  hasta?: string;
+  desde?: string | null;
+  hasta?: string | null;
 }
 
 export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Props) {
