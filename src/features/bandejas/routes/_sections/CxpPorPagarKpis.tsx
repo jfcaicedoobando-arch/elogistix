@@ -4,13 +4,11 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
-import type { resumirCxpPorPagar } from "@/features/bandejas/domain/aggregates";
-
-type Resumen = ReturnType<typeof resumirCxpPorPagar>;
+import type { CxpPagarSummary } from "@/features/bandejas/domain/aggregates";
 
 interface Props {
   totalFacturas: number;
-  resumen: Resumen;
+  resumen: Pick<CxpPagarSummary, "saldoMXN" | "porMoneda" | "faltaTipoCambio" | "vencidas">;
 }
 
 export function CxpPorPagarKpis({ totalFacturas, resumen }: Props) {
