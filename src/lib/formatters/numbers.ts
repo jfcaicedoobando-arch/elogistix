@@ -72,11 +72,7 @@ export const formatCurrencySafe = (value: unknown, currency: string = "MXN"): st
  */
 export const formatCurrencyCompact = (amount: number, currency: string = "MXN"): string => {
   const safe = Number.isFinite(amount) ? amount : 0;
-  const formatted = new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 0,
-  }).format(safe);
+  const formatted = getCompactFormatter("compact:1").format(safe);
   return `${currency} ${formatted}`;
 };
 
@@ -87,10 +83,9 @@ export const formatNumber = (
 ): string => {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   const { decimals, suffix } = options;
-  const formatted = new Intl.NumberFormat("es-MX", {
-    minimumFractionDigits: decimals ?? 0,
-    maximumFractionDigits: decimals ?? (Number.isInteger(value) ? 0 : 2),
-  }).format(value);
+  const min = decimals ?? 0;
+  const max = decimals ?? (Number.isInteger(value) ? 0 : 2);
+  const formatted = getNumberFormatter(min, max).format(value);
   return suffix ? `${formatted} ${suffix}` : formatted;
 };
 
