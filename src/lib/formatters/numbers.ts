@@ -1,8 +1,48 @@
 /** Formatos numéricos y de moneda. */
 
+// Caché de Intl.NumberFormat por moneda: construir uno por render costaba
+// ~600 constructores en CxP y ~4,000 en conciliación. Mantén el Map interno
+// (no exportar) para preservar la API pública.
+const currencyFormatterCache = new Map<string, Intl.NumberFormat>();
+const getCurrencyFormatter = (currency: string): Intl.NumberFormat => {
+  let f = currencyFormatterCache.get(currency);
+  if (!f) {
+    f = new Intl.NumberFormat("es-MX", { style: "currency", currency, minimumFractionDigits: 2 });
+    currencyFormatterCache.set(currency, f);
+  }
+  return f;
+};
+
+const compactFormatterCache = new Map<string, Intl.NumberFormat>();
+const getCompactFormatter = (key: string): Intl.NumberFormat => {
+  let f = compactFormatterCache.get(key);
+  if (!f) {
+    f = new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+      minimumFractionDigits: 0,
+    });
+    compactFormatterCache.set(key, f);
+  }
+  return f;
+};
+
+const numberFormatterCache = new Map<string, Intl.NumberFormat>();
+const getNumberFormatter = (min: number, max: number): Intl.NumberFormat => {
+  const key = `${min}:${max}`;
+  let f = numberFormatterCache.get(key);
+  if (!f) {
+    f = new Intl.NumberFormat("es-MX", {
+      minimumFractionDigits: min,
+      maximumFractionDigits: max,
+    });
+    numberFormatterCache.set(key, f);
+  }
+  return f;
+};
+
 export const formatCurrency = (amount: number, currency: string = 'MXN'): string => {
-  const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 });
-  const formatted = formatter.format(amount);
+  const formatted = getCurrencyFormatter(currency).format(amount);
   // Intl con MXN devuelve "$57,000.00" (sin código). Forzamos el prefijo "MXN " para
   // mantener consistencia con USD/EUR y evitar ambigüedad entre USD y MXN.
   if (currency === 'MXN' && !formatted.startsWith('MXN')) {
