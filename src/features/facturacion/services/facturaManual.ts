@@ -32,7 +32,7 @@ export interface CrearFacturaManualInput {
   metodoPago: string;
   diasCredito: number;
   fechaEmision: string;          // YYYY-MM-DD
-  moneda: "MXN" | "USD";
+  moneda: "MXN" | "USD" | "EUR";
   tipoCambio: number;
   notas?: string;
   conceptos: ConceptoManualInput[];
