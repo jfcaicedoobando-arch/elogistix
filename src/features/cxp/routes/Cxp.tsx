@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { Plus, FileText, Inbox, Download } from "lucide-react";
+import { Plus, FileText, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
