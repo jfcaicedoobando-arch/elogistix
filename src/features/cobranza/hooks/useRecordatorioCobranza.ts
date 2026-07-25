@@ -43,7 +43,7 @@ async function enviarRecordatorio(input: RecordatorioCobranzaInput): Promise<Rec
 export function useRecordatorioCobranza({ onSuccess }: { onSuccess?: () => void } = {}) {
   return useMutationWithFeedback<RecordatorioCobranzaResult, Error, RecordatorioCobranzaInput>({
     mutationFn: enviarRecordatorio,
-    invalidate: [queryKeys.facturacion.cartera, queryKeys.facturacion.facturas],
+    invalidate: [queryKeys.facturas.cobranza(), queryKeys.facturas.all],
     successTitle: "Recordatorio enviado",
     successDescription: "El recordatorio se envió correctamente.",
     errorTitle: "Error al enviar recordatorio",
