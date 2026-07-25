@@ -3,9 +3,15 @@
  * los chips secundarios correctos según los `flags` de la factura.
  */
 import { render, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { EstadoFacturaCxPCell } from "../EstadoFacturaCxPCell";
 import type { FacturaCxP } from "@/features/cxp/services";
+
+function renderWithTooltip(ui: ReactElement) {
+  return render(<TooltipProvider>{ui}</TooltipProvider>);
+}
 
 const base: FacturaCxP = {
   id: "f1",
@@ -59,7 +65,7 @@ const base: FacturaCxP = {
 
 describe("EstadoFacturaCxPCell", () => {
   it("pinta los chips Parcial · +N d · NC · SAT ✓ · Prog.", () => {
-    render(<EstadoFacturaCxPCell factura={base} />);
+    renderWithTooltip(<EstadoFacturaCxPCell factura={base} />);
     expect(screen.getByText(/Parcial · 50%/)).toBeInTheDocument();
     expect(screen.getByText("+12 d")).toBeInTheDocument();
     expect(screen.getByText("NC")).toBeInTheDocument();
@@ -74,7 +80,7 @@ describe("EstadoFacturaCxPCell", () => {
       saldo: 0,
       flags: { ...base.flags, parcial: false, parcialPct: 100 },
     };
-    render(<EstadoFacturaCxPCell factura={pagada} />);
+    renderWithTooltip(<EstadoFacturaCxPCell factura={pagada} />);
     expect(screen.queryByText(/Prog\./)).not.toBeInTheDocument();
     expect(screen.queryByText(/Parcial/)).not.toBeInTheDocument();
   });

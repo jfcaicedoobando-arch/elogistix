@@ -12,8 +12,7 @@ const SOURCE = readFileSync(
 );
 const match = SOURCE.match(/FNAME_RE\s*=\s*(\/[^\n]+\/)/);
 if (!match) throw new Error("No se pudo extraer FNAME_RE de audit-migrations.ts");
-// eslint-disable-next-line no-eval
-const FNAME_RE = eval(match[1]) as RegExp;
+const FNAME_RE = new Function(`return ${match[1]}`)() as RegExp;
 
 describe("audit-migrations · FNAME_RE", () => {
   it("acepta snake_case (guiones bajos) en el sufijo — patrón QW7", () => {

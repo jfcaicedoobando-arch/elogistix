@@ -23,7 +23,7 @@ describe("cxpPorPagarCount service", () => {
     expect(mock.rpcCalls[0].fn).toBe("cxp_por_pagar");
   });
 
-  it("retorna 0 cuando la RPC devuelve null", async () => {
+  it("retorna 0 cuando la RPC de por pagar devuelve null", async () => {
     mock.setRpcResult("cxp_por_pagar", { data: null, error: null });
     await expect(fetchPorPagarCount()).resolves.toBe(0);
   });

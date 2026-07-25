@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { Plus, FileText, Inbox, Download } from "lucide-react";
+import { Plus, FileText, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { ColumnVisibilityMenu } from "@/components/shared/ColumnVisibilityMenu";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { EliminarFacturaCxpDialog } from "@/features/cxp/components/EliminarFacturaCxpDialog";
+import { CxpRouteDialogs } from "@/features/cxp/routes/_sections/CxpRouteDialogs";
 import { usePermissions, useColumnVisibility } from "@/hooks/shared";
 import {
   useFacturasCxP,
@@ -17,10 +17,6 @@ import {
   useCxpDeepLinks,
 } from "@/features/cxp/hooks";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
-import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
-import { DialogEditarFacturaProveedor } from "@/features/cxp/components/DialogEditarFacturaProveedor";
-import { DialogRegistrarPagoProveedor } from "@/features/cxp/components/DialogRegistrarPagoProveedor";
-import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import { CxpFiltros } from "@/features/cxp/components/CxpFiltros";
 import { CxpKpiCards } from "@/features/cxp/components/CxpKpiCards";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -35,34 +31,8 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { withOrgPrefix } from "@/lib/filenames";
 import { todayLocalISO } from "@/lib/date/today";
-import { formatCurrency } from "@/lib/formatters";
-
-function exportarCxpCsv(rows: readonly FacturaCxP[]) {
-  if (!rows || rows.length === 0) return;
-  const headers = ["Folio", "Folio Prov", "Proveedor", "Emisión", "Vencimiento", "Moneda", "Total", "Pagado", "Saldo", "Estado"];
-  const lines = rows.map((r) =>
-    [
-      r.folio_interno,
-      `"${(r.folio_proveedor || "").replace(/"/g, '""')}"`,
-      `"${(r.proveedor_nombre || "").replace(/"/g, '""')}"`,
-      r.fecha_emision,
-      r.fecha_vencimiento || "",
-      r.moneda,
-      formatCurrency(r.total, r.moneda),
-      formatCurrency(r.pagado, r.moneda),
-      formatCurrency(r.saldo, r.moneda),
-      r.estatus,
-    ].join(","),
-  );
-  const csv = [headers.join(","), ...lines].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `cxp-facturas-${todayLocalISO()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
+import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
 
 export default function Cxp() {
   const { canEdit } = usePermissions();
@@ -160,19 +130,7 @@ export default function Cxp() {
       <Card>
         <CardContent className="p-0">
           {!isLoading && data.length === 0 && !f.hayFiltros ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-              <Inbox className="h-10 w-10 text-muted-foreground mb-3" />
-              <h3 className="text-base font-semibold">Aún no hay facturas de proveedor</h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                Captura la primera factura recibida para abrir su saldo en Cuentas por Pagar
-                y empezar a registrar pagos.
-              </p>
-              {canEdit && (
-                <Button className="mt-4" onClick={() => f.setOpenNueva(true)}>
-                  <Plus className="h-4 w-4 mr-2" /> Capturar primera factura
-                </Button>
-              )}
-            </div>
+            <CxpEmptyState canEdit={canEdit} onCapturar={() => f.setOpenNueva(true)} />
           ) : (
             <TooltipProvider delayDuration={200}>
               <DataTable
@@ -204,37 +162,15 @@ export default function Cxp() {
         </CardContent>
       </Card>
 
-      <DialogNuevaFacturaProveedor open={f.openNueva} onOpenChange={f.setOpenNueva} />
-      <DialogEditarFacturaProveedor
-        factura={f.editar ? data.find((d) => d.id === f.editar!.id) ?? f.editar : null}
-        onOpenChange={(o) => !o && f.setEditar(null)}
-      />
-      <DialogRegistrarPagoProveedor
-        open={!!f.pagar}
-        onOpenChange={(o) => !o && f.setPagar(null)}
-        factura={f.pagar ? data.find((d) => d.id === f.pagar!.id) ?? f.pagar : null}
-      />
-      <DialogDetallePagosProveedor
-        open={!!f.detalle}
-        onOpenChange={(o) => !o && f.setDetalle(null)}
-        factura={f.detalle ? data.find((d) => d.id === f.detalle!.id) ?? f.detalle : null}
+      <CxpRouteDialogs
+        f={f}
+        data={data}
         canEdit={canEdit}
-        onPagar={(fact) => { f.setDetalle(null); f.setPagar(fact); }}
-        onEditar={(fact) => { f.setDetalle(null); f.setEditar(fact); }}
-        onEliminar={(fact) => { f.setDetalle(null); onEliminar(fact); }}
-      />
-
-      <EliminarFacturaCxpDialog
-        factura={f.aEliminar}
-        onOpenChange={(o) => !o && f.setAEliminar(null)}
-        isPending={eliminar.isPending}
-        onConfirm={async () => {
+        isPendingEliminar={eliminar.isPending}
+        onEliminar={onEliminar}
+        onConfirmEliminar={async () => {
           if (!f.aEliminar) return;
-          try {
-            await eliminar.mutateAsync(f.aEliminar.id);
-          } catch {
-            // Notificación gestionada por el hook.
-          }
+          try { await eliminar.mutateAsync(f.aEliminar.id); } catch { /* hook notifica */ }
           f.setAEliminar(null);
         }}
       />

@@ -22,26 +22,14 @@ import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
-import { formatCurrency } from "@/lib/formatters";
+
 import { cn } from "@/lib/utils";
 import { AgingDrillDownDialog } from "@/features/cxp/components/AgingDrillDownDialog";
 import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
 import { todayLocalISO } from "@/lib/date/today";
 
-function KpiBucket({ label, value, moneda, tone = "default" }: { label: string; value: number; moneda: string; tone?: "default" | "warn" | "danger" }) {
-  const toneCls =
-    tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn("text-xl font-semibold tabular-nums mt-1", toneCls)}>
-          {formatCurrency(value, moneda)}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
+import { KpiBucket } from "./_sections/AgingKpiBucket";
+
 
 function exportarCsv(rows: readonly CxpAgingRow[], moneda: string) {
   if (!rows || rows.length === 0) return;

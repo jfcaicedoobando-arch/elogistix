@@ -1,16 +1,10 @@
-import { useState } from "react";
-import { Plus, MoreHorizontal, Ban, Link2, Inbox } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, Inbox } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -22,12 +16,10 @@ import { useAnticiposProveedor, type AnticipoProveedorRow } from "../hooks/useAn
 import { RegistrarAnticipoDialog } from "../components/RegistrarAnticipoDialog";
 import { AplicarAnticipoDialog } from "../components/AplicarAnticipoDialog";
 import { CancelarAnticipoDialog } from "../components/CancelarAnticipoDialog";
-import { ToneBadge } from "@/components/shared/ToneBadge";
-import { formatCurrency } from "@/lib/formatters";
-import { formatDate } from "@/lib/formatters/dates";
 import { usePermissions } from "@/hooks/shared";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
 import { PageSkeleton } from "@/components/shared/skeletons";
+import { buildAnticipoColumns } from "./_sections/buildAnticipoColumns";
 
 export default function AnticiposProveedor() {
   const { canEditFinance } = usePermissions();
@@ -45,90 +37,15 @@ export default function AnticiposProveedor() {
 
   const { data: proveedores = [] } = useProveedoresLite();
 
-  type CellCtx = {
-    getValue: () => unknown;
-    row: { original: AnticipoProveedorRow };
-  };
-
-  const columns = [
-    {
-      header: "Fecha",
-      accessorKey: "fecha_anticipo",
-      cell: (info: CellCtx) => formatDate(info.getValue() as string),
-    },
-    {
-      header: "Proveedor",
-      accessorKey: "proveedor_nombre",
-    },
-    {
-      header: "Monto",
-      accessorKey: "monto",
-      cell: (info: CellCtx) => formatCurrency(info.getValue() as number, info.row.original.moneda),
-    },
-    {
-      header: "Aplicado",
-      accessorKey: "aplicado",
-      cell: (info: CellCtx) => formatCurrency(info.getValue() as number, info.row.original.moneda),
-    },
-    {
-      header: "Disponible",
-      accessorKey: "disponible",
-      cell: (info: CellCtx) => (
-        <span className="font-semibold text-primary">
-          {formatCurrency(info.getValue() as number, info.row.original.moneda)}
-        </span>
-      ),
-    },
-    {
-      header: "Moneda",
-      accessorKey: "moneda",
-    },
-    {
-      header: "Estado",
-      accessorKey: "estado",
-      cell: (info: CellCtx) => {
-        const val = info.getValue() as string;
-        if (val === "disponible") return <ToneBadge tone="success">Disponible</ToneBadge>;
-        if (val === "aplicado_parcial") return <ToneBadge tone="warning">Parcial</ToneBadge>;
-        if (val === "aplicado_total") return <ToneBadge tone="neutral">Aplicado</ToneBadge>;
-        if (val === "cancelado") return <ToneBadge tone="destructive">Cancelado</ToneBadge>;
-        return <ToneBadge tone="neutral">{val}</ToneBadge>;
-      },
-    },
-    {
-      id: "actions",
-      cell: (info: CellCtx) => {
-        const row = info.row.original;
-        const canApply = row.estado === "disponible" || row.estado === "aplicado_parcial";
-        const canCancel = row.estado === "disponible";
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                disabled={!canApply || !canEditFinance}
-                onClick={() => setAnticipoParaAplicar(row)}
-              >
-                <Link2 className="mr-2 h-4 w-4" /> Aplicar
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                disabled={!canCancel || !canEditFinance}
-                onClick={() => setAnticipoParaCancelar(row)}
-              >
-                <Ban className="mr-2 h-4 w-4" /> Cancelar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      buildAnticipoColumns({
+        canEditFinance,
+        onAplicar: setAnticipoParaAplicar,
+        onCancelar: setAnticipoParaCancelar,
+      }),
+    [canEditFinance],
+  );
 
   if (isLoading) return <PageSkeleton />;
 

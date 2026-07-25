@@ -6,16 +6,18 @@
  * rango de fecha de vencimiento, orden y paginación sincronizados con la URL.
  */
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Inbox, CalendarCheck } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { ProgramarPagoDialog } from "./_sections/ProgramarPagoDialog";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar } from "@/features/bandejas/domain/aggregates";
+import { CxpPorPagarKpis } from "./_sections/CxpPorPagarKpis";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -23,16 +25,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { useProgramarPagoLote } from "@/features/cxp/hooks/useProgramarPagoLote";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { todayLocalISO } from "@/lib/date/today";
 
 
@@ -110,32 +103,10 @@ export default function CxpPorPagar() {
 
 
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Facturas vigentes</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold">{data.length}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Saldo total</CardTitle></CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold tabular-nums">{formatCurrency(saldoMXN, "MXN")}</div>
-            <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-label text-muted-foreground mt-1">
-              {porMoneda.MXN > 0 && <span>{formatCurrencyCompact(porMoneda.MXN, "MXN")}</span>}
-              {porMoneda.USD > 0 && <span>· {formatCurrencyCompact(porMoneda.USD, "USD")}</span>}
-              {porMoneda.EUR > 0 && <span>· {formatCurrencyCompact(porMoneda.EUR, "EUR")}</span>}
-            </div>
-            {faltaTipoCambio > 0 && (
-              <p className="text-2xs text-warning mt-0.5">
-                {faltaTipoCambio} factura{faltaTipoCambio > 1 ? "s" : ""} sin TC capturado — no incluida{faltaTipoCambio > 1 ? "s" : ""} en homologado.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Vencidas</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold text-destructive">{vencidas}</CardContent>
-        </Card>
-      </div>
+      <CxpPorPagarKpis
+        totalFacturas={data.length}
+        resumen={{ saldoMXN, porMoneda, faltaTipoCambio, vencidas }}
+      />
 
       <UnifiedFiltersBar
         search={paged.search}
@@ -206,34 +177,16 @@ export default function CxpPorPagar() {
         </CardContent>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Programar pago</DialogTitle>
-            <DialogDescription>
-              Selecciona la fecha en la que Tesorería deberá ejecutar el pago para las {selectedIds.length} facturas seleccionadas.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Fecha de pago</Label>
-              <DatePickerMx
-                value={fechaProgramada}
-                onChange={(v) => v && setFechaProgramada(v)}
-                className="w-full"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isRunning}>
-              Cancelar
-            </Button>
-            <Button onClick={handleProgramar} disabled={isRunning || !fechaProgramada}>
-              {isRunning ? `Programando (${progreso?.hecho}/${progreso?.total})...` : "Confirmar programación"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ProgramarPagoDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        cantidad={selectedIds.length}
+        fechaProgramada={fechaProgramada}
+        onFechaChange={setFechaProgramada}
+        isRunning={isRunning}
+        progreso={progreso}
+        onConfirmar={handleProgramar}
+      />
     </PageContainer>
   );
 }
