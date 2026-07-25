@@ -54,6 +54,9 @@ const CRITICAL = [
   "supabase/functions/facturapi-consultar/index.ts",
   // 13.303.2 — Recuperación de claims huérfanos PENDING:<uuid>
   "supabase/functions/facturapi-recuperar-claim/index.ts",
+  // 13.315.0 — Recordatorios de cobro y estado de cuenta CxC
+  "supabase/functions/cxc-recordatorio-enviar/index.ts",
+  "supabase/functions/cxc-estado-cuenta-enviar/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {

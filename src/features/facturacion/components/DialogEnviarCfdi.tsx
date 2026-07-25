@@ -4,20 +4,17 @@
  * cliente antes de enviar para evitar mandarlo al destinatario equivocado.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Mail, User, Loader2, AlertTriangle } from "lucide-react";
+import { Mail, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { enviarCfdiFactura, enviarCfdiRep, enviarCfdiNotaCredito } from "@/features/facturacion/services/enviarCfdiEmail";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
-import {
-  useContactosClienteParaEnvio,
-  type ContactoEnvio,
-} from "@/features/facturacion/hooks/useContactosClienteParaEnvio";
+import { useContactosClienteParaEnvio } from "@/features/facturacion/hooks/useContactosClienteParaEnvio";
+import { ContactosClienteList } from "@/features/facturacion/components/ContactosClienteList";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors/index";
@@ -47,76 +44,7 @@ async function enviarCfdiPor(args: {
   throw new Error("Falta facturaId, pagoId o notaCreditoId");
 }
 
-interface ContactoItemProps {
-  contacto: ContactoEnvio;
-  seleccionado: boolean;
-  onPick: (email: string) => void;
-}
 
-function ContactoItem({ contacto: c, seleccionado, onPick }: ContactoItemProps) {
-  return (
-    <button
-      type="button"
-      onClick={() => onPick(c.email)}
-      className={`text-left rounded-md border px-3 py-2 text-xs transition-colors ${
-        seleccionado ? "border-primary bg-primary/5" : "border-border hover:bg-muted"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 font-medium">
-          <User className="h-3 w-3 text-muted-foreground" />
-          {c.nombre ?? "(Sin nombre)"}
-          {c.esFacturacion && (
-            <Badge variant="secondary" className="h-4 px-1 text-[10px]">Facturación</Badge>
-          )}
-        </div>
-        {c.tipo && !c.esFacturacion && (
-          <span className="text-[10px] text-muted-foreground">{c.tipo}</span>
-        )}
-      </div>
-      <div className="text-muted-foreground mt-0.5 truncate">{c.email}</div>
-    </button>
-  );
-}
-
-interface ContactosListProps {
-  cargando: boolean;
-  contactos: ContactoEnvio[];
-  emailCliente: string | null | undefined;
-  emailSeleccionado: string;
-  onPick: (email: string) => void;
-}
-
-function ContactosList({ cargando, contactos, emailCliente, emailSeleccionado, onPick }: ContactosListProps) {
-  if (cargando) {
-    return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Cargando contactos…
-      </div>
-    );
-  }
-  if (contactos.length === 0) {
-    return (
-      <p className="text-xs text-muted-foreground">
-        Este cliente no tiene contactos con email registrados.
-        {emailCliente && " Se usará el email de la ficha del cliente."}
-      </p>
-    );
-  }
-  const seleccionadoLower = emailSeleccionado.trim().toLowerCase();
-  return (
-    <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
-      {contactos.map((c) => (
-        <ContactoItem
-          key={c.id}
-          contacto={c}
-          seleccionado={seleccionadoLower === c.email.toLowerCase()}
-          onPick={onPick}
-        />
-      ))}
-    </div>
-  );
-}
 
 export function DialogEnviarCfdi({
   open, onOpenChange, facturaId, pagoId, notaCreditoId, clienteId, emailDefault, titulo, descripcion,
@@ -215,7 +143,7 @@ export function DialogEnviarCfdi({
             <Label className="text-xs uppercase tracking-wide text-muted-foreground">
               Contactos del cliente
             </Label>
-            <ContactosList
+            <ContactosClienteList
               cargando={cargandoContactos}
               contactos={contactos}
               emailCliente={datosCliente?.emailCliente}

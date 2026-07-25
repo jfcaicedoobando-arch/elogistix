@@ -64,6 +64,9 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/facturapi-recuperar-claim/index.ts",
   // 13.303.99 — Parseo de facturas PDF con Gemini (proveedores sin XML)
   "supabase/functions/parse-invoice-pdf/index.ts",
+  // 13.315.0 — Recordatorios de cobro y estado de cuenta CxC
+  "supabase/functions/cxc-recordatorio-enviar/index.ts",
+  "supabase/functions/cxc-estado-cuenta-enviar/index.ts",
 ];
 
 // Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia
