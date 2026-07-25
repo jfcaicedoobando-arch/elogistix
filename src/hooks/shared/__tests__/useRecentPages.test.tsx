@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { useRecentPages } from "../useRecentPages";
 import type { ReactNode } from "react";

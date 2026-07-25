@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.319.0] - 2026-07-25
+- **feat · Sidebar Etapa 3: medición + colapsables + recientes.** Analogía: pusimos un contador de pasos en las puertas del menú, bisagras que recuerdan qué cajones dejaste cerrados y una libretita con "lo que sacaste ayer" dentro del ⌘K.
+  - **3.0 Medición**: nueva tabla `public.nav_events` (append-only, RLS por org, lectura sólo admin/super_admin). Servicio `trackNavEvent` fire-and-forget, jamás propaga error. Inyectado en `SidebarGroupBlock` y `GlobalSearch`. Guardado por prefijo: no se trackea `/portal`, `/login`, marketing, onboarding. Sólo url/título/sección/rol — nunca folios, montos ni clientes.
+  - **3.A Colapsables**: nuevo hook `useSidebarCollapse` con persistencia versionada (`sidebar:collapsed:v1`) y parseo defensivo. `SidebarGroupBlock` envuelve cada sección en `Collapsible` con chevron rotatorio. **Regla de oro**: la sección de la ruta activa siempre se auto-expande, aunque esté colapsada por preferencia. Modo icon-only sin cambios.
+  - **3.B Recientes**: nuevo hook `useRecentPages` (montado en `GlobalSearch`) que registra las últimas 8 páginas visitadas, dedupe por URL, sólo URLs del sidebar (nada de `/facturacion/:id`), persiste en `nav:recent:v1`. ⌘K sin teclear muestra un grupo "Recientes" con icono `History`; al teclear desaparece.
+  - Con `localStorage` vacío, el sidebar se ve idéntico a v13.318.0. Sin librerías nuevas ni cambios de rutas/guards.
+  - Fuera de alcance: favoritos (3.C descartado) y dashboard de analytics (se decide con datos reales de `nav_events`).
+
 ## [13.318.0] - 2026-07-25
 - **feat · Sidebar Etapa 2: reorganización por flujo del dinero.** Analogía: reordenamos los cajones de la alacena. La comida (rutas, permisos, badges) sigue exacta; sólo cambió en qué cajón se guarda.
   - Nuevas secciones: **Inicio · Operación · Ventas (CxC) · Compras (CxP) · Dinero · Costeo · Análisis · Sistema**.
