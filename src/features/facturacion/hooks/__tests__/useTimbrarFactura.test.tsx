@@ -90,7 +90,9 @@ describe("useTimbrarFactura", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     expect(notifyError).toHaveBeenCalledTimes(1);
-    expect(notifyError.mock.calls[0]![1].title).toContain("boom");
+    const errArg = notifyError.mock.calls[0]![1];
+    expect(errArg.title).toBe("No se pudo timbrar");
+    expect((errArg.error as Error).message).toContain("boom");
     qc.clear();
   });
 });
