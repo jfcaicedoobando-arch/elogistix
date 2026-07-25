@@ -52,6 +52,21 @@ export const facturas = {
   envios: (facturaId?: string | null) => ['factura-envios', facturaId] as const,
   historial: (facturaId?: string | null) => ['facturas', 'historial', facturaId] as const,
   legacyDetail: (facturaId?: string | null) => ['factura', facturaId] as const,
+  listado: (filtros: {
+    organizationId?: string | null;
+    search?: string;
+    estado?: string;
+    page?: number;
+    pageSize?: number;
+  }) =>
+    [
+      'facturas', 'listado',
+      filtros.organizationId ?? null,
+      filtros.search ?? '',
+      filtros.estado ?? 'todos',
+      filtros.page ?? 0,
+      filtros.pageSize ?? 100,
+    ] as const,
 } as const;
 
 export const estadoCuenta = {
