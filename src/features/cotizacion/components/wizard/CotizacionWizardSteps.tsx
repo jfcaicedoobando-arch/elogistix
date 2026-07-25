@@ -94,16 +94,16 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
             tieneCostosUSD={w.costosUSD.length > 0}
             tieneCostosMXN={w.costosMXN.length > 0}
             nombreCliente={
-              form.watch("esProspecto")
-                ? form.watch("prospectoEmpresa")
+              esProspecto
+                ? prospectoEmpresa
                 : (w.clienteSeleccionado?.nombre || "—")
             }
-            origen={form.watch("origen")}
-            destino={form.watch("destino")}
-            numContenedores={form.watch("numContenedores")}
-            modo={form.watch("modo")}
-            incoterm={form.watch("incoterm")}
-            tipo={form.watch("tipo")}
+            origen={origen}
+            destino={destino}
+            numContenedores={numContenedores}
+            modo={modo}
+            incoterm={incoterm}
+            tipo={tipo}
             totalUSD={w.totalUSD}
             totalMXN={w.totalMXN}
           />
