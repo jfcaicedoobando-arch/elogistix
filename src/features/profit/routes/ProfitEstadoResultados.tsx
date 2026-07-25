@@ -14,7 +14,7 @@ import {
 } from "@/features/profit/components/EstadoResultadosTable.helpers";
 import { exportToCsv } from "@/generators/exportCsv";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
-import { ReporteEERRDocument } from "@/pdf/documents/ReporteEERRDocument";
+// P12: ReporteEERRDocument se carga dinámicamente en el handler.
 import { PageContainer } from "@/components/shared/PageContainer";
 import { withOrgPrefix } from "@/lib/filenames";
 import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
