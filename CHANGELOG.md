@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.315.1] - 2026-07-25
+- **fix(facturacion) · Confirmar destinatario antes de enviar CFDI desde "Por enviar".** El botón "Enviar" de la bandeja disparaba el envío al instante y la edge function `facturapi-enviar-email` resolvía el email tomando `contactos_cliente` con `order created_at asc limit 1`. Si el contacto más antiguo no era el de facturación, el CFDI salía al buzón equivocado y el usuario nunca lo vio.
+  - **UI**: `BandejaPorEnviar.tsx` ahora abre `<DialogEnviarCfdi />` en vez de mandar directo. El diálogo (mejorado) muestra el email sugerido, permite editarlo y ofrece los contactos del cliente como opciones clicables, marcando con un badge "Facturación" a los que coincidan con roles de cobranza/facturación. Un aviso ámbar advierte cuando el usuario elige un email distinto al sugerido.
+  - **Hook nuevo**: `useContactosClienteParaEnvio.ts` trae los contactos con email + email del cliente y calcula el sugerido priorizando tipos `Facturación`, `Cobranza`, `Contabilidad`, `Pagador`, `Administración`.
+  - **Servicio**: `FilaPorEnviar` incluye ahora `cliente_id` para poder mostrar los contactos sin fetch extra.
+  - **Edge function `facturapi-enviar-email`**: nueva heurística — primero contacto de facturación, luego contacto más reciente (antes era el más antiguo), luego `clientes.email`. La bitácora de `cfdi_enviado`/`cfdi_envio_failed` ahora guarda `email_enviado`, `email_sugerido`, `fuente_email`, `override_manual` y `email_distinto_sugerido` para poder auditar futuros incidentes similares.
+  - Analogía: antes el botón funcionaba como un sobre pre-dirigido que se mandaba solo; ahora primero te muestra a quién le vas a escribir y te deja cambiar el destinatario antes de soltarlo al correo.
+
+
+
 ## [13.315.0] - 2026-07-25
 - **feat(facturacion · QW12 Tanda 3 Quick Wins) · Envío del estado de cuenta por email.** Última entrega del backlog `quickwins-facturacion-2026-07-24.md`:
   - **Nueva plantilla de correo**: `supabase/functions/_shared/transactional-email-templates/estado-cuenta-cliente.tsx` envía un resumen del periodo (total, saldo, vencido) con un enlace al portal del cliente. Se registra en `registry.ts` como `estado-cuenta-cliente`.
