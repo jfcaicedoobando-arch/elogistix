@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Plus, MoreHorizontal, Ban, Link2, Inbox } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -27,7 +27,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
 import { usePermissions } from "@/hooks/shared";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
-import { PageSkeleton } from "@/components/shared/states/PageSkeleton";
+import { PageSkeleton } from "@/components/shared/skeletons";
 
 export default function AnticiposProveedor() {
   const { canEditFinance } = usePermissions();
@@ -84,10 +84,10 @@ export default function AnticiposProveedor() {
       cell: (info: any) => {
         const val = info.getValue();
         if (val === "disponible") return <ToneBadge tone="success">Disponible</ToneBadge>;
-        if (val === "aplicado_parcial") return <ToneBadge tone="warn">Parcial</ToneBadge>;
-        if (val === "aplicado_total") return <ToneBadge tone="default">Aplicado</ToneBadge>;
-        if (val === "cancelado") return <ToneBadge tone="danger">Cancelado</ToneBadge>;
-        return <ToneBadge>{val}</ToneBadge>;
+        if (val === "aplicado_parcial") return <ToneBadge tone="warning">Parcial</ToneBadge>;
+        if (val === "aplicado_total") return <ToneBadge tone="neutral">Aplicado</ToneBadge>;
+        if (val === "cancelado") return <ToneBadge tone="destructive">Cancelado</ToneBadge>;
+        return <ToneBadge tone="neutral">{val}</ToneBadge>;
       },
     },
     {
@@ -201,6 +201,7 @@ export default function AnticiposProveedor() {
             <DataTable
               columns={columns}
               data={data}
+              rowKey={(r) => r.id}
               isLoading={isLoading}
               isError={isError}
               onRetry={refetch}
