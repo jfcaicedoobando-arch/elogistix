@@ -4,7 +4,7 @@ import type { ConceptoManualInput } from "@/features/facturacion/services/factur
 
 const base = { descripcion: "x", clave_sat: "78101800" };
 
-describe("calcularTotalesConceptos", () => {
+describe("calcularTotalesConceptos (factura manual)", () => {
   it("suma IVA 16% correctamente", () => {
     const conceptos: ConceptoManualInput[] = [
       { ...base, cantidad: 2, precio_unitario: 100, tipo_iva: "gravado_16" },
