@@ -5,6 +5,8 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
+
 
 const TIPOS_FACTURACION = ["facturacion", "facturación", "cobranza", "contabilidad", "pagador", "administracion", "administración"];
 
@@ -66,7 +68,7 @@ async function fetchContactos(clienteId: string): Promise<DatosEnvioCliente> {
 
 export function useContactosClienteParaEnvio(clienteId: string | undefined, enabled = true) {
   return useQuery({
-    queryKey: ["contactos-cliente-envio", clienteId],
+    queryKey: facturacionKeys.contactosClienteEnvio(clienteId),
     queryFn: () => fetchContactos(clienteId!),
     enabled: enabled && Boolean(clienteId),
     staleTime: 60_000,
