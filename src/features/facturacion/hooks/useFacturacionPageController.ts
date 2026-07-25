@@ -159,6 +159,7 @@ export function useFacturacionPageController(opts?: {
     facturasFiltradas: filtered,
     paginatedFacturas,
     totalPages,
+    totalCount,
     gastosPendientes: gastosFiltrados,
     clientesDisponibles,
 
