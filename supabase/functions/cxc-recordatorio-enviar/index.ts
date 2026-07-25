@@ -137,25 +137,27 @@ Deno.serve(wrapEdgeHandler('cxc-recordatorio-enviar', async (req) => {
       ejecutivoTelefono: perfil?.telefono ?? '',
     };
 
-    const { error: enqueueError } = await supabaseAdmin.rpc('enqueue_email', {
-      queue_name: 'transactional_emails',
-      payload: {
-        message_id: messageId,
-        to: destinatario,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-        sender_domain: SENDER_DOMAIN,
-        subject: `${diasVencido > 0 ? 'Factura vencida' : 'Recordatorio de pago'} — ${templateData.numero}`,
-        html: '',
-        text: '',
-        purpose: 'transactional',
-        label: 'recordatorio-cobranza',
-        idempotency_key: idempotencyKey,
-        template_name: 'recordatorio-cobranza',
-        template_data: templateData,
-        queued_at: new Date().toISOString(),
+    const sendUrl = `${supabaseUrl}/functions/v1/send-transactional-email`;
+    const sendResp = await fetch(sendUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${serviceRoleKey}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        templateName: 'recordatorio-cobranza',
+        recipientEmail: destinatario,
+        messageId,
+        idempotencyKey,
+        templateData,
+      }),
     });
-    if (enqueueError) throw new Error(`500:Error al encolar correo: ${enqueueError.message}`);
+
+    const sendResult = await sendResp.json().catch(() => ({ error: 'No se pudo enviar el correo' }));
+    if (!sendResp.ok || !sendResult.success) {
+      console.error('send-transactional-email falló', sendResult);
+      throw new Error(`500:Error al enviar correo: ${sendResult.error ?? 'desconocido'}`);
+    }
 
     return corsJson({ ok: true, enviado_a: destinatario }, 200, req);
   } catch (err) {
