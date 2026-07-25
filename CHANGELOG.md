@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.317.4] - 2026-07-25
+- **perf · Ola 2 batch inicial (P11, P12, P16).**
+  - **P11 · `ResponsiveDataTable` monta una sola rama por viewport.** Antes renderizaba las dos ramas (mobile lista + desktop tabla) y las ocultaba con `hidden sm:block` / `sm:hidden`, así que en móvil se pagaba el costo de montar la `DataTable` completa aunque estuviera invisible. Ahora consulta `useIsMobile()` (breakpoint 767 px) y devuelve exactamente una: en desktop sólo `DataTable`, en móvil sólo el listado card. Analogía: antes cocinábamos dos platillos y tirábamos el que no ibas a comer; ahora sólo cocinamos el tuyo.
+  - **P12 · `@react-pdf/renderer` fuera del bundle inicial.** `src/pdf/render/descargarPdf.ts` ya no importa `pdf` estáticamente; lo trae con `await import("@react-pdf/renderer")` justo antes del render. Además, `ProfitDashboardEjecutivo` deja de importar `pdf` y `ReporteEjecutivoDocument` en el módulo y los carga dinámicamente al presionar "Descargar PDF". Con esto los usuarios que nunca descargan un PDF no pagan los ~1.4 MB del renderer en el chunk inicial. Los `type DocumentProps` siguen como `type-only import`, así que no arrastran runtime.
+  - **P16 · Wizard de cotización con `useWatch` puntual.** `CotizacionWizardSteps.tsx` reemplaza 8 `form.watch("<campo>")` globales por `useWatch({ control, name })` por campo. React Hook Form ahora sólo re-renderea el resumen cuando cambia el campo específico observado, no en cada tecleo de cualquier input del wizard.
+
+
+
 ## [13.317.3] - 2026-07-25
 - **perf · P7 · Bandeja de Facturación con paginación server-side.** Nuevo hook `useFacturasListado` que consume el RPC `facturas_listado` (ya paginado en SQL con `p_offset`/`p_limit` y `count` total). El controller `useFacturacionPageController` ya no descarga hasta 5 000 facturas para filtrar en cliente: pide sólo 100 por página al servidor, con `search` y `estado` empujados al RPC y `keepPreviousData` para transiciones suaves. `search` se debouncea a 300 ms (mismo patrón que Embarques/CxP). Los filtros de `cliente` y rango de fechas siguen client-side sobre la página visible (limitación conocida documentada en el hook). Nueva query key `queryKeys.facturas.listado(filtros)` y campo `totalCount` expuesto por el controller. Analogía: antes traíamos la biblioteca completa a la mesa para hojear 100 libros; ahora pedimos sólo los 100 que vamos a leer.
 
