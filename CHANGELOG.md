@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.317.8] - 2026-07-25
+- **chore · Sidebar Etapa 1 · 6 quick-wins de navegación.** Analogía: reordenamos los letreros del edificio; los cuartos no cambian.
+  - **S1 · `/cartera` duplicado eliminado.** `SIDEBAR_BANDEJAS_ITEMS` (que exponía "Cartera" apuntando a la misma URL que "Cobranza" en Gestión) fue removido de `sidebarItems.ts` y de `buildGerenteOperaciones`. `gerente_operaciones` deja de ver una sección "Bandejas" con un solo enlace duplicado.
+  - **S2a · Badge CxP "Por aprobar" en su lugar.** `useAppSidebarSections.patchSidebarBadges` ahora pinta el conteo sobre `/compras/por-aprobar` (antes salía en `/compras` = Dashboard).
+  - **S2b · Nuevo badge "Por pagar".** Nuevos `fetchPorPagarCount` (reutiliza la RPC `cxp_por_pagar`, mismo universo que la bandeja) + `useCxpPorPagarCount` (staleTime 60 s) + `queryKeys.cxp.porPagarCount`. `patchSidebarBadges` lo pinta sobre `/compras/por-pagar`. Test unitario con supabase mockeado.
+  - **S3 · "Configuración" migró de "Facturación" a "Sistema" en `buildContador`.** No tenía relación conceptual con CxC; ahora vive al final de "Sistema" para el contador.
+  - **S4 · Renombres de consistencia.** "Antigüedad A/R" → "Antigüedad CxC"; "Antigüedad" (Compras) → "Antigüedad CxP"; "Conciliación" (Compras) → "Conciliación CxP" para distinguirla de la conciliación bancaria en Tesorería.
+  - **S5 · "Por emitir" visible en el menú.** Nuevo ítem `/proformas?estado=aceptada` (icono `FileClock`) añadido a `SIDEBAR_GESTION_ITEMS`. Se añade a los `filterGestion(...)` de `buildCoordinador`, `buildContador`, `buildEjecutivoCobranza`, `buildAdmin` y `gerente_operaciones` (que ya recibe la lista completa). Doble active-state con "Proformas" es comportamiento aceptado en QA para esta etapa.
+  - **S6 · Sentry fuera de menús operativos.** `buildGerenteOperaciones` y `buildDefaultSections` ahora usan `filterSistema(sistemaItems, ["/ayuda", "/bitacora"])` — Sentry queda sólo en admin/super_admin.
+  - **Tests actualizados**: `useLayout.test.tsx` mockea el nuevo hook; nuevo test del service `cxpPorPagarCount`.
+
+
 ## [13.317.7] - 2026-07-25
 - **fix · CI · 3 fallas de tests derivadas del sprint de performance.**
   - **`agregador.test.ts` (shard 9, 4/4 fallando).** P8 introdujo `supabase.rpc("eerr_resumen_anual", …)` dentro de `fetchTendencia12m`; el test mockeaba los servicios upstream pero no la RPC directa, así que las 4 pruebas caían con `permission denied for function current_user_org_id`. Se añadió `vi.mock("@/integrations/supabase/client")` con un `rpcMock` compartido y se ajustó la expectativa del test "invoca EERR…": ya no espera 14 llamadas al servicio EERR (1 + 1 + 12), sino 2 (actual + previo) más 2 llamadas RPC a `eerr_resumen_anual` para los años que abarca la tendencia.
