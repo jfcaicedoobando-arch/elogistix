@@ -94,5 +94,25 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
           <span className="text-muted-foreground">—</span>
         ),
     },
+    {
+      id: "acciones",
+      header: "",
+      enableSorting: false,
+      meta: { width: "w-[60px]", align: "right" },
+      cell: ({ row }) =>
+        onRecordatorio ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Enviar recordatorio de pago para ${row.original.numero ?? ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRecordatorio(row.original);
+            }}
+          >
+            <Mail className="h-4 w-4" />
+          </Button>
+        ) : null,
+    },
   ]);
 }
