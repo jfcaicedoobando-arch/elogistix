@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.314.0] - 2026-07-25
+- **feat(cobranza · QW10 Tanda 3 Quick Wins) · Recordatorios de cobranza manuales desde Cartera.** Tercera entrega del backlog `quickwins-facturacion-2026-07-24.md`:
+  - **Nueva plantilla de correo**: `supabase/functions/_shared/transactional-email-templates/recordatorio-cobranza.tsx` usa el `EmailLayout` compartido, muestra saldo, vencimiento, días de retraso y un mensaje libre del ejecutivo. Se registra en `registry.ts` como `recordatorio-cobranza`.
+  - **Nueva edge function**: `supabase/functions/cxc-recordatorio-enviar/index.ts` autentica al usuario, valida que pertenezca a la organización de la factura, inserta una fila en `factura_recordatorios`, resuelve el email del contacto principal del cliente (o usa el email opcional enviado por la UI) e invoca `send-transactional-email` con service-role para encolar el correo transaccional. Devuelve `{ ok, enviado_a }`.
+  - **Frontend**: `src/features/cobranza/hooks/useRecordatorioCobranza.ts` usa `useMutationWithFeedback` e invalida `facturas.cobranza` y `facturas.all`. `src/features/cobranza/components/DialogRecordatorioCobranza.tsx` es un diálogo `FormDialogShell` con un textarea de mensaje opcional. Se integra en `/facturacion/cartera` (`Cartera.tsx`) como un botón de icono `Mail` por fila; el click `e.stopPropagation()` evita navegar al detalle de la factura.
+  - Sin migraciones de esquema (la tabla `factura_recordatorios` ya existía). Sin cambios en RLS. Analogía: antes para pedirle a un cliente que pague había que ir a la factura, copiar datos y enviar un correo aparte; ahora es un click desde la Cartera — como poner un botón "toca el timbre" al lado de cada deudor.
+
 ## [13.313.0] - 2026-07-25
 - **feat(cobranza · QW9 Tanda 3 Quick Wins) · Aging A/R por cliente con export CSV.** Continuación del backlog `quickwins-facturacion-2026-07-24.md`. Se añade el reporte de antigüedad de saldos de Cuentas por Cobrar (`/cobranza/aging`), reutilizando el patrón de `CxpAging` pero con datos propios:
   - **Base de datos**: nueva RPC `public.cxc_aging_clientes(p_fecha date)` (Security Definer) que agrupa saldos de `facturas` en cubetas estándar (vigente, 1-30, 31-60, 61-90, >90 días) por cliente, excluyendo borradores, canceladas y sustituidas. Usa la misma estructura de cubetas que `cxp_aging_proveedores` para mantener consistencia entre CxC y CxP.
