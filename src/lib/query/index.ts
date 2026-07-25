@@ -30,6 +30,7 @@ import { portal } from "@/features/portal/queryKeys";
 import { auditoria } from "@/features/auditoria/queryKeys";
 import { facturacion, facturas } from "@/features/facturacion/queryKeys";
 import { profit } from "@/features/profit/queryKeys";
+import { cxc } from "@/features/cxc/queryKeys";
 import {
   cxp, proveedorFacturas, proveedorNotasCredito, pagosProveedor,
   bbvaMovimientos, proveedorSalud, conceptosCosto,
