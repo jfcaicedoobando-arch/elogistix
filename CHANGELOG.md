@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.315.3] - 2026-07-25
+- **security(db · FIX-45) · Revocar EXECUTE anónimo de funciones SECURITY DEFINER fuera de whitelist.** El guardrail `supabase/tests/fix45_anon_execute_whitelist.sql` detectó 7 funciones ejecutables por `anon` que no debían estarlo: `cxc_aging_clientes`, `assert_pago_sin_rep_vivo_delete`, `calc_pago_retenciones`, `calcular_comision_pago` (dos firmas), `is_org_member`, `tg_facturas_link_proforma` y `tg_liberar_folio_proveedor_factura`. Migración `REVOKE EXECUTE ... FROM PUBLIC, anon` en cada una. Sin cambios de comportamiento para usuarios autenticados. Analogía: la puerta de servicio del edificio estaba con la chapa abierta; sólo le pusimos llave, los inquilinos siguen entrando igual.
+
 ## [13.315.2] - 2026-07-25
 - **UI/UX(facturacion) · Rediseño del modal "Nueva factura manual".** El formulario pasó de una hoja apretada con 12 casillas en una sola cuadrícula a una carpeta con secciones apiladas: Información del Cliente, Datos fiscales, Conceptos y un bloque Notas + Resumen. Cambios visuales, cero cambios de lógica ni de contrato.
   - **`DialogNuevaFacturaManual.tsx`**: cada zona vive en `<section>` sobre `bg-card` con encabezado uppercase y el área scrollable en `bg-muted/30` para que las tarjetas respiren. El total ahora se muestra en una **placa navy** (`bg-primary`) junto al textarea de Notas: subtotal, IVA y total con jerarquía tipográfica clara.
