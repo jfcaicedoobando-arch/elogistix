@@ -17,7 +17,7 @@ import {
   Bug,
   Handshake,
   TrendingUp,
-  
+
   Receipt,
   Landmark,
   Percent,
@@ -38,49 +38,49 @@ import {
   Banknote,
   ArrowRightLeft,
   CalendarCheck,
+  Wallet,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
-
-// v13.300.47 — Se consolidó Profit en un único enlace (patrón hub + tabs).
-// La navegación entre Dashboard Ejecutivo, Proyección, Estado de Resultados
-// y Presupuesto vs Real vive en `ProfitSubNav` dentro del módulo.
-export const SIDEBAR_PROFIT_ITEMS: SidebarItem[] = [
-  { title: "Profit", url: "/profit", icon: TrendingUp },
-];
 
 export const SIDEBAR_DASHBOARD_ITEMS: SidebarItem[] = [
   { title: "Principal", url: "/", icon: LayoutDashboard },
   { title: "Operaciones", url: "/operaciones", icon: Workflow },
 ];
 
-// v13.175.0 — Se removieron "Facturas de proveedor" (`/cxp`) — ahora vive
-// exclusivamente en la sección Compras como "Facturas" (`/compras/facturas`).
-export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
-  { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
-  { title: "Embarques", url: "/embarques", icon: Ship },
+// v13.318.0 — Sidebar Etapa 2: reagrupación por flujo del dinero.
+// Antes: SIDEBAR_GESTION_ITEMS / SIDEBAR_DIRECTORIO_ITEMS / SIDEBAR_PROFIT_ITEMS
+// / SIDEBAR_REPORTES_ITEMS. Ahora se dividen en Ventas / Operación / Dinero / Análisis.
+export const SIDEBAR_VENTAS_ITEMS: SidebarItem[] = [
   { title: "Facturación", url: "/facturacion", icon: Receipt },
-  // v13.317.8 — Bandeja de proformas aceptadas listas para emitir CFDI.
   { title: "Por emitir", url: "/proformas?estado=aceptada", icon: FileClock },
   { title: "Proformas", url: "/proformas", icon: FileSpreadsheet },
   { title: "Cobranza", url: "/cartera", icon: HandCoins },
   { title: "Antigüedad CxC", url: "/cobranza/aging", icon: LayoutList },
-  { title: "Tesorería", url: "/tesoreria", icon: Landmark },
-  { title: "Pagos programados", url: "/tesoreria/pagos-programados", icon: CalendarCheck },
   { title: "Comisiones", url: "/comisiones", icon: Percent },
+  { title: "Clientes", url: "/clientes", icon: Building2 },
 ];
 
-export const SIDEBAR_REPORTES_ITEMS: SidebarItem[] = [
+export const SIDEBAR_OPERACION_ITEMS: SidebarItem[] = [
+  { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
+  { title: "Embarques", url: "/embarques", icon: Ship },
+];
+
+export const SIDEBAR_DINERO_ITEMS: SidebarItem[] = [
+  { title: "Tesorería", url: "/tesoreria", icon: Landmark },
+  { title: "Pagos programados", url: "/tesoreria/pagos-programados", icon: CalendarCheck },
+  { title: "Conciliación bancaria", url: "/tesoreria/conciliacion", icon: GitCompare },
+  { title: "Cuentas bancarias", url: "/tesoreria/cuentas", icon: Wallet },
+  { title: "Flujo proyectado", url: "/tesoreria/flujo", icon: TrendingUp },
+];
+
+export const SIDEBAR_ANALISIS_ITEMS: SidebarItem[] = [
+  { title: "Profit", url: "/profit", icon: TrendingUp },
   { title: "Cierre mensual", url: "/reportes/cierre-mensual", icon: Calendar },
   { title: "Rentabilidad", url: "/reportes/rentabilidad", icon: BarChart3 },
 ];
 
 export const SIDEBAR_CRM_ITEMS: SidebarItem[] = [
   { title: "CRM", url: "/crm", icon: Handshake },
-];
-
-// v13.175.0 — Proveedores migra al módulo Compras (`/compras/proveedores`).
-export const SIDEBAR_DIRECTORIO_ITEMS: SidebarItem[] = [
-  { title: "Clientes", url: "/clientes", icon: Building2 },
 ];
 
 export const SIDEBAR_SISTEMA_ITEMS: SidebarItem[] = [
@@ -109,9 +109,6 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
   { title: "Navieras (Condiciones)", url: "/costeo/navieras", icon: Anchor },
   { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Timer },
 ];
-
-// v13.317.8 — SIDEBAR_BANDEJAS_ITEMS eliminado: "/cartera" ya vive en Gestión
-// como "Cobranza". Antes se duplicaba aquí como "Cartera".
 
 /**
  * v13.175.0 — Módulo Compras unificado. Todas las rutas viven bajo `/compras/*`
