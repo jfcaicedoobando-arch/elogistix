@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.315.0] - 2026-07-25
+- **feat(facturacion · QW12 Tanda 3 Quick Wins) · Envío del estado de cuenta por email.** Última entrega del backlog `quickwins-facturacion-2026-07-24.md`:
+  - **Nueva plantilla de correo**: `supabase/functions/_shared/transactional-email-templates/estado-cuenta-cliente.tsx` envía un resumen del periodo (total, saldo, vencido) con un enlace al portal del cliente. Se registra en `registry.ts` como `estado-cuenta-cliente`.
+  - **Nueva edge function**: `supabase/functions/cxc-estado-cuenta-enviar/index.ts` autentica, valida membresía de la organización, lee las facturas vivas del cliente, resuelve el contacto principal y envía el correo mediante `send-transactional-email`. Devuelve `{ ok, enviado_a }`.
+  - **Frontend**: `src/features/cobranza/components/DialogEnviarEstadoCuenta.tsx` muestra un preview de total/saldo/vencido y permite sobreescribir el correo y agregar un mensaje opcional. `src/features/cobranza/hooks/useEstadoCuentaEmail.ts` usa `useMutationWithFeedback`. Se integra en `ExportActions.tsx` como un botón "Enviar" visible cuando se selecciona un solo cliente en el Estado de Cuenta.
+  - Sin migraciones. Sin cambios en RLS. Analogía: antes para mandar el estado de cuenta había que descargarlo, adjuntarlo y redactar un correo; ahora es un botón al lado de PDF y CSV — como poner un sobre junto a la impresora.
+
 ## [13.314.0] - 2026-07-25
 - **feat(cobranza · QW10 Tanda 3 Quick Wins) · Recordatorios de cobranza manuales desde Cartera.** Tercera entrega del backlog `quickwins-facturacion-2026-07-24.md`:
   - **Nueva plantilla de correo**: `supabase/functions/_shared/transactional-email-templates/recordatorio-cobranza.tsx` usa el `EmailLayout` compartido, muestra saldo, vencimiento, días de retraso y un mensaje libre del ejecutivo. Se registra en `registry.ts` como `recordatorio-cobranza`.
