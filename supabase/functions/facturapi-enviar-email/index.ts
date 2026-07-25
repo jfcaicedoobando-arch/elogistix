@@ -94,31 +94,72 @@ async function resolveTarget(supabase: SbClient, body: ReqBody): Promise<Resolve
 
 
 
+const TIPOS_FACTURACION = [
+  "facturacion", "facturación", "cobranza", "contabilidad", "pagador",
+  "administracion", "administración",
+];
+
+interface EmailResolucion {
+  email: string | null;
+  fuente: "override" | "contacto_facturacion" | "contacto_reciente" | "cliente" | "ninguna";
+  emailSugerido: string | null;
+}
+
 async function resolveEmail(
   supabase: SbClient,
   clienteId: string,
   override: string | undefined,
-): Promise<string | null> {
-  if (override && override.includes("@")) return override.trim();
-  if (!clienteId) return null;
-  // La columna `es_principal` fue removida; tomamos el contacto más antiguo con email.
-  const { data: contacto } = await supabase
-    .from("contactos_cliente")
-    .select("email")
-    .eq("cliente_id", clienteId)
-    .not("email", "is", null)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  const emailContacto = (contacto?.email as string | null) ?? null;
-  if (emailContacto) return emailContacto;
-  const { data: cliente } = await supabase
-    .from("clientes")
-    .select("email")
-    .eq("id", clienteId)
-    .maybeSingle();
-  return (cliente?.email as string | null) ?? null;
+): Promise<EmailResolucion> {
+  // Traemos contactos + cliente en paralelo para decidir sugerencia y
+  // reportar en bitácora si el usuario mandó a un email distinto.
+  const contactosPromise = clienteId
+    ? supabase
+        .from("contactos_cliente")
+        .select("email, tipo, created_at")
+        .eq("cliente_id", clienteId)
+        .is("deleted_at", null)
+        .not("email", "is", null)
+        .order("created_at", { ascending: false })
+    : null;
+  const clientePromise = clienteId
+    ? supabase.from("clientes").select("email").eq("id", clienteId).maybeSingle()
+    : null;
+
+  const [contactosRes, clienteRes] = await Promise.all([
+    contactosPromise, clientePromise,
+  ]);
+
+  const contactos = ((contactosRes?.data ?? []) as Array<{
+    email: string | null; tipo: string | null;
+  }>).filter((c) => c.email && c.email.includes("@"));
+
+  const facturacion = contactos.find((c) => {
+    const t = (c.tipo ?? "").toLowerCase().trim();
+    return TIPOS_FACTURACION.some((k) => t.includes(k));
+  });
+  const primerContacto = contactos[0];
+  const emailCliente = (clienteRes?.data?.email as string | null) ?? null;
+
+  const emailSugerido =
+    (facturacion?.email as string | null) ??
+    (primerContacto?.email as string | null) ??
+    emailCliente;
+
+  if (override && override.includes("@")) {
+    return { email: override.trim(), fuente: "override", emailSugerido };
+  }
+  if (facturacion?.email) {
+    return { email: facturacion.email, fuente: "contacto_facturacion", emailSugerido };
+  }
+  if (primerContacto?.email) {
+    return { email: primerContacto.email, fuente: "contacto_reciente", emailSugerido };
+  }
+  if (emailCliente) {
+    return { email: emailCliente, fuente: "cliente", emailSugerido };
+  }
+  return { email: null, fuente: "ninguna", emailSugerido };
 }
+
 
 function isValidEmail(e: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
