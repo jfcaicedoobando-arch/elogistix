@@ -146,7 +146,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
         {busy === "zip" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
         Descargar ZIP
       </Button>
-      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={reenviarEmail}>
+      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={() => setConfirmEmailOpen(true)}>
         {busy === "email" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
         Reenviar por email
       </Button>
@@ -157,6 +157,20 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       {ids.length > 0 && (
         <Button variant="ghost" size="sm" onClick={onClear}>Limpiar</Button>
       )}
+      <ConfirmActionDialog
+        open={confirmEmailOpen}
+        onOpenChange={setConfirmEmailOpen}
+        title="Reenviar facturas por email"
+        description={
+          <>
+            Se reenviará por correo <strong>{ids.length}</strong> factura(s) a los contactos
+            principales de cada cliente. ¿Continuar?
+          </>
+        }
+        confirmLabel="Reenviar"
+        isPending={busy === "email"}
+        onConfirm={reenviarEmail}
+      />
     </div>
   );
 }
