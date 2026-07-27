@@ -98,12 +98,19 @@ const RESERVED = new Set([
   "record","alias","current_setting","coalesce","nullif","concat",
 ]);
 
-function extractAliases(body: string, tables: ColMap): Map<string, string> {
-  const aliases = new Map<string, string>();
-  // Normaliza: quita comentarios /* ... */ y -- ...
+function extractAliases(body: string, tables: ColMap): Map<string, Set<string>> {
+  // Un mismo alias puede reutilizarse dentro de una misma función para tablas
+  // distintas (SQL local en distintos bloques/CTE). Guardamos TODAS las tablas
+  // candidatas y sólo flagueamos cuando la columna no existe en NINGUNA.
+  const aliases = new Map<string, Set<string>>();
   const clean = body
     .replace(/\/\*[\s\S]*?\*\//g, " ")
     .replace(/--[^\n]*/g, " ");
+
+  const add = (alias: string, table: string) => {
+    if (!aliases.has(alias)) aliases.set(alias, new Set());
+    aliases.get(alias)!.add(table);
+  };
 
   // FROM|JOIN [public.]tabla [AS] alias
   const re = /\b(?:FROM|JOIN|,)\s+(?:public\.)?([a-z_][a-z0-9_]*)\s+(?:AS\s+)?([a-z_][a-z0-9_]*)/gi;
@@ -111,24 +118,22 @@ function extractAliases(body: string, tables: ColMap): Map<string, string> {
   while ((m = re.exec(clean)) !== null) {
     const table = m[1].toLowerCase();
     const alias = m[2].toLowerCase();
-    if (!tables.has(table)) continue;             // no es tabla real
-    if (RESERVED.has(alias)) continue;            // ej. "cotizaciones WHERE" → alias=where
-    if (alias === table) continue;                // alias implícito = nombre tabla
-    aliases.set(alias, table);
+    if (!tables.has(table)) continue;
+    if (RESERVED.has(alias)) continue;
+    add(alias, table);
   }
-  // También el nombre de la tabla puede usarse como su propio alias.
+  // Tabla usada sin alias: su propio nombre es alias válido.
   const re2 = /\b(?:FROM|JOIN|,)\s+(?:public\.)?([a-z_][a-z0-9_]*)\b/gi;
   while ((m = re2.exec(clean)) !== null) {
     const table = m[1].toLowerCase();
-    if (tables.has(table) && !aliases.has(table)) aliases.set(table, table);
+    if (tables.has(table)) add(table, table);
   }
   return aliases;
 }
 
 // ---------- 4. Buscar alias.columna ilegales ----------
-interface Finding { kind: string; name: string; alias: string; table: string; column: string; }
+interface Finding { kind: string; name: string; alias: string; tables: string[]; column: string; }
 
-// Columnas de sistema / pseudos que siempre existen.
 const SYSTEM_COLS = new Set(["*", "ctid", "xmin", "xmax", "cmin", "cmax", "tableoid", "oid"]);
 
 function auditObject(obj: SqlObject, tables: ColMap): Finding[] {
@@ -143,14 +148,18 @@ function auditObject(obj: SqlObject, tables: ColMap): Finding[] {
     const alias = m[1].toLowerCase();
     const column = m[2].toLowerCase();
     if (SYSTEM_COLS.has(column)) continue;
-    const table = aliases.get(alias);
-    if (!table) continue;                          // alias no rastreado (CTE, subquery, RECORD…)
-    const cols = tables.get(table);
-    if (!cols || cols.has(column)) continue;
+    const candidates = aliases.get(alias);
+    if (!candidates) continue;
+    // Válido si la columna existe en al menos UNA de las tablas candidatas.
+    let existsSomewhere = false;
+    for (const t of candidates) {
+      if (tables.get(t)?.has(column)) { existsSomewhere = true; break; }
+    }
+    if (existsSomewhere) continue;
     const key = `${obj.kind}:${obj.name}:${alias}.${column}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    found.push({ kind: obj.kind, name: obj.name, alias, table, column });
+    found.push({ kind: obj.kind, name: obj.name, alias, tables: [...candidates], column });
   }
   return found;
 }
