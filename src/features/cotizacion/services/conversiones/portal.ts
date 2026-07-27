@@ -10,6 +10,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { translateLcCode } from "@/lib/errors";
+import { logger } from "@/lib/observability/logger";
 
 export async function portalResponderCotizacion(
   cotizacionId: string,
@@ -43,7 +44,7 @@ export async function portalResponderCotizacion(
     });
   } catch (notifyErr) {
     // Best-effort: no romper el flujo del portal si el email falla.
-    console.warn("notificar-respuesta-cotizacion falló (best-effort)", notifyErr);
+    logger.warn("portal", "notificar-respuesta-cotizacion falló (best-effort)", notifyErr);
   }
 }
 

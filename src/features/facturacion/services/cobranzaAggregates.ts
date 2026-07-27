@@ -5,6 +5,7 @@
  */
 import { sumarMontos } from "@/lib/financial/financialUtils";
 import type { FacturaCobranza } from "./cobranza";
+import { logger } from "@/lib/observability/logger";
 
 export interface KPIsCobranza {
   total_mxn: number;
@@ -51,8 +52,7 @@ export function agruparSaldosPorMoneda(filas: FacturaCobranza[]): SaldosPorMoned
   for (const [k, arr] of Object.entries(otros)) porMoneda[k] = sumarMontos(arr);
 
   if (descartadas > 0) {
-    console.warn(
-      `[cobranza] ${descartadas} factura(s) con moneda no canónica descartada(s) de los buckets MXN/USD:`,
+    logger.warn("cobranza", `${descartadas} factura(s) con moneda no canónica descartada(s) de los buckets MXN/USD:`,
       Object.keys(otros),
     );
   }

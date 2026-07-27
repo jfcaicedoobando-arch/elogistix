@@ -1,45 +1,87 @@
-## Diagnóstico (verificado en BD)
+# Auditoría — Sonner/Toasts y Sentry
 
-El usuario ve "COT-2026-0123" (y sus duplicados `-DUP-2`, `-DUP-3`) en el buscador global, pero al abrir el detalle el registro no aparece. Consultando `cotizaciones` en BD:
+Analogía rápida: nuestra app hoy es como una casa con alarma bien instalada (Sentry) y bocinas bien reguladas (toasts). La estructura está sólida; lo que falta es afinar sensores para no gastar batería en falsas alarmas y cerrar unas ventanas menores.
 
-| folio | estado | deleted_at |
-|---|---|---|
-| COT-2026-0123 | Borrador | 2026-07-13 19:43 |
-| COT-2026-0123-DUP-2 | Borrador | 2026-07-14 01:37 |
-| COT-2026-0123-DUP-3 | Borrador | 2026-07-20 22:31 |
+## 1) Estado actual (verificado)
 
-Las tres están **soft-deleted** (`deleted_at` con fecha). El detalle sí respeta `deleted_at IS NULL`, pero al inspeccionar `busqueda_global` en Postgres, la CTE de cotizaciones **no** filtra por `c.deleted_at IS NULL` — sólo filtra por organización:
+### Toasts / Sonner
+- **Backend único**: todos los toasts pasan por `sonner@2.0.7` vía dos wrappers autorizados:
+  - `@/lib/ui/appFeedback` (`notifyError` / `notifySuccess` / `notifyWarning` / `notifyInfo`) — usado en **282 archivos**.
+  - `@/hooks/shared/useToast` (shim legacy `{title, description, variant}` que delega en sonner).
+- **Baseline SONNER-LEGACY vacía**: 0 features importan `sonner` directo. La allowlist en `eslint.config.js` sólo cubre wrappers, el `Toaster` y `ErrorDetailsDialog`.
+- **Guardrails activos**:
+  - Regla ESLint `no-restricted-imports` de `sonner` en `src/**`.
+  - Script `scripts/audit-sonner-baseline.ts` (regresión en CI).
+  - Tests arquitectónicos: `error-toasts-use-notifyError`, `no-double-toast-on-mutate`.
+- **Toaster global**: `top-right`, `expand`, swipe-to-dismiss, tap targets ≥44 px, bordes semánticos por severidad. Consistente con la identidad visual.
 
-```sql
-FROM cotizaciones c
-WHERE (c.folio ILIKE ... OR c.cliente_nombre ILIKE ... OR c.prospecto_empresa ILIKE ...)
-  AND (c.organization_id = current_user_org_id() OR has_role(auth.uid(),'super_admin'))
-```
+### Sentry
+- **SDK**: `@sentry/react@10.65.0` (front) + `@sentry/deno@8` (edge).
+- **Init diferido** en `main.tsx` (chunk `sentry-vendor` fuera del critical path) con captura inmediata.
+- **Configuración robusta**:
+  - `beforeSend` con `shouldDropSentryEvent` (chunk/HMR, Zod, RLS 42501, ruido `flock.js` del hosting).
+  - Fingerprint custom para `PostgrestError` por `code + ruta`.
+  - `scrubEventPii` + `scrubBreadcrumb` para redactar RFC/emails/query strings.
+  - `sendDefaultPii: false`, `normalizeDepth: 5`, `maxValueLength: 1500`.
+  - Integraciones: BrowserTracing (react-router v6), Profiling, `extraErrorData` (`Error.cause` + props enumerables), `httpClient` (5xx en Supabase/`/api`/`/functions`), Replay con `maskAllText/Inputs + blockAllMedia`, Feedback widget.
+  - Sampling: `tracesSampler` por ruta, replay session 2% + on-error 100%, profiles 10%.
+- **Edge functions**: `_shared/sentry.ts` con init perezoso, `flush(2000)`, y helper `withMonitor` para cron. **41/41 edge functions** usan el wrapper.
+- **Contexto enriquecido**: `reportCaughtError` inyecta tags (`organization_id`, `effective_role`, `route`, `app_version`, `error_kind`, `pg_code`) + payload sanitizado.
+- **Guardrails de tests**: `sentry-edge-coverage`, `sentry-edge-wrapping`, `sentry-fiscal-services`, `sentry-imports-guardrail`.
 
-Por eso los resultados del buscador incluyen "fantasmas" ya borrados.
+## 2) Hallazgos y mejoras propuestas
 
-**Analogía:** el buscador es un índice del archivero, pero seguimos listando carpetas que ya movimos a la trituradora. Al ir a leerlas, no están.
+### Sonner / Toasts
 
-## Cambios propuestos
+| # | Severidad | Hallazgo | Acción |
+|---|---|---|---|
+| T1 | Media | `useToast` shim legacy sigue activo — 20+ archivos aún lo usan. Duplica la superficie de API (legacy vs `notify*`). | Fase burn-down: codemod de `toast({variant, title, description})` → `notify*`. Al terminar, marcar el shim como deprecado (`@deprecated` + regla ESLint). |
+| T2 | Baja | El primer parámetro `_toast` de las funciones `notify*` es histórico y siempre se ignora. Confunde a devs nuevos. | Deprecar la firma `(toast, opts)` → sólo `(opts)`. Migración con codemod + `@deprecated` overload. |
+| T3 | Baja | No hay dedupe automático de errores idénticos consecutivos (mismo `errorCode`+`method` en <2 s). En cascadas RLS aparecen 3–5 toasts iguales. | Implementar dedupe por `id` sintético (`hash(errorCode+method)`) dentro de `notifyError`, dejando pasar sólo el primero por ventana de 2 s. |
+| T4 | Baja | Toasts de éxito con `duration: Infinity` no existen hoy; usuarios en pantallas grandes pierden avisos rápidos (4 s). | Añadir `notifySuccess({ persistent: true })` como opción explícita cuando la acción abre otro flujo (ej. "Ver factura timbrada"). |
+| T5 | Info | Falta un `notifyPromise(promise, {loading, success, error})` para operaciones async — hoy se emiten 2 toasts secuenciales manuales. | Envolver `sonnerToast.promise()` con nuestro tracking a Sentry cuando la promesa rechaza. |
 
-1. **Migración `patch_busqueda_global_deleted_at`**
-   - Recrear `public.busqueda_global` añadiendo `AND c.deleted_at IS NULL` al bloque cotizaciones.
-   - Auditar en la misma función los demás bloques `UNION ALL` (embarques, proformas, facturas, clientes, proveedores…) y añadir `X.deleted_at IS NULL` en cualquiera cuya tabla tenga esa columna y aún no lo filtre. Mantener firma, `SECURITY DEFINER`, `search_path` y grants existentes; sin cambios de permisos.
+### Sentry
 
-2. **Test de regresión**
-   - `supabase/tests/rls/test_busqueda_global_deleted_at.sql`: sembrar una cotización soft-deleted y otra viva con el mismo folio parcial, invocar `busqueda_global('COT-...')` y afirmar que sólo aparece la viva. Ejecutado por `ci-fast.sh --only rls`.
+| # | Severidad | Hallazgo | Acción |
+|---|---|---|---|
+| S1 | Media | 5 servicios llaman `Sentry.captureException` directo en lugar de `reportCaughtError` (`conciliacion.ts`, `catalogos/services/index.ts`, `parsePdfInvoice.ts`, `parseCfdi.ts`, `ErrorBoundary.tsx`). Pierden tags automáticos (`organization_id`, `effective_role`, `route`). | Migrar los 5 a `reportCaughtError`. `ErrorBoundary` es caso especial (necesita `eventId` para el feedback dialog) — mantener `captureException` pero setear tags antes vía `withScope`. |
+| S2 | Media | `beforeSend` tiene 5 predicados de drop pero no hay métrica de **cuántos** eventos se descartan por cada uno. Riesgo: silenciar bugs reales. | Agregar `Sentry.metrics.increment('event.dropped', 1, {tags: {reason}})` antes de retornar `null`. Panel Sentry para monitorear ratios. |
+| S3 | Baja | `console.error/warn` aparece en **12 archivos** de features. En prod se pierde (Sentry no captura console por defecto). | Sustituir con `logger.warn/error` (`src/lib/observability/logger.ts`), que ya rutea a Sentry como breadcrumb + captura en `error`. |
+| S4 | Baja | Session Replay al 2% + on-error 100%. Buen balance, pero **no hay canary** para replays fallidos (Replay a veces se cae silenciosamente en Safari iOS). | Agregar `onError` handler de la integración Replay que loggee a un breadcrumb `replay_failed`. |
+| S5 | Baja | Cron monitoring (`withMonitor`) existe en `_shared/sentry.ts`, pero necesita auditoría rápida: verificar que **todos** los edge functions programados (`pg_cron`) lo usen. | Grep `pg_cron.schedule` → cruzar con `withMonitor`. Reportar deltas y envolver los faltantes. |
+| S6 | Info | Falta `Sentry.startSpan` en RPCs pesados (auditoría, aging, PnL) — hoy sólo tenemos traces automáticos de router. Cuellos de botella lentos no aparecen en Performance. | Envolver los 6–8 RPCs "lentos conocidos" con `Sentry.startSpan({op: 'db.rpc', name})`. |
+| S7 | Info | El `DSN` público en `.env` no está documentado en `docs/observabilidad/` (existe `runbook.md` pero no menciona cómo rotar DSN). | Añadir sección "Rotar DSN" al runbook + checklist post-rotación (verificar que edge functions lo tomen del `SENTRY_DSN_EDGE`). |
 
-3. **Documentación**
-   - `CHANGELOG.md` entrada nueva en la parte superior con la analogía.
-   - `APP_VERSION` → `13.320.23`.
+## 3) Ejecución sugerida (3 tandas)
 
-## Fuera de alcance
+**Tanda 1 — Consolidación (bajo riesgo, alto valor)**
+- S1: migrar 5 `captureException` → `reportCaughtError`.
+- S3: sustituir `console.error/warn` por `logger.*` en features.
+- Test arquitectónico nuevo: prohibir `Sentry.captureException` fuera de `observability/` y `ErrorBoundary`.
 
-- No se tocan RLS ni grants (el problema es de filtro dentro del RPC, no de permisos).
-- No se restaurarán ni borrarán los tres registros de "COT-2026-0123" — quedan como estaban (soft-deleted). Si el usuario quiere recuperar alguno, es una acción separada.
+**Tanda 2 — Observabilidad de la observabilidad**
+- S2: métricas de drop en `beforeSend`.
+- S5: auditoría cron + envolver faltantes con `withMonitor`.
+- S6: `startSpan` en RPCs lentos.
+- T3: dedupe de toasts de error consecutivos.
+
+**Tanda 3 — DX y limpieza**
+- T1: burn-down del shim `useToast` legacy.
+- T2: deprecar primer parámetro `_toast` de `notify*`.
+- T4/T5: `persistent` en success + `notifyPromise`.
+- S4: canary Replay.
+- S7: doc runbook.
+
+## 4) Fuera de alcance
+- Cambiar de proveedor (Sentry queda).
+- Cambiar de librería de toasts (Sonner queda).
+- Rediseñar el toaster visualmente (ya cumple identidad Apple-like).
 
 ## Detalles técnicos
-
-- Archivo: nueva migración en `supabase/migrations/<timestamp>_patch_busqueda_global_deleted_at.sql` usando `CREATE OR REPLACE FUNCTION`.
-- Antes de escribir la migración, se leerá la definición completa del RPC (`pg_get_functiondef`) para preservar exactamente el resto de UNION ALL, LIMITs y firma.
-- Se validará con `audit:migrations` (H4/H6) para conservar `REVOKE ALL FROM PUBLIC` + `GRANT EXECUTE TO authenticated, service_role` si ya existen.
+- Codemod para T1/T2: `scripts/codemod-sonner-to-appfeedback.ts` ya existe y se puede reutilizar/extender.
+- Métricas S2: `Sentry.metrics` está en el SDK 10 (`@sentry/react/metrics`).
+- `withMonitor` S5: firma en `supabase/functions/_shared/sentry.ts:250`.
+- Tests: agregar `sentry-no-direct-capture.test.ts` (guardrail) y `toast-dedupe.test.ts`.
+- Todos los cambios respetan el límite de 200 líneas por archivo (Power of 10).
+- Cada tanda: bump `APP_VERSION` + entrada en `CHANGELOG.md`.

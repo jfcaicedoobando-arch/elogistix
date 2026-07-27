@@ -6,7 +6,7 @@
  * - ignorarMovimiento: marcar como Ignorado con motivo.
  * - sugerirCandidatos: matching por monto (±$1) y fecha (±5 días) contra CxC/CxP pendientes.
  */
-import * as Sentry from "@sentry/react";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
@@ -139,12 +139,11 @@ export async function conciliarConPago(
     })
     .eq("id", movId);
   if (error) {
-    try {
-      Sentry.captureMessage("conciliacion.failed", {
-        level: "warning",
-        tags: { tipo, reason: error.code ?? "unknown" },
-      });
-    } catch { /* best-effort */ }
+    reportCaughtError(error, {
+      feature: "tesoreria",
+      op: "conciliacion.failed",
+      tipo,
+    }, { pgCode: error.code ?? "unknown", movId, pagoId });
     mapConciliacionError(error);
   }
 }

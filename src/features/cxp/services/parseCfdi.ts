@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/react";
 import { supabase } from "@/integrations/supabase/client";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
 import { invokeParseCfdiOnce, type InvokeAttemptFail } from "./parseCfdi.invoke";
 import {
@@ -113,10 +114,11 @@ export async function parseCfdiXml(
         level: "error",
         data: { attempt_count: attemptCount, phase: ctx.phase, errorName: ctx.errorName },
       });
-      Sentry.captureException(error, {
-        tags: { feature: "cfdi_upload", phase: ctx.phase },
-        contexts: { cfdi: { xml_size: file.size, latency_ms: ctx.latencyMs, ...ctx } },
-      });
+      reportCaughtError(error, {
+        feature: "cfdi_upload",
+        op: "parse_cfdi_xml",
+        phase: ctx.phase,
+      }, { xml_size: file.size, latency_ms: ctx.latencyMs, ...ctx });
       throw error;
     },
   );

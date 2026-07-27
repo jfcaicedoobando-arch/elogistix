@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/appRole";
 import { UNRESOLVED_EMAIL } from "./constants";
+import { logger } from "@/lib/observability/logger";
 
 // Re-export para no romper callers históricos que importan desde el barrel.
 export { UNRESOLVED_EMAIL };
@@ -44,7 +45,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
       body: { action: "list" },
     });
     if (fnError) {
-      console.warn("[fetchUsuariosOrganizacion] user-management invoke error:", fnError);
+      logger.warn("fetchUsuariosOrganizacion", "user-management invoke error:", fnError);
     } else if (Array.isArray(usersData)) {
       (usersData as ListUsersRow[]).forEach((u) => {
         emailMap[u.id] = { email: u.email, created_at: u.created_at };
@@ -52,7 +53,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
     }
   } catch (err) {
     // Mantenemos la tabla funcional con placeholder UNRESOLVED_EMAIL; logueamos para debug en prod.
-    console.warn("[fetchUsuariosOrganizacion] user-management threw:", err);
+    logger.warn("fetchUsuariosOrganizacion", "user-management threw:", err);
   }
 
   return members.map((m) => ({

@@ -17,6 +17,7 @@ import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { Tables } from "@/integrations/supabase/types";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
+import { logger } from "@/lib/observability/logger";
 
 type Moneda = Tables<"factura_notas_credito">["moneda"];
 type Motivo = Tables<"factura_notas_credito">["motivo"];
@@ -110,7 +111,7 @@ export function useNotaCreditoDraft(p: Params) {
     onError: (err) => {
       // `handleSubmit` ya notifica al usuario; el onError sólo satisface la
       // regla de arquitectura y deja huella en consola para diagnóstico.
-      console.warn("[useNotaCreditoDraft] crearNotaCredito failed", getErrorMessage(err));
+      logger.warn("useNotaCreditoDraft", "crearNotaCredito failed", getErrorMessage(err));
     },
   });
 

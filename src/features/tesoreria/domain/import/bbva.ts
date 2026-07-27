@@ -13,6 +13,7 @@
  */
 import { isoUtcDay } from "@/lib/date/mx";
 import Papa from "papaparse";
+import { logger } from "@/lib/observability/logger";
 
 
 export interface MovimientoParseado {
@@ -119,7 +120,7 @@ function parseMontosRow(row: unknown[], idx: ColIdx):
   const cargoRaw = idx.cargo >= 0 ? parseMonto(row[idx.cargo]) : 0;
   const abonoRaw = idx.abono >= 0 ? parseMonto(row[idx.abono]) : 0;
   if (Number.isNaN(cargoRaw) || Number.isNaN(abonoRaw)) {
-    console.warn("[bbva] fila descartada: monto no parseable", { row });
+    logger.warn("bbva", "fila descartada: monto no parseable", { row });
     return null;
   }
   const saldoRaw = idx.saldo >= 0 ? row[idx.saldo] : null;
