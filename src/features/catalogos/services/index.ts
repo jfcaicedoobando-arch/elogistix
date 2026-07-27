@@ -6,6 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { unwrapOr, run } from "@/lib/supabase/response";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
