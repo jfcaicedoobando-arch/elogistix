@@ -261,7 +261,7 @@ BEGIN
            bool_or(cc.moneda::text = 'USD') AS tiene_usd_costo,
            bool_or(cc.moneda::text = 'EUR') AS tiene_eur_costo
     FROM emb e
-    JOIN conceptos_costo cc ON cc.embarque_id = e.id
+    JOIN conceptos_costo cc ON cc.embarque_id = e.id AND cc.deleted_at IS NULL
     WHERE cc.moneda::text IN ('USD','EUR')
       AND (
         (cc.moneda::text = 'USD' AND COALESCE(NULLIF(e.tipo_cambio_usd,0),0) = 0)
