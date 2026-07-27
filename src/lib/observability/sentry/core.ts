@@ -71,7 +71,10 @@ export function initSentry(): void {
     tracesSampler: sampleByRoute,
     tracePropagationTargets: TRACE_PROPAGATION_TARGETS,
     profilesSampleRate: readRate("VITE_SENTRY_PROFILES_SAMPLE_RATE", 0.1),
-    replaysSessionSampleRate: readRate("VITE_SENTRY_REPLAYS_SESSION_RATE", 0),
+    // 13.320.1 (audit Sentry Batch 3): default 0 → 0.02 (2% de sesiones).
+    // Replays con PII enmascarada nos dan reproducción visual sin explotar cuota.
+    // Override por env `VITE_SENTRY_REPLAYS_SESSION_RATE`.
+    replaysSessionSampleRate: readRate("VITE_SENTRY_REPLAYS_SESSION_RATE", 0.02),
     replaysOnErrorSampleRate: readRate("VITE_SENTRY_REPLAYS_ON_ERROR_RATE", 1.0),
     tunnel: resolveTunnelUrl(),
     // 13.312.10: explícito para blindar contra un upgrade del SDK.
