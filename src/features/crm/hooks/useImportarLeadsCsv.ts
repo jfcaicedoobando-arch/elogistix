@@ -3,7 +3,6 @@
  * Extraído de `ImportarLeadsCsvDialog` en 11.60.0 (Bloque B2).
  */
 import { useState, useMemo, useCallback } from "react";
-import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { useCrearLeadsBulk } from "@/features/crm/hooks";
 import {
@@ -17,7 +16,6 @@ export interface UseImportarLeadsCsvOptions {
 }
 
 export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
-  const { toast } = useToast();
   const [rows, setRows] = useState<ParsedLeadRow[]>([]);
   const [fileName, setFileName] = useState("");
   const crearBulk = useCrearLeadsBulk();
@@ -39,21 +37,21 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
   const handleImport = useCallback(async () => {
     try {
       const { inserted } = await crearBulk.mutateAsync(validRows);
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: `${inserted} leads importados`,
         description: errorCount > 0 ? `${errorCount} filas omitidas por errores` : undefined,
       });
       reset();
       onDone();
     } catch (e) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al importar",
         description: e instanceof Error ? e.message : undefined,
         error: e,
         method: "USE_IMPORTAR_LEADS_CSV",
       });
     }
-  }, [crearBulk, validRows, errorCount, toast, reset, onDone]);
+  }, [crearBulk, validRows, errorCount, reset, onDone]);
 
   return {
     rows,

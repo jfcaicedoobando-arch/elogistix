@@ -15,7 +15,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useConvertirLead, type CrmLeadRow } from "@/features/crm/hooks";
@@ -34,7 +33,6 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
   const [fecha, setFecha] = useState<string>("");
   const convertir = useConvertirLead();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const yaConvertido = lead.estado === "Convertido" && lead.oportunidad_convertida_id;
 
@@ -53,7 +51,7 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
       onOpenChange(false);
       if (r.clienteId) navigate(`/clientes/${r.clienteId}`);
     } catch (e) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo convertir el lead",
         description: e instanceof Error ? e.message : undefined,
         error: e,

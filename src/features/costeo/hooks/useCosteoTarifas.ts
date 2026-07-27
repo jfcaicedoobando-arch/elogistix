@@ -71,7 +71,7 @@ export function useCosteoTarifaMutations() {
       if (fallos.length === 0) {
         toast({ title: `Se crearon ${exitos.length} tarifa${exitos.length === 1 ? "" : "s"}` });
       } else if (exitos.length === 0) {
-        notifyError(toast, {
+        notifyError(undefined, {
           title: "No se pudo crear ninguna tarifa",
           description: fallos[0].error.message,
           error: fallos[0].error,
@@ -85,7 +85,7 @@ export function useCosteoTarifaMutations() {
       }
     },
     onError: (e: Error) =>
-      notifyError(toast, { title: "Error al guardar tarifas", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_6" }),
+      notifyError(undefined, { title: "Error al guardar tarifas", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_6" }),
   });
 
   const actualizar = useMutationWithFeedback({

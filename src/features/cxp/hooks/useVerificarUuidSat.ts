@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { verificarUuidSat, type EstatusSat } from "@/features/cxp/services/verificarUuidSat";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
@@ -15,15 +15,15 @@ export function useVerificarUuidSat() {
     mutationKey: queryKeys.cxp.all,
     mutationFn: (facturaId: string) => verificarUuidSat(facturaId),
     onSuccess: (res: { estatus: EstatusSat }) => {
-      if (res.estatus === "Vigente") toast.success("CFDI Vigente en SAT");
-      else if (res.estatus === "Cancelado") toast.warning("CFDI Cancelado en SAT");
+      if (res.estatus === "Vigente") notifySuccess(undefined, { title: "CFDI Vigente en SAT" });
+      else if (res.estatus === "Cancelado") notifyWarning(undefined, { title: "CFDI Cancelado en SAT" });
       else if (res.estatus === "No Encontrado")
-        notifyError(toast, {
+        notifyError(undefined, {
           title: "CFDI No encontrado en SAT",
           method: "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT",
         });
       else
-        notifyError(toast, {
+        notifyError(undefined, {
           title: "SAT no devolvió un estatus válido",
           method: "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT",
         });
@@ -31,7 +31,7 @@ export function useVerificarUuidSat() {
       qc.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });
     },
     onError: (err: Error) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: `No se pudo consultar SAT: ${err.message}`,
         error: err,
         method: "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT",

@@ -7,14 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   useMotivosPerdida, useActualizarMotivoPerdida, useCrearMotivoPerdida,
 } from "@/features/crm/hooks";
 
 export default function MotivosPerdidaEditor() {
-  const { toast } = useToast();
   const { data: motivos = [] } = useMotivosPerdida(false);
   const actualizar = useActualizarMotivoPerdida();
   const crear = useCrearMotivoPerdida();
@@ -22,7 +20,7 @@ export default function MotivosPerdidaEditor() {
 
   const toggle = async (id: string, activa: boolean) => {
     try { await actualizar.mutateAsync({ id, patch: { activa } }); }
-    catch (e) { notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "TOGGLE" }); }
+    catch (e) { notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "TOGGLE" }); }
   };
 
   const handleCrear = async () => {
@@ -30,10 +28,10 @@ export default function MotivosPerdidaEditor() {
     if (!n) return;
     try {
       await crear.mutateAsync(n);
-      notifySuccess(toast, { title: "Motivo agregado" });
+      notifySuccess(undefined, { title: "Motivo agregado" });
       setNuevo("");
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
+      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
     }
   };
 

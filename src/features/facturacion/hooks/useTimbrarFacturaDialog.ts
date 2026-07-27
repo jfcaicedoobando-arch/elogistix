@@ -82,7 +82,7 @@ export function useTimbrarFacturaDialog(
         uso_cfdi: v.uso_cfdi, forma_pago: v.forma_pago, metodo_pago: v.metodo_pago,
       }),
     onError: (err) => {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudieron guardar los datos fiscales",
         description: getErrorMessage(err),
         method: "ON_ERROR",
@@ -117,7 +117,7 @@ export function useTimbrarFacturaDialog(
       toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
     },
     onError: (err) => {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Factura timbrada, pero no se envió el email",
         description: getErrorMessage(err),
         method: "ON_ERROR",

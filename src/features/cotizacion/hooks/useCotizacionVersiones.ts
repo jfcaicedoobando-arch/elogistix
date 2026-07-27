@@ -3,7 +3,7 @@
  * Refactor v13.297.4: I/O delegado a `services/versiones.ts`.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import {
@@ -20,7 +20,7 @@ export function useDuplicarCotizacion() {
     mutationFn: (cotizacionId: string) => duplicarCotizacionRpc(cotizacionId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
-      toast.success("Cotización duplicada. Se abrió el borrador nuevo.");
+      notifySuccess(undefined, { title: "Cotización duplicada. Se abrió el borrador nuevo." });
     },
     onError: (e) =>
       notifyError(undefined, {

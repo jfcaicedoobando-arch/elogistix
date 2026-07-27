@@ -72,7 +72,7 @@ interface Deps {
  *           este archivo bajo 200 líneas (Power-of-10).
  */
 export function useCotizacionWizardSteps({
-  form, toast, navigate, isEditMode,
+  form, navigate, isEditMode,
   cotizacionId, setCotizacionId, currentStep, setCurrentStep,
   msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
   conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
@@ -81,7 +81,7 @@ export function useCotizacionWizardSteps({
   const { updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
   const { handlePaso1, handleCotizarSinDesglose } = usePaso1Handlers({
-    form, toast, cotizacionId, setCotizacionId, setCurrentStep,
+    form, cotizacionId, setCotizacionId, setCurrentStep,
     msdsFile, buildPaso1Data,
     mutations: {
       crearCotizacion: mutations.crearCotizacion,
@@ -100,7 +100,7 @@ export function useCotizacionWizardSteps({
     // (típico en LCL con precarga por tarifa aún pendiente), bloqueamos con toast
     // en vez de saltar a paso 3 con `conceptos_venta = []`.
     if (costosInternos.length === 0) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Agrega al menos un costo interno antes de continuar",
         description: "El paso 3 usa los costos del paso 2 para generar los conceptos de venta.",
       });
@@ -122,7 +122,7 @@ export function useCotizacionWizardSteps({
       }
       setCurrentStep(3);
     } catch (e: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al guardar costos",
         description: getErrorMessage(e),
         error: e,
@@ -130,14 +130,14 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, paso: 2 },
       });
     }
-  }, [costosInternos, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep, toast]);
+  }, [costosInternos, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep]);
 
 
   const handlePaso3 = useCallback(async () => {
     const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
     const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion?.trim());
     if (conceptosUSDValidos.length === 0 && conceptosMXNValidos.length === 0) {
-      notifyError(toast, { title: "Agrega al menos un concepto de venta" });
+      notifyError(undefined, { title: "Agrega al menos un concepto de venta" });
       return;
     }
     try {
@@ -146,7 +146,7 @@ export function useCotizacionWizardSteps({
       }
       setCurrentStep(4);
     } catch (e: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al guardar conceptos de venta",
         description: getErrorMessage(e),
         error: e,
@@ -154,7 +154,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, paso: 3 },
       });
     }
-  }, [conceptosUSD, conceptosMXN, cotizacionId, totalUSD, updateCotizacion, setCurrentStep, toast]);
+  }, [conceptosUSD, conceptosMXN, cotizacionId, totalUSD, updateCotizacion, setCurrentStep]);
 
   const handleSiguiente = useCallback(async () => {
     if (currentStep === 1) return handlePaso1();
@@ -170,14 +170,14 @@ export function useCotizacionWizardSteps({
         mutations: { updateCotizacion },
         registrarActividad: registrarActividad.mutate,
       });
-      notifySuccess(toast, { title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
+      notifySuccess(undefined, { title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
       if (onFinalized) {
         onFinalized(cotizacionId);
       } else {
         navigate(`/cotizaciones/${cotizacionId}`);
       }
     } catch (err: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al finalizar cotización",
         description: getErrorMessage(err),
         error: err,
@@ -185,7 +185,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, isEditMode },
       });
     }
-  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode, onFinalized]);
+  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, onFinalized]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);

@@ -4,7 +4,6 @@
  */
 import { useState } from "react";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { useToast } from "@/hooks/shared";
 import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
 import { getErrorMessage } from "@/lib/errors";
 import type { Tables } from "@/integrations/supabase/types";
@@ -30,7 +29,6 @@ interface Deps {
 }
 
 export function useClienteDetalleHandlers(deps: Deps) {
-  const { toast } = useToast();
   const { cliente, createContacto, updateContacto, deleteContacto, updateCliente, registrarActividad } = deps;
 
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
@@ -44,15 +42,15 @@ export function useClienteDetalleHandlers(deps: Deps) {
     try {
       if (editingId) {
         await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...data });
-        notifySuccess(toast, { title: "Contacto actualizado" });
+        notifySuccess(undefined, { title: "Contacto actualizado" });
       } else {
         await createContacto.mutateAsync({ cliente_id: cliente.id, ...data });
-        notifySuccess(toast, { title: "Contacto creado" });
+        notifySuccess(undefined, { title: "Contacto creado" });
       }
       setContactDialogOpen(false);
       setEditingContacto(null);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE_CONTACTO" });
+      notifyError(undefined, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE_CONTACTO" });
     }
   };
 
@@ -72,10 +70,10 @@ export function useClienteDetalleHandlers(deps: Deps) {
         entidad_nombre: data.nombre,
         detalles: cambios.length > 0 ? { cambios } : undefined,
       });
-      notifySuccess(toast, { title: "Cliente actualizado" });
+      notifySuccess(undefined, { title: "Cliente actualizado" });
       setEditClienteOpen(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE_CLIENTE" });
+      notifyError(undefined, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE_CLIENTE" });
     }
   };
 
@@ -88,9 +86,9 @@ export function useClienteDetalleHandlers(deps: Deps) {
     if (!deletingContactoId || !cliente) return;
     try {
       await deleteContacto.mutateAsync({ id: deletingContactoId, cliente_id: cliente.id });
-      notifySuccess(toast, { title: "Contacto eliminado" });
+      notifySuccess(undefined, { title: "Contacto eliminado" });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "CONFIRM_DELETE" });
+      notifyError(undefined, { title: "Error", description: getErrorMessage(err), error: err, method: "CONFIRM_DELETE" });
     }
   };
 

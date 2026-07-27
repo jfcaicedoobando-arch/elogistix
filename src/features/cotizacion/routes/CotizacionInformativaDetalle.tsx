@@ -10,7 +10,6 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import { parseTarifasInformativas } from "@/features/cotizacion/services";
-import { useToast } from "@/hooks/shared";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
@@ -35,7 +34,6 @@ async function descargarTarifario(cotizacion: CotizacionRow) {
 }
 
 export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Props) {
-  const { toast } = useToast();
   const tarifas = parseTarifasInformativas(cotizacion.tarifas_informativas);
   const { data: tiposContenedor = [] } = useTiposContenedor();
 
@@ -43,7 +41,7 @@ export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Pro
     try { await descargarTarifario(cotizacion); }
     catch (e) {
       const msg = e instanceof Error ? e.message : "Error al generar PDF";
-      notifyError(toast, { title: msg, error: e, method: "PAGES_COTIZACIONES_COTIZACIONINFORMATIVADETALLE_1" });
+      notifyError(undefined, { title: msg, error: e, method: "PAGES_COTIZACIONES_COTIZACIONINFORMATIVADETALLE_1" });
     }
   };
 

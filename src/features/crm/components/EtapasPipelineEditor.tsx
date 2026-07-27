@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   useActualizarEtapa, useEtapasPipelineAll,
@@ -37,7 +36,6 @@ function toState(e: CrmEtapaRow): RowState {
 }
 
 export default function EtapasPipelineEditor() {
-  const { toast } = useToast();
   const { data: etapas = [], isLoading } = useEtapasPipelineAll();
   const actualizar = useActualizarEtapa();
   const [draft, setDraft] = useState<Record<string, RowState>>({});
@@ -65,9 +63,9 @@ export default function EtapasPipelineEditor() {
   const save = async (id: string) => {
     try {
       await actualizar.mutateAsync({ id, patch: draft[id] });
-      notifySuccess(toast, { title: "Etapa actualizada" });
+      notifySuccess(undefined, { title: "Etapa actualizada" });
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "SAVE" });
+      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "SAVE" });
     }
   };
 
@@ -76,7 +74,7 @@ export default function EtapasPipelineEditor() {
     try {
       await actualizar.mutateAsync({ id, patch: { orden: d.orden + delta } });
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "MOVER" });
+      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "MOVER" });
     }
   };
 

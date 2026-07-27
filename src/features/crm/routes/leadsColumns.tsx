@@ -6,7 +6,6 @@ import {
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { LEAD_ESTADOS, useActualizarLead, type CrmLeadEstado, type CrmLeadRow } from "@/features/crm/hooks";
 
@@ -20,7 +19,6 @@ const ESTADO_VARIANT: Record<CrmLeadEstado, "default" | "secondary" | "outline" 
 
 function EstadoCell({ lead }: { lead: CrmLeadRow }) {
   const actualizar = useActualizarLead();
-  const { toast } = useToast();
   if (lead.estado === "Convertido") {
     return <Badge variant={ESTADO_VARIANT[lead.estado]}>{lead.estado}</Badge>;
   }
@@ -33,7 +31,7 @@ function EstadoCell({ lead }: { lead: CrmLeadRow }) {
           try {
             await actualizar.mutateAsync({ id: lead.id, patch: { estado: v as CrmLeadEstado } });
           } catch (err) {
-            notifyError(toast, { title: "No se pudo actualizar", description: err instanceof Error ? err.message : undefined, error: err, method: "ESTADO_CELL" });
+            notifyError(undefined, { title: "No se pudo actualizar", description: err instanceof Error ? err.message : undefined, error: err, method: "ESTADO_CELL" });
           }
         }}
         disabled={actualizar.isPending}

@@ -31,13 +31,13 @@ export function useCosteoRutaMutations() {
   const crear = useMutation({
     mutationFn: (input: CosteoRutaInput) => insertCosteoRuta(organizationId!, input),
     onSuccess: () => { invalidate(); toast({ title: "Ruta agregada" }); },
-    onError: (e: Error) => notifyError(toast, { title: e instanceof CosteoRutaDuplicadaError ? "Ruta duplicada" : "Error al agregar",
+    onError: (e: Error) => notifyError(undefined, { title: e instanceof CosteoRutaDuplicadaError ? "Ruta duplicada" : "Error al agregar",
       description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_1" }),
   });
   const eliminar = useMutation({
     mutationFn: (id: string) => deleteCosteoRuta(id),
     onSuccess: () => { invalidate(); toast({ title: "Ruta eliminada" }); },
-    onError: (e: Error) => notifyError(toast, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_2" }),
+    onError: (e: Error) => notifyError(undefined, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_2" }),
   });
   return { crear, eliminar };
 }

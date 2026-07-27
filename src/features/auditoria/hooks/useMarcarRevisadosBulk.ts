@@ -4,7 +4,7 @@
  * éxitos/fallos parciales.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { upsertAuditoriaRevision } from "@/features/auditoria/services";
 import { insertBitacora } from "@/features/auditoria/services/bitacora";
@@ -92,20 +92,20 @@ export function useMarcarRevisadosBulk() {
       queryClient.invalidateQueries({ queryKey: AUDITORIA_REVISIONES_KEY });
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       if (res.fail === 0) {
-        toast.success(`${res.ok} hallazgo${res.ok === 1 ? "" : "s"} marcado${res.ok === 1 ? "" : "s"} como revisado${res.ok === 1 ? "" : "s"}`);
+        notifySuccess(undefined, { title: `${res.ok} hallazgo${res.ok === 1 ? "" : "s"} marcado${res.ok === 1 ? "" : "s"} como revisado${res.ok === 1 ? "" : "s"}` });
       } else if (res.ok === 0) {
-        notifyError(toast, {
+        notifyError(undefined, {
           title: "No se pudo marcar ningún hallazgo",
           description: `${res.fail} con error`,
           method: "FEATURES_AUDITORIA_HOOKS_BULK_REVISADOS_2",
         });
       } else {
-        toast.warning(`${res.ok} revisado${res.ok === 1 ? "" : "s"}, ${res.fail} con error`);
+        notifyWarning(undefined, { title: `${res.ok} revisado${res.ok === 1 ? "" : "s"}, ${res.fail} con error` });
       }
     },
     onError: (err) => {
       logger.error("[useMarcarRevisadosBulk]", err);
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al marcar hallazgos",
         description: err.message,
         method: "FEATURES_AUDITORIA_HOOKS_BULK_REVISADOS_1",

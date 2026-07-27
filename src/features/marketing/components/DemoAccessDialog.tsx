@@ -79,7 +79,7 @@ export function DemoAccessDialog({ open, onOpenChange }: Props) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Intenta de nuevo en un momento.";
       setError(msg);
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No pudimos abrir la demo",
         description: msg,
         error: err,

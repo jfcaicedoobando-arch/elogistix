@@ -37,11 +37,11 @@ export function EditarContactoDialog({
   const handleSubmit = async () => {
     const trimmed = nombre.trim();
     if (!trimmed || trimmed.length > 100) {
-      notifyError(toast, { title: "Nombre inválido", description: "Ingresa un nombre (máx 100 caracteres).", method: "FEATURES_PORTAL_COMPONENTS_PERFIL_EDITARCONTACTODIALOG_1" });
+      notifyError(undefined, { title: "Nombre inválido", description: "Ingresa un nombre (máx 100 caracteres).", method: "FEATURES_PORTAL_COMPONENTS_PERFIL_EDITARCONTACTODIALOG_1" });
       return;
     }
     if (telefono.length > 30) {
-      notifyError(toast, { title: "Teléfono inválido", description: "Máximo 30 caracteres.", method: "FEATURES_PORTAL_COMPONENTS_PERFIL_EDITARCONTACTODIALOG_2" });
+      notifyError(undefined, { title: "Teléfono inválido", description: "Máximo 30 caracteres.", method: "FEATURES_PORTAL_COMPONENTS_PERFIL_EDITARCONTACTODIALOG_2" });
       return;
     }
     try {
@@ -49,7 +49,7 @@ export function EditarContactoDialog({
       toast({ title: "Contacto actualizado" });
       onOpenChange(false);
     } catch (err) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo actualizar",
         description: getErrorMessage(err),
         error: err,

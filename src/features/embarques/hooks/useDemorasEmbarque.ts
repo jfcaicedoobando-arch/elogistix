@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifyInfo, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { calcularDemorasEmbarque, eliminarDemorasAuto } from "../services/demorasEmbarque";
 
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -13,17 +13,17 @@ export function useRecalcularDemoras(embarqueId: string | undefined) {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVentaDash(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCostoDash(embarqueId) });
       if (data.sin_eventos) {
-        toast.warning("Faltan eventos de Descarga o Entrega en el timeline");
+        notifyWarning(undefined, { title: "Faltan eventos de Descarga o Entrega en el timeline" });
       } else if (data.dias_excedidos === 0) {
-        toast.info("No hay días excedidos: no se generaron demoras");
+        notifyInfo(undefined, { title: "No hay días excedidos: no se generaron demoras" });
       } else {
-        toast.success(`Demoras calculadas: ${data.dias_excedidos} días excedidos`);
+        notifySuccess(undefined, { title: `Demoras calculadas: ${data.dias_excedidos} días excedidos` });
       }
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error al calcular demoras";
       if (msg.includes("LC_DEMORAS_BLOQUEADAS")) {
-        notifyError(toast, {
+        notifyError(undefined, {
           title: "No se pueden recalcular demoras",
           description:
             "Hay conceptos ya en proforma, facturados o vinculados a cuentas por pagar. Cancela primero la proforma / la CxP asociada e intenta de nuevo.",
@@ -33,7 +33,7 @@ export function useRecalcularDemoras(embarqueId: string | undefined) {
         });
         return;
       }
-      notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_1" });
+      notifyError(undefined, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_1" });
     },
   });
 }
@@ -46,11 +46,11 @@ export function useEliminarDemorasAuto(embarqueId: string | undefined) {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.detalle(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVentaDash(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCostoDash(embarqueId) });
-      toast.success("Demoras automáticas eliminadas");
+      notifySuccess(undefined, { title: "Demoras automáticas eliminadas" });
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error al eliminar";
-      notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_2" });
+      notifyError(undefined, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_2" });
     },
   });
 }

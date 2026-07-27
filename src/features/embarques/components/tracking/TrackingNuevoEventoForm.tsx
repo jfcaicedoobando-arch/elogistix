@@ -22,7 +22,6 @@ import { useCreateEventoEmbarque } from "@/features/embarques/hooks";
 import { useActualizarFechaLlegadaReal } from "@/features/embarques/hooks/mutations/useActualizarFechaLlegadaReal";
 import { useActualizarEta } from "@/features/embarques/hooks/mutations/useActualizarEta";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
@@ -53,7 +52,6 @@ export function TrackingNuevoEventoForm({
   const actualizarEta = useActualizarEta({ silent: true });
   const actualizarFechaLlegada = useActualizarFechaLlegadaReal({ silent: true });
   const { user } = useAuth();
-  const { toast } = useToast();
 
   if (modo === "menu") {
     return (
@@ -117,10 +115,10 @@ export function TrackingNuevoEventoForm({
               fecha: new Date().toISOString(),
               usuario: user?.email ?? "",
             });
-            notifySuccess(toast, { title: "ETA actualizada" });
+            notifySuccess(undefined, { title: "ETA actualizada" });
             onClose();
           } catch (err: unknown) {
-            notifyError(toast, {
+            notifyError(undefined, {
               title: "Error al actualizar ETA",
               description: getErrorMessage(err),
               error: err,
@@ -143,7 +141,7 @@ export function TrackingNuevoEventoForm({
         try {
           const pendientes = await contarDocumentosPendientes(embarqueId);
           if (pendientes > 0) {
-            notifyError(toast, {
+            notifyError(undefined, {
               title: "Documentos incompletos",
               description: `Hay ${pendientes} documento(s) pendiente(s). Súbelos antes de marcar la llegada real.`,
             });
@@ -161,10 +159,10 @@ export function TrackingNuevoEventoForm({
             fecha: new Date().toISOString(),
             usuario: user?.email ?? "",
           });
-          notifySuccess(toast, { title: "Llegada real registrada" });
+          notifySuccess(undefined, { title: "Llegada real registrada" });
           onClose();
         } catch (err: unknown) {
-          notifyError(toast, {
+          notifyError(undefined, {
             title: "Error al registrar llegada",
             description: getErrorMessage(err),
             error: err,

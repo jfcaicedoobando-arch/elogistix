@@ -9,7 +9,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { toast } from "sonner";
 import { notifyError } from "@/lib/ui/appFeedback";
 import {
   actualizarDatosTimbradoFactura,
@@ -60,7 +59,7 @@ export function useAutoSaveDatosFiscales(
       } catch (err) {
         if (ctrl.signal.aborted) return;
         setEstado("error");
-        notifyError(toast, {
+        notifyError(undefined, {
           title: "No se pudo guardar",
           error: err,
           method: "FACTURA_DATOS_FISCALES_AUTOSAVE",

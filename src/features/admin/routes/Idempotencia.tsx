@@ -58,7 +58,7 @@ export default function Idempotencia() {
       await navigator.clipboard.writeText(k);
       toast({ title: "requestId copiado" });
     } catch {
-      notifyError(toast, { title: "No se pudo copiar", method: "PAGES_ADMIN_IDEMPOTENCIA_1" });
+      notifyError(undefined, { title: "No se pudo copiar", method: "PAGES_ADMIN_IDEMPOTENCIA_1" });
     }
   };
 

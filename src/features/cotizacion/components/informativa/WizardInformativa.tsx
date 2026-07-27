@@ -49,7 +49,7 @@ export default function WizardInformativa() {
     };
     const v = validateCotizacionInformativa(input);
     if (!v.ok) {
-      notifyError(toast, { title: "Revisa los datos", description: v.errores.join(" • "), method: "FEATURES_COTIZACION_COMPONENTS_INFORMATIVA_WIZARDINFORMATIVA_1" });
+      notifyError(undefined, { title: "Revisa los datos", description: v.errores.join(" • "), method: "FEATURES_COTIZACION_COMPONENTS_INFORMATIVA_WIZARDINFORMATIVA_1" });
       return;
     }
     try {
@@ -58,7 +58,7 @@ export default function WizardInformativa() {
       navigate(`/cotizaciones/${cot.id}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al guardar";
-      notifyError(toast, { title: msg, error: e, method: "FEATURES_COTIZACION_COMPONENTS_INFORMATIVA_WIZARDINFORMATIVA_2" });
+      notifyError(undefined, { title: msg, error: e, method: "FEATURES_COTIZACION_COMPONENTS_INFORMATIVA_WIZARDINFORMATIVA_2" });
     }
   };
 

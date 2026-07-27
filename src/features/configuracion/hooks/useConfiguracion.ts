@@ -1,6 +1,5 @@
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
   fetchConfiguracion,
@@ -31,16 +30,15 @@ export function useConfigValue<T>(categoria: string, clave: string, fallback: T)
 
 export function useUpdateConfiguracion() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: updateConfiguracionByCategoriaClave,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
-      notifySuccess(toast, { title: "Configuración guardada" });
+      notifySuccess(undefined, { title: "Configuración guardada" });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error al guardar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al guardar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 }

@@ -6,7 +6,7 @@
  * toast informativo.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { emitirRep, cancelarRep, type MotivoCancelacionSat } from "@/features/facturacion/services/repFacturapi";
 import { autoEnviarRepPorCorreo } from "@/features/facturacion/services/repAutoEmail";
 import { notifyError, notifyInfo } from "@/lib/ui/appFeedback";
@@ -20,7 +20,7 @@ export function useTimbrarRep(facturaId?: string) {
     mutationKey: queryKeys.facturacion.emitirRep,
     mutationFn: (pagoId: string) => emitirRep(pagoId),
     onSuccess: (res, pagoId) => {
-      toast.success(`REP timbrado · UUID ${res.uuid.slice(0, 8)}…`);
+      notifySuccess(undefined, { title: `REP timbrado · UUID ${res.uuid.slice(0, 8)}…` });
       if (facturaId) {
         qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
       } else {
@@ -36,7 +36,7 @@ export function useTimbrarRep(facturaId?: string) {
         });
       });
     },
-    onError: (err: Error) => notifyError(toast, {
+    onError: (err: Error) => notifyError(undefined, {
       title: `No se pudo timbrar el REP: ${err.message}`,
       error: err,
       method: "FEATURES_FACTURACION_HOOKS_USETIMBRARREP_1",
@@ -51,7 +51,7 @@ export function useCancelarRep(facturaId?: string) {
     mutationFn: (vars: { pagoId: string; motivo: MotivoCancelacionSat; sustituyeUuid?: string }) =>
       cancelarRep(vars.pagoId, vars.motivo, vars.sustituyeUuid),
     onSuccess: () => {
-      toast.success("REP cancelado");
+      notifySuccess(undefined, { title: "REP cancelado" });
       if (facturaId) {
         qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
       } else {
@@ -60,7 +60,7 @@ export function useCancelarRep(facturaId?: string) {
       qc.invalidateQueries({ queryKey: queryKeys.facturacion.repPendientes });
       invalidateProfitDependencies(qc);
     },
-    onError: (err: Error) => notifyError(toast, {
+    onError: (err: Error) => notifyError(undefined, {
       title: `No se pudo cancelar el REP: ${err.message}`,
       error: err,
       method: "FEATURES_FACTURACION_HOOKS_USETIMBRARREP_2",

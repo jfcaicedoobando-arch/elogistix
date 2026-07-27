@@ -10,7 +10,6 @@
  */
 import { useCallback, useRef, useState } from "react";
 import * as Sentry from "@sentry/react";
-import { useToast } from "@/hooks/shared";
 import {
   useProveedoresForSelect,
 } from "@/features/embarques/hooks/useEmbarques";
@@ -30,7 +29,6 @@ import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useNuevoEmbarqueWizard() {
-  const { toast } = useToast();
   // v13.303.26 — sin excepciones de rol: cotización siempre obligatoria.
 
 
@@ -78,12 +76,12 @@ export function useNuevoEmbarqueWizard() {
       setValidationErrors((prev) => ({ ...prev, [step]: errors }));
 
       if (Object.keys(errors).length > 0) {
-        notifyError(toast, { step, errors, method: "USE_NUEVO_EMBARQUE_WIZARD", errorCode: ERROR_CODES.VALIDATION_FAILED });
+        notifyError(undefined, { step, errors, method: "USE_NUEVO_EMBARQUE_WIZARD", errorCode: ERROR_CODES.VALIDATION_FAILED });
         return false;
       }
       return true;
     },
-    [methods, form.documentosArchivos, conceptos.conceptosVenta, conceptos.conceptosCosto, toast, cotVinc.cotizacionVinculada],
+    [methods, form.documentosArchivos, conceptos.conceptosVenta, conceptos.conceptosCosto, cotVinc.cotizacionVinculada],
   );
 
 
@@ -101,7 +99,7 @@ export function useNuevoEmbarqueWizard() {
     // antes del orquestador para evitar bypasses por errores parcheados/saltados.
     if (!cotVinc.cotizacionVinculada?.id) {
       setCurrentStep(1);
-      notifyError(toast, {
+      notifyError(undefined, {
         step: 1,
         errors: { cotizacion: "Debes iniciar el embarque desde una cotización Aceptada." },
         method: "USE_NUEVO_EMBARQUE_WIZARD",

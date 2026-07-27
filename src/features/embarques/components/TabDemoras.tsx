@@ -15,8 +15,7 @@ import EmptyState from "@/components/empty/EmptyState";
 import { Clock } from "lucide-react";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { actualizarDemorasContenedor } from "@/features/embarques/services/contenedores";
-import { toast } from "sonner";
-
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import {
@@ -45,7 +44,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
     mutationFn: ({ id, patch }: { id: string; patch: DraftPatch }) =>
       actualizarDemorasContenedor(id, patch),
     onSuccess: (_, vars) => {
-      toast.success("Demoras del contenedor actualizadas");
+      notifySuccess(undefined, { title: "Demoras del contenedor actualizadas" });
       setDrafts((d) => {
         const next = { ...d };
         delete next[vars.id];
@@ -55,7 +54,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
     },
-    onError: (err: Error) => notifyError(toast, { title: err.message, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_TABDEMORAS_1" }),
+    onError: (err: Error) => notifyError(undefined, { title: err.message, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_TABDEMORAS_1" }),
   });
 
   const setDraft = useCallback((id: string, patch: DraftPatch) => {

@@ -2,7 +2,7 @@
  * Registrar pago a proveedor.
  * Migrado a `FormDialogShell` (v13.120.0) — paridad visual con resto de modales CXP.
  */
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { Loader2, ArrowUpFromLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -27,10 +27,10 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
 
   const submit = async () => {
     if (!factura) return;
-    if (noAprobada) return notifyError(toast, { title: "La factura debe estar aprobada antes de registrar pagos", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_0" });
-    if (f.montoNum <= 0) return notifyError(toast, { title: "El monto debe ser mayor a 0", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_1" });
-    if (f.bloqueadoPorTc) return notifyError(toast, { title: `Captura un tipo de cambio válido para pagar en MXN una factura ${factura.moneda}`, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_4" });
-    if (f.excede) return notifyError(toast, { title: `El monto excede el saldo pendiente (${factura.moneda})`, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
+    if (noAprobada) return notifyError(undefined, { title: "La factura debe estar aprobada antes de registrar pagos", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_0" });
+    if (f.montoNum <= 0) return notifyError(undefined, { title: "El monto debe ser mayor a 0", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_1" });
+    if (f.bloqueadoPorTc) return notifyError(undefined, { title: `Captura un tipo de cambio válido para pagar en MXN una factura ${factura.moneda}`, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_4" });
+    if (f.excede) return notifyError(undefined, { title: `El monto excede el saldo pendiente (${factura.moneda})`, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
     try {
       await registrar.mutateAsync({
         proveedor_factura_id: factura.id,
@@ -47,10 +47,10 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
         diferencia_cambiaria_mxn:
           f.esUsdPagadoEnMxn && f.diffMxn !== "" ? Number(f.diffMxn) : null,
       });
-      toast.success("Pago registrado");
+      notifySuccess(undefined, { title: "Pago registrado" });
       onOpenChange(false);
     } catch (e) {
-      notifyError(toast, { title: traducirErrorPagoProveedor(e), error: e, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_3" });
+      notifyError(undefined, { title: traducirErrorPagoProveedor(e), error: e, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_3" });
     }
   };
 

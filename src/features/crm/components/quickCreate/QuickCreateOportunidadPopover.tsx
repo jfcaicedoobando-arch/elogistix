@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
@@ -31,8 +31,8 @@ export default function QuickCreateOportunidadPopover({ onCreated, onMore, onClo
 
   const submit = async () => {
     const n = nombre.trim();
-    if (!n) return notifyError(toast, { title: "Nombre requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_1" });
-    if (!etapaInicial) return notifyError(toast, { title: "Configura el pipeline primero", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_2" });
+    if (!n) return notifyError(undefined, { title: "Nombre requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_1" });
+    if (!etapaInicial) return notifyError(undefined, { title: "Configura el pipeline primero", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_2" });
     const cliente = clientes.find((c) => c.id === clienteId);
     try {
       const r = await crear.mutateAsync({
@@ -45,12 +45,12 @@ export default function QuickCreateOportunidadPopover({ onCreated, onMore, onClo
         vendedor_id: user?.id ?? null,
         vendedor_email: user?.email ?? "",
       });
-      toast.success("Oportunidad creada", { duration: 2000 });
+      notifySuccess(undefined, { title: "Oportunidad creada", duration: 2000 });
       setNombre(""); setClienteId("ninguno");
       onClose();
       onCreated(r.id);
     } catch (e) {
-      notifyError(toast, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_3" });
+      notifyError(undefined, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_3" });
     }
   };
 

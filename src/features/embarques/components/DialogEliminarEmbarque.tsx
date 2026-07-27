@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { useToast } from "@/hooks/shared";
 import { useNavigate } from "react-router-dom";
 import {
   useEliminarEmbarque,
@@ -51,7 +50,6 @@ async function ejecutarEliminacion(
 }
 
 export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }: Props) {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const eliminarEmbarque = useEliminarEmbarque();
   const registrarActividad = useRegistrarActividad();
@@ -76,7 +74,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
         entidad_nombre: label,
         detalles: { cliente: embarque.cliente_nombre, modo: embarque.modo, tipo: embarque.tipo },
       });
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: "Embarque eliminado",
         description: `${label} fue eliminado permanentemente.`,
       });
@@ -88,7 +86,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
       setBloqueoServidor(res.motivos);
       return;
     }
-    notifyError(toast, {
+    notifyError(undefined, {
       title: "Error al eliminar",
       description: getErrorMessage(res.err),
       error: res.err,

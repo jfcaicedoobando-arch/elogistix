@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { WizardShell } from "@/components/shared/WizardShell";
 import { CotizacionWizardFooter } from "@/features/cotizacion/components/wizard/CotizacionWizardFooter";
 import { CotizacionWizardSteps } from "@/features/cotizacion/components/wizard/CotizacionWizardSteps";
@@ -59,7 +59,7 @@ export default function CotizacionWizardLayout({
   const handleBack = useCallback(() => { if (!isBusy) wHandleBack(); }, [isBusy, wHandleBack]);
   const handleConfirmSinDesglose = useCallback(() => {
     if (!canCotizarSinDesglose) {
-      notifyError(toast, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_1" });
+      notifyError(undefined, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_1" });
       setShowSinDesglose(false);
       return;
     }
@@ -69,7 +69,7 @@ export default function CotizacionWizardLayout({
 
   const handleOpenSinDesglose = useCallback(() => {
     if (!canCotizarSinDesglose) {
-      notifyError(toast, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_2" });
+      notifyError(undefined, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_2" });
       return;
     }
     setShowSinDesglose(true);
@@ -85,7 +85,7 @@ export default function CotizacionWizardLayout({
   const handleFlushDraft = useCallback(() => {
     if (!onFlushDraft) return;
     onFlushDraft();
-    toast.success("Borrador guardado");
+    notifySuccess(undefined, { title: "Borrador guardado" });
   }, [onFlushDraft]);
   useCotizacionKeyboardShortcuts({
     currentStep: w.currentStep,

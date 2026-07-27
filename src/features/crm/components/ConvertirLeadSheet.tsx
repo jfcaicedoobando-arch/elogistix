@@ -19,7 +19,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { toast as sonnerToast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useConvertirLead, type CrmLeadRow } from "@/features/crm/hooks";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { formSheet } from "@/components/shared/utils/dialogTokens";
@@ -53,7 +53,8 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
         fechaEstimadaCierre: null,
       });
       onOpenChange(false);
-      sonnerToast.success("Lead convertido", {
+      notifySuccess(undefined, {
+        title: "Lead convertido",
         duration: 5000,
         action: r.oportunidadId
           ? { label: "Abrir oportunidad →", onClick: () => navigate(`/crm/oportunidades/${r.oportunidadId}`) }

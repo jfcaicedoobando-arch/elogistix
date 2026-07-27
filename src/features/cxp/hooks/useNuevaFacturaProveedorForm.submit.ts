@@ -2,9 +2,9 @@
  * Orquestación del submit de captura de factura de proveedor.
  * Extraído para respetar Power-of-10 (≤200 líneas por archivo).
  */
-import { toast } from "sonner";
+
 import { existeFacturaDuplicada } from "@/features/cxp/services";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import { buildPayload, type PendingCfdi, type VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
@@ -17,13 +17,13 @@ export function handleSubmitError(e: unknown) {
   const err = e as { message?: string; code?: string; details?: string; constraint?: string };
   const blob = `${err.message ?? ""} ${err.details ?? ""} ${err.constraint ?? ""}`.toLowerCase();
   if (err.code === "23505" && /uuid_fiscal/.test(blob)) {
-    notifyError(toast, { title: "Ya existe una factura con este UUID fiscal (CFDI duplicado).", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1" });
+    notifyError(undefined, { title: "Ya existe una factura con este UUID fiscal (CFDI duplicado).", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1" });
   } else if (err.code === "23505" && /folio/.test(blob)) {
-    notifyError(toast, { title: "Ya existe una factura viva con este folio para el proveedor.", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_FOLIO" });
+    notifyError(undefined, { title: "Ya existe una factura viva con este folio para el proveedor.", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_FOLIO" });
   } else if (err.code === "23505") {
-    notifyError(toast, { title: "Registro duplicado", description: err.message ?? undefined, method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP2" });
+    notifyError(undefined, { title: "Registro duplicado", description: err.message ?? undefined, method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP2" });
   } else {
-    notifyError(toast, { title: err.message ?? "Error al capturar", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2" });
+    notifyError(undefined, { title: err.message ?? "Error al capturar", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2" });
   }
 }
 
@@ -46,7 +46,7 @@ export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
     const dup = await existeFacturaDuplicada(p.values.provId, p.values.folio, p.values.emision);
     if (dup) {
       p.setFolioError();
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Factura duplicada",
         description: `Ya capturaste el folio ${p.values.folio.trim()} de este proveedor el ${p.values.emision}.`,
         method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP",
@@ -71,7 +71,8 @@ export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
         values: p.values, total: p.total, vinculos: p.vinculos, embarqueAdHoc: p.embarqueAdHoc,
       });
     }
-    toast.success("Factura de proveedor capturada", {
+    notifySuccess(undefined, {
+      title: "Factura de proveedor capturada",
       description: buildFacturaSuccessDescription(sideResult),
     });
     return true;

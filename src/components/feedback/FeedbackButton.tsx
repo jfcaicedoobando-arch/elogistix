@@ -3,7 +3,6 @@ import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { useToast } from "@/hooks/shared";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
@@ -17,13 +16,12 @@ interface Props {
  */
 export function FeedbackButton({ variant = "ghost", className }: Props) {
   const { user } = useAuth();
-  const { toast } = useToast();
   if (!user) return null;
 
   const handleClick = async () => {
     const feedback = Sentry.getFeedback();
     if (!feedback) {
-      notifyError(toast, { title: "Reporte no disponible",
+      notifyError(undefined, { title: "Reporte no disponible",
         description: "El sistema de feedback no se inicializó correctamente.", method: "COMPONENTS_FEEDBACK_FEEDBACKBUTTON_1" });
       return;
     }
@@ -32,7 +30,7 @@ export function FeedbackButton({ variant = "ghost", className }: Props) {
       form.appendToDom();
       form.open();
     } catch {
-      notifyError(toast, { title: "No se pudo abrir el formulario", method: "COMPONENTS_FEEDBACK_FEEDBACKBUTTON_2" });
+      notifyError(undefined, { title: "No se pudo abrir el formulario", method: "COMPONENTS_FEEDBACK_FEEDBACKBUTTON_2" });
     }
   };
 

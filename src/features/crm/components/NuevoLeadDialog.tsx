@@ -7,7 +7,6 @@ import { useState } from "react";
 import { Loader2, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -45,11 +44,10 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   const [autoActividad, setAutoActividad] = useState(true);
   const crear = useCrearLead();
   const crearActividad = useCrearActividad();
-  const { toast } = useToast();
 
   const handleSubmit = async () => {
     if (!form.empresa.trim()) {
-      notifyError(toast, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     try {
@@ -72,7 +70,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       onOpenChange(false);
       onCreated?.(r.id);
     } catch (e) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo crear el lead",
         description: e instanceof Error ? e.message : undefined,
         error: e,

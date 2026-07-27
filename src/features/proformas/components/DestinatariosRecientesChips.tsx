@@ -3,7 +3,7 @@
  * Extraído de `EnviarProformaDialog` para respetar Power-of-10 #4 (≤200 líneas).
  */
 import { X } from "lucide-react";
-import { toast as sonnerToast } from "sonner";
+import { notifyInfo } from "@/lib/ui/appFeedback";
 
 interface Props {
   sugerencias: string[];
@@ -41,7 +41,8 @@ export function DestinatariosRecientesChips({
                 type="button"
                 onClick={() => {
                   onOcultar(e);
-                  sonnerToast("Correo ocultado", {
+                  notifyInfo(undefined, {
+                    title: "Correo ocultado",
                     description: e,
                     action: { label: "Deshacer", onClick: () => onRestaurar(e) },
                   });

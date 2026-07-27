@@ -12,9 +12,9 @@
  */
 
 import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
+
 import { fetchExchangeRates } from "@/features/catalogos/services";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export interface BanxicoTcResult {
   tipoCambio: number;
@@ -45,11 +45,12 @@ export function useBanxicoTipoCambio(moneda: string, onTC: (tc: number | null) =
     },
     onSuccess: (d) => {
       onTC(d.tipoCambio);
-      toast.success(`TC DOF ${d.moneda}: ${d.tipoCambio}`, {
+      notifySuccess(undefined, {
+        title: `TC DOF ${d.moneda}: ${d.tipoCambio}`,
         description: "Guardado automáticamente en la factura.",
       });
     },
     onError: (err) =>
-      notifyError(toast, { title: "No se pudo obtener TC DOF", error: err, method: "BANXICO_TC" }),
+      notifyError(undefined, { title: "No se pudo obtener TC DOF", error: err, method: "BANXICO_TC" }),
   });
 }

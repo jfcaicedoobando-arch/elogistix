@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { asignarResponsableHallazgo } from "@/features/auditoria/services";
 import { insertBitacora } from "@/features/auditoria/services/bitacora";
@@ -9,7 +9,7 @@ import { hallazgoHash, AUDITORIA_REVISIONES_KEY } from "./hash";
 import { resolveAuthUser } from "./query";
 import { queryKeys } from "@/lib/query";
 
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 /**
  * Asigna o reasigna un responsable (operador/encargado) a un hallazgo.
  * Si el responsable es el propio usuario y `tomar=true`, registra
@@ -72,16 +72,16 @@ export function useAsignarResponsable() {
     onSuccess: (_data, vars) => {
       queryClient.invalidateQueries({ queryKey: AUDITORIA_REVISIONES_KEY });
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
-      toast.success(
-        vars.tomar ? "Hallazgo tomado" : vars.responsableId ? "Responsable asignado" : "Asignación removida",
-      );
+      notifySuccess(undefined, {
+        title: vars.tomar ? "Hallazgo tomado" : vars.responsableId ? "Responsable asignado" : "Asignación removida",
+      });
     },
     onError: (err: unknown) => {
       logger.error("[useAsignarResponsable] error:", err);
       const e = err as { code?: string; message?: string };
       const isPermiso =
         e?.code === "42501" || /row-level security/i.test(e?.message ?? "");
-      notifyError(toast, { title: isPermiso ? "No tienes permisos para asignar" : "Error al asignar responsable", description: e?.message ?? "Error desconocido", method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_ASIGNAR_1" });
+      notifyError(undefined, { title: isPermiso ? "No tienes permisos para asignar" : "Error al asignar responsable", description: e?.message ?? "Error desconocido", method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_ASIGNAR_1" });
     },
   });
 }

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { findProveedorByRfcEnOrg, ProveedorDuplicadoError } from "@/features/proveedor/services";
@@ -148,7 +147,7 @@ export function useNuevoProveedorController(
 
     const validacion = preparePayload(form);
     if (!validacion.ok) {
-      notifyError(toast, { title: validacion.mensaje, method: `FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_${validacion.motivo === "clabe" ? 1 : 2}` });
+      notifyError(undefined, { title: validacion.mensaje, method: `FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_${validacion.motivo === "clabe" ? 1 : 2}` });
       return;
     }
     setSaving(true);

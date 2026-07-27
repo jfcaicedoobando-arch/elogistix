@@ -6,7 +6,6 @@ import { MessageSquare, Send, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { getErrorMessage } from "@/lib/errors";
@@ -26,7 +25,6 @@ function formatRelativeDate(iso: string): string {
 }
 
 export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props) {
-  const { toast } = useToast();
   const { data: comentarios = [], isLoading } = useComentariosOportunidad(oportunidadId);
   const crear = useCrearComentarioOportunidad();
   const [texto, setTexto] = useState("");
@@ -37,7 +35,7 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
       setTexto("");
       crmToast.success("Comentario publicado");
     } catch (e) {
-      notifyError(toast, { title: "No se pudo publicar", description: getErrorMessage(e), error: e, method: "ENVIAR" });
+      notifyError(undefined, { title: "No se pudo publicar", description: getErrorMessage(e), error: e, method: "ENVIAR" });
     }
   };
 

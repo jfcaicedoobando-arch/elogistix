@@ -86,7 +86,7 @@ export function DialogEnviarCfdi({
       qc.invalidateQueries({ queryKey: facturasKeys.all });
       onOpenChange(false);
     } catch (err) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo enviar el CFDI",
         description: getErrorMessage(err),
         method: "ON_ERROR",

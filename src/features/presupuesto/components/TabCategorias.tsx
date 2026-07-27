@@ -3,7 +3,7 @@
  * v13.232.0 · Confirmación migrada a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,11 +30,11 @@ export function TabCategorias() {
     if (!organizationId) return;
     try {
       await seedCategoriasDefault(organizationId);
-      toast.success("Categorías por defecto creadas");
+      notifySuccess(undefined, { title: "Categorías por defecto creadas" });
       cats.refetch();
     } catch (e) {
       const err = e as { message?: string };
-      notifyError(toast, { title: err.message ?? "Error", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_1" });
+      notifyError(undefined, { title: err.message ?? "Error", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_1" });
     }
   };
 
@@ -42,11 +42,11 @@ export function TabCategorias() {
     if (!borrarId) return;
     try {
       await eliminar.mutateAsync(borrarId);
-      toast.success("Categoría eliminada");
+      notifySuccess(undefined, { title: "Categoría eliminada" });
       setBorrarId(null);
     } catch (e) {
       const err = e as { message?: string };
-      notifyError(toast, { title: err.message ?? "No se pudo eliminar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_2" });
+      notifyError(undefined, { title: err.message ?? "No se pudo eliminar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_2" });
     }
   };
 

@@ -7,7 +7,7 @@
  *     (modo estricto: sólo productos del catálogo).
  */
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -50,7 +50,7 @@ export function CatalogoClavesSATCard() {
   };
 
   const onError = (err: unknown) =>
-    notifyError(toast, { title: "No se pudo guardar el producto", error: err, method: "CATALOGO_PRODUCTOS" });
+    notifyError(undefined, { title: "No se pudo guardar el producto", error: err, method: "CATALOGO_PRODUCTOS" });
 
   const buildPayload = (d: Draft) => ({
     patron: d.patron.trim(),
@@ -66,7 +66,7 @@ export function CatalogoClavesSATCard() {
       if (!organizationId) throw new Error("Sin organización");
       await insertCatalogoClaveSat(organizationId, buildPayload(d));
     },
-    onSuccess: () => { invalidate(); setShowNew(false); setDraft(EMPTY_DRAFT); toast.success("Producto agregado"); },
+    onSuccess: () => { invalidate(); setShowNew(false); setDraft(EMPTY_DRAFT); notifySuccess(undefined, { title: "Producto agregado" }); },
     onError,
   });
 
@@ -74,7 +74,7 @@ export function CatalogoClavesSATCard() {
     mutationFn: async (vars: { id: string; d: Draft }) => {
       await updateCatalogoClaveSat(vars.id, buildPayload(vars.d));
     },
-    onSuccess: () => { invalidate(); setEditingId(null); toast.success("Producto actualizado"); },
+    onSuccess: () => { invalidate(); setEditingId(null); notifySuccess(undefined, { title: "Producto actualizado" }); },
     onError,
   });
 
@@ -82,7 +82,7 @@ export function CatalogoClavesSATCard() {
     mutationFn: async (id: string) => {
       await deleteCatalogoClaveSat(id);
     },
-    onSuccess: () => { invalidate(); toast.success("Producto eliminado"); },
+    onSuccess: () => { invalidate(); notifySuccess(undefined, { title: "Producto eliminado" }); },
     onError,
   });
 

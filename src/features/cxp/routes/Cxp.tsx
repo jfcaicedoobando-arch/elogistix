@@ -2,7 +2,6 @@ import { useCallback, useMemo } from "react";
 import { Plus, FileText, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/shared/DataTable";
 import { ColumnVisibilityMenu } from "@/components/shared/ColumnVisibilityMenu";
@@ -63,7 +62,7 @@ export default function Cxp() {
 
   const onEliminar = useCallback((fact: FacturaCxP) => {
     if (fact.pagado > 0) {
-      notifyError(toast, { title: "No se puede eliminar: la factura tiene pagos registrados", method: "PAGES_CXP_CXP_1" });
+      notifyError(undefined, { title: "No se puede eliminar: la factura tiene pagos registrados", method: "PAGES_CXP_CXP_1" });
       return;
     }
     f.setAEliminar(fact);

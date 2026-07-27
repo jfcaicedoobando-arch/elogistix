@@ -35,7 +35,7 @@ export function UsuariosInternosTab() {
     const unresolved = users.filter((u) => u.email === UNRESOLVED_EMAIL).length;
     if (unresolved > 0) {
       warnedRef.current = true;
-      notifyWarning(toast, {
+      notifyWarning(undefined, {
         title: "Correos no disponibles",
         description: `No se pudieron resolver los correos de ${unresolved} usuario(s). Verifica la conexión con el servidor de autenticación.`,
       });

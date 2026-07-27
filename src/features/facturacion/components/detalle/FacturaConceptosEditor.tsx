@@ -5,7 +5,6 @@
  * recálculo de subtotal/IVA/total en la factura padre.
  */
 import { useState } from "react";
-import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,7 +53,7 @@ export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conc
   };
 
   const onError = (err: unknown) =>
-    notifyError(toast, { title: "No se pudo guardar el concepto", error: err, method: "FACTURA_CONCEPTOS_EDITOR" });
+    notifyError(undefined, { title: "No se pudo guardar el concepto", error: err, method: "FACTURA_CONCEPTOS_EDITOR" });
 
   const addMut = useMutation({
     mutationFn: (input: ConceptoFacturaInput) =>

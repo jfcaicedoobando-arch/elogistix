@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import {
   timbrarNotaCreditoFacturapi,
@@ -15,12 +15,12 @@ export function useTimbrarNotaCredito(facturaId: string) {
     mutationKey: queryKeys.facturacion.emitirNotaCredito,
     mutationFn: (notaCreditoId: string) => timbrarNotaCreditoFacturapi(notaCreditoId),
     onSuccess: (res) => {
-      toast.success(`Nota de crédito timbrada · UUID ${res.uuid.slice(0, 8)}…`);
+      notifySuccess(undefined, { title: `Nota de crédito timbrada · UUID ${res.uuid.slice(0, 8)}…` });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
     },
     onError: (err: Error) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: `No se pudo timbrar la nota de crédito: ${err.message}`,
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USENOTACREDITOFACTURAPI_1",
@@ -35,12 +35,12 @@ export function useCancelarNotaCredito(facturaId: string) {
     mutationFn: (vars: { notaCreditoId: string; motivo: MotivoCancelacionSat; sustituyeUuid?: string }) =>
       cancelarNotaCreditoFacturapi(vars.notaCreditoId, vars.motivo, vars.sustituyeUuid),
     onSuccess: () => {
-      toast.success("Nota de crédito cancelada");
+      notifySuccess(undefined, { title: "Nota de crédito cancelada" });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
     },
     onError: (err: Error) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: `No se pudo cancelar la nota de crédito: ${err.message}`,
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USENOTACREDITOFACTURAPI_2",

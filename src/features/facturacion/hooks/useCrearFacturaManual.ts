@@ -2,7 +2,7 @@
  * Mutación: crear factura manual + (opcional) timbrar al instante.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import {
   crearFacturaManual,
   type CrearFacturaManualInput,
@@ -33,9 +33,9 @@ export function useCrearFacturaManual() {
     },
     onSuccess: (res) => {
       if (res.timbrada) {
-        toast.success(`Factura manual timbrada · UUID ${res.uuid.slice(0, 8)}…`);
+        notifySuccess(undefined, { title: `Factura manual timbrada · UUID ${res.uuid.slice(0, 8)}…` });
       } else {
-        toast.success("Factura manual guardada como borrador");
+        notifySuccess(undefined, { title: "Factura manual guardada como borrador" });
       }
       qc.invalidateQueries({ queryKey: facturasKeys.all });
       // Auditoría: la regla `ventas_sin_facturar` depende del estado de facturación
@@ -45,7 +45,7 @@ export function useCrearFacturaManual() {
       invalidateProfitDependencies(qc);
     },
     onError: (err: Error) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: `No se pudo crear la factura: ${err.message}`,
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USECREARFACTURAMANUAL_1",

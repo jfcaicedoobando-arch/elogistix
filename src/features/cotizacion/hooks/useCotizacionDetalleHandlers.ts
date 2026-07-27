@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useUpdateEstadoCotizacion,
@@ -24,7 +23,6 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
  * Separado del state de queries/totales para favorecer la testabilidad.
  */
 export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefined) {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const actualizarEstado = useUpdateEstadoCotizacion();
   const convertirProspecto = useConvertirProspectoACliente();
@@ -44,7 +42,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!cotizacion) return;
     try {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
-      notifySuccess(toast, { title: `Estado actualizado a "${estado}"` });
+      notifySuccess(undefined, { title: `Estado actualizado a "${estado}"` });
       if (cotizacion.oportunidad_id) {
         try {
           await sincronizarEtapaPorEstadoCotizacion({
@@ -56,7 +54,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
         }
       }
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_CAMBIAR_ESTADO" });
+      notifyError(undefined, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_CAMBIAR_ESTADO" });
     }
   };
 
@@ -74,7 +72,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
 
   const handleConvertir = async () => {
     if (!cotizacion || !clienteForm.nombre.trim()) {
-      notifyError(toast, { title: "El nombre es obligatorio", method: "HANDLE_CONVERTIR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "El nombre es obligatorio", method: "HANDLE_CONVERTIR", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     try {
@@ -82,7 +80,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
         cotizacionId: cotizacion.id,
         clienteData: clienteForm,
       });
-      notifySuccess(toast, { title: `Cliente "${cliente.nombre}" creado exitosamente` });
+      notifySuccess(undefined, { title: `Cliente "${cliente.nombre}" creado exitosamente` });
       if (cotizacion.oportunidad_id) {
         try {
           await propagarConversionProspectoCRM({
@@ -96,7 +94,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       }
       setShowConvertir(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al convertir prospecto", description: getErrorMessage(err), error: err, method: "HANDLE_CONVERTIR" });
+      notifyError(undefined, { title: "Error al convertir prospecto", description: getErrorMessage(err), error: err, method: "HANDLE_CONVERTIR" });
     }
   };
 
@@ -126,7 +124,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
 
   const manejarErrorRevalidacion = (err: unknown, _method: string): boolean => {
     if (err instanceof RevalidacionRequeridaError) {
-      notifyWarning(toast, {
+      notifyWarning(undefined, {
         title: "Tarifa desactualizada",
         description:
           "La tarifa de esta cotización cambió o venció. Usa el botón \"Crear embarque\" del detalle para revalidar (mantener, refrescar, sustituir o pedir reaprobación).",
@@ -147,11 +145,11 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!ok) return;
     try {
       const embarqueId = await crearBorrador.mutateAsync(cotizacion.id);
-      notifySuccess(toast, { title: "Embarque borrador creado", description: "Complétalo y confírmalo cuando esté listo." });
+      notifySuccess(undefined, { title: "Embarque borrador creado", description: "Complétalo y confírmalo cuando esté listo." });
       navigate(`/embarques/${embarqueId}`);
     } catch (err: unknown) {
       if (manejarErrorRevalidacion(err, "HANDLE_CREAR_BORRADOR")) return;
-      notifyError(toast, { title: "Error al crear el borrador", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR_BORRADOR" });
+      notifyError(undefined, { title: "Error al crear el borrador", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR_BORRADOR" });
     }
   };
 

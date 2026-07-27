@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { Upload, FileSpreadsheet, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { notifyInfo } from "@/lib/ui/appFeedback";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,17 +36,17 @@ export default function TesoreriaConciliacion() {
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !cuentaId) {
-      if (!cuentaId) notifyError(toast, { title: "Selecciona una cuenta primero", method: "PAGES_TESORERIA_TESORERIACONCILIACION_1" });
+      if (!cuentaId) notifyError(undefined, { title: "Selecciona una cuenta primero", method: "PAGES_TESORERIA_TESORERIACONCILIACION_1" });
       return;
     }
     try {
-      toast.message("Procesando archivo...");
+      notifyInfo(undefined, { title: "Procesando archivo..." });
       const movimientos = await parseEstadoCuentaBBVA(file);
-      if (movimientos.length === 0) return notifyError(toast, { title: "No se encontraron movimientos válidos", method: "PAGES_TESORERIA_TESORERIACONCILIACION_2" });
+      if (movimientos.length === 0) return notifyError(undefined, { title: "No se encontraron movimientos válidos", method: "PAGES_TESORERIA_TESORERIACONCILIACION_2" });
       const res = await importar.mutateAsync({ cuentaId, movimientos });
-      toast.success(`Importados ${res.nuevos} nuevos / ${res.duplicados} duplicados ignorados`);
+      notifySuccess(undefined, { title: `Importados ${res.nuevos} nuevos / ${res.duplicados} duplicados ignorados` });
     } catch (err) {
-      notifyError(toast, { title: (err as Error).message, error: err, method: "PAGES_TESORERIA_TESORERIACONCILIACION_3" });
+      notifyError(undefined, { title: (err as Error).message, error: err, method: "PAGES_TESORERIA_TESORERIACONCILIACION_3" });
       reportCaughtError(err, { feature: "tesoreria", op: "importar_movimientos_bbva" });
     } finally {
       if (fileRef.current) fileRef.current.value = "";
@@ -85,12 +85,12 @@ export default function TesoreriaConciliacion() {
     }
 
     if (conciliados > 0) {
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: `${conciliados} movimientos conciliados automáticamente`,
         description: revision > 0 ? `${revision} requieren revisión manual` : undefined,
       });
     } else if (revision > 0) {
-      notifyWarning(toast, {
+      notifyWarning(undefined, {
         title: "No se encontraron matches exactos únicos",
         description: `${revision} movimientos pendientes requieren revisión`,
       });

@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/features/proveedor/hooks/useProveedores";
-import { useToast } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/features/auditoria/hooks/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
@@ -21,7 +20,6 @@ export function useProveedorDetalleController() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { canEdit, isAdmin } = usePermissions();
   const registrarActividad = useRegistrarActividad();
-  const { toast } = useToast();
 
   const { data: operaciones = [] } = useProveedorOperaciones(id);
 
@@ -48,11 +46,11 @@ export function useProveedorDetalleController() {
         entidad_nombre: (data.nombre as string) ?? proveedor?.nombre ?? "",
         detalles: cambios.length > 0 ? { cambios } : undefined,
       });
-      notifySuccess(toast, { title: "Proveedor actualizado" });
+      notifySuccess(undefined, { title: "Proveedor actualizado" });
     } catch {
-      notifyError(toast, { title: "Error al actualizar", method: "USE_PROVEEDOR_DETALLE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al actualizar", method: "USE_PROVEEDOR_DETALLE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
-  }, [updateProveedor, toast, proveedor, registrarActividad]);
+  }, [updateProveedor, proveedor, registrarActividad]);
 
   const handleDelete = useCallback(async () => {
     if (!proveedor) return;
@@ -64,12 +62,12 @@ export function useProveedorDetalleController() {
         entidad_id: proveedor.id,
         entidad_nombre: proveedor.nombre,
       });
-      notifySuccess(toast, { title: "Proveedor eliminado" });
+      notifySuccess(undefined, { title: "Proveedor eliminado" });
       navigate("/compras/proveedores");
     } catch {
-      notifyError(toast, { title: "Error al eliminar proveedor", method: "USE_PROVEEDOR_DETALLE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al eliminar proveedor", method: "USE_PROVEEDOR_DETALLE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
-  }, [proveedor, deleteProveedor, registrarActividad, toast, navigate]);
+  }, [proveedor, deleteProveedor, registrarActividad, navigate]);
 
   return {
     proveedor,

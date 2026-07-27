@@ -75,7 +75,7 @@ export default function Onboarding() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "No pudimos guardar los datos.";
       setError(msg);
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al completar onboarding",
         description: msg,
         error: err,

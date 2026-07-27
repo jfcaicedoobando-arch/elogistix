@@ -3,7 +3,7 @@
  * Migrado a FormDialogShell (regla core "modales tipo formulario").
  */
 import { useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { BookmarkPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ export function GuardarPlantillaDialog({
         visibilidad,
         values: limpiarValues(values),
       });
-      toast.success("Plantilla guardada");
+      notifySuccess(undefined, { title: "Plantilla guardada" });
       onSaved?.();
       handleClose(false);
     } catch (err) {

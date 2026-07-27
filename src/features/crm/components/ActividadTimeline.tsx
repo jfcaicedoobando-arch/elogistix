@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { formatFechaHora } from "@/lib/formatters";
 import { crmToast } from "@/features/crm/lib/crmToast";
@@ -27,7 +26,6 @@ interface Props {
 }
 
 export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
-  const { toast } = useToast();
   const { data } = useActividades({ entidadTipo, entidadId, estado: "todas", pageSize: 100 });
   const crear = useCrearActividad();
   const completar = useCompletarActividad();
@@ -38,13 +36,13 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
   const items = data?.data ?? [];
 
   const handleCrear = async () => {
-    if (!asunto.trim()) return notifyError(toast, { title: "Asunto requerido", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    if (!asunto.trim()) return notifyError(undefined, { title: "Asunto requerido", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     try {
       await crear.mutateAsync({ tipo, asunto, descripcion: desc, entidad_tipo: entidadTipo, entidad_id: entidadId });
       crmToast.success("Actividad registrada");
       setAsunto(""); setDesc("");
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
+      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
     }
   };
 

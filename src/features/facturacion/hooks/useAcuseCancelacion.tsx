@@ -9,7 +9,6 @@
  *    aún no lo había emitido en el momento de la cancelación.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import {
   reintentarAcuseCancelacion,
   descargarAcuseCancelacionPdf,
@@ -33,12 +32,12 @@ export function useAcuseCancelacion(factura: FacturaDetalle | null | undefined) 
     mutationFn: () => reintentarAcuseCancelacion(factura!.id),
     onSuccess: (res) => {
       if (res.acuse_guardado) {
-        notifySuccess(toast, {
+        notifySuccess(undefined, {
           title: "Acuse descargado",
           description: "Ya puedes descargar el XML y el PDF del acuse SAT.",
         });
       } else {
-        notifySuccess(toast, {
+        notifySuccess(undefined, {
           title: "Acuse aún no disponible",
           description: "El SAT no ha emitido el acuse todavía. Inténtalo más tarde.",
         });
@@ -47,7 +46,7 @@ export function useAcuseCancelacion(factura: FacturaDetalle | null | undefined) 
       invalidateProfitDependencies(qc);
     },
     onError: (err: Error) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: `No se pudo descargar el acuse: ${err.message}`,
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USEACUSECANCELACION",
@@ -56,7 +55,7 @@ export function useAcuseCancelacion(factura: FacturaDetalle | null | undefined) 
 
   function descargarXml() {
     if (!factura?.acuse_cancelacion_xml) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Aún no hay acuse SAT disponible.",
         error: new Error("acuse_xml_missing"),
         method: "FEATURES_FACTURACION_HOOKS_USEACUSECANCELACION_XML",
@@ -75,7 +74,7 @@ export function useAcuseCancelacion(factura: FacturaDetalle | null | undefined) 
       const blob = await descargarAcuseCancelacionPdf(factura.id);
       descargarBlob(blob, `${nombreArchivoBase(factura)}.pdf`);
     } catch (err) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo descargar el PDF del acuse.",
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USEACUSECANCELACION_PDF",

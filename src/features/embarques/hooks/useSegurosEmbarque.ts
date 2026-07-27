@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import {
   createSeguroEmbarque,
@@ -33,9 +33,9 @@ export function useCreateSeguro(embarqueId: string) {
     mutationFn: (input: SeguroEmbarqueInput) => createSeguroEmbarque(input),
     onSuccess: () => {
       invalidatePnl(qc, embarqueId);
-      toast.success("Póliza registrada");
+      notifySuccess(undefined, { title: "Póliza registrada" });
     },
-    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo guardar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_1" }),
+    onError: (e: Error) => notifyError(undefined, { title: e.message ?? "No se pudo guardar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_1" }),
   });
 }
 
@@ -46,9 +46,9 @@ export function useUpdateSeguro(embarqueId: string) {
       updateSeguroEmbarque(vars.id, vars.patch),
     onSuccess: () => {
       invalidatePnl(qc, embarqueId);
-      toast.success("Póliza actualizada");
+      notifySuccess(undefined, { title: "Póliza actualizada" });
     },
-    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo actualizar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_2" }),
+    onError: (e: Error) => notifyError(undefined, { title: e.message ?? "No se pudo actualizar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_2" }),
   });
 }
 
@@ -58,8 +58,8 @@ export function useDeleteSeguro(embarqueId: string) {
     mutationFn: (id: string) => deleteSeguroEmbarque(id),
     onSuccess: () => {
       invalidatePnl(qc, embarqueId);
-      toast.success("Póliza eliminada");
+      notifySuccess(undefined, { title: "Póliza eliminada" });
     },
-    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo eliminar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_3" }),
+    onError: (e: Error) => notifyError(undefined, { title: e.message ?? "No se pudo eliminar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_3" }),
   });
 }

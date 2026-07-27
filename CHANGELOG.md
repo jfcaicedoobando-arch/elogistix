@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.320.15] - 2026-07-27
+- **Auditoría de toasts · Olas B y C completadas.** Cierre total de la baseline `SONNER-LEGACY`:
+  - Migrados los 2 wrappers residuales (`crmToast.undo`, `useUndoToast`) a `notifyInfo({ action: { label, onClick } })`. Ya no queda un solo `import { toast } from "sonner"` fuera de los 5 wrappers autorizados (`appFeedback`, `sonner.tsx`, `ErrorDetailsDialog`, `useToast` shim, `useCopyText`).
+  - `eslint.config.js`: allowlist `SONNER-LEGACY` vaciada — la regla se mantiene como *guardia de regresión* (no agregar entradas nuevas).
+  - Limpieza de residuos post-codemod en 11 hooks (`useNuevoEmbarqueWizard`, `useEmbarquesPageController`, `useProveedorDetalleController`, `useCotizacionWizardSteps`, `usePaso1Handlers`, etc.): removidas dependencias muertas `toast` en `useCallback`, imports huérfanos de `useToast` y el parámetro `_toast: ToastFn` en `vincularCrmTrasCrear`.
+  - `scripts/codemod-sonner-to-appfeedback.ts`: anotación `eslint-disable complexity` justificada para el parser `splitFirstArg` (balance de delimitadores).
+  - Analogía: cerramos el último grifo goteando; ahora `bun run audit:sonner` reporta `✅ 5 archivos, 0 fugas, 0 dead entries`.
+
+
 ## [13.320.14] - 2026-07-27
 - **Auditoría de toasts · Ola A (higiene inmediata).** Tapo fugas de la baseline `SONNER-LEGACY` y agrego regresión automática:
   - Migré 3 archivos que importaban `sonner` directo sin permiso a `notify*` de `@/lib/ui/appFeedback` (`useMigrarRolesLegacy`, `useNuevaFacturaProveedorForm.applyParsed`, `useProgramarPagoLote`).

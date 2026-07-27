@@ -12,7 +12,7 @@ import { useState } from "react";
 import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { notifyInfo, notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { recuperarClaimFactura, type RecuperarClaimResponse } from "@/features/facturacion/services/claimPending";
 import { useQueryClient } from "@tanstack/react-query";
@@ -50,14 +50,14 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt }:
       const outcome = data?.outcome ?? "sin_cambios";
       const info = MENSAJES[outcome] ?? MENSAJES.sin_cambios;
       const description = data?.message;
-      if (info.tono === "success") toast.success(info.titulo, { description });
+      if (info.tono === "success") notifySuccess(undefined, { title: info.titulo, description });
       else if (info.tono === "error") {
         notifyError(undefined, {
           title: info.titulo,
           description,
           method: "ClaimPendingBanner.onRecuperar",
         });
-      } else toast.info(info.titulo, { description });
+      } else notifyInfo(undefined, { title: info.titulo, description });
       await qc.invalidateQueries({ queryKey: facturasKeys.detail(facturaId) });
     } catch (err) {
       notifyError(undefined, {

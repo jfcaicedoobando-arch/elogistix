@@ -13,7 +13,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   usePlantillasMensaje,
@@ -32,7 +31,6 @@ export default function PlantillasMensajeEditor() {
   const crear = useCrearPlantilla();
   const actualizar = useActualizarPlantilla();
   const eliminar = useEliminarPlantilla();
-  const { toast } = useToast();
 
   const [nuevo, setNuevo] = useState({ nombre: "", canal: "email" as PlantillaCanal, asunto: "", cuerpo: "" });
   const [aEliminar, setAEliminar] = useState<{ id: string; nombre: string } | null>(null);
@@ -40,15 +38,15 @@ export default function PlantillasMensajeEditor() {
 
   const handleCrear = async () => {
     if (!nuevo.nombre.trim() || !nuevo.cuerpo.trim()) {
-      notifyError(toast, { title: "Nombre y cuerpo son obligatorios", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Nombre y cuerpo son obligatorios", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     try {
       await crear.mutateAsync(nuevo);
-      notifySuccess(toast, { title: "Plantilla creada" });
+      notifySuccess(undefined, { title: "Plantilla creada" });
       setNuevo({ nombre: "", canal: nuevo.canal, asunto: "", cuerpo: "" });
     } catch (e) {
-      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
+      notifyError(undefined, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
     }
   };
 

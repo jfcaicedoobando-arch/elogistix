@@ -1,7 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Archive, ArchiveRestore, AlertTriangle } from "lucide-react";
-import { useToast } from "@/hooks/shared";
 import { useReactivarCotizacion } from "@/features/cotizacion/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
@@ -21,7 +20,6 @@ interface Props {
  * Permite reactivarla (vuelve a su estado anterior).
  */
 export function CotizacionInactivaBanner({ cotizacionId, estado, updatedAt, canEdit }: Props) {
-  const { toast } = useToast();
   const reactivar = useReactivarCotizacion();
 
   if (!puedeReactivar(estado)) return null;
@@ -33,12 +31,12 @@ export function CotizacionInactivaBanner({ cotizacionId, estado, updatedAt, canE
   const handleReactivar = async () => {
     try {
       const nuevo = await reactivar.mutateAsync(cotizacionId);
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: "Cotización reactivada",
         description: `Volvió al estado "${nuevo}". Recuerda revisar las tarifas antes de enviarla.`,
       });
     } catch (err: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo reactivar",
         description: getErrorMessage(err),
         error: err,

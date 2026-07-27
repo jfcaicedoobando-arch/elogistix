@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Upload, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { Button } from "@/components/ui/button";
 import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
 import type { Tables } from "@/types/db";
@@ -61,28 +61,28 @@ export function ProveedorCsfUpdateButton({ proveedor, onUpdate }: Props) {
       data = await parseCsf(file);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "No se pudo procesar la CSF";
-      notifyError(toast, { title: msg, error: err, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_1" });
+      notifyError(undefined, { title: msg, error: err, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_1" });
       setCsfLoading(false);
       return;
     }
 
     const validacion = validarCsf(data, proveedor);
     if (!validacion.ok) {
-      notifyError(toast, { title: validacion.msg, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_2" });
+      notifyError(undefined, { title: validacion.msg, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_2" });
       setCsfLoading(false);
       return;
     }
 
     const patch = construirPatchCsf(data);
     if (Object.keys(patch).length === 0) {
-      toast.warning("La CSF se validó correctamente pero no contenía datos nuevos para actualizar.");
+      notifyWarning(undefined, { title: "La CSF se validó correctamente pero no contenía datos nuevos para actualizar." });
       setCsfLoading(false);
       return;
     }
 
     try {
       await onUpdate(proveedor.id, patch);
-      toast.success("Datos fiscales actualizados desde la CSF");
+      notifySuccess(undefined, { title: "Datos fiscales actualizados desde la CSF" });
     } finally {
       setCsfLoading(false);
     }

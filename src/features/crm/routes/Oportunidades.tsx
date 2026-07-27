@@ -15,7 +15,7 @@ import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import SearchInput from "@/components/shared/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable } from "@/components/shared/DataTable";
-import { useDebounce, useToast } from "@/hooks/shared";
+import { useDebounce } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { LoadingState } from "@/components/shared/states/LoadingState";
@@ -30,7 +30,6 @@ import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function Oportunidades() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [filtros, setFiltros] = useState<OportunidadesFiltros>(FILTROS_DEFAULT);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -75,7 +74,7 @@ export default function Oportunidades() {
         await mover.mutateAsync({ id, etapa_id: etapaPrev, probabilidad: probPrev });
       });
     } catch (e) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo mover",
         description: e instanceof Error ? e.message : undefined,
         error: e,

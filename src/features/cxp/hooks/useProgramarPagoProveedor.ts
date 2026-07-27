@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { programarPagoProveedor } from "@/features/cxp/services/programarPagoProveedor";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
@@ -16,7 +15,7 @@ export function useProgramarPagoProveedor() {
     mutationFn: (p: { facturaId: string; fecha: string | null }) =>
       programarPagoProveedor(p.facturaId, p.fecha),
     onSuccess: (_r, vars) => {
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: vars.fecha ? `Pago programado para ${vars.fecha}` : "Programación de pago cancelada",
       });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
@@ -25,7 +24,7 @@ export function useProgramarPagoProveedor() {
       invalidateProfitDependencies(qc);
     },
     onError: (err: Error) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: `No se pudo programar el pago: ${err.message}`,
         error: err,
         method: "FEATURES_CXP_HOOKS_USEPROGRAMARPAGOPROVEEDOR",

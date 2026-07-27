@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useEliminarOportunidad, useCrearCotizacionDesdeOportunidad } from "@/features/crm/hooks";
@@ -27,7 +26,6 @@ function findCotizandoEtapa(etapas: EtapaLite[]): EtapaLite | undefined {
 
 export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const eliminar = useEliminarOportunidad();
   const crearCot = useCrearCotizacionDesdeOportunidad();
 
@@ -37,7 +35,7 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
       crmToast.success("Oportunidad eliminada");
       navigate("/crm/oportunidades");
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ELIMINAR" });
+      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ELIMINAR" });
     }
   };
 
@@ -60,7 +58,7 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
       crmToast.success(`Cotización creada · ${result.folio}`);
       navigate(`/cotizaciones/${result.id}/editar`);
     } catch (e) {
-      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "CREAR_COTIZACION" });
+      notifyError(undefined, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "CREAR_COTIZACION" });
     }
   };
 

@@ -1,6 +1,5 @@
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { fetchPlanes, updatePlan, type Plan } from "@/features/admin/services/planes";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -17,16 +16,15 @@ export function usePlanes() {
 
 export function useUpdatePlan() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: updatePlan,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.planes.all });
-      notifySuccess(toast, { title: "Plan actualizado" });
+      notifySuccess(undefined, { title: "Plan actualizado" });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error al actualizar plan", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al actualizar plan", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 }

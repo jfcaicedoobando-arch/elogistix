@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DateTimePickerMx } from "@/components/ui/date-time-picker-mx";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useCrearActividad, useOportunidades, type CrmEntidadTipo } from "@/features/crm/hooks";
 
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -37,8 +37,8 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
 
   const submit = async () => {
     const a = asunto.trim();
-    if (!a) return notifyError(toast, { title: "Asunto requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_1" });
-    if (!entidadId) return notifyError(toast, { title: "Selecciona una oportunidad", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_2" });
+    if (!a) return notifyError(undefined, { title: "Asunto requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_1" });
+    if (!entidadId) return notifyError(undefined, { title: "Selecciona una oportunidad", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_2" });
     try {
       await crear.mutateAsync({
         tipo: "tarea",
@@ -48,12 +48,12 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
         entidad_id: entidadId,
         fecha_programada: new Date(fecha).toISOString(),
       });
-      toast.success("Actividad creada", { duration: 2000 });
+      notifySuccess(undefined, { title: "Actividad creada", duration: 2000 });
       setAsunto("");
       onClose();
       onCreated();
     } catch (e) {
-      notifyError(toast, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_3" });
+      notifyError(undefined, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_3" });
     }
   };
 

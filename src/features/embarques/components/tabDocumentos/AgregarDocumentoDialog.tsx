@@ -11,7 +11,6 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
 import { useCreateDocumentoEmbarque } from "@/features/embarques/hooks";
 import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
-import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
@@ -27,7 +26,6 @@ interface Props {
 }
 
 export function AgregarDocumentoDialog({ open, onOpenChange, embarqueId, modo, documentos }: Props) {
-  const { toast } = useToast();
   const [nombreSel, setNombreSel] = useState<string>("");
   const [nombreLibre, setNombreLibre] = useState("");
   const [notasNuevo, setNotasNuevo] = useState("");
@@ -47,16 +45,16 @@ export function AgregarDocumentoDialog({ open, onOpenChange, embarqueId, modo, d
   const handleCrear = async () => {
     const nombreFinal = nombreSel === OTRO_VALUE ? nombreLibre.trim() : nombreSel.trim();
     if (!nombreFinal) {
-      notifyError(toast, { title: "Nombre requerido", description: "Selecciona o escribe el nombre del documento.", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Nombre requerido", description: "Selecciona o escribe el nombre del documento.", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     try {
       await createDoc.mutateAsync({ embarqueId, nombre: nombreFinal, notas: notasNuevo.trim() || undefined });
-      notifySuccess(toast, { title: "Documento agregado" });
+      notifySuccess(undefined, { title: "Documento agregado" });
       resetForm();
       onOpenChange(false);
     } catch (err) {
-      notifyError(toast, { title: "No se pudo agregar el documento", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR" });
+      notifyError(undefined, { title: "No se pudo agregar el documento", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR" });
     }
   };
 

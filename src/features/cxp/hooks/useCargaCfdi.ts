@@ -5,7 +5,7 @@
  * (regla Power of 10).
  */
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { parseCfdiXml, type CfdiParsedResponse } from "@/features/cxp/services";
 import { CfdiUploadError } from "@/features/cxp/services/parseCfdi";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -31,14 +31,14 @@ export function useCargaCfdi({ categorias, onParsed }: UseCargaCfdiArgs) {
   const handleXml = useCallback((f: File | null) => {
     if (!f) return;
     if (!f.name.toLowerCase().endsWith(".xml")) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "El archivo debe ser .xml",
         method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_1",
       });
       return;
     }
     if (f.size > MAX_XML_BYTES) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "XML excede 2 MB",
         method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_2",
       });
@@ -60,7 +60,7 @@ export function useCargaCfdi({ categorias, onParsed }: UseCargaCfdiArgs) {
       // devuelve `false` y suprimimos el toast de éxito para no contradecir su
       // propio toast de error.
       const consumerResult = await onParsed(data, { xml, pdf });
-      if (consumerResult !== false) toast.success("CFDI procesado");
+      if (consumerResult !== false) notifySuccess(undefined, { title: "CFDI procesado" });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error procesando XML";
       const baseCtx = {
@@ -90,7 +90,7 @@ export function useCargaCfdi({ categorias, onParsed }: UseCargaCfdiArgs) {
         title = msg;
       }
 
-      notifyError(toast, {
+      notifyError(undefined, {
         title,
         error: e,
         context: richCtx,

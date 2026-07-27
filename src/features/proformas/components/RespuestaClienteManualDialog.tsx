@@ -44,7 +44,7 @@ export function RespuestaClienteManualDialog({
 
   async function handleConfirmar() {
     if (!esAceptar && !motivo.trim()) {
-      notifyError(toast, { title: "Indica el motivo de rechazo", method: "PROFORMAS_RESPUESTA_MANUAL_VALIDACION" });
+      notifyError(undefined, { title: "Indica el motivo de rechazo", method: "PROFORMAS_RESPUESTA_MANUAL_VALIDACION" });
       return;
     }
     setLoading(true);
@@ -61,12 +61,12 @@ export function RespuestaClienteManualDialog({
     } catch (e) {
       const msg = (e as Error)?.message ?? "";
       if (/no tienes permisos|permission denied|not authorized|forbidden|acceso denegado/i.test(msg)) {
-        notifyWarning(toast, {
+        notifyWarning(undefined, {
           title: "Acción no permitida",
           description: msg,
         });
       } else {
-        notifyError(toast, {
+        notifyError(undefined, {
           title: "Error al actualizar",
           description: msg,
           error: e,

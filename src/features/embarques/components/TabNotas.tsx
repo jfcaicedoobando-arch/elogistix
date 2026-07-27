@@ -10,7 +10,6 @@ import { usePermissions } from "@/hooks/shared";
 import { useCreateNotaEmbarque, useEventosEmbarque, useActividadEmbarque } from "@/features/embarques/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
-import { useToast } from "@/hooks/shared";
 import type { NotaEmbarqueRow } from "@/features/embarques/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
@@ -41,7 +40,6 @@ export function TabNotas({ notas, embarqueId, expediente, creadoPor, creadoEn }:
   const { canEdit } = usePermissions();
   const crearNota = useCreateNotaEmbarque();
   const registrarActividad = useRegistrarActividad();
-  const { toast } = useToast();
   const { data: eventos = [] } = useEventosEmbarque(embarqueId);
 
   const { items, isLoading } = useActividadEmbarque({
@@ -69,9 +67,9 @@ export function TabNotas({ notas, embarqueId, expediente, creadoPor, creadoEn }:
         detalles: { nota: texto.trim() },
       });
       setTexto("");
-      notifySuccess(toast, { title: "Nota agregada" });
+      notifySuccess(undefined, { title: "Nota agregada" });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al agregar nota", description: getErrorMessage(err), error: err, method: "HANDLE_SUBMIT" });
+      notifyError(undefined, { title: "Error al agregar nota", description: getErrorMessage(err), error: err, method: "HANDLE_SUBMIT" });
     }
   };
 

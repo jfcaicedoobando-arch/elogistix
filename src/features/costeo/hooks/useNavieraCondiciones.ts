@@ -40,7 +40,7 @@ export function useCondicionNavieraMutations() {
       toast({ title: "Condiciones guardadas" });
     },
     onError: (e: Error) =>
-      notifyError(toast, { title: "Error al guardar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_1" }),
+      notifyError(undefined, { title: "Error al guardar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_1" }),
   });
 
   const eliminar = useMutation({
@@ -50,7 +50,7 @@ export function useCondicionNavieraMutations() {
       toast({ title: "Condiciones eliminadas" });
     },
     onError: (e: Error) =>
-      notifyError(toast, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_2" }),
+      notifyError(undefined, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_2" }),
   });
 
   return { guardar, eliminar };
@@ -82,7 +82,7 @@ export function useReemplazarTramos() {
       toast({ title: "Tabulador actualizado" });
     },
     onError: (e: Error) =>
-      notifyError(toast, { title: "Error al guardar tabulador", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_3" }),
+      notifyError(undefined, { title: "Error al guardar tabulador", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_3" }),
   });
 }
 

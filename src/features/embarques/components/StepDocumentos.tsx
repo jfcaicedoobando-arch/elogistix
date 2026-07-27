@@ -7,7 +7,6 @@ import {
   MAX_FILE_SIZE_MB,
   type StepValidationErrors,
 } from "@/features/embarques/domain/embarqueWizardSchemas";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
@@ -18,7 +17,6 @@ interface Props {
 }
 
 export function StepDocumentos({ documentos, onFileChange, errors = {} }: Props) {
-  const { toast } = useToast();
   const adjuntados = useMemo(() => documentos.filter((d) => d.adjuntado).length, [documentos]);
   const total = documentos.length;
   const pendientes = total - adjuntados;
@@ -28,7 +26,7 @@ export function StepDocumentos({ documentos, onFileChange, errors = {} }: Props)
     if (file) {
       const err = validateArchivo({ nombre, size: file.size, type: file.type });
       if (err) {
-        notifyError(toast, { title: "Documento rechazado", message: err, method: "HANDLE_FILE_CHANGE", errorCode: ERROR_CODES.VALIDATION_FAILED });
+        notifyError(undefined, { title: "Documento rechazado", message: err, method: "HANDLE_FILE_CHANGE", errorCode: ERROR_CODES.VALIDATION_FAILED });
         return;
       }
     }

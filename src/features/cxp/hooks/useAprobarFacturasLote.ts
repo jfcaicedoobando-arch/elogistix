@@ -7,7 +7,6 @@
  */
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { aprobarFacturaProveedor } from "@/features/cxp/services/aprobacionFactura";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
@@ -48,18 +47,18 @@ export function useAprobarFacturasLote() {
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
 
       if (fallos.length === 0) {
-        notifySuccess(toast, {
+        notifySuccess(undefined, {
           title: `${exitos.length} factura(s) aprobada(s)`,
           description: "Todas las solicitudes de la selección se aprobaron correctamente.",
         });
       } else if (exitos.length === 0) {
-        notifyError(toast, {
+        notifyError(undefined, {
           title: `No se pudo aprobar ninguna de las ${fallos.length} facturas`,
           error: new Error(fallos[0].error),
           method: "USE_APROBAR_FACTURAS_LOTE",
         });
       } else {
-        notifySuccess(toast, {
+        notifySuccess(undefined, {
           title: `${exitos.length} aprobada(s), ${fallos.length} con error`,
           description: "Revisa las facturas que fallaron para reintentar manualmente.",
         });

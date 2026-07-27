@@ -5,7 +5,6 @@
  *              complejidad ciclomática y respetar el límite de 250 líneas.
  */
 import { useRef, useState } from "react";
-import { toast } from "sonner";
 import {
   ExternalLink, Loader2, Upload, RefreshCcw, X,
 } from "lucide-react";
@@ -38,7 +37,7 @@ async function handleAbrir(path: string, tipo: TipoAdjuntoCfdi) {
   try {
     await openFacturaInNewTab(path);
   } catch (e) {
-    notifyError(toast, {
+    notifyError(undefined, {
       title: `No se pudo abrir el ${tipo} del CFDI`,
       error: e,
       method: "FEATURES_CXP_INFOFACTURA_OPEN_CFDI",
@@ -127,7 +126,7 @@ export function AdjuntoRow({
     if (!file || !onUpload) return;
     const err = validarArchivo(file, tipo);
     if (err) {
-      notifyError(toast, { title: err, method: "CXP_ADJUNTO_ROW_VALIDATE" });
+      notifyError(undefined, { title: err, method: "CXP_ADJUNTO_ROW_VALIDATE" });
       return;
     }
     if (adjunto) setConfirmReplace(file);

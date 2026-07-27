@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { AlertCircle, Loader2, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,11 +92,11 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
         estado: data.estado?.trim() || prev.estado,
         regimen_fiscal: data.regimen_fiscal?.trim() || prev.regimen_fiscal,
       }));
-      toast.success("CSF procesada. Verifica los datos actualizados antes de guardar.");
+      notifySuccess(undefined, { title: "CSF procesada. Verifica los datos actualizados antes de guardar." });
     } catch (err) {
       setCsfFileName(null);
       const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
-      notifyError(toast, { title: mensaje, error: err, method: "DIALOG_EDITAR_CLIENTE_CSF" });
+      notifyError(undefined, { title: mensaje, error: err, method: "DIALOG_EDITAR_CLIENTE_CSF" });
     } finally {
       setParsingCsf(false);
     }

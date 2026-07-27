@@ -11,7 +11,6 @@ import { formatCurrency } from "@/lib/formatters";
 import { ROUTES } from "@/constants/routes";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { openFacturaInNewTab } from "@/services/storage";
-import { toast } from "@/hooks/shared";
 import PortalFacturaResumenCard from "@/features/portal/components/factura/PortalFacturaResumenCard";
 import PortalFacturaConceptosTable from "@/features/portal/components/factura/PortalFacturaConceptosTable";
 import PortalFacturaPagosCard from "@/features/portal/components/factura/PortalFacturaPagosCard";
@@ -27,7 +26,7 @@ export default function PortalFacturaDetalle() {
     try {
       await openFacturaInNewTab(stored);
     } catch (err) {
-      notifyError(toast, { title: `No se pudo abrir el ${kind}`,
+      notifyError(undefined, { title: `No se pudo abrir el ${kind}`,
         description: (err as Error).message, error: err, method: "PAGES_PORTAL_PORTALFACTURADETALLE_1" });
     }
   };

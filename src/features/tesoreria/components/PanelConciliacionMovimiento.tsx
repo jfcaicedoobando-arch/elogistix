@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { toast } from "sonner";
 import { EyeOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
   };
 
   const onIgnorar = () => {
-    if (!motivo.trim()) return notifyError(toast, { title: "Captura un motivo", method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_2" });
+    if (!motivo.trim()) return notifyError(undefined, { title: "Captura un motivo", method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_2" });
     ignorar.mutate(
       { movId: movimiento.id, motivo: motivo.trim() },
       { onSuccess: () => { setOpenIgnorar(false); setMotivo(""); onClose(); } },

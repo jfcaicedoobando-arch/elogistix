@@ -90,7 +90,7 @@ export function CambiarPasswordDialog({
 
   const handleSubmit = async () => {
     if (nueva.length < 8) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Contraseña muy corta",
         description: "Mínimo 8 caracteres.",
         method: `${method}_LEN`,
@@ -98,7 +98,7 @@ export function CambiarPasswordDialog({
       return;
     }
     if (nueva !== confirma) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No coinciden",
         description: "La confirmación no coincide.",
         method: `${method}_MISMATCH`,
@@ -111,7 +111,7 @@ export function CambiarPasswordDialog({
       toast({ title: "Contraseña actualizada" });
       onOpenChange(false);
     } catch (err) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo actualizar la contraseña",
         description: traducirErrorPassword(err),
         error: err,

@@ -42,11 +42,11 @@ export function deriveContenedoresPayload(values: {
  * Devuelve `false` por conveniencia para usarse en `return reportPhaseError(...)`.
  */
 export function reportPhaseError(
-  toast: Parameters<typeof notifyError>[0],
+  _toast: Parameters<typeof notifyError>[0],
   title: string,
   err: unknown,
 ): false {
-  notifyError(toast, {
+  notifyError(undefined, {
     title,
     description: getErrorMessage(err),
     error: err,

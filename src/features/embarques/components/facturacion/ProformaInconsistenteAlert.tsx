@@ -7,7 +7,7 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { asignarConceptosAProforma } from "@/features/proformas/services";
@@ -38,14 +38,14 @@ export function ProformaInconsistenteAlert({
       await asignarConceptosAProforma(proformaBorrador.id, ids);
     },
     onSuccess: () => {
-      toast.success(`Conceptos asignados a ${proformaBorrador.numero}`);
+      notifySuccess(undefined, { title: `Conceptos asignados a ${proformaBorrador.numero}` });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.proformasEmbarque(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVentaDash(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(toast, { title: `No se pudieron asignar los conceptos: ${msg}`, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_FACTURACION_PROFORMAINCONSISTENTEALERT_1" });
+      notifyError(undefined, { title: `No se pudieron asignar los conceptos: ${msg}`, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_FACTURACION_PROFORMAINCONSISTENTEALERT_1" });
     },
     onSettled: () => setBusy(false),
   });

@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { cancelarFacturaProveedor } from "@/features/cxp/services/cancelarFacturaProveedor";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
@@ -17,7 +16,7 @@ export function useCancelarFacturaProveedor() {
     mutationFn: (p: { facturaId: string; motivo: string }) =>
       cancelarFacturaProveedor(p.facturaId, p.motivo),
     onSuccess: () => {
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: "Factura cancelada",
         description: "Se cancelaron las notas de crédito asociadas y se limpiaron los conceptos del embarque.",
       });
@@ -29,7 +28,7 @@ export function useCancelarFacturaProveedor() {
       invalidateProfitDependencies(qc);
     },
     onError: (err: Error) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: `No se pudo cancelar la factura: ${err.message}`,
         error: err,
         method: "FEATURES_CXP_HOOKS_USECANCELARFACTURAPROVEEDOR",
