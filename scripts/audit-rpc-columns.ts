@@ -158,6 +158,7 @@ function auditObject(obj: SqlObject, tables: ColMap): Finding[] {
     if (SYSTEM_COLS.has(column)) continue;
     const candidates = aliases.get(alias);
     if (!candidates) continue;
+    if (candidates.has(OPAQUE)) continue;         // alias rebindeado a CTE/subquery → no validable
     // Válido si la columna existe en al menos UNA de las tablas candidatas.
     let existsSomewhere = false;
     for (const t of candidates) {
