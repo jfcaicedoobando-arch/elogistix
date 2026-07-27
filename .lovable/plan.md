@@ -1,45 +1,52 @@
-## Objetivo
+## Plan · Fix 40 tests rojos (7 grupos)
 
-Subir `tailwind-merge` de v2 a v3 (único major seguro pendiente tras Ola 1) y verificar que la app queda verde.
+Analogía: es una revisión mayor donde arreglamos 7 sistemas independientes del auto. Cada grupo se atiende por separado y al final damos una vuelta completa (`test:fast`) para confirmar que todo enciende.
 
-## Contexto
+### 🅐 sonner v2 · `toast.info` no existe (2 líneas)
+`src/lib/ui/appFeedback.ts:140` → reemplazar `sonnerToast.info(opts.title, {...})` por `sonnerToast(opts.title, {...})` (sonner v2 removió el helper `info`). Desbloquea 4 tests y previene runtime bugs.
 
-- `tailwind-merge` se usa exclusivamente en `src/lib/utils/cn.ts` vía `twMerge(clsx(...))`.
-- v3 cambia el bundling (ESM-only, tree-shaking mejor) y ajusta algunas reglas de conflicto de clases, pero la API pública `twMerge()` con strings se mantiene compatible.
-- Riesgo bajo: no hay configuración custom (`extendTailwindMerge`) ni imports de tipos internos.
+### 🅓-bis · Título duplicado
+Renombrar `it("la allowlist apunta a archivos existentes (evita drift)")` en `src/__tests__/architecture/sentry-no-direct-capture.test.ts:65` a algo distinto (ej. "allowlist de direct-capture apunta a archivos existentes") para que el guardarraíl de higiene ("no duplicar títulos") deje de fallar.
 
-## Pasos
+### 🅕 Fixture RLS storage
+`supabase/tests/rls/test_rls_storage_objects.sql:46-47`: renombrar `ELISTG00001/00002` → `ELS00001/ELS00002` (3 letras, cumple el linter).
 
-1. **Actualizar dependencia**
-   - `bun add tailwind-merge@^3` (regenera `bun.lock` en modo texto, ya configurado en Ola 1).
+### 🅔 Tag `source` → `op` en exchangeRates
+`src/features/catalogos/services/__tests__/exchangeRates.sentry.test.ts:47`: actualizar el `expect` a `{ feature: "exchange_rates", op: "edge_invoke" }` para reflejar el shape actual de tags.
 
-2. **Validaciones en cascada (fail-fast)**
-   - `bun run lint -- --max-warnings 0`
-   - `bunx tsgo --noEmit` (typecheck)
-   - `bun run test:fast` (suite Vitest completa)
-   - `bun run test:e2e` si el entorno lo permite; si requiere staging remoto, dejar constancia y correr al menos la suite de humo local (`e2e/specs/01-login` + `13-dashboard-responsive`).
+### 🅑 Codemod `expect.anything()` → `undefined` en 8 archivos (18 tests)
+En las llamadas `expect(notifyError|notifySuccess).toHaveBeenCalledWith(expect.anything(), objectContaining({...}))`, reemplazar el primer argumento por `undefined`. Archivos:
+- `useCargaCfdi.test.tsx`
+- `useEditarFacturaProveedorForm.test.tsx`
+- `useEmbarqueEstadoActions.branches.test.tsx`
+- `useEmbarquesPageController.test.tsx`
+- `useRegistrarPagoSubmit.test.tsx`
+- `useCotizacionWizardSteps.test.tsx`
+- (`useNuevaFacturaProveedorForm.test.tsx` — revisar por consistencia aunque no aparezca en el reporte)
 
-3. **Rollback plan**
-   - Si falla lint/typecheck/tests: `bun add tailwind-merge@2.6.0` y reportar la incompatibilidad concreta.
-   - No se toca ningún componente en este PR; si v3 rompe clases en runtime, se revierte antes de mergear.
+### 🅒 Mocks pending en hooks de facturación (6 tests, 4 archivos)
+- `useCrearFacturaManual.test.tsx`, `useNotaCreditoFacturapi.test.tsx`, `useTimbrarFactura.test.tsx`, `useEnviarFacturaEmail.test.tsx`: revisar la cadena de mocks del RPC/mutation para que resuelva y `isSuccess` se ponga `true` dentro de `waitFor`. Para `useTimbrarFactura` alinear el segundo argumento del `toastSuccess` (omitir `description: undefined`).
 
-4. **Versionado y changelog**
-   - Bump `APP_VERSION` → `13.320.28` en `src/constants/appVersion.ts`.
-   - Entrada en `CHANGELOG.md`:
-     ```
-     ## [13.320.28] - 2026-07-27
-     - **chore(deps)**: tailwind-merge 2 → 3 (Ola 2, único major de bajo riesgo restante).
-     ```
-   - Actualizar `mem://constraint/lovable-stack-pins` para reflejar que `tailwind-merge` ya no está en 2.
+### 🅖 EnviarProformaDialog · sonner mock
+`EnviarProformaDialog.test.tsx`: apuntar el mock a `notifyInfo` en lugar del import directo de sonner (o adaptar el expect a la nueva firma `notifyInfo(undefined, { title, action })`).
 
-## Criterio de éxito
+### 🅗 useBanxicoTipoCambio · `onTC` no llamado
+Añadir `await waitFor(() => expect(onTC).toHaveBeenCalled())` o forzar un `flushPromises` tras el mock del fetch.
 
-- `lint`, `typecheck` y `test:fast` en verde.
-- E2E de humo sin regresiones visuales en Dashboard/Sidebar (donde `cn()` más se ejerce).
-- Sin cambios en componentes; único diff funcional es `package.json` + `bun.lock`.
+### 🅓 timeouts audit-report
+`src/__tests__/architecture/audit-report.test.ts`: subir `testTimeout: 30_000` sólo en ese archivo (los 4 tests recorren todo `src/`). No tocar el global.
 
-## Detalles técnicos
+### Verificación final
+1. `bun run lint -- --max-warnings 0`
+2. `bunx tsgo --noEmit`
+3. `bun run test:fast` → objetivo 0 rojos
+4. Bump `APP_VERSION` → `13.320.29` + entry en `CHANGELOG.md`
 
-- v3 requiere Node ≥ 18 (ya cumplido en CI).
-- `clsx` sigue en su versión actual; no se toca.
-- Si aparece warning de tipos por el nuevo `ClassNameValue` genérico, se ajusta la firma de `cn()` en `src/lib/utils/cn.ts` (una línea) sin romper llamadas existentes.
+### Fuera de alcance
+- E2E remoto contra staging (requiere secrets en CI, no ejecutable desde el sandbox).
+- Majors de dependencias.
+
+### Detalles técnicos
+- Sonner v2: `toast()` genérico acepta `{ description, duration, id, action }`; sólo se pierde el ícono "info". Si se quiere ícono, usar `toast(msg, { icon: <Info /> })`.
+- `expect.anything()` en Vitest **no** matchea `undefined` (sólo valores no-nulos). Por eso los tests fallan cuando el helper se llama con `notifyError(undefined, opts)`.
+- El guardarraíl de "títulos duplicados" vive en `src/__tests__/architecture/test-hygiene.test.ts` y compara nombres completos de `it/test`.
