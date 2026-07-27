@@ -546,3 +546,6 @@ BEGIN
   RETURN v_result;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.auditoria_embarques_org(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.auditoria_embarques_org(uuid) TO authenticated, service_role;
