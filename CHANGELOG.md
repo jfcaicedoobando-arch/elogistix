@@ -1,6 +1,18 @@
 # Changelog
 
+## [13.320.30] - 2026-07-27
+- **DX · E2E local/CI onboarding**: nueva plantilla `.env.e2e.example` con TODAS las variables (mínimas + opcionales agrupadas por spec habilitado) y validador `scripts/e2e/check-env.ts` que reporta qué está listo y qué se saltará antes de correr. Nuevos scripts en `package.json`:
+  - `bun run e2e:check` — valida variables y termina con exit 1 si faltan los mínimos (`E2E_BASE_URL`, `E2E_EMAIL`, `E2E_PASSWORD`).
+  - `bun run e2e:install` — `playwright install --with-deps chromium` (una sola vez por máquina).
+  - `bun run e2e` / `e2e:ui` / `e2e:headed` / `e2e:report` — atajos alrededor de Playwright.
+  - `bun run e2e:local` — fuerza `E2E_BASE_URL=http://localhost:8080` (arranca `vite dev` automático vía `webServer`).
+  - `bun run e2e:staging` — alias de `e2e` (usa `.env.e2e`).
+- **Docs · `e2e/README.md`** con sección **Quickstart en 3 pasos** (cp plantilla → `e2e:check` → `e2e:install && e2e`), tabla de scripts, y aviso de que `.env.e2e` no debe commitearse (el `.gitignore` ya excluye `e2e/.auth/` pero conviene agregar `.env.e2e` manualmente).
+- **CI · sin cambios en `.github/workflows/e2e.yml`**: los secrets siguen siendo los mismos (documentados en README). El guard existente sigue skippeando la corrida si faltan los mínimos.
+- Analogía: antes correr E2E requería leer 3 archivos para saber qué variables poner; ahora es como armar un mueble con manual — copias la plantilla, corres `e2e:check` y el script te dice qué piezas te faltan y qué mueble sale con lo que tienes.
+
 ## [13.320.29] - 2026-07-27
+
 - **test(baseline-verde)**: 0 fallos en `test:fast` (5309/5309). Se atacaron los 7 grupos del reporte previo:
   - 🅐 **Sonner v2 · `toast.info` removido.** `src/lib/ui/appFeedback.ts` migra `sonnerToast.info(...)` → `sonnerToast(...)` (helper `info` eliminado en sonner 2.x). Desbloquea `notifyInfo` en runtime y 4 tests.
   - 🅑 **Codemod `expect.anything()` → `undefined`** en 6 archivos (`useCargaCfdi`, `useEditarFacturaProveedorForm`, `useEmbarqueEstadoActions.branches`, `useEmbarquesPageController`, `useRegistrarPagoSubmit`, `useCotizacionWizardSteps`). `expect.anything()` no matchea `undefined` en Vitest; los helpers `notify*` reciben `undefined` como primer arg.
