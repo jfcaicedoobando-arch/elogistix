@@ -91,10 +91,12 @@ function buildFailure(file: File, last: Attempt | null, latencyMs: number): Cfdi
     },
     last?.cause ?? null,
   );
-  Sentry.captureException(err, {
-    tags: { feature: "pdf_ia_upload", phase: err.context.phase, functionName: "parse-invoice-pdf" },
-    contexts: { pdf_ia: { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, ...err.context } },
-  });
+  reportCaughtError(err, {
+    feature: "pdf_ia_upload",
+    op: "parse_invoice_pdf",
+    phase: err.context.phase,
+    functionName: "parse-invoice-pdf",
+  }, { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, ...err.context });
   return err;
 }
 
