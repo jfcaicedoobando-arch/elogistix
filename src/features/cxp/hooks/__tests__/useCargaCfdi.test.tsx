@@ -19,6 +19,7 @@ vi.mock("sonner", () => ({
 }));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
+  notifySuccess: (_t: unknown, opts: { title: string }) => toastSuccess(opts.title),
 }));
 vi.mock("@/features/cxp/services", async () => {
   const actual = await vi.importActual<typeof import("@/features/cxp/services/parseCfdi.types")>(
