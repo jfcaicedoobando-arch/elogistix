@@ -23,6 +23,8 @@
  * Exit codes: 0 = limpio, 1 = hallazgos, 2 = error de ejecución.
  */
 import { execFileSync } from "node:child_process";
+import { readFileSync, existsSync } from "node:fs";
+import path from "node:path";
 
 // ---------- Helpers psql ----------
 // Devuelve filas como arrays de strings. La consulta DEBE producir texto ya
