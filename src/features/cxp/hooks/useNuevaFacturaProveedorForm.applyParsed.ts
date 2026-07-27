@@ -49,7 +49,7 @@ export async function aplicarCfdiParsed(
 ): Promise<boolean> {
   const result = await procesarCfdiParsed(data, files, deps.organizationId);
   if (!result.ok) {
-    notifyError(toast, {
+    notifyError(undefined, {
       title: "El CFDI no cuadra y no se puede registrar",
       description: result.cuadreError,
       method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CUADRE",
