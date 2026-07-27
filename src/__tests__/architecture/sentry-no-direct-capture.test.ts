@@ -62,7 +62,7 @@ describe("Sentry direct capture guardrail", () => {
     ).toEqual([]);
   });
 
-  it("la allowlist apunta a archivos existentes (evita drift)", () => {
+  it("la allowlist de direct-capture apunta a archivos existentes (evita drift)", () => {
     for (const rel of ALLOWLIST) {
       expect(fs.existsSync(path.join(ROOT, rel)), `Allowlist obsoleta: ${rel}`).toBe(true);
     }

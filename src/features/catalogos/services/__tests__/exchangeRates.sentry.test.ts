@@ -44,7 +44,7 @@ describe("fetchExchangeRates — captureException", () => {
     expect(mocks.captureException).toHaveBeenCalledWith(
       edgeErr,
       expect.objectContaining({
-        tags: { feature: "exchange_rates", source: "edge_invoke" },
+        tags: expect.objectContaining({ feature: "exchange_rates", op: "edge_invoke" }),
       }),
     );
   });
