@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.319.2] - 2026-07-27
+- **fix · "Crear embarque" desde cotización ya no truena con `record "v_cot" has no field "puerto_origen"`.** Analogía: la receta pedía sacar el jitomate del cajón `puerto_origen` pero ese cajón nunca existió en la despensa `cotizaciones` — sólo hay uno llamado `origen`. La RPC `crear_embarque_borrador_core` ahora lee `v_cot.origen`/`v_cot.destino` directamente (que es donde vive el dato) y luego resuelve UN/LOCODE → puerto / aeropuerto / ciudad según el modo del embarque como antes. Sin cambios en la estructura ni en cotizaciones existentes.
+
+
 ## [13.319.1] - 2026-07-27
 - **fix · Modal "Nueva factura manual" ahora cierra tras guardar/timbrar.** Analogía: la puerta ya se cierra sola cuando terminas — antes se quedaba abierta y podías entrar dos veces (facturas duplicadas). `useFacturaManualForm` acepta un callback `onClose` que se dispara en `onSuccess`.
 - **fix · Visitantes anónimos ya no reciben "permission denied" en páginas públicas.** Se otorgó `EXECUTE` a `anon` sobre `current_user_org_id()`. La función sigue devolviendo NULL para no-autenticados (no expone datos), pero deja de tumbar consultas de landing / portal antes de login / sesiones expiradas con error 42501.
