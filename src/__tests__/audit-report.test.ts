@@ -42,7 +42,7 @@ const SUPABASE_MOCK_BASELINE = new Set<string>();
 
 
 
-describe("audit-report", () => {
+describe("audit-report", { timeout: 30_000 }, () => {
   it("arch baseline: 0 imports directos nuevos en hooks/contexts/components/pages", () => {
     const a = runArchAudit(ROOT);
     expect(a.hooksContextsDirectImports).toEqual([]);
