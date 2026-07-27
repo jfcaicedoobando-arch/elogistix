@@ -43,7 +43,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
     creditoAlerta, setCreditoAlerta,
     puedeGuardar, puedeTimbrar, faltantesTimbrar,
     handleSubmit, onConfirmarExceso, isPending,
-  } = useFacturaManualForm(open);
+  } = useFacturaManualForm(open, () => onOpenChange(false));
 
   const totales = calcularTotalesConceptos(conceptos, tasaIva);
 
