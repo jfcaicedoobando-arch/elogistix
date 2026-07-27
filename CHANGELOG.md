@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.19] - 2026-07-27
+- **Fix · `audit:migrations` H6 en `auditoria_embarques_org`.** Las tres migraciones que redeployaron el RPC como `SECURITY DEFINER` no adjuntaban `REVOKE ALL FROM PUBLIC` + `GRANT EXECUTE TO authenticated, service_role`. Añadidos en los tres archivos (`20260727191441`, `20260727192239`, `20260727195758`). Analogía: dejamos la puerta con llave maestra sin especificar quién tiene copia — ahora sólo authenticated y service_role.
+
 ## [13.320.18] - 2026-07-27
 - **Fix · Editar embarque falla con `embarques_tc_eur_pos` cuando no se captura tipo de cambio EUR.** El UPDATE de `/embarques/:id/editar` reventaba con `23514` porque el mapper `embarqueToDb.partesFinancieras` hacía `Number(v.tipoCambioEUR)` — y `Number("")` es `0`, valor rechazado por el CHECK `tipo_cambio_eur > 0`. Ahora ambos tipos de cambio (USD y EUR) pasan por `tcOrNull()`, que devuelve `null` si el valor no es un número finito estrictamente positivo. `NULL` sí lo acepta el constraint. Test nuevo en `embarqueToDb.test.ts` cubre los 3 casos: vacío, `"0"` y valor válido. Analogía: el formulario dejaba el campo "tipo de cambio EUR" en blanco, pero el traductor lo entregaba a la BD como "cero pesos por euro" — un dato imposible. Ahora "en blanco" viaja como "no aplica".
 
