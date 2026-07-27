@@ -246,6 +246,10 @@ jobs:
           - rpc_provision_organization
           - rpc_financieras
           - tablas_dinero_extra
+          - anon_deny_all
+          - cross_tenant_mutations
+          - policy_linter
+          - storage_objects
 
     services:
       postgres:

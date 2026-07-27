@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.320.6] - 2026-07-27
+- **audit · RLS suites: Olas 2, 3 y 4 completas.** Analogía: ya sonaba la alarma cuando alguien entraba, ahora también suena si intenta *mover* o *romper* algo — y hay un inspector que revisa el plano de cerraduras antes de aprobar la obra. Sin cambios de producto.
+  - **Ola 2 · Mutaciones y anon (H5, H5b)**:
+    - `test_rls_anon_deny_all.sql`: barrido sobre ~25 tablas sensibles verificando que `anon` ve 0 filas + 2 INSERT anónimos bloqueados (incluye escalada a `super_admin` en `user_roles`).
+    - `test_rls_cross_tenant_mutations.sql`: `user_b` no puede UPDATE ni DELETE `clientes`, `embarques` ni `facturas` de `org_a` (RLS deja `ROW_COUNT = 0` en vez de lanzar). Verifica también integridad post-intento.
+  - **Ola 3 · Meta-linter y storage (H7, H8)**:
+    - `test_rls_policy_linter.sql`: inspecciona `pg_policies` y exige que toda tabla `public` con `organization_id` tenga al menos una policy que referencie `organization_id`, `current_user_org_id`, `has_role`, `client_users`, `agente_users` o `auth.uid()`. Detecta también policies `USING/WITH CHECK (true)` no restringidas a `service_role`. Whitelist explícita para catálogos globales.
+    - `test_rls_storage_objects.sql`: aísla `storage.objects` por primer folder = `organization_id` (SELECT/INSERT). Auto-skip si el entorno CI no tiene policies de storage cargadas.
+  - **Ola 4 · Higiene de helpers (H9)**:
+    - `_helpers.sql` — `assert_insert_blocked` ahora acepta `raise_exception` (P0001, para triggers `LC_*`) y **falla ruidosamente** con `SQLSTATE + MESSAGE_TEXT` si el INSERT se cae por `not_null_violation` / `foreign_key_violation`, evitando falsos verdes por fixtures incompletos.
+  - CI: `rls-tests.yml` — matriz sube a 16 suites; el guard sigue exigiendo paridad archivos ↔ matriz.
+
+
+
 ## [13.320.5] - 2026-07-27
 - **audit · RLS suites: Ola 1 (H1–H4) completa.** Analogía: teníamos alarma en la puerta principal (aislamiento entre orgs) pero no en las ventanas del sótano (portal B2B intra-org, roles de negocio, RPCs con `SECURITY DEFINER`, tablas con dinero/API keys). Se agregaron 4 suites nuevas al matriz de CI `rls-tests.yml` — cero cambios de producto, sólo cobertura defensiva:
   - `test_rls_portal_intra_org.sql` (H2): dentro de una MISMA org con dos clientes, `portal_a` no puede ver facturas/proformas/documentos/pagos/embarques de `cli_b`, y el INSERT cruzado se bloquea. Incluye control positivo con `portal_b`.
