@@ -25,7 +25,11 @@ BEGIN
       'log_client_error_v1',
       'check_ratelimit',
       'handle_new_user_signup',
-      'is_demo_user'
+      'is_demo_user',
+      -- v13.319.1: helper de RLS usado en policies. Para anon, auth.uid() es NULL
+      -- y la consulta devuelve NULL sin exponer datos. Concedido a anon para
+      -- evitar 42501 en rutas públicas / sesiones expiradas que evalúan policies.
+      'current_user_org_id'
     );
   IF fuera IS NOT NULL AND array_length(fuera, 1) > 0 THEN
     RAISE EXCEPTION 'FIX-45 REGRESIÓN: funciones SECURITY DEFINER ejecutables por anon fuera de whitelist: %', fuera;
