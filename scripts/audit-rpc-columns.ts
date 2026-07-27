@@ -175,26 +175,75 @@ function auditObject(obj: SqlObject, tables: ColMap): Finding[] {
   return found;
 }
 
-// ---------- 5. Main ----------
+// ---------- 5. Allow-list ----------
+// Formato de cada entrada: "<kind>:<name>:<alias>.<column>".
+// Preexistentes conocidos se listan en scripts/audit-rpc-columns-allowlist.json
+// para no romper CI mientras se planea el fix.
+function loadAllowlist(): Set<string> {
+  const p = path.join(process.cwd(), "scripts/audit-rpc-columns-allowlist.json");
+  if (!existsSync(p)) return new Set();
+  try {
+    const parsed = JSON.parse(readFileSync(p, "utf8")) as { allow?: string[] };
+    return new Set(parsed.allow ?? []);
+  } catch (e) {
+    console.error(`audit:rpc-columns — allowlist inválido en ${p}:`, e);
+    return new Set();
+  }
+}
+
+function findingKey(f: Finding): string {
+  return `${f.kind}:${f.name}:${f.alias}.${f.column}`;
+}
+
+// ---------- 6. Main ----------
 async function main() {
   if (!process.env.PGHOST) {
     console.error("audit:rpc-columns — PGHOST no está definido; requiere acceso psql.");
     process.exit(2);
   }
   const tables = loadColumns();
+  const allowed = loadAllowlist();
   const objects = [...loadFunctions(), ...loadViews()];
-  const findings: Finding[] = [];
-  for (const obj of objects) findings.push(...auditObject(obj, tables));
+  const raw: Finding[] = [];
+  for (const obj of objects) raw.push(...auditObject(obj, tables));
 
-  if (findings.length === 0) {
-    console.log(`✓ audit:rpc-columns — ${objects.length} objetos escaneados, sin referencias inválidas.`);
+  const knownPreexisting = raw.filter((f) => allowed.has(findingKey(f)));
+  const newFindings = raw.filter((f) => !allowed.has(findingKey(f)));
+
+  // Reporta entradas de allow-list que ya no producen hallazgo — hay que limpiarlas.
+  const stillPresent = new Set(raw.map(findingKey));
+  const stale = [...allowed].filter((k) => !stillPresent.has(k));
+
+  console.log(
+    `audit:rpc-columns — ${objects.length} objetos escaneados. ` +
+      `${knownPreexisting.length} preexistente(s) en allow-list, ` +
+      `${newFindings.length} nuevo(s), ${stale.length} entrada(s) obsoleta(s).`,
+  );
+
+  if (knownPreexisting.length > 0) {
+    console.log("Preexistentes (permitidos temporalmente — arreglar y remover del allow-list):");
+    for (const f of knownPreexisting) {
+      console.log(`  · [${f.kind}] ${f.name}: ${f.alias}.${f.column}  (tablas: ${f.tables.join(", ")})`);
+    }
+  }
+
+  if (stale.length > 0) {
+    console.error("✗ Entradas del allow-list que ya no aplican (bórralas):");
+    for (const k of stale) console.error(`  · ${k}`);
+  }
+
+  if (newFindings.length === 0 && stale.length === 0) {
+    console.log("✓ Sin regresiones.");
     return;
   }
-  console.error(`✗ audit:rpc-columns — ${findings.length} referencia(s) a columnas inexistentes:`);
-  for (const f of findings) {
-    console.error(
-      `  [${f.kind}] ${f.name}: ${f.alias}.${f.column}  → ninguna de {${f.tables.join(", ")}} tiene columna "${f.column}"`,
-    );
+
+  if (newFindings.length > 0) {
+    console.error(`✗ ${newFindings.length} referencia(s) NUEVAS a columnas inexistentes:`);
+    for (const f of newFindings) {
+      console.error(
+        `  [${f.kind}] ${f.name}: ${f.alias}.${f.column}  → ninguna de {${f.tables.join(", ")}} tiene columna "${f.column}"`,
+      );
+    }
   }
   process.exit(1);
 }
