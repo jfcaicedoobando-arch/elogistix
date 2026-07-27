@@ -236,7 +236,7 @@ BEGIN
       'documentos_faltantes', '[]'::jsonb
     ) AS h
     FROM emb e
-    JOIN conceptos_venta cv ON cv.embarque_id = e.id
+    JOIN conceptos_venta cv ON cv.embarque_id = e.id AND cv.deleted_at IS NULL
     WHERE e.estado IN ('Entregado','Cerrado')
       AND cv.estado_facturacion = 'pendiente'
       AND (e.etd IS NULL OR e.etd >= v_fecha_corte_facturacion)
@@ -248,7 +248,7 @@ BEGIN
            bool_or(cv.moneda::text = 'USD') AS tiene_usd_venta,
            bool_or(cv.moneda::text = 'EUR') AS tiene_eur_venta
     FROM emb e
-    JOIN conceptos_venta cv ON cv.embarque_id = e.id
+    JOIN conceptos_venta cv ON cv.embarque_id = e.id AND cv.deleted_at IS NULL
     WHERE cv.moneda::text IN ('USD','EUR')
       AND (
         (cv.moneda::text = 'USD' AND COALESCE(NULLIF(e.tipo_cambio_usd,0),0) = 0)
@@ -261,7 +261,7 @@ BEGIN
            bool_or(cc.moneda::text = 'USD') AS tiene_usd_costo,
            bool_or(cc.moneda::text = 'EUR') AS tiene_eur_costo
     FROM emb e
-    JOIN conceptos_costo cc ON cc.embarque_id = e.id
+    JOIN conceptos_costo cc ON cc.embarque_id = e.id AND cc.deleted_at IS NULL
     WHERE cc.moneda::text IN ('USD','EUR')
       AND (
         (cc.moneda::text = 'USD' AND COALESCE(NULLIF(e.tipo_cambio_usd,0),0) = 0)
@@ -311,6 +311,7 @@ BEGIN
            ) AS tc_incompleto
     FROM conceptos_venta cv
     JOIN emb e ON e.id = cv.embarque_id
+    WHERE cv.deleted_at IS NULL  -- AUD-3: excluir conceptos soft-deleted (aliniea con Tab P&L)
     GROUP BY cv.embarque_id
   ),
   costos_mxn AS (
@@ -327,6 +328,7 @@ BEGIN
            ) AS tc_incompleto
     FROM conceptos_costo cc
     JOIN emb e ON e.id = cc.embarque_id
+    WHERE cc.deleted_at IS NULL  -- AUD-3: excluir conceptos soft-deleted (aliniea con Tab P&L)
     GROUP BY cc.embarque_id
   ),
   margenes AS (
