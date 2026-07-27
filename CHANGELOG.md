@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.21] - 2026-07-27
+- **Chore · Actualizar `sonner` de 1.7.4 → 2.0.7.** Nuestro stack (React 19.2) ya cumple el peer de v2. El wrapper `src/components/ui/sonner.tsx` sigue funcionando sin cambios: los class-hooks `data-[type=…]` y `swipeDirections` se conservan. `swipeThreshold` sigue sin estar en los tipos públicos (mismo `@ts-expect-error` que ya teníamos), pero se acepta en runtime. `tsgo` limpio. Analogía: le cambiamos el motor al auto por uno nuevo del mismo fabricante — los pedales, el volante y el tablero siguen igual.
+
 ## [13.320.20] - 2026-07-27
 - **Fix · CI CodeQL falla con `pr-diff-range.yml` filas "undefined".** El workflow `Analyze (javascript-typescript)` reventaba porque `git fetch main` fallaba (`fatal: error processing shallow info: 4`) y CodeQL Action generaba un extension pack `restrictAlertsTo` con filas inválidas, abortando el `codeql database run-queries`. Añadido `CODEQL_ACTION_DIFF_INFORMED_QUERIES: "false"` al job — es el workaround oficial que desactiva las queries diff-informed y fuerza el escaneo completo del PR. Analogía: el escáner intentaba comparar sólo las páginas cambiadas de un libro, pero la lista de páginas venía corrupta; ahora escanea el libro entero y ya no depende de esa lista.
 
