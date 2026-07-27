@@ -1,10 +1,10 @@
 -- Canonical schema para public.portal_obtener_proforma_por_token
 -- Sincronizado en 13.320.2 (audit RPC columns).
 --
--- Fix: antes exponía `pcc.importe` (columna inexistente) al JSON del portal
--- público. La vista `proforma_conceptos_consolidados` publica `total`, no
--- `importe`. Se conserva el nombre `importe` en la salida por compatibilidad
--- con el front del portal público.
+-- Fix: antes se exponía una columna inexistente (`importe`) de la vista
+-- `proforma_conceptos_consolidados`, que publica `total`. Se conserva el
+-- nombre `importe` como clave de salida en el JSON del portal público para
+-- no romper el contrato con el front.
 CREATE OR REPLACE FUNCTION public.portal_obtener_proforma_por_token(p_token uuid)
  RETURNS jsonb
  LANGUAGE plpgsql

@@ -32,7 +32,7 @@ describe("RPC columns · schema canónico coincide con columnas reales", () => {
     const sql = read("supabase/schema/embarques/crear_embarque_borrador_core.sql");
     expect(sql).not.toMatch(/\btc\.codigo\b/);
     expect(sql).not.toMatch(/tipos_contenedor\.codigo\b/);
-    expect(sql).toMatch(/FROM\s+public\.tipos_contenedor[^;]*SELECT\s+code|SELECT\s+code\s+INTO\s+v_tipo_cont_code\s+FROM\s+public\.tipos_contenedor/is);
+    expect(sql).toMatch(/SELECT\s+code[\s\S]{0,80}FROM\s+public\.tipos_contenedor/i);
   });
 
   it("portal_obtener_proforma_por_token expone pcc.total como `importe` (no pcc.importe)", () => {
