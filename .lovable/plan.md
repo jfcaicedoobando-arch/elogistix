@@ -1,52 +1,48 @@
-# Fix: margen negativo fantasma en auditoría (ELIMP00315)
 
-## Diagnóstico (verificado en BD, no supuesto)
+## Problema
 
-**Analogía**: la auditoría sumó una factura que ya estaba en la papelera; el detalle del embarque la ignora porque está tachada. Por eso los números no cuadran.
+Al abrir `/auditoria` la app falla con:
 
-Embarque `ELIMP00315` (`0e6b5a7f-…`) — datos reales consultados:
+```
+column p.estado does not exist (42703)
+```
 
-| Concepto costo | Monto USD | ¿Borrado? |
-|---|---|---|
-| LONGSAIL SUPPLY CHAIN | 12,411 | vivo |
-| WAN HAI LINES MEXIC | 249 | vivo |
-| Wan Hai Lines | 6,205.5 | **borrado** (soft-delete) |
+## Causa raíz (confirmada)
 
-- **Con conceptos vivos** (lo que muestra el detalle): venta 13,300 USD vs costo 12,660 USD → utilidad **+11,222 MXN** (positiva, no debería alertar).
-- **Con el borrado incluido** (lo que hace la auditoría): venta 13,300 USD vs costo 18,865.5 USD → utilidad **−97,591 MXN** → dispara `margen_negativo · critico` falso.
+La migración `13.320.12` (aplicada hace minutos) reemplazó la RPC `auditoria_embarques_org(uuid)` con un cuerpo extraído del archivo canónico `supabase/schema/auditoria/auditoria_embarques_org.sql`. Ese archivo tenía **dos versiones mezcladas** dentro de la misma función:
 
-## Causa raíz confirmada en el SQL
+- **CTEs de conceptos** (`hall_ventas`, `ventas_mxn`, etc.) — versión moderna, correcta.
+- **CTEs de proforma** (`proforma_pend`, `proforma_huerfana`, `proforma_facturas`) — versión antigua con `p.estado` / valores `'Pendiente'` `'Cancelada'` `'Facturada'`.
 
-En `supabase/schema/auditoria/auditoria_embarques_org.sql`, los CTEs que leen conceptos **no filtran `deleted_at IS NULL`**, aunque el resto del archivo sí lo hace en otros lados (líneas 162, 169, 493, etc.):
+La tabla `proformas` no tiene columna `estado` — sólo `estado_proforma` con valores en minúsculas (`'pendiente'`, `'facturada'`). La migración anterior en producción (`20260723161803`) usaba `p.estado_proforma = 'pendiente'` correctamente; al re-emitir desde el archivo canónico introduje una regresión.
 
-- Línea 239 · `emb_sin_tc` — `JOIN conceptos_venta cv` sin filtro
-- Línea 251 · (segundo CTE `tiene_eur_venta`) — igual
-- Línea 264 · `emb_sin_tc_costo` — `JOIN conceptos_costo cc` sin filtro
-- Línea 312 · `ventas_mxn` — `FROM conceptos_venta cv` sin filtro
-- Línea 328 · `costos_mxn` — `FROM conceptos_costo cc` sin filtro
+**Analogía**: copié la receta de un cuaderno donde alguien había pegado media hoja vieja encima de la nueva; los ingredientes de la parte de arriba estaban al día, los de abajo no.
 
-El Tab P&L del detalle sí filtra `deleted_at IS NULL` (RPC `pnl_financiero_embarque`, migración `20260722132715`), por eso los dos módulos discrepan.
+## Fix
 
-## Cambios propuestos
+1. **Nueva migración de un solo `CREATE OR REPLACE FUNCTION`** que re-emita `auditoria_embarques_org(uuid)` idéntica a la actual, pero con estas 5 sustituciones dentro de los CTEs de proforma:
 
-**1 · Nueva migración** que reemplaza la función `auditoria_embarques_org` añadiendo `AND cv.deleted_at IS NULL` / `AND cc.deleted_at IS NULL` a los 5 CTEs listados. Sin cambios de firma ni de shape del JSON de salida.
+   | Actual (roto)                              | Correcto                                              |
+   | ------------------------------------------ | ----------------------------------------------------- |
+   | `WHERE p.estado = 'Pendiente'`             | `WHERE p.estado_proforma = 'pendiente'`               |
+   | `AND p.estado <> 'Cancelada'`              | `AND COALESCE(p.estado_proforma,'') <> 'cancelada'`   |
+   | `p.estado::text AS estado_prof`            | `p.estado_proforma::text AS estado_prof`              |
+   | `GROUP BY … p.estado, f.saldo, f.estado …` | `GROUP BY … p.estado_proforma, f.saldo, f.estado …`   |
+   | `WHERE pf.estado_prof = 'Facturada'`       | `WHERE pf.estado_prof = 'facturada'`                  |
 
-**2 · Sync del schema canónico**: aplicar el mismo cambio en `supabase/schema/auditoria/auditoria_embarques_org.sql` para que `audit:migrations` quede verde.
+   Se conservan íntegros los cambios de `13.320.12` (filtros `AND deleted_at IS NULL` en los 5 CTEs de conceptos) — que sí son los que arreglan el hallazgo fantasma de ELIMP00315.
 
-**3 · Regression test** en `supabase/tests/rls/` o unit test de la RPC: seed 1 embarque con 1 concepto costo vivo (venta > costo) + 1 concepto costo borrado con monto grande; verificar que **no** aparece hallazgo `margen_negativo`. Previene reincidencia.
+2. **Sincronizar el archivo canónico** `supabase/schema/auditoria/auditoria_embarques_org.sql` con las mismas 5 líneas, para que futuras regeneraciones no reintroduzcan la regresión.
 
-**4 · Refresh de la revisión abierta**: al aplicar la migración, correr `auditoria_capturar_snapshot` para la org afectada para que el usuario vea el hallazgo desaparecer sin esperar al siguiente ciclo.
+3. **Bump** `APP_VERSION` → `13.320.13` y entrada breve en `CHANGELOG.md`.
 
-**5 · CHANGELOG + bump** a `13.320.12` con la explicación en analogía.
+## Verificación
+
+- `psql` directo: `SELECT 1 FROM public.auditoria_embarques_org('00000000-0000-0000-0000-000000000001'::uuid)` (esperado: falla sólo por `_assert_internal_reader`, no por columna inexistente).
+- Consulta directa sobre `proformas` filtrando `estado_proforma IN ('pendiente','facturada')` para confirmar que los CTEs corren.
+- El módulo `/auditoria` recarga sin `DB_ERROR / QUERY_CACHE`.
 
 ## Fuera de alcance
 
-- No se toca la fórmula del margen ni la severidad.
-- No se cambia la RPC del detalle (`pnl_financiero_embarque`) — ya está correcta.
-- No se migran otros CTEs no financieros (proformas, documentos) porque ya filtran `deleted_at` donde importa.
-
-## Cómo verificar tras el fix
-
-1. Volver a `/auditoria` en la misma org → embarque `ELIMP00315` ya no aparece en "Margen negativo".
-2. Abrir el detalle → Tab P&L sigue mostrando el mismo margen positivo que hoy.
-3. Los tests nuevos + `audit:migrations` pasan en CI.
+- No se toca UI, tipos, RLS ni permisos.
+- No se toca el resto de la función (docs, TC, margen, CxC, CxP, borradores). Los `deleted_at` de v13.320.12 siguen aplicando.

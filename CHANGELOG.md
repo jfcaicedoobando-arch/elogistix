@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.320.13] - 2026-07-27
+- **hotfix · `/auditoria` fallaba con `column p.estado does not exist`.** La migración v13.320.12 re-emitió `auditoria_embarques_org` con una versión antigua de los CTEs de proforma que apuntaban a `p.estado` (columna inexistente). Re-emití la RPC desde el archivo canónico moderno: `p.estado_proforma = 'pendiente'`, `estado_aprobacion = 'borrador'`, se conservan los `deleted_at IS NULL` que arreglan el hallazgo fantasma de ELIMP00315. Analogía: la receta correcta estaba en la libreta, pero la última vez copié medio ingrediente de una hoja vieja pegada encima; ahora leí la libreta completa antes de servir.
+
+
+
 ## [13.320.12] - 2026-07-27
 - **fix · Auditoría de embarques ignora conceptos borrados (soft-delete).** La RPC `auditoria_embarques_org` sumaba conceptos con `deleted_at NOT NULL`, provocando falsos hallazgos de "margen negativo" (caso reportado: ELIMP00315 con un costo Wan Hai eliminado de ~6,200 USD). Agregué `AND deleted_at IS NULL` en los 5 CTEs que leen `conceptos_venta` / `conceptos_costo` (`hall_ventas`, `emb_sin_tc`, `emb_sin_tc_costo`, `ventas_mxn`, `costos_mxn`), quedando alineada con lo que muestra el Tab P&L del detalle. Analogía: la auditoría contaba boletos que ya habías tirado a la basura; ahora sólo lee los que siguen en la mesa, igual que el resumen del embarque.
 
