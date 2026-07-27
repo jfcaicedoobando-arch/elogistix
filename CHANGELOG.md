@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.9] - 2026-07-27
+- **fix · Literal de color legacy en `CrearEmbarqueConRevalidacion.tsx`.** Reemplazado `text-amber-600` por token semántico `text-warning`. Analogía: usábamos pintura genérica; ahora usamos la del catálogo oficial.
+
 ## [13.320.8] - 2026-07-27
 - **fix · Fixture RLS usaba `estado='vigente'` en `anticipos_proveedor`.** El CHECK real permite `disponible | aplicado_parcial | aplicado_total | cancelado`. Corregido en `test_rls_tablas_dinero_extra.sql`. Analogía: intentamos etiquetar el anticipo como "vigente" pero el buzón sólo acepta etiquetas específicas — ahora usamos "disponible".
 
