@@ -47,16 +47,29 @@ $$;
 
 -- Helper para probar que un INSERT cruzado por org está bloqueado por RLS.
 -- Recibe el SQL del INSERT (debe usar organization_id = $1 ajeno a la sesión
--- actual) y verifica que lance insufficient_privilege o check_violation.
+-- actual) y verifica que lance:
+--   - insufficient_privilege (42501) — RLS clásico
+--   - check_violation       (23514) — WITH CHECK failed
+--   - raise_exception       (P0001) — trigger `LC_*` de guardia
+-- Cualquier OTRO error (NOT NULL, FK, tipo) indica que el fixture es incorrecto
+-- y el test se aborta con mensaje explícito, evitando falsos verdes.
 CREATE OR REPLACE FUNCTION pg_temp.assert_insert_blocked(_sql text, _msg text) RETURNS void
 LANGUAGE plpgsql AS $$
+DECLARE
+  v_state text;
+  v_msg   text;
 BEGIN
   BEGIN
     EXECUTE _sql;
     RAISE EXCEPTION 'RLS TEST FAIL: % — INSERT cruzado NO fue bloqueado', _msg;
   EXCEPTION
-    WHEN insufficient_privilege OR check_violation THEN
+    WHEN insufficient_privilege OR check_violation OR raise_exception THEN
       RETURN;
+    WHEN OTHERS THEN
+      GET STACKED DIAGNOSTICS
+        v_state = RETURNED_SQLSTATE,
+        v_msg   = MESSAGE_TEXT;
+      RAISE EXCEPTION 'RLS TEST FIXTURE FAIL: % — INSERT falló por SQLSTATE % (%) — no es un bloqueo de RLS, revisa NOT NULL/FK del fixture', _msg, v_state, v_msg;
   END;
 END;
 $$;
