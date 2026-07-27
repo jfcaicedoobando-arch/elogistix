@@ -248,7 +248,7 @@ BEGIN
            bool_or(cv.moneda::text = 'USD') AS tiene_usd_venta,
            bool_or(cv.moneda::text = 'EUR') AS tiene_eur_venta
     FROM emb e
-    JOIN conceptos_venta cv ON cv.embarque_id = e.id
+    JOIN conceptos_venta cv ON cv.embarque_id = e.id AND cv.deleted_at IS NULL
     WHERE cv.moneda::text IN ('USD','EUR')
       AND (
         (cv.moneda::text = 'USD' AND COALESCE(NULLIF(e.tipo_cambio_usd,0),0) = 0)
