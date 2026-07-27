@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.8] - 2026-07-27
+- **fix · Fixture RLS usaba `estado='vigente'` en `anticipos_proveedor`.** El CHECK real permite `disponible | aplicado_parcial | aplicado_total | cancelado`. Corregido en `test_rls_tablas_dinero_extra.sql`. Analogía: intentamos etiquetar el anticipo como "vigente" pero el buzón sólo acepta etiquetas específicas — ahora usamos "disponible".
+
 ## [13.320.7] - 2026-07-27
 - **fix · Fixtures RLS usaban `tipo='email'` en `cobranza_seguimiento`.** El CHECK real permite `recordatorio_email | llamada | promesa_pago | nota | visita`. Se corrigió el seed en `test_rls_roles_negocio.sql` y `test_rls_tablas_dinero_extra.sql`. Analogía: escribimos "email" en un formulario cuyo desplegable sólo aceptaba "recordatorio_email" — el guardia (CHECK) lo rebotó antes de que RLS pudiera opinar.
 
