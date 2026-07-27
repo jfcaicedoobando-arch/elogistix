@@ -215,3 +215,6 @@ BEGIN
   RETURN v_embarque_id;
 END;
 $function$;
+-- H6: blindar SECURITY DEFINER
+revoke all on function public.crear_embarque_borrador_core(uuid) from public;
+grant execute on function public.crear_embarque_borrador_core(uuid) to authenticated, service_role;
