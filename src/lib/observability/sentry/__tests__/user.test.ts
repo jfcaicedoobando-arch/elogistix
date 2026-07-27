@@ -57,6 +57,7 @@ describe("syncSentryUser", () => {
     expect(sentryMocks.setTags).toHaveBeenCalledWith({
       organization_id: "org-1",
       effective_role: "admin_org",
+      auth_status: "authenticated",
     });
   });
 
