@@ -19,7 +19,7 @@ function readInitial(): CollapsedMap {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
-    const parsed = JSON.parse(raw) as unknown;
+    const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
     const result: CollapsedMap = {};
     for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {

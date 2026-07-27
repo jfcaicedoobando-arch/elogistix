@@ -26,7 +26,7 @@ function readInitial(): RecentPage[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
+    const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     const out: RecentPage[] = [];
     for (const it of parsed) {
