@@ -5,7 +5,6 @@
  */
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { programarPagoProveedor } from "@/features/cxp/services/programarPagoProveedor";
 import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
