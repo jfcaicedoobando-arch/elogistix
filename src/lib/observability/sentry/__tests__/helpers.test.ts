@@ -5,7 +5,11 @@
  */
 import { describe, it, expect } from "vitest";
 import type * as Sentry from "@sentry/react";
-import { scrubEventPii, sampleByRoute } from "@/lib/observability/sentry/helpers";
+import {
+  scrubEventPii,
+  sampleByRoute,
+  computePostgrestFingerprint,
+} from "@/lib/observability/sentry/helpers";
 
 describe("scrubEventPii — recorta PII en eventos Sentry", () => {
   it("recorta event.user a sólo { id } y scrubea URL/mensaje/excepción", () => {
@@ -56,5 +60,32 @@ describe("sampleByRoute — sampling dinámico por ruta", () => {
     // F5 (13.65.0): /admin se elevó a 0.3, /reportes a 0.5. Probar paths neutros.
     expect(sampleByRoute(at("/configuracion"))).toBe(0.1);
     expect(sampleByRoute(at("/perfil"))).toBe(0.1);
+  });
+});
+
+describe("computePostgrestFingerprint — agrupa errores Postgres por code + ruta", () => {
+  it("devuelve tokens estables para PostgrestError con code SQLSTATE", () => {
+    const fp = computePostgrestFingerprint({ code: "23505", message: "duplicate" }, "/facturas/nueva");
+    expect(fp).toEqual(["postgres", "23505", "/facturas/nueva"]);
+  });
+  it("normaliza IDs volátiles en la ruta", () => {
+    const fp = computePostgrestFingerprint(
+      { code: "42501" },
+      "/embarques/a1b2c3d4-e5f6-7890-abcd-ef0123456789/editar",
+    );
+    expect(fp?.[2]).toBe("/embarques/:id/editar");
+  });
+  it("acepta códigos PGRST* de PostgREST", () => {
+    const fp = computePostgrestFingerprint({ code: "PGRST116" }, "/x");
+    expect(fp).toEqual(["postgres", "PGRST116", "/x"]);
+  });
+  it("devuelve null para errores sin code o code no reconocido", () => {
+    expect(computePostgrestFingerprint({ message: "boom" }, "/x")).toBeNull();
+    expect(computePostgrestFingerprint({ code: "algo-random" }, "/x")).toBeNull();
+    expect(computePostgrestFingerprint(null, "/x")).toBeNull();
+  });
+  it("usa 'unknown' si no hay ruta", () => {
+    const fp = computePostgrestFingerprint({ code: "23505" }, undefined);
+    expect(fp?.[2]).toBe("unknown");
   });
 });
