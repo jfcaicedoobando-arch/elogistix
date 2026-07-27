@@ -108,15 +108,27 @@ BEGIN
     NULL
   );
 
-  IF v_cot.modo = 'Marítimo' THEN
-    v_puerto_o := v_origen_code;
-    v_puerto_d := v_destino_code;
-  ELSIF v_cot.modo = 'Aéreo' THEN
-    v_aero_o := v_origen_code;
-    v_aero_d := v_destino_code;
-  ELSIF v_cot.modo = 'Terrestre' THEN
-    v_ciudad_o := v_origen_code;
-    v_ciudad_d := v_destino_code;
+  -- v13.319.3: resolver nombre legible de puerto usando puertos.code → puertos.name.
+  -- Regresión bloqueante si estas columnas se renombran (ver test
+  -- src/__tests__/architecture/revalidar-tarifa-puertos-lookup.test.ts).
+  IF v_origen_code IS NOT NULL THEN
+    SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.code = v_origen_code LIMIT 1;
+  END IF;
+  IF v_destino_code IS NOT NULL THEN
+    SELECT p.name INTO v_puerto_d FROM public.puertos p WHERE p.code = v_destino_code LIMIT 1;
+  END IF;
+
+  IF v_cot.modo = 'Aéreo'::modo_transporte THEN
+    v_aero_o := COALESCE(v_puerto_o, v_origen_code);
+    v_aero_d := COALESCE(v_puerto_d, v_destino_code);
+    v_puerto_o := NULL; v_puerto_d := NULL;
+  ELSIF v_cot.modo = 'Terrestre'::modo_transporte THEN
+    v_ciudad_o := COALESCE(v_puerto_o, v_origen_code);
+    v_ciudad_d := COALESCE(v_puerto_d, v_destino_code);
+    v_puerto_o := NULL; v_puerto_d := NULL;
+  ELSE
+    v_puerto_o := COALESCE(v_puerto_o, v_origen_code);
+    v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
 
   v_tipo_cont_code := v_cot.tipo_contenedor;
