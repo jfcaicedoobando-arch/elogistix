@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.319.1] - 2026-07-27
+- **fix · Modal "Nueva factura manual" ahora cierra tras guardar/timbrar.** Analogía: la puerta ya se cierra sola cuando terminas — antes se quedaba abierta y podías entrar dos veces (facturas duplicadas). `useFacturaManualForm` acepta un callback `onClose` que se dispara en `onSuccess`.
+- **fix · Visitantes anónimos ya no reciben "permission denied" en páginas públicas.** Se otorgó `EXECUTE` a `anon` sobre `current_user_org_id()`. La función sigue devolviendo NULL para no-autenticados (no expone datos), pero deja de tumbar consultas de landing / portal antes de login / sesiones expiradas con error 42501.
+
+
 ## [13.319.0] - 2026-07-25
 - **feat · Sidebar Etapa 3: medición + colapsables + recientes.** Analogía: pusimos un contador de pasos en las puertas del menú, bisagras que recuerdan qué cajones dejaste cerrados y una libretita con "lo que sacaste ayer" dentro del ⌘K.
   - **3.0 Medición**: nueva tabla `public.nav_events` (append-only, RLS por org, lectura sólo admin/super_admin). Servicio `trackNavEvent` fire-and-forget, jamás propaga error. Inyectado en `SidebarGroupBlock` y `GlobalSearch`. Guardado por prefijo: no se trackea `/portal`, `/login`, marketing, onboarding. Sólo url/título/sección/rol — nunca folios, montos ni clientes.
