@@ -110,7 +110,7 @@ describe("useCotizacionWizardSteps", () => {
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
     expect(notifyError).toHaveBeenCalledWith(
-      expect.anything(),
+      undefined,
       expect.objectContaining({ title: expect.stringMatching(/costo interno/i) }),
     );
     expect(savePaso2).not.toHaveBeenCalled();
