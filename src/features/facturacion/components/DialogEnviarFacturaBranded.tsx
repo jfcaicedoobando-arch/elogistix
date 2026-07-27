@@ -97,9 +97,9 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
                   logger.warn("envio-factura", "no se guardó preferencia del cliente:", r.reason);
                 }
               });
-              notifyWarning(
-                "Factura enviada, pero no pudimos recordar tus destinatarios para la próxima vez.",
-              );
+              notifyWarning(undefined, {
+                title: "Factura enviada, pero no pudimos recordar tus destinatarios para la próxima vez.",
+              });
             }
           }
           onOpenChange(false);
