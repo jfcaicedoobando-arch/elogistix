@@ -123,27 +123,25 @@ export async function fetchExchangeRates(fecha?: string): Promise<ExchangeRates>
   if (error) {
     // `FunctionsFetchError` = el navegador no logró siquiera contactar la edge
     // (cold start, micro-corte de red, AdBlock). Es transitorio y la app tiene
-    // fallback. Sólo dejamos breadcrumb, NO capturamos en Sentry, y devolvemos
-    // los rates fallback para evitar reintentos inútiles de React Query.
+    // fallback. Sólo dejamos breadcrumb, NO reportamos, y devolvemos los rates
+    // fallback para evitar reintentos inútiles de React Query.
     const isFetchError =
       (error as { name?: string })?.name === "FunctionsFetchError";
-    void import("@sentry/react").then((Sentry) => {
-      if (isFetchError) {
+    if (isFetchError) {
+      void import("@sentry/react").then((Sentry) => {
         Sentry.addBreadcrumb({
           category: "exchange_rates",
           level: "warning",
           message: "exchange_rates.fetch_error.fallback",
           data: { name: (error as { name?: string })?.name },
         });
-        return;
-      }
-      // Errores no transitorios (5xx, JSON inválido) sí van a Sentry.
-      Sentry.captureException(error, {
-        tags: { feature: "exchange_rates", source: "edge_invoke" },
-      });
-    }).catch(() => undefined);
-
-    if (isFetchError) return EXCHANGE_RATES_FALLBACK;
+      }).catch(() => undefined);
+      return EXCHANGE_RATES_FALLBACK;
+    }
+    // Errores no transitorios (5xx, JSON inválido) sí van a Sentry vía
+    // `reportCaughtError` (13.320.22 · Tanda 1 · S1: reemplaza captura directa
+    // para heredar tags de tenant/route/version).
+    reportCaughtError(error, { feature: "exchange_rates", op: "edge_invoke" });
     throw error;
   }
   return {
