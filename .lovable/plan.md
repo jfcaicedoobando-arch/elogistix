@@ -1,78 +1,77 @@
-# Auditoría · Acciones sin toast que se beneficiarían
 
-**Contexto:** Ya migramos 282 archivos a `appFeedback` (v13.320.15) y hay guardrail contra Sonner directo. El wrapper canónico es `notifySuccess/Error/Info/Warning` + `useMutationWithFeedback`. Buscamos huecos donde una acción **iniciada por el usuario** no confirma resultado.
+# Auditoría de Dependencias — Libre Carga ERP
 
-## Analogía
+**Estado de seguridad:** ✅ Sin vulnerabilidades altas/críticas (npm audit + bun audit).
+**Restricciones de plataforma (mem://constraint/lovable-stack-pins):** Vite 5, Tailwind 3, TS 5, react-router 6, `@vitejs/plugin-react-swc` 3, `tailwind-merge` 2. Estas mayores están **prohibidas por Lovable**.
 
-Es como pedir un café en la barra: el barista te lo prepara pero nunca te avisa que ya está — te quedas mirando la máquina sin saber si oprimiste bien el botón. Estos toasts son ese "aquí tienes tu café".
+Analogía: piensa en las dependencias como refacciones del camión. Unas son cambio de aceite (rutinario), otras son cambio de transmisión (parar el taller), y otras el fabricante nos prohíbe cambiar.
 
-## Hallazgos priorizados
+---
 
-### 🔴 Alta prioridad — descargas CSV silenciosas (impactan reportes financieros)
+## 🟢 Ola 1 — Seguro (patches/minors, sin breaking changes esperados)
 
+Actualizar todos de golpe. Riesgo bajo, sólo re-correr CI.
 
-| #   | Archivo                                                                                   | Acción                              | Falta                      |
-| --- | ----------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------- |
-| 1   | `src/features/cxc/routes/CxcAging.tsx:43-60`                                              | Botón "Exportar CSV" antigüedad CxC | Success + Warning si vacío |
-| 2   | `src/features/cxp/routes/_helpers/exportarCxpCsv.ts:9-37`                                 | CSV antigüedad CxP                  | Success + Warning si vacío |
-| 3   | `src/features/embarques/components/reconciliacion/ReconciliacionTresColumnas.tsx:116-129` | CSV reconciliación 3 columnas       | Success                    |
+**Radix UI (18 paquetes)** — todos minor bumps:
+`accordion 1.2.16→1.2.20`, `alert-dialog 1.1.19→1.1.23`, `avatar 1.2.2→1.2.6`, `checkbox 1.3.7→1.3.11`, `collapsible 1.1.16→1.1.20`, `dialog 1.1.19→1.1.23`, `dropdown-menu 2.1.20→2.1.24`, `label 2.1.11→2.1.15`, `popover 1.1.19→1.1.23`, `progress 1.1.12→1.1.16`, `radio-group 1.4.3→1.4.7`, `select 2.3.3→2.3.7`, `separator 1.1.11→1.1.15`, `slot 1.3.0→1.3.3`, `switch 1.3.3→1.3.7`, `tabs 1.1.17→1.1.21`, `toggle-group 1.1.15→1.1.19`, `tooltip 1.2.12→1.2.16`.
 
+**TanStack (4 paquetes):** `react-query`, `query-persist-client`, `query-sync-storage-persister`, `react-query-devtools` → `5.101.4`. `react-virtual` → `3.14.8`.
 
-**Por qué duele:** El usuario da clic → aparece (o no) un archivo en Descargas. Si no aparece (por filtros que dejaron 0 filas), cree que la app está rota.
+**Sentry:** `@sentry/react 10.65 → 10.68`.
+**Supabase JS:** `2.110.2 → 2.110.9`.
+**React:** `19.2.7 → 19.2.8` (junto con `react-dom` y `@types/react*`).
+**React Hook Form:** `7.81 → 7.83`.
+**Otros minor:** `libphonenumber-js 1.13.8→1.13.9`, `lucide-react 1.24→1.27`, `nuqs 2.9.0→2.9.2`, `@playwright/test 1.61→1.62`, `@testing-library/jest-dom 6.9→6.10`, `@types/node 26.1.1→26.1.2`, `autoprefixer 10.5.2→10.5.4`, `eslint 10.7→10.8`, `globals 17.7→17.8`, `knip 6.26→6.29`, `lovable-tagger 1.3.1→1.3.3`, `postcss 8.5.16→8.5.23`, `tsx 4.23.0→4.23.1`, `typescript-eslint 8.63→8.65`.
 
-### 🟡 Media prioridad — mutaciones que delegan feedback a un solo consumidor
+**Cómo:** `bun update` sobre estos paquetes → CI Fast completo → tests → smoke visual.
 
+---
 
-| #   | Archivo                                                                                                   | Riesgo                                                                                                           |
-| --- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 4   | `src/features/embarques/hooks/mutations/useDeleteEmbarque.ts`                                             | Hook destructivo sin toast propio; confía en `DialogEliminarEmbarque`. Un nuevo call site olvidaría el feedback. |
-| 5   | `src/features/cotizacion/hooks/mutations/usePortalCotizacionMutations.ts:9-23` (`useResponderCotizacion`) | Aceptar/Rechazar cotización en portal cliente sin toast en el hook; delega al controller.                        |
-| 6   | `src/features/facturacion/components/FacturasMasivasToolbar.tsx:78-84`                                    | Usa `window.confirm()` nativo en vez de `ConfirmActionDialog`. Rompe consistencia de UI destructiva.             |
+## 🟡 Ola 2 — Mayor con riesgo controlado (uno a uno, con QA)
 
+Cada uno merece su propio ticket + regression testing:
 
-### 🟢 Baja prioridad — microinteracciones inconsistentes
+1. **`@hookform/resolvers` 3.10.0 → 5.5.7** — cambió la firma de resolvers en v4 (breaking para Zod). Requiere revisar cada `useForm({ resolver: zodResolver(...) })` (memoria dice que usamos RHF+Zod extensivamente). Riesgo: alto en formularios, medio en tests.
+2. **`date-fns` 3.6 → 4.4** — v4 introdujo timezone-aware APIs. Debemos validar el módulo de fechas custom (`mem://technical/date-time-standards`) que hoy normaliza a UTC.
+3. **`@testing-library/jest-dom` 6.10 → 7.0** — sólo tests, riesgo aislado.
+4. **`jsdom` 29 → 30** — sólo tests, revisar canaries de PDF y JSDOM-only mocks.
 
+**Cómo:** un PR por paquete, correr `bun run test` completo + Playwright E2E.
 
-| #   | Archivo                                                                  | Detalle                                                                                                                |
-| --- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| 7   | `src/features/costeo/components/InvitarAgenteCredencialesView.tsx:23-31` | Copiar credenciales sólo cambia el icono; otros "copiar" (tracking naviera, embarque detalle) sí usan `notifySuccess`. |
-| 8   | `src/features/admin/components/MigrarRolesLegacyCard.tsx:90-95`          | Botón "Refrescar vista previa" sin toast de éxito/fallo del refetch manual.                                            |
+---
 
+## 🔴 Bloqueadas por Lovable (NO actualizar)
 
-### ⚪ A verificar antes de tocar
+Estas mayores están vetadas por la plataforma (`mem://constraint/lovable-stack-pins`):
 
-- `**useCapturarSnapshotAuditoria**` — hoy es background al abrir la tab (silencio correcto). Confirmar que no exista un botón manual "Recalcular" que lo dispare.
-- `**useRegistrarActividad**` — silencio intencional (bitácora es efecto secundario). Confirmar que ningún flujo dependa de este mutate como única señal de éxito.
+- **Vite 5 → 8** ❌
+- **TypeScript 5 → 7** ❌
+- **Tailwind 3 → 4** ❌
+- **react-router-dom 6 → 7** ❌
+- **@vitejs/plugin-react-swc 3 → 4** ❌
+- **tailwind-merge 2 → 3** ❌
 
-## Plan de remediación (3 tandas)
+---
 
-### Tanda 1 · CSV silenciosos (Alta)
+## 🟠 Requieren decisión de negocio (mayor, no bloqueada por Lovable, pero costosa)
 
-- Crear helper `notifyCsvExport(filename, rowCount)` en `src/lib/ui/appFeedback.ts` que:
-  - Si `rowCount === 0` → `notifyWarning("Sin datos para exportar", { description: "Ajusta los filtros e inténtalo de nuevo." })` y **no descarga**.
-  - Si `rowCount > 0` → genera descarga y muestra `notifySuccess("CSV descargado", { description: filename })`.
-- Aplicar en los 3 sitios (#1, #2, #3).
+- **`recharts` 2.15 → 3.10** — v3 reescribió la API de componentes y tooltips. Impacta Dashboard, Profit, Presupuesto, Aging CxP. Costo alto, beneficio bajo.
+- **`xlsx` 0.18.5** — última versión oficial en npm; el mantenedor migró a `xlsx.js` fuera de npm. No es urgente pero conviene evaluar alternativa (`exceljs`) por soporte a largo plazo.
+- **`@babel/core` 7.29 → 8.0.1** (dev) — usado solo por `babel-plugin-react-compiler`. Esperar a que el plugin lo soporte.
+- **`react-day-picker` "^10"** — está en `^10` amplio; validar que no rompió API.
 
-### Tanda 2 · Hooks destructivos + portal cotización (Media)
+---
 
-- Migrar `useDeleteEmbarque` (#4) a `useMutationWithFeedback` con success/error por defecto; permitir override desde `DialogEliminarEmbarque` para no duplicar.
-- Migrar `useResponderCotizacion` (#5) al mismo patrón — mensajes específicos por acción (`aceptar` vs `rechazar`).
-- Reemplazar `window.confirm()` en `FacturasMasivasToolbar` (#6) por `ConfirmActionDialog` existente.
+## Detalles técnicos
 
-### Tanda 3 · Consistencia microinteracciones (Baja)
+- Ninguna vulnerabilidad reportada en `npm audit`/`bun audit`/`code--dependency_scan`.
+- `sonner` ya está en 2.0.7 (última estable) por el fix reciente.
+- El pin `^4` de `zod` cubre v4 completo, ya está al día.
+- `react-helmet-async 3.0.0` es la última.
+- Al aplicar Ola 1, regenerar `bun.lock` como texto (`bun install --save-text-lockfile`) para que el scanner pueda leerlo si aparece un CVE.
 
-- Agregar `notifySuccess("Contraseña copiada al portapapeles")` en `InvitarAgenteCredencialesView` (#7).
-- Agregar `notifySuccess("Vista previa actualizada")` / `notifyError` en el refresh manual de `MigrarRolesLegacyCard` (#8).
+## Recomendación
 
-## Notas técnicas
+Ejecutar **Ola 1 ahora** en un solo commit (`chore(deps): bump minor/patch dependencies`) + bump `APP_VERSION` + entrada en `CHANGELOG.md`. Postergar Ola 2 a sprints individuales. Congelar las bloqueadas hasta que Lovable habilite las mayores.
 
-- Todas las nuevas notificaciones respetan el guardrail `no-direct-sonner` (usan `@/lib/ui/appFeedback`).
-- Cada tanda cierra con bump de `APP_VERSION` (patch) y entrada en `CHANGELOG.md` (regla core).
-- Tanda 2 puede requerir agregar tests de integración para el override de mensajes.
-
-## Preguntas para ti
-
-1. ¿Ejecutamos las **3 tandas** de corrido o sólo la **Tanda 1** (impacto UX inmediato) y evaluamos?
-2. ¿Quieres que revise también los ~140 servicios con `supabase.functions.invoke`/`rpc` que no auditamos en detalle (audit exhaustivo, ~1 hora más)?
-
-Ejecutar las 3 tandas
+¿Quieres que ejecute Ola 1 en modo build?
