@@ -43,8 +43,8 @@ BEGIN
     (cli_b, 'STG Cliente B', 'XAXX010101S01', 'stgb@test.local', org_b);
 
   INSERT INTO public.embarques(id, cliente_id, cliente_nombre, organization_id, tipo, modo, expediente) VALUES
-    (emb_a, cli_a, 'STG Cliente A', org_a, 'Importación', 'Marítimo', 'ELS00001'),
-    (emb_b, cli_b, 'STG Cliente B', org_b, 'Importación', 'Marítimo', 'ELS00002');
+    (emb_a, cli_a, 'STG Cliente A', org_a, 'Importación', 'Marítimo', 'ELSTG00001'),
+    (emb_b, cli_b, 'STG Cliente B', org_b, 'Importación', 'Marítimo', 'ELSTG00002');
 
   INSERT INTO storage.buckets(id, name, public) VALUES (bucket, bucket, false) ON CONFLICT DO NOTHING;
 
