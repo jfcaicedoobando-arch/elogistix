@@ -4,29 +4,25 @@
  *  - Vinculación de la factura con conceptos_costo existentes o creación ad-hoc.
  * Extraídos del controller para mantenerlo bajo el límite Power of 10.
  */
-import { toast } from "sonner";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
 /**
  * Warning persistente para fallos "best-effort" post-guardado: la factura
  * quedó grabada pero un paso secundario (ajustes, vínculos, concepto ad-hoc)
- * falló. Necesita `duration: Infinity` para que el usuario alcance a leer y
- * `action` para poder copiar el detalle al clipboard.
+ * falló. Usa `persistent: true` para que el usuario alcance a leer y expone
+ * "Ver detalles" con reporte copiable + breadcrumb Sentry.
  */
 function notifyBestEffortFallo(titulo: string, err: unknown): void {
-  const detalle = getErrorMessage(err);
-  toast.warning(titulo, {
-    description: detalle,
-    duration: Infinity,
-    closeButton: true,
-    action: {
-      label: "Copiar detalle",
-      onClick: () => {
-        void navigator.clipboard?.writeText(`${titulo}: ${detalle}`);
-      },
-    },
+  notifyWarning(undefined, {
+    title: titulo,
+    description: getErrorMessage(err),
+    persistent: true,
+    error: err,
+    method: "CXP_FACTURA_BEST_EFFORT_FALLO",
   });
 }
+
 import {
   subirArchivosCfdiFactura,
   vincularFacturaAConceptos,
@@ -56,8 +52,7 @@ export async function persistirConceptosCfdiSafe(params: {
       conceptos: params.conceptos,
     });
   } catch (e) {
-    const err = e as { message?: string };
-    toast.warning(`Factura guardada pero no se registraron los conceptos del XML: ${err.message ?? "error"}`);
+    notifyBestEffortFallo("Factura guardada pero no se registraron los conceptos del XML", e);
   }
 }
 
@@ -75,8 +70,7 @@ export async function uploadCfdiSafe(params: {
       pdfFile: params.pendingCfdi.pdfFile,
     });
   } catch (uploadErr) {
-    const err = uploadErr as { message?: string };
-    toast.warning(`Factura guardada pero el XML/PDF falló: ${err.message ?? "error"}`);
+    notifyBestEffortFallo("Factura guardada pero el XML/PDF falló", uploadErr);
   }
 }
 

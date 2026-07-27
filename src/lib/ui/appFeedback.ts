@@ -104,7 +104,7 @@ export function notifyWarning(
     : undefined;
   sonnerToast.warning(opts.title, {
     description: opts.description,
-    duration: opts.duration,
+    duration: opts.persistent ? Infinity : opts.duration,
     id: opts.id,
     action,
   });
@@ -120,7 +120,7 @@ export function notifySuccess(
     : undefined;
   sonnerToast.success(opts.title, {
     description: opts.description,
-    duration: opts.duration,
+    duration: opts.persistent ? Infinity : opts.duration,
     id: opts.id,
     action,
   });
@@ -136,8 +136,9 @@ export function notifyInfo(
     : undefined;
   sonnerToast(opts.title, {
     description: opts.description,
-    duration: opts.duration,
+    duration: opts.persistent ? Infinity : opts.duration,
     id: opts.id,
     action,
   });
 }
+

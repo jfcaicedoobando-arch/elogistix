@@ -3,7 +3,6 @@
  * Encapsula `useQuery` (vista previa) y `useMutation` (ejecución).
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import {
@@ -36,13 +35,13 @@ export function useMigrarRolesLegacy(options: UseMigrarRolesLegacyOptions = {}) 
       qc.invalidateQueries({ queryKey: QUERY_KEY });
       qc.invalidateQueries({ queryKey: queryKeys.usuarios.all });
       qc.invalidateQueries({ queryKey: queryKeys.admin.orgMembersAll });
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: `Migración completada: ${data.total_migrados} rol(es) actualizado(s).`,
       });
       options.onSuccess?.(data);
     },
     onError: (err) => {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: err instanceof Error ? err.message : "Error al migrar roles legacy",
         error: err,
         method: "USE_MIGRAR_ROLES_LEGACY",

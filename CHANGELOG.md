@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.320.14] - 2026-07-27
+- **Auditoría de toasts · Ola A (higiene inmediata).** Tapo fugas de la baseline `SONNER-LEGACY` y agrego regresión automática:
+  - Migré 3 archivos que importaban `sonner` directo sin permiso a `notify*` de `@/lib/ui/appFeedback` (`useMigrarRolesLegacy`, `useNuevaFacturaProveedorForm.applyParsed`, `useProgramarPagoLote`).
+  - `useNuevaFacturaProveedorForm.sideEffects.ts` usaba `toast.warning({ duration: Infinity })` crudo. Añadí flag `persistent?: boolean` a `notifyWarning/notifySuccess/notifyInfo` en `appFeedback.ts` y lo consumo desde el helper `notifyBestEffortFallo`. Ahora los warnings post-guardado incluyen "Ver detalles" con reporte copiable + breadcrumb Sentry.
+  - Nuevo script `scripts/audit-sonner-baseline.ts` (comando `bun run audit:sonner`, integrado en `ci-fast.sh`): compara los archivos que importan `sonner` contra la allowlist de `eslint.config.js` y falla si hay fugas o entradas muertas.
+  - Limpié 2 entradas muertas de la allowlist (`useSnoozeHallazgo.ts`, `sideEffects.ts`).
+  - Tests nuevos en `appFeedback.test.ts` cubren el flag `persistent`. Analogía: pusimos alarma de humo con puerta contra portazos: si alguien vuelve a saltarse el wrapper, la baseline lo grita antes de mergear.
+
+
+
 ## [13.320.13] - 2026-07-27
 - **hotfix · `/auditoria` fallaba con `column p.estado does not exist`.** La migración v13.320.12 re-emitió `auditoria_embarques_org` con una versión antigua de los CTEs de proforma que apuntaban a `p.estado` (columna inexistente). Re-emití la RPC desde el archivo canónico moderno: `p.estado_proforma = 'pendiente'`, `estado_aprobacion = 'borrador'`, se conservan los `deleted_at IS NULL` que arreglan el hallazgo fantasma de ELIMP00315. Analogía: la receta correcta estaba en la libreta, pero la última vez copié medio ingrediente de una hoja vieja pegada encima; ahora leí la libreta completa antes de servir.
 

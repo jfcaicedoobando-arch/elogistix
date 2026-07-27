@@ -702,7 +702,7 @@ export default tseslint.config(
       "src/features/auditoria/hooks/revisiones/marcar.ts",
       "src/features/auditoria/hooks/useAuditoriaComentarios.ts",
       "src/features/auditoria/hooks/useMarcarRevisadosBulk.ts",
-      "src/features/auditoria/hooks/useSnoozeHallazgo.ts",
+      
       "src/features/cliente/components/DialogEditarCliente.tsx",
       "src/features/comisiones/components/TabVendedorasConfig.tsx",
       "src/features/comisiones/hooks/useVendedorasEmailWarning.ts",
@@ -734,7 +734,7 @@ export default tseslint.config(
       "src/features/cxp/hooks/useCargaPdfIa.ts",
       "src/features/cxp/hooks/useCerrarFacturaSinPago.ts",
       "src/features/cxp/hooks/useEditarFacturaProveedorForm.ts",
-      "src/features/cxp/hooks/useNuevaFacturaProveedorForm.sideEffects.ts",
+      
       "src/features/cxp/hooks/useNuevaFacturaProveedorForm.submit.ts",
       "src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts",
       "src/features/cxp/hooks/useProgramarPagoProveedor.ts",

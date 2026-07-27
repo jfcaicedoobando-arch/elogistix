@@ -59,6 +59,7 @@ TASKS=(
   "lint|bun run lint --max-warnings 0"
   "typecheck|bun run typecheck"
   "migrations|bun run audit:migrations"
+  "sonner|bun run audit:sonner"
   "vitest|bun run test:fast --reporter=dot --bail=1"
 )
 

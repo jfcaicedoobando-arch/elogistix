@@ -44,4 +44,6 @@ export interface InfoNotifyOptions {
   errorCode?: string;
   /** Fuerza el botón "Ver detalles" aunque no haya error/contexto. */
   showDetails?: boolean;
+  /** Toast persistente (no auto-dismiss). Equivale a `duration: Infinity`. */
+  persistent?: boolean;
 }

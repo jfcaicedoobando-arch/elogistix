@@ -3,7 +3,7 @@
  * al estado del hook `useNuevaFacturaProveedorForm`.
  * Extraído (v13.317.9) para respetar Power of 10 #1 (≤200 líneas).
  */
-import { toast } from "sonner";
+
 import type { Dispatch, SetStateAction, MutableRefObject } from "react";
 import type { CfdiParsedResponse, CfdiConceptoParsed } from "@/features/cxp/services";
 import type { FacturaFormValues, TcOrigen } from "@/features/cxp/types";
@@ -49,7 +49,7 @@ export async function aplicarCfdiParsed(
 ): Promise<boolean> {
   const result = await procesarCfdiParsed(data, files, deps.organizationId);
   if (!result.ok) {
-    notifyError(toast, {
+    notifyError(undefined, {
       title: "El CFDI no cuadra y no se puede registrar",
       description: result.cuadreError,
       method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CUADRE",

@@ -59,6 +59,22 @@ describe("appFeedback (sonner)", () => {
     expect(m.success).toHaveBeenCalledWith("Listo", { description: "ok" });
   });
 
+  it("notifyWarning con persistent:true emite duration Infinity", () => {
+    notifyWarning(undefined, { title: "Persistente", persistent: true });
+    expect(m.warning).toHaveBeenCalledWith(
+      "Persistente",
+      expect.objectContaining({ duration: Infinity }),
+    );
+  });
+
+  it("notifySuccess con persistent:true emite duration Infinity", () => {
+    notifySuccess(undefined, { title: "Persistente", persistent: true });
+    expect(m.success).toHaveBeenCalledWith(
+      "Persistente",
+      expect.objectContaining({ duration: Infinity }),
+    );
+  });
+
   it("isAuthorizationError detecta variantes conocidas", () => {
     expect(isAuthorizationError(new Error("No tienes permisos para X"))).toBe(true);
     expect(isAuthorizationError(new Error("permission denied for table"))).toBe(true);
