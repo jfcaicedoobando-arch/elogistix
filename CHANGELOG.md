@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.320.12] - 2026-07-27
+- **fix · Auditoría de embarques ignora conceptos borrados (soft-delete).** La RPC `auditoria_embarques_org` sumaba conceptos con `deleted_at NOT NULL`, provocando falsos hallazgos de "margen negativo" (caso reportado: ELIMP00315 con un costo Wan Hai eliminado de ~6,200 USD). Agregué `AND deleted_at IS NULL` en los 5 CTEs que leen `conceptos_venta` / `conceptos_costo` (`hall_ventas`, `emb_sin_tc`, `emb_sin_tc_costo`, `ventas_mxn`, `costos_mxn`), quedando alineada con lo que muestra el Tab P&L del detalle. Analogía: la auditoría contaba boletos que ya habías tirado a la basura; ahora sólo lee los que siguen en la mesa, igual que el resumen del embarque.
+
+
+
 ## [13.320.11] - 2026-07-27
 - **chore · `ci:fast` vuelve a ser MÍNIMO a propósito.** Quité `--parity` y `--with-build` (ese es trabajo del CI real en `.github/workflows/ci.yml`). Se conservan fail-fast, `trap`, duración por tarea, resumen ordenado, `--only/--skip` y logs en `.ci-fast-logs/`. Analogía: `ci:fast` es el "smoke test" antes de salir de casa (llaves, cartera, teléfono); el chequeo médico completo se lo dejamos al CI de GitHub.
 
