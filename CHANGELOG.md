@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.320.7] - 2026-07-27
+- **fix · Fixtures RLS usaban `tipo='email'` en `cobranza_seguimiento`.** El CHECK real permite `recordatorio_email | llamada | promesa_pago | nota | visita`. Se corrigió el seed en `test_rls_roles_negocio.sql` y `test_rls_tablas_dinero_extra.sql`. Analogía: escribimos "email" en un formulario cuyo desplegable sólo aceptaba "recordatorio_email" — el guardia (CHECK) lo rebotó antes de que RLS pudiera opinar.
+
+
+
 ## [13.320.6] - 2026-07-27
 - **audit · RLS suites: Olas 2, 3 y 4 completas.** Analogía: ya sonaba la alarma cuando alguien entraba, ahora también suena si intenta *mover* o *romper* algo — y hay un inspector que revisa el plano de cerraduras antes de aprobar la obra. Sin cambios de producto.
   - **Ola 2 · Mutaciones y anon (H5, H5b)**:
