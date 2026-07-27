@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
-# ci:fast — corre en paralelo el mismo set de checks que CI, con logs
-# separados y resumen ordenado al final.
+# ci:fast — checks rápidos en paralelo antes de pushear.
+# NO es el suite completo de CI: para eso está `.github/workflows/ci.yml`.
+# Objetivo: dar señal en < 2 min sobre lo que rompe más seguido.
 #
 # Uso:
 #   bun run ci:fast                       # set rápido (default)
-#   bun run ci:fast -- --parity           # paridad completa con .github/workflows/ci.yml
 #   bun run ci:fast -- --only lint,vitest # sólo esas tareas
 #   bun run ci:fast -- --skip vitest      # todas menos ésa
-#   bun run ci:fast -- --no-fail-fast     # espera a que terminen todas aunque una falle
-#   bun run ci:fast -- --with-build       # además corre `bun run build`
+#   bun run ci:fast -- --no-fail-fast     # espera aunque una falle
 #
 # Salida:
 #   - Logs por tarea en .ci-fast-logs/<timestamp>/<task>.log
-#   - Si todo pasa, se limpia el directorio de logs.
-#   - Si algo falla, se conserva y se imprime la ruta.
+#   - En verde se auto-limpian; en rojo se conservan y se imprime la ruta.
 #
-# v13.320.10 — reescrito: paridad con CI, fail-fast, trap, orden estable,
-# duración por tarea, selección --only/--skip.
+# v13.320.11 — mejoras: fail-fast, trap para matar hijos, orden estable,
+# duración por tarea, selección --only/--skip. Se mantiene mínimo a propósito.
 
 set -uo pipefail
 
@@ -35,15 +33,11 @@ fi
 
 # ---------- Flags ----------
 FAIL_FAST=1
-PARITY=0
-WITH_BUILD=0
 ONLY=""
 SKIP=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --parity)       PARITY=1 ;;
-    --with-build)   WITH_BUILD=1 ;;
     --no-fail-fast) FAIL_FAST=0 ;;
     --fail-fast)    FAIL_FAST=1 ;;
     --only)         ONLY="${2:-}"; shift ;;
@@ -51,7 +45,7 @@ while [ $# -gt 0 ]; do
     --skip)         SKIP="${2:-}"; shift ;;
     --skip=*)       SKIP="${1#--skip=}" ;;
     -h|--help)
-      sed -n '2,20p' "$0"; exit 0 ;;
+      sed -n '2,18p' "$0"; exit 0 ;;
     *)
       echo "⚠️  flag desconocido: $1" >&2; exit 2 ;;
   esac
@@ -60,27 +54,13 @@ done
 
 # ---------- Definición de tareas (arreglo ordenado) ----------
 # Formato: "name|comando..."
+# NOTA: mantener este set MÍNIMO. Para el suite completo usar CI real.
 TASKS=(
   "lint|bun run lint --max-warnings 0"
   "typecheck|bun run typecheck"
   "migrations|bun run audit:migrations"
   "vitest|bun run test:fast --reporter=dot --bail=1"
 )
-
-if [ "$PARITY" = "1" ]; then
-  TASKS+=(
-    "knip|bun run lint:unused:strict"
-    "arch|bun run audit:arch"
-    "casts|bun run audit:casts"
-    "tests-aud|bun run audit:tests"
-    "schema|bun run audit:schema"
-    "arch-gate|bunx vitest run src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/__tests__/audit-casts-classifier.test.ts"
-  )
-fi
-
-if [ "$WITH_BUILD" = "1" ]; then
-  TASKS+=("build|bun run build")
-fi
 
 # Aplicar --only / --skip
 filter_tasks() {
