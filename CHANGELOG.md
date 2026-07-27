@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.319.3] - 2026-07-27
+- **fix · Revalidar tarifa ya no truena con `column p.nombre does not exist`.** Analogía: ayer arreglamos la puerta (leer `origen`/`destino` de cotizaciones) pero pusimos la manija con los tornillos equivocados — buscábamos `puertos.unlocode` y `puertos.nombre`, cuando esa tabla tiene `code` y `name`. La RPC `crear_embarque_borrador_core` ahora consulta `SELECT p.name FROM public.puertos p WHERE p.code = ...`. Auditoría: revisamos las otras funciones que usaban `p.nombre` (`busqueda_global`, `proveedores_listado`) y ahí `p` es alias de `proveedores` (que sí tiene `nombre`) — falsos positivos, no requieren cambios.
+
 ## [13.319.2] - 2026-07-27
 - **fix · "Crear embarque" desde cotización ya no truena con `record "v_cot" has no field "puerto_origen"`.** Analogía: la receta pedía sacar el jitomate del cajón `puerto_origen` pero ese cajón nunca existió en la despensa `cotizaciones` — sólo hay uno llamado `origen`. La RPC `crear_embarque_borrador_core` ahora lee `v_cot.origen`/`v_cot.destino` directamente (que es donde vive el dato) y luego resuelve UN/LOCODE → puerto / aeropuerto / ciudad según el modo del embarque como antes. Sin cambios en la estructura ni en cotizaciones existentes.
 
