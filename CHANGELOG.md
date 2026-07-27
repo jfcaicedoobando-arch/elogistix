@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.20] - 2026-07-27
+- **Fix · CI CodeQL falla con `pr-diff-range.yml` filas "undefined".** El workflow `Analyze (javascript-typescript)` reventaba porque `git fetch main` fallaba (`fatal: error processing shallow info: 4`) y CodeQL Action generaba un extension pack `restrictAlertsTo` con filas inválidas, abortando el `codeql database run-queries`. Añadido `CODEQL_ACTION_DIFF_INFORMED_QUERIES: "false"` al job — es el workaround oficial que desactiva las queries diff-informed y fuerza el escaneo completo del PR. Analogía: el escáner intentaba comparar sólo las páginas cambiadas de un libro, pero la lista de páginas venía corrupta; ahora escanea el libro entero y ya no depende de esa lista.
+
 ## [13.320.19] - 2026-07-27
 - **Fix · `audit:migrations` H6 en `auditoria_embarques_org`.** Las tres migraciones que redeployaron el RPC como `SECURITY DEFINER` no adjuntaban `REVOKE ALL FROM PUBLIC` + `GRANT EXECUTE TO authenticated, service_role`. Añadidos en los tres archivos (`20260727191441`, `20260727192239`, `20260727195758`). Analogía: dejamos la puerta con llave maestra sin especificar quién tiene copia — ahora sólo authenticated y service_role.
 
