@@ -1,61 +1,51 @@
-# Plan: Fix `column f.pagado does not exist` en auditoría de embarques
+# Plan: Reparar suite RLS `storage_objects`
 
 ## Analogía
-Es como pedirle al cajero el "saldo pagado" de una cuenta y descubrir que no lo tiene guardado — hay que sumarlo desde los recibos (`pagos_factura` y `pagos_proveedor`) cada vez que se consulta.
+Es como probar la cerradura del casillero pero sin haber puesto tu chaqueta adentro: el guardia (RLS) no te deja pasar porque no encuentra tu nombre en la lista de dueños — no porque la cerradura falle, sino porque falta registrar el objeto en la tabla de dominio.
 
 ## Diagnóstico confirmado
-El RPC `auditoria_embarques_org(uuid)` referencia dos columnas que **no existen**:
+La suite `RLS suite — storage_objects` es la única que falla en CI (línea 64 del test):
 
-- Línea 386: `SUM(f.total - COALESCE(f.pagado, 0))` en CTE `cxc_facturas_vencidas`.
-- Línea 429: `SUM(pf.total - COALESCE(pf.pagado, 0))` en CTE `cxp_vencidas`.
+```
+ERROR: RLS TEST FAIL: user_a (control) sí debe ver su objeto en org_a
+```
 
-Verificado con `information_schema`:
-- `facturas` sólo tiene `total`, `subtotal`, `forma_pago`, `metodo_pago` (nada de `pagado`).
-- `proveedor_facturas` sólo tiene `total`, `subtotal`, `fecha_programada_pago`.
+Las otras cuatro suites (`isolation`, `anon_deny_all`, `roles_no_admin`, `financiero`) pasaron.
 
-Los montos pagados se calculan sumando pagos vivos:
-- CxC: `pagos_factura.monto_aplicado_factura` (o `monto` si es nulo) `WHERE factura_id = f.id AND deleted_at IS NULL`.
-- CxP: `pagos_proveedor.monto_en_moneda_factura` (o `monto` si es nulo) `WHERE proveedor_factura_id = pf.id AND deleted_at IS NULL`.
+**Causa raíz.** La política `Tenant scoped read documentos` (bucket `documentos`) exige `EXISTS` contra `documentos_embarque JOIN embarques`:
+
+```sql
+EXISTS (
+  SELECT 1 FROM documentos_embarque d JOIN embarques e ON e.id = d.embarque_id
+  WHERE d.archivo = objects.name
+    AND d.organization_id = current_user_org_id()
+    AND e.organization_id = current_user_org_id()
+)
+```
+
+El test siembra sólo `storage.objects` con path `org_a/emb-a/doc.pdf`, sin fila en `documentos_embarque` ni en `embarques`. Por eso el `EXISTS` retorna falso incluso para el dueño → `count = 0` → aserción de control falla.
+
+Esta es la regla que documenta el memoria `Storage RLS Paths`: la validación de tenancy va vía EXISTS a la tabla de dominio, no por prefijo de carpeta. La suite quedó desalineada.
 
 ## Cambios
 
-### 1. Migración: reemplazar RPC `auditoria_embarques_org(uuid)`
-Sustituir las dos CTEs para calcular el pendiente vía `LEFT JOIN LATERAL` a la tabla de pagos:
+### 1. `supabase/tests/rls/test_rls_storage_objects.sql`
+Antes de sembrar los objetos en storage, insertar en las tablas de dominio para que las policies encuentren el vínculo. Cambios acotados dentro del `DO $$`:
 
-```sql
-cxc_facturas_vencidas AS (
-  SELECT f.embarque_id,
-         COUNT(*) AS n,
-         SUM(f.total - COALESCE(p.pagado, 0)) AS pendiente
-  FROM facturas f
-  LEFT JOIN LATERAL (
-    SELECT SUM(COALESCE(pf2.monto_aplicado_factura, pf2.monto)) AS pagado
-    FROM pagos_factura pf2
-    WHERE pf2.factura_id = f.id AND pf2.deleted_at IS NULL
-  ) p ON true
-  WHERE f.embarque_id IN (SELECT id FROM emb)
-    AND f.deleted_at IS NULL
-    AND f.estado NOT IN ('Cancelada','Sustituida','Pagada')
-    AND f.fecha_vencimiento IS NOT NULL
-    AND f.fecha_vencimiento < CURRENT_DATE - v_dias_cxc_vencida
-  GROUP BY f.embarque_id
-),
-```
+- Declarar `emb_a uuid`, `emb_b uuid`.
+- Insertar dos filas en `public.embarques` (uno para cada org) con los mínimos requeridos por NOT NULL (organization_id, expediente, cliente_nombre — inspecciono el schema primero).
+- Insertar dos filas en `public.documentos_embarque` con `archivo = path_a` / `path_b`, `organization_id` correspondiente, `embarque_id` correspondiente.
+- Mantener el resto del test intacto (los 3 asserts).
 
-Análogo para `cxp_vencidas` usando `pagos_proveedor` y `proveedor_factura_id`.
+Si el esquema de `embarques` tiene NOT NULLs adicionales o triggers de negocio (autogeneración de expediente, validaciones de fecha), esos también deben cumplirse. Voy a leer `information_schema` para `embarques` y `documentos_embarque` antes de escribir la migración de fixtures.
 
-Preservar el resto del RPC (guardas `deleted_at IS NULL`, filtro `p.estado_proforma`, etc.) — solo tocar estas dos CTEs.
+### 2. Test alternativo si el fixture es inviable
+Si sembrar `embarques` explota por triggers complicados (por ejemplo `_audit_embarques_agregar`, generación de folio), la alternativa mínima es reducir el test a que el owner **postgres/service_role** vea el objeto y verificar sólo la denegación cruzada de `user_b`. Esto degrada la cobertura, así que primero intento el fixture completo.
 
-### 2. Test de regresión SQL
-En `supabase/tests/rpc/test_auditoria_embarques_org.sql`: escenario mínimo con una factura vencida parcialmente pagada, verificar que `pendiente = total - suma(pagos)` y que el RPC no arroja `42703`.
-
-### 3. Auditoría automática de columnas
-El script `audit-rpc-columns` (creado en v13.319.6) debería haber detectado esto. Agregar `facturas` y `proveedor_facturas` a su allow-list de tablas escaneadas si no están, para que el próximo drift falle en CI en vez de en producción.
-
-### 4. Versionado
-- `APP_VERSION` → `13.320.14` (parche).
-- `CHANGELOG.md`: entrada bajo Fixed describiendo el hallazgo y el fix.
+### 3. Versionado
+- `APP_VERSION` → `13.320.17`.
+- Entrada en `CHANGELOG.md` bajo Fixed: descripción del fixture y la razón (política EXISTS contra tabla de dominio).
 
 ## Fuera de alcance
-- No tocar UI de `/auditoria`.
-- No renombrar columnas ni agregar `pagado` materializada (sería refactor mayor con triggers).
+- No cambiar las políticas de `storage.objects`. Son correctas: exigir vínculo a tabla de dominio es la postura de seguridad deseada (referida en `mem://technical/storage-rls-paths`).
+- No tocar las otras 4 suites RLS ni el workflow de CI.
