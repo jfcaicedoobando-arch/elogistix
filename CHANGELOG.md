@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.320.22] - 2026-07-27
+- **Fix · Tests rotos tras migración a `notify*` (shard 5/10).** Dos fallos post-Ola B:
+  - `appFeedback.notifyInfo` llamaba `sonnerToast(...)` como función; los tests (y varios call sites) mockean `toast` como objeto con `.info/.success/.error`. Cambiado a `sonnerToast.info(...)` para coincidir con el resto de helpers y mostrar el icono neutral correcto.
+  - `useTimbrarRep.test.tsx` mockeaba sólo `notifyError` de `appFeedback`, pero el hook ahora usa `notifySuccess`/`notifyInfo`. Ampliado el mock (`notifySuccess` reenvía al spy `toastSuccess`, `notifyInfo` stub) y añadido mock de `repAutoEmail` + `invalidateProfitDependencies` para aislar side-effects.
+- Analogía: cambiamos el altavoz del intercomunicador — algunos ayudantes seguían intentando gritar por el hueco donde ya no había bocina.
+
 ## [13.320.21] - 2026-07-27
 - **Chore · Actualizar `sonner` de 1.7.4 → 2.0.7.** Nuestro stack (React 19.2) ya cumple el peer de v2. El wrapper `src/components/ui/sonner.tsx` sigue funcionando sin cambios: los class-hooks `data-[type=…]` y `swipeDirections` se conservan. `swipeThreshold` sigue sin estar en los tipos públicos (mismo `@ts-expect-error` que ya teníamos), pero se acepta en runtime. `tsgo` limpio. Analogía: le cambiamos el motor al auto por uno nuevo del mismo fabricante — los pedales, el volante y el tablero siguen igual.
 
