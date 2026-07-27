@@ -21,8 +21,16 @@ vi.mock("@/features/facturacion/services/repFacturapi", () => ({
   emitirRep: (...a: unknown[]) => emitirRep(...a),
   cancelarRep: (...a: unknown[]) => cancelarRep(...a),
 }));
+vi.mock("@/features/facturacion/services/repAutoEmail", () => ({
+  autoEnviarRepPorCorreo: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("@/features/profit/hooks/invalidateProfitDependencies", () => ({
+  invalidateProfitDependencies: vi.fn(),
+}));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
+  notifySuccess: (_t: unknown, opts: { title: string }) => toastSuccess(opts.title),
+  notifyInfo: vi.fn(),
 }));
 
 import { useTimbrarRep, useCancelarRep } from "../useTimbrarRep";
