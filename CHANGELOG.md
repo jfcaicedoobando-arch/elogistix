@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.320.5] - 2026-07-27
+- **audit · RLS suites: Ola 1 (H1–H4) completa.** Analogía: teníamos alarma en la puerta principal (aislamiento entre orgs) pero no en las ventanas del sótano (portal B2B intra-org, roles de negocio, RPCs con `SECURITY DEFINER`, tablas con dinero/API keys). Se agregaron 4 suites nuevas al matriz de CI `rls-tests.yml` — cero cambios de producto, sólo cobertura defensiva:
+  - `test_rls_portal_intra_org.sql` (H2): dentro de una MISMA org con dos clientes, `portal_a` no puede ver facturas/proformas/documentos/pagos/embarques de `cli_b`, y el INSERT cruzado se bloquea. Incluye control positivo con `portal_b`.
+  - `test_rls_roles_negocio.sql` (H1): cubre roles `vendedor`, `contador`, `tesorero`, `ejecutivo_cobranza` (nunca ven otra org) y `super_admin` positivo (sí ve ambas orgs).
+  - `test_rls_rpc_financieras.sql` (H3): `user_b` invoca `clientes_listado`, `cotizaciones_listado`, `cxc_aging_clientes`, `cxp_aging_proveedores`, `busqueda_global`, `cartera_pendiente`, `aplicar_anticipo_a_factura` pasando IDs/orgs de `org_a`; ninguna debe fugar datos.
+  - `test_rls_tablas_dinero_extra.sql` (H4): aislamiento de `anticipos_proveedor`, `cobranza_seguimiento`, `facturapi_credenciales` (API keys), `embarque_garantias_contenedor`, `cotizacion_costos_historico` (markups) y `costeo_navieras_condiciones` (depósitos negociados).
+  - CI: `rls-tests.yml` — nueva matriz de 12 suites (antes 8); el guard `matrix.suite` sigue exigiendo paridad con los archivos en disco.
+
+
+
 ## [13.320.4] - 2026-07-27
 - **fix · Revalidar tarifa fallaba con `record "v_cot" has no field "tipo_contenedor_id"`.** Analogía: el manual (repo) decía "conectar el cable rojo" pero el técnico había conectado el azul en la instalación real — cada quien seguro de tener razón y el foco sin prender. La función viva `crear_embarque_borrador_core` en BD referenciaba `v_cot.tipo_contenedor_id` (columna fantasma que nunca existió en `cotizaciones`), mientras que el archivo canónico del repo ya usaba la columna real `tipo_contenedor` (text). Se re-sincronizó la función viva con el canónico vía `CREATE OR REPLACE`, manteniendo `SECURITY DEFINER`, `search_path=public` y el blindaje `REVOKE ALL FROM PUBLIC` + `GRANT EXECUTE TO authenticated, service_role`.
 - **regresión**: `src/__tests__/architecture/revalidar-tarifa-puertos-lookup.test.ts` amplió 2 aserciones que prohíben la cadena `tipo_contenedor_id` y exigen el uso de `v_cot.tipo_contenedor`.
