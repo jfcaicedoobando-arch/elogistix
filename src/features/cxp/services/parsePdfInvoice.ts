@@ -6,6 +6,7 @@
  * frontend reutiliza `handleCfdiParsed` para prellenar el formulario.
  */
 import * as Sentry from "@sentry/react";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import {
   FunctionsHttpError,
   FunctionsRelayError,
