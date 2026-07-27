@@ -36,6 +36,12 @@ jobs:
       security-events: write
       contents: read
       actions: read
+    env:
+      # 13.320.20 — Workaround para bug de CodeQL Action donde el fetch shallow
+      # de `main` falla ("fatal: error processing shallow info: 4") y genera un
+      # pr-diff-range.yml con filas "undefined" que aborta el análisis.
+      # Desactivar diff-informed queries fuerza el escaneo completo del PR.
+      CODEQL_ACTION_DIFF_INFORMED_QUERIES: "false"
 
     strategy:
       fail-fast: false
