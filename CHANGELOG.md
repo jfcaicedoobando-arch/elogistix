@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.320.2] - 2026-07-27
+- **fix · Tres RPCs consultaban columnas inexistentes (auditoría schema drift).** Analogía: tres cables mal etiquetados en el panel eléctrico. La casa parecía funcionar porque otros breakers alcanzaban a suplir (fallbacks, `EXCEPTION WHEN undefined_column`, columnas que aceptaban NULL). Re-etiquetamos los cables con el nombre real del tornillo y quitamos el breaker de emergencia que estaba tapando el problema.
+  - **`proveedor_salud`**: usaba `e.agente_origen_id` / `e.agente_destino_id` (no existen) protegido por `EXCEPTION WHEN undefined_column`, que devolvía `embarques_activos = 0` en silencio. Ahora usa la columna real `embarques.agente_id` y sin `EXCEPTION` — el KPI del proveedor ya refleja la realidad.
+  - **`crear_embarque_borrador_core`**: consultaba `tipos_contenedor.codigo` (la columna real es `code`). El código de contenedor caía siempre al fallback `v_cot.tipo_contenedor`. Ahora `SELECT tc.code INTO v_tipo_cont_code`.
+  - **`portal_obtener_proforma_por_token`**: exponía `pcc.importe` (no existe; la vista publica `total`). El portal público mostraba `importe: null`. Ahora `'importe', pcc.total` — se conserva el nombre `importe` en el JSON para no romper el contrato del front.
+  - **Schema canónico**: nuevos `supabase/schema/proveedores/proveedor_salud.sql` y `supabase/schema/portal/portal_obtener_proforma_por_token.sql`.
+  - **Allow-list depurada**: `scripts/audit-rpc-columns-allowlist.json` queda con una sola entrada (`auditoria_embarques_org:d.doc_nombre`) documentada como falso positivo: `d` es alias de `LATERAL unnest(...) AS d(doc_nombre)`, no columna de `documentos_embarque`.
+  - **Test de regresión**: `src/__tests__/architecture/rpc-columns-schema.test.ts` (5 aserciones) valida que las 3 correcciones sobreviven a mantenimiento futuro.
+
 ## [13.320.1] - 2026-07-27
 - **chore · Auditoría Sentry · Batches 2, 3 y 4.** Analogía: si Batch 1 le puso etiquetas más finas al detector de humo, este cierre le conecta la cámara del pasillo con la del garaje (traza continua), sube un poquito la grabación en vivo (replays al 2%) y deja el manual de operación pegado en la pared (runbook).
   - **Batch 2 · Trace continuity front → edge.** `wrapEdgeHandler` en `supabase/functions/_shared/sentry.ts` ahora lee `sentry-trace` + `baggage` del request y llama a `Sentry.continueTrace(...)` cuando existen. El span del edge cuelga como hijo de la transaction del navegador, así en Sentry Performance ves una sola cadena "click en botón → fetch → RPC → error". Backward-compatible: sin DSN o sin headers, es idéntico al comportamiento previo. `corsHeaders` ya permitía ambos headers (v13.114.13).
