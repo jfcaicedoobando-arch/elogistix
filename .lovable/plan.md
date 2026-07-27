@@ -1,28 +1,40 @@
-## Contexto
+## Problema
 
-En v13.319.2 arreglamos `crear_embarque_borrador_core`, que leía `v_cot.puerto_origen / aeropuerto_origen / ciudad_origen` cuando la tabla `cotizaciones` solo tiene `origen` y `destino`. Este plan documenta la auditoría que hicimos para verificar si el mismo bug (leer columnas inexistentes de `cotizaciones`) aparece en otro lado.
+La RPC `crear_embarque_borrador_core` (parchada ayer en v13.319.2) ahora truena con `column p.nombre does not exist` al revalidar tarifa.
 
-## Hallazgos de la auditoría
+## Causa
 
-**Columnas reales en `public.cotizaciones`** (confirmado con `information_schema`): solo `origen` y `destino`. NO existen `puerto_origen`, `puerto_destino`, `aeropuerto_origen`, `aeropuerto_destino`, `ciudad_origen`, `ciudad_destino` en cotizaciones — esas viven únicamente en `public.embarques`.
+La versión parchada asumió columnas `unlocode` y `nombre` en `public.puertos`, pero la tabla real tiene:
 
-**Funciones SQL revisadas** (busqué en todas las funciones de `public` que tocan `cotizaciones` y mencionan alguna de las 6 columnas problemáticas):
+- `code` (no `unlocode`)
+- `name` (no `nombre`)
 
-1. `crear_embarque_borrador_core` — ya corregida en v13.319.2. ✅
-2. `seed_demo_organization` — **falso positivo**. Usa `puerto_origen` / `aeropuerto_origen` solo dentro de `INSERT INTO public.embarques (...)`, donde esas columnas sí existen. El `INSERT INTO public.cotizaciones` usa correctamente `origen, destino`. ✅
+Analogía: arreglamos la puerta pero pusimos la manija con los tornillos equivocados — la puerta sigue sin abrir.
 
-**Frontend / edge functions**: búsqueda por patrón `cotizacion*.puerto_origen|aeropuerto_origen|ciudad_origen` en `src/` y `supabase/` — 0 resultados. ✅
+Líneas problemáticas dentro de la función:
 
-**Búsqueda extra por `v_cot.puerto_ / aeropuerto_ / ciudad_`** en migraciones históricas: 0 resultados adicionales. ✅
+```sql
+SELECT p.nombre INTO v_puerto_o FROM public.puertos p WHERE p.unlocode = v_origen_code LIMIT 1;
+SELECT p.nombre INTO v_puerto_d FROM public.puertos p WHERE p.unlocode = v_destino_code LIMIT 1;
+```
 
-## Conclusión
+## Fix
 
-El bug estaba aislado a `crear_embarque_borrador_core`. No hay que tocar más funciones ni código. No requiere migración ni cambio de código.
+Migración que redefine `crear_embarque_borrador_core` cambiando esas dos consultas por:
 
-## Siguiente paso propuesto
+```sql
+SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.code = v_origen_code LIMIT 1;
+SELECT p.name INTO v_puerto_d FROM public.puertos p WHERE p.code = v_destino_code LIMIT 1;
+```
 
-Ninguno — cerrar el hilo. Si quieres, puedo:
-- **Opción A**: dejarlo así y no hacer cambios (recomendado).
-- **Opción B**: agregar un test de regresión en `supabase/tests/` que llame `crear_embarque_borrador_core` sobre una cotización semilla y verifique que no truena, para atrapar regresiones si alguien reintroduce el bug al reescribir la RPC.
+Sin otros cambios de lógica.
 
-Confirma cuál prefieres y salimos de modo plan.
+## Auditoría de contagio
+
+Revisé las otras dos funciones que usan `p.nombre` (`busqueda_global`, `proveedores_listado`) — allí `p` es alias de `proveedores` (que sí tiene columna `nombre`), no de `puertos`. Falsos positivos, no requieren cambio.
+
+## Entregables
+
+- Migración con `CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_core` corregida.
+- Bump `APP_VERSION` a `13.319.3`.
+- Entrada en `CHANGELOG.md`.
