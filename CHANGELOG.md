@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.320.0] - 2026-07-27
+- **chore · Auditoría Sentry · Batch 1 (alta señal, bajo riesgo).** Analogía: le pusimos etiquetas más finas al detector de humo — ahora sabemos si el humo viene de la cocina o del garaje (auth vs. anon), agrupamos los "mismo humo, misma causa" en un solo aviso (fingerprint Postgres), y le dejamos listo un checador de asistencia para los jobs nocturnos (cron monitor).
+  - **1.a Sentry Crons opt-in en edge functions.** Nuevo helper `withCronMonitor(fnName, monitorSlug, handler, { schedule, checkinMargin, maxRuntime })` en `supabase/functions/_shared/sentry.ts`. Si Sentry no está configurado, se comporta como `wrapEdgeHandler` (no-op). Cuando lo cableemos a un job programado, Sentry alerta automático si el check-in no llega en la ventana esperada.
+  - **1.b Fingerprint estable para `PostgrestError`.** Nuevo helper puro `computePostgrestFingerprint` en `sentry/helpers.ts` que devuelve `["postgres", <code>, <route con IDs normalizados>]`. `beforeSend` lo aplica cuando `originalException.code` es SQLSTATE (5 chars) o `PGRST*`. Dos issues equivalentes (mismo code + misma ruta con distinto ID) ahora se agrupan en un solo issue Sentry.
+  - **1.c Tag `auth_status`.** `syncSentryUser` ahora setea `auth_status: "authenticated" | "anonymous"` en el scope global de Sentry. Antes ambos casos quedaban sin tag y era imposible filtrar "sólo errores de visitantes anónimos" en el UI de Sentry.
+  - Tests: 5 casos nuevos en `sentry/__tests__/helpers.test.ts` cubriendo `computePostgrestFingerprint` (SQLSTATE, IDs volátiles, PGRST, null cases, ruta ausente).
+
+
+
 ## [13.319.6] - 2026-07-27
 - **test · Regresión bloqueante: revalidar tarifa consulta `puertos.code` y `puertos.name`.** Analogía: pusimos un candado a la manija correcta de la puerta — si alguien mañana renombra los tornillos (columnas), la prueba salta antes de que la puerta se caiga en producción. Nuevo test `src/__tests__/architecture/revalidar-tarifa-puertos-lookup.test.ts` (4 aserciones) que lee el schema canónico `supabase/schema/embarques/crear_embarque_borrador_core.sql` y verifica: (1) hay `FROM public.puertos p ... WHERE p.code =`, (2) hay `SELECT p.name INTO v_puerto_[od]` para origen **y** destino, (3) no hay referencias a columnas legacy inexistentes (`p.nombre`, `p.unlocode`). También sincronicé el schema canónico con la definición real de la BD (el fix v13.319.3 vivía sólo en DB — ahora quedó en el repo).
 

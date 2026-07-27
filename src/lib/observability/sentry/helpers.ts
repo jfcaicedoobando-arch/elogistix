@@ -92,6 +92,28 @@ export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
   return event;
 }
 
+/**
+ * 13.320.0 (audit Sentry Batch 1.b): agrupar errores de Postgres/PostgREST por
+ * `code` SQL + ruta para que dos issues equivalentes no queden en grupos
+ * separados. Un `PostgrestError` trae `code` (`23505`, `42501`, `P0001`, …) y
+ * opcionalmente `hint`. Sin fingerprint explícito Sentry agrupa por `message`,
+ * que suele incluir IDs volátiles.
+ *
+ * Devuelve un array de tokens estable o `null` si no aplica.
+ */
+export function computePostgrestFingerprint(
+  exc: unknown,
+  routePath: string | undefined,
+): string[] | null {
+  const err = exc as { code?: unknown; name?: unknown } | undefined;
+  const code = typeof err?.code === "string" ? err.code : null;
+  if (!code) return null;
+  // Filtro barato: sólo códigos SQLSTATE (5 chars alfanuméricos) o PostgREST.
+  if (!/^[A-Z0-9]{5}$/.test(code) && !code.startsWith("PGRST")) return null;
+  const route = routePath ? routePath.replace(/\/[0-9a-f-]{8,}/gi, "/:id") : "unknown";
+  return ["postgres", code, route];
+}
+
 
 const SAMPLE_RULES: ReadonlyArray<{ pattern: RegExp; rate: number }> = [
   // 0% — estáticas / marketing / dev

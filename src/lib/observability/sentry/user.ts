@@ -37,12 +37,16 @@ export function syncSentryUser(params: SyncParams): void {
       if (!latest) return;
       if (!latest.userId) {
         Sentry.setUser(null);
+        // 13.320.0 (audit Sentry Batch 1.c): distinguir eventos anon vs auth
+        // en filtros de Sentry. Antes ambos casos quedaban sin tag.
+        Sentry.getCurrentScope().setTag("auth_status", "anonymous");
         return;
       }
       Sentry.setUser({ id: latest.userId, email: latest.email ?? undefined });
       Sentry.setTags({
         organization_id: latest.organizationId ?? "none",
         effective_role: latest.effectiveRole ?? "none",
+        auth_status: "authenticated",
       });
     })
     .catch(() => {

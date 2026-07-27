@@ -18,7 +18,7 @@ import {
   useNavigationType,
 } from "react-router-dom";
 import { APP_VERSION } from "@/constants/appVersion";
-import { sampleByRoute, scrubEventPii } from "./helpers";
+import { sampleByRoute, scrubEventPii, computePostgrestFingerprint } from "./helpers";
 import { shouldDropSentryEvent, resolveSentryEnvironment } from "./dropPredicate";
 import { FEEDBACK_INTEGRATION_OPTIONS } from "./feedbackConfig";
 import {
@@ -84,6 +84,12 @@ export function initSentry(): void {
     ignoreErrors: IGNORE_ERRORS,
     beforeSend(event, hint) {
       if (shouldDropSentryEvent(event, hint)) return null;
+      // 13.320.0 (Batch 1.b): fingerprint por PostgrestError.code + ruta.
+      const fp = computePostgrestFingerprint(
+        hint?.originalException,
+        typeof window !== "undefined" ? window.location?.pathname : undefined,
+      );
+      if (fp) event.fingerprint = fp;
       return scrubEventPii(event);
     },
     // 13.114.19: las transactions también pueden traer PII en `request.url`
