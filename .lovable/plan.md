@@ -1,62 +1,61 @@
-# Auditoría Sentry — Estado actual y plan de mejora
+## Diagnóstico verificado contra el schema real
 
-## Diagnóstico (verificado)
+Consulté `information_schema.columns` y las 4 definiciones vivas en la BD. Resultado: **3 bugs reales + 1 falso positivo** del audit script.
 
-**Salud excelente:** 0 issues sin resolver, sólo 70 eventos en 7 días (env `production`). La implementación está madura y bien pensada.
+| # | Función | Referencia | Real? | Motivo |
+|---|---|---|---|---|
+| 1 | `proveedor_salud` | `e.agente_origen_id`, `e.agente_destino_id` | ✅ Bug | `embarques` solo tiene `agente_id`. Está protegido por `EXCEPTION WHEN undefined_column` que **silenciosamente devuelve `embarques_activos = 0`** — el KPI del proveedor miente. |
+| 2 | `auditoria_embarques_org` | `d.doc_nombre` | ❌ Falso positivo | `d` es alias de `LATERAL unnest(...) AS d(doc_nombre)` — es un alias de columna del CTE, no de `documentos_embarque`. El JOIN real usa `de.nombre = x.doc_nombre` correctamente. |
+| 3 | `crear_embarque_borrador_core` | `tc.codigo` (línea 709) | ✅ Bug | `tipos_contenedor` tiene `code`, no `codigo`. `v_tipo_cont_code` queda NULL y cae al fallback `COALESCE(..., v_cot.tipo_contenedor)`. |
+| 4 | `portal_obtener_proforma_por_token` | `pcc.importe` (línea 849) | ✅ Bug | `proforma_conceptos_consolidados` tiene `total`, no `importe`. La proforma pública muestra los conceptos con `importe: null` — el cliente ve importes vacíos. |
 
-### Lo que ya está bien hecho
-- **Front (`src/lib/observability/sentry/`):** DSN por env, carga dinámica (`sentry-vendor` fuera del critical path), túnel `/functions/v1/sentry-tunnel` con whitelist de host + rate-limit por IP, PII scrub en events/breadcrumbs/headers, `denyUrls` + `ignoreErrors`, `dropPredicate` para RLS `42501` / ZodError / chunks / extensiones.
-- **Sampling inteligente:** `sampleByRoute` prioriza flujos críticos (embarques/cotizaciones/facturas al 100%, listados al 5%).
-- **Integraciones:** React Router v6 tracing, Profiling, `extraErrorData` (captura `Error.cause`), `httpClient` 5xx, Replay con `maskAllText/Inputs/Media`, Feedback widget en español.
-- **Release management:** `libre-carga@${APP_VERSION}` + `dist=buildHash`, sourcemaps hidden + subida vía `sentry-vite-plugin` + `filesToDeleteAfterUpload`.
-- **Edge functions:** wrapper `_shared/sentry.ts` con `@sentry/deno@8` y `SENTRY_DSN_EDGE`; guardrails arquitectónicos (`sentry-edge-coverage.test.ts`).
+## Cambios propuestos
 
-### Gaps detectados
-1. **Sin alert rules ni monitors** documentados en el proyecto (Sentry Alerts / Crons).
-2. **Cron jobs sin monitoreo Sentry:** `rep-retry-nocturno`, `cxc-recordatorio-enviar`, `auditoria-weekly-digest`, `exchange-rates` corren en schedule pero no reportan a Sentry Crons (si fallan silenciosos, nadie se entera).
-3. **Trace propagation front→edge no verificada:** `tracePropagationTargets` está OK, pero los edge functions no continúan el trace (falta `Sentry.continueTrace` en el wrapper).
-4. **Fingerprinting genérico para `PostgrestError`:** dos rutas distintas con el mismo `code` SQL generan issues separados en vez de agruparse por código de error.
-5. **`Sentry.ErrorBoundary` no se usa:** el `ErrorBoundary` casero reporta manualmente; perderíamos el hook `showReportDialog` estándar.
-6. **Replay sample session en 0%:** cuando llega el primer bug, sólo tenemos el clip on-error (muy corto). Un 1-3% session ayudaría a reproducir flujos completos.
-7. **Ownership rules / CODEOWNERS de Sentry:** no hay reglas para auto-asignar issues por área (facturación / embarques / auditoría).
-8. **Rate-limit del túnel en memoria por isolate:** un pico multi-isolate lo elude. Aceptable hoy (70 events/7d), pero conviene documentarlo.
-9. **`user` scope no tagea `auth_status`:** anon vs. authenticated no se distingue en filtros.
+**Migración única** (`supabase/migration`) que hace `CREATE OR REPLACE FUNCTION` de las 3 funciones afectadas, sin tocar firmas ni permisos:
 
-## Plan (4 batches priorizados)
+### Fix 1 · `proveedor_salud` — usar `agente_id` real
+```sql
+-- Antes:
+AND (e.naviera_id = p_proveedor_id OR e.agente_origen_id = p_proveedor_id OR e.agente_destino_id = p_proveedor_id)
+-- Después:
+AND (e.naviera_id = p_proveedor_id OR e.agente_id = p_proveedor_id)
+```
+Además, **elimino el `BEGIN…EXCEPTION WHEN undefined_column`** que estaba enmascarando el bug. Que si algo rompe, se vea.
 
-### Batch 1 — Alta señal, bajo esfuerzo
-- **1.a Sentry Crons para jobs schedule.** Envolver los 4 edge functions cron con `Sentry.withMonitor("<slug>", …)` en `_shared/sentry.ts` (extender wrapper con helper `withCronMonitor`). Alertas de "no check-in en X min" gratis.
-- **1.b Fingerprint por `PostgrestError.code`.** En `beforeSend`, si `originalException` es PostgrestError, setear `event.fingerprint = ["postgres", code, route]`. Reduce ruido y agrupa correcto.
-- **1.c Tag `auth_status`.** `user.setTag("auth_status", userId ? "authenticated" : "anonymous")` en `syncSentryUser`.
+### Fix 2 · `crear_embarque_borrador_core` — `tc.codigo` → `tc.code`
+```sql
+SELECT tc.code INTO v_tipo_cont_code FROM public.tipos_contenedor tc WHERE tc.id = v_cot.tipo_contenedor_id;
+```
 
-### Batch 2 — Trace continuity front→edge
-- **2.a** Extender `_shared/sentry.ts` con `wrapEdgeHandlerWithTrace` que llame `Sentry.continueTrace({sentryTrace, baggage}, () => Sentry.startSpan(...))` usando los headers ya propagados por el front.
-- **2.b** Migrar 3 edge functions críticas (`enviar-factura-email`, `facturapi-emitir-*`, `parse-invoice-pdf`) al nuevo wrapper.
-- **2.c** Test arquitectónico que valide que las funciones facturación crean spans nombrados.
+### Fix 3 · `portal_obtener_proforma_por_token` — `pcc.importe` → cálculo real
+Como `proforma_conceptos_consolidados` no tiene `importe`, expongo el `total` con el alias `importe` para no romper al front del portal público:
+```sql
+'importe', pcc.total,
+```
 
-### Batch 3 — Replay + ErrorBoundary
-- **3.a** Subir `replaysSessionSampleRate` a 0.02 (2%) sólo en `production` — mantener 0 en preview.
-- **3.b** Migrar `ErrorBoundary.tsx` a `Sentry.ErrorBoundary` con `showDialog` + `fallback` custom (conserva UI actual, gana `eventId` + integración feedback nativa).
-- **3.c** Ajustar tests de `ErrorBoundary` a la nueva API.
+### Sincronización de schema canónico
+Actualizo los `.sql` correspondientes bajo `supabase/schema/` (mismo patrón que el fix de `puertos.code`) para que el próximo `audit:rpc-columns` no reporte nada:
+- `supabase/schema/embarques/crear_embarque_borrador_core.sql`
+- (si existen) las variantes canónicas de `proveedor_salud` y `portal_obtener_proforma_por_token`; si no existen, agrego archivos nuevos con la definición reparada.
 
-### Batch 4 — Gobernanza y alertas
-- **4.a** Documentar en `docs/observability/sentry-runbook.md`: quién recibe alertas, cómo escalar, cómo silenciar, políticas de retención.
-- **4.b** Crear archivo `sentry.owners.yml` (o instructivo si no se puede vía código) mapeando paths → equipos/personas.
-- **4.c** Definir 3 alert rules mínimas: `error_rate spike >5x baseline`, `new issue en release`, `cron missed check-in`.
+### Allow-list del audit script
+Actualizo `scripts/audit-rpc-columns-allowlist.json`:
+- Remuevo las 3 entradas ahora reparadas.
+- Dejo `auditoria_embarques_org.doc_nombre` con una nota `"reason": "alias de LATERAL unnest, no columna de documentos_embarque"` — o mejor, enseño al script a ignorar aliases de `unnest ... AS x(...)`. Elijo la opción **allow-list con nota** para no meter complejidad al parser en este PR.
 
-## Detalles técnicos
+### Test de regresión
+Nuevo `src/__tests__/architecture/rpc-columns-schema.test.ts` (o extensión del existente `revalidar-tarifa-puertos-lookup.test.ts`) que verifica por regex sobre los `.sql` canónicos:
+- `proveedor_salud`: NO contiene `agente_origen_id` ni `agente_destino_id`.
+- `crear_embarque_borrador_core`: NO contiene `tc.codigo`; SÍ contiene `tc.code`.
+- `portal_obtener_proforma_por_token`: NO contiene `pcc.importe` como columna (regex `pcc\.importe(?!\s*['"])`).
 
-- Sentry Crons: `Sentry.withMonitor(slug, handler, { schedule: { type: "crontab", value: "0 3 * * *" }, checkinMargin: 5, maxRuntime: 30 })`. Requiere confirmar el schedule real de cada job en `supabase/config.toml`.
-- Trace continuity: el SDK ya adjunta `sentry-trace` y `baggage` a fetch por `tracePropagationTargets`. Sólo falta consumirlos en Deno.
-- Ownership rules: pueden vivir sólo en el UI de Sentry; en repo dejaríamos el runbook.
-- No modificamos `beforeSend` masivamente para no romper drop rules ya probadas (sólo añadimos fingerprint).
+### CHANGELOG + APP_VERSION
+- Bump `13.320.1 → 13.320.2`.
+- Entry `13.320.2` en `CHANGELOG.md` con analogía + IDs de los tres fixes.
 
 ## Fuera de alcance
-- Cambiar DSN, proyecto Sentry o retention.
-- Reemplazar el túnel por un servicio externo (rate-limit actual es suficiente).
-- Deshabilitar `maskAllText` (política de privacidad vigente).
+- Falso positivo `auditoria_embarques_org.doc_nombre` → sólo se documenta en el allow-list; no toco la RPC.
+- Refactor del `audit-rpc-columns.ts` para parsear aliases de `LATERAL unnest` — es mejora futura, no bloqueante.
 
-## Entregable
-Cada batch termina con: código + tests + entrada en `CHANGELOG.md` + bump de `APP_VERSION`. Puedo ejecutar batch por batch o los 4 seguidos; recomiendo empezar por **Batch 1** porque son 3 wins independientes y de bajo riesgo.
-
-¿Ejecuto los 4 batches en orden, o prefieres validar Batch 1 antes de continuar?
+## Analogía para el equipo
+Los tres bugs son "cables mal etiquetados dentro del panel eléctrico": la casa funciona porque otro breaker alcanza a suplir (fallbacks, `EXCEPTION WHEN`, columnas que aceptan NULL). Vamos a re-etiquetar los cables con el nombre real del tornillo y a quitar el breaker de emergencia que estaba tapando el problema.
