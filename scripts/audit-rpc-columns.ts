@@ -42,15 +42,15 @@ function psqlJson<T = unknown>(sql: string): T[] {
 type ColMap = Map<string, Set<string>>;
 
 function loadColumns(): ColMap {
-  const rows = psql<[string, string]>(
+  const rows = psqlJson<{ table_name: string; column_name: string }>(
     `SELECT table_name, column_name
        FROM information_schema.columns
       WHERE table_schema = 'public'`,
   );
   const map: ColMap = new Map();
-  for (const [t, c] of rows) {
-    if (!map.has(t)) map.set(t, new Set());
-    map.get(t)!.add(c);
+  for (const r of rows) {
+    if (!map.has(r.table_name)) map.set(r.table_name, new Set());
+    map.get(r.table_name)!.add(r.column_name);
   }
   return map;
 }
@@ -59,24 +59,23 @@ function loadColumns(): ColMap {
 interface SqlObject { kind: "function" | "view"; name: string; body: string; }
 
 function loadFunctions(): SqlObject[] {
-  // Usa una tabla temporal via \\gexec-free approach: string_agg del cuerpo.
-  const rows = psql<[string, string]>(`
-    SELECT p.proname, pg_get_functiondef(p.oid)
+  const rows = psqlJson<{ name: string; body: string }>(`
+    SELECT p.proname AS name, pg_get_functiondef(p.oid) AS body
       FROM pg_proc p
       JOIN pg_namespace n ON n.oid = p.pronamespace
      WHERE n.nspname = 'public'
        AND p.prokind = 'f'
   `);
-  return rows.map(([name, body]) => ({ kind: "function" as const, name, body }));
+  return rows.map((r) => ({ kind: "function" as const, name: r.name, body: r.body ?? "" }));
 }
 
 function loadViews(): SqlObject[] {
-  const rows = psql<[string, string]>(`
-    SELECT table_name, view_definition
+  const rows = psqlJson<{ name: string; body: string }>(`
+    SELECT table_name AS name, view_definition AS body
       FROM information_schema.views
      WHERE table_schema = 'public'
   `);
-  return rows.map(([name, body]) => ({ kind: "view" as const, name, body }));
+  return rows.map((r) => ({ kind: "view" as const, name: r.name, body: r.body ?? "" }));
 }
 
 // ---------- 3. Extraer alias → tabla ----------
