@@ -311,6 +311,7 @@ BEGIN
            ) AS tc_incompleto
     FROM conceptos_venta cv
     JOIN emb e ON e.id = cv.embarque_id
+    WHERE cv.deleted_at IS NULL  -- AUD-3: excluir conceptos soft-deleted (aliniea con Tab P&L)
     GROUP BY cv.embarque_id
   ),
   costos_mxn AS (
