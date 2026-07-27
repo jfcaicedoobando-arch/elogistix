@@ -138,17 +138,21 @@ paso previo al matrix de Playwright (`bun run e2e:provision`).
 ## Correr
 
 ```bash
-# Headless, los 5 specs
-npx playwright test
+# Toda la suite (usa E2E_BASE_URL del .env.e2e)
+bun run e2e
 
-# Con UI interactiva
-npx playwright test --ui
+# Modo interactivo
+bun run e2e:ui
 
-# Sólo uno
-npx playwright test 01-login
+# Sólo un spec
+bunx playwright test 01-login
+
+# Forzar contra localhost aunque .env.e2e apunte a staging
+bun run e2e:local
 ```
 
-Resultados HTML quedan en `playwright-report/`.
+Resultados HTML quedan en `playwright-report/` (ábrelos con `bun run e2e:report`).
+
 
 ## Especificaciones
 
