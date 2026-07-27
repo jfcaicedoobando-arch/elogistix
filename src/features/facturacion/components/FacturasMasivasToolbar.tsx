@@ -27,6 +27,7 @@ async function obtenerBytes(stored: string | null, facturaId: string, tipo: "pdf
 
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { todayLocalISO } from "@/lib/date/today";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 interface Props {
   selectedIds: Set<string>;
   onClear: () => void;
@@ -41,6 +42,7 @@ interface Props {
 export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState<null | "zip" | "email" | "mark">(null);
+  const [confirmEmailOpen, setConfirmEmailOpen] = useState(false);
   const ids = Array.from(selectedIds);
   const disabled = ids.length === 0;
 
@@ -81,7 +83,10 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
     // del contacto principal del cliente cuando no se pasa uno explícito).
     // No usamos plantilla `factura-reenvio` para evitar sobreescribir
     // adjuntos PDF/XML — FacturApi ya los adjunta desde su lado.
-    if (!confirm(`Se reenviará por correo ${ids.length} factura(s). ¿Continuar?`)) return;
+    // v13.320.25 (Tanda 2 auditoría toasts): la confirmación pasó de
+    // `window.confirm()` (inconsistente con el resto de la app) a
+    // `ConfirmActionDialog`.
+    setConfirmEmailOpen(false);
     setBusy("email");
     let ok = 0;
     const errores: string[] = [];
@@ -141,7 +146,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
         {busy === "zip" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
         Descargar ZIP
       </Button>
-      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={reenviarEmail}>
+      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={() => setConfirmEmailOpen(true)}>
         {busy === "email" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
         Reenviar por email
       </Button>
@@ -152,6 +157,20 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       {ids.length > 0 && (
         <Button variant="ghost" size="sm" onClick={onClear}>Limpiar</Button>
       )}
+      <ConfirmActionDialog
+        open={confirmEmailOpen}
+        onOpenChange={setConfirmEmailOpen}
+        title="Reenviar facturas por email"
+        description={
+          <>
+            Se reenviará por correo <strong>{ids.length}</strong> factura(s) a los contactos
+            principales de cada cliente. ¿Continuar?
+          </>
+        }
+        confirmLabel="Reenviar"
+        isPending={busy === "email"}
+        onConfirm={reenviarEmail}
+      />
     </div>
   );
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.320.25] - 2026-07-27
+- **Chore · Auditoría de acciones sin toast · Tandas 1-3.** Cierra 8 huecos donde clics de usuario no confirmaban resultado.
+  - **Tanda 1 · CSV silenciosos (Alta).** Nuevo helper `src/lib/ui/notifyCsvExport.ts` (`downloadCsvWithFeedback`): si no hay filas → `notifyWarning("Sin datos para exportar")` y no descarga; si hay → descarga + `notifySuccess("CSV descargado · <archivo> · N fila(s)")`. Adoptado en Antigüedad CxC (`CxcAging.tsx`), Antigüedad CxP (`exportarCxpCsv.ts`) y Reconciliación 3 columnas (`ReconciliacionTresColumnas.tsx`). Antes los tres hacían early-return silencioso y el usuario creía que la app estaba rota.
+  - **Tanda 2 · Confirmación consistente (Media).** `FacturasMasivasToolbar` reemplaza `window.confirm(...)` por `ConfirmActionDialog` para el reenvío masivo por email, alineado con el resto de acciones destructivas (typable/doble confirmación). Los toasts de éxito/error/parcial ya existían — sólo se homologa el paso previo.
+  - **Tanda 3 · Microinteracciones (Baja).** (a) `InvitarAgenteCredencialesView`: al copiar email/contraseña/ambos ahora emite `notifySuccess` breve (2s) además del cambio de icono, consistente con "copiar tracking naviera"/"copiar folio embarque". (b) `MigrarRolesLegacyCard`: el botón "Refrescar vista previa" ahora notifica éxito ("N registro(s) por migrar") o error si el refetch falla; antes sólo mostraba el spinner del icono.
+  - **Fuera de alcance intencional.** `useEliminarEmbarque` y `useResponderCotizacion` mantienen la excepción vigente en las WHITELIST de `mutations-have-onerror.test.ts` y `no-double-toast-on-mutate.test.ts` — la UI consumidora ya emite el toast enriquecido y refactorizar introduciría doble toast.
+- Analogía: la barra de un café donde el barista te preparaba el pedido pero nunca decía "listo" — algunos botones "Exportar CSV" no emitían señal alguna. Ahora todos avisan cuando terminan, y si no hay nada que servir, lo dicen antes de dejarte esperando.
+
 ## [13.320.24] - 2026-07-27
 - **Chore · Auditoría Sonner/Sentry · Tanda 1 (Consolidación).** Higiene del ruteo de errores.
   - **S1 · 4 `Sentry.captureException/Message` directos → `reportCaughtError`** en `tesoreria/services/conciliacion.ts`, `catalogos/services/index.ts`, `cxp/services/parsePdfInvoice.ts` y `cxp/services/parseCfdi.ts`. Ahora heredan tags automáticos (`organization_id`, `effective_role`, `route`, `app_version`, `error_kind`, `pg_code`) + payload sanitizado. `ErrorBoundary` se mantiene como excepción (necesita `eventId` para el feedback dialog).

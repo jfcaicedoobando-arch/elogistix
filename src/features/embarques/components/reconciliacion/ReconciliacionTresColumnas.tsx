@@ -18,6 +18,7 @@ import { useUmbralesReconciliacion } from "@/features/embarques/hooks/useUmbrale
 import type { FilaReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
 import { fmt, pct, colorPorClasificacion } from "./reconciliacionFormat";
 import { ResumenReconciliacion } from "./ResumenReconciliacion";
+import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 
 interface Props {
   embarqueId: string;
@@ -119,13 +120,12 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
       [f.concepto, f.moneda, f.cotizado, f.refrescado, f.real,
         f.delta_cot_vs_real.pct.toFixed(2), f.clasificacion].join(","),
     );
-    const blob = new Blob([[header, ...lines].join("\n")], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `reconciliacion-${embarqueId}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsvWithFeedback({
+      filename: `reconciliacion-${embarqueId}.csv`,
+      csv: [header, ...lines].join("\n"),
+      rowCount: data.filas.length,
+      emptyWarning: { description: "No hay filas de reconciliación para exportar." },
+    });
   };
 
   return (
