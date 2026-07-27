@@ -197,12 +197,27 @@ export function wrapEdgeHandler(
       req.headers.get("x-request-id") ??
       req.headers.get("x-correlation-id") ??
       null;
-    try {
-      return await handler(req);
-    } catch (err) {
-      await captureEdgeException(err, { fn: fnName, request_id });
-      throw err;
+    // 13.320.1 (audit Sentry Batch 2) — Trace continuity front→edge.
+    // Si el front adjuntó `sentry-trace` + `baggage`, continuamos la traza para
+    // que el error/span del edge quede como hijo de la transaction del browser.
+    const sentryTrace = req.headers.get("sentry-trace") ?? undefined;
+    const baggage = req.headers.get("baggage") ?? undefined;
+    const runHandler = async () => {
+      try {
+        return await handler(req);
+      } catch (err) {
+        await captureEdgeException(err, { fn: fnName, request_id });
+        throw err;
+      }
+    };
+    if (!DSN || (!sentryTrace && !baggage)) return runHandler();
+    const Sentry = await loadSentry();
+    if (!Sentry || typeof (Sentry as unknown as { continueTrace?: unknown }).continueTrace !== "function") {
+      return runHandler();
     }
+    return await (Sentry as unknown as {
+      continueTrace: <T>(ctx: { sentryTrace?: string; baggage?: string }, cb: () => Promise<T>) => Promise<T>;
+    }).continueTrace({ sentryTrace, baggage }, runHandler);
   };
 }
 
