@@ -36,9 +36,10 @@
     "audit:arch": "tsx scripts/audit-architecture.ts",
     "audit:rpc-sync": "tsx scripts/audit-rpc-sync.ts",
     "audit:schema": "tsx scripts/audit-schema-columns.ts",
+    "audit:rpc-columns": "tsx scripts/audit-rpc-columns.ts",
     "audit:report": "tsx scripts/audit-report.ts",
     "audit:migrations": "tsx scripts/audit-migrations.ts",
-    "audit:all": "bun run audit:arch && bun run audit:casts && bun run audit:tests && bun run audit:rpc-sync && bun run audit:schema && bun run audit:migrations && bun run audit:report",
+    "audit:all": "bun run audit:arch && bun run audit:casts && bun run audit:tests && bun run audit:rpc-sync && bun run audit:schema && bun run audit:rpc-columns && bun run audit:migrations && bun run audit:report",
     "e2e:provision": "tsx scripts/e2e/provision-users.ts",
     "e2e:provision-multi-tenant": "tsx scripts/e2e/provision-multi-tenant.ts",
     "ci:local": "bun run lint && bun run lint:unused && bun run test && bun run build"
