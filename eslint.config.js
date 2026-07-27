@@ -702,7 +702,7 @@ export default tseslint.config(
       "src/features/auditoria/hooks/revisiones/marcar.ts",
       "src/features/auditoria/hooks/useAuditoriaComentarios.ts",
       "src/features/auditoria/hooks/useMarcarRevisadosBulk.ts",
-      "src/features/auditoria/hooks/useSnoozeHallazgo.ts",
+      
       "src/features/cliente/components/DialogEditarCliente.tsx",
       "src/features/comisiones/components/TabVendedorasConfig.tsx",
       "src/features/comisiones/hooks/useVendedorasEmailWarning.ts",
