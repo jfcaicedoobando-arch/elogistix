@@ -25,14 +25,17 @@
 import { execFileSync } from "node:child_process";
 
 // ---------- Helpers psql ----------
-function psql<T = Record<string, string>>(sql: string): T[] {
+// Devuelve filas como arrays de strings. La consulta DEBE producir texto ya
+// codificado (usar to_jsonb o replace de tabs/newlines antes de retornar).
+function psqlJson<T = unknown>(sql: string): T[] {
+  // Envuelve la consulta para que devuelva un array JSON de una sola fila.
+  const wrapped = `SELECT coalesce(jsonb_agg(t), '[]'::jsonb)::text FROM (${sql}) t`;
   const raw = execFileSync(
     "psql",
-    ["-X", "-A", "-t", "-F", "\t", "--no-align", "-c", sql],
-    { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+    ["-X", "-A", "-t", "-q", "-c", wrapped],
+    { encoding: "utf8", maxBuffer: 128 * 1024 * 1024 },
   );
-  const lines = raw.split("\n").filter((l) => l.length > 0);
-  return lines.map((l) => l.split("\t")) as unknown as T[];
+  return JSON.parse(raw.trim()) as T[];
 }
 
 // ---------- 1. Cargar columnas reales por tabla ----------
