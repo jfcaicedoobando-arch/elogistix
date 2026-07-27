@@ -236,7 +236,7 @@ BEGIN
       'documentos_faltantes', '[]'::jsonb
     ) AS h
     FROM emb e
-    JOIN conceptos_venta cv ON cv.embarque_id = e.id
+    JOIN conceptos_venta cv ON cv.embarque_id = e.id AND cv.deleted_at IS NULL
     WHERE e.estado IN ('Entregado','Cerrado')
       AND cv.estado_facturacion = 'pendiente'
       AND (e.etd IS NULL OR e.etd >= v_fecha_corte_facturacion)
