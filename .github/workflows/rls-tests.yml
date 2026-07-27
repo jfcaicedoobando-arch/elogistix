@@ -93,7 +93,11 @@ jobs:
             operaciones \
             tarifas_y_costeo \
             roles_no_admin \
+            roles_negocio \
+            portal_intra_org \
             rpc_provision_organization \
+            rpc_financieras \
+            tablas_dinero_extra \
             | LC_ALL=C sort)
           if ! diff <(echo "$expected") <(echo "$declared") >/dev/null; then
             echo "::error::matrix.suite está desincronizada con los archivos test_rls_*.sql"
@@ -233,7 +237,11 @@ jobs:
           - operaciones
           - tarifas_y_costeo
           - roles_no_admin
+          - roles_negocio
+          - portal_intra_org
           - rpc_provision_organization
+          - rpc_financieras
+          - tablas_dinero_extra
 
     services:
       postgres:
