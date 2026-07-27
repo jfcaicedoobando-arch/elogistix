@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.319.5] - 2026-07-27
+- **fix · UX: revalidación de tarifa maneja errores de esquema sin ruido.** Analogía: si el timbre de la casa está mal cableado, ya no dejamos que el visitante lo pique 20 veces seguidas — apagamos el botón, ponemos un letrero "no funciona, ya avisamos al electricista" y evitamos que la alarma (Sentry) suene idéntica cada segundo. `CrearEmbarqueConRevalidacion` ahora:
+  - Detecta errores de contrato BD (`column X does not exist`, `has no field`, `structure of query does not match function result type`, `relation does not exist`) y muestra un toast claro: "bug de sistema — avisa a soporte con el ID de la cotización, no reintentes".
+  - Bloquea el botón después de un error de esquema (variante `outline` + ícono `AlertTriangle` + label "Revalidación no disponible" + tooltip).
+  - Guard `enVueloRef` que previene reentrada síncrona por doble-click rápido (además del `disabled` del botón, que sólo se aplica tras el re-render).
+  - Errores no-esquema conservan el flujo previo (toast con el mensaje del backend, reintento permitido).
+
 ## [13.319.4] - 2026-07-27
 - **chore · Nuevo barrido automatizado `audit:rpc-columns` para cazar columnas fantasma en RPCs/vistas.** Analogía: un detector de metales que camina por todas las recetas de la cocina (funciones y vistas de la BD) y avisa cuando alguien intenta sacar un ingrediente que no está en la despensa (columna inexistente). Escanea las 313 funciones/vistas de `public`, resuelve aliases de `FROM`/`JOIN`, y valida cada `alias.columna` contra `information_schema.columns`. Incluye allow-list (`scripts/audit-rpc-columns-allowlist.json`) tipo ratchet: los hallazgos preexistentes no rompen CI, pero cualquier regresión nueva sí lo hace. Registrado en `bun run audit:rpc-columns` y en `audit:all`. **Hallazgos detectados (5, sembrados en allow-list para fix posterior):**
   - `proveedor_salud`: usa `e.agente_origen_id` / `e.agente_destino_id` (embarques sólo tiene `agente_id`).

@@ -7,11 +7,11 @@
  *    refrescar / sustituir (BuscarTarifaDialog).
  * 4. Si `bloqueante` → modal sólo permite "Solicitar re-aprobación a ventas".
  */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { RevalidarTarifaModal } from "@/features/cotizacion/components/revalidacion/RevalidarTarifaModal";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
 import {
@@ -27,12 +27,31 @@ interface Props {
   numContenedores: number;
 }
 
+/**
+ * Detecta errores de esquema/contrato de la BD (columnas o campos inexistentes,
+ * mismatch de tipos de retorno). Estos son bugs de sistema, no de datos —
+ * reintentar no ayuda y sólo produce ruido en Sentry.
+ */
+function esErrorDeEsquemaBD(msg: string): boolean {
+  const m = msg.toLowerCase();
+  return (
+    /column\s+\S+\s+does not exist/.test(m) ||
+    /has no field/.test(m) ||
+    /structure of query does not match function result type/.test(m) ||
+    /return type mismatch/.test(m) ||
+    /relation\s+\S+\s+does not exist/.test(m)
+  );
+}
+
 export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: Props) {
   const navigate = useNavigate();
   const [revalidando, setRevalidando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoRevalidacion | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [buscarOpen, setBuscarOpen] = useState(false);
+  const [bloqueadoPorEsquema, setBloqueadoPorEsquema] = useState(false);
+  // Ref para evitar dobles-invocaciones si el click llega antes del re-render.
+  const enVueloRef = useRef(false);
 
   const crearMut = useCrearEmbarqueBorradorConDecision();
   const reaprobarMut = useSolicitarReaprobacion();
@@ -53,26 +72,45 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
   };
 
   const handleClick = async () => {
+    // Guard #1: evita re-entrada síncrona (doble click rápido).
+    if (enVueloRef.current || bloqueadoPorEsquema) return;
+    enVueloRef.current = true;
     setRevalidando(true);
     try {
       const r = await revalidarTarifa(cotizacionId);
       setResultado(r);
       if (r.severidad === "sin_cambios") {
-        // Crear directo
         await ejecutarCreacion("sin_cambios", r.tarifa_id_vigente ?? null, { cambios: r.cambios });
       } else {
         setModalOpen(true);
       }
     } catch (err) {
-      notifyError(undefined, {
-        title: `No se pudo revalidar la tarifa: ${(err as Error).message}`,
-        error: err as Error,
-        method: "REVALIDAR_TARIFA",
-      });
+      const error = err as Error;
+      const msg = error?.message ?? "";
+      if (esErrorDeEsquemaBD(msg)) {
+        // Bug de sistema: bloqueamos el botón para no producir reintentos
+        // duplicados (cada reintento genera un Sentry idéntico).
+        setBloqueadoPorEsquema(true);
+        notifyError(undefined, {
+          title: "No se pudo revalidar la tarifa — bug de sistema",
+          description:
+            "El backend hace referencia a una columna que ya no existe. Nuestro equipo ya recibió el reporte; por favor avisa a soporte con el ID de la cotización y evita reintentar.",
+          error,
+          method: "REVALIDAR_TARIFA",
+        });
+      } else {
+        notifyError(undefined, {
+          title: `No se pudo revalidar la tarifa: ${msg}`,
+          error,
+          method: "REVALIDAR_TARIFA",
+        });
+      }
     } finally {
       setRevalidando(false);
+      enVueloRef.current = false;
     }
   };
+
 
   const handleMantener = () =>
     ejecutarCreacion("mantenida_por_operaciones", resultado?.tarifa_id_vigente ?? null, {
@@ -116,11 +154,25 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
 
   return (
     <>
-      <Button size="sm" onClick={handleClick} disabled={revalidando || loading}>
+      <Button
+        size="sm"
+        onClick={handleClick}
+        disabled={revalidando || loading || bloqueadoPorEsquema}
+        variant={bloqueadoPorEsquema ? "outline" : "default"}
+        title={
+          bloqueadoPorEsquema
+            ? "Revalidación deshabilitada por un bug de sistema. Contacta a soporte."
+            : undefined
+        }
+      >
         {revalidando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-        Crear embarque
-        {numContenedores > 1 && <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>}
+        {bloqueadoPorEsquema ? <AlertTriangle className="h-4 w-4 mr-2 text-amber-600" /> : null}
+        {bloqueadoPorEsquema ? "Revalidación no disponible" : "Crear embarque"}
+        {!bloqueadoPorEsquema && numContenedores > 1 && (
+          <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>
+        )}
       </Button>
+
 
       <RevalidarTarifaModal
         open={modalOpen}
