@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.320.3] - 2026-07-27
+- **fix · CI `audit:migrations` verde (H4 + H6).** Analogía: tres puertas quedaron sin cerradura reglamentaria — la casa funciona, pero el inspector las marca hasta que atornillamos la manija correcta. Sin cambio funcional.
+  - **H4 · `nav_events` (Sidebar 3.0)**: agregado `IF NOT EXISTS` al índice `idx_nav_events_org_fecha` y `DROP POLICY IF EXISTS` previo a las dos policies (`insert own org`, `read admin`). Idempotente ante replays.
+  - **H6 · SECURITY DEFINER blindado**: `REVOKE ALL FROM PUBLIC` + `GRANT EXECUTE TO authenticated, service_role` para `crear_embarque_borrador_core` (en las 2 migraciones de hoy) y para las 3 RPCs de 13.320.2 (`proveedor_salud`, `crear_embarque_borrador_core`, `portal_obtener_proforma_por_token`).
+
 ## [13.320.2] - 2026-07-27
 - **fix · Tres RPCs consultaban columnas inexistentes (auditoría schema drift).** Analogía: tres cables mal etiquetados en el panel eléctrico. La casa parecía funcionar porque otros breakers alcanzaban a suplir (fallbacks, `EXCEPTION WHEN undefined_column`, columnas que aceptaban NULL). Re-etiquetamos los cables con el nombre real del tornillo y quitamos el breaker de emergencia que estaba tapando el problema.
   - **`proveedor_salud`**: usaba `e.agente_origen_id` / `e.agente_destino_id` (no existen) protegido por `EXCEPTION WHEN undefined_column`, que devolvía `embarques_activos = 0` en silencio. Ahora usa la columna real `embarques.agente_id` y sin `EXCEPTION` — el KPI del proveedor ya refleja la realidad.
