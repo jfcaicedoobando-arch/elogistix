@@ -17,6 +17,10 @@ DECLARE
   org_b uuid := gen_random_uuid();
   user_a uuid := gen_random_uuid();
   user_b uuid := gen_random_uuid();
+  cli_a uuid := gen_random_uuid();
+  cli_b uuid := gen_random_uuid();
+  emb_a uuid := gen_random_uuid();
+  emb_b uuid := gen_random_uuid();
   bucket text := 'documentos';
   path_a text;
   path_b text;
@@ -34,10 +38,24 @@ BEGIN
   INSERT INTO public.user_roles(user_id, role) VALUES
     (user_a, 'admin_org'), (user_b, 'admin_org');
 
+  INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
+    (cli_a, 'STG Cliente A', 'XAXX010101S00', 'stga@test.local', org_a),
+    (cli_b, 'STG Cliente B', 'XAXX010101S01', 'stgb@test.local', org_b);
+
+  INSERT INTO public.embarques(id, cliente_id, cliente_nombre, organization_id, tipo, modo, expediente) VALUES
+    (emb_a, cli_a, 'STG Cliente A', org_a, 'Importación', 'Marítimo', 'ELISTG00001'),
+    (emb_b, cli_b, 'STG Cliente B', org_b, 'Importación', 'Marítimo', 'ELISTG00002');
+
   INSERT INTO storage.buckets(id, name, public) VALUES (bucket, bucket, false) ON CONFLICT DO NOTHING;
 
   path_a := org_a::text || '/emb-a/doc.pdf';
   path_b := org_b::text || '/emb-b/doc.pdf';
+
+  -- La policy `Tenant scoped read documentos` exige EXISTS contra documentos_embarque
+  -- vinculado a embarques del mismo org. Sembramos el link de dominio antes del objeto.
+  INSERT INTO public.documentos_embarque(embarque_id, nombre, archivo, organization_id) VALUES
+    (emb_a, 'BL', path_a, org_a),
+    (emb_b, 'BL', path_b, org_b);
 
   -- Sembrar como postgres (bypass RLS) para tener 2 objetos de orgs distintas
   INSERT INTO storage.objects(bucket_id, name, owner) VALUES
