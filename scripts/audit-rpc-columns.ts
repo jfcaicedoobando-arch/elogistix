@@ -98,10 +98,14 @@ const RESERVED = new Set([
   "record","alias","current_setting","coalesce","nullif","concat",
 ]);
 
+// Un alias "opaco" es uno rebindeado dentro del cuerpo a un CTE o subquery.
+// No podemos validar sus columnas estáticamente, así que se salta.
+const OPAQUE = "__opaque__";
+
 function extractAliases(body: string, tables: ColMap): Map<string, Set<string>> {
-  // Un mismo alias puede reutilizarse dentro de una misma función para tablas
-  // distintas (SQL local en distintos bloques/CTE). Guardamos TODAS las tablas
-  // candidatas y sólo flagueamos cuando la columna no existe en NINGUNA.
+  // Un mismo alias puede reutilizarse dentro de la misma función para tablas
+  // distintas o para un CTE. Guardamos TODAS las tablas candidatas; si el
+  // alias también aparece bindeado a un no-table (CTE), lo marcamos opaco.
   const aliases = new Map<string, Set<string>>();
   const clean = body
     .replace(/\/\*[\s\S]*?\*\//g, " ")
@@ -116,11 +120,15 @@ function extractAliases(body: string, tables: ColMap): Map<string, Set<string>> 
   const re = /\b(?:FROM|JOIN|,)\s+(?:public\.)?([a-z_][a-z0-9_]*)\s+(?:AS\s+)?([a-z_][a-z0-9_]*)/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(clean)) !== null) {
-    const table = m[1].toLowerCase();
+    const source = m[1].toLowerCase();
     const alias = m[2].toLowerCase();
-    if (!tables.has(table)) continue;
     if (RESERVED.has(alias)) continue;
-    add(alias, table);
+    if (tables.has(source)) {
+      add(alias, source);
+    } else {
+      // Es un CTE o derivada — degrada el alias a opaco.
+      add(alias, OPAQUE);
+    }
   }
   // Tabla usada sin alias: su propio nombre es alias válido.
   const re2 = /\b(?:FROM|JOIN|,)\s+(?:public\.)?([a-z_][a-z0-9_]*)\b/gi;
