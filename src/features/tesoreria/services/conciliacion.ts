@@ -139,12 +139,11 @@ export async function conciliarConPago(
     })
     .eq("id", movId);
   if (error) {
-    try {
-      Sentry.captureMessage("conciliacion.failed", {
-        level: "warning",
-        tags: { tipo, reason: error.code ?? "unknown" },
-      });
-    } catch { /* best-effort */ }
+    reportCaughtError(error, {
+      feature: "tesoreria",
+      op: "conciliacion.failed",
+      tipo,
+    }, { pgCode: error.code ?? "unknown", movId, pagoId });
     mapConciliacionError(error);
   }
 }
