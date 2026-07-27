@@ -8,6 +8,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { UNRESOLVED_EMAIL } from "./constants";
+import { logger } from "@/lib/observability/logger";
 
 export interface PortalClienteUserRow {
   id: string;
@@ -41,7 +42,7 @@ async function fetchPortalEmailMap(userIds: string[]): Promise<Record<string, st
       body: { action: "list-portal-emails", user_ids: userIds },
     });
     if (error) {
-      console.warn("[portales] list-portal-emails invoke error:", error);
+      logger.warn("portales", "list-portal-emails invoke error:", error);
       return emailMap;
     }
     if (Array.isArray(data)) {
@@ -50,7 +51,7 @@ async function fetchPortalEmailMap(userIds: string[]): Promise<Record<string, st
       });
     }
   } catch (err) {
-    console.warn("[portales] list-portal-emails threw:", err);
+    logger.warn("portales", "list-portal-emails threw:", err);
   }
   return emailMap;
 }

@@ -20,6 +20,7 @@ import {
 } from "@/features/facturacion/services";
 import type { Tables } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/query";
+import { logger } from "@/lib/observability/logger";
 
 type FacturaLite = Pick<
   Tables<"facturas">,
@@ -84,7 +85,7 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
             try {
               await guardarDefaultsCcCliente(factura.cliente_id, ccPersist);
             } catch (err) {
-              console.warn("[envio-factura] no se guardaron los CC del cliente:", err);
+              logger.warn("envio-factura", "no se guardaron los CC del cliente:", err);
             }
             const manualesPersist = payload.destinatarios
               .filter((d) => !d.contacto_id)
@@ -92,7 +93,7 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
             try {
               await guardarDefaultsDestinatariosCliente(factura.cliente_id, manualesPersist);
             } catch (err) {
-              console.warn("[envio-factura] no se guardaron los destinatarios del cliente:", err);
+              logger.warn("envio-factura", "no se guardaron los destinatarios del cliente:", err);
             }
           }
           onOpenChange(false);

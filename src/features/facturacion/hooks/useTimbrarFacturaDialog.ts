@@ -23,6 +23,7 @@ import { getErrorMessage } from "@/lib/errors/index";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { queryKeys } from "@/lib/query";
+import { logger } from "@/lib/observability/logger";
 
 interface FacturaLike {
   id: string;
@@ -105,7 +106,7 @@ export function useTimbrarFacturaDialog(
     },
     onError: (err) => {
       // best-effort: sólo warning, no rompe el timbrado ya exitoso.
-      console.warn("[timbrado] no se guardaron los defaults del cliente:", err);
+      logger.warn("timbrado", "no se guardaron los defaults del cliente:", err);
     },
   });
 

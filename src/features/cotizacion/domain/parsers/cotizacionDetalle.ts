@@ -4,6 +4,7 @@
  */
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
+import { logger } from "@/lib/observability/logger";
 
 export interface ConceptosTotales {
   conceptosVentaUSD: ConceptoVentaCotizacion[];
@@ -50,13 +51,13 @@ export function parseConceptos(raw: unknown): ConceptoVentaCotizacion[] {
     try {
       arr = JSON.parse(raw);
     } catch (err) {
-      console.warn("[cotizacionDetalle] conceptos_venta: JSON inválido", err);
+      logger.warn("cotizacionDetalle", "conceptos_venta: JSON inválido", err);
       return [];
     }
   }
   if (!Array.isArray(arr)) {
     if (typeof raw !== "string") {
-      console.warn("[cotizacionDetalle] conceptos_venta con formato inválido", { raw });
+      logger.warn("cotizacionDetalle", "conceptos_venta con formato inválido", { raw });
     }
     return [];
   }
@@ -67,7 +68,7 @@ export function parseConceptos(raw: unknown): ConceptoVentaCotizacion[] {
     else descartados++;
   }
   if (descartados > 0) {
-    console.warn(`[cotizacionDetalle] ${descartados} concepto(s) descartado(s) por schema inválido`);
+    logger.warn("cotizacionDetalle", `${descartados} concepto(s) descartado(s) por schema inválido`);
   }
   return valid;
 }

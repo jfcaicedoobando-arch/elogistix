@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
 import { fetchWithRetry } from "@/lib/net/fetchWithRetry";
+import { logger } from "@/lib/observability/logger";
 
 export interface CsfParsedData {
   nombre?: string;
@@ -37,7 +38,7 @@ export async function parseCsf(file: File): Promise<CsfParsedData> {
     },
     {
       onRetry: ({ attempt, reason }) => {
-        console.warn(`[parseCsf] reintento ${attempt} (${reason})`);
+        logger.warn("parseCsf", `reintento ${attempt} (${reason})`);
       },
     },
   );
