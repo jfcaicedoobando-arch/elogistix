@@ -154,11 +154,25 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
 
   return (
     <>
-      <Button size="sm" onClick={handleClick} disabled={revalidando || loading}>
+      <Button
+        size="sm"
+        onClick={handleClick}
+        disabled={revalidando || loading || bloqueadoPorEsquema}
+        variant={bloqueadoPorEsquema ? "outline" : "default"}
+        title={
+          bloqueadoPorEsquema
+            ? "Revalidación deshabilitada por un bug de sistema. Contacta a soporte."
+            : undefined
+        }
+      >
         {revalidando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-        Crear embarque
-        {numContenedores > 1 && <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>}
+        {bloqueadoPorEsquema ? <AlertTriangle className="h-4 w-4 mr-2 text-amber-600" /> : null}
+        {bloqueadoPorEsquema ? "Revalidación no disponible" : "Crear embarque"}
+        {!bloqueadoPorEsquema && numContenedores > 1 && (
+          <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>
+        )}
       </Button>
+
 
       <RevalidarTarifaModal
         open={modalOpen}
