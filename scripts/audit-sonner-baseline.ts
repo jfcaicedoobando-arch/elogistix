@@ -35,12 +35,13 @@ function listFilesImportingSonner(): string[] {
 
 function parseAllowlist(): string[] {
   const cfg = readFileSync(resolve(ROOT, "eslint.config.js"), "utf8");
-  // Buscamos el bloque "no-raw-table-and-sonner" completo.
-  const blockStart = cfg.indexOf("no-raw-table-and-sonner");
-  if (blockStart < 0) throw new Error("bloque no-raw-table-and-sonner no encontrado");
-  const blockEnd = cfg.indexOf("\n    },\n", blockStart);
-  const block = cfg.slice(blockStart, blockEnd > 0 ? blockEnd : cfg.length);
-  const paths = [...block.matchAll(/"(src\/[^"]+)"/g)].map((m) => m[1]);
+  // Sólo nos interesa la sección SONNER-LEGACY del bloque `no-raw-table-and-sonner`
+  // (arriba de esa marca hay exclusiones de `no-raw-table` que no aplican a sonner).
+  const marker = cfg.indexOf("SONNER-LEGACY");
+  if (marker < 0) throw new Error("marker SONNER-LEGACY no encontrado en eslint.config.js");
+  const blockEnd = cfg.indexOf("\n    },\n", marker);
+  const block = cfg.slice(marker, blockEnd > 0 ? blockEnd : cfg.length);
+  const paths = [...block.matchAll(/"(src\/[^"*]+)"/g)].map((m) => m[1]);
   // Wrappers autorizados adicionales (siempre válidos).
   const wrappers = [
     "src/lib/ui/appFeedback.ts",
