@@ -14,7 +14,8 @@ const emitirFacturapi = vi.fn();
 const cancelarFacturapi = vi.fn();
 const toastSuccess = vi.fn();
 const notifySuccess = vi.fn((_t: unknown, opts: { title: string; description?: string }) => {
-  toastSuccess(opts.title, { description: opts.description });
+  if (opts.description !== undefined) toastSuccess(opts.title, { description: opts.description });
+  else toastSuccess(opts.title);
 });
 const notifyError = vi.fn();
 
