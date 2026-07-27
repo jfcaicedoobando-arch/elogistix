@@ -17,12 +17,14 @@ grant all on public.nav_events to service_role;
 
 alter table public.nav_events enable row level security;
 
+drop policy if exists "nav_events insert own org" on public.nav_events;
 create policy "nav_events insert own org"
   on public.nav_events
   for insert
   to authenticated
   with check (organization_id = current_user_org_id() and user_id = auth.uid());
 
+drop policy if exists "nav_events read admin" on public.nav_events;
 create policy "nav_events read admin"
   on public.nav_events
   for select
@@ -33,4 +35,4 @@ create policy "nav_events read admin"
     or has_role(auth.uid(), 'admin_org'::app_role)
   );
 
-create index idx_nav_events_org_fecha on public.nav_events (organization_id, created_at desc);
+create index if not exists idx_nav_events_org_fecha on public.nav_events (organization_id, created_at desc);

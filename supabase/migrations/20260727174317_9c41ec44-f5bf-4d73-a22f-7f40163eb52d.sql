@@ -373,3 +373,10 @@ BEGIN
     'conceptos', v_conceptos
   );
 END $function$;
+-- H6: blindar SECURITY DEFINER
+revoke all on function public.proveedor_salud(uuid) from public;
+grant execute on function public.proveedor_salud(uuid) to authenticated, service_role;
+revoke all on function public.crear_embarque_borrador_core(uuid) from public;
+grant execute on function public.crear_embarque_borrador_core(uuid) to authenticated, service_role;
+revoke all on function public.portal_obtener_proforma_por_token(uuid) from public;
+grant execute on function public.portal_obtener_proforma_por_token(uuid) to authenticated, service_role;
