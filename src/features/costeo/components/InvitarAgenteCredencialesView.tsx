@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, Check } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useState } from "react";
 
 interface Props {
@@ -24,6 +24,15 @@ export function InvitarAgenteCredencialesView({ email, password, onClose }: Prop
     try {
       await navigator.clipboard.writeText(texto);
       setCopiado(llave);
+      // v13.320.25 · Tanda 3 auditoría toasts: además del cambio de icono,
+      // confirmamos con un toast breve para mantener consistencia con el
+      // resto de acciones "copiar" en la app (tracking naviera, embarque).
+      const etiquetas: Record<string, string> = {
+        email: "Email copiado al portapapeles",
+        password: "Contraseña copiada al portapapeles",
+        ambos: "Credenciales copiadas al portapapeles",
+      };
+      notifySuccess(undefined, { title: etiquetas[llave] ?? "Copiado al portapapeles", duration: 2000 });
       setTimeout(() => setCopiado((c) => (c === llave ? null : c)), 1500);
     } catch {
       notifyError(undefined, { title: "No se pudo copiar al portapapeles" });

@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { MigrarRolesLegacyPreviewTable } from "./MigrarRolesLegacyPreviewTable";
 import { MigrarRolesLegacyResultPanel } from "./MigrarRolesLegacyResultPanel";
 
@@ -87,7 +88,25 @@ export function MigrarRolesLegacyCard() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => preview.refetch()}
+                onClick={async () => {
+                  // v13.320.25 · Tanda 3 auditoría toasts: el refresh manual
+                  // ahora confirma explícitamente éxito/fallo (antes sólo
+                  // dependía del spinner del icono).
+                  const res = await preview.refetch();
+                  if (res.isError) {
+                    notifyError(undefined, {
+                      title: "No se pudo actualizar la vista previa",
+                      error: res.error,
+                      method: "MIGRAR_ROLES_LEGACY_REFETCH",
+                    });
+                  } else {
+                    notifySuccess(undefined, {
+                      title: "Vista previa actualizada",
+                      description: `${res.data?.total_afectados ?? 0} registro(s) por migrar.`,
+                      duration: 2500,
+                    });
+                  }
+                }}
                 disabled={preview.isFetching}
                 aria-label="Refrescar vista previa"
               >
