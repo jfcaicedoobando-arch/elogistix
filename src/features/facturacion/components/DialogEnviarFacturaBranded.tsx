@@ -21,6 +21,7 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/query";
 import { logger } from "@/lib/observability/logger";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 
 type FacturaLite = Pick<
   Tables<"facturas">,
@@ -82,18 +83,23 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
           if (factura.cliente_id) {
             const userEmailLc = user?.email?.toLowerCase();
             const ccPersist = payload.cc.filter((e) => e.toLowerCase() !== userEmailLc);
-            try {
-              await guardarDefaultsCcCliente(factura.cliente_id, ccPersist);
-            } catch (err) {
-              logger.warn("envio-factura", "no se guardaron los CC del cliente:", err);
-            }
             const manualesPersist = payload.destinatarios
               .filter((d) => !d.contacto_id)
               .map((d) => d.email);
-            try {
-              await guardarDefaultsDestinatariosCliente(factura.cliente_id, manualesPersist);
-            } catch (err) {
-              logger.warn("envio-factura", "no se guardaron los destinatarios del cliente:", err);
+            const results = await Promise.allSettled([
+              guardarDefaultsCcCliente(factura.cliente_id, ccPersist),
+              guardarDefaultsDestinatariosCliente(factura.cliente_id, manualesPersist),
+            ]);
+            const failed = results.filter((r) => r.status === "rejected");
+            if (failed.length > 0) {
+              failed.forEach((r) => {
+                if (r.status === "rejected") {
+                  logger.warn("envio-factura", "no se guardó preferencia del cliente:", r.reason);
+                }
+              });
+              notifyWarning(undefined, {
+                title: "Factura enviada, pero no pudimos recordar tus destinatarios para la próxima vez.",
+              });
             }
           }
           onOpenChange(false);

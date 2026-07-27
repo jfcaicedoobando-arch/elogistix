@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.320.26] - 2026-07-27
+- **Fix · Auditoría de toasts en servicios · Hallazgo Alta.** Al enviar una factura branded, si el guardado best-effort de preferencias del cliente (`guardarDefaultsCcCliente` / `guardarDefaultsDestinatariosCliente`) fallaba, solo se registraba `logger.warn` y el usuario no se enteraba: la próxima vez tendría que volver a capturar CC y destinatarios sin saber por qué. Ahora ambas llamadas se ejecutan en paralelo con `Promise.allSettled`; si alguna falla, se emite un único `notifyWarning("Factura enviada, pero no pudimos recordar tus destinatarios para la próxima vez.")`, y cada rechazo sigue registrándose en `logger.warn` para diagnóstico. La factura ya se envió con éxito (toast emitido por `useEnviarFacturaEmail`), así que el warning es informativo, no bloqueante.
+- Analogía: le decías al mesero "la próxima vez tráemelo sin cebolla" y él anotaba, pero si la libreta estaba llena no te avisaba; volvías la siguiente semana y venía con cebolla. Ahora, si no puede anotar tu preferencia, te lo dice al momento aunque el platillo de hoy ya te lo sirvió bien.
+
 ## [13.320.25] - 2026-07-27
 - **Chore · Auditoría de acciones sin toast · Tandas 1-3.** Cierra 8 huecos donde clics de usuario no confirmaban resultado.
   - **Tanda 1 · CSV silenciosos (Alta).** Nuevo helper `src/lib/ui/notifyCsvExport.ts` (`downloadCsvWithFeedback`): si no hay filas → `notifyWarning("Sin datos para exportar")` y no descarga; si hay → descarga + `notifySuccess("CSV descargado · <archivo> · N fila(s)")`. Adoptado en Antigüedad CxC (`CxcAging.tsx`), Antigüedad CxP (`exportarCxpCsv.ts`) y Reconciliación 3 columnas (`ReconciliacionTresColumnas.tsx`). Antes los tres hacían early-return silencioso y el usuario creía que la app estaba rota.
