@@ -41,4 +41,15 @@ describe("crear_embarque_borrador_core · puertos lookup (regresión revalidar t
     const matches = sql.match(/SELECT\s+p\.name\s+INTO\s+v_puerto_[od]/gi) ?? [];
     expect(matches.length).toBeGreaterThanOrEqual(2);
   });
+
+  // v13.320.4: la columna real es `cotizaciones.tipo_contenedor` (text).
+  // `tipo_contenedor_id` nunca existió; bloquear su reintroducción.
+  it("no referencia la columna fantasma `tipo_contenedor_id` de cotizaciones", () => {
+    expect(sql).not.toMatch(/\bv_cot\.tipo_contenedor_id\b/);
+    expect(sql).not.toMatch(/\bcotizaciones\.tipo_contenedor_id\b/);
+  });
+
+  it("usa la columna real `v_cot.tipo_contenedor` para resolver el código de contenedor", () => {
+    expect(sql).toMatch(/v_tipo_cont_code\s*:=\s*v_cot\.tipo_contenedor\b/);
+  });
 });

@@ -46,7 +46,6 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_NO_ENCONTRADA: cotización % no existe', p_cotizacion_id USING ERRCODE = 'P0002';
   END IF;
 
-  -- FIX-21: rechazar cotizaciones borradas (soft delete).
   IF v_cot.deleted_at IS NOT NULL THEN
     RAISE EXCEPTION 'LC_COT_ELIMINADA: la cotización % está eliminada', p_cotizacion_id USING ERRCODE = 'P0001';
   END IF;
@@ -62,8 +61,6 @@ BEGIN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo admin u operador pueden crear el borrador' USING ERRCODE = '42501';
   END IF;
 
-  -- FIX-21: aceptar 'Aceptada' y 'En operación' (esta última implica que ya
-  -- hay un embarque; el bloque de idempotencia devuelve el existente).
   IF v_cot.estado NOT IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion) THEN
     RAISE EXCEPTION 'LC_COT_ESTADO_INVALIDO: la cotización debe estar Aceptada o En operación (actual: %)', v_cot.estado USING ERRCODE = 'P0001';
   END IF;
@@ -72,10 +69,7 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
 
-  -- Idempotencia (link directo): la cotización ya apunta a un embarque.
   IF v_cot.embarque_id IS NOT NULL THEN
-    -- Sólo devolver si el embarque sigue vivo; si fue eliminado, se limpia el link
-    -- y se crea uno nuevo (permite re-generar tras borrar).
     SELECT id INTO v_orphan_id FROM public.embarques WHERE id = v_cot.embarque_id AND deleted_at IS NULL;
     IF FOUND THEN
       RETURN v_orphan_id;
@@ -83,8 +77,6 @@ BEGIN
     UPDATE public.cotizaciones SET embarque_id = NULL WHERE id = v_cot.id;
   END IF;
 
-  -- FIX-21: idempotencia extendida — embarque huérfano (con cotizacion_id
-  -- pero sin link inverso). Devolverlo en vez de duplicar.
   SELECT id INTO v_orphan_id
   FROM public.embarques
   WHERE cotizacion_id = v_cot.id AND deleted_at IS NULL
@@ -93,9 +85,6 @@ BEGIN
   IF v_orphan_id IS NOT NULL THEN
     RETURN v_orphan_id;
   END IF;
-
-  -- v13.303.42: no reservar expediente aquí. Se asigna en avanzar_estado_embarque
-  -- cuando el borrador pasa a Confirmado.
 
   v_origen_code := COALESCE(
     NULLIF(substring(v_cot.origen  FROM '\(([^)]+)\)'), ''),
@@ -108,9 +97,6 @@ BEGIN
     NULL
   );
 
-  -- v13.319.3: resolver nombre legible de puerto usando puertos.code → puertos.name.
-  -- Regresión bloqueante si estas columnas se renombran (ver test
-  -- src/__tests__/architecture/revalidar-tarifa-puertos-lookup.test.ts).
   IF v_origen_code IS NOT NULL THEN
     SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.code = v_origen_code LIMIT 1;
   END IF;
@@ -131,6 +117,9 @@ BEGIN
     v_puerto_d := COALESCE(v_puerto_d, v_destino_code);
   END IF;
 
+  -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
+  -- La versión viva anterior referenciaba `v_cot.tipo_contenedor_id`, columna que
+  -- nunca existió en la tabla y hacía fallar toda la revalidación de tarifa.
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
@@ -207,7 +196,6 @@ BEGIN
     v_cot.id, v_embarque_id, v_cot.organization_id, v_target_ids, v_cot.conceptos_venta
   );
 
-
   UPDATE public.cotizaciones
   SET embarque_id = v_embarque_id, estado = 'En operación'::estado_cotizacion, updated_at = now()
   WHERE id = v_cot.id;
@@ -230,5 +218,4 @@ BEGIN
 
   RETURN v_embarque_id;
 END;
-$function$
- name:crear_embarque_borrador_core schema:public;
+$function$;
