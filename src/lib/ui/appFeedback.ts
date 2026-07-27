@@ -137,7 +137,7 @@ export function notifyInfo(
     ?? (shouldAttachDetails(opts)
       ? buildDetailsAction({ ...opts, titleFinal: opts.title })
       : undefined);
-  sonnerToast(opts.title, {
+  sonnerToast.info(opts.title, {
     description: opts.description,
     duration: opts.persistent ? Infinity : opts.duration,
     id: opts.id,
