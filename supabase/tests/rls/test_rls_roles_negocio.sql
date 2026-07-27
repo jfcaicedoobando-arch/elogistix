@@ -92,7 +92,7 @@ BEGIN
 
   INSERT INTO public.cobranza_seguimiento(id, organization_id, factura_id, tipo, fecha) VALUES
     (seg_a, org_a, fac_a, 'llamada', CURRENT_DATE),
-    (seg_b, org_b, fac_b, 'email',   CURRENT_DATE);
+    (seg_b, org_b, fac_b, 'recordatorio_email', CURRENT_DATE);
 
   -- ════════════════════════════════════════════════════════════════════════
   -- VENDEDOR (org_a) — nunca ve otra org

@@ -97,7 +97,7 @@ BEGIN
   -- ── TEST 2: cobranza_seguimiento ──
   INSERT INTO public.cobranza_seguimiento(id, organization_id, factura_id, tipo, fecha) VALUES
     (seg_a, org_a, fac_a, 'llamada', CURRENT_DATE),
-    (seg_b, org_b, fac_b, 'email',   CURRENT_DATE);
+    (seg_b, org_b, fac_b, 'recordatorio_email', CURRENT_DATE);
 
   PERFORM pg_temp.as_user(user_a);
   SELECT count(*) INTO visible FROM public.cobranza_seguimiento WHERE id IN (seg_a, seg_b);
