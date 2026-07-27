@@ -1,11 +1,12 @@
 -- Canonical schema para public.proveedor_salud
 -- Sincronizado en 13.320.2 (audit RPC columns).
 --
--- Fix: antes intentaba usar `embarques.agente_origen_id` y `agente_destino_id`
--- (columnas inexistentes) protegido por `EXCEPTION WHEN undefined_column`, lo
--- que devolvía `embarques_activos = 0` en silencio. Ahora usa la columna real
--- `embarques.agente_id` y sin `EXCEPTION`, para que cualquier regresión falle
--- ruidosamente en vez de mentir el KPI.
+-- Fix: antes se intentaba filtrar por dos columnas inexistentes en
+-- `embarques` (variantes "origen"/"destino" de agente) protegido por
+-- `EXCEPTION WHEN undefined_column`, lo que devolvía `embarques_activos = 0`
+-- en silencio. Ahora usa la columna real `embarques.agente_id` y sin
+-- `EXCEPTION`, para que cualquier regresión falle ruidosamente en vez de
+-- mentir el KPI.
 CREATE OR REPLACE FUNCTION public.proveedor_salud(p_proveedor_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
