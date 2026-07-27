@@ -71,7 +71,7 @@ describe("useRegistrarPagoSubmit", () => {
       entidad_id: "fac-1",
       entidad_nombre: expect.stringContaining("MXN 1000"),
     }));
-    expect(notifySuccess).toHaveBeenCalledWith(expect.anything(), { title: "Pago registrado" });
+    expect(notifySuccess).toHaveBeenCalledWith(undefined, { title: "Pago registrado" });
     expect(emitirRep).not.toHaveBeenCalled();
     expect(onSuccess).toHaveBeenCalledTimes(1);
   });
@@ -88,7 +88,7 @@ describe("useRegistrarPagoSubmit", () => {
 
     expect(emitirRep).toHaveBeenCalledWith("pago-2");
     expect(notifySuccess).toHaveBeenCalledTimes(2);
-    expect(notifySuccess).toHaveBeenNthCalledWith(2, expect.anything(), expect.objectContaining({ title: "REP timbrado" }));
+    expect(notifySuccess).toHaveBeenNthCalledWith(2, undefined, expect.objectContaining({ title: "REP timbrado" }));
     expect(onSuccess).toHaveBeenCalled();
     expect(result.current.timbrandoRep).toBe(false);
   });
@@ -103,7 +103,7 @@ describe("useRegistrarPagoSubmit", () => {
       await result.current.submit({ ...baseArgs, esPpdTimbrada: true });
     });
 
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
       title: "Pago registrado, pero el REP falló",
       description: expect.stringContaining("SAT down"),
     }));
@@ -133,7 +133,7 @@ describe("useRegistrarPagoSubmit", () => {
       await result.current.submit(baseArgs);
     });
 
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
       title: "Error al registrar pago",
       description: expect.stringContaining("Saldo inválido"),
     }));

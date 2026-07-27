@@ -53,7 +53,7 @@ describe("useCargaCfdi", () => {
     const { result } = renderHook(() => useCargaCfdi({ categorias, onParsed }));
     act(() => result.current.handleXml(new File(["x"], "foo.txt")));
     expect(result.current.xml).toBeNull();
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
       title: expect.stringMatching(/\.xml/i),
     }));
   });
@@ -62,7 +62,7 @@ describe("useCargaCfdi", () => {
     const { result } = renderHook(() => useCargaCfdi({ categorias, onParsed }));
     act(() => result.current.handleXml(makeXml(2 * 1024 * 1024 + 1)));
     expect(result.current.xml).toBeNull();
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
       title: expect.stringMatching(/2 MB/),
     }));
   });
@@ -117,7 +117,7 @@ describe("useCargaCfdi", () => {
     const { result } = renderHook(() => useCargaCfdi({ categorias, onParsed }));
     act(() => result.current.handleXml(makeXml(10)));
     await act(async () => { await result.current.procesar(); });
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
       title: expect.stringMatching(/HTTP 502/),
     }));
     expect(onParsed).not.toHaveBeenCalled();
@@ -135,7 +135,7 @@ describe("useCargaCfdi", () => {
     const { result } = renderHook(() => useCargaCfdi({ categorias, onParsed }));
     act(() => result.current.handleXml(makeXml(10)));
     await act(async () => { await result.current.procesar(); });
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
       title: expect.stringMatching(/Sin conexión/i),
     }));
   });
@@ -151,7 +151,7 @@ describe("useCargaCfdi", () => {
       vi.advanceTimersByTime(15_001);
       await pending!;
     });
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
       title: expect.stringMatching(/Tiempo de espera/i),
     }));
     expect(result.current.loading).toBe(false);

@@ -76,7 +76,7 @@ describe("useCotizacionWizardSteps", () => {
     });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), { title: "Falta cliente" });
+    expect(notifyError).toHaveBeenCalledWith(undefined, { title: "Falta cliente" });
     expect(savePaso1).not.toHaveBeenCalled();
   });
 
@@ -145,7 +145,7 @@ describe("useCotizacionWizardSteps", () => {
     const { deps } = makeDeps({ currentStep: 3, cotizacionId: "cot-1" });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), { title: "Agrega al menos un concepto de venta" });
+    expect(notifyError).toHaveBeenCalledWith(undefined, { title: "Agrega al menos un concepto de venta" });
     expect(savePaso3).not.toHaveBeenCalled();
   });
 
