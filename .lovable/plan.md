@@ -1,51 +1,53 @@
-# Plan: Reparar suite RLS `storage_objects`
+## Bug
 
-## Analogía
-Es como probar la cerradura del casillero pero sin haber puesto tu chaqueta adentro: el guardia (RLS) no te deja pasar porque no encuentra tu nombre en la lista de dueños — no porque la cerradura falle, sino porque falta registrar el objeto en la tabla de dominio.
-
-## Diagnóstico confirmado
-La suite `RLS suite — storage_objects` es la única que falla en CI (línea 64 del test):
+Al editar el embarque `ELIMP00342`, la BD rechaza el UPDATE con:
 
 ```
-ERROR: RLS TEST FAIL: user_a (control) sí debe ver su objeto en org_a
+23514 — new row for relation "embarques" violates check constraint "embarques_tc_eur_pos"
 ```
 
-Las otras cuatro suites (`isolation`, `anon_deny_all`, `roles_no_admin`, `financiero`) pasaron.
+## Causa raíz (verificada)
 
-**Causa raíz.** La política `Tenant scoped read documentos` (bucket `documentos`) exige `EXISTS` contra `documentos_embarque JOIN embarques`:
+- El constraint en la BD es `CHECK (tipo_cambio_eur > 0)` (y su hermano `embarques_tc_usd_pos`). Un `NULL` está permitido; un `0` no.
+- El mapper `src/features/embarques/domain/mappers/embarqueToDb.ts:105-112` hace:
+  ```ts
+  tipo_cambio_usd: Number(v.tipoCambioUSD),
+  tipo_cambio_eur: Number(v.tipoCambioEUR),
+  ```
+  Cuando el usuario no captura EUR (embarque en USD, como este de Vietnam→Ensenada), `v.tipoCambioEUR` llega como `""` / `undefined`, y `Number("")` = `0`. Ese `0` es lo que la BD rechaza.
 
-```sql
-EXISTS (
-  SELECT 1 FROM documentos_embarque d JOIN embarques e ON e.id = d.embarque_id
-  WHERE d.archivo = objects.name
-    AND d.organization_id = current_user_org_id()
-    AND e.organization_id = current_user_org_id()
-)
+Analogía: el formulario está dejando el campo "tipo de cambio euro" en blanco, pero el mapper lo traduce como "cero pesos por euro" — un valor imposible que la báscula de la base rechaza. Hay que traducir el blanco como "no aplica" (NULL), no como "cero".
+
+## Cambio
+
+Un único archivo, en la capa de mapeo (presentación → BD):
+
+**`src/features/embarques/domain/mappers/embarqueToDb.ts`** — reemplazar `partesFinancieras` para que `tipo_cambio_usd` y `tipo_cambio_eur` sean `null` cuando el valor no sea un número finito estrictamente positivo. Regla explícita:
+
+```ts
+const tcOrNull = (raw: unknown): number | null => {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
 ```
 
-El test siembra sólo `storage.objects` con path `org_a/emb-a/doc.pdf`, sin fila en `documentos_embarque` ni en `embarques`. Por eso el `EXISTS` retorna falso incluso para el dueño → `count = 0` → aserción de control falla.
+Aplicado a ambas monedas. Esto respeta el constraint (`NULL` permitido, `>0` permitido, `0`/`NaN`/`""` → `NULL`).
 
-Esta es la regla que documenta el memoria `Storage RLS Paths`: la validación de tenancy va vía EXISTS a la tabla de dominio, no por prefijo de carpeta. La suite quedó desalineada.
+## Versionado y changelog
 
-## Cambios
+- Bump `APP_VERSION` a `13.320.18` en `src/constants/appVersion.ts`.
+- Entrada en `CHANGELOG.md` explicando el fix.
 
-### 1. `supabase/tests/rls/test_rls_storage_objects.sql`
-Antes de sembrar los objetos en storage, insertar en las tablas de dominio para que las policies encuentren el vínculo. Cambios acotados dentro del `DO $$`:
+## Verificación
 
-- Declarar `emb_a uuid`, `emb_b uuid`.
-- Insertar dos filas en `public.embarques` (uno para cada org) con los mínimos requeridos por NOT NULL (organization_id, expediente, cliente_nombre — inspecciono el schema primero).
-- Insertar dos filas en `public.documentos_embarque` con `archivo = path_a` / `path_b`, `organization_id` correspondiente, `embarque_id` correspondiente.
-- Mantener el resto del test intacto (los 3 asserts).
-
-Si el esquema de `embarques` tiene NOT NULLs adicionales o triggers de negocio (autogeneración de expediente, validaciones de fecha), esos también deben cumplirse. Voy a leer `information_schema` para `embarques` y `documentos_embarque` antes de escribir la migración de fixtures.
-
-### 2. Test alternativo si el fixture es inviable
-Si sembrar `embarques` explota por triggers complicados (por ejemplo `_audit_embarques_agregar`, generación de folio), la alternativa mínima es reducir el test a que el owner **postgres/service_role** vea el objeto y verificar sólo la denegación cruzada de `user_b`. Esto degrada la cobertura, así que primero intento el fixture completo.
-
-### 3. Versionado
-- `APP_VERSION` → `13.320.17`.
-- Entrada en `CHANGELOG.md` bajo Fixed: descripción del fixture y la razón (política EXISTS contra tabla de dominio).
+- Test unitario nuevo en `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` (o `embarqueRoundtrip.test.ts` si ya cubre el caso) que valide:
+  - `tipoCambioEUR: ""` → `tipo_cambio_eur: null`
+  - `tipoCambioEUR: "0"` → `tipo_cambio_eur: null`
+  - `tipoCambioEUR: "19.87"` → `tipo_cambio_eur: 19.87`
+- Correr `bun run test -- embarqueToDb` para confirmar.
 
 ## Fuera de alcance
-- No cambiar las políticas de `storage.objects`. Son correctas: exigir vínculo a tabla de dominio es la postura de seguridad deseada (referida en `mem://technical/storage-rls-paths`).
-- No tocar las otras 4 suites RLS ni el workflow de CI.
+
+- No se toca el constraint (`> 0` es la regla correcta del negocio).
+- No se toca el formulario ni el schema Zod — el fix es en la frontera de serialización, que es donde nace el `0` fantasma.
+- No se re-guardan embarques históricos: los que ya persistieron un tipo de cambio válido se quedan igual; los que fallaban al guardar volverán a funcionar en el próximo Save.
