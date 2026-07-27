@@ -52,8 +52,7 @@ export async function persistirConceptosCfdiSafe(params: {
       conceptos: params.conceptos,
     });
   } catch (e) {
-    const err = e as { message?: string };
-    toast.warning(`Factura guardada pero no se registraron los conceptos del XML: ${err.message ?? "error"}`);
+    notifyBestEffortFallo("Factura guardada pero no se registraron los conceptos del XML", e);
   }
 }
 
