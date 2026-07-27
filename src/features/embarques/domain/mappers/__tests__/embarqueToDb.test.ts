@@ -79,6 +79,29 @@ describe("buildEmbarquePayload (toDb)", () => {
   it("rechaza incoterm inválido", () => {
     expect(() => buildEmbarquePayload({ ...baseValues, incoterm: "XXX" }, contactos, "X", "op")).toThrow();
   });
+
+  it("convierte tipos de cambio vacíos, 0 o NaN a null (respetando CHECK > 0)", () => {
+    const p1 = buildEmbarquePayload(
+      { ...baseValues, tipoCambioUSD: "" as never, tipoCambioEUR: "" as never },
+      contactos, "X", "op",
+    );
+    expect(p1.tipo_cambio_usd).toBeNull();
+    expect(p1.tipo_cambio_eur).toBeNull();
+
+    const p2 = buildEmbarquePayload(
+      { ...baseValues, tipoCambioUSD: "0" as never, tipoCambioEUR: "0" as never },
+      contactos, "X", "op",
+    );
+    expect(p2.tipo_cambio_usd).toBeNull();
+    expect(p2.tipo_cambio_eur).toBeNull();
+
+    const p3 = buildEmbarquePayload(
+      { ...baseValues, tipoCambioUSD: "17.46" as never, tipoCambioEUR: "19.87" as never },
+      contactos, "X", "op",
+    );
+    expect(p3.tipo_cambio_usd).toBe(17.46);
+    expect(p3.tipo_cambio_eur).toBe(19.87);
+  });
 });
 
 describe("buildConceptosVentaPayload (toDb)", () => {
