@@ -45,11 +45,11 @@ export function useProgramarPagoLote() {
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
 
       if (fallos.length === 0) {
-        notifySuccess(toast, {
+        notifySuccess(undefined, {
           title: `${exitos.length} factura(s) programada(s) para ${fecha}`,
         });
       } else {
-        notifyWarning(toast, {
+        notifyWarning(undefined, {
           title: `${exitos.length} programada(s), ${fallos.length} con error`,
           description: "Revisa las facturas que fallaron para reintentar manualmente.",
         });
