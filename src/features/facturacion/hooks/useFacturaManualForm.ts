@@ -54,7 +54,7 @@ function useFaltantesTimbrar(
   );
 }
 
-export function useFacturaManualForm(open: boolean) {
+export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const { organizationId } = useAuth();
   const tasaIva = useTasaIVA();
   const crear = useCrearFacturaManual();
@@ -129,7 +129,7 @@ export function useFacturaManualForm(open: boolean) {
   const ejecutarSubmit = (timbrarAlGuardar: boolean) => {
     const payload = buildInput();
     if (!payload) return;
-    crear.mutate({ input: payload.input, timbrarAlGuardar }, { onSuccess: () => { reset(); } });
+    crear.mutate({ input: payload.input, timbrarAlGuardar }, { onSuccess: () => { reset(); onClose?.(); } });
   };
 
   const handleSubmit = async (timbrarAlGuardar: boolean) => {
