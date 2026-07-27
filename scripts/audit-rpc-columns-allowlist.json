@@ -1,0 +1,11 @@
+{
+  "$schema": "./audit-rpc-columns-allowlist.schema.json",
+  "note": "Hallazgos preexistentes detectados por scripts/audit-rpc-columns.ts. Cada entrada es una referencia [function|view] <nombre> <alias>.<columna> que apunta a una columna inexistente. Al arreglar la RPC/vista, eliminar la entrada correspondiente. El script NO fallará CI mientras la entrada esté aquí, pero SÍ fallará ante cualquier nueva regresión.",
+  "allow": [
+    "function:proveedor_salud:e.agente_origen_id",
+    "function:proveedor_salud:e.agente_destino_id",
+    "function:auditoria_embarques_org:d.doc_nombre",
+    "function:crear_embarque_borrador_core:tc.codigo",
+    "function:portal_obtener_proforma_por_token:pcc.importe"
+  ]
+}

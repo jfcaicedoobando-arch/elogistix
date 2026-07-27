@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.319.4] - 2026-07-27
+- **chore · Nuevo barrido automatizado `audit:rpc-columns` para cazar columnas fantasma en RPCs/vistas.** Analogía: un detector de metales que camina por todas las recetas de la cocina (funciones y vistas de la BD) y avisa cuando alguien intenta sacar un ingrediente que no está en la despensa (columna inexistente). Escanea las 313 funciones/vistas de `public`, resuelve aliases de `FROM`/`JOIN`, y valida cada `alias.columna` contra `information_schema.columns`. Incluye allow-list (`scripts/audit-rpc-columns-allowlist.json`) tipo ratchet: los hallazgos preexistentes no rompen CI, pero cualquier regresión nueva sí lo hace. Registrado en `bun run audit:rpc-columns` y en `audit:all`. **Hallazgos detectados (5, sembrados en allow-list para fix posterior):**
+  - `proveedor_salud`: usa `e.agente_origen_id` / `e.agente_destino_id` (embarques sólo tiene `agente_id`).
+  - `auditoria_embarques_org`: usa `d.doc_nombre` (documentos_embarque tiene `nombre`).
+  - `crear_embarque_borrador_core`: usa `tc.codigo` (tipos_contenedor tiene `code`).
+  - `portal_obtener_proforma_por_token`: usa `pcc.importe` (proforma_conceptos_consolidados tiene `total`/`precio_unitario`).
+
 ## [13.319.3] - 2026-07-27
 - **fix · Revalidar tarifa ya no truena con `column p.nombre does not exist`.** Analogía: ayer arreglamos la puerta (leer `origen`/`destino` de cotizaciones) pero pusimos la manija con los tornillos equivocados — buscábamos `puertos.unlocode` y `puertos.nombre`, cuando esa tabla tiene `code` y `name`. La RPC `crear_embarque_borrador_core` ahora consulta `SELECT p.name FROM public.puertos p WHERE p.code = ...`. Auditoría: revisamos las otras funciones que usaban `p.nombre` (`busqueda_global`, `proveedores_listado`) y ahí `p` es alias de `proveedores` (que sí tiene `nombre`) — falsos positivos, no requieren cambios.
 
