@@ -23,6 +23,7 @@ import type { CxcAgingRow } from "@/features/cxc/services/cxcAging";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { todayLocalISO } from "@/lib/date/today";
+import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
 
 function KpiBucket({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "warn" | "danger" }) {
@@ -41,22 +42,19 @@ function KpiBucket({ label, value, tone = "default" }: { label: string; value: n
 }
 
 function exportarCsv(rows: readonly CxcAgingRow[]) {
-  if (!rows || rows.length === 0) return;
   const headers = ["Cliente", "Facturas", "Vigente", "1-30", "31-60", "61-90", ">90", "Total"];
-  const lines = rows.map((r) =>
+  const lines = (rows ?? []).map((r) =>
     [
       `"${r.cliente_nombre.replace(/"/g, '""')}"`,
       r.num_facturas, r.vigente, r.d_1_30, r.d_31_60, r.d_61_90, r.mas_90, r.saldo_total,
     ].join(","),
   );
-  const csv = [headers.join(","), ...lines].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `aging-cxc-${todayLocalISO()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadCsvWithFeedback({
+    filename: `aging-cxc-${todayLocalISO()}.csv`,
+    csv: [headers.join(","), ...lines].join("\n"),
+    rowCount: rows?.length ?? 0,
+    emptyWarning: { description: "No hay saldos de clientes para exportar con los filtros actuales." },
+  });
 }
 
 interface Filters extends Record<string, string> { cubeta: string }
