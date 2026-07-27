@@ -205,3 +205,46 @@ export function wrapEdgeHandler(
     }
   };
 }
+
+/**
+ * 13.320.0 (audit Sentry Batch 1.a) — Sentry Crons Monitoring.
+ *
+ * Envuelve un handler de edge function programado (cron / pg_cron) con
+ * check-ins de Sentry Crons. Si el job no manda check-in en la ventana
+ * esperada, Sentry dispara una alerta "missed check-in".
+ *
+ * Opt-in por función vía env `SENTRY_CRON_MONITOR_SLUG` — si no está seteada,
+ * el wrapper se comporta idéntico a `wrapEdgeHandler` (no-op de monitoreo).
+ *
+ * Uso típico:
+ *   Deno.serve(withCronMonitor("rep-retry-nocturno", "rep-retry-nocturno", handler, {
+ *     schedule: { type: "crontab", value: "0 12 * * *" },
+ *     checkinMargin: 5,   // minutos
+ *     maxRuntime: 30,     // minutos
+ *   }));
+ */
+export interface CronMonitorConfig {
+  schedule: { type: "crontab"; value: string } | { type: "interval"; value: number; unit: "minute" | "hour" | "day" };
+  checkinMargin?: number;
+  maxRuntime?: number;
+  timezone?: string;
+}
+
+export function withCronMonitor(
+  fnName: string,
+  monitorSlug: string,
+  handler: (req: Request) => Promise<Response> | Response,
+  monitorConfig: CronMonitorConfig,
+): (req: Request) => Promise<Response> {
+  initSentryEdge(fnName);
+  const wrapped = wrapEdgeHandler(fnName, handler);
+  return async (req: Request): Promise<Response> => {
+    if (!DSN) return wrapped(req);
+    const Sentry = await loadSentry();
+    if (!Sentry) return wrapped(req);
+    // `withMonitor` maneja check-in de inicio, éxito y error automáticamente.
+    return await (Sentry as unknown as {
+      withMonitor: <T>(slug: string, cb: () => Promise<T>, cfg: CronMonitorConfig) => Promise<T>;
+    }).withMonitor(monitorSlug, () => Promise.resolve(wrapped(req)), monitorConfig);
+  };
+}
