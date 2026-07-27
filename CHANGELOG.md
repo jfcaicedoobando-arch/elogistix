@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.320.1] - 2026-07-27
+- **chore · Auditoría Sentry · Batches 2, 3 y 4.** Analogía: si Batch 1 le puso etiquetas más finas al detector de humo, este cierre le conecta la cámara del pasillo con la del garaje (traza continua), sube un poquito la grabación en vivo (replays al 2%) y deja el manual de operación pegado en la pared (runbook).
+  - **Batch 2 · Trace continuity front → edge.** `wrapEdgeHandler` en `supabase/functions/_shared/sentry.ts` ahora lee `sentry-trace` + `baggage` del request y llama a `Sentry.continueTrace(...)` cuando existen. El span del edge cuelga como hijo de la transaction del navegador, así en Sentry Performance ves una sola cadena "click en botón → fetch → RPC → error". Backward-compatible: sin DSN o sin headers, es idéntico al comportamiento previo. `corsHeaders` ya permitía ambos headers (v13.114.13).
+  - **Batch 3 · Session Replay al 2%.** `replaysSessionSampleRate` default sube de `0` → `0.02` en `sentry/core.ts`. Cubierto por `maskAllText`, `maskAllInputs`, `blockAllMedia` (v13.310.0) para blindaje PII. Override por env `VITE_SENTRY_REPLAYS_SESSION_RATE` si algún ambiente necesita apagarlo.
+  - **Batch 4 · Runbook de gobierno.** Nuevo `docs/sentry-runbook.md`: 10 secciones (piezas, envs, envolturas obligatorias, trazas, PII, fingerprint, tags, rotación de DSN, checklist al agregar código nuevo, referencias). Fuente de la verdad para on-call y para auditorías futuras.
+
 ## [13.320.0] - 2026-07-27
 - **chore · Auditoría Sentry · Batch 1 (alta señal, bajo riesgo).** Analogía: le pusimos etiquetas más finas al detector de humo — ahora sabemos si el humo viene de la cocina o del garaje (auth vs. anon), agrupamos los "mismo humo, misma causa" en un solo aviso (fingerprint Postgres), y le dejamos listo un checador de asistencia para los jobs nocturnos (cron monitor).
   - **1.a Sentry Crons opt-in en edge functions.** Nuevo helper `withCronMonitor(fnName, monitorSlug, handler, { schedule, checkinMargin, maxRuntime })` en `supabase/functions/_shared/sentry.ts`. Si Sentry no está configurado, se comporta como `wrapEdgeHandler` (no-op). Cuando lo cableemos a un job programado, Sentry alerta automático si el check-in no llega en la ventana esperada.
