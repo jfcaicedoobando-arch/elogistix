@@ -734,7 +734,7 @@ export default tseslint.config(
       "src/features/cxp/hooks/useCargaPdfIa.ts",
       "src/features/cxp/hooks/useCerrarFacturaSinPago.ts",
       "src/features/cxp/hooks/useEditarFacturaProveedorForm.ts",
-      "src/features/cxp/hooks/useNuevaFacturaProveedorForm.sideEffects.ts",
+      
       "src/features/cxp/hooks/useNuevaFacturaProveedorForm.submit.ts",
       "src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts",
       "src/features/cxp/hooks/useProgramarPagoProveedor.ts",
