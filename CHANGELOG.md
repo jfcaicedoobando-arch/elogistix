@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.319.6] - 2026-07-27
+- **test · Regresión bloqueante: revalidar tarifa consulta `puertos.code` y `puertos.name`.** Analogía: pusimos un candado a la manija correcta de la puerta — si alguien mañana renombra los tornillos (columnas), la prueba salta antes de que la puerta se caiga en producción. Nuevo test `src/__tests__/architecture/revalidar-tarifa-puertos-lookup.test.ts` (4 aserciones) que lee el schema canónico `supabase/schema/embarques/crear_embarque_borrador_core.sql` y verifica: (1) hay `FROM public.puertos p ... WHERE p.code =`, (2) hay `SELECT p.name INTO v_puerto_[od]` para origen **y** destino, (3) no hay referencias a columnas legacy inexistentes (`p.nombre`, `p.unlocode`). También sincronicé el schema canónico con la definición real de la BD (el fix v13.319.3 vivía sólo en DB — ahora quedó en el repo).
+
 ## [13.319.5] - 2026-07-27
 - **fix · UX: revalidación de tarifa maneja errores de esquema sin ruido.** Analogía: si el timbre de la casa está mal cableado, ya no dejamos que el visitante lo pique 20 veces seguidas — apagamos el botón, ponemos un letrero "no funciona, ya avisamos al electricista" y evitamos que la alarma (Sentry) suene idéntica cada segundo. `CrearEmbarqueConRevalidacion` ahora:
   - Detecta errores de contrato BD (`column X does not exist`, `has no field`, `structure of query does not match function result type`, `relation does not exist`) y muestra un toast claro: "bug de sistema — avisa a soporte con el ID de la cotización, no reintentes".
