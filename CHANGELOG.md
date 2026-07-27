@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.320.4] - 2026-07-27
+- **fix · Revalidar tarifa fallaba con `record "v_cot" has no field "tipo_contenedor_id"`.** Analogía: el manual (repo) decía "conectar el cable rojo" pero el técnico había conectado el azul en la instalación real — cada quien seguro de tener razón y el foco sin prender. La función viva `crear_embarque_borrador_core` en BD referenciaba `v_cot.tipo_contenedor_id` (columna fantasma que nunca existió en `cotizaciones`), mientras que el archivo canónico del repo ya usaba la columna real `tipo_contenedor` (text). Se re-sincronizó la función viva con el canónico vía `CREATE OR REPLACE`, manteniendo `SECURITY DEFINER`, `search_path=public` y el blindaje `REVOKE ALL FROM PUBLIC` + `GRANT EXECUTE TO authenticated, service_role`.
+- **regresión**: `src/__tests__/architecture/revalidar-tarifa-puertos-lookup.test.ts` amplió 2 aserciones que prohíben la cadena `tipo_contenedor_id` y exigen el uso de `v_cot.tipo_contenedor`.
+
 ## [13.320.3] - 2026-07-27
 - **fix · CI `audit:migrations` verde (H4 + H6).** Analogía: tres puertas quedaron sin cerradura reglamentaria — la casa funciona, pero el inspector las marca hasta que atornillamos la manija correcta. Sin cambio funcional.
   - **H4 · `nav_events` (Sidebar 3.0)**: agregado `IF NOT EXISTS` al índice `idx_nav_events_org_fecha` y `DROP POLICY IF EXISTS` previo a las dos policies (`insert own org`, `read admin`). Idempotente ante replays.

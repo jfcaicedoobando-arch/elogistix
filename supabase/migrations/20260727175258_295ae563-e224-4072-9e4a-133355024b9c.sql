@@ -1,6 +1,6 @@
--- Fuente canónica de public.crear_embarque_borrador_core
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+-- Resync live crear_embarque_borrador_core con archivo canónico
+-- Bug: la versión viva usaba v_cot.tipo_contenedor_id (columna inexistente).
+-- El canónico usa v_cot.tipo_contenedor (text) con detección de UUID.
 
 CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid)
  RETURNS uuid
@@ -118,7 +118,7 @@ BEGIN
   END IF;
 
   -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
-  -- La versión viva anterior referenciaba una columna fantasma con sufijo _id que
+  -- La versión viva anterior referenciaba `v_cot.tipo_contenedor_id`, columna que
   -- nunca existió en la tabla y hacía fallar toda la revalidación de tarifa.
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
@@ -219,3 +219,6 @@ BEGIN
   RETURN v_embarque_id;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.crear_embarque_borrador_core(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_borrador_core(uuid) TO authenticated, service_role;
