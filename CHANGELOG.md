@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.10] - 2026-07-27
+- **chore · Auditoría y mejora de `scripts/ci-fast.sh`.** Ahora tiene paridad opcional con el workflow de CI (`--parity`), fail-fast al primer error, `trap` que mata a los hijos si cancelás con Ctrl+C, duración por tarea, resumen en orden estable, selección `--only/--skip`, preflight (`bun` + `node_modules`) y logs en `.ci-fast-logs/` (auto-limpiados en verde). Analogía: antes era una cocina donde si se quemaba una olla el resto seguía cocinando y no sabías cuál había fallado primero; ahora, al primer humo, apagás todas las hornillas y el reporte final te dice qué olla, cuánto tardó y dónde está su receta.
+
 ## [13.320.9] - 2026-07-27
 - **fix · Literal de color legacy en `CrearEmbarqueConRevalidacion.tsx`.** Reemplazado `text-amber-600` por token semántico `text-warning`. Analogía: usábamos pintura genérica; ahora usamos la del catálogo oficial.
 
