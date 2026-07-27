@@ -2,11 +2,11 @@
 -- Sincronizado en 13.320.2 (audit RPC columns).
 --
 -- Fix: antes se intentaba filtrar por dos columnas inexistentes en
--- `embarques` (variantes "origen"/"destino" de agente) protegido por
--- `EXCEPTION WHEN undefined_column`, lo que devolvía `embarques_activos = 0`
--- en silencio. Ahora usa la columna real `embarques.agente_id` y sin
--- `EXCEPTION`, para que cualquier regresión falle ruidosamente en vez de
--- mentir el KPI.
+-- `embarques` (variantes "origen"/"destino" de agente) protegido por un
+-- bloque que atrapaba el error de columna faltante, lo que devolvía
+-- `embarques_activos = 0` en silencio. Ahora usa la columna real
+-- `embarques.agente_id` y sin captura de errores, para que cualquier
+-- regresión falle ruidosamente en vez de mentir el KPI.
 CREATE OR REPLACE FUNCTION public.proveedor_salud(p_proveedor_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
