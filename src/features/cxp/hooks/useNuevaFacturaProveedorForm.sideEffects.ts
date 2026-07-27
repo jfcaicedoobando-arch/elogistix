@@ -70,8 +70,7 @@ export async function uploadCfdiSafe(params: {
       pdfFile: params.pendingCfdi.pdfFile,
     });
   } catch (uploadErr) {
-    const err = uploadErr as { message?: string };
-    toast.warning(`Factura guardada pero el XML/PDF falló: ${err.message ?? "error"}`);
+    notifyBestEffortFallo("Factura guardada pero el XML/PDF falló", uploadErr);
   }
 }
 
