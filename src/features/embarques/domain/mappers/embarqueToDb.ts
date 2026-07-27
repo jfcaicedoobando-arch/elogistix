@@ -102,12 +102,17 @@ function partesTerrestre(v: EmbarqueFormValues) {
   };
 }
 
+const tcOrNull = (raw: unknown): number | null => {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
 function partesFinancieras(v: EmbarqueFormValues) {
   return {
     etd: emptyToNull(v.etd),
     eta: emptyToNull(v.eta),
-    tipo_cambio_usd: Number(v.tipoCambioUSD),
-    tipo_cambio_eur: Number(v.tipoCambioEUR),
+    tipo_cambio_usd: tcOrNull(v.tipoCambioUSD),
+    tipo_cambio_eur: tcOrNull(v.tipoCambioEUR),
   };
 }
 

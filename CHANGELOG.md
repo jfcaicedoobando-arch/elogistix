@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.18] - 2026-07-27
+- **Fix · Editar embarque falla con `embarques_tc_eur_pos` cuando no se captura tipo de cambio EUR.** El UPDATE de `/embarques/:id/editar` reventaba con `23514` porque el mapper `embarqueToDb.partesFinancieras` hacía `Number(v.tipoCambioEUR)` — y `Number("")` es `0`, valor rechazado por el CHECK `tipo_cambio_eur > 0`. Ahora ambos tipos de cambio (USD y EUR) pasan por `tcOrNull()`, que devuelve `null` si el valor no es un número finito estrictamente positivo. `NULL` sí lo acepta el constraint. Test nuevo en `embarqueToDb.test.ts` cubre los 3 casos: vacío, `"0"` y valor válido. Analogía: el formulario dejaba el campo "tipo de cambio EUR" en blanco, pero el traductor lo entregaba a la BD como "cero pesos por euro" — un dato imposible. Ahora "en blanco" viaja como "no aplica".
+
 ## [13.320.17] - 2026-07-27
 - **Fix · Suite RLS `storage_objects` falla en CI.** El único job rojo en la matriz RLS era el que verifica `storage.objects`: la aserción de control (`user_a debe ver su propio objeto en org_a`) devolvía 0. Causa: la policy `Tenant scoped read documentos` requiere `EXISTS` contra `documentos_embarque JOIN embarques` (regla `mem://technical/storage-rls-paths`), pero el test sólo sembraba el objeto crudo en `storage.objects`. Ahora `test_rls_storage_objects.sql` inserta primero `clientes` → `embarques` → `documentos_embarque` con `archivo` = path del objeto antes de sembrar en `storage.objects`, así la policy encuentra el vínculo de dominio. No se tocaron las policies. Analogía: metimos la chaqueta al casillero antes de probar la llave.
 
