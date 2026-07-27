@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.17] - 2026-07-27
+- **Fix · Suite RLS `storage_objects` falla en CI.** El único job rojo en la matriz RLS era el que verifica `storage.objects`: la aserción de control (`user_a debe ver su propio objeto en org_a`) devolvía 0. Causa: la policy `Tenant scoped read documentos` requiere `EXISTS` contra `documentos_embarque JOIN embarques` (regla `mem://technical/storage-rls-paths`), pero el test sólo sembraba el objeto crudo en `storage.objects`. Ahora `test_rls_storage_objects.sql` inserta primero `clientes` → `embarques` → `documentos_embarque` con `archivo` = path del objeto antes de sembrar en `storage.objects`, así la policy encuentra el vínculo de dominio. No se tocaron las policies. Analogía: metimos la chaqueta al casillero antes de probar la llave.
+
 ## [13.320.16] - 2026-07-27
 - **Fix · `auditoria_embarques_org`: columnas `f.pagado` / `pf.pagado` inexistentes.** El reporte de auditoría fallaba en `/auditoria` con `42703: column f.pagado does not exist`. Las CTEs `cxc_facturas_vencidas` y `cxp_vencidas` asumían un campo materializado que nunca existió — el pendiente se calcula sumando pagos vivos. Ahora el RPC hace `LEFT JOIN LATERAL` a `pagos_factura` (usando `COALESCE(monto_aplicado_factura, monto)`) y a `pagos_proveedor` (usando `COALESCE(monto_en_moneda_factura, monto)`), filtrando `deleted_at IS NULL` en ambos lados. Analogía: en vez de pedirle al cajero un "saldo pagado" que no guarda, sumamos los recibos de la caja cada vez que consultamos.
 
