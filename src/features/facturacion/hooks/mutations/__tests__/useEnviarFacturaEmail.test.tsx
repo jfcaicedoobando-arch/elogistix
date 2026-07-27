@@ -23,6 +23,8 @@ vi.mock("sonner", () => ({
 
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => mocks.notifyError(...a),
+  notifySuccess: (_t: unknown, opts: { title: string }) => mocks.success(opts?.title),
+  notifyWarning: (_t: unknown, opts: { title: string }) => mocks.warning(opts?.title),
 }));
 
 import { useEnviarFacturaEmail } from "../useEnviarFacturaEmail";
