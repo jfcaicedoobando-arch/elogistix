@@ -1,6 +1,20 @@
 # Changelog
 
+## [13.320.29] - 2026-07-27
+- **test(baseline-verde)**: 0 fallos en `test:fast` (5309/5309). Se atacaron los 7 grupos del reporte previo:
+  - 🅐 **Sonner v2 · `toast.info` removido.** `src/lib/ui/appFeedback.ts` migra `sonnerToast.info(...)` → `sonnerToast(...)` (helper `info` eliminado en sonner 2.x). Desbloquea `notifyInfo` en runtime y 4 tests.
+  - 🅑 **Codemod `expect.anything()` → `undefined`** en 6 archivos (`useCargaCfdi`, `useEditarFacturaProveedorForm`, `useEmbarqueEstadoActions.branches`, `useEmbarquesPageController`, `useRegistrarPagoSubmit`, `useCotizacionWizardSteps`). `expect.anything()` no matchea `undefined` en Vitest; los helpers `notify*` reciben `undefined` como primer arg.
+  - 🅒 **Mocks parciales de `@/lib/ui/appFeedback`** ampliados en `useCargaCfdi`, `useCrearFacturaManual`, `useNotaCreditoFacturapi`, `useTimbrarFactura`, `useBanxicoTipoCambio` y `useEnviarFacturaEmail`: se agregó `notifySuccess`/`notifyWarning` reenviando a `toastSuccess(opts.title)` para que las mutaciones no exploten y `isSuccess` se establezca.
+  - 🅓 **Título duplicado** en guardarraíles Sentry: renombrado `it("la allowlist apunta a archivos existentes ...")` → `"la allowlist de direct-capture ..."` en `sentry-no-direct-capture.test.ts`.
+  - 🅓-bis **Timeout `audit-report`**: bloque `describe` con `{ timeout: 30_000 }` porque los 4 tests recorren todo `src/`.
+  - 🅔 **Tag drift** `source` → `op` en `exchangeRates.sentry.test.ts` (matcher relajado a `expect.objectContaining` para tolerar tags adicionales).
+  - 🅕 **Fixture RLS** `test_rls_storage_objects.sql`: `ELISTG00001/00002` → `ELSTG00001/00002` (cumple el CHECK `^EL[A-Z]{3}[0-9]+$`).
+  - 🅖 **`EnviarProformaDialog`** mock de `@/lib/ui/appFeedback` ahora expone `notifyInfo` reenviando a `sonnerToastMock(title, { description, action })`.
+  - **Mock sonner callable** en `vincularEmbarqueHelpers.test.ts`: `toast` ahora es una función invocable con `.info/.success/.error` (sonner v2 requiere el helper callable, no sólo sub-métodos).
+- Analogía: eran 40 focos rojos en el tablero repartidos en 7 tableros de fusibles. Cada grupo se resolvió con un cambio mínimo (2 líneas del `appFeedback`, unos mocks que faltaban, un fixture con formato correcto) y ahora el motor arranca en verde 100%.
+
 ## [13.320.28] - 2026-07-27
+
 - **chore(deps)**: `tailwind-merge` 2.6.0 → 3.6.0 (Ola 2 · único major de bajo riesgo restante). Único uso en `src/lib/utils/cn.ts` vía `twMerge(clsx(...))`; API pública compatible. Verificado con `bun run lint --max-warnings 0` y `bunx tsgo --noEmit` en verde. `bun run test:fast` reporta los mismos 35 fallos pre-existentes que ya existían con v2 (baseline comparado antes/después del bump), ninguno relacionado con class-merging. Analogía: cambiamos la pastilla que combina clases de Tailwind por su versión más nueva; encaja igual en el mismo enchufe, sólo consume menos y tolera mejor las clases arbitrarias.
 
 
