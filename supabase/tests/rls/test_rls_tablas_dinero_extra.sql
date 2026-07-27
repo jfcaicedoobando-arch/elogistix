@@ -80,7 +80,7 @@ BEGIN
     id, organization_id, proveedor_id, fecha_anticipo, monto, moneda,
     estado, saldo_disponible
   ) VALUES
-    (ant_a, org_a, prov_a, CURRENT_DATE, 5000, 'MXN', 'vigente', 5000);
+    (ant_a, org_a, prov_a, CURRENT_DATE, 5000, 'MXN', 'disponible', 5000);
 
   PERFORM pg_temp.as_user(user_b);
   SELECT count(*) INTO visible FROM public.anticipos_proveedor WHERE id = ant_a;
@@ -88,7 +88,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       'INSERT INTO public.anticipos_proveedor(id, organization_id, proveedor_id, fecha_anticipo, monto, moneda, estado, saldo_disponible) VALUES (%L, %L, %L, CURRENT_DATE, 1, %L, %L, 1)',
-      gen_random_uuid(), org_a, prov_a, 'MXN', 'vigente'
+      gen_random_uuid(), org_a, prov_a, 'MXN', 'disponible'
     ),
     'anticipos_proveedor acepta INSERT con organization_id ajeno'
   );
