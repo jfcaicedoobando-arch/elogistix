@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
-# ci:fast — corre en paralelo el mismo set de checks que CI, con logs
-# separados y resumen ordenado al final.
+# ci:fast — checks rápidos en paralelo antes de pushear.
+# NO es el suite completo de CI: para eso está `.github/workflows/ci.yml`.
+# Objetivo: dar señal en < 2 min sobre lo que rompe más seguido.
 #
 # Uso:
 #   bun run ci:fast                       # set rápido (default)
-#   bun run ci:fast -- --parity           # paridad completa con .github/workflows/ci.yml
 #   bun run ci:fast -- --only lint,vitest # sólo esas tareas
 #   bun run ci:fast -- --skip vitest      # todas menos ésa
-#   bun run ci:fast -- --no-fail-fast     # espera a que terminen todas aunque una falle
-#   bun run ci:fast -- --with-build       # además corre `bun run build`
+#   bun run ci:fast -- --no-fail-fast     # espera aunque una falle
 #
 # Salida:
 #   - Logs por tarea en .ci-fast-logs/<timestamp>/<task>.log
-#   - Si todo pasa, se limpia el directorio de logs.
-#   - Si algo falla, se conserva y se imprime la ruta.
+#   - En verde se auto-limpian; en rojo se conservan y se imprime la ruta.
 #
-# v13.320.10 — reescrito: paridad con CI, fail-fast, trap, orden estable,
-# duración por tarea, selección --only/--skip.
+# v13.320.11 — mejoras: fail-fast, trap para matar hijos, orden estable,
+# duración por tarea, selección --only/--skip. Se mantiene mínimo a propósito.
 
 set -uo pipefail
 
