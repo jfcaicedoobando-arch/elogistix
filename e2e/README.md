@@ -1,14 +1,48 @@
 # E2E — Playwright
 
-Smoke tests de los 5 flujos críticos de Libre Carga, pensados como **gate de
-go-live** y regresión semanal. No corren en `npm test` ni en CI por defecto.
+Smoke tests de los flujos críticos de Libre Carga, pensados como **gate de
+go-live** y regresión semanal. No corren en `bun test` ni en CI por defecto.
+
+## Quickstart (3 pasos)
+
+```bash
+# 1) Plantilla de variables → rellenar SÓLO los mínimos (BASE_URL + admin).
+cp .env.e2e.example .env.e2e
+$EDITOR .env.e2e
+
+# 2) Validar qué está listo y qué se saltará (opcional pero recomendado).
+bun run e2e:check
+
+# 3) Instalar Chromium (una vez) y correr.
+bun run e2e:install
+bun run e2e
+```
+
+> ⚠️ `.env.e2e` contiene credenciales — NO lo commitees. Si no aparece en tu
+> `.gitignore`, agrégalo (`echo .env.e2e >> .gitignore`).
+
+### Scripts disponibles
+
+| Script | Qué hace |
+|---|---|
+| `bun run e2e:check` | Valida las variables mínimas y reporta qué specs se saltarán. |
+| `bun run e2e:install` | `playwright install --with-deps chromium` (una vez por máquina). |
+| `bun run e2e` | Corre toda la suite contra `E2E_BASE_URL` (default `http://localhost:8080`). |
+| `bun run e2e:local` | Fuerza `E2E_BASE_URL=http://localhost:8080` (arranca `vite dev` automático). |
+| `bun run e2e:staging` | Alias de `e2e` — apunta al `E2E_BASE_URL` de tu `.env.e2e`. |
+| `bun run e2e:ui` | Modo interactivo (Playwright UI). |
+| `bun run e2e:headed` | Corrida con navegador visible. |
+| `bun run e2e:report` | Abre el reporte HTML de la última corrida. |
+| `bun run e2e:provision` | Provisiona/reset admin + portal en staging (edge function). |
+| `bun run e2e:provision-multi-tenant` | Provisiona orgs A/B para el spec 26. |
 
 ## Setup local (una sola vez)
 
 ```bash
-npm i -D @playwright/test
-npx playwright install chromium
+bun run e2e:install    # descarga Chromium + libs del sistema
 ```
+
+
 
 ## Variables de entorno
 
