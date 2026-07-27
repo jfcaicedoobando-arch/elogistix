@@ -328,6 +328,7 @@ BEGIN
            ) AS tc_incompleto
     FROM conceptos_costo cc
     JOIN emb e ON e.id = cc.embarque_id
+    WHERE cc.deleted_at IS NULL  -- AUD-3: excluir conceptos soft-deleted (aliniea con Tab P&L)
     GROUP BY cc.embarque_id
   ),
   margenes AS (
