@@ -1,79 +1,61 @@
-## Auditoría de toasts
+# Plan: Fix `column f.pagado does not exist` en auditoría de embarques
 
-### Cómo está hoy (verificado en código)
+## Analogía
+Es como pedirle al cajero el "saldo pagado" de una cuenta y descubrir que no lo tiene guardado — hay que sumarlo desde los recibos (`pagos_factura` y `pagos_proveedor`) cada vez que se consulta.
 
-- **Backend único:** Sonner (`<Toaster />` montado 1 sola vez en `src/App.tsx`, config global en `src/components/ui/sonner.tsx`).
-- **Wrapper canónico:** `@/lib/ui/appFeedback` con `notifyError / notifySuccess / notifyInfo / notifyWarning`. Todos añaden acción "Ver detalles", integran `reportCaughtError` (Sentry) y filtran ruido vía `shouldReportToSentry`.
-- **Wrapper para mutaciones:** `useMutationWithFeedback` + `queryClient` global hooks, que ya usan los helpers.
-- **Guardrail ESLint:** bloque `no-raw-table-and-sonner` prohíbe `import { toast } from "sonner"` fuera de allowlist (`eslint.config.js` líneas ~176–780).
-- **Uso real hoy:**
-  - `notify*` helpers: **~1,069 call sites en 272 archivos** ✅
-  - Import directo de `sonner` fuera de wrappers: **84 archivos** (baseline `SONNER-LEGACY` congela 82; hay **2 archivos que se colaron sin permiso**).
-  - Llamadas crudas `toast.success/error/info/…`: **77 sitios** en 58 archivos.
+## Diagnóstico confirmado
+El RPC `auditoria_embarques_org(uuid)` referencia dos columnas que **no existen**:
 
-### Hallazgos (severidad ↓)
+- Línea 386: `SUM(f.total - COALESCE(f.pagado, 0))` en CTE `cxc_facturas_vencidas`.
+- Línea 429: `SUM(pf.total - COALESCE(pf.pagado, 0))` en CTE `cxp_vencidas`.
 
-**HIGH · 1. Baseline SONNER-LEGACY se está oxidando.** 82 archivos siguen importando `sonner` directo. Sin plan de cierre, la deuda crece cada release y la promesa "todo toast pasa por `appFeedback`" es falsa. **Impacto:** errores sin panel "Ver detalles", sin breadcrumb Sentry, textos inconsistentes.
+Verificado con `information_schema`:
+- `facturas` sólo tiene `total`, `subtotal`, `forma_pago`, `metodo_pago` (nada de `pagado`).
+- `proveedor_facturas` sólo tiene `total`, `subtotal`, `fecha_programada_pago`.
 
-**HIGH · 2. Fugas de la allowlist.** Comparé `rg` vs baseline: hay 84 archivos importando `sonner` directo pero sólo 82 en la lista → **2 archivos regressionaron** sin actualizar `eslint.config.js` (probablemente `useTesoreriaMovimientos.ts` y otro; a confirmar). El lint no falló porque los otros overrides desactivan `no-restricted-imports` en varias carpetas.
+Los montos pagados se calculan sumando pagos vivos:
+- CxC: `pagos_factura.monto_aplicado_factura` (o `monto` si es nulo) `WHERE factura_id = f.id AND deleted_at IS NULL`.
+- CxP: `pagos_proveedor.monto_en_moneda_factura` (o `monto` si es nulo) `WHERE proveedor_factura_id = pf.id AND deleted_at IS NULL`.
 
-**MEDIUM · 3. `duration: Infinity` fuera del helper.** `useNuevaFacturaProveedorForm.sideEffects.ts` fija Infinity manualmente. La regla actual es "sólo `notifyError` bloquea"; toasts persistentes sueltos rompen esa expectativa (usuario ve un warning que nunca desaparece sin acción).
+## Cambios
 
-**MEDIUM · 4. Estilos de severidad ambiguos.** `sonner.tsx` retiró `richColors` (correcto) y usa borde izquierdo + icono. Sin embargo `success` y `info` en dark mode comparten un token muy parecido (`--success` vs `--info`) — vale una revisión de contraste rápida.
+### 1. Migración: reemplazar RPC `auditoria_embarques_org(uuid)`
+Sustituir las dos CTEs para calcular el pendiente vía `LEFT JOIN LATERAL` a la tabla de pagos:
 
-**MEDIUM · 5. Falta `toast.promise` / patrón loading.** 0 usos hoy. Muchos flujos largos (subida XML/PDF, timbrado, cancelación SAT) emiten "empezó" + "terminó" a mano. `notifyLoading` + `notifyResolve` podrían simplificar.
+```sql
+cxc_facturas_vencidas AS (
+  SELECT f.embarque_id,
+         COUNT(*) AS n,
+         SUM(f.total - COALESCE(p.pagado, 0)) AS pendiente
+  FROM facturas f
+  LEFT JOIN LATERAL (
+    SELECT SUM(COALESCE(pf2.monto_aplicado_factura, pf2.monto)) AS pagado
+    FROM pagos_factura pf2
+    WHERE pf2.factura_id = f.id AND pf2.deleted_at IS NULL
+  ) p ON true
+  WHERE f.embarque_id IN (SELECT id FROM emb)
+    AND f.deleted_at IS NULL
+    AND f.estado NOT IN ('Cancelada','Sustituida','Pagada')
+    AND f.fecha_vencimiento IS NOT NULL
+    AND f.fecha_vencimiento < CURRENT_DATE - v_dias_cxc_vencida
+  GROUP BY f.embarque_id
+),
+```
 
-**LOW · 6. Duplicación semántica.** `crmToast.ts` reimplementa una capa fina encima de `notify*` para "silenciar" mensajes CRUD (2s). Es útil, pero duplica lógica: podría vivir como preset `notifySuccess(…, { duration: 2000 })` en `appFeedback` para no tener 2 APIs.
+Análogo para `cxp_vencidas` usando `pagos_proveedor` y `proveedor_factura_id`.
 
-**LOW · 7. `useToast` legacy shim.** `src/hooks/shared/useToast.ts` sigue exponiendo la firma `const { toast } = useToast()` para ~7 archivos. Ya no aporta; añade una capa más para entender el sistema.
+Preservar el resto del RPC (guardas `deleted_at IS NULL`, filtro `p.estado_proforma`, etc.) — solo tocar estas dos CTEs.
 
-**OK · 8.** Toaster está montado 1 sola vez, posición `top-right`, cerrable, con swipe. Sin bugs.
+### 2. Test de regresión SQL
+En `supabase/tests/rpc/test_auditoria_embarques_org.sql`: escenario mínimo con una factura vencida parcialmente pagada, verificar que `pendiente = total - suma(pagos)` y que el RPC no arroja `42703`.
 
-**OK · 9.** Integración con Sentry (filtro anti-ruido + breadcrumb + `Ver detalles`) está bien pensada.
+### 3. Auditoría automática de columnas
+El script `audit-rpc-columns` (creado en v13.319.6) debería haber detectado esto. Agregar `facturas` y `proveedor_facturas` a su allow-list de tablas escaneadas si no están, para que el próximo drift falle en CI en vez de en producción.
 
-### Propuesta: 3 olas incrementales
+### 4. Versionado
+- `APP_VERSION` → `13.320.14` (parche).
+- `CHANGELOG.md`: entrada bajo Fixed describiendo el hallazgo y el fix.
 
-**Ola A — Higiene inmediata (1 PR pequeño)**
-1. Detectar los 2 archivos que se colaron sin permiso vs. baseline y **migrarlos** a `notify*` (o agregarlos con comentario si son casos legítimos, ej. `toast.dismiss`).
-2. Mover `duration: Infinity` de `useNuevaFacturaProveedorForm.sideEffects.ts` a `notifyWarning({ persistent: true })` (nuevo flag).
-3. Test de regresión: `scripts/audit-sonner-baseline.ts` que compare `rg 'from "sonner"'` contra la allowlist y falle si crece.
-
-**Ola B — Cerrar la baseline (SONNER-LEGACY → 0)**
-Migrar los 82 archivos en tandas de ~15 archivos por módulo, en este orden por riesgo:
-1. `auditoria/` (7 archivos) + `admin/` (2) — flujos internos.
-2. `crm/` (~12) — reemplazar `crmToast` por preset `notifySuccessQuiet` en `appFeedback` y borrar el archivo.
-3. `cxp/` (~11) + `facturacion/` (~15) — módulos financieros; migrar y verificar que "Ver detalles" aparece en cada error.
-4. `embarques/` + `costeo/` + `cotizacion/` (~20).
-5. `tesoreria/` + `presupuesto/` + `comisiones/` + `proveedor/` + resto (~15).
-
-Cada tanda: (a) sustituir `toast.*` por `notify*`, (b) quitar entrada de allowlist, (c) test suite específico de la carpeta, (d) bump CHANGELOG. Objetivo: baseline queda **vacía** y la regla ESLint bloquea el 100 %.
-
-**Ola C — Mejoras de plataforma (post-baseline)**
-1. Añadir `notifyPromise(promise, { loading, success, error })` en `appFeedback` (wrap de `toast.promise`) y adoptarlo en 6 flujos largos (timbrar factura, cancelar SAT, subir XML/PDF IA, generar PDF cotización, envío masivo, backfill legacy).
-2. Deprecar y borrar `src/hooks/shared/useToast.ts` migrando los ~7 call sites a `notify*` directo. Menos superficie de API.
-3. Revisar contraste `--success` vs `--info` en dark mode (screenshot side-by-side) y ajustar tokens si es necesario.
-4. Documentar el sistema en `docs/ui/toasts.md`: cuándo usar cada helper, `duration`, cuándo pasar `context/method` para trazabilidad Sentry.
-
-### Métricas de éxito
-
-| Métrica | Hoy | Meta post-Ola C |
-|---|---|---|
-| Archivos con `import { toast } from "sonner"` (fuera de wrappers) | 84 | 0 |
-| Baseline SONNER-LEGACY | 82 | 0 |
-| Call sites vía `notify*` | 1,069 | ~1,150 (100 %) |
-| `toast.*` crudos | 77 | 0 |
-| `duration: Infinity` fuera de `appFeedback` | 1 | 0 |
-| APIs de toast públicas | 3 (`notify*`, `useToast`, `crmToast`) | 1 (`notify*`) |
-
-### Sección técnica (para referencia)
-
-- Wrapper canónico: `src/lib/ui/appFeedback.ts` (143 líneas) + `appFeedback.sentry.ts` + `appFeedback.details.ts`.
-- Regla ESLint clave: `eslint.config.js` block `no-raw-table-and-sonner` (línea 176), `no-restricted-imports` sobre `sonner`, con allowlist en líneas ~695–780.
-- Toaster global: `src/components/ui/sonner.tsx` montado en `src/App.tsx:41`.
-
-### Alcance del siguiente turno
-
-Necesito confirmar contigo antes de tocar código:
-
-1. ¿Ejecuto **sólo Ola A** ahora (safe, 1–2 archivos + script de regresión), o quieres que arranque también con la primera tanda de Ola B (`auditoria/` + `admin/`)?
-2. ¿Consolido `crmToast` dentro de `appFeedback` como `notifySuccessQuiet` (recomendado), o lo dejo como wrapper propio del módulo CRM?
+## Fuera de alcance
+- No tocar UI de `/auditoria`.
+- No renombrar columnas ni agregar `pagado` materializada (sería refactor mayor con triggers).

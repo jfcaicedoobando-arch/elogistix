@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.16] - 2026-07-27
+- **Fix · `auditoria_embarques_org`: columnas `f.pagado` / `pf.pagado` inexistentes.** El reporte de auditoría fallaba en `/auditoria` con `42703: column f.pagado does not exist`. Las CTEs `cxc_facturas_vencidas` y `cxp_vencidas` asumían un campo materializado que nunca existió — el pendiente se calcula sumando pagos vivos. Ahora el RPC hace `LEFT JOIN LATERAL` a `pagos_factura` (usando `COALESCE(monto_aplicado_factura, monto)`) y a `pagos_proveedor` (usando `COALESCE(monto_en_moneda_factura, monto)`), filtrando `deleted_at IS NULL` en ambos lados. Analogía: en vez de pedirle al cajero un "saldo pagado" que no guarda, sumamos los recibos de la caja cada vez que consultamos.
+
 ## [13.320.15] - 2026-07-27
 - **Auditoría de toasts · Olas B y C completadas.** Cierre total de la baseline `SONNER-LEGACY`:
   - Migrados los 2 wrappers residuales (`crmToast.undo`, `useUndoToast`) a `notifyInfo({ action: { label, onClick } })`. Ya no queda un solo `import { toast } from "sonner"` fuera de los 5 wrappers autorizados (`appFeedback`, `sonner.tsx`, `ErrorDetailsDialog`, `useToast` shim, `useCopyText`).
