@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.320.23] - 2026-07-27
+- **Fix · Buscador global mostraba cotizaciones/embarques ya eliminados (soft-delete).** Reportado por un usuario que veía COT-2026-0123 en el buscador pero al abrir el detalle no existía. La función `public.busqueda_global` no filtraba `deleted_at IS NULL` en 5 de sus 7 sub-consultas (`embarques`, `clientes`, `facturas`, `cotizaciones`, `proformas`); sólo `proveedor_facturas` lo hacía. Añadido el filtro en las cinco. Verificado en BD: `busqueda_global('COT-2026-0123')` ya devuelve 0 filas (antes devolvía 3 fantasmas). Sin cambios de firma, `SECURITY DEFINER`, `search_path` ni grants.
+- Analogía: el buscador era un índice del archivero que aún listaba carpetas que ya habíamos mandado a la trituradora — al ir por ellas, no estaban. Ahora sólo indexa las que siguen en el archivero.
+
 ## [13.320.22] - 2026-07-27
 - **Fix · Tests rotos tras migración a `notify*` (shard 5/10).** Dos fallos post-Ola B:
   - `appFeedback.notifyInfo` llamaba `sonnerToast(...)` como función; los tests (y varios call sites) mockean `toast` como objeto con `.info/.success/.error`. Cambiado a `sonnerToast.info(...)` para coincidir con el resto de helpers y mostrar el icono neutral correcto.
