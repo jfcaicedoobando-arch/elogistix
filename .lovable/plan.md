@@ -1,27 +1,45 @@
-## Objetivo
-Subir `sonner` de `1.7.4` a `2.0.7` (última). El proyecto ya está en React 19.2, así que cumple con el nuevo peer.
+## Diagnóstico (verificado en BD)
 
-## Contexto verificado
-- `package.json`: `"sonner": "1.7.4"` — última publicada `2.0.7`.
-- Se usa en 8 archivos vía `from "sonner"` + wrapper propio en `src/components/ui/sonner.tsx` (posición, clases, `swipeDirections`, `swipeThreshold`).
-- Existe wrapper `appFeedback` (regla del proyecto) — la migración a v2 es transparente para los llamadores que ya usan los helpers `notify*`.
+El usuario ve "COT-2026-0123" (y sus duplicados `-DUP-2`, `-DUP-3`) en el buscador global, pero al abrir el detalle el registro no aparece. Consultando `cotizaciones` en BD:
 
-## Cambios notables de Sonner 1 → 2
-1. **Peer**: exige React ≥ 18.3; nuestro stack (React 19.2) califica.
-2. **Firma de `promise()`**: `success`/`error` reciben `(data)` — ya así lo usamos donde aplica.
-3. **`swipeDirections`** ahora es prop oficial en `<Toaster>` (ya no requiere `@ts-expect-error` para `swipeThreshold` — v2 lo tipa). Revisar y quitar el `@ts-expect-error` si TS ya lo acepta.
-4. **Class hooks**: los `data-[type=…]` que usamos siguen soportados; no requieren cambio.
-5. **Close button**: v2 cambia ligeramente el layout interno — revisar visualmente el override `!left-auto !right-2 !top-2`.
+| folio | estado | deleted_at |
+|---|---|---|
+| COT-2026-0123 | Borrador | 2026-07-13 19:43 |
+| COT-2026-0123-DUP-2 | Borrador | 2026-07-14 01:37 |
+| COT-2026-0123-DUP-3 | Borrador | 2026-07-20 22:31 |
 
-## Pasos
-1. `bun add sonner@2.0.7`.
-2. `bun run lint` + `tsgo` + `bun run test` (unit) para detectar rupturas de tipos/API.
-3. Smoke visual: disparar un toast success, error, warning, info y uno con `action` desde la app en preview (fullHD) para validar borde izquierdo, icono, close button y swipe.
-4. Si TS ya acepta `swipeThreshold` en `toastOptions`, remover el `@ts-expect-error` de `src/components/ui/sonner.tsx` (línea 30). Si no, dejarlo.
-5. Bump `APP_VERSION` a `13.320.21` y entrada en `CHANGELOG.md` con analogía.
+Las tres están **soft-deleted** (`deleted_at` con fecha). El detalle sí respeta `deleted_at IS NULL`, pero al inspeccionar `busqueda_global` en Postgres, la CTE de cotizaciones **no** filtra por `c.deleted_at IS NULL` — sólo filtra por organización:
 
-## Riesgos
-- Bajo. El wrapper concentra el estilo; los llamadores usan `appFeedback` (helper `notify*`), no la API cruda. El único punto sensible son los overrides `!` de `closeButton` si v2 cambia posición del botón.
+```sql
+FROM cotizaciones c
+WHERE (c.folio ILIKE ... OR c.cliente_nombre ILIKE ... OR c.prospecto_empresa ILIKE ...)
+  AND (c.organization_id = current_user_org_id() OR has_role(auth.uid(),'super_admin'))
+```
 
-## Rollback
-- `bun add sonner@1.7.4` revierte en un paso; no hay migraciones ni cambios de datos.
+Por eso los resultados del buscador incluyen "fantasmas" ya borrados.
+
+**Analogía:** el buscador es un índice del archivero, pero seguimos listando carpetas que ya movimos a la trituradora. Al ir a leerlas, no están.
+
+## Cambios propuestos
+
+1. **Migración `patch_busqueda_global_deleted_at`**
+   - Recrear `public.busqueda_global` añadiendo `AND c.deleted_at IS NULL` al bloque cotizaciones.
+   - Auditar en la misma función los demás bloques `UNION ALL` (embarques, proformas, facturas, clientes, proveedores…) y añadir `X.deleted_at IS NULL` en cualquiera cuya tabla tenga esa columna y aún no lo filtre. Mantener firma, `SECURITY DEFINER`, `search_path` y grants existentes; sin cambios de permisos.
+
+2. **Test de regresión**
+   - `supabase/tests/rls/test_busqueda_global_deleted_at.sql`: sembrar una cotización soft-deleted y otra viva con el mismo folio parcial, invocar `busqueda_global('COT-...')` y afirmar que sólo aparece la viva. Ejecutado por `ci-fast.sh --only rls`.
+
+3. **Documentación**
+   - `CHANGELOG.md` entrada nueva en la parte superior con la analogía.
+   - `APP_VERSION` → `13.320.23`.
+
+## Fuera de alcance
+
+- No se tocan RLS ni grants (el problema es de filtro dentro del RPC, no de permisos).
+- No se restaurarán ni borrarán los tres registros de "COT-2026-0123" — quedan como estaban (soft-deleted). Si el usuario quiere recuperar alguno, es una acción separada.
+
+## Detalles técnicos
+
+- Archivo: nueva migración en `supabase/migrations/<timestamp>_patch_busqueda_global_deleted_at.sql` usando `CREATE OR REPLACE FUNCTION`.
+- Antes de escribir la migración, se leerá la definición completa del RPC (`pg_get_functiondef`) para preservar exactamente el resto de UNION ALL, LIMITs y firma.
+- Se validará con `audit:migrations` (H4/H6) para conservar `REVOKE ALL FROM PUBLIC` + `GRANT EXECUTE TO authenticated, service_role` si ya existen.
