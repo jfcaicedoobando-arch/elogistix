@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
-import { useToast } from "@/hooks/shared";
 import { useCreateCliente } from "@/features/cliente/hooks/useClientes";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { parseCsf } from "@/features/cliente/services/csf";
@@ -29,7 +28,6 @@ export type ClienteForm = typeof EMPTY_CLIENTE;
  * la validación y la mutación de creación. El componente UI queda presentacional.
  */
 export function useNuevoClienteController(onClose: () => void) {
-  const { toast } = useToast();
   const createCliente = useCreateCliente();
   const registrarActividad = useRegistrarActividad();
 
@@ -87,10 +85,10 @@ export function useNuevoClienteController(onClose: () => void) {
         accion: 'crear', modulo: 'clientes',
         entidad_id: clienteCreado.id, entidad_nombre: clienteCreado.nombre,
       });
-      notifySuccess(toast, { title: "Cliente creado exitosamente" });
+      notifySuccess(undefined, { title: "Cliente creado exitosamente" });
       resetAndClose();
     } catch (error: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al crear cliente",
         description: getErrorMessage(error),
         error: error,
@@ -104,7 +102,7 @@ export function useNuevoClienteController(onClose: () => void) {
     if (!file) return;
 
     if (file.type !== "application/pdf") {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Archivo inválido",
         description: "Solo se aceptan archivos PDF.",
         method: "HANDLE_CSF_UPLOAD",
@@ -128,11 +126,11 @@ export function useNuevoClienteController(onClose: () => void) {
       }));
 
       setCsfFile(file);
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: "Datos extraídos",
         description: "Revisa la información antes de continuar."});
     } catch (error: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al leer CSF",
         description: getErrorMessage(error),
         error: error,

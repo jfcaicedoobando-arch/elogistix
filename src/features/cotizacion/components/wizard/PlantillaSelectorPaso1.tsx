@@ -5,7 +5,7 @@
  * Al seleccionar aplica el payload con `form.reset()` + `trigger()`.
  */
 import { useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,7 +54,7 @@ export function PlantillaSelectorPaso1({ organizationId, form, onApplied }: Prop
         await form.trigger();
       }
       setOpen(false);
-      toast.success(`Plantilla "${nombre}" aplicada`);
+      notifySuccess(undefined, { title: `Plantilla "${nombre}" aplicada` });
       onApplied?.();
     } catch (err) {
       notifyError(undefined, {

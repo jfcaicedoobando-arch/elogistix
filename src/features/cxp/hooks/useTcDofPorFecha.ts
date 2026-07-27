@@ -8,9 +8,9 @@
  * v13.219.0 — auto-fill del TC en captura/edición de facturas de proveedor.
  */
 import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
+
 import { fetchExchangeRates } from "@/features/catalogos/services";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { todayLocalISO } from "@/lib/date/today";
 
 export type MonedaTc = "USD" | "EUR";
@@ -69,7 +69,8 @@ export function useTcDofPorFecha(onTc: (r: TcDofResult) => void) {
     onSuccess: (r, args) => {
       onTc(r);
       if (!args.silent) {
-        toast.success(`TC DOF ${r.moneda}: ${r.tipoCambio}`, {
+        notifySuccess(undefined, {
+          title: `TC DOF ${r.moneda}: ${r.tipoCambio}`,
           description: r.fechaAplicada
             ? `Publicación DOF vigente al ${formatFechaEs(args.fecha)} (FIX ${formatFechaEs(r.fechaAplicada)}).`
             : `Consulta para emisión ${formatFechaEs(args.fecha)}.`,
@@ -77,7 +78,7 @@ export function useTcDofPorFecha(onTc: (r: TcDofResult) => void) {
       }
     },
     onError: (err) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo obtener TC DOF",
         error: err,
         method: "FEATURES_CXP_HOOKS_USETCDOFPORFECHA_1",

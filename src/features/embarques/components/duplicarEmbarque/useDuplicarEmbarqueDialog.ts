@@ -5,7 +5,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { useToast } from "@/hooks/shared";
 import { useDuplicarEmbarque } from "@/features/embarques/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
@@ -43,7 +42,6 @@ interface Args {
 
 export function useDuplicarEmbarqueDialog({ embarque, open, onOpenChange }: Args) {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const duplicar = useDuplicarEmbarque();
   const [copias, setCopias] = useState<CopiaContenedor[]>([]);
 
@@ -76,7 +74,7 @@ export function useDuplicarEmbarqueDialog({ embarque, open, onOpenChange }: Args
     }));
     const err = validate(limpias);
     if (err) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Datos inválidos",
         description: err,
         method: "HANDLE_CONFIRMAR",
@@ -87,14 +85,14 @@ export function useDuplicarEmbarqueDialog({ embarque, open, onOpenChange }: Args
 
     try {
       const nuevos = await duplicar.mutateAsync({ embarqueOrigen: embarque, copias: limpias });
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: nuevos.length === 1 ? "Embarque duplicado" : `${nuevos.length} embarques creados`,
         description: nuevos.map((n) => n.expediente).join(", "),
       });
       onOpenChange(false);
       if (nuevos.length > 0) navigate(`/embarques/${nuevos[0].id}`);
     } catch (error) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo duplicar el embarque",
         phase: "duplicación de embarque",
         error,
@@ -102,7 +100,7 @@ export function useDuplicarEmbarqueDialog({ embarque, open, onOpenChange }: Args
         method: "HANDLE_CONFIRMAR",
       });
     }
-  }, [copias, embarque, duplicar, toast, onOpenChange, navigate]);
+  }, [copias, embarque, duplicar, onOpenChange, navigate]);
 
   return {
     copias,

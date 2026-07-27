@@ -7,7 +7,6 @@ import { useState } from "react";
 import { Loader2, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -38,14 +37,13 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const crear = useCrearOportunidad();
   const actualizar = useActualizarOportunidad();
   const crearActividad = useCrearActividad();
-  const { toast } = useToast();
 
   const { form, setForm, set } = useOportunidadForm(open, oportunidad, etapas, user);
   const [autoActividad, setAutoActividad] = useState(true);
 
   const handleSubmit = async () => {
-    if (!form.nombre.trim()) return notifyError(toast, { title: "Nombre es obligatorio", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    if (!form.etapa_id) return notifyError(toast, { title: "Selecciona una etapa", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    if (!form.nombre.trim()) return notifyError(undefined, { title: "Nombre es obligatorio", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    if (!form.etapa_id) return notifyError(undefined, { title: "Selecciona una etapa", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
     try {
       const payload = {
         nombre: form.nombre,
@@ -87,7 +85,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       }
       onOpenChange(false);
     } catch (e) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo guardar",
         description: e instanceof Error ? e.message : undefined,
         error: e,

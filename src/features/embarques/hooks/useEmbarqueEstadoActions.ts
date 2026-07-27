@@ -1,4 +1,3 @@
-import { useToast } from "@/hooks/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
@@ -31,7 +30,6 @@ export { getSiguienteEstado } from "./useEmbarqueEstadoActions.helpers";
  * Confirmado/En Tránsito). Cierre: validación dura por rol + checklist.
  */
 export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: string | undefined) {
-  const { toast } = useToast();
   const { user } = useAuth();
   const registrarActividad = useRegistrarActividad();
   const avanzarEstado = useAvanzarEstadoEmbarque();
@@ -73,15 +71,15 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (kind === "block_docs") { setBlockDocsOpen(true); return; }
     if (kind === "block_fecha_llegada") { setBlockFechaLlegadaOpen(true); return; }
     if (kind === "transicion_invalida") {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Transición de estado no permitida",
         description: `No se permite pasar de "${estadoActual}" a "${siguiente}". Refresca la página; el estado del embarque pudo cambiar en otra sesión.`,
         error: err, method: "HANDLE_AVANZAR_ESTADO_TRANSICION",
       });
       return;
     }
-    notifyError(toast, { title: "Error al cambiar estado", description: msg, error: err, method: "HANDLE_AVANZAR_ESTADO" });
-  }, [toast]);
+    notifyError(undefined, { title: "Error al cambiar estado", description: msg, error: err, method: "HANDLE_AVANZAR_ESTADO" });
+  }, []);
 
   const ejecutarAvance = useCallback(async (siguiente: string) => {
     if (!embarque || !id) return;
@@ -92,11 +90,11 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
         entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
         detalles: { estado_anterior: embarque.estado, estado_nuevo: siguiente },
       });
-      notifySuccess(toast, { title: `Estado actualizado a "${siguiente}"` });
+      notifySuccess(undefined, { title: `Estado actualizado a "${siguiente}"` });
     } catch (err: unknown) {
       notificarErrorAvance(err, embarque.estado, siguiente);
     }
-  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, toast, notificarErrorAvance]);
+  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, notificarErrorAvance]);
 
   const handleAvanzarEstado = async () => {
     if (!embarque || !id) return;
@@ -111,7 +109,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (bloqueo === "block_fecha_llegada") { setBlockFechaLlegadaOpen(true); return; }
     if (bloqueo === "warn_docs") { setWarnDocsOpen(true); return; }
     if (bloqueo === "gate_cierre") {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: cierre.motivo === "rol"
           ? "Solo administración/finanzas pueden cerrar el embarque"
           : "Pendientes administrativos. Revisa el Tab Cierre.",
@@ -145,9 +143,9 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
         entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
         detalles: { estado_anterior: 'Cerrado', estado_nuevo: 'Entregado' },
       });
-      notifySuccess(toast, { title: "Embarque reabierto", description: "Ahora puedes generar la proforma o ajustar facturación." });
+      notifySuccess(undefined, { title: "Embarque reabierto", description: "Ahora puedes generar la proforma o ajustar facturación." });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al reabrir embarque", description: getErrorMessage(err), error: err, method: "HANDLE_REABRIR_EMBARQUE" });
+      notifyError(undefined, { title: "Error al reabrir embarque", description: getErrorMessage(err), error: err, method: "HANDLE_REABRIR_EMBARQUE" });
     }
   };
 

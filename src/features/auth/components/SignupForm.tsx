@@ -76,7 +76,7 @@ export function SignupForm() {
     } catch (err) {
       const friendly = translateAuthError(err instanceof Error ? err.message : null);
       setSignupError(friendly);
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No pudimos crear la cuenta",
         description: friendly,
         error: err,

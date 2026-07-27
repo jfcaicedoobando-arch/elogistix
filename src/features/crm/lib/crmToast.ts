@@ -8,10 +8,10 @@
  *  - error sigue delegando en `notifyError` (persistente + panel copiable).
  *  - undo mantiene su acción "Deshacer" a 5 s.
  *
- * Usar SIEMPRE en el módulo CRM en lugar de `notifySuccess(toast, {...})`
+ * Usar SIEMPRE en el módulo CRM en lugar de `notifySuccess(undefined, {...})`
  * cuando el mensaje es un simple "X creado/actualizado/eliminado".
  */
-import { toast } from "sonner";
+
 import {
   notifyError,
   notifySuccess,
@@ -35,13 +35,13 @@ function success(message: string, opts?: DebugOpts): void {
     });
     return;
   }
-  toast.success(message, { duration: 2000 });
+  notifySuccess(undefined, { title: message, duration: 2000 });
 }
 
 function error(message: string, err?: unknown): void {
   const description =
     err instanceof Error ? err.message : typeof err === "string" ? err : undefined;
-  notifyError(toast, { title: message, description, error: err, method: "CRM_TOAST" });
+  notifyError(undefined, { title: message, description, error: err, method: "CRM_TOAST" });
 }
 
 function info(message: string, opts?: DebugOpts): void {
@@ -55,11 +55,12 @@ function info(message: string, opts?: DebugOpts): void {
     });
     return;
   }
-  toast(message, { duration: 2000 });
+  notifyInfo(undefined, { title: message, duration: 2000 });
 }
 
 function undo(message: string, onUndo: () => void | Promise<void>): void {
-  toast(message, {
+  notifyInfo(undefined, {
+    title: message,
     duration: 5000,
     action: { label: "Deshacer", onClick: () => { void onUndo(); } },
   });

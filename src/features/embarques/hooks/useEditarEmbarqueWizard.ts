@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/shared";
 import {
   useEmbarque,
   useEmbarqueConceptosVenta,
@@ -35,7 +34,6 @@ import {
 export function useEditarEmbarqueWizard(id: string | undefined) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const { data: embarque, isLoading } = useEmbarque(id);
   const { data: conceptosVentaDb = [], isLoading: cargandoVenta } = useEmbarqueConceptosVenta(id);
@@ -112,7 +110,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       const modoActual = methods.getValues('modo');
       const errContenedores = validarContenedoresMaritimo(modoActual, contenedoresActuales);
       if (errContenedores) {
-        notifyError(toast, {
+        notifyError(undefined, {
           title: "Faltan datos de contenedores",
           description: errContenedores.description,
           method: "HANDLE_SAVE",
@@ -157,13 +155,13 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
         }),
       });
 
-      notifySuccess(toast, { title: "Embarque actualizado", description: `${labelExpediente(embarque.expediente, embarque.id)} guardado correctamente.` });
+      notifySuccess(undefined, { title: "Embarque actualizado", description: `${labelExpediente(embarque.expediente, embarque.id)} guardado correctamente.` });
       navigate(`/embarques/${id}`);
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       // FIX-15 · Conflicto de concurrencia: mensaje humano en vez del código crudo.
       if (msg.includes("LC_CONFLICTO_CONCURRENCIA")) {
-        notifyError(toast, {
+        notifyError(undefined, {
           title: "Otro usuario modificó este embarque",
           description: "Recarga la página para ver los cambios más recientes y vuelve a guardar.",
           error: err,
@@ -171,7 +169,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
         });
         return;
       }
-      notifyError(toast, { title: "Error al actualizar", description: msg, error: err, method: "HANDLE_SAVE" });
+      notifyError(undefined, { title: "Error al actualizar", description: msg, error: err, method: "HANDLE_SAVE" });
     }
   };
 

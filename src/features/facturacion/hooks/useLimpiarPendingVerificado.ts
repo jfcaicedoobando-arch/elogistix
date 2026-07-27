@@ -8,7 +8,6 @@
  * `cancellation_status` remoto que devolvió `facturapi-consultar`.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { limpiarCancellationStatusVerificado } from "@/features/facturacion/services/limpiarPendingVerificado";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
@@ -24,7 +23,7 @@ export function useLimpiarPendingVerificado(facturaId: string | null | undefined
     mutationFn: ({ facturaId: id, remoteCancellationStatus }) =>
       limpiarCancellationStatusVerificado({ facturaId: id, remoteCancellationStatus }),
     onSuccess: () => {
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: "Estado local limpiado",
         description: "La factura vuelve a mostrarse como Emitida. FacturAPI confirmó que no hay cancelación en curso.",
       });
@@ -32,7 +31,7 @@ export function useLimpiarPendingVerificado(facturaId: string | null | undefined
       qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
     },
     onError: (err) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo limpiar el estado",
         description: err.message,
       }),

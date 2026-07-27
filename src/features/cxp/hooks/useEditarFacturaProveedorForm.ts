@@ -6,7 +6,6 @@
  * (esos flujos viven en sus propias secciones).
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { useActualizarFacturaProveedor } from "@/features/cxp/hooks";
@@ -155,7 +154,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
     const next = validateFactura(values, total);
     if (Object.keys(next).length > 0) {
       setErrors(next);
-      notifyError(toast, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USEEDITARFACTURAPROVEEDORFORM_1" });
+      notifyError(undefined, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USEEDITARFACTURAPROVEEDORFORM_1" });
       return;
     }
     const payload: ActualizarFacturaPayload = {

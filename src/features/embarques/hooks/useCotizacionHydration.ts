@@ -32,7 +32,7 @@ export function useCotizacionHydration({ onPrevincular }: UseCotizacionHydration
     if (!cotizacionPrevinculada) return;
     yaPrevinculadoRef.current = true;
     onPrevincular(cotizacionPrevinculada);
-    notifySuccess(toast, {
+    notifySuccess(undefined, {
       title: "Datos pre-rellenados",
       description: `Cotización ${cotizacionPrevinculada.folio} vinculada automáticamente.`});
     window.history.replaceState({}, "");

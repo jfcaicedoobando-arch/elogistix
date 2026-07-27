@@ -2,7 +2,7 @@
  * Helpers puros para `VincularEmbarqueSection` — extraídos en v13.182.0
  * (Wave 2 · Power-of-10 splits). Sin cambios de comportamiento.
  */
-import { toast } from "sonner";
+import { notifyInfo, notifySuccess } from "@/lib/ui/appFeedback";
 import type { ConceptoCostoAbierto } from "@/features/cxp/hooks";
 import { sugerirVinculos, type SugerenciaVinculo } from "@/features/compras/matching/matcher";
 
@@ -68,7 +68,7 @@ export function notificarResumen(
   totalCandidatos: number,
 ) {
   if (res.seleccion.length === 0) {
-    toast.info("Sin sugerencias con confianza suficiente. Marca manualmente los conceptos.");
+    notifyInfo(undefined, { title: "Sin sugerencias con confianza suficiente. Marca manualmente los conceptos." });
     return;
   }
   const fuertes = res.seleccion.filter((s) => s.fuerte).length;
@@ -78,7 +78,7 @@ export function notificarResumen(
   if (dudosas > 0) partes.push(pluralS(dudosas, "dudosa"));
   if (res.descartadosPorMoneda > 0) partes.push(`${pluralS(res.descartadosPorMoneda, "descartada")} por moneda`);
   if (sinMatch > 0) partes.push(`${sinMatch} sin match`);
-  toast.success(partes.join(" · "));
+  notifySuccess(undefined, { title: partes.join(" · ") });
 }
 
 export function calcularPuedeSugerir(args: {

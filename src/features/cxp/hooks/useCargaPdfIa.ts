@@ -3,7 +3,7 @@
  * internacionales. Espejo de `useCargaCfdi` pero contra `parse-invoice-pdf`.
  */
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { parsePdfInvoice } from "@/features/cxp/services/parsePdfInvoice";
 import { CfdiUploadError } from "@/features/cxp/services/parseCfdi";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
@@ -26,14 +26,14 @@ export function useCargaPdfIa({ categorias, onParsed }: Args) {
   const handlePdf = useCallback((f: File | null) => {
     if (!f) return;
     if (!f.name.toLowerCase().endsWith(".pdf") && f.type !== "application/pdf") {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "El archivo debe ser un PDF",
         method: "FEATURES_CXP_HOOKS_USECARGAPDFIA_MIME",
       });
       return;
     }
     if (f.size > MAX_PDF_BYTES) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "El PDF excede 10 MB",
         method: "FEATURES_CXP_HOOKS_USECARGAPDFIA_SIZE",
       });
@@ -53,7 +53,7 @@ export function useCargaPdfIa({ categorias, onParsed }: Args) {
       const data = await Promise.race([parsePdfInvoice(pdf, categorias), timeoutPromise]);
       const consumerResult = await onParsed(data, { pdf });
       if (consumerResult !== false) {
-        toast.success("Factura procesada por IA — revisa los datos antes de guardar");
+        notifySuccess(undefined, { title: "Factura procesada por IA — revisa los datos antes de guardar" });
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error procesando PDF";
@@ -61,7 +61,7 @@ export function useCargaPdfIa({ categorias, onParsed }: Args) {
       const title = isTimeout
         ? "La IA tardó demasiado en procesar el PDF. Inténtalo de nuevo o usa Captura manual."
         : msg;
-      notifyError(toast, {
+      notifyError(undefined, {
         title,
         error: e,
         context: e instanceof CfdiUploadError ? { ...e.context } as Record<string, unknown> : { pdfName: pdf.name, pdfSize: pdf.size },

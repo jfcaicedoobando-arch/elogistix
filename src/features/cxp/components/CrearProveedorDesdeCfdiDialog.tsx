@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { Loader2, Truck } from "lucide-react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +32,7 @@ export function CrearProveedorDesdeCfdiDialog({
 
   const submit = async () => {
     if (!n.trim() || !r.trim()) {
-      notifyError(toast, { title: "Nombre y RFC son obligatorios", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_1" });
+      notifyError(undefined, { title: "Nombre y RFC son obligatorios", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_1" });
       return;
     }
     try {
@@ -46,18 +46,18 @@ export function CrearProveedorDesdeCfdiDialog({
         organization_id: organizationId ?? undefined,
       };
       const created = await addProveedor(payload);
-      toast.success("Proveedor creado");
+      notifySuccess(undefined, { title: "Proveedor creado" });
       onCreated(created.id, created.nombre);
       onOpenChange(false);
     } catch (e) {
       const err = e as { name?: string; message?: string; existente?: { id: string; nombre: string } | null };
       if (err.name === "ProveedorDuplicadoError" && err.existente) {
-        toast.success(`Vinculado al proveedor existente: ${err.existente.nombre}`);
+        notifySuccess(undefined, { title: `Vinculado al proveedor existente: ${err.existente.nombre}` });
         onCreated(err.existente.id, err.existente.nombre);
         onOpenChange(false);
         return;
       }
-      notifyError(toast, { title: err.message ?? "Error al crear proveedor", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_2" });
+      notifyError(undefined, { title: err.message ?? "Error al crear proveedor", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_2" });
     }
   };
 

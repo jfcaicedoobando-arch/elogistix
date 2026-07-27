@@ -4,7 +4,6 @@
  * del componente por debajo del límite del linter.
  */
 import { useState } from "react";
-import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
@@ -30,7 +29,6 @@ interface SubmitArgs {
 }
 
 export function useRegistrarPagoSubmit(onSuccess: () => void) {
-  const { toast } = useToast();
   const registrar = useRegistrarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [timbrandoRep, setTimbrandoRep] = useState(false);
@@ -39,12 +37,12 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
     setTimbrandoRep(true);
     try {
       await emitirRep(pagoId);
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: "REP timbrado",
         description: "Se generó el Recibo Electrónico de Pago.",
       });
     } catch (err) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Pago registrado, pero el REP falló",
         description: `${getErrorMessage(err)}. Puedes reintentar desde el historial de pagos.`,
         method: "ON_ERROR",
@@ -74,11 +72,11 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
         entidad_id: args.facturaId,
         entidad_nombre: `Pago ${formatCurrency(args.monto, args.moneda)} factura ${args.facturaNumero}`,
       });
-      notifySuccess(toast, { title: "Pago registrado" });
+      notifySuccess(undefined, { title: "Pago registrado" });
       if (args.esPpdTimbrada && pagoId) await intentarTimbrarRep(pagoId);
       onSuccess();
     } catch (err) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al registrar pago",
         description: getErrorMessage(err),
         method: "ON_ERROR",

@@ -17,9 +17,6 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 
-interface ToastFn {
-  (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;
-}
 
 // ── Pure sub-validators ──────────────────────────────────────────────────────
 
@@ -82,7 +79,6 @@ export function validatePaso1(v: CotizacionFormValues): string | null {
 export async function vincularCrmTrasCrear(
   cotizacionId: string,
   values: CotizacionFormValues,
-  toast: ToastFn,
 ): Promise<void> {
   try {
     const user = await obtenerUsuarioActual();
@@ -102,7 +98,7 @@ export async function vincularCrmTrasCrear(
       user,
     });
   } catch (vinculErr) {
-    notifyError(toast, {
+    notifyError(undefined, {
       title: "Cotización guardada, pero falló el vínculo CRM",
       description: getErrorMessage(vinculErr),
       error: vinculErr,

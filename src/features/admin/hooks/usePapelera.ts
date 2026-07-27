@@ -44,7 +44,7 @@ export function usePapelera(enabled: boolean) {
       invalidateAll();
     },
     onError: (e: Error) =>
-      notifyError(toast, { title: "Error al restaurar", description: e.message, error: e, method: "FEATURES_ADMIN_HOOKS_USEPAPELERA_1" }),
+      notifyError(undefined, { title: "Error al restaurar", description: e.message, error: e, method: "FEATURES_ADMIN_HOOKS_USEPAPELERA_1" }),
   });
 
   const purge = useMutation({
@@ -54,7 +54,7 @@ export function usePapelera(enabled: boolean) {
       invalidateAll();
     },
     onError: (e: Error) =>
-      notifyError(toast, { title: "Error al purgar", description: e.message, error: e, method: "FEATURES_ADMIN_HOOKS_USEPAPELERA_2" }),
+      notifyError(undefined, { title: "Error al purgar", description: e.message, error: e, method: "FEATURES_ADMIN_HOOKS_USEPAPELERA_2" }),
   });
 
   return {

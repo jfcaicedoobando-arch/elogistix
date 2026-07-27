@@ -20,7 +20,6 @@ import { useOrgFilter } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { createCliente } from "@/features/cliente/services";
-import { useToast } from "@/hooks/shared";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useRegistrarActividad } from "@/hooks/shared";
 import {
@@ -34,7 +33,6 @@ export default function Clientes() {
   const { canEdit } = usePermissions();
   const { organizationId } = useOrgFilter();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const registrarActividad = useRegistrarActividad();
 
   const {
@@ -160,7 +158,7 @@ export default function Clientes() {
         }}
         onSuccess={(n) => {
           queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
-          notifySuccess(toast, { title: `Importados ${n} clientes` });
+          notifySuccess(undefined, { title: `Importados ${n} clientes` });
         }}
       />
 

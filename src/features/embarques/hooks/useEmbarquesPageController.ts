@@ -5,7 +5,6 @@ import { calcularEstadoEmbarque, usePrefetchEmbarque } from "@/features/embarque
 import { useOperadoresDistintos } from "@/features/catalogos/hooks/useOperadoresDistintos";
 import { useClientesForSelect } from "@/features/cliente/hooks/useClientes";
 import { usePermissions } from "@/hooks/shared";
-import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters/dates";
@@ -29,7 +28,6 @@ export function useEmbarquesPageController() {
   const navigate = useNavigate();
   const { data: clientes = [] } = useClientesForSelect();
   const { canEdit } = usePermissions();
-  const { toast } = useToast();
   const prefetchEmbarque = usePrefetchEmbarque();
 
   const state = useEmbarquesPageState();
@@ -82,7 +80,7 @@ export function useEmbarquesPageController() {
         : filtradosPorEstado.filter((e) => state.alertIdSet!.has(e.id));
 
       if (filtradosFinal.length === 0) {
-        notifyError(toast, { title: "Sin datos para exportar", description: "Los filtros actuales no devuelven embarques.", method: "USE_EMBARQUES_PAGE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
+        notifyError(undefined, { title: "Sin datos para exportar", description: "Los filtros actuales no devuelven embarques.", method: "USE_EMBARQUES_PAGE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
         return;
       }
 
@@ -128,16 +126,16 @@ export function useEmbarquesPageController() {
         })),
       );
 
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: "CSV exportado",
         description: `${filtradosFinal.length} embarques exportados con los filtros actuales.`,
       });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al exportar", description: getErrorMessage(err), error: err, method: "USE_EMBARQUES_PAGE_CONTROLLER" });
+      notifyError(undefined, { title: "Error al exportar", description: getErrorMessage(err), error: err, method: "USE_EMBARQUES_PAGE_CONTROLLER" });
     } finally {
       setExportandoCsv(false);
     }
-  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterEstado, state.filterAlerta, state.alertIdSet, state.fechaDesde, state.fechaHasta, toast]);
+  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterEstado, state.filterAlerta, state.alertIdSet, state.fechaDesde, state.fechaHasta]);
 
   return {
     state,

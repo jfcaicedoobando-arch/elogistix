@@ -5,7 +5,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ExternalLink, Copy, Check, AlertCircle } from "lucide-react";
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
-import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
@@ -93,7 +92,6 @@ function resolveTrackingUrl(
 
 export function TrackingNavieraActions(props: Props) {
   const { data: navieras = [] } = useNavieras();
-  const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
   const { esMaritimo, carrier, referencia, refLabel } = getCarrierInfo(props);
@@ -105,10 +103,10 @@ export function TrackingNavieraActions(props: Props) {
     const ok = await copyTextWithFallback(texto);
     if (ok) {
       setCopied(true);
-      notifySuccess(toast, { title: `${refLabel} copiado`, description: texto });
+      notifySuccess(undefined, { title: `${refLabel} copiado`, description: texto });
       setTimeout(() => setCopied(false), 2000);
     } else {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo copiar",
         description: `Copia manualmente: ${texto}`,
         method: "TRACKING_COPY_BL",

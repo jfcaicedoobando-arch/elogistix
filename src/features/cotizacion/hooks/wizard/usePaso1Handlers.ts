@@ -14,9 +14,6 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { validatePaso1, vincularCrmTrasCrear } from "./handlePaso1Crm";
 import { scrollAndFocusSection, seccionParaErrorPaso1 } from "./scrollToErrorSection";
 
-interface ToastFn {
-  (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;
-}
 
 interface Paso1Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<CotizacionRow>; isPending: boolean };
@@ -26,7 +23,6 @@ interface Paso1Mutations {
 
 interface Paso1Deps {
   form: UseFormReturn<CotizacionFormValues>;
-  toast: ToastFn;
   cotizacionId: string | null;
   setCotizacionId: (id: string) => void;
   setCurrentStep: (step: number | ((p: number) => number)) => void;
@@ -36,7 +32,7 @@ interface Paso1Deps {
 }
 
 export function usePaso1Handlers({
-  form, toast, cotizacionId, setCotizacionId, setCurrentStep,
+  form, cotizacionId, setCotizacionId, setCurrentStep,
   msdsFile, buildPaso1Data, mutations,
 }: Paso1Deps) {
   const { crearCotizacion, updateCotizacion, registrarActividad } = mutations;
@@ -44,17 +40,17 @@ export function usePaso1Handlers({
   const handlePaso1 = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
-    if (err) { notifyError(toast, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
+    if (err) { notifyError(undefined, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
     const esNueva = !cotizacionId;
     try {
       const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
       if (!cotizacionId) setCotizacionId(id);
       if (esNueva && v.esProspecto) {
-        await vincularCrmTrasCrear(id, v, toast);
+        await vincularCrmTrasCrear(id, v);
       }
       setCurrentStep(2);
     } catch (e: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al guardar datos generales",
         description: getErrorMessage(e),
         error: e,
@@ -62,7 +58,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, toast, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep]);
 
   /**
    * Atajo "Cotizar sin desglose": guarda Paso 1 con `sin_desglose_costos = true`
@@ -71,14 +67,14 @@ export function usePaso1Handlers({
   const handleCotizarSinDesglose = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
-    if (err) { notifyError(toast, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
+    if (err) { notifyError(undefined, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
     form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
     const esNueva = !cotizacionId;
     try {
       const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
       if (!cotizacionId) setCotizacionId(id);
       if (esNueva && v.esProspecto) {
-        await vincularCrmTrasCrear(id, v, toast);
+        await vincularCrmTrasCrear(id, v);
       }
       registrarActividad.mutate({
         accion: "cotizacion_sin_desglose_creada",
@@ -88,7 +84,7 @@ export function usePaso1Handlers({
       });
       setCurrentStep(3);
     } catch (e: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al guardar cotización",
         description: getErrorMessage(e),
         error: e,
@@ -96,7 +92,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, toast, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep]);
 
   return { handlePaso1, handleCotizarSinDesglose };
 }

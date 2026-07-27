@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 
@@ -26,7 +26,7 @@ export default function QuickCreateLeadPopover({ onCreated, onMore, onClose }: P
 
   const submit = async () => {
     const emp = empresa.trim();
-    if (!emp) return notifyError(toast, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_1" });
+    if (!emp) return notifyError(undefined, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_1" });
     try {
       const r = await crear.mutateAsync({
         empresa: emp,
@@ -38,12 +38,12 @@ export default function QuickCreateLeadPopover({ onCreated, onMore, onClose }: P
         vendedor_id: user?.id ?? null,
         vendedor_email: user?.email ?? "",
       });
-      toast.success("Lead creado", { duration: 2000 });
+      notifySuccess(undefined, { title: "Lead creado", duration: 2000 });
       setEmpresa(""); setContacto("");
       onClose();
       onCreated(r.id);
     } catch (e) {
-      notifyError(toast, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_2" });
+      notifyError(undefined, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_2" });
     }
   };
 

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { deleteAuditoriaRevision } from "@/features/auditoria/services";
 import { insertBitacora } from "@/features/auditoria/services/bitacora";
@@ -37,11 +37,11 @@ export function useDesmarcarRevisado() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: AUDITORIA_REVISIONES_KEY });
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
-      toast.success("Marca de revisión eliminada");
+      notifySuccess(undefined, { title: "Marca de revisión eliminada" });
     },
     onError: (err: Error) => {
       logger.error("[useDesmarcarRevisado] error:", err);
-      notifyError(toast, { title: "Error al eliminar marca", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_DESMARCAR_1" });
+      notifyError(undefined, { title: "Error al eliminar marca", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_DESMARCAR_1" });
     },
   });
 }

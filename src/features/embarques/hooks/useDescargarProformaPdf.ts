@@ -5,7 +5,6 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
  * y la invocación del generador, eliminando duplicación entre TabFacturacion y TabProformas.
  */
 import { useState, useCallback } from "react";
-import { toast } from "@/hooks/shared";
 import type { generarPdfProforma } from "@/generators/proformaPdf";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import {
@@ -52,7 +51,7 @@ export function useDescargarProformaPdf() {
         ]);
 
         if (!embarque) {
-          notifyError(toast, { title: "No se pudo cargar el embarque asociado", method: "USE_DESCARGAR_PROFORMA_PDF", errorCode: ERROR_CODES.VALIDATION_FAILED });
+          notifyError(undefined, { title: "No se pudo cargar el embarque asociado", method: "USE_DESCARGAR_PROFORMA_PDF", errorCode: ERROR_CODES.VALIDATION_FAILED });
           return;
         }
 
@@ -66,7 +65,7 @@ export function useDescargarProformaPdf() {
           conceptosConsolidados: consolidados,
         });
       } catch (e) {
-        notifyError(toast, { title: "Error al generar PDF: " + (e as Error).message, error: e, method: "USE_DESCARGAR_PROFORMA_PDF" });
+        notifyError(undefined, { title: "Error al generar PDF: " + (e as Error).message, error: e, method: "USE_DESCARGAR_PROFORMA_PDF" });
       } finally {
         setDownloadingId(null);
       }

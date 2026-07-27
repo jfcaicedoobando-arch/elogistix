@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { useResponderCotizacion } from "@/features/cotizacion/hooks/mutations/usePortalCotizacionMutations";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -14,7 +13,6 @@ export type RespuestaCotizacion = "Aceptada" | "Rechazada";
  * orquestación de la mutación de respuesta (toasts + reset).
  */
 export function usePortalCotizacionDetalleController(cotizacionId: string | undefined) {
-  const { toast } = useToast();
   const [confirmAction, setConfirmAction] = useState<RespuestaCotizacion | null>(null);
   const [comentario, setComentario] = useState("");
   const responderMutation = useResponderCotizacion(cotizacionId ?? "");
@@ -31,7 +29,7 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
       {
         onSuccess: () => {
           const fechaTxt = formatFechaHora(new Date().toISOString());
-          notifySuccess(toast, {
+          notifySuccess(undefined, {
             title:
               confirmAction === "Aceptada"
                 ? "Tu respuesta fue registrada"
@@ -44,7 +42,7 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
           reset();
         },
         onError: (err: unknown) => {
-          notifyError(toast, {
+          notifyError(undefined, {
             title: "Error",
             description: getErrorMessage(err),
             method: "ON_ERROR",
@@ -54,7 +52,7 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
         },
       },
     );
-  }, [confirmAction, cotizacionId, comentario, responderMutation, toast, reset]);
+  }, [confirmAction, cotizacionId, comentario, responderMutation, reset]);
 
   const onDialogOpenChange = useCallback(
     (open: boolean) => {

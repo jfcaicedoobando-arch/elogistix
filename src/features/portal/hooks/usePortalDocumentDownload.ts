@@ -1,6 +1,5 @@
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState, useCallback } from "react";
-import { useToast } from "@/hooks/shared";
 import { createDocumentoSignedUrl } from "@/features/search/services";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { descargarBlob } from "@/lib/downloadBlob";
@@ -9,7 +8,6 @@ import { descargarBlob } from "@/lib/downloadBlob";
  * Encapsula la descarga de documentos del portal (signed URL + blob fallback).
  */
 export function usePortalDocumentDownload() {
-  const { toast } = useToast();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const handleDownload = useCallback(async (archivo: string, docId: string) => {
@@ -26,11 +24,11 @@ export function usePortalDocumentDownload() {
         window.open(signedUrl, "_blank");
       }
     } catch {
-      notifyError(toast, { title: "Error al descargar", method: "USE_PORTAL_DOCUMENT_DOWNLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al descargar", method: "USE_PORTAL_DOCUMENT_DOWNLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     } finally {
       setDownloadingId(null);
     }
-  }, [toast]);
+  }, []);
 
   return { downloadingId, handleDownload };
 }

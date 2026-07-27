@@ -18,7 +18,6 @@ import { SaldosBancosCard } from "@/features/dashboardEjecutivo/components/Saldo
 import { TopListaCard } from "@/features/dashboardEjecutivo/components/TopListaCard";
 import { MiniFlujoCard } from "@/features/dashboardEjecutivo/components/MiniFlujoCard";
 import { AlertasPanel } from "@/features/dashboardEjecutivo/components/AlertasPanel";
-import { toast } from "sonner";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -49,7 +48,7 @@ export default function ProfitDashboardEjecutivo() {
       const blob = await pdf(<ReporteEjecutivoDocument snapshot={data} />).toBlob();
       descargarBlob(blob, `dashboard-ejecutivo-${data.periodo}.pdf`);
     } catch (e) {
-      notifyError(toast, { title: "No se pudo generar el PDF", error: e, method: "PAGES_PROFIT_PROFITDASHBOARDEJECUTIVO_1" });
+      notifyError(undefined, { title: "No se pudo generar el PDF", error: e, method: "PAGES_PROFIT_PROFITDASHBOARDEJECUTIVO_1" });
       reportCaughtError(e, { feature: "pnl", op: "generar_pdf_ejecutivo" }, { periodo: data?.periodo });
     } finally {
       setGenerandoPdf(false);

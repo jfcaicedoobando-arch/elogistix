@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { toast as sonnerToast } from "sonner";
+
 import { useProveedorMutations } from "@/features/proveedor/hooks";
-import { useToast, useRegistrarActividad } from "@/hooks/shared";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { ProveedorDuplicadoError } from "@/features/proveedor/services";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
@@ -16,7 +16,6 @@ export function useProveedoresCrear() {
   const navigate = useNavigate();
   const { addProveedor } = useProveedorMutations();
   const registrarActividad = useRegistrarActividad();
-  const { toast } = useToast();
 
   return async (data: TablesInsert<"proveedores">) => {
     try {
@@ -27,21 +26,23 @@ export function useProveedoresCrear() {
         entidad_id: proveedorCreado.id,
         entidad_nombre: data.nombre,
       });
-      notifySuccess(toast, { title: "Proveedor creado correctamente" });
+      notifySuccess(undefined, { title: "Proveedor creado correctamente" });
     } catch (err) {
       if (err instanceof ProveedorDuplicadoError) {
         const existente = err.existente;
-        sonnerToast.error("Proveedor duplicado", {
+        notifyWarning(undefined, {
+          title: "Proveedor duplicado",
           description: existente
             ? `Ya existe "${existente.nombre}" con este RFC en tu organización.`
             : "Ya existe un proveedor con este RFC en tu organización.",
+          method: "PROVEEDOR_DUPLICADO",
           action: existente
             ? { label: "Ver", onClick: () => navigate(`/proveedores/${existente.id}`) }
             : undefined,
         });
         throw err; // mantiene el diálogo abierto
       }
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error al crear proveedor",
         method: "HANDLE_ADD",
         errorCode: ERROR_CODES.VALIDATION_FAILED,

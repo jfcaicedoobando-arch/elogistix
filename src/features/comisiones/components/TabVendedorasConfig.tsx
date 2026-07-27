@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Plus, Save } from "lucide-react";
-import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,7 +55,7 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
 
   const guardarPct = (id: string) => {
     const v = Number(pcts[id]);
-    if (Number.isNaN(v) || v < 0 || v > 100) return notifyError(toast, { title: "% inválido", method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_2" });
+    if (Number.isNaN(v) || v < 0 || v > 100) return notifyError(undefined, { title: "% inválido", method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_2" });
     update.mutate({ id, changes: { porcentaje_default: v } });
   };
 

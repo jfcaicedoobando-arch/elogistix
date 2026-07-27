@@ -99,7 +99,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
       await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
     },
     onError: (e: Error) => {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo enviar",
         description: e.message,
         error: e,
@@ -112,7 +112,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
     const to = destinatarios.split(/[,;\s]+/).filter(Boolean).map((email) => ({ email }));
     const ccList = cc.split(/[,;\s]+/).filter(Boolean);
     if (to.length === 0) {
-      notifyError(toast, { title: "Ingresa al menos un destinatario", method: "PROFORMAS_ENVIAR_VALIDACION" });
+      notifyError(undefined, { title: "Ingresa al menos un destinatario", method: "PROFORMAS_ENVIAR_VALIDACION" });
       return;
     }
     enviarMut.mutate({ to, ccList, asunto, mensaje });

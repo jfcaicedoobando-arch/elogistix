@@ -5,7 +5,7 @@
 "use memo";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Sparkles } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -54,7 +54,7 @@ export default function CotizacionPlantillas() {
     if (!aEliminar || !organizationId) return;
     try {
       await eliminar.mutateAsync({ id: aEliminar.id, organizationId });
-      toast.success("Plantilla eliminada");
+      notifySuccess(undefined, { title: "Plantilla eliminada" });
       setAEliminar(null);
     } catch (err) {
       notifyError(undefined, {

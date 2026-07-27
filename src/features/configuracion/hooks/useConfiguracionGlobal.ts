@@ -1,6 +1,5 @@
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
   fetchConfiguracionGlobal,
@@ -32,16 +31,15 @@ export function useConfigGlobalCategoria(categoria: string): Record<string, unkn
 
 export function useUpdateConfiguracionGlobal() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: updateConfiguracionGlobalItems,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.configuracionGlobal.all });
-      notifySuccess(toast, { title: "Configuración global guardada" });
+      notifySuccess(undefined, { title: "Configuración global guardada" });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error al guardar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al guardar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 }

@@ -8,7 +8,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import VendedorSelect from "@/features/crm/components/VendedorSelect";
@@ -23,7 +22,6 @@ interface Props {
 }
 
 export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
-  const { toast } = useToast();
   const actualizar = useActualizarLeadsBulk();
   const eliminar = useEliminarLeadsBulk();
   const [delOpen, setDelOpen] = useState(false);
@@ -34,7 +32,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
       crmToast.success(`${updated} leads → ${estado}`);
       onDone();
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ESTADO" });
+      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ESTADO" });
     }
   };
 
@@ -47,7 +45,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
       crmToast.success(`${updated} leads reasignados`);
       onDone();
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_VENDEDOR" });
+      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_VENDEDOR" });
     }
   };
 
@@ -57,7 +55,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
       crmToast.success(`${deleted} leads eliminados`);
       onDone();
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ELIMINAR" });
+      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ELIMINAR" });
     }
   };
 

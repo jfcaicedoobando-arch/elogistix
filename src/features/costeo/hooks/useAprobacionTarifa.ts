@@ -3,7 +3,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { aprobarTarifa, rechazarTarifa, reactivarTarifa } from "@/features/costeo/services/aprobacion";
 import { notifyError } from "@/lib/ui/appFeedback";
 
@@ -22,8 +22,8 @@ export function useAprobacionTarifa() {
 
   const aprobar = useMutation({
     mutationFn: (id: string) => aprobarTarifa(id),
-    onSuccess: () => { invalidate(); toast.success("Tarifa aprobada — ahora está vigente."); },
-    onError: (e: unknown) => notifyError(toast, {
+    onSuccess: () => { invalidate(); notifySuccess(undefined, { title: "Tarifa aprobada — ahora está vigente." }); },
+    onError: (e: unknown) => notifyError(undefined, {
       title: `No se pudo aprobar: ${describeError(e)}`,
       error: e,
       method: "FEATURES_COSTEO_HOOKS_USEAPROBACIONTARIFA_1",
@@ -32,8 +32,8 @@ export function useAprobacionTarifa() {
 
   const rechazar = useMutation({
     mutationFn: ({ id, motivo }: { id: string; motivo: string }) => rechazarTarifa(id, motivo),
-    onSuccess: () => { invalidate(); toast.success("Tarifa rechazada — el agente fue notificado."); },
-    onError: (e: unknown) => notifyError(toast, {
+    onSuccess: () => { invalidate(); notifySuccess(undefined, { title: "Tarifa rechazada — el agente fue notificado." }); },
+    onError: (e: unknown) => notifyError(undefined, {
       title: `No se pudo rechazar: ${describeError(e)}`,
       error: e,
       method: "FEATURES_COSTEO_HOOKS_USEAPROBACIONTARIFA_2",
@@ -42,8 +42,8 @@ export function useAprobacionTarifa() {
 
   const reactivar = useMutation({
     mutationFn: (id: string) => reactivarTarifa(id),
-    onSuccess: () => { invalidate(); toast.success("Tarifa devuelta a borrador."); },
-    onError: (e: unknown) => notifyError(toast, {
+    onSuccess: () => { invalidate(); notifySuccess(undefined, { title: "Tarifa devuelta a borrador." }); },
+    onError: (e: unknown) => notifyError(undefined, {
       title: `No se pudo reactivar: ${describeError(e)}`,
       error: e,
       method: "FEATURES_COSTEO_HOOKS_USEAPROBACIONTARIFA_3",

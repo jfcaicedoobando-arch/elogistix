@@ -99,9 +99,10 @@ export function notifyWarning(
   _toast: AnyToastFn | undefined,
   opts: InfoNotifyOptions,
 ) {
-  const action = shouldAttachDetails(opts)
-    ? buildDetailsAction({ ...opts, titleFinal: opts.title })
-    : undefined;
+  const action = opts.action
+    ?? (shouldAttachDetails(opts)
+      ? buildDetailsAction({ ...opts, titleFinal: opts.title })
+      : undefined);
   sonnerToast.warning(opts.title, {
     description: opts.description,
     duration: opts.persistent ? Infinity : opts.duration,
@@ -115,9 +116,10 @@ export function notifySuccess(
   _toast: AnyToastFn | undefined,
   opts: InfoNotifyOptions,
 ) {
-  const action = shouldAttachDetails(opts)
-    ? buildDetailsAction({ ...opts, titleFinal: opts.title })
-    : undefined;
+  const action = opts.action
+    ?? (shouldAttachDetails(opts)
+      ? buildDetailsAction({ ...opts, titleFinal: opts.title })
+      : undefined);
   sonnerToast.success(opts.title, {
     description: opts.description,
     duration: opts.persistent ? Infinity : opts.duration,
@@ -131,9 +133,10 @@ export function notifyInfo(
   _toast: AnyToastFn | undefined,
   opts: InfoNotifyOptions,
 ) {
-  const action = shouldAttachDetails(opts)
-    ? buildDetailsAction({ ...opts, titleFinal: opts.title })
-    : undefined;
+  const action = opts.action
+    ?? (shouldAttachDetails(opts)
+      ? buildDetailsAction({ ...opts, titleFinal: opts.title })
+      : undefined);
   sonnerToast(opts.title, {
     description: opts.description,
     duration: opts.persistent ? Infinity : opts.duration,

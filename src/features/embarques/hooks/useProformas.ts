@@ -3,7 +3,6 @@
  * La lógica de negocio vive en `services/proformaServices.ts` y `lib/domain/proforma.ts`.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "@/hooks/shared";
 import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
@@ -75,11 +74,11 @@ export function useCrearProforma() {
       return svcCrear({ ...params, organizationId });
     },
     onSuccess: (proforma) => {
-      notifySuccess(toast, { title: `Proforma ${proforma.numero} generada (pendiente de revisión)` });
+      notifySuccess(undefined, { title: `Proforma ${proforma.numero} generada (pendiente de revisión)` });
       invalidateProformaCaches(queryClient, proforma.embarque_id);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al generar proforma: ${error.message}`, error, method: "CREATE_PROFORMA" });
+      notifyError(undefined, { title: `Error al generar proforma: ${error.message}`, error, method: "CREATE_PROFORMA" });
     },
   });
 }
@@ -91,11 +90,11 @@ export function useEliminarProforma() {
     mutationFn: (params: EliminarProformaParams & { numero: string }) =>
       svcEliminar(params).then(() => params),
     onSuccess: (params) => {
-      notifySuccess(toast, { title: "Proforma eliminada correctamente" });
+      notifySuccess(undefined, { title: "Proforma eliminada correctamente" });
       invalidateProformaCaches(queryClient, params.embarqueId);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al eliminar proforma: ${error.message}`, error, method: "DELETE_PROFORMA" });
+      notifyError(undefined, { title: `Error al eliminar proforma: ${error.message}`, error, method: "DELETE_PROFORMA" });
     },
   });
 }

@@ -130,7 +130,7 @@ export function useNotaCreditoDraft(p: Params) {
     } catch (err) {
       const rawMsg = err instanceof Error ? err.message : "";
       const description = rawMsg.startsWith("LC_") ? rawMsg : getErrorMessage(err);
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo crear la nota de crédito",
         description,
         method: "ON_ERROR",

@@ -9,7 +9,6 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { CheckCircle2, Link2, Link2Off, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -56,13 +55,13 @@ export function ConciliacionPagoCell({
   const vincular = useMutation({
     mutationFn: (movId: string) => conciliarConPago(movId, "cxp", pagoId, user?.id ?? null),
     onSuccess: () => {
-      notifySuccess(toast, { title: "Movimiento vinculado al pago" });
+      notifySuccess(undefined, { title: "Movimiento vinculado al pago" });
       qc.invalidateQueries({ queryKey: queryKeys.pagosProveedor.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.bbvaMovimientos.all });
       setOpen(false);
     },
-    onError: (err: Error) => notifyError(toast, {
+    onError: (err: Error) => notifyError(undefined, {
       title: `No se pudo vincular: ${err.message}`, error: err,
       method: "FEATURES_CXP_CONCILIACION_VINCULAR",
     }),
@@ -71,13 +70,13 @@ export function ConciliacionPagoCell({
   const desvincular = useMutation({
     mutationFn: (movId: string) => desconciliarMovimiento(movId),
     onSuccess: () => {
-      notifySuccess(toast, { title: "Movimiento desvinculado" });
+      notifySuccess(undefined, { title: "Movimiento desvinculado" });
       qc.invalidateQueries({ queryKey: queryKeys.pagosProveedor.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.bbvaMovimientos.all });
       setOpen(false);
     },
-    onError: (err: Error) => notifyError(toast, {
+    onError: (err: Error) => notifyError(undefined, {
       title: `No se pudo desvincular: ${err.message}`, error: err,
       method: "FEATURES_CXP_CONCILIACION_DESVINCULAR",
     }),

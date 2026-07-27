@@ -3,7 +3,6 @@
  * cuando se abre el dialog del hallazgo, no entra al cache global.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   fetchComentariosByRevision,
@@ -44,7 +43,7 @@ export function useAgregarComentarioAuditoria() {
     },
     onError: (err: Error) => {
       logger.error("[useAgregarComentarioAuditoria] error:", err);
-      notifyError(toast, { title: "No se pudo agregar el comentario", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USEAUDITORIACOMENTARIOS_1" });
+      notifyError(undefined, { title: "No se pudo agregar el comentario", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USEAUDITORIACOMENTARIOS_1" });
     },
   });
 }

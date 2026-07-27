@@ -4,7 +4,6 @@ import { exportToCsv } from "@/generators/exportCsv";
 import { exportarLayoutContable } from "@/generators/layoutContable";
 import { useFacturasListado, useGastosPendientes, useMarcarCostoPagado } from "@/features/facturacion/hooks/useFacturas";
 import { useRegistrarActividad } from "@/hooks/shared";
-import { useToast } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared";
 
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -56,7 +55,6 @@ export function useFacturacionPageController(opts?: {
 
   const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
-  const { toast } = useToast();
   const registrarActividad = useRegistrarActividad();
 
   // Lista de clientes derivada de la página actual (limitación conocida:
@@ -142,11 +140,11 @@ export function useFacturacionPageController(opts?: {
         entidad_id: 'layout_contable',
         entidad_nombre: `Layout contable (${filtered.length} facturas)`,
       });
-      notifySuccess(toast, { title: "Layout contable generado" });
+      notifySuccess(undefined, { title: "Layout contable generado" });
     } catch {
-      notifyError(toast, { title: "Error al generar layout contable", method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al generar layout contable", method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
-  }, [filtered, registrarActividad, toast]);
+  }, [filtered, registrarActividad]);
 
   return {
     // estado

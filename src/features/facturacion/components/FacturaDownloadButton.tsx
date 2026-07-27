@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { FileText, FileCode2 } from "lucide-react";
 import { openFacturaInNewTab } from "@/services/storage";
-import { toast } from "@/hooks/shared";
 import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -36,7 +35,7 @@ export function FacturaDownloadButton({ stored, kind, size = "icon", className, 
         throw new Error("Archivo no disponible");
       }
     } catch (err) {
-      notifyError(toast, { title: "No se pudo abrir el archivo",
+      notifyError(undefined, { title: "No se pudo abrir el archivo",
         description: (err as Error).message, error: err, method: "FEATURES_FACTURACION_COMPONENTS_FACTURADOWNLOADBUTTON_1" });
     }
   };

@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+
 import { emitirFacturapi, cancelarFacturapi, FacturapiError, type MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { useMutationWithFeedback } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyError, notifyInfo, notifyWarning } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
 
@@ -54,13 +54,14 @@ export function useCancelarFactura() {
       if (res.pending) {
         // Silencio positivo SAT (regla 2.7.1.34 RMF): el receptor tiene hasta
         // 72 h hábiles para aceptar/rechazar. NO decimos "cancelado".
-        toast.info("Cancelación enviada al SAT", {
+        notifyInfo(undefined, {
+          title: "Cancelación enviada al SAT",
           description: res.message
             ?? "El receptor tiene hasta 72 h para aceptar. El sistema reconciliará automáticamente.",
           duration: 12000,
         });
       } else {
-        toast.success(res.sustituida ? "CFDI sustituido" : "CFDI cancelado");
+        notifySuccess(undefined, { title: res.sustituida ? "CFDI sustituido" : "CFDI cancelado" });
       }
       qc.invalidateQueries({ queryKey: facturasKeys.all });
       invalidateHuecoFacturacion(qc);
@@ -70,9 +71,11 @@ export function useCancelarFactura() {
       // en vez del toast rojo genérico. El modal queda abierto para que el
       // usuario reintente sin perder los datos ya seleccionados.
       if (err instanceof FacturapiError && err.transient) {
-        toast.warning("Servicio SAT no disponible", {
+        notifyWarning(undefined, {
+          title: "Servicio SAT no disponible",
           description: err.message,
           duration: 15000,
+          method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_TRANSIENT",
           action: {
             label: "Reintentar",
             onClick: () => {
@@ -84,19 +87,19 @@ export function useCancelarFactura() {
                 vars.sustituidaPorFacturaId,
               )
                 .then(() => {
-                  toast.success("CFDI cancelado");
+                  notifySuccess(undefined, { title: "CFDI cancelado" });
                   qc.invalidateQueries({ queryKey: facturasKeys.all });
                   invalidateHuecoFacturacion(qc);
                 })
                 .catch((e: Error) => {
-                  notifyError(toast, { title: `No se pudo cancelar: ${e.message}`, error: e, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_RETRY" });
+                  notifyError(undefined, { title: `No se pudo cancelar: ${e.message}`, error: e, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_RETRY" });
                 });
             },
           },
         });
         return;
       }
-      notifyError(toast, { title: `No se pudo cancelar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_2" });
+      notifyError(undefined, { title: `No se pudo cancelar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_2" });
     },
   });
 }

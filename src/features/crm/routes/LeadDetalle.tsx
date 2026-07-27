@@ -12,7 +12,6 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { usePermissions } from "@/hooks/shared";
@@ -32,7 +31,6 @@ export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
-  const { toast } = useToast();
   const { data: lead, isLoading } = useLead(id);
   const actualizar = useActualizarLead();
   const eliminar = useEliminarLead();
@@ -48,7 +46,7 @@ export default function LeadDetalle() {
       await actualizar.mutateAsync({ id, patch: form });
       crmToast.success("Cambios guardados");
     } catch (e) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo guardar",
         description: e instanceof Error ? e.message : undefined,
         error: e,
@@ -64,7 +62,7 @@ export default function LeadDetalle() {
       crmToast.success("Lead eliminado");
       navigate(ROUTES.CRM_LEADS);
     } catch (e) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo eliminar",
         description: e instanceof Error ? e.message : undefined,
         error: e,

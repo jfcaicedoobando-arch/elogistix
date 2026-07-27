@@ -4,7 +4,7 @@
  * (Auditoría Paso 6: separar lógica de presentación).
  */
 import { useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/features/tesoreria/hooks";
 import type { Database } from "@/integrations/supabase/types";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
@@ -37,7 +37,7 @@ export function useTesoreriaCuentasController() {
 
   const submit = async () => {
     if (!form.alias.trim()) {
-      notifyError(toast, { title: "Captura un alias", method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_1" });
+      notifyError(undefined, { title: "Captura un alias", method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_1" });
       return;
     }
     try {
@@ -50,11 +50,11 @@ export function useTesoreriaCuentasController() {
         saldo_inicial: Number(form.saldoInicial) || 0,
         activa: true,
       });
-      toast.success("Cuenta creada");
+      notifySuccess(undefined, { title: "Cuenta creada" });
       reset();
       setOpen(false);
     } catch (e) {
-      notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_2" });
+      notifyError(undefined, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_2" });
       reportCaughtError(e, { feature: "tesoreria", op: "crear_cuenta" });
     }
   };

@@ -1,6 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useToast } from "@/hooks/shared";
 import { uploadFile } from "@/services/storage/index";
 import { useExchangeRates } from "@/features/catalogos/hooks/useExchangeRates";
 import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
@@ -33,7 +32,6 @@ export function useEmbarqueForm() {
     mode: "onBlur",
   });
 
-  const { toast } = useToast();
   const [documentosArchivos, setDocumentosArchivos] = useState<Record<string, File>>({});
   const { data: tiposDeCambio } = useExchangeRates();
 
@@ -55,7 +53,7 @@ export function useEmbarqueForm() {
       await uploadFile(ruta, archivo);
       methods.setValue("msdsArchivo", ruta, opts);
     } catch {
-      notifyError(toast, { title: "Error al subir MSDS", method: "HANDLE_MSDS_UPLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al subir MSDS", method: "HANDLE_MSDS_UPLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     } finally {
       methods.setValue("subiendoMsds", false, opts);
     }

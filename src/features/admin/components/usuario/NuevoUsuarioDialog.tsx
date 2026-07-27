@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/shared";
 import { Loader2, UserPlus } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCreateUser } from "@/features/admin/hooks/usuario";
@@ -34,7 +33,6 @@ export default function NuevoUsuarioDialog({
   const [role, setRole] = useState<AppRole>(DEFAULT_ROLE);
   const [orgId, setOrgId] = useState("");
   const [touched, setTouched] = useState({ email: false, password: false });
-  const { toast } = useToast();
   const createUser = useCreateUser();
 
   const { data: orgs = [] } = useOrganizationsList(open && showOrgSelector);
@@ -65,7 +63,7 @@ export default function NuevoUsuarioDialog({
     if (!email || !password) return;
     if (!EMAIL_REGEX.test(email)) return;
     if (password.length < PASSWORD_MIN) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error",
         description: `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres`,
         method: "HANDLE_SUBMIT",
@@ -74,7 +72,7 @@ export default function NuevoUsuarioDialog({
       return;
     }
     if (showOrgSelector && !orgId) {
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "Error",
         description: "Selecciona una organización",
         method: "HANDLE_SUBMIT",

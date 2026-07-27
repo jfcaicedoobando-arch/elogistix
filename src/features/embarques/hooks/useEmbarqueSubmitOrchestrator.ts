@@ -124,7 +124,7 @@ export function useEmbarqueSubmitOrchestrator() {
         embarqueCreadoId = created?.id ?? null;
         reqId.reset();
       } catch (err: unknown) {
-        notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err), error: err, method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR" });
+        notifyError(undefined, { phase: "guardado del embarque", message: getErrorMessage(err), error: err, method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR" });
         return false;
       }
 
@@ -137,7 +137,7 @@ export function useEmbarqueSubmitOrchestrator() {
             embarqueId: embarqueCreadoId,
           });
         } catch (err: unknown) {
-          notifyWarning(toast, {
+          notifyWarning(undefined, {
             title: "Embarque creado con advertencia",
             description: `Cotización: no se pudo actualizar el estado (${getErrorMessage(err)}).`,
           });
@@ -159,7 +159,7 @@ export function useEmbarqueSubmitOrchestrator() {
         }),
       });
 
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: "Embarque creado",
         description: `Expediente ${expediente}: registrado correctamente.`,
       });

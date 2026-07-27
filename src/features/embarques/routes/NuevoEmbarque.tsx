@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { FormProvider } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
 import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
@@ -30,7 +29,7 @@ export default function NuevoEmbarque() {
   // lo devolvemos al listado de cotizaciones.
   useEffect(() => {
     if (!llegaConCotizacion) {
-      notifyError(toast, { title: "Selecciona primero una cotización Aceptada para crear el embarque.", method: "FEATURES_EMBARQUES_ROUTES_NUEVOEMBARQUE_1" });
+      notifyError(undefined, { title: "Selecciona primero una cotización Aceptada para crear el embarque.", method: "FEATURES_EMBARQUES_ROUTES_NUEVOEMBARQUE_1" });
       navigate("/cotizaciones", { replace: true });
     }
   }, [llegaConCotizacion, navigate]);

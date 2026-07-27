@@ -14,7 +14,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import {
@@ -33,7 +32,6 @@ interface Props {
 }
 
 export default function NuevaActividadDialog({ open, onOpenChange, defaultEntidad, onCreated }: Props) {
-  const { toast } = useToast();
   const crear = useCrearActividad();
   const [entidadTipo, setEntidadTipo] = useState<CrmEntidadTipo>(defaultEntidad?.tipo ?? "oportunidad");
   const [entidadId, setEntidadId] = useState<string>(defaultEntidad?.id ?? "");
@@ -61,8 +59,8 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   };
 
   const handleSubmit = async () => {
-    if (!entidadId) return notifyError(toast, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    if (!asunto.trim()) return notifyError(toast, { title: "Asunto requerido", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    if (!entidadId) return notifyError(undefined, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    if (!asunto.trim()) return notifyError(undefined, { title: "Asunto requerido", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
     try {
       const res = await crear.mutateAsync({
         tipo,
@@ -77,7 +75,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       onOpenChange(false);
       onCreated?.(res.id);
     } catch (e) {
-      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_SUBMIT" });
+      notifyError(undefined, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_SUBMIT" });
     }
   };
 

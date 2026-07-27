@@ -3,7 +3,6 @@
  */
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
   fetchAdminOrganization,
@@ -14,7 +13,6 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useAdminOrgInfo(id: string | undefined) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [editing, setEditing] = useState(false);
@@ -41,11 +39,11 @@ export function useAdminOrgInfo(id: string | undefined) {
       updateAdminOrganization(id!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.org(id!) });
-      notifySuccess(toast, { title: "Organización actualizada" });
+      notifySuccess(undefined, { title: "Organización actualizada" });
       setEditing(false);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error al actualizar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al actualizar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -53,10 +51,10 @@ export function useAdminOrgInfo(id: string | undefined) {
     mutationFn: (activo: boolean) => establecerOrganizacionActiva(id!, activo),
     onSuccess: (_, activo) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.org(id!) });
-      notifySuccess(toast, { title: activo ? "Organización activada" : "Organización desactivada" });
+      notifySuccess(undefined, { title: activo ? "Organización activada" : "Organización desactivada" });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 

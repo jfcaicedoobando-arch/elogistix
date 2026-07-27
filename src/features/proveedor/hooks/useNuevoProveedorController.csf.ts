@@ -3,7 +3,7 @@
  * Sube un PDF de Constancia de Situación Fiscal y devuelve el patch parcial
  * que el controller fusionará en el form. Solo aplica a proveedores nacionales.
  */
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
 import type { NuevoProveedorForm } from "./useNuevoProveedorController.constants";
 
@@ -30,11 +30,11 @@ function buildCsfPatch(data: CsfParsedData): CsfPatch {
 export async function procesarCsfUpload(file: File): Promise<CsfPatch | null> {
   try {
     const data = await parseCsf(file);
-    toast.success("CSF procesada. Verifica los datos extraídos.");
+    notifySuccess(undefined, { title: "CSF procesada. Verifica los datos extraídos." });
     return buildCsfPatch(data);
   } catch (err) {
     const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
-    notifyError(toast, { title: mensaje, error: err, method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER.CSF_1" });
+    notifyError(undefined, { title: mensaje, error: err, method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER.CSF_1" });
     return null;
   }
 }

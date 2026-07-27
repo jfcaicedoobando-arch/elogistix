@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/shared";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getSignedUrl } from "@/services/storage/index";
 import { getErrorMessage } from "@/lib/errors";
@@ -18,7 +17,6 @@ import { descargarBlob } from "@/lib/downloadBlob";
  * Separado del avance de estado para mantener responsabilidades únicas.
  */
 export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, id: string | undefined) {
-  const { toast } = useToast();
   const registrarActividad = useRegistrarActividad();
   const uploadDoc = useUploadDocumentoEmbarque();
   const deleteDoc = useDeleteDocumentoEmbarque();
@@ -35,11 +33,11 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
         entidad_id: id, entidad_nombre: embarque?.expediente ?? '',
         detalles: { documento: file.name },
       });
-      notifySuccess(toast, { title: "Archivo subido correctamente" });
+      notifySuccess(undefined, { title: "Archivo subido correctamente" });
     } catch (err: unknown) {
       const raw = getErrorMessage(err);
       const isInvalidKey = /invalid key/i.test(raw);
-      notifyError(toast, {
+      notifyError(undefined, {
         phase: "subida de documentos",
         title: "Error al subir archivo",
         description: isInvalidKey
@@ -69,9 +67,9 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
         entidad_id: id, entidad_nombre: embarque?.expediente ?? '',
         detalles: { documento: doc.nombre },
       });
-      notifySuccess(toast, { title: "Documento eliminado correctamente" });
+      notifySuccess(undefined, { title: "Documento eliminado correctamente" });
     } catch (err: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         phase: "eliminación de documento",
         title: "Error al eliminar documento",
         description: getErrorMessage(err),
@@ -92,7 +90,7 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
       const fileName = rutaArchivo.split("/").pop() ?? "documento";
       descargarBlob(blob, fileName);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al descargar", description: getErrorMessage(err), error: err, method: "HANDLE_DOWNLOAD" });
+      notifyError(undefined, { title: "Error al descargar", description: getErrorMessage(err), error: err, method: "HANDLE_DOWNLOAD" });
     } finally {
       setDownloadingDocId(null);
     }
@@ -111,13 +109,13 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
         entidad_nombre: embarque?.expediente ?? '',
         detalles: { documento: doc.nombre },
       });
-      notifySuccess(toast, {
+      notifySuccess(undefined, {
         title: noAplica
           ? `"${doc.nombre}" marcado como No aplica`
           : `"${doc.nombre}" marcado como Pendiente`,
       });
     } catch (err: unknown) {
-      notifyError(toast, {
+      notifyError(undefined, {
         phase: "actualización de estado de documento",
         title: "Error al actualizar el documento",
         description: getErrorMessage(err),

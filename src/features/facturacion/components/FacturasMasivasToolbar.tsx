@@ -5,7 +5,7 @@ import {
   fetchFacturasParaZip,
   marcarFacturasComoEnviadas,
 } from "@/features/facturacion/services";
-import { toast } from "sonner";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import JSZip from "jszip";
@@ -25,7 +25,7 @@ async function obtenerBytes(stored: string | null, facturaId: string, tipo: "pdf
   return await blob.arrayBuffer();
 }
 
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { todayLocalISO } from "@/lib/date/today";
 interface Props {
   selectedIds: Set<string>;
@@ -66,9 +66,9 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       }
       const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
       saveAs(blob, `facturas-${todayLocalISO()}.zip`);
-      toast.success(`${count} factura(s) descargadas`);
+      notifySuccess(undefined, { title: `${count} factura(s) descargadas` });
     } catch (e) {
-      notifyError(toast, { title: `Error al generar ZIP: ${(e as Error).message}`, error: e, method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_1" });
+      notifyError(undefined, { title: `Error al generar ZIP: ${(e as Error).message}`, error: e, method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_1" });
       reportCaughtError(e, { feature: "facturacion", op: "generar_zip_masivo" }, { total: ids.length });
     } finally {
       setBusy(null);
@@ -97,16 +97,18 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       }
       if (ok > 0) qc.invalidateQueries({ queryKey: facturasKeys.all });
       if (errores.length === 0) {
-        toast.success(`${ok} factura(s) reenviadas`);
+        notifySuccess(undefined, { title: `${ok} factura(s) reenviadas` });
       } else if (ok === 0) {
-        notifyError(toast, {
+        notifyError(undefined, {
           title: `No se pudo reenviar ninguna factura (${errores.length} error(es))`,
           description: errores.slice(0, 3).join(" · "),
           method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_REENVIAR",
         });
       } else {
-        toast.warning(`${ok} enviadas · ${errores.length} con error`, {
+        notifyWarning(undefined, {
+          title: `${ok} enviadas · ${errores.length} con error`,
           description: errores.slice(0, 3).join(" · "),
+          method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_REENVIAR_PARTIAL",
         });
       }
     } finally {
@@ -118,11 +120,11 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
     setBusy("mark");
     try {
       await marcarFacturasComoEnviadas(ids);
-      toast.success(`${ids.length} factura(s) marcadas como enviadas`);
+      notifySuccess(undefined, { title: `${ids.length} factura(s) marcadas como enviadas` });
       qc.invalidateQueries({ queryKey: facturasKeys.all });
       onClear();
     } catch (e) {
-      notifyError(toast, { title: `Error al marcar: ${(e as Error).message}`, error: e, method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_2" });
+      notifyError(undefined, { title: `Error al marcar: ${(e as Error).message}`, error: e, method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_2" });
       reportCaughtError(e, { feature: "facturacion", op: "marcar_enviada_masivo" }, { count: ids.length });
     } finally {
       setBusy(null);

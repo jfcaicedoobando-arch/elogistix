@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifyInfo } from "@/lib/ui/appFeedback";
 import { fetchSustitutaEstado, type SustitutaEstado } from "@/features/facturacion/services/sustitucionEstado";
 import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
 import { clearPersisted, readPersisted } from "@/features/facturacion/services/sustitucionPersistence";
@@ -48,7 +48,7 @@ export function useSustitucionState(facturaId: string | null, open: boolean) {
     if (step !== "confirmar" || !nuevaId || sustitutaQuery.isLoading) return;
     if (sustitutaQuery.data === null && facturaId) {
       clearPersisted(facturaId);
-      toast.info("El borrador sustituto ya no existe. Reinicia el proceso.");
+      notifyInfo(undefined, { title: "El borrador sustituto ya no existe. Reinicia el proceso." });
       setNuevaId(null);
       setStep("intro");
     }

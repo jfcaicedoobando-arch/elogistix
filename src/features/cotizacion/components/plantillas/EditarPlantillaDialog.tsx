@@ -3,7 +3,7 @@
  * v13.297.4 para respetar el límite `max-lines`.
  */
 import { useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ export function EditarPlantillaDialog({ plantilla, organizationId, open, onOpenC
         descripcion,
         visibilidad,
       });
-      toast.success("Plantilla actualizada");
+      notifySuccess(undefined, { title: "Plantilla actualizada" });
       onOpenChange(false);
     } catch (err) {
       notifyError(undefined, {

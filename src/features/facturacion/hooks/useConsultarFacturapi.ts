@@ -3,7 +3,6 @@
  * en vivo qué reporta FacturApi/SAT sobre una factura y reconciliar BD.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { consultarEstadoFacturapi, type ConsultarFacturapiResult } from "@/features/facturacion/services/facturapi";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
@@ -17,7 +16,7 @@ export function useConsultarFacturapi(facturaId: string | null | undefined) {
     },
     onSuccess: (res) => {
       if (res.reconciliada) {
-        notifySuccess(toast, {
+        notifySuccess(undefined, {
           title: "Estado reconciliado",
           description: "FacturApi reportó un estado distinto al local. Se actualizó la factura.",
         });
@@ -26,7 +25,7 @@ export function useConsultarFacturapi(facturaId: string | null | undefined) {
       }
     },
     onError: (err) =>
-      notifyError(toast, {
+      notifyError(undefined, {
         title: "No se pudo consultar FacturApi",
         description: err.message,
       }),

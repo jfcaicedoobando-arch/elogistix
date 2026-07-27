@@ -3,7 +3,7 @@ import { queryKeys } from "@/lib/query";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
 import { insertProveedor } from "@/features/proveedor/services";
-import { useToast, useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
+import { useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
@@ -19,7 +19,6 @@ export function ProveedoresImportDialog({ open, onOpenChange }: Props) {
   const { organizationId } = useOrgFilter();
   const queryClient = useQueryClient();
   const registrarActividad = useRegistrarActividad();
-  const { toast } = useToast();
 
   return (
     <BulkImportDialog
@@ -54,7 +53,7 @@ export function ProveedoresImportDialog({ open, onOpenChange }: Props) {
       }}
       onSuccess={(n) => {
         queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
-        notifySuccess(toast, { title: `Importados ${n} proveedores` });
+        notifySuccess(undefined, { title: `Importados ${n} proveedores` });
       }}
     />
   );

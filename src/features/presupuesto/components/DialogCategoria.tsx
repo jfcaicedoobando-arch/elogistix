@@ -2,7 +2,7 @@
  * Diálogo para crear/editar categoría presupuestal.
  */
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,19 +52,19 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
   }, [categoria, open]);
 
   const submit = async () => {
-    if (!nombre.trim()) return notifyError(toast, { title: "Nombre requerido", method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_1" });
+    if (!nombre.trim()) return notifyError(undefined, { title: "Nombre requerido", method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_1" });
     try {
       if (categoria) {
         await actualizar.mutateAsync({ id: categoria.id, patch: { nombre: nombre.trim(), orden, activa, tipo_contable: tipoContable } });
-        toast.success("Categoría actualizada");
+        notifySuccess(undefined, { title: "Categoría actualizada" });
       } else {
         await crear.mutateAsync({ nombre: nombre.trim(), orden, activa, tipo_contable: tipoContable });
-        toast.success("Categoría creada");
+        notifySuccess(undefined, { title: "Categoría creada" });
       }
       onOpenChange(false);
     } catch (e) {
       const err = e as { message?: string };
-      notifyError(toast, { title: err.message ?? "Error al guardar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_2" });
+      notifyError(undefined, { title: err.message ?? "Error al guardar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_2" });
     }
   };
 

@@ -7,8 +7,7 @@ import {
   fetchHistorialEnviosCotizacion,
   type EnvioRow,
 } from "@/features/cotizacion/services/envios";
-import { toast } from "sonner";
-
+import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 export type { EnvioRow } from "@/features/cotizacion/services/envios";
@@ -19,11 +18,11 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
     mutationFn: (input: EnviarEmailInput) => enviarCotizacionPorEmail(input),
     onSuccess: (res) => {
       if (res.estado === "enviado") {
-        toast.success("Cotización enviada por correo");
+        notifySuccess(undefined, { title: "Cotización enviada por correo" });
       } else if (res.estado === "parcial") {
-        toast.warning("Algunos correos no pudieron enviarse");
+        notifyWarning(undefined, { title: "Algunos correos no pudieron enviarse" });
       } else {
-        notifyError(toast, { title: "No se pudo enviar el correo", method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_1" });
+        notifyError(undefined, { title: "No se pudo enviar el correo", method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_1" });
       }
       if (cotizacionId) {
         qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacionId) });
@@ -31,7 +30,7 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
       }
       qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
     },
-    onError: (e: Error) => notifyError(toast, { title: e.message, error: e, method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_2" }),
+    onError: (e: Error) => notifyError(undefined, { title: e.message, error: e, method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_2" }),
   });
 }
 

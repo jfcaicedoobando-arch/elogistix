@@ -16,7 +16,6 @@ import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
 import { buildNcPrefillFromCfdi } from "./ncFromCfdi";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
 
@@ -100,7 +99,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
             pdfFile: cfdiFiles.pdf,
           });
         } catch (uploadErr) {
-          notifyError(toast, {
+          notifyError(undefined, {
             title: "NC registrada, pero no se pudieron subir los adjuntos.",
             error: uploadErr,
             method: "DIALOG_NC_PROV_UPLOAD",
