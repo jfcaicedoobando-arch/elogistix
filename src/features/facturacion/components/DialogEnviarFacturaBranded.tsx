@@ -21,6 +21,7 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/query";
 import { logger } from "@/lib/observability/logger";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 
 type FacturaLite = Pick<
   Tables<"facturas">,
