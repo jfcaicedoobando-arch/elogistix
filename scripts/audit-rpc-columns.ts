@@ -182,7 +182,7 @@ async function main() {
   console.error(`✗ audit:rpc-columns — ${findings.length} referencia(s) a columnas inexistentes:`);
   for (const f of findings) {
     console.error(
-      `  [${f.kind}] ${f.name}: ${f.alias}.${f.column}  → tabla ${f.table} no tiene columna "${f.column}"`,
+      `  [${f.kind}] ${f.name}: ${f.alias}.${f.column}  → ninguna de {${f.tables.join(", ")}} tiene columna "${f.column}"`,
     );
   }
   process.exit(1);
