@@ -35,6 +35,8 @@ vi.mock("@/hooks/shared", () => ({
 
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: vi.fn(),
+  notifyInfo: (_t: unknown, opts: { title: string; description?: string; action?: unknown }) =>
+    sonnerToastMock(opts.title, { description: opts.description, action: opts.action }),
 }));
 
 import { EnviarProformaDialog } from "../EnviarProformaDialog";

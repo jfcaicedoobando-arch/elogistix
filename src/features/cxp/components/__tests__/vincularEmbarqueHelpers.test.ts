@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("sonner", () => ({
-  toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() },
-}));
+vi.mock("sonner", () => {
+  const info = vi.fn();
+  const success = vi.fn();
+  const error = vi.fn();
+  const toast = Object.assign(vi.fn((...args: unknown[]) => info(...args)), { info, success, error });
+  return { toast };
+});
 
 import { toast } from "sonner";
 import {

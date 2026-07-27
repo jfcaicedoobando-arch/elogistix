@@ -20,6 +20,7 @@ vi.mock("@/features/facturacion/services/notasCreditoFacturapi", () => ({
 }));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
+  notifySuccess: (_t: unknown, opts: { title: string }) => toastSuccess(opts?.title),
 }));
 
 import {

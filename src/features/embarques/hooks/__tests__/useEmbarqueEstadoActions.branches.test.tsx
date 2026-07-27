@@ -157,7 +157,7 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
     expect(result.current.cierreMotivoBloqueo).toBe("rol");
     await act(async () => { await result.current.handleAvanzarEstado(); });
     expect(h.notifyError).toHaveBeenCalledWith(
-      expect.anything(),
+      undefined,
       expect.objectContaining({ method: "GATE_CERRAR_EMBARQUE" }),
     );
     expect(h.avanzar).not.toHaveBeenCalled();
@@ -225,7 +225,7 @@ describe("useEmbarqueEstadoActions — handleReabrir error y conceptos", () => {
     const { result } = renderH({ estado: "Cerrado" });
     await act(async () => { await result.current.handleReabrir(); });
     await waitFor(() => expect(h.notifyError).toHaveBeenCalledWith(
-      expect.anything(),
+      undefined,
       expect.objectContaining({ method: "HANDLE_REABRIR_EMBARQUE" }),
     ));
   });

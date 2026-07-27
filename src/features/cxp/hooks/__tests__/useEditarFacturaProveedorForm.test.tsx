@@ -99,7 +99,7 @@ describe("useEditarFacturaProveedorForm", () => {
     act(() => result.current.handleChange("folio", "  "));
     await act(async () => { await result.current.submit(); });
     expect(mutateAsync).not.toHaveBeenCalled();
-    expect(notifyError).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({
       title: expect.stringMatching(/campos/i),
     }));
     expect(result.current.errors.folio).toBeTruthy();

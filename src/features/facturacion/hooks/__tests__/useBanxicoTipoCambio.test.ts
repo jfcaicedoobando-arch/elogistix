@@ -21,6 +21,7 @@ vi.mock("sonner", () => ({
 }));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: mocks.notifyError,
+  notifySuccess: (_t: unknown, opts: { title: string }) => mocks.toastSuccess(opts?.title),
 }));
 
 import { useBanxicoTipoCambio } from "../useBanxicoTipoCambio";

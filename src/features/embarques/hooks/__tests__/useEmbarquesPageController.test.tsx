@@ -100,7 +100,7 @@ describe("useEmbarquesPageController", () => {
     await act(async () => { await result.current.exportarCsv(); });
     expect(exportToCsv).not.toHaveBeenCalled();
     expect(notifyError).toHaveBeenCalledWith(
-      expect.anything(),
+      undefined,
       expect.objectContaining({ title: "Sin datos para exportar" }),
     );
   });
@@ -110,7 +110,7 @@ describe("useEmbarquesPageController", () => {
     const { result } = renderHook(() => useEmbarquesPageController(), { wrapper: makeWrapper() });
     await act(async () => { await result.current.exportarCsv(); });
     expect(notifyError).toHaveBeenCalledWith(
-      expect.anything(),
+      undefined,
       expect.objectContaining({ title: "Error al exportar", description: expect.stringMatching(/boom/) }),
     );
     expect(result.current.exportandoCsv).toBe(false);
