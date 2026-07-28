@@ -15,11 +15,18 @@ import { ProveedorCombobox } from "@/features/cxp/components/ProveedorCombobox";
 import { useRegistrarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import { todayLocalISO } from "@/lib/date/today";
 
+const METODOS_PAGO = ["Transferencia", "Efectivo", "Cheque", "Tarjeta", "Otro"] as const;
+
 const schema = z.object({
   proveedorId: z.string().uuid({ message: "Selecciona un proveedor" }),
   monto: z.coerce.number().positive({ message: "El monto debe ser mayor a cero" }),
   moneda: z.enum(["MXN", "USD", "EUR"]),
   fechaAnticipo: z.string().min(1, "La fecha es requerida"),
+  // B-060 (v13.320.32): `metodo_pago` es NOT NULL DEFAULT 'Transferencia' en
+  // `pagos_proveedor`. Sin capturarlo aquí, la RPC `aplicar_anticipo_a_factura`
+  // insertaba NULL explícito (que anula el default) y el 100% de los anticipos
+  // creados por UI eran inaplicables. Ahora es requerido y por defecto Transferencia.
+  metodoPago: z.enum(METODOS_PAGO, { errorMap: () => ({ message: "Selecciona un método de pago" }) }),
   referencia: z.string().optional(),
   notas: z.string().optional(),
 });
@@ -36,7 +43,12 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
   const [proveedorNombre, setProveedorNombre] = useState("");
   const { control, register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { proveedorId: "", monto: 0, moneda: "MXN", fechaAnticipo: todayLocalISO(), referencia: "", notas: "" },
+    defaultValues: {
+      proveedorId: "", monto: 0, moneda: "MXN",
+      fechaAnticipo: todayLocalISO(),
+      metodoPago: "Transferencia",
+      referencia: "", notas: "",
+    },
   });
 
   const handleOpenChange = (o: boolean) => {
@@ -50,6 +62,7 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
       monto: values.monto,
       moneda: values.moneda,
       fechaAnticipo: values.fechaAnticipo,
+      metodoPago: values.metodoPago,
       referencia: values.referencia || undefined,
       notas: values.notas || undefined,
     });
