@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { FormProvider } from "react-hook-form";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
 import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
@@ -20,13 +20,13 @@ const steps = [
 export default function NuevoEmbarque() {
   const navigate = useNavigate();
   const location = useLocation();
-  const llegaConCotizacion = Boolean(
-    (location.state as { cotizacionPrevinculadaId?: string } | null)?.cotizacionPrevinculadaId,
-  );
+  const [searchParams] = useSearchParams();
+  // B-013 (v13.320.34): política tarifa-first honra tanto state como query
+  // param `?fromCotizacion=…` (el diálogo post-guardado usa querystring).
+  const llegaConCotizacion =
+    Boolean((location.state as { cotizacionPrevinculadaId?: string } | null)?.cotizacionPrevinculadaId)
+    || Boolean(searchParams.get("fromCotizacion"));
 
-  // v13.303.26 — política tarifa-first: todo embarque nuevo debe nacer de una
-  // cotización aceptada. Si el usuario cae aquí sin cotización previnculada,
-  // lo devolvemos al listado de cotizaciones.
   useEffect(() => {
     if (!llegaConCotizacion) {
       notifyError(undefined, { title: "Selecciona primero una cotización Aceptada para crear el embarque.", method: "FEATURES_EMBARQUES_ROUTES_NUEVOEMBARQUE_1" });

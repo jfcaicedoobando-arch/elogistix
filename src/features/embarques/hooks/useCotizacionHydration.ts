@@ -7,7 +7,7 @@
  * inicialización.
  */
 import { useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
 import { useCotizacion, type CotizacionRow } from "@/features/cotizacion/hooks";
 import { notifySuccess } from "@/lib/ui/appFeedback";
@@ -18,11 +18,17 @@ interface UseCotizacionHydrationArgs {
 
 export function useCotizacionHydration({ onPrevincular }: UseCotizacionHydrationArgs) {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
-  const cotizacionPrevinculadaId = (
-    location.state as { cotizacionPrevinculadaId?: string } | null
-  )?.cotizacionPrevinculadaId;
+  // B-013 (v13.320.34): honrar ambos vehículos — `location.state` (navegación
+  // programática) y `?fromCotizacion=` en la URL (redirect post-guardado del
+  // diálogo de NuevaCotizacion). Antes, sólo se leía state, así que la ruta
+  // con querystring rebotaba al listado con toast de error.
+  const cotizacionPrevinculadaId =
+    (location.state as { cotizacionPrevinculadaId?: string } | null)?.cotizacionPrevinculadaId
+    ?? searchParams.get("fromCotizacion")
+    ?? undefined;
 
   const { data: cotizacionPrevinculada } = useCotizacion(cotizacionPrevinculadaId);
 
