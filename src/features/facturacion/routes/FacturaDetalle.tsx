@@ -3,7 +3,7 @@
  * `?accion=timbrar` (llegada desde conversión de proforma) abre el diálogo
  * de timbrado automáticamente.
  */
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { FileX } from "lucide-react";
 import { DetailSkeleton } from "@/components/shared/skeletons";
@@ -32,7 +32,6 @@ function FacturaNoEncontrada() {
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const controller = useFacturaDetalleController(id);
   const { canEdit, factura, isLoading, flags } = controller;
   useRegisterBreadcrumbLabel(id, factura?.numero);
