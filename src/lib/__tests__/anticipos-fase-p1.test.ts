@@ -28,7 +28,11 @@ function readLatestContaining(marker: string): string {
 }
 
 describe("Fase P.1 — Anticipos a proveedor", () => {
-  const sql = readLatestContaining("aplicar_anticipo_a_factura");
+  // v13.320.35: usamos un marker exclusivo de la migración seed de Fase P.1.
+  // El marker anterior (`aplicar_anticipo_a_factura`) también aparecía en
+  // hotfixes posteriores del RPC (p.ej. B-060 v13.320.32), lo que hacía que el
+  // guardrail leyera la migración equivocada y fallara con un falso positivo.
+  const sql = readLatestContaining("CREATE TABLE IF NOT EXISTS public.anticipos_proveedor");
 
   it("crea la tabla anticipos_proveedor con estados válidos y grants correctos", () => {
     expect(sql).toMatch(/CREATE TABLE IF NOT EXISTS public\.anticipos_proveedor/);

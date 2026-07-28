@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.320.35] - 2026-07-28
+- **CI verde · re-alineación de 2 test files residuales del sprint** (run `82189359705` fallaba solo en shard 7):
+  - **`useCotizacionDraftAutosave.test.tsx`**: el schema del borrador subió a `v2` en Wave 1 (fix B-003 · duplicación de cotización). Los tests seguían asumiendo `v1`: el caso "versión no coincide" guardaba `v2` esperando rechazo (ahora es la versión vigente y se acepta), y el caso "persiste tras debounce" afirmaba `parsed.version === 1`. Ajustado a `v99` (mismatch garantizado) y `v2` (versión persistida real).
+  - **`anticipos-fase-p1.test.ts`**: el guardrail buscaba "la última migración que menciona `aplicar_anticipo_a_factura`". Ese marker es demasiado genérico: cualquier hotfix futuro del RPC (p.ej. B-060 en Wave 1) lo secuestraba y el test evaluaba la migración equivocada contra el contrato completo de la Fase P.1. Cambiado a `CREATE TABLE IF NOT EXISTS public.anticipos_proveedor`, exclusivo de la migración seed original.
+- **Sin impacto en producción**: solo se editaron 2 archivos de test. Analogía: cambiamos la cerradura hace días (schema v2) y hoy repartimos las llaves nuevas a los guardias (tests) que aún intentaban entrar con la vieja.
+
+
 ## [13.320.34] - 2026-07-28
 - **Bug bash live · Wave 3 (5 fixes de dinero, integridad y flujo)** — tercera tanda del audit `bugs-e2e-live-2026-07-28.md`:
   - **B-007 · NC de cliente calcula CON IVA (dinero)**: `useNotaCreditoDraft` calcula `monto = Σ base × (1 + tasa_iva)`. Antes: `Σ cantidad × precio` sin IVA — una NC "total" de una factura de $1,160 pedía teclear $1,000 y dejaba $160 de saldo fantasma en la factura original.
