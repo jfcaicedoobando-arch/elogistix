@@ -240,6 +240,7 @@ jobs:
           - crm_operacional
           - operaciones
           - tarifas_y_costeo
+          - reg_costeo
           - roles_no_admin
           - roles_negocio
           - portal_intra_org
