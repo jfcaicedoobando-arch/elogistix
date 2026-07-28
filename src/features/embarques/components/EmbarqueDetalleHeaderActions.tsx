@@ -100,16 +100,20 @@ export function EmbarqueDetalleHeaderActions({
             >
               <Copy className="h-4 w-4 mr-2" /> Duplicar embarque
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                onAbrirEliminar();
-              }}
-              className="text-destructive focus:text-destructive focus:bg-destructive/10"
-            >
-              <Trash2 className="h-4 w-4 mr-2" /> Eliminar
-            </DropdownMenuItem>
+            {!esTerminal && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    onAbrirEliminar();
+                  }}
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
