@@ -57,7 +57,7 @@ export default function PortalCotizacionDetalle() {
         folio={cot.folio}
         estado={cot.estado}
         clienteNombre={cot.cliente_nombre}
-        onBack={() => navigate(ROUTES.PORTAL_COTIZACIONES)}
+        
         onAceptar={() => setConfirmAction("Aceptada")}
         onRechazar={() => setConfirmAction("Rechazada")}
       />
