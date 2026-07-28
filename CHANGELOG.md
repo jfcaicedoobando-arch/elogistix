@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.320.65] - 2026-07-28
+- **Rediseño del detalle de proveedor** (`/compras/proveedores/:id`) tras la auditoría visual en 1920 / 1440 / 768 / 390 px. Analogía: la ficha pasó de ser una hoja suelta con datos amontonados a una carpeta ordenada por secciones.
+  - `ProveedorResumenCards.tsx` (nuevo): banda de KPIs canónica con `KpiStrip`/`KpiCard` (carrusel en móvil) + barra de proporción Pagado vs. Pendiente. Elimina el desbordamiento horizontal a 768 px.
+  - `ProveedorDatosGeneralesCard.tsx` (nuevo): usa `DescriptionList` (placeholder "—" en campos vacíos) y hace accionables email (`mailto:`) y teléfono (`tel:`).
+  - `ProveedorDatosBancariosCard.tsx`: badge Nacional/Extranjero, estado vacío con CTA "Capturar datos bancarios" y extracción de los bloques nacional/internacional en subcomponentes (complejidad dentro del límite).
+  - `ProveedorDetalle.tsx`: encabezado migrado al componente canónico `DetailHeader` (apilado correcto en móvil, acciones ya no se salen de pantalla) y layout de dos columnas en desktop para Datos generales + Datos bancarios.
+
 ## [13.320.64] - 2026-07-28
 - **CI: se eliminó el warning "Node.js 20 is deprecated" del job CodeQL**. `github/codeql-action/init` y `/analyze` estaban pinneados en v3.27.5 (runtime Node 20, que GitHub ya forzaba a correr sobre Node 24). Analogía: un enchufe viejo que aún funciona gracias a un adaptador.
   - `.github/workflows/codeql.yml`: ambos pins actualizados a `e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81` (v4.37.3), manteniendo el pinning por SHA con el tag en comentario.
