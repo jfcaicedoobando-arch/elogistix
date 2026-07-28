@@ -41,6 +41,79 @@ function Row({ label, value, mono = false }: { label: string; value: string | nu
   );
 }
 
+/** Bloque nacional: banco + CLABE con toggle de revelado. */
+function BloqueNacional({ banco, clabe }: { banco?: string | null; clabe?: string | null }) {
+  const [revealClabe, setRevealClabe] = useState(false);
+  return (
+    <>
+      <Row label="Banco" value={banco} />
+      <div>
+        <p className="text-xs text-muted-foreground mb-1">CLABE interbancaria</p>
+        {clabe ? (
+          <div className="flex items-center gap-2">
+            <span className="font-mono tabular-nums tracking-wider">{maskClabe(clabe, revealClabe)}</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setRevealClabe((v) => !v)}
+              aria-label={revealClabe ? "Ocultar CLABE" : "Mostrar CLABE"}
+            >
+              {revealClabe ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-muted-foreground italic">No capturado</p>
+        )}
+      </div>
+    </>
+  );
+}
+
+/** Bloque internacional: SWIFT/IBAN/ABA + banco intermediario. */
+function BloqueInternacional(p: Props) {
+  return (
+    <>
+      <Row label="Beneficiario" value={p.beneficiario} />
+      <Row label="Banco" value={p.banco} />
+      <Row label="País del banco" value={p.bancoPais} />
+      <Row label="SWIFT / BIC" value={p.swiftBic} mono />
+      <Row label="IBAN / Cuenta" value={p.iban} mono />
+      <Row label="ABA / Routing" value={p.abaRouting} mono />
+      <Row label="Banco intermediario" value={p.bancoIntermediario} />
+      <Row label="SWIFT intermediario" value={p.bancoIntermediarioSwift} mono />
+      {p.bancoDireccion && (
+        <div className="md:col-span-2">
+          <Row label="Dirección del banco" value={p.bancoDireccion} />
+        </div>
+      )}
+      {p.referenciaPago && (
+        <div className="md:col-span-2">
+          <Row label="Referencia / notas" value={p.referenciaPago} />
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Estado vacío cuando no hay ningún dato bancario capturado. */
+function SinDatosBancarios({ onCapturar }: { onCapturar?: () => void }) {
+  return (
+    <CardContent className="text-sm">
+      <p className="text-muted-foreground">
+        Este proveedor todavía no tiene datos bancarios capturados. Sin ellos no se
+        puede registrar el pago.
+      </p>
+      {onCapturar && (
+        <Button variant="outline" size="sm" className="mt-3" onClick={onCapturar}>
+          Capturar datos bancarios
+        </Button>
+      )}
+    </CardContent>
+  );
+}
+
 /**
  * Card de datos bancarios del proveedor. Muestra el bloque nacional (banco + CLABE
  * con toggle reveal) o el internacional (SWIFT/IBAN/ABA/etc.) según el origen
