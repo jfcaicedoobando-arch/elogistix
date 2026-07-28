@@ -99,10 +99,13 @@ export default function PortalProforma() {
     <div className="min-h-screen bg-muted/30 py-8 px-4">
       <Seo title="Proforma para revisión — Libre Carga" description="Portal de aprobación de proformas" />
       <div className="max-w-2xl mx-auto space-y-4">
-        <div className="flex items-center gap-2 text-primary">
-          <FileSpreadsheet className="h-5 w-5" />
-          <h1 className="text-xl font-semibold">Libre Carga · Portal de proformas</h1>
-        </div>
+        <DetailHeader
+          backTo={null}
+          icon={<FileSpreadsheet className="h-5 w-5 text-primary" />}
+          title="Portal de proformas"
+          subtitle="Revisa el detalle y responde tu proforma de Libre Carga."
+        />
+
 
         <ContenidoPortal state={state} />
 
