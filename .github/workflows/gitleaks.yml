@@ -26,7 +26,6 @@ jobs:
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
-        with:
           fetch-depth: 0
 
       - name: Run gitleaks
