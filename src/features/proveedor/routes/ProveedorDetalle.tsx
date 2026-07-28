@@ -41,20 +41,16 @@ export default function ProveedorDetalle() {
 
   if (!proveedor) {
     return (
-      <div className="py-12">
-        <EmptyState
-          icon={PackageX}
-          title="Proveedor no encontrado"
-          description="El proveedor que buscas no existe o fue eliminado."
-          primaryAction={{
-            label: "Volver a Proveedores",
-            onClick: () => navigate("/compras/proveedores"),
-            variant: "outline",
-          }}
-        />
-      </div>
+      <DetailNotFound
+        icon={PackageX}
+        title="Proveedor no encontrado"
+        description="El proveedor que buscas no existe, fue eliminado o no tienes permiso para verlo."
+        backTo="/compras/proveedores"
+        backLabel="Volver a Proveedores"
+      />
     );
   }
+
 
   const nombreFmt = toTitleCase(proveedor.nombre);
   const rfcFmt = (proveedor.rfc || "").toUpperCase();
