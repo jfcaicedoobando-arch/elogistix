@@ -44,6 +44,7 @@ function partesMercanciaBase(d: CotizacionInitialData) {
     incoterm: d.incoterm,
     tipoCarga: d.tipo_carga ?? "Carga General",
     sectorEconomico: d.sector_economico ?? "",
+    descripcionMercancia: d.descripcion_mercancia ?? "",
     descripcionAdicional: d.descripcion_adicional ?? "",
     tipoEmbarque: (d.tipo_embarque as "FCL" | "LCL") ?? "FCL",
     tipoContenedor: d.tipo_contenedor ?? "",

@@ -45,6 +45,18 @@ export default function SeccionMercanciaWrapper({
         </div>
       </div>
 
+      {/* B-035: descripción real de la mercancía (antes se persistía el sector). */}
+      <div>
+        <Label>
+          Descripción de la Mercancía <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          value={watch("descripcionMercancia")}
+          onChange={e => setValue("descripcionMercancia", e.target.value, { shouldValidate: true, shouldDirty: true })}
+          placeholder="Ej. Pallets de refacciones automotrices"
+        />
+      </div>
+
       {children}
 
       <Accordion type="multiple" className="w-full">

@@ -23,6 +23,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   incoterm: "",
   tipoCarga: "",
   sectorEconomico: "",
+  descripcionMercancia: "",
   descripcionAdicional: "",
   tipoEmbarque: "",
   tipoContenedor: "",
