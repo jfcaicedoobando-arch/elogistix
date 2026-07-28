@@ -87,7 +87,7 @@ describe("useTimbrarRep", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     expect(notifyError).toHaveBeenCalledTimes(1);
-    expect(notifyError.mock.calls[0]![1].title).toContain("rep fail");
+    expect(notifyError.mock.calls[0]![1].description).toContain("rep fail");
     qc.clear();
   });
 });
@@ -130,7 +130,7 @@ describe("useCancelarRep", () => {
     result.current.mutate({ pagoId: "p-3", motivo: "02" });
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(notifyError.mock.calls[0]![1].title).toContain("no autorizado");
+    expect(notifyError.mock.calls[0]![1].description).toContain("no autorizado");
     qc.clear();
   });
 });

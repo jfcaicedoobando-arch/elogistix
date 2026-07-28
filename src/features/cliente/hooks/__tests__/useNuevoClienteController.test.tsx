@@ -33,6 +33,10 @@ describe("useNuevoClienteController", () => {
       result.current.handleChange("rfc", "TEST123456");
       result.current.handleChange("cp", "12345");
       result.current.handleChange("regimen_fiscal", "601");
+      // B-024: email/teléfono/contacto son obligatorios en paso 1.
+      result.current.handleChange("email", "test@example.com");
+      result.current.handleChange("telefono", "5555555555");
+      result.current.handleChange("contacto", "Juan Pérez");
     });
     
     act(() => {

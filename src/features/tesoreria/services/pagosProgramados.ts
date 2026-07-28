@@ -38,6 +38,9 @@ export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]>
       .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
       .limit(1000),
     [] as RowCruda[],
+    // SAFE-CAST: el select con join anidado `pagos_proveedor(...)` produce un
+    // shape sintetizado por PostgREST que el tipo generado de Supabase no
+    // captura; RowCruda declara sólo las columnas que consumimos aquí.
   )) as unknown as RowCruda[];
 
   return rows
