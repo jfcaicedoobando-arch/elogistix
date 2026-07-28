@@ -151,36 +151,13 @@ export function EmbarqueDetalleHeaderActions({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-      <ConfirmActionDialog
+      <CancelarEmbarqueDialog
         open={cancelarOpen}
         onOpenChange={setCancelarOpen}
-        title={`Cancelar embarque ${expediente}`}
-        description="Esta acción marca el embarque como Cancelado y detiene el flujo operativo. Documenta el motivo para trazabilidad."
-        variant="destructive"
-        titleIcon={<Ban className="h-4 w-4" />}
-        titleDestructive
-        confirmLabel="Cancelar embarque"
-        cancelLabel="Volver"
+        expediente={expediente}
         isPending={cancelandoEmbarque}
-        confirmDisabled={motivo.trim().length < 5}
-        size="md"
-        onConfirm={async () => {
-          await onCancelar(motivo.trim());
-          setCancelarOpen(false);
-          setMotivo("");
-        }}
-      >
-        <div className="space-y-1">
-          <Label htmlFor="motivo-cancelar">Motivo (mínimo 5 caracteres)</Label>
-          <Textarea
-            id="motivo-cancelar"
-            value={motivo}
-            onChange={(e) => setMotivo(e.target.value)}
-            placeholder="Ej. Cliente canceló la operación por falta de stock en origen."
-            rows={3}
-          />
-        </div>
-      </ConfirmActionDialog>
+        onConfirm={onCancelar}
+      />
     </div>
   );
 }
