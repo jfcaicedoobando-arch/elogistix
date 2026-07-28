@@ -16,7 +16,7 @@ import {
   type ProformaConFactura,
   type ProformaRow,
 } from "@/features/proformas/services";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 
 // Re-export tipos para que componentes/pages no tengan que importar del service.
 export type { ProformaConFactura,  ProformaRow };
