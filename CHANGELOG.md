@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [13.321.7] - 2026-07-28
+- CI: se corrigió un salto de línea suelto en el validador de pruebas de seguridad que rompía el script (`roles_no_admin: command not found`) y detenía todo el flujo.
+
+
 ## [13.321.6] - 2026-07-28
 - Proformas: ya no es posible marcar como aceptada/rechazada una proforma que está en la papelera; el sistema pide restaurarla primero.
 - Proformas: la aprobación masiva omite las proformas borradas.
