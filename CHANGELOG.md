@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.320.43] - 2026-07-28
+- **Bug bash live · Wave 9 batch 1 (Validaciones de identidad)** — arranca la novena tanda del audit `bugs-e2e-live-2026-07-28.md`. Se cierran dos bugs de captura de datos fiscales/bancarios que hoy pasaban al backend sin filtro real:
+  - **B-023 · RFC sin validación de formato SAT**: `rfcSchema` (mutationSchemas.ts) sólo verificaba longitud (≤20 chars). Ahora aplica el patrón oficial SAT: 3-4 letras (RFC moral o físico) + 6 dígitos AAMMDD + 3 alfanuméricos. Se normaliza a mayúsculas antes de comparar. Campo sigue siendo opcional (acepta `""` y `null`), así que altas sin RFC no rompen (típico en clientes extranjeros).
+  - **B-025 · CLABE aceptaba cualquier serie de 18 dígitos**: `useNuevoProveedorController.helpers.ts` sumaba validación mod-10 con pesos 3-7-1 (norma Banxico) además del regex de longitud. Si el usuario tipea un dígito mal, el dialog rechaza con mensaje explícito ("dígito verificador inválido — revisa que no tenga errores de tipeo") en vez de guardarla y explotar en el pago.
+- **Tests**: 12 casos nuevos en `rfcClabe.wave9.test.ts` (patrones válidos, rechazos, normalización, DV correcto/incorrecto). 60 tests de regresión en `mutationSchemas` y `useNuevoProveedorController` siguen verdes.
+- **Sprint status**: acumulado 33/63 bugs cerrados (Wave 9 batch 1: B-023, B-025). Pendientes: 30.
+- Analogía: antes era como aceptar cualquier CURP escrita a mano; ahora la ventanilla del SAT rechaza los que no cumplen el patrón oficial y también los que tienen un número "revuelto" al final (dígito verificador).
+
+
+
 ## [13.320.42] - 2026-07-28
 - **Bug bash live · Wave 8 parcial (Money & KPIs, batch 1)** — arranca la octava tanda del audit `bugs-e2e-live-2026-07-28.md` atacando 4 desalineaciones de números en tablero, P&L, cartera y listado de cotizaciones. Los cuatro comparten el mismo patrón: la UI mostraba un dato "raro" (cero, borrador contado como confirmado, "Por vencer 0d") no por bug en el componente sino por dato que venía mal desde el RPC/columna. Con este batch quedan bien desde el origen.
   - **B-019 · "Por vencer 0d" en cartera**: `carteraColumns.tsx` ahora muestra `Vence hoy` cuando faltan 0 días y `Vence en Xd` para el resto, en vez del confuso "Por vencer 0d". No cambia lógica de negocio, solo copy del badge.

@@ -45,13 +45,21 @@ const optionalText = (max = 500) =>
     .or(z.literal(""))
     .or(z.null());
 
+// B-023 (v13.320.43): RFC mexicano con formato SAT.
+// - Persona física: 4 letras + 6 dígitos (AAMMDD) + 3 alfanuméricos = 13.
+// - Persona moral:  3 letras + 6 dígitos (AAMMDD) + 3 alfanuméricos = 12.
+// Se acepta vacío/null (campo opcional) y se normaliza a mayúsculas antes de validar.
+const RFC_RE = /^[A-ZÑ&]{3,4}\d{6}[A-Z\d]{3}$/;
 const rfcSchema = z
   .string()
   .trim()
   .max(20, "RFC: máximo 20 caracteres.")
+  .transform((v) => v.toUpperCase())
+  .refine((v) => v === "" || RFC_RE.test(v), "RFC: formato inválido (12 o 13 caracteres, patrón SAT).")
   .optional()
   .or(z.literal(""))
   .or(z.null());
+
 
 const emailSchema = z
   .string()
