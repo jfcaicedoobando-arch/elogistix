@@ -44,7 +44,13 @@ const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActi
   {
     ...statusColumn<CrmActividadRow>({
       domain: "actividad_crm",
-      accessor: (a) => (a.fecha_completada ? "Completada" : "Pendiente"),
+      // B-055 (v13.320.40): distinguir "Vencida" cuando la actividad no completada
+      // ya pasó su fecha programada. Antes todo lo no completado era "Pendiente".
+      accessor: (a) => {
+        if (a.fecha_completada) return "Completada";
+        if (a.fecha_programada && new Date(a.fecha_programada).getTime() < Date.now()) return "Vencida";
+        return "Pendiente";
+      },
     }),
     meta: { width: "w-[110px]" },
   },
