@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.320.40] - 2026-07-28
+- **Bug bash live · Wave 6 (3 fixes de UX financiera y CRM)** — sexta tanda del audit `bugs-e2e-live-2026-07-28.md`:
+  - **B-053 · Formato de negativos "MXN -$8,000.00"**: `formatCurrency` ahora captura el signo antes del símbolo, así los negativos MXN se muestran como `MXN -8,000.00` (sin el `$` intermedio confuso). El regex pasó de `^\$\s?` a `^(-?)\$\s?` preservando el signo al re-prefijar "MXN ".
+  - **B-055 · Listado de actividades CRM ahora distingue "Vencida"**: `Actividades.tsx` compara `fecha_programada` contra `Date.now()` cuando la actividad no está completada y muestra badge "Vencida" (rojo) para las que ya se pasaron. Antes toda actividad no completada aparecía como "Pendiente" (mismo badge para una vencida hace 3 días que para una futura). Se sumó "Vencida" al dominio `actividad_crm` del `statusRegistry`.
+  - **B-057 · "Ajuste neto ▼ Ahorro" ya no aparece cuando falta la factura del proveedor**: `describirAjusteNeto` pasa `tieneFactura: facturado > 0` (antes `facturado > 0 || cotizado > 0`), así una fila con costo cotizado 30,000 y facturado 0 se etiqueta "Sin factura" (neutral) en lugar de "Ahorro MXN 30,000" (verde). El sobrecosto/ahorro reales sólo se calculan cuando el proveedor ya facturó.
+- **Sprint status**: acumulado 24/63 bugs cerrados (Wave 6: B-053, B-055, B-057). Restantes: 39.
+- Analogía: al signo menos ya no le atravesamos el símbolo del peso (B-053), al pizarrón de tareas le enseñamos qué color usar para las atrasadas (B-055) y dejamos de celebrar "ahorros" que en realidad son cuentas por llegar (B-057).
+
+
+
+
 ## [13.320.39] - 2026-07-28
 - **Bug bash live · Wave 5 (4 fixes de KPIs, formato y UX)** — quinta tanda del audit `bugs-e2e-live-2026-07-28.md`:
   - **B-020 · KPI "Vencido" ahora incluye facturas vencidas pendientes de aprobación**: `calcularKPIsCxP` deja de leer el estatus derivado ("Por aprobar" tenía prioridad sobre "Vencida") y usa `dias_vencido > 0` directamente. Antes el dashboard mostraba "Vencido $0 al corriente" mientras el aging graficaba varias en rojo.
