@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import {
-  ArrowLeft, Truck, Pencil, Trash2, PackageX, MoreHorizontal,
+  Truck, Pencil, Trash2, PackageX, MoreHorizontal,
 } from "lucide-react";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import {
@@ -10,8 +10,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { formatCurrency, toTitleCase, formatPhoneMx } from "@/lib/formatters";
+import { toTitleCase } from "@/lib/formatters";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import EmptyState from "@/components/empty/EmptyState";
@@ -20,6 +21,8 @@ import { useProveedorDetalleController } from "@/features/proveedor/hooks";
 import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
 import { ProveedorCsfUpdateButton } from "../components/ProveedorCsfUpdateButton";
 import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancariosCard";
+import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneralesCard";
+import { ProveedorResumenCards } from "../components/ProveedorResumenCards";
 import { ProveedorSaludTab } from "../components/ProveedorSaludTab";
 
 export default function ProveedorDetalle() {
@@ -55,28 +58,29 @@ export default function ProveedorDetalle() {
 
   const nombreFmt = toTitleCase(proveedor.nombre);
   const rfcFmt = (proveedor.rfc || "").toUpperCase();
-  const contactoFmt = toTitleCase(proveedor.contacto);
-  const telFmt = formatPhoneMx(proveedor.telefono);
-  const opsLabel = operaciones.length === 1 ? "operación" : "operaciones";
   const esNacional = proveedor.origen_proveedor === "Nacional";
+  const categoriaLabel = proveedor.categoria === "GastoOperativo"
+    ? (proveedor.subtipo_gasto ?? "Gasto de administración")
+    : (proveedor.tipo ?? "—");
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/compras/proveedores")} aria-label="Volver a proveedores">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Truck className="h-6 w-6 text-accent" />
-          <div className="flex items-center gap-3">
-            <h1 className="text-display font-bold tracking-tight" title={proveedor.nombre}>{nombreFmt}</h1>
-            <Badge variant="secondary">
-              {proveedor.categoria === "GastoOperativo" ? (proveedor.subtipo_gasto ?? "Gasto de administración") : (proveedor.tipo ?? "—")}
+      <DetailHeader
+        backTo="/compras/proveedores"
+        backLabel="Proveedores"
+        icon={<Truck className="h-6 w-6 text-accent shrink-0" />}
+        title={nombreFmt}
+        subtitle={rfcFmt ? `RFC / Tax ID · ${rfcFmt}` : undefined}
+        badge={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">{categoriaLabel}</Badge>
+            <Badge variant="outline" className="font-normal">
+              {esNacional ? "Nacional" : "Extranjero"}
             </Badge>
           </div>
-        </div>
-        {canEdit && (
-          <div className="flex gap-2 items-center">
+        }
+        trailing={canEdit ? (
+          <>
             <Button size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-2 h-4 w-4" /> Editar
             </Button>
@@ -101,60 +105,43 @@ export default function ProveedorDetalle() {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Datos Generales</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p><span className="text-muted-foreground">RFC:</span> <span className="font-mono">{rfcFmt}</span></p>
-            <p><span className="text-muted-foreground">Contacto:</span> {contactoFmt}</p>
-            <p><span className="text-muted-foreground">Email:</span> {proveedor.email}</p>
-            <p><span className="text-muted-foreground">Teléfono:</span> {telFmt}</p>
-            <p><span className="text-muted-foreground">Moneda preferida:</span> {proveedor.moneda_preferida}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Total Facturado</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold tabular-nums">{formatCurrency(totalFacturado, proveedor.moneda_preferida)}</p>
-            <p className="text-xs text-muted-foreground">{operaciones.length} {opsLabel}</p>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-success">Pagado</CardTitle></CardHeader>
-            <CardContent>
-              <p className="text-lg font-bold tabular-nums">{formatCurrency(totalPagado, proveedor.moneda_preferida)}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-warning">Pendiente</CardTitle></CardHeader>
-            <CardContent>
-              <p className="text-lg font-bold tabular-nums">{formatCurrency(totalPendiente, proveedor.moneda_preferida)}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <ProveedorDatosBancariosCard
-        banco={proveedor.banco}
-        clabe={proveedor.clabe}
-        origen={proveedor.origen_proveedor}
-        bancoPais={proveedor.banco_pais}
-        swiftBic={proveedor.swift_bic}
-        iban={proveedor.iban}
-        abaRouting={proveedor.aba_routing}
-        bancoDireccion={proveedor.banco_direccion}
-        bancoIntermediario={proveedor.banco_intermediario}
-        bancoIntermediarioSwift={proveedor.banco_intermediario_swift}
-        beneficiario={proveedor.beneficiario}
-        referenciaPago={proveedor.referencia_pago}
+          </>
+        ) : undefined}
       />
+
+      <ProveedorResumenCards
+        totalFacturado={totalFacturado}
+        totalPagado={totalPagado}
+        totalPendiente={totalPendiente}
+        moneda={proveedor.moneda_preferida}
+        operacionesCount={operaciones.length}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ProveedorDatosGeneralesCard
+          rfc={proveedor.rfc}
+          contacto={proveedor.contacto}
+          email={proveedor.email}
+          telefono={proveedor.telefono}
+          monedaPreferida={proveedor.moneda_preferida}
+        />
+
+        <ProveedorDatosBancariosCard
+          banco={proveedor.banco}
+          clabe={proveedor.clabe}
+          origen={proveedor.origen_proveedor}
+          bancoPais={proveedor.banco_pais}
+          swiftBic={proveedor.swift_bic}
+          iban={proveedor.iban}
+          abaRouting={proveedor.aba_routing}
+          bancoDireccion={proveedor.banco_direccion}
+          bancoIntermediario={proveedor.banco_intermediario}
+          bancoIntermediarioSwift={proveedor.banco_intermediario_swift}
+          beneficiario={proveedor.beneficiario}
+          referenciaPago={proveedor.referencia_pago}
+          onCapturar={canEdit ? () => setEditOpen(true) : undefined}
+        />
+      </div>
 
       <Tabs defaultValue="operaciones">
         <TabsList>
@@ -163,8 +150,15 @@ export default function ProveedorDetalle() {
         </TabsList>
         <TabsContent value="operaciones" className="mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-sm">Historial de Operaciones</CardTitle></CardHeader>
-            <CardContent className="p-0">
+            <CardHeader>
+              <CardTitle className="text-sm">
+                Historial de operaciones
+                <span className="ml-2 font-normal text-muted-foreground tabular-nums">
+                  {operaciones.length}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 overflow-x-auto">
               <ProveedorOperacionesTable operaciones={operaciones} />
             </CardContent>
           </Card>
@@ -193,3 +187,4 @@ export default function ProveedorDetalle() {
     </PageContainer>
   );
 }
+
