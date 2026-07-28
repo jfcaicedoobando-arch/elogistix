@@ -79,8 +79,11 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     .from("proformas")
     .select("*")
     .eq("id", params.proformaId)
+    // Nunca facturar una proforma que está en papelera.
+    .is("deleted_at", null)
     .single();
   if (errProf) throw errProf;
+
 
   // Idempotencia: si ya fue facturada, salir sin tocar nada.
   if (proforma.factura_id) {
