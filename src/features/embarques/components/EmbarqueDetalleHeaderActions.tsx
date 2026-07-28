@@ -52,14 +52,9 @@ export function EmbarqueDetalleHeaderActions({
 }: Props) {
   // B-058 (v13.320.39): en estados terminales/cerrados el borrado ya no aplica.
   const esTerminal = ["Entregado", "EIR", "Cerrado", "Cancelado"].includes(estadoVisual);
-  // B-058: "Cancelar" sólo tiene sentido antes de cierre/entrega; una vez que
-  // el embarque ya llegó a estados terminales usamos "Reabrir".
-  const estadosCancelables = ["Borrador", "Confirmado", "En Tránsito", "Llegada", "En Aduana", "Arribo"];
-  const puedeCancelar = estadosCancelables.includes(estadoVisual);
-  // B-058: si hay CxC/CxP pendientes no eliminamos — sólo cancelamos.
+  const puedeCancelar = ["Borrador", "Confirmado", "En Tránsito", "Llegada", "En Aduana", "Arribo"].includes(estadoVisual);
   const puedeEliminar = !esTerminal && !tieneDeudaPendiente;
   const [cancelarOpen, setCancelarOpen] = useState(false);
-  
   const navigate = useNavigate();
   const goEditar = () => navigate(`/embarques/${embarqueId}/editar`);
 
