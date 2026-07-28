@@ -1,28 +1,49 @@
-## Ola 4 — Cerrar la adopción de `DetailHeader`
 
-Tras las olas 1–3 quedan **dos** páginas de detalle fuera del estándar (verificado con `rg`: son los únicos archivos en `src/features/*/routes/*Detalle*.tsx` que no importan `DetailHeader`). El resto de los `ArrowLeft` que quedan en el código son de wizards/diálogos (pasos) y páginas legales/404 — esos se quedan como están, a propósito.
+# Auditoría visual de `DetailHeader` (1920×1080)
 
-### 1. Embarque Detalle (el más importante)
-`src/features/embarques/components/EmbarqueDetalleHeader.tsx` dibuja hoy su propio `<h1>` + subtítulo + acciones en un flex, y **no tiene botón "Volver"** en absoluto: desde el detalle de un embarque el usuario sólo puede regresar con el botón del navegador.
+Capturé en FullHD las páginas de detalle reales de Factura, Proforma, Proveedor, Lead, Oportunidad, Tesorería, Estado de cuenta, Cliente, Cotización y Embarque. El componente en sí se ve sólido y consistente; los problemas están en **cómo lo usa cada página**, no en el componente.
 
-Cambio: envolver el contenido actual en `DetailHeader` sin tocar la lógica de estados ni los diálogos.
-- `backTo="/embarques"`, `backLabel="Embarques"`.
-- `title` = expediente (`labelExpediente`), `badge` = `EmbarqueStatusChip` + `EmbarqueBadgeAdmin`.
-- `subtitle` = cliente + enlace a cotización origen (idéntico a hoy, incluyendo el aviso de "Sin cotización vinculada").
-- `trailing` = `<EmbarqueDetalleHeaderActions />` con las mismas props.
-- `EmbarqueHeaderDialogs` se queda como hermano, fuera del header visual.
+## Hallazgos
 
-### 2. Tarifario / Cotización informativa
-`src/features/cotizacion/routes/CotizacionInformativaDetalle.tsx` usa `PageHeader` (componente de listados) y mete un `<Button>Volver</Button>` entre las acciones de la derecha.
+**1. Estados "no encontrado" quedan sin encabezado (el más grave).**
+En `/cotizaciones/:id` y `/embarques/:id` con un ID inexistente la pantalla muestra sólo el texto "Cotización no encontrada" centrado: sin título, sin botón Volver, sin acciones. El usuario queda varado y sólo puede usar el botón del navegador. Cliente sí ofrece un botón "Volver a Clientes", pero tampoco muestra encabezado. Analogía: es como una recepción donde, si no encuentran tu cita, apagan la luz y quitan la señalización de salida.
 
-Cambio: sustituir por `DetailHeader` con `backTo`/`onBack` a la izquierda y dejar sólo "Descargar PDF" en `trailing`. Recibe `onBack` como prop, así que el botón Volver usará ese callback (se añadirá soporte de `onBack` opcional en `DetailHeader`, o se pasará la ruta directa si el callback sólo navega a `/cotizaciones`; se decide al leer el componente padre).
+**2. La etiqueta de "Volver" es inconsistente.**
+Conviven tres estilos: `Volver` a secas (Factura), sólo el nombre del destino (`Proformas`, `Proveedores`, `Tesorería`, `Leads`, `Oportunidades`) y `Cliente` (Estado de cuenta, ambiguo: no dice si vuelve al listado o a la ficha).
 
-### 3. Reforzar el guardrail
-`src/__tests__/architecture/detail-header-canonical.test.ts` hoy sólo prohíbe `ArrowLeft` en rutas `*Detalle*.tsx`. Se ampliará para exigir que cada ruta de detalle **importe `DetailHeader`** (directa o vía su componente de header), con allowlist explícita para `EmbarqueDetalleStates.tsx` (estados de error/vacío, no es un detalle real).
+**3. Las acciones no viven en el mismo lugar.**
+Proveedor y Lead las ponen en `trailing`, alineadas con el título (correcto). Factura y Proforma las dejan en una barra suelta debajo del encabezado. Estado de cuenta las manda a una fila propia alineada a la derecha, desconectada del título. Resultado: el ojo no sabe dónde buscar los botones al cambiar de módulo.
 
-### 4. Cierre
-- `bun run lint --max-warnings 0`, `tsgo --noEmit` y los tests de `embarques` + `cotizacion` + arquitectura.
-- Bump `APP_VERSION` a `13.320.68` y entrada en `CHANGELOG.md`.
+**4. Estado de cuenta pierde el nombre del cliente.**
+El título es genérico ("Estado de cuenta") y el cliente no aparece ni en título ni en subtítulo, aunque es la entidad de la página.
 
-### Nota técnica
-No se toca lógica de negocio: `useEmbarqueEstadoActions`, permisos, diálogos de bloqueo por documentos y la generación de PDF del tarifario quedan intactos. El riesgo es puramente visual (posición del botón Volver y truncado del título en móvil), y se verificará con captura a 1920 y 390 px.
+**5. CRM apila cuatro niveles de encabezado.**
+`CRM` (h1) → descripción → tabs → botón Volver → título del lead. Demasiado peso vertical antes del contenido útil.
+
+**6. Detalles menores de alineación.**
+El bloque de total en `trailing` (Factura/Proforma) queda alto respecto al título; Tesorería es el único `DetailHeader` sin icono.
+
+## Plan de corrección
+
+**Ola 1 — Estados vacíos y de error (prioridad alta)**
+- Crear `DetailNotFound` (encabezado + tarjeta de estado vacío) que use `DetailHeader` con título tipo "Cotización no encontrada", `backTo` al listado y mensaje de ayuda.
+- Aplicarlo en Cotización, Embarque, Cliente, Factura, Proforma y Proveedor, para que el botón Volver exista siempre, incluso en error.
+
+**Ola 2 — Etiqueta de retorno canónica**
+- Convención única: `Volver a {Listado}` (ej. "Volver a Facturación", "Volver a Proformas", "Volver a Cliente Rollos y Etiquetas Rollet").
+- Ajustar los 16 sitios que hoy usan `DetailHeader` y añadir un test de arquitectura que exija `backLabel` explícito cuando `backTo` es una ruta.
+
+**Ola 3 — Acciones dentro del encabezado**
+- Mover la barra de acciones de Factura, Proforma y Estado de cuenta al slot `trailing`, dejando en "Más acciones" lo secundario para que no se desborde en 1366 px.
+- Estado de cuenta: título con el nombre del cliente y subtítulo con el periodo.
+
+**Ola 4 — Densidad en CRM y pulido**
+- En Lead y Oportunidad, ocultar el `backTo` (ya hay tabs y breadcrumb) o comprimir el bloque CRM a una sola línea, ganando ~90 px de altura útil.
+- Alinear verticalmente el bloque de total en `trailing` y añadir icono a Tesorería.
+
+## Notas técnicas
+
+- Sin cambios de lógica de negocio: sólo presentación (`src/components/shared/DetailHeader.tsx` y sus 16 consumidores).
+- El guardrail existente `src/__tests__/architecture/detail-header-canonical.test.ts` se amplía con la regla de `backLabel`.
+- Se añaden tests en `DetailHeader.test.tsx` para el nuevo `DetailNotFound` y verificación FullHD posterior con capturas de las mismas rutas.
+- Al terminar: bump de `APP_VERSION` y entrada en `CHANGELOG.md`.

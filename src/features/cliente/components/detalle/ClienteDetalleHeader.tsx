@@ -2,6 +2,7 @@ import { Pencil, FileText, Loader2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { DetailNotFound } from "@/components/shared/DetailNotFound";
 
 interface Cliente {
   id: string;
@@ -24,7 +25,7 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
   return (
     <DetailHeader
       backTo="/clientes"
-      backLabel="Clientes"
+      backLabel="Volver a Clientes"
       icon={<Users className="h-6 w-6 text-accent shrink-0" />}
       title={cliente.nombre}
       subtitle={cliente.rfc}
@@ -57,11 +58,16 @@ export function ClienteLoadingState() {
   );
 }
 
-export function ClienteNotFoundState({ onBack }: { onBack: () => void }) {
+export function ClienteNotFoundState() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 space-y-4">
-      <p className="text-muted-foreground">Cliente no encontrado</p>
-      <Button variant="outline" onClick={onBack}>Volver a Clientes</Button>
-    </div>
+    <DetailNotFound
+      icon={Users}
+      title="Cliente no encontrado"
+      description="El cliente no existe, fue eliminado o no tienes permiso para verlo."
+      backTo="/clientes"
+      backLabel="Volver a Clientes"
+      withContainer={false}
+    />
   );
 }
+

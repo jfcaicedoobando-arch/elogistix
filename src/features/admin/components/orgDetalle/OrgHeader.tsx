@@ -16,7 +16,7 @@ export function OrgHeader({ nombre, rfc, plan, activo, toggleActivoPending, onTo
   return (
     <DetailHeader
       backTo="/admin/organizaciones"
-      backLabel="Organizaciones"
+      backLabel="Volver a Organizaciones"
       icon={<Building2 className="h-6 w-6 text-primary shrink-0" />}
       title={nombre}
       subtitle={`RFC: ${rfc || "—"} · Plan: ${plan}`}

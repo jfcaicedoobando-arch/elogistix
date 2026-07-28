@@ -3,9 +3,10 @@
  * Drilldown desde el tab Facturación del embarque y del módulo Facturación.
  */
 import { useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { LoadingState } from "@/components/shared/states/LoadingState";
-import { ErrorState } from "@/components/shared/states/ErrorState";
+import { DetailNotFound } from "@/components/shared/DetailNotFound";
+import { FileX } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
@@ -30,7 +31,6 @@ import { conceptoColumns } from "@/features/proformas/components/detalle/concept
 
 export default function ProformaDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { data, isLoading } = useProformaDetalle(id);
   useRegisterBreadcrumbLabel(id, data?.proforma.numero);
 
@@ -44,16 +44,16 @@ export default function ProformaDetalle() {
 
   if (!data) {
     return (
-      <PageContainer>
-        <ErrorState
-          title="Proforma no encontrada"
-          description="La proforma no existe o no tienes acceso."
-          onRetry={() => navigate(-1)}
-          retryLabel="Volver"
-        />
-      </PageContainer>
+      <DetailNotFound
+        icon={FileX}
+        title="Proforma no encontrada"
+        description="La proforma no existe, fue eliminada o no tienes acceso a ella."
+        backTo="/proformas"
+        backLabel="Volver a Proformas"
+      />
     );
   }
+
 
   return <ProformaDetalleContent data={data} />;
 }

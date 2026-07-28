@@ -3,8 +3,9 @@
  * `?accion=timbrar` (llegada desde conversión de proforma) abre el diálogo
  * de timbrado automáticamente.
  */
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useParams } from "react-router-dom";
+import { DetailNotFound } from "@/components/shared/DetailNotFound";
+import { FileX } from "lucide-react";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { PageContainer } from "@/components/shared/PageContainer";
 
@@ -15,20 +16,22 @@ import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFactur
 import { useFacturaDetalleController } from "@/features/facturacion/hooks/useFacturaDetalleController";
 import { FacturaDetalleView } from "@/features/facturacion/components/detalle/FacturaDetalleView";
 
-function FacturaNoEncontrada({ onVolver }: { onVolver: () => void }) {
+function FacturaNoEncontrada() {
   return (
-    <div className="text-center py-12">
-      <p className="text-muted-foreground">Factura no encontrada o sin acceso.</p>
-      <Button variant="link" onClick={onVolver}>
-        Volver a facturación
-      </Button>
-    </div>
+    <DetailNotFound
+      icon={FileX}
+      title="Factura no encontrada"
+      description="La factura no existe, fue eliminada o no tienes acceso a ella."
+      backTo="/facturacion"
+      backLabel="Volver a Facturación"
+      withContainer={false}
+    />
   );
 }
 
+
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const controller = useFacturaDetalleController(id);
   const { canEdit, factura, isLoading, flags } = controller;
   useRegisterBreadcrumbLabel(id, factura?.numero);
@@ -46,7 +49,7 @@ export default function FacturaDetalle() {
     );
   }
 
-  if (!factura) return <FacturaNoEncontrada onVolver={() => navigate("/facturacion")} />;
+  if (!factura) return <FacturaNoEncontrada />;
 
   return (
     <FacturaDetalleView

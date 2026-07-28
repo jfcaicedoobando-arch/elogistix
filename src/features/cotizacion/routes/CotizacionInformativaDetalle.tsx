@@ -48,7 +48,7 @@ export default function CotizacionInformativaDetalle({ cotizacion }: Props) {
     <PageContainer>
       <DetailHeader
         backTo="/cotizaciones"
-        backLabel="Cotizaciones"
+        backLabel="Volver a Cotizaciones"
         title={`Tarifario ${cotizacion.folio}`}
         subtitle={`Cliente: ${cotizacion.cliente_nombre}`}
         trailing={

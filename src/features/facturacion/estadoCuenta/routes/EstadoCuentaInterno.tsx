@@ -11,7 +11,7 @@ export default function EstadoCuentaInterno() {
     <PageContainer width="wide">
       <DetailHeader
         backTo={`/clientes/${clienteId}`}
-        backLabel="Cliente"
+        backLabel="Volver a Cliente"
         icon={<Wallet className="h-6 w-6 text-accent shrink-0" />}
         title="Estado de cuenta"
         subtitle="Movimientos, saldos y anticipos del cliente."

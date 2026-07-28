@@ -1,5 +1,5 @@
 "use memo";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useState } from "react";
 
@@ -43,7 +43,6 @@ const TABS_LEGACY: Record<string, (typeof TABS_VALIDOS)[number]> = {
  */
 export default function EmbarqueDetalle() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { canEdit } = usePermissions();
   const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen", "tab", TABS_LEGACY);
 
@@ -56,7 +55,7 @@ export default function EmbarqueDetalle() {
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
   if (isLoading) return <LoadingState />;
-  if (!embarque) return <NotFoundState onBack={() => navigate("/embarques")} />;
+  if (!embarque) return <NotFoundState />;
 
   const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado, embarque.fecha_llegada_real);
   const siguienteEstado = getSiguienteEstado(estadoVisual);

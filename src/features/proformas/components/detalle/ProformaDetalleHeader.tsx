@@ -34,7 +34,7 @@ export function ProformaDetalleHeader({
   return (
     <DetailHeader
       backTo="/proformas"
-      backLabel="Proformas"
+      backLabel="Volver a Proformas"
       icon={<FileText className="h-6 w-6 text-accent shrink-0" />}
       title={<span className="font-mono tabular-nums">{numero}</span>}
       badge={

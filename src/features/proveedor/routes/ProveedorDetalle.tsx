@@ -15,7 +15,7 @@ import { DetailSkeleton } from "@/components/shared/skeletons";
 import { toTitleCase } from "@/lib/formatters";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import EmptyState from "@/components/empty/EmptyState";
+import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
 import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
@@ -31,7 +31,7 @@ export default function ProveedorDetalle() {
     proveedor, isLoading, isDeleting, operaciones,
     totalFacturado, totalPagado, totalPendiente,
     canEdit, isAdmin, editOpen, setEditOpen,
-    deleteOpen, setDeleteOpen, handleUpdate, handleDelete, navigate,
+    deleteOpen, setDeleteOpen, handleUpdate, handleDelete,
   } = useProveedorDetalleController();
   useRegisterBreadcrumbLabel(id, proveedor?.nombre);
 
@@ -41,20 +41,16 @@ export default function ProveedorDetalle() {
 
   if (!proveedor) {
     return (
-      <div className="py-12">
-        <EmptyState
-          icon={PackageX}
-          title="Proveedor no encontrado"
-          description="El proveedor que buscas no existe o fue eliminado."
-          primaryAction={{
-            label: "Volver a Proveedores",
-            onClick: () => navigate("/compras/proveedores"),
-            variant: "outline",
-          }}
-        />
-      </div>
+      <DetailNotFound
+        icon={PackageX}
+        title="Proveedor no encontrado"
+        description="El proveedor que buscas no existe, fue eliminado o no tienes permiso para verlo."
+        backTo="/compras/proveedores"
+        backLabel="Volver a Proveedores"
+      />
     );
   }
+
 
   const nombreFmt = toTitleCase(proveedor.nombre);
   const rfcFmt = (proveedor.rfc || "").toUpperCase();
@@ -67,7 +63,7 @@ export default function ProveedorDetalle() {
     <PageContainer>
       <DetailHeader
         backTo="/compras/proveedores"
-        backLabel="Proveedores"
+        backLabel="Volver a Proveedores"
         icon={<Truck className="h-6 w-6 text-accent shrink-0" />}
         title={nombreFmt}
         subtitle={rfcFmt ? `RFC / Tax ID · ${rfcFmt}` : undefined}

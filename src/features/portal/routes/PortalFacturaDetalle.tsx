@@ -52,7 +52,7 @@ export default function PortalFacturaDetalle() {
     <div className="space-y-5">
       <DetailHeader
         backTo={ROUTES.PORTAL_FACTURAS}
-        backLabel="Facturas"
+        backLabel="Volver a Facturas"
         icon={<Receipt className="h-6 w-6 text-accent shrink-0" />}
         title={<span className="font-mono tabular-nums">{factura.numero}</span>}
         subtitle={

@@ -1,5 +1,10 @@
 # Changelog
 
+
+## [13.320.71] - 2026-07-28
+- Nuevo componente `DetailNotFound`: estado "no encontrado" canónico con encabezado y botón Volver (antes varias rutas dejaban al usuario sin salida).
+- Aplicado en detalle de Cotización, Embarque, Cliente, Factura, Proforma y Proveedor.
+- Etiquetas del botón Volver estandarizadas a "Volver a {Listado}" en todas las páginas de detalle.
 ## [13.320.70] - 2026-07-28
 - `DetailHeader` acepta `backTo={null}` para ocultar el botón "Volver" en páginas públicas sin página padre.
 - Portal público de proformas (`/portal/proformas/:token`) y tracking público (`/tracking/:token`) migrados a `DetailHeader` (título + badge + subtítulo, sin botón volver).

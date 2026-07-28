@@ -22,6 +22,9 @@ import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseB
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { DetailNotFound } from "@/components/shared/DetailNotFound";
+import { FileX } from "lucide-react";
+
 import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
@@ -54,8 +57,17 @@ export default function CotizacionDetalle() {
   }
 
   if (!cotizacion) {
-    return <div className="text-center py-12 text-muted-foreground">Cotización no encontrada</div>;
+    return (
+      <DetailNotFound
+        icon={FileX}
+        title="Cotización no encontrada"
+        description="La cotización no existe, fue eliminada o no tienes permiso para verla."
+        backTo="/cotizaciones"
+        backLabel="Volver a Cotizaciones"
+      />
+    );
   }
+
 
   if (cotizacion.tipo_documento === "informativa") {
     return <CotizacionInformativaDetalle cotizacion={cotizacion} />;

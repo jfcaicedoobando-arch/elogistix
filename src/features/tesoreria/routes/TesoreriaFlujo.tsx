@@ -24,7 +24,7 @@ export default function TesoreriaFlujo() {
     <PageContainer>
       <DetailHeader
         backTo="/tesoreria"
-        backLabel="Tesorería"
+        backLabel="Volver a Tesorería"
         title="Flujo de caja proyectado · 90 días"
         subtitle="Proyección semanal de entradas (CxC) y salidas (CxP + comisiones) sobre vencimientos."
       />

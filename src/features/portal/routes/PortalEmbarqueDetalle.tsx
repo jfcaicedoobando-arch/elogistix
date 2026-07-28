@@ -54,7 +54,7 @@ export default function PortalEmbarqueDetalle() {
     <div className="space-y-6">
       <DetailHeader
         backTo={ROUTES.PORTAL_EMBARQUES}
-        backLabel="Embarques"
+        backLabel="Volver a Embarques"
         icon={<Ship className="h-6 w-6 text-accent shrink-0" />}
         title={embarque.expediente}
         subtitle={`${embarque.tipo} • ${embarque.modo} • ${embarque.incoterm}`}
