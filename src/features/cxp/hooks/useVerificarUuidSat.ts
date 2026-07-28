@@ -1,8 +1,26 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
-import { verificarUuidSat, type EstatusSat } from "@/features/cxp/services/verificarUuidSat";
+import {
+  verificarUuidSat,
+  type EstatusSat,
+  type VerificarUuidResult,
+} from "@/features/cxp/services/verificarUuidSat";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+
+const METHOD = "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT";
+
+/**
+ * v13.320.62 — el SAT devuelve un `raw` con el código y la leyenda oficial
+ * (ej. `N - 601 | La expresión impresa proporcionada no es válida`). Antes lo
+ * descartábamos y el usuario sólo veía "SAT no devolvió un estatus válido",
+ * sin pista de qué corregir.
+ */
+function descripcionSat(raw?: string): string | undefined {
+  const t = raw?.trim();
+  if (!t || t === "|") return undefined;
+  return `Respuesta del SAT: ${t}`;
+}
 
 /**
  * Hook para verificar el UUID de una factura de proveedor contra el SAT.
@@ -14,18 +32,25 @@ export function useVerificarUuidSat() {
   return useMutation({
     mutationKey: queryKeys.cxp.all,
     mutationFn: (facturaId: string) => verificarUuidSat(facturaId),
-    onSuccess: (res: { estatus: EstatusSat }) => {
-      if (res.estatus === "Vigente") notifySuccess(undefined, { title: "CFDI Vigente en SAT" });
-      else if (res.estatus === "Cancelado") notifyWarning(undefined, { title: "CFDI Cancelado en SAT" });
-      else if (res.estatus === "No Encontrado")
+    onSuccess: (res: VerificarUuidResult) => {
+      const detalle = descripcionSat(res.raw);
+      const estatus: EstatusSat = res.estatus;
+      if (estatus === "Vigente") notifySuccess(undefined, { title: "CFDI Vigente en SAT" });
+      else if (estatus === "Cancelado")
+        notifyWarning(undefined, { title: "CFDI Cancelado en SAT", description: detalle });
+      else if (estatus === "No Encontrado")
         notifyError(undefined, {
           title: "CFDI No encontrado en SAT",
-          method: "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT",
+          description: detalle,
+          method: METHOD,
         });
       else
         notifyError(undefined, {
           title: "SAT no devolvió un estatus válido",
-          method: "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT",
+          description:
+            detalle ??
+            "El SAT no devolvió un estatus reconocible. Revisa que el RFC del proveedor, el UUID y el total coincidan con el CFDI.",
+          method: METHOD,
         });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });
@@ -34,7 +59,7 @@ export function useVerificarUuidSat() {
       notifyError(undefined, {
         title: `No se pudo consultar SAT: ${err.message}`,
         error: err,
-        method: "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT",
+        method: METHOD,
       }),
   });
 }

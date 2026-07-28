@@ -27,10 +27,23 @@ const SAT_ENDPOINT = "https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaC
 const json = (cors: Record<string, string>, body: unknown, status = 200): Response =>
   _jsonResponse(body, status, cors);
 
+/**
+ * v13.320.62 — Escapa un valor antes de meterlo en el sobre SOAP.
+ * Sin esto, un RFC con `&` (ej. `AL&0807074L5`) rompe el XML del request
+ * y el SAT responde con un cuerpo que no podemos interpretar.
+ * OJO: los separadores `&amp;` de la expresión NO pasan por aquí.
+ */
+function escapeXmlValue(v: string): string {
+  return v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function buildSoapEnvelope(rfcEmisor: string, rfcReceptor: string, total: number, uuid: string) {
   // Formato oficial SAT — total con 6 decimales, string escape básico.
   const totalStr = total.toFixed(6);
-  const expr = `?re=${rfcEmisor}&amp;rr=${rfcReceptor}&amp;tt=${totalStr}&amp;id=${uuid}`;
+  const re = escapeXmlValue(rfcEmisor);
+  const rr = escapeXmlValue(rfcReceptor);
+  const id = escapeXmlValue(uuid);
+  const expr = `?re=${re}&amp;rr=${rr}&amp;tt=${totalStr}&amp;id=${id}`;
   return `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
   <soapenv:Header/>
@@ -42,9 +55,14 @@ function buildSoapEnvelope(rfcEmisor: string, rfcReceptor: string, total: number
 </soapenv:Envelope>`;
 }
 
+/**
+ * v13.320.62 — el regex anterior (`<[a-z]:?Estado>`) exigía un prefijo de
+ * namespace de exactamente una letra: `<Estado>` o `<ns1:Estado>` no
+ * matcheaban y el resultado caía en "Error" sin razón real.
+ */
 function parseSatResponse(xml: string): { estado: string; codigo: string } {
-  const estado = /<[a-z]:?Estado>([^<]+)</i.exec(xml)?.[1] ?? "";
-  const codigo = /<[a-z]:?CodigoEstatus>([^<]+)</i.exec(xml)?.[1] ?? "";
+  const estado = /<(?:[\w.-]+:)?Estado>([^<]*)</i.exec(xml)?.[1] ?? "";
+  const codigo = /<(?:[\w.-]+:)?CodigoEstatus>([^<]*)</i.exec(xml)?.[1] ?? "";
   return { estado: estado.trim(), codigo: codigo.trim() };
 }
 
@@ -72,6 +90,24 @@ async function consultarSat(rfcEmisor: string, rfcReceptor: string, total: numbe
   return { estatus: mapEstatus(estado, codigo), raw: `${codigo} | ${estado}` };
 }
 
+/**
+ * v13.320.62 — Defensa contra datos históricos: RFCs importados de CFDI antes
+ * del fix del parser quedaron con entidades XML (`AL&amp;0807074L5`).
+ * Normalizamos aquí también para no depender solo del backfill.
+ */
+function normalizarRfc(raw: string | null | undefined): string {
+  return (raw ?? "")
+    .replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+    .trim()
+    .toUpperCase();
+}
+
 type Tipo = "cxp" | "cxc" | "cxp_nc";
 
 interface CfdiParaVerificar {
@@ -85,7 +121,7 @@ interface CfdiParaVerificar {
 async function fetchOrgRfc(admin: ReturnType<typeof createClient>, orgId: string | null): Promise<string> {
   if (!orgId) return "";
   const { data } = await admin.from("organizations").select("rfc").eq("id", orgId).maybeSingle();
-  return ((data as { rfc?: string } | null)?.rfc ?? "").trim().toUpperCase();
+  return normalizarRfc((data as { rfc?: string } | null)?.rfc);
 }
 
 async function loadFacturaCxp(admin: ReturnType<typeof createClient>, facturaId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
@@ -100,7 +136,7 @@ async function loadFacturaCxp(admin: ReturnType<typeof createClient>, facturaId:
   return {
     data: {
       uuid_fiscal: row.uuid_fiscal,
-      rfc_emisor: (row.rfc_proveedor ?? "").trim().toUpperCase(),
+      rfc_emisor: normalizarRfc(row.rfc_proveedor),
       rfc_receptor: rfcReceptor,
       total: Number(row.total ?? 0),
       organization_id: row.organization_id,
@@ -123,7 +159,7 @@ async function loadFacturaCxc(admin: ReturnType<typeof createClient>, facturaId:
     data: {
       uuid_fiscal: row.uuid_fiscal,
       rfc_emisor: rfcEmisor,
-      rfc_receptor: (row.rfc_cliente ?? "").trim().toUpperCase(),
+      rfc_receptor: normalizarRfc(row.rfc_cliente),
       total: Number(row.total ?? 0),
       organization_id: row.organization_id,
     },
@@ -148,7 +184,7 @@ async function loadNotaCreditoCxp(admin: ReturnType<typeof createClient>, ncId: 
   return {
     data: {
       uuid_fiscal: row.uuid_fiscal,
-      rfc_emisor: (row.proveedor_facturas?.rfc_proveedor ?? "").trim().toUpperCase(),
+      rfc_emisor: normalizarRfc(row.proveedor_facturas?.rfc_proveedor),
       rfc_receptor: rfcReceptor,
       total: Number(row.monto ?? 0),
       organization_id: row.organization_id,

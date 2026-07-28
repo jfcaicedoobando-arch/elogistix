@@ -197,3 +197,37 @@ Deno.test("parseCfdi: tipo_cambio=null cuando CFDI USD viene sin atributo TipoCa
   assertEquals(r.tipo_cambio, null);
 });
 
+
+// ---------------------------------------------------------------------------
+// v13.320.62 — entidades XML en atributos de texto.
+// Bug real: RFC `AL&0807074L5` llegaba como `AL&amp;0807074L5` y rompía la
+// consulta de estatus al SAT.
+// ---------------------------------------------------------------------------
+const SAMPLE_ENTIDADES = `<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Serie="A&amp;B" Folio="7" Fecha="2025-03-14T10:22:01" SubTotal="100.00" Total="116.00" Moneda="MXN" TipoCambio="1">
+  <cfdi:Emisor Rfc="AL&amp;0807074L5" Nombre="ALMACENES &amp; LOG&#205;STICA" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="XAXX010101000" Nombre="R &lt;TEST&gt;"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto Descripcion="Flete &amp; maniobras" Importe="100.00"/>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="16.00" TotalImpuestosRetenidos="0.00"/>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="11111111-2222-3333-4444-555555555555"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>`;
+
+Deno.test("parseCfdi decodifica entidades XML en RFC, nombres y textos", () => {
+  const r = parseCfdi(SAMPLE_ENTIDADES);
+  assertEquals(r.emisor.rfc, "AL&0807074L5");
+  assertEquals(r.emisor.nombre, "ALMACENES & LOGÍSTICA");
+  assertEquals(r.receptor.nombre, "R <TEST>");
+  assertEquals(r.serie, "A&B");
+  assertEquals(r.conceptos[0].descripcion, "Flete & maniobras");
+});
+
+Deno.test("decodeXmlEntities no re-decodifica secuencias generadas", async () => {
+  const { decodeXmlEntities } = await import("./parser.ts");
+  assertEquals(decodeXmlEntities("&amp;lt;"), "&lt;");
+  assertEquals(decodeXmlEntities("&#38;"), "&");
+  assertEquals(decodeXmlEntities("sin entidades"), "sin entidades");
+});

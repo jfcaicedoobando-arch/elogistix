@@ -1,46 +1,34 @@
-## Diagnóstico
+## Qué pasó (en corto)
 
-El CI `82225517241` falla en dos jobs (los demás están verdes): **typecheck** y **knip strict**. Ambos son consecuencia directa del `knip --fix` masivo de `v13.320.60`.
+La factura de proveedor **FiscLYD-2046203** (17:26:50, misma hora del reporte) quedó con `uuid_estatus_sat = 'Error'`, y el toast genérico "SAT no devolvió un estatus válido" es lo que se disparó.
 
-**Qué pasó (analogía):** knip quitó los "letreros de salida" (`export`) de tipos que nadie usaba fuera del archivo. Pero en varios archivos ese letrero era lo único que consumía un `import type` que venía de otro módulo. Al quitar el letrero, el import quedó huérfano — como una caja entregada en la bodega que ya no tiene destinatario. TypeScript, con `noUnusedLocals`, marca error.
+**Causa confirmada (consultada en la base):** el RFC del proveedor está guardado como `AL&amp;0807074L5` en vez de `AL&0807074L5`.
 
-Ejemplo confirmado en `src/features/facturacion/hooks/useFacturas.ts`: siguen los `type FacturaRow, type FacturaListItem` importados, pero el `export type { ... }` desapareció y quedó un `;` suelto en la línea 14.
+Analogía: el XML del CFDI escribe el símbolo `&` en "clave morse" (`&amp;`). Nuestro lector copió la clave morse tal cual en vez de traducirla, así que le pedimos al SAT un RFC que no existe y el SAT contesta algo que no sabemos interpretar.
 
-### Errores exactos (42 en total)
+Hay 2 facturas afectadas hoy (las únicas con `&` en el RFC).
 
-| Código | Cantidad | Naturaleza |
-|---|---|---|
-| TS6133 | 34 | `import type { X }` huérfano tras quitar el re-export |
-| TS6196 | 8 | Tipo declarado localmente que ya nadie usa |
+## Bugs a corregir
 
-Archivos afectados: `useAdminData.ts`, `useAlertasSistema.ts`, `useAppLogsHealth.ts`, `usePapelera.ts`, `admin/services/members.ts`, `anticiposProveedorService.ts`, `CxpPorCapturarToolbar.tsx`, `useEstadoCuentaEmail.ts`, `useComisionesDevengadas.ts`, `useFacturasCxP.ts`, `useDashboardOperador.ts`, `useEmbarquesPendientesAdmin.ts`, `embarqueDetalleTabsTypes.ts` (7 tipos), `useContenedoresInfoMap.ts`, `useProformas.ts`, `useReconciliacionEmbarque.ts`, `useBandejas.ts`, `useContactosClienteParaEnvio.ts`, `useFacturas.ts`, `useHuecoFacturacion.ts`, `useNotasCredito.ts`, `useTabProformasController.ts`, `facturacion/services/facturapi.ts`, `usePortalBreadcrumbs.ts`, `useProveedores.ts`.
+**1. El parser de CFDI no decodifica entidades XML** — `supabase/functions/parse-cfdi-xml/parser.ts`, función `attr()`: devuelve el valor crudo del atributo. Se añade un `decodeXmlEntities()` (`&amp; &lt; &gt; &quot; &apos; &#NN; &#xNN;`) aplicado a todos los atributos de texto (RFC, Nombre, Descripción, Serie, Folio). Tests en `parser_test.ts` con `Rfc="AL&amp;0807074L5"` y `Nombre="ACME &amp; CO"`.
 
-### Knip strict
+**2. El sobre SOAP al SAT no escapa los valores** — `supabase/functions/verificar-uuid-sat/index.ts`, `buildSoapEnvelope()`: interpola RFC/UUID directo. Aunque el dato ya venga limpio, un `&` real rompe el XML del request. Se añade escape del valor (solo `&`, `<`, `>`) antes de armar la expresión, manteniendo `&amp;` como separador de parámetros.
 
-Reporta 1 archivo no usado: `src/features/catalogos/domain/tiposContenedorDefault.ts` — es el residuo de cuando se movió `TIPOS_CONTENEDOR_DEFAULT` a `src/lib/domain/` para resolver el error de cross-feature import.
+**3. El parser de la respuesta del SAT es frágil** — el regex `/<[a-z]:?Estado>/i` exige prefijo de namespace de una sola letra; si el SAT responde `<Estado>` o `<ns1:Estado>` no matchea y cae en `Error`. Se cambia a `/<(?:[\w.-]+:)?Estado>/i` (mismo tratamiento para `CodigoEstatus`).
 
-## Plan
+**4. El mensaje de error no dice nada** — `src/features/cxp/hooks/useVerificarUuidSat.ts` descarta el campo `raw` que ya devuelve la edge function. El toast del caso `Error` pasará a incluir el código/estado del SAT (ej. "SAT respondió: N - 601 | La expresión impresa proporcionada no es válida"), y en el caso de RFC/UUID faltantes se mostrará el motivo concreto en vez del genérico. También se registrará `raw` como contexto en Sentry.
 
-**Paso 1 — Limpiar imports huérfanos (34 errores TS6133)**
-En cada archivo, eliminar únicamente el especificador `type X` de la lista de import, y borrar el `;` suelto que quedó donde estaba el re-export. Si el import queda vacío, se elimina la sentencia completa.
+**5. Datos ya contaminados** — migración de backfill que corre `replace()` de las entidades sobre `proveedor_facturas.rfc_proveedor` y `razon_social`/nombre del proveedor donde contengan `&amp;` u otras entidades (2 filas hoy), y se resetea su `uuid_estatus_sat`/`uuid_verificado` a nulo para que se puedan re-verificar.
 
-**Paso 2 — Eliminar tipos locales muertos (8 errores TS6196)**
-Principalmente en `embarqueDetalleTabsTypes.ts` (`ResumenProps`, `CostosProps`, `FacturacionProps`, `NotasProps`, `TrackingProps`, `DocHandlers`, `Financials`) y `DireccionOrden` en `CxpPorCapturarToolbar.tsx`. Antes de borrar cada uno se verifica que no esté referenciado dentro del mismo archivo (por ejemplo, `Financials` podría estar embebido en otro tipo); si lo está, se conserva y se ajusta la referencia.
+## Verificación
 
-**Paso 3 — Borrar archivo muerto**
-`rm src/features/catalogos/domain/tiposContenedorDefault.ts`. Se confirma antes con `rg` que nadie lo importe.
+- `deno test` de `parse-cfdi-xml` y de la edge function de SAT.
+- `bunx vitest run src/features/cxp`.
+- Consulta post-migración confirmando 0 RFCs con entidades XML.
+- Re-verificar manualmente la factura FiscLYD-2046203 desde `/compras/por-aprobar`.
+- `bun run lint --max-warnings 0`, `audit:migrations`.
+- Bump `APP_VERSION` a `13.320.62` + entrada en `CHANGELOG.md`, y marcar el issue de Sentry como `resolved`.
 
-**Paso 4 — Verificación**
-- `bun run typecheck` (o `tsgo --noEmit`) → 0 errores
-- `bun run lint:unused:strict` → 0 hallazgos
-- `bun run lint -- --max-warnings 0` → verde (no debe romperse; los cambios son remociones)
-- Smoke de tests de los módulos tocados (facturación, embarques, admin)
+## Nota técnica
 
-**Paso 5 — Versionado**
-Bump de `APP_VERSION` a `13.320.61` y entrada en `CHANGELOG.md`.
-
-## Notas técnicas
-
-- No se toca lógica de negocio: todas las ediciones son remoción de declaraciones de tipo e imports sin runtime.
-- No se relajan las reglas de `knip.json` ni de `tsconfig` — se cierra la deuda real.
-- Riesgo bajo: si algún tipo resulta estar en uso, el typecheck lo detecta de inmediato en el Paso 4.
+El `attr()` con regex se mantiene (migrar a DOM está fuera de alcance aquí); el fix es puntual en la decodificación de entidades, que es exactamente donde se pierde la información.
