@@ -12,7 +12,7 @@ import { PortalCotizacionesMobileFilters } from "@/features/portal/components/Po
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
-import { calcularDesgloseMoneda, parseConceptos } from "@/features/cotizacion/domain/parsers/cotizacionDetalle";
+import { calcularDesgloseMoneda, parseConceptos } from "@/lib/domain/cotizacionDetalle";
 
 export default function PortalCotizaciones() {
   const navigate = useNavigate();

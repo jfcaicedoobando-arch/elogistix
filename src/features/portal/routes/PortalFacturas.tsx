@@ -4,7 +4,7 @@ import { PageSkeleton } from "@/components/shared/skeletons";
 import { usePortalFacturas, usePortalClientUsers } from "@/features/portal/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { resolverEstadoFacturaCliente } from "@/features/facturacion/domain/estadosFactura";
+import { resolverEstadoFacturaCliente } from "@/lib/domain/estadosFactura";
 import { Receipt, AlertTriangle, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";

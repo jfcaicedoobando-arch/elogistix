@@ -3,7 +3,7 @@ import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import {
   calcularDesgloseMoneda,
   parseConceptos,
-} from "@/features/cotizacion/domain/parsers/cotizacionDetalle";
+} from "@/lib/domain/cotizacionDetalle";
 
 interface CotizacionLike {
   conceptos_venta?: unknown;

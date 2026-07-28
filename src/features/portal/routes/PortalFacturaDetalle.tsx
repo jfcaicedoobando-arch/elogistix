@@ -10,7 +10,7 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
 import { ROUTES } from "@/constants/routes";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { resolverEstadoFacturaCliente } from "@/features/facturacion/domain/estadosFactura";
+import { resolverEstadoFacturaCliente } from "@/lib/domain/estadosFactura";
 import { openFacturaInNewTab } from "@/services/storage";
 import PortalFacturaResumenCard from "@/features/portal/components/factura/PortalFacturaResumenCard";
 import PortalFacturaConceptosTable from "@/features/portal/components/factura/PortalFacturaConceptosTable";

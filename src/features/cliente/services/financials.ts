@@ -3,7 +3,7 @@
  * Encapsula consultas a `facturas` y la RPC `profit_por_cliente`.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { FACTURA_ESTADOS_VIVOS } from "@/features/facturacion/domain/estadosFactura";
+import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 
 export interface ClienteFinancials {
   facturadoUSD: number;

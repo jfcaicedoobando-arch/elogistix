@@ -12,7 +12,7 @@ import {
   PORTAL_PAGO_FACTURA_COLUMNS,
   PORTAL_NOTA_CREDITO_COLUMNS,
 } from "./columns";
-import { FACTURA_ESTADOS_VIVOS } from "@/features/facturacion/domain/estadosFactura";
+import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 
 // v13.56.3 — Límites defensivos en consultas del portal. Si un cliente acumula
 // más de 500 embarques/facturas o 200 eventos/documentos/pagos por embarque,
