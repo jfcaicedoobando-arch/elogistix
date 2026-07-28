@@ -69,7 +69,7 @@ export function DetailHeader({
 
   return (
     <div className={cn("space-y-3", className)}>
-      {typeof backTo === "string" ? (
+      {backTo === null ? null : typeof backTo === "string" ? (
         <Button variant="ghost" size="sm" className={backClasses} asChild>
           <Link to={backTo}>
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -87,6 +87,7 @@ export function DetailHeader({
           {backLabel}
         </Button>
       )}
+
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-2">
