@@ -4,7 +4,7 @@
  * El saldo que ve el cliente debe descontar tanto los pagos aplicados como
  * las notas de crédito aplicadas. Sin I/O para poder testearse aislado.
  */
-import { sumarMontos, restarMontos } from "@/lib/financial/financialUtils";
+import { sumarMontos } from "@/lib/financial/financialUtils";
 
 export interface PagoAplicadoLike {
   monto_aplicado_factura?: number | string | null;
