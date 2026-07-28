@@ -106,7 +106,7 @@ export default function AgenteTarifas() {
         <TabsList>
           <TabsTrigger value="todas">Todas ({tarifas.length})</TabsTrigger>
           <TabsTrigger value="borrador">Borrador ({tarifas.filter((t) => t.estado_aprobacion === "borrador").length})</TabsTrigger>
-          <TabsTrigger value="vigente">Vigente ({tarifas.filter(esVigenteReal).length})</TabsTrigger>
+          <TabsTrigger value="vigente">Vigente ({tarifas.filter((t) => esVigenteReal(t, hoy)).length})</TabsTrigger>
           <TabsTrigger value="rechazada">Rechazada ({tarifas.filter((t) => t.estado_aprobacion === "rechazada").length})</TabsTrigger>
         </TabsList>
       </Tabs>
