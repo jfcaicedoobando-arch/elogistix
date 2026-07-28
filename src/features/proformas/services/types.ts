@@ -71,6 +71,13 @@ export type ProformaFacturaAsociada = {
   factura_xml_url: string | null;
 };
 
+/** Envío por correo registrado en `proforma_envios` (forma reducida). */
+export type ProformaEnvioLite = {
+  created_at: string;
+  estado: string | null;
+  destinatarios: unknown;
+};
+
 export type ProformaDetalleFull = ProformaConFactura & {
   /**
    * Factura(s) generadas a partir de esta proforma. Se resuelve vía la FK
@@ -81,4 +88,6 @@ export type ProformaDetalleFull = ProformaConFactura & {
   facturas_asociadas: ProformaFacturaAsociada[];
   cliente_full: ProformaClienteFull | null;
   embarque_full: ProformaEmbarqueFull | null;
+  /** Envíos al cliente, más reciente primero. */
+  envios: ProformaEnvioLite[];
 };
