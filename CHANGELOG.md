@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.320.70] - 2026-07-28
+- `DetailHeader` acepta `backTo={null}` para ocultar el botón "Volver" en páginas públicas sin página padre.
+- Portal público de proformas (`/portal/proformas/:token`) y tracking público (`/tracking/:token`) migrados a `DetailHeader` (título + badge + subtítulo, sin botón volver).
+
+
+
 ## [13.320.69] - 2026-07-28
 - Auditoría visual de `DetailHeader`: el icono ya no salta de línea con títulos largos (razón social completa en Clientes).
 - El título ahora muestra hasta 2 líneas con `break-words` y expone el texto completo en tooltip nativo.
