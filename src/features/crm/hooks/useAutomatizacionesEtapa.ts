@@ -14,7 +14,10 @@ export function useMoverEtapaConAutomatizacion() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (params: { id: string; etapa_id: string; probabilidad?: number }) => {
+    mutationFn: async (params: {
+      id: string; etapa_id: string; probabilidad?: number;
+      fecha_cierre_real?: string | null; valor_real?: number | null;
+    }) => {
       await moverEtapaOportunidad(params);
       try {
         await runAutomatizaciones(params.etapa_id, params.id, user?.id ?? null, user?.email ?? "");

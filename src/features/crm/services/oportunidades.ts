@@ -63,9 +63,19 @@ export async function moverEtapaOportunidad(input: {
   id: string;
   etapa_id: string;
   probabilidad?: number;
+  // B-034: cierre real cuando la etapa destino es "ganada" (kanban DnD).
+  fecha_cierre_real?: string | null;
+  valor_real?: number | null;
 }): Promise<void> {
-  const patch: { etapa_id: string; probabilidad?: number } = { etapa_id: input.etapa_id };
+  const patch: {
+    etapa_id: string;
+    probabilidad?: number;
+    fecha_cierre_real?: string;
+    valor_real?: number;
+  } = { etapa_id: input.etapa_id };
   if (typeof input.probabilidad === "number") patch.probabilidad = input.probabilidad;
+  if (input.fecha_cierre_real) patch.fecha_cierre_real = input.fecha_cierre_real;
+  if (typeof input.valor_real === "number") patch.valor_real = input.valor_real;
   await run(supabase.from("crm_oportunidades").update(patch).eq("id", input.id));
 }
 

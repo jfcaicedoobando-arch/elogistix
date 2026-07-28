@@ -1,49 +1,37 @@
-## Wave 15 — Bug bash live (siguiente lote)
+# Wave 17 · Cierre de bugs BAJA + 1 MEDIA en CRM y Embarques
 
-Objetivo: bajar los pendientes de 17 a ~10 aplicando los diffs listos del MD `instrucciones-lovable-bugs-e2e-2026-07-28-2.md`. Se agrupan por capa para minimizar riesgo (SQL primero, luego frontend puro).
+Aplicaremos 4 correcciones frontend de bajo riesgo del archivo `instrucciones-lovable-bugs-e2e-2026-07-28-2.md`. Ninguna toca lógica de dinero ni migraciones SQL nuevas.
 
-### Bugs a corregir
+## Bugs incluidos
 
-**Capa SQL/BD (una migración)**
-- **B-032** · `seed_demo_organization()` sin datos CxP: sembrar facturas de proveedor + pagos CxP en la org Demo para que las pantallas de Compras/CxP no estén en ceros. Idempotente por org demo fija.
+### B-034 · Oportunidad "Ganada" sin `fecha_cierre_real` / `valor_real` (🟡 MEDIA)
+Contradicción entre Resumen (usa `monto_estimado`) y Leaderboard (usa `fecha_cierre_real`).
+- En `NuevaOportunidadDialog`, cuando la etapa es tipo `ganada`, mostrar campos **Fecha de cierre real** (obligatoria, default hoy) y **Valor real** (default `monto_estimado`).
+- En kanban `handleMover`: al soltar en etapa `ganada` escribir automáticamente `fecha_cierre_real = hoy` y `valor_real = monto_estimado`.
+- Extender `moverEtapaOportunidad` y `useMoverEtapaConAutomatizacion` con esos campos opcionales.
 
-**Capa Frontend (diffs del MD, sin cambios de negocio nuevos)**
-- **B-030** · Bandeja de pagos programados: hoy usa `cxp_por_pagar` que filtra `estado='Vigente'` en silencio → tesorero ve "2 de N". Nuevo `fetchPagosProgramables()` lee `proveedor_facturas` directo (no canceladas, saldo > 0), agrega sección "Sin fecha de pago" y filtro explícito (Todas / Solo programadas / Vencen en 30 días) con default "todas".
-- **B-049** · Copy: "Pendiente revisión" → "Pendiente cliente" en las demás vistas donde aún aparece (unificar con B-048).
-- **B-052** · Toasts del wizard de cotización acumulados en pares: `useCreateCotizacion`/`useUpdateCotizacion`/`useUpsertCotizacionCostos` reciben opción `silent` y el wizard la activa; los puntos finales del wizard notifican una sola vez.
-- **B-054** · Drag kanban CRM sobrescribe probabilidad manual con el default de etapa: al mover una tarjeta, sólo actualizar `probabilidad` si el usuario NO la ha personalizado (o si viene de una etapa `perdida/ganada`).
-- **B-056** · Póliza de seguro: validaciones silenciosas — el submit se queda muerto sin toast. Añadir `handleSubmit` con `onInvalid` que muestre los errores Zod agregados.
-- **B-061** · Validaciones Zod silenciosas en diálogos de anticipos (mismo patrón que B-056): `onInvalid` con toast que resume los campos con error.
+### B-055 · Actividades CRM sin distinción "Vencida" (⚪ BAJA)
+- `Actividades.tsx`: badge "Vencida" cuando `fecha_completada == null && fecha_programada < now`.
+- `statusRegistry.ts`: agregar `"Vencida"` a `DOMAIN_STATUSES.actividad_crm`.
+- `services/actividades.ts`: `listActividadesVencidas` / `countActividadesVencidas` filtran por `responsable_id` OR `responsable_email` cuando hay email.
 
-### Fuera de este lote (por complejidad o dependencia)
-- B-034 (CRM oportunidad ganada sin fecha_cierre_real): requiere revisar RPC + UI, se hará en Wave 16.
-- B-029 (import CSV validación por fila): cambia contrato del parser + tests; se propone aislado en Wave 16.
-- B-044 (subir realmente los 11 docs del cliente): condicional a verificación en staging.
-- B-012, B-021, B-059: decisiones de diseño / diagnóstico previos.
+### B-057 · Tab Costos muestra "Ahorro 100%" en costos sin factura (⚪ BAJA)
+- `ajusteDescripcion.ts`: `describirAjusteNeto` acepta `sinFactura` y excluye del cálculo los renglones sin factura de proveedor; rotula "· N sin factura" o "Sin factura proveedor".
+- Actualizar llamadas en `ResumenAjusteBar` y `GrupoCostosProveedor` para pasar el conteo.
+- Tiles "Cotizado/Facturado" se mantienen sin cambios.
 
-### Detalles técnicos
+### B-058 · Embarque Entregado sin acción "Cancelar" (⚪ BAJA)
+La BD ya permite `* → Cancelado` vía `avanzar_estado_embarque`, pero la UI no lo expone.
+- `useEmbarqueEstadoActions`: nuevo `handleCancelar` que llama `avanzarEstado.mutateAsync({ nuevoEstado: "Cancelado" })` + bitácora (`cambiar_estado`) + toast.
+- `EmbarqueDetalleHeaderActions`: nueva entrada "Cancelar embarque" con `ConfirmActionDialog` destructivo, visible en cualquier estado ≠ Cancelado; descripción advierte que no revierte pagos/facturas/docs si estado es Entregado/EIR/Cerrado.
+- Ocultar "Eliminar" cuando hay deuda vinculada (usar `useValidacionCierre` / `validar_cierre_embarque`).
 
-Archivos a tocar (sin re-leer el MD durante la implementación, ya está en contexto):
+## Verificación
+- `bun run lint -- --max-warnings 0`
+- `bun test src/features/crm src/features/embarques/components/costos` (targeted)
+- Verificar en preview: Oportunidad → mover a ganada, Actividades vencidas badge rojo, tab Costos sin ahorro fantasma, embarque Entregado permite Cancelar.
 
-- Nuevo: `src/features/tesoreria/services/pagosProgramados.ts`
-- `src/features/tesoreria/routes/TesoreriaPagosProgramados.tsx`
-- `src/features/cotizacion/hooks/mutations/useCotizacionMutations.ts`
-- `src/features/cotizacion/hooks/useCotizacionCostos.ts`
-- `src/features/cotizacion/routes/NuevaCotizacion.tsx`, `EditarCotizacion.tsx`
-- `src/features/crm/**` (localizar handler de drag kanban antes de tocarlo)
-- `src/features/seguros/**` (localizar form de póliza)
-- `src/features/anticipos/**` (localizar diálogos)
-- Migración Supabase: extender `seed_demo_organization()` con facturas + pagos CxP (idempotente por `organization_id = de100000-…-0001`).
-
-Cierre de wave:
-- Bump `APP_VERSION` a `13.320.51`.
-- Entrada `CHANGELOG.md` con explicaciones cortas + analogías (regla del proyecto).
-- Reporte de sprint: 46 → ~52/63 cerrados; pendientes ~11.
-
-### Verificación mínima por bug
-- **B-030**: con facturas en captura/Borrador y con `fecha_programada_pago`, aparecen en la bandeja; las sin fecha caen en "Sin fecha de pago".
-- **B-032**: `SELECT count(*) FROM proveedor_facturas WHERE organization_id = 'de100000-…-0001'` > 0 tras re-seed.
-- **B-049**: badge de proforma dice "Pendiente cliente" en todas las vistas.
-- **B-052**: guardar wizard = un solo toast; error de paso = un solo toast con contexto.
-- **B-054**: mover una tarjeta con `probabilidad` custom mantiene el valor; una tarjeta sin custom toma el default de la etapa nueva.
-- **B-056 / B-061**: submit inválido dispara toast con lista de campos, en lugar de "no pasa nada".
+## Post
+- Bump `APP_VERSION` a `13.320.53`.
+- Entrada en `CHANGELOG.md`.
+- Reportar: 56/63 cerrados, 7 pendientes (B-010, B-011, B-013, B-020, B-029, B-042, B-044 + diagnósticos B-012/B-021/B-059).

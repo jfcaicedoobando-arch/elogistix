@@ -13,14 +13,22 @@ export type SubtotalPorMoneda = {
   moneda: string;
   cotizado: number;
   facturado: number;
+  /** B-057: cotizado sólo de filas con factura ligada — base para % de ajuste. */
+  cotizadoFacturable: number;
+  /** B-057: cuántas filas aún no tienen factura del proveedor. */
+  sinFactura: number;
 };
 
 export function calcularSubtotales(filas: FilaReconciliacion[]): SubtotalPorMoneda[] {
   const map = new Map<string, SubtotalPorMoneda>();
   for (const f of filas) {
-    const cur = map.get(f.moneda) ?? { moneda: f.moneda, cotizado: 0, facturado: 0 };
+    const cur = map.get(f.moneda) ?? {
+      moneda: f.moneda, cotizado: 0, facturado: 0, cotizadoFacturable: 0, sinFactura: 0,
+    };
     cur.cotizado += f.cotizado;
     cur.facturado += f.real_facturado;
+    if (f.facturas.length > 0) cur.cotizadoFacturable += f.cotizado;
+    else cur.sinFactura += 1;
     map.set(f.moneda, cur);
   }
   return Array.from(map.values());

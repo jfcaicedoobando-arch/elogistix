@@ -22,6 +22,7 @@ interface Etapa {
   id: string;
   nombre: string;
   probabilidad_default: number;
+  tipo?: string;
 }
 
 interface ClienteOption {
@@ -43,6 +44,8 @@ interface Props {
 export default function OportunidadFormFields({
   form, setForm, set, etapas, clientes, isEdit, autoActividad, setAutoActividad,
 }: Props) {
+  const etapaSel = etapas.find((e) => e.id === form.etapa_id);
+  const esGanada = etapaSel?.tipo === "ganada";
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="sm:col-span-2 space-y-1">
@@ -114,6 +117,25 @@ export default function OportunidadFormFields({
         <Label>Fecha estimada cierre</Label>
         <DatePickerMx value={form.fecha_estimada_cierre} onChange={(v) => set("fecha_estimada_cierre", v)} className="w-full" />
       </div>
+      {/* B-034: al cerrar en etapa "ganada" exigimos fecha y valor reales;
+          sin ellos el Resumen (monto_estimado) y el Leaderboard
+          (fecha_cierre_real) se contradicen. */}
+      {esGanada && (
+        <>
+          <div className="space-y-1">
+            <Label>Fecha de cierre real *</Label>
+            <DatePickerMx value={form.fecha_cierre_real} onChange={(v) => set("fecha_cierre_real", v)} className="w-full" />
+          </div>
+          <div className="space-y-1">
+            <Label>Valor real</Label>
+            <Input
+              type="number" min={0} step="0.01"
+              value={form.valor_real}
+              onChange={(e) => set("valor_real", Number(e.target.value))}
+            />
+          </div>
+        </>
+      )}
       <div className="space-y-1">
         <Label>Modo</Label>
         <Input value={form.modo} onChange={(e) => set("modo", e.target.value)} placeholder="Marítimo / Aéreo..." />

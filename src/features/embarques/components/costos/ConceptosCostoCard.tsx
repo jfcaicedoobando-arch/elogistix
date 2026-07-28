@@ -68,13 +68,17 @@ export function ConceptosCostoCard({
       .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   }, [filasFiltradas]);
 
-  // Totales globales por moneda.
+  // Totales globales por moneda. B-057: además de cotizado/facturado
+  // guardamos `cotizadoFacturable` (sólo filas con factura) para que el
+  // % de "Ahorro/Sobrecosto" no se infle con costos por devengar.
   const totales = useMemo(() => {
-    const map = new Map<string, { moneda: string; cotizado: number; facturado: number }>();
+    const map = new Map<string, { moneda: string; cotizado: number; facturado: number; cotizadoFacturable: number; sinFactura: number }>();
     for (const f of filasFiltradas) {
-      const cur = map.get(f.moneda) ?? { moneda: f.moneda, cotizado: 0, facturado: 0 };
+      const cur = map.get(f.moneda) ?? { moneda: f.moneda, cotizado: 0, facturado: 0, cotizadoFacturable: 0, sinFactura: 0 };
       cur.cotizado += f.cotizado;
       cur.facturado += f.real_facturado;
+      if (f.facturas.length > 0) cur.cotizadoFacturable += f.cotizado;
+      else cur.sinFactura += 1;
       map.set(f.moneda, cur);
     }
     return Array.from(map.values());
