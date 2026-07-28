@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.320.45] - 2026-07-28
+- **RLS meta-linter · falsos positivos**: `test_rls_policy_linter.sql` marcaba 33 hallazgos falsos. Se corrige el linter (no la BD): (1) sólo audita `BASE TABLE` — antes revisaba VIEWs con columna `organization_id` (v_pagos_rep_pendientes, cxp_alertas_vencimiento, etc.), pero las políticas viven en las tablas subyacentes; (2) sólo bloquea policies `PERMISSIVE` con `USING/WITH CHECK (true)` — las `RESTRICTIVE` (patrón "Hide soft deleted X" con `qual = deleted_at IS NULL` y `with_check = true`) sólo pueden restringir acceso, nunca expandirlo; (3) exenta `facturapi_webhook_eventos` (ingest interno solo `service_role`). Analogía: es como un detector de humo que se activaba con el vapor de la ducha — ahora sólo suena con humo real.
+
 ## [13.320.44] - 2026-07-28
+
 - **Bug bash live · Wave 10 (Validaciones ausentes)** — se cierra un bug medio del audit `bugs-e2e-live-2026-07-28.md`:
   - **B-024 · Email/teléfono/contacto opcionales en UI pero NOT NULL en BD**: `useNuevoClienteController.isStep1Valid` sólo exigía nombre/RFC/CP/régimen. Al enviar, el trigger `NULLIF('','')` convertía cadenas vacías a NULL y Postgres devolvía `23502` crudo al usuario. Ahora los tres campos son requeridos en el paso 1 del wizard (`NuevoClienteDialog.tsx` marca `required` visualmente) y el botón "Siguiente" queda bloqueado hasta que se capturen.
 - **Bugs ya cerrados verificados en esta ola** (no se re-abren): B-041 (auto-toasts wizard eliminados en v13.312.21), B-042 (JSON crudo checklist cierre en v13.320.36 fallback formatter), B-062 (busqueda_global ya matchea `folio_interno` FI-…).
