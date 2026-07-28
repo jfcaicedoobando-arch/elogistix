@@ -8,11 +8,26 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { CalendarClock } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 
-const etaSchema = z.object({
-  fecha: z.string().min(1, "Fecha requerida"),
-  fuente: z.string().max(120, "Máximo 120 caracteres").optional().default(""),
-});
-type EtaForm = z.infer<typeof etaSchema>;
+/**
+ * v13.320.47 — B-026: Validación de ETA
+ * - `fecha` obligatoria y distinta al ETA vigente (si actualiza al mismo día
+ *   no tiene sentido registrar cambio + evento de bitácora).
+ * - `fuente` obligatoria (mínimo 3 caracteres) — sin fuente no hay auditoría útil.
+ */
+function buildEtaSchema(etaActualIso: string) {
+  return z.object({
+    fecha: z.string()
+      .min(1, "Fecha requerida")
+      .refine((v) => !etaActualIso || v !== etaActualIso, {
+        message: "La nueva ETA debe ser distinta a la actual",
+      }),
+    fuente: z.string()
+      .trim()
+      .min(3, "Indica la fuente o motivo (mín. 3 caracteres)")
+      .max(120, "Máximo 120 caracteres"),
+  });
+}
+type EtaForm = z.infer<ReturnType<typeof buildEtaSchema>>;
 
 interface Props {
   etaActual: string | null;
@@ -23,8 +38,9 @@ interface Props {
 
 export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: Props) {
   const etaActualIso = (etaActual ?? "").slice(0, 10);
+  const schema = buildEtaSchema(etaActualIso);
   const { control, handleSubmit, formState: { errors, isValid } } = useForm<EtaForm>({
-    resolver: zodResolver(etaSchema),
+    resolver: zodResolver(schema),
     defaultValues: { fecha: etaActualIso, fuente: "" },
     mode: "onChange",
   });
