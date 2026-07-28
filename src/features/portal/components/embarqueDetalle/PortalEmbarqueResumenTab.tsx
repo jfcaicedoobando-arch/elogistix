@@ -1,5 +1,33 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
+import { formatDate, formatNumber, getOrigen, getDestino } from "@/lib/formatters";
+
+/** Fila `dt`/`dd` que sólo se pinta cuando hay valor. */
+function Dato({ label, value }: { label: string; value: string | null }) {
+  if (!value) return null;
+  return (
+    <>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium">{value}</dd>
+    </>
+  );
+}
+
+/** B-102: datos operativos (carga y documentos) del embarque. */
+function DatosOperativos({ embarque }: { embarque: EmbarqueResumen }) {
+  const num = (v?: number | null, sufijo = "") =>
+    v != null && v > 0 ? `${formatNumber(v)}${sufijo}` : null;
+  return (
+    <>
+      <Dato label="Tipo de contenedor" value={embarque.tipo_contenedor ?? null} />
+      <Dato label="Peso" value={num(embarque.peso_kg, " kg")} />
+      <Dato label="Volumen" value={num(embarque.volumen_m3, " m³")} />
+      <Dato label="Piezas" value={num(embarque.piezas)} />
+      <Dato label="Contenedor" value={embarque.contenedor ?? null} />
+      <Dato label="BL Master" value={embarque.bl_master ?? null} />
+      <Dato label="BL House" value={embarque.bl_house ?? null} />
+    </>
+  );
+}
 
 type EmbarqueResumen = Parameters<typeof getOrigen>[0] &
   Parameters<typeof getDestino>[0] & {
