@@ -240,6 +240,8 @@ BEGIN
   -- =========================================================================
   PERFORM pg_temp.as_postgres();
   IF EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects') THEN
+    INSERT INTO storage.buckets(id, name, public) VALUES (bucket, bucket, false)
+      ON CONFLICT DO NOTHING;
     INSERT INTO storage.objects(bucket_id, name, owner) VALUES
       (bucket, ag_a::text || '/carta-a.pdf', user_a),
       (bucket, ag_b::text || '/carta-b.pdf', user_b);
