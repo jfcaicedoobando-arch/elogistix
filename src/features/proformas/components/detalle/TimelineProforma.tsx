@@ -64,7 +64,7 @@ function toneClass(done: boolean, tone: Hito["tone"]): string {
 export function TimelineProforma({ fechaEmision, operador, timeline, envios }: Props) {
   const resumen = resumirEnvios(envios);
   const notaEnvios =
-    resumen.total > 1 ? `${resumen.total} envíos · último ${formatDate(resumen.ultimoAt)}` : null;
+    resumen.total > 1 ? `${resumen.total} envíos · último ${formatDate(resumen.ultimoAt ?? "")}` : null;
   const hitos = buildHitos(fechaEmision, operador, timeline, notaEnvios);
   const activos = hitos.filter((h) => h.fecha).length;
   if (activos === 0) return null;
@@ -97,7 +97,7 @@ export function TimelineProforma({ fechaEmision, operador, timeline, envios }: P
                 <div className={`min-w-0 ${esUltimo ? "pb-0" : "pb-4"}`}>
                   <p className="text-sm font-medium">{h.label}</p>
                   <p className={`text-xs ${done ? "text-foreground" : "text-muted-foreground"}`}>
-                    {done ? formatDate(h.fecha) : "Pendiente"}
+                    {done && h.fecha ? formatDate(h.fecha) : "Pendiente"}
                   </p>
                   {done && h.actor && (
                     <p className="text-xs text-muted-foreground truncate" title={h.actor}>
