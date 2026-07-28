@@ -41,8 +41,19 @@ export function useNuevoClienteController(onClose: () => void) {
   const handleChange = (field: keyof ClienteForm, value: string) =>
     setForm(prev => ({ ...prev, [field]: value }));
 
+  // B-024 · email/teléfono/contacto son NOT NULL en BD (trigger NULLIF('')→NULL
+  // provocaba 23502 crudo). Los exigimos aquí para bloquear el paso 1.
   const isStep1Valid = () =>
-    Boolean(form.nombre.trim() && form.rfc.trim() && form.cp.trim() && form.regimen_fiscal.trim());
+    Boolean(
+      form.nombre.trim() &&
+      form.rfc.trim() &&
+      form.cp.trim() &&
+      form.regimen_fiscal.trim() &&
+      form.email.trim() &&
+      form.telefono.trim() &&
+      form.contacto.trim()
+    );
+
 
   const handleNext = () => {
     if (!isStep1Valid()) return;
