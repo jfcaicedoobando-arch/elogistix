@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.320.37] - 2026-07-28
+- **Fix CI · audit:migrations H6**: agregado `REVOKE ALL ... FROM PUBLIC` y `GRANT EXECUTE ... TO service_role` a `public.pnl_financiero_embarque(uuid)` en la migración `20260728040216`. La función es `SECURITY DEFINER` y debía blindar acceso público.
+- Analogía: cerramos la puerta trasera de una oficina con llave maestra (SECURITY DEFINER) — antes cualquiera podía empujarla.
+
+
+
 ## [13.320.36] - 2026-07-28
 - **Bug bash live · Wave 4 (4 fixes de integridad, dinero y UX)** — cuarta tanda del audit `bugs-e2e-live-2026-07-28.md`:
   - **B-017 · "Marcar Llegada real" con guardas de negocio (integridad)**: `actualizarFechaLlegadaRealEmbarque` ahora rechaza (1) fecha anterior al ETD ("arribar antes de zarpar"), (2) re-marcar una llegada ya capturada (llegadas múltiples) y (3) estados previos a "En Tránsito" (Cotización/Borrador/Confirmado). Antes se aceptaba cualquier fecha y el stepper mostraba "Arribo ✓" junto al botón "Avanzar a En Tránsito".
