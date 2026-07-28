@@ -4,8 +4,6 @@
  */
 import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { PageContainer } from "@/components/shared/PageContainer";
