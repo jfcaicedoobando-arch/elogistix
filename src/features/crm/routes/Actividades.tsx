@@ -11,14 +11,12 @@ import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
+import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
 import { usePermissions } from "@/hooks/shared";
@@ -31,39 +29,11 @@ import {
   ACTIVIDAD_TIPOS,
   type CrmActividadRow, type CrmActividadTipo,
 } from "@/features/crm/hooks";
-import ActividadRowActions from "@/features/crm/components/ActividadRowActions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { queryKeys } from "@/lib/query";
-import { formatFechaHora } from "@/lib/formatters/dates";
-const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
-  { id: "tipo", header: "Tipo", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
-  { id: "asunto", header: "Asunto", meta: { className: "font-medium" }, cell: ({ row }) => row.original.asunto },
-  { id: "entidad", header: "Entidad", meta: { className: "text-xs" }, cell: ({ row }) => row.original.entidad_tipo },
-  { id: "responsable", header: "Responsable", meta: { className: "text-xs" }, cell: ({ row }) => row.original.responsable_email || "—" },
-  {
-    ...statusColumn<CrmActividadRow>({
-      domain: "actividad_crm",
-      // B-055 (v13.320.40): distinguir "Vencida" cuando la actividad no completada
-      // ya pasó su fecha programada. Antes todo lo no completado era "Pendiente".
-      accessor: (a) => {
-        if (a.fecha_completada) return "Completada";
-        if (a.fecha_programada && new Date(a.fecha_programada).getTime() < Date.now()) return "Vencida";
-        return "Pendiente";
-      },
-    }),
-    meta: { width: "w-[110px]" },
-  },
-  {
-    id: "fecha_programada", header: "Programada", meta: { className: "text-xs" },
-    cell: ({ row }) => row.original.fecha_programada ? formatFechaHora(row.original.fecha_programada) : "—",
-  },
-]);
+import { baseActividadColumns, actividadActionColumn } from "./actividadesColumns";
 
-const actionColumn: ColumnDef<CrmActividadRow, unknown> = {
-  id: "acciones", header: "", meta: { width: "w-[110px]" },
-  cell: ({ row }) => <ActividadRowActions actividad={row.original} />,
-};
 
 type ActividadesFilters = { tipo: string; estado: string; responsable: string } & Record<string, string>;
 const DEFAULTS: ActividadesFilters = { tipo: "todos", estado: "pendientes", responsable: "todos" };
@@ -112,7 +82,7 @@ export default function Actividades() {
   const items = vencidasOnly
     ? list.rows.filter((a) => a.fecha_programada && new Date(a.fecha_programada).getTime() < now)
     : list.rows;
-  const columns = canEditCrm ? [...baseColumns, actionColumn] : baseColumns;
+  const columns = canEditCrm ? [...baseActividadColumns, actividadActionColumn] : baseActividadColumns;
 
   const limpiarFiltro = () => {
     const next = new URLSearchParams(searchParams);
