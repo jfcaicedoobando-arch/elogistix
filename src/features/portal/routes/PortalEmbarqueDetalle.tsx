@@ -52,26 +52,20 @@ export default function PortalEmbarqueDetalle() {
 
   return (
     <div className="space-y-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate(ROUTES.PORTAL_EMBARQUES)}
-        className="-ml-2 mb-1"
-      >
-        <ArrowLeft className="h-4 w-4 mr-1" /> Volver
-      </Button>
-
-      <PageHeader
-        icon={<Ship className="h-6 w-6 text-accent" />}
+      <DetailHeader
+        backTo={ROUTES.PORTAL_EMBARQUES}
+        backLabel="Embarques"
+        icon={<Ship className="h-6 w-6 text-accent shrink-0" />}
         title={embarque.expediente}
-        description={`${embarque.tipo} • ${embarque.modo} • ${embarque.incoterm}`}
-        subHeader={
-          <div className="flex items-center gap-2 flex-wrap">
+        subtitle={`${embarque.tipo} • ${embarque.modo} • ${embarque.incoterm}`}
+        badge={
+          <>
             <Badge className={getEstadoColor(estadoVisual ?? "")}>{estadoVisual}</Badge>
             <ModoIcon modo={embarque.modo} size={16} circle />
-          </div>
+          </>
         }
       />
+
 
 
 
