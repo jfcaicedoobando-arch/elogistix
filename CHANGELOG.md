@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.320.32] - 2026-07-28
+- **Bug bash live · Wave 1 (4 críticos)** — arreglos derivados del audit `bugs-e2e-live-2026-07-28.md`:
+  - **B-002 · Cobrar tiene prioridad sobre "Timbrar REP"**: en `FacturaDetalleActionsBar`, si la factura tiene saldo, la acción primaria es **Registrar pago**. Antes, un REP pendiente/fallido escondía "Registrar pago" y bloqueaba la cobranza indefinidamente. El REP queda accesible como secundario.
+  - **B-003 · Wizard no duplica cotización al recargar**: el autoguardado (`useCotizacionDraftAutosave`) ahora persiste `cotizacionId` en el draft (schema v2). Al restaurar, el wizard vuelve a apuntar a la misma fila y hace UPDATE en lugar de INSERTar una nueva cotización huérfana. Compatibilidad con drafts v1 legacy.
+  - **B-004 · CRM "+Nuevo" ya reacciona**: el `<PopoverAnchor asChild>` envolvía a `<DropdownMenu>` (que no tiene nodo DOM), así que Radix nunca posicionaba el Popover y los items se veían "muertos". Ahora envolvemos en un `<span>` real como ancla estable.
+  - **B-060 · Anticipos ya aplicables**: se agregó campo `Método de pago` (obligatorio, default `Transferencia`) al diálogo `RegistrarAnticipoDialog`. RPC `aplicar_anticipo_a_factura` ahora hace `COALESCE(NULLIF(TRIM(v_ant.metodo_pago),''),'Transferencia')` para anticipos legacy sin método, evitando el NOT NULL de `pagos_proveedor`.
+- Analogía: son 4 fugas independientes en la misma tubería — la de cobranza estaba tapada por un aviso viejo (B-002), la de cotizaciones goteaba duplicados cada refresh (B-003), la de CRM no tenía manija (B-004), y la de anticipos rebotaba por olvidar poner "cómo se paga" (B-060).
+
+
+
 ## [13.320.31] - 2026-07-28
 - **Fix · RLS helpers ejecutables por anon**: se otorgó `GRANT EXECUTE` sobre `has_role`, `current_agente_id` y `current_agente_org` al rol `anon`. Estas funciones (SECURITY DEFINER) se llaman dentro de políticas RLS en casi todas las tablas; cuando un visitante no autenticado tocaba una página pública, Postgres respondía `permission denied for function` y la carga fallaba en cascada. Devuelven `false`/`null` sin sesión, así que exponerlas a `anon` es seguro. Cierra hallazgo Project monitoring `error_log_finding_bcd363a0…`.
 - Analogía: era como tener el intercomunicado del edificio pidiendo credencial para *preguntar* si alguien está en casa — ahora cualquiera puede preguntar, pero la puerta sigue cerrada si no tienes llave.
