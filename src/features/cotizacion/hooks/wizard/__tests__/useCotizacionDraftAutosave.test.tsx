@@ -68,7 +68,7 @@ describe("useCotizacionDraftAutosave hook", () => {
     return renderHook(() => {
        
       const form = useForm<any>({ defaultValues: { cliente_id: "" } });
-      useCotizacionDraftAutosave({ form, userId: USER, enabled });
+      useCotizacionDraftAutosave({ form, userId: USER, enabled, cotizacionId: null });
       return form;
     });
   }
@@ -122,7 +122,7 @@ describe("useCotizacionDraftAutosave flush (P1 — v13.294.1)", () => {
     return renderHook(() => {
        
       const form = useForm<any>({ defaultValues: { cliente_id: "seed" } });
-      const api = useCotizacionDraftAutosave({ form, userId: USER, enabled });
+      const api = useCotizacionDraftAutosave({ form, userId: USER, enabled, cotizacionId: null });
       return { form, api };
     });
   }

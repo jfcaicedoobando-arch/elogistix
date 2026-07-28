@@ -52,12 +52,15 @@ export default function NuevaCotizacion() {
     onFinalized: handleFinalized,
   });
 
-  // P0 — Autoguardado de borrador. Sólo mientras estamos en el paso 1
-  // (aún no hay cotizacionId persistido en BD).
+  // B-003 (v13.320.32) — Autoguardado ahora persiste `cotizacionId` en el draft
+  // para que recargar el wizard NO duplique la cotización. Antes se apagaba con
+  // `enabled: !w.cotizacionId` y el id se perdía al recargar. Sólo se apaga en
+  // modo edición (initialData) — aquí siempre es alta, así que enabled=true.
   const { flush: flushDraft } = useCotizacionDraftAutosave({
     form: w.form,
     userId,
-    enabled: !w.cotizacionId,
+    enabled: true,
+    cotizacionId: w.cotizacionId,
   });
 
   // P0 — Detectar borrador existente (re-evalúa cuando el userId async llega).
@@ -70,9 +73,14 @@ export default function NuevaCotizacion() {
   const handleRestore = useCallback(() => {
     if (draftDetectado) {
       w.form.reset(draftDetectado.values);
+      // B-003: restaurar el id garantiza que el siguiente "Guardar" haga UPDATE
+      // en la cotización huérfana en vez de INSERTar una nueva.
+      if (draftDetectado.cotizacionId) {
+        w.setCotizacionId(draftDetectado.cotizacionId);
+      }
     }
     setBanderaBorrador(false);
-  }, [draftDetectado, w.form]);
+  }, [draftDetectado, w]);
 
   const handleDiscard = useCallback(() => {
     clearDraft(userId);
