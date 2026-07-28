@@ -69,8 +69,17 @@ export function useNotaCreditoDraft(p: Params) {
     }
   }, [p.open, p.conceptosSugeridos]);
 
+  // B-007 (v13.320.34): la NC debe reflejar el total con IVA para que iguale
+  // el saldo de la factura original. Antes: `Σ cantidad*precio` (sin IVA) — una
+  // NC "total" de $1,160 pedía teclear $1,000 y dejaba $160 fantasma en saldo.
+  // `tasa_iva` es fracción (0.16 por defecto en makeConcepto).
   const monto = useMemo(
-    () => conceptos.reduce((acc, c) => acc + Number(c.cantidad) * Number(c.precio_unitario), 0),
+    () =>
+      conceptos.reduce((acc, c) => {
+        const base = Number(c.cantidad) * Number(c.precio_unitario);
+        const tasa = Number.isFinite(Number(c.tasa_iva)) ? Number(c.tasa_iva) : 0;
+        return acc + base * (1 + tasa);
+      }, 0),
     [conceptos],
   );
 
