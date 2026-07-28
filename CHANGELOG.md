@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.320.31] - 2026-07-28
+- **Fix · RLS helpers ejecutables por anon**: se otorgó `GRANT EXECUTE` sobre `has_role`, `current_agente_id` y `current_agente_org` al rol `anon`. Estas funciones (SECURITY DEFINER) se llaman dentro de políticas RLS en casi todas las tablas; cuando un visitante no autenticado tocaba una página pública, Postgres respondía `permission denied for function` y la carga fallaba en cascada. Devuelven `false`/`null` sin sesión, así que exponerlas a `anon` es seguro. Cierra hallazgo Project monitoring `error_log_finding_bcd363a0…`.
+- Analogía: era como tener el intercomunicado del edificio pidiendo credencial para *preguntar* si alguien está en casa — ahora cualquiera puede preguntar, pero la puerta sigue cerrada si no tienes llave.
+
+
+
 ## [13.320.30] - 2026-07-27
 - **DX · E2E local/CI onboarding**: nueva plantilla `.env.e2e.example` con TODAS las variables (mínimas + opcionales agrupadas por spec habilitado) y validador `scripts/e2e/check-env.ts` que reporta qué está listo y qué se saltará antes de correr. Nuevos scripts en `package.json`:
   - `bun run e2e:check` — valida variables y termina con exit 1 si faltan los mínimos (`E2E_BASE_URL`, `E2E_EMAIL`, `E2E_PASSWORD`).
