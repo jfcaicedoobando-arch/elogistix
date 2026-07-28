@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.320.60] - 2026-07-28
+- **Knip strict verde · Wave 1 (limpieza completa)**: se aplicó `knip --fix --fix-type exports,types` sobre los 130 hallazgos del gate `lint:unused:strict` (22 exports + 108 tipos muertos). Knip removió automáticamente exports huérfanos como `AnticipoError`, `roleLabels`, `diffHoras`, `UnidadMedidaSelect`, `COTIZACION_LIST_COLUMNS`, `RFC_GENERICOS_SAT`, `useSaldosCuentas`, y ~108 `export type` sin consumidores en hooks/servicios/barrels. Analogía: como vaciar un cajón de cables viejos — nada de lo que se tiró estaba enchufado a algo. Verificación: `tsgo --noEmit` limpio, `bun run lint --max-warnings 0` limpio, `knip --include exports,types` 0 hallazgos.
+
+
+
 ## [13.320.59] - 2026-07-28
 - **Test suite verde tras logs CI `82218191365`**:
   - `EmbarqueDetalleHeaderActions.tsx`: se compactaron comentarios internos para dejar el archivo en 197 líneas (< límite 200 de `architecture-baseline`).
