@@ -88,6 +88,19 @@ function validateContenedoresFcl(
     if (!c.tipo_contenedor || !c.tipo_contenedor.trim()) {
       errors[`contenedores.${i}.tipo_contenedor`] = msg("2.contenedores.item.tipo");
     }
+    // B-014 (v13.320.41): peso, volumen y piezas nunca deben ser negativos.
+    // El input UI ya bloquea el signo, pero validamos defensivamente para no
+    // depender de la UI (import CSV, edición programática, tests, etc.).
+    const raw = c as ContenedorRutaItem & { peso_kg?: number; volumen_m3?: number; piezas?: number };
+    if (typeof raw.peso_kg === "number" && raw.peso_kg < 0) {
+      errors[`contenedores.${i}.peso_kg`] = "Peso: no puede ser negativo.";
+    }
+    if (typeof raw.volumen_m3 === "number" && raw.volumen_m3 < 0) {
+      errors[`contenedores.${i}.volumen_m3`] = "Volumen: no puede ser negativo.";
+    }
+    if (typeof raw.piezas === "number" && raw.piezas < 0) {
+      errors[`contenedores.${i}.piezas`] = "Piezas: no puede ser negativo.";
+    }
   }
   return errors;
 }
