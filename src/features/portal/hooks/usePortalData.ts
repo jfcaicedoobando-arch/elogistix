@@ -80,6 +80,15 @@ export function usePortalPagosFactura(facturaId?: string) {
   });
 }
 
+// B-082: las NC aplicadas se descuentan del saldo mostrado al cliente.
+export function usePortalNotasCreditoFactura(facturaId?: string) {
+  return useQuery({
+    queryKey: queryKeys.portal.notasCreditoFactura(facturaId ?? ""),
+    queryFn: () => fetchPortalNotasCreditoFactura(facturaId!),
+    enabled: !!facturaId,
+  });
+}
+
 export function usePortalClientUsers() {
   return useQuery({
     queryKey: queryKeys.portal.clientUsers,
