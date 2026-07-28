@@ -94,18 +94,49 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
           </ul>
         )}
 
-        <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <p className="text-xs text-muted-foreground">Pagado</p>
-            <p className="font-semibold tabular-nums">{formatCurrency(totalPagado, moneda)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">Saldo</p>
-            <p className={`font-bold tabular-nums ${liquidada ? "text-success" : "text-accent"}`}>
-              {formatCurrency(saldo, moneda)}
+        {notasCredito.length > 0 && (
+          <div className="border-t pt-3 space-y-2">
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+              <Receipt className="h-3.5 w-3.5" /> Notas de crédito aplicadas
             </p>
+            <ul className="divide-y">
+              {notasCredito.map((nc) => (
+                <li key={nc.id} className="py-2 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">NC {nc.folio ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(nc.fecha_emision)}</p>
+                  </div>
+                  <p className="text-sm font-bold tabular-nums text-success shrink-0">
+                    −{formatCurrency(Number(nc.monto), moneda)}
+                  </p>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
+        )}
+
+        <dl className="border-t pt-3 space-y-1.5 text-sm">
+          <div className="flex items-center justify-between">
+            <dt className="text-muted-foreground">Total facturado</dt>
+            <dd className="tabular-nums">{formatCurrency(totalFactura, moneda)}</dd>
+          </div>
+          <div className="flex items-center justify-between">
+            <dt className="text-muted-foreground">Pagos</dt>
+            <dd className="tabular-nums">−{formatCurrency(totalPagado, moneda)}</dd>
+          </div>
+          {totalNc > 0 && (
+            <div className="flex items-center justify-between">
+              <dt className="text-muted-foreground">Notas de crédito</dt>
+              <dd className="tabular-nums">−{formatCurrency(totalNc, moneda)}</dd>
+            </div>
+          )}
+          <div className="flex items-center justify-between border-t pt-1.5">
+            <dt className="font-medium">Saldo</dt>
+            <dd className={`font-bold tabular-nums ${liquidada ? "text-success" : "text-accent"}`}>
+              {formatCurrency(saldo, moneda)}
+            </dd>
+          </div>
+        </dl>
       </CardContent>
     </Card>
   );
