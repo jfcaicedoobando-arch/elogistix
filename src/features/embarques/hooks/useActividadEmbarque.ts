@@ -66,6 +66,9 @@ export function useActividadEmbarque({ embarqueId, expediente, notas, eventos, c
     return dedupCreacion(out);
   }, [notas, eventos, bitacoraQ.data, creadoEn, creadoPor]);
 
+  return { items, isLoading: bitacoraQ.isLoading };
+}
+
 function mapNotas(notas: NotaEmbarqueRow[], minutosCambioEstado: Set<string>): ActividadEmbarqueItem[] {
   const out: ActividadEmbarqueItem[] = [];
   for (const n of notas) {
