@@ -9,11 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { AvanzarEstadoButton } from "./header/AvanzarEstadoButton";
 import { ReabrirEmbarqueButton } from "./header/ReabrirEmbarqueButton";
+import { CancelarEmbarqueDialog } from "./header/CancelarEmbarqueDialog";
 
 interface Props {
   expediente: string;

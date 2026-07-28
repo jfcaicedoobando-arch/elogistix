@@ -3,7 +3,6 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useAvanzarEstadoEmbarque,
-  useReabrirEmbarque,
   type EmbarqueRow,
 } from "@/features/embarques/hooks/useEmbarques";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks/useEmbarqueQueries";
@@ -24,6 +23,7 @@ import {
   useCierreGate,
 } from "./useEmbarqueEstadoActions.internals";
 import { useValidacionCierre } from "./useCierreEmbarque";
+import { useEmbarqueReabrirCancelar } from "./useEmbarqueReabrirCancelar";
 
 export { getSiguienteEstado } from "./useEmbarqueEstadoActions.helpers";
 
@@ -36,24 +36,17 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const { user } = useAuth();
   const registrarActividad = useRegistrarActividad();
   const avanzarEstado = useAvanzarEstadoEmbarque();
-  const reabrirEmbarque = useReabrirEmbarque();
   const conceptosQuery = useEmbarqueConceptosVenta(id);
   const conceptosVenta = conceptosQuery.data ?? [];
   const { data: contenedores = [] } = useContenedoresEmbarque(id);
   const { isAdmin, canEditOperations, isSuperAdmin } = usePermissions();
-  // v13.209.3 — Auto-sync sólo si el usuario puede escribir en embarques/eventos_embarque.
   const puedeSincronizarEstado = isAdmin || isSuperAdmin || canEditOperations;
 
   const siguienteEstado = embarque ? getSiguienteEstado(embarque.estado) : null;
   const { faltantes: docsFaltantes, bloqueante: docsBloqueantes } =
     useDocsFaltantesParaEstado(id, siguienteEstado);
 
-  // v13.89.1 — Validación dura para cierre: solo admin/finanzas pueden cerrar,
-  // y solo si todas las reglas del checklist (CxC, CxP, docs, etc.) pasan.
   const cierre = useCierreGate(siguienteEstado, id);
-  // B-058: para decidir si "Eliminar" es seguro necesitamos saber si hay
-  // deuda pendiente (CxC/CxP). Reusamos el checklist de cierre — su fuente
-  // es la misma RPC autoritativa que valida el cierre financiero.
   const { data: cierreCheck } = useValidacionCierre(id);
   const tieneDeudaPendiente = (cierreCheck?.checks ?? []).some(
     (c) => (c.regla === "cxc_sin_pendientes" || c.regla === "cxp_sin_pendientes") && !c.ok,
@@ -62,6 +55,8 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const usuarioEmail = user?.email ?? "";
   useAutoSyncEstadoEmbarque(embarque, puedeSincronizarEstado, usuarioEmail);
 
+  const { handleReabrir, reabrirEmbarque, handleCancelar } =
+    useEmbarqueReabrirCancelar(embarque, id, usuarioEmail);
 
   const conceptosSinProforma = conceptosVenta.filter(
     (c) => c.estado_facturacion !== "en_proforma",
@@ -72,11 +67,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const [blockDocsOpen, setBlockDocsOpen] = useState(false);
   const [blockFechaLlegadaOpen, setBlockFechaLlegadaOpen] = useState(false);
 
-  const notificarErrorAvance = useCallback((
-    err: unknown,
-    estadoActual: string,
-    siguiente: string,
-  ) => {
+  const notificarErrorAvance = useCallback((err: unknown, estadoActual: string, siguiente: string) => {
     const msg = getErrorMessage(err);
     const kind = clasificarAvanceError(msg);
     if (kind === "block_docs") { setBlockDocsOpen(true); return; }
@@ -111,9 +102,6 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (!embarque || !id) return;
     const siguiente = getSiguienteEstado(embarque.estado);
     if (!siguiente) return;
-    // B-027: Borrador → Confirmado exige datos mínimos operativos; sin ellos
-    // la transición era exitosa con un embarque vacío (peso 0, sin
-    // contenedores/BL/naviera).
     if (siguiente === "Confirmado") {
       const faltantes = faltantesParaConfirmado(embarque, contenedores.length);
       if (faltantes.length > 0) {
@@ -145,7 +133,6 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     await ejecutarAvance(siguiente);
   };
 
-
   const confirmarCierreSinProforma = useCallback(async () => {
     setWarnCierreOpen(false);
     await ejecutarAvance("Cerrado");
@@ -158,39 +145,6 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (!siguiente) return;
     await ejecutarAvance(siguiente);
   }, [embarque, ejecutarAvance]);
-
-  const handleReabrir = async () => {
-    if (!embarque || !id) return;
-    try {
-      await reabrirEmbarque.mutateAsync({ embarqueId: id, usuarioEmail });
-      registrarActividad.mutate({
-        accion: 'reabrir_embarque', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
-        detalles: { estado_anterior: 'Cerrado', estado_nuevo: 'Entregado' },
-      });
-      notifySuccess(undefined, { title: "Embarque reabierto", description: "Ahora puedes generar la proforma o ajustar facturación." });
-    } catch (err: unknown) {
-      notifyError(undefined, { title: "Error al reabrir embarque", description: getErrorMessage(err), error: err, method: "HANDLE_REABRIR_EMBARQUE" });
-    }
-  };
-
-  // B-058: cancelar embarque desde estados posteriores a Confirmado.
-  // Reutilizamos `avanzarEstado` con destino "Cancelado" — la RPC
-  // `assert_transicion_embarque` valida si aplica y devuelve error si no.
-  const handleCancelar = useCallback(async (motivo: string) => {
-    if (!embarque || !id) return;
-    try {
-      await avanzarEstado.mutateAsync({ embarqueId: id, nuevoEstado: "Cancelado", usuarioEmail });
-      registrarActividad.mutate({
-        accion: 'cancelar_embarque', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
-        detalles: { estado_anterior: embarque.estado, motivo },
-      });
-      notifySuccess(undefined, { title: "Embarque cancelado", description: motivo });
-    } catch (err: unknown) {
-      notifyError(undefined, { title: "No se pudo cancelar el embarque", description: getErrorMessage(err), error: err, method: "HANDLE_CANCELAR_EMBARQUE" });
-    }
-  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad]);
 
   return {
     handleAvanzarEstado, avanzarEstado, handleReabrir, reabrirEmbarque,
@@ -206,5 +160,5 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     cierrePuedeAvanzar: cierre.cierrePuedeAvanzar,
     cierreMotivoBloqueo: cierre.motivo,
   };
-
 }
+
