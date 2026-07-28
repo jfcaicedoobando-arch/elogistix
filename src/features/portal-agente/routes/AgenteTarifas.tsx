@@ -40,23 +40,17 @@ export default function AgenteTarifas() {
   // derivado — aprobada + `estado='vigente'` + no vencida por fecha. Las
   // reemplazadas dejan de contar como vigentes (quedan visibles en "Todas").
   const hoy = todayLocalISO();
-  const esVigenteReal = (t: AgenteTarifaRow) =>
-    t.estado_aprobacion === "vigente" && t.estado === "vigente" && t.vigente_hasta >= hoy;
 
-  const filtradas = useMemo(
-    () => {
-      if (filtro === "todas") return tarifas;
-      if (filtro === "vigente") return tarifas.filter(esVigenteReal);
-      return tarifas.filter((t) => t.estado_aprobacion === filtro);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tarifas, filtro, hoy],
-  );
+  const filtradas = useMemo(() => {
+    if (filtro === "todas") return tarifas;
+    if (filtro === "vigente") return tarifas.filter((t) => esVigenteReal(t, hoy));
+    return tarifas.filter((t) => t.estado_aprobacion === filtro);
+  }, [tarifas, filtro, hoy]);
 
   // B-086: antes de abrir el form de duplicar se traen los recargos reales de
   // la tarifa (BAF/LSS/ISPS...) — la "nueva versión" debe ser fiel. Si la
   // carga falla, se abre sin recargos (comportamiento anterior).
-  const handleDuplicar = async (t: AgenteTarifaRow) => {
+  const handleDuplicar = useCallback(async (t: AgenteTarifaRow) => {
     let recargos: TarifaRecargoInput[] = [];
     try {
       const rows = await fetchRecargosDeTarifa(t.id);
@@ -69,15 +63,14 @@ export default function AgenteTarifas() {
       }));
     } catch { /* silencioso: el usuario puede recapturar recargos a mano */ }
     setEditor({ open: true, modo: "duplicar", initial: toInitial(t, recargos) });
-  };
+  }, []);
 
   const columns = useMemo(
     () => buildAgenteTarifasColumns({
       onEditar: (t) => setEditor({ open: true, modo: "editar", tarifaId: t.id, initial: toInitial(t) }),
       onDuplicar: (t) => { void handleDuplicar(t); },
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [handleDuplicar],
   );
 
   return (
