@@ -1,9 +1,7 @@
 {
   "$schema": "./audit-rpc-columns-allowlist.schema.json",
   "note": "Hallazgos preexistentes detectados por scripts/audit-rpc-columns.ts. Cada entrada es una referencia [function|view] <nombre> <alias>.<columna> que apunta a una columna inexistente. Al arreglar la RPC/vista, eliminar la entrada correspondiente. El script NO fallará CI mientras la entrada esté aquí, pero SÍ fallará ante cualquier nueva regresión.",
-  "allow": [
-    "function:auditoria_embarques_org:d.doc_nombre"
-  ],
+  "allow": [],
   "reasons": {
     "function:auditoria_embarques_org:d.doc_nombre": "Falso positivo: `d` es alias de `LATERAL unnest(...) AS d(doc_nombre)` — es una columna del CTE `exigidos`, no de `documentos_embarque`. El JOIN real se hace con `de.nombre = x.doc_nombre`. TODO: enseñar al parser a reconocer aliases de unnest."
   }
