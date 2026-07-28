@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.320.39] - 2026-07-28
+- **Bug bash live · Wave 5 (4 fixes de KPIs, formato y UX)** — quinta tanda del audit `bugs-e2e-live-2026-07-28.md`:
+  - **B-020 · KPI "Vencido" ahora incluye facturas vencidas pendientes de aprobación**: `calcularKPIsCxP` deja de leer el estatus derivado ("Por aprobar" tenía prioridad sobre "Vencida") y usa `dias_vencido > 0` directamente. Antes el dashboard mostraba "Vencido $0 al corriente" mientras el aging graficaba varias en rojo.
+  - **B-048 · Prefijo duplicado "MXN: MXN 2,320.00" en confirm de aprobación masiva**: `ComprasPorAprobar.confirmDialog` ya no antepone "MXN:"/"USD:" al valor formateado por `formatCurrency`, que ya emite el símbolo.
+  - **B-050 · Title-case ya no rompe siglas cortas** (`Cliente QA` → `Cliente Qa`): `toTitleCase` preserva tokens 2–4 letras que llegaron en mayúsculas del original (QA, TI, IT, HR, etc.) sin exigir whitelist explícita.
+  - **B-058 · Menú "Más acciones" oculta "Eliminar" en estados terminales**: `EmbarqueDetalleHeaderActions` no muestra el ítem de borrado cuando `estadoVisual` es `Entregado`, `EIR`, `Cerrado` o `Cancelado` (la RPC ya lo bloqueaba, pero el menú sugería la acción).
+- **Sprint status**: acumulado 21/63 bugs cerrados (Wave 5: B-020, B-048, B-050, B-058). Restantes: 42.
+- Analogía: el termómetro del área de compras marcaba "sin fiebre" mientras el paciente ya estaba a 40° (B-020), a la etiqueta le poníamos "MXN MXN" como si tartamudeara (B-048), a los clientes "QA" les cambiábamos su nombre a "Qa" en cada saludo (B-050) y ofrecíamos "eliminar" un paquete que ya entregamos (B-058).
+
+
+
+
 ## [13.320.38] - 2026-07-28
 - **Fix CI · shards 5 y 6 (sprint drift Wave 4)**:
   - `lcCodeCoverage`: agregado mensaje amigable para `LC_CXP_NO_EXISTE` en `src/lib/errors/lcCodeMessages.ts` (la migración `20260728035544` ya lo emitía sin catálogo).
