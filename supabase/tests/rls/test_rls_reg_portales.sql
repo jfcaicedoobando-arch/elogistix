@@ -82,7 +82,7 @@ BEGIN
   VALUES (cli_a, 'Cli PORT A', 'XAXX010101000', 'a@test.local', org_a);
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
-  VALUES (emb_a, 'ELPORT0001', cli_a, 'Cli PORT A', org_a, 'Marítimo', 'Importación');
+  VALUES (emb_a, 'ELPRT0001', cli_a, 'Cli PORT A', org_a, 'Marítimo', 'Importación');
 
   INSERT INTO public.puertos(id, code, name, country, activo) VALUES
     (puerto_o, 'RP-O-' || substr(puerto_o::text, 1, 8), 'Port Origen', 'CN', true),
@@ -240,6 +240,8 @@ BEGIN
   -- =========================================================================
   PERFORM pg_temp.as_postgres();
   IF EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects') THEN
+    INSERT INTO storage.buckets(id, name, public) VALUES (bucket, bucket, false)
+      ON CONFLICT DO NOTHING;
     INSERT INTO storage.objects(bucket_id, name, owner) VALUES
       (bucket, ag_a::text || '/carta-a.pdf', user_a),
       (bucket, ag_b::text || '/carta-b.pdf', user_b);
@@ -265,8 +267,8 @@ BEGIN
   VALUES (cot_a, 'COT-REG-PORT-1', 'Marítimo', 'Importación', cli_a, 'Cli PORT A', org_a);
 
   INSERT INTO public.cotizacion_costos(
-    cotizacion_id, concepto, moneda, cantidad, costo_unitario, costo_total, organization_id
-  ) VALUES (cot_a, 'Flete', 'USD', 3, 1000, 3000, org_a);
+    cotizacion_id, concepto, moneda, cantidad, costo_unitario, organization_id
+  ) VALUES (cot_a, 'Flete', 'USD', 3, 1000, org_a);
 
   INSERT INTO public.embarque_contenedores(
     id, embarque_id, numero_contenedor, tipo_contenedor, organization_id
