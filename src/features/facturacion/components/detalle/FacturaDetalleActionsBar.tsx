@@ -102,9 +102,20 @@ function buildSecondary(props: Props, primaryId: string | null): DetalleActionIt
   return items;
 }
 
-function buildMore(props: Props): DetalleActionItem[] {
-  const { factura, flags, acuse } = props;
+function buildMore(props: Props, primaryId: string | null): DetalleActionItem[] {
+  const { factura, flags, acuse, canEdit } = props;
   const items: DetalleActionItem[] = [];
+  // B-002 (v13.320.32): si el primary es "Registrar pago" pero hay REP pendiente,
+  // el "Timbrar REP" sigue disponible aquí; y viceversa.
+  if (canEdit && flags.repPendiente && !flags.estaCancelada && primaryId !== "rep") {
+    items.push({
+      id: "rep", label: "Timbrar REP", icon: Stamp,
+      onClick: props.onTimbrarRep, loading: props.timbrarRepPending,
+    });
+  }
+  if (canEdit && flags.puedeRegistrarPago && primaryId !== "cobrar") {
+    items.push({ id: "cobrar", label: "Registrar pago", icon: HandCoins, onClick: props.onRegistrarPago });
+  }
   // "Ver embarque" se retiró: el expediente del header ya es link clickable.
   if (factura.facturapi_id) {
     items.push({
