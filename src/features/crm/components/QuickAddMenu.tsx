@@ -56,34 +56,40 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
 
   return (
     <>
+      {/* B-004 (v13.320.32): el <PopoverAnchor asChild> envolvía a <DropdownMenu>
+          — un componente sin nodo DOM propio — así que Radix nunca posicionaba
+          el Popover y los items del menú se veían "muertos". Ahora envolvemos
+          en un <span> real que Radix puede usar como ancla. */}
       <Popover open={quick !== null} onOpenChange={(o) => { if (!o) setQuick(null); }}>
         <PopoverAnchor asChild>
-          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" className="gap-1">
-                <Plus className="h-4 w-4" /> Nuevo
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem onClick={() => setQuick("lead")}>
-              <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-2xs text-muted-foreground">L</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setQuick("oportunidad")}>
-              <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-2xs text-muted-foreground">O</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setQuick("actividad")}>
-              <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-2xs text-muted-foreground">A</span>
-            </DropdownMenuItem>
-            {canEditCrm && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setImportOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2" /> Importar leads CSV
+          <span className="inline-block">
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" className="gap-1">
+                  <Plus className="h-4 w-4" /> Nuevo
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setQuick("lead")}>
+                  <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-2xs text-muted-foreground">L</span>
                 </DropdownMenuItem>
-              </>
-            )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={() => setQuick("oportunidad")}>
+                  <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-2xs text-muted-foreground">O</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setQuick("actividad")}>
+                  <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-2xs text-muted-foreground">A</span>
+                </DropdownMenuItem>
+                {canEditCrm && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setImportOpen(true)}>
+                      <Upload className="h-4 w-4 mr-2" /> Importar leads CSV
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </span>
         </PopoverAnchor>
         <PopoverContent align="end" className="p-3">
           {quick === "lead" && (
