@@ -1,6 +1,12 @@
 # Changelog
 
 
+## [13.321.1] - 2026-07-28
+- Portal cliente (B-082): el saldo de una factura ahora descuenta también las notas de crédito aplicadas; se agrega su desglose y un resumen Total / Pagos / NC / Saldo.
+- Comparador de tarifas (B-091): el badge de demoras ya no dice "día 6" fijo — usa los días libres reales de la tarifa y explica el cobro por contenedor y día.
+- Regresión: nueva suite SQL `test_rls_reg_costeo.sql` (reemplazo atómico de tarifas, estado vencida derivado, borrador que no reemplaza, coherencia agente↔organización, vista comparable y aislamiento multi-tenant) registrada en CI, más pruebas unitarias del cálculo de saldo del portal.
+
+
 ## [13.321.0] - 2026-07-28
 - Auditoría E2E portales y costeo (46 hallazgos): se aplicaron las 4 olas completas.
 - Seguridad: se corta la fuga cross-tenant en tarifas Top-3, en pricing/facturas visibles al agente y en las cartas de garantía del storage (ahora filtradas por organización).
