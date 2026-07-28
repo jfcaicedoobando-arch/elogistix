@@ -41,9 +41,13 @@ export function preparePayload(form: NuevoProveedorForm): PayloadValidado | Payl
   if (!esExtranjero && clabeTrim && !CLABE_RE.test(clabeTrim)) {
     return { ok: false, motivo: "clabe", mensaje: "La CLABE debe tener exactamente 18 dígitos numéricos." };
   }
+  if (!esExtranjero && clabeTrim && !clabeDigitoVerificadorValido(clabeTrim)) {
+    return { ok: false, motivo: "clabe", mensaje: "La CLABE tiene un dígito verificador inválido — revisa que no tenga errores de tipeo." };
+  }
   if (esExtranjero && swiftTrim && !SWIFT_RE.test(swiftTrim)) {
     return { ok: false, motivo: "swift", mensaje: "El SWIFT/BIC debe tener 8 u 11 caracteres alfanuméricos." };
   }
+
   const payload = esExtranjero
     ? { ...form, clabe: "", swift_bic: swiftTrim }
     : { ...form, clabe: clabeTrim };
