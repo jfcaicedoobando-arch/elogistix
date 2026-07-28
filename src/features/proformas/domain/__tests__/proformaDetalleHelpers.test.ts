@@ -3,6 +3,8 @@ import {
   vigenciaPlus30,
   resumirContenedores,
   resolverUbicacion,
+  resolverDiasCredito,
+  resumirEnvios,
 } from "@/features/proformas/domain/proformaDetalleHelpers";
 
 describe("proformaDetalleHelpers", () => {
