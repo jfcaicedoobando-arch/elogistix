@@ -55,15 +55,15 @@ export default function ProformaDetalle() {
     );
   }
 
-  return <ProformaDetalleContent data={data} onVolver={() => navigate(-1)} />;
+  return <ProformaDetalleContent data={data} />;
 }
 
 interface ContentProps {
   data: NonNullable<ReturnType<typeof useProformaDetalle>["data"]>;
-  onVolver: () => void;
 }
 
-function ProformaDetalleContent({ data, onVolver }: ContentProps) {
+function ProformaDetalleContent({ data }: ContentProps) {
+
   const { descargar, downloadingId } = useDescargarProformaPdf();
   const tasaIva = useTasaIVA();
   const totales = useMemo(
