@@ -108,7 +108,7 @@ BEGIN
     id, organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
     moneda, flete_base, dias_libres_demoras, vigente_desde, vigente_hasta, estado_aprobacion
   ) VALUES
-    (t_borrador, org_a, ag_a, naviera_x, ruta_a, tipo_cont, 'USD', 900, 14, hoy, hoy + 90, 'borrador');
+    (t_borrador, org_a, ag_a, naviera_x, ruta_a, tipo_cont, 'USD', 900, 14, hoy + 1, hoy + 90, 'borrador');
 
   SELECT estado INTO v_estado FROM public.costeo_tarifas WHERE id = t_nueva;
   PERFORM pg_temp.assert(v_estado = 'vigente',

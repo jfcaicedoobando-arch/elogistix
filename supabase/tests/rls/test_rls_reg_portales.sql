@@ -82,7 +82,7 @@ BEGIN
   VALUES (cli_a, 'Cli PORT A', 'XAXX010101000', 'a@test.local', org_a);
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
-  VALUES (emb_a, 'ELPORT0001', cli_a, 'Cli PORT A', org_a, 'Marítimo', 'Importación');
+  VALUES (emb_a, 'ELPRT0001', cli_a, 'Cli PORT A', org_a, 'Marítimo', 'Importación');
 
   INSERT INTO public.puertos(id, code, name, country, activo) VALUES
     (puerto_o, 'RP-O-' || substr(puerto_o::text, 1, 8), 'Port Origen', 'CN', true),
