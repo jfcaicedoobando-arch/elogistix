@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [13.321.6] - 2026-07-28
+- Proformas: ya no es posible marcar como aceptada/rechazada una proforma que está en la papelera; el sistema pide restaurarla primero.
+- Proformas: la aprobación masiva omite las proformas borradas.
+
+
 ## [13.321.5] - 2026-07-28
 - CI: se registraron las suites de pruebas `reg_costeo` y `reg_portales` en el validador del flujo de pruebas de seguridad, que fallaba por estar desactualizado.
 
