@@ -11,6 +11,8 @@ import {
   fetchProformasEmbarque,
   fetchProformaPorId,
   fetchProformasAprobadas,
+  fetchProformasTodas,
+
   fetchProformasPendientes,
   fetchClienteParaPdf,
   fetchEmbarqueParaPdf,
