@@ -2,8 +2,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle, Receipt } from "lucide-react";
+import { DetailHeader } from "@/components/shared/DetailHeader";
+import { FileText, FileCode2, Ship, AlertTriangle, Receipt } from "lucide-react";
 
 import { usePortalFactura } from "@/features/portal/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
