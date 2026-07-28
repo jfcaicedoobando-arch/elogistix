@@ -22,7 +22,7 @@ function listarRutasDetalle(dir: string): string[] {
       entry.isFile() &&
       entry.name.includes("Detalle") &&
       entry.name.endsWith(".tsx") &&
-      /(^|\/)routes\//.test(full)
+      dir.endsWith("/routes")
     ) {
       out.push(full);
     }
