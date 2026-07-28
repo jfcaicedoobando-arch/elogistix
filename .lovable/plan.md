@@ -1,64 +1,54 @@
-## Auditoría visual — Detalle de Proveedor (`/proveedores/:id`)
+# Auditoría de `DetailHeader` y plan de adopción
 
-Capturé la página del proveedor "CTL Logistics Mexico" en 4 anchos: 1920, 1440, 768 y 390 px. Lo que encontré, de más grave a cosmético.
+## Veredicto
 
-### 1. Bug real: el encabezado se rompe en móvil y tablet
+El componente está **bien planteado pero infra-utilizado y algo incompleto**. Hoy sólo lo usa `ProveedorDetalle.tsx:68`. Mientras tanto, **9 sitios** reimplementan a mano el mismo patrón "botón fantasma + flecha + navegar", cada uno con su propio `<h1>` y sus propias clases (`text-2xl font-bold` vs. el token canónico `text-display`). Es la deuda ya registrada en `docs/refactor/dry-hooks-audit.md` (C-1) y `docs/ui-audit/06-capa3-tranche-d.md` (D-01).
 
-A 390 px el título ocupa 3 renglones, el badge se comprime a 3 líneas y los botones **se salen de la pantalla** — "Editar" queda cortado y "Actualizar con CSF" y el menú "…" son inalcanzables. A 768 px la página entera hace scroll horizontal.
+Analogía: tenemos una plantilla de portada oficial impresa, pero cada departamento sigue dibujando la suya a mano; se parecen, pero ninguna es igual.
 
-Causa: el encabezado es un `flex items-center justify-between` hecho a mano en `ProveedorDetalle.tsx:65-106`, sin `flex-wrap`, sin `min-w-0` y sin apilado en móvil. Analogía: una repisa de ancho fijo a la que le seguimos poniendo libros; los de la orilla se caen.
+## Hallazgos sobre el componente
 
-Ya existe en el repo el componente canónico `DetailHeader` (`src/components/shared/DetailHeader.tsx`) que resuelve exactamente esto (columna en móvil, fila en `md+`, `truncate`, `min-w-0`, acciones que envuelven) — y hoy **no lo usa ninguna página**. Esta es la oportunidad de estrenarlo.
+| # | Sev | Ubicación | Qué pasa | Riesgo | Arreglo |
+|---|-----|-----------|----------|--------|---------|
+| 1 | HIGH | `DetailHeader.tsx:63` | `truncate` sobre el `<h1>` dentro de un `flex` sin `min-w-0` en el hijo: con títulos largos el badge se empuja fuera en pantallas chicas en vez de truncar el texto | Títulos/badges cortados en móvil | Envolver el título en `<span className="truncate min-w-0">` como ya hace `PageHeader.tsx:49` |
+| 2 | HIGH | `DetailHeader.tsx:42-45` | El "Volver" es un `<button>` con `navigate`; no es un enlace real cuando `backTo` es ruta | Sin clic-medio / abrir en pestaña nueva; peor a11y y SEO interno | Renderizar `<Link>` (via `asChild`) cuando `backTo` es string; mantener `button` sólo para el caso numérico |
+| 3 | MED | `DetailHeader.tsx:43-44` | Rama `if/else` que llama a `navigate` en ambos casos (idéntica) | Ruido / falsa complejidad | Colapsar a una sola llamada tipada |
+| 4 | MED | falta | No hay slots `meta` (chips bajo el título) ni `tabs` (pie del header), que `PageHeader` sí tiene | Cada detalle vuelve a inventar la fila de chips/tabs → divergencia visual | Añadir props opcionales `meta` y `tabs` con el mismo contrato que `PageHeader` |
+| 5 | MED | falta | Sin estado de carga | Cada página arma su propio esqueleto de encabezado | Exportar `DetailHeaderSkeleton` en el mismo archivo |
+| 6 | LOW | `DetailHeader.tsx` vs `PageHeader.tsx` | Los dos duplican el bloque título/descr/acciones, con breakpoint distinto (`md` vs `lg`) | Se desincronizan al retocar uno | Extraer un `HeaderTitleBlock` interno compartido y unificar el breakpoint en `lg` |
+| 7 | LOW | sin regla | No existe lint ni test de arquitectura que exija el componente canónico (`eslint.config.js` y `architecture.test.ts` no lo mencionan) | La deuda se vuelve a generar en cada página nueva | Test de arquitectura: prohibir `ArrowLeft` + `useNavigate` en archivos `*Detalle*`/`*DetalleHeader*` |
 
-### 2. Bug real: la fila de KPIs se desborda a 768 px
+Lo que **sí está bien**: API por slots (`icon`/`badge`/`trailing`), `backTo` polimórfico, `<h1>` único por página, token `text-display`, `line-clamp-2` en subtítulo, y test unitario existente (`__tests__/DetailHeader.test.tsx`) que cubre render, ambos modos de `backTo` y `trailing`.
 
-`grid-cols-1 md:grid-cols-3` con una sub-rejilla de 2 columnas dentro de la tercera celda = 4 tarjetas reales apretadas en 3 columnas justo cuando entra el breakpoint `md`. Resultado a 768 px: "Pagado" y "Pendiente" quedan cortados a media cifra. En móvil el monto "USD 80,768.13" también se desborda de su tarjeta.
+## Dónde implementarlo (rollout)
 
-### 3. Tarjetas con enorme espacio muerto (1440/1920)
+Ola 1 — duplicación pura (bajo riesgo, sólo se cambia el encabezado):
+1. `src/features/cliente/components/detalle/ClienteDetalleHeader.tsx:21-31`
+2. `src/features/cotizacion/components/detalle/CotizacionDetalleHeader.tsx:18-26`
+3. `src/features/admin/components/orgDetalle/OrgHeader.tsx:18-25`
+4. `src/features/proformas/routes/ProformaDetalle.tsx:90` + `ProformaDetalleHeader.tsx:32-36`
 
-Las tarjetas del renglón se estiran a la altura de la más alta ("Datos Generales"), dejando ~140 px vacíos debajo de "USD 306.59" y "USD 80,768.13". La página se ve hueca y obliga a hacer scroll para llegar a la tabla, que es lo que la gente viene a ver.
+Ola 2 — portal cliente (hallazgo D-01), hoy back manual + `PageHeader` sin integrar:
+5. `src/features/portal/routes/PortalFacturaDetalle.tsx:59,62`
+6. `src/features/portal/routes/PortalEmbarqueDetalle.tsx:61,64`
+7. `src/features/portal/routes/PortalCotizacionDetalle.tsx:56-60` (retirar `PortalCotizacionHeader` ad-hoc)
 
-### 4. Campos vacíos sin placeholder
+Ola 3 — CRM y detalles con header propio (requiere revisar tabs/acciones):
+8. `src/features/crm/routes/LeadDetalle.tsx:82,96,100` (hoy tiene **dos** botones "volver")
+9. `src/features/crm/components/oportunidadDetalle/OportunidadDetalleContent.tsx:62-63` (usa `ArrowLeft` como `icon` de `PageHeader`)
+10. `src/features/facturacion/.../FacturaDetalleHeader.tsx:40-53`
+11. `src/features/embarque/.../EmbarqueDetalleHeader.tsx:63-67`
 
-"Contacto:" y "Email:" se muestran literalmente vacíos, como si la interfaz estuviera rota. Debe ir "—". Existe `DescriptionList` (con `emptyPlaceholder="—"`) para esto.
+`CotizacionInformativaDetalle.tsx:50` ya usa `PageHeader` limpio: se migra sólo si queremos uniformidad total.
 
-### 5. Falta información de contexto y jerarquía
+## Detalles técnicos
 
-- No hay indicador visual de **Nacional / Extranjero** (dato que cambia todo el bloque bancario) ni del **estado** del proveedor.
-- Facturado / Pagado / Pendiente son tres cifras sueltas: no se ve de un vistazo **qué proporción se debe**.
-- La tarjeta "Datos bancarios" ocupa el ancho completo para mostrar dos "No capturado" — mucho espacio para poca información, y sin invitación a capturarlos.
-- El email y el teléfono no son accionables (`mailto:` / `tel:`).
+- Nueva API propuesta: `backTo`, `backLabel`, `icon`, `title`, `subtitle`, `badge`, `meta?`, `trailing?`, `tabs?`, `className`; más `DetailHeaderSkeleton`.
+- Tests: ampliar `DetailHeader.test.tsx` con `meta`/`tabs`, render como `<a href>` cuando `backTo` es string, y truncado con título largo + badge.
+- Guardarraíl: nuevo caso en `src/lib/__tests__/architecture.test.ts` que falle si un archivo de detalle importa `ArrowLeft` desde `lucide-react`.
+- Cada ola termina con `bun run lint -- --max-warnings 0`, `tsgo` y los tests de la feature tocada; se sube `APP_VERSION` y se agrega entrada en `CHANGELOG.md`.
 
----
+## Riesgos
 
-## Plan de rediseño
-
-**Sólo capa de presentación.** Cero cambios en hooks, servicios, consultas ni lógica de negocio.
-
-### A — Encabezado responsive (arregla el bug #1)
-Sustituir el bloque manual por `<DetailHeader>` con `backTo="/compras/proveedores"`, icono `Truck`, título, badges y `trailing` con las acciones. Agregar como subtítulo el RFC + categoría para que el título deje de cargar todo el peso.
-
-### B — Banda de KPIs (arregla el bug #2 y el #3)
-Reemplazar la rejilla ad-hoc por `KpiStrip` + `KpiCard` (los componentes canónicos ya usados en el resto de la app): carrusel con scroll-snap en móvil, grid de 3 en desktop. Las tres KPIs: **Total Facturado** (sublabel: "37 operaciones"), **Pagado** (variante `success`), **Pendiente** (variante `warning`). Altura uniforme y compacta → desaparece el espacio muerto.
-
-Debajo de las KPIs, una barra fina de proporción pagado/pendiente con su porcentaje, para leer la salud de la cuenta en un vistazo.
-
-### C — Tarjeta "Datos Generales" + bancarios en dos columnas
-Convertir "Datos Generales" a `DescriptionList` (con "—" en vacíos, RFC en `mono`, email como `mailto:` y teléfono como `tel:`) y ponerla lado a lado con "Datos bancarios" en `lg:grid-cols-2`. Así se aprovecha el ancho y se acorta el scroll hasta la tabla.
-
-En la tarjeta bancaria: badge **Nacional / Extranjero** en el encabezado y, cuando no hay datos capturados, un micro-estado vacío con botón "Capturar datos bancarios" que abre el diálogo de edición ya existente.
-
-### D — Detalles finos
-- Badge de categoría con tono semántico en vez de `secondary` plano.
-- Contador de operaciones junto al título de la tabla ("Historial de Operaciones · 37").
-- Verificar contraste de `text-success` / `text-warning` en modo oscuro.
-
-### Notas técnicas
-- Archivos tocados: `src/features/proveedor/routes/ProveedorDetalle.tsx` (principal), `ProveedorDatosBancariosCard.tsx` (badge de origen + estado vacío) y probablemente un `ProveedorResumenCards.tsx` nuevo para no rebasar el límite de 200 líneas por archivo.
-- Sólo tokens semánticos (`success`, `warning`, `muted-foreground`); nada de colores literales.
-- Se conserva `useProveedorDetalleController` tal cual (incluida la corrección del doble toast de v13.320.63).
-
-### Verificación
-- Re-captura con Playwright en 1920 / 1440 / 768 / 390 px, comprobando además que `document.documentElement.scrollWidth === clientWidth` (sin scroll horizontal) en cada ancho.
-- `tsgo`, `eslint --max-warnings 0` y los tests de `features/proveedor`.
-- Bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
+- Migrar headers que hoy incluyen acciones complejas (Factura, Embarque) puede alterar el orden de botones; se resuelve pasándolos tal cual por `trailing`.
+- Unificar el breakpoint de `md` a `lg` cambia levemente el layout en tablet de `ProveedorDetalle` (recién rediseñado): hay que revalidar a 768 px.

@@ -1,8 +1,10 @@
 /**
- * Header de la vista de detalle de proforma. Alineado con
- * `FacturaDetalleHeader`: número + estado + subtítulo cliente/expediente
- * a la izquierda y total destacado a la derecha, sin `Card` wrapper.
+ * Header de la vista de detalle de proforma. Usa el componente canónico
+ * `DetailHeader` (v13.320.66): botón Volver + número + badges de estado +
+ * total destacado como acción trailing.
  */
+import { FileText } from "lucide-react";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import { EstadoBadges, TotalDestacado } from "@/features/proformas/components/ProformaDetalleCards";
 import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import type { EstadoClienteProforma } from "@/features/proformas/domain/proformaClienteEstado";
@@ -30,23 +32,27 @@ export function ProformaDetalleHeader({
 }: Props) {
   const subtitulo = clienteNombre?.trim() || "";
   return (
-    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-2xl font-bold font-mono tabular-nums">{numero}</h1>
-          <EstadoBadges
-            estadoProforma={estadoProforma}
-            estadoCliente={estadoCliente}
-            aceptadaPor={aceptadaPor}
-          />
-        </div>
-        <p className="text-sm text-muted-foreground mt-1 truncate" title={subtitulo}>
+    <DetailHeader
+      backTo="/proformas"
+      backLabel="Proformas"
+      icon={<FileText className="h-6 w-6 text-accent shrink-0" />}
+      title={<span className="font-mono tabular-nums">{numero}</span>}
+      badge={
+        <EstadoBadges
+          estadoProforma={estadoProforma}
+          estadoCliente={estadoCliente}
+          aceptadaPor={aceptadaPor}
+        />
+      }
+      subtitle={
+        <>
           {subtitulo}
           <span className="mx-1.5">•</span>
           Exp: <span className="font-mono">{expediente}</span>
-        </p>
-      </div>
-      {totales && <TotalDestacado totales={totales} />}
-    </div>
+        </>
+      }
+      trailing={totales ? <TotalDestacado totales={totales} /> : undefined}
+    />
   );
 }
+

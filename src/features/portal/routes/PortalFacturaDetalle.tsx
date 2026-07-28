@@ -2,8 +2,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle, Receipt } from "lucide-react";
+import { DetailHeader } from "@/components/shared/DetailHeader";
+import { FileText, FileCode2, Ship, AlertTriangle, Receipt } from "lucide-react";
 
 import { usePortalFactura } from "@/features/portal/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
@@ -50,30 +50,23 @@ export default function PortalFacturaDetalle() {
 
   return (
     <div className="space-y-5">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate(ROUTES.PORTAL_FACTURAS)}
-        className="-ml-2 mb-1"
-      >
-        <ArrowLeft className="h-4 w-4 mr-1" /> Volver
-      </Button>
-
-      <PageHeader
-        icon={<Receipt className="h-6 w-6 text-accent" />}
+      <DetailHeader
+        backTo={ROUTES.PORTAL_FACTURAS}
+        backLabel="Facturas"
+        icon={<Receipt className="h-6 w-6 text-accent shrink-0" />}
         title={<span className="font-mono tabular-nums">{factura.numero}</span>}
-        description={
+        subtitle={
           <>
             {factura.cliente_nombre} • Exp: <span className="font-mono">{factura.expediente}</span>
           </>
         }
-        subHeader={
-          <div className="flex items-center gap-2 flex-wrap">
+        badge={
+          <>
             <Badge className={`${getEstadoColor(factura.estado)} text-xs`}>{factura.estado}</Badge>
             {vencida && <AlertTriangle className="h-4 w-4 text-destructive" />}
-          </div>
+          </>
         }
-        actions={
+        trailing={
           <div className="text-right shrink-0">
             <p className="text-sm text-muted-foreground">Total</p>
             <p className="text-2xl font-bold tabular-nums text-accent">
@@ -82,6 +75,7 @@ export default function PortalFacturaDetalle() {
           </div>
         }
       />
+
 
 
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">

@@ -4,8 +4,6 @@
  */
 import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -57,15 +55,15 @@ export default function ProformaDetalle() {
     );
   }
 
-  return <ProformaDetalleContent data={data} onVolver={() => navigate(-1)} />;
+  return <ProformaDetalleContent data={data} />;
 }
 
 interface ContentProps {
   data: NonNullable<ReturnType<typeof useProformaDetalle>["data"]>;
-  onVolver: () => void;
 }
 
-function ProformaDetalleContent({ data, onVolver }: ContentProps) {
+function ProformaDetalleContent({ data }: ContentProps) {
+
   const { descargar, downloadingId } = useDescargarProformaPdf();
   const tasaIva = useTasaIVA();
   const totales = useMemo(
@@ -86,9 +84,7 @@ function ProformaDetalleContent({ data, onVolver }: ContentProps) {
 
   return (
     <PageContainer>
-      <Button variant="ghost" size="sm" onClick={onVolver} className="-ml-2">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Volver
-      </Button>
+
 
       <ProformaDetalleHeader
         numero={proforma.numero}

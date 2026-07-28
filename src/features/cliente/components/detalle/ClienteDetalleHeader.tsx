@@ -1,6 +1,7 @@
-import { ArrowLeft, Pencil, FileText, Loader2 } from "lucide-react";
+import { Pencil, FileText, Loader2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 
 interface Cliente {
   id: string;
@@ -18,32 +19,35 @@ interface Props {
   onEdit: () => void;
 }
 
-export function ClienteDetalleHeader({ cliente, canEdit, onBack, onEdit }: Props) {
+export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
   const navigate = useNavigate();
   return (
-    <div className="flex items-center gap-4">
-      <Button variant="ghost" size="icon" onClick={onBack} aria-label="Volver a clientes">
-        <ArrowLeft className="h-5 w-5" />
-      </Button>
-      <div className="flex-1">
-        <h1 className="text-display font-bold tracking-tight">{cliente.nombre}</h1>
-        <p className="text-sm text-muted-foreground">{cliente.rfc}</p>
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => navigate(`/clientes/${cliente.id}/estado-de-cuenta`)}
-      >
-        <FileText className="h-4 w-4 mr-1" /> Estado de cuenta
-      </Button>
-      {canEdit && (
-        <Button variant="outline" size="sm" onClick={onEdit}>
-          <Pencil className="h-4 w-4 mr-1" /> Editar
-        </Button>
-      )}
-    </div>
+    <DetailHeader
+      backTo="/clientes"
+      backLabel="Clientes"
+      icon={<Users className="h-6 w-6 text-accent shrink-0" />}
+      title={cliente.nombre}
+      subtitle={cliente.rfc}
+      trailing={
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/clientes/${cliente.id}/estado-de-cuenta`)}
+          >
+            <FileText className="h-4 w-4 mr-1" /> Estado de cuenta
+          </Button>
+          {canEdit && (
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              <Pencil className="h-4 w-4 mr-1" /> Editar
+            </Button>
+          )}
+        </>
+      }
+    />
   );
 }
+
 
 export function ClienteLoadingState() {
   return (

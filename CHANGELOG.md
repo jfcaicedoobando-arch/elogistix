@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.320.66] - 2026-07-28
+- **Auditoría y adopción de `DetailHeader`**. Analogía: teníamos 10 recepcionistas distintos improvisando cómo saludar; ahora todos usan el mismo guion.
+  - `DetailHeader.tsx`: se añadieron los slots `meta` y `tabs`, `DetailHeaderSkeleton`, `backTo` polimórfico (renderiza `<Link>` real cuando es una ruta, mejor a11y/SEO) y se corrigió el truncado de títulos y badges largos en móvil.
+  - Ola 1 migrada: `ClienteDetalleHeader`, `CotizacionDetalleHeader`, `OrgHeader` (admin) y `ProformaDetalleHeader` (se eliminó el botón "Volver" duplicado en `ProformaDetalle.tsx`).
+  - Ola 2 (portal cliente) migrada: `PortalCotizacionHeader`, `PortalFacturaDetalle` y `PortalEmbarqueDetalle` dejaron de reimplementar el patrón "ghost button + ArrowLeft + navigate".
+
 ## [13.320.65] - 2026-07-28
 - **Rediseño del detalle de proveedor** (`/compras/proveedores/:id`) tras la auditoría visual en 1920 / 1440 / 768 / 390 px. Analogía: la ficha pasó de ser una hoja suelta con datos amontonados a una carpeta ordenada por secciones.
   - `ProveedorResumenCards.tsx` (nuevo): banda de KPIs canónica con `KpiStrip`/`KpiCard` (carrusel en móvil) + barra de proporción Pagado vs. Pendiente. Elimina el desbordamiento horizontal a 768 px.

@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
-import { ArrowLeft, Ship } from "lucide-react";
+import { Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
@@ -52,26 +52,20 @@ export default function PortalEmbarqueDetalle() {
 
   return (
     <div className="space-y-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate(ROUTES.PORTAL_EMBARQUES)}
-        className="-ml-2 mb-1"
-      >
-        <ArrowLeft className="h-4 w-4 mr-1" /> Volver
-      </Button>
-
-      <PageHeader
-        icon={<Ship className="h-6 w-6 text-accent" />}
+      <DetailHeader
+        backTo={ROUTES.PORTAL_EMBARQUES}
+        backLabel="Embarques"
+        icon={<Ship className="h-6 w-6 text-accent shrink-0" />}
         title={embarque.expediente}
-        description={`${embarque.tipo} • ${embarque.modo} • ${embarque.incoterm}`}
-        subHeader={
-          <div className="flex items-center gap-2 flex-wrap">
+        subtitle={`${embarque.tipo} • ${embarque.modo} • ${embarque.incoterm}`}
+        badge={
+          <>
             <Badge className={getEstadoColor(estadoVisual ?? "")}>{estadoVisual}</Badge>
             <ModoIcon modo={embarque.modo} size={16} circle />
-          </div>
+          </>
         }
       />
+
 
 
 
