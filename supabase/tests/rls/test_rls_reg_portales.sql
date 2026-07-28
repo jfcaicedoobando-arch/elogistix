@@ -267,8 +267,8 @@ BEGIN
   VALUES (cot_a, 'COT-REG-PORT-1', 'Marítimo', 'Importación', cli_a, 'Cli PORT A', org_a);
 
   INSERT INTO public.cotizacion_costos(
-    cotizacion_id, concepto, moneda, cantidad, costo_unitario, costo_total, organization_id
-  ) VALUES (cot_a, 'Flete', 'USD', 3, 1000, 3000, org_a);
+    cotizacion_id, concepto, moneda, cantidad, costo_unitario, organization_id
+  ) VALUES (cot_a, 'Flete', 'USD', 3, 1000, org_a);
 
   INSERT INTO public.embarque_contenedores(
     id, embarque_id, numero_contenedor, tipo_contenedor, organization_id
