@@ -58,7 +58,7 @@ export default function CotizacionDetalle() {
   }
 
   if (cotizacion.tipo_documento === "informativa") {
-    return <CotizacionInformativaDetalle cotizacion={cotizacion} onBack={() => navigate("/cotizaciones")} />;
+    return <CotizacionInformativaDetalle cotizacion={cotizacion} />;
   }
 
   return (
