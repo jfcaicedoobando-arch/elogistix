@@ -1,7 +1,12 @@
 # Changelog
 
 
+## [13.321.3] - 2026-07-28
+- Cobertura de pruebas (Ola 3): estado único de factura para el cliente (B-083), banner de respuesta de cotización en el portal sin hora falsa (B-103), datos operativos del embarque en el portal ocultando valores vacíos (B-102) y copy del banner de re-aprobación según vigencia o cambio de precio (B-097).
+
+
 ## [13.321.2] - 2026-07-28
+
 - Cobertura de pruebas (Ola 1): nueva suite SQL `test_rls_reg_portales.sql` registrada en CI — fuga cross-tenant y orden determinista del comparador de tarifas, agente inactivo fuera del Top-3, aprobación de tarifa con notificación al agente, contexto de agente determinista, agente de carga sin acceso a ventas/facturas, aislamiento de agentes y cartas de garantía, y replicación de costos sin multiplicar por contenedor.
 - Cobertura de pruebas (Ola 2): tests unitarios de tramos de demoras sin solapes y de fechas date-only ancladas a hora de México (sin desfase de un día ni por horario de verano).
 
