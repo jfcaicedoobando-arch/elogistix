@@ -86,9 +86,7 @@ function ProformaDetalleContent({ data, onVolver }: ContentProps) {
 
   return (
     <PageContainer>
-      <Button variant="ghost" size="sm" onClick={onVolver} className="-ml-2">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Volver
-      </Button>
+
 
       <ProformaDetalleHeader
         numero={proforma.numero}
