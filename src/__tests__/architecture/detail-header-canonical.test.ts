@@ -8,9 +8,27 @@
  * Analogía: un solo recepcionista con el mismo guion para todas las fichas.
  */
 import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { globSync } from "glob";
+
+/** Recorrido recursivo sin dependencias externas (evita `glob`). */
+function listarRutasDetalle(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...listarRutasDetalle(full));
+    } else if (
+      entry.isFile() &&
+      entry.name.includes("Detalle") &&
+      entry.name.endsWith(".tsx") &&
+      /(^|\/)routes\//.test(full)
+    ) {
+      out.push(full);
+    }
+  }
+  return out;
+}
 
 /** Archivos que legítimamente pueden dibujar un ArrowLeft propio. */
 const ALLOWLIST = [
@@ -29,7 +47,7 @@ const STEP_NAV_PATTERN = /(Wizard|Dialog|Stepper|Shortcuts)/;
 const NO_ES_DETALLE = ["src/features/embarques/routes/EmbarqueDetalleStates.tsx"];
 
 describe("arquitectura: DetailHeader canónico en páginas de detalle", () => {
-  const files = globSync("src/features/**/routes/*Detalle*.tsx", { nodir: true });
+  const files = listarRutasDetalle("src/features");
 
   it("encuentra rutas de detalle para auditar", () => {
     expect(files.length).toBeGreaterThan(0);
