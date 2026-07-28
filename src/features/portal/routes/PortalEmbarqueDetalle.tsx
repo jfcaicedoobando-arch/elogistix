@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
