@@ -1,97 +1,83 @@
-# Wave 7 · Cerrar los hallazgos ALTOS todavía abiertos
+# Plan: Bug bash live · Waves 8-10
 
-## Ya cerrados en olas anteriores (verificado esta ronda)
+44 hallazgos (28 MEDIA + 16 BAJA). Los agrupo por **familia técnica** para atacar la causa raíz común, no bug por bug. Cada ola es shippeable e independiente.
 
-Antes de tocar código nuevo dejo constancia de que **6 de los 13 hallazgos ALTOS ya se resolvieron** en olas previas y los revisé en el código:
+## Ola 8 · Dinero y KPIs correctos (alta rentabilidad UX)
 
-- **B-007** — `useNotaCreditoDraft.ts` línea 80 aplica `Σ base × (1 + tasa_iva)` (Wave 3, v13.320.34).
-- **B-008** — existe `CREATE UNIQUE INDEX clientes_org_rfc_unique` en la migración `20260728040216` (Wave 3).
-- **B-013** — `NuevoEmbarque.tsx:28` ya honra `searchParams.get("fromCotizacion")` (Wave 3).
-- **B-016** — la migración `20260728035544` re-escribe `duplicar_cotizacion` copiando `precio_venta` (Wave 2/3).
-- **B-017** — `actualizarFechaLlegadaRealEmbarque` tiene guardrails contra arribo previo al ETD y transición de estado (Wave 4).
-- **B-018** — la migración `20260728040216` re-escribe `pnl_financiero_embarque` usando `pf.total` en `pf_saldo` (Wave 3).
+Ataca los bugs donde el número en pantalla miente al usuario.
 
-Estos NO se retocan. Cualquier regresión visible sería un bug nuevo, no una reapertura.
+- **B-019** — `PorVencer 0d`: el cálculo de días en el badge de cartera usa fecha mal parseada; unificar con `dateUtils.diasEntre`. Además revisar el default del filtro "Accionable ≤7d" para excluir "0d".
+- **B-020** — KPI `Vencido $0` vs gráfica de aging: refactorizar `clasificar()` en `proveedorFacturas.helpers.ts` para que evalúe vencimiento **antes** de "Por aprobar", y que `calcularKPIsCxP` sume vencido por fecha (no por estatus).
+- **B-022** — P&L "Sin datos": extender RPC `pnl_financiero_embarque` para devolver `por_concepto` y `por_concepto_costo` agregando desde `conceptos_venta` y `conceptos_costo`.
+- **B-033** — Dashboard cuenta Borradores como activos: modificar `dashboard_stats()` para excluir `estado='Borrador'` del CTE `activos`.
+- **B-036** — Listado cotizaciones con `subtotal`/`moneda` stale: dejar de leer las columnas viejas; calcular en la RPC de listado desde `conceptos_venta` (misma fuente que el detalle).
+- **B-040** — Folio duplicado con MAX+1 lexicográfico: reemplazar `duplicar_cotizacion` para que use `siguiente_folio_cotizacion` atómica (mismo helper de crear).
+- **B-053** — `formatCurrency` negativos: ya se tocó en Wave 6 pero reporta persistir en P&L; verificar filas y unificar.
 
-## Analogía rápida (para que ubiques la ola)
+## Ola 9 · Validaciones espejo + error→mensaje humano
 
-Imagina que la app es una oficina: en olas pasadas ya arreglamos las **calculadoras** (dinero mal sumado). Ahora nos toca destapar puertas cerradas (flujos que no dejan avanzar), poner un vidrio a la caja fuerte (validaciones) y **abrir la ventana** para que el aire de los cambios en catálogos entre sin tener que reiniciar la oficina (caché).
+Cura los "error crudo de Postgres" bajando validación a la UI y traduciendo errores restantes con `mapPostgresError`.
 
-## Objetivo de la ola
+- **B-023** — Alta cliente RFC: validar RFC (regex SAT) en step 1 con Zod; conservar documentos adjuntos al retroceder (mover state fuera del step); limpiar huérfanos de storage.
+- **B-024** — Email cliente NULLable: hacerlo opcional en BD (`ALTER TABLE clientes ALTER COLUMN email DROP NOT NULL`) — la UI ya lo trata como opcional.
+- **B-025** — CLABE dígito verificador: implementar módulo-10 ABM en `validaciones/clabe.ts` y aplicar en Zod del form de cuentas.
+- **B-026** — ETA anterior a ETD: validar en cliente (Zod cross-field) antes de submit; traducir el check constraint restante con `mapPostgresError`.
+- **B-027** — Borrador→Confirmado sin datos: agregar Zod pre-transición en `avanzar_estado_embarque` invocador (peso>0, ≥1 contenedor, BL Master no vacío, naviera, shipper/consignatario).
+- **B-045** — `%.2f` literal en RAISE: patchear 3 migraciones (usar `%s` + `to_char`).
+- **B-061** — Zod se traga silenciosamente en anticipos: adjuntar handler de rechazo en `handleSubmit` que llame `notifyValidationError`; auditar `AplicarAnticipoDialog` con mismo patrón.
 
-Cerrar 6 hallazgos ALTOS pendientes en un solo lote, dejando B-012 fuera porque el propio reporte pide re-verificarlo en staging antes de invertir tiempo.
+## Ola 10 · Flujos rotos + estados + seeds
 
-## Alcance — qué cambia y por qué
+Desatasca los callejones sin salida.
 
-### Dinero / bloqueos duros
+- **B-028 + B-031 + B-063** — Marítimo bloqueado: seed catálogo `tipos_contenedor` (INSERT idempotente con los 12 tipos hardcodeados actuales); unificar dropdown "Buscar tarifa" a leer de esa tabla; agregar interfaz admin en Configuración → Catálogos.
+- **B-021** — `organization_members` UNIQUE(user_id): decidir con el usuario si el diseño target es multi-org (drop UNIQUE) o single-org (limpiar OrgSwitcher/get_user_org_ids). **Requiere confirmación del usuario antes de tocar.**
+- **B-030** — Bandeja pagos programados: revisar filtros implícitos, exponer estado/ventana como toggles visibles.
+- **B-032** — `seed_demo_organization()` sin CxP: extender el seed con 8-10 facturas de proveedor, 3-4 pagos, 2 anticipos, 1 NC.
+- **B-034** — Oportunidad "Ganada": al marcar ganada pedir `fecha_cierre_real`, `valor_real`, `cotizacion_ganadora_id` (dialog con Zod).
+- **B-035** — `descripcion_mercancia` toma Sector Económico: agregar campo "Descripción de la mercancía" real en la UI; ajustar mapper.
+- **B-037** — Diálogo pago CxP stale: refetch al abrir el dialog (`queryClient.invalidateQueries` + `enabled` gate).
+- **B-038** — DateInput descarta fecha tecleada: en `DatePickerMx` fallback silencioso reemplazado por error inline.
+- **B-039** — Cambio de estado triplicado: consolidar bitácora+nota+evento en una sola entrada del feed con tres etiquetas.
 
-**B-006 · Captura manual CxP sin conceptos = limbo**
+## Ola 11 · UX/copy/cosméticos (barrido corto)
 
-- `CargaCfdiSection.tsx` sólo captura totales; `_cxp_validar_aprobacion` exige al menos un renglón en `proveedor_facturas_conceptos`, por eso **toda** factura manual bloquea al aprobar con `LC_CXP_SIN_CONCEPTOS`.
-- Cambio: cuando `carga_mode = "manual"`, mostrar una mini-tabla de conceptos (descripción, cantidad, precio, tasa IVA) dentro del mismo dialog. Como mínimo pedir 1 concepto con `subtotal + iva = total` capturado arriba. `useNuevaFacturaProveedorForm` valida cuadre en front (mismo helper que ya tenemos: `cuadreConceptos`) para no depender del error del trigger.
-- Resultado: la factura manual se aprueba sin caer al catch de `LC_CXP_SIN_CONCEPTOS`.
+Todos los baratos en una sola pasada.
 
-### Flujos bloqueados
+- **B-029** — Importación CSV bancario: agregar mapeo de columnas visual (fuera de scope si es grande; mínimo: validación con mensaje claro cuando el layout no coincide).
+- **B-041** — Toasts wizard cotización: quitar `successTitle` automático de `useCotizacionMutations`; dejar solo el toast manual del handler.
+- **B-042** — JSON crudo en checklist: renderizar `detalle` con formatter humano por tipo de ítem.
+- **B-043** — Errores en inglés: envolver invocación de Edge Functions con `mapEdgeError` que traduce mensajes conocidos.
+- **B-044** — Documentos cliente teatrales: **decisión requerida** — o persistir a storage con RLS, o remover el requisito bloqueante. Verificar primero si ya persiste en staging (report contradictorio).
+- **B-046** — React Query Devtools en prod: condicionar por `import.meta.env.DEV`.
+- **B-047** — "Cargando…" con 0 embarques: empty-state cuando `!isLoading && rows.length===0`.
+- **B-048** — "MXN: MXN": deduplicar prefijo en resumen.
+- **B-049** — Proforma dos estados: unificar fuente (usar `estado_cliente` en ambos lados).
+- **B-050** — Title-case destructivo: usar `toTitleCase` con lista de siglas ya extendida en Wave 5.
+- **B-051** — Toggles IVA proforma apagados: sincronizar visual con `incluye_iva`.
+- **B-052** — Toasts wizard sin dismiss: `toast.dismiss()` antes de emitir el siguiente error del mismo tipo, o usar `id` estable.
+- **B-054** — Kanban sobrescribe probabilidad: preguntar con confirm antes de aplicar default de etapa.
+- **B-055** — Actividades vencidas: badge "Vencida" distinto + `listActividadesVencidas` filtra también por email/creado_por.
+- **B-056** — Póliza seguro silenciosa: Zod con inline errors (prima≥0, vigencia_hasta≥desde).
+- **B-057** — "Ajuste neto Ahorro": ya tocado en Wave 6; verificar edge case restante.
+- **B-058** — Menú "…" en Entregado: ocultar "Eliminar"; agregar transición "Cancelar" a la máquina de estados si aplica.
+- **B-059** — NC "Sesión no válida": reproducir en cloud; si aplica, degradar `getUser()` a `getSession()`.
+- **B-062** — GlobalSearch por `folio_interno`: agregar `folio_interno` a `busqueda_global` RPC (unión ILIKE) además de `folio_proveedor`.
+- **Observación CSV Aging CxP** — agregar fila de totales al final del CSV.
 
-**B-009 · super_admin expulsado de módulos operativos**
+## Preguntas para el usuario antes de arrancar
 
-- `resolveProtectedRouteRedirect.ts:40-41` redirige a `/admin` cualquier ruta que no sea del panel dueño.
-- Cambio: si el usuario es `super_admin` **y** hay una `organization_id` activa en el store de impersonation, permitir rutas operativas (usar la misma matriz de `roleHierarchy`). Si no hay org activa, seguir redirigiendo a `/admin` (comportamiento actual).
-- Resultado: el `OrgSwitcher` vuelve a tener sentido; el dueño puede entrar a Embarques / CxP como si fuera admin_org de la org seleccionada.
-
-**B-010 · Conciliación bancaria sin movimientos**
-
-- No existe UI de captura manual de movimientos ni importador amigable → el panel siempre queda vacío.
-- Cambio (mínimo viable): agregar un dialog "Registrar movimiento bancario" dentro del módulo, escribiendo a `bbva_movimientos` (fecha, referencia, monto, moneda, cuenta, descripción). Ya existe RLS en la tabla; sólo hay que exponer el formulario y el listado en la ruta correspondiente.
-- Fuera de alcance: mejorar el importador CSV (queda como QW aparte).
-- Resultado: se puede conciliar aun sin el importador robusto.
-
-**B-014 · Wizard paso 2 sin validación**
-
-- Peso, volumen, piezas negativos y ETD/ETA vacíos pasan al paso 3 sin queja.
-- Cambio: extender el schema Zod del paso 2 con `peso ≥ 0`, `volumen ≥ 0`, `piezas ≥ 1`, ETD y ETA obligatorios, ETA ≥ ETD; usar `trigger()` antes de `setStep(next)` y bloquear "Siguiente" con `disabled` si hay errores. Mensajes con `notifyValidationError`.
-- Resultado: no se pueden avanzar embarques con basura numérica.
-
-### Presentación / UX
-
-**B-011 · Footer wizard cotización: VENTA MXN $0 y mezcla con/sin IVA**
-
-- El footer del paso 2 agrupa por moneda pero descarta los MXN si el primer renglón es USD; el paso 3 muestra venta con IVA y costo sin IVA en el mismo renglón.
-- Cambio: reutilizar el helper `sumPorMoneda` que ya usa el Resumen P&L (fuente única). Renderizar dos totales lado a lado ("VENTA USD" + "VENTA MXN"). En paso 3 forzar la lectura del mismo campo (`totalConIva` o `subtotal`) para venta y costo, no cruzados.
-- Resultado: los cuatro paneles (paso 2, paso 3, Resumen P&L, paso 4) hablan el mismo idioma.
-
-### Infraestructura
-
-**B-015 · React Query persistido congela catálogos**
-
-- `persistBootstrap.ts` guarda todo en localStorage con `staleTime` largo → catálogos administrables no se refrescan tras F5 hasta expirar el cache.
-- Cambio: en `persistQueryClient` pasar `dehydrateOptions.shouldDehydrateQuery` para **excluir** query keys de catálogos administrables (`tipos_contenedor`, `navieras`, `puertos`, `conceptos_costo`, `conceptos_venta`, `catalogo_claves_sat`, `crm_etapas_pipeline`, `crm_motivos_perdida`). Esos caches se recalculan cada sesión; el resto sigue persistiendo.
-- Resultado: cualquier cambio en un catálogo se ve al recargar sin tener que borrar localStorage.
-
-## Fuera de alcance intencional
-
-- **B-012** — el reporte mismo pide re-verificar en staging; no se toca aquí. Si tras staging aparece un race real de sesión/React Query, se abre una mini-ola dedicada.
-- Importador CSV robusto de estado de cuenta (B-010 sólo aborda la salida manual).
-
-## Cómo se verifica
-
-- `bun run lint -- --max-warnings 0` y `bun run test` locales.
-- Tests unitarios nuevos: `useNuevaFacturaProveedorForm` (cuadre con conceptos manuales), Zod paso 2 wizard embarques (casos negativos), helper `sumPorMoneda` cotizaciones (mezcla USD+MXN), `resolveProtectedRouteRedirect` (super_admin con y sin org activa), `persistBootstrap` (query key excluida no se dehidrata).
-- Manual en preview: seguir el flujo B-006 (crear CxP manual con 1 concepto → aprobar sin error), B-009 (loguear como super_admin, cambiar org, entrar a `/embarques`), B-014 (peso negativo → error visible), B-015 (editar `tipos_contenedor` desde otra sesión → F5 refresca).
-
-## Cierre / versionado
-
-- Bump `APP_VERSION` a `13.321.0` (cambio mayor: super_admin recupera operación y wizard endurece validaciones).
-- `CHANGELOG.md` con bullet por bug siguiendo el formato de olas anteriores (analogía breve + IDs).
-- Estado acumulado esperado tras la ola: **30/63** bugs cerrados (Wave 7 suma 6). Restantes: 33 (todos MED/BAJA/verify).
+1. **B-021** (multi-org): ¿El diseño target es **multi-org** (un usuario en varias organizaciones a la vez) o **single-org** (un usuario ↔ una org, `OrgSwitcher` sólo para super_admin impersonando)? La respuesta define si dropeamos el UNIQUE o simplificamos el código.  un usuario no puede pertenecer a mas de 1 org.
+2. **B-044** (docs cliente): ¿Verificamos primero en staging si los archivos SÍ se están subiendo, o asumimos "no persisten" y agregamos la persistencia? No lo se.
+3. **Orden**: ¿arranco Ola 8 completa, o prefieres que primero haga las 3 quick-wins de dinero (B-019, B-020, B-022) y valides antes de seguir?Ho,a completa
 
 ## Detalles técnicos (para referencia)
 
-| ID | Archivos principales |
-| --- | --- |
-| B-006 | `src/features/cxp/components/CargaCfdiSection.tsx`, `src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts`, nuevo `ConceptosManualesTable.tsx` |
-| B-009 | `src/lib/auth/resolveProtectedRouteRedirect.ts`, tests en `src/lib/auth/__tests__/` |
-| B-010 | `src/features/embarques/components/reconciliacion/*` (o ruta actual de conciliación), nuevo `DialogRegistrarMovimientoBancario.tsx` |
-| B-011 | `src/features/cotizaciones/wizard/**/Footer*.tsx`, helper `sumPorMoneda` |
-| B-014 | `src/features/embarques/wizard/schema.ts` y `Paso2*.tsx` |
-| B-015 | `src/lib/query/persistBootstrap.ts` + lista de keys en `staleTimes.ts` |
+- Cambios de schema (RPCs y catálogos) → migraciones en el mismo turno.
+- Todos los nuevos toasts pasan por `appFeedback` (regla vigente).
+- Cada ola cierra con: `bump APP_VERSION`, entrada al CHANGELOG.md con analogía, y verificación puntual (lint/tests si aplica).
+- Estimado: Ola 8 ≈ 7 fixes, Ola 9 ≈ 7, Ola 10 ≈ 8, Ola 11 ≈ 20 (cosméticos). Total 42 (B-021 y B-044 esperan respuesta).
+
+## Estado acumulado tras waves 1-7
+
+27/63 cerrados. Este plan cierra hasta 42 más → objetivo 69/63 (incluye los 3 diferidos B-006/B-010/B-011 que quedan como QW dedicados, no entran acá).
