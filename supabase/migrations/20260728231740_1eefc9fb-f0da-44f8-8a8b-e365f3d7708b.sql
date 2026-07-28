@@ -96,3 +96,6 @@ BEGIN
   );
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.actualizar_estado_cliente_proforma(uuid, text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.actualizar_estado_cliente_proforma(uuid, text, text) TO authenticated, service_role;

@@ -140,3 +140,7 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.revalidar_tarifa_cotizacion(UUID) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.actualizar_cotizacion_costos(uuid, jsonb, uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.actualizar_cotizacion_costos(uuid, jsonb, uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) TO authenticated, service_role;
