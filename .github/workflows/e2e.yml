@@ -124,8 +124,8 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-        # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
-        persist-credentials: false
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
       - uses: ./.github/actions/setup-bun
       - name: Guard (provisioning secret)
         id: check
@@ -153,8 +153,8 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-        # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
-        persist-credentials: false
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-bun
 
@@ -208,8 +208,8 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-        # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
-        persist-credentials: false
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
       - uses: ./.github/actions/setup-bun
 
       - name: Cache Playwright browsers
@@ -281,8 +281,8 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-        # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
-        persist-credentials: false
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
       - uses: ./.github/actions/setup-bun
 
       - name: Cache Playwright browsers
@@ -333,8 +333,8 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-        # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
-        persist-credentials: false
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
       - uses: ./.github/actions/setup-bun
 
       - name: Guard (multi-tenant secrets)
@@ -399,8 +399,8 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-        # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
-        persist-credentials: false
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
       - uses: ./.github/actions/setup-bun
 
       - name: Download all blob reports
