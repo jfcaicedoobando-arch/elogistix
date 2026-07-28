@@ -144,6 +144,8 @@ export function ProveedorDatosBancariosCard({
           </>
         )}
       </CardContent>
+      )}
     </Card>
+
   );
 }
