@@ -1,43 +1,48 @@
-## Objetivo
+## Respuesta corta
 
-Cerrar los 2 ítems parciales de la auditoría (B-082 y B-091) y ponerle red de seguridad a los 13 fixes SQL que hoy no tienen ningún test.
+No. Del inventario cruzado (documento de instrucciones ↔ repo), sólo ~10 de los 49 fixes tienen un test que ejercite exactamente el comportamiento corregido:
 
-## Estado verificado antes del plan
+- **Con test**: B-067+B-072, B-071, B-079 (suite nueva `test_rls_reg_costeo.sql`), B-082 (`facturaSaldo.test.ts`), B-068+B-076, B-075, B-092, B-083+B-106.
+- **Cobertura parcial / genérica** (el archivo tiene tests, pero no del hunk del fix): REG B-001, B-069, B-077, B-099, B-105, B-098.
+- **Sin ningún test**: el resto (~30 IDs), incluidos varios de dinero y seguridad: REG B-016, REG B-004, B-064, B-065, B-066, B-070+B-084, B-080, B-085, B-090, B-073, B-074, B-089, B-091, B-096, B-078, B-081/B-093/B-101, B-086+B-095, B-087+B-094, B-100, B-102, B-103, B-104.
 
-- `fetchPortalNotasCreditoFactura` ya existe y filtra bien (`estado = 'Aplicada'`, `deleted_at IS NULL`), pero **`PortalFacturaPagosCard.tsx` no la consume**: calcula `saldo = totalFactura - totalPagado` y decide "Liquidada" sin restar notas de crédito. Ese es el hueco real de B-082.
-- El badge de B-091 en `TarifaCardBadges.tsx` existe pero dice literalmente "Demora día 6", un número quemado que no corresponde cuando la tarifa tiene otros días libres.
-- En `supabase/tests/rls/` hay 16 suites, todas de RLS/permisos; ninguna cubre lógica de negocio de las funciones y triggers de tarifas/costeo.
+Nota: "existe archivo de test que menciona el símbolo" no es lo mismo que "cubre la rama del bug"; los marcados como parciales requieren leer los asserts contra el diff antes de darlos por cerrados.
 
-## Parte 1 — B-082: notas de crédito en el saldo del portal
+## Plan: 3 olas de cobertura, por riesgo
 
-1. En `PortalFacturaPagosCard.tsx`, consumir el hook de NC junto al de pagos y calcular:
-   `saldo = max(0, total - pagado - notasCreditoAplicadas)`, con "Liquidada" derivada de ese saldo.
-2. Renderizar las NC como una sección propia dentro de la tarjeta (folio, fecha, monto en negativo), separada del historial de pagos para que el cliente vea de dónde sale el descuento.
-3. Mostrar una línea de resumen "Total facturado / Pagos / Notas de crédito / Saldo" para que el número cuadre a la vista.
-4. Revisar que el listado de facturas del portal y `PortalFacturaDetalle` usen el mismo saldo, no uno propio, para que no queden dos verdades.
+### Ola 1 — Dinero y seguridad (SQL, mayor riesgo de regresión silenciosa)
+Nueva suite `supabase/tests/rls/test_rls_reg_portales.sql` (registrada en la matriz de `rls-tests.yml`):
+- **B-065 + B-090**: `get_top_tarifas` invocada por un usuario de Org B no devuelve tarifas de Org A; con dos tarifas de igual total, el orden es determinista.
+- **B-080**: agente inactivo desaparece del Top-3.
+- **B-069**: un usuario con rol `agente_carga` no lee `conceptos_venta` / `facturas` de la organización.
+- **B-070 + B-084**: el agente sólo ve su propio registro en `costeo_agentes`.
+- **B-085**: `storage.objects` del bucket de cartas de garantía filtra por organización.
+- **B-064**: `_crear_embarque_replicar_conceptos` con 3 contenedores no multiplica el costo unitario.
+- **REG B-016**: `duplicar_cotizacion` corre sin error y copia conceptos.
+- **B-066**: `agente_aprobar_tarifa` existe con una sola firma y aprueba un borrador.
+- **B-098**: `current_agente_id` / `get_current_agente_context` resuelven determinista con dos vínculos.
+- **REG B-001**: `UPDATE ... SET deleted_at = now()` funciona en una muestra de las 27 tablas y la fila deja de listarse.
 
-## Parte 2 — B-091: copy de demoras
+### Ola 2 — Lógica pura de frontend (vitest, barato y estable)
+- `demorasTramos.test.ts` (B-096): solapes, tramo abierto, límites.
+- `dateOnly.test.ts` (B-089/B-103): fechas date-only sin desfase horario en México.
+- `TarifaCardBadges.test.tsx` (B-091): copy dinámico según días libres; badge ausente si faltan datos.
+- `buildCostosDesdeTarifa` / payload del wizard (B-073, B-074): vínculo tarifa→costos y regeneración de conceptos al hacer override.
+- `estadoCuentaAggregates.test.ts` (B-077, B-105): casos multi-moneda y "Por vencer ≤ 7 días".
+- `cotizacionDetalle` + columnas del portal (B-081, B-099, B-093): total con IVA y parseo de conceptos.
 
-Sustituir el texto quemado por uno derivado de la tarifa: "Demora desde el día N" usando los días libres reales de la fila, y ajustar el tooltip para explicar que el cargo aplica **después** de agotar esos días. Si el dato de días libres no viene, no se muestra el badge en lugar de inventar el día 6.
-
-## Parte 3 — Suite de regresión para los 13 fixes SQL
-
-Nueva suite `supabase/tests/rls/test_reg_costeo_tarifas.sql`, con los mismos helpers (`_helpers.sql`, transacción + ROLLBACK) e integrada al workflow `rls-tests.yml`. Cubre, con aserciones de comportamiento y no de mera existencia del objeto:
-
-- Reemplazo atómico de tarifas: al insertar una tarifa que sustituye a otra, la anterior queda marcada reemplazada y sólo una queda vigente.
-- Vista `costeo_tarifas_vigentes_v`: incluye tarifas con vigencia futura, excluye las de agentes inactivos y las vencidas.
-- Trigger de estado `vencida` derivado por fecha.
-- `get_top_tarifas`: no devuelve filas de otra organización.
-- `agente_aprobar_tarifa`: un agente no puede aprobar tarifas fuera de su organización.
-- `duplicar_cotizacion` y `actualizar_cotizacion_costos`: corren sin error de columna inexistente (regresión REG B-016 y la de `puerto_origen`).
-- `crear_embarque_borrador_core`: hereda la tarifa y no multiplica costos.
-- Soft delete (REG B-001): las funciones de listado no devuelven filas con `deleted_at`.
-- Policies de storage de cartas garantía: no se lee un objeto de otra organización.
-
-Además, un test unitario de los agregados del portal que verifique que el saldo resta notas de crédito (la parte que no necesita base de datos).
+### Ola 3 — Componentes de portal y agente (RTL, humo dirigido)
+Tests de render con datos mockeados que afirman el texto/estado corregido, no el layout:
+- Portal cliente: B-101, B-102, B-103, B-104, B-106.
+- Portal agente: B-086+B-095 (columnas y estados de tarifa), B-087+B-094 (KPIs sin reemplazadas ni cerrados), B-078 (contexto de agente).
+- CRM: REG B-004 (menú "+ Nuevo" renderiza sus items).
+- B-097, B-100: copy y grid de mercancía.
 
 ## Notas técnicas
+- Las suites SQL siguen el patrón existente (`_helpers.sql`, `pg_temp.as_user`, `ROLLBACK` final) y deben añadirse a `matrix.suite` en `.github/workflows/rls-tests.yml`, si no el validador de CI falla.
+- Los tests de RPC de la Ola 1 son de comportamiento, no de RLS puro; van en la misma suite para reutilizar el seed multi-tenant.
+- Cada ola cierra con `bun run lint -- --max-warnings 0` y la corrida de las suites tocadas; bump de `APP_VERSION` + entrada en `CHANGELOG.md` por ola.
+- Si un test revela que un fix quedó incompleto (posible en B-073/B-074), se corrige el código en la misma ola y se anota en el changelog.
 
-- Todo el trabajo SQL es de pruebas: **ninguna migración nueva**, ningún cambio de esquema.
-- Si alguna aserción falla, se reporta como hallazgo y se decide contigo antes de tocar la función — el objetivo de esta ola es la red de seguridad, no reescribir lógica.
-- Se registra el cambio en `CHANGELOG.md` y se sube `APP_VERSION`.
+## Alcance
+Sólo se añaden tests y, si algún test descubre un fix incompleto, la corrección puntual. No se rediseña nada más.
