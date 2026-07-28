@@ -49,19 +49,24 @@ export function ConceptoRow({
         </div>
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <div className="flex items-center gap-2">
-          <Label htmlFor={`iva-${c.id}`} className="text-xs text-muted-foreground cursor-pointer">
-            IVA
-          </Label>
-          <Switch
-            id={`iva-${c.id}`}
-            checked={ivaActivo}
-            onCheckedChange={() => onToggleIva(c.id, c.moneda)}
-            disabled={ivaBloqueado || !isSelected}
-          />
-        </div>
-        {ivaBloqueado && (
-          <span className="text-2xs text-muted-foreground">Obligatorio MXN</span>
+        {ivaBloqueado ? (
+          // B-051 (v13.320.48): en conceptos MXN el IVA es obligatorio por ley.
+          // Antes se mostraba un Switch deshabilitado que parecía "apagado" pero
+          // el sistema sí cobraba IVA — confundía al operador. Ahora se muestra
+          // un badge informativo "IVA incluido" y desaparece el toggle.
+          <Badge variant="secondary" className="text-xs">IVA 16% incluido</Badge>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Label htmlFor={`iva-${c.id}`} className="text-xs text-muted-foreground cursor-pointer">
+              IVA
+            </Label>
+            <Switch
+              id={`iva-${c.id}`}
+              checked={ivaActivo}
+              onCheckedChange={() => onToggleIva(c.id, c.moneda)}
+              disabled={!isSelected}
+            />
+          </div>
         )}
       </div>
     </div>
