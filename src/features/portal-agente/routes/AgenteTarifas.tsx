@@ -4,7 +4,7 @@
  * v13.172.17: migrado de `<Table>` crudo a `DataTable` (Fase 4 homologación).
  * v13.182.0: columnas + `EstadoBadge` extraídos a `_sections/agenteTarifasColumns.tsx`.
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +23,13 @@ import {
 import { todayLocalISO } from "@/lib/date/today";
 
 type Filter = "todas" | "borrador" | "vigente" | "rechazada";
+
+/**
+ * B-087 (complementa FIX B-079): vigencia derivada — aprobada + `estado='vigente'`
+ * + no vencida por fecha. Las reemplazadas dejan de contar como vigentes.
+ */
+const esVigenteReal = (t: AgenteTarifaRow, hoy: string) =>
+  t.estado_aprobacion === "vigente" && t.estado === "vigente" && t.vigente_hasta >= hoy;
 
 interface EditorState {
   open: boolean;
