@@ -22,6 +22,9 @@ import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseB
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { DetailNotFound } from "@/components/shared/DetailNotFound";
+import { FileX } from "lucide-react";
+
 import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
