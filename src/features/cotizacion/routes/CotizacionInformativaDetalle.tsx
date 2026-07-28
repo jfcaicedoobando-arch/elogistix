@@ -5,7 +5,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
@@ -16,7 +16,6 @@ import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolve
 import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   cotizacion: CotizacionRow;
-  onBack: () => void;
 }
 
 async function descargarTarifario(cotizacion: CotizacionRow) {
@@ -33,7 +32,7 @@ async function descargarTarifario(cotizacion: CotizacionRow) {
   );
 }
 
-export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Props) {
+export default function CotizacionInformativaDetalle({ cotizacion }: Props) {
   const tarifas = parseTarifasInformativas(cotizacion.tarifas_informativas);
   const { data: tiposContenedor = [] } = useTiposContenedor();
 
@@ -47,18 +46,18 @@ export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Pro
 
   return (
     <PageContainer>
-      <PageHeader
+      <DetailHeader
+        backTo="/cotizaciones"
+        backLabel="Cotizaciones"
         title={`Tarifario ${cotizacion.folio}`}
-        description={`Cliente: ${cotizacion.cliente_nombre}`}
-        actions={
-          <>
-            <Button variant="outline" onClick={onBack}>Volver</Button>
-            <Button onClick={handleDescargar}>
-              <Download className="h-4 w-4 mr-2" /> Descargar PDF
-            </Button>
-          </>
+        subtitle={`Cliente: ${cotizacion.cliente_nombre}`}
+        trailing={
+          <Button onClick={handleDescargar}>
+            <Download className="h-4 w-4 mr-2" /> Descargar PDF
+          </Button>
         }
       />
+
 
       <Card>
         <CardHeader><CardTitle>Vigencia</CardTitle></CardHeader>

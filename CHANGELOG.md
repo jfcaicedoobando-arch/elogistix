@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.320.68] - 2026-07-28
+- **Ola 4 de adopción de `DetailHeader`** — cierre de la migración. Analogía: el último par de fichas que aún se presentaban a su manera ya usan el mismo guion.
+  - `EmbarqueDetalleHeader.tsx`: migrado a `DetailHeader`; ahora el detalle de embarque **sí tiene botón "Volver a Embarques"** (antes sólo se podía regresar con el botón del navegador). Sin cambios de lógica de estados ni diálogos.
+  - `CotizacionInformativaDetalle.tsx` (tarifario): pasó de `PageHeader` a `DetailHeader`; el "Volver" salió de la zona de acciones y la prop muerta `onBack` se eliminó de `CotizacionDetalle.tsx`.
+  - Guardrail ampliado en `detail-header-canonical.test.ts`: además de prohibir `ArrowLeft`, ahora exige que toda ruta `*Detalle*.tsx` use `DetailHeader` (directo o vía su componente de header).
+
 ## [13.320.67] - 2026-07-28
 - **Ola 3 de adopción de `DetailHeader` + auditoría de dónde más aplica**. Analogía: terminamos de repartir el mismo guion de recepción a todas las fichas del sistema.
   - `FacturaDetalleHeader.tsx`: migrado a `DetailHeader` (recibe `volverHref`/`volverLabel`); se eliminó el botón "Volver" suelto y la prop muerta `onVolver` de `FacturaDetalleView` / `FacturaDetalle`.

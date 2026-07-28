@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 
 import { toTitleCase } from "@/lib/formatters";
 import { EmbarqueStatusChip } from "./EmbarqueStatusChip";
@@ -61,41 +62,46 @@ export function EmbarqueDetalleHeader({
   const onIrACierre = () => onNavigateTab("cierre");
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-2xl font-bold truncate">{labelExpediente(embarque.expediente, embarque.id)}</h1>
-          <EmbarqueStatusChip
-            estado={estadoVisual}
-            modo={embarque.modo}
-            tieneProforma={embarque.tiene_proforma}
-            cobroStatus={embarque.cobro_cliente_status as "pendiente" | "parcial" | "pagado" | null | undefined}
-          />
-          <EmbarqueBadgeAdmin embarqueId={embarqueId} estado={estadoVisual} />
-        </div>
-        <p className="text-sm text-muted-foreground truncate mt-1">
-          <span>{toTitleCase(embarque.cliente_nombre)}</span>
-          <span aria-hidden className="mx-1.5 opacity-60">·</span>
-          {embarque.cotizacion_id ? (
-            cotizacionFolio ? (
-              <Link
-                to={`/cotizaciones/${embarque.cotizacion_id}`}
-                className="text-xs hover:text-foreground hover:underline"
-              >
-                Cotización origen: {cotizacionFolio}
-              </Link>
+    <>
+      <DetailHeader
+        backTo="/embarques"
+        backLabel="Embarques"
+        title={labelExpediente(embarque.expediente, embarque.id)}
+        badge={
+          <>
+            <EmbarqueStatusChip
+              estado={estadoVisual}
+              modo={embarque.modo}
+              tieneProforma={embarque.tiene_proforma}
+              cobroStatus={embarque.cobro_cliente_status as "pendiente" | "parcial" | "pagado" | null | undefined}
+            />
+            <EmbarqueBadgeAdmin embarqueId={embarqueId} estado={estadoVisual} />
+          </>
+        }
+        subtitle={
+          <>
+            <span>{toTitleCase(embarque.cliente_nombre)}</span>
+            <span aria-hidden className="mx-1.5 opacity-60">·</span>
+            {embarque.cotizacion_id ? (
+              cotizacionFolio ? (
+                <Link
+                  to={`/cotizaciones/${embarque.cotizacion_id}`}
+                  className="text-xs hover:text-foreground hover:underline"
+                >
+                  Cotización origen: {cotizacionFolio}
+                </Link>
+              ) : (
+                <span className="text-xs">Cotización origen no disponible</span>
+              )
             ) : (
-              <span className="text-xs">Cotización origen no disponible</span>
-            )
-          ) : (
-            <span className="text-xs text-warning" title="Embarque legacy sin cotización vinculada (creado antes de la política tarifa-first)">
-              Sin cotización vinculada
-            </span>
-          )}
-        </p>
-      </div>
-
-      <EmbarqueDetalleHeaderActions
+              <span className="text-xs text-warning" title="Embarque legacy sin cotización vinculada (creado antes de la política tarifa-first)">
+                Sin cotización vinculada
+              </span>
+            )}
+          </>
+        }
+        trailing={
+          <EmbarqueDetalleHeaderActions
         expediente={labelExpediente(embarque.expediente, embarque.id)}
         estadoVisual={estadoVisual}
         siguienteEstado={siguienteEstado}
@@ -121,6 +127,8 @@ export function EmbarqueDetalleHeader({
         onCancelar={handleCancelar}
         cancelandoEmbarque={avanzarEstado.isPending}
         tieneDeudaPendiente={tieneDeudaPendiente}
+          />
+        }
       />
 
       <EmbarqueHeaderDialogs
@@ -141,6 +149,6 @@ export function EmbarqueDetalleHeader({
         onIrATracking={onIrATracking}
       />
 
-    </div>
+    </>
   );
 }
