@@ -59,7 +59,7 @@ export function EmbarqueDetalleHeaderActions({
   // B-058: si hay CxC/CxP pendientes no eliminamos — sólo cancelamos.
   const puedeEliminar = !esTerminal && !tieneDeudaPendiente;
   const [cancelarOpen, setCancelarOpen] = useState(false);
-  const [motivo, setMotivo] = useState("");
+  
   const navigate = useNavigate();
   const goEditar = () => navigate(`/embarques/${embarqueId}/editar`);
 
