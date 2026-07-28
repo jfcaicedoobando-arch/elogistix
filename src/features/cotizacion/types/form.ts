@@ -37,6 +37,8 @@ export interface CotizacionFormValues {
   incoterm: string;
   tipoCarga: string;
   sectorEconomico: string;
+  /** B-035: descripción real de la mercancía (columna `descripcion_mercancia`). */
+  descripcionMercancia: string;
   descripcionAdicional: string;
   tipoEmbarque: "FCL" | "LCL" | "";
   tipoContenedor: string;
