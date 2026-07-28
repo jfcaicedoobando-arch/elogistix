@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.58] - 2026-07-28
+- **H6 audit:migrations**: se anexó al archivo `20260728062322_..._seed_demo_organization` el bloque `REVOKE ALL … FROM PUBLIC/anon` + `GRANT EXECUTE … TO authenticated/service_role/postgres` para que la migración original cumpla por sí sola con la política H6 (el linter revisa por archivo, no por estado acumulado).
+
 ## [13.320.57] - 2026-07-28
 - **Lint · 8 errores resueltos**:
   - `AplicarAnticipoDialog.tsx` y `RegistrarAnticipoDialog.tsx`: se quitó el import directo de `sonner`; ahora usan `notifyError(undefined, …)` de `@/lib/ui/appFeedback`.
