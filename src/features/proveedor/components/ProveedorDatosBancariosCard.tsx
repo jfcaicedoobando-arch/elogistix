@@ -59,23 +59,41 @@ export function ProveedorDatosBancariosCard({
   bancoIntermediarioSwift,
   beneficiario,
   referenciaPago,
+  onCapturar,
 }: Props) {
   const [revealClabe, setRevealClabe] = useState(false);
   const tieneDatosIntl = !!(swiftBic || iban || abaRouting || bancoPais || bancoIntermediario);
   const esInternacional = origen === "Extranjero" || tieneDatosIntl;
+  const sinDatos = !banco && !clabe && !tieneDatosIntl && !beneficiario;
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="text-sm flex flex-wrap items-center gap-2">
           {esInternacional ? (
             <Globe className="h-4 w-4 text-muted-foreground" />
           ) : (
             <Landmark className="h-4 w-4 text-muted-foreground" />
           )}
-          Datos bancarios{esInternacional ? " (internacional)" : ""}
+          Datos bancarios
+          <Badge variant="outline" className="font-normal">
+            {esInternacional ? "Internacional" : "Nacional"}
+          </Badge>
         </CardTitle>
       </CardHeader>
+      {sinDatos ? (
+        <CardContent className="text-sm">
+          <p className="text-muted-foreground">
+            Este proveedor todavía no tiene datos bancarios capturados. Sin ellos no se
+            puede registrar el pago.
+          </p>
+          {onCapturar && (
+            <Button variant="outline" size="sm" className="mt-3" onClick={onCapturar}>
+              Capturar datos bancarios
+            </Button>
+          )}
+        </CardContent>
+      ) : (
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         {!esInternacional && (
           <>
@@ -102,6 +120,7 @@ export function ProveedorDatosBancariosCard({
             </div>
           </>
         )}
+
         {esInternacional && (
           <>
             <Row label="Beneficiario" value={beneficiario} />
