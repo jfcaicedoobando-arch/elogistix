@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.320.33] - 2026-07-28
+- **Bug bash live · Wave 2 (4 fixes de negocio)** — segunda tanda del audit `bugs-e2e-live-2026-07-28.md`:
+  - **B-016 · Duplicar cotización preserva utilidad**: la RPC `duplicar_cotizacion` ahora copia `precio_venta` (y `tipo_cambio_usd`) en `cotizacion_costos`. Antes el duplicado nacía con precio de venta = 0 en cada renglón, así que la columna generada `profit` mostraba pérdida artificial.
+  - **B-040 · Folio del duplicado usa la secuencia atómica**: `duplicar_cotizacion` ahora llama a `siguiente_folio_cotizacion()` en vez de calcular `MAX(folio)+1` sobre texto. Elimina la carrera entre duplicados concurrentes y la colisión permanente al pasar de COT-YYYY-9999 a 10000 (donde `'10000' < '9999'` como string bloqueaba nuevos folios).
+  - **B-045 · Mensaje de descuadre CxP legible**: `_cxp_validar_aprobacion` mostraba literalmente `%.2f` en los toasts porque `RAISE EXCEPTION` no soporta ese format-spec (sólo `%s/%L/%I`). Ahora se formatea con `to_char(..., 'FM999,999,999,990.00')` para leer "$1,234.56".
+  - **B-062 · Búsqueda global encuentra CxP por folio interno (FI-…)**: `busqueda_global` ahora matchea `proveedor_facturas.folio_interno`, que es el folio que la UI muestra en todas las listas de CxP. Antes sólo buscaba por folio del proveedor y la búsqueda por FI- devolvía vacío.
+- **Sprint status**: acumulado 8/63 bugs cerrados (Wave 1: B-002, B-003, B-004, B-060 · Wave 2: B-016, B-040, B-045, B-062). Restantes: 55. B-001, B-005, B-046 ya cerrados en olas previas y verificados sin regresión.
+- Analogía: la duplicadora de cotizaciones nacía sin precios (B-016) y numeraba con marcador que se despintaba en el 10 000 (B-040); los toasts de CxP hablaban en jeroglífico `%.2f` (B-045); y el buscador buscaba por el nombre del proveedor en vez del folio que ve el usuario en pantalla (B-062).
+
+
 ## [13.320.32] - 2026-07-28
 - **Bug bash live · Wave 1 (4 críticos)** — arreglos derivados del audit `bugs-e2e-live-2026-07-28.md`:
   - **B-002 · Cobrar tiene prioridad sobre "Timbrar REP"**: en `FacturaDetalleActionsBar`, si la factura tiene saldo, la acción primaria es **Registrar pago**. Antes, un REP pendiente/fallido escondía "Registrar pago" y bloqueaba la cobranza indefinidamente. El REP queda accesible como secundario.
