@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.320.36] - 2026-07-28
+- **Bug bash live · Wave 4 (4 fixes de integridad, dinero y UX)** — cuarta tanda del audit `bugs-e2e-live-2026-07-28.md`:
+  - **B-017 · "Marcar Llegada real" con guardas de negocio (integridad)**: `actualizarFechaLlegadaRealEmbarque` ahora rechaza (1) fecha anterior al ETD ("arribar antes de zarpar"), (2) re-marcar una llegada ya capturada (llegadas múltiples) y (3) estados previos a "En Tránsito" (Cotización/Borrador/Confirmado). Antes se aceptaba cualquier fecha y el stepper mostraba "Arribo ✓" junto al botón "Avanzar a En Tránsito".
+  - **B-035 · `descripcion_mercancia` deja de secuestrar el Sector Económico**: el mapper `partesMercancia` ahora usa `descripcionAdicional` como fuente principal (con fallback a `sectorEconomico` cuando el usuario lo dejó en blanco) — antes ambos campos se guardaban con el mismo valor, borrando la descripción real que ventas capturaba.
+  - **B-041 · Toasts contradictorios del wizard de cotización**: `useCreateCotizacion` y `useUpdateCotizacion` ya no auto-toastean success ("Cotización creada" / "actualizada") en cada paso intermedio. El wizard emite un único toast final "Cotización creada/actualizada exitosamente".
+  - **B-042 · Checklist de cierre ya no muestra JSON crudo**: el fallback de `getCierreCheckMeta` retorna `null` en lugar de `JSON.stringify(detalle)` para reglas desconocidas. Los usuarios veían literalmente `{"ids":[],"pendientes":0}` como "detalle".
+- **Sprint status**: acumulado 17/63 bugs cerrados (Wave 4: B-017, B-035, B-041, B-042). Restantes: 46.
+- Analogía: al barco lo dejamos zarpar antes de anotar su llegada (B-017), a la etiqueta "descripción" le pusimos el nombre correcto en lugar del del cajón (B-035), silenciamos al altavoz que anunciaba "creada" en cada paso del elevador (B-041) y guardamos el diccionario técnico en el cajón del sistema (B-042).
+
+
 ## [13.320.35] - 2026-07-28
 - **CI verde · re-alineación de 2 test files residuales del sprint** (run `82189359705` fallaba solo en shard 7):
   - **`useCotizacionDraftAutosave.test.tsx`**: el schema del borrador subió a `v2` en Wave 1 (fix B-003 · duplicación de cotización). Los tests seguían asumiendo `v1`: el caso "versión no coincide" guardaba `v2` esperando rechazo (ahora es la versión vigente y se acepta), y el caso "persiste tras debounce" afirmaba `parsed.version === 1`. Ajustado a `v99` (mismatch garantizado) y `v2` (versión persistida real).
