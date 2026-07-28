@@ -52,7 +52,11 @@ describe("proformas queries", () => {
 
   it("fetchProformaPorId mapea data presente", async () => {
     mock.setTableResult("proformas", { data: { id: "p1" }, error: null });
-    await expect(fetchProformaPorId("p1")).resolves.toEqual({ id: "p1", facturas_asociadas: [] });
+    await expect(fetchProformaPorId("p1")).resolves.toEqual({
+      id: "p1",
+      facturas_asociadas: [],
+      envios: [],
+    });
   });
 
   it("fetchProformasAprobadas filtra estado_revision=aprobada", async () => {
