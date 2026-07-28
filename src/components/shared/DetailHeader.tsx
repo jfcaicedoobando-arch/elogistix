@@ -14,6 +14,8 @@ interface DetailHeaderProps {
   icon?: ReactNode;
   /** Título principal (<h1>). */
   title: ReactNode;
+  /** Nivel semántico del título. Usa `h2` cuando la página ya tiene un `h1`. */
+  titleAs?: "h1" | "h2";
   /** Subtítulo/descripción bajo el título. */
   subtitle?: ReactNode;
   /** Badge/status a la derecha del título (misma línea en md+). */
@@ -26,6 +28,7 @@ interface DetailHeaderProps {
   tabs?: ReactNode;
   className?: string;
 }
+
 
 /**
  * Encabezado de página de detalle: botón Volver + título + badge + acciones.
