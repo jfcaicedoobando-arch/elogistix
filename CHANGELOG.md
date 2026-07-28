@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.320.52] - 2026-07-28
+- **Bug bash live · Wave 16 (1 fix + 3 verificaciones)**:
+  - **B-035 · `descripcion_mercancia` guardaba el Sector Económico**: el mapper `cotizacionForm.ts` persistía `descripcion_adicional || sectorEconomico` en la columna `descripcion_mercancia`, así que la búsqueda del listado y el detalle mostraban "Industrial" en vez de la mercancía real. Se añade el campo dedicado `descripcionMercancia` (form + defaults + hidratación desde `descripcion_mercancia`) y un input requerido en `SeccionMercanciaWrapper`; el mapper prioriza el nuevo campo y mantiene fallback a `descripcionAdicional`/`sectorEconomico` para no romper cotizaciones legacy. Analogía: antes el sistema anotaba "sector automotriz" en la casilla "qué llevas"; ahora tiene una casilla específica "qué llevas" y otra "en qué sector".
+- **Verificaciones (ya cerrados en HEAD, no requieren diff)**:
+  - **B-045**: `_cxp_validar_aprobacion` ya interpola con `to_char(...,'FM999,999,999,990.00')` — el placeholder `%.2f` crudo ya no aparece.
+  - **B-050**: `processToken` ya preserva siglas cortas en mayúsculas (`/^[A-Z]{2,4}$/`) — "QA" no se convierte a "Qa".
+  - **B-053**: `formatCurrency` ya extrae el signo antes del prefijo MXN — se muestra "MXN -8,000.00", no "MXN -$8,000.00".
+- **Sprint status**: acumulado 52/63 bugs cerrados. Pendientes: 11.
+
+
+
 ## [13.320.51] - 2026-07-28
 - **Bug bash live · Wave 15 (5 fixes + 1 backend)**:
   - **B-030 · Bandeja de pagos programados con filtro implícito**: la vista se alimentaba de la RPC `cxp_por_pagar`, que filtra `estado='Vigente'` en silencio; captura/Borrador con fecha programada quedaban fuera y las pendientes sin fecha se descartaban al agrupar por semana → el tesorero veía "2 de N". Se agrega `fetchPagosProgramables()` que lee `proveedor_facturas` directo (no canceladas con saldo > 0), un filtro EXPLÍCITO ("Todas" / "Solo programadas" / "Vencen en 30 días") default "todas", y una sección "Sin fecha de pago" al final. Analogía: antes la bandeja tenía un colador con hoyos escondidos; ahora es transparente y el usuario decide qué colar.
