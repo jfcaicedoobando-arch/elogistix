@@ -105,6 +105,35 @@ export interface AgenteTarifaRow {
   puerto_destino_nombre: string;
 }
 
+/** Forma cruda del join anidado de `costeo_tarifas` (alias de relaciones). */
+type RawTarifaAgente = {
+  id: string; ruta_id: string; naviera_id: string; tipo_contenedor_id: string;
+  moneda: string; flete_base: number;
+  vigente_desde: string; vigente_hasta: string; estado: string; estado_aprobacion: string;
+  motivo_rechazo: string | null; aprobada_en: string | null;
+  transit_time_dias: number | null; dias_libres_demoras: number | null;
+  notas: string | null;
+  costeo_agentes?: { nombre?: string } | null;
+  navieras?: { name?: string } | null;
+  tipos_contenedor?: { name?: string } | null;
+  costeo_rutas?: {
+    puerto_origen?: { name?: string } | null;
+    puerto_destino?: { name?: string } | null;
+  } | null;
+};
+
+/** Nombres legibles de las relaciones de una tarifa (guion largo si faltan). */
+function nombresRelacionesTarifa(r: RawTarifaAgente) {
+  const txt = (v?: string | null) => v ?? "—";
+  return {
+    agente_nombre: txt(r.costeo_agentes?.nombre),
+    naviera_nombre: txt(r.navieras?.name),
+    tipo_contenedor_nombre: txt(r.tipos_contenedor?.name),
+    puerto_origen_nombre: txt(r.costeo_rutas?.puerto_origen?.name),
+    puerto_destino_nombre: txt(r.costeo_rutas?.puerto_destino?.name),
+  };
+}
+
 /** Lista todas las tarifas del agente autenticado (cualquier estado_aprobacion). */
 export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
   const data = await unwrapOr(
