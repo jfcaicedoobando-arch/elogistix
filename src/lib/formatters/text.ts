@@ -30,6 +30,9 @@ function processToken(original: string, idx: number): string {
   if (TITLECASE_ACRONYMS.has(upper)) return upper;
   if (TITLECASE_CORP_TOKENS.has(lower)) return upper;
   if (idx > 0 && TITLECASE_LOWER_WORDS.has(lower)) return lower;
+  // B-050 (v13.320.39): siglas cortas en mayúsculas del original se preservan
+  // (QA, TI, IT, HR, etc.) para evitar "Cliente QA" → "Cliente Qa".
+  if (/^[A-Z]{2,4}$/.test(cleaned)) return upper;
   if (cleaned.includes("-")) {
     return cleaned.split("-").map((p) => capitalizeWord(p)).join("-");
   }
