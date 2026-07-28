@@ -133,6 +133,24 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
           />
         </div>
         <div className="space-y-1.5">
+          <Label>Método de pago</Label>
+          <Controller
+            control={control}
+            name="metodoPago"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {METODOS_PAGO.map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.metodoPago && <p className="text-xs text-destructive">{errors.metodoPago.message}</p>}
+        </div>
+        <div className="space-y-1.5">
           <Label htmlFor="ant-ref">Referencia</Label>
           <Input id="ant-ref" placeholder="Folio de transferencia, cheque, etc." {...register("referencia")} />
         </div>
