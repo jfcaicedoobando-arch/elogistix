@@ -187,5 +187,7 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "El tipo de cambio de la factura no está disponible. Refresca antes de emitir la nota de crédito.",
   LC_TC_DOF_NO_DISPONIBLE:
     "No fue posible obtener el tipo de cambio del DOF. Intenta de nuevo en unos segundos.",
+  LC_CXP_NO_EXISTE: "La factura de proveedor no existe o fue eliminada.",
 };
+
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.320.38] - 2026-07-28
+- **Fix CI · shards 5 y 6 (sprint drift Wave 4)**:
+  - `lcCodeCoverage`: agregado mensaje amigable para `LC_CXP_NO_EXISTE` en `src/lib/errors/lcCodeMessages.ts` (la migración `20260728035544` ya lo emitía sin catálogo).
+  - `useMutationWithFeedback.migration-ola1-batch2`: actualizado el test de `useCreateCotizacion` para reflejar B-041 — ahora se verifica que `notifySuccess` NO se dispare desde el hook (el wizard emite el toast final).
+- Analogía: en Wave 4 quitamos el altavoz intermedio, pero olvidamos avisarle al inspector que lo esperaba (test) y al diccionario de traducciones (catálogo LC_*).
+
+
+
 ## [13.320.37] - 2026-07-28
 - **Fix CI · audit:migrations H6**: agregado `REVOKE ALL ... FROM PUBLIC` y `GRANT EXECUTE ... TO service_role` a `public.pnl_financiero_embarque(uuid)` en la migración `20260728040216`. La función es `SECURITY DEFINER` y debía blindar acceso público.
 - Analogía: cerramos la puerta trasera de una oficina con llave maestra (SECURITY DEFINER) — antes cualquiera podía empujarla.
