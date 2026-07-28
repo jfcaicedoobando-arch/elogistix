@@ -83,7 +83,7 @@ function partesMercancia(v: CotizacionFormValues) {
     tipo_embarque: esMaritimo ? v.tipoEmbarque : "FCL",
     tipo_contenedor: esFcl ? v.tipoContenedor : null,
     tipo_peso: esFcl ? v.tipoPeso : "Peso Normal",
-    descripcion_mercancia: v.sectorEconomico,
+    descripcion_mercancia: (v.descripcionAdicional?.trim() || v.sectorEconomico),
     descripcion_adicional: v.descripcionAdicional,
     sector_economico: v.sectorEconomico,
     dimensiones_lcl: (esLcl ? v.dimensionesLCL : []) as DimensionLCL[],
