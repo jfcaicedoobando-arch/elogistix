@@ -123,3 +123,9 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
     </FormDialogShell>
   );
 }
+
+function computeSubmitTitle(noAprobada: boolean, bloqueadoPorTc: boolean): string | undefined {
+  if (noAprobada) return "Requiere aprobación";
+  if (bloqueadoPorTc) return "Captura el TC";
+  return undefined;
+}
