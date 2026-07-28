@@ -6,6 +6,7 @@ import {
   type FacturaProgramableRow,
 } from "@/features/tesoreria/services/pagosProgramados";
 import { agruparPorSemana, type FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
+import { tesoreria as tesoreriaKeys } from "@/features/tesoreria/queryKeys";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
