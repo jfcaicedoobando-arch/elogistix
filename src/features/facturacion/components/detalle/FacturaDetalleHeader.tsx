@@ -46,7 +46,7 @@ export function FacturaDetalleHeader(props: Props) {
   return (
     <DetailHeader
       backTo={volverHref}
-      backLabel={volverLabel ?? "Volver"}
+      backLabel={volverLabel ?? "Volver a Facturación"}
       icon={<Receipt className="h-6 w-6 text-accent shrink-0" />}
       title={
         <span className="font-mono tabular-nums">
