@@ -8,8 +8,14 @@ import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { useAgenteContext, useAgenteTarifas, useAgenteEmbarques } from "@/features/portal-agente/hooks";
+import { ESTADOS_ACTIVOS } from "@/features/embarques/constants/embarqueConstants";
 import { ROUTES } from "@/constants/routes";
 import { todayLocalISO } from "@/lib/date/today";
+
+// B-087: "vigente" = aprobada + estado derivado vigente (no reemplazada) +
+// no vencida por fecha — mismo criterio que `get_top_tarifas` (FIX B-079).
+const esVigenteReal = (t: { estado_aprobacion: string; estado: string; vigente_hasta: string }, hoy: string) =>
+  t.estado_aprobacion === "vigente" && t.estado === "vigente" && t.vigente_hasta >= hoy;
 
 export default function AgenteInicio() {
   const { data: ctx } = useAgenteContext();
@@ -17,15 +23,19 @@ export default function AgenteInicio() {
   const { data: embarques = [] } = useAgenteEmbarques();
 
   const hoy = todayLocalISO();
-  const vigentes = tarifas.filter((t) => t.estado_aprobacion === "vigente" && t.vigente_hasta >= hoy).length;
+  const vigentes = tarifas.filter((t) => esVigenteReal(t, hoy)).length;
   const borradores = tarifas.filter((t) => t.estado_aprobacion === "borrador").length;
   const rechazadas = tarifas.filter((t) => t.estado_aprobacion === "rechazada").length;
   const en30 = tarifas.filter((t) => {
-    if (t.estado_aprobacion !== "vigente") return false;
+    if (!esVigenteReal(t, hoy)) return false;
     const dHasta = new Date(t.vigente_hasta);
     const diff = (dHasta.getTime() - new Date(hoy).getTime()) / (1000 * 60 * 60 * 24);
     return diff >= 0 && diff <= 30;
   }).length;
+  // B-094: "activos" excluye Cerrado/Cancelado/Borrador — constante canónica.
+  const embarquesActivos = embarques.filter((e) =>
+    (ESTADOS_ACTIVOS as readonly string[]).includes(e.estado),
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -39,7 +49,7 @@ export default function AgenteInicio() {
         <KpiCard icon={ClipboardCheck} label="Tarifas vigentes" value={vigentes} />
         <KpiCard icon={FileSpreadsheet} label="Borradores pendientes" value={borradores} variant={borradores > 0 ? "warning" : "default"} />
         <KpiCard icon={Clock} label="Vencen en 30 días" value={en30} variant={en30 > 0 ? "warning" : "default"} />
-        <KpiCard icon={Ship} label="Embarques activos" value={embarques.length} />
+        <KpiCard icon={Ship} label="Embarques activos" value={embarquesActivos} />
       </div>
 
       {rechazadas > 0 && (

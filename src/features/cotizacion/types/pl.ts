@@ -27,6 +27,14 @@ export interface FilaCostoLocal {
    * catálogo (0.16 / 0 / exento). Prevalece sobre la heurística por nombre.
    */
   tasa_iva_aplicada?: number;
+  /**
+   * B-073: linkage a la tarifa/recargo de costeo que originó la fila en la
+   * auto-carga desde tarifa. Se persiste en `cotizacion_costos` para que
+   * `revalidar_tarifa_cotizacion` pueda comparar el precio vigente contra
+   * el snapshot de la cotización (revalidación de precio, no sólo vigencia).
+   */
+  costeo_tarifa_id?: string | null;
+  costeo_tarifa_recargo_id?: string | null;
 }
 
 

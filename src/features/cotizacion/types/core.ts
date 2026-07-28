@@ -78,6 +78,11 @@ export interface CreateCotizacionInput {
   descripcion_adicional?: string;
   sector_economico?: string;
   dimensiones_lcl?: DimensionLCL[];
+  /** B-092: parámetros del flete LCL manual (W/M) persistidos en columnas `lcl_*`. */
+  lcl_tarifa_wm?: number | null;
+  lcl_minimo_flete?: number | null;
+  lcl_dias_libres_almacenaje?: number | null;
+  lcl_consolidador_id?: string | null;
   dimensiones_aereas?: DimensionAerea[];
   dias_libres_destino?: number;
   dias_almacenaje?: number;

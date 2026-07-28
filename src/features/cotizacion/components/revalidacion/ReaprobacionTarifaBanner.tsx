@@ -35,8 +35,10 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
   if (estado !== "pendiente_reaprobacion") return null;
 
   const delta = deltaJsonb as
-    | { conceptos?: number; total_usd?: number; total_mxn?: number }
+    | { conceptos?: number; total_usd?: number; total_mxn?: number; tarifa_vigente?: boolean; severidad?: string }
     | undefined;
+  // B-097: copy según la causa real del bloqueo (vigencia vs precio).
+  const tarifaVencida = delta?.tarifa_vigente === false;
 
   async function handleRecotizar() {
     setRecotizando(true);
@@ -69,7 +71,9 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
       <AlertTitle>Tarifa pendiente de re-aprobación</AlertTitle>
       <AlertDescription className="space-y-3">
         <p>
-          Operaciones detectó cambios en la tarifa vigente al crear el embarque.
+          {tarifaVencida
+            ? "Operaciones detectó que la tarifa vinculada está vencida al crear el embarque."
+            : "Operaciones detectó cambios en la tarifa vigente al crear el embarque."}
           {delta?.conceptos ? ` (${delta.conceptos} concepto(s) afectado(s))` : ""}
         </p>
         <div className="flex gap-2 flex-wrap">

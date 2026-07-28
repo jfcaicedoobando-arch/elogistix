@@ -13,7 +13,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
-import { FACTURA_ESTADOS_VIVOS } from "@/features/facturacion/domain/estadosFactura";
+import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 import {
   buildEstadoResultados,
   type EstadoResultados,

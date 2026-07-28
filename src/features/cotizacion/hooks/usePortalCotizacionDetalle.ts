@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
-import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
-import { calcularSubtotal, calcularIVA } from "@/lib/financial/financialUtils";
-import { fromDb } from "@/lib/supabase/cast";
+import {
+  calcularDesgloseMoneda,
+  parseConceptos,
+} from "@/lib/domain/cotizacionDetalle";
 
 interface CotizacionLike {
   conceptos_venta?: unknown;
@@ -12,27 +13,28 @@ export function usePortalCotizacionDetalle(cot: CotizacionLike | null | undefine
   const tasaIva = useTasaIVA();
 
   return useMemo(() => {
-    const conceptos: ConceptoVentaCotizacion[] = Array.isArray(cot?.conceptos_venta)
-      ? fromDb<ConceptoVentaCotizacion[]>(cot!.conceptos_venta)
-      : [];
+    // B-093: parseo defensivo fila a fila — los conceptos legacy (formato
+    // viejo, sin `total`/`tasa_iva_aplicada`/`descripcion`) ya no rompen el
+    // render ("USDNaN", Total USD $0.00, fila vacía).
+    const conceptos = parseConceptos(cot?.conceptos_venta);
 
     const conceptosUSD = conceptos.filter((c) => c.moneda === "USD");
     const conceptosMXN = conceptos.filter((c) => c.moneda === "MXN");
 
-    const totalUSD = conceptosUSD.reduce((s, c) => s + (c.total || 0), 0);
-    const subtotalMXN = conceptosMXN.reduce(
-      (s, c) => s + calcularSubtotal(c.cantidad, c.precio_unitario),
-      0,
-    );
-    const ivaMXN = conceptosMXN.reduce((s, c) => {
-      const sub = calcularSubtotal(c.cantidad, c.precio_unitario);
-      const tasa = c.tasa_iva_aplicada != null && Number.isFinite(c.tasa_iva_aplicada)
-        ? Number(c.tasa_iva_aplicada)
-        : tasaIva; // MXN siempre aplica IVA (ignora flag aplica_iva)
-      return s + calcularIVA(sub, tasa);
-    }, 0);
-    const totalMXN = subtotalMXN + ivaMXN;
+    // B-081: desglose por moneda — el USD también puede llevar IVA (la tasa
+    // viaja en cada fila) y debe mostrarse desglosado, no escondido en el total.
+    const usd = calcularDesgloseMoneda(conceptosUSD, tasaIva);
+    const mxn = calcularDesgloseMoneda(conceptosMXN, tasaIva, true); // MXN siempre aplica IVA
 
-    return { conceptosUSD, conceptosMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN };
+    return {
+      conceptosUSD,
+      conceptosMXN,
+      subtotalUSD: usd.subtotal,
+      ivaUSD: usd.iva,
+      totalUSD: usd.total,
+      subtotalMXN: mxn.subtotal,
+      ivaMXN: mxn.iva,
+      totalMXN: mxn.total,
+    };
   }, [cot, tasaIva]);
 }

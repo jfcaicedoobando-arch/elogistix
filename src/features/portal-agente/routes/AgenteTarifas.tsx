@@ -4,7 +4,7 @@
  * v13.172.17: migrado de `<Table>` crudo a `DataTable` (Fase 4 homologación).
  * v13.182.0: columnas + `EstadoBadge` extraídos a `_sections/agenteTarifasColumns.tsx`.
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,14 +13,23 @@ import { DataTable } from "@/components/shared/DataTable";
 import { useAgenteTarifas } from "@/features/portal-agente/hooks";
 import { AgenteTarifaForm } from "@/features/portal-agente/components/AgenteTarifaForm";
 import { Plus, FileSpreadsheet } from "lucide-react";
-import type { TarifaInput } from "@/features/costeo/services/tarifas";
+import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
+import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
 import type { AgenteTarifaRow } from "@/features/portal-agente/services";
 import {
   buildAgenteTarifasColumns,
   toInitial,
 } from "./_sections/agenteTarifasColumns";
+import { todayLocalISO } from "@/lib/date/today";
 
 type Filter = "todas" | "borrador" | "vigente" | "rechazada";
+
+/**
+ * B-087 (complementa FIX B-079): vigencia derivada — aprobada + `estado='vigente'`
+ * + no vencida por fecha. Las reemplazadas dejan de contar como vigentes.
+ */
+const esVigenteReal = (t: AgenteTarifaRow, hoy: string) =>
+  t.estado_aprobacion === "vigente" && t.estado === "vigente" && t.vigente_hasta >= hoy;
 
 interface EditorState {
   open: boolean;
@@ -34,17 +43,41 @@ export default function AgenteTarifas() {
   const [filtro, setFiltro] = useState<Filter>("todas");
   const [editor, setEditor] = useState<EditorState>({ open: false, modo: "crear" });
 
-  const filtradas = useMemo(
-    () => filtro === "todas" ? tarifas : tarifas.filter((t) => t.estado_aprobacion === filtro),
-    [tarifas, filtro],
-  );
+  // B-087 (complementa FIX B-079): el tab "Vigente" y su conteo usan el estado
+  // derivado — aprobada + `estado='vigente'` + no vencida por fecha. Las
+  // reemplazadas dejan de contar como vigentes (quedan visibles en "Todas").
+  const hoy = todayLocalISO();
+
+  const filtradas = useMemo(() => {
+    if (filtro === "todas") return tarifas;
+    if (filtro === "vigente") return tarifas.filter((t) => esVigenteReal(t, hoy));
+    return tarifas.filter((t) => t.estado_aprobacion === filtro);
+  }, [tarifas, filtro, hoy]);
+
+  // B-086: antes de abrir el form de duplicar se traen los recargos reales de
+  // la tarifa (BAF/LSS/ISPS...) — la "nueva versión" debe ser fiel. Si la
+  // carga falla, se abre sin recargos (comportamiento anterior).
+  const handleDuplicar = useCallback(async (t: AgenteTarifaRow) => {
+    let recargos: TarifaRecargoInput[] = [];
+    try {
+      const rows = await fetchRecargosDeTarifa(t.id);
+      recargos = rows.map((r) => ({
+        concepto: r.concepto,
+        lado: r.lado === "origen" || r.lado === "destino" ? r.lado : undefined,
+        monto: Number(r.monto),
+        moneda: r.moneda ?? "USD",
+        incluido_en_total: r.incluido_en_total ?? true,
+      }));
+    } catch { /* silencioso: el usuario puede recapturar recargos a mano */ }
+    setEditor({ open: true, modo: "duplicar", initial: toInitial(t, recargos) });
+  }, []);
 
   const columns = useMemo(
     () => buildAgenteTarifasColumns({
       onEditar: (t) => setEditor({ open: true, modo: "editar", tarifaId: t.id, initial: toInitial(t) }),
-      onDuplicar: (t) => setEditor({ open: true, modo: "duplicar", initial: toInitial(t) }),
+      onDuplicar: (t) => { void handleDuplicar(t); },
     }),
-    [],
+    [handleDuplicar],
   );
 
   return (
@@ -73,7 +106,7 @@ export default function AgenteTarifas() {
         <TabsList>
           <TabsTrigger value="todas">Todas ({tarifas.length})</TabsTrigger>
           <TabsTrigger value="borrador">Borrador ({tarifas.filter((t) => t.estado_aprobacion === "borrador").length})</TabsTrigger>
-          <TabsTrigger value="vigente">Vigente ({tarifas.filter((t) => t.estado_aprobacion === "vigente").length})</TabsTrigger>
+          <TabsTrigger value="vigente">Vigente ({tarifas.filter((t) => esVigenteReal(t, hoy)).length})</TabsTrigger>
           <TabsTrigger value="rechazada">Rechazada ({tarifas.filter((t) => t.estado_aprobacion === "rechazada").length})</TabsTrigger>
         </TabsList>
       </Tabs>

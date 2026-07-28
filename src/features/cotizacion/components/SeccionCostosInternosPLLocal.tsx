@@ -87,12 +87,13 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
       dimensiones: dimensionesLCL,
       pesoKg,
       consolidadorNombre: consolidador?.nombre ?? null,
+      markup, // B-075: mismo markup configurable que la rama FCL.
     });
     if (nuevas.length === 0) return;
     setFilas(prev => (prev.length > 0 ? prev : nuevas));
     precargadaLclRef.current = true;
     setLclAutoCargado(true);
-  }, [tipoEmbarque, tarifaId, filas.length, lclFleteManual, dimensionesLCL, pesoKg, proveedores, setFilas]);
+  }, [tipoEmbarque, tarifaId, filas.length, lclFleteManual, dimensionesLCL, pesoKg, proveedores, markup, setFilas]);
 
 
 

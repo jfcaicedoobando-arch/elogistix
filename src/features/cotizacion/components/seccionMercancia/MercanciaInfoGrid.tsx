@@ -56,7 +56,8 @@ export function MercanciaInfoGrid({ cotizacion }: { cotizacion: Cot }) {
       </div>
       <div>
         <span className="text-muted-foreground">Sector Económico</span>
-        <p className="font-medium">{cotizacion.sector_economico || cotizacion.descripcion_mercancia || '-'}</p>
+        {/* B-100: no etiquetar la descripción de la mercancía como "Sector Económico". */}
+        <p className="font-medium">{cotizacion.sector_economico || '-'}</p>
       </div>
       {esTerrestre && (
         <>

@@ -3,12 +3,12 @@ import { DashboardSkeleton } from "@/components/shared/skeletons";
 import {
   usePortalEmbarques,
   usePortalCotizaciones,
-  usePortalFacturas,
   usePortalClientUsers,
   usePortalClienteName,
   usePortalOrgName,
 } from "@/features/portal/hooks";
 import { usePortalDashboardKpis } from "@/features/portal/hooks";
+import { useEstadoCuenta } from "@/features/facturacion/estadoCuenta/hooks/useEstadoCuenta";
 
 import { PortalWelcomeCard } from "@/features/portal/components/dashboard/PortalWelcomeCard";
 import { PortalKpiGrid } from "@/features/portal/components/dashboard/PortalKpiGrid";
@@ -24,16 +24,19 @@ export default function PortalDashboard() {
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
   const { data: embarques = [], isLoading: loadingEmb } = usePortalEmbarques(clienteIds);
   const { data: cotizaciones = [], isLoading: loadingCot } = usePortalCotizaciones(clienteIds);
-  const { data: facturas = [], isLoading: loadingFac } = usePortalFacturas(clienteIds);
+  // B-068/B-076: la tarjeta de Facturación Pendiente se alimenta del MISMO
+  // agregado que el estado de cuenta del portal — saldo real por moneda
+  // (incluye Parcialmente pagada y resta pagos + notas de crédito).
+  const { kpis: kpisCobranza, isLoading: loadingFac } = useEstadoCuenta({
+    clienteIds,
+    soloConSaldo: true,
+  });
 
   const {
     embarquesActivos,
-    facturasPendientes,
     proximosArribos,
     estadoDistribucion,
-    montoFacturasPendientes,
-    facturasVencidas,
-  } = usePortalDashboardKpis(embarques, facturas);
+  } = usePortalDashboardKpis(embarques);
 
   if (loadingEmb || loadingCot || loadingFac) {
     return <DashboardSkeleton kpis={3} charts={2} />;
@@ -47,7 +50,7 @@ export default function PortalDashboard() {
         values={{
           embarques: embarquesActivos.length,
           cotizaciones: cotizaciones.filter((c) => c.estado === "Enviada").length,
-          facturas: facturasPendientes.length,
+          facturas: kpisCobranza.facturasAdeudadas,
         }}
       />
 
@@ -61,9 +64,9 @@ export default function PortalDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <PortalFacturacionPendienteCard
-          monto={montoFacturasPendientes}
-          total={facturasPendientes.length}
-          vencidas={facturasVencidas}
+          montos={kpisCobranza.adeudado}
+          total={kpisCobranza.facturasAdeudadas}
+          vencidas={kpisCobranza.facturasVencidas}
           className="lg:col-span-1"
         />
         <PortalEmbarquesRecientesCard

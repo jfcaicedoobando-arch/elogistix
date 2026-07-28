@@ -11,12 +11,15 @@ import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
 import { PortalCotizacionesMobileFilters } from "@/features/portal/components/PortalCotizacionesMobileFilters";
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
+import { calcularDesgloseMoneda, parseConceptos } from "@/lib/domain/cotizacionDetalle";
 
 export default function PortalCotizaciones() {
   const navigate = useNavigate();
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
   const { data: cotizaciones = [], isLoading } = usePortalCotizaciones(clienteIds);
+  const tasaIva = useTasaIVA();
   const [search, setSearch] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
 
@@ -95,6 +98,14 @@ export default function PortalCotizaciones() {
             const fechaRechazo = (c as { fecha_rechazo?: string | null }).fecha_rechazo ?? null;
             const fechaRespuesta = fechaAceptacion ?? fechaRechazo;
             const fechaRespuestaLabel = fechaAceptacion ? "Aceptada" : fechaRechazo ? "Rechazada" : null;
+            // B-099: mostrar el TOTAL de la moneda de la cotización (subtotal
+            // + IVA por fila), igual que el detalle; fallback al subtotal
+            // crudo si la cotización legacy no trae conceptos parseables.
+            const conceptosMoneda = parseConceptos((c as { conceptos_venta?: unknown }).conceptos_venta)
+              .filter((cv) => cv.moneda === c.moneda);
+            const totalLista = conceptosMoneda.length > 0
+              ? calcularDesgloseMoneda(conceptosMoneda, tasaIva, c.moneda === "MXN").total
+              : Number(c.subtotal ?? 0);
             return (
               <Card
                 key={c.id}
@@ -120,7 +131,8 @@ export default function PortalCotizaciones() {
                         </p>
                         {fechaRespuesta && fechaRespuestaLabel && (
                           <p className="text-2xs text-muted-foreground mt-0.5 tabular-nums">
-                            {fechaRespuestaLabel} el {formatDate(fechaRespuesta, "dd/MM/yyyy HH:mm")}
+                            {/* B-103: fecha date-only → sólo fecha (no "00:00"). */}
+                            {fechaRespuestaLabel} el {formatDate(fechaRespuesta, fechaRespuesta.includes("T") ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy")}
                           </p>
                         )}
                         {tieneEmbarque && (
@@ -140,7 +152,7 @@ export default function PortalCotizaciones() {
                       </div>
                     </div>
                     <p className="text-sm font-bold tabular-nums shrink-0 text-right min-w-[110px]">
-                      {formatCurrency(c.subtotal, c.moneda)}
+                      {formatCurrency(totalLista, c.moneda)}
                     </p>
                   </CardContent>
                 </Link>

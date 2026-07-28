@@ -90,6 +90,29 @@ export function calcularTotalesConceptos(
   return { conceptosVentaUSD, conceptosVentaMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN };
 }
 
+/**
+ * Desglose subtotal/IVA/total de los conceptos de UNA moneda
+ * (B-081/B-093, detalle del portal cliente). La tasa de IVA sale de cada fila
+ * (`tasa_iva_aplicada` > `aplica_iva` + tasa global, vía `resolverTasaConcepto`);
+ * con `ivaSiempre` se reproduce la regla histórica del portal para MXN
+ * ("MXN siempre aplica IVA", ignora el flag `aplica_iva`).
+ */
+export function calcularDesgloseMoneda(
+  conceptos: ConceptoVentaCotizacion[],
+  tasaIva: number,
+  ivaSiempre = false,
+): { subtotal: number; iva: number; total: number } {
+  const subtotal = sumarSubtotales(conceptos, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
+  const iva = sumarMontos(
+    conceptos.map((c) => {
+      const tieneTasaFila = c.tasa_iva_aplicada != null && Number.isFinite(Number(c.tasa_iva_aplicada));
+      const tasaFila = ivaSiempre && !tieneTasaFila ? tasaIva : resolverTasaConcepto(c, tasaIva);
+      return calcularIVA(c.cantidad * c.precio_unitario, tasaFila);
+    }),
+  );
+  return { subtotal, iva, total: subtotal + iva };
+}
+
 /** Construye la etiqueta del destinatario (cliente o prospecto). */
 export function getNombreDestinatario(cotizacion: {
   es_prospecto: boolean;

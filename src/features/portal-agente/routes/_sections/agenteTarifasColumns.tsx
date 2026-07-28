@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { MoreHorizontal } from "lucide-react";
-import type { TarifaInput } from "@/features/costeo/services/tarifas";
+import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
 import type { AgenteTarifaRow } from "@/features/portal-agente/services";
 import { formatNumber } from "@/lib/formatters/numbers";
 
@@ -20,7 +20,7 @@ export function EstadoBadge({ estado }: { estado: string }) {
   return <StatusBadge domain="tarifa_maritima" status={canonical} />;
 }
 
-export function toInitial(t: AgenteTarifaRow): Partial<TarifaInput> {
+export function toInitial(t: AgenteTarifaRow, recargos: TarifaRecargoInput[] = []): Partial<TarifaInput> {
   return {
     agente_id: "",
     naviera_id: t.naviera_id,
@@ -29,8 +29,12 @@ export function toInitial(t: AgenteTarifaRow): Partial<TarifaInput> {
     flete_base: Number(t.flete_base),
     vigente_desde: t.vigente_desde,
     vigente_hasta: t.vigente_hasta,
-    dias_libres_demoras: 7,
-    recargos: [],
+    // B-086: la "nueva versión" debe ser fiel — antes se reseteaban los días
+    // libres a 7 y se perdían TT, notas y TODOS los recargos (BAF/LSS/ISPS).
+    dias_libres_demoras: t.dias_libres_demoras,
+    transit_time_dias: t.transit_time_dias ?? null,
+    notas: t.notas,
+    recargos,
   };
 }
 
@@ -74,6 +78,24 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       accessorFn: (t) => t.tipo_contenedor_nombre,
       enableSorting: true,
       cell: ({ row }) => row.original.tipo_contenedor_nombre,
+    },
+    {
+      id: "transito",
+      header: "Tránsito",
+      accessorFn: (t) => t.transit_time_dias ?? -1,
+      sortingFn: sortByNumber((t) => t.transit_time_dias ?? -1),
+      enableSorting: true,
+      meta: { align: "right", className: "tabular-nums" },
+      cell: ({ row }) => (row.original.transit_time_dias != null ? `${row.original.transit_time_dias} días` : "—"),
+    },
+    {
+      id: "diasLibres",
+      header: "Días libres",
+      accessorFn: (t) => t.dias_libres_demoras,
+      sortingFn: sortByNumber((t) => t.dias_libres_demoras),
+      enableSorting: true,
+      meta: { align: "right", className: "tabular-nums" },
+      cell: ({ row }) => `${row.original.dias_libres_demoras} días`,
     },
     {
       id: "flete",

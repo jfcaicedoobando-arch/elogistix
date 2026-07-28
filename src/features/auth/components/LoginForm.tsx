@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { signInWithEmail, resolveLandingRoute } from "@/features/auth/services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ interface Props {
 
 export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -29,7 +30,14 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
     setLoginError(null);
     try {
       const { role } = await signInWithEmail(email, password);
-      navigate(resolveLandingRoute(role), { replace: true });
+      // B-104: si el guard del portal mandó al login desde un deep-link,
+      // regresar a la ruta pedida — sólo si pertenece al área del rol
+      // (defensa contra open-redirect).
+      const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
+      const destino = role === "cliente" && from?.pathname?.startsWith("/portal")
+        ? `${from.pathname}${from.search ?? ""}`
+        : resolveLandingRoute(role);
+      navigate(destino, { replace: true });
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Error desconocido";
       const friendly = translateAuthError(raw);

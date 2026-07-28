@@ -18,7 +18,8 @@ function FechaRespuesta({ label, fecha }: { label: string; fecha: string }) {
     <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
       <CalendarCheck2 className="h-3.5 w-3.5" />
       <span>
-        {label} el <span className="font-medium tabular-nums">{formatDate(fecha, "dd/MM/yyyy HH:mm")}</span>
+        {/* B-103: fecha de respuesta date-only → sin hora falsa "00:00". */}
+        {label} el <span className="font-medium tabular-nums">{formatDate(fecha, fecha.includes("T") ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy")}</span>
       </span>
     </p>
   );

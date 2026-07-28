@@ -97,6 +97,20 @@ function partesComercialInsert(input: CreateCotizacionInput) {
   };
 }
 
+/**
+ * B-092: parámetros del flete LCL manual (W/M). El mapper del wizard
+ * (`partesLclManual`) y el UPDATE ya los manejan; el INSERT los descartaba
+ * por lista blanca y las columnas quedaban NULL (auditoría W/M degradada).
+ */
+function partesLclInsert(input: CreateCotizacionInput) {
+  return {
+    lcl_tarifa_wm: input.lcl_tarifa_wm ?? null,
+    lcl_minimo_flete: input.lcl_minimo_flete ?? null,
+    lcl_dias_libres_almacenaje: input.lcl_dias_libres_almacenaje ?? null,
+    lcl_consolidador_id: input.lcl_consolidador_id ?? null,
+  };
+}
+
 export function buildCotizacionInsertPayload(
   input: CreateCotizacionInput,
   folio: string,
@@ -108,6 +122,7 @@ export function buildCotizacionInsertPayload(
     ...partesClienteInsert(input),
     ...partesMercanciaInsert(input),
     ...partesComercialInsert(input),
+    ...partesLclInsert(input),
   };
 }
 

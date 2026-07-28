@@ -47,7 +47,11 @@ export default function PortalCotizacionDetalle() {
     );
   }
 
-  const { conceptosUSD, conceptosMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN } = totales;
+  const {
+    conceptosUSD, conceptosMXN,
+    subtotalUSD, ivaUSD, totalUSD,
+    subtotalMXN, ivaMXN, totalMXN,
+  } = totales;
   // cast: comentario_cliente vive en la fila DB pero no en el tipo dominio mínimo
   const comentarioCliente = (cot as { comentario_cliente?: string | null }).comentario_cliente;
 
@@ -77,7 +81,14 @@ export default function PortalCotizacionDetalle() {
       <SeccionMercanciaCotizacionDetalle cotizacion={cot} />
 
       {conceptosUSD.length > 0 && (
-        <TablaConceptosGenerico moneda="USD" conceptos={conceptosUSD} total={totalUSD} />
+        // B-081: el USD también se desglosa (subtotal / IVA / total).
+        <TablaConceptosGenerico
+          moneda="USD"
+          conceptos={conceptosUSD}
+          subtotal={subtotalUSD}
+          iva={ivaUSD}
+          total={totalUSD}
+        />
       )}
 
       {conceptosMXN.length > 0 && (
@@ -90,7 +101,17 @@ export default function PortalCotizacionDetalle() {
         />
       )}
 
-      <ResumenTotalesCotizacion totalUSD={totalUSD} totalMXN={totalMXN} />
+      {(conceptosUSD.length > 0 || conceptosMXN.length > 0) && (
+        // B-101: sin líneas de monedas vacías; B-081: nota coherente.
+        <ResumenTotalesCotizacion
+          totalUSD={totalUSD}
+          totalMXN={totalMXN}
+          mostrarUSD={conceptosUSD.length > 0}
+          mostrarMXN={conceptosMXN.length > 0}
+          ivaUSD={ivaUSD}
+          ivaMXN={ivaMXN}
+        />
+      )}
 
       {cot.notas && (
         <Card>

@@ -6921,12 +6921,10 @@ export type Database = {
         Args: { p_motivo?: string; p_proforma_id: string; p_respuesta: string }
         Returns: Json
       }
-      agente_aprobar_tarifa:
-        | { Args: { _estado: string; _tarifa_id: string }; Returns: undefined }
-        | {
-            Args: { _estado: string; _motivo?: string; _tarifa_id: string }
-            Returns: undefined
-          }
+      agente_aprobar_tarifa: {
+        Args: { _estado: string; _motivo?: string; _tarifa_id: string }
+        Returns: undefined
+      }
       alertas_sistema_pending_count: { Args: never; Returns: number }
       aplicar_anticipo_a_factura: {
         Args: {
@@ -7468,6 +7466,10 @@ export type Database = {
         Args: { p_proforma_ids: string[] }
         Returns: undefined
       }
+      costeo_tarifa_estado_actual: {
+        Args: { p_estado: string; p_vigente_hasta: string }
+        Returns: string
+      }
       cotizaciones_listado: {
         Args: {
           p_cliente_id?: string
@@ -7610,6 +7612,7 @@ export type Database = {
       }
       current_agente_id: { Args: never; Returns: string }
       current_agente_org: { Args: never; Returns: string }
+      current_agente_proveedor_id: { Args: never; Returns: string }
       current_user_client_ids: { Args: never; Returns: string[] }
       current_user_org_id: { Args: never; Returns: string }
       cxc_aging_clientes: {

@@ -15,6 +15,9 @@ export interface CostoCotizacion {
   precio_venta?: number;
   unidad_medida?: string;
   notas?: string;
+  /** B-073: linkage a la tarifa/recargo de costeo (revalidación de precio). */
+  costeo_tarifa_id?: string | null;
+  costeo_tarifa_recargo_id?: string | null;
   created_at: string;
   updated_at: string;
 }
