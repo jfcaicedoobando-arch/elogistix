@@ -73,25 +73,9 @@ export function buildCostosDesdeTarifa({
     });
   }
 
-  for (const r of recargos) {
-    const monto = Number(r.monto ?? 0);
-    if (monto <= 0) continue;
-    const ladoTxt = r.lado ? ` (${r.lado})` : "";
-    filas.push({
-      concepto: `${r.concepto}${ladoTxt}`,
-      moneda: "USD",
-      proveedor,
-      cantidad: qty,
-      costo_unitario: monto,
-      precio_venta: aplicarMarkup(monto, markup),
-      unidad_medida: unidad,
-      aplica_iva: false,
-      notas: "Auto-cargado desde tarifa marítima",
-      // B-073: linkage tarifa + recargo (la RPC compara recargo por recargo).
-      costeo_tarifa_id: tarifa.id ?? null,
-      costeo_tarifa_recargo_id: r.id ?? null,
-    });
-  }
+  filas.push(
+    ...filasDesdeRecargos({ recargos, tarifaId: tarifa.id ?? null, proveedor, qty, unidad, markup }),
+  );
 
   return filas;
 }
