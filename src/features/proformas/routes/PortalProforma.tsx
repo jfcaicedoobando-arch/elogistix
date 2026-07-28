@@ -8,6 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Clock, AlertTriangle, FileSpreadsheet, Loader2 } from "lucide-react";
 import { Seo } from "@/components/shared/Seo";
+import { DetailHeader } from "@/components/shared/DetailHeader";
+
 import { usePortalProforma } from "@/features/proformas/hooks/usePortalProforma";
 import { PortalProformaResumen } from "@/features/proformas/components/portal/PortalProformaResumen";
 import { PortalProformaAcciones } from "@/features/proformas/components/portal/PortalProformaAcciones";
