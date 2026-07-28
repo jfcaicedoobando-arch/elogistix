@@ -10,6 +10,7 @@ import {
   fetchPortalFacturas,
   fetchPortalFactura,
   fetchPortalPagosFactura,
+  fetchPortalNotasCreditoFactura,
   fetchPortalClientUsers,
   fetchPortalClienteName,
   fetchPortalOrgName,
