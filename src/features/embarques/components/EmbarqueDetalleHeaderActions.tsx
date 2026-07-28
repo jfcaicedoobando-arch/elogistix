@@ -9,11 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { AvanzarEstadoButton } from "./header/AvanzarEstadoButton";
 import { ReabrirEmbarqueButton } from "./header/ReabrirEmbarqueButton";
+import { CancelarEmbarqueDialog } from "./header/CancelarEmbarqueDialog";
 
 interface Props {
   expediente: string;
@@ -54,14 +52,9 @@ export function EmbarqueDetalleHeaderActions({
 }: Props) {
   // B-058 (v13.320.39): en estados terminales/cerrados el borrado ya no aplica.
   const esTerminal = ["Entregado", "EIR", "Cerrado", "Cancelado"].includes(estadoVisual);
-  // B-058: "Cancelar" sólo tiene sentido antes de cierre/entrega; una vez que
-  // el embarque ya llegó a estados terminales usamos "Reabrir".
-  const estadosCancelables = ["Borrador", "Confirmado", "En Tránsito", "Llegada", "En Aduana", "Arribo"];
-  const puedeCancelar = estadosCancelables.includes(estadoVisual);
-  // B-058: si hay CxC/CxP pendientes no eliminamos — sólo cancelamos.
+  const puedeCancelar = ["Borrador", "Confirmado", "En Tránsito", "Llegada", "En Aduana", "Arribo"].includes(estadoVisual);
   const puedeEliminar = !esTerminal && !tieneDeudaPendiente;
   const [cancelarOpen, setCancelarOpen] = useState(false);
-  const [motivo, setMotivo] = useState("");
   const navigate = useNavigate();
   const goEditar = () => navigate(`/embarques/${embarqueId}/editar`);
 
@@ -153,36 +146,13 @@ export function EmbarqueDetalleHeaderActions({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-      <ConfirmActionDialog
+      <CancelarEmbarqueDialog
         open={cancelarOpen}
         onOpenChange={setCancelarOpen}
-        title={`Cancelar embarque ${expediente}`}
-        description="Esta acción marca el embarque como Cancelado y detiene el flujo operativo. Documenta el motivo para trazabilidad."
-        variant="destructive"
-        titleIcon={<Ban className="h-4 w-4" />}
-        titleDestructive
-        confirmLabel="Cancelar embarque"
-        cancelLabel="Volver"
+        expediente={expediente}
         isPending={cancelandoEmbarque}
-        confirmDisabled={motivo.trim().length < 5}
-        size="md"
-        onConfirm={async () => {
-          await onCancelar(motivo.trim());
-          setCancelarOpen(false);
-          setMotivo("");
-        }}
-      >
-        <div className="space-y-1">
-          <Label htmlFor="motivo-cancelar">Motivo (mínimo 5 caracteres)</Label>
-          <Textarea
-            id="motivo-cancelar"
-            value={motivo}
-            onChange={(e) => setMotivo(e.target.value)}
-            placeholder="Ej. Cliente canceló la operación por falta de stock en origen."
-            rows={3}
-          />
-        </div>
-      </ConfirmActionDialog>
+        onConfirm={onCancelar}
+      />
     </div>
   );
 }

@@ -22,13 +22,18 @@ describe("queryClient (lib/query)", () => {
 });
 
 describe("shouldDehydrateCatalogQuery", () => {
-  const catalogos = [
-    "puertos", "navieras", "tipos_contenedor", "tasa_iva",
-    "exchange-rates", "configuracion",
-  ];
+  // B-015 (v13.320.41): sólo `tasa_iva` y `exchange-rates` son persistibles.
+  // Los catálogos administrables (puertos/navieras/tipos_contenedor/configuracion)
+  // se removieron porque quedaban congelados en localStorage tras editarlos.
+  const catalogos = ["tasa_iva", "exchange-rates"];
+  const removidos = ["puertos", "navieras", "tipos_contenedor", "configuracion"];
 
   it.each(catalogos)("hidrata '%s' cuando status=success", (key) => {
     expect(shouldDehydrateCatalogQuery([key, "x"], "success")).toBe(true);
+  });
+
+  it.each(removidos)("NO hidrata '%s' (removido por B-015)", (key) => {
+    expect(shouldDehydrateCatalogQuery([key, "x"], "success")).toBe(false);
   });
 
   it("NO hidrata catálogos cuando status != success", () => {
