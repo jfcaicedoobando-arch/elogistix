@@ -68,7 +68,7 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   // B-061: handler de inválidos — el JSON crudo de zod ya no se traga.
   const onInvalid = (errs: FieldErrors<FormValues>) => {
     const first = Object.values(errs)[0];
-    notifyError(toast, {
+    notifyError(undefined, {
       title: "Revisa el formulario",
       description: first?.message?.toString() ?? "Hay campos inválidos o incompletos.",
       method: "ANTICIPO_APLICAR_FORM_INVALID",
