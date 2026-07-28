@@ -68,28 +68,14 @@ DECLARE
   n_funcs int;
 BEGIN
   -- ===================== Seed base =====================
-  -- auth.users: en local es la tabla real de GoTrue (con trigger de
-  -- provisioning) y en CI es la tabla mínima del bootstrap. Desactivamos los
-  -- triggers de usuario si existen para no auto-crear organizaciones.
-  BEGIN
-    EXECUTE 'ALTER TABLE auth.users DISABLE TRIGGER USER';
-  EXCEPTION WHEN OTHERS THEN NULL;
-  END;
-  INSERT INTO auth.users(id, email) VALUES
-    (user_a,  'reg-port-a@test.local'),
-    (user_b,  'reg-port-b@test.local'),
-    (user_ag, 'reg-port-ag@test.local')
-  ON CONFLICT (id) DO NOTHING;
-  BEGIN
-    EXECUTE 'ALTER TABLE auth.users ENABLE TRIGGER USER';
-  EXCEPTION WHEN OTHERS THEN NULL;
-  END;
-
+  -- Nota: estas suites sólo corren en CI, donde `_ci_post_migrate.sql` elimina
+  -- los FK contra auth.users (no hay GoTrue). Por eso no se siembran usuarios.
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'REG PORT A'), (org_b, 'REG PORT B');
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
     (org_a, user_a, 'admin_org'), (org_b, user_b, 'admin_org');
   INSERT INTO public.user_roles(user_id, role) VALUES
     (user_a, 'admin_org'), (user_b, 'admin_org'), (user_ag, 'agente_carga');
+
 
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
