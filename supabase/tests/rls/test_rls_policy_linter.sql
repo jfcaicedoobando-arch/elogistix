@@ -38,14 +38,22 @@ DECLARE
     'demo_leads',                -- landing público
     'folio_secuencias',          -- app-wide
     'idempotency_keys',          -- por user_id
-    'email_send_state'           -- interno edge fn
+    'email_send_state',          -- interno edge fn
+    'facturapi_webhook_eventos'  -- ingest interno de FacturAPI (solo service_role)
   ];
 BEGIN
   FOR r IN
+    -- Sólo BASE TABLE. Las VIEW aparecen en information_schema.columns pero
+    -- las policies se definen sobre las tablas subyacentes; auditarlas aquí
+    -- produce falsos positivos (p.ej. v_*, costeo_tarifas_vigentes_v).
     SELECT c.table_name
       FROM information_schema.columns c
+      JOIN information_schema.tables t
+        ON t.table_schema = c.table_schema
+       AND t.table_name   = c.table_name
      WHERE c.table_schema = 'public'
-       AND c.column_name = 'organization_id'
+       AND c.column_name  = 'organization_id'
+       AND t.table_type   = 'BASE TABLE'
        AND c.table_name NOT LIKE 'pg_%'
        AND c.table_name <> ALL(exempt)
      GROUP BY c.table_name
@@ -65,13 +73,16 @@ BEGIN
       n := n + 1;
     END IF;
 
-    -- Detecta policy explícitamente permisiva (USING true / WITH CHECK true)
-    -- que NO esté acompañada por has_role/service_role.
+    -- Detecta policy PERMISIVA explícitamente permisiva (USING true / WITH CHECK true)
+    -- que NO esté acompañada por has_role/service_role. Las RESTRICTIVE con `true`
+    -- sólo pueden restringir (no expanden acceso) — típico patrón "soft delete
+    -- filter" con qual=(deleted_at IS NULL) y with_check=true.
     FOR r IN
       SELECT p.tablename, p.policyname, p.qual, p.with_check
         FROM pg_policies p
        WHERE p.schemaname = 'public'
          AND p.tablename = r.table_name
+         AND p.permissive = 'PERMISSIVE'
          AND (
               btrim(COALESCE(p.qual,''))       = 'true'
            OR btrim(COALESCE(p.with_check,'')) = 'true'
@@ -82,6 +93,7 @@ BEGIN
       n := n + 1;
     END LOOP;
   END LOOP;
+
 
   IF n > 0 THEN
     RAISE EXCEPTION E'RLS LINTER FAIL: % hallazgo(s):\n%', n, violations;
