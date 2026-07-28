@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.320.56] - 2026-07-28
+- **Sync check**: bump menor de versión para validar que la sincronización Lovable → GitHub sigue activa. Sin cambios funcionales.
+
 ## [13.320.53] - 2026-07-28
 - **Bug bash live · Wave 17 (4 fixes)**:
   - **B-034 · Ganada sin fecha/valor real**: `NuevaOportunidadDialog` y `OportunidadFormFields` ahora exponen `Fecha de cierre real *` y `Valor real` cuando la etapa destino es `tipo="ganada"`, y `handleSubmit` exige la fecha antes de guardar. En el Kanban, soltar en etapa ganada preseteea `fecha_cierre_real=hoy` y `valor_real=monto_estimado` para que el Resumen y el Leaderboard dejen de contradecirse. Analogía: cerrar un trato es como anotar el gol — hoy también apuntamos el minuto y el marcador.
