@@ -113,7 +113,16 @@ describe("portal/queries", () => {
   it("fetchPortalFacturas: ordena por fecha_emision desc", async () => {
     mock.setTableResult("facturas", { data: [{ id: "f1" }], error: null });
     const r = await fetchPortalFacturas(["cli-1"]);
-    expect(r).toEqual([{ id: "f1" }]);
+    // B-106: la fila incluye el fallback `embarque_expediente` (null aquí).
+    expect(r).toEqual([{ id: "f1", embarque_expediente: null }]);
+  });
+
+  it("fetchPortalFacturas (B-106): resuelve expediente del embarque cuando la factura no lo trae", async () => {
+    mock.setTableResult("facturas", { data: [{ id: "f1", expediente: null, embarque_id: "e9" }], error: null });
+    mock.setTableResult("embarques", { data: [{ id: "e9", expediente: "EMB-9" }], error: null });
+    const r = await fetchPortalFacturas(["cli-1"]);
+    expect(r).toEqual([{ id: "f1", expediente: null, embarque_id: "e9", embarque_expediente: "EMB-9" }]);
+    expect(mock.tableCalls.some((c) => c.table === "embarques")).toBe(true);
   });
 
   it("fetchPortalFacturas: filtra por estados vivos (excluye Cancelada/Sustituida)", async () => {
@@ -132,7 +141,8 @@ describe("portal/queries", () => {
   it("fetchPortalFactura: consulta tabla facturas por id", async () => {
     mock.setTableResult("facturas", { data: { id: "f1" }, error: null });
     const r = await fetchPortalFactura("f1");
-    expect(r).toEqual({ id: "f1" });
+    // B-106: la fila incluye el fallback `embarque_expediente` (null aquí).
+    expect(r).toEqual({ id: "f1", embarque_expediente: null });
   });
 
   it("fetchPortalPagosFactura: ordena por fecha_pago desc", async () => {

@@ -18,6 +18,8 @@ import {
   useReemplazarTramos,
   useTiposContenedorDemoras,
 } from "@/features/costeo/hooks/useNavieraCondiciones";
+import { encontrarSolapeTramos } from "@/features/costeo/utils/demorasTramos";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { DemorasTramoInput } from "@/features/costeo/types/navieraCondicion";
 
 interface Props {
@@ -69,6 +71,18 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
 
   const guardar = async () => {
     if (!tipoSel) return;
+    // B-096: el motor resuelve solapes en silencio (desde_dia DESC) — la
+    // captura debe impedirlos; también rangos invertidos (hasta < desde).
+    const solape = encontrarSolapeTramos(rows);
+    if (solape) {
+      notifyError(undefined, {
+        title: solape.invertido
+          ? `El tramo ${solape.i} tiene "hasta día" menor que "desde día"`
+          : `Los tramos ${solape.i} y ${solape.j} se solapan`,
+        description: "Ajusta los rangos para que cada día tenga un solo precio.",
+      });
+      return;
+    }
     const payload: DemorasTramoInput[] = rows.map((r) => ({
       tipo_contenedor_id: tipoSel,
       desde_dia: Number(r.desde_dia) || 1,

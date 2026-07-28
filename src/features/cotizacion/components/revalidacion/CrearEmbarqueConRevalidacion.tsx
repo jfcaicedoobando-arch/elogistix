@@ -140,6 +140,10 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
           cambios: resultado?.cambios ?? [],
           conceptos: resultado?.cambios.length ?? 0,
           max_delta_pct: resultado?.max_delta_pct ?? 0,
+          // B-097: el banner necesita saber si el bloqueo fue por vigencia
+          // vencida o por cambio de precio para mostrar el copy correcto.
+          tarifa_vigente: resultado?.tarifa_vigente ?? true,
+          severidad: resultado?.severidad ?? "bloqueante",
         },
       },
       {

@@ -11,6 +11,8 @@ import { Plus, Trash2 } from "lucide-react";
 import { useDemorasVenta, useDemorasVentaMutations } from "@/features/costeo/hooks/useDemorasVenta";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import type { DemoraVentaTarifaInput } from "@/features/costeo/services/demorasVenta";
+import { tramosSeSolapan, vigenciasSeSolapan } from "@/features/costeo/utils/demorasTramos";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
@@ -45,6 +47,19 @@ export default function CosteoDemorasVenta() {
     e.preventDefault();
     setIntentoEnvio(true);
     if (!form.tipo_contenedor_id || form.monto_por_dia_usd < 0) return;
+    // B-096: impedir tramos solapados con los vigentes del mismo contenedor.
+    const solapada = tarifas.find((t) =>
+      t.tipo_contenedor_id === form.tipo_contenedor_id &&
+      tramosSeSolapan(t, form) &&
+      vigenciasSeSolapan(t.vigente_desde, t.vigente_hasta, form.vigente_desde, form.vigente_hasta),
+    );
+    if (solapada) {
+      notifyError(undefined, {
+        title: "El tramo se solapa con uno existente",
+        description: `Ya hay un tramo días ${solapada.desde_dia}–${solapada.hasta_dia ?? "∞"} para este contenedor en vigencias traslapadas. Ajusta el rango o la vigencia.`,
+      });
+      return;
+    }
     await crear.mutateAsync(form);
     setForm(EMPTY);
     setIntentoEnvio(false);

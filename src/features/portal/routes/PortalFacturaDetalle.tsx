@@ -10,6 +10,7 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
 import { ROUTES } from "@/constants/routes";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { resolverEstadoFacturaCliente } from "@/features/facturacion/domain/estadosFactura";
 import { openFacturaInNewTab } from "@/services/storage";
 import PortalFacturaResumenCard from "@/features/portal/components/factura/PortalFacturaResumenCard";
 import PortalFacturaConceptosTable from "@/features/portal/components/factura/PortalFacturaConceptosTable";
@@ -46,7 +47,9 @@ export default function PortalFacturaDetalle() {
     );
   }
 
-  const vencida = factura.estado === "Vencida";
+  // B-083: misma clasificación que el estado de cuenta y la lista del portal.
+  const estadoVisible = resolverEstadoFacturaCliente(factura.estado, factura.fecha_vencimiento);
+  const vencida = estadoVisible === "Vencida";
 
   return (
     <div className="space-y-5">
@@ -57,12 +60,12 @@ export default function PortalFacturaDetalle() {
         title={<span className="font-mono tabular-nums">{factura.numero}</span>}
         subtitle={
           <>
-            {factura.cliente_nombre} • Exp: <span className="font-mono">{factura.expediente}</span>
+            {factura.cliente_nombre} • Exp: <span className="font-mono">{factura.expediente || (factura as { embarque_expediente?: string | null }).embarque_expediente || "—"}</span>
           </>
         }
         badge={
           <>
-            <Badge className={`${getEstadoColor(factura.estado)} text-xs`}>{factura.estado}</Badge>
+            <Badge className={`${getEstadoColor(estadoVisible)} text-xs`}>{estadoVisible}</Badge>
             {vencida && <AlertTriangle className="h-4 w-4 text-destructive" />}
           </>
         }
@@ -110,7 +113,11 @@ export default function PortalFacturaDetalle() {
 
       <PortalFacturaResumenCard factura={factura} />
 
-      <PortalFacturaConceptosTable snapshot={factura.snapshot_emision} moneda={factura.moneda} />
+      <PortalFacturaConceptosTable
+        snapshot={factura.snapshot_emision}
+        moneda={factura.moneda}
+        pdfDisponible={Boolean(factura.factura_pdf_url)}
+      />
 
       <PortalFacturaPagosCard
         facturaId={factura.id}

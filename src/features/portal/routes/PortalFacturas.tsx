@@ -4,6 +4,7 @@ import { PageSkeleton } from "@/components/shared/skeletons";
 import { usePortalFacturas, usePortalClientUsers } from "@/features/portal/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { resolverEstadoFacturaCliente } from "@/features/facturacion/domain/estadosFactura";
 import { Receipt, AlertTriangle, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -31,7 +32,7 @@ export default function PortalFacturas() {
         const q = search.toLowerCase();
         return (
           f.numero.toLowerCase().includes(q) ||
-          f.expediente.toLowerCase().includes(q)
+          (f.expediente ?? "").toLowerCase().includes(q)
         );
       }
       return true;
@@ -87,7 +88,11 @@ export default function PortalFacturas() {
         />
       ) : (
         <div className="grid gap-3">
-          {facturas.length > 0 && filtered.map((f) => (
+          {facturas.length > 0 && filtered.map((f) => {
+            // B-083: misma clasificación que el estado de cuenta — una
+            // Emitida/Parcialmente pagada ya vencida se muestra "Vencida".
+            const estadoVisible = resolverEstadoFacturaCliente(f.estado, f.fecha_vencimiento);
+            return (
             <Card key={f.id} className="transition-all hover:shadow-raised hover:border-accent/40 focus-within:ring-2 focus-within:ring-accent/40">
               <Link
                 to={`/portal/facturas/${f.id}`}
@@ -96,16 +101,16 @@ export default function PortalFacturas() {
               >
                 <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Badge className={`${getEstadoColor(f.estado)} text-xs shrink-0`}>
-                      {f.estado}
+                    <Badge className={`${getEstadoColor(estadoVisible)} text-xs shrink-0`}>
+                      {estadoVisible}
                     </Badge>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm font-mono tabular-nums">{f.numero}</p>
-                        {f.estado === "Vencida" && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                        {estadoVisible === "Vencida" && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">
-                        Exp: <span className="font-mono">{f.expediente}</span> • Emisión: {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
+                        Exp: <span className="font-mono">{f.expediente || (f as { embarque_expediente?: string | null }).embarque_expediente || "—"}</span> • Emisión: {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
                       </p>
                       <p className="text-2xs text-muted-foreground mt-0.5">
                         Vence: {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
@@ -121,7 +126,8 @@ export default function PortalFacturas() {
                 </CardContent>
               </Link>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
