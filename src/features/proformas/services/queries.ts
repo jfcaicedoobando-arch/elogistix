@@ -17,6 +17,10 @@ export async function fetchProformasEmbarque(embarqueId: string): Promise<Profor
         .from("proformas")
         .select("*, facturas:factura_id(factura_pdf_url, factura_xml_url)")
         .eq("embarque_id", embarqueId)
+        // Las proformas en papelera (`deleted_at`) no deben listarse: se veían
+        // como vivas y al intentar borrarlas de nuevo el RPC respondía
+        // "Registro no encontrado o ya borrado".
+        .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       [],
     ),
@@ -37,6 +41,9 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
         ].join(", "),
       )
       .eq("id", id)
+      // Una proforma en papelera se trata como inexistente en el detalle; la
+      // recuperación vive en `/admin/papelera`.
+      .is("deleted_at", null)
       .maybeSingle(),
   );
   if (!data) return null;
@@ -51,6 +58,7 @@ export async function fetchProformasAprobadas(organizationId: string): Promise<P
         .select("*, facturas:factura_id(factura_pdf_url, factura_xml_url)")
         .eq("organization_id", organizationId)
         .eq("estado_revision", "aprobada")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       [],
     ),
@@ -69,11 +77,13 @@ export async function fetchProformasTodas(organizationId: string): Promise<Profo
         .from("proformas")
         .select("*, facturas:factura_id(factura_pdf_url, factura_xml_url)")
         .eq("organization_id", organizationId)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       [],
     ),
   );
 }
+
 
 export async function fetchProformasPendientes(
   organizationId: string,
