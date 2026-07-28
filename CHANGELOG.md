@@ -1,7 +1,16 @@
 # Changelog
 
+## [13.320.57] - 2026-07-28
+- **Lint · 8 errores resueltos**:
+  - `AplicarAnticipoDialog.tsx` y `RegistrarAnticipoDialog.tsx`: se quitó el import directo de `sonner`; ahora usan `notifyError(undefined, …)` de `@/lib/ui/appFeedback`.
+  - `SeccionMercanciaMaritimaFCL.tsx`: import de `TIPOS_CONTENEDOR_DEFAULT` migrado a `@/lib/domain/tiposContenedorDefault` (el archivo bajo `features/catalogos/domain/` queda como reexport compat).
+  - `cotizacion.ts` mapper: `partesMercancia` reducido extrayendo `partesMercanciaMaritimo` (complexity 17 → OK).
+  - `DialogRegistrarPagoProveedor.tsx`: extracción de `validarPago()` y `computeSubmitTitle()` (complexity 18 → OK).
+  - `useActividadEmbarque.ts`: arrow del `useMemo` partido en `mapNotas`/`mapEventos`/`mapBitacora`/`dedupCreacion` (complexity 19 → OK).
+  - `useEmbarqueEstadoActions.helpers.ts`: `faltantesParaConfirmado` delegado a `faltantesMaritimo` y `faltantesAereo` (complexity 20 → OK).
+  - `TesoreriaPagosProgramados.tsx`: queryKey inline movido a `tesoreriaKeys.pagosProgramables` en `src/features/tesoreria/queryKeys.ts`.
+
 ## [13.320.56] - 2026-07-28
-- **Sync check**: bump menor de versión para validar que la sincronización Lovable → GitHub sigue activa. Sin cambios funcionales.
 
 ## [13.320.53] - 2026-07-28
 - **Bug bash live · Wave 17 (4 fixes)**:
