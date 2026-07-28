@@ -119,22 +119,9 @@ function SinDatosBancarios({ onCapturar }: { onCapturar?: () => void }) {
  * con toggle reveal) o el internacional (SWIFT/IBAN/ABA/etc.) según el origen
  * del proveedor o los datos presentes.
  */
-export function ProveedorDatosBancariosCard({
-  banco,
-  clabe,
-  origen,
-  bancoPais,
-  swiftBic,
-  iban,
-  abaRouting,
-  bancoDireccion,
-  bancoIntermediario,
-  bancoIntermediarioSwift,
-  beneficiario,
-  referenciaPago,
-  onCapturar,
-}: Props) {
-  const [revealClabe, setRevealClabe] = useState(false);
+export function ProveedorDatosBancariosCard(props: Props) {
+  const { banco, clabe, origen, swiftBic, iban, abaRouting, bancoPais,
+    bancoIntermediario, beneficiario, onCapturar } = props;
   const tieneDatosIntl = !!(swiftBic || iban || abaRouting || bancoPais || bancoIntermediario);
   const esInternacional = origen === "Extranjero" || tieneDatosIntl;
   const sinDatos = !banco && !clabe && !tieneDatosIntl && !beneficiario;
@@ -155,69 +142,17 @@ export function ProveedorDatosBancariosCard({
         </CardTitle>
       </CardHeader>
       {sinDatos ? (
-        <CardContent className="text-sm">
-          <p className="text-muted-foreground">
-            Este proveedor todavía no tiene datos bancarios capturados. Sin ellos no se
-            puede registrar el pago.
-          </p>
-          {onCapturar && (
-            <Button variant="outline" size="sm" className="mt-3" onClick={onCapturar}>
-              Capturar datos bancarios
-            </Button>
+        <SinDatosBancarios onCapturar={onCapturar} />
+      ) : (
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          {esInternacional ? (
+            <BloqueInternacional {...props} />
+          ) : (
+            <BloqueNacional banco={banco} clabe={clabe} />
           )}
         </CardContent>
-      ) : (
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        {!esInternacional && (
-          <>
-            <Row label="Banco" value={banco} />
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">CLABE interbancaria</p>
-              {clabe ? (
-                <div className="flex items-center gap-2">
-                  <span className="font-mono tabular-nums tracking-wider">{maskClabe(clabe, revealClabe)}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => setRevealClabe((v) => !v)}
-                    aria-label={revealClabe ? "Ocultar CLABE" : "Mostrar CLABE"}
-                  >
-                    {revealClabe ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </Button>
-                </div>
-              ) : (
-                <p className="text-muted-foreground italic">No capturado</p>
-              )}
-            </div>
-          </>
-        )}
-
-        {esInternacional && (
-          <>
-            <Row label="Beneficiario" value={beneficiario} />
-            <Row label="Banco" value={banco} />
-            <Row label="País del banco" value={bancoPais} />
-            <Row label="SWIFT / BIC" value={swiftBic} mono />
-            <Row label="IBAN / Cuenta" value={iban} mono />
-            <Row label="ABA / Routing" value={abaRouting} mono />
-            <Row label="Banco intermediario" value={bancoIntermediario} />
-            <Row label="SWIFT intermediario" value={bancoIntermediarioSwift} mono />
-            {bancoDireccion && (
-              <div className="md:col-span-2">
-                <Row label="Dirección del banco" value={bancoDireccion} />
-              </div>
-            )}
-            {referenciaPago && (
-              <div className="md:col-span-2">
-                <Row label="Referencia / notas" value={referenciaPago} />
-              </div>
-            )}
-          </>
-        )}
-      </CardContent>
       )}
+
     </Card>
 
   );
