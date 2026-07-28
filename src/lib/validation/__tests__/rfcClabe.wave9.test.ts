@@ -67,19 +67,19 @@ const baseProv: NuevoProveedorForm = {
 } as unknown as NuevoProveedorForm;
 
 describe("CLABE dígito verificador (B-025)", () => {
-  it("acepta CLABE válida (BBVA ejemplo real: 012180001234567897)", () => {
-    // dv calculado con pesos 3-7-1: verificado manualmente.
-    const clabeValida = "002180057800110020";
+  it("acepta CLABE con dígito verificador correcto (DV=9 calculado con pesos 3-7-1)", () => {
+    const clabeValida = "002180057800110029";
     const res = preparePayload({ ...baseProv, clabe: clabeValida });
     expect(res.ok).toBe(true);
   });
 
   it("rechaza CLABE con dígito verificador inválido", () => {
-    // Última cifra alterada a propósito.
-    const res = preparePayload({ ...baseProv, clabe: "002180057800110029" });
+    // DV correcto es 9; usar 0 fuerza rechazo.
+    const res = preparePayload({ ...baseProv, clabe: "002180057800110020" });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.motivo).toBe("clabe");
   });
+
 
   it("rechaza CLABE con menos de 18 dígitos (regex previo)", () => {
     const res = preparePayload({ ...baseProv, clabe: "12345" });
