@@ -40,6 +40,8 @@ export type ProformaClienteFull = {
   ciudad: string | null;
   estado: string | null;
   cp: string | null;
+  /** Días de crédito pactados en el catálogo de clientes (fallback). */
+  dias_credito?: number | null;
 };
 
 export type ProformaEmbarqueFull = {
