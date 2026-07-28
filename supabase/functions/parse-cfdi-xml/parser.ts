@@ -31,9 +31,29 @@ export interface CfdiParsed {
 
 const ATTR = (name: string) => new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, "i");
 
+/**
+ * v13.320.62 — Decodifica entidades XML en valores de atributo.
+ *
+ * Bug real: un RFC como `AL&0807074L5` viaja en el CFDI como
+ * `Rfc="AL&amp;0807074L5"`. Antes guardábamos el literal `AL&amp;0807074L5`,
+ * lo que rompía la consulta de estatus al SAT (devolvía "Error").
+ * Aplica a RFC, Nombre, Descripcion, Serie, Folio y cualquier texto.
+ */
+export function decodeXmlEntities(raw: string): string {
+  return raw
+    .replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    // `&amp;` va al final para no re-decodificar secuencias generadas arriba.
+    .replace(/&amp;/g, "&");
+}
+
 function attr(tag: string, name: string): string {
   const m = tag.match(ATTR(name));
-  return m ? m[1].trim() : "";
+  return m ? decodeXmlEntities(m[1]).trim() : "";
 }
 
 /**

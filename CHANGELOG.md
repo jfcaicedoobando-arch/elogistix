@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.320.62] - 2026-07-28
+- **Fix: "SAT no devolvió un estatus válido" al verificar UUID de facturas de proveedor** (`/compras/por-aprobar`, `FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT`). Analogía: el RFC del proveedor `AL&0807074L5` se guardó con el "&" en clave secreta de XML (`&amp;`) y luego se mandó al SAT sin traducir; el SAT recibía un sobre roto y contestaba con un error que la app no sabía leer.
+  - `parse-cfdi-xml/parser.ts`: nuevo `decodeXmlEntities()` aplicado en `attr()` — ahora los atributos del CFDI (RFC, nombre, serie, descripciones) se decodifican (`&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&#xNN;`). +2 tests de regresión (26/26 verdes).
+  - `verificar-uuid-sat/index.ts`: se escapan los valores antes de armar el sobre SOAP (`escapeXmlValue`), se normaliza el RFC leído de BD (`normalizarRfc`) y el regex de respuesta acepta cualquier prefijo de namespace (`<a:Estado>`, `<Estado>`, `<ns1:Estado>`). Verificado contra el WS real del SAT: sin escape → `DeserializationFailed`; con escape → respuesta válida.
+  - `useVerificarUuidSat.ts`: el toast ahora muestra el texto crudo del SAT (ej. `N - 601: La expresión impresa proporcionada no es válida`) en vez del mensaje genérico.
+  - Backfill de datos: 2 facturas de proveedor con RFC `AL&amp;0807074L5` corregidas a `AL&0807074L5` y su verificación SAT reseteada para poder reintentarla.
+
+
 ## [13.320.61] - 2026-07-28
 - **CI verde: se reparó el fallout del `knip --fix` (logs `82225517241`)**. Fallaban `typecheck` y `knip strict`; el resto de jobs ya estaba en verde.
   - **46 errores de TypeScript (TS6133/TS6196)**: al quitar los `export type { … }` de re-exportación, quedaron `import type` huérfanos en 25 archivos (`useAdminData`, `useFacturas`, `useProveedores`, `useNotasCredito`, `useHuecoFacturacion`, `usePortalBreadcrumbs`, etc.). Analogía: knip quitó el letrero de salida de la bodega, pero las cajas siguieron llegando sin destinatario. Se eliminaron los especificadores muertos y los `;` sueltos que dejó el fix automático.
