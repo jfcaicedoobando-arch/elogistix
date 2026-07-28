@@ -2,6 +2,7 @@ import { Pencil, FileText, Loader2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { DetailNotFound } from "@/components/shared/DetailNotFound";
 
 interface Cliente {
   id: string;

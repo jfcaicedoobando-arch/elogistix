@@ -55,7 +55,7 @@ export default function ClienteDetalle() {
   useRegisterBreadcrumbLabel(id, cliente?.nombre);
 
   if (loadingCliente) return <ClienteLoadingState />;
-  if (!cliente) return <ClienteNotFoundState onBack={() => navigate("/clientes")} />;
+  if (!cliente) return <ClienteNotFoundState />;
 
   return (
     <PageContainer>
