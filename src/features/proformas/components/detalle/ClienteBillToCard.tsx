@@ -1,16 +1,19 @@
 /**
  * Card "Facturar a" con los datos completos del cliente (RFC + dirección).
- * Fallback al `cliente_nombre` de la proforma cuando no hay `cliente_full`.
+ * Enlaza al expediente del cliente cuando conocemos su id.
  */
+import { Link } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ProformaClienteFull } from "@/features/proformas/services";
 
 interface Props {
   cliente: ProformaClienteFull | null;
   clienteNombreFallback: string;
+  clienteId?: string | null;
 }
 
-export function ClienteBillToCard({ cliente, clienteNombreFallback }: Props) {
+export function ClienteBillToCard({ cliente, clienteNombreFallback, clienteId }: Props) {
   const nombre = cliente?.nombre?.trim() || clienteNombreFallback;
   const rfc = cliente?.rfc?.trim() || null;
   const partes = cliente
@@ -20,8 +23,16 @@ export function ClienteBillToCard({ cliente, clienteNombreFallback }: Props) {
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Facturar a</CardTitle>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
+        <CardTitle className="text-base font-semibold">Facturar a</CardTitle>
+        {clienteId && (
+          <Link
+            to={`/clientes/${clienteId}`}
+            className="text-xs text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+          >
+            Ver cliente <ExternalLink className="h-3 w-3" />
+          </Link>
+        )}
       </CardHeader>
       <CardContent className="text-sm space-y-2">
         <p className="font-medium break-words" title={nombre}>{nombre}</p>

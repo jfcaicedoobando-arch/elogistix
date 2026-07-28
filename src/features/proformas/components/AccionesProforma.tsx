@@ -10,7 +10,7 @@
  */
 import { useState } from "react";
 import {
-  Download, Ship, Receipt, Mail, CheckCircle2, XCircle, AlertTriangle,
+  Download, Ship, Receipt, Mail, CheckCircle2, XCircle, AlertTriangle, Link2, Eye,
 } from "lucide-react";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
@@ -24,8 +24,9 @@ import {
 } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { usePermissions } from "@/hooks/shared";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatCurrency } from "@/lib/formatters";
+import { resolverDiasCredito } from "@/features/proformas/domain/proformaDetalleHelpers";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
@@ -83,7 +84,10 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     convertir({
       proformaIds: [proforma.id],
       organizationId: proforma.organization_id,
-      diasCredito: proforma.dias_credito ?? 0,
+      diasCredito: resolverDiasCredito(
+        proforma.dias_credito,
+        proforma.cliente_full?.dias_credito,
+      ).dias ?? 0,
     });
 
   const onConvertir = async () => {
@@ -144,6 +148,23 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   }
 
   const more: DetalleActionItem[] = [];
+  // SAFE-CAST: columna pública generada al enviar la proforma; los tipos
+  // generados aún no la incluyen.
+  const tokenPublico = (proforma as unknown as { token_publico?: string | null }).token_publico ?? null;
+  if (tokenPublico) {
+    const rutaPortal = `/portal/proformas/${tokenPublico}`;
+    const ligaPortal = `${window.location.origin}${rutaPortal}`;
+    more.push({
+      id: "copiar-liga", label: "Copiar liga del portal", icon: Link2,
+      onClick: () => {
+        void navigator.clipboard.writeText(ligaPortal).then(
+          () => notifySuccess(undefined, { title: "Liga del portal copiada" }),
+          (err) => notifyError(undefined, { title: "No se pudo copiar la liga", error: err }),
+        );
+      },
+    });
+    more.push({ id: "ver-portal", label: "Ver como cliente", icon: Eye, href: rutaPortal });
+  }
   if (proforma.embarque_id) {
     more.push({
       id: "embarque", label: "Ver embarque", icon: Ship,

@@ -48,3 +48,46 @@ export function resolverUbicacion(
 ): string {
   return puerto?.trim() || aeropuerto?.trim() || ciudad?.trim() || "—";
 }
+
+export interface DiasCreditoResuelto {
+  /** Días efectivos a usar (proforma > cliente > null). */
+  dias: number | null;
+  /** `true` cuando el valor proviene del catálogo de clientes. */
+  heredado: boolean;
+}
+
+/**
+ * Resuelve los días de crédito de una proforma: usa el valor capturado en la
+ * proforma y, si no existe, hereda el del cliente marcando el origen para que
+ * la UI pueda mostrar el badge "Heredado del cliente".
+ */
+export function resolverDiasCredito(
+  diasProforma: number | null | undefined,
+  diasCliente: number | null | undefined,
+): DiasCreditoResuelto {
+  if (typeof diasProforma === "number" && Number.isFinite(diasProforma)) {
+    return { dias: diasProforma, heredado: false };
+  }
+  if (typeof diasCliente === "number" && Number.isFinite(diasCliente)) {
+    return { dias: diasCliente, heredado: true };
+  }
+  return { dias: null, heredado: false };
+}
+
+export interface EnvioLite {
+  created_at: string;
+  estado?: string | null;
+}
+
+export interface ResumenEnvios {
+  total: number;
+  ultimoAt: string | null;
+}
+
+/** Resume los envíos por correo de una proforma (total + fecha del último). */
+export function resumirEnvios(envios: EnvioLite[] | null | undefined): ResumenEnvios {
+  const lista = envios ?? [];
+  if (lista.length === 0) return { total: 0, ultimoAt: null };
+  const ultimo = lista.reduce((max, e) => (e.created_at > max ? e.created_at : max), lista[0].created_at);
+  return { total: lista.length, ultimoAt: ultimo };
+}

@@ -36,7 +36,8 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
           "*",
           "facturas:factura_id(factura_pdf_url, factura_xml_url)",
           "facturas_asociadas:facturas!proforma_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url, deleted_at, created_at)",
-          "cliente_full:cliente_id(nombre, rfc, direccion, ciudad, estado, cp)",
+          "cliente_full:cliente_id(nombre, rfc, direccion, ciudad, estado, cp, dias_credito)",
+          "envios:proforma_envios(created_at, estado, destinatarios)",
           "embarque_full:embarque_id(modo, tipo, incoterm, bl_house, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, descripcion_mercancia, contenedores:embarque_contenedores(numero_contenedor, tipo_contenedor))",
         ].join(", "),
       )

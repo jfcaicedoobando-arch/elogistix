@@ -3,6 +3,8 @@ import {
   vigenciaPlus30,
   resumirContenedores,
   resolverUbicacion,
+  resolverDiasCredito,
+  resumirEnvios,
 } from "@/features/proformas/domain/proformaDetalleHelpers";
 
 describe("proformaDetalleHelpers", () => {
@@ -45,5 +47,40 @@ describe("proformaDetalleHelpers", () => {
     expect(resolverUbicacion(null, null, "Guadalajara")).toBe("Guadalajara");
     expect(resolverUbicacion(null, null, null)).toBe("—");
     expect(resolverUbicacion("  ", "  ", "CDMX")).toBe("CDMX");
+  });
+});
+
+describe("resolverDiasCredito", () => {
+  it("usa los días de la proforma cuando existen", () => {
+    expect(resolverDiasCredito(15, 30)).toEqual({ dias: 15, heredado: false });
+  });
+
+  it("respeta el contado (0) de la proforma sin heredar", () => {
+    expect(resolverDiasCredito(0, 30)).toEqual({ dias: 0, heredado: false });
+  });
+
+  it("hereda del cliente cuando la proforma no tiene días", () => {
+    expect(resolverDiasCredito(null, 30)).toEqual({ dias: 30, heredado: true });
+  });
+
+  it("devuelve null cuando no hay dato en ninguno", () => {
+    expect(resolverDiasCredito(undefined, null)).toEqual({ dias: null, heredado: false });
+  });
+});
+
+describe("resumirEnvios", () => {
+  it("devuelve vacío sin envíos", () => {
+    expect(resumirEnvios([])).toEqual({ total: 0, ultimoAt: null });
+    expect(resumirEnvios(null)).toEqual({ total: 0, ultimoAt: null });
+  });
+
+  it("cuenta envíos y toma el más reciente", () => {
+    expect(
+      resumirEnvios([
+        { created_at: "2026-07-01T10:00:00Z" },
+        { created_at: "2026-07-05T10:00:00Z" },
+        { created_at: "2026-07-03T10:00:00Z" },
+      ]),
+    ).toEqual({ total: 3, ultimoAt: "2026-07-05T10:00:00Z" });
   });
 });

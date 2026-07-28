@@ -2,6 +2,8 @@
  * Card "Datos del embarque" — modo, tipo, incoterm, ruta, contenedores y
  * descripción de mercancía. Se oculta si la proforma no tiene embarque.
  */
+import { Link } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   resumirContenedores,
@@ -11,6 +13,8 @@ import type { ProformaEmbarqueFull } from "@/features/proformas/services";
 
 interface Props {
   embarque: ProformaEmbarqueFull | null;
+  embarqueId?: string | null;
+  expediente?: string | null;
 }
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
@@ -22,7 +26,7 @@ function Field({ label, value }: { label: string; value: string | null | undefin
   );
 }
 
-export function EmbarqueDatosCard({ embarque }: Props) {
+export function EmbarqueDatosCard({ embarque, embarqueId, expediente }: Props) {
   if (!embarque) return null;
   const origen = resolverUbicacion(embarque.puerto_origen, embarque.aeropuerto_origen, embarque.ciudad_origen);
   const destino = resolverUbicacion(embarque.puerto_destino, embarque.aeropuerto_destino, embarque.ciudad_destino);
@@ -32,8 +36,18 @@ export function EmbarqueDatosCard({ embarque }: Props) {
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Datos del embarque</CardTitle>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
+        <CardTitle className="text-base font-semibold truncate">
+          Embarque{expediente ? ` ${expediente}` : ""}
+        </CardTitle>
+        {embarqueId && (
+          <Link
+            to={`/embarques/${embarqueId}?tab=facturacion`}
+            className="text-xs text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+          >
+            Ver embarque <ExternalLink className="h-3 w-3" />
+          </Link>
+        )}
       </CardHeader>
       <CardContent className="text-sm space-y-3">
         <div className="grid grid-cols-3 gap-3">

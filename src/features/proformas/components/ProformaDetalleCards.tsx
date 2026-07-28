@@ -113,31 +113,6 @@ export function FacturaAsociadaCard({ facturas }: { facturas: FacturaAsociada[] 
 }
 
 
-export function TotalesCard({ totales }: { totales: Totales }) {
-  const hasUsd = totales.subtotal_usd > 0;
-  const hasMxn = totales.subtotal_mxn > 0;
-  if (!hasUsd && !hasMxn) return null;
-  return (
-    <Card>
-      <CardHeader className="pb-2"><CardTitle className="text-lg">Totales</CardTitle></CardHeader>
-      <CardContent className="grid grid-cols-2 gap-6 text-sm">
-        {hasUsd && (
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground font-medium">USD</p>
-            <div className="flex justify-between"><span>Subtotal</span><span className="tabular-nums">{formatCurrency(totales.subtotal_usd, "USD")}</span></div>
-            <div className="flex justify-between"><span>IVA</span><span className="tabular-nums">{formatCurrency(totales.iva_usd, "USD")}</span></div>
-            <div className="flex justify-between font-bold border-t pt-1"><span>Total</span><span className="tabular-nums text-accent">{formatCurrency(totales.total_usd, "USD")}</span></div>
-          </div>
-        )}
-        {hasMxn && (
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground font-medium">MXN</p>
-            <div className="flex justify-between"><span>Subtotal</span><span className="tabular-nums">{formatCurrency(totales.subtotal_mxn, "MXN")}</span></div>
-            <div className="flex justify-between"><span>IVA</span><span className="tabular-nums">{formatCurrency(totales.iva_mxn, "MXN")}</span></div>
-            <div className="flex justify-between font-bold border-t pt-1"><span>Total</span><span className="tabular-nums text-accent">{formatCurrency(totales.total_mxn, "MXN")}</span></div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+// Los totales viven ahora al pie de la tabla de conceptos
+// (`ProformaConceptosCard`), evitando duplicar el total del header.
+
