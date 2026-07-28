@@ -29,16 +29,38 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
  * deprecado).
  */
 const ESTADOS_QUE_AVANZAN_A_ARRIBO = new Set(["En Tránsito", "En Proceso"]);
+const ESTADOS_QUE_ADMITEN_LLEGADA = new Set([
+  "En Tránsito", "En Proceso", "Arribo", "En Aduana", "Entregado", "EIR", "Cerrado",
+]);
 
+/**
+ * v13.320.36 (B-017) — Guardas de negocio para marcar llegada real:
+ *   1. No permite fechas anteriores al ETD (arribar antes de zarpar).
+ *   2. No permite re-marcar una llegada real ya capturada.
+ *   3. Sólo estados en tránsito o posteriores admiten llegada.
+ */
 export async function actualizarFechaLlegadaRealEmbarque(
   embarqueId: string,
   fechaIso: string,
 ): Promise<void> {
   const { data: current } = await supabase
     .from('embarques')
-    .select('estado')
+    .select('estado, etd, fecha_llegada_real')
     .eq('id', embarqueId)
     .maybeSingle();
+  if (current?.fecha_llegada_real) {
+    throw new Error("Este embarque ya tiene una fecha de llegada real capturada.");
+  }
+  if (current?.estado && !ESTADOS_QUE_ADMITEN_LLEGADA.has(current.estado)) {
+    throw new Error(
+      `No se puede marcar llegada real en estado "${current.estado}". Confirma y pon en tránsito el embarque primero.`,
+    );
+  }
+  if (current?.etd && fechaIso < current.etd) {
+    throw new Error(
+      `La fecha de llegada real (${fechaIso}) no puede ser anterior al ETD (${current.etd}).`,
+    );
+  }
   const debeAvanzar = current?.estado
     ? ESTADOS_QUE_AVANZAN_A_ARRIBO.has(current.estado)
     : false;
