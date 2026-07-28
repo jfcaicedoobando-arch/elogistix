@@ -33,6 +33,45 @@ const aplicarMarkup = (costo: number, markup: number): number => {
   return Math.round(costo * factor * 100) / 100;
 };
 
+/** Filas de costo derivadas de los recargos de la tarifa (B-073: con linkage). */
+function filasDesdeRecargos({
+  recargos,
+  tarifaId,
+  proveedor,
+  qty,
+  unidad,
+  markup,
+}: {
+  recargos: BuildCostosDesdeTarifaArgs["recargos"];
+  tarifaId: string | null;
+  proveedor: string;
+  qty: number;
+  unidad: string;
+  markup: number;
+}): FilaCostoLocal[] {
+  const filas: FilaCostoLocal[] = [];
+  for (const r of recargos) {
+    const monto = Number(r.monto ?? 0);
+    if (monto <= 0) continue;
+    const ladoTxt = r.lado ? ` (${r.lado})` : "";
+    filas.push({
+      concepto: `${r.concepto}${ladoTxt}`,
+      moneda: "USD",
+      proveedor,
+      cantidad: qty,
+      costo_unitario: monto,
+      precio_venta: aplicarMarkup(monto, markup),
+      unidad_medida: unidad,
+      aplica_iva: false,
+      notas: "Auto-cargado desde tarifa marítima",
+      // B-073: linkage tarifa + recargo (la RPC compara recargo por recargo).
+      costeo_tarifa_id: tarifaId,
+      costeo_tarifa_recargo_id: r.id ?? null,
+    });
+  }
+  return filas;
+}
+
 export function buildCostosDesdeTarifa({
   tarifa,
   recargos,
