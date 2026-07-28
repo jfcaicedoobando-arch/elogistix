@@ -81,6 +81,26 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         saldo={props.saldo}
         moneda={factura.moneda}
         ambiente={factura.ambiente}
+        actions={
+          <FacturaDetalleActionsBar
+            factura={factura}
+            canEdit={canEdit}
+            flags={flags}
+            acuse={acuse}
+            eliminando={eliminando}
+            puedeEliminarBorrador={puedeEliminarBorrador}
+            timbrarRepPending={timbrarRep.isPending}
+            onTimbrar={() => setTimbrarOpen(true)}
+            onEnviarEmail={() => setEnviarOpen(true)}
+            onRegistrarPago={() => setPagoOpen(true)}
+            onTimbrarRep={handleTimbrarRep}
+            onSustituir={() => setSustituirOpen(true)}
+            onCancelar={() => setCancelarOpen(true)}
+            onEliminar={() => setEliminarOpen(true)}
+            onConsultar={() => setConsultarOpen(true)}
+            onDownload={handleDownload}
+          />
+        }
       />
 
 
@@ -97,25 +117,6 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         />
       )}
 
-
-      <FacturaDetalleActionsBar
-        factura={factura}
-        canEdit={canEdit}
-        flags={flags}
-        acuse={acuse}
-        eliminando={eliminando}
-        puedeEliminarBorrador={puedeEliminarBorrador}
-        timbrarRepPending={timbrarRep.isPending}
-        onTimbrar={() => setTimbrarOpen(true)}
-        onEnviarEmail={() => setEnviarOpen(true)}
-        onRegistrarPago={() => setPagoOpen(true)}
-        onTimbrarRep={handleTimbrarRep}
-        onSustituir={() => setSustituirOpen(true)}
-        onCancelar={() => setCancelarOpen(true)}
-        onEliminar={() => setEliminarOpen(true)}
-        onConsultar={() => setConsultarOpen(true)}
-        onDownload={handleDownload}
-      />
 
       <FacturaDetalleBody
         factura={factura}

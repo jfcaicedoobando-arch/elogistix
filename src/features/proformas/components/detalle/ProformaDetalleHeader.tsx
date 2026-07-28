@@ -3,6 +3,7 @@
  * `DetailHeader` (v13.320.66): botón Volver + número + badges de estado +
  * total destacado como acción trailing.
  */
+import { type ReactNode } from "react";
 import { FileText } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { EstadoBadges, TotalDestacado } from "@/features/proformas/components/ProformaDetalleCards";
@@ -19,6 +20,8 @@ interface Props {
   clienteNombre: string | null | undefined;
   expediente: string;
   totales: Totales | null;
+  /** Barra de acciones, renderizada dentro del encabezado (ola 3). */
+  actions?: ReactNode;
 }
 
 export function ProformaDetalleHeader({
@@ -29,6 +32,7 @@ export function ProformaDetalleHeader({
   clienteNombre,
   expediente,
   totales,
+  actions,
 }: Props) {
   const subtitulo = clienteNombre?.trim() || "";
   return (
@@ -51,7 +55,14 @@ export function ProformaDetalleHeader({
           Exp: <span className="font-mono">{expediente}</span>
         </>
       }
-      trailing={totales ? <TotalDestacado totales={totales} /> : undefined}
+      trailing={
+        totales || actions ? (
+          <div className="flex w-full flex-col items-start gap-3 lg:w-auto lg:items-end">
+            {totales ? <TotalDestacado totales={totales} /> : null}
+            {actions ? <div className="w-full lg:w-auto">{actions}</div> : null}
+          </div>
+        ) : undefined
+      }
     />
   );
 }

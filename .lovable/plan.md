@@ -1,49 +1,33 @@
+## Estado actual
 
-# Auditoría visual de `DetailHeader` (1920×1080)
+La auditoría visual de `DetailHeader` ya cubrió las 2 primeras olas (v13.320.71):
 
-Capturé en FullHD las páginas de detalle reales de Factura, Proforma, Proveedor, Lead, Oportunidad, Tesorería, Estado de cuenta, Cliente, Cotización y Embarque. El componente en sí se ve sólido y consistente; los problemas están en **cómo lo usa cada página**, no en el componente.
+- **Ola 1 — estados "no encontrado"**: nuevo componente `DetailNotFound` (encabezado + botón Volver + estado vacío) aplicado en Cotización, Embarque, Cliente, Factura, Proforma y Proveedor. Antes el usuario quedaba sin salida salvo el botón del navegador.
+- **Ola 2 — etiquetas**: todos los botones Volver dicen ahora "Volver a {Listado}" (antes mezclaban "Cotizaciones", "Volver", "Volver a embarques").
 
-## Hallazgos
+Quedan 2 olas del plan aprobado.
 
-**1. Estados "no encontrado" quedan sin encabezado (el más grave).**
-En `/cotizaciones/:id` y `/embarques/:id` con un ID inexistente la pantalla muestra sólo el texto "Cotización no encontrada" centrado: sin título, sin botón Volver, sin acciones. El usuario queda varado y sólo puede usar el botón del navegador. Cliente sí ofrece un botón "Volver a Clientes", pero tampoco muestra encabezado. Analogía: es como una recepción donde, si no encuentran tu cita, apagan la luz y quitan la señalización de salida.
+## Ola 3 — Unificar acciones en el slot `trailing`
 
-**2. La etiqueta de "Volver" es inconsistente.**
-Conviven tres estilos: `Volver` a secas (Factura), sólo el nombre del destino (`Proformas`, `Proveedores`, `Tesorería`, `Leads`, `Oportunidades`) y `Cliente` (Estado de cuenta, ambiguo: no dice si vuelve al listado o a la ficha).
+Hoy en Facturación, Proformas y Tesorería los botones de acción (Timbrar, Descargar PDF, Enviar, Cancelar) viven en una barra separada debajo del encabezado, desconectados visualmente del título.
 
-**3. Las acciones no viven en el mismo lugar.**
-Proveedor y Lead las ponen en `trailing`, alineadas con el título (correcto). Factura y Proforma las dejan en una barra suelta debajo del encabezado. Estado de cuenta las manda a una fila propia alineada a la derecha, desconectada del título. Resultado: el ojo no sabe dónde buscar los botones al cambiar de módulo.
+- Mover esas acciones al slot `trailing` de `DetailHeader`, dejando en la barra inferior sólo las acciones secundarias dentro de un menú "Más acciones" (patrón ya usado en Proveedor).
+- Regla de corte: máximo 2 botones visibles + menú overflow, para que en 1366px no se rompa la línea.
+- Archivos: `FacturaDetalleHeader.tsx`, `ProformaDetalleHeader.tsx`, `AccionesProforma` (ProformaDetalleCards), `TesoreriaFlujo.tsx`.
 
-**4. Estado de cuenta pierde el nombre del cliente.**
-El título es genérico ("Estado de cuenta") y el cliente no aparece ni en título ni en subtítulo, aunque es la entidad de la página.
+## Ola 4 — Densidad y alineación en CRM
 
-**5. CRM apila cuatro niveles de encabezado.**
-`CRM` (h1) → descripción → tabs → botón Volver → título del lead. Demasiado peso vertical antes del contenido útil.
+- Lead y Oportunidad apilan encabezado, badges y métricas con demasiado aire vertical: se pierde media pantalla antes del contenido.
+- Compactar: badges al slot `badge`, métricas clave al slot `meta` del encabezado, y reducir el espaciado del contenedor de `space-y-6` a `space-y-4`.
+- Alinear el bloque de acciones a la derecha en `lg+` y a la izquierda en móvil (ya soportado por `DetailHeader`).
+- Archivos: `LeadDetalle.tsx`, `OportunidadDetalleContent.tsx`.
 
-**6. Detalles menores de alineación.**
-El bloque de total en `trailing` (Factura/Proforma) queda alto respecto al título; Tesorería es el único `DetailHeader` sin icono.
+## Verificación
 
-## Plan de corrección
-
-**Ola 1 — Estados vacíos y de error (prioridad alta)**
-- Crear `DetailNotFound` (encabezado + tarjeta de estado vacío) que use `DetailHeader` con título tipo "Cotización no encontrada", `backTo` al listado y mensaje de ayuda.
-- Aplicarlo en Cotización, Embarque, Cliente, Factura, Proforma y Proveedor, para que el botón Volver exista siempre, incluso en error.
-
-**Ola 2 — Etiqueta de retorno canónica**
-- Convención única: `Volver a {Listado}` (ej. "Volver a Facturación", "Volver a Proformas", "Volver a Cliente Rollos y Etiquetas Rollet").
-- Ajustar los 16 sitios que hoy usan `DetailHeader` y añadir un test de arquitectura que exija `backLabel` explícito cuando `backTo` es una ruta.
-
-**Ola 3 — Acciones dentro del encabezado**
-- Mover la barra de acciones de Factura, Proforma y Estado de cuenta al slot `trailing`, dejando en "Más acciones" lo secundario para que no se desborde en 1366 px.
-- Estado de cuenta: título con el nombre del cliente y subtítulo con el periodo.
-
-**Ola 4 — Densidad en CRM y pulido**
-- En Lead y Oportunidad, ocultar el `backTo` (ya hay tabs y breadcrumb) o comprimir el bloque CRM a una sola línea, ganando ~90 px de altura útil.
-- Alinear verticalmente el bloque de total en `trailing` y añadir icono a Tesorería.
+- Capturas FullHD (1920x1080) de las rutas tocadas antes/después.
+- `bun run lint -- --max-warnings 0`, typecheck y los tests de `DetailHeader` / `DetailNotFound` / guardrail arquitectónico.
+- Bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
 
 ## Notas técnicas
 
-- Sin cambios de lógica de negocio: sólo presentación (`src/components/shared/DetailHeader.tsx` y sus 16 consumidores).
-- El guardrail existente `src/__tests__/architecture/detail-header-canonical.test.ts` se amplía con la regla de `backLabel`.
-- Se añaden tests en `DetailHeader.test.tsx` para el nuevo `DetailNotFound` y verificación FullHD posterior con capturas de las mismas rutas.
-- Al terminar: bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
+`DetailHeader` ya expone `trailing`, `meta`, `badge`, `titleAs` y `backTo` polimórfico (ruta, número o `null`), así que ambas olas son cambios de composición en las páginas: no requiere tocar el componente compartido.

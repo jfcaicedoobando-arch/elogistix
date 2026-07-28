@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { UserPlus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { LoadingState } from "@/components/shared/states/LoadingState";
@@ -95,23 +95,9 @@ export default function LeadDetalle() {
         title={lead.empresa}
         titleAs="h2"
 
+        badge={<Badge variant="outline" className="capitalize">{lead.estado}</Badge>}
         subtitle={`Lead · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
-        trailing={
-          <LeadHeaderActions
-            estado={lead.estado}
-            canEdit={canEdit}
-            onConvertir={() => setConvertirSheetOpen(true)}
-            onEliminar={() => setDeleteOpen(true)}
-          />
-        }
-      />
-
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Contacto rápido</CardTitle>
-        </CardHeader>
-        <CardContent>
+        meta={
           <ContactActions
             email={lead.email}
             telefono={lead.telefono}
@@ -126,8 +112,17 @@ export default function LeadDetalle() {
               },
             }}
           />
-        </CardContent>
-      </Card>
+        }
+        trailing={
+          <LeadHeaderActions
+            estado={lead.estado}
+            canEdit={canEdit}
+            onConvertir={() => setConvertirSheetOpen(true)}
+            onEliminar={() => setDeleteOpen(true)}
+          />
+        }
+      />
+
 
       <LeadDatosCard
         form={form}
