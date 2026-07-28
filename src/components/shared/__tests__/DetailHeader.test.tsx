@@ -34,12 +34,14 @@ describe("<DetailHeader />", () => {
     expect(navigateMock).toHaveBeenCalledWith(-1);
   });
 
-  it("botón Volver navega a backTo (ruta)", async () => {
+  it("botón Volver es un enlace real cuando backTo es una ruta", () => {
     navigateMock.mockClear();
     renderInRouter(<DetailHeader title="X" backTo="/facturacion" />);
-    fireEvent.click(screen.getByRole("button", { name: /volver/i }));
-    expect(navigateMock).toHaveBeenCalledWith("/facturacion");
+    const link = screen.getByRole("link", { name: /volver/i });
+    expect(link).toHaveAttribute("href", "/facturacion");
+    expect(navigateMock).not.toHaveBeenCalled();
   });
+
 
   it("renderiza acciones trailing", () => {
     renderInRouter(
