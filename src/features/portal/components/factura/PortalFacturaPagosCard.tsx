@@ -39,7 +39,7 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
         )}
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading ? (
+        {isLoading || loadingNc ? (
           <ListSkeleton rows={2} />
         ) : pagos.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">
