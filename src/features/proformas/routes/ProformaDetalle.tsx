@@ -94,12 +94,13 @@ function ProformaDetalleContent({ data }: ContentProps) {
         clienteNombre={proforma.cliente_nombre}
         expediente={proforma.expediente}
         totales={totales}
-      />
-
-      <AccionesProforma
-        proforma={proforma}
-        downloadingId={downloadingId}
-        onDescargar={() => descargar(proforma)}
+        actions={
+          <AccionesProforma
+            proforma={proforma}
+            downloadingId={downloadingId}
+            onDescargar={() => descargar(proforma)}
+          />
+        }
       />
 
       <ProformaDatosGeneralesCard

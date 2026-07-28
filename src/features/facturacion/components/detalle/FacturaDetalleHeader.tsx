@@ -5,7 +5,10 @@
  * y el expediente pasó a ser link clickable al embarque.
  * v13.320.67: migrado al componente canónico `DetailHeader` (el botón
  * "Volver" ya vive dentro del encabezado, no suelto arriba de la página).
+ * v13.320.72 (ola 3): las acciones (`actions`) viajan dentro del slot
+ * `trailing`, junto al total, en vez de una barra suelta bajo el encabezado.
  */
+import { type ReactNode } from "react";
 import { AlertTriangle, Receipt } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -31,13 +34,16 @@ interface Props {
   ambiente?: "sandbox" | "live" | null;
   volverHref?: string;
   volverLabel?: string;
+  /** Barra de acciones del detalle, renderizada dentro del encabezado. */
+  actions?: ReactNode;
 }
+
 
 export function FacturaDetalleHeader(props: Props) {
   const {
     numero, estado, acuseCancelacionStatus, cancellationStatus, sinTimbrar,
     expediente, embarqueId, proformaId, proformaNumero, total, saldo, moneda, ambiente,
-    volverHref, volverLabel,
+    volverHref, volverLabel, actions,
   } = props;
   const vencida = estado === "Vencida";
   const esBorradorSinFolio = (numero ?? "").startsWith("BORRADOR-");
@@ -93,18 +99,22 @@ export function FacturaDetalleHeader(props: Props) {
         </span>
       }
       trailing={
-        <div className="text-right shrink-0">
-          <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Total</p>
-          <p className="text-lg font-semibold tabular-nums text-foreground">
-            {formatCurrency(total, moneda)}
-          </p>
-          {mostrarSaldo && (
-            <p className="text-xs tabular-nums text-destructive mt-0.5">
-              Saldo: {formatCurrency(saldo!, moneda)}
+        <div className="flex w-full flex-col items-start gap-3 lg:w-auto lg:items-end">
+          <div className="text-left shrink-0 lg:text-right">
+            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Total</p>
+            <p className="text-lg font-semibold tabular-nums text-foreground">
+              {formatCurrency(total, moneda)}
             </p>
-          )}
+            {mostrarSaldo && (
+              <p className="text-xs tabular-nums text-destructive mt-0.5">
+                Saldo: {formatCurrency(saldo!, moneda)}
+              </p>
+            )}
+          </div>
+          {actions ? <div className="w-full lg:w-auto">{actions}</div> : null}
         </div>
       }
+
     />
   );
 }

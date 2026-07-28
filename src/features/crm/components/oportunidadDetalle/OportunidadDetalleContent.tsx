@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Edit, ClipboardList, Loader2, Target, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
@@ -56,7 +57,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
   const montoEstimado = Number(op.monto_estimado ?? 0);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 p-6">
       <DetailHeader
         backTo="/crm/oportunidades"
         backLabel="Volver a Oportunidades"
@@ -64,17 +65,18 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         title={op.nombre}
         titleAs="h2"
 
+        badge={etapa ? <Badge variant="outline">{etapa.nombre}</Badge> : undefined}
         subtitle={op.cliente_nombre || "Sin cliente"}
         trailing={canEdit ? (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={actions.crearCotizacion} disabled={actions.crearCotPending}>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={actions.crearCotizacion} disabled={actions.crearCotPending}>
               {actions.crearCotPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ClipboardList className="h-4 w-4 mr-1" />}
               Crear cotización
             </Button>
-            <Button variant="outline" onClick={() => setEditOpen(true)}>
+            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
               <Edit className="h-4 w-4 mr-1" /> Editar
             </Button>
-            <Button variant="destructive" onClick={() => setDelOpen(true)}>
+            <Button size="sm" variant="destructive" onClick={() => setDelOpen(true)}>
               <Trash2 className="h-4 w-4 mr-1" /> Eliminar
             </Button>
           </div>
