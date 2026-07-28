@@ -111,7 +111,7 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   ],
   aprobacion_cxp: ["Por aprobar", "Aprobada", "Rechazada"],
   captura_cxp: ["Sin captura", "Parcial", "Completo"],
-  actividad_crm: ["Pendiente", "Completada"],
+  actividad_crm: ["Pendiente", "Completada", "Vencida"],
   tarifa_maritima: ["Borrador", "Vigente", "Rechazada"],
   agente: ["Activo", "Inactivo"],
   garantia_naviera: ["Pendiente", "Depositado", "Liberado", "Retenido"],

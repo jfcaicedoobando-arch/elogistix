@@ -45,8 +45,10 @@ export const formatCurrency = (amount: number, currency: string = 'MXN'): string
   const formatted = getCurrencyFormatter(currency).format(amount);
   // Intl con MXN devuelve "$57,000.00" (sin código). Forzamos el prefijo "MXN " para
   // mantener consistencia con USD/EUR y evitar ambigüedad entre USD y MXN.
+  // B-053 (v13.320.40): capturar el signo negativo antes del símbolo para que
+  // negativos sean "MXN -8,000.00" en vez de "MXN -$8,000.00".
   if (currency === 'MXN' && !formatted.startsWith('MXN')) {
-    return `MXN ${formatted.replace(/^\$\s?/, '')}`;
+    return `MXN ${formatted.replace(/^(-?)\$\s?/, '$1')}`;
   }
   return formatted;
 };

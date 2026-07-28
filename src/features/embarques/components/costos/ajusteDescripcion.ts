@@ -72,5 +72,7 @@ export function describirAjusteNeto(
   facturado: number,
   moneda: string,
 ): AjusteDescripcion {
-  return describirAjuste(cotizado, facturado, moneda, { tieneFactura: facturado > 0 || cotizado > 0 });
+  // B-057 (v13.320.40): sin factura del proveedor NO es "ahorro" — es costo por
+  // devengar. Sólo hay ajuste real cuando el proveedor ya facturó (facturado > 0).
+  return describirAjuste(cotizado, facturado, moneda, { tieneFactura: facturado > 0 });
 }
