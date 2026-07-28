@@ -54,8 +54,17 @@ export default function CotizacionDetalle() {
   }
 
   if (!cotizacion) {
-    return <div className="text-center py-12 text-muted-foreground">Cotización no encontrada</div>;
+    return (
+      <DetailNotFound
+        icon={FileX}
+        title="Cotización no encontrada"
+        description="La cotización no existe, fue eliminada o no tienes permiso para verla."
+        backTo="/cotizaciones"
+        backLabel="Volver a Cotizaciones"
+      />
+    );
   }
+
 
   if (cotizacion.tipo_documento === "informativa") {
     return <CotizacionInformativaDetalle cotizacion={cotizacion} />;
