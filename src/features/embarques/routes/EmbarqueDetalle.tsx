@@ -1,5 +1,5 @@
 "use memo";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useState } from "react";
 
@@ -43,7 +43,6 @@ const TABS_LEGACY: Record<string, (typeof TABS_VALIDOS)[number]> = {
  */
 export default function EmbarqueDetalle() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { canEdit } = usePermissions();
   const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen", "tab", TABS_LEGACY);
 
