@@ -11,11 +11,14 @@ import {
 } from '@/features/cotizacion/services';
 import { notifySuccess } from '@/lib/ui/appFeedback';
 
+// v13.320.36 (B-041) — El wizard emite un único toast final ("Cotización
+// creada/actualizada exitosamente") desde `useCotizacionWizardSteps`. Estos
+// hooks se disparan también en pasos intermedios (paso 1/2/3), así que no
+// deben auto-toastear success para no duplicar/contradecir mensajes.
 export function useCreateCotizacion() {
   return useMutationWithFeedback({
     mutationFn: (input: CreateCotizacionInput) => svcCrear(input),
     invalidate: queryKeys.cotizaciones.all,
-    successTitle: "Cotización creada",
     errorTitle: "Error al crear cotización",
     errorMethod: "CREATE_COTIZACION",
   });
@@ -27,7 +30,6 @@ export function useUpdateCotizacion() {
     mutationFn: ({ id, data }: { id: string; data: Partial<CreateCotizacionInput> }) =>
       svcUpdate(id, data),
     invalidate: queryKeys.cotizaciones.all,
-    successTitle: "Cotización actualizada",
     errorTitle: "Error al actualizar cotización",
     errorMethod: "UPDATE_COTIZACION",
     onSuccess: (_r, vars) => {
