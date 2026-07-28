@@ -128,23 +128,7 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
     [],
   );
   // SAFE-CAST: alias de relaciones — el cliente generado infiere never en joins anidados.
-  type Raw = {
-    id: string; ruta_id: string; naviera_id: string; tipo_contenedor_id: string;
-    moneda: string; flete_base: number;
-    vigente_desde: string; vigente_hasta: string; estado: string; estado_aprobacion: string;
-    motivo_rechazo: string | null; aprobada_en: string | null;
-    transit_time_dias: number | null; dias_libres_demoras: number | null;
-    notas: string | null;
-    costeo_agentes?: { nombre?: string } | null;
-    navieras?: { name?: string } | null;
-    tipos_contenedor?: { name?: string } | null;
-    costeo_rutas?: {
-      puerto_origen?: { name?: string } | null;
-      puerto_destino?: { name?: string } | null;
-    } | null;
-  };
-  // SAFE-CAST: alias de relaciones — el cliente generado infiere never en joins anidados.
-  return (data as unknown as Raw[]).map((r) => ({
+  return (data as unknown as RawTarifaAgente[]).map((r) => ({
     id: r.id,
     ruta_id: r.ruta_id,
     naviera_id: r.naviera_id,
