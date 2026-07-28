@@ -13,4 +13,5 @@ export const tesoreria = {
     ["tesoreria", "flujo-proyectado", dias] as const,
   flujoProyectadoPorOrg: (dias: number, organizationId: string | null) =>
     ["tesoreria", "flujo-proyectado", dias, organizationId ?? "none"] as const,
+  pagosProgramables: ["tesoreria", "pagos-programables"] as const,
 } as const;

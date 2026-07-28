@@ -92,23 +92,36 @@ export function faltantesParaConfirmado(
 ): string[] {
   const faltantes: string[] = [];
   if (!embarque.peso_kg || embarque.peso_kg <= 0) faltantes.push("peso mayor a 0 kg");
-  if (embarque.modo === "Marítimo") {
-    // LCL no exige contenedores dinámicos (el número es opcional).
-    if (embarque.tipo_servicio !== "LCL" && numContenedores === 0) {
-      faltantes.push("al menos un contenedor");
-    }
-    if (!embarque.naviera?.trim()) faltantes.push("naviera");
-    if (!embarque.bl_master?.trim() && !embarque.bl_house?.trim()) {
-      faltantes.push("BL master u house");
-    }
-  }
-  if (embarque.modo === "Aéreo") {
-    if (!embarque.aerolinea?.trim()) faltantes.push("aerolínea");
-    if (!embarque.mawb?.trim()) faltantes.push("MAWB");
-  }
+  faltantes.push(...faltantesMaritimo(embarque, numContenedores));
+  faltantes.push(...faltantesAereo(embarque));
   if (embarque.modo === "Terrestre" && !embarque.transportista?.trim()) {
     faltantes.push("transportista");
   }
   return faltantes;
+}
+
+function faltantesMaritimo(
+  embarque: { modo?: string | null; tipo_servicio?: string | null; naviera?: string | null; bl_master?: string | null; bl_house?: string | null },
+  numContenedores: number,
+): string[] {
+  if (embarque.modo !== "Marítimo") return [];
+  const out: string[] = [];
+  // LCL no exige contenedores dinámicos (el número es opcional).
+  if (embarque.tipo_servicio !== "LCL" && numContenedores === 0) {
+    out.push("al menos un contenedor");
+  }
+  if (!embarque.naviera?.trim()) out.push("naviera");
+  if (!embarque.bl_master?.trim() && !embarque.bl_house?.trim()) {
+    out.push("BL master u house");
+  }
+  return out;
+}
+
+function faltantesAereo(embarque: { modo?: string | null; aerolinea?: string | null; mawb?: string | null }): string[] {
+  if (embarque.modo !== "Aéreo") return [];
+  const out: string[] = [];
+  if (!embarque.aerolinea?.trim()) out.push("aerolínea");
+  if (!embarque.mawb?.trim()) out.push("MAWB");
+  return out;
 }
 

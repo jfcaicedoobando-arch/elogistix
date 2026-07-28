@@ -3,7 +3,6 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm, Controller, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Loader2, HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,7 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
   // en silencio (pageerror con el JSON crudo de zod y cero feedback visible).
   const onInvalid = (errs: FieldErrors<FormValues>) => {
     const first = Object.values(errs)[0];
-    notifyError(toast, {
+    notifyError(undefined, {
       title: "Revisa el formulario",
       description: first?.message?.toString() ?? "Hay campos inválidos o incompletos.",
       method: "ANTICIPO_REGISTRAR_FORM_INVALID",

@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/select";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
-import { TIPOS_CONTENEDOR_DEFAULT } from "@/features/catalogos/domain/tiposContenedorDefault";
+import { TIPOS_CONTENEDOR_DEFAULT } from "@/lib/domain/tiposContenedorDefault";
 
 const TIPOS_PESO = ['Peso Normal', 'Sobrepeso'];
 
