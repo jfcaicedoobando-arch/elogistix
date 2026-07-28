@@ -93,6 +93,8 @@ export default function LeadDetalle() {
         backLabel="Leads"
         icon={<UserPlus className="h-6 w-6 text-accent shrink-0" />}
         title={lead.empresa}
+        titleAs="h2"
+
         subtitle={`Lead · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
         trailing={
           <LeadHeaderActions
