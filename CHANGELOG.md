@@ -1,6 +1,17 @@
 # Changelog
 
 
+## [13.321.0] - 2026-07-28
+- Auditoría E2E portales y costeo (46 hallazgos): se aplicaron las 4 olas completas.
+- Seguridad: se corta la fuga cross-tenant en tarifas Top-3, en pricing/facturas visibles al agente y en las cartas de garantía del storage (ahora filtradas por organización).
+- Cotización → embarque: el costo ya no se multiplica por número de contenedores; se persiste el vínculo tarifa/recargo y la revalidación detecta también cambios en el flete base.
+- Tarifas: reemplazo por naviera coherente con la aprobación, tarifas futuras visibles, estado "vencida" derivado por fecha, agentes inactivos fuera del comparador, duplicar conserva recargos y días libres, y validación de tramos de demoras solapados.
+- Portal cliente: saldo real por moneda en el dashboard (sin "saldo a favor" fantasma), notas de crédito consideradas en el detalle de factura, un solo estado visible en facturas, total con IVA en el listado de cotizaciones y fechas date-only sin desfase de zona horaria.
+- Portal agente: contexto de sesión estable, KPIs que no cuentan tarifas reemplazadas ni embarques cerrados, y resolución determinista del agente cuando hay varios vínculos.
+- Limpieza: `estadosFactura` y el parser de detalle de cotización se promovieron a `src/lib/domain` (sin imports cross-feature).
+
+
+
 ## [13.320.73] - 2026-07-28
 - `lint:unused:strict` en verde: el guardrail de `DetailHeader` ya no usa la dependencia no declarada `glob` (recorrido con `node:fs`) y se retiró el export sin uso `DetailHeaderSkeleton`.
 
