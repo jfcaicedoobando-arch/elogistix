@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, Landmark, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function maskClabe(clabe: string | null | undefined, reveal: boolean): string {
@@ -24,7 +25,10 @@ interface Props {
   bancoIntermediarioSwift?: string | null;
   beneficiario?: string | null;
   referenciaPago?: string | null;
+  /** Si se pasa y no hay datos capturados, muestra un CTA para capturarlos. */
+  onCapturar?: () => void;
 }
+
 
 function Row({ label, value, mono = false }: { label: string; value: string | null | undefined; mono?: boolean }) {
   return (
