@@ -2,7 +2,6 @@ import { type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface DetailHeaderProps {
@@ -119,29 +118,3 @@ export function DetailHeader({
     </div>
   );
 }
-
-/** Esqueleto de carga con la misma métrica vertical que `DetailHeader`. */
-export function DetailHeaderSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn("space-y-3", className)} aria-hidden="true">
-      <Skeleton className="h-8 w-24" />
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex min-w-0 flex-1 items-start gap-2">
-          <Skeleton className="h-6 w-6 shrink-0 rounded-md" />
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-8 w-64 max-w-full" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </div>
-            <Skeleton className="h-4 w-40" />
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="h-9 w-9" />
-        </div>
-      </div>
-    </div>
-  );
-}
-

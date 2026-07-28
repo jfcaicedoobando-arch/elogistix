@@ -1,6 +1,9 @@
 # Changelog
 
 
+## [13.320.73] - 2026-07-28
+- `lint:unused:strict` en verde: el guardrail de `DetailHeader` ya no usa la dependencia no declarada `glob` (recorrido con `node:fs`) y se retiró el export sin uso `DetailHeaderSkeleton`.
+
 ## [13.320.72] - 2026-07-28
 - Ola 3 (auditoría visual `DetailHeader`): las acciones de Factura y Proforma se movieron al slot `trailing` del encabezado, junto al total; se elimina la barra suelta bajo el título.
 - Ola 4 (CRM): encabezados compactados — badge de estado/etapa en el header, contacto rápido del Lead movido al slot `meta` (se retira la tarjeta dedicada) y menor espaciado vertical en Oportunidad.
