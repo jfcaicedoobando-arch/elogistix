@@ -6,6 +6,6 @@
  *   - `ayudaGlosario.ts`  → GLOSARIO (51 términos)
  *   - `ayudaModulos.ts`   → MODULOS (12 módulos de FAQ)
  */
-export type { GlossaryTerm, FaqItem, AyudaModulo } from "./ayudaTypes";
+;
 export { GLOSARIO } from "./ayudaGlosario";
 export { MODULOS } from "./ayudaModulos";

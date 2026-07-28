@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 
 export type {
   FacturaFormValues,
-  CategoriaPresupuestoLite,
+  
 } from "@/features/cxp/types";
 
 

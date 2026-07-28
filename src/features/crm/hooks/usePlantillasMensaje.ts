@@ -14,7 +14,7 @@ import {
 } from "@/features/crm/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-export type { PlantillaCanal, PlantillaMensajeRow, PlantillaInput };
+export type { PlantillaCanal, PlantillaMensajeRow,  };
 
 export function usePlantillasMensaje(canal?: PlantillaCanal, soloActivas = true) {
   return useQuery<PlantillaMensajeRow[]>({

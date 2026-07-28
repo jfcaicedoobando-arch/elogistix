@@ -31,4 +31,4 @@ export function useFacturasCxP(filtros: FetchCxPFiltros = {}) {
   return { ...q, kpis };
 }
 
-export type { EstatusCxP };
+;

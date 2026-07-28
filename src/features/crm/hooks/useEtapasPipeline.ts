@@ -16,7 +16,7 @@ import {
 } from "@/features/crm/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-export type { CrmEtapaRow, CrmEtapaTipo, EtapaPatch };
+export type { CrmEtapaRow, CrmEtapaTipo,  };
 
 export function useEtapasPipeline() {
   return useQuery<CrmEtapaRow[]>({

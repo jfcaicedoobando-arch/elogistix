@@ -10,7 +10,7 @@ import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { syncSentryUser } from "@/lib/observability/sentry/user";
 import { buildAuthSnapshot, buildSentryUserContext } from "@/lib/auth/authSnapshotBuilder";
 
-export type { CachedOrganization } from "./auth/useAuthProfile";
+;
 
 interface AuthContextType {
   user: User | null;

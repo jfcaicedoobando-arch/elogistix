@@ -89,6 +89,6 @@ export {
   montoPrincipalProforma,
   totalesProformasSeleccionadas,
   type ProformaPendienteLite,
-  type GrupoContenedor,
-  type GrupoExpediente,
+  
+  
 } from "./proformaAgrupacion";

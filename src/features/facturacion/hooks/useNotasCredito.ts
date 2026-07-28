@@ -21,4 +21,4 @@ export function useNotasCreditoRecientes(filtros: ListarNotasCreditoRecientesFil
   });
 }
 
-export type { NotaCredito, EstadoNotaCredito, NotaCreditoConFactura };
+export type {  EstadoNotaCredito,  };

@@ -10,7 +10,7 @@ import {
   type KpiVariant,
 } from "./kpiCard.tokens";
 
-export type { KpiVariant, KpiIconVariant } from "./kpiCard.tokens";
+export type { KpiVariant,  } from "./kpiCard.tokens";
 
 interface KpiCardProps {
   label: string;

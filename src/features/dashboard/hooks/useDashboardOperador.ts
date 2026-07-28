@@ -14,7 +14,7 @@ import {
 } from "@/features/embarques/services/dashboardOperador";
 import { queryKeys } from "@/lib/query";
 
-export type { DocsFaltantesItem, SinTrackingItem, OperadorEmbarqueLite };
+export type { DocsFaltantesItem, SinTrackingItem,  };
 
 export function useDocsFaltantesOperador() {
   const { user } = useAuth();

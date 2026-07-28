@@ -27,4 +27,4 @@ export function useComisionesDevengadas(filtros: FetchComisionesFiltros = {}) {
   return { ...q, kpis };
 }
 
-export type { EstadoComision };
+;

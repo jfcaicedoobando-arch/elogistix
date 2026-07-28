@@ -10,7 +10,7 @@ interface FiltrosRentabilidad {
 }
 
 import type { RentabilidadCliente } from "@/types/rentabilidad";
-export type { RentabilidadCliente } from "@/types/rentabilidad";
+;
 
 /**
  * v8.173.0 (Ola B.4): consume el RPC `reportes_resumen` que devuelve filas +

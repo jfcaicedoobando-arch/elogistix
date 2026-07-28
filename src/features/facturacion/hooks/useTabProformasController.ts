@@ -11,7 +11,7 @@ import { useProformas, type ProformaConFactura, type ProformaRow } from "@/featu
 import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
 import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProformasState";
 
-export type { FiltroEstadoProforma };
+;
 
 function isConvertible(p: ProformaConFactura): boolean {
   if ((p.estado_proforma ?? "pendiente") === "facturada") return false;

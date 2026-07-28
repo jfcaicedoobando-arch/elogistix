@@ -10,7 +10,7 @@ import {
   type EnviarEstadoCuentaResult,
 } from "@/features/cobranza/services/estadoCuentaService";
 
-export type { EnviarEstadoCuentaInput, EnviarEstadoCuentaResult };
+;
 
 export function useEstadoCuentaEmail(options?: { onSuccess?: () => void }) {
   return useMutationWithFeedback({

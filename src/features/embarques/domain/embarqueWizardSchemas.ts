@@ -15,12 +15,12 @@ import { z } from "zod";
 import { msg } from "@/lib/domain/errorCatalog";
 
 // Re-export del helper neutro para compatibilidad con imports existentes
-export { formatValidationMessage } from "@/lib/domain/validationFormat";
-export { MAX_FILE_SIZE_MB, MAX_FILE_SIZE_BYTES, ALLOWED_MIME_TYPES } from "./embarqueWizardConstants";
-export { validateArchivo, validateStepDocumentos, type DocumentoArchivoValidacion } from "./embarqueWizardDocumentos";
+;
+export { MAX_FILE_SIZE_MB,   } from "./embarqueWizardConstants";
+export { validateArchivo, validateStepDocumentos,  } from "./embarqueWizardDocumentos";
 export {
   validateStepCostos,
-  type StepCostosInput,
+  
   type ConceptoVentaValidacion,
   type ConceptoCostoValidacion,
 } from "./embarqueWizardCostos";

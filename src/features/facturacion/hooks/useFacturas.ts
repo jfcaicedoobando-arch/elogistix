@@ -11,7 +11,7 @@ import {
 } from "@/features/facturacion/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-export type { FacturaRow, FacturaListItem };
+;
 
 export function useFacturas(opts: { enabled?: boolean } = {}) {
   const { organizationId } = useOrgFilter();

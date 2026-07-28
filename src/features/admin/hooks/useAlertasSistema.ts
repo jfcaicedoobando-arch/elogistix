@@ -9,7 +9,7 @@ import {
 } from "@/features/admin/services";
 import { queryKeys } from "@/lib/query";
 
-export type { AlertaSistema };
+;
 
 const QK_PENDING = queryKeys.alertasSistema.pending;
 

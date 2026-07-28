@@ -24,7 +24,7 @@ interface Cliente {
   nombre: string;
 }
 
-export type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
+;
 import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
 
 interface Props {

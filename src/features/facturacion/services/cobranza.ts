@@ -19,8 +19,8 @@ import { orIlike } from "@/lib/search/ilike";
 export {
   agruparSaldosPorMoneda,
   calcularKPIs,
-  type KPIsCobranza,
-  type SaldosPorMoneda,
+  
+  
 } from "./cobranzaAggregates";
 
 type FacturaRow = Tables<"facturas">;

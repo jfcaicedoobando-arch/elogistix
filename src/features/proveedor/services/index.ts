@@ -16,10 +16,10 @@ export type {
   ProveedorListItem,
   ProveedorOperacion,
   ProveedorLite,
-  FetchProveedoresParams,
+  
 } from "./proveedoresCrud";
 export {
-  RFC_GENERICOS_SAT,
+  
   ProveedorDuplicadoError,
   findProveedorByRfcEnOrg,
 } from "./duplicadoRfc";

@@ -3,7 +3,7 @@
 // compatibilidad con los consumidores existentes (componentes y hooks).
 export type {
   EmbarqueRow,
-  ConceptoVentaRow,
+  
   ConceptoCostoRow,
   DocumentoEmbarqueRow,
   NotaEmbarqueRow,

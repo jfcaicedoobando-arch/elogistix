@@ -18,7 +18,7 @@ import {
   buildHuecoCsvRows,
 } from "@/features/facturacion/domain/huecoCsv";
 
-export type { FilaHueco, HuecoFacturacionResult };
+;
 
 export function useHuecoFacturacion() {
   const { organizationId } = useOrgFilter();

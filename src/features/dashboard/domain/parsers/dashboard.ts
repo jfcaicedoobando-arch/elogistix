@@ -86,7 +86,7 @@ export function parseResumenMesSiguiente(stats: DashboardStats): ResumenFacturac
 }
 
 // Re-export para no romper consumidores existentes
-export { parseEmbarqueConProfitRaw } from "./dashboardProfit";
+;
 import { parseEmbarqueConProfitRaw } from "./dashboardProfit";
 
 export function parseEmbarquesMesSiguiente(stats: DashboardStats): EmbarqueMesSiguiente[] {

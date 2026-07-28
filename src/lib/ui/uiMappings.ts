@@ -53,7 +53,7 @@ export const getModoLucideIcon = (modo: string): LucideIcon => {
 
 /** Etiquetas legibles para roles internos del sistema.
  *  @deprecated Importar `ROLE_LABELS` / `obtenerEtiquetaRol` desde `@/features/admin/domain/roles/roleCatalog`. */
-export { ROLE_LABELS as roleLabels, obtenerEtiquetaRol } from "@/features/admin/domain/roles/roleCatalog";
+export {  obtenerEtiquetaRol } from "@/features/admin/domain/roles/roleCatalog";
 
 
 /** Color del indicador de estado de un documento de embarque. */

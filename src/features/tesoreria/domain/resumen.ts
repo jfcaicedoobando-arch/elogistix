@@ -10,7 +10,7 @@
 
 export type {
   ResumenCuenta,
-  FlujoMes,
+  
   TopItem,
   ResumenTesoreria,
   CobranzaRow,

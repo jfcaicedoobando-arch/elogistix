@@ -29,4 +29,4 @@ export function usePortalBreadcrumbs(
   }, [pathname, labels]);
 }
 
-export type { PortalNavItem };
+;

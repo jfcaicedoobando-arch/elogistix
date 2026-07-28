@@ -8,7 +8,7 @@ import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estad
 import { generarMesesDisponibles, mesActualKey } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { useFuenteEerr, type FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
 
-export type { FuenteEERR };
+;
 
 const MES_MINIMO = "2026-04";
 

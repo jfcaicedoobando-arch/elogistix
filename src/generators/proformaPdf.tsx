@@ -61,4 +61,4 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
   );
 }
 
-export type { EmbarqueLite, ClienteLite };
+;

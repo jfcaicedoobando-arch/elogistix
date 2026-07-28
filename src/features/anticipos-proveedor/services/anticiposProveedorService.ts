@@ -21,9 +21,9 @@ export {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
-  AnticipoError,
+  
 };
-export type { Anticipo, AnticipoAplicacion, RegistrarAnticipoInput, MonedaAnticipo };
+export type { Anticipo, AnticipoAplicacion, RegistrarAnticipoInput,  };
 
 /** Fila de la bandeja de anticipos, con el nombre de proveedor ya resuelto. */
 export type AnticipoConProveedor = Anticipo & { proveedor_nombre: string | null };
