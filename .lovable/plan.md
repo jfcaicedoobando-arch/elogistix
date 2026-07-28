@@ -1,57 +1,62 @@
+## Diagnóstico
 
-# Diagnóstico previo — reporte E2E vs código actual
+El CI del run `82189359705` falla en un solo shard (`7/10`) con **2 archivos de test rojos**. Todo lo demás está verde: 9 shards en `78/78 passed`, ESLint, Build, TypeScript, Architecture & audits, Knip y 340 tests de Edge Functions en Deno. El fallo del "aggregator" (`Uno o más jobs requeridos no terminaron en success`) es consecuencia — no causa — de esos 2 archivos.
 
-**Reporte base:** `bugs-e2e-live-2026-07-28.md` corrido contra v13.320.4.
-**HEAD actual:** v13.320.31 (14 releases posteriores).
-**Alcance de esta verificación:** los 6 críticos y checkeos puntuales de las 13 altas. Para las 44 medias/bajas asumo estado del reporte (verificarlas 1×1 tomaría otra ronda dedicada).
+Los dos archivos rojos son **residuo de fixes anteriores en este mismo sprint**, no bugs nuevos de Wave 3.
 
-⚠️ Esto es sólo un plan de diagnóstico — **no se toca código**. En el siguiente turno decides qué olas ejecutar.
+### Archivo rojo 1 — `useCotizacionDraftAutosave.test.tsx` (2 casos)
 
----
+**Analogía**: es como cambiar la cerradura de la puerta (schema del borrador `v1 → v2` en el fix B-003 de Wave 1) pero olvidar cambiar la llave de repuesto en el test.
 
-## Analogía rápida
+- **Línea 47**: el test guarda un borrador con `version: 2` y espera que `loadDraft` lo rechace por versión incorrecta. Cuando la versión actual era `1`, `2` era "distinta". Tras B-003, la versión actual **es 2**, así que ya no es un mismatch y el borrador se acepta.
+- **Línea 90**: el test lee el borrador recién persistido y afirma `parsed.version === 1`. La firma real ahora escribe `version: 2`.
 
-Piensa el reporte como una radiografía tomada hace 14 días. Antes de operar, verifico qué "fracturas" ya sanaron solas (fixes de otros turnos) para no re-operar sobre hueso ya soldado.
+### Archivo rojo 2 — `anticipos-fase-p1.test.ts` (6 casos)
 
-## Resultado por bug crítico
+**Analogía**: el guardrail busca "la última migración que menciona `aplicar_anticipo_a_factura`" para revisar que esa migración cumpla el contrato completo de la Fase P.1 (tablas, RLS, trigger, RPCs, GRANTs).
 
-| ID | Estado real en HEAD | Evidencia |
-|---|---|---|
-| **B-001** RLS soft delete bloquea borrar | 🟡 **Probablemente resuelto (verificar en staging)** | Migración `20260712224629` + `20260721193856` re-establecen `WITH CHECK (true)` sobre las 29 políticas `Hide soft deleted%`. Con eso, un UPDATE que ponga `deleted_at = now()` ya no debería violar la política RESTRICTIVE. **Confirmar empíricamente** con un `UPDATE` como `authenticated` en staging antes de descartar. |
-| **B-002** REP pendiente esconde "Registrar pago" | 🔴 **Abierto** | `FacturaDetalleActionsBar.tsx:52-60` sigue dando prioridad a `Timbrar REP` sobre `Registrar pago`; "Registrar pago" no está en `buildSecondary`. Sin cambios. |
-| **B-003** Recargar wizard duplica cotización | 🔴 **Abierto** | `useCotizacionDraftAutosave.ts` — `StoredDraft` no incluye `cotizacionId`; el autosave se desactiva a partir de paso 2 pero nada rehidrata el ID al recargar. |
-| **B-004** Menú "+ Nuevo" CRM muerto | 🔴 **Abierto** | `QuickAddMenu.tsx` sigue con `<Popover><PopoverAnchor asChild><DropdownMenu>...` — mismo antipatrón exacto. |
-| **B-005** Guardar embarque con TC vacío | 🟢 **Ya resuelto** | `embarqueToDb.ts` ahora usa helper `tcOrNull(raw)` que retorna `null` si no es finito o ≤0. Ola de "exchange rate check constraint" (v13.320.18). |
-| **B-060** Anticipo no aplicable (`metodo_pago` NULL) | 🔴 **Abierto** | La RPC `aplicar_anticipo_a_factura` en `20260719033659` sigue insertando `v_ant.metodo_pago` sin `COALESCE`, y el diálogo `RegistrarAnticipoDialog` sigue sin capturar método. Cero re-definiciones de la RPC posteriores. |
+El problema: el marker `aplicar_anticipo_a_factura` es demasiado genérico. La migración de Wave 1 (`v13.320.32`, fix B-060) hace `CREATE OR REPLACE` de ese RPC — nada más. El test la agarra como si fuera la migración P.1 original y falla porque, obviamente, ese hotfix no contiene la tabla, ni los GRANTs, ni el trigger.
 
-**Resumen críticos:** 1 verde (B-005), 1 amarillo (B-001, requiere validación en staging), 4 rojos confirmados abiertos (B-002, B-003, B-004, B-060).
+## Cambios propuestos
 
-## Muestreo de altas (spot-checks)
+### 1. `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionDraftAutosave.test.tsx`
 
-No verifiqué las 13 una por una; sí las que tenían fixes recientes en el changelog:
+- Reemplazar el borrador de "versión inválida" para usar una versión evidentemente incorrecta (`version: 99`), documentando que se prueba mismatch, no una versión específica.
+- Ajustar la aserción de la versión persistida a `expect(parsed.version).toBe(2)`.
 
-- **B-016** (`duplicar_cotizacion` sin `precio_venta`) — no hay migración posterior tocándolo → **probablemente abierto**.
-- **B-018** (P&L usa subtotal en vez de total con IVA) — última definición sigue en `20260722132715` → **probablemente abierto**.
-- **B-007** (NC CxC sin IVA en `useNotaCreditoDraft`) — sin cambios recientes → **probablemente abierto**.
-- Resto (B-006, B-008…B-014, B-017) no muestreados en este pase.
+### 2. `src/lib/__tests__/anticipos-fase-p1.test.ts`
 
-## Recomendación
+Cambiar el marker de búsqueda de la migración de:
 
-**Ola 1 mínima real (5 fixes en vez de 6):**
-1. B-002 · `FacturaDetalleActionsBar` — mostrar "Registrar pago" siempre que `saldo > 0`, coexistiendo con "Timbrar REP".
-2. B-003 · Incluir `cotizacionId` en `StoredDraft` y restaurarlo tras recarga.
-3. B-004 · Rediseñar `QuickAddMenu` (anclar Popover al botón o abrir Dialogs desde los items).
-4. B-060 · Dos-en-uno: `COALESCE(v_ant.metodo_pago, 'Transferencia')` en la RPC + campo "Método de pago" en `RegistrarAnticipoDialog`.
-5. B-001 · **Validar en staging** que el fix de julio realmente destrabó soft delete. Si aún falla, migrar las 29 políticas a `FOR SELECT`.
+```ts
+const sql = readLatestContaining("aplicar_anticipo_a_factura");
+```
 
-B-005 sale del scope: ya está.
+a un texto que solo puede aparecer en la migración seed original de Fase P.1:
+
+```ts
+const sql = readLatestContaining("CREATE TABLE IF NOT EXISTS public.anticipos_proveedor");
+```
+
+Así el guardrail sigue leyendo la migración correcta aunque haya patches futuros al RPC.
+
+### 3. Metadata
+
+- Bump `APP_VERSION` → `13.320.35`.
+- Entrada en `CHANGELOG.md` explicando que este cambio no toca lógica de producción — solo re-alinea 2 tests con la realidad ya vigente.
+
+## Verificación
+
+Correr localmente los 2 archivos:
+
+```bash
+bun x vitest run \
+  src/features/cotizacion/hooks/wizard/__tests__/useCotizacionDraftAutosave.test.tsx \
+  src/lib/__tests__/anticipos-fase-p1.test.ts
+```
 
 ## Detalles técnicos
 
-- La rutina `20260721193856` sólo relaja `WITH CHECK` de las RESTRICTIVE — no cambia `FOR ALL` a `FOR SELECT`. Si Postgres evalúa RESTRICTIVE.USING contra la fila post-UPDATE (comportamiento observado por el agente T3), el fix es insuficiente y hay que pasar a `FOR SELECT` como sugiere el reporte.
-- B-060 tiene 2 puntos de falla independientes; arreglar sólo la RPC dejaría anticipos históricos NULL sin captura de método (aplicable pero opaco). Arreglar sólo el diálogo no repara los anticipos ya creados con NULL. Hay que hacer los dos.
-- B-003 se puede resolver de dos formas: (a) persistir `cotizacionId` en el draft, (b) no insertar la cotización hasta el guardado final. (a) es menos invasivo.
-
-## Siguiente paso sugerido
-
-Aprueba este diagnóstico y en el siguiente turno propongo el plan de implementación de la **Ola 1** (5 fixes arriba). O dime si prefieres que primero muestree con detalle las 13 altas y las 28 medias antes de ejecutar cualquier fix.
+- **Impacto en producción**: cero. Solo se editan 2 archivos de test.
+- **Riesgo**: bajo. El marker nuevo (`CREATE TABLE IF NOT EXISTS public.anticipos_proveedor`) solo existe en `20260625134756_5a7e9f6c-…sql` (la seed P.1), verificado con `rg`.
+- **Regresión Wave 1/3**: ninguna — los cambios lógicos ya validados en su turno original se mantienen intactos.
