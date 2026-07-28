@@ -10,7 +10,6 @@ import {
   fetchSinTrackingOperador,
   type DocsFaltantesItem,
   type SinTrackingItem,
-  type OperadorEmbarqueLite,
 } from "@/features/embarques/services/dashboardOperador";
 import { queryKeys } from "@/lib/query";
 

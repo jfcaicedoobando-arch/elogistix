@@ -8,23 +8,15 @@ export {
   marcarCostoPagado,
   fetchGastosPendientes,
 } from "./facturasCrud";
-export type {
-  FacturaRow,
-  FacturaListItem,
-  
-  
-} from "./facturasCrud";
+export type { FacturaListItem } from "./facturasCrud";
 export {
   fetchLayoutContableData,
   fetchEstadoCuentaFacturas,
 } from "./exports";
-;
-export type { FilaHueco, HuecoFacturacionResult } from "./huecoFacturacion";
+export type { FilaHueco } from "./huecoFacturacion";
 export { fetchHuecoFacturacion } from "./huecoFacturacion";
 export { fetchProyeccionMes } from "./proyeccion";
-;
 export { fetchFacturasParaZip, marcarFacturasComoEnviadas } from "./masivas";
-;
 export {
   fetchClienteFiscal,
   actualizarDatosTimbradoFactura,

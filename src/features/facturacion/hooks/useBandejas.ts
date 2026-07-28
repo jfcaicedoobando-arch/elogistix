@@ -13,7 +13,6 @@ import {
   fetchFacturasPorEnviar,
   fetchPagosRepPendientes,
   fetchBandejaConteos,
-  type BandejaConteos,
   type FilaPorTimbrar,
   type FilaPorEnviar,
   type FilaRepPendiente,

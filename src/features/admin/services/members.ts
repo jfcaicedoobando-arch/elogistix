@@ -8,7 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { AppRole } from "@/types/appRole";
-import { fetchAvailableUsers, type UserOption } from "@/features/admin/services/usuario/availableUsers";
+import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
 
 export { fetchAvailableUsers };
 ;

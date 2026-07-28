@@ -9,7 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type {
-  AntiguedadFiltro, DireccionOrden, EstatusFiltro, FiltersState, OrdenarPor,
+  AntiguedadFiltro, EstatusFiltro, FiltersState, OrdenarPor,
 } from "@/features/bandejas/hooks/useCxpPorCapturarFilters";
 
 interface Props {

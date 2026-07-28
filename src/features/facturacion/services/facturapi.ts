@@ -4,7 +4,6 @@ import {
   parseFunctionError,
   toReadableError,
   type EdgeErrorBody,
-  type ValidationIssue,
 } from "./facturapiError";
 
 export { FacturapiError, parseFunctionError };

@@ -8,8 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/shared";
 import {
   listTrash, listTrashCounts, restoreRecord, purgeRecord,
-  type SoftTable, type TrashRow, type TrashCountRow,
-} from "@/features/admin/services";
+  type SoftTable, type TrashRow, } from "@/features/admin/services";
 import { queryKeys } from "@/lib/query";
 
 import { notifyError } from "@/lib/ui/appFeedback";

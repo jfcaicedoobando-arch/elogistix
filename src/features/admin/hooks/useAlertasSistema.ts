@@ -5,7 +5,6 @@ import {
   fetchAlertasPendingCount,
   fetchAlertasSistema,
   reconocerAlerta,
-  type AlertaSistema,
 } from "@/features/admin/services";
 import { queryKeys } from "@/lib/query";
 

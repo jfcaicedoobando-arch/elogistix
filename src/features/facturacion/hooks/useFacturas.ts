@@ -6,8 +6,6 @@ import {
   fetchFacturasListado,
   fetchGastosPendientes,
   marcarCostoPagado,
-  type FacturaRow,
-  type FacturaListItem,
 } from "@/features/facturacion/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 

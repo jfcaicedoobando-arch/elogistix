@@ -4,7 +4,6 @@ import { queryKeys } from "@/lib/query";
 import {
   fetchFacturasCxP,
   calcularKPIsCxP,
-  type EstatusCxP,
   type FetchCxPFiltros,
 } from "@/features/cxp/services";
 

@@ -1,37 +1,46 @@
-# Wave 17 · Cierre de bugs BAJA + 1 MEDIA en CRM y Embarques
+## Diagnóstico
 
-Aplicaremos 4 correcciones frontend de bajo riesgo del archivo `instrucciones-lovable-bugs-e2e-2026-07-28-2.md`. Ninguna toca lógica de dinero ni migraciones SQL nuevas.
+El CI `82225517241` falla en dos jobs (los demás están verdes): **typecheck** y **knip strict**. Ambos son consecuencia directa del `knip --fix` masivo de `v13.320.60`.
 
-## Bugs incluidos
+**Qué pasó (analogía):** knip quitó los "letreros de salida" (`export`) de tipos que nadie usaba fuera del archivo. Pero en varios archivos ese letrero era lo único que consumía un `import type` que venía de otro módulo. Al quitar el letrero, el import quedó huérfano — como una caja entregada en la bodega que ya no tiene destinatario. TypeScript, con `noUnusedLocals`, marca error.
 
-### B-034 · Oportunidad "Ganada" sin `fecha_cierre_real` / `valor_real` (🟡 MEDIA)
-Contradicción entre Resumen (usa `monto_estimado`) y Leaderboard (usa `fecha_cierre_real`).
-- En `NuevaOportunidadDialog`, cuando la etapa es tipo `ganada`, mostrar campos **Fecha de cierre real** (obligatoria, default hoy) y **Valor real** (default `monto_estimado`).
-- En kanban `handleMover`: al soltar en etapa `ganada` escribir automáticamente `fecha_cierre_real = hoy` y `valor_real = monto_estimado`.
-- Extender `moverEtapaOportunidad` y `useMoverEtapaConAutomatizacion` con esos campos opcionales.
+Ejemplo confirmado en `src/features/facturacion/hooks/useFacturas.ts`: siguen los `type FacturaRow, type FacturaListItem` importados, pero el `export type { ... }` desapareció y quedó un `;` suelto en la línea 14.
 
-### B-055 · Actividades CRM sin distinción "Vencida" (⚪ BAJA)
-- `Actividades.tsx`: badge "Vencida" cuando `fecha_completada == null && fecha_programada < now`.
-- `statusRegistry.ts`: agregar `"Vencida"` a `DOMAIN_STATUSES.actividad_crm`.
-- `services/actividades.ts`: `listActividadesVencidas` / `countActividadesVencidas` filtran por `responsable_id` OR `responsable_email` cuando hay email.
+### Errores exactos (42 en total)
 
-### B-057 · Tab Costos muestra "Ahorro 100%" en costos sin factura (⚪ BAJA)
-- `ajusteDescripcion.ts`: `describirAjusteNeto` acepta `sinFactura` y excluye del cálculo los renglones sin factura de proveedor; rotula "· N sin factura" o "Sin factura proveedor".
-- Actualizar llamadas en `ResumenAjusteBar` y `GrupoCostosProveedor` para pasar el conteo.
-- Tiles "Cotizado/Facturado" se mantienen sin cambios.
+| Código | Cantidad | Naturaleza |
+|---|---|---|
+| TS6133 | 34 | `import type { X }` huérfano tras quitar el re-export |
+| TS6196 | 8 | Tipo declarado localmente que ya nadie usa |
 
-### B-058 · Embarque Entregado sin acción "Cancelar" (⚪ BAJA)
-La BD ya permite `* → Cancelado` vía `avanzar_estado_embarque`, pero la UI no lo expone.
-- `useEmbarqueEstadoActions`: nuevo `handleCancelar` que llama `avanzarEstado.mutateAsync({ nuevoEstado: "Cancelado" })` + bitácora (`cambiar_estado`) + toast.
-- `EmbarqueDetalleHeaderActions`: nueva entrada "Cancelar embarque" con `ConfirmActionDialog` destructivo, visible en cualquier estado ≠ Cancelado; descripción advierte que no revierte pagos/facturas/docs si estado es Entregado/EIR/Cerrado.
-- Ocultar "Eliminar" cuando hay deuda vinculada (usar `useValidacionCierre` / `validar_cierre_embarque`).
+Archivos afectados: `useAdminData.ts`, `useAlertasSistema.ts`, `useAppLogsHealth.ts`, `usePapelera.ts`, `admin/services/members.ts`, `anticiposProveedorService.ts`, `CxpPorCapturarToolbar.tsx`, `useEstadoCuentaEmail.ts`, `useComisionesDevengadas.ts`, `useFacturasCxP.ts`, `useDashboardOperador.ts`, `useEmbarquesPendientesAdmin.ts`, `embarqueDetalleTabsTypes.ts` (7 tipos), `useContenedoresInfoMap.ts`, `useProformas.ts`, `useReconciliacionEmbarque.ts`, `useBandejas.ts`, `useContactosClienteParaEnvio.ts`, `useFacturas.ts`, `useHuecoFacturacion.ts`, `useNotasCredito.ts`, `useTabProformasController.ts`, `facturacion/services/facturapi.ts`, `usePortalBreadcrumbs.ts`, `useProveedores.ts`.
 
-## Verificación
-- `bun run lint -- --max-warnings 0`
-- `bun test src/features/crm src/features/embarques/components/costos` (targeted)
-- Verificar en preview: Oportunidad → mover a ganada, Actividades vencidas badge rojo, tab Costos sin ahorro fantasma, embarque Entregado permite Cancelar.
+### Knip strict
 
-## Post
-- Bump `APP_VERSION` a `13.320.53`.
-- Entrada en `CHANGELOG.md`.
-- Reportar: 56/63 cerrados, 7 pendientes (B-010, B-011, B-013, B-020, B-029, B-042, B-044 + diagnósticos B-012/B-021/B-059).
+Reporta 1 archivo no usado: `src/features/catalogos/domain/tiposContenedorDefault.ts` — es el residuo de cuando se movió `TIPOS_CONTENEDOR_DEFAULT` a `src/lib/domain/` para resolver el error de cross-feature import.
+
+## Plan
+
+**Paso 1 — Limpiar imports huérfanos (34 errores TS6133)**
+En cada archivo, eliminar únicamente el especificador `type X` de la lista de import, y borrar el `;` suelto que quedó donde estaba el re-export. Si el import queda vacío, se elimina la sentencia completa.
+
+**Paso 2 — Eliminar tipos locales muertos (8 errores TS6196)**
+Principalmente en `embarqueDetalleTabsTypes.ts` (`ResumenProps`, `CostosProps`, `FacturacionProps`, `NotasProps`, `TrackingProps`, `DocHandlers`, `Financials`) y `DireccionOrden` en `CxpPorCapturarToolbar.tsx`. Antes de borrar cada uno se verifica que no esté referenciado dentro del mismo archivo (por ejemplo, `Financials` podría estar embebido en otro tipo); si lo está, se conserva y se ajusta la referencia.
+
+**Paso 3 — Borrar archivo muerto**
+`rm src/features/catalogos/domain/tiposContenedorDefault.ts`. Se confirma antes con `rg` que nadie lo importe.
+
+**Paso 4 — Verificación**
+- `bun run typecheck` (o `tsgo --noEmit`) → 0 errores
+- `bun run lint:unused:strict` → 0 hallazgos
+- `bun run lint -- --max-warnings 0` → verde (no debe romperse; los cambios son remociones)
+- Smoke de tests de los módulos tocados (facturación, embarques, admin)
+
+**Paso 5 — Versionado**
+Bump de `APP_VERSION` a `13.320.61` y entrada en `CHANGELOG.md`.
+
+## Notas técnicas
+
+- No se toca lógica de negocio: todas las ediciones son remoción de declaraciones de tipo e imports sin runtime.
+- No se relajan las reglas de `knip.json` ni de `tsconfig` — se cierra la deuda real.
+- Riesgo bajo: si algún tipo resulta estar en uso, el typecheck lo detecta de inmediato en el Paso 4.

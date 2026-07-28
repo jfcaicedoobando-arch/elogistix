@@ -6,10 +6,6 @@ import {
   fetchAdminOrgActivity,
   fetchAdminRecentOrgs,
   createOrganization,
-  type AdminOrgStats,
-  type AdminOrgActivity,
-  type AdminRecentOrg,
-  type GlobalUserRow,
   type OrgRow,
 } from '@/features/admin/services';
 import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';

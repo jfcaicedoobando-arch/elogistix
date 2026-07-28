@@ -6,7 +6,7 @@ import { queryKeys } from "@/lib/query";
 import { fetchEstadoResultadosMes } from "@/features/profit/services/estadoResultados";
 import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estadoResultadosDevengado";
 import { generarMesesDisponibles, mesActualKey } from "@/features/facturacion/domain/proyeccionFacturacion";
-import { useFuenteEerr, type FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
+import { useFuenteEerr } from "@/features/profit/hooks/useFuenteEerr";
 
 ;
 

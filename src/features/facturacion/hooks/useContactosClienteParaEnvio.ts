@@ -8,7 +8,6 @@ import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys
 import {
   fetchContactosClienteEnvio,
   type ContactoEnvio,
-  type DatosEnvioCliente,
 } from "@/features/facturacion/services/contactosClienteEnvio";
 
 export type { ContactoEnvio,  };

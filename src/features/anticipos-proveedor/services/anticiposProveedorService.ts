@@ -10,11 +10,9 @@ import {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
-  AnticipoError,
   type Anticipo,
   type AnticipoAplicacion,
   type RegistrarAnticipoInput,
-  type MonedaAnticipo,
 } from "@/features/cxp/services/anticipos";
 
 export {
