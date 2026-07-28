@@ -40,15 +40,17 @@ describe("loadDraft", () => {
   });
 
   it("devuelve null si la versión no coincide", () => {
+    // v13.320.35: la versión vigente del schema es 2 (bump por B-003, Wave 1).
+    // Usamos 99 para asegurar mismatch aun si el schema vuelve a bumpearse.
     window.localStorage.setItem(
       draftKey(USER),
-      JSON.stringify({ version: 2, savedAt: Date.now(), values: {} }),
+      JSON.stringify({ version: 99, savedAt: Date.now(), values: {} }),
     );
     expect(loadDraft(USER)).toBeNull();
   });
 
   it("devuelve el draft cuando es válido y fresco", () => {
-    const fresh = { version: 1, savedAt: Date.now(), values: { cliente_id: "c-1" } };
+    const fresh = { version: 2, savedAt: Date.now(), values: { cliente_id: "c-1" } };
     window.localStorage.setItem(draftKey(USER), JSON.stringify(fresh));
     const out = loadDraft(USER);
     expect(out?.values).toEqual({ cliente_id: "c-1" });
@@ -87,7 +89,7 @@ describe("useCotizacionDraftAutosave hook", () => {
     const raw = window.localStorage.getItem(draftKey(USER));
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
-    expect(parsed.version).toBe(1);
+    expect(parsed.version).toBe(2);
     expect(parsed.values.cliente_id).toBe("c-42");
   });
 
