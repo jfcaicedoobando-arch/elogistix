@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCreateSeguro, useUpdateSeguro } from "@/features/embarques/hooks/useSegurosEmbarque";
 import type { MonedaSeguro, SeguroEmbarque, SeguroEmbarqueInput } from "@/features/embarques/services/seguros";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
@@ -71,8 +72,29 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
     setForm((p) => ({ ...p, [k]: v }));
 
   const handleSubmit = async () => {
-    if (!form.aseguradora.trim() || !form.numero_poliza.trim()) return;
-    if (form.vigencia_hasta < form.vigencia_desde) return;
+    // B-056: antes estos guardas eran returns silenciosos — el submit "moría"
+    // sin toast ni mensaje inline. Ahora cada causa se dice explícitamente.
+    if (!form.aseguradora.trim() || !form.numero_poliza.trim()) {
+      return notifyError(undefined, {
+        title: "Faltan datos de la póliza",
+        description: "Aseguradora y número de póliza son obligatorios.",
+        method: "SEGURO_FORM_SUBMIT",
+      });
+    }
+    if (form.prima < 0) {
+      return notifyError(undefined, {
+        title: "Prima inválida",
+        description: "La prima no puede ser negativa.",
+        method: "SEGURO_FORM_SUBMIT",
+      });
+    }
+    if (form.vigencia_hasta < form.vigencia_desde) {
+      return notifyError(undefined, {
+        title: "Vigencia inválida",
+        description: "La vigencia final no puede ser anterior a la inicial.",
+        method: "SEGURO_FORM_SUBMIT",
+      });
+    }
     if (isEdit && seguro) {
       await update.mutateAsync({ id: seguro.id, patch: form });
     } else {
