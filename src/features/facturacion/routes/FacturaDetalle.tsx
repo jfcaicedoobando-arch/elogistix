@@ -4,7 +4,8 @@
  * de timbrado automáticamente.
  */
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { DetailNotFound } from "@/components/shared/DetailNotFound";
+import { FileX } from "lucide-react";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { PageContainer } from "@/components/shared/PageContainer";
 
@@ -49,7 +50,7 @@ export default function FacturaDetalle() {
     );
   }
 
-  if (!factura) return <FacturaNoEncontrada onVolver={() => navigate("/facturacion")} />;
+  if (!factura) return <FacturaNoEncontrada />;
 
   return (
     <FacturaDetalleView
