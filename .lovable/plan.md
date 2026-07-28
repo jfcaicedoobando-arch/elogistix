@@ -1,64 +1,49 @@
+## Contexto
 
-# Auditoría visual — Detalle de proforma (`/proformas/:id`)
+Las 4 auditorías coinciden: el CI pre-merge es sólido, pero hay (a) guardrails que existen y no corren, (b) una fuga de seguridad real en una función de base de datos, (c) supply-chain con puntos flotantes, y (d) cero automatización post-merge (deploy/migraciones/smoke).
 
-Capturé la vista real (PRO-2026-1002) y verifiqué los datos en la base. Resumen: la página funciona, pero apila 6 tarjetas a todo lo ancho con baja densidad, repite el mismo dato hasta 3 veces y muestra 3 campos que **no vienen de la base** (uno de ellos es informativo-falso).
+Verifiqué en el repo antes de planear:
+- `audit:rpc-sync`, `audit:rpc-columns` y `audit:sonner` existen en `package.json` (líneas 37, 39, 42) y **ninguno se invoca desde `.github/workflows/`**.
+- `get_top_tarifas` (migración `20260623211759_…`) es `SECURITY DEFINER` y **cuando se le pasa `p_organization_id` explícito no valida membresía** — cualquier usuario autenticado puede leer tarifas de otra organización. Fuga real, no sólo falta de test.
+- 654 migraciones en el repo; ningún workflow valida el apply limpio.
+- Script local `test` usa 16 shards; CI usa 10.
 
-## 1. Información repetida (verificada en pantalla)
+Analogía: el CI de hoy es una alarma muy buena instalada en las ventanas… pero la puerta principal (el deploy) no tiene ni cerradura, y hay dos sensores desconectados.
 
-| Dato | Dónde se repite |
-|---|---|
-| Total (USD 406.00) | Header + tarjeta "Totales" + "Monto" de la factura asociada |
-| Estado "Facturada" | Badge del header + hito del Historial + tarjeta Factura asociada |
-| Cliente (FASTCOLD TECH) | Subtítulo del header + tarjeta "Facturar a" |
-| Fecha de emisión + ejecutivo | Tarjeta "Datos generales" + hito "Emitida" del Historial |
-| Moneda (USD) | En cada celda de la tabla de conceptos, más el encabezado de Totales |
+---
 
-## 2. Información que no se propaga (verificada en base de datos)
+## Ola 1 — Cierres inmediatos (bajo riesgo, alto valor)
 
-- **"Método de pago: Transferencia electrónica"** está escrito a mano en el código (`ProformaDatosGeneralesCard`). No existe columna de método/forma de pago en `proformas` ni en `clientes`. Hoy es un dato inventado en pantalla.
-- **"Vigencia"** se calcula siempre como emisión + 30 días (`vigenciaPlus30`), sin campo ni configuración detrás.
-- **"Días crédito: —"**: `proformas.dias_credito` viene nulo, pero `clientes.dias_credito` sí existe y no se hereda ni se muestra. Riesgo real: al convertir a factura se usa `proforma.dias_credito ?? 0`, es decir, crédito 0 aunque el cliente tenga plazo pactado.
-- **Historial "Enviada —"**: sólo lee `proformas.enviada_at`; nunca consulta `proforma_envios` (esta proforma tiene 0 envíos, pero cuando los hay no se ven fecha, destinatarios ni reenvíos).
-- **Sin bitácora**: el detalle de Factura sí tiene `FacturaBitacoraCard`; la proforma no muestra su historial de actividad.
-- **Sin liga al portal del cliente**: el enlace público sólo aparece justo después de enviar; no hay "copiar liga" ni "ver como cliente" en la página.
-- **Cards sin navegación**: "Facturar a" no enlaza al cliente y "Datos del embarque" no enlaza al embarque (el enlace está escondido en "Más acciones").
+1. **Fuga de seguridad `get_top_tarifas`**: nueva migración que exige membresía también en la rama `p_organization_id IS NOT NULL`, + prueba pgTAP en `supabase/tests/rls/`.
+2. **Cablear guardrails muertos**: añadir `audit:rpc-sync`, `audit:rpc-columns` y `audit:sonner` al job `audits` de `ci.yml`.
+3. **Limpiezas de `ci.yml`**: eliminar el step JUnit muerto, quitar el caché de Vite inútil, corregir el comentario falso sobre gating tests (excluirlos de los shards vía `vitest.config.ts` para que corran una sola vez).
+4. **Alinear shards locales (16) con CI (10)** en el script `test`.
 
-## 3. UI/UX y consistencia con el design language
+## Ola 2 — Supply-chain
 
-- La página es una columna de 6 tarjetas: en escritorio (1280–1920px) se desperdicia la mitad del ancho y obliga a hacer scroll para llegar a la factura asociada.
-- "Totales" ocupa una tarjeta completa para 3 renglones; en Factura, los totales viven **dentro** de la tabla de conceptos (`FacturaConceptosTable`). Divergencia de patrón.
-- "Facturar a" queda con un hueco vertical grande porque se estira a la altura de la tarjeta del embarque.
-- El Historial son 4 iconos sueltos sin conector; se lee como una fila de tarjetas, no como una línea de tiempo.
-- La tabla de conceptos repite la moneda en cada celda y muestra IVA como texto "Sí" en lugar de badge.
+5. **Pinear el descargador de actionlint** a un commit/tag con verificación de checksum (hoy es `curl | bash` desde `main`).
+6. **Pinear `bun-version`** a la versión verificada en `setup-bun/action.yml` e `install-canary.yml`.
+7. **`deno.lock` para las edge functions** + `--lock` en `ci.yml`, `deno-typecheck.yml` y `post-deploy-smoke.yml`.
+8. **`persist-credentials: false`** en los checkouts que no hacen push/fetch; `deny-licenses` + `fail-on-scopes` en `dependency-review.yml`.
+9. **Reducir alcance de secretos en `e2e.yml`**: mover el bloque `env:` global a los jobs que sí lo necesitan.
 
-## 4. Plan de cambios
+## Ola 3 — Cobertura que hubiera cachado los bugs reales
 
-### Fase A — Corrección de datos (lo más importante)
-1. Quitar "Método de pago" fijo. Se elimina el campo hasta que exista dato real (o se muestra sólo si el CFDI asociado lo tiene).
-2. Etiquetar "Vigencia" como derivada (tooltip "30 días naturales desde la emisión") para que no se lea como un campo capturado.
-3. Días de crédito: si la proforma no trae plazo, mostrar el del cliente con el badge `HeredadoBadge` ("Heredado del cliente: 30 días") y usar ese mismo valor en la conversión a factura, en lugar de 0.
-4. Historial: leer `proforma_envios` para el hito "Enviada" (fecha del último envío, número de envíos y destinatarios en tooltip).
+10. **Suite `test_rls_rpc_smoke_roles.sql`**: ejecuta (no sólo inspecciona) las RPC críticas bajando de rol — `get_top_tarifas` con org ajena, `duplicar_cotizacion`, soft-delete, y el rol nuevo `agente_carga` sin acceso a pricing. Alta en la matriz de `rls-tests.yml`.
+11. **Job `migration-clean-apply`**: aplica las 654 migraciones en Postgres limpio con allowlist explícita de excepciones, para que la deriva sea visible y decreciente en vez de estar oculta tras stubs.
+12. **Job `rpc-smoke`** en `post-deploy-smoke.yml`: llama las RPC de dinero y falla si el contrato de columnas cambió.
+13. **Anti-skip global en `e2e.yml`**: en corridas agendadas, faltar secretos debe fallar, no pintar verde vacío.
 
-### Fase B — Deduplicación
-5. Quitar la tarjeta "Totales" independiente y mover el desglose Subtotal/IVA/Total al pie de la tabla de Conceptos, igual que en Factura. El total grande del header se conserva como única cifra destacada.
-6. Quitar de "Datos generales" la fecha de emisión y el ejecutivo (ya viven en el Historial), dejando esa tarjeta para vigencia, crédito, BL Master y folio externo.
-7. La tarjeta de factura asociada deja de repetir el monto cuando coincide con el total de la proforma; muestra folio, estado, UUID y descargas.
-8. Mover la moneda de cada celda al encabezado de columna ("Importe (USD)") y usar badge para IVA.
+## Ola 4 — Post-merge (requiere decisiones tuyas)
 
-### Fase C — Layout y jerarquía
-9. Rejilla de dos columnas en escritorio: izquierda (Historial, Conceptos + totales, Notas), derecha en columna angosta y pegajosa (Facturar a, Datos del embarque, Factura asociada, Datos generales). En móvil se apila igual que hoy.
-10. Historial convertido en línea de tiempo con conector, mismo lenguaje visual que el timeline de embarques; los hitos sin fecha en gris apagado.
-11. Enlaces contextuales: nombre del cliente → ficha de cliente; expediente del embarque → detalle del embarque.
-12. Añadir a la barra de acciones "Copiar liga del portal" y "Ver como cliente" (reutilizando el token del portal ya existente).
-13. Añadir tarjeta de bitácora al final, con el componente compartido ya usado en Factura.
+14. `deploy.yml` con gate (CI verde en main → migraciones verificadas → smoke inmediato) y `workflow_dispatch`/`repository_dispatch` para engancharlo al publish de Lovable.
+15. Check de drift de `src/integrations/supabase/types.ts` contra el esquema real.
+16. Migración correctiva que formalice el drift documentado en `_ci_drift.sql` (buckets, `tracking_externo`, columnas de `proformas`).
 
-### Fase D — Verificación
-14. Capturas comparativas a 1920×1080, 1440 y 390 (móvil) antes/después.
-15. Pruebas: unitarias para la herencia de días de crédito y para el hito "Enviada" con y sin envíos; RTL para que no se rendericen campos inventados; correr lint y la suite afectada.
-16. `CHANGELOG.md` + `APP_VERSION` (13.322.0, por el cambio de estructura).
+---
 
 ## Detalles técnicos
 
-- Archivos: `routes/ProformaDetalle.tsx`, `components/detalle/*`, `components/ProformaDetalleCards.tsx`, `domain/proformaDetalleHelpers.ts`, `hooks/useProformaDetalle.ts` (agregar envíos y `clientes.dias_credito` al fetch), `components/AccionesProforma.tsx`.
-- Sin cambios de esquema en base de datos; sólo lectura adicional de `proforma_envios` y del plazo del cliente en el `select` existente.
-- Se respetan los límites de 200 líneas por componente y los tokens semánticos de color (sin colores fijos).
+- Los puntos que **no puedo hacer desde aquí** y necesitan que tú los configures en GitHub: crear los environments `staging`/`production` con reviewers, mover secretos a esos environments, definir `vars.SUPABASE_URL`, el token de Codecov y `GITLEAKS_LICENSE`. Yo dejo el YAML preparado para consumirlos.
+- Cada ola cierra con `lint`, `typecheck`, tests afectados, bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
+- Las olas 1–3 son puramente de repositorio y se pueden mergear de forma independiente.
