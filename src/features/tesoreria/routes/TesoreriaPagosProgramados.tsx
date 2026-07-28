@@ -23,7 +23,7 @@ export default function TesoreriaPagosProgramados() {
   // B-030: fetch directo sin filtro implícito de estado (antes la RPC
   // `cxp_por_pagar` ocultaba captura/Borrador/por aprobar con fecha).
   const { data = [], isLoading } = useQuery({
-    queryKey: ["tesoreria", "pagos-programables"],
+    queryKey: tesoreriaKeys.pagosProgramables,
     queryFn: fetchPagosProgramables,
     staleTime: 30_000,
   });
