@@ -77,7 +77,7 @@ export default function LeadDetalle() {
   if (!lead) {
     return (
       <PageContainer>
-        <DetailHeader backTo={ROUTES.CRM_LEADS} backLabel="Leads" title="Lead no encontrado" />
+        <DetailHeader backTo={ROUTES.CRM_LEADS} backLabel="Leads" titleAs="h2" title="Lead no encontrado" />
         <ErrorState
           title="Lead no encontrado"
           description="El lead que buscas no existe o fue eliminado."
