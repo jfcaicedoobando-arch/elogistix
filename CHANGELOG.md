@@ -1,5 +1,20 @@
 # Changelog
 
+## [13.320.41] - 2026-07-28
+- **Bug bash live · Wave 7 (3 fixes de flujos e infraestructura)** — séptima tanda del audit `bugs-e2e-live-2026-07-28.md`. Al revisar los 13 hallazgos ALTOS confirmamos que 6 ya se habían cerrado en olas previas (B-007, B-008, B-013, B-016, B-017, B-018). Los 3 que se atacan ahora:
+  - **B-009 · super_admin recupera módulos operativos**: `resolveProtectedRouteRedirect` ya no expulsa al super_admin fuera de `/admin`. Sólo lo lleva a `/admin` cuando aterriza en `/` o `/dashboard` (comportamiento default); si navega a `/embarques`, `/cxp`, etc., se respeta la intención. Así el OrgSwitcher vuelve a servir como palanca de impersonación.
+  - **B-014 · Wizard embarques: peso/volumen/piezas negativos**: `validateContenedoresFcl` valida ahora que `peso_kg`, `volumen_m3` y `piezas` no sean negativos, además del `NumericInput` que ya bloqueaba el signo en la UI. Es defensa en profundidad para imports CSV, edición programática y tests.
+  - **B-015 · Caché persistida congelaba catálogos administrables**: `CATALOG_KEYS` se recortó a `tasa_iva` y `exchange-rates` (los que sí son estáticos por definición). `tipos_contenedor`, `navieras`, `puertos` y `configuracion` ya no se dehidratan a `localStorage` — se refetchean al primer montaje de cada sesión, así los cambios que hace un admin en un catálogo se ven al recargar sin tener que limpiar el storage.
+- **Aplazados con nota** (requieren rediseño que no cabe en este pase):
+  - **B-006 · Captura manual CxP sin conceptos**: exige un mini-editor de conceptos dentro del dialog que además cuadre con subtotal+IVA=total. Se abre como QW dedicado.
+  - **B-010 · Conciliación bancaria sin movimientos**: falta UI de captura manual sobre `bbva_movimientos`. Se abre como QW dedicado (el importador CSV queda para otra fase).
+  - **B-011 · Footer wizard cotización con VENTA MXN $0**: el bug vive en `useCotizacionWizardForm` (cálculo aguas arriba de `WizardTotalsBar`); necesita re-diseño del helper `sumPorMoneda`. Se aparta para una revisión enfocada.
+- **Sprint status**: acumulado 27/63 bugs cerrados (Wave 7: B-009, B-014, B-015). Restantes: 36 (3 ALTOS diferidos + 33 MED/BAJA/verify).
+- Analogía: al dueño le devolvimos la llave del piso operativo (B-009), le pusimos malla al colador para que no cuele números negativos (B-014) y le abrimos la ventana de la despensa para que los catálogos frescos entren solos sin tener que reiniciar la casa (B-015).
+
+
+
+
 ## [13.320.40] - 2026-07-28
 - **Bug bash live · Wave 6 (3 fixes de UX financiera y CRM)** — sexta tanda del audit `bugs-e2e-live-2026-07-28.md`:
   - **B-053 · Formato de negativos "MXN -$8,000.00"**: `formatCurrency` ahora captura el signo antes del símbolo, así los negativos MXN se muestran como `MXN -8,000.00` (sin el `$` intermedio confuso). El regex pasó de `^\$\s?` a `^(-?)\$\s?` preservando el signo al re-prefijar "MXN ".
