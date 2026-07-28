@@ -62,6 +62,8 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         backLabel="Oportunidades"
         icon={<Target className="h-6 w-6 text-accent shrink-0" />}
         title={op.nombre}
+        titleAs="h2"
+
         subtitle={op.cliente_nombre || "Sin cliente"}
         trailing={canEdit ? (
           <div className="flex gap-2">
