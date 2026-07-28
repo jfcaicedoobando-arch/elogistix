@@ -26,6 +26,7 @@ import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { usePermissions } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatCurrency } from "@/lib/formatters";
+import { resolverDiasCredito } from "@/features/proformas/domain/proformaDetalleHelpers";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
@@ -83,7 +84,10 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     convertir({
       proformaIds: [proforma.id],
       organizationId: proforma.organization_id,
-      diasCredito: proforma.dias_credito ?? 0,
+      diasCredito: resolverDiasCredito(
+        proforma.dias_credito,
+        proforma.cliente_full?.dias_credito,
+      ).dias ?? 0,
     });
 
   const onConvertir = async () => {
@@ -148,7 +152,8 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   // generados aún no la incluyen.
   const tokenPublico = (proforma as unknown as { token_publico?: string | null }).token_publico ?? null;
   if (tokenPublico) {
-    const ligaPortal = `${window.location.origin}/portal/proformas/${tokenPublico}`;
+    const rutaPortal = `/portal/proformas/${tokenPublico}`;
+    const ligaPortal = `${window.location.origin}${rutaPortal}`;
     more.push({
       id: "copiar-liga", label: "Copiar liga del portal", icon: Link2,
       onClick: () => {
@@ -158,7 +163,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
         );
       },
     });
-    more.push({ id: "ver-portal", label: "Ver como cliente", icon: Eye, href: ligaPortal });
+    more.push({ id: "ver-portal", label: "Ver como cliente", icon: Eye, href: rutaPortal });
   }
   if (proforma.embarque_id) {
     more.push({
