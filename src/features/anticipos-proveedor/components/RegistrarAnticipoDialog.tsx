@@ -26,7 +26,7 @@ const schema = z.object({
   // `pagos_proveedor`. Sin capturarlo aquí, la RPC `aplicar_anticipo_a_factura`
   // insertaba NULL explícito (que anula el default) y el 100% de los anticipos
   // creados por UI eran inaplicables. Ahora es requerido y por defecto Transferencia.
-  metodoPago: z.enum(METODOS_PAGO, { errorMap: () => ({ message: "Selecciona un método de pago" }) }),
+  metodoPago: z.enum([...METODOS_PAGO] as [string, ...string[]], { errorMap: () => ({ message: "Selecciona un método de pago" }) }),
   referencia: z.string().optional(),
   notas: z.string().optional(),
 });
