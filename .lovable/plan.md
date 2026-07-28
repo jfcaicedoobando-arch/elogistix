@@ -1,38 +1,43 @@
 ## Objetivo
 
-Verificar, uno por uno, los 49 puntos del documento (REG B-001, REG B-004, REG B-016 y B-064…B-106) contra el código y la base de datos reales, y entregar un reporte de estado. **Sin modificar código.**
+Cerrar los 2 ítems parciales de la auditoría (B-082 y B-091) y ponerle red de seguridad a los 13 fixes SQL que hoy no tienen ningún test.
 
-Contexto verificado antes de este plan: el archivo subido es byte-idéntico (md5 `73fb1ce9…`) al ejecutado la sesión pasada; `APP_VERSION` está en `13.321.0` y hay 5 migraciones nuevas del 28/07 (`20260728195103` … `20260728195844`) más las del bloque previo.
+## Estado verificado antes del plan
 
-## Método de verificación
+- `fetchPortalNotasCreditoFactura` ya existe y filtra bien (`estado = 'Aplicada'`, `deleted_at IS NULL`), pero **`PortalFacturaPagosCard.tsx` no la consume**: calcula `saldo = totalFactura - totalPagado` y decide "Liquidada" sin restar notas de crédito. Ese es el hueco real de B-082.
+- El badge de B-091 en `TarifaCardBadges.tsx` existe pero dice literalmente "Demora día 6", un número quemado que no corresponde cuando la tarifa tiene otros días libres.
+- En `supabase/tests/rls/` hay 16 suites, todas de RLS/permisos; ninguna cubre lógica de negocio de las funciones y triggers de tarifas/costeo.
 
-Cada ítem se clasifica como **APLICADO**, **PARCIAL**, **NO APLICADO** o **NO VERIFICABLE** (requiere staging/E2E), con la evidencia concreta que lo respalda.
+## Parte 1 — B-082: notas de crédito en el saldo del portal
 
-### Grupo A — Base de datos (REG B-001, REG B-016, B-064…B-067, B-069…B-073, B-079, B-080, B-084, B-085, B-090, B-096, B-098)
-Consultas de solo lectura contra el backend:
-- `pg_proc`: existencia, firma única (sin overloads huérfanos) y cuerpo actual de `duplicar_cotizacion`, `agente_aprobar_tarifa`, `get_top_tarifas`, `crear_embarque_borrador_core`, `actualizar_cotizacion_costos`, `revalidar_tarifa_cotizacion`, `current_agente_id`, `current_agente_org`, `get_current_agente_context`.
-- `pg_policies`: policies de las 27 tablas del soft delete (REG B-001), las 3 policies revertidas del agente (B-069), las de `costeo_agentes` (B-070) y las de `storage.objects` del bucket de cartas garantía (B-085).
-- `pg_trigger` + definición: trigger de reemplazo de tarifas (B-067/B-072), trigger de estado `vencida` (B-079), validación de tramos solapados (B-096).
-- Definición de la vista `costeo_tarifas_vigentes_v` (B-071, B-080).
-- Contraste con el SQL "esperado" del documento para detectar divergencias reales, no sólo presencia del objeto.
+1. En `PortalFacturaPagosCard.tsx`, consumir el hook de NC junto al de pagos y calcular:
+   `saldo = max(0, total - pagado - notasCreditoAplicadas)`, con "Liquidada" derivada de ese saldo.
+2. Renderizar las NC como una sección propia dentro de la tarjeta (folio, fecha, monto en negativo), separada del historial de pagos para que el cliente vea de dónde sale el descuento.
+3. Mostrar una línea de resumen "Total facturado / Pagos / Notas de crédito / Saldo" para que el número cuadre a la vista.
+4. Revisar que el listado de facturas del portal y `PortalFacturaDetalle` usen el mismo saldo, no uno propio, para que no queden dos verdades.
 
-### Grupo B — Frontend (B-074, B-075, B-081…B-083, B-086…B-089, B-091…B-095, B-097, B-099…B-106)
-- Lectura dirigida de los archivos citados por cada FIX (wizard de cotización, `PortalCotizaciones`, `PortalFacturaDetalle`, `PortalEmbarqueResumenTab`, `AgenteTarifas`, KPIs del portal agente, menú "+ Nuevo" del CRM).
-- Verificación de que existe y se usa `src/lib/date/dateOnly.ts` en los puntos de B-089/B-103, y que no quedan `new Date(fechaDateOnly)` sin normalizar en esas rutas.
-- Búsqueda de los símbolos/campos que cada fix exige (p. ej. `lcl_tarifa_wm`/`lcl_minimo_flete` en el INSERT de B-092, override → regeneración de conceptos en B-074, margen LCL en B-075).
+## Parte 2 — B-091: copy de demoras
 
-### Grupo C — Cobertura de pruebas
-- Identificar cuáles de los fixes tienen test asociado (unitario, RLS `.sql` o E2E) y cuáles quedaron sin red de seguridad — esto es lo que hace que un fix "aplicado" pueda regresar, como pasó con REG B-001 y REG B-016.
+Sustituir el texto quemado por uno derivado de la tarifa: "Demora desde el día N" usando los días libres reales de la fila, y ajustar el tooltip para explicar que el cargo aplica **después** de agotar esos días. Si el dato de días libres no viene, no se muestra el badge en lugar de inventar el día 6.
 
-## Entregable
+## Parte 3 — Suite de regresión para los 13 fixes SQL
 
-Una tabla en el chat: `ID | Estado | Evidencia | Riesgo`, ordenada por severidad, seguida de:
-1. Lista corta de ítems NO APLICADOS o PARCIALES, con lo que falta exactamente.
-2. Lista de ítems sin test de regresión.
-3. Recomendación de siguiente ola de trabajo (que se ejecutaría sólo si lo apruebas después).
+Nueva suite `supabase/tests/rls/test_reg_costeo_tarifas.sql`, con los mismos helpers (`_helpers.sql`, transacción + ROLLBACK) e integrada al workflow `rls-tests.yml`. Cubre, con aserciones de comportamiento y no de mera existencia del objeto:
+
+- Reemplazo atómico de tarifas: al insertar una tarifa que sustituye a otra, la anterior queda marcada reemplazada y sólo una queda vigente.
+- Vista `costeo_tarifas_vigentes_v`: incluye tarifas con vigencia futura, excluye las de agentes inactivos y las vencidas.
+- Trigger de estado `vencida` derivado por fecha.
+- `get_top_tarifas`: no devuelve filas de otra organización.
+- `agente_aprobar_tarifa`: un agente no puede aprobar tarifas fuera de su organización.
+- `duplicar_cotizacion` y `actualizar_cotizacion_costos`: corren sin error de columna inexistente (regresión REG B-016 y la de `puerto_origen`).
+- `crear_embarque_borrador_core`: hereda la tarifa y no multiplica costos.
+- Soft delete (REG B-001): las funciones de listado no devuelven filas con `deleted_at`.
+- Policies de storage de cartas garantía: no se lee un objeto de otra organización.
+
+Además, un test unitario de los agregados del portal que verifique que el saldo resta notas de crédito (la parte que no necesita base de datos).
 
 ## Notas técnicas
 
-- La auditoría es de solo lectura: `supabase--read_query`, `rg` y lectura de archivos. Ninguna migración, ningún `write`.
-- Los ítems marcados CONDICIONAL en el documento (B-078, y parcialmente B-104) sólo pueden confirmarse en staging con sesión de agente real; se reportarán como NO VERIFICABLE con el chequeo estático que sí se pueda hacer.
-- No se modificará `CHANGELOG.md` ni `APP_VERSION`, ya que no hay cambio funcional.
+- Todo el trabajo SQL es de pruebas: **ninguna migración nueva**, ningún cambio de esquema.
+- Si alguna aserción falla, se reporta como hallazgo y se decide contigo antes de tocar la función — el objetivo de esta ola es la red de seguridad, no reescribir lógica.
+- Se registra el cambio en `CHANGELOG.md` y se sube `APP_VERSION`.
