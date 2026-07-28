@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.320.42] - 2026-07-28
+- **Bug bash live · Wave 8 parcial (Money & KPIs, batch 1)** — arranca la octava tanda del audit `bugs-e2e-live-2026-07-28.md` atacando 4 desalineaciones de números en tablero, P&L, cartera y listado de cotizaciones. Los cuatro comparten el mismo patrón: la UI mostraba un dato "raro" (cero, borrador contado como confirmado, "Por vencer 0d") no por bug en el componente sino por dato que venía mal desde el RPC/columna. Con este batch quedan bien desde el origen.
+  - **B-019 · "Por vencer 0d" en cartera**: `carteraColumns.tsx` ahora muestra `Vence hoy` cuando faltan 0 días y `Vence en Xd` para el resto, en vez del confuso "Por vencer 0d". No cambia lógica de negocio, solo copy del badge.
+  - **B-033 · Borrador contado como Confirmado en dashboard**: `dashboard_stats` preservaba `estado='Borrador'` sólo si no había ETD/ETA; con fechas, la fórmula lo promovía a `Confirmado`/`En Tránsito`. Ahora Borrador queda como Borrador siempre y se excluye del set de "activos" (KPIs, alertas y cargas por cliente). Los conteos ya no se inflan con borradores planeados.
+  - **B-022 · Tablas "Ingresos/Costos por concepto" vacías en P&L embarque**: `pnl_financiero_embarque` no emitía las claves `por_concepto` ni `por_concepto_costo` (el componente las buscaba y siempre pintaba "Sin datos"). Se agregan como agregados por descripción normalizada, uniendo conceptos presupuestados con `conceptos_factura` (ingresos) y `proveedor_facturas_conceptos` (costos). Cuando una factura de proveedor no trae conceptos, cae al bucket `(factura completa)` para no perder el monto.
+  - **B-036 · Cotizaciones legadas con subtotal USD $0.00**: `cotizaciones_listado` regresaba `c.subtotal` tal cual; en cotizaciones viejas ese campo se quedó en 0 aunque los conceptos existen. Ahora, si `subtotal` es 0, se recalcula sumando `cotizacion_costos.precio_venta` y se infiere la moneda dominante del mismo agregado. Las cotizaciones nuevas siguen tomando el valor cacheado (ruta rápida).
+- **Sprint status**: acumulado 31/63 bugs cerrados (Wave 8 batch 1: B-019, B-022, B-033, B-036). Pendientes: 32 (siguiente batch: B-020 CxP KPI vs aging).
+- Analogía: era un tablero eléctrico donde 4 focos venían fundidos desde la caja de fusibles. En vez de cambiar los focos (los componentes), reemplazamos los fusibles (los RPCs que sirven los datos) para que llegue voltaje correcto a cada uno.
+
+
+
 ## [13.320.41] - 2026-07-28
 - **Bug bash live · Wave 7 (3 fixes de flujos e infraestructura)** — séptima tanda del audit `bugs-e2e-live-2026-07-28.md`. Al revisar los 13 hallazgos ALTOS confirmamos que 6 ya se habían cerrado en olas previas (B-007, B-008, B-013, B-016, B-017, B-018). Los 3 que se atacan ahora:
   - **B-009 · super_admin recupera módulos operativos**: `resolveProtectedRouteRedirect` ya no expulsa al super_admin fuera de `/admin`. Sólo lo lleva a `/admin` cuando aterriza en `/` o `/dashboard` (comportamiento default); si navega a `/embarques`, `/cxp`, etc., se respeta la intención. Así el OrgSwitcher vuelve a servir como palanca de impersonación.
