@@ -34,7 +34,7 @@ export function buildConceptoColumns(
       meta: { align: "right", className: "w-[160px] tabular-nums" },
       cell: ({ row }) =>
         moneda
-          ? formatNumber(Number(row.original.precio_unitario), 2)
+          ? formatNumber(Number(row.original.precio_unitario), { decimals: 2 })
           : formatCurrency(Number(row.original.precio_unitario), row.original.moneda),
     },
     {
@@ -43,7 +43,7 @@ export function buildConceptoColumns(
       meta: { align: "right", className: "w-[160px] tabular-nums font-medium" },
       cell: ({ row }) =>
         moneda
-          ? formatNumber(importe(row.original), 2)
+          ? formatNumber(importe(row.original), { decimals: 2 })
           : formatCurrency(importe(row.original), row.original.moneda),
     },
     {
