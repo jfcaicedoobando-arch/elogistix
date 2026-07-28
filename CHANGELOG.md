@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.320.34] - 2026-07-28
+- **Bug bash live · Wave 3 (5 fixes de dinero, integridad y flujo)** — tercera tanda del audit `bugs-e2e-live-2026-07-28.md`:
+  - **B-007 · NC de cliente calcula CON IVA (dinero)**: `useNotaCreditoDraft` calcula `monto = Σ base × (1 + tasa_iva)`. Antes: `Σ cantidad × precio` sin IVA — una NC "total" de una factura de $1,160 pedía teclear $1,000 y dejaba $160 de saldo fantasma en la factura original.
+  - **B-008 · RFC de cliente único por organización (integridad)**: nuevo índice único parcial `clientes_org_rfc_unique` sobre `(organization_id, upper(btrim(rfc)))`. Excluye RFCs genéricos SAT (`XEXX010101000` extranjero, `XAXX010101000` público general) que legítimamente se repiten. Los proveedores ya lo tenían.
+  - **B-013 · Post-guardar cotización lleva al wizard de embarque**: `useCotizacionHydration` y `NuevoEmbarque` ahora honran también el query param `?fromCotizacion=<id>` (además de `location.state`). Antes el diálogo post-guardado rebotaba al listado con un toast "Selecciona primero una cotización Aceptada".
+  - **B-018 · P&L del embarque usa `total` con IVA para CxP (dinero)**: `pnl_financiero_embarque` computa `costo_real_mxn` y `pdte_pago_mxn` contra `proveedor_facturas.total` (subtotal + IVA − retenciones). Antes usaba `subtotal`, subestimando el pasivo por el 16 % del IVA (factura de 34,800 aparecía como 30,000 en dos KPIs del mismo detalle). Fallback a `subtotal` para facturas legacy con `total` nulo.
+  - **B-031 · Seed catálogo `tipos_contenedor`**: se sembraron los 12 tipos ISO más usados (Dry 20'/40'/40'HC/45'HC, Reefer 20'/40'HC, Open Top, Flat Rack, Tank, 53' HC doméstico). Sin seed, cotización marítima quedaba estructuralmente bloqueada en despliegues nuevos.
+- **Sprint status**: acumulado 13/63 bugs cerrados (Wave 3: B-007, B-008, B-013, B-018, B-031). Restantes: 50.
+- Analogía: la NC pedía cambio sin contar el IVA (B-007), el buzón dejaba dos vecinos con la misma llave (B-008), el elevador ignoraba a los pasajeros que subían por la puerta lateral (B-013), la calculadora de la caja fuerte olvidaba sumar el IVA a los pagarés por pagar (B-018), y el almacén de "tipos de contenedor" venía vacío de fábrica (B-031).
+
+
 ## [13.320.33] - 2026-07-28
 - **Bug bash live · Wave 2 (4 fixes de negocio)** — segunda tanda del audit `bugs-e2e-live-2026-07-28.md`:
   - **B-016 · Duplicar cotización preserva utilidad**: la RPC `duplicar_cotizacion` ahora copia `precio_venta` (y `tipo_cambio_usd`) en `cotizacion_costos`. Antes el duplicado nacía con precio de venta = 0 en cada renglón, así que la columna generada `profit` mostraba pérdida artificial.
