@@ -179,3 +179,5 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.pnl_financiero_embarque(uuid) TO authenticated;
+REVOKE ALL ON FUNCTION public.pnl_financiero_embarque(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.pnl_financiero_embarque(uuid) TO service_role;
