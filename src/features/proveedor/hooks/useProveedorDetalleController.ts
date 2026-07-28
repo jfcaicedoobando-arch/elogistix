@@ -4,9 +4,8 @@ import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/features/auditoria/hooks/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
 /**
  * Controller para la página de detalle de proveedor.
  * Encapsula carga, mutaciones, totales, dialogs y handlers.
