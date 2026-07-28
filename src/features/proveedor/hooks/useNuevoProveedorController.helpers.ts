@@ -8,6 +8,22 @@ import type { NuevoProveedorForm } from "./useNuevoProveedorController.constants
 const CLABE_RE = /^\d{18}$/;
 const SWIFT_RE = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
 
+// B-025 (v13.320.43): validación de dígito verificador CLABE (mod-10 con pesos 3-7-1).
+// Suma cada uno de los primeros 17 dígitos multiplicado por [3,7,1] cíclico,
+// toma el residuo mod 10 de cada producto, luego (10 - suma%10) % 10 debe = dígito 18.
+// Fuente: NOM-006-SCFI-1994 / especificación Banxico.
+const CLABE_WEIGHTS = [3, 7, 1] as const;
+function clabeDigitoVerificadorValido(clabe: string): boolean {
+  if (!CLABE_RE.test(clabe)) return false;
+  let suma = 0;
+  for (let i = 0; i < 17; i++) {
+    suma += (Number(clabe[i]) * CLABE_WEIGHTS[i % 3]) % 10;
+  }
+  const dv = (10 - (suma % 10)) % 10;
+  return dv === Number(clabe[17]);
+}
+
+
 export interface PayloadValidado {
   ok: true;
   payload: TablesInsert<"proveedores">;
