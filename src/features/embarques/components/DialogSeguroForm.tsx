@@ -135,6 +135,9 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
         <div>
           <Label>Vigencia hasta *</Label>
           <DatePickerMx value={form.vigencia_hasta} onChange={(v) => setField("vigencia_hasta", v)} className="w-full" />
+          {form.vigencia_hasta < form.vigencia_desde && (
+            <p className="text-xs text-destructive mt-1">La vigencia final es anterior a la inicial.</p>
+          )}
         </div>
 
         <div>
@@ -152,6 +155,9 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
           <Label>Prima (costo) *</Label>
           <Input type="number" min={0} step={0.01} value={form.prima}
             onChange={(e) => setField("prima", Number(e.target.value))} />
+          {form.prima < 0 && (
+            <p className="text-xs text-destructive mt-1">La prima no puede ser negativa.</p>
+          )}
         </div>
 
         <div>

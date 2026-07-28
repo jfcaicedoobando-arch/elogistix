@@ -1,8 +1,10 @@
 /** Dialog "Aplicar anticipo a factura" (QW6). FormDialogShell + RHF + Zod. */
 import { useEffect, useMemo } from "react";
 import { z } from "zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { Loader2, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +66,16 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   const monedaFactura = watch("monedaFactura");
   const monedaDifiere = Boolean(anticipo) && monedaFactura && anticipo!.moneda !== monedaFactura;
 
+  // B-061: handler de inválidos — el JSON crudo de zod ya no se traga.
+  const onInvalid = (errs: FieldErrors<FormValues>) => {
+    const first = Object.values(errs)[0];
+    notifyError(toast, {
+      title: "Revisa el formulario",
+      description: first?.message?.toString() ?? "Hay campos inválidos o incompletos.",
+      method: "ANTICIPO_APLICAR_FORM_INVALID",
+    });
+  };
+
   const onSubmit = handleSubmit(async (values) => {
     if (!anticipo) return;
     await aplicar.mutateAsync({
@@ -73,7 +85,7 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
       fechaAplicacion: values.fechaAplicacion,
     });
     handleOpenChange(false);
-  });
+  }, onInvalid);
 
   const footer = (
     <>
