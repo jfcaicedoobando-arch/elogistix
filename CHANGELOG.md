@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.320.64] - 2026-07-28
+- **CI: se eliminó el warning "Node.js 20 is deprecated" del job CodeQL**. `github/codeql-action/init` y `/analyze` estaban pinneados en v3.27.5 (runtime Node 20, que GitHub ya forzaba a correr sobre Node 24). Analogía: un enchufe viejo que aún funciona gracias a un adaptador.
+  - `.github/workflows/codeql.yml`: ambos pins actualizados a `e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81` (v4.37.3), manteniendo el pinning por SHA con el tag en comentario.
+  - Se conserva `CODEQL_ACTION_DIFF_INFORMED_QUERIES: "false"` (workaround de v13.320.20) para no mezclar dos variables en el mismo cambio.
+  - Revisadas las 13 acciones del repo: el resto ya corre en Node 24.
+
+
 ## [13.320.63] - 2026-07-28
 - **Fix: doble toast al editar (o eliminar) un proveedor** (`/proveedores/:id`). El aviso se emitía dos veces: una en la mutación `useProveedorMutations` y otra en `useProveedorDetalleController`. Analogía: dos personas anunciando por altavoz el mismo vuelo.
   - `useProveedorDetalleController.ts`: se quitaron los `notifySuccess`/`notifyError` propios de `handleUpdate` y `handleDelete`; la notificación queda centralizada en la mutación (fuente única de verdad). Se conserva el `try/catch` porque el `catch` evita que un error rompa la navegación posterior.
