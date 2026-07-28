@@ -10,6 +10,7 @@ import {
   fetchPortalFacturas,
   fetchPortalFactura,
   fetchPortalPagosFactura,
+  fetchPortalNotasCreditoFactura,
   fetchPortalClientUsers,
   fetchPortalClienteName,
   fetchPortalOrgName,
@@ -75,6 +76,15 @@ export function usePortalPagosFactura(facturaId?: string) {
   return useQuery({
     queryKey: queryKeys.portal.pagosFactura(facturaId ?? ""),
     queryFn: () => fetchPortalPagosFactura(facturaId!),
+    enabled: !!facturaId,
+  });
+}
+
+// B-082: las NC aplicadas se descuentan del saldo mostrado al cliente.
+export function usePortalNotasCreditoFactura(facturaId?: string) {
+  return useQuery({
+    queryKey: queryKeys.portal.notasCreditoFactura(facturaId ?? ""),
+    queryFn: () => fetchPortalNotasCreditoFactura(facturaId!),
     enabled: !!facturaId,
   });
 }
