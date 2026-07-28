@@ -93,7 +93,8 @@ const FALLBACK: CierreCheckMeta = {
   responsable: "Sistema",
   ruta: null,
   ctaLabel: "",
-  formatDetalle: (d) => (d == null ? null : JSON.stringify(d)),
+  // v13.320.36 (B-042) — Nunca exponer JSON crudo al usuario en el checklist.
+  formatDetalle: () => null,
 };
 
 export function getCierreCheckMeta(regla: string): CierreCheckMeta {
