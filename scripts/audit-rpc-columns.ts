@@ -132,6 +132,17 @@ function extractAliases(body: string, tables: ColMap): Map<string, Set<string>> 
       add(alias, OPAQUE);
     }
   }
+  // v13.322.1 — Alias de subquery/derivada/LATERAL: `... ) p ON true`,
+  // `... ) AS x`. Sus columnas se calculan en la subquery, así que NO son
+  // validables contra el catálogo: se marcan opacas para evitar falsos
+  // positivos (antes `LEFT JOIN LATERAL (...) p` colisionaba con la tabla
+  // `proformas` aliaseada como `p` en otra parte del cuerpo).
+  const reDerived = /\)\s*(?:AS\s+)?([a-z_][a-z0-9_]*)/gi;
+  while ((m = reDerived.exec(clean)) !== null) {
+    const alias = m[1].toLowerCase();
+    if (RESERVED.has(alias)) continue;
+    add(alias, OPAQUE);
+  }
   // Tabla usada sin alias: su propio nombre es alias válido.
   const re2 = /\b(?:FROM|JOIN|,)\s+(?:public\.)?([a-z_][a-z0-9_]*)\b/gi;
   while ((m = re2.exec(clean)) !== null) {
