@@ -116,10 +116,11 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
               form={c.form} onChange={c.handleChange} prefilledFromCsf={prefilled} />
             <ClienteField label="Ciudad" field="ciudad" form={c.form} onChange={c.handleChange} prefilledFromCsf={prefilled} />
             <ClienteField label="Estado" field="estado" form={c.form} onChange={c.handleChange} prefilledFromCsf={prefilled} />
-            <ClienteField label="Contacto" field="contacto" form={c.form} onChange={c.handleChange} />
-            <ClienteField label="Email" field="email" form={c.form} onChange={c.handleChange}
+            <ClienteField label="Contacto" field="contacto" form={c.form} onChange={c.handleChange} required />
+            <ClienteField label="Email" field="email" form={c.form} onChange={c.handleChange} required
               validate={(v) => (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? "Email inválido" : null)} />
-            <ClienteField label="Teléfono" field="telefono" form={c.form} onChange={c.handleChange} />
+            <ClienteField label="Teléfono" field="telefono" form={c.form} onChange={c.handleChange} required />
+
           </FormDialogSection>
         </>
       )}
