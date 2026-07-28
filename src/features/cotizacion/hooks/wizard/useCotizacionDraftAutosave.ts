@@ -20,8 +20,11 @@ const DEBOUNCE_MS = 800;
 export const draftKey = (userId: string): string => `lc:cotizacion:draft:${userId || "anon"}`;
 
 interface StoredDraft {
-  version: 1;
+  version: 2;
   savedAt: number;
+  /** B-003 (v13.320.32): sin esto, recargar el wizard tras paso 1 duplicaba
+   *  la cotización — el `cotizacionId` vivía sólo en memoria React. */
+  cotizacionId: string | null;
   values: CotizacionFormValues;
 }
 
@@ -49,19 +52,25 @@ export function loadDraft(userId: string): StoredDraft | null {
     if (
       !parsedUnknown ||
       typeof parsedUnknown !== "object" ||
-      (parsedUnknown as { version?: unknown }).version !== 1 ||
       typeof (parsedUnknown as { savedAt?: unknown }).savedAt !== "number"
     ) {
       return null;
     }
-    // SAFE-CAST: validado shape mínimo (version + savedAt numérico) antes de aceptar.
-    const parsed = parsedUnknown as StoredDraft;
-    if (Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
+    const versionRaw = (parsedUnknown as { version?: unknown }).version;
+    // Aceptamos v1 (legacy, sin cotizacionId) y v2 (con cotizacionId).
+    if (versionRaw !== 1 && versionRaw !== 2) return null;
+    const bag = parsedUnknown as { savedAt: number; values: CotizacionFormValues; cotizacionId?: unknown };
+    if (Date.now() - bag.savedAt > DRAFT_TTL_MS) {
       safeLocalStorage.removeItem(draftKey(userId));
       return null;
     }
-    // JSON.stringify convierte Date → string ISO; revivimos los campos Date
-    // conocidos del form para que RHF y los mappers reciban `Date` reales.
+    // SAFE-CAST: shape mínimo validado + rehidratación de fechas.
+    const parsed: StoredDraft = {
+      version: 2,
+      savedAt: bag.savedAt,
+      cotizacionId: typeof bag.cotizacionId === "string" ? bag.cotizacionId : null,
+      values: bag.values,
+    };
     reviveDateFields(parsed.values);
     return parsed;
   } catch {
@@ -76,22 +85,26 @@ export function clearDraft(userId: string): void {
 interface Params {
   form: UseFormReturn<CotizacionFormValues>;
   userId: string;
-  /** Se desactiva en modo edición o cuando ya existe un cotizacionId (paso 2+). */
+  /** B-003: se sigue guardando aún después del paso 1 para persistir el
+   *  `cotizacionId` en el draft y evitar duplicados al recargar. Sólo se
+   *  desactiva en modo edición (initialData presente en el wizard). */
   enabled: boolean;
+  /** B-003: id actual del wizard; se persiste en el draft junto con los values. */
+  cotizacionId: string | null;
 }
 
-export function useCotizacionDraftAutosave({ form, userId, enabled }: Params): {
+export function useCotizacionDraftAutosave({ form, userId, enabled, cotizacionId }: Params): {
   clear: () => void;
   flush: () => void;
 } {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cotIdRef = useRef<string | null>(cotizacionId);
+  cotIdRef.current = cotizacionId;
 
   const clear = useCallback(() => {
     clearDraft(userId);
   }, [userId]);
 
-  // v13.294.1 (P1) — Guardado inmediato saltándose el debounce.
-  // Se dispara desde `Ctrl/Cmd + S`. No-op cuando `enabled=false`.
   const flush = useCallback(() => {
     if (!enabled) return;
     if (timerRef.current) {
@@ -100,8 +113,9 @@ export function useCotizacionDraftAutosave({ form, userId, enabled }: Params): {
     }
     try {
       const payload: StoredDraft = {
-        version: 1,
+        version: 2,
         savedAt: Date.now(),
+        cotizacionId: cotIdRef.current,
         values: form.getValues(),
       };
       safeLocalStorage.setItem(draftKey(userId), JSON.stringify(payload));
@@ -116,8 +130,9 @@ export function useCotizacionDraftAutosave({ form, userId, enabled }: Params): {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         const payload: StoredDraft = {
-          version: 1,
+          version: 2,
           savedAt: Date.now(),
+          cotizacionId: cotIdRef.current,
           values: values as CotizacionFormValues,
         };
         try {
@@ -132,6 +147,23 @@ export function useCotizacionDraftAutosave({ form, userId, enabled }: Params): {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [enabled, form, userId]);
+
+  // B-003: al cambiar el `cotizacionId` (transición paso 1 → 2), escribimos
+  // inmediatamente para no perderlo si el usuario recarga en ese momento.
+  useEffect(() => {
+    if (!enabled || !cotizacionId) return;
+    try {
+      const payload: StoredDraft = {
+        version: 2,
+        savedAt: Date.now(),
+        cotizacionId,
+        values: form.getValues(),
+      };
+      safeLocalStorage.setItem(draftKey(userId), JSON.stringify(payload));
+    } catch {
+      /* noop */
+    }
+  }, [enabled, cotizacionId, form, userId]);
 
   return { clear, flush };
 }
