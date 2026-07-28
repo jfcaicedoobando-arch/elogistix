@@ -1,12 +1,18 @@
 /**
  * Registrar pago a proveedor.
  * Migrado a `FormDialogShell` (v13.120.0) — paridad visual con resto de modales CXP.
+ * v13.320.48 (B-037): al abrir el diálogo se invalida `queryKeys.cxp.factura(id)`
+ * y se re-lee vía `useFacturaProveedor` para evitar mostrar saldo/estado stale
+ * cuando el usuario acaba de aprobar/pagar en otra pestaña.
  */
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { Loader2, ArrowUpFromLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { useRegistrarPagoProveedor } from "@/features/cxp/hooks";
+import { useRegistrarPagoProveedor, useFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
 import { usePagoProveedorForm } from "./usePagoProveedorForm";
@@ -20,7 +26,24 @@ interface Props {
   factura: FacturaCxP | null;
 }
 
-export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Props) {
+export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: facturaInput }: Props) {
+  const qc = useQueryClient();
+  const facturaId = facturaInput?.id ?? null;
+
+  // B-037: al abrir, forzar re-lectura de la factura para evitar snapshot stale
+  // (p.ej. usuario aprobó/pagó en otra ventana y aquí seguía mostrando "por aprobar").
+  useEffect(() => {
+    if (open && facturaId) {
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.factura(facturaId) });
+    }
+  }, [open, facturaId, qc]);
+
+  const { data: facturaFresca } = useFacturaProveedor(
+    open ? facturaId : null,
+    facturaInput ?? undefined,
+  );
+  const factura = facturaFresca ?? facturaInput;
+
   const registrar = useRegistrarPagoProveedor();
   const f = usePagoProveedorForm(factura, open);
   const noAprobada = !!factura && factura.estado_aprobacion !== "aprobada";

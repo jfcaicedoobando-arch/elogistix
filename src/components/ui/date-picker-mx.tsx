@@ -54,6 +54,10 @@ export function DatePickerMx({
   const emitIfValid = useCallback((iso: string): boolean => {
     if (!isoInRange(iso, min, max)) {
       setInvalid(true);
+      // B-038 (v13.320.48): si el ISO cae fuera de rango, purgar el valor
+      // controlado del padre para que RHF/Zod detecten fecha vacía en lugar de
+      // arrastrar la ISO stale (que pasaba validación silenciosamente).
+      if (value) onChange("");
       return false;
     }
     setInvalid(false);
@@ -77,6 +81,8 @@ export function DatePickerMx({
       return;
     }
     setInvalid(true);
+    // B-038: texto no parseable — purgar valor previo para no dejar ISO stale.
+    if (value) onChange("");
   }, [emitIfValid, onChange, value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

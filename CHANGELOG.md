@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.320.48] - 2026-07-28
+- **Bug bash live · Wave 12 (4 fixes S, frontend)**:
+  - **B-037 · Detalle de pago con datos stale**: `DialogRegistrarPagoProveedor` recibía la factura como snapshot desde la fila; si el usuario aprobaba en otra pestaña, el diálogo seguía diciendo "no aprobada". Ahora al abrir se invalida `queryKeys.cxp.factura(id)` y se re-lee con `useFacturaProveedor` (fallback al snapshot). Analogía: antes miraba una foto de ayer del saldo; ahora mira el saldo en vivo.
+  - **B-038 · DatePickerMx dejaba ISO stale**: si el usuario borraba/tecleaba basura tras haber puesto una fecha válida, el padre conservaba la ISO anterior y la validación Zod pasaba silenciosamente. `commit()` y `emitIfValid()` ahora emiten `onChange("")` cuando el parseo falla o cae fuera de rango — RHF detecta "requerido" y bloquea el submit.
+  - **B-047 · Bandeja CxP sin manejo de error**: `CxpPorCapturar` mostraba loading infinito si `useCxpPorCapturar` fallaba. Añadido branch `isError` con Inbox rojo + botón "Reintentar" (`refetch()`).
+  - **B-051 · Switch de IVA confuso en MXN**: en `PasoSeleccionConceptos.parts.tsx`, para conceptos MXN el Switch se veía deshabilitado (parecía "IVA apagado") pero el sistema sí lo cobraba por ley. Reemplazado por un badge `IVA 16% incluido` sin toggle. Analogía: antes había un interruptor pegado con cinta; ahora hay un letrero fijo que dice "aquí siempre cobra IVA".
+- **Sprint status**: acumulado 40/63 bugs cerrados (Wave 12: B-037, B-038, B-047, B-051). Pendientes: 23.
+
 ## [13.320.47] - 2026-07-28
 - **Bug bash live · Wave 11 (2 fixes S)**:
   - **B-026 · ETA sin validación**: `ActualizarEtaForm` aceptaba la misma fecha vigente o fuente vacía y aun así emitía toast de éxito + evento en bitácora sin cambio real. Se añade schema Zod con `buildEtaSchema(etaActualIso)` que exige (1) fecha distinta a la ETA actual y (2) fuente/motivo con al menos 3 caracteres. Analogía: antes podías firmar un cheque en blanco por la misma cantidad; ahora la caja te obliga a llenar el "concepto" y a mover el monto.

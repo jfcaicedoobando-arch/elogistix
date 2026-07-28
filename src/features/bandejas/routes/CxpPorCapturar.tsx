@@ -33,7 +33,7 @@ const SORT_TO_COL: Record<OrdenarPor, string> = {
 };
 
 export default function CxpPorCapturar() {
-  const { data = [], isLoading } = useCxpPorCapturar();
+  const { data = [], isLoading, isError, refetch } = useCxpPorCapturar();
   const { totalPresupuestadoMxn, totalPresupuestadoUsd, facturasCapturadas } = resumirCxpPorCapturar(data);
   const filters = useCxpPorCapturarFilters(data);
   const [picked, setPicked] = useState<EmbarqueSeleccionado | null>(null);
@@ -114,7 +114,18 @@ export default function CxpPorCapturar() {
 
       <Card>
         <CardContent className="p-0">
-          {!isLoading && data.length === 0 ? (
+          {isError ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <Inbox className="h-10 w-10 text-destructive mb-3" />
+              <h3 className="text-base font-semibold">No se pudo cargar la bandeja</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                Revisa tu conexión y vuelve a intentar. Si el problema persiste, contacta a soporte.
+              </p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => refetch()}>
+                Reintentar
+              </Button>
+            </div>
+          ) : !isLoading && data.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
               <Inbox className="h-10 w-10 text-muted-foreground mb-3" />
               <h3 className="text-base font-semibold">Sin embarques pendientes de captura</h3>
