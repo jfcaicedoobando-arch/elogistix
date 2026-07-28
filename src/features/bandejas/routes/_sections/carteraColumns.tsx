@@ -60,9 +60,13 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
       cell: ({ row }) => {
         const d = row.original.dias_vencido;
         if (d > 0) return <Badge variant="destructive">Vencida {d}d</Badge>;
-        if (d >= -7) return <Badge variant="secondary">Por vencer {Math.abs(d)}d</Badge>;
-        return <Badge variant="outline">{d}d</Badge>;
+        // B-019 (v13.320.42): antes decíamos "Por vencer 0d" cuando vence hoy —
+        // era ambiguo (¿ya venció? ¿faltan 0 días?). Ahora "Vence hoy" es literal.
+        if (d === 0) return <Badge variant="secondary">Vence hoy</Badge>;
+        if (d >= -7) return <Badge variant="secondary">Vence en {Math.abs(d)}d</Badge>;
+        return <Badge variant="outline">Vence en {Math.abs(d)}d</Badge>;
       },
+
     },
     {
       ...moneyColumn<CarteraRow>({
