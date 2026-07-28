@@ -33,7 +33,7 @@ export default function PortalCotizacionHeader({
     <>
       <DetailHeader
         backTo={ROUTES.PORTAL_COTIZACIONES}
-        backLabel="Cotizaciones"
+        backLabel="Volver a Cotizaciones"
         icon={<ClipboardList className="h-6 w-6 text-accent shrink-0" />}
         title={<span className="font-mono tabular-nums">{folio}</span>}
         subtitle={toTitleCase(clienteNombre)}

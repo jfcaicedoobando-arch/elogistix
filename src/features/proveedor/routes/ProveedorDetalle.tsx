@@ -63,7 +63,7 @@ export default function ProveedorDetalle() {
     <PageContainer>
       <DetailHeader
         backTo="/compras/proveedores"
-        backLabel="Proveedores"
+        backLabel="Volver a Proveedores"
         icon={<Truck className="h-6 w-6 text-accent shrink-0" />}
         title={nombreFmt}
         subtitle={rfcFmt ? `RFC / Tax ID · ${rfcFmt}` : undefined}

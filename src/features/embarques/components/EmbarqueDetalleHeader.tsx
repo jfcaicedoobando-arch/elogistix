@@ -65,7 +65,7 @@ export function EmbarqueDetalleHeader({
     <>
       <DetailHeader
         backTo="/embarques"
-        backLabel="Embarques"
+        backLabel="Volver a Embarques"
         title={labelExpediente(embarque.expediente, embarque.id)}
         badge={
           <>

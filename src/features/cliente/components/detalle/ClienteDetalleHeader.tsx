@@ -25,7 +25,7 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
   return (
     <DetailHeader
       backTo="/clientes"
-      backLabel="Clientes"
+      backLabel="Volver a Clientes"
       icon={<Users className="h-6 w-6 text-accent shrink-0" />}
       title={cliente.nombre}
       subtitle={cliente.rfc}

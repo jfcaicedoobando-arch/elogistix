@@ -25,7 +25,7 @@ export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExpo
   return (
     <DetailHeader
       backTo="/cotizaciones"
-      backLabel="Cotizaciones"
+      backLabel="Volver a Cotizaciones"
       icon={<FileSpreadsheet className="h-6 w-6 text-accent shrink-0" />}
       title={cotizacion.folio}
       subtitle={toTitleCase(nombreDestinatario)}

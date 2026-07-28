@@ -59,7 +59,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
     <div className="space-y-6 p-6">
       <DetailHeader
         backTo="/crm/oportunidades"
-        backLabel="Oportunidades"
+        backLabel="Volver a Oportunidades"
         icon={<Target className="h-6 w-6 text-accent shrink-0" />}
         title={op.nombre}
         titleAs="h2"
