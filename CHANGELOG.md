@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [13.322.0] - 2026-07-28
+- Detalle de proforma: nuevo diseño en 2 columnas con totales integrados en la tabla de conceptos, historial vertical con envíos al portal, bitácora de actividad, días de crédito heredados del cliente y accesos rápidos para copiar la liga del portal o verla como cliente.
+
+
 ## [13.321.9] - 2026-07-28
 - CI: se añadieron los permisos faltantes (revocar acceso público y otorgar ejecución) a las funciones de tarifas, cotizaciones y proformas señaladas por la auditoría de migraciones.
 
