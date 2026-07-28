@@ -144,11 +144,7 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
     transit_time_dias: r.transit_time_dias ?? null,
     dias_libres_demoras: Number(r.dias_libres_demoras) || 0,
     notas: r.notas ?? null,
-    agente_nombre: r.costeo_agentes?.nombre ?? "—",
-    naviera_nombre: r.navieras?.name ?? "—",
-    tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",
-    puerto_origen_nombre: r.costeo_rutas?.puerto_origen?.name ?? "—",
-    puerto_destino_nombre: r.costeo_rutas?.puerto_destino?.name ?? "—",
+    ...nombresRelacionesTarifa(r),
   }));
 }
 
