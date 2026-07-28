@@ -1,6 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Inbox } from "lucide-react";
-import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
+import { useQuery } from "@tanstack/react-query";
+import {
+  fetchPagosProgramables,
+  type FacturaProgramableRow,
+} from "@/features/tesoreria/services/pagosProgramados";
 import { agruparPorSemana, type FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -10,24 +14,42 @@ import { formatDate, formatCurrency } from "@/lib/formatters";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/shared/skeletons";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type FiltroBandeja = "todas" | "programadas" | "treinta_dias";
 
 export default function TesoreriaPagosProgramados() {
-  const { data = [], isLoading } = useCxpPorPagar();
+  // B-030: fetch directo sin filtro implícito de estado (antes la RPC
+  // `cxp_por_pagar` ocultaba captura/Borrador/por aprobar con fecha).
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["tesoreria", "pagos-programables"],
+    queryFn: fetchPagosProgramables,
+    staleTime: 30_000,
+  });
+
+  // Filtro EXPLÍCITO del usuario — por defecto se muestra todo.
+  const [filtro, setFiltro] = useState<FiltroBandeja>("todas");
 
   const programables = useMemo(() => {
-    return data.map(r => ({
-      id: r.factura_id,
-      proveedor_nombre: r.proveedor_nombre,
-      folio_proveedor: r.folio_proveedor,
-      fecha_vencimiento: r.fecha_vencimiento,
-      fecha_programada_pago: r.fecha_programada_pago,
-      moneda: r.moneda,
-      total: Number(r.total),
-      saldo: Number(r.saldo)
-    })) as FacturaProgramable[];
-  }, [data]);
+    let rows = data as FacturaProgramableRow[];
+    if (filtro === "programadas") rows = rows.filter((r) => r.fecha_programada_pago);
+    if (filtro === "treinta_dias") {
+      const limite = new Date();
+      limite.setDate(limite.getDate() + 30);
+      rows = rows.filter((r) => {
+        const f = r.fecha_programada_pago ?? r.fecha_vencimiento;
+        return f && new Date(`${f}T00:00:00`) <= limite;
+      });
+    }
+    return rows as FacturaProgramable[];
+  }, [data, filtro]);
 
   const semanas = useMemo(() => agruparPorSemana(programables), [programables]);
+  // B-030: pendientes sin fecha efectiva — antes se descartaban en silencio.
+  const sinFecha = useMemo(
+    () => programables.filter((r) => !r.fecha_programada_pago && !r.fecha_vencimiento),
+    [programables],
+  );
 
   const columns = useMemo(() => defineColumns<FacturaProgramable>([
     {
@@ -95,7 +117,21 @@ export default function TesoreriaPagosProgramados() {
         description="Bandeja semanal de Tesorería. Agrupación por fecha programada (o vencimiento)."
       />
 
-      {semanas.length === 0 ? (
+      {/* B-030: filtro explícito y visible. Default: "Todas" para no ocultar
+          facturas silenciosamente como hacía la RPC anterior. */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Mostrar:</span>
+        <Select value={filtro} onValueChange={(v) => setFiltro(v as FiltroBandeja)}>
+          <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas las pendientes</SelectItem>
+            <SelectItem value="programadas">Solo con pago programado</SelectItem>
+            <SelectItem value="treinta_dias">Vencen en 30 días</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {semanas.length === 0 && sinFecha.length === 0 ? (
         <Card>
           <CardContent className="py-12 flex flex-col items-center justify-center text-center">
             <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
@@ -135,6 +171,19 @@ export default function TesoreriaPagosProgramados() {
               </Card>
             </section>
           ))}
+
+          {sinFecha.length > 0 && (
+            <section>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 px-1">
+                Sin fecha de pago ({sinFecha.length})
+              </h2>
+              <Card>
+                <CardContent className="p-0">
+                  <DataTable columns={columns} data={sinFecha} rowKey={(r) => r.id} density="compact" hoverable={false} />
+                </CardContent>
+              </Card>
+            </section>
+          )}
         </div>
       )}
     </PageContainer>

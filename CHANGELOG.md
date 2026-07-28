@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.320.51] - 2026-07-28
+- **Bug bash live · Wave 15 (5 fixes + 1 backend)**:
+  - **B-030 · Bandeja de pagos programados con filtro implícito**: la vista se alimentaba de la RPC `cxp_por_pagar`, que filtra `estado='Vigente'` en silencio; captura/Borrador con fecha programada quedaban fuera y las pendientes sin fecha se descartaban al agrupar por semana → el tesorero veía "2 de N". Se agrega `fetchPagosProgramables()` que lee `proveedor_facturas` directo (no canceladas con saldo > 0), un filtro EXPLÍCITO ("Todas" / "Solo programadas" / "Vencen en 30 días") default "todas", y una sección "Sin fecha de pago" al final. Analogía: antes la bandeja tenía un colador con hoyos escondidos; ahora es transparente y el usuario decide qué colar.
+  - **B-032 · Seed demo sin datos CxP**: `seed_demo_organization()` no generaba facturas ni pagos → todo Compras/CxP en cero. Se reescribe con 3 facturas (vencida / vigente / parcialmente pagada con pago de 20 000) aprobadas y conceptos que cuadran al centavo, más limpieza idempotente en orden seguro de FKs. Analogía: la casa modelo ya trae muebles en la cocina y no solo en la sala.
+  - **B-054 · Kanban CRM pisaba la probabilidad manual**: al mover una oportunidad de etapa, `handleMover` siempre enviaba el `probabilidad_default` de la etapa destino, aplastando ediciones manuales (ej. 20 → arrastrar → 25). Heurística sin flag en BD: si la probabilidad actual difiere del default de la etapa ORIGEN se considera manual y se conserva; si coincide, se hereda el default nuevo. Analogía: solo se cambia el precio si nadie le puso oferta a mano.
+  - **B-056 · Póliza de seguro con submit muerto**: `DialogSeguroForm` tenía `return`s silenciosos ante aseguradora vacía, prima negativa o vigencia invertida → clic en "Registrar póliza" y nada. Ahora cada causa dispara `notifyError` con mensaje explícito y hay recordatorios inline debajo de "Prima" y "Vigencia hasta". Analogía: el timbre ya suena, no solo la mano en el interruptor.
+  - **B-061 · Validaciones Zod silenciosas en anticipos**: `RegistrarAnticipoDialog` y `AplicarAnticipoDialog` pasaban un solo callback a `handleSubmit`; con monto 0/negativo el resolver rechazaba y quedaba `pageerror` con JSON crudo. Se añade `onInvalid` que toma el primer mensaje de Zod y lo muestra como toast ("Revisa el formulario · <mensaje>").
+- **Nota**: B-049 verificado ya cerrado en HEAD (badge "Pendiente cliente" unificado). B-052 cubierto por dedupe de B-026 + modo silent de B-041, sin diff adicional.
+- **Sprint status**: acumulado 51/63 bugs cerrados (Wave 15: B-030, B-032, B-054, B-056, B-061 + verificación B-049). Pendientes: 12.
+
+
+
 ## [13.320.50] - 2026-07-28
 - **Bug bash live · Wave 14 (3 fixes)**:
   - **B-027 · Confirmado sin datos mínimos**: un embarque en Borrador con peso 0, 0 contenedores y sin BL/naviera podía avanzar a Confirmado. Se añade `faltantesParaConfirmado()` (función pura testeable) que exige peso > 0, al menos un contenedor (marítimo FCL), naviera + BL master u house (marítimo), aerolínea + MAWB (aéreo) o transportista (terrestre). `useEmbarqueEstadoActions` la ejecuta antes de disparar la transición y muestra un toast con exactamente qué falta. Analogía: antes el aduanero dejaba pasar un tráiler vacío; ahora revisa la carga antes de sellar la orden.

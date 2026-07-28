@@ -1,8 +1,10 @@
 /** Dialog "Registrar anticipo" (QW6). FormDialogShell + RHF + Zod. */
 import { useState } from "react";
 import { z } from "zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { Loader2, HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +58,17 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
     onOpenChange(o);
   };
 
+  // B-061: sin handler de inválidos, la promesa de handleSubmit rechazaba
+  // en silencio (pageerror con el JSON crudo de zod y cero feedback visible).
+  const onInvalid = (errs: FieldErrors<FormValues>) => {
+    const first = Object.values(errs)[0];
+    notifyError(toast, {
+      title: "Revisa el formulario",
+      description: first?.message?.toString() ?? "Hay campos inválidos o incompletos.",
+      method: "ANTICIPO_REGISTRAR_FORM_INVALID",
+    });
+  };
+
   const onSubmit = handleSubmit(async (values) => {
     await registrar.mutateAsync({
       proveedorId: values.proveedorId,
@@ -67,7 +80,7 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
       notas: values.notas || undefined,
     });
     handleOpenChange(false);
-  });
+  }, onInvalid);
 
   const footer = (
     <>

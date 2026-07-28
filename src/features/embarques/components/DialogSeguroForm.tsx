@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCreateSeguro, useUpdateSeguro } from "@/features/embarques/hooks/useSegurosEmbarque";
 import type { MonedaSeguro, SeguroEmbarque, SeguroEmbarqueInput } from "@/features/embarques/services/seguros";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
@@ -71,8 +72,29 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
     setForm((p) => ({ ...p, [k]: v }));
 
   const handleSubmit = async () => {
-    if (!form.aseguradora.trim() || !form.numero_poliza.trim()) return;
-    if (form.vigencia_hasta < form.vigencia_desde) return;
+    // B-056: antes estos guardas eran returns silenciosos — el submit "moría"
+    // sin toast ni mensaje inline. Ahora cada causa se dice explícitamente.
+    if (!form.aseguradora.trim() || !form.numero_poliza.trim()) {
+      return notifyError(undefined, {
+        title: "Faltan datos de la póliza",
+        description: "Aseguradora y número de póliza son obligatorios.",
+        method: "SEGURO_FORM_SUBMIT",
+      });
+    }
+    if (form.prima < 0) {
+      return notifyError(undefined, {
+        title: "Prima inválida",
+        description: "La prima no puede ser negativa.",
+        method: "SEGURO_FORM_SUBMIT",
+      });
+    }
+    if (form.vigencia_hasta < form.vigencia_desde) {
+      return notifyError(undefined, {
+        title: "Vigencia inválida",
+        description: "La vigencia final no puede ser anterior a la inicial.",
+        method: "SEGURO_FORM_SUBMIT",
+      });
+    }
     if (isEdit && seguro) {
       await update.mutateAsync({ id: seguro.id, patch: form });
     } else {
@@ -113,6 +135,9 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
         <div>
           <Label>Vigencia hasta *</Label>
           <DatePickerMx value={form.vigencia_hasta} onChange={(v) => setField("vigencia_hasta", v)} className="w-full" />
+          {form.vigencia_hasta < form.vigencia_desde && (
+            <p className="text-xs text-destructive mt-1">La vigencia final es anterior a la inicial.</p>
+          )}
         </div>
 
         <div>
@@ -130,6 +155,9 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
           <Label>Prima (costo) *</Label>
           <Input type="number" min={0} step={0.01} value={form.prima}
             onChange={(e) => setField("prima", Number(e.target.value))} />
+          {form.prima < 0 && (
+            <p className="text-xs text-destructive mt-1">La prima no puede ser negativa.</p>
+          )}
         </div>
 
         <div>

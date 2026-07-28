@@ -1,36 +1,49 @@
-# Wave 11 · Bug bash live (post-verificación)
+## Wave 15 — Bug bash live (siguiente lote)
 
-Un subagente auditó 16 candidatos. Resultado: **13 vigentes, 1 parcial, 2 ya cerrados** (B-050, B-053). Los dos cerrados se descuentan del pendiente y se anotan en CHANGELOG. Difiero B-027, B-034, B-058 por complejidad M (rediseño de flujo/estado) — irán en Wave 12.
+Objetivo: bajar los pendientes de 17 a ~10 aplicando los diffs listos del MD `instrucciones-lovable-bugs-e2e-2026-07-28-2.md`. Se agrupan por capa para minimizar riesgo (SQL primero, luego frontend puro).
 
-## Alcance de esta ola (8 fixes S/M)
+### Bugs a corregir
 
-| ID | Archivo | Cambio |
-|---|---|---|
-| **B-026** | `ActualizarEtaForm.tsx`, `appFeedback.ts/types.ts` | `etaSchema` recibe `etd` y aplica `.refine(eta >= etd)`. Añadir `duration`/`id` a `ErrorNotifyOptions` para que los toasts crudos ya no queden `Infinity`. |
-| **B-037** | `DialogRegistrarPagoProveedor.tsx` | Al abrir, invalidar `queryKeys.cxp.factura(id)` y usar hook `useFacturaProveedor(id)` en lugar de la prop cacheada. Evita registrar pago sobre saldo obsoleto. |
-| **B-038** | `date-picker-mx.tsx` | En las 3 ramas de `emitIfValid`/`commit` que hoy sólo hacen `setInvalid(true)`, llamar también `onChange("")` para no persistir el valor stale (evita que se guarde "hoy" cuando el parse falla). |
-| **B-039** | `useActividadEmbarque.ts` | Dedup: filtrar notas `tipo='cambio_estado'` que caigan dentro de ±2 min de una entrada de bitácora `accion='cambiar_estado'` sobre el mismo embarque. |
-| **B-047** | `CxpPorCapturar.tsx` | Desestructurar `isError`/`refetch` del hook y añadir rama `<ErrorStateInline onRetry={refetch} />`; ya no queda "Cargando…" perpetuo si la query falla. |
-| **B-048** | `ResumenConceptosVentaTotales.tsx` | Quitar labels `"MXN:"`/`"USD:"` — `formatCurrency` ya antepone el código. Fin del `MXN: MXN 2,320.00`. |
-| **B-049** | `HistorialProformas.tsx` | Reemplazar `"Pendiente revisión"` por `"Pendiente cliente"` (label unificado con el resto del módulo). |
-| **B-061** | `RegistrarAnticipoDialog.tsx`, `AplicarAnticipoDialog.tsx` | Añadir segundo argumento a `handleSubmit(onValid, onInvalid)` que llama `notifyError` con los mensajes agregados de `FieldErrors` — fin de los submits mudos. |
-| **B-035** (parcial) | `types/form.ts`, `formDefaults.ts`, `SeccionMercanciaWrapper.tsx`, `mappers/cotizacion.ts` | Campo dedicado `descripcionMercancia` en el schema del wizard + input en la sección Mercancía; el mapper deja de caer al sector económico. |
+**Capa SQL/BD (una migración)**
+- **B-032** · `seed_demo_organization()` sin datos CxP: sembrar facturas de proveedor + pagos CxP en la org Demo para que las pantallas de Compras/CxP no estén en ceros. Idempotente por org demo fija.
 
-## Bugs verificados y descartados (no re-abrir)
-- **B-050** — ya cerrado en v13.320.39 (regex de siglas en `text.ts`).
-- **B-053** — ya cerrado en v13.320.40 (variante equivalente al diff, no idéntica).
+**Capa Frontend (diffs del MD, sin cambios de negocio nuevos)**
+- **B-030** · Bandeja de pagos programados: hoy usa `cxp_por_pagar` que filtra `estado='Vigente'` en silencio → tesorero ve "2 de N". Nuevo `fetchPagosProgramables()` lee `proveedor_facturas` directo (no canceladas, saldo > 0), agrega sección "Sin fecha de pago" y filtro explícito (Todas / Solo programadas / Vencen en 30 días) con default "todas".
+- **B-049** · Copy: "Pendiente revisión" → "Pendiente cliente" en las demás vistas donde aún aparece (unificar con B-048).
+- **B-052** · Toasts del wizard de cotización acumulados en pares: `useCreateCotizacion`/`useUpdateCotizacion`/`useUpsertCotizacionCostos` reciben opción `silent` y el wizard la activa; los puntos finales del wizard notifican una sola vez.
+- **B-054** · Drag kanban CRM sobrescribe probabilidad manual con el default de etapa: al mover una tarjeta, sólo actualizar `probabilidad` si el usuario NO la ha personalizado (o si viene de una etapa `perdida/ganada`).
+- **B-056** · Póliza de seguro: validaciones silenciosas — el submit se queda muerto sin toast. Añadir `handleSubmit` con `onInvalid` que muestre los errores Zod agregados.
+- **B-061** · Validaciones Zod silenciosas en diálogos de anticipos (mismo patrón que B-056): `onInvalid` con toast que resume los campos con error.
 
-## Diferidos a Wave 12 (complejidad M, rediseño de flujo)
-- **B-027** — Guarda de datos mínimos Borrador→Confirmado (nuevo helper + validaciones).
-- **B-034** — Captura obligatoria de `fecha_cierre_real`/`valor_real` al ganar oportunidad (UI + mutation).
-- **B-058** — Transición "Cancelar embarque" + ocultar Eliminar en Entregado (nuevo estado + UI header).
+### Fuera de este lote (por complejidad o dependencia)
+- B-034 (CRM oportunidad ganada sin fecha_cierre_real): requiere revisar RPC + UI, se hará en Wave 16.
+- B-029 (import CSV validación por fila): cambia contrato del parser + tests; se propone aislado en Wave 16.
+- B-044 (subir realmente los 11 docs del cliente): condicional a verificación en staging.
+- B-012, B-021, B-059: decisiones de diseño / diagnóstico previos.
 
-## Detalles técnicos
-- Todos los cambios cliente-side/UI; sólo B-037 toca una query key existente (sin migración).
-- Sin migraciones SQL en esta ola.
-- Tests: extender `ActualizarEtaForm.test.tsx` (refine ETA≥ETD), `date-picker-mx.test.tsx` (clear on invalid), y snapshot para `ResumenConceptosVentaTotales` (label sin duplicado).
-- Bump `APP_VERSION` a `13.320.47` y actualizar `CHANGELOG.md` con nota por bug + descuento de B-050/B-053.
+### Detalles técnicos
 
-## Sprint status tras Wave 11
-- Cerrados esperados: 34 (previo) + 8 nuevos + 2 verificados = **44/63**.
-- Pendientes: **19** (incluye B-027, B-034, B-058 diferidos + resto de bajas cosméticas).
+Archivos a tocar (sin re-leer el MD durante la implementación, ya está en contexto):
+
+- Nuevo: `src/features/tesoreria/services/pagosProgramados.ts`
+- `src/features/tesoreria/routes/TesoreriaPagosProgramados.tsx`
+- `src/features/cotizacion/hooks/mutations/useCotizacionMutations.ts`
+- `src/features/cotizacion/hooks/useCotizacionCostos.ts`
+- `src/features/cotizacion/routes/NuevaCotizacion.tsx`, `EditarCotizacion.tsx`
+- `src/features/crm/**` (localizar handler de drag kanban antes de tocarlo)
+- `src/features/seguros/**` (localizar form de póliza)
+- `src/features/anticipos/**` (localizar diálogos)
+- Migración Supabase: extender `seed_demo_organization()` con facturas + pagos CxP (idempotente por `organization_id = de100000-…-0001`).
+
+Cierre de wave:
+- Bump `APP_VERSION` a `13.320.51`.
+- Entrada `CHANGELOG.md` con explicaciones cortas + analogías (regla del proyecto).
+- Reporte de sprint: 46 → ~52/63 cerrados; pendientes ~11.
+
+### Verificación mínima por bug
+- **B-030**: con facturas en captura/Borrador y con `fecha_programada_pago`, aparecen en la bandeja; las sin fecha caen en "Sin fecha de pago".
+- **B-032**: `SELECT count(*) FROM proveedor_facturas WHERE organization_id = 'de100000-…-0001'` > 0 tras re-seed.
+- **B-049**: badge de proforma dice "Pendiente cliente" en todas las vistas.
+- **B-052**: guardar wizard = un solo toast; error de paso = un solo toast con contexto.
+- **B-054**: mover una tarjeta con `probabilidad` custom mantiene el valor; una tarjeta sin custom toma el default de la etapa nueva.
+- **B-056 / B-061**: submit inválido dispara toast con lista de campos, en lugar de "no pasa nada".
