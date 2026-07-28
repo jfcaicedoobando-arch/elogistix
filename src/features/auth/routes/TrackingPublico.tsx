@@ -11,6 +11,8 @@ import { TrackingPublicoErrorCard } from "@/features/embarques/components/tracki
 import { TrackingPublicoLoading } from "@/features/embarques/components/tracking/TrackingPublicoLoading";
 import { TrackingPublicoTimeline } from "@/features/embarques/components/tracking/TrackingPublicoTimeline";
 import { Seo } from "@/components/shared/Seo";
+import { DetailHeader } from "@/components/shared/DetailHeader";
+
 
 function transporteLabel(e: TrackingPublicoData["embarque"]): string {
   return e.naviera || e.aerolinea || e.transportista || "—";
