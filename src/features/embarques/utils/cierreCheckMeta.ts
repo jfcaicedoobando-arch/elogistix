@@ -8,6 +8,7 @@ import {
   pick,
   fmtCxc, fmtCxp, fmtDocs, fmtMargen, fmtVentaPendientes,
   fmtSinFactura, fmtContenedores, fmtContenedoresFechas, fmtRepPendientes,
+  fmtComisionesNoDefinitivas, fmtMargenMinimoPct,
 } from "./cierreCheckFormatters";
 
 export type ResponsableCierre =
@@ -85,6 +86,29 @@ const META: Record<string, CierreCheckMeta> = {
     ruta: buildRuta("facturacion", "rep-pendientes"),
     ctaLabel: "Ir a Facturación",
     formatDetalle: fmtRepPendientes,
+  },
+  // B-042: nombres actuales emitidos por validar_cierre_embarque
+  // (migración 20260723051800). Los legacy se conservan para caché histórica.
+  rep_timbrados: {
+    label: "Complementos de Pago (REP) timbrados",
+    responsable: "Contador",
+    ruta: buildRuta("facturacion", "rep-pendientes"),
+    ctaLabel: "Ir a Facturación",
+    formatDetalle: fmtRepPendientes,
+  },
+  comisiones_definitivas: {
+    label: "Comisiones devengadas definitivas",
+    responsable: "Sistema",
+    ruta: buildRuta("pnl", "comision"),
+    ctaLabel: "Ver P&L",
+    formatDetalle: fmtComisionesNoDefinitivas,
+  },
+  margen_minimo: {
+    label: "Margen mínimo alcanzado",
+    responsable: "Ventas",
+    ruta: buildRuta("pnl", "utilidad"),
+    ctaLabel: "Ver P&L",
+    formatDetalle: fmtMargenMinimoPct,
   },
 };
 

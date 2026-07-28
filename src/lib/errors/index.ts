@@ -24,6 +24,18 @@ const FRIENDLY_ERROR_MESSAGES: Array<{ match: RegExp; message: string }> = [
     message:
       "Número de contenedor inválido. Formato ISO 6346: 4 letras + 7 dígitos (ej. MSCU1234567). Déjalo vacío si aún no lo asignan.",
   },
+  // B-043: errores del SDK de Supabase Functions (timbrado CFDI/REP y demás
+  // edge functions) traducidos a mensajes de negocio es-MX.
+  {
+    match: /failed to send a request to the edge function/i,
+    message:
+      "No pudimos contactar el servicio en la nube (Edge Function). Revisa tu conexión e intenta de nuevo; si el problema persiste, contacta a soporte.",
+  },
+  {
+    match: /edge function returned a non-2xx status code/i,
+    message:
+      "El servicio en la nube rechazó la solicitud. Intenta de nuevo en unos minutos; si el problema persiste, contacta a soporte.",
+  },
 ];
 
 export function getErrorMessage(err: unknown): string {

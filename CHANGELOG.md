@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.320.49] - 2026-07-28
+- **Bug bash live · Wave 13 (3 fixes M, frontend)**:
+  - **B-039 · Cambio de estado triplicado en "Notas y Actividad"**: al avanzar un embarque, la RPC `avanzar_estado_embarque` escribía nota auto (`cambio_estado`) + evento de tracking + entrada de bitácora — el feed mostraba TRES filas por la misma transición. `useActividadEmbarque` ahora deduplica en la vista: conserva la bitácora `cambiar_estado` (más rica: trae `estado_anterior`/`estado_nuevo`) y suprime la nota/evento que caigan en el mismo minuto. Datos legacy o de auto-sync (sin bitácora) siguen mostrando su nota/evento — no se pierde historia. Analogía: tres cámaras filmaban el mismo gol; ahora la transmisión oficial es la de detrás del arco y las otras dos se ocultan si graban al mismo segundo.
+  - **B-042 · Checklist de cierre mostraba JSON crudo**: la RPC `validar_cierre_embarque` (20260723051800) emite reglas nuevas (`rep_timbrados`, `comisiones_definitivas`, `margen_minimo`) que `cierreCheckMeta` no conocía → caía al FALLBACK con `JSON.stringify` y el usuario veía `{"venta_mxn":30000,"margen_pct":-5,…}`. Se registran los tres nombres en `META` con formatters es-MX (`fmtComisionesNoDefinitivas`, `fmtMargenMinimoPct`; `rep_timbrados` reutiliza `fmtRepPendientes`). El FALLBACK ya nunca muestra JSON (devuelve `null`).
+  - **B-043 · Errores en inglés en toasts de dinero**: al fallar el timbrado de REP por edge function caída, el toast mostraba "Failed to send a request to the Edge Function". Se añaden dos traducciones en `getErrorMessage` para los errores del SDK de Supabase Functions (`FunctionsFetchError` y `non-2xx status code`), y `useTimbrarRep`/`useCancelarRep` ahora pasan el error por `getErrorMessage` en la `description` (título fijo en español).
+- **Sprint status**: acumulado 43/63 bugs cerrados (Wave 13: B-039, B-042, B-043). Pendientes: 20.
+
+
+
 ## [13.320.48] - 2026-07-28
 - **Bug bash live · Wave 12 (4 fixes S, frontend)**:
   - **B-037 · Detalle de pago con datos stale**: `DialogRegistrarPagoProveedor` recibía la factura como snapshot desde la fila; si el usuario aprobaba en otra pestaña, el diálogo seguía diciendo "no aprobada". Ahora al abrir se invalida `queryKeys.cxp.factura(id)` y se re-lee con `useFacturaProveedor` (fallback al snapshot). Analogía: antes miraba una foto de ayer del saldo; ahora mira el saldo en vivo.

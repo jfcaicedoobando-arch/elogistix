@@ -124,3 +124,21 @@ export const fmtRepPendientes = (d: unknown): string | null => {
   if (n > 0) return `${n} pago(s) PPD sin REP timbrado`;
   return null;
 };
+
+// B-042: reglas actuales de la RPC validar_cierre_embarque (20260723051800).
+export const fmtComisionesNoDefinitivas = (d: unknown): string | null => {
+  const n = Number(pick(d, "no_definitivas") ?? 0);
+  if (n > 0) return `${n} comisión(es) devengada(s) pendiente(s) de pasar a definitiva`;
+  return null;
+};
+
+export const fmtMargenMinimoPct = (d: unknown): string | null => {
+  const pct = pick(d, "margen_pct");
+  const min = pick(d, "minimo_pct");
+  const utilidad = pick(d, "utilidad_mxn");
+  if (pct == null && min == null) return null;
+  const partes: string[] = [];
+  partes.push(`Margen actual ${pct == null ? "—" : `${Number(pct).toFixed(2)}%`} (mínimo ${Number(min ?? 0).toFixed(2)}%)`);
+  if (utilidad != null) partes.push(`utilidad ${fmtMoney(utilidad)}`);
+  return partes.join(" · ");
+};

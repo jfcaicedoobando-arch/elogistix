@@ -10,6 +10,7 @@ import { notifySuccess } from "@/lib/ui/appFeedback";
 import { emitirRep, cancelarRep, type MotivoCancelacionSat } from "@/features/facturacion/services/repFacturapi";
 import { autoEnviarRepPorCorreo } from "@/features/facturacion/services/repAutoEmail";
 import { notifyError, notifyInfo } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
@@ -37,7 +38,10 @@ export function useTimbrarRep(facturaId?: string) {
       });
     },
     onError: (err: Error) => notifyError(undefined, {
-      title: `No se pudo timbrar el REP: ${err.message}`,
+      // B-043: mensaje es-MX de negocio (antes se interpolaba el error crudo
+      // del SDK, p. ej. "Failed to send a request to the Edge Function").
+      title: "No se pudo timbrar el REP",
+      description: getErrorMessage(err),
       error: err,
       method: "FEATURES_FACTURACION_HOOKS_USETIMBRARREP_1",
     }),
@@ -61,9 +65,11 @@ export function useCancelarRep(facturaId?: string) {
       invalidateProfitDependencies(qc);
     },
     onError: (err: Error) => notifyError(undefined, {
-      title: `No se pudo cancelar el REP: ${err.message}`,
+      title: "No se pudo cancelar el REP",
+      description: getErrorMessage(err),
       error: err,
       method: "FEATURES_FACTURACION_HOOKS_USETIMBRARREP_2",
     }),
+
   });
 }
