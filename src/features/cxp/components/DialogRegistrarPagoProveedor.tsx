@@ -48,12 +48,22 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
   const f = usePagoProveedorForm(factura, open);
   const noAprobada = !!factura && factura.estado_aprobacion !== "aprobada";
 
+  const validarPago = (): string | null => {
+    if (!factura) return "Factura no disponible";
+    if (noAprobada) return "La factura debe estar aprobada antes de registrar pagos";
+    if (f.montoNum <= 0) return "El monto debe ser mayor a 0";
+    if (f.bloqueadoPorTc) return `Captura un tipo de cambio válido para pagar en MXN una factura ${factura.moneda}`;
+    if (f.excede) return `El monto excede el saldo pendiente (${factura.moneda})`;
+    return null;
+  };
+
   const submit = async () => {
     if (!factura) return;
-    if (noAprobada) return notifyError(undefined, { title: "La factura debe estar aprobada antes de registrar pagos", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_0" });
-    if (f.montoNum <= 0) return notifyError(undefined, { title: "El monto debe ser mayor a 0", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_1" });
-    if (f.bloqueadoPorTc) return notifyError(undefined, { title: `Captura un tipo de cambio válido para pagar en MXN una factura ${factura.moneda}`, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_4" });
-    if (f.excede) return notifyError(undefined, { title: `El monto excede el saldo pendiente (${factura.moneda})`, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
+    const errorMsg = validarPago();
+    if (errorMsg) {
+      notifyError(undefined, { title: errorMsg, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_VALIDAR" });
+      return;
+    }
     try {
       await registrar.mutateAsync({
         proveedor_factura_id: factura.id,
@@ -62,7 +72,6 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
         moneda: f.moneda,
         // v13.308.8: si no hay TC válido (ej. pago MXN de factura MXN), enviamos
         // `null` — el CHECK `pagos_proveedor_tc_pos` sólo permite `NULL` o `> 0`.
-        // Antes mandábamos `0` y disparaba `23514` en BD (Sentry JAVASCRIPT-REACT-1M).
         tipo_cambio_usd: Number(f.tc) > 0 ? Number(f.tc) : null,
         metodo_pago: f.metodo,
         referencia: f.referencia,
