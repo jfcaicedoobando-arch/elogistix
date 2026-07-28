@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.320.63] - 2026-07-28
+- **Fix: doble toast al editar (o eliminar) un proveedor** (`/proveedores/:id`). El aviso se emitía dos veces: una en la mutación `useProveedorMutations` y otra en `useProveedorDetalleController`. Analogía: dos personas anunciando por altavoz el mismo vuelo.
+  - `useProveedorDetalleController.ts`: se quitaron los `notifySuccess`/`notifyError` propios de `handleUpdate` y `handleDelete`; la notificación queda centralizada en la mutación (fuente única de verdad). Se conserva el `try/catch` porque el `catch` evita que un error rompa la navegación posterior.
+  - Test de regresión en `useProveedorDetalleController.test.tsx`: el controller no debe llamar a `notifySuccess`/`notifyError`. 24 tests verdes en `features/proveedor/hooks`.
+
+
+
 ## [13.320.62] - 2026-07-28
 - **Fix: "SAT no devolvió un estatus válido" al verificar UUID de facturas de proveedor** (`/compras/por-aprobar`, `FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT`). Analogía: el RFC del proveedor `AL&0807074L5` se guardó con el "&" en clave secreta de XML (`&amp;`) y luego se mandó al SAT sin traducir; el SAT recibía un sobre roto y contestaba con un error que la app no sabía leer.
   - `parse-cfdi-xml/parser.ts`: nuevo `decodeXmlEntities()` aplicado en `attr()` — ahora los atributos del CFDI (RFC, nombre, serie, descripciones) se decodifican (`&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&#xNN;`). +2 tests de regresión (26/26 verdes).
