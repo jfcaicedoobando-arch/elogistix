@@ -62,7 +62,6 @@ export default function FacturaDetalle() {
       onEliminar={() => controller.eliminar(factura.id)}
       volverHref={volverHref}
       volverLabel={volverLabel}
-      onVolver={(href) => navigate(href)}
       dialogs={dialogs}
       saldo={controller.saldo}
     />

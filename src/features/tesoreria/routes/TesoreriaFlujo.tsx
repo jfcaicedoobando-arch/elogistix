@@ -2,10 +2,8 @@
  * Flujo de caja proyectado a 90 días.
  */
 import { lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
@@ -24,15 +22,13 @@ export default function TesoreriaFlujo() {
 
   return (
     <PageContainer>
-      <PageHeader
+      <DetailHeader
+        backTo="/tesoreria"
+        backLabel="Tesorería"
         title="Flujo de caja proyectado · 90 días"
-        description="Proyección semanal de entradas (CxC) y salidas (CxP + comisiones) sobre vencimientos."
-        actions={
-          <Button variant="outline" asChild>
-            <Link to="/tesoreria"><ArrowLeft className="h-4 w-4 mr-2" /> Tesorería</Link>
-          </Button>
-        }
+        subtitle="Proyección semanal de entradas (CxC) y salidas (CxP + comisiones) sobre vencimientos."
       />
+
 
       {isLoading || !data ? (
         <KpiGridSkeleton count={4} heightClass="h-20" />
