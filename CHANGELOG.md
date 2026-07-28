@@ -1,6 +1,12 @@
 # Changelog
 
 
+## [13.321.4] - 2026-07-28
+- Proformas: las proformas enviadas a la papelera ya no aparecen en el embarque, en el listado general ni en el detalle — antes seguían visibles y al intentar borrarlas otra vez fallaba con "Registro no encontrado o ya borrado".
+- Proformas: tampoco pueden facturarse proformas borradas, y si se intenta eliminar una que ya estaba en papelera se muestra un aviso claro y la lista se refresca sola.
+
+
+
 ## [13.321.3] - 2026-07-28
 - Cobertura de pruebas (Ola 3): estado único de factura para el cliente (B-083), banner de respuesta de cotización en el portal sin hora falsa (B-103), datos operativos del embarque en el portal ocultando valores vacíos (B-102) y copy del banner de re-aprobación según vigencia o cambio de precio (B-097).
 

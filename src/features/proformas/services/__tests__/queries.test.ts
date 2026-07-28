@@ -11,6 +11,8 @@ import {
   fetchProformasEmbarque,
   fetchProformaPorId,
   fetchProformasAprobadas,
+  fetchProformasTodas,
+
   fetchProformasPendientes,
   fetchClienteParaPdf,
   fetchEmbarqueParaPdf,
@@ -108,4 +110,38 @@ describe("proformas queries", () => {
     mock.setTableResult("proforma_conceptos_consolidados", { data: null, error: new Error("e") });
     await expect(fetchConceptosConsolidados("p")).rejects.toThrow("e");
   });
+
+  // Regresión: las proformas en papelera se seguían listando y al borrarlas de
+  // nuevo el RPC respondía "Registro no encontrado o ya borrado" (P0001).
+  describe("excluye proformas en papelera (deleted_at)", () => {
+    const isOps = () => {
+      const call = mock.tableCalls[0];
+      return call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "is");
+    };
+
+    it("fetchProformasEmbarque filtra deleted_at IS NULL", async () => {
+      mock.setTableResult("proformas", { data: [], error: null });
+      await fetchProformasEmbarque("emb-1");
+      expect(isOps()).toContainEqual(["is", ["deleted_at", null]]);
+    });
+
+    it("fetchProformaPorId filtra deleted_at IS NULL", async () => {
+      mock.setTableResult("proformas", { data: null, error: null });
+      await fetchProformaPorId("p1");
+      expect(isOps()).toContainEqual(["is", ["deleted_at", null]]);
+    });
+
+    it("fetchProformasAprobadas filtra deleted_at IS NULL", async () => {
+      mock.setTableResult("proformas", { data: [], error: null });
+      await fetchProformasAprobadas("org");
+      expect(isOps()).toContainEqual(["is", ["deleted_at", null]]);
+    });
+
+    it("fetchProformasTodas filtra deleted_at IS NULL", async () => {
+      mock.setTableResult("proformas", { data: [], error: null });
+      await fetchProformasTodas("org");
+      expect(isOps()).toContainEqual(["is", ["deleted_at", null]]);
+    });
+  });
 });
+

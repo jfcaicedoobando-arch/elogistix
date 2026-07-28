@@ -16,7 +16,7 @@ import {
   type ProformaConFactura,
   type ProformaRow,
 } from "@/features/proformas/services";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 
 // Re-export tipos para que componentes/pages no tengan que importar del service.
 export type { ProformaConFactura,  ProformaRow };
@@ -83,6 +83,9 @@ export function useCrearProforma() {
 }
 
 
+/** Mensaje que devuelve `soft_delete_record` cuando la fila ya está en papelera. */
+const YA_BORRADA = "Registro no encontrado o ya borrado";
+
 export function useEliminarProforma() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -92,9 +95,19 @@ export function useEliminarProforma() {
       notifySuccess(undefined, { title: "Proforma eliminada correctamente" });
       invalidateProformaCaches(queryClient, params.embarqueId);
     },
-    onError: (error: Error) => {
+    onError: (error: Error, params) => {
+      // Fila fantasma: la proforma ya estaba en papelera y la lista venía de
+      // caché. Se refresca en vez de mostrar un error técnico.
+      if (error.message.includes(YA_BORRADA)) {
+        notifyWarning(undefined, {
+          title: "Esta proforma ya había sido eliminada; se actualizó la lista",
+        });
+        invalidateProformaCaches(queryClient, params.embarqueId);
+        return;
+      }
       notifyError(undefined, { title: `Error al eliminar proforma: ${error.message}`, error, method: "DELETE_PROFORMA" });
     },
   });
 }
+
 
