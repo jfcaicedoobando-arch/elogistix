@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.320.46] - 2026-07-28
+- **Arch baseline · Actividades CRM > 200 líneas**: `src/features/crm/routes/Actividades.tsx` había crecido a 204 líneas y rompía el test de Power of 10. Se extraen `baseActividadColumns` y `actividadActionColumn` a `actividadesColumns.tsx` (columnas puras de tabla, sin lógica). La ruta queda en 173 líneas. Analogía: era un cajón de escritorio que ya no cerraba — sacamos los lápices (las columnas) a su propio estuche.
+
 ## [13.320.45] - 2026-07-28
+
 - **RLS meta-linter · falsos positivos**: `test_rls_policy_linter.sql` marcaba 33 hallazgos falsos. Se corrige el linter (no la BD): (1) sólo audita `BASE TABLE` — antes revisaba VIEWs con columna `organization_id` (v_pagos_rep_pendientes, cxp_alertas_vencimiento, etc.), pero las políticas viven en las tablas subyacentes; (2) sólo bloquea policies `PERMISSIVE` con `USING/WITH CHECK (true)` — las `RESTRICTIVE` (patrón "Hide soft deleted X" con `qual = deleted_at IS NULL` y `with_check = true`) sólo pueden restringir acceso, nunca expandirlo; (3) exenta `facturapi_webhook_eventos` (ingest interno solo `service_role`). Analogía: es como un detector de humo que se activaba con el vapor de la ducha — ahora sólo suena con humo real.
 
 ## [13.320.44] - 2026-07-28
