@@ -4,9 +4,8 @@ import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/features/auditoria/hooks/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
 /**
  * Controller para la página de detalle de proveedor.
  * Encapsula carga, mutaciones, totales, dialogs y handlers.
@@ -29,6 +28,8 @@ export function useProveedorDetalleController() {
     .reduce((sum, o) => sum + o.monto, 0);
   const totalPendiente = totalFacturado - totalPagado;
 
+  // NOTA (v13.320.63): los toasts de éxito/error de update y delete los emite
+  // `useProveedorMutations`. No los repitas aquí o el usuario ve doble aviso.
   const handleUpdate = useCallback(async (provId: string, data: Record<string, unknown>) => {
     try {
       const cambios = proveedor
@@ -46,9 +47,8 @@ export function useProveedorDetalleController() {
         entidad_nombre: (data.nombre as string) ?? proveedor?.nombre ?? "",
         detalles: cambios.length > 0 ? { cambios } : undefined,
       });
-      notifySuccess(undefined, { title: "Proveedor actualizado" });
     } catch {
-      notifyError(undefined, { title: "Error al actualizar", method: "USE_PROVEEDOR_DETALLE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      // Silencioso a propósito: `useProveedorMutations.onError` ya notificó.
     }
   }, [updateProveedor, proveedor, registrarActividad]);
 
@@ -62,12 +62,12 @@ export function useProveedorDetalleController() {
         entidad_id: proveedor.id,
         entidad_nombre: proveedor.nombre,
       });
-      notifySuccess(undefined, { title: "Proveedor eliminado" });
       navigate("/compras/proveedores");
     } catch {
-      notifyError(undefined, { title: "Error al eliminar proveedor", method: "USE_PROVEEDOR_DETALLE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      // Silencioso a propósito: `useProveedorMutations.onError` ya notificó.
     }
   }, [proveedor, deleteProveedor, registrarActividad, navigate]);
+
 
   return {
     proveedor,
