@@ -16,6 +16,8 @@ interface ConceptoSnapshot {
 interface Props {
   snapshot: unknown;
   moneda: string;
+  /** B-104: sin PDF disponible no se invita a "consultar el PDF". */
+  pdfDisponible: boolean;
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -29,7 +31,7 @@ function parseConceptos(snapshot: unknown): ConceptoSnapshot[] {
   return list.filter(isRecord) as ConceptoSnapshot[];
 }
 
-export default function PortalFacturaConceptosTable({ snapshot, moneda }: Props) {
+export default function PortalFacturaConceptosTable({ snapshot, moneda, pdfDisponible }: Props) {
   const conceptos = parseConceptos(snapshot);
 
   if (conceptos.length === 0) {
@@ -42,7 +44,9 @@ export default function PortalFacturaConceptosTable({ snapshot, moneda }: Props)
           <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
             <Receipt className="h-8 w-8 mb-2 opacity-50" />
             <p className="text-sm">Esta factura no incluye un desglose detallado.</p>
-            <p className="text-xs mt-1">Consulta el PDF para más información.</p>
+            {pdfDisponible && (
+              <p className="text-xs mt-1">Consulta el PDF para más información.</p>
+            )}
           </div>
         </CardContent>
       </Card>

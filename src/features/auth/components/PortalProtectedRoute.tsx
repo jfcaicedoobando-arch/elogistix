@@ -1,9 +1,10 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
 export function PortalProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, role, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -14,7 +15,8 @@ export function PortalProtectedRoute({ children }: { children: React.ReactNode }
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // B-104: conservar el deep-link pedido para volver a él tras el login.
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   if (role !== "cliente") {

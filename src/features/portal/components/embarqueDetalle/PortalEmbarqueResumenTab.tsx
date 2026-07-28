@@ -12,6 +12,10 @@ type EmbarqueResumen = Parameters<typeof getOrigen>[0] &
     tipo: string;
     incoterm: string;
     descripcion_mercancia?: string | null;
+    tipo_contenedor?: string | null;
+    peso_kg?: number | null;
+    volumen_m3?: number | null;
+    piezas?: number | null;
     contenedor?: string | null;
     bl_master?: string | null;
     bl_house?: string | null;
@@ -63,6 +67,23 @@ export function PortalEmbarqueResumenTab({ embarque }: Props) {
             <dd className="font-medium">{embarque.incoterm}</dd>
             <dt className="text-muted-foreground">Mercancía</dt>
             <dd className="font-medium">{embarque.descripcion_mercancia || "—"}</dd>
+            {/* B-102: datos operativos que ya vienen en la query del detalle. */}
+            {embarque.tipo_contenedor && <>
+              <dt className="text-muted-foreground">Tipo de contenedor</dt>
+              <dd className="font-medium">{embarque.tipo_contenedor}</dd>
+            </>}
+            {embarque.peso_kg != null && embarque.peso_kg > 0 && <>
+              <dt className="text-muted-foreground">Peso</dt>
+              <dd className="font-medium">{embarque.peso_kg.toLocaleString("es-MX")} kg</dd>
+            </>}
+            {embarque.volumen_m3 != null && embarque.volumen_m3 > 0 && <>
+              <dt className="text-muted-foreground">Volumen</dt>
+              <dd className="font-medium">{embarque.volumen_m3.toLocaleString("es-MX")} m³</dd>
+            </>}
+            {embarque.piezas != null && embarque.piezas > 0 && <>
+              <dt className="text-muted-foreground">Piezas</dt>
+              <dd className="font-medium">{embarque.piezas}</dd>
+            </>}
             {embarque.contenedor && <>
               <dt className="text-muted-foreground">Contenedor</dt>
               <dd className="font-medium">{embarque.contenedor}</dd>
