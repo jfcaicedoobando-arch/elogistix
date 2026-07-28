@@ -35,11 +35,16 @@ export function resolveProtectedRouteRedirect({
     return "/agente";
   }
 
-  // Super admin accessing regular app routes → redirect to /admin
+  // Super admin: permitirle operar módulos como cualquier admin_org. Sólo lo
+  // enviamos a /admin cuando entra a la raíz `/` o `/dashboard` (aterrizaje por
+  // defecto); si navega explícitamente a otra ruta operativa, respetamos su
+  // intención. B-009 (v13.320.41): antes se le expulsaba de todo lo que no
+  // empezara con /admin, inutilizando el OrgSwitcher.
   const isSuperAdmin = role === "super_admin";
-  if (isSuperAdmin && !pathname.startsWith("/admin")) {
+  if (isSuperAdmin && (pathname === "/" || pathname === "/dashboard")) {
     return "/admin";
   }
+
 
   // Onboarding inicial: si la organización del usuario no ha completado los
   // datos básicos (RFC, dirección, moneda), forzar al admin a completarlos.
