@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.320.44] - 2026-07-28
+- **Bug bash live · Wave 10 (Validaciones ausentes)** — se cierra un bug medio del audit `bugs-e2e-live-2026-07-28.md`:
+  - **B-024 · Email/teléfono/contacto opcionales en UI pero NOT NULL en BD**: `useNuevoClienteController.isStep1Valid` sólo exigía nombre/RFC/CP/régimen. Al enviar, el trigger `NULLIF('','')` convertía cadenas vacías a NULL y Postgres devolvía `23502` crudo al usuario. Ahora los tres campos son requeridos en el paso 1 del wizard (`NuevoClienteDialog.tsx` marca `required` visualmente) y el botón "Siguiente" queda bloqueado hasta que se capturen.
+- **Bugs ya cerrados verificados en esta ola** (no se re-abren): B-041 (auto-toasts wizard eliminados en v13.312.21), B-042 (JSON crudo checklist cierre en v13.320.36 fallback formatter), B-062 (busqueda_global ya matchea `folio_interno` FI-…).
+- **Sprint status**: acumulado 34/63 bugs cerrados (Wave 10: B-024 + 3 verificaciones). Pendientes: 29.
+- Analogía: era un formulario donde el registro civil pedía teléfono de emergencia sólo "si querías", pero la ventanilla lo exigía obligatorio y devolvía un ticket ilegible cuando faltaba. Ahora el formulario mismo marca los 3 campos con asterisco rojo antes de dejar avanzar.
+
+
+
+## [13.320.43] - 2026-07-28
+
+
 ## [13.320.43] - 2026-07-28
 - **Bug bash live · Wave 9 batch 1 (Validaciones de identidad)** — arranca la novena tanda del audit `bugs-e2e-live-2026-07-28.md`. Se cierran dos bugs de captura de datos fiscales/bancarios que hoy pasaban al backend sin filtro real:
   - **B-023 · RFC sin validación de formato SAT**: `rfcSchema` (mutationSchemas.ts) sólo verificaba longitud (≤20 chars). Ahora aplica el patrón oficial SAT: 3-4 letras (RFC moral o físico) + 6 dígitos AAMMDD + 3 alfanuméricos. Se normaliza a mayúsculas antes de comparar. Campo sigue siendo opcional (acepta `""` y `null`), así que altas sin RFC no rompen (típico en clientes extranjeros).
