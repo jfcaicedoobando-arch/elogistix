@@ -151,7 +151,7 @@ function buildMore(props: Props, primaryId: string | null): DetalleActionItem[] 
 export function FacturaDetalleActionsBar(props: Props) {
   const primary = buildPrimary(props);
   const secondary = buildSecondary(props, primary?.id ?? null);
-  const more = buildMore(props);
+  const more = buildMore(props, primary?.id ?? null);
   const destructive: DetalleActionItem | null = props.puedeEliminarBorrador
     ? {
         id: "eliminar-borrador", label: "Eliminar borrador", icon: Trash2,
