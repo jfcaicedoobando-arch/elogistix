@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [13.321.9] - 2026-07-28
+- CI: se añadieron los permisos faltantes (revocar acceso público y otorgar ejecución) a las funciones de tarifas, cotizaciones y proformas señaladas por la auditoría de migraciones.
+
+
 ## [13.321.8] - 2026-07-28
 - Pruebas de seguridad: se corrigieron los datos de prueba de las suites de portales y costeo (formato de expediente, tarifa duplicada, bucket de cartas de garantía y columna calculada), que hacían fallar el flujo de CI.
 
