@@ -158,7 +158,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
       id: "copiar-liga", label: "Copiar liga del portal", icon: Link2,
       onClick: () => {
         void navigator.clipboard.writeText(ligaPortal).then(
-          () => notifySuccess("Liga del portal copiada"),
+          () => notifySuccess(undefined, { title: "Liga del portal copiada" }),
           (err) => notifyError(undefined, { title: "No se pudo copiar la liga", error: err }),
         );
       },
