@@ -8,6 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Clock, AlertTriangle, FileSpreadsheet, Loader2 } from "lucide-react";
 import { Seo } from "@/components/shared/Seo";
+import { DetailHeader } from "@/components/shared/DetailHeader";
+
 import { usePortalProforma } from "@/features/proformas/hooks/usePortalProforma";
 import { PortalProformaResumen } from "@/features/proformas/components/portal/PortalProformaResumen";
 import { PortalProformaAcciones } from "@/features/proformas/components/portal/PortalProformaAcciones";
@@ -99,10 +101,13 @@ export default function PortalProforma() {
     <div className="min-h-screen bg-muted/30 py-8 px-4">
       <Seo title="Proforma para revisión — Libre Carga" description="Portal de aprobación de proformas" />
       <div className="max-w-2xl mx-auto space-y-4">
-        <div className="flex items-center gap-2 text-primary">
-          <FileSpreadsheet className="h-5 w-5" />
-          <h1 className="text-xl font-semibold">Libre Carga · Portal de proformas</h1>
-        </div>
+        <DetailHeader
+          backTo={null}
+          icon={<FileSpreadsheet className="h-5 w-5 text-primary" />}
+          title="Portal de proformas"
+          subtitle="Revisa el detalle y responde tu proforma de Libre Carga."
+        />
+
 
         <ContenidoPortal state={state} />
 

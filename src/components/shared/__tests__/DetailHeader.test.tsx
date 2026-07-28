@@ -42,6 +42,14 @@ describe("<DetailHeader />", () => {
     expect(navigateMock).not.toHaveBeenCalled();
   });
 
+  it("oculta el botón Volver cuando backTo es null (páginas públicas)", () => {
+    renderInRouter(<DetailHeader title="X" backTo={null} />);
+    expect(screen.queryByRole("button", { name: /volver/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /volver/i })).not.toBeInTheDocument();
+  });
+
+
+
 
   it("renderiza acciones trailing", () => {
     renderInRouter(

@@ -6,10 +6,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface DetailHeaderProps {
-  /** Ruta destino del botón Volver. Si es número, hace `navigate(n)` (ej. -1). */
-  backTo?: string | number;
+  /**
+   * Ruta destino del botón Volver. Si es número, hace `navigate(n)` (ej. -1).
+   * Usa `null` en páginas públicas sin página padre (portal, tracking) para
+   * ocultar el botón por completo y conservar sólo título + badge + acciones.
+   */
+  backTo?: string | number | null;
   /** Label accesible del botón Volver. */
   backLabel?: string;
+
   /** Icono opcional a la izquierda del título. */
   icon?: ReactNode;
   /** Título principal (<h1>). */
@@ -64,7 +69,7 @@ export function DetailHeader({
 
   return (
     <div className={cn("space-y-3", className)}>
-      {typeof backTo === "string" ? (
+      {backTo === null ? null : typeof backTo === "string" ? (
         <Button variant="ghost" size="sm" className={backClasses} asChild>
           <Link to={backTo}>
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -82,6 +87,7 @@ export function DetailHeader({
           {backLabel}
         </Button>
       )}
+
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-2">

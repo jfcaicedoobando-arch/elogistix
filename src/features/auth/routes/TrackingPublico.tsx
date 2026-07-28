@@ -11,6 +11,8 @@ import { TrackingPublicoErrorCard } from "@/features/embarques/components/tracki
 import { TrackingPublicoLoading } from "@/features/embarques/components/tracking/TrackingPublicoLoading";
 import { TrackingPublicoTimeline } from "@/features/embarques/components/tracking/TrackingPublicoTimeline";
 import { Seo } from "@/components/shared/Seo";
+import { DetailHeader } from "@/components/shared/DetailHeader";
+
 
 function transporteLabel(e: TrackingPublicoData["embarque"]): string {
   return e.naviera || e.aerolinea || e.transportista || "—";
@@ -48,11 +50,14 @@ export default function TrackingPublico() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl font-bold">{e.expediente}</h1>
-          <Badge className={getEstadoColor(e.estado)}>{e.estado}</Badge>
-          <ModoIcon modo={e.modo} size={18} circle />
-        </div>
+        <DetailHeader
+          backTo={null}
+          icon={<ModoIcon modo={e.modo} size={18} circle />}
+          title={e.expediente}
+          subtitle={`${getOrigen(e)} → ${getDestino(e)}`}
+          badge={<Badge className={getEstadoColor(e.estado)}>{e.estado}</Badge>}
+        />
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
