@@ -228,3 +228,6 @@ UPDATE public.costeo_tarifas
        updated_at = now()
  WHERE estado IN ('vigente','vencida')
    AND estado IS DISTINCT FROM public.costeo_tarifa_estado_actual(estado, vigente_hasta);
+
+REVOKE ALL ON FUNCTION public.costeo_tarifas_marcar_reemplazadas() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.costeo_tarifas_marcar_reemplazadas() TO service_role;
