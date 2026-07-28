@@ -48,7 +48,7 @@ function renderEstado(p: ProformaConFactura, proformas: ProformaConFactura[]) {
   if (unificado === "aceptada") return <Badge variant="success" className="w-fit">Aceptada</Badge>;
 
   // 3. Sin respuesta del cliente: reflejar el estado de revisión interna.
-  if (rev === "pendiente") return <Badge variant="warning" className="w-fit">Pendiente revisión</Badge>;
+  if (rev === "pendiente") return <Badge variant="warning" className="w-fit">Pendiente cliente</Badge>;
   return <Badge variant="outline" className="w-fit">Enviada al cliente</Badge>;
 }
 
