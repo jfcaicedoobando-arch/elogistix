@@ -1,9 +1,15 @@
 /**
  * Cómputos derivados para el dashboard del portal cliente.
  * Extraído de PortalDashboard para separar lógica de render.
+ *
+ * B-068/B-076: los KPIs de facturación pendiente YA NO se calculan aquí.
+ * El dashboard usa `useEstadoCuenta` — la misma fuente que el estado de
+ * cuenta del portal (saldo por moneda, incluye Parcialmente pagada y resta
+ * pagos + notas de crédito).
  */
 import { useMemo } from "react";
-import { parseISO, isAfter, addDays } from "date-fns";
+import { isAfter, addDays } from "date-fns";
+import { parseDateOnlyLocal } from "@/lib/date/dateOnly";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
 
@@ -16,23 +22,10 @@ interface EmbarqueLike {
   estado: string;
 }
 
-interface FacturaLike {
-  estado: string;
-  total: number;
-}
-
-export function usePortalDashboardKpis<E extends EmbarqueLike, F extends FacturaLike>(
-  embarques: E[],
-  facturas: F[],
-) {
+export function usePortalDashboardKpis<E extends EmbarqueLike>(embarques: E[]) {
   const embarquesActivos = useMemo(
     () => embarques.filter((e) => !["Cerrado", "Cancelado", "EIR"].includes(e.estado)),
     [embarques],
-  );
-
-  const facturasPendientes = useMemo(
-    () => facturas.filter((f) => f.estado === "Emitida" || f.estado === "Vencida"),
-    [facturas],
   );
 
   const proximosArribos = useMemo(() => {
@@ -42,7 +35,8 @@ export function usePortalDashboardKpis<E extends EmbarqueLike, F extends Factura
       .filter((e) => {
         if (!e.eta) return false;
         try {
-          const etaDate = parseISO(e.eta);
+          // B-089: la ETA es date-only; parsear como medianoche LOCAL (no UTC).
+          const etaDate = parseDateOnlyLocal(e.eta);
           return isAfter(etaDate, hoy) && !isAfter(etaDate, en14Dias);
         } catch { return false; }
       })
@@ -63,22 +57,9 @@ export function usePortalDashboardKpis<E extends EmbarqueLike, F extends Factura
     });
   }, [embarquesActivos]);
 
-  const montoFacturasPendientes = useMemo(
-    () => facturasPendientes.reduce((sum, f) => sum + f.total, 0),
-    [facturasPendientes],
-  );
-
-  const facturasVencidas = useMemo(
-    () => facturasPendientes.filter((f) => f.estado === "Vencida").length,
-    [facturasPendientes],
-  );
-
   return {
     embarquesActivos,
-    facturasPendientes,
     proximosArribos,
     estadoDistribucion,
-    montoFacturasPendientes,
-    facturasVencidas,
   };
 }

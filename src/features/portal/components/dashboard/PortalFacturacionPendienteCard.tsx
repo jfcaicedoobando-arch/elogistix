@@ -4,15 +4,16 @@ import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import { formatCurrency } from "@/lib/formatters";
+import type { KpiPorMoneda } from "@/features/facturacion/estadoCuenta/services/estadoCuentaAggregates";
 
 interface Props {
-  monto: number;
+  montos: KpiPorMoneda;
   total: number;
   vencidas: number;
   className?: string;
 }
 
-export function PortalFacturacionPendienteCard({ monto, total, vencidas, className }: Props) {
+export function PortalFacturacionPendienteCard({ montos, total, vencidas, className }: Props) {
   const drilldownHref = total > 0 ? ROUTES.PORTAL_FACTURAS : null;
   return (
     <DrilldownRow
@@ -34,7 +35,15 @@ export function PortalFacturacionPendienteCard({ monto, total, vencidas, classNa
             </p>
           ) : (
             <>
-              <p className="text-3xl font-bold">{formatCurrency(monto, "MXN")}</p>
+              {/* B-076: nunca sumar monedas distintas — un total por moneda. */}
+              {montos.mxn > 0 && (
+                <p className="text-3xl font-bold">{formatCurrency(montos.mxn, "MXN")}</p>
+              )}
+              {montos.usd > 0 && (
+                <p className={montos.mxn > 0 ? "text-xl font-bold mt-0.5" : "text-3xl font-bold"}>
+                  {formatCurrency(montos.usd, "USD")}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground mt-1">
                 {total} factura{total !== 1 ? "s" : ""} por pagar
               </p>

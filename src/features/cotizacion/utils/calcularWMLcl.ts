@@ -49,18 +49,24 @@ function safeNum(n: unknown): number {
 
 /**
  * Calcula la venta de flete LCL a partir de tarifa W/M y mínimo.
- * Aplica: `venta = max(wm × tarifaWM, minimo)`.
+ * Aplica: `venta = max(wm × tarifaWM, minimo) × (1 + markup)`.
+ * B-075: el markup configurable (`cotizaciones.markup_default_maritimo`,
+ * default 15%) se aplica igual que en FCL — antes la venta LCL salía a
+ * precio de costo (margen 0%) salvo edición manual en el paso 2.
  * Redondea a 2 decimales (USD). Devuelve 0 si ambos parámetros son inválidos.
  */
 export function calcularFleteVentaLCL(
   wmFacturable: number,
   tarifaWM: number | null | undefined,
   minimo: number | null | undefined,
+  markup: number | null | undefined = 0,
 ): number {
   const wm = safeNum(wmFacturable);
   const tarifa = safeNum(tarifaWM);
   const min = safeNum(minimo);
+  const mk = Number(markup);
+  const factor = 1 + (Number.isFinite(mk) && mk >= 0 ? mk : 0);
   const calc = wm * tarifa;
   const bruto = Math.max(calc, min);
-  return Math.round(bruto * 100) / 100;
+  return Math.round(bruto * factor * 100) / 100;
 }

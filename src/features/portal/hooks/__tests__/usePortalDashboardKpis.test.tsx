@@ -7,10 +7,6 @@ const embarque = (overrides = {}) => ({
   ...overrides,
 });
 
-const factura = (overrides = {}) => ({
-  estado: "Emitida", total: 1000, ...overrides,
-});
-
 describe("usePortalDashboardKpis", () => {
   it("filtra embarques activos (excluye Cerrado/Cancelado/EIR)", () => {
     const embarques = [
@@ -18,21 +14,9 @@ describe("usePortalDashboardKpis", () => {
       embarque({ id: "e2", estado: "Cerrado" }),
       embarque({ id: "e3", estado: "Cancelado" }),
     ];
-    const { result } = renderHook(() => usePortalDashboardKpis(embarques, []));
+    const { result } = renderHook(() => usePortalDashboardKpis(embarques));
     expect(result.current.embarquesActivos).toHaveLength(1);
     expect(result.current.embarquesActivos[0].id).toBe("e1");
-  });
-
-  it("calcula montoFacturasPendientes y facturasVencidas", () => {
-    const facturas = [
-      factura({ estado: "Emitida", total: 500 }),
-      factura({ estado: "Vencida", total: 300 }),
-      factura({ estado: "Pagada", total: 999 }),
-    ];
-    const { result } = renderHook(() => usePortalDashboardKpis([], facturas));
-    expect(result.current.montoFacturasPendientes).toBe(800);
-    expect(result.current.facturasVencidas).toBe(1);
-    expect(result.current.facturasPendientes).toHaveLength(2);
   });
 
   it("proximosArribos solo incluye ETAs en los próximos 14 días", () => {
@@ -43,7 +27,7 @@ describe("usePortalDashboardKpis", () => {
       embarque({ id: "e1", eta: en5, estado: "En Tránsito" }),
       embarque({ id: "e2", eta: en30, estado: "En Tránsito" }),
     ];
-    const { result } = renderHook(() => usePortalDashboardKpis(embarques, []));
+    const { result } = renderHook(() => usePortalDashboardKpis(embarques));
     expect(result.current.proximosArribos).toHaveLength(1);
     expect(result.current.proximosArribos[0].id).toBe("e1");
   });

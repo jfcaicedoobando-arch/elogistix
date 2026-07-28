@@ -1,5 +1,6 @@
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import { formatUSD } from "@/lib/formatters";
+import { diasHastaFecha } from "@/lib/date/dateOnly";
 
 /** Re-export para call-sites históricos (`usd(n)`). Delega en el canónico `formatUSD`. */
 export const usd = formatUSD;
@@ -19,9 +20,8 @@ export function formatVigencia(desde: string, hasta: string): string {
 }
 
 export function vigenciaHint(hasta: string): { text: string; tone: "muted" | "warn" | "danger" } {
-  const target = new Date(hasta).getTime();
-  const today = new Date().setHours(0, 0, 0, 0);
-  const diff = Math.floor((target - today) / 86_400_000);
+  // B-089: `hasta` es date-only; contar días naturales en hora local.
+  const diff = diasHastaFecha(hasta);
   if (diff < 0) return { text: `vencida hace ${Math.abs(diff)} d`, tone: "danger" };
   if (diff === 0) return { text: "vence hoy", tone: "danger" };
   if (diff <= 7) return { text: `vence en ${diff} d`, tone: "warn" };

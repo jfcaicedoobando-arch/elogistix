@@ -6,7 +6,8 @@ import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate } from "@/lib/formatters";
-import { differenceInCalendarDays, parseISO } from "date-fns";
+import { differenceInCalendarDays } from "date-fns";
+import { parseDateOnlyLocal } from "@/lib/date/dateOnly";
 import { cn } from "@/lib/utils";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
@@ -14,7 +15,7 @@ import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 function etaProximityClass(eta: string | null | undefined): string {
   if (!eta) return "text-muted-foreground";
   try {
-    const days = differenceInCalendarDays(parseISO(eta), new Date());
+    const days = differenceInCalendarDays(parseDateOnlyLocal(eta), new Date());
     if (days < 0) return "text-muted-foreground";
     if (days < 3) return "text-destructive";
     if (days < 7) return "text-[hsl(var(--warning))]";

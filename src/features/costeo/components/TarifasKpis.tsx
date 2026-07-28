@@ -5,6 +5,7 @@
 import { CheckCircle2, Clock, AlertTriangle, Route } from "lucide-react";
 import { KpiCard, type KpiVariant } from "@/components/shared/KpiCard";
 import { cn } from "@/lib/utils";
+import { diasHastaFecha, parseDateOnlyLocal } from "@/lib/date/dateOnly";
 
 interface TarifaLike {
   vigente_hasta: string;
@@ -18,14 +19,6 @@ interface Props {
   onFilterPendientes?: () => void;
   onFilterPorVencer?: () => void;
   activeKpi?: "vigentes" | "porVencer" | "pendientes" | null;
-}
-
-const DAY_MS = 86_400_000;
-
-function daysUntil(date: string): number {
-  const target = new Date(date).getTime();
-  const today = new Date().setHours(0, 0, 0, 0);
-  return Math.floor((target - today) / DAY_MS);
 }
 
 /** Anillo de "filtro activo" con el mismo token semántico que la variant de la card. */
@@ -49,10 +42,11 @@ export function TarifasKpis({ tarifas, onFilterPendientes, onFilterPorVencer, ac
   for (const t of tarifas) {
     const ap = t.estado_aprobacion ?? "vigente";
     if (ap === "borrador") pendientes++;
-    const hasta = new Date(t.vigente_hasta).getTime();
+    // B-089: vigente_hasta es date-only → medianoche LOCAL (no UTC).
+    const hasta = parseDateOnlyLocal(t.vigente_hasta).getTime();
     if (ap === "vigente" && hasta >= today && t.estado !== "reemplazada") {
       vigentes++;
-      if (daysUntil(t.vigente_hasta) <= 7) porVencer++;
+      if (diasHastaFecha(t.vigente_hasta) <= 7) porVencer++;
     }
     if (t.ruta_id) rutas.add(t.ruta_id);
   }

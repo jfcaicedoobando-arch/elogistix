@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   fetchAgenteContext,
   fetchAgenteTarifas,
@@ -7,9 +8,13 @@ import {
 } from "@/features/portal-agente/services";
 
 export function useAgenteContext() {
+  // B-078: no disparar la query hasta que AuthContext resolvió la sesión;
+  // el email sirve de respaldo si el roundtrip de auth falla (patrón B-059).
+  const { user, loading } = useAuth();
   return useQuery({
     queryKey: queryKeys.portalAgente.context(),
-    queryFn: fetchAgenteContext,
+    queryFn: () => fetchAgenteContext(user?.email ?? null),
+    enabled: !loading && !!user,
     staleTime: 5 * 60 * 1000,
   });
 }

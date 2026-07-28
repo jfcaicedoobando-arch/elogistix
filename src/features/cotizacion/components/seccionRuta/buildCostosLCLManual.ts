@@ -20,6 +20,8 @@ export interface BuildCostosLCLManualArgs {
   pesoKg: number | undefined;
   /** Nombre del consolidador (si se conoce). Fallback: cadena vacía. */
   consolidadorNombre?: string | null;
+  /** B-075: markup decimal aplicado a la venta (0.15 = 15%), igual que FCL. */
+  markup?: number;
 }
 
 /**
@@ -34,6 +36,7 @@ export function buildCostosLCLManual({
   dimensiones,
   pesoKg,
   consolidadorNombre,
+  markup,
 }: BuildCostosLCLManualArgs): FilaCostoLocal[] {
   const manual = lclFleteManual;
   if (!manual) return [];
@@ -48,7 +51,7 @@ export function buildCostosLCLManual({
   // El flete marítimo LCL se cotiza como UN servicio único (cantidad = 1).
   // El desglose W/M vive en el paso 1 y queda documentado en `notas`.
   const costoTotal = Math.round(wmFacturable * tarifaWM * 100) / 100;
-  const ventaTotal = calcularFleteVentaLCL(wmFacturable, tarifaWM, minimo);
+  const ventaTotal = calcularFleteVentaLCL(wmFacturable, tarifaWM, minimo, markup);
   const aplicaMinimo = tarifaWM * wmFacturable < minimo;
 
   const detalleWm = `W/M facturable ${wmFacturable} @ USD ${tarifaWM.toFixed(2)}`;

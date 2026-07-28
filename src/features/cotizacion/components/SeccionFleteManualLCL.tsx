@@ -20,6 +20,7 @@ import { WizardSection } from "@/components/shared/WizardSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProveedoresLite } from "@/features/proveedor/hooks/useProveedores";
 import { formatCurrency, formatNumber } from "@/lib/formatters/numbers";
+import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
 import type { CotizacionFormValues, LclFleteManual } from "@/features/cotizacion/types";
 import {
   calcularTotalesLcl,
@@ -39,9 +40,11 @@ export default function SeccionFleteManualLCL({ complete }: Props = {}) {
   const dimensionesLCL = watch("dimensionesLCL");
   const pesoKg = watch("pesoKg");
   const manual = watch("lclFleteManual");
+  // B-075: preview con el mismo markup que se auto-cargará en el paso 2.
+  const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
 
   const { totalPesoKg, totalVolumenM3, wmFacturable } = calcularTotalesLcl(dimensionesLCL, pesoKg);
-  const ventaFlete = calcularFleteVentaLCL(wmFacturable, manual?.tarifaWM, manual?.minimo);
+  const ventaFlete = calcularFleteVentaLCL(wmFacturable, manual?.tarifaWM, manual?.minimo, markup);
 
   const setField = <K extends keyof LclFleteManual>(key: K, value: LclFleteManual[K]) => {
     setValue("lclFleteManual", { ...manual, [key]: value }, OPTS);
@@ -127,7 +130,7 @@ export default function SeccionFleteManualLCL({ complete }: Props = {}) {
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Venta flete (calculada)</p>
+            <p className="text-muted-foreground">Venta flete (calculada, markup incluido)</p>
             <p className="font-semibold tabular-nums">
               {formatCurrency(ventaFlete, "USD")}
             </p>

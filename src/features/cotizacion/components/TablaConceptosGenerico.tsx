@@ -26,7 +26,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">
-          Conceptos en {moneda}{esMXN ? " + IVA" : ""}
+          Conceptos en {moneda}{esMXN || (iva !== undefined && iva > 0) ? " + IVA" : ""}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -48,11 +48,17 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                 const lineSubtotal = calcularSubtotal(concepto.cantidad, concepto.precio_unitario);
                 const tasaFila = resolverTasaConcepto(concepto, tasaIva);
                 const lineIva = calcularIVA(lineSubtotal, tasaFila);
+                // B-093: conceptos legacy sin `total` — caer al cálculo de
+                // línea en lugar de renderizar "USDNaN" / $0.00.
+                const totalGuardado = Number(concepto.total);
+                const lineTotal = esMXN || !Number.isFinite(totalGuardado)
+                  ? lineSubtotal + lineIva
+                  : totalGuardado;
 
                 return (
-                  <TableRow key={concepto.descripcion ?? indice}>
+                  <TableRow key={concepto.descripcion ?? `concepto-${indice}`}>
                     <TableCell>
-                      {concepto.descripcion}
+                      {concepto.descripcion ?? "—"}
                       {concepto.notas && (
                         <p className="text-xs text-muted-foreground mt-0.5">↳ {concepto.notas}</p>
                       )}
@@ -63,7 +69,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                     {esMXN && <TableCell className="text-right">{formatCurrency(lineSubtotal, moneda)}</TableCell>}
                     {esMXN && <TableCell className="text-right">{formatCurrency(lineIva, moneda)}</TableCell>}
                     <TableCell className="text-right font-medium">
-                      {formatCurrency(esMXN ? lineSubtotal + lineIva : concepto.total, moneda)}
+                      {formatCurrency(lineTotal, moneda)}
                     </TableCell>
                   </TableRow>
                 );
@@ -73,11 +79,14 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
         </div>
 
         <div className="flex flex-col items-end mt-3 gap-1">
-          {esMXN && subtotal !== undefined && (
-            <span className="text-sm">Subtotal MXN: {formatCurrency(subtotal, "MXN")}</span>
+          {/* B-081: el desglose se muestra para cualquier moneda cuyo caller
+              pase subtotal/iva (el portal también desglosa el USD con IVA);
+              los call-sites internos no pasan desglose USD → no cambian. */}
+          {subtotal !== undefined && (
+            <span className="text-sm">Subtotal {moneda}: {formatCurrency(subtotal, moneda)}</span>
           )}
-          {esMXN && iva !== undefined && (
-            <span className="text-sm">{ivaLabel}: {formatCurrency(iva, "MXN")}</span>
+          {iva !== undefined && (
+            <span className="text-sm">{esMXN ? ivaLabel : "IVA"}: {formatCurrency(iva, moneda)}</span>
           )}
           <p className="text-lg font-bold">Total {moneda}: {formatCurrency(total, moneda)}</p>
         </div>

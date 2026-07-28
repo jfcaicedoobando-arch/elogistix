@@ -66,6 +66,8 @@ type RawPago = {
   id: string;
   fecha_pago: string;
   monto: number;
+  moneda: string;
+  tipo_cambio: number | null;
   monto_aplicado_factura: number;
   forma_pago: string | null;
   referencia: string | null;
@@ -115,7 +117,7 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
     .select(`
       id, numero, cliente_id, cliente_nombre, expediente,
       moneda, total, fecha_emision, fecha_vencimiento, estado,
-      pagos_factura(id, fecha_pago, monto, monto_aplicado_factura, forma_pago, referencia, deleted_at),
+      pagos_factura(id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura, forma_pago, referencia, deleted_at),
       factura_notas_credito(id, folio, fecha_emision, monto, estado, deleted_at)
     `)
     .in("cliente_id", filters.clienteIds)
@@ -162,7 +164,17 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
         id: p.id,
         fecha_pago: p.fecha_pago,
         monto_aplicado: Number(p.monto_aplicado_factura),
-        monto_no_aplicado: Math.max(0, Number(p.monto) - Number(p.monto_aplicado_factura)),
+        // B-077: `monto` está en moneda del PAGO y `monto_aplicado_factura`
+        // en moneda de la FACTURA — restarlos directo inventa saldos a favor
+        // (factura USD pagada en MXN mostraba "USD 175,000 a favor").
+        // Convención (la misma de DialogRegistrarPago): `tipo_cambio`
+        // convierte moneda del pago → moneda de la factura; el excedente
+        // queda expresado en moneda de la factura. Sin TC confiable → 0.
+        monto_no_aplicado: (() => {
+          const tc = Number(p.tipo_cambio);
+          const factor = p.moneda === f.moneda ? 1 : Number.isFinite(tc) && tc > 0 ? tc : 0;
+          return Math.max(0, Number(p.monto) * factor - Number(p.monto_aplicado_factura));
+        })(),
         forma_pago: p.forma_pago,
         referencia: p.referencia,
       })),

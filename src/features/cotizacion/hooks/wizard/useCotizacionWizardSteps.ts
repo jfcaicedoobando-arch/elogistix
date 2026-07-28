@@ -165,6 +165,30 @@ export function useCotizacionWizardSteps({
   const handleGuardar = useCallback(async () => {
     if (!cotizacionId) return;
     try {
+      // B-074: no finalizar una cotización con costos con precio de venta y
+      // `conceptos_venta` vacío (P&L ficticio en rojo y embarque sin ventas).
+      // Si el prefill del paso 3 no se materializó (p. ej. tras override +
+      // ida/vuelta entre pasos), regeneramos desde los costos actuales.
+      let conceptosValidos = [...conceptosUSD, ...conceptosMXN].filter(c => c.descripcion?.trim());
+      const hayVentasEnCostos = costosInternos.some(c => Number(c.precio_venta) > 0);
+      if (conceptosValidos.length === 0 && hayVentasEnCostos) {
+        const { usd, mxn } = buildConceptosFromCostos(costosInternos, tasaIva);
+        conceptosValidos = [...usd, ...mxn].filter(c => c.descripcion?.trim());
+        if (conceptosValidos.length > 0) {
+          setConceptosUSD(usd);
+          setConceptosMXN(mxn);
+          lastCostosHash.current = firmaCostos(costosInternos);
+          const nuevoTotalUSD = usd.reduce((s, c) => s + (Number(c.total) || 0), 0);
+          await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>(conceptosValidos), totalUSD: nuevoTotalUSD, mutations: { updateCotizacion } });
+        }
+      }
+      if (conceptosValidos.length === 0 && hayVentasEnCostos) {
+        notifyError(undefined, {
+          title: "La cotización no tiene conceptos de venta",
+          description: "Hay costos con precio de venta pero ningún concepto válido. Revisa el paso 3 antes de guardar.",
+        });
+        return;
+      }
       await savePasoFinal({
         cotizacionId, isEditMode,
         mutations: { updateCotizacion },
@@ -185,7 +209,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, isEditMode },
       });
     }
-  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, onFinalized]);
+  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, onFinalized, conceptosUSD, conceptosMXN, costosInternos, tasaIva, setConceptosUSD, setConceptosMXN]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);

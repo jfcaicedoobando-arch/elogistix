@@ -7,7 +7,8 @@ import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { MapPin, CalendarClock } from "lucide-react";
-import { differenceInCalendarDays, parseISO } from "date-fns";
+import { differenceInCalendarDays } from "date-fns";
+import { parseDateOnlyLocal } from "@/lib/date/dateOnly";
 import { cn } from "@/lib/utils";
 
 export interface EmbarqueCardData {
@@ -36,7 +37,7 @@ export interface EmbarqueCardData {
 function etaProximityClass(eta: string | null | undefined): string {
   if (!eta) return "text-muted-foreground";
   try {
-    const days = differenceInCalendarDays(parseISO(eta), new Date());
+    const days = differenceInCalendarDays(parseDateOnlyLocal(eta), new Date());
     if (days < 0) return "text-muted-foreground";
     if (days < 3) return "text-destructive font-semibold";
     if (days < 7) return "text-[hsl(var(--warning))] font-semibold";

@@ -32,6 +32,9 @@ export async function upsertCotizacionCostos(
       precio_venta: c.precio_venta ?? 0,
       unidad_medida: c.unidad_medida ?? "",
       notas: c.notas ?? "",
+      // B-073: la RPC los inserta desde la migración b073 (antes los ignoraba).
+      costeo_tarifa_id: c.costeo_tarifa_id ?? null,
+      costeo_tarifa_recargo_id: c.costeo_tarifa_recargo_id ?? null,
     })),
     p_request_id: requestId,
   });

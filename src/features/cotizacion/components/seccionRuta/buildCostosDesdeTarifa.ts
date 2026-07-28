@@ -16,7 +16,7 @@ import type { TopTarifaRow, CosteoTarifaRecargo } from "@/features/costeo/types"
 export interface BuildCostosDesdeTarifaArgs {
   tarifa: Pick<
     TopTarifaRow,
-    "flete_base" | "naviera_nombre" | "tipo_contenedor_nombre"
+    "id" | "flete_base" | "naviera_nombre" | "tipo_contenedor_nombre"
   >;
   recargos: CosteoTarifaRecargo[];
   /** Markup decimal aplicado a costo para sugerir precio_venta (0.15 = 15%). */
@@ -68,6 +68,8 @@ export function buildCostosDesdeTarifa({
       unidad_medida: unidad,
       aplica_iva: false,
       notas: "Auto-cargado desde tarifa marítima",
+      // B-073: la fila de flete queda ligada a la tarifa para revalidar precio.
+      costeo_tarifa_id: tarifa.id ?? null,
     });
   }
 
@@ -85,6 +87,9 @@ export function buildCostosDesdeTarifa({
       unidad_medida: unidad,
       aplica_iva: false,
       notas: "Auto-cargado desde tarifa marítima",
+      // B-073: linkage tarifa + recargo (la RPC compara recargo por recargo).
+      costeo_tarifa_id: tarifa.id ?? null,
+      costeo_tarifa_recargo_id: r.id ?? null,
     });
   }
 

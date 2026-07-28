@@ -19,9 +19,15 @@ export interface AgenteContext {
 /** Contexto completo del agente autenticado vía RPC SECURITY DEFINER
  *  (salta RLS de `costeo_agentes` y `organizations`, a las que el agente
  *  no tiene SELECT directo). */
-export async function fetchAgenteContext(): Promise<AgenteContext> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error(AUTH_ERROR_MESSAGES.notAuthenticated);
+export async function fetchAgenteContext(userEmail?: string | null): Promise<AgenteContext> {
+  // B-078: `getUser()` hace roundtrip a /auth/v1/user y puede resolver sin
+  // usuario durante la rehidratación de sesión (o con proxies que reescriben
+  // /auth/v1/*) → la query moría con "No autenticado" y los botones de
+  // tarifa quedaban muertos. `getSession()` lee la sesión local sin red;
+  // el email del AuthContext (patrón B-059) es el último respaldo.
+  const { data: { session } } = await supabase.auth.getSession();
+  const email = session?.user?.email ?? userEmail ?? null;
+  if (!session && !userEmail) throw new Error(AUTH_ERROR_MESSAGES.notAuthenticated);
 
   const data = await unwrap(supabase.rpc("get_current_agente_context"));
 
@@ -43,7 +49,7 @@ export async function fetchAgenteContext(): Promise<AgenteContext> {
     organizacionNombre: r.organizacion_nombre ?? "Organización",
     proveedorId: r.proveedor_id ?? null,
     agenteNombre: r.agente_nombre ?? "Agente",
-    email: user.email ?? "",
+    email: email ?? "",
   };
 }
 
@@ -89,6 +95,9 @@ export interface AgenteTarifaRow {
   estado_aprobacion: string;
   motivo_rechazo: string | null;
   aprobada_en: string | null;
+  transit_time_dias: number | null;
+  dias_libres_demoras: number;
+  notas: string | null;
   agente_nombre: string;
   naviera_nombre: string;
   tipo_contenedor_nombre: string;
@@ -105,6 +114,7 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
       id, ruta_id, naviera_id, tipo_contenedor_id, moneda, flete_base,
       vigente_desde, vigente_hasta, estado, estado_aprobacion,
       motivo_rechazo, aprobada_en,
+      transit_time_dias, dias_libres_demoras, notas,
       costeo_agentes:agente_id(nombre),
       navieras:naviera_id(name),
       tipos_contenedor:tipo_contenedor_id(name),
@@ -123,6 +133,8 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
     moneda: string; flete_base: number;
     vigente_desde: string; vigente_hasta: string; estado: string; estado_aprobacion: string;
     motivo_rechazo: string | null; aprobada_en: string | null;
+    transit_time_dias: number | null; dias_libres_demoras: number | null;
+    notas: string | null;
     costeo_agentes?: { nombre?: string } | null;
     navieras?: { name?: string } | null;
     tipos_contenedor?: { name?: string } | null;
@@ -145,6 +157,9 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
     estado_aprobacion: r.estado_aprobacion,
     motivo_rechazo: r.motivo_rechazo,
     aprobada_en: r.aprobada_en,
+    transit_time_dias: r.transit_time_dias ?? null,
+    dias_libres_demoras: Number(r.dias_libres_demoras) || 0,
+    notas: r.notas ?? null,
     agente_nombre: r.costeo_agentes?.nombre ?? "—",
     naviera_nombre: r.navieras?.name ?? "—",
     tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",

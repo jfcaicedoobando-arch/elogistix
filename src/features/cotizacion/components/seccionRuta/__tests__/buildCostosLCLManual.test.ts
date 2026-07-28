@@ -46,6 +46,27 @@ describe("buildCostosLCLManual", () => {
     expect(filas[0].notas).toMatch(/aplica mínimo/i);
   });
 
+  it("B-075: aplica el markup configurable a la venta (como FCL)", () => {
+    const filas = buildCostosLCLManual({
+      lclFleteManual: { tarifaWM: 85, minimo: 120, diasLibresAlmacenaje: 0, consolidadorId: null },
+      dimensiones: [dim(10)],
+      pesoKg: 500, // 0.5 t → W/M = 10 → costo = 850; venta = 850 × 1.15 = 977.50
+      markup: 0.15,
+    });
+    expect(filas).toHaveLength(1);
+    expect(filas[0].costo_unitario).toBe(850); // el costo NO lleva markup
+    expect(filas[0].precio_venta).toBe(977.5);
+  });
+
+  it("B-075: sin markup (default 0) conserva el comportamiento anterior", () => {
+    const filas = buildCostosLCLManual({
+      lclFleteManual: { tarifaWM: 85, minimo: 120, diasLibresAlmacenaje: 0, consolidadorId: null },
+      dimensiones: [dim(10)],
+      pesoKg: 500,
+    });
+    expect(filas[0].precio_venta).toBe(850);
+  });
+
   it("devuelve [] si no hay dimensiones ni peso", () => {
     const filas = buildCostosLCLManual({
       lclFleteManual: { tarifaWM: 50, minimo: 0, diasLibresAlmacenaje: 0, consolidadorId: null },

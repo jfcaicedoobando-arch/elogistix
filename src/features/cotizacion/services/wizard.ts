@@ -40,6 +40,12 @@ export async function savePaso1(opts: {
   data.msds_archivo = msdsArchivo;
 
   if (cotizacionId) {
+    // B-074: buildPaso1Data siempre trae `conceptos_venta: []` y `subtotal: 0`
+    // (las ventas viven en el estado del paso 3, no en el form). En UPDATE hay
+    // que excluirlos para no pisar lo ya guardado — el caso típico es volver
+    // al paso 1 para un override de tarifa tras haber completado el paso 3.
+    delete data.conceptos_venta;
+    delete data.subtotal;
     await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data });
     return cotizacionId;
   } else {
@@ -61,6 +67,9 @@ export async function savePaso2(opts: {
     proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
     costo_total: f.cantidad * f.costo_unitario, precio_venta: f.precio_venta,
     unidad_medida: f.unidad_medida, notas: f.notas ?? "", created_at: "", updated_at: "",
+    // B-073: propagar el linkage tarifa/recargo al upsert de costos.
+    costeo_tarifa_id: f.costeo_tarifa_id ?? null,
+    costeo_tarifa_recargo_id: f.costeo_tarifa_recargo_id ?? null,
   }));
   await mutations.upsertCostos.mutateAsync({ cotizacionId, costos });
 }

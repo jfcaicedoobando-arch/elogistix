@@ -54,6 +54,17 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
     setQuick(dialogTrigger.kind);
   }, [dialogTrigger]);
 
+  // REG B-004: abrir el Popover en el mismo tick del click del item pierde la
+  // carrera contra el cierre del DropdownMenu (Radix desmonta el content y
+  // devuelve el foco al trigger dentro del mismo gesto; el Popover recién
+  // abierto se desancla). Se cierra el menú primero y se abre el popover en
+  // el siguiente frame — el mismo camino de los hotkeys L/O/A, que sí
+  // funcionan porque el menú ya está cerrado.
+  const abrirQuick = (kind: Exclude<Quick, null>) => {
+    setMenuOpen(false);
+    requestAnimationFrame(() => setQuick(kind));
+  };
+
   return (
     <>
       {/* B-004 (v13.320.32): el <PopoverAnchor asChild> envolvía a <DropdownMenu>
@@ -70,19 +81,19 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => setQuick("lead")}>
+                <DropdownMenuItem onSelect={() => abrirQuick("lead")}>
                   <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-2xs text-muted-foreground">L</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setQuick("oportunidad")}>
+                <DropdownMenuItem onSelect={() => abrirQuick("oportunidad")}>
                   <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-2xs text-muted-foreground">O</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setQuick("actividad")}>
+                <DropdownMenuItem onSelect={() => abrirQuick("actividad")}>
                   <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-2xs text-muted-foreground">A</span>
                 </DropdownMenuItem>
                 {canEditCrm && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setImportOpen(true)}>
+                    <DropdownMenuItem onSelect={() => { setMenuOpen(false); requestAnimationFrame(() => setImportOpen(true)); }}>
                       <Upload className="h-4 w-4 mr-2" /> Importar leads CSV
                     </DropdownMenuItem>
                   </>

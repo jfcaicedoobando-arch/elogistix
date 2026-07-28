@@ -7,6 +7,7 @@ import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatVigencia, vigenciaHint } from "../routes/CosteoTarifas.helpers";
+import { parseDateOnlyLocal } from "@/lib/date/dateOnly";
 
 interface Props {
   desde: string;
@@ -14,8 +15,9 @@ interface Props {
 }
 
 function pct(desde: string, hasta: string): number {
-  const d = new Date(desde).getTime();
-  const h = new Date(hasta).getTime();
+  // B-089: vigencias date-only ancladas a medianoche local.
+  const d = parseDateOnlyLocal(desde).getTime();
+  const h = parseDateOnlyLocal(hasta).getTime();
   const today = Date.now();
   if (!Number.isFinite(d) || !Number.isFinite(h) || h <= d) return 1;
   const r = (today - d) / (h - d);
