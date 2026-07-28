@@ -28,15 +28,17 @@ export function TarifaCardBadges({ row }: { row: TopTarifaRow }) {
             <Timer className="size-3" /> {row.transit_time_dias} días tránsito
           </Badge>
         )}
-        {row.naviera_demora_dia_6 != null && (
+        {row.naviera_demora_dia_6 != null && row.dias_libres_demoras != null && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 gap-1 cursor-help">
-                <AlertTriangle className="size-3" /> Demora día 6: {usdTarifa(row.naviera_demora_dia_6)}/día
+                <AlertTriangle className="size-3" /> Demora desde el día{" "}
+                {row.dias_libres_demoras + 1}: {usdTarifa(row.naviera_demora_dia_6)}/día
               </Badge>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs text-xs">
-              Costo que cobra la naviera por día después de agotar los días libres.
+              Después de agotar los {row.dias_libres_demoras} días libres, la naviera cobra este
+              monto por contenedor y por cada día adicional.
             </TooltipContent>
           </Tooltip>
         )}
