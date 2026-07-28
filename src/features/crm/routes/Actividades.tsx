@@ -82,7 +82,7 @@ export default function Actividades() {
   const items = vencidasOnly
     ? list.rows.filter((a) => a.fecha_programada && new Date(a.fecha_programada).getTime() < now)
     : list.rows;
-  const columns = canEditCrm ? [...baseColumns, actionColumn] : baseColumns;
+  const columns = canEditCrm ? [...baseActividadColumns, actividadActionColumn] : baseActividadColumns;
 
   const limpiarFiltro = () => {
     const next = new URLSearchParams(searchParams);
