@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.320.47] - 2026-07-28
+- **Bug bash live · Wave 11 (2 fixes S)**:
+  - **B-026 · ETA sin validación**: `ActualizarEtaForm` aceptaba la misma fecha vigente o fuente vacía y aun así emitía toast de éxito + evento en bitácora sin cambio real. Se añade schema Zod con `buildEtaSchema(etaActualIso)` que exige (1) fecha distinta a la ETA actual y (2) fuente/motivo con al menos 3 caracteres. Analogía: antes podías firmar un cheque en blanco por la misma cantidad; ahora la caja te obliga a llenar el "concepto" y a mover el monto.
+  - **B-048 · Etiqueta ambigua en proformas**: badge de estado revisión decía "Pendiente revisión" cuando en realidad significa "sin respuesta del cliente" (según comentario del propio código). Se renombra a "Pendiente cliente" en `HistorialProformas.tsx` para que el operador entienda a quién esperar.
+- **Sprint status**: acumulado 36/63 bugs cerrados (Wave 11: B-026, B-048). Pendientes: 27.
+
 ## [13.320.46] - 2026-07-28
 - **Arch baseline · Actividades CRM > 200 líneas**: `src/features/crm/routes/Actividades.tsx` había crecido a 204 líneas y rompía el test de Power of 10. Se extraen `baseActividadColumns` y `actividadActionColumn` a `actividadesColumns.tsx` (columnas puras de tabla, sin lógica). La ruta queda en 173 líneas. Analogía: era un cajón de escritorio que ya no cerraba — sacamos los lápices (las columnas) a su propio estuche.
 
