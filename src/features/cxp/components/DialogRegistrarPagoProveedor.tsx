@@ -86,16 +86,15 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
     }
   };
 
+  const submitDisabled = registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada || f.bloqueadoPorTc;
+  const submitTitle = computeSubmitTitle(noAprobada, f.bloqueadoPorTc);
+
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>
         Cancelar
       </Button>
-      <Button
-        onClick={submit}
-        disabled={registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada || f.bloqueadoPorTc}
-        title={noAprobada ? "Requiere aprobación" : f.bloqueadoPorTc ? "Captura el TC" : undefined}
-      >
+      <Button onClick={submit} disabled={submitDisabled} title={submitTitle}>
         {registrar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {registrar.isPending ? "Guardando…" : "Registrar pago"}
       </Button>
