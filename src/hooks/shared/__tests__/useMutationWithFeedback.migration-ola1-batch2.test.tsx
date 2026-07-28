@@ -244,14 +244,16 @@ describe("useClientes · migración ola1 batch 2", () => {
 // COTIZACIONES
 // ============================================================================
 describe("useCotizacionMutations · migración ola1 batch 2", () => {
-  it("useCreateCotizacion: éxito → invalidate all + toast", async () => {
+  it("useCreateCotizacion: éxito → invalidate all sin toast intermedio (Wave 4 B-041)", async () => {
     svcCrearCot.mockResolvedValueOnce({ id: "cot1" });
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useCreateCotizacion(), { wrapper: Wrapper });
     result.current.mutate({ cliente_id: "cli1" } as never);
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(notifySuccess).toHaveBeenCalledWith(undefined, expect.objectContaining({ title: "Cotización creada" }));
+    // B-041: wizard emite un único toast final; el hook ya NO auto-toastea "Cotización creada".
+    expect(notifySuccess).not.toHaveBeenCalled();
   });
+
 
   it("useUpdateEstadoCotizacion: éxito → toast dinámico con estado", async () => {
     svcUpdateEstadoCot.mockResolvedValueOnce({});
