@@ -15,16 +15,19 @@ import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFactur
 import { useFacturaDetalleController } from "@/features/facturacion/hooks/useFacturaDetalleController";
 import { FacturaDetalleView } from "@/features/facturacion/components/detalle/FacturaDetalleView";
 
-function FacturaNoEncontrada({ onVolver }: { onVolver: () => void }) {
+function FacturaNoEncontrada() {
   return (
-    <div className="text-center py-12">
-      <p className="text-muted-foreground">Factura no encontrada o sin acceso.</p>
-      <Button variant="link" onClick={onVolver}>
-        Volver a facturación
-      </Button>
-    </div>
+    <DetailNotFound
+      icon={FileX}
+      title="Factura no encontrada"
+      description="La factura no existe, fue eliminada o no tienes acceso a ella."
+      backTo="/facturacion"
+      backLabel="Volver a Facturación"
+      withContainer={false}
+    />
   );
 }
+
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
