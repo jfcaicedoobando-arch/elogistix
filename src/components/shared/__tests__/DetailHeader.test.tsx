@@ -49,4 +49,17 @@ describe("<DetailHeader />", () => {
     );
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
   });
+
+  it("degrada el título a h2 con titleAs", () => {
+    renderInRouter(<DetailHeader title="Nova Trading" titleAs="h2" />);
+    expect(screen.getByRole("heading", { level: 2, name: "Nova Trading" })).toBeInTheDocument();
+  });
+
+  it("expone el título completo en tooltip cuando es texto", () => {
+    renderInRouter(<DetailHeader title="Razón social muy larga SA de CV" />);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveAttribute(
+      "title",
+      "Razón social muy larga SA de CV",
+    );
+  });
 });

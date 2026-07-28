@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.320.69] - 2026-07-28
+- Auditoría visual de `DetailHeader`: el icono ya no salta de línea con títulos largos (razón social completa en Clientes).
+- El título ahora muestra hasta 2 líneas con `break-words` y expone el texto completo en tooltip nativo.
+- Nueva prop `titleAs` para degradar a `h2`; aplicada en Lead y Oportunidad (CRM ya tenía un `h1` propio).
+- Acciones (`trailing`) alineadas a la izquierda en móvil/tablet y a la derecha sólo en `lg+`.
+- `DetailHeaderSkeleton` ahora refleja icono y badge reales.
+
 ## [13.320.68] - 2026-07-28
 - **Ola 4 de adopción de `DetailHeader`** — cierre de la migración. Analogía: el último par de fichas que aún se presentaban a su manera ya usan el mismo guion.
   - `EmbarqueDetalleHeader.tsx`: migrado a `DetailHeader`; ahora el detalle de embarque **sí tiene botón "Volver a Embarques"** (antes sólo se podía regresar con el botón del navegador). Sin cambios de lógica de estados ni diálogos.
