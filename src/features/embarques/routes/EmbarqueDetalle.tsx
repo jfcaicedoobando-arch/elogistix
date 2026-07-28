@@ -56,7 +56,7 @@ export default function EmbarqueDetalle() {
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
   if (isLoading) return <LoadingState />;
-  if (!embarque) return <NotFoundState onBack={() => navigate("/embarques")} />;
+  if (!embarque) return <NotFoundState />;
 
   const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado, embarque.fecha_llegada_real);
   const siguienteEstado = getSiguienteEstado(estadoVisual);
