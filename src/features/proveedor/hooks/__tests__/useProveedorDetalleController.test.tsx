@@ -52,4 +52,23 @@ describe("useProveedorDetalleController", () => {
     
     expect(result.current.deleteOpen).toBe(false);
   });
+
+  // Regresión v13.320.63 — el toast lo emite `useProveedorMutations`.
+  // Si el controller vuelve a notificar, el usuario ve doble aviso.
+  it("no emite toasts propios: la notificación vive en la mutación", async () => {
+    const { notifySuccess, notifyError } = await import("@/lib/ui/appFeedback");
+    vi.mocked(notifySuccess).mockClear();
+    vi.mocked(notifyError).mockClear();
+
+    const { result } = renderHook(() => useProveedorDetalleController(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      await result.current.handleUpdate("prov-1", { nombre: "Prov Editado" });
+      await result.current.handleDelete();
+    });
+
+    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(notifyError).not.toHaveBeenCalled();
+  });
 });
+
