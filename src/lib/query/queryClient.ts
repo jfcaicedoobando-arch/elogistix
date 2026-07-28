@@ -152,19 +152,18 @@ export const queryClient = new QueryClient({
 });
 
 /**
- * Persister para catálogos estáticos: puertos, navieras, tipos de contenedor,
- * tasa IVA y tipos de cambio. Sólo estas queries (whitelist por queryKey[0])
- * se serializan a localStorage para sobrevivir refresh sin volver a pegarle al
- * backend, recortando 200-400 ms del TTI en pantallas con selects.
+ * Persister para catálogos verdaderamente estáticos (tasa IVA vigente y tipos
+ * de cambio del día, que se re-consultan por su propio staleTime aunque estén
+ * hidratados). B-015 (v13.320.41): se removieron `tipos_contenedor`,
+ * `navieras`, `puertos` y `configuracion` porque son administrables y quedaban
+ * congelados en localStorage hasta 24 h tras editarlos en la app. Ahora se
+ * refetchean al primer montaje de cada sesión.
  */
 const CATALOG_KEYS = new Set([
-  "puertos",
-  "navieras",
-  "tipos_contenedor",
   "tasa_iva",
   "exchange-rates",
-  "configuracion",
 ]);
+
 
 export const queryPersister = createSyncStoragePersister({
   storage: getStorageRef("local"),
