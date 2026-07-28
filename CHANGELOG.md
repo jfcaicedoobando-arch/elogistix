@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [13.321.8] - 2026-07-28
+- Pruebas de seguridad: se corrigieron los datos de prueba de las suites de portales y costeo (formato de expediente, tarifa duplicada, bucket de cartas de garantía y columna calculada), que hacían fallar el flujo de CI.
+
+
 ## [13.321.7] - 2026-07-28
 - CI: se corrigió un salto de línea suelto en el validador de pruebas de seguridad que rompía el script (`roles_no_admin: command not found`) y detenía todo el flujo.
 
