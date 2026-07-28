@@ -68,33 +68,39 @@ function partesCliente(v: CotizacionFormValues, clientes: { id: string; nombre: 
   };
 }
 
-function partesMercancia(v: CotizacionFormValues) {
+function partesMercanciaMaritimo(v: CotizacionFormValues) {
   const esMaritimo = v.modo === "Marítimo";
-  const esAereo = v.modo === "Aéreo";
-  const esTerrestre = v.modo === "Terrestre";
   const esFcl = esMaritimo && v.tipoEmbarque === "FCL";
   const esLcl = esMaritimo && v.tipoEmbarque === "LCL";
+  return {
+    tipo_embarque: esMaritimo ? v.tipoEmbarque : "FCL",
+    tipo_contenedor: esFcl ? v.tipoContenedor : null,
+    tipo_peso: esFcl ? v.tipoPeso : "Peso Normal",
+    dimensiones_lcl: (esLcl ? v.dimensionesLCL : []) as DimensionLCL[],
+    dias_libres_destino: esFcl ? v.diasLibresDestino : 0,
+    dias_almacenaje: esLcl ? v.diasAlmacenaje : 0,
+    carta_garantia: esFcl ? v.cartaGarantia : false,
+  };
+}
+
+function partesMercancia(v: CotizacionFormValues) {
+  const esAereo = v.modo === "Aéreo";
+  const esTerrestre = v.modo === "Terrestre";
   return {
     modo: v.modo,
     tipo: v.tipo,
     incoterm: esTerrestre ? "N/A" : v.incoterm,
     tipo_carga: v.tipoCarga,
     msds_archivo: null as string | null,
-    tipo_embarque: esMaritimo ? v.tipoEmbarque : "FCL",
-    tipo_contenedor: esFcl ? v.tipoContenedor : null,
-    tipo_peso: esFcl ? v.tipoPeso : "Peso Normal",
+    ...partesMercanciaMaritimo(v),
     // B-035: campo dedicado; fallback a descripción adicional / sector para
     // no romper cotizaciones legacy que no lo tienen capturado.
     descripcion_mercancia: (v.descripcionMercancia?.trim() || v.descripcionAdicional?.trim() || v.sectorEconomico),
     descripcion_adicional: v.descripcionAdicional,
     sector_economico: v.sectorEconomico,
-    dimensiones_lcl: (esLcl ? v.dimensionesLCL : []) as DimensionLCL[],
     dimensiones_aereas: (esAereo ? v.dimensionesAereas : []) as DimensionAerea[],
-    dias_libres_destino: esFcl ? v.diasLibresDestino : 0,
-    dias_almacenaje: esLcl ? v.diasAlmacenaje : 0,
-    carta_garantia: esFcl ? v.cartaGarantia : false,
     num_contenedores: v.numContenedores,
-    tipo_unidad: v.modo === "Terrestre" ? v.tipoUnidad : null,
+    tipo_unidad: esTerrestre ? v.tipoUnidad : null,
   };
 }
 
