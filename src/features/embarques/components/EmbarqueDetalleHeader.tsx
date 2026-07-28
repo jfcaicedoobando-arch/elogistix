@@ -45,6 +45,7 @@ export function EmbarqueDetalleHeader({
   const {
     handleAvanzarEstado,
     handleReabrir, reabrirEmbarque,
+    handleCancelar, tieneDeudaPendiente,
     warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
     docsFaltantes, docsBloqueantes,
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
@@ -117,6 +118,9 @@ export function EmbarqueDetalleHeader({
         cierreMotivoBloqueo={cierreMotivoBloqueo}
         onIrACierre={onIrACierre}
         onIrADocumentos={onIrADocumentos}
+        onCancelar={handleCancelar}
+        cancelandoEmbarque={avanzarEstado.isPending}
+        tieneDeudaPendiente={tieneDeudaPendiente}
       />
 
       <EmbarqueHeaderDialogs
