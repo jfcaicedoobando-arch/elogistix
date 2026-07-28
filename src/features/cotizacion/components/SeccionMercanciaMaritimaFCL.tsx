@@ -5,12 +5,7 @@ import {
 } from "@/components/ui/select";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
-
-const CONTENEDORES_FCL = [
-  "20' GP", "20' Dry", "20' High Cube", "20' Reefer", "20' Open Top", "20' Flat Rack",
-  "40' Dry", "40' High Cube", "40' Reefer", "40' Open Top", "40' Flat Rack",
-  "45' High Cube",
-];
+import { TIPOS_CONTENEDOR_DEFAULT } from "@/features/catalogos/domain/tiposContenedorDefault";
 
 const TIPOS_PESO = ['Peso Normal', 'Sobrepeso'];
 
@@ -30,7 +25,7 @@ export default function SeccionMercanciaMaritimaFCL({ msdsFile, setMsdsFile }: P
           <Select value={watch("tipoContenedor")} onValueChange={v => setValue("tipoContenedor", v)}>
             <SelectTrigger><SelectValue placeholder="Seleccionar contenedor" /></SelectTrigger>
             <SelectContent>
-              {CONTENEDORES_FCL.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              {TIPOS_CONTENEDOR_DEFAULT.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

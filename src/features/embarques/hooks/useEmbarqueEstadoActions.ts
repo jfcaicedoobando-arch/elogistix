@@ -8,6 +8,7 @@ import {
 } from "@/features/embarques/hooks/useEmbarques";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks/useEmbarqueQueries";
 import { useDocsFaltantesParaEstado } from "@/features/embarques/hooks/useDocsFaltantesParaEstado";
+import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
@@ -16,6 +17,7 @@ import {
   getSiguienteEstado,
   clasificarBloqueoAvance,
   clasificarAvanceError,
+  faltantesParaConfirmado,
 } from "./useEmbarqueEstadoActions.helpers";
 import {
   useAutoSyncEstadoEmbarque,
@@ -36,6 +38,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const reabrirEmbarque = useReabrirEmbarque();
   const conceptosQuery = useEmbarqueConceptosVenta(id);
   const conceptosVenta = conceptosQuery.data ?? [];
+  const { data: contenedores = [] } = useContenedoresEmbarque(id);
   const { isAdmin, canEditOperations, isSuperAdmin } = usePermissions();
   // v13.209.3 — Auto-sync sólo si el usuario puede escribir en embarques/eventos_embarque.
   const puedeSincronizarEstado = isAdmin || isSuperAdmin || canEditOperations;
@@ -100,6 +103,20 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (!embarque || !id) return;
     const siguiente = getSiguienteEstado(embarque.estado);
     if (!siguiente) return;
+    // B-027: Borrador → Confirmado exige datos mínimos operativos; sin ellos
+    // la transición era exitosa con un embarque vacío (peso 0, sin
+    // contenedores/BL/naviera).
+    if (siguiente === "Confirmado") {
+      const faltantes = faltantesParaConfirmado(embarque, contenedores.length);
+      if (faltantes.length > 0) {
+        notifyError(undefined, {
+          title: "Faltan datos para confirmar el embarque",
+          description: `Completa antes de pasar a Confirmado: ${faltantes.join(", ")}.`,
+          method: "HANDLE_AVANZAR_ESTADO_MINIMOS",
+        });
+        return;
+      }
+    }
     const bloqueo = clasificarBloqueoAvance({
       docsBloqueantes, docsFaltantesCount: docsFaltantes.length, siguiente,
       bloqueoCierreMotivo: cierre.motivo,
