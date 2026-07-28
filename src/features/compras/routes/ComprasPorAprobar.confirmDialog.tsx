@@ -34,8 +34,8 @@ export function ConfirmarAprobacionLoteDialog({
             Vas a aprobar <strong>{cantidad}</strong> solicitudes en un solo paso. El total involucrado es:
           </p>
           <ul className="list-disc pl-5 text-muted-foreground text-xs space-y-0.5">
-            <li>MXN: {formatCurrency(totalMxn, "MXN")}</li>
-            <li>USD: {formatCurrency(totalUsd, "USD")}</li>
+            <li>{formatCurrency(totalMxn, "MXN")}</li>
+            <li>{formatCurrency(totalUsd, "USD")}</li>
           </ul>
           <p className="text-xs text-muted-foreground">
             El proceso corre factura por factura. Si alguna falla, te lo indicamos al final para revisarla manualmente.

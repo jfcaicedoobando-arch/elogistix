@@ -35,7 +35,9 @@ export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {
     if (f.estatus === "Rechazada" || f.estatus === "Cancelada") continue;
     const usd = f.moneda === "USD";
     if (usd) k.por_pagar_usd += f.saldo; else k.por_pagar_mxn += f.saldo;
-    if (f.estatus === "Vencida") {
+    // B-020 (v13.320.39): KPI Vencido considera días vencidos reales,
+    // no el estatus derivado (una factura "Por aprobar" vencida sigue siendo deuda).
+    if ((f.dias_vencido ?? 0) > 0) {
       k.facturas_vencidas++;
       if (usd) k.vencido_usd += f.saldo; else k.vencido_mxn += f.saldo;
     }
