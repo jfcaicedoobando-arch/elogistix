@@ -1,8 +1,8 @@
 import type { LucideIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DetailHeader } from "@/components/shared/DetailHeader";
-import EmptyState from "@/components/empty/EmptyState";
+import { Button } from "@/components/ui/button";
 
 export interface DetailNotFoundProps {
   /** Icono del estado vacío (ej. `PackageX`, `FileX`). */
@@ -22,31 +22,34 @@ export interface DetailNotFoundProps {
 /**
  * Estado "no encontrado" canónico de las páginas de detalle.
  *
- * Auditoría visual v13.320.70: varias rutas de detalle (Cotización, Embarque,
+ * Auditoría visual v13.320.71: varias rutas de detalle (Cotización, Embarque,
  * Cliente, Factura) mostraban sólo un texto centrado, sin encabezado ni botón
  * Volver, dejando al usuario sin salida más que el botón del navegador.
  * Este componente garantiza que el encabezado (y por tanto la navegación de
  * retorno) exista también en el camino de error.
  */
 export function DetailNotFound({
-  icon,
+  icon: Icon,
   title,
   description,
   backTo,
   backLabel,
   withContainer = true,
 }: DetailNotFoundProps) {
-  const navigate = useNavigate();
-
   const content = (
     <div className="space-y-2">
       <DetailHeader backTo={backTo} backLabel={backLabel} title={title} />
-      <EmptyState
-        icon={icon}
-        title={title}
-        description={description ?? "El registro no existe, fue eliminado o no tienes permiso para verlo."}
-        primaryAction={{ label: backLabel, onClick: () => navigate(backTo) }}
-      />
+      <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Icon className="h-8 w-8" />
+        </div>
+        <p className="mb-6 max-w-md text-sm text-muted-foreground">
+          {description ?? "El registro no existe, fue eliminado o no tienes permiso para verlo."}
+        </p>
+        <Button asChild>
+          <Link to={backTo}>{backLabel}</Link>
+        </Button>
+      </div>
     </div>
   );
 
