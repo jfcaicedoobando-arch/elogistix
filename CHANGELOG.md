@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.320.61] - 2026-07-28
+- **CI verde: se reparó el fallout del `knip --fix` (logs `82225517241`)**. Fallaban `typecheck` y `knip strict`; el resto de jobs ya estaba en verde.
+  - **46 errores de TypeScript (TS6133/TS6196)**: al quitar los `export type { … }` de re-exportación, quedaron `import type` huérfanos en 25 archivos (`useAdminData`, `useFacturas`, `useProveedores`, `useNotasCredito`, `useHuecoFacturacion`, `usePortalBreadcrumbs`, etc.). Analogía: knip quitó el letrero de salida de la bodega, pero las cajas siguieron llegando sin destinatario. Se eliminaron los especificadores muertos y los `;` sueltos que dejó el fix automático.
+  - `embarqueDetalleTabsTypes.ts`: se borraron 7 tipos derivados sin consumidores (`ResumenProps`, `CostosProps`, `FacturacionProps`, `NotasProps`, `TrackingProps`, `DocHandlers`, `Financials`, y en cascada `DocsProps`).
+  - `CxpPorCapturarToolbar.tsx`: se removió el import de tipo `DireccionOrden`.
+  - Barrels `facturacion/services/index.ts` y `proveedor/services/index.ts`: se limpiaron los re-exports de tipo muertos (`FacturaRow`, `HuecoFacturacionResult`, `Proveedor`, `ProveedorOperacion`, `ProveedorLite`) y los `;` residuales.
+  - Se eliminó el archivo muerto `src/features/catalogos/domain/tiposContenedorDefault.ts` (residuo de la mudanza de `TIPOS_CONTENEDOR_DEFAULT` a `src/lib/domain/`).
+  - Verificación: `tsc -b` limpio · `knip --include files,dependencies,unlisted,duplicates,exports,types` 0 hallazgos · `eslint --max-warnings 0` limpio · 1314 tests verdes en facturación/embarques/admin/proveedor/bandejas.
+
+
 ## [13.320.60] - 2026-07-28
 - **Knip strict verde · Wave 1 (limpieza completa)**: se aplicó `knip --fix --fix-type exports,types` sobre los 130 hallazgos del gate `lint:unused:strict` (22 exports + 108 tipos muertos). Knip removió automáticamente exports huérfanos como `AnticipoError`, `roleLabels`, `diffHoras`, `UnidadMedidaSelect`, `COTIZACION_LIST_COLUMNS`, `RFC_GENERICOS_SAT`, `useSaldosCuentas`, y ~108 `export type` sin consumidores en hooks/servicios/barrels. Analogía: como vaciar un cajón de cables viejos — nada de lo que se tiró estaba enchufado a algo. Verificación: `tsgo --noEmit` limpio, `bun run lint --max-warnings 0` limpio, `knip --include exports,types` 0 hallazgos.
 
