@@ -44,16 +44,16 @@ export default function ProformaDetalle() {
 
   if (!data) {
     return (
-      <PageContainer>
-        <ErrorState
-          title="Proforma no encontrada"
-          description="La proforma no existe o no tienes acceso."
-          onRetry={() => navigate(-1)}
-          retryLabel="Volver"
-        />
-      </PageContainer>
+      <DetailNotFound
+        icon={FileX}
+        title="Proforma no encontrada"
+        description="La proforma no existe, fue eliminada o no tienes acceso a ella."
+        backTo="/proformas"
+        backLabel="Volver a Proformas"
+      />
     );
   }
+
 
   return <ProformaDetalleContent data={data} />;
 }
