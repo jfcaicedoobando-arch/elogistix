@@ -31,6 +31,13 @@ jobs:
         uses: actions/dependency-review-action@67d4f4bd7a9b17a0db54d2a7519187c65e339de8 # v4.5.0
         with:
           fail-on-severity: moderate
+          # v13.322.1 (GHA-audit H5) — Sólo dependencias de runtime bloquean;
+          # las devDependencies no llegan al bundle de producción.
+          fail-on-scopes: runtime
+          # Licencias copyleft fuertes / no comerciales: incompatibles con un
+          # ERP propietario. Si una dep legítima aparece aquí, añadirla a
+          # `allow-dependencies-licenses` con justificación.
+          deny-licenses: AGPL-1.0-only, AGPL-1.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later, GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later, SSPL-1.0, BUSL-1.1
           comment-summary-in-pr: on-failure
           # allow-ghsas: |
           #   GHSA-xxxx-xxxx-xxxx  # motivo de la excepción
