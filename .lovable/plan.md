@@ -1,36 +1,38 @@
 ## Objetivo
 
-Aplicar el paquete completo de `instrucciones-lovable-portales-2026-07-28.md`: 3 regresiones (REG B-001, B-004, B-016) + 43 bugs (B-064…B-106) de portales, costeo/tarifario y facturación, en el orden de olas que propone el propio documento (SQL antes que el frontend que lo consume).
+Verificar, uno por uno, los 49 puntos del documento (REG B-001, REG B-004, REG B-016 y B-064…B-106) contra el código y la base de datos reales, y entregar un reporte de estado. **Sin modificar código.**
 
-## Ola 1 — Seguridad y dinero crítico
+Contexto verificado antes de este plan: el archivo subido es byte-idéntico (md5 `73fb1ce9…`) al ejecutado la sesión pasada; `APP_VERSION` está en `13.321.0` y hay 5 migraciones nuevas del 28/07 (`20260728195103` … `20260728195844`) más las del bloque previo.
 
-- **REG B-001** · Migración DROP-only de las 27 policies `Hide soft deleted %` restrictivas + las 3 del patrón `pagos_factura`/`proveedor_facturas`. Desbloquea el soft delete (42501).
-- **REG B-016** · `duplicar_cotizacion` rota por columna inexistente `tipo_cambio_usd`.
-- **B-065** · `get_top_tarifas` sin validación de membresía (fuga cross-tenant).
-- **B-069** · Revertir 3 policies que dejan al agente leer pricing/facturas del cliente.
-- **B-064** · Conversión cotización→embarque multiplicaba el costo por N contenedores.
-- **B-068 + B-076** · "Facturación Pendiente" con saldo real por moneda (fuente única = estado de cuenta).
-- **B-077** · `monto_no_aplicado` multi-moneda → "Saldo a favor" fantasma.
+## Método de verificación
 
-## Ola 2 — Desbloquear pipeline tarifario
+Cada ítem se clasifica como **APLICADO**, **PARCIAL**, **NO APLICADO** o **NO VERIFICABLE** (requiere staging/E2E), con la evidencia concreta que lo respalda.
 
-B-066 (`agente_aprobar_tarifa` + overload huérfano PGRST203), B-067 + B-072 (trigger de reemplazo por naviera validando NEW), B-071 (vista de tarifa vigente ignoraba `p_fecha`), B-079 (estado `vencida` derivado), B-080 (agente desactivado fuera del Top-3), B-089 (parseo de fechas date-only, off-by-one TZ México — frontend).
+### Grupo A — Base de datos (REG B-001, REG B-016, B-064…B-067, B-069…B-073, B-079, B-080, B-084, B-085, B-090, B-096, B-098)
+Consultas de solo lectura contra el backend:
+- `pg_proc`: existencia, firma única (sin overloads huérfanos) y cuerpo actual de `duplicar_cotizacion`, `agente_aprobar_tarifa`, `get_top_tarifas`, `crear_embarque_borrador_core`, `actualizar_cotizacion_costos`, `revalidar_tarifa_cotizacion`, `current_agente_id`, `current_agente_org`, `get_current_agente_context`.
+- `pg_policies`: policies de las 27 tablas del soft delete (REG B-001), las 3 policies revertidas del agente (B-069), las de `costeo_agentes` (B-070) y las de `storage.objects` del bucket de cartas garantía (B-085).
+- `pg_trigger` + definición: trigger de reemplazo de tarifas (B-067/B-072), trigger de estado `vencida` (B-079), validación de tramos solapados (B-096).
+- Definición de la vista `costeo_tarifas_vigentes_v` (B-071, B-080).
+- Contraste con el SQL "esperado" del documento para detectar divergencias reales, no sólo presencia del objeto.
 
-## Ola 3 — Vínculos y márgenes
+### Grupo B — Frontend (B-074, B-075, B-081…B-083, B-086…B-089, B-091…B-095, B-097, B-099…B-106)
+- Lectura dirigida de los archivos citados por cada FIX (wizard de cotización, `PortalCotizaciones`, `PortalFacturaDetalle`, `PortalEmbarqueResumenTab`, `AgenteTarifas`, KPIs del portal agente, menú "+ Nuevo" del CRM).
+- Verificación de que existe y se usa `src/lib/date/dateOnly.ts` en los puntos de B-089/B-103, y que no quedan `new Date(fechaDateOnly)` sin normalizar en esas rutas.
+- Búsqueda de los símbolos/campos que cada fix exige (p. ej. `lcl_tarifa_wm`/`lcl_minimo_flete` en el INSERT de B-092, override → regeneración de conceptos en B-074, margen LCL en B-075).
 
-B-073 (persistir linkage tarifa↔cotización), B-074 (override deja la cotización sin conceptos de venta), B-075 (LCL vendido a costo), B-084 (policy por nombre en texto), B-092 (`lcl_tarifa_wm` / `lcl_minimo_flete` no persistidos), REG B-004 (menú "+ Nuevo" del CRM vacío).
+### Grupo C — Cobertura de pruebas
+- Identificar cuáles de los fixes tienen test asociado (unitario, RLS `.sql` o E2E) y cuáles quedaron sin red de seguridad — esto es lo que hace que un fix "aplicado" pueda regresar, como pasó con REG B-001 y REG B-016.
 
-## Ola 4 — Portales completos y pulido
+## Entregable
 
-B-070 (portal agente roto por EXISTS sobre `costeo_agentes`), B-078 (contexto "No autenticado" — CONDICIONAL), B-081+B-093+B-101, B-082, B-083+B-106, B-085, B-086+B-095, B-087+B-094, B-088, B-090, B-091, B-096, B-097, B-098, B-099, B-100, B-102, B-103, B-104, B-105.
+Una tabla en el chat: `ID | Estado | Evidencia | Riesgo`, ordenada por severidad, seguida de:
+1. Lista corta de ítems NO APLICADOS o PARCIALES, con lo que falta exactamente.
+2. Lista de ítems sin test de regresión.
+3. Recomendación de siguiente ola de trabajo (que se ejecutaría sólo si lo apruebas después).
 
-## Detalles técnicos
+## Notas técnicas
 
-- Las migraciones se emiten con timestamps nuevos y crecientes, idempotentes (`DROP POLICY IF EXISTS`, `CREATE OR REPLACE`), respetando H4/H6 (`search_path`, `SECURITY DEFINER` justificado, GRANTs por tabla nueva).
-- Tras cada ola: `bun run lint --max-warnings 0`, tests unitarios afectados, `audit:migrations` y `tsc`. No avanzo a la ola siguiente si algo queda en rojo.
-- Cada ola bumpea `APP_VERSION` y agrega su bloque en `CHANGELOG.md` (raíz) con los IDs de bug.
-- Se añaden/actualizan tests de regresión donde el fix es lógica pura (fechas date-only, ranking Top-3, saldo con notas de crédito, cuadre multi-moneda) y tests RLS para B-065, B-069, B-070, B-085.
-
-## Punto que requiere tu visto bueno
-
-**REG B-001** elimina las policies RLS que ocultaban registros borrados. El documento demuestra que en PostgreSQL no se puede tener a la vez "ocultar por RLS" y "soft delete por UPDATE". Tras el cambio, los borrados quedan protegidos sólo por las policies de tenant y ocultos por los ~91 filtros `.is('deleted_at', null)` de la aplicación. Es la opción correcta pero traslada el ocultamiento a la capa de app; lo aplico salvo que prefieras otra ruta. Si, aplica.
+- La auditoría es de solo lectura: `supabase--read_query`, `rg` y lectura de archivos. Ninguna migración, ningún `write`.
+- Los ítems marcados CONDICIONAL en el documento (B-078, y parcialmente B-104) sólo pueden confirmarse en staging con sesión de agente real; se reportarán como NO VERIFICABLE con el chequeo estático que sí se pueda hacer.
+- No se modificará `CHANGELOG.md` ni `APP_VERSION`, ya que no hay cambio funcional.
