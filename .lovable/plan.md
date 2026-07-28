@@ -1,34 +1,40 @@
-## Qué pasó (en corto)
+## Qué pasa
 
-La factura de proveedor **FiscLYD-2046203** (17:26:50, misma hora del reporte) quedó con `uuid_estatus_sat = 'Error'`, y el toast genérico "SAT no devolvió un estatus válido" es lo que se disparó.
+GitHub Actions dejó de soportar Node.js 20. Nuestro workflow de CodeQL sigue apuntando a la versión v3.27.5 de la acción, que fue construida para Node 20. GitHub la sigue ejecutando, pero forzándola sobre Node 24 y avisando con un warning. Es una advertencia, no un fallo: el análisis de seguridad sigue corriendo. Pero conviene actualizar antes de que GitHub retire el modo de compatibilidad.
 
-**Causa confirmada (consultada en la base):** el RFC del proveedor está guardado como `AL&amp;0807074L5` en vez de `AL&0807074L5`.
+Analogía: es como un enchufe viejo que todavía funciona porque le pusimos un adaptador. Funciona hoy, pero mejor cambiar el enchufe.
 
-Analogía: el XML del CFDI escribe el símbolo `&` en "clave morse" (`&amp;`). Nuestro lector copió la clave morse tal cual en vez de traducirla, así que le pedimos al SAT un RFC que no existe y el SAT contesta algo que no sabemos interpretar.
+## Verificación previa
 
-Hay 2 facturas afectadas hoy (las únicas con `&` en el RFC).
+Revisé las 13 acciones usadas en `.github/workflows`. Las únicas dos pinneadas a una versión que target Node 20 son:
 
-## Bugs a corregir
+- `github/codeql-action/init@f09c1c0a...` (v3.27.5) — `.github/workflows/codeql.yml:58`
+- `github/codeql-action/analyze@f09c1c0a...` (v3.27.5) — `.github/workflows/codeql.yml:74`
 
-**1. El parser de CFDI no decodifica entidades XML** — `supabase/functions/parse-cfdi-xml/parser.ts`, función `attr()`: devuelve el valor crudo del atributo. Se añade un `decodeXmlEntities()` (`&amp; &lt; &gt; &quot; &apos; &#NN; &#xNN;`) aplicado a todos los atributos de texto (RFC, Nombre, Descripción, Serie, Folio). Tests en `parser_test.ts` con `Rfc="AL&amp;0807074L5"` y `Nombre="ACME &amp; CO"`.
+El resto (`actions/checkout` v6.0.3, `actions/cache` v5.0.5, `actions/upload-artifact` v7.0.1, `setup-bun`, `setup-deno`, `codecov-action`, `gitleaks-action`, `dependency-review-action`, `github-script`, `download-artifact`) ya está en versiones que corren en Node 24 y no aparecen en el warning.
 
-**2. El sobre SOAP al SAT no escapa los valores** — `supabase/functions/verificar-uuid-sat/index.ts`, `buildSoapEnvelope()`: interpola RFC/UUID directo. Aunque el dato ya venga limpio, un `&` real rompe el XML del request. Se añade escape del valor (solo `&`, `<`, `>`) antes de armar la expresión, manteniendo `&amp;` como separador de parámetros.
+## Cambio propuesto
 
-**3. El parser de la respuesta del SAT es frágil** — el regex `/<[a-z]:?Estado>/i` exige prefijo de namespace de una sola letra; si el SAT responde `<Estado>` o `<ns1:Estado>` no matchea y cae en `Error`. Se cambia a `/<(?:[\w.-]+:)?Estado>/i` (mismo tratamiento para `CodigoEstatus`).
+Actualizar ambos pins a **CodeQL Action v4.37.3**, la última release estable (consultada hoy vía la API de GitHub):
 
-**4. El mensaje de error no dice nada** — `src/features/cxp/hooks/useVerificarUuidSat.ts` descarta el campo `raw` que ya devuelve la edge function. El toast del caso `Error` pasará a incluir el código/estado del SAT (ej. "SAT respondió: N - 601 | La expresión impresa proporcionada no es válida"), y en el caso de RFC/UUID faltantes se mostrará el motivo concreto en vez del genérico. También se registrará `raw` como contexto en Sentry.
+```
+github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81    # v4.37.3
+github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+```
 
-**5. Datos ya contaminados** — migración de backfill que corre `replace()` de las entidades sobre `proveedor_facturas.rfc_proveedor` y `razon_social`/nombre del proveedor donde contengan `&amp;` u otras entidades (2 filas hoy), y se resetea su `uuid_estatus_sat`/`uuid_verificado` a nulo para que se puedan re-verificar.
+Se mantiene el estilo de pinning por SHA con el tag en comentario (política de seguridad del repo, validada por `actionlint` y `audit:migrations`).
+
+### Detalles técnicos
+
+- **v3 → v4 no rompe nuestra configuración**: los inputs que usamos (`languages`, `queries: security-and-quality`, `config` con `paths-ignore`, `category`) son idénticos en v4. El cambio mayor de v4 fue subir el runtime a Node 24 y retirar el soporte de CodeQL CLI muy antiguo, nada que nos afecte.
+- **Se conserva** el env `CODEQL_ACTION_DIFF_INFORMED_QUERIES: "false"` (workaround de la v13.320.20 por el fetch shallow que rompía el `pr-diff-range.yml`). No lo quito en el mismo cambio para no mezclar dos variables: si después de la actualización queremos probar si v4 ya arregló ese bug, lo hacemos en un cambio aparte y medible.
+- **Sin cambios de permisos**: v4 usa los mismos (`security-events: write`, `contents: read`, `actions: read`).
 
 ## Verificación
 
-- `deno test` de `parse-cfdi-xml` y de la edge function de SAT.
-- `bunx vitest run src/features/cxp`.
-- Consulta post-migración confirmando 0 RFCs con entidades XML.
-- Re-verificar manualmente la factura FiscLYD-2046203 desde `/compras/por-aprobar`.
-- `bun run lint --max-warnings 0`, `audit:migrations`.
-- Bump `APP_VERSION` a `13.320.62` + entrada en `CHANGELOG.md`, y marcar el issue de Sentry como `resolved`.
+1. `bun run lint:actions` (actionlint) para confirmar que el YAML sigue válido.
+2. El propio job "Analyze (javascript-typescript)" en el siguiente push: debe terminar en verde y **sin** el warning de Node 20.
 
-## Nota técnica
+## Cierre
 
-El `attr()` con regex se mantiene (migrar a DOM está fuera de alcance aquí); el fix es puntual en la decodificación de entidades, que es exactamente donde se pierde la información.
+- Bump de `APP_VERSION` a `13.320.64` y entrada en `CHANGELOG.md`.
