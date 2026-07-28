@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchEmbarquesPendientesAdmin,
-  type EmbarquePendienteAdminItem,
-  type EmbarquesPendientesAdminData,
 } from "@/features/dashboard/services/embarquesPendientesAdmin";
 import { queryKeys } from "@/lib/query";
 

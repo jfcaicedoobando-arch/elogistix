@@ -11,15 +11,8 @@ export {
   updateProveedor,
   deleteProveedor,
 } from "./proveedoresCrud";
-export type {
-  Proveedor,
-  ProveedorListItem,
-  ProveedorOperacion,
-  ProveedorLite,
-  
-} from "./proveedoresCrud";
+export type { ProveedorListItem } from "./proveedoresCrud";
 export {
-  
   ProveedorDuplicadoError,
   findProveedorByRfcEnOrg,
 } from "./duplicadoRfc";

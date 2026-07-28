@@ -14,7 +14,6 @@ import {
   type CrearProformaParams,
   type EliminarProformaParams,
   type ProformaConFactura,
-  type ProformaPendienteConEmbarque,
   type ProformaRow,
 } from "@/features/proformas/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";

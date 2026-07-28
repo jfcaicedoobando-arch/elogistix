@@ -12,7 +12,6 @@ import {
   crearMotivoPerdida,
   type CrmEtapaRow,
   type CrmEtapaTipo,
-  type EtapaPatch,
 } from "@/features/crm/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 

@@ -10,10 +10,7 @@ import {
   deleteProveedor as svcDelete,
   fetchProveedorOperaciones,
   fetchProveedoresLite,
-  type Proveedor,
   type ProveedorListItem,
-  type ProveedorOperacion,
-  type ProveedorLite,
 } from "@/features/proveedor/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 

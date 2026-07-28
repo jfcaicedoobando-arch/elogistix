@@ -9,7 +9,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchContenedoresInfoMap,
-  type ContenedoresInfo,
   type ContenedoresInfoMap,
 } from "@/features/embarques/services/contenedores/fetchInfoMap";
 import { queryKeys } from "@/lib/query";

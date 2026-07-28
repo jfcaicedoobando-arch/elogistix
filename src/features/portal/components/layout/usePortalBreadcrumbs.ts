@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { PORTAL_BREADCRUMB_MAP, type PortalNavItem } from "./portalNav";
+import { PORTAL_BREADCRUMB_MAP } from "./portalNav";
 import type { PortalCrumb } from "./PortalBreadcrumbsBar";
 
 export function usePortalBreadcrumbs(

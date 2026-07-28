@@ -23,7 +23,6 @@ import {
   contenedoresPorExpediente as computeContenedoresPorExpediente,
   applyClientFilters,
   computeSinFiltros,
-  type SortDir,
 } from "@/features/embarques/domain/embarquesPageHelpers";
 import { buildEmbarquesPageActions } from "@/features/embarques/hooks/useEmbarquesPageActions";
 

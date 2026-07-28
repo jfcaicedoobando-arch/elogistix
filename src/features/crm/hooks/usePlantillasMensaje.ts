@@ -10,7 +10,6 @@ import {
   eliminarPlantilla,
   type PlantillaCanal,
   type PlantillaMensajeRow,
-  type PlantillaInput,
 } from "@/features/crm/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 

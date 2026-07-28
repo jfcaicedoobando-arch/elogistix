@@ -8,7 +8,6 @@ import {
   fetchComisionesDevengadas,
   calcularKPIsComisiones,
   type FetchComisionesFiltros,
-  type EstadoComision,
 } from "@/features/comisiones/services";
 
 export function useComisionesDevengadas(filtros: FetchComisionesFiltros = {}) {

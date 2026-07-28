@@ -7,8 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useOrgFilter } from "@/hooks/shared";
 import {
   fetchHuecoFacturacion,
-  type FilaHueco,
-  type HuecoFacturacionResult,
 } from "@/features/facturacion/services";
 import { exportToCsv } from "@/generators/exportCsv";
 import { queryKeys } from "@/lib/query";

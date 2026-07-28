@@ -6,8 +6,6 @@
 import { useMutationWithFeedback } from "@/hooks/shared/useMutationWithFeedback";
 import {
   enviarEstadoCuentaEmail,
-  type EnviarEstadoCuentaInput,
-  type EnviarEstadoCuentaResult,
 } from "@/features/cobranza/services/estadoCuentaService";
 
 ;

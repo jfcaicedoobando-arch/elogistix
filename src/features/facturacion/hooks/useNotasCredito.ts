@@ -4,8 +4,6 @@ import { queryKeys } from "@/lib/query";
 import {
   listarNotasCreditoRecientes,
   type EstadoNotaCredito,
-  type NotaCredito,
-  type NotaCreditoConFactura,
   type ListarNotasCreditoRecientesFiltros,
 } from "@/features/facturacion/services/notasCredito";
 
