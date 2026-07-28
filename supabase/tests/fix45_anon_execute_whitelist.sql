@@ -29,8 +29,16 @@ BEGIN
       -- v13.319.1: helper de RLS usado en policies. Para anon, auth.uid() es NULL
       -- y la consulta devuelve NULL sin exponer datos. Concedido a anon para
       -- evitar 42501 en rutas públicas / sesiones expiradas que evalúan policies.
-      'current_user_org_id'
+      'current_user_org_id',
+      -- v13.320.31: helpers SECURITY DEFINER usados por policies del Portal del
+      -- Agente y validaciones de embarque. Todos devuelven NULL/false cuando
+      -- auth.uid() es NULL, por lo que anon no obtiene datos; sólo evita 42501
+      -- al evaluar las policies desde sesiones anónimas o expiradas.
+      'has_role',
+      'current_agente_id',
+      'current_agente_org'
     );
+
   IF fuera IS NOT NULL AND array_length(fuera, 1) > 0 THEN
     RAISE EXCEPTION 'FIX-45 REGRESIÓN: funciones SECURITY DEFINER ejecutables por anon fuera de whitelist: %', fuera;
   END IF;
