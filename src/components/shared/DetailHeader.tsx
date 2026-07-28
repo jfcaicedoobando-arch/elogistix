@@ -6,10 +6,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface DetailHeaderProps {
-  /** Ruta destino del botón Volver. Si es número, hace `navigate(n)` (ej. -1). */
-  backTo?: string | number;
+  /**
+   * Ruta destino del botón Volver. Si es número, hace `navigate(n)` (ej. -1).
+   * Usa `null` en páginas públicas sin página padre (portal, tracking) para
+   * ocultar el botón por completo y conservar sólo título + badge + acciones.
+   */
+  backTo?: string | number | null;
   /** Label accesible del botón Volver. */
   backLabel?: string;
+
   /** Icono opcional a la izquierda del título. */
   icon?: ReactNode;
   /** Título principal (<h1>). */
