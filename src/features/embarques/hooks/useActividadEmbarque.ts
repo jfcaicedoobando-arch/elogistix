@@ -42,7 +42,19 @@ export function useActividadEmbarque({ embarqueId, expediente, notas, eventos, c
   const items: ActividadEmbarqueItem[] = useMemo(() => {
     const out: ActividadEmbarqueItem[] = [];
 
+    // B-039: minutos con una entrada de bitácora "cambiar_estado". La RPC
+    // avanzar_estado_embarque escribe además una nota auto (tipo cambio_estado)
+    // y un evento de tracking por la misma transición; la bitácora es la
+    // representación más rica (trae estado_anterior/estado_nuevo en detalles),
+    // así que suprimimos las otras dos cuando coinciden en el mismo minuto.
+    const minutosCambioEstadoBitacora = new Set(
+      (bitacoraQ.data ?? [])
+        .filter((b) => b.accion === "cambiar_estado")
+        .map((b) => b.created_at.slice(0, 16)),
+    );
+
     for (const n of notas) {
+      if (n.tipo === "cambio_estado" && minutosCambioEstadoBitacora.has(n.fecha.slice(0, 16))) continue;
       out.push({
         id: `nota-${n.id}`,
         tipo: "nota",
@@ -54,6 +66,7 @@ export function useActividadEmbarque({ embarqueId, expediente, notas, eventos, c
     }
 
     for (const ev of eventos) {
+      if (ev.descripcion?.startsWith("Estado cambiado a") && minutosCambioEstadoBitacora.has(ev.fecha.slice(0, 16))) continue;
       out.push({
         id: `ev-${ev.id}`,
         tipo: "evento",
