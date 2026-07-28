@@ -27,7 +27,7 @@ export {
   type ExportProgress,
   type ProgressCallback,
   type ExportTableResult,
-  type ExportManifestInput,
+  
 } from "./exportOrg.manifest";
 import { todayLocalISO } from "@/lib/date/today";
 

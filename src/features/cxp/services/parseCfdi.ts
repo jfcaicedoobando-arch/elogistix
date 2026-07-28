@@ -16,8 +16,8 @@ export { CfdiUploadError };
 export type {
   CfdiConceptoParsed,
   CfdiParsedResponse,
-  CfdiUploadErrorContext,
-  CfdiUploadPhase,
+  
+  
 } from "./parseCfdi.types";
 
 const MAX_ATTEMPTS = 3;

@@ -8,7 +8,7 @@ import {
   type Naviera,
 } from "@/features/catalogos/services";
 
-export type { Naviera };
+;
 
 const hooks = createCatalogHooks<Naviera, { code: string; name: string }>({
   keys: { invalidate: queryKeys.navieras.all, active: queryKeys.navieras.activas, all: queryKeys.navieras.todas },

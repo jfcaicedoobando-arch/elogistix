@@ -4,7 +4,7 @@ import { queryKeys } from "@/lib/query";
 import { fetchOperacionesStats } from "@/features/operaciones/services";
 import type { EmbarquesPorEstado } from "@/features/operaciones/services";
 
-export type { EmbarqueResumen, EmbarquesPorEstadoBucket, EmbarquesPorEstado, EstadoUiKey } from "@/features/operaciones/services";
+export type {  EmbarquesPorEstadoBucket, EmbarquesPorEstado, EstadoUiKey } from "@/features/operaciones/services";
 
 export const MAX_CONTENEDORES = 150;
 

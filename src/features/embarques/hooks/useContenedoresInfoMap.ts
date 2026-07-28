@@ -14,7 +14,7 @@ import {
 } from "@/features/embarques/services/contenedores/fetchInfoMap";
 import { queryKeys } from "@/lib/query";
 
-export type { ContenedoresInfo, ContenedoresInfoMap };
+export type {  ContenedoresInfoMap };
 
 export function useContenedoresInfoMap(embarqueIds: string[]) {
   const ids = [...embarqueIds].sort();

@@ -8,7 +8,7 @@ import {
 } from "@/features/embarques/services/reconciliacionCostos";
 import { queryKeys } from "@/lib/query";
 
-export type { FilaReconciliacion };
+;
 
 export function useReconciliacionEmbarque(embarqueId: string | undefined) {
   return useQuery({

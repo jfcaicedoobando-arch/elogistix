@@ -134,4 +134,4 @@ export function CxpPorCapturarToolbar({
   );
 }
 
-export type { DireccionOrden };
+;

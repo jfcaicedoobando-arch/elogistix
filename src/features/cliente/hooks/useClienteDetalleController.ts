@@ -14,7 +14,7 @@ import { useClienteFinancials } from "@/features/cliente/hooks/useClienteFinanci
 import { usePermissions, useRegistrarActividad } from "@/hooks/shared";
 import { useClienteDetalleHandlers } from "./useClienteDetalleHandlers";
 
-export type { ContactoFormData, ClienteFormData } from "./useClienteDetalleController.types";
+;
 
 /**
  * Controller-hook para la página de detalle de cliente. Centraliza queries,

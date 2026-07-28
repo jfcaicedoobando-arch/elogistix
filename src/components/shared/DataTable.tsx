@@ -8,7 +8,7 @@ import { useTableInstance } from "@/components/shared/dataTable/useTableInstance
 import type { DataTablePagination, TableDensity, SortDir } from "@/components/shared/dataTable/types";
 
 // API pública estable (componente + helpers) — allowlisted en eslint react-refresh override.
-export type { DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
+export type {    SortDir } from "@/components/shared/dataTable/types";
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
 export type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 

@@ -12,7 +12,7 @@ import {
   type HealthTimelinePoint,
 } from "@/features/admin/services";
 
-export type { HealthSummaryRow, HealthTimelinePoint };
+export type { HealthSummaryRow,  };
 
 export interface HealthKpis {
   totalEvents: number;

@@ -6,7 +6,7 @@ import {
 } from "@/features/dashboard/services/embarquesPendientesAdmin";
 import { queryKeys } from "@/lib/query";
 
-export type { EmbarquePendienteAdminItem, EmbarquesPendientesAdminData };
+;
 
 export function useEmbarquesPendientesAdmin(enabled: boolean) {
   return useQuery({

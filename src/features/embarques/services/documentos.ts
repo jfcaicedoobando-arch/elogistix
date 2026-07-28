@@ -5,7 +5,7 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 
 type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
 
-export { uploadDocumentoEmbarque, type UploadDocumentoResult } from './documentos/uploadDocumentoEmbarque';
+export { uploadDocumentoEmbarque,  } from './documentos/uploadDocumentoEmbarque';
 
 export async function resolverExpediente(
   blMaster: string | undefined | null,

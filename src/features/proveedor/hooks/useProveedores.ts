@@ -19,7 +19,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 
-export type { Proveedor, ProveedorListItem, ProveedorOperacion, ProveedorLite };
+export type {  ProveedorListItem,   };
 
 interface UseProveedoresPaginadosParams {
   tipo?: TipoProveedor | null;

@@ -24,7 +24,7 @@ import {
 export { ESTADOS_FILTRO };
 export type {
   EstadoFiltro,
-  EmbarqueConEstado,
+  
   AlertaDemora,
   ProximoArribo,
   EmbarqueConProfit,

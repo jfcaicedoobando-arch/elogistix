@@ -13,7 +13,7 @@ import { toTitleCase } from "@/lib/formatters/text";
 import { cn } from "@/lib/utils";
 
 export { actionsColumn } from "./actionsColumn";
-export type { ActionItem, ActionsColumnOpts } from "./actionsColumn";
+;
 
 type Getter<T, V> = (row: T) => V;
 

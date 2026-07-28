@@ -31,10 +31,10 @@ import type {
 } from "./genericPayloadMapper.types";
 
 export type {
-  DotPath,
-  PathValue,
-  MapDirection,
-  FieldMap,
+  
+  
+  
+  
   MapperSchema,
   PayloadMapper,
 } from "./genericPayloadMapper.types";

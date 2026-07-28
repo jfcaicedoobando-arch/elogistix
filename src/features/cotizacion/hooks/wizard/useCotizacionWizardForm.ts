@@ -17,7 +17,7 @@ import { useCotizacionPL } from "@/features/cotizacion/hooks/useCotizacionPL";
 import { useCotizacionWizardSteps } from "@/features/cotizacion/hooks/wizard/useCotizacionWizardSteps";
 
 // Re-exports para preservar la API pública existente
-export { COTIZACION_FORM_DEFAULTS } from "@/features/cotizacion/domain/mappers/cotizacionForm";
+;
 export type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 
 // ────────── Types ──────────

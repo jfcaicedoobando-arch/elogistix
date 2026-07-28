@@ -16,20 +16,20 @@ import type { TabTracking } from "@/features/embarques/components/TabTracking";
 import type { EmbarqueRow } from "@/features/embarques/types/embarque";
 
 // Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
-export type ResumenProps = ComponentProps<typeof TabResumen>;
+type ResumenProps = ComponentProps<typeof TabResumen>;
 export type DocsProps = ComponentProps<typeof TabDocumentos>;
-export type CostosProps = ComponentProps<typeof TabCostos>;
-export type FacturacionProps = ComponentProps<typeof TabFacturacion>;
-export type NotasProps = ComponentProps<typeof TabNotas>;
-export type TrackingProps = ComponentProps<typeof TabTracking>;
+type CostosProps = ComponentProps<typeof TabCostos>;
+type FacturacionProps = ComponentProps<typeof TabFacturacion>;
+type NotasProps = ComponentProps<typeof TabNotas>;
+type TrackingProps = ComponentProps<typeof TabTracking>;
 
-export type DocHandlers = Pick<
+type DocHandlers = Pick<
   DocsProps,
   "uploadingDocId" | "downloadingDocId" | "deletingDocId" | "togglingNoAplicaDocId"
   | "onUpload" | "onDownload" | "onDelete" | "onToggleNoAplica"
 >;
 
-export interface Financials {
+interface Financials {
   totalVenta: number;
   totalCosto: number;
   utilidad: number;

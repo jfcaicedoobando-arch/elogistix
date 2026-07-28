@@ -17,7 +17,7 @@ import { findZodError, type MaybeZodError } from "./errorDetailsExtract.internal
 
 type Details = ErrorReport["errorDetails"];
 
-export type { ValidationIssue } from "@/lib/diagnostics/errorReportTypes";
+;
 import type { ValidationIssue } from "@/lib/diagnostics/errorReportTypes";
 export { deriveErrorCode } from "./errorCodeDerive";
 

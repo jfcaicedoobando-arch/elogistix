@@ -11,7 +11,7 @@ import {
   type DatosEnvioCliente,
 } from "@/features/facturacion/services/contactosClienteEnvio";
 
-export type { ContactoEnvio, DatosEnvioCliente };
+export type { ContactoEnvio,  };
 
 export function useContactosClienteParaEnvio(clienteId: string | undefined, enabled = true) {
   return useQuery({

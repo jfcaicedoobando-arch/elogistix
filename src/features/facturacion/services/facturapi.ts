@@ -8,7 +8,7 @@ import {
 } from "./facturapiError";
 
 export { FacturapiError, parseFunctionError };
-export type { ValidationIssue };
+;
 
 export interface TimbradoResult {
   uuid: string;
@@ -189,5 +189,5 @@ export async function duplicarFacturaParaSustitucion(facturaId: string): Promise
 }
 
 // consultarEstadoFacturapi() vive en ./facturapiConsultar.ts (split Power-of-10).
-export type { ConsultarFacturapiRelacionado, ConsultarFacturapiResult } from "./facturapiConsultar";
+export type {  ConsultarFacturapiResult } from "./facturapiConsultar";
 export { consultarEstadoFacturapi } from "./facturapiConsultar";

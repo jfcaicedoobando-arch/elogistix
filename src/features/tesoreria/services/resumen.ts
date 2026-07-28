@@ -16,7 +16,7 @@ import {
   type CxpRow,
 } from "@/features/tesoreria/domain";
 
-export type { ResumenCuenta, ResumenTesoreria, FlujoMes, TopItem } from "@/features/tesoreria/domain";
+export type { ResumenCuenta, ResumenTesoreria,  TopItem } from "@/features/tesoreria/domain";
 
 export async function fetchSaldosCuentas(organizationId?: string | null): Promise<ResumenCuenta[]> {
   let q = supabase

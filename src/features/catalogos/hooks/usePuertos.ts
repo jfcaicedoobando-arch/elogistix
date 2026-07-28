@@ -8,7 +8,7 @@ import {
   type Puerto,
 } from "@/features/catalogos/services";
 
-export type { Puerto };
+;
 
 const hooks = createCatalogHooks<Puerto, { code: string; name: string; country: string }>({
   keys: { invalidate: queryKeys.puertos.all, active: queryKeys.puertos.activos, all: queryKeys.puertos.todos },

@@ -83,7 +83,7 @@ export interface CotizacionFormValues {
   navieraNombre: string;
 }
 
-export { COTIZACION_FORM_DEFAULTS, DEFAULT_LCL_FLETE_MANUAL } from "./formDefaults";
+export { COTIZACION_FORM_DEFAULTS,  } from "./formDefaults";
 
 
 export interface CotizacionInitialData {

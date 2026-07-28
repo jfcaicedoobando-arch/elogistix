@@ -7,9 +7,9 @@
 
 // Queries (lecturas)
 export {
-  COTIZACION_LIST_COLUMNS,
-  COTIZACION_ACEPTADA_COLUMNS,
-  generarFolioCotizacion,
+  
+  
+  
   fetchCotizaciones,
   fetchCotizacionesAceptadas,
   fetchCotizacionById,
@@ -32,7 +32,7 @@ export {
   upsertCotizacionCostos,
   fetchCotizacionCostosForEmbarque,
 } from "./costos";
-export type { CotizacionCostoLookup } from "./costos";
+;
 
 // Conversiones (prospecto→cliente / cotización→embarques / portal)
 export {
@@ -48,8 +48,8 @@ export type { ProspectoAClienteInput } from "./conversiones";
 export { savePaso1, savePaso2, savePaso3, savePasoFinal } from "./wizard";
 
 // Informativa (tarifarios)
-export { crearCotizacionInformativa, parseTarifasInformativas } from "./informativa";
+export {  parseTarifasInformativas } from "./informativa";
 
 // Lógica pura del dominio (re-exportada por compatibilidad; preferir importar desde lib/domain/cotizacion)
 export { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion";
-export type { ConceptoVentaPrellenado } from "@/features/cotizacion/domain/cotizacion";
+;

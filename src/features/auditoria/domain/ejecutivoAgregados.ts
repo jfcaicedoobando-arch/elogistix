@@ -11,7 +11,7 @@ import { isoUtcDay } from "@/lib/date/mx";
 import { TOP_N } from "./ejecutivoRankingCore";
 
 // `OperadorRanking` / `calcularRanking` viven en `./ejecutivoRanking` (split Power-of-10 #4).
-export { calcularRanking, type OperadorRanking, type RankingResultado } from "./ejecutivoRanking";
+export { calcularRanking, type OperadorRanking,  } from "./ejecutivoRanking";
 
 // `calcularScore` / `calcularRegresion` / `RIESGO_UMBRAL_MXN` viven en `./ejecutivoScore` (split Power-of-10 #4).
 export {
@@ -36,7 +36,7 @@ export const REGLAS_FINANCIERAS: ReglaAuditoria[] = [
 ];
 
 // `TOP_N` y `diffHoras` viven en `./ejecutivoRankingCore` (hoja pura, rompe ciclo con ranking).
-export { diffHoras } from "./ejecutivoRankingCore";
+;
 export { TOP_N };
 
 export function emptyPorRegla(): Record<ReglaAuditoria, number> {

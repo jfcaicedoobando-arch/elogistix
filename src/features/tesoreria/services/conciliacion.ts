@@ -76,7 +76,7 @@ export async function listarMovimientos(f: FiltrosMovimientos): Promise<Movimien
   return unwrapOr(q, [] as MovimientoBBVA[]) as Promise<MovimientoBBVA[]>;
 }
 
-export { sugerirCandidatos, type Candidato } from "./sugerirCandidatos";
+export { sugerirCandidatos,  } from "./sugerirCandidatos";
 
 /**
  * S.1 (N-1): errores tipados por la guarda de BD

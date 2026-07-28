@@ -18,7 +18,7 @@ import {
 } from "@/features/tesoreria/domain";
 
 export type {
-  DetalleFlujo,
+  
   SemanaFlujo,
   FlujoProyectado,
 } from "@/features/tesoreria/domain";

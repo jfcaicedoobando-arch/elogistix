@@ -14,7 +14,7 @@ import {
 } from '@/features/admin/services';
 import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
 
-export type { AdminOrgStats, AdminOrgActivity, AdminRecentOrg, GlobalUserRow, OrgRow };
+export type {     OrgRow };
 
 // ─── Dashboard Stats ─────────────────────────────────────
 export function useAdminDashboardStats() {

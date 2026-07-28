@@ -11,7 +11,7 @@ import type { AppRole } from "@/types/appRole";
 import { fetchAvailableUsers, type UserOption } from "@/features/admin/services/usuario/availableUsers";
 
 export { fetchAvailableUsers };
-export type { UserOption };
+;
 
 export interface GlobalUserRow {
   user_id: string;

@@ -27,7 +27,7 @@ import {
 } from "@/features/embarques/domain/embarquesPageHelpers";
 import { buildEmbarquesPageActions } from "@/features/embarques/hooks/useEmbarquesPageActions";
 
-export type { SortDir };
+;
 
 
 

@@ -12,8 +12,8 @@
 export type {
   ImportPreview,
   ImportRowError,
-  ImportRowResult,
-  Row,
+  
+  
 } from "./importSchemasShared";
 export * from "./importSchemaCliente";
 export * from "./importSchemaProveedor";

@@ -11,24 +11,20 @@ export {
 export type {
   FacturaRow,
   FacturaListItem,
-  FacturasListadoFilters,
-  FacturasListadoResult,
+  
+  
 } from "./facturasCrud";
 export {
   fetchLayoutContableData,
   fetchEstadoCuentaFacturas,
 } from "./exports";
-export type {
-  LayoutContableData,
-  LayoutContableRow,
-  EstadoCuentaFactura,
-} from "./exports";
+;
 export type { FilaHueco, HuecoFacturacionResult } from "./huecoFacturacion";
 export { fetchHuecoFacturacion } from "./huecoFacturacion";
 export { fetchProyeccionMes } from "./proyeccion";
-export type { ProyeccionMesParams } from "./proyeccion";
+;
 export { fetchFacturasParaZip, marcarFacturasComoEnviadas } from "./masivas";
-export type { FacturaParaZip } from "./masivas";
+;
 export {
   fetchClienteFiscal,
   actualizarDatosTimbradoFactura,

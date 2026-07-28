@@ -20,7 +20,7 @@ import {
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 // Re-export tipos para que componentes/pages no tengan que importar del service.
-export type { ProformaConFactura, ProformaPendienteConEmbarque, ProformaRow };
+export type { ProformaConFactura,  ProformaRow };
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Queries

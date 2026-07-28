@@ -19,7 +19,7 @@ import {
   type FilaRepPendiente,
 } from "@/features/facturacion/services/bandejas";
 
-export type { BandejaConteos, FilaPorTimbrar, FilaPorEnviar, FilaRepPendiente };
+export type {  FilaPorTimbrar, FilaPorEnviar, FilaRepPendiente };
 
 const STALE = 60_000;
 

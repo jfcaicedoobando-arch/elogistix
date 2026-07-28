@@ -19,7 +19,7 @@ import { mergeCsfPatch, procesarCsfUpload } from "./useNuevoProveedorController.
 import { preparePayload } from "./useNuevoProveedorController.helpers";
 import { notifyError } from "@/lib/ui/appFeedback";
 
-export { DOCS_EXTRANJERO, DOCS_NACIONAL, EMPTY_PROVEEDOR_FORM, type NuevoProveedorForm } from "./useNuevoProveedorController.constants";
+export {    type NuevoProveedorForm } from "./useNuevoProveedorController.constants";
 
 
 /**
