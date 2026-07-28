@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.320.67] - 2026-07-28
+- **Ola 3 de adopción de `DetailHeader` + auditoría de dónde más aplica**. Analogía: terminamos de repartir el mismo guion de recepción a todas las fichas del sistema.
+  - `FacturaDetalleHeader.tsx`: migrado a `DetailHeader` (recibe `volverHref`/`volverLabel`); se eliminó el botón "Volver" suelto y la prop muerta `onVolver` de `FacturaDetalleView` / `FacturaDetalle`.
+  - `LeadDetalle.tsx` (CRM) y `OportunidadDetalleContent.tsx`: encabezado unificado; se quitó el hack del icono `ArrowLeft` clickeable como icono del header.
+  - `EstadoCuentaInterno.tsx` y `TesoreriaFlujo.tsx`: el botón "Volver" pasó de la zona de acciones (derecha) al lugar canónico (arriba a la izquierda).
+  - Guardrail nuevo `src/__tests__/architecture/detail-header-canonical.test.ts`: falla el CI si una ruta `*Detalle*.tsx` vuelve a dibujar su propio `ArrowLeft` en lugar de usar `DetailHeader`.
+  - `DetailHeader.test.tsx`: la prueba de `backTo` ahora verifica que se renderiza un `<a href>` real (clic medio / abrir en pestaña nueva).
+
 ## [13.320.66] - 2026-07-28
 - **Auditoría y adopción de `DetailHeader`**. Analogía: teníamos 10 recepcionistas distintos improvisando cómo saludar; ahora todos usan el mismo guion.
   - `DetailHeader.tsx`: se añadieron los slots `meta` y `tabs`, `DetailHeaderSkeleton`, `backTo` polimórfico (renderiza `<Link>` real cuando es una ruta, mejor a11y/SEO) y se corrigió el truncado de títulos y badges largos en móvil.
