@@ -1,9 +1,8 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, ClipboardList, Loader2, Trash2 } from "lucide-react";
+import { Edit, ClipboardList, Loader2, Target, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
@@ -33,7 +32,6 @@ interface Props {
 }
 
 export function OportunidadDetalleContent({ op, etapas }: Props) {
-  const navigate = useNavigate();
   const { canEdit } = usePermissions();
   const [editOpen, setEditOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
@@ -59,11 +57,13 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
 
   return (
     <div className="space-y-6 p-6">
-      <PageHeader
-        icon={<ArrowLeft className="h-5 w-5 cursor-pointer" onClick={() => navigate("/crm/oportunidades")} />}
+      <DetailHeader
+        backTo="/crm/oportunidades"
+        backLabel="Oportunidades"
+        icon={<Target className="h-6 w-6 text-accent shrink-0" />}
         title={op.nombre}
-        description={op.cliente_nombre || "Sin cliente"}
-        actions={canEdit ? (
+        subtitle={op.cliente_nombre || "Sin cliente"}
+        trailing={canEdit ? (
           <div className="flex gap-2">
             <Button variant="outline" onClick={actions.crearCotizacion} disabled={actions.crearCotPending}>
               {actions.crearCotPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ClipboardList className="h-4 w-4 mr-1" />}
@@ -76,8 +76,9 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
               <Trash2 className="h-4 w-4 mr-1" /> Eliminar
             </Button>
           </div>
-        ) : null}
+        ) : undefined}
       />
+
 
       <OportunidadGanadaBanner
         cotizacionGanadoraId={op.cotizacion_ganadora_id ?? null}

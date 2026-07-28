@@ -1,8 +1,7 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Wallet } from "lucide-react";
+import { DetailHeader } from "@/components/shared/DetailHeader";
+import { Wallet } from "lucide-react";
 import { EstadoCuentaModule } from "../components/EstadoCuentaModule";
 
 export default function EstadoCuentaInterno() {
@@ -10,19 +9,14 @@ export default function EstadoCuentaInterno() {
 
   return (
     <PageContainer width="wide">
-      <PageHeader
-        icon={<Wallet className="h-6 w-6 text-primary" />}
+      <DetailHeader
+        backTo={`/clientes/${clienteId}`}
+        backLabel="Cliente"
+        icon={<Wallet className="h-6 w-6 text-accent shrink-0" />}
         title="Estado de cuenta"
-        description="Movimientos, saldos y anticipos del cliente."
-        actions={
-          <Button asChild variant="outline" size="sm">
-            <Link to={`/clientes/${clienteId}`}>
-              <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Volver al cliente
-            </Link>
-          </Button>
-        }
+        subtitle="Movimientos, saldos y anticipos del cliente."
       />
+
 
       <EstadoCuentaModule
         clienteIds={clienteId ? [clienteId] : []}

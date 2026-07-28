@@ -4,10 +4,9 @@
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { DetailHeader } from "@/components/shared/DetailHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
@@ -78,9 +77,7 @@ export default function LeadDetalle() {
   if (!lead) {
     return (
       <PageContainer>
-        <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.CRM_LEADS)}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Volver
-        </Button>
+        <DetailHeader backTo={ROUTES.CRM_LEADS} backLabel="Leads" title="Lead no encontrado" />
         <ErrorState
           title="Lead no encontrado"
           description="El lead que buscas no existe o fue eliminado."
@@ -91,16 +88,13 @@ export default function LeadDetalle() {
 
   return (
     <PageContainer>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.CRM_LEADS)}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Leads
-        </Button>
-      </div>
-
-      <PageHeader
+      <DetailHeader
+        backTo={ROUTES.CRM_LEADS}
+        backLabel="Leads"
+        icon={<UserPlus className="h-6 w-6 text-accent shrink-0" />}
         title={lead.empresa}
-        description={`Lead · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
-        actions={
+        subtitle={`Lead · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
+        trailing={
           <LeadHeaderActions
             estado={lead.estado}
             canEdit={canEdit}
@@ -109,6 +103,7 @@ export default function LeadDetalle() {
           />
         }
       />
+
 
       <Card>
         <CardHeader className="pb-2">

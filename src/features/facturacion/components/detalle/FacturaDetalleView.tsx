@@ -1,6 +1,4 @@
 /** FacturaDetalleView — vista pura de la factura ya resuelta. */
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { FacturaDetalleFooterDialogs } from "@/features/facturacion/components/detalle/FacturaDetalleFooterDialogs";
 import { FacturaDetalleActionsBar } from "@/features/facturacion/components/detalle/FacturaDetalleActionsBar";
@@ -39,7 +37,6 @@ interface FacturaDetalleViewProps {
   onEliminar: () => void;
   volverHref: string;
   volverLabel: string;
-  onVolver: (href: string) => void;
   dialogs: DialogsBundle;
   saldo?: number;
 }
@@ -48,7 +45,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
   const {
     factura, canEdit, flags, acuse, eliminando, conceptosVivos,
     pagoRepPendiente, timbrarRep, handleDownload, onEliminar,
-    volverHref, volverLabel, onVolver, dialogs,
+    volverHref, volverLabel, dialogs,
   } = props;
   const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador } = flags;
   const {
@@ -68,11 +65,9 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
 
   return (
     <PageContainer>
-      <Button variant="ghost" size="sm" onClick={() => onVolver(volverHref)} className="-ml-2">
-        <ArrowLeft className="h-4 w-4 mr-1" /> {volverLabel}
-      </Button>
-
       <FacturaDetalleHeader
+        volverHref={volverHref}
+        volverLabel={volverLabel}
         numero={factura.numero}
         estado={factura.estado}
         acuseCancelacionStatus={acuseCancelacionStatus}
@@ -87,6 +82,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         moneda={factura.moneda}
         ambiente={factura.ambiente}
       />
+
 
       <ClaimPendingBanner
         facturaId={factura.id}
