@@ -49,14 +49,18 @@ function buildPrimary(props: Props): DetalleActionItem | null {
   if (canEdit && flags.puedeTimbrarDesdeSistema) {
     return { id: "timbrar", label: "Timbrar factura", icon: Stamp, onClick: props.onTimbrar };
   }
+  // B-002 (v13.320.32): Cobrar tiene prioridad sobre "Timbrar REP" cuando hay saldo.
+  // Antes, un REP pendiente/fallido escondía "Registrar pago" y bloqueaba la cobranza
+  // indefinidamente. Ahora si hay saldo por cobrar, ese es el primary; el REP queda
+  // accesible como acción secundaria.
+  if (canEdit && flags.puedeRegistrarPago) {
+    return { id: "cobrar", label: "Registrar pago", icon: HandCoins, onClick: props.onRegistrarPago };
+  }
   if (canEdit && flags.repPendiente && !flags.estaCancelada) {
     return {
       id: "rep", label: "Timbrar REP", icon: Stamp,
       onClick: props.onTimbrarRep, loading: props.timbrarRepPending,
     };
-  }
-  if (canEdit && flags.puedeRegistrarPago) {
-    return { id: "cobrar", label: "Registrar pago", icon: HandCoins, onClick: props.onRegistrarPago };
   }
   if (!flags.sinTimbrar && !flags.estaCancelada) {
     return { id: "enviar", label: "Enviar por email", icon: Mail, onClick: props.onEnviarEmail };
