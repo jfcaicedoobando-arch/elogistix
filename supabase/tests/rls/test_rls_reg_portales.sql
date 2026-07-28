@@ -68,11 +68,15 @@ DECLARE
   n_funcs int;
 BEGIN
   -- ===================== Seed base =====================
+  -- Nota: estas suites sólo corren en CI, donde `_ci_post_migrate.sql` elimina
+  -- los FK contra auth.users (no hay GoTrue). Por eso no se siembran usuarios.
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'REG PORT A'), (org_b, 'REG PORT B');
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
     (org_a, user_a, 'admin_org'), (org_b, user_b, 'admin_org');
   INSERT INTO public.user_roles(user_id, role) VALUES
     (user_a, 'admin_org'), (user_b, 'admin_org'), (user_ag, 'agente_carga');
+
+
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
   VALUES (cli_a, 'Cli PORT A', 'XAXX010101000', 'a@test.local', org_a);
