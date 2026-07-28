@@ -71,3 +71,44 @@ export function clasificarAvanceError(msg: string): AvanceErrorKind {
   return "generic";
 }
 
+/**
+ * B-027: mínimos operativos para pasar de Borrador a Confirmado.
+ * Devuelve la lista de faltantes en lenguaje de negocio (vacía = puede avanzar).
+ * Función pura, testeable.
+ */
+export function faltantesParaConfirmado(
+  embarque: {
+    modo?: string | null;
+    tipo_servicio?: string | null;
+    peso_kg?: number | null;
+    naviera?: string | null;
+    bl_master?: string | null;
+    bl_house?: string | null;
+    aerolinea?: string | null;
+    mawb?: string | null;
+    transportista?: string | null;
+  },
+  numContenedores: number,
+): string[] {
+  const faltantes: string[] = [];
+  if (!embarque.peso_kg || embarque.peso_kg <= 0) faltantes.push("peso mayor a 0 kg");
+  if (embarque.modo === "Marítimo") {
+    // LCL no exige contenedores dinámicos (el número es opcional).
+    if (embarque.tipo_servicio !== "LCL" && numContenedores === 0) {
+      faltantes.push("al menos un contenedor");
+    }
+    if (!embarque.naviera?.trim()) faltantes.push("naviera");
+    if (!embarque.bl_master?.trim() && !embarque.bl_house?.trim()) {
+      faltantes.push("BL master u house");
+    }
+  }
+  if (embarque.modo === "Aéreo") {
+    if (!embarque.aerolinea?.trim()) faltantes.push("aerolínea");
+    if (!embarque.mawb?.trim()) faltantes.push("MAWB");
+  }
+  if (embarque.modo === "Terrestre" && !embarque.transportista?.trim()) {
+    faltantes.push("transportista");
+  }
+  return faltantes;
+}
+

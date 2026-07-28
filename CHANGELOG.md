@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.320.50] - 2026-07-28
+- **Bug bash live · Wave 14 (3 fixes)**:
+  - **B-027 · Confirmado sin datos mínimos**: un embarque en Borrador con peso 0, 0 contenedores y sin BL/naviera podía avanzar a Confirmado. Se añade `faltantesParaConfirmado()` (función pura testeable) que exige peso > 0, al menos un contenedor (marítimo FCL), naviera + BL master u house (marítimo), aerolínea + MAWB (aéreo) o transportista (terrestre). `useEmbarqueEstadoActions` la ejecuta antes de disparar la transición y muestra un toast con exactamente qué falta. Analogía: antes el aduanero dejaba pasar un tráiler vacío; ahora revisa la carga antes de sellar la orden.
+  - **B-028 · Fuente única de tipos de contenedor**: la lista hardcodeada del wizard (`CONTENEDORES_FCL`) se movió a `TIPOS_CONTENEDOR_DEFAULT` (nuevo módulo `catalogos/domain/tiposContenedorDefault.ts`), que también sirve de referencia documental para el diálogo "Buscar tarifa". Con el seed B-031 aplicado el dropdown de tarifas ya no queda mudo.
+  - **B-031 · Seed `tipos_contenedor`**: migración `20260728120500` inserta los 12 tipos estándar con los mismos nombres que el wizard (mapeo por `resolveTipoContenedorId`) y `code` corto en mayúsculas. Idempotente por `ON CONFLICT (code) DO NOTHING`.
+- **Sprint status**: acumulado 46/63 bugs cerrados (Wave 14: B-027, B-028, B-031). Pendientes: 17.
+
+
+
 ## [13.320.49] - 2026-07-28
 - **Bug bash live · Wave 13 (3 fixes M, frontend)**:
   - **B-039 · Cambio de estado triplicado en "Notas y Actividad"**: al avanzar un embarque, la RPC `avanzar_estado_embarque` escribía nota auto (`cambio_estado`) + evento de tracking + entrada de bitácora — el feed mostraba TRES filas por la misma transición. `useActividadEmbarque` ahora deduplica en la vista: conserva la bitácora `cambiar_estado` (más rica: trae `estado_anterior`/`estado_nuevo`) y suprime la nota/evento que caigan en el mismo minuto. Datos legacy o de auto-sync (sin bitácora) siguen mostrando su nota/evento — no se pierde historia. Analogía: tres cámaras filmaban el mismo gol; ahora la transmisión oficial es la de detrás del arco y las otras dos se ocultan si graban al mismo segundo.
