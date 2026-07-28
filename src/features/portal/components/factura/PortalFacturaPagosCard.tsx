@@ -3,9 +3,13 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { usePortalPagosFactura } from "@/features/portal/hooks";
+import {
+  usePortalPagosFactura,
+  usePortalNotasCreditoFactura,
+} from "@/features/portal/hooks";
+import { calcularSaldoFacturaPortal } from "@/features/portal/services";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
-import { CheckCircle2, Clock, FileText, FileCode2 } from "lucide-react";
+import { CheckCircle2, Clock, FileText, FileCode2, Receipt } from "lucide-react";
 
 interface Props {
   facturaId: string;
@@ -15,16 +19,19 @@ interface Props {
 
 export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda }: Props) {
   const { data: pagos = [], isLoading } = usePortalPagosFactura(facturaId);
+  const { data: notasCredito = [], isLoading: loadingNc } =
+    usePortalNotasCreditoFactura(facturaId);
 
-  const totalPagado = pagos.reduce((acc, p) => acc + Number(p.monto_aplicado_factura ?? 0), 0);
-  const saldo = Math.max(0, totalFactura - totalPagado);
-  const liquidada = saldo < 0.01;
+  // B-082: el saldo del portal descuenta pagos Y notas de crédito aplicadas.
+  const resumen = calcularSaldoFacturaPortal(totalFactura, pagos, notasCredito);
+  const { pagado: totalPagado, notasCredito: totalNc, saldo, liquidada } = resumen;
+  const hayMovimientos = pagos.length > 0 || notasCredito.length > 0;
 
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
-        <CardTitle className="text-lg">Historial de pagos</CardTitle>
-        {pagos.length > 0 && (
+        <CardTitle className="text-lg">Pagos y notas de crédito</CardTitle>
+        {hayMovimientos && (
           <Badge variant={liquidada ? "default" : "secondary"} className="gap-1">
             {liquidada ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
             {liquidada ? "Liquidada" : "Saldo pendiente"}
