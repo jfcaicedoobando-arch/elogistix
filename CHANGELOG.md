@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [13.321.5] - 2026-07-28
+- CI: se registraron las suites de pruebas `reg_costeo` y `reg_portales` en el validador del flujo de pruebas de seguridad, que fallaba por estar desactualizado.
+
+
+
 ## [13.321.4] - 2026-07-28
 - Proformas: las proformas enviadas a la papelera ya no aparecen en el embarque, en el listado general ni en el detalle — antes seguían visibles y al intentar borrarlas otra vez fallaba con "Registro no encontrado o ya borrado".
 - Proformas: tampoco pueden facturarse proformas borradas, y si se intenta eliminar una que ya estaba en papelera se muestra un aviso claro y la lista se refresca sola.
