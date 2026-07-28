@@ -35,7 +35,7 @@ export function calcularSaldoFacturaPortal(
   const totalFactura = num(total);
   const pagado = sumarMontos(pagos.map((p) => num(p.monto_aplicado_factura)));
   const nc = sumarMontos(notasCredito.map((n) => num(n.monto)));
-  const bruto = restarMontos(restarMontos(totalFactura, pagado), nc);
+  const bruto = sumarMontos([totalFactura, -pagado, -nc]);
   const saldo = bruto > 0 ? bruto : 0;
 
   return {
