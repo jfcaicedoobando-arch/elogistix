@@ -20,6 +20,8 @@ export function buildFromOportunidad(o: CrmOportunidadRow): OportunidadFormState
     monto_estimado: Number(o.monto_estimado ?? 0),
     moneda: (o.moneda as Moneda) ?? "MXN",
     probabilidad: o.probabilidad ?? 0,
+    valor_real: Number(o.valor_real ?? 0),
+    fecha_cierre_real: o.fecha_cierre_real ?? "",
     fecha_estimada_cierre: o.fecha_estimada_cierre ?? "",
     modo: o.modo ?? "",
     origen: o.origen ?? "",

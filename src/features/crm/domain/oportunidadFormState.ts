@@ -12,6 +12,9 @@ export interface OportunidadFormState {
   monto_estimado: number;
   moneda: Moneda;
   probabilidad: number;
+  // B-034: captura al cerrar en etapa "ganada".
+  valor_real: number;
+  fecha_cierre_real: string;
   fecha_estimada_cierre: string;
   modo: string;
   origen: string;
@@ -29,6 +32,8 @@ export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
   monto_estimado: 0,
   moneda: "MXN",
   probabilidad: 0,
+  valor_real: 0,
+  fecha_cierre_real: "",
   fecha_estimada_cierre: "",
   modo: "",
   origen: "",

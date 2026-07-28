@@ -23,6 +23,7 @@ import {
   useAutoSyncEstadoEmbarque,
   useCierreGate,
 } from "./useEmbarqueEstadoActions.internals";
+import { useValidacionCierre } from "./useCierreEmbarque";
 
 export { getSiguienteEstado } from "./useEmbarqueEstadoActions.helpers";
 
@@ -50,6 +51,13 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   // v13.89.1 — Validación dura para cierre: solo admin/finanzas pueden cerrar,
   // y solo si todas las reglas del checklist (CxC, CxP, docs, etc.) pasan.
   const cierre = useCierreGate(siguienteEstado, id);
+  // B-058: para decidir si "Eliminar" es seguro necesitamos saber si hay
+  // deuda pendiente (CxC/CxP). Reusamos el checklist de cierre — su fuente
+  // es la misma RPC autoritativa que valida el cierre financiero.
+  const { data: cierreCheck } = useValidacionCierre(id);
+  const tieneDeudaPendiente = (cierreCheck?.checks ?? []).some(
+    (c) => (c.regla === "cxc_sin_pendientes" || c.regla === "cxp_sin_pendientes") && !c.ok,
+  );
 
   const usuarioEmail = user?.email ?? "";
   useAutoSyncEstadoEmbarque(embarque, puedeSincronizarEstado, usuarioEmail);
@@ -166,8 +174,28 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     }
   };
 
+  // B-058: cancelar embarque desde estados posteriores a Confirmado.
+  // Reutilizamos `avanzarEstado` con destino "Cancelado" — la RPC
+  // `assert_transicion_embarque` valida si aplica y devuelve error si no.
+  const handleCancelar = useCallback(async (motivo: string) => {
+    if (!embarque || !id) return;
+    try {
+      await avanzarEstado.mutateAsync({ embarqueId: id, nuevoEstado: "Cancelado", usuarioEmail });
+      registrarActividad.mutate({
+        accion: 'cancelar_embarque', modulo: 'embarques',
+        entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
+        detalles: { estado_anterior: embarque.estado, motivo },
+      });
+      notifySuccess(undefined, { title: "Embarque cancelado", description: motivo });
+    } catch (err: unknown) {
+      notifyError(undefined, { title: "No se pudo cancelar el embarque", description: getErrorMessage(err), error: err, method: "HANDLE_CANCELAR_EMBARQUE" });
+    }
+  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad]);
+
   return {
     handleAvanzarEstado, avanzarEstado, handleReabrir, reabrirEmbarque,
+    handleCancelar,
+    tieneDeudaPendiente,
     warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
     docsFaltantes, docsBloqueantes,
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,

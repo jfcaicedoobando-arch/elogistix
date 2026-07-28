@@ -28,7 +28,7 @@ export function useActividadesVencidasCount() {
   return useQuery({
     queryKey: queryKeys.crm.actividades.vencidasCount(user?.id),
     enabled: !!user?.id,
-    queryFn: () => countActividadesVencidas(user!.id),
+    queryFn: () => countActividadesVencidas(user!.id, user!.email),
     staleTime: 60_000,
   });
 }
@@ -39,7 +39,7 @@ export function useActividadesVencidasList(limit = 5) {
   return useQuery({
     queryKey: queryKeys.crm.actividades.vencidasList(user?.id, limit),
     enabled: !!user?.id,
-    queryFn: () => listActividadesVencidas(user!.id, limit),
+    queryFn: () => listActividadesVencidas(user!.id, limit, user!.email),
     staleTime: 60_000,
   });
 }

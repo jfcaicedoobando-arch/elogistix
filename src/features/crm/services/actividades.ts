@@ -118,14 +118,21 @@ export async function actualizarActividadNotas(input: { id: string; resultado: s
 }
 
 
-export async function countActividadesVencidas(userId: string): Promise<number> {
+// B-055: las actividades pueden tener solo responsable_email (sin id); el
+// filtro "mías" debe cubrir ambas llaves.
+const filtroResponsable = (userId: string, email?: string | null) =>
+  email
+    ? `responsable_id.eq.${userId},responsable_email.eq.${email}`
+    : `responsable_id.eq.${userId}`;
+
+export async function countActividadesVencidas(userId: string, email?: string | null): Promise<number> {
   // `count` va fuera de `data` — mantenemos el patrón manual.
   const { count, error } = await supabase
     .from("crm_actividades")
     .select("id", { count: "exact", head: true })
     .is("fecha_completada", null)
     .lt("fecha_programada", new Date().toISOString())
-    .eq("responsable_id", userId);
+    .or(filtroResponsable(userId, email));
   if (error) throw error;
   return count ?? 0;
 }
@@ -139,14 +146,14 @@ export type ActividadVencida = {
   entidad_id: string;
 };
 
-export async function listActividadesVencidas(userId: string, limit: number): Promise<ActividadVencida[]> {
+export async function listActividadesVencidas(userId: string, limit: number, email?: string | null): Promise<ActividadVencida[]> {
   return unwrapOr(
     supabase
       .from("crm_actividades")
       .select(CRM_ACTIVIDADES_COLUMNS_MIN)
       .is("fecha_completada", null)
       .lt("fecha_programada", new Date().toISOString())
-      .eq("responsable_id", userId)
+      .or(filtroResponsable(userId, email))
       .order("fecha_programada", { ascending: true })
       .limit(limit),
     [] as ActividadVencida[],

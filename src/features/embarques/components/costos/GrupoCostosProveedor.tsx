@@ -53,9 +53,12 @@ export function GrupoCostosProveedor({
     return { conAjuste, sinFactura };
   }, [filas]);
 
+  // B-057: el resumen narrativo del grupo debe usar el cotizado
+  // "facturable" (excluyendo filas sin factura) para no reportar ahorros
+  // ficticios cuando el proveedor aún no ha facturado.
   const resumenNarrativo = subtotales.map(s => ({
     moneda: s.moneda,
-    d: describirAjusteNeto(s.cotizado, s.facturado, s.moneda),
+    d: describirAjusteNeto(s.cotizadoFacturable, s.facturado, s.moneda),
   }));
 
   return (

@@ -44,6 +44,17 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const handleSubmit = async () => {
     if (!form.nombre.trim()) return notifyError(undefined, { title: "Nombre es obligatorio", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
     if (!form.etapa_id) return notifyError(undefined, { title: "Selecciona una etapa", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    // B-034: etapa "ganada" exige fecha de cierre real; valor real por
+    // defecto = monto estimado (editable en el form).
+    const etapaSel = etapas.find((e) => e.id === form.etapa_id);
+    const esGanada = (etapaSel as { tipo?: string } | undefined)?.tipo === "ganada";
+    if (esGanada && !form.fecha_cierre_real) {
+      return notifyError(undefined, {
+        title: "Captura la fecha de cierre real",
+        description: "Una oportunidad ganada necesita su fecha de cierre para que el Resumen y el Leaderboard coincidan.",
+        method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+    }
     try {
       const payload = {
         nombre: form.nombre,
@@ -54,6 +65,11 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         moneda: form.moneda,
         probabilidad: form.probabilidad,
         fecha_estimada_cierre: form.fecha_estimada_cierre || null,
+        // B-034: solo se persisten cuando la etapa destino es "ganada".
+        ...(esGanada ? {
+          fecha_cierre_real: form.fecha_cierre_real,
+          valor_real: form.valor_real > 0 ? form.valor_real : form.monto_estimado,
+        } : {}),
         modo: form.modo,
         origen: form.origen,
         destino: form.destino,

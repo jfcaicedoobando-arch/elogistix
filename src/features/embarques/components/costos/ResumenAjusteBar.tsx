@@ -11,6 +11,10 @@ interface TotalPorMoneda {
   moneda: string;
   cotizado: number;
   facturado: number;
+  /** B-057: cotizado sólo de filas con factura ligada (base para % de ajuste). */
+  cotizadoFacturable: number;
+  /** B-057: filas todavía sin factura del proveedor. */
+  sinFactura: number;
 }
 
 interface Props {
@@ -22,7 +26,13 @@ export function ResumenAjusteBar({ totales }: Props) {
   return (
     <div className="space-y-2">
       {totales.map((t) => {
-        const d = describirAjusteNeto(t.cotizado, t.facturado, t.moneda);
+        // B-057: comparamos facturado vs. cotizadoFacturable (excluyendo filas
+        // sin factura), así el % de Ahorro/Sobrecosto refleja sólo lo ya
+        // devengado y no se distorsiona con costos por devengar.
+        const d = describirAjusteNeto(t.cotizadoFacturable, t.facturado, t.moneda);
+        const detalle = t.sinFactura > 0
+          ? `${d.detalle} (excluye ${t.sinFactura} concepto${t.sinFactura === 1 ? "" : "s"} sin factura)`
+          : d.detalle;
         return (
           <div
             key={t.moneda}
@@ -34,7 +44,7 @@ export function ResumenAjusteBar({ totales }: Props) {
               label="Ajuste neto"
               value={`${d.icono} ${d.titulo}`}
               valueClassName={cn("font-semibold", TONE_TEXT[d.tone])}
-              title={d.detalle}
+              title={detalle}
             />
           </div>
         );

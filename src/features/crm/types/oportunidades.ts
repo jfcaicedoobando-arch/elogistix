@@ -17,6 +17,9 @@ export type OportunidadInput = {
   monto_estimado?: number;
   moneda?: Moneda;
   probabilidad?: number;
+  // B-034: cierre real de la oportunidad (etapa tipo "ganada").
+  valor_real?: number | null;
+  fecha_cierre_real?: string | null;
   fecha_estimada_cierre?: string | null;
   modo?: string;
   tipo_carga?: string;

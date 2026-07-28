@@ -1,6 +1,16 @@
 # Changelog
 
-## [13.320.52] - 2026-07-28
+## [13.320.53] - 2026-07-28
+- **Bug bash live · Wave 17 (4 fixes)**:
+  - **B-034 · Ganada sin fecha/valor real**: `NuevaOportunidadDialog` y `OportunidadFormFields` ahora exponen `Fecha de cierre real *` y `Valor real` cuando la etapa destino es `tipo="ganada"`, y `handleSubmit` exige la fecha antes de guardar. En el Kanban, soltar en etapa ganada preseteea `fecha_cierre_real=hoy` y `valor_real=monto_estimado` para que el Resumen y el Leaderboard dejen de contradecirse. Analogía: cerrar un trato es como anotar el gol — hoy también apuntamos el minuto y el marcador.
+  - **B-055 · "Vencida" no aparecía en actividades ajenas por email**: `countActividadesVencidas`/`listActividadesVencidas` filtraban sólo por `responsable_id`, y muchas actividades legadas sólo tienen `responsable_email`. Ahora usan `.or(responsable_id.eq.<uid>,responsable_email.eq.<email>)` — el conteo del banner y la lista incluyen ambos casos.
+  - **B-057 · % de "Ahorro" inflado por conceptos sin factura**: `ResumenAjusteBar` y el header de `GrupoCostosProveedor` calculaban el ajuste sobre `cotizado` total (incluyendo filas sin factura de proveedor). Se agrega `cotizadoFacturable`/`sinFactura` en los subtotales y el ajuste sólo compara facturado vs. lo ya facturable; el tooltip aclara "excluye N concepto(s) sin factura". Analogía: no se cuenta como "ahorro" lo que el proveedor aún no ha cobrado.
+  - **B-058 · Faltaba "Cancelar" y "Eliminar" borraba con deudas**: en `EmbarqueDetalleHeaderActions` se agrega el ítem "Cancelar embarque" (con modal `ConfirmActionDialog` que exige motivo ≥ 5 chars) para estados operativos, y "Eliminar" queda oculto cuando `useValidacionCierre` reporta `cxc_sin_pendientes` o `cxp_sin_pendientes` en `false`. `useEmbarqueEstadoActions` expone `handleCancelar` (avanza a "Cancelado" vía `assert_transicion_embarque`) y `tieneDeudaPendiente`. Analogía: un embarque con adeudos ya no se puede "borrar" — se congela con motivo escrito.
+- **Sprint status**: acumulado 56/63 bugs cerrados. Pendientes: 7.
+
+
+
+
 - **Bug bash live · Wave 16 (1 fix + 3 verificaciones)**:
   - **B-035 · `descripcion_mercancia` guardaba el Sector Económico**: el mapper `cotizacionForm.ts` persistía `descripcion_adicional || sectorEconomico` en la columna `descripcion_mercancia`, así que la búsqueda del listado y el detalle mostraban "Industrial" en vez de la mercancía real. Se añade el campo dedicado `descripcionMercancia` (form + defaults + hidratación desde `descripcion_mercancia`) y un input requerido en `SeccionMercanciaWrapper`; el mapper prioriza el nuevo campo y mantiene fallback a `descripcionAdicional`/`sectorEconomico` para no romper cotizaciones legacy. Analogía: antes el sistema anotaba "sector automotriz" en la casilla "qué llevas"; ahora tiene una casilla específica "qué llevas" y otra "en qué sector".
 - **Verificaciones (ya cerrados en HEAD, no requieren diff)**:
