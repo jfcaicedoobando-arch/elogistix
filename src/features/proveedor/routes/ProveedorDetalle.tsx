@@ -15,7 +15,7 @@ import { DetailSkeleton } from "@/components/shared/skeletons";
 import { toTitleCase } from "@/lib/formatters";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import EmptyState from "@/components/empty/EmptyState";
+import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
 import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
@@ -31,7 +31,7 @@ export default function ProveedorDetalle() {
     proveedor, isLoading, isDeleting, operaciones,
     totalFacturado, totalPagado, totalPendiente,
     canEdit, isAdmin, editOpen, setEditOpen,
-    deleteOpen, setDeleteOpen, handleUpdate, handleDelete, navigate,
+    deleteOpen, setDeleteOpen, handleUpdate, handleDelete,
   } = useProveedorDetalleController();
   useRegisterBreadcrumbLabel(id, proveedor?.nombre);
 
