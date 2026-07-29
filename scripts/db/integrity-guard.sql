@@ -11,16 +11,35 @@
 -- Criterio: las tres consultas deben regresar 0 filas.
 -- =============================================================================
 
--- 1) Sobrecargas ambiguas expuestas vía PostgREST
+-- 1) Sobrecargas REALMENTE ambiguas vía PostgREST.
+--    PostgREST resuelve por NOMBRES de argumento: dos funciones con el mismo
+--    nombre sólo chocan (PGRST203) si una llamada puede satisfacer a ambas,
+--    es decir cuando los nombres de A son un subconjunto de los de B y los
+--    argumentos extra de B tienen valor por omisión. Se excluyen las funciones
+--    de trigger (no se exponen en la API).
+with expuestas as (
+  select p.oid,
+         p.proname,
+         coalesce(p.proargnames[1:p.pronargs], '{}'::text[]) as nombres,
+         p.pronargs,
+         p.pronargdefaults
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public'
+    and p.prokind = 'f'
+    and pg_get_function_result(p.oid) <> 'trigger'
+)
 select 'sobrecarga_ambigua' as hallazgo,
-       p.proname            as objeto,
-       count(*)::text       as detalle
-from pg_proc p
-join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public'
-  and p.prokind = 'f'
-group by p.proname
-having count(*) > 1
+       a.proname            as objeto,
+       a.oid::regprocedure::text || ' vs ' || b.oid::regprocedure::text as detalle
+from expuestas a
+join expuestas b
+  on b.proname = a.proname
+ and b.oid <> a.oid
+ and b.pronargs >= a.pronargs
+where a.nombres <@ b.nombres
+  and b.pronargs - a.pronargs <= b.pronargsdefaults_dummy_placeholder
+
 
 union all
 
