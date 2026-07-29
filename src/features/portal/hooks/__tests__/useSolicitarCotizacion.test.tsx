@@ -58,11 +58,13 @@ describe("useSolicitarCotizacion", () => {
     const { wrapper, invalidate } = setup();
     const { result } = renderHook(() => useSolicitarCotizacion(["cli-1"]), { wrapper });
 
+    const onError = vi.fn();
     act(() => {
-      result.current.mutate(input);
+      result.current.mutate(input, { onError });
     });
 
-    await waitFor(() => expect(result.current.isError).toBe(true));
+    await waitFor(() => expect(onError).toHaveBeenCalled());
+    expect(result.current.isError).toBe(true);
     expect(result.current.error?.message).toBe("LC_CLIENTE_NO_VINCULADO");
 
     expect(invalidate).not.toHaveBeenCalled();
