@@ -56,7 +56,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
       description={
         c.step === 1
           ? "Captura los datos del cliente o sube su CSF para prellenar el formulario."
-          : "Adjunta todos los documentos obligatorios para crear el cliente."
+          : "Adjunta la Constancia de Situación Fiscal; el resto del expediente puede completarse después."
       }
       size="lg"
       step={c.step}
@@ -75,7 +75,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
           <Button variant="outline" onClick={() => c.setStep(1)}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
           </Button>
-          <Button onClick={c.handleSave} disabled={!c.allDocsAdjuntados || c.isSaving}>
+          <Button onClick={c.handleSave} disabled={!c.docsRequeridosCompletos || c.isSaving}>
             {c.isSaving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
             {c.isSaving ? "Creando…" : "Crear cliente"}
           </Button>
@@ -129,7 +129,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
         <DocumentChecklist
           documentos={c.documentos}
           onFileChange={c.handleFileChange}
-          descripcion="Todos los documentos deben estar adjuntados para poder crear el cliente."
+          descripcion="Sólo la Constancia de Situación Fiscal (CSF) es obligatoria. Los demás documentos son opcionales y puedes subirlos más adelante desde el detalle del cliente."
         />
       )}
     </FormDialogShell>

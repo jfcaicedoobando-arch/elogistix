@@ -12,6 +12,10 @@ export const EMPTY_CLIENTE = {
   regimen_fiscal: "", uso_cfdi_default: "G03",
 };
 
+/** Único documento indispensable para dar de alta al cliente. */
+export const DOC_CSF = 'Constancia de Situación Fiscal (CSF)';
+
+/** Checklist completo del expediente; sólo la CSF bloquea el alta. */
 export const DOCS_OBLIGATORIOS = [
   'Constancia de Situación Fiscal (CSF)', 'CIF', 'Opinión fiscal', 'Acta constitutiva',
   'INE RL', 'Poder notarial', 'Comprobante de domicilio', 'Datos bancarios',
@@ -58,10 +62,11 @@ export function useNuevoClienteController(onClose: () => void) {
   const handleNext = () => {
     if (!isStep1Valid()) return;
     setDocumentos(DOCS_OBLIGATORIOS.map(nombre => {
-      if (nombre === 'Constancia de Situación Fiscal (CSF)' && csfFile) {
-        return { nombre, adjuntado: true, archivo: csfFile.name };
+      const requerido = nombre === DOC_CSF;
+      if (requerido && csfFile) {
+        return { nombre, adjuntado: true, archivo: csfFile.name, requerido };
       }
-      return { nombre, adjuntado: false };
+      return { nombre, adjuntado: false, requerido };
     }));
     setStep(2);
   };
@@ -72,8 +77,10 @@ export function useNuevoClienteController(onClose: () => void) {
     );
   };
 
-  const allDocsAdjuntados =
-    documentos.length > 0 && documentos.every(d => d.adjuntado);
+  // P-08: sólo la CSF es obligatoria; el resto del expediente se completa
+  // después desde el detalle del cliente.
+  const docsRequeridosCompletos =
+    documentos.length > 0 && documentos.every(d => d.requerido === false || d.adjuntado);
 
   const reset = () => {
     setForm(EMPTY_CLIENTE);
@@ -89,7 +96,7 @@ export function useNuevoClienteController(onClose: () => void) {
   };
 
   const handleSave = async () => {
-    if (!allDocsAdjuntados) return;
+    if (!docsRequeridosCompletos) return;
     try {
       const clienteCreado = await createCliente.mutateAsync(form);
       registrarActividad.mutate({
@@ -162,7 +169,7 @@ export function useNuevoClienteController(onClose: () => void) {
     csfFile,
     isSaving: createCliente.isPending,
     isStep1Valid: isStep1Valid(),
-    allDocsAdjuntados,
+    docsRequeridosCompletos,
     setModoAlta,
     setStep,
     handleChange,

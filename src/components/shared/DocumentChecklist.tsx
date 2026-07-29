@@ -31,6 +31,9 @@ export default function DocumentChecklist({ documentos, onFileChange, descripcio
             )}
             <div className="min-w-0">
               <span className="text-sm font-medium">{doc.nombre}</span>
+              {doc.requerido === false && (
+                <span className="ml-2 text-2xs uppercase tracking-wide text-muted-foreground">Opcional</span>
+              )}
               {doc.archivo && (
                 <p className="text-xs text-muted-foreground truncate">{doc.archivo}</p>
               )}
