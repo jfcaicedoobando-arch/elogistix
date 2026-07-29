@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AvanzarEstadoButton } from "./header/AvanzarEstadoButton";
+import { AccionPrincipalEmbarque } from "./header/AccionPrincipalEmbarque";
 import { ReabrirEmbarqueButton } from "./header/ReabrirEmbarqueButton";
 import { CancelarEmbarqueDialog } from "./header/CancelarEmbarqueDialog";
 import { usePermissions } from "@/hooks/shared/usePermissions";
