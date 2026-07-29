@@ -200,6 +200,10 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
     "No se pudo aplicar un ajuste interno de base de datos. Reporta este error a soporte.",
   LC_C5_INCOMPLETO:
     "Un ajuste interno de base de datos quedó incompleto. Reporta este error a soporte.",
+  LC_C5B_ANCLA_AUSENTE:
+    "No se pudo aplicar un ajuste interno de base de datos. Reporta este error a soporte.",
+  LC_C5B_INCOMPLETO:
+    "Un ajuste interno de base de datos quedó incompleto. Reporta este error a soporte.",
 };
 
 
