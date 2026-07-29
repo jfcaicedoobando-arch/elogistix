@@ -34,6 +34,8 @@ function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
     motivo_ignorar: "",
     importado_en: "2024-01-01T00:00:00Z",
     importado_por: null,
+    deleted_at: null,
+    deleted_by: null,
     organization_id: "o1",
   };
   return { ...base, ...partial };

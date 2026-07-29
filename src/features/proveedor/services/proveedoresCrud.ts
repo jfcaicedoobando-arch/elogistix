@@ -103,6 +103,7 @@ export async function fetchProveedoresLite(organizationId?: string | null): Prom
   // al capturar facturas de proveedor.
   let query = supabase.from("proveedores").select("id, nombre, dias_credito");
   if (organizationId) query = query.eq("organization_id", organizationId);
+  query = query.is("deleted_at", null);
   return unwrapOr(query.order("nombre", { ascending: true }).limit(500), []) as Promise<ProveedorLite[]>;
 }
 
@@ -113,13 +114,19 @@ export async function findProveedorByRfc(rfc: string): Promise<{ id: string; nom
       .from("proveedores")
       .select("id, nombre")
       .eq("rfc", rfc.trim().toUpperCase())
+      .is("deleted_at", null)
       .maybeSingle(),
   ) as Promise<{ id: string; nombre: string } | null>;
 }
 
 export async function fetchProveedor(id: string): Promise<Proveedor | null> {
   const data = await unwrap(
-    supabase.from("proveedores").select(PROVEEDOR_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
+    supabase
+      .from("proveedores")
+      .select(PROVEEDOR_DETAIL_COLUMNS)
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle(),
   );
   return fromDb<Proveedor | null>(data);
 }
@@ -144,6 +151,13 @@ export async function updateProveedor(
   await run(supabase.from("proveedores").update(changes).eq("id", id));
 }
 
-export async function deleteProveedor(id: string): Promise<void> {
-  await run(supabase.from("proveedores").delete().eq("id", id));
+export async function deleteProveedor(id: string, userId: string | null = null): Promise<void> {
+  // M6: soft-delete. El índice proveedores_org_rfc_unique es parcial
+  // (deleted_at IS NULL): re-capturar el mismo RFC tras borrar ya no colisiona.
+  await run(
+    supabase
+      .from("proveedores")
+      .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+      .eq("id", id),
+  );
 }

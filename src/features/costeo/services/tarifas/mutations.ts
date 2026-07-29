@@ -27,11 +27,17 @@ export interface TarifaInput {
   recargos: TarifaRecargoInput[];
 }
 
-function buildRecargoRows(tarifaId: string, recargos: TarifaRecargoInput[]) {
+function buildRecargoRows(
+  tarifaId: string,
+  organizationId: string,
+  recargos: TarifaRecargoInput[],
+) {
   return recargos
     .filter((r) => r.concepto.trim() && Number(r.monto) > 0)
     .map((r) => ({
       tarifa_id: tarifaId,
+      // M7: la org viaja explícita; el trigger de BD la re-deriva del padre.
+      organization_id: organizationId,
       concepto: r.concepto.trim(),
       lado: r.lado ?? "origen",
       monto: Number(r.monto) || 0,
@@ -73,7 +79,7 @@ export async function insertTarifaConRecargos(
       .single(),
   );
 
-  const rows = buildRecargoRows(data.id, recargos);
+  const rows = buildRecargoRows(data.id, organizationId, recargos);
   if (rows.length > 0) {
     await run(supabase.from("costeo_tarifa_recargos").insert(rows));
   }
@@ -86,6 +92,9 @@ export async function updateTarifaConRecargos(
 ): Promise<void> {
   const { recargos, ...rest } = input;
   const tarifa = sanitizeTarifaDates(rest);
+  const padre = await unwrap(
+    supabase.from("costeo_tarifas").select("organization_id").eq("id", id).single(),
+  );
   await run(
     supabase.from("costeo_tarifas").update({ ...tarifa, moneda: "USD" }).eq("id", id),
   );
@@ -93,7 +102,7 @@ export async function updateTarifaConRecargos(
   // Sincronizar recargos: borrar todos los existentes y reinsertar los nuevos.
   await run(supabase.from("costeo_tarifa_recargos").delete().eq("tarifa_id", id));
 
-  const rows = buildRecargoRows(id, recargos);
+  const rows = buildRecargoRows(id, padre.organization_id, recargos);
   if (rows.length > 0) {
     await run(supabase.from("costeo_tarifa_recargos").insert(rows));
   }

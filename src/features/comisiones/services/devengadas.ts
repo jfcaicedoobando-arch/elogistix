@@ -50,6 +50,7 @@ export async function fetchComisionesDevengadas(
       comision_mxn, estado, liquidacion_id, nota, created_at,
       facturas:factura_id ( numero, cliente_nombre, expediente )
     `)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(500);
 

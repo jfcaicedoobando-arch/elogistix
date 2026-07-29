@@ -100,8 +100,17 @@ export async function replaceDemorasTramos(
       .eq("tipo_contenedor_id", tipoContenedorId),
   );
   if (tramos.length === 0) return;
+  // M7: la org viaja explícita; el trigger de BD la re-deriva de la condición padre.
+  const padre = await unwrap(
+    supabase
+      .from("costeo_navieras_condiciones")
+      .select("organization_id")
+      .eq("id", navieraCondicionId)
+      .single(),
+  );
   const rows = tramos.map((t) => ({
     naviera_condicion_id: navieraCondicionId,
+    organization_id: padre.organization_id,
     tipo_contenedor_id: tipoContenedorId,
     desde_dia: t.desde_dia,
     hasta_dia: t.hasta_dia,
