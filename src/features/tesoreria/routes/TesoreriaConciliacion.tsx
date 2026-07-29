@@ -7,7 +7,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useCuentasBancarias, useMovimientos, useImportarMovimientos, useConciliarPago } from "@/features/tesoreria/hooks";
+import { useCuentasBancarias, useMovimientos, useImportarMovimientos, useConciliarPago, useConciliacionResumen } from "@/features/tesoreria/hooks";
+import { ResumenConciliacionCards } from "@/features/tesoreria/components/ResumenConciliacionCards";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { parseEstadoCuentaBBVA } from "@/features/tesoreria/domain/import/bbva";
 import { PanelConciliacionMovimiento } from "@/features/tesoreria/components/PanelConciliacionMovimiento";
@@ -28,6 +29,7 @@ export default function TesoreriaConciliacion() {
   const [isAutoConciliando, setIsAutoConciliando] = useState(false);
 
   const { data: movs = [], isLoading } = useMovimientos(cuentaId ? { cuenta_bancaria_id: cuentaId, estado } : null);
+  const { data: resumen, isLoading: resumenLoading } = useConciliacionResumen(cuentaId || null);
   const importar = useImportarMovimientos();
   const conciliarPago = useConciliarPago();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -156,7 +158,14 @@ export default function TesoreriaConciliacion() {
           Selecciona una cuenta para empezar a conciliar.
         </CardContent></Card>
       ) : (
+        <>
+        <ResumenConciliacionCards
+          resumen={resumen}
+          moneda={cuentaActual?.moneda ?? "MXN"}
+          isLoading={resumenLoading}
+        />
         <div className="grid lg:grid-cols-3 gap-4">
+
           <div className="lg:col-span-2 space-y-1">
             <div className="text-xs text-muted-foreground px-1 flex justify-between">
               <span>{movs.length} movimientos · {cuentaActual?.alias}</span>
@@ -176,6 +185,7 @@ export default function TesoreriaConciliacion() {
             <PanelConciliacionMovimiento movimiento={sel} onClose={() => setSel(null)} />
           </div>
         </div>
+        </>
       )}
     </PageContainer>
   );

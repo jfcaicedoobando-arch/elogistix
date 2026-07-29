@@ -36,3 +36,19 @@ export function ym(d: Date): string {
 export function inicioMesUtc(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
 }
+
+/** Meses de historia que cubre el tablero de Dirección. */
+export const HORIZONTE_MESES_DIRECCION = 6;
+
+/**
+ * Inicio (ISO, día UTC) de la ventana del tablero de Dirección.
+ * Compartido por los KPIs de detalle y por los totales server-side (FIX C3c)
+ * para que ambos hablen del mismo periodo.
+ */
+export function ventanaDireccionDesdeIso(hoy: Date = new Date()): string {
+  const base = inicioMesUtc(hoy);
+  const desde = new Date(
+    Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - (HORIZONTE_MESES_DIRECCION - 1), 1),
+  );
+  return isoUtcDay(desde);
+}

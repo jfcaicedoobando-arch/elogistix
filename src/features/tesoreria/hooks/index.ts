@@ -10,6 +10,7 @@ export {
 } from "./useTesoreriaCuentas";
 export {
   useMovimientos,
+  useConciliacionResumen,
   useImportarMovimientos,
   useSugerirCandidatos,
   useConciliarPago,

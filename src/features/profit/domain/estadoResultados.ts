@@ -5,7 +5,8 @@
  * Conversión a MXN usando tipo_cambio_usd / tipo_cambio_eur del embarque.
  */
 import currency from "currency.js";
-import { convertirAMXN, calcularMargen, type Moneda } from "@/lib/financial/financialUtils";
+import { calcularMargen } from "@/lib/financial/financialUtils";
+import { convertirMxn } from "@/lib/financial/convertir";
 
 export type ModoColumna = "Marítimo" | "Aéreo" | "Terrestre" | "Otros";
 export const MODOS_COLUMNAS: readonly ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre", "Otros"] as const;
@@ -131,8 +132,12 @@ function pivotConceptos<T extends { embarque_id: string; moneda: string }>(
     const emb = embById.get(i.embarque_id);
     if (!emb) continue;
     const columna = resolverModoColumna(emb.modo);
-    const moneda = (i.moneda?.toUpperCase() ?? "MXN") as Moneda;
-    const mxn = convertirAMXN(Number(getMonto(i)) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
+    // FIX C6: sin TC válido NO se suma como MXN (antes `?? 1` inflaba el P&G).
+    const { mxn } = convertirMxn(Number(getMonto(i)) || 0, i.moneda, {
+      usd: emb.tipo_cambio_usd, eur: emb.tipo_cambio_eur,
+    });
+    if (mxn === null) continue;
+
     const desc = getDesc(i);
     acumular(out, normalizeKey(desc), (desc ?? "").trim() || "(Sin descripción)", columna, mxn);
   }

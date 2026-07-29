@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.324.0] - 2026-07-30
+- Conciliación bancaria: nuevo resumen arriba de la tabla (movimientos, pendientes, conciliados, ignorados y montos pendientes) calculado en el servidor sobre toda la cuenta, no sólo sobre la página visible.
+- Dashboard Dirección: nueva tarjeta "Totales del periodo por moneda" (ventas, costos, facturado y cobrado) con cifras agregadas en el servidor, sin mezclar divisas.
+- Dinero: canon único de conversión a pesos. Un monto en dólares o euros sin tipo de cambio confiable ya nunca se suma como si fuera MXN; se excluye y se puede reportar aparte. Corrige el Estado de Resultados y la proyección de facturación, que antes usaban tipo de cambio 1 por omisión.
+- Facturas: al agregar, editar o borrar conceptos, el subtotal, IVA, retenciones y total se recalculan en el servidor a partir de los conceptos reales, para que las cifras nunca dependan del navegador.
+
+
+
 ## [13.323.3] - 2026-07-30
 - Cobranza y Estado de cuenta: las tarjetas de totales (adeudado, vencido, por vencer, saldo a favor) ahora leen las cifras agregadas en el servidor, no la página visible de la tabla.
 - Si se aplica búsqueda de texto, filtro de estatus, moneda o "sólo con saldo", los totales vuelven a calcularse sobre las filas mostradas para que tabla y tarjetas siempre cuadren.

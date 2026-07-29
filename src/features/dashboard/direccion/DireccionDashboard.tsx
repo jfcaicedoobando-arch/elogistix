@@ -8,7 +8,9 @@ import { DashboardSkeleton } from "@/components/shared/skeletons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { useDireccionKpis } from "@/features/dashboard/direccion/hooks/useDireccionKpis";
+import { useDireccionTotales } from "@/features/dashboard/direccion/hooks/useDireccionTotales";
 import { HeroCards } from "@/features/dashboard/direccion/components/HeroCards";
+import { TotalesPeriodoCard } from "@/features/dashboard/direccion/components/TotalesPeriodoCard";
 import { RentabilidadSection } from "@/features/dashboard/direccion/components/RentabilidadSection";
 import { CarteraSection } from "@/features/dashboard/direccion/components/CarteraSection";
 import { PulsoSection } from "@/features/dashboard/direccion/components/PulsoSection";
@@ -16,6 +18,7 @@ import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/compone
 
 export default function DireccionDashboard() {
   const { data, isLoading, error } = useDireccionKpis();
+  const { data: totales, isLoading: totalesLoading, desdeIso } = useDireccionTotales();
 
   return (
     <PageContainer>
@@ -39,6 +42,8 @@ export default function DireccionDashboard() {
       ) : (
         <>
           <HeroCards hero={data.hero} />
+          <TotalesPeriodoCard totales={totales} desdeIso={desdeIso} isLoading={totalesLoading} />
+
           <section className="space-y-2">
             <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Rentabilidad</h2>
             <RentabilidadSection margen6m={data.margen_6m} porModo={data.margen_por_modo} />
