@@ -103,12 +103,38 @@ export function sumarEnMoneda(
     }
   }
 
-  const total = items
-    .reduce((acc, item) => {
-      const moneda = esMoneda(item.moneda) ? item.moneda : target;
-      return acc.add(convertirFila(item.monto, moneda, target, tcUSD, tcEUR));
-    }, currency(0, { precision: 2 }))
-    .value;
+  // Fast path (canary de performance): si todas las filas ya vienen en la
+  // moneda target no hay FX, así que acumulamos en centavos enteros. Es
+  // aritmética equivalente a `currency(x, { precision: 2 }).add(...)` pero sin
+  // instanciar un objeto por fila (hot path en tablas de miles de conceptos).
+  if (homogenea) {
+    let centavos = 0;
+    for (let i = 0; i < items.length; i++) {
+      centavos += Math.round(items[i].monto * 100);
+    }
+    return { total: centavos / 100, filasMixtas, homogenea };
+  }
+
+  // Camino mixto: memorizamos el factor por moneda para no recalcularlo por fila.
+  const factores = new Map<Moneda, number>();
+  let centavos = 0;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const moneda = esMoneda(item.moneda) ? item.moneda : target;
+    let factor = factores.get(moneda);
+    if (factor === undefined) {
+      factor = factorEntreMonedas(moneda, target, { usd: tcUSD, eur: tcEUR }) ?? NaN;
+      if (!Number.isFinite(factor)) {
+        throw new Error(
+          `TC requerido para conversión: no hay tipo de cambio confiable de ${moneda} a ${target}`,
+        );
+      }
+      factores.set(moneda, factor);
+    }
+    centavos += Math.round(currency(item.monto, { precision: 2 }).multiply(factor).value * 100);
+  }
+  const total = centavos / 100;
+
 
   return { total, filasMixtas, homogenea };
 }
