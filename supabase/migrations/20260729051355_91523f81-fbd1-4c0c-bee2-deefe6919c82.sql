@@ -183,6 +183,9 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' AS $function$
   ) dd ON dd.embarque_id=p.id;
 $function$;
 
+REVOKE ALL ON FUNCTION public.embarques_list_extras(uuid[]) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.embarques_list_extras(uuid[]) TO authenticated, service_role;
+
 DROP FUNCTION public._c5b_patch(regprocedure, text, text);
 
 DO $verify$
