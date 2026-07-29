@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.328.0] - 2026-07-30
+- M5: los nombres de cliente, naviera y agente guardados en el embarque se mantienen sincronizados automáticamente cuando cambian en el catálogo (los embarques cerrados quedan intactos).
+- M6: proveedores, garantías, comisiones, movimientos bancarios y cuentas ahora se archivan en vez de borrarse; un RFC archivado puede volver a registrarse.
+- M7: recargos de tarifa y tramos de demoras guardan su organización de forma directa, cerrando fugas entre inquilinos.
+- M13: las bitácoras de envío por correo solo aceptan estados válidos (enviado, parcial o fallido).
+
 ## [13.327.2] - 2026-07-30
 - M4: editar una cotización ahora valida el payload antes de tocar la base (montos negativos y conceptos inválidos se rechazan con mensaje claro).
 - M11: parser fiscal único (`facturaConceptos`) para conceptos de factura y CFDI: interpreta importes con comas ("1,200.50") y ya no redondea cantidades decimales (0.5 TON) a entero.
