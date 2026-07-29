@@ -10,13 +10,10 @@ export default mergeConfig(
   baseConfig,
   defineConfig({
     test: {
+      // v13.342.0 — El paralelismo (forks/heap/fileParallelism) ya vive en la
+      // config base, derivado de los núcleos reales. Aquí sólo heredamos.
       pool: "forks",
-      singleFork: false,
-      maxForks: 4,
-      minForks: 2,
       isolate: true,
-      execArgv: ["--max-old-space-size=8192", "--expose-gc"],
-      fileParallelism: true,
     },
   })
 );
