@@ -1,6 +1,9 @@
 # Changelog
 
 
+## [13.322.12] - 2026-07-29
+- Integración continua: se corrigió una prueba que revisaba la migración equivocada de aprobación de facturas de proveedor; sin cambios visibles para el usuario.
+
 ## [13.322.11] - 2026-07-29
 - Mantenimiento: se dividieron cinco archivos que superaban el límite de tamaño del proyecto (acciones de proforma, consultas del portal, servicios del portal de agente, wizard de cotización y botón de crear embarque); sin cambios visibles para el usuario.
 
