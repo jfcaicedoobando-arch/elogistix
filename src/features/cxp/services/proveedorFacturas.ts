@@ -172,6 +172,7 @@ export async function fetchFacturaProveedor(id: string): Promise<FacturaCxP | nu
     .from("proveedor_facturas")
     .select(PROVEEDOR_FACTURAS_SELECT)
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
