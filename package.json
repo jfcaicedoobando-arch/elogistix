@@ -41,6 +41,7 @@
     "audit:report": "tsx scripts/audit-report.ts",
     "audit:migrations": "tsx scripts/audit-migrations.ts",
     "audit:sonner": "bun scripts/audit-sonner-baseline.ts",
+    "audit:db-integrity": "psql -v ON_ERROR_STOP=1 -X -q -A -t -f scripts/db/integrity-guard.sql",
     "audit:all": "bun run audit:arch && bun run audit:casts && bun run audit:tests && bun run audit:rpc-sync && bun run audit:schema && bun run audit:rpc-columns && bun run audit:migrations && bun run audit:sonner && bun run audit:report",
     "e2e:provision": "tsx scripts/e2e/provision-users.ts",
     "e2e:check": "tsx scripts/e2e/check-env.ts",
