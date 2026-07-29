@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.324.7] - 2026-07-30
+- CI en verde: se corrigieron los tests de `eliminar_embarque_completo` (leían el comentario en vez de la definición), el formato de expediente en la suite RLS de soft-delete, 8 mensajes amigables de códigos `LC_*` faltantes y un export sin uso detectado por knip.
+
+
 ## [13.324.6] - 2026-07-30
 - Calidad de código: se dividieron cuatro archivos que superaban el límite de 200 líneas (estado de cuenta, permisos, conciliación bancaria y acciones del detalle de embarque) sin cambiar su comportamiento.
 

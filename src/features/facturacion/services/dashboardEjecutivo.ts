@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
  * (`f.estado IN ('Emitida','Parcialmente pagada','Vencida','Pagada')`); esta
  * constante se conserva como documentación/uso compartido en la UI.
  */
-export const ESTADOS_FACTURADO = ["Emitida", "Parcialmente pagada", "Vencida", "Pagada"] as const;
+const ESTADOS_FACTURADO = ["Emitida", "Parcialmente pagada", "Vencida", "Pagada"] as const;
 
 export interface MesKpi {
   mes: string; // 'YYYY-MM'

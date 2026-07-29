@@ -22,11 +22,25 @@ function findLatestBody(): string {
   return latest;
 }
 
+/**
+ * Índice de la ÚLTIMA definición (no del COMMENT ON FUNCTION, que también
+ * menciona el nombre y dejaba el slice vacío).
+ */
+function lastDefIndex(body: string): number {
+  let idx = -1;
+  for (const m of body.matchAll(
+    /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.eliminar_embarque_completo\b/gi,
+  )) {
+    idx = m.index ?? idx;
+  }
+  return idx;
+}
+
 describe("eliminar_embarque_completo bloquea proformas en borrador", () => {
   const body = findLatestBody();
 
   it("la última definición cuenta proformas NOT IN ('cancelada','facturada')", () => {
-    const idx = body.lastIndexOf("eliminar_embarque_completo");
+    const idx = lastDefIndex(body);
     const slice = body.slice(idx);
     expect(slice).toMatch(
       /estado_proforma[\s\S]{0,120}NOT\s+IN\s*\(\s*'cancelada'\s*,\s*'facturada'\s*\)/i,

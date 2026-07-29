@@ -188,6 +188,22 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
   LC_TC_DOF_NO_DISPONIBLE:
     "No fue posible obtener el tipo de cambio del DOF. Intenta de nuevo en unos segundos.",
   LC_CXP_NO_EXISTE: "La factura de proveedor no existe o fue eliminada.",
+  LC_CXP_TOTAL_NEGATIVO: "El total de la factura de proveedor no puede ser negativo.",
+  LC_CXP_TOTAL_MENOR_PAGADO:
+    "El total no puede quedar por debajo de lo ya pagado. Cancela o ajusta los pagos primero.",
+  LC_COTIZACION_CONCEPTO_INVALIDO:
+    "Uno de los conceptos de la cotización tiene datos inválidos. Revísalos antes de guardar.",
+  LC_FORBIDDEN: "No tienes permisos para realizar esta acción.",
+  LC_ORG_MISMATCH: "El recurso no pertenece a tu organización.",
+  // Infraestructura de migración (FIX C5): no deberían llegar a la UI.
+  LC_C5_ANCLA_NO_ENCONTRADA:
+    "No se pudo aplicar un ajuste interno de base de datos. Reporta este error a soporte.",
+  LC_C5_INCOMPLETO:
+    "Un ajuste interno de base de datos quedó incompleto. Reporta este error a soporte.",
+  LC_C5B_ANCLA_AUSENTE:
+    "No se pudo aplicar un ajuste interno de base de datos. Reporta este error a soporte.",
+  LC_C5B_INCOMPLETO:
+    "Un ajuste interno de base de datos quedó incompleto. Reporta este error a soporte.",
 };
 
 
