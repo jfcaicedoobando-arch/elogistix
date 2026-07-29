@@ -121,6 +121,16 @@ export function TabFacturacion({ facturas, canEdit: canEditProp, embarque }: Pro
 
   return (
     <div className="space-y-4">
+      {embarqueCerrado && (
+        <Alert>
+          <Lock className="h-4 w-4" />
+          <AlertTitle>Embarque cerrado</AlertTitle>
+          <AlertDescription>
+            La facturación de este embarque está bloqueada. Reabre el embarque desde la
+            pestaña Cierre para generar, editar o eliminar proformas.
+          </AlertDescription>
+        </Alert>
+      )}
       <DetalleActionBar primary={actionPrimary} secondary={actionSecondary} />
       <FlujoFacturacionStepper
         conceptosCount={conceptos.length}
