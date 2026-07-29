@@ -141,6 +141,21 @@ export const cotizacionDraftInputSchema = cotizacionBaseSchema.extend({
 // (knip detecta duplicado si se vuelve a `export const`, por eso lo re-exportamos como alias.)
 export { cotizacionDraftInputSchema as cotizacionInputSchema };
 
+/**
+ * M4 — Boundary de `updateCotizacion`: patch parcial. Sólo se validan los
+ * campos presentes, pero los montos y los conceptos de venta se revisan
+ * siempre que vengan en el patch (era la vía que escribía dinero sin red).
+ */
+export const cotizacionUpdateSchema = cotizacionBaseSchema
+  .partial()
+  .extend({
+    conceptos_venta: z.array(conceptoVentaSchema).optional(),
+    total: z.number().nonnegative("Total: no puede ser negativo.").optional(),
+    iva: z.number().nonnegative("IVA: no puede ser negativo.").optional(),
+    tipo_cambio: z.number().positive("Tipo de cambio: debe ser mayor a cero.").optional().nullable(),
+  })
+  .passthrough();
+
 // ── Embarque ──────────────────────────────────────────────────────────
 
 /**
