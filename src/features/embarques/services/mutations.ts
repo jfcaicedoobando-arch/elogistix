@@ -137,7 +137,9 @@ export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<v
     if (/usa reabrir_embarque|bypass_cierre/i.test(msg)) {
       throw new Error(
         'El candado de embarque cerrado bloqueó la operación. Recarga la página e inténtalo de nuevo; si persiste, reporta el incidente.',
+        { cause: e },
       );
+
     }
     throw e instanceof Error ? e : new Error(msg);
   }
