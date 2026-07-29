@@ -5,6 +5,10 @@ export const tesoreria = {
   saldosCuentasPorOrg: (organizationId: string | null) =>
     ["tesoreria", "saldos-cuentas", organizationId ?? "none"] as const,
   candidatos: (movId?: string | null) => ["tesoreria", "candidatos", movId] as const,
+  /** FIX C3c: resumen de conciliación agregado en el servidor. */
+  conciliacionResumen: (cuentaId: string | null) =>
+    ["tesoreria", "conciliacion-resumen", cuentaId ?? "none"] as const,
+
   movimientos: (cuentaId: string | null, filtros?: unknown) =>
     ["tesoreria", "movimientos", cuentaId, filtros ?? null] as const,
   resumen: (organizationId?: string | null) =>
