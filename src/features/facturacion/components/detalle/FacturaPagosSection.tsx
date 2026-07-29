@@ -27,12 +27,14 @@ interface Props {
   totalFactura: number;
   moneda: string;
   canEdit: boolean;
+  /** Estado actual de la factura (para detectar inconsistencias contables). */
+  estadoFactura?: string;
   /** @deprecated Ahora el botón vive en `FacturaDetalleActionsBar`. */
   onRegistrarPago?: () => void;
 }
 
 export function FacturaPagosSection({
-  facturaId, facturaNumero, totalFactura, moneda, canEdit,
+  facturaId, facturaNumero, totalFactura, moneda, canEdit, estadoFactura,
 }: Props) {
   const { data: pagos = [], isLoading } = usePagosFactura(facturaId);
   const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(facturaId);
@@ -48,6 +50,13 @@ export function FacturaPagosSection({
     notasAplicadas,
   );
   const liquidada = sinSaldo && pagos.length > 0;
+
+  // FIX-F964: el estado dice "Pagada" pero no hay respaldo (ni pagos ni NC aplicadas).
+  const inconsistente =
+    !isLoading &&
+    (estadoFactura === "Pagada" || estadoFactura === "Parcialmente pagada") &&
+    pagos.length === 0 &&
+    notasAplicadas.length === 0;
 
   const handleEliminar = async () => {
     if (!pagoAEliminar) return;
