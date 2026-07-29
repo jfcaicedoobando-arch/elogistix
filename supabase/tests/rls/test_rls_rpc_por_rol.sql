@@ -50,6 +50,29 @@ DECLARE
   v_estado text;
 BEGIN
   -- ── Seed ──
+  -- Los FK de user_roles/organization_members apuntan a auth.users, así que
+  -- sembramos los usuarios primero. El trigger on_auth_user_created (si existe)
+  -- autoprovisiona org + membresía y chocaría con los INSERT manuales.
+  IF EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'auth.users'::regclass AND tgname = 'on_auth_user_created'
+  ) THEN
+    ALTER TABLE auth.users DISABLE TRIGGER on_auth_user_created;
+  END IF;
+
+  INSERT INTO auth.users(id, email) VALUES
+    (u_admin_a, 'admin_a+rol@e2e.test'),
+    (u_conta_a, 'conta_a+rol@e2e.test'),
+    (u_cs_a,    'cs_a+rol@e2e.test'),
+    (u_conta_b, 'conta_b+rol@e2e.test');
+
+  IF EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'auth.users'::regclass AND tgname = 'on_auth_user_created'
+  ) THEN
+    ALTER TABLE auth.users ENABLE TRIGGER on_auth_user_created;
+  END IF;
+
   INSERT INTO public.organizations(id, nombre) VALUES
     (org_a, 'ROL RPC A'), (org_b, 'ROL RPC B');
 
