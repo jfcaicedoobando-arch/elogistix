@@ -13,6 +13,8 @@
  * indicador cualitativo ("hay saldo sin convertir"), no como conteo exacto.
  */
 
+import { aMxn } from "@/lib/financial/convertir";
+
 export interface SaldosNativos {
   MXN: number;
   USD: number;
