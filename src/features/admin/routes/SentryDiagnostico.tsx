@@ -83,16 +83,28 @@ function RuntimeCard({ sentryInfo }: { sentryInfo: ReturnType<typeof useSentryIn
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <StatusTitle active={sentryInfo.active} />
+          <StatusTitle status={sentryInfo.status} />
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Row label="Estado" value={<Badge variant={sentryInfo.active ? "default" : "destructive"}>{sentryInfo.active ? "Activo" : "Inactivo"}</Badge>} />
+        <Row
+          label="Estado"
+          value={
+            <Badge variant={STATUS_META[sentryInfo.status].variant}>
+              {STATUS_META[sentryInfo.status].badge}
+            </Badge>
+          }
+        />
         <Row label="Release" value={release} />
         <Row label="APP_VERSION" value={APP_VERSION} />
         <Row label="Environment" value={environment} />
         <Row label="Traces sample rate" value={tracesRate} />
+        <Row
+          label="DSN configurado en el build"
+          value={sentryInfo.dsnConfigured ? "Sí (VITE_SENTRY_DSN)" : "No — falta VITE_SENTRY_DSN"}
+        />
         <Row label="DSN" value={maskDsn(sentryInfo.dsn)} />
+
       </CardContent>
     </Card>
   );
