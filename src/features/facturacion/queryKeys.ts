@@ -85,4 +85,12 @@ export const estadoCuenta = {
       filters.moneda ?? "todas",
       filters.soloConSaldo ?? false,
     ] as const,
+  /** KPIs agregados en el servidor (C3c) para los mismos filtros. */
+  kpis: (filters: {
+    clienteIds: readonly string[];
+    desde?: string | null;
+    hasta?: string | null;
+    moneda?: string | null;
+    soloConSaldo?: boolean;
+  }) => [...estadoCuenta.list(filters), "kpis"] as const,
 } as const;
