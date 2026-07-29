@@ -57,6 +57,25 @@ export function detectarFilasMixtas(
   }
   return out;
 }
+/**
+ * Convierte un monto de `moneda` a `target` con el canon único.
+ * Lanza si no hay un tipo de cambio confiable: en este módulo el contrato es
+ * fallar fuerte, nunca sumar monedas distintas como si fueran la misma.
+ */
+function convertirFila(
+  monto: number,
+  moneda: Moneda,
+  target: Moneda,
+  tcUSD: number,
+  tcEUR: number,
+): number {
+  const factor = factorEntreMonedas(moneda, target, { usd: tcUSD, eur: tcEUR });
+  if (factor === null) {
+    throw new Error(`TC requerido para conversión: no hay tipo de cambio confiable de ${moneda} a ${target}`);
+  }
+  return currency(monto, { precision: 2 }).multiply(factor).value;
+}
+
 
 /**
  * Suma estricta a una moneda objetivo. Convierte vía TC las filas cuya
