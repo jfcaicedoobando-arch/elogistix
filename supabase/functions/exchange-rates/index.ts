@@ -45,13 +45,11 @@ export function extraerUltimoTC(data: BanxicoResponse): number | null {
 export function extraerPublicacionDof(data: BanxicoResponse, hoyIso: string): number | null {
   return dofPublicacion(data, hoyIso).tc;
 }
-export function formatFechaBanxico2(d: Date): string {
-  return formatFechaBanxico(d);
-}
 export { formatFechaBanxico };
 export function rangoUltimosDias(hoy: Date, dias?: number) {
   return rangoDias(hoy, dias);
 }
+
 
 interface Rates {
   usdMxn: number;
