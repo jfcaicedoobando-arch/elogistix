@@ -17,7 +17,9 @@ const baseProps = {
   onAbrirConvertir: vi.fn(),
 };
 
-function renderAcciones(overrides: Partial<Parameters<typeof CotizacionDetalleAcciones>[0]>) {
+type AccionesProps = Parameters<typeof CotizacionDetalleAcciones>[0];
+
+function renderAcciones(overrides: Pick<AccionesProps, "estado" | "total" | "rol">) {
   return render(
     <MemoryRouter>
       <CotizacionDetalleAcciones {...baseProps} {...overrides} />
