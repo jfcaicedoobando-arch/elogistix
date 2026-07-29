@@ -190,29 +190,12 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
           modo={manualOpen}
         />
       )}
-      <ConfirmActionDialog
-        open={!!creditoAlerta}
+      <AlertaLimiteCreditoDialog
+        resultado={creditoAlerta}
+        clienteNombre={proforma.cliente_nombre}
+        montoNuevaFactura={Number(proforma.total_mxn ?? 0)}
         onOpenChange={(o) => { if (!o) setCreditoAlerta(null); }}
-        title="Límite de crédito excedido"
-        titleIcon={<AlertTriangle className="h-5 w-5 text-warning" />}
-        confirmLabel="Facturar de todas formas"
-        cancelLabel="Cancelar"
-        size="md"
         onConfirm={onConfirmarExceso}
-        description={creditoAlerta ? (
-          <div className="space-y-1 text-sm">
-            <p>
-              <strong>{proforma.cliente_nombre ?? "El cliente"}</strong> excederá su límite en
-              {" "}<strong>{fmtMxn(creditoAlerta.excedentePotencialMxn)}</strong>.
-            </p>
-            <p className="text-muted-foreground">
-              Límite: {fmtMxn(creditoAlerta.exposicion.limiteMxn ?? 0)} · En uso: {fmtMxn(creditoAlerta.exposicion.enUsoMxn)} · Nueva factura: {fmtMxn(Number(proforma.total_mxn ?? 0))}
-            </p>
-            <p className="text-xs text-muted-foreground pt-2">
-              Se registrará en bitácora que continuaste a pesar del exceso.
-            </p>
-          </div>
-        ) : null}
       />
     </div>
   );
