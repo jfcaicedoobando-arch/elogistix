@@ -44,6 +44,7 @@ function normalizarConcepto(x: unknown): ConceptoVentaCotizacion | null {
   const cantidad = parseNumeroFiscal(c.cantidad);
   const precio = parseNumeroFiscal(c.precio_unitario);
   if (cantidad == null || precio == null) return null;
+  // SAFE-CAST: fila cruda ya validada (moneda + cantidad/precio numéricos) por este parser.
   return { ...c, cantidad, precio_unitario: precio } as unknown as ConceptoVentaCotizacion;
 }
 

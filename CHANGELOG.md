@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.328.1] - 2026-07-30
+- Se agregaron mensajes claros para dos errores nuevos de tarifas y demoras (recargo/tramo sin registro padre).
+- Corrección de higiene de código: se documentó una conversión de tipos en el parser de conceptos de cotización.
+
 ## [13.328.0] - 2026-07-30
 - M5: los nombres de cliente, naviera y agente guardados en el embarque se mantienen sincronizados automáticamente cuando cambian en el catálogo (los embarques cerrados quedan intactos).
 - M6: proveedores, garantías, comisiones, movimientos bancarios y cuentas ahora se archivan en vez de borrarse; un RFC archivado puede volver a registrarse.
