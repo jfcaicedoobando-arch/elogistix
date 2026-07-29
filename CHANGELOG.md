@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.324.2] - 2026-07-30
+- Costos y precios del embarque: la conversión entre monedas ya no puede caer en un tipo de cambio de 1 por omisión; si el tipo de cambio no es utilizable, el cálculo avisa en vez de sumar dólares como pesos.
+- KPIs del embarque (venta, costo, utilidad, margen): los conceptos en moneda extranjera sin tipo de cambio confiable se excluyen del total y se cuentan aparte, para no inflar la utilidad.
+
+
+
 ## [13.324.1] - 2026-07-30
 - Dinero: se cierra el canon de conversión. Tesorería (flujo proyectado), Dashboard Dirección, Cartera y el pago de facturas ya usan la misma regla: si falta un tipo de cambio confiable, el monto en dólares o euros se excluye en lugar de sumarse como pesos.
 - Factura manual: si la factura es en moneda extranjera y el tipo de cambio no es válido, se avisa y no se guarda, en vez de validar el crédito con cifras infladas.

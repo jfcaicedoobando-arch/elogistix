@@ -4,7 +4,19 @@ import { computeEmbarqueKpis } from "@/features/embarques/domain/embarqueKpis";
 describe("computeEmbarqueKpis", () => {
   it("retorna ceros con listas vacías", () => {
     const k = computeEmbarqueKpis([], [], 17.5, 19);
-    expect(k).toEqual({ totalVenta: 0, totalCosto: 0, utilidad: 0, margen: 0 });
+    expect(k).toEqual({ totalVenta: 0, totalCosto: 0, utilidad: 0, margen: 0, montosSinTipoCambio: 0 });
+  });
+
+  it("excluye conceptos en USD sin tipo de cambio confiable — FIX C6", () => {
+    const k = computeEmbarqueKpis(
+      [{ total: 1000, moneda: "MXN" }, { total: 100, moneda: "USD" }],
+      [{ monto: 50, moneda: "EUR" }],
+      1,
+      0,
+    );
+    expect(k.totalVenta).toBe(1000);
+    expect(k.totalCosto).toBe(0);
+    expect(k.montosSinTipoCambio).toBe(2);
   });
 
   it("suma totales en MXN sin conversión cuando ya están en MXN", () => {

@@ -1,19 +1,21 @@
 /**
  * Helpers para totalizar listas de conceptos en una moneda objetivo.
- * Conversión y suma se delegan a currency.js (vía convertirAUSD/convertirAMXN)
- * para evitar errores de punto flotante. Sin React, sin formato.
+ * La conversión se delega al canon único (`@/lib/financial/convertir`) y la
+ * acumulación a currency.js, para evitar errores de punto flotante.
+ * Sin React, sin formato.
  *
  * `sumarEnMoneda` es la API estricta: detecta filas cuya `moneda` no coincide
  * con el `target` del bucket padre y SIEMPRE las convierte vía FX (nunca suma
  * nativamente valores heterogéneos). Lanza si falta TC con filas mixtas.
+ *
+ * FIX C6: ya no se usan `convertirAMXN`/`convertirAUSD` (tenían TC=1 por
+ * omisión); el factor sale de `factorEntreMonedas` y un TC no confiable
+ * produce un error explícito en vez de una suma silenciosa 1:1.
  */
 
 import currency from "currency.js";
-import {
-  convertirAUSD,
-  convertirAMXN,
-  type Moneda,
-} from "@/lib/financial/financialUtils";
+import { factorEntreMonedas } from "@/lib/financial/convertir";
+import { type Moneda } from "@/lib/financial/financialUtils";
 
 interface MontoEnMoneda {
   monto: number;
@@ -55,6 +57,25 @@ export function detectarFilasMixtas(
   }
   return out;
 }
+/**
+ * Convierte un monto de `moneda` a `target` con el canon único.
+ * Lanza si no hay un tipo de cambio confiable: en este módulo el contrato es
+ * fallar fuerte, nunca sumar monedas distintas como si fueran la misma.
+ */
+function convertirFila(
+  monto: number,
+  moneda: Moneda,
+  target: Moneda,
+  tcUSD: number,
+  tcEUR: number,
+): number {
+  const factor = factorEntreMonedas(moneda, target, { usd: tcUSD, eur: tcEUR });
+  if (factor === null) {
+    throw new Error(`TC requerido para conversión: no hay tipo de cambio confiable de ${moneda} a ${target}`);
+  }
+  return currency(monto, { precision: 2 }).multiply(factor).value;
+}
+
 
 /**
  * Suma estricta a una moneda objetivo. Convierte vía TC las filas cuya
@@ -85,14 +106,7 @@ export function sumarEnMoneda(
   const total = items
     .reduce((acc, item) => {
       const moneda = esMoneda(item.moneda) ? item.moneda : target;
-      const convertido = target === 'USD'
-        ? convertirAUSD(item.monto, moneda, tcUSD, tcEUR)
-        : target === 'MXN'
-          ? convertirAMXN(item.monto, moneda, tcUSD, tcEUR)
-          // Target EUR: pasar primero a MXN y luego dividir por tcEUR.
-          : currency(convertirAMXN(item.monto, moneda, tcUSD, tcEUR), { precision: 2 })
-              .divide(tcEUR).value;
-      return acc.add(convertido);
+      return acc.add(convertirFila(item.monto, moneda, target, tcUSD, tcEUR));
     }, currency(0, { precision: 2 }))
     .value;
 
@@ -124,12 +138,14 @@ export function sumarEnUSD(
  */
 export function aUSD(monto: number, moneda: string, tcUSD: number, tcEUR: number): number {
   if (moneda === 'USD') return monto;
+  // Monedas desconocidas: passthrough histórico (no hay TC que aplicar).
+  if (moneda !== 'MXN' && moneda !== 'EUR') return monto;
   if (!Number.isFinite(tcUSD) || tcUSD <= 0) {
     throw new Error('TC requerido para conversión: tipoCambioUSD inválido (0/NaN) al convertir a USD');
   }
   if (moneda === 'EUR' && (!Number.isFinite(tcEUR) || tcEUR <= 0)) {
     throw new Error('TC requerido para conversión: tipoCambioEUR inválido (0/NaN) al convertir EUR a USD');
   }
-  return convertirAUSD(monto, moneda as Moneda, tcUSD, tcEUR);
+  return convertirFila(monto, moneda as Moneda, 'USD', tcUSD, tcEUR);
 }
 
