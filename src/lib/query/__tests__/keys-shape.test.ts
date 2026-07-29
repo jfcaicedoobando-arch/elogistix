@@ -21,7 +21,7 @@ const EXPECTED_DOMAINS = [
   "pagosProveedor", "proveedorSalud", "conceptosCosto",
   "bandejas", "productosCatalogo", "direccion", "dashboardOperador",
   "embarquesPendientesAdmin", "alertasSistema", "demoLeads", "notificaciones",
-  "marketing", "cxc",
+  "marketing", "cxc", "auth",
 ] as const;
 
 describe("queryKeys shape", () => {

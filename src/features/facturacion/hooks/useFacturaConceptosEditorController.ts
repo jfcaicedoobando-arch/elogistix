@@ -46,25 +46,25 @@ export function useFacturaConceptosEditorController({ facturaId, organizationId,
     qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(facturaId) });
   };
 
-  const onError = (err: unknown) =>
+  const handleError = (err: unknown) =>
     notifyError(undefined, { title: "No se pudo guardar el concepto", error: err, method: "FACTURA_CONCEPTOS_EDITOR" });
 
   const addMut = useMutation({
     mutationFn: (input: ConceptoFacturaInput) =>
       agregarConceptoFactura({ facturaId, organizationId, moneda, input }),
     onSuccess: () => { invalidate(); setShowNew(false); setDraft(EMPTY); },
-    onError,
+    onError: handleError,
   });
   const updateMut = useMutation({
     mutationFn: (vars: { conceptoId: string; input: ConceptoFacturaInput }) =>
       actualizarConceptoFactura({ ...vars, facturaId }),
     onSuccess: () => { invalidate(); setEditingId(null); },
-    onError,
+    onError: handleError,
   });
   const deleteMut = useMutation({
     mutationFn: (conceptoId: string) => eliminarConceptoFactura({ conceptoId, facturaId }),
     onSuccess: invalidate,
-    onError,
+    onError: handleError,
   });
 
   const startEdit = (row: ConceptoFacturaRow) => {
