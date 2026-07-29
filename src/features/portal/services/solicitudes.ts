@@ -38,9 +38,9 @@ export async function solicitarCotizacionPortal(
     p_origen: input.origen,
     p_destino: input.destino,
     p_tipo_embarque: input.tipoEmbarque,
-    p_tipo_contenedor: input.tipoContenedor ?? null,
+    p_tipo_contenedor: input.tipoContenedor ?? undefined,
     p_descripcion_mercancia: input.descripcionMercancia ?? "",
-    p_notas: input.notas ?? null,
+    p_notas: input.notas ?? undefined,
   });
 
   if (error) throw new Error(error.message);
