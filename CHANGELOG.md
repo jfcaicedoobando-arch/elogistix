@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.327.2] - 2026-07-30
+- M4: editar una cotización ahora valida el payload antes de tocar la base (montos negativos y conceptos inválidos se rechazan con mensaje claro).
+- M11: parser fiscal único (`facturaConceptos`) para conceptos de factura y CFDI: interpreta importes con comas ("1,200.50") y ya no redondea cantidades decimales (0.5 TON) a entero.
+- Los conceptos de cotización con montos guardados como texto ya no se descartan en silencio del total.
+
+
+
 ## [13.327.1] - 2026-07-30
 - **refactor(facturacion)**: se extrajo la tabla del historial de pagos a `FacturaPagosTabla` para cumplir el límite de 200 líneas (Power of 10).
 
