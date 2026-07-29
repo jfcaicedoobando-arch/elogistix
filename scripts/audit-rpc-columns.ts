@@ -209,8 +209,10 @@ function findingKey(f: Finding): string {
 // ---------- 6. Main ----------
 async function main() {
   if (!process.env.PGHOST) {
-    console.error("audit:rpc-columns — PGHOST no está definido; requiere acceso psql.");
-    process.exit(2);
+    console.warn(
+      "audit:rpc-columns — PGHOST no está definido (sin acceso psql); auditoría omitida.",
+    );
+    process.exit(0);
   }
   const tables = loadColumns();
   const allowed = loadAllowlist();
