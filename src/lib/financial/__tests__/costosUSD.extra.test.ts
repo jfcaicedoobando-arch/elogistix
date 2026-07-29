@@ -112,3 +112,19 @@ describe("costosUSD.extra — aUSD", () => {
     expect(() => aUSD(100, "EUR", 17, 0)).toThrow();
   });
 });
+
+describe("costosUSD — canon C6 (TC no confiable)", () => {
+  it("lanza si el TC de USD es 1 al convertir MXN → USD", () => {
+    expect(() => sumarEnMoneda([{ monto: 100, moneda: "MXN" }], "USD", 1, TC_EUR)).toThrow(
+      /tipo de cambio confiable/,
+    );
+  });
+
+  it("lanza si el TC de EUR no es confiable con filas EUR hacia MXN", () => {
+    expect(() => sumarEnMoneda([{ monto: 100, moneda: "EUR" }], "MXN", TC_USD, 1)).toThrow();
+  });
+
+  it("no lanza cuando todas las filas ya están en el target", () => {
+    expect(sumarEnMoneda([{ monto: 100, moneda: "USD" }], "USD", 1, 1).total).toBe(100);
+  });
+});
