@@ -21,7 +21,10 @@ export function useSolicitarCotizacion(clienteIds: string[]) {
       });
     },
     onError: (error) => {
-      notifyError("No pudimos enviar tu solicitud", error);
+      notifyError(undefined, {
+        title: "No pudimos enviar tu solicitud",
+        error,
+      });
     },
   });
 }
