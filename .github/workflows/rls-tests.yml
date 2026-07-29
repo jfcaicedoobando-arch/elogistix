@@ -460,8 +460,10 @@ jobs:
                 echo "- \`$base\`" >> /tmp/legacy.md
               else
                 echo "::error file=$f::drift NUEVO — la migración no aplica en una base limpia"
-                sed -n '1,10p' /tmp/mig.log
+                echo "--- últimas 20 líneas de $base ---"
+                tail -n 20 /tmp/mig.log
                 nuevas="$nuevas $base"
+
               fi
             fi
           done
