@@ -1,6 +1,9 @@
 # Changelog
 
 
+## [13.322.9] - 2026-07-29
+- Integración continua: se corrigieron dos advertencias de estilo en los scripts de los flujos automáticos; sin cambios de comportamiento.
+
 ## [13.322.8] - 2026-07-29
 - Base de datos: se documentaron formalmente cuatro piezas (dos campos de proformas y las dos tablas de seguimiento) que existían sin registro; no cambia ningún dato, pero ahora la base puede reconstruirse fielmente desde cero.
 - Integración continua: el radar de cambios manuales usa una lista congelada de deuda histórica, ya no genera advertencias amarillas en cada revisión y avisa cuando una entrada de esa lista ya se puede borrar.

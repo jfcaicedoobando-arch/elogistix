@@ -231,9 +231,11 @@ jobs:
             fi
           done
           if [ "$fail" = "1" ]; then
-            echo "## 🚫 PROMOCIÓN BLOQUEADA" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "No publiques este commit en producción hasta que los gates estén en verde." >> "$GITHUB_STEP_SUMMARY"
+            {
+              echo "## 🚫 PROMOCIÓN BLOQUEADA"
+              echo ""
+              echo "No publiques este commit en producción hasta que los gates estén en verde."
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           echo "## ✅ PROMOCIÓN AUTORIZADA" >> "$GITHUB_STEP_SUMMARY"
