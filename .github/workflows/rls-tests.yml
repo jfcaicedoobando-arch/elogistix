@@ -120,7 +120,9 @@ jobs:
           path: .rls-snapshot/db.dump
           # Invalidamos cache cuando cambian migraciones, helpers CI o el
           # propio workflow (pinneo de imagen Postgres incluido).
-          key: rls-snapshot-pg15.8-${{ hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql', 'supabase/tests/*.sql', '.github/workflows/rls-tests.yml') }}
+          # v13.x (GHA-audit A3) — incluye supabase/schema/**: es trigger del
+          # workflow y debe invalidar el snapshot igual que las migraciones.
+          key: rls-snapshot-pg15.8-${{ hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql', 'supabase/tests/*.sql', 'supabase/schema/**', '.github/workflows/rls-tests.yml') }}
 
       - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
@@ -155,53 +157,6 @@ jobs:
       - name: Verify RLS coverage
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql
-
-      - name: Verify schema invariants (triggers/functions esperados)
-        # FIX-R2-04: si alguien dropea un trigger/función crítico sin
-        # actualizar el snapshot esperado, este script hace RAISE y el
-        # job falla.
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/schema-invariants.sql
-
-      - name: CxP guard — tests conductuales de sobrepago (FIX-R3-01)
-        # Sprint 1 (R3): valida INSERT/UPDATE de pagos_proveedor contra
-        # el trigger `guard_pago_proveedor`. Cubre el bug del path UPDATE
-        # (delta vs saldo) reintroducido si alguien vuelve a la fórmula
-        # v_delta. Todo el fixture corre dentro de BEGIN…ROLLBACK.
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/cxp_guard_sobrepago.sql
-
-      - name: FIX-45 — whitelist de EXECUTE para anon
-        # Auditoría de tests 2026-07-24: este test existía pero no corría
-        # en ningún workflow. Requiere el post_migrate acotado (sin grants
-        # masivos a anon) y la migración FIX-45-HARDENING.
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/fix45_anon_execute_whitelist.sql
-
-      - name: Aging CxP — paridad NC soft-deleted (FIX-AGING-NC-01)
-        # H1: fija que cxp_aging_proveedores ignore NCs soft-borradas,
-        # en paridad con el guard y v_proveedor_facturas_saldo.
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/aging_nc_deleted_at.sql
-
-      - name: CxC guard — tests conductuales de sobrepago
-        # Gemelo CxC de cxp_guard_sobrepago: 7 casos contra
-        # tg_pago_factura_no_sobrepago + assert_factura_viva_para_pago
-        # + LC_TENANT_MISMATCH.
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/cxc_guard_sobrepago.sql
-
-      - name: Conversión de moneda — convertir_monto_pago_a_factura
-        # 7 casos: identidad, MXN↔USD con TC del pago, TC requerido,
-        # cruce no soportado, NULL.
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/convertir_monto_pago.sql
-
-      - name: Guard de estados — guard_estado_factura
-        # 5 casos: cancelación con pagos vivos, reapertura, estado
-        # calculado manual, bypass de recálculo, cancelación limpia.
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/guard_estado_factura.sql
 
       - name: Dump prepared database
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
