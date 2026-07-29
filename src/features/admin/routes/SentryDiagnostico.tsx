@@ -2,7 +2,7 @@
  * /sentry — Pantalla de diagnóstico del SDK de Sentry.
  */
 import * as Sentry from "@sentry/react";
-import { Bug, CheckCircle2, XCircle, Send } from "lucide-react";
+import { Bug, CheckCircle2, XCircle, Send, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,30 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { toast } from "@/hooks/shared";
 import { useSentryInfo, maskDsn } from "@/lib/observability/hooks";
+import type { SentryStatus } from "@/lib/observability/hooks";
+
+/** Copy y variante de badge por estado del SDK. */
+const STATUS_META: Record<
+  SentryStatus,
+  { title: string; badge: string; variant: "default" | "destructive" | "secondary" }
+> = {
+  active: { title: "Sentry está activo", badge: "Activo", variant: "default" },
+  pending: {
+    title: "Cargando el SDK de Sentry…",
+    badge: "Cargando",
+    variant: "secondary",
+  },
+  disabled_dev: {
+    title: "Sentry deshabilitado en desarrollo (comportamiento esperado)",
+    badge: "Deshabilitado en dev",
+    variant: "secondary",
+  },
+  missing_dsn: {
+    title: "Sentry NO está inicializado — falta el DSN en el build",
+    badge: "Sin DSN",
+    variant: "destructive",
+  },
+};
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -23,10 +47,20 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function StatusTitle({ active }: { active: boolean }) {
-  if (active) return <><CheckCircle2 className="h-4 w-4 text-primary" />Sentry está activo</>;
-  return <><XCircle className="h-4 w-4 text-destructive" />Sentry NO está inicializado</>;
+function StatusTitle({ status }: { status: SentryStatus }) {
+  const meta = STATUS_META[status];
+  if (status === "active") {
+    return <><CheckCircle2 className="h-4 w-4 text-primary" />{meta.title}</>;
+  }
+  if (status === "pending") {
+    return <><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />{meta.title}</>;
+  }
+  if (status === "disabled_dev") {
+    return <><AlertTriangle className="h-4 w-4 text-muted-foreground" />{meta.title}</>;
+  }
+  return <><XCircle className="h-4 w-4 text-destructive" />{meta.title}</>;
 }
+
 
 function handleTestError() {
   const id = Sentry.captureException(
