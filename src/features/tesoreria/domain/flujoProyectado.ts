@@ -54,10 +54,12 @@ export function isoWeekKey(d: Date): string {
   return `${t.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
+/**
+ * FIX C6: convierte a MXN con el canon único. Sin TC confiable el monto NO se
+ * suma (antes se devolvía el monto nativo, sumando USD como si fueran MXN).
+ */
 export function toMxn(monto: number, moneda: string, tc: number | undefined): number {
-  if (moneda === "MXN") return monto;
-  if (!tc || tc <= 0) return monto;
-  return monto * tc;
+  return aMxn(monto, moneda, tc).monto;
 }
 
 export function calcularFlujoProyectado(args: {
