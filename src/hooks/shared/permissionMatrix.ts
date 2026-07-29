@@ -148,5 +148,18 @@ export const ELIMINAR_EMBARQUE: readonly AppRole[] = [
   "ejecutivo_pricing",
 ];
 
+/**
+ * Alta/edición/baja de cuentas bancarias.
+ * El tesorero administra la operación bancaria del tenant, así que además de
+ * los administradores puede gestionar el catálogo de cuentas. El contador
+ * conserva sólo consulta (política de lectura en la base).
+ */
+export const ADMIN_CUENTAS_BANCARIAS: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "tesorero",
+];
+
 export const hasRole = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
