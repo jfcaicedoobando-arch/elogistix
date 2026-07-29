@@ -105,6 +105,17 @@ export function useEliminarProforma() {
         invalidateProformaCaches(queryClient, params.embarqueId);
         return;
       }
+      // v13.334.8 — Candado de embarque cerrado (trigger BD). Mensaje claro en
+      // lugar del texto técnico por si el estado cambió en otra pestaña.
+      if (/edición bloqueada|embarque Cerrado/i.test(error.message)) {
+        notifyError(undefined, {
+          title: "Embarque cerrado: no se puede eliminar la proforma",
+          description: "Reabre el embarque desde la pestaña Cierre e inténtalo de nuevo.",
+          error,
+          method: "DELETE_PROFORMA",
+        });
+        return;
+      }
       notifyError(undefined, { title: `Error al eliminar proforma: ${error.message}`, error, method: "DELETE_PROFORMA" });
     },
   });
