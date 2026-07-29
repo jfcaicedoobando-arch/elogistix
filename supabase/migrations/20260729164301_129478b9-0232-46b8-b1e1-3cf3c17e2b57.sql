@@ -1,6 +1,37 @@
--- Fuente canónica de public.convertir_proformas_a_factura
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+CREATE OR REPLACE FUNCTION public.facturas_set_fecha_vencimiento()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  IF NEW.fecha_emision IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.fecha_vencimiento IS NULL THEN
+      NEW.fecha_vencimiento := NEW.fecha_emision + COALESCE(NEW.dias_credito, 0);
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  -- UPDATE: si el caller fijó explícitamente un vencimiento distinto, se respeta.
+  IF NEW.fecha_vencimiento IS DISTINCT FROM OLD.fecha_vencimiento THEN
+    IF NEW.fecha_vencimiento IS NULL THEN
+      NEW.fecha_vencimiento := NEW.fecha_emision + COALESCE(NEW.dias_credito, 0);
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  -- Recalcular cuando cambia la emisión o los días de crédito.
+  IF NEW.fecha_emision IS DISTINCT FROM OLD.fecha_emision
+     OR NEW.dias_credito IS DISTINCT FROM OLD.dias_credito THEN
+    NEW.fecha_vencimiento := NEW.fecha_emision + COALESCE(NEW.dias_credito, 0);
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
 
 CREATE OR REPLACE FUNCTION public.convertir_proformas_a_factura(p_proforma_ids uuid[], p_serie_id uuid, p_metodo_pago text, p_forma_pago text, p_uso_cfdi text, p_dias_credito integer DEFAULT NULL::integer, p_notas text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS SETOF facturas
@@ -91,7 +122,6 @@ BEGIN
 
   -- Cascada de plazo de crédito: parámetro → proforma → ficha del cliente → 0.
   v_dias := COALESCE(NULLIF(p_dias_credito, 0), v_first.dias_credito, v_cliente.dias_credito, p_dias_credito, 0);
-
 
   SELECT array_agg(DISTINCT embarque_id) INTO v_embarque_ids
   FROM public.proformas
@@ -245,6 +275,4 @@ BEGIN
 
   RETURN QUERY SELECT * FROM public.facturas WHERE id = ANY(v_factura_ids);
 END;
-$function$
-
-;
+$function$;

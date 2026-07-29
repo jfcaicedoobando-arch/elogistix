@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { parseDateOnlyLocal, diasHastaFecha } from "../dateOnly";
+import { parseDateOnlyLocal, diasHastaFecha, addDaysIso } from "../dateOnly";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -55,5 +55,32 @@ describe("diasHastaFecha (B-089)", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 6, 28, 6, 0, 0));
     expect(diasHastaFecha("2026-07-30")).toBe(2);
+  });
+});
+
+describe("addDaysIso", () => {
+  it("suma días naturales sin desfase de zona horaria", () => {
+    expect(addDaysIso("2026-07-27", 60)).toBe("2026-09-25");
+    expect(addDaysIso("2026-07-22", 30)).toBe("2026-08-21");
+  });
+
+  it("con 0 días devuelve la misma fecha (vence el día de emisión)", () => {
+    expect(addDaysIso("2026-07-27", 0)).toBe("2026-07-27");
+  });
+
+  it("cruza fin de mes y año bisiesto", () => {
+    expect(addDaysIso("2028-02-28", 1)).toBe("2028-02-29");
+    expect(addDaysIso("2026-12-31", 1)).toBe("2027-01-01");
+  });
+
+  it("acepta un ISO completo tomando sólo la parte de fecha", () => {
+    expect(addDaysIso("2026-07-27T18:30:00Z", 1)).toBe("2026-07-28");
+  });
+
+  it("devuelve null con entradas inválidas", () => {
+    expect(addDaysIso(null, 30)).toBeNull();
+    expect(addDaysIso("", 30)).toBeNull();
+    expect(addDaysIso("27/07/2026", 30)).toBeNull();
+    expect(addDaysIso("2026-07-27", Number.NaN)).toBeNull();
   });
 });

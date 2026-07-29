@@ -24,6 +24,25 @@ export function parseDateOnlyLocal(iso: string): Date {
 }
 
 /**
+ * Suma días naturales a un date-only `YYYY-MM-DD` y devuelve otro date-only.
+ * Espejo exacto de `fecha_emision + dias_credito` en Postgres, usado para
+ * previsualizar el vencimiento de una factura antes de guardarla (v13.331.9).
+ * Devuelve `null` si la fecha o los días no son válidos.
+ */
+export function addDaysIso(iso: string | null | undefined, days: number): string | null {
+  if (!iso || !DATE_ONLY_RE.test(iso.slice(0, 10))) return null;
+  if (!Number.isFinite(days)) return null;
+  const base = parseDateOnlyLocal(iso.slice(0, 10));
+  base.setDate(base.getDate() + Math.trunc(days));
+  const y = base.getFullYear();
+  const m = String(base.getMonth() + 1).padStart(2, "0");
+  const d = String(base.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+
+
+/**
  * Días naturales de hoy (medianoche local) a la fecha date-only dada.
  * Negativo si ya pasó. Usa Math.round para ser inmune al cambio de horario
  * (DST), a diferencia de Math.floor((utcMs - hoyMs) / 86400000).

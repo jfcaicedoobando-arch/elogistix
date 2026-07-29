@@ -1,42 +1,50 @@
-## Diagnóstico (verificado en el código)
+## Qué está pasando
 
-Encontré **dos problemas reales**, uno de configuración y uno de la propia pantalla de diagnóstico.
+Auditoría de las facturas de INDIMEX TRADING, verificada contra la base de datos:
 
-**1. Falta el DSN en el build (causa principal)**
-`src/lib/observability/sentry/core.ts` línea 45 lee `import.meta.env.VITE_SENTRY_DSN`. Si está vacío, `initSentry()` se sale de inmediato y ni siquiera llama a `Sentry.init` (líneas 51–57). Revisé el `.env` del proyecto: **no contiene ninguna variable `VITE_SENTRY_*`** (sólo las de Supabase). Como Vite reemplaza estas variables *en tiempo de build*, el bundle publicado en librecarga.com salió con el DSN vacío → Sentry apagado.
+| Problema | Evidencia |
+|---|---|
+| Ficha del cliente sin plazo | `clientes.dias_credito` = vacío en INDIMEX TRADING y en INDIMEX COLOMBIA |
+| Días de crédito que no mueven el vencimiento | F1008: 60 días pero vence el mismo día de emisión (27/07 → 27/07). Igual en F1009, F1010, F1011 de otros clientes |
+| Facturas nacidas con 0 días | F1005, F1006, F1007 (sus proformas no traían plazo) |
+| Plazos divergentes | F959: 45 días en la factura vs 60 en su proforma; F966 con 58 días (contado desde la fecha de la proforma, no de la factura) |
 
-Analogía: es una alarma bien instalada pero sin la línea telefónica conectada; suena internamente y nadie la recibe.
+**Causa raíz.** El trigger `facturas_set_fecha_vencimiento` sólo calcula la fecha *cuando está vacía*. Como la conversión de proforma ya inserta un vencimiento, cualquier edición posterior de los días de crédito en el borrador actualiza el número pero deja la fecha vieja. Es como un sello que sólo se estampa si la casilla está en blanco.
 
-**2. Falso negativo en la pantalla `/sentry` (bug secundario)**
-`src/lib/observability/hooks/useSentryInfo.ts` lee `Sentry.getClient()` dentro de un `useMemo(..., [])`, o sea **una sola vez en el primer render**. Pero en `main.tsx` el SDK se carga con `import()` dinámico, así que el cliente puede existir *después* de ese render. Resultado: aunque Sentry sí arranque, la tarjeta se queda congelada en "NO está inicializado" y los botones de prueba quedan deshabilitados. Este bug hay que arreglarlo igual, si no, no podremos confirmar que el fix 1 funcionó.
+**Causa secundaria.** Al convertir proformas, el plazo se toma de la proforma y si viene vacío se usa `0`, sin caer nunca al plazo del cliente.
 
-## Cambios propuestos
+## Plan
 
-**A. Configurar el DSN**
-- Agregar `VITE_SENTRY_DSN` (el valor que ya tienes) al `.env` del proyecto para que entre al build de producción.
-- Dejar documentados en `.env.example` los overrides opcionales que el código ya soporta (`VITE_SENTRY_ENV`, `VITE_BUILD_HASH`, sample rates) — el archivo ya los lista, sólo se verifica que coincidan con lo que lee el código.
+### 1. Arreglar el trigger (raíz del bug)
+Reemplazar `facturas_set_fecha_vencimiento` para que recalcule `fecha_vencimiento = fecha_emision + dias_credito` siempre que cambie la emisión o los días, no sólo cuando esté vacía. Se respeta una fecha capturada explícitamente distinta sólo en el INSERT.
 
-**B. Arreglar `useSentryInfo` (falso negativo)**
-- Cambiar el `useMemo([])` por estado reactivo: leer `Sentry.getClient()` al montar y reintentar con un pequeño poll (o suscribirse al término de la carga diferida) hasta que el cliente exista, con un tope de intentos y `clearInterval` en el cleanup del efecto.
+### 2. Heredar el plazo del cliente en la conversión
+En `convertir_proformas_a_factura`, la cascada pasa a ser: parámetro recibido → plazo de la proforma → **plazo del cliente** → 0. Así una proforma sin plazo ya no produce facturas de 0 días.
 
-**C. Mensaje honesto en la pantalla de diagnóstico**
-- Distinguir tres estados en lugar de dos:
-  - **Activo** — hay cliente Sentry.
-  - **Deshabilitado en desarrollo** — `import.meta.env.MODE === "development"` (comportamiento intencional; hoy se muestra como error rojo y confunde).
-  - **No inicializado — falta DSN** — sin DSN configurado, con la indicación de qué variable falta.
-- Mostrar una fila extra "DSN configurado en el build: sí/no" para que el diagnóstico se pueda hacer sin abrir la consola.
+### 3. Prellenar en la interfaz
+- Al convertir proformas (`useTabProformasController`), si la proforma no trae plazo se propone el del cliente.
+- En los datos fiscales del borrador, mostrar junto al campo la fecha de vencimiento resultante, para que el usuario vea el efecto al cambiar los días.
 
-**D. Verificación**
-- Build de producción y revisión del bundle para confirmar que el DSN quedó embebido.
-- Tras publicar, entrar a `/sentry` en librecarga.com, confirmar el badge **Activo** y usar "Enviar error de prueba" para verificar que el evento llega al proyecto Sentry.
+### 4. Corregir datos históricos
+Migración de datos puntual:
+- INDIMEX TRADING e INDIMEX COLOMBIA: `dias_credito = 30` en su ficha de cliente.
+- Recalcular `fecha_vencimiento` de las 4 facturas desalineadas (F1008, F1009, F1010, F1011) con los días ya capturados.
+- F1005, F1006, F1007: fijar 30 días y recalcular su vencimiento.
+- Las 140 facturas antiguas sin plazo quedan intactas, como acordamos.
 
-**E. Registro**
-- Entrada en `CHANGELOG.md` y bump de `APP_VERSION`.
+Nota: el plazo de crédito no forma parte del CFDI timbrado, así que corregirlo no afecta ningún comprobante ante el SAT; sólo ajusta cobranza y antigüedad de saldos.
 
-## Nota técnica
+### 5. Blindaje
+- Test que verifique que al cambiar `dias_credito` de un borrador el vencimiento se recalcula.
+- Regla de auditoría en el módulo de auditoría: marcar facturas donde `fecha_vencimiento - fecha_emision ≠ dias_credito`.
 
-No toco `core.ts` salvo que la verificación lo exija: la política de "sin DSN hardcodeado" y de no inicializar en desarrollo es intencional (documentada en el propio archivo, 13.310.0) y la mantengo.
+### 6. Registro
+Entrada en `CHANGELOG.md` y bump de `APP_VERSION` a `13.331.9`.
 
-## Lo que necesito de ti
+## Detalles técnicos
 
-Al aprobar el plan, pégame el DSN público de Sentry (empieza con `https://...@oXXXX.ingest.us.sentry.io/XXXX`). Es un valor público, seguro de vivir en el bundle del navegador — así lo documenta ya tu propio `.env.example`.
+- `supabase/schema/facturacion/` + migración: nueva versión de `facturas_set_fecha_vencimiento()`; el trigger ya escucha `BEFORE INSERT OR UPDATE OF fecha_emision, dias_credito`.
+- `supabase/schema/proformas/convertir_proformas_a_factura.sql`: `COALESCE(p_dias_credito, v_first.dias_credito, v_cliente.dias_credito, 0)` en ambas ramas (MXN y USD), añadiendo `dias_credito` al SELECT de `v_cliente`.
+- `src/features/facturacion/hooks/useTabProformasController.ts`: fallback al plazo del cliente.
+- `src/features/facturacion/components/detalle/DatosFiscalesForm.tsx`: texto auxiliar con la fecha de vencimiento calculada.
+- Corrección de datos vía herramienta de inserción/actualización (no migración de esquema).

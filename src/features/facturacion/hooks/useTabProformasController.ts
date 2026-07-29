@@ -55,14 +55,16 @@ export function useTabProformasController(opts?: {
   // valida en la RPC `convertir_proformas_a_factura`).
   const fusionInfo = useMemo(() => {
     if (selectedProformas.length === 0) {
-      return { sameCliente: true, clienteNombre: "", organizationId: "", diasCredito: 0 };
+      return { sameCliente: true, clienteNombre: "", organizationId: "", diasCredito: null as number | null };
     }
     const first = selectedProformas[0];
     return {
       sameCliente: selectedProformas.every((p) => p.cliente_id === first.cliente_id),
       clienteNombre: first.cliente_nombre,
       organizationId: first.organization_id,
-      diasCredito: first.dias_credito ?? 0,
+      // v13.331.9 — `null` deja que la RPC herede el plazo de la ficha del
+      // cliente; antes se enviaba 0 y la factura vencía el mismo día.
+      diasCredito: first.dias_credito ?? null,
     };
   }, [selectedProformas]);
 

@@ -18,7 +18,11 @@ import { queryKeys } from "@/lib/query";
 export interface ConvertirDirectoInput {
   proformaIds: string[];
   organizationId: string;
-  diasCredito?: number;
+  /**
+   * Plazo de crédito explícito. `null`/`undefined` deja que la RPC aplique la
+   * cascada proforma → ficha del cliente → 0 (v13.331.9).
+   */
+  diasCredito?: number | null;
 }
 
 export function useConvertirProformaDirecto() {
@@ -42,7 +46,7 @@ export function useConvertirProformaDirecto() {
         metodoPago: "PPD",
         formaPago: "99",
         usoCfdi: "G03",
-        diasCredito: input.diasCredito ?? 0,
+        diasCredito: input.diasCredito ?? null,
         notas: null,
         requestId: crypto.randomUUID(),
       });

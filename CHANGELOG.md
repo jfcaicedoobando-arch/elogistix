@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.332.0] - 2026-07-29
+- Los días de crédito y la fecha de vencimiento de una factura ya no se desincronizan: al cambiar el plazo o la fecha de emisión de un borrador, el vencimiento se recalcula solo (antes una factura a 60 días podía vencer el mismo día de emisión).
+- Al convertir proformas a factura, si la proforma no trae plazo se hereda el de la ficha del cliente en lugar de facturar a 0 días.
+- El formulario de datos fiscales muestra la fecha de vencimiento calculada debajo de los días de crédito.
+- Datos corregidos: INDIMEX TRADING e INDIMEX COLOMBIA quedaron con 30 días de crédito oficiales y se realinearon las facturas cuyo vencimiento no coincidía con su plazo (F1005–F1011).
+
+
 ## [13.331.9] - 2026-07-29
 - SEO: se acortó el título de la guía de puertos de México a menos de 60 caracteres.
 - SEO: títulos, descripciones y etiquetas sociales únicas en /reset-password y /onboarding.

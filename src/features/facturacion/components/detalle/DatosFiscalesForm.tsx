@@ -10,6 +10,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { addDaysIso } from "@/lib/date/dateOnly";
+import { formatDate } from "@/lib/formatters/dates";
 
 interface Option { value: string; label: string }
 
@@ -37,9 +39,14 @@ export interface DatosFiscalesFormProps {
   tipoCambio: number | null; setTipoCambio: (v: number | null) => void;
   notas: string; setNotas: (v: string) => void;
   mostrarTipoCambio: boolean;
+  /** Fecha de emisión del borrador; se usa para previsualizar el vencimiento. */
+  fechaEmision?: string | null;
 }
 
 export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
+  // v13.331.9 — espejo de `fecha_emision + dias_credito` (trigger en BD), para
+  // que el usuario vea de inmediato cuándo vencerá la factura.
+  const vencimiento = addDaysIso(p.fechaEmision, p.diasCredito);
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -52,6 +59,11 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
             type="number" min={0} value={p.diasCredito}
             onChange={(e) => p.setDiasCredito(Number(e.target.value) || 0)}
           />
+          <p className="mt-1 text-xs text-muted-foreground">
+            {vencimiento
+              ? `Vence el ${formatDate(vencimiento)}`
+              : "Vencimiento: se calcula al guardar la fecha de emisión"}
+          </p>
         </div>
         {p.mostrarTipoCambio && (
           <div>
