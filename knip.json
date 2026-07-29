@@ -4,7 +4,8 @@
     "index.html",
     "scripts/**/*.ts",
     "src/**/*.test.{ts,tsx}",
-    "src/**/__tests__/**/*.{ts,tsx}"
+    "src/**/__tests__/**/*.{ts,tsx}",
+    "src/features/*/index.ts"
   ],
   "project": [
     "src/**/*.{ts,tsx}",

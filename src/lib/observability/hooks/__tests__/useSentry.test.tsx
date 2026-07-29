@@ -39,11 +39,18 @@ describe('useSentry Hooks', () => {
     expect(result.current.status).toBe('active');
   });
 
-  it('reporta disabled_dev cuando no hay cliente en modo desarrollo', () => {
+  it('sin cliente reporta un estado inactivo acorde al entorno', () => {
     getClientMock.mockReturnValue(undefined as never);
     const { result } = renderHook(() => useSentryInfo());
-    // Vitest corre en MODE=test, no development; sin DSN el estado es missing_dsn.
-    expect(['disabled_dev', 'missing_dsn']).toContain(result.current.status);
+    // El estado inicial depende del entorno de ejecución:
+    //  - MODE=development         -> disabled_dev
+    //  - sin VITE_SENTRY_DSN      -> missing_dsn
+    //  - con DSN (CI) y SDK aún   -> pending (el SDK carga diferido)
+    expect(result.current.active).toBe(false);
+    expect(['disabled_dev', 'missing_dsn', 'pending']).toContain(result.current.status);
+    if (result.current.status === 'pending') {
+      expect(result.current.dsnConfigured).toBe(true);
+    }
   });
 
   it('maskDsn hides sensitive part of DSN', () => {
