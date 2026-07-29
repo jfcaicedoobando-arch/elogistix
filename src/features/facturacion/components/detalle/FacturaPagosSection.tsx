@@ -94,6 +94,17 @@ export function FacturaPagosSection({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {inconsistente && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Estado inconsistente</AlertTitle>
+              <AlertDescription>
+                La factura aparece como «{estadoFactura}» pero no tiene pagos ni notas de
+                crédito aplicadas que lo respalden. Verifica con Cobranza antes de usarla
+                en reportes.
+              </AlertDescription>
+            </Alert>
+          )}
           {isLoading ? (
             <ListSkeleton rows={3} />
           ) : pagos.length === 0 ? (
