@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.325.4] - 2026-07-30
+- Radar de esquema: se registraron en migraciones los campos de proformas que existían sólo en la base (`consolidada_en`, `embarques_ids`, `embarque_id` opcional) y el comparador de tipos ya ignora el encabezado de versión del generador, que causaba falsas alertas de desincronización.
+
+
+
 ## [13.325.3] - 2026-07-30
 - Rendimiento: la suma de conceptos en una misma moneda ahora acumula en centavos enteros (sin crear un objeto por fila) y el camino con conversión reutiliza el tipo de cambio por moneda; el canario de performance vuelve a pasar. Los importes no cambian.
 
