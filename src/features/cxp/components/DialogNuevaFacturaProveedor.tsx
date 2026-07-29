@@ -28,6 +28,22 @@ interface Props {
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null;
 }
 
+/**
+ * Fuente de verdad de las partidas que alimentan el cuadre contra el subtotal:
+ * CFDI > conceptos manuales (Q-02, v13.339.0) > montos vinculados a embarques.
+ */
+function resolverConceptosParaCuadre(
+  cfdi: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null }>,
+  manuales: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null }>,
+  vinculos: Record<string, { monto?: number | string | null }>,
+): ConceptoParaCuadre[] {
+  const fuente = cfdi.length > 0 ? cfdi : manuales;
+  if (fuente.length > 0) {
+    return fuente.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad }));
+  }
+  return Object.values(vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
+}
+
 export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqueAdHoc }: Props) {
   const cats = usePresupuestoCategorias(true);
   const ctl = useNuevaFacturaProveedorForm(() => onOpenChange(false), initialEmbarqueAdHoc);
@@ -38,19 +54,10 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
   const ret = Number(ctl.values.retenciones) || 0;
   const moneda = ctl.values.moneda;
 
-  const conceptosParaCuadre = useMemo<ConceptoParaCuadre[]>(() => {
-    if (ctl.cfdiConceptos.length > 0) {
-      return ctl.cfdiConceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad }));
-    }
-    // v13.339.0 (Q-02): los conceptos manuales también alimentan el cuadre.
-    if (ctl.conceptosManuales.conceptos.length > 0) {
-      return ctl.conceptosManuales.conceptos.map((c) => ({
-        monto: Number(c.importe) || 0,
-        cantidad: c.cantidad,
-      }));
-    }
-    return Object.values(ctl.vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
-  }, [ctl.cfdiConceptos, ctl.conceptosManuales.conceptos, ctl.vinculos]);
+  const conceptosParaCuadre = useMemo<ConceptoParaCuadre[]>(
+    () => resolverConceptosParaCuadre(ctl.cfdiConceptos, ctl.conceptosManuales.conceptos, ctl.vinculos),
+    [ctl.cfdiConceptos, ctl.conceptosManuales.conceptos, ctl.vinculos],
+  );
   const cuadre = useMemo(() => calcularCuadreConceptos(sub, conceptosParaCuadre), [sub, conceptosParaCuadre]);
 
   const footer = (
