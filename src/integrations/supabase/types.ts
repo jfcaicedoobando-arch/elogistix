@@ -7291,8 +7291,16 @@ export type Database = {
           total_embarques: number
         }[]
       }
+      cobranza_agregados: {
+        Args: { p_cliente_id?: string; p_moneda?: string }
+        Returns: Json
+      }
       complete_onboarding: {
         Args: { _direccion: string; _moneda: string; _rfc: string }
+        Returns: Json
+      }
+      conciliacion_resumen: {
+        Args: { p_cuenta_bancaria_id: string }
         Returns: Json
       }
       consolidar_proformas: {
@@ -7702,6 +7710,10 @@ export type Database = {
         }[]
       }
       dashboard_details: { Args: never; Returns: Json }
+      dashboard_facturacion_kpis: {
+        Args: { p_fallback_usd?: number; p_meses?: number }
+        Returns: Json
+      }
       dashboard_stats: { Args: never; Returns: Json }
       dashboard_summary: { Args: never; Returns: Json }
       delete_email: {
@@ -7709,6 +7721,7 @@ export type Database = {
         Returns: boolean
       }
       detectar_alertas_app_logs: { Args: never; Returns: number }
+      direccion_totales: { Args: { p_desde: string }; Returns: Json }
       duplicar_cotizacion: { Args: { p_id: string }; Returns: string }
       duplicar_embarque_completo: {
         Args: {
@@ -7832,6 +7845,10 @@ export type Database = {
       ensure_demo_membership: { Args: { _user_id: string }; Returns: undefined }
       es_admin_catalogo: { Args: { _uid: string }; Returns: boolean }
       es_escritor_financiero: { Args: { _uid: string }; Returns: boolean }
+      estado_cuenta_agregados: {
+        Args: { p_cliente_ids: string[]; p_desde?: string; p_hasta?: string }
+        Returns: Json
+      }
       expirar_cotizaciones_job: { Args: never; Returns: Json }
       facturacion_por_emitir: {
         Args: never
