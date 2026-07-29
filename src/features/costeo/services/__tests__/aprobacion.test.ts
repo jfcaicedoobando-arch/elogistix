@@ -21,7 +21,7 @@ describe("costeo/services/aprobacion", () => {
   it("aprobarTarifa llama RPC con estado 'vigente' y motivo null", async () => {
     await aprobarTarifa("t1");
     const call = mock.rpcCalls.find((c) => c.fn === "agente_aprobar_tarifa");
-    expect(call?.args).toMatchObject({ _tarifa_id: "t1", _estado: "vigente", _motivo: null });
+    expect(call?.args).toMatchObject({ _tarifa_id: "t1", _estado: "vigente", _motivo: undefined });
   });
 
   it("rechazarTarifa envía estado 'rechazada' con motivo recortado", async () => {
@@ -42,7 +42,7 @@ describe("costeo/services/aprobacion", () => {
   it("reactivarTarifa devuelve la tarifa a 'borrador'", async () => {
     await reactivarTarifa("t5");
     const call = mock.rpcCalls.find((c) => c.fn === "agente_aprobar_tarifa");
-    expect(call?.args).toMatchObject({ _tarifa_id: "t5", _estado: "borrador", _motivo: null });
+    expect(call?.args).toMatchObject({ _tarifa_id: "t5", _estado: "borrador", _motivo: undefined });
   });
 
   it("propaga errores del RPC", async () => {

@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.330.1] - 2026-07-30
+- Corrección interna: las pruebas de aprobación de tarifas ahora reflejan cómo se envía realmente el motivo vacío al servidor.
+
 ## [13.330.0] - 2026-07-30
 - El nombre y datos de tu organización ahora se actualizan al instante en el menú lateral cuando un administrador los edita (antes tardaban hasta un minuto).
 - Los filtros de Compras > Facturas de proveedor viven en la dirección web: puedes copiar y compartir el enlace con los filtros ya aplicados y funcionan los accesos directos tipo "pendientes de aprobar".
