@@ -7,9 +7,15 @@ import {
   calcularVencimientos,
   calcularRanking,
   RIESGO_UMBRAL_MXN,
+  esHallazgoEtaVencida,
+  hoyAuditoriaIso,
 } from "../ejecutivoAgregados";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
+
+
+/** Offset en días sobre "hoy" en zona CDMX (misma base que calcularVencimientos). */
+const isoMxOffset = (d: number) => hoyAuditoriaIso(new Date(Date.now() + d * 86_400_000));
 
 const h = (over: Partial<HallazgoAuditoria>): HallazgoAuditoria =>
   ({
@@ -63,10 +69,8 @@ describe("ejecutivoAgregados", () => {
   });
 
   it("calcularVencimientos distingue vencidos vs urgentes", () => {
-    const ayer = new Date(); ayer.setDate(ayer.getDate() - 1);
-    const en2 = new Date(); en2.setDate(en2.getDate() + 2);
-    const ayerIso = ayer.toISOString().slice(0, 10);
-    const en2Iso = en2.toISOString().slice(0, 10);
+    const ayerIso = isoMxOffset(-1);
+    const en2Iso = isoMxOffset(2);
     const r = calcularVencimientos([
       h({ eta: ayerIso }),
       h({ eta: en2Iso }),
@@ -77,10 +81,8 @@ describe("ejecutivoAgregados", () => {
   });
 
   it("calcularVencimientos excluye reglas con vencimiento propio (CXP/CXC/proformas)", () => {
-    const ayer = new Date(); ayer.setDate(ayer.getDate() - 5);
-    const ayerIso = ayer.toISOString().slice(0, 10);
-    const en2 = new Date(); en2.setDate(en2.getDate() + 2);
-    const en2Iso = en2.toISOString().slice(0, 10);
+    const ayerIso = isoMxOffset(-5);
+    const en2Iso = isoMxOffset(2);
     const r = calcularVencimientos([
       h({ eta: ayerIso, regla: "cxp_vencida" }),
       h({ eta: ayerIso, regla: "cxp_por_capturar_estancada" }),
@@ -153,3 +155,36 @@ describe("ejecutivoAgregados", () => {
   });
 });
 
+
+describe("esHallazgoEtaVencida — paridad tarjeta/tabla", () => {
+  const base = {
+    embarque_id: "e1",
+    expediente: "EXP-001",
+    cliente_nombre: "ACME",
+    severidad: "critico",
+    detalle: "x",
+  } as unknown as HallazgoAuditoria;
+
+  it("sólo cuenta ETA estrictamente anterior a hoy", () => {
+    expect(esHallazgoEtaVencida({ ...base, regla: "docs_faltantes", eta: "2026-07-09" }, "2026-07-10")).toBe(true);
+    expect(esHallazgoEtaVencida({ ...base, regla: "docs_faltantes", eta: "2026-07-10" }, "2026-07-10")).toBe(false);
+  });
+
+  it("excluye reglas con calendario propio y hallazgos sin ETA", () => {
+    expect(esHallazgoEtaVencida({ ...base, regla: "cxp_vencida", eta: "2026-07-01" }, "2026-07-10")).toBe(false);
+    expect(esHallazgoEtaVencida({ ...base, regla: "docs_faltantes", eta: null }, "2026-07-10")).toBe(false);
+  });
+
+  it("el conteo de la tarjeta coincide con el predicado del filtro", () => {
+    const hoy = hoyAuditoriaIso();
+    const ayer = isoMxOffset(-1);
+    const hallazgos = [
+      { ...base, regla: "docs_faltantes", eta: ayer },
+      { ...base, regla: "cxp_vencida", eta: ayer },
+      { ...base, regla: "docs_faltantes", eta: hoy },
+    ] as HallazgoAuditoria[];
+    const { pendientesVencidos } = calcularVencimientos(hallazgos);
+    const porFiltro = hallazgos.filter((h) => esHallazgoEtaVencida(h, hoy)).length;
+    expect(porFiltro).toBe(pendientesVencidos);
+  });
+});

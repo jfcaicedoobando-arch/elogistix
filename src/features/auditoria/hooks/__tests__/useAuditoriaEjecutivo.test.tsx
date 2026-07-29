@@ -6,6 +6,7 @@
  * deterministas y verificar la lógica pura de `useMemo`.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { hoyMx } from "@/lib/date/mx";
 import { renderHook } from "@testing-library/react";
 import type {
   AuditoriaRevision,
@@ -173,12 +174,8 @@ describe("useAuditoriaEjecutivo", () => {
   });
 
   it("clasifica ETAs en vencidos, urgentes (≤3 días) y calcula edad promedio", () => {
-    const today = new Date();
-    const offset = (d: number) => {
-      const x = new Date(today);
-      x.setDate(x.getDate() + d);
-      return x.toISOString().slice(0, 10);
-    };
+    // Base CDMX: misma zona que usa calcularVencimientos.
+    const offset = (d: number) => hoyMx(new Date(Date.now() + d * 86_400_000));
     setMocks([
       h({ embarque_id: "v1", eta: offset(-10) }),
       h({ embarque_id: "v2", eta: offset(-4) }),

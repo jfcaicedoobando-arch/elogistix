@@ -4,6 +4,7 @@
  * permitir tests aislados.
  */
 import { revisionKey } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import { esHallazgoEtaVencida } from "@/features/auditoria/domain/ejecutivoAgregados";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,
@@ -23,6 +24,8 @@ export interface MatchCtx {
   filtroCliente: string;
   filtroRevision: FiltroRevision;
   filtroResponsable: FiltroResponsable;
+  /** Drill-down desde la tarjeta "ETA vencida" del dashboard ejecutivo. */
+  soloEtaVencida: boolean;
   userId: string | undefined;
   revisiones:
     | Map<string, { estado_revision?: string; responsable_id?: string | null; fecha_limite?: string | null }>
@@ -40,6 +43,7 @@ const BASE_PREDICATES: Array<(h: HallazgoAuditoria, c: MatchCtx) => boolean> = [
   (h, c) => c.filtroCliente === "todos" || h.cliente_nombre === c.filtroCliente,
   (h, c) => !c.desde || (!!h.eta && h.eta >= c.desde),
   (h, c) => !c.hasta || (!!h.eta && h.eta <= c.hasta),
+  (h, c) => !c.soloEtaVencida || esHallazgoEtaVencida(h, c.today),
 ];
 
 function matchBase(h: HallazgoAuditoria, c: MatchCtx): boolean {
@@ -89,6 +93,9 @@ export function matchHallazgo(h: HallazgoAuditoria, c: MatchCtx): boolean {
   if (!matchBase(h, c)) return false;
   const rev = c.revisiones?.get(revisionKey(h)) ?? null;
   const estado = rev?.estado_revision ?? "pendiente";
+  // El conteo del dashboard sólo considera hallazgos sin revisión abierta;
+  // el drill-down debe usar exactamente la misma definición de "pendiente".
+  if (c.soloEtaVencida && estado !== "pendiente") return false;
   if (!matchRevision(estado, !!rev, c.filtroRevision)) return false;
   if (!matchResponsable(rev, estado, c.filtroResponsable, c.userId, c.today)) return false;
   return true;

@@ -7,7 +7,7 @@ import type {
   ReglaAuditoria,
   SeveridadAuditoria,
 } from "@/features/auditoria/types";
-import { isoUtcDay } from "@/lib/date/mx";
+import { hoyMx } from "@/lib/date/mx";
 import { TOP_N } from "./ejecutivoRankingCore";
 
 // `OperadorRanking` / `calcularRanking` viven en `./ejecutivoRanking` (split Power-of-10 #4).
@@ -130,11 +130,27 @@ export const REGLAS_CON_VENCIMIENTO_PROPIO: ReglaAuditoria[] = [
   "proforma_borrador_abandonada",
 ];
 
+/**
+ * Fuente única de verdad del concepto "hallazgo con ETA vencida".
+ * La tarjeta ejecutiva y el filtro de la tabla DEBEN usar este predicado para
+ * que el conteo y el drill-down coincidan siempre.
+ */
+export function esHallazgoEtaVencida(h: HallazgoAuditoria, hoyIso: string): boolean {
+  if (!h.eta) return false;
+  if (REGLAS_CON_VENCIMIENTO_PROPIO.includes(h.regla)) return false;
+  return h.eta < hoyIso;
+}
+
+/** Hoy en zona CDMX (misma base para tarjeta y tabla). */
+export function hoyAuditoriaIso(base: Date = new Date()): string {
+  return hoyMx(base);
+}
+
 export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
-  // UTC-only: evita drift por TZ local (ver banner core.ts).
+  // Zona CDMX: misma base de "hoy" que el filtro de la tabla (v13.322.17).
   const nowMs = Date.now();
-  const hoyIso = isoUtcDay(new Date(nowMs));
-  const en3DiasIso = isoUtcDay(new Date(nowMs + 3 * 86_400_000));
+  const hoyIso = hoyAuditoriaIso(new Date(nowMs));
+  const en3DiasIso = hoyAuditoriaIso(new Date(nowMs + 3 * 86_400_000));
   let pendientesVencidos = 0;
   let pendientesUrgentesPorEta = 0;
   let sumaDias = 0;
@@ -142,7 +158,7 @@ export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
   for (const h of pendientes) {
     if (!h.eta) continue;
     if (REGLAS_CON_VENCIMIENTO_PROPIO.includes(h.regla)) continue;
-    if (h.eta < hoyIso) {
+    if (esHallazgoEtaVencida(h, hoyIso)) {
       pendientesVencidos++;
       const dias = Math.floor((Date.parse(hoyIso) - Date.parse(h.eta)) / 86_400_000);
       sumaDias += dias;
