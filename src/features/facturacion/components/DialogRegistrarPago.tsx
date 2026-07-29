@@ -12,6 +12,8 @@ import { ArrowDownToLine } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { usePagosFactura } from "@/features/facturacion/hooks";
+import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoFactura";
+import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarPagoSubmit } from "@/features/facturacion/hooks/useRegistrarPagoSubmit";
 import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
@@ -52,13 +54,14 @@ const today = () => todayLocalISO();
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: rates } = useExchangeRates();
   const { data: pagosPrevios = [] } = usePagosFactura(factura?.id);
+  const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(factura?.id);
   const { submit, isPending, timbrandoRep } = useRegistrarPagoSubmit(() => onOpenChange(false));
 
-  const totalPagado = useMemo(
-    () => pagosPrevios.reduce((s, p) => s + Number(p.monto_aplicado_factura), 0),
-    [pagosPrevios],
+  // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC aplicadas).
+  const { saldo, pagado: totalPagado } = useMemo(
+    () => calcularSaldoFactura(factura?.total ?? 0, pagosPrevios, notasAplicadas),
+    [factura, pagosPrevios, notasAplicadas],
   );
-  const saldo = useMemo(() => (factura ? factura.total - totalPagado : 0), [factura, totalPagado]);
 
   const [values, setValues] = useState<PagoFormValues>({
     fecha: today(), monto: "", moneda: "MXN",

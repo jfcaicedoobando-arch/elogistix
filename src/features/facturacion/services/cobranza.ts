@@ -14,6 +14,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { orIlike } from "@/lib/search/ilike";
+import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
@@ -138,14 +139,17 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
 
   // SAFE-CAST: `RawFactura` modela el join con pagos_factura; Supabase tipa unknown.
   const rows = ((data as unknown as RawFactura[] | null) ?? []).map((f): FacturaCobranza => {
-    const pagado = (f.pagos_factura ?? [])
-      .filter((p) => !p.deleted_at)
-      .reduce((s, p) => s + Number(p.monto_aplicado_factura), 0);
-    const notas = (f.factura_notas_credito ?? [])
-      .filter((n) => !n.deleted_at && n.estado === "Aplicada")
-      .reduce((s, n) => s + Number(n.monto), 0);
+    const pagosActivos = (f.pagos_factura ?? []).filter((p) => !p.deleted_at);
+    const notasActivas = (f.factura_notas_credito ?? []).filter(
+      (n) => !n.deleted_at && n.estado === "Aplicada",
+    );
     const total = Number(f.total);
-    const saldo = Math.max(0, total - pagado - notas);
+    // A1: canon único `@/lib/financial/saldoFactura` (no reimplementar).
+    const { saldo, pagado, notasCredito: notas } = calcularSaldoFactura(
+      total,
+      pagosActivos,
+      notasActivas,
+    );
     const diasVencido = calcularDiasVencido(f.fecha_vencimiento);
     return {
       id: f.id,

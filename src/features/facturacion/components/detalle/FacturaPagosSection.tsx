@@ -15,6 +15,8 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
+import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoFactura";
+import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
@@ -34,14 +36,19 @@ export function FacturaPagosSection({
   facturaId, facturaNumero, totalFactura, moneda, canEdit,
 }: Props) {
   const { data: pagos = [], isLoading } = usePagosFactura(facturaId);
+  const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(facturaId);
   const eliminar = useEliminarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
   const [previewRep, setPreviewRep] = useState<{ id: string; label: string } | null>(null);
 
-  const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura ?? 0), 0);
-  const saldo = Math.max(0, totalFactura - totalPagado);
-  const liquidada = saldo < 0.01 && pagos.length > 0;
+  // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC aplicadas).
+  const { saldo, pagado: totalPagado, liquidada: sinSaldo } = calcularSaldoFactura(
+    totalFactura,
+    pagos,
+    notasAplicadas,
+  );
+  const liquidada = sinSaldo && pagos.length > 0;
 
   const handleEliminar = async () => {
     if (!pagoAEliminar) return;

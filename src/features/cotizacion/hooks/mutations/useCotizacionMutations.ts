@@ -10,6 +10,7 @@ import {
   reactivarCotizacion as svcReactivar,
 } from '@/features/cotizacion/services';
 import { notifySuccess } from '@/lib/ui/appFeedback';
+import { invalidatePortalMirrors } from '@/features/portal/hooks/invalidatePortalMirrors';
 
 // v13.320.36 (B-041) — El wizard emite un único toast final ("Cotización
 // creada/actualizada exitosamente") desde `useCotizacionWizardSteps`. Estos
@@ -34,6 +35,7 @@ export function useUpdateCotizacion() {
     errorMethod: "UPDATE_COTIZACION",
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(vars.id) });
+      invalidatePortalMirrors(queryClient, { cotizacionId: vars.id });
     },
   });
 }
@@ -61,6 +63,7 @@ export function useUpdateEstadoCotizacion() {
     errorMethod: "UPDATE_COTIZACION_STATE",
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(vars.id) });
+      invalidatePortalMirrors(queryClient, { cotizacionId: vars.id });
       notifySuccess(undefined, { title: `Cotización ${vars.estado}` });
     },
   });
@@ -76,6 +79,7 @@ export function useReactivarCotizacion() {
     errorMethod: "REACTIVATE_COTIZACION",
     onSuccess: (_r, id) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(id) });
+      invalidatePortalMirrors(queryClient, { cotizacionId: id });
     },
   });
 }

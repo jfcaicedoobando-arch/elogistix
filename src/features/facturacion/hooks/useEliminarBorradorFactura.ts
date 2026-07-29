@@ -25,7 +25,8 @@ export function useEliminarBorradorFactura() {
       });
       qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
       qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
-      qc.invalidateQueries({ queryKey: queryKeys.facturacion.proformaDetalleAll });
+      // A8: ['proforma-detalle'] estaba muerta; la raíz viva es proformas.all
+      // (ya invalidada arriba) más el detalle por embarque cuando aplica.
       invalidateHuecoFacturacion(qc);
       navigate("/facturacion");
     },

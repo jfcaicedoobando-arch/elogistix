@@ -18,7 +18,7 @@ const EXPECTED_DOMAINS = [
   "cxp", "tesoreria", "comisiones", "presupuesto", "dashboardEjecutivo",
   "usuariosPortalCliente", "usuariosPortalAgente",
   "costeo", "portalAgente", "proveedorFacturas", "proveedorNotasCredito",
-  "pagosProveedor", "bbvaMovimientos", "proveedorSalud", "conceptosCosto",
+  "pagosProveedor", "proveedorSalud", "conceptosCosto",
   "bandejas", "productosCatalogo", "direccion", "dashboardOperador",
   "embarquesPendientesAdmin", "alertasSistema", "demoLeads", "notificaciones",
   "marketing", "cxc",

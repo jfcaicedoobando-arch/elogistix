@@ -36,10 +36,6 @@ export const pagosProveedor = {
   all: ["pagos-proveedor"] as const,
 } as const;
 
-export const bbvaMovimientos = {
-  all: ["bbva-movimientos"] as const,
-} as const;
-
 export const proveedorSalud = {
   byId: (proveedorId?: string | null) =>
     ["proveedor", "salud", proveedorId ?? null] as const,

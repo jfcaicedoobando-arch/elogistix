@@ -18,7 +18,6 @@ export const facturacion = {
     ['facturacion', 'dashboard-ejecutivo', organizationId, fallback] as const,
   referenciasEmbarque: (embarqueId?: string | null, expediente?: string, referenciaBl?: string) =>
     ['referencias_embarque_factura', embarqueId, expediente ?? '', referenciaBl ?? ''] as const,
-  proformaDetalleAll: ['proforma-detalle'] as const,
   emitirFactura: ['fiscal', 'emitir-factura'] as const,
   cancelarFactura: ['fiscal', 'cancelar-factura'] as const,
   facturaManual: ['fiscal', 'factura-manual'] as const,
@@ -51,7 +50,6 @@ export const facturas = {
   notasCreditoRecientes: (filtros?: unknown) => ['factura_notas_credito', 'recientes', filtros ?? null] as const,
   envios: (facturaId?: string | null) => ['factura-envios', facturaId] as const,
   historial: (facturaId?: string | null) => ['facturas', 'historial', facturaId] as const,
-  legacyDetail: (facturaId?: string | null) => ['factura', facturaId] as const,
   listado: (filtros: {
     organizationId?: string | null;
     search?: string;

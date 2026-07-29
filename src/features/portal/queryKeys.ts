@@ -1,4 +1,9 @@
 export const portal = {
+  // A5 — Raíces de namespace para invalidación por prefijo: invalidar
+  // `cotizacionesAll` alcanza todas las listas `cotizaciones(clienteIds)`.
+  cotizacionesAll: ['portal', 'cotizaciones'] as const,
+  facturasAll: ['portal', 'facturas'] as const,
+  embarquesAll: ['portal', 'embarques'] as const,
   embarques: (clienteIds: string[]) => ['portal', 'embarques', clienteIds] as const,
   embarque: (id: string) => ['portal', 'embarque', id] as const,
   eventos: (id: string) => ['portal', 'eventos', id] as const,

@@ -22,6 +22,10 @@ function invalidarFacturasYPagos(qc: ReturnType<typeof useQueryClient>, facturaI
   qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
   // Registrar/eliminar un pago impacta cartera vencida e ingresos cobrados
   // (Dashboard Ejecutivo, EERR, Presupuesto vs Real). v13.300.33.
+  // A8: el aging CxC y la cartera pendiente cambian con cada abono — antes
+  // quedaban obsoletos hasta que vencía el staleTime.
+  qc.invalidateQueries({ queryKey: queryKeys.cxc.all });
+  qc.invalidateQueries({ queryKey: queryKeys.bandejas.carteraPendiente });
   invalidateProfitDependencies(qc);
 }
 

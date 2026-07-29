@@ -6,6 +6,7 @@
  * (`diasVencido`, `calcularEstatus`) sin tocar la capa de datos.
  */
 import type { Tables, Database } from "@/integrations/supabase/types";
+import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 
 export type FacturaRow = Tables<"facturas">;
 export type Moneda = Database["public"]["Enums"]["moneda"];
@@ -134,10 +135,13 @@ export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
   const notasActivas = (f.factura_notas_credito ?? []).filter(
     (n) => !n.deleted_at && n.estado === "Aplicada",
   );
-  const pagado = pagosActivos.reduce((s, p) => s + Number(p.monto_aplicado_factura), 0);
-  const nc_aplicadas = notasActivas.reduce((s, n) => s + Number(n.monto), 0);
   const total = Number(f.total);
-  const saldo = Math.max(0, total - pagado - nc_aplicadas);
+  // A1: canon único `@/lib/financial/saldoFactura` (no reimplementar).
+  const { saldo, pagado, notasCredito: nc_aplicadas } = calcularSaldoFactura(
+    total,
+    pagosActivos,
+    notasActivas,
+  );
   const dias = diasVencido(f.fecha_vencimiento);
 
   return {

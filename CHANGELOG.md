@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.326.0] - 2026-07-30
+- Saldos de factura unificados (A1): un solo cálculo oficial que ya descuenta pagos **y** notas de crédito aplicadas en detalle de factura, registro de pagos, cobranza, estado de cuenta y portal del cliente.
+- Sincronización portal ↔ interno (A5): cuando el cliente acepta o rechaza una cotización, la bandeja interna se actualiza sola; y al editar la cotización internamente, el portal refleja el cambio sin recargar.
+- Refrescos de pantalla arreglados (A8): guardar demoras, enviar factura por correo, registrar un abono o conciliar un movimiento bancario ahora actualizan las vistas afectadas (detalle de embarque, antigüedad de CxC, cartera, movimientos) sin necesidad de recargar.
+
+
 ## [13.325.5] - 2026-07-30
 - Radar de drift: las migraciones recientes ya aplican sobre una base limpia. La migración de proformas declara por sí misma las columnas heredadas y el parche C5-b omite (en vez de abortar) las funciones que no existen en una base reconstruida.
 

@@ -58,7 +58,7 @@ export function ConciliacionPagoCell({
       notifySuccess(undefined, { title: "Movimiento vinculado al pago" });
       qc.invalidateQueries({ queryKey: queryKeys.pagosProveedor.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
-      qc.invalidateQueries({ queryKey: queryKeys.bbvaMovimientos.all });
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
       setOpen(false);
     },
     onError: (err: Error) => notifyError(undefined, {
@@ -73,7 +73,7 @@ export function ConciliacionPagoCell({
       notifySuccess(undefined, { title: "Movimiento desvinculado" });
       qc.invalidateQueries({ queryKey: queryKeys.pagosProveedor.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
-      qc.invalidateQueries({ queryKey: queryKeys.bbvaMovimientos.all });
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
       setOpen(false);
     },
     onError: (err: Error) => notifyError(undefined, {

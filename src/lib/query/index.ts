@@ -33,7 +33,7 @@ import { profit } from "@/features/profit/queryKeys";
 import { cxc } from "@/features/cxc/queryKeys";
 import {
   cxp, proveedorFacturas, proveedorNotasCredito, pagosProveedor,
-  bbvaMovimientos, proveedorSalud, conceptosCosto,
+  proveedorSalud, conceptosCosto,
 } from "@/features/cxp/queryKeys";
 import { bandejas } from "@/features/bandejas/queryKeys";
 import { tesoreria } from "@/features/tesoreria/queryKeys";
@@ -85,7 +85,6 @@ export const queryKeys = {
   proveedorFacturas,
   proveedorNotasCredito,
   pagosProveedor,
-  bbvaMovimientos,
   proveedorSalud,
   conceptosCosto,
   bandejas,

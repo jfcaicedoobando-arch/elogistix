@@ -9,9 +9,11 @@ export function useRecalcularDemoras(embarqueId: string | undefined) {
   return useMutation({
     mutationFn: () => calcularDemorasEmbarque(embarqueId!),
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.detalle(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVentaDash(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCostoDash(embarqueId) });
+      // A8: claves vivas — 'embarque-detalle'/'conceptos-venta' (guion) no las
+      // usa ninguna query; las reales son full(id)/conceptos_venta/conceptos_costo.
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.full(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueId) });
       if (data.sin_eventos) {
         notifyWarning(undefined, { title: "Faltan eventos de Descarga o Entrega en el timeline" });
       } else if (data.dias_excedidos === 0) {
@@ -43,9 +45,11 @@ export function useEliminarDemorasAuto(embarqueId: string | undefined) {
   return useMutation({
     mutationFn: () => eliminarDemorasAuto(embarqueId!),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.detalle(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVentaDash(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCostoDash(embarqueId) });
+      // A8: claves vivas — 'embarque-detalle'/'conceptos-venta' (guion) no las
+      // usa ninguna query; las reales son full(id)/conceptos_venta/conceptos_costo.
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.full(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueId) });
       notifySuccess(undefined, { title: "Demoras automáticas eliminadas" });
     },
     onError: (e: unknown) => {

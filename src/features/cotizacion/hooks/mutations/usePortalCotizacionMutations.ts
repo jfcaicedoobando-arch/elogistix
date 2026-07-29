@@ -14,7 +14,13 @@ export function useResponderCotizacion(cotizacionId: string) {
       portalResponderCotizacion(cotizacionId, params.respuesta, params.comentario),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.portal.cotizacion(cotizacionId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.portal.cotizaciones([]) });
+      // A5: raíz de namespace (la variante `cotizaciones([])` no matcheaba
+      // las listas con clienteIds reales — prefix matching por elemento).
+      queryClient.invalidateQueries({ queryKey: queryKeys.portal.cotizacionesAll });
+      // A5: espejo interno — la bandeja de cotizaciones debe enterarse de la
+      // respuesta del cliente (Aceptada/Rechazada) en la misma sesión.
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacionId) });
     },
     onError: (err: Error) => {
       logger.warn("[useResponderCotizacion] mutation error:", err);
