@@ -57,7 +57,7 @@ const BASELINE = "20260729170000";
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
 
-type Violation = { file: string; check: string; detail: string };
+export type { Violation };
 
 export function scanFile(file: string, body: string, auditPostBaseline = true): Violation[] {
   const out: Violation[] = [];
