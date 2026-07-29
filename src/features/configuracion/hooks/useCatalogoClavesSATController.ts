@@ -30,7 +30,7 @@ export function useCatalogoClavesSATController() {
     qc.invalidateQueries({ queryKey: queryKeys.productosCatalogo(organizationId) });
   };
 
-  const onError = (err: unknown) =>
+  const handleError = (err: unknown) =>
     notifyError(undefined, { title: "No se pudo guardar el producto", error: err, method: "CATALOGO_PRODUCTOS" });
 
   const buildPayload = (d: Draft) => ({
@@ -48,7 +48,7 @@ export function useCatalogoClavesSATController() {
       await insertCatalogoClaveSat(organizationId, buildPayload(d));
     },
     onSuccess: () => { invalidate(); notifySuccess(undefined, { title: "Producto agregado" }); },
-    onError,
+    onError: handleError,
   });
 
   const updateMut = useMutation({
@@ -56,7 +56,7 @@ export function useCatalogoClavesSATController() {
       await updateCatalogoClaveSat(vars.id, buildPayload(vars.d));
     },
     onSuccess: () => { invalidate(); notifySuccess(undefined, { title: "Producto actualizado" }); },
-    onError,
+    onError: handleError,
   });
 
   const deleteMut = useMutation({
@@ -64,7 +64,7 @@ export function useCatalogoClavesSATController() {
       await deleteCatalogoClaveSat(id);
     },
     onSuccess: () => { invalidate(); notifySuccess(undefined, { title: "Producto eliminado" }); },
-    onError,
+    onError: handleError,
   });
 
   return { rows, isLoading, addMut, updateMut, deleteMut };
