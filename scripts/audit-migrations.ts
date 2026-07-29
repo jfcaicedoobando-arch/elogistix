@@ -32,6 +32,8 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { scanSecurityDefiner, type Violation } from "./lib/audit-sql-signatures";
+
 
 const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
 /**
