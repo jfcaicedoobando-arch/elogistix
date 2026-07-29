@@ -89,6 +89,10 @@ BEGIN
   SELECT * INTO v_serie FROM public.factura_series WHERE id = p_serie_id AND organization_id = v_org;
   IF v_serie IS NULL THEN RAISE EXCEPTION 'Serie no encontrada'; END IF;
 
+  -- Cascada de plazo de crédito: parámetro → proforma → ficha del cliente → 0.
+  v_dias := COALESCE(NULLIF(p_dias_credito, 0), v_first.dias_credito, v_cliente.dias_credito, p_dias_credito, 0);
+
+
   SELECT array_agg(DISTINCT embarque_id) INTO v_embarque_ids
   FROM public.proformas
   WHERE id = ANY(p_proforma_ids) AND embarque_id IS NOT NULL;
