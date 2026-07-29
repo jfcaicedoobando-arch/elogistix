@@ -108,14 +108,51 @@ jobs:
     timeout-minutes: 2
     outputs:
       ok: ${{ steps.check.outputs.ok }}
+      mt_ok: ${{ steps.check.outputs.mt_ok }}
     steps:
       - id: check
+        # v13.x (GHA-audit M8/A1) — antes sólo validaba 3 secretos y el resto
+        # skipeaba en silencio. Ahora valida todos los grupos requeridos y
+        # FALLA en corridas agendadas/encadenadas (verde vacío prohibido).
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [ -z "${E2E_BASE_URL}" ] || [ -z "${E2E_EMAIL}" ] || [ -z "${E2E_PASSWORD}" ]; then
-            echo "::warning::E2E secrets missing — skipping run."
+          set -u
+          core_missing=""
+          for v in E2E_BASE_URL E2E_EMAIL E2E_PASSWORD \
+                   E2E_PORTAL_EMAIL E2E_PORTAL_PASSWORD \
+                   E2E_PROVISION_SECRET \
+                   VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY; do
+            eval "val=\${$v:-}"
+            [ -z "$val" ] && core_missing="$core_missing $v"
+          done
+          mt_missing=""
+          for v in E2E_MT_A_EMAIL E2E_MT_A_PASSWORD E2E_MT_B_EMAIL E2E_MT_B_PASSWORD; do
+            eval "val=\${$v:-}"
+            [ -z "$val" ] && mt_missing="$mt_missing $v"
+          done
+          scheduled=0
+          [ "$EVENT_NAME" = "schedule" ] && scheduled=1
+          [ "$EVENT_NAME" = "workflow_run" ] && scheduled=1
+          if [ -n "$core_missing" ]; then
+            if [ "$scheduled" = "1" ]; then
+              echo "::error::E2E secrets ausentes en corrida agendada:$core_missing — la suite NO corrió (verde vacío prohibido)."
+              exit 1
+            fi
+            echo "::warning::E2E secrets missing:$core_missing — skipping run."
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -n "$mt_missing" ]; then
+            if [ "$scheduled" = "1" ]; then
+              echo "::error::E2E_MT_* secrets ausentes en corrida agendada:$mt_missing — el job multi-tenant NO corrió."
+              exit 1
+            fi
+            echo "::warning::E2E_MT_* missing:$mt_missing — se omite multi-tenant."
+            echo "mt_ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "mt_ok=true" >> "$GITHUB_OUTPUT"
           fi
 
   provision-users:
@@ -184,7 +221,30 @@ jobs:
         run: bunx playwright install-deps chromium
 
       - name: Run internal specs (shard ${{ matrix.shard }}/3)
-        run: bunx playwright test --project=chromium-internal --shard=${{ matrix.shard }}/3 --grep-invert "@visual"  # @visual fuera de CI hasta commitear baselines (ver spec 27)
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=internal-${{ matrix.shard }}-report.json bunx playwright test --project=chromium-internal --shard=${{ matrix.shard }}/3 --grep-invert "@visual" --reporter=blob,json  # @visual fuera de CI hasta commitear baselines (ver spec 27)
+
+      - name: Gate anti-skip — internal-shard debe ejecutar tests reales
+        # v13.x (GHA-audit A1) — mismo criterio que mutators: si los specs
+        # skippearon en silencio (fixtures/env ausentes) el job quedaba verde
+        # con 0 tests. Ahora falla.
+        if: always()
+        run: |
+          # shellcheck disable=SC2016
+          node -e '
+            const fs = require("fs");
+            const f = "internal-${{ matrix.shard }}-report.json";
+            if (!fs.existsSync(f)) {
+              console.error(`::error::${f} no existe — el run de Playwright no produjo reporte.`);
+              process.exit(1);
+            }
+            const r = JSON.parse(fs.readFileSync(f, "utf8"));
+            const s = r.stats || {};
+            const executed = (s.expected||0) + (s.unexpected||0) + (s.flaky||0);
+            console.log(`internal shard: executed=${executed} skipped=${s.skipped||0}`);
+            if (executed === 0) {
+              console.error("::error::0 tests ejecutados en internal-shard — los specs skippearon en silencio.");
+              process.exit(1);
+            }'
 
       - name: Upload blob report
         if: always()
@@ -316,7 +376,28 @@ jobs:
         run: bunx playwright install-deps chromium
 
       - name: Run portal specs
-        run: bunx playwright test --project=chromium-portal
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=portal-report.json bunx playwright test --project=chromium-portal --reporter=blob,json
+
+      - name: Gate anti-skip — portal debe ejecutar tests reales
+        # v13.x (GHA-audit A1) — evita el "verde vacío" con 0 tests reales.
+        if: always()
+        run: |
+          # shellcheck disable=SC2016
+          node -e '
+            const fs = require("fs");
+            const f = "portal-report.json";
+            if (!fs.existsSync(f)) {
+              console.error(`::error::${f} no existe — el run de Playwright no produjo reporte.`);
+              process.exit(1);
+            }
+            const r = JSON.parse(fs.readFileSync(f, "utf8"));
+            const s = r.stats || {};
+            const executed = (s.expected||0) + (s.unexpected||0) + (s.flaky||0);
+            console.log(`portal: executed=${executed} skipped=${s.skipped||0}`);
+            if (executed === 0) {
+              console.error("::error::0 tests ejecutados en portal — los specs skippearon en silencio.");
+              process.exit(1);
+            }'
 
       - name: Upload blob report
         if: always()
@@ -357,9 +438,17 @@ jobs:
 
       - name: Guard (multi-tenant secrets)
         id: mt_check
+        # v13.x (GHA-audit M8) — en corridas agendadas/encadenadas falla en vez
+        # de skipear: un multi-tenant que no corre no puede reportarse verde.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           if [ -z "${E2E_MT_A_EMAIL}" ] || [ -z "${E2E_MT_A_PASSWORD}" ] || \
              [ -z "${E2E_MT_B_EMAIL}" ] || [ -z "${E2E_MT_B_PASSWORD}" ]; then
+            if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_run" ]; then
+              echo "::error::E2E_MT_* secrets ausentes en corrida agendada — el job multi-tenant NO corrió."
+              exit 1
+            fi
             echo "::warning::E2E_MT_* secrets missing — se omite el job multi-tenant."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
