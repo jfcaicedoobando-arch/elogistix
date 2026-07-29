@@ -8768,6 +8768,7 @@ export type Database = {
       estado_conciliacion: "Pendiente" | "Conciliado" | "Ignorado"
       estado_cotizacion:
         | "Borrador"
+        | "Solicitada"
         | "Enviada"
         | "Aceptada"
         | "Rechazada"
@@ -9064,6 +9065,7 @@ export const Constants = {
       estado_conciliacion: ["Pendiente", "Conciliado", "Ignorado"],
       estado_cotizacion: [
         "Borrador",
+        "Solicitada",
         "Enviada",
         "Aceptada",
         "Rechazada",
