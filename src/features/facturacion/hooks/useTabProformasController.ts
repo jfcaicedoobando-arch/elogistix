@@ -11,14 +11,11 @@ import { useProformas, type ProformaConFactura, type ProformaRow } from "@/featu
 import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
 import { useTabProformasState } from "./useTabProformasState";
 
-;
-
 function isConvertible(p: ProformaConFactura): boolean {
   if ((p.estado_proforma ?? "pendiente") === "facturada") return false;
-  // SAFE-CAST: `estado_cliente` es columna nueva, aún no está en los tipos generados.
-  const estadoCliente = (p as unknown as { estado_cliente?: string }).estado_cliente;
-  return estadoCliente === "aceptada";
+  return p.estado_cliente === "aceptada";
 }
+
 
 export function useTabProformasController(opts?: {
   isInRange?: (fecha: string | null | undefined) => boolean;

@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CotizacionRow, CreateCotizacionInput } from "@/features/cotizacion/types";
-import { fromDb } from "@/lib/supabase/cast";
+import { fromDbChecked } from "@/lib/supabase/cast";
+import { cotizacionRowDbSchema } from "../readSchemas";
+
 import { cotizacionDraftInputSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { buildCotizacionInsertPayload } from "./payloadBuilders";
 
@@ -39,5 +41,5 @@ export async function crearCotizacion(input: CreateCotizacionInput): Promise<Cot
     .select()
     .single();
   if (error) throw error;
-  return fromDb<CotizacionRow>(data);
+  return fromDbChecked<CotizacionRow>(data, cotizacionRowDbSchema);
 }

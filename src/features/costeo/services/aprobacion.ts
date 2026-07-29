@@ -6,11 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
 
 async function callAprobar(_tarifa_id: string, _estado: string, _motivo: string | null) {
-  // SAFE-CAST: RPC con tercer parámetro opcional; tipos generados aún no reflejan el _motivo opcional.
   await run(
-    supabase.rpc("agente_aprobar_tarifa", { _tarifa_id, _estado, _motivo } as never),
+    supabase.rpc("agente_aprobar_tarifa", { _tarifa_id, _estado, _motivo: _motivo ?? undefined }),
   );
 }
+
 
 export async function aprobarTarifa(tarifaId: string): Promise<void> {
   await callAprobar(tarifaId, "vigente", null);

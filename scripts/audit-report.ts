@@ -20,6 +20,7 @@ import { join, relative } from "node:path";
 import { runArchAudit } from "./lib/arch";
 import { scanCasts, summarizeCasts, type CastsSummary } from "./lib/casts";
 import { auditTests, type TestViolation } from "./lib/tests";
+import { scanFromDbAdoption, type FromDbAdoption } from "./lib/fromDbAdoption";
 
 const ROOT = process.cwd();
 const OUT_DIR = join(ROOT, "reports");
@@ -36,6 +37,7 @@ interface ReportShape {
     topFiles: { file: string; total: number; weight: number }[];
   };
   tests: { violations: TestViolation[] };
+  fromDb: FromDbAdoption;
 }
 
 function readAppVersion(): string {
@@ -46,7 +48,7 @@ function readAppVersion(): string {
 }
 
 function renderMd(r: ReportShape): string {
-  const { arch, casts, tests } = r;
+  const { arch, casts, tests, fromDb } = r;
   const archOk = arch.hooksContextsDirectImports.length === 0 && arch.componentsPagesDirectImports.length === 0 && arch.oversized.length === 0;
   const testsOk = tests.violations.length === 0;
   const castsHC = casts.bySeverity.HIGH + casts.bySeverity.CRITICAL;
@@ -63,6 +65,7 @@ Generado: ${r.generatedAt}
 | Power-of-10 (>200 líneas) | ${arch.oversized.length === 0 ? "✅" : "❌"} | ${arch.oversized.length} archivos |
 | Casts HIGH + CRITICAL | ${castsHC === 0 ? "✅" : "⚠️"} | ${castsHC} / ${casts.total} |
 | Higiene de tests | ${testsOk ? "✅" : "❌"} | ${tests.violations.length} violaciones |
+| Adopción zod en \`fromDb\` | ${fromDb.sinSchema === 0 ? "✅" : "⚠️"} | ${fromDb.conSchema}/${fromDb.total} validados (${Math.round(fromDb.ratio * 100)}%) |
 
 ## Arquitectura
 
@@ -93,6 +96,16 @@ Total: **${casts.total}** — HIGH: **${casts.bySeverity.HIGH}**, CRITICAL: **${
 |---|---|---:|---:|
 ${casts.topFiles.slice(0, 10).map((f, i) => `| ${i + 1} | \`${f.file}\` | ${f.total} | ${f.weight} |`).join("\n")}
 
+## Boundaries de datos (\`fromDb\`)
+
+Call sites validados con zod: **${fromDb.conSchema}** de **${fromDb.total}** (${Math.round(fromDb.ratio * 100)}%).
+
+${fromDb.sinSchema === 0 ? "✅ Sin casts crudos." : `Casts crudos \`fromDb<T>()\` pendientes por feature:
+
+| Feature | Pendientes |
+|---|---:|
+${Object.entries(fromDb.porFeature).sort((a, b) => b[1] - a[1]).map(([f, n]) => `| \`${f}\` | ${n} |`).join("\n")}`}
+
 ## Tests
 
 ${testsOk ? "✅ Sin violaciones." : tests.violations.map((v) => `- [${v.rule}] \`${v.file}:${v.line}\` — ${v.detail}`).join("\n")}
@@ -108,6 +121,7 @@ function main() {
   const castHits = scanCasts(ROOT);
   const castsSummary = summarizeCasts(castHits, { topFiles: 10, topHits: 0 });
   const testsViolations = auditTests(ROOT);
+  const fromDbAdoption = scanFromDbAdoption(ROOT);
 
   const report: ReportShape = {
     version: readAppVersion(),
@@ -119,6 +133,7 @@ function main() {
       topFiles: castsSummary.topFiles.map((f) => ({ file: f.file, total: f.total, weight: f.weight })),
     },
     tests: { violations: testsViolations },
+    fromDb: fromDbAdoption,
   };
 
   mkdirSync(OUT_DIR, { recursive: true });
@@ -129,6 +144,7 @@ function main() {
   console.log(`  arch: ${arch.hooksContextsDirectImports.length + arch.componentsPagesDirectImports.length} import violations, ${arch.oversized.length} oversized`);
   console.log(`  casts: ${castsSummary.bySeverity.HIGH} HIGH, ${castsSummary.bySeverity.CRITICAL} CRITICAL (de ${castsSummary.total})`);
   console.log(`  tests: ${testsViolations.length} violaciones de higiene`);
+  console.log(`  fromDb: ${fromDbAdoption.conSchema}/${fromDbAdoption.total} boundaries validados con zod`);
 }
 
 main();

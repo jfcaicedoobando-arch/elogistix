@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
-import { fromDb } from "@/lib/supabase/cast";
+import { fromDb, fromDbChecked } from "@/lib/supabase/cast";
+import { proformaRowsDbSchema } from "@/features/cotizacion/services/readSchemas";
+
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { mergeProformaDetalle } from "./queries.helpers";
 import type {
@@ -11,7 +13,8 @@ import type {
 } from "./types";
 
 export async function fetchProformasEmbarque(embarqueId: string): Promise<ProformaConFactura[]> {
-  return fromDb<ProformaConFactura[]>(
+  // M2: boundary de dinero validado (identidad + total/subtotal/iva).
+  return fromDbChecked<ProformaConFactura[]>(
     await unwrapOr(
       supabase
         .from("proformas")
@@ -24,7 +27,9 @@ export async function fetchProformasEmbarque(embarqueId: string): Promise<Profor
         .order("created_at", { ascending: false }),
       [],
     ),
+    proformaRowsDbSchema,
   );
+
 }
 
 export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFull | null> {

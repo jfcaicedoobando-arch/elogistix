@@ -3,7 +3,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CostoCotizacion } from "@/features/cotizacion/types";
-import { fromDb } from "@/lib/supabase/cast";
+import { fromDbChecked } from "@/lib/supabase/cast";
+import { costosCotizacionDbSchema } from "./readSchemas";
 
 export async function fetchCotizacionCostos(
   cotizacionId: string,
@@ -13,8 +14,10 @@ export async function fetchCotizacionCostos(
     .select("*")
     .eq("cotizacion_id", cotizacionId);
   if (error) throw error;
-  return fromDb<CostoCotizacion[]>(data ?? []);
+  // M2: valida montos/identidad en el boundary de dinero antes del dominio.
+  return fromDbChecked<CostoCotizacion[]>(data ?? [], costosCotizacionDbSchema);
 }
+
 
 export async function upsertCotizacionCostos(
   cotizacionId: string,
