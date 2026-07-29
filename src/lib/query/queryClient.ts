@@ -93,12 +93,13 @@ function reportQueryError(
       .catch(() => undefined);
     return;
   }
-  const tags: Record<string, string> = { feature: "react_query", kind };
+  const { error: normalized, pgTags } = normalizeForSentry(err);
+  const tags: Record<string, string> = { feature: "react_query", kind, ...pgTags };
   if (rootKey) tags[kind === "query" ? "query_root" : "mutation_root"] = rootKey.slice(0, 64);
   if (opKey && kind === "mutation") tags.mutation_op = opKey.slice(0, 64);
   void import("@sentry/react")
     .then(({ captureException }) =>
-      captureException(err, { tags, extra: meta }),
+      captureException(normalized, { tags, extra: meta }),
     )
     .catch(() => undefined);
 }
