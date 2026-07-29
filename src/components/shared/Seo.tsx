@@ -13,8 +13,13 @@ interface SeoProps {
   ogTitle?: string;
   ogDescription?: string;
   ogUrl?: string;
+  /** Tipo Open Graph. Usar "article" en guías/recursos. Default: "website". */
+  ogType?: "website" | "article";
+  /** URL absoluta (https) de la imagen de previsualización social. */
+  ogImage?: string;
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
+
 
 function upsertMeta(attr: "name" | "property", key: string, value: string) {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
