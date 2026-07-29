@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.326.3] - 2026-07-30
+- Se renombró un título de prueba duplicado para que la auditoría de higiene de tests vuelva a pasar en CI.
+
 ## [13.326.2] - 2026-07-30
 - Se alineó el corte del radar de drift del gate de despliegue con el de la suite RLS, evitando que una migración histórica (FIX C5) bloqueara la promoción a producción.
 
