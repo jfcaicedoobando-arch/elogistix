@@ -34,7 +34,8 @@ describe("convertirProformaAFactura", () => {
       p_metodo_pago: "PUE",
       p_forma_pago: "03",
       p_uso_cfdi: "G03",
-      p_dias_credito: 0,
+      // v13.331.9: sin plazo explícito se omite para que la RPC herede el del cliente.
+      p_dias_credito: undefined,
       p_notas: undefined,
       p_request_id: undefined,
     });
