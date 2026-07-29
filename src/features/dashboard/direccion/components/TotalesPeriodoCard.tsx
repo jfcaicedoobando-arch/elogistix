@@ -5,7 +5,7 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import { formatDateMx } from "@/lib/date/mx";
+import { formatDate } from "@/lib/formatters/dates";
 import type { DireccionTotales } from "@/features/dashboard/direccion/services/loaders";
 
 const BLOQUES: Array<{ key: keyof Pick<DireccionTotales, "ventas" | "costos" | "facturado" | "cobrado">; label: string }> = [
