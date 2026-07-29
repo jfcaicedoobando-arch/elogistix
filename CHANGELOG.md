@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.331.1] - 2026-07-30
+- Corregida la pantalla en blanco al abrir la aplicación: el sistema de datos ahora se inicializa antes que la sesión del usuario.
+
 ## [13.331.0] - 2026-07-30
 - Reorganización interna: la lógica que consulta y guarda datos salió de las pantallas y quedó en hooks reutilizables por módulo (admin, costeo, CxP, embarques, facturación, portal y anticipos), lo que reduce recargas innecesarias y facilita corregir errores sin tocar la interfaz.
 - Se añadió una prueba automática que impide volver a mezclar esa lógica dentro de los componentes.
