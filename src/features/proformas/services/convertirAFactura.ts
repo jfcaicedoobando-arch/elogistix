@@ -16,7 +16,12 @@ export interface ConvertirProformaParams {
   metodoPago: "PUE" | "PPD";
   formaPago: string;   // catálogo SAT
   usoCfdi: string;     // catálogo SAT
-  diasCredito?: number;
+  /**
+   * Plazo de crédito explícito. Si es `null`/`undefined` la RPC aplica la
+   * cascada proforma → ficha del cliente → 0 (v13.331.9). Enviar 0 aquí
+   * forzaría facturas que vencen el mismo día de emisión.
+   */
+  diasCredito?: number | null;
   notas?: string | null;
   requestId?: string;  // idempotencia
 }
