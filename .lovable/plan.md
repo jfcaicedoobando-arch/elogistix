@@ -1,41 +1,40 @@
-## Qué revisé (verificado en código y base de datos hoy)
+## Qué pasó (en analogía)
 
-| # | Tema | Estado real |
-|---|---|---|
-| Q-01 | Solicitud del portal invisible | **PENDIENTE**. El enum `estado_cotizacion` NO tiene `'Solicitada'` (valores: Borrador, Enviada, Aceptada, Rechazada, Vencida, En operación, Archivada) y la policy `Cliente read own cotizaciones` sigue sin incluirla |
-| Q-02 | CxP manual sin conceptos | **PENDIENTE**. No existe sección de conceptos manuales en la captura; el toast de lote sigue diciendo "No se pudo aprobar ninguna de las N facturas" (`useAprobarFacturasLote.ts:74`) sin el mensaje del servidor |
-| Q-03 | Matching de tarifas | **PENDIENTE**. `get_top_tarifas` no usa `locode` en ninguna parte de su cuerpo (matching por id de fila) |
-| Q-04 | SoD tesorero/ventas | **PENDIENTE**. No existe ninguna función en BD que emita `LC_SOD_VIOLATION` |
-| Q-05 | Alta de usuarios | **PENDIENTE**. `createUserViaEdgeFunction` castea el rol a `"admin"|"operador"|"viewer"` (bug de mapeo), no re-verifica la membresía tras crear, no valida duplicados, y no envía `orgId` a la edge function |
-| Q-06 | Divisas Tesorería | **PARCIAL**. `calcularResumenTesoreria` ya acepta `tipoCambioUsd`, pero cae a `1` si no llega; falta enchufar el TC del DOF y cubrir el flujo proyectado |
-| Q-07/08/09/10/11/12/13 | Inputs, banner, retry, concepto libre, RBAC, autosave, navieras | **SIN EVIDENCIA de fix** — requieren verificación dirigida antes de tocar código |
-| Q-14 | integrity-guard | **HECHO** (v13.334.5: exclusión de agregados y funciones de extensiones) |
-| Q-15/Q-16 | Lotes medio/bajo | **PENDIENTES** salvo lo que coincida con arreglos previos |
-| Q-17 | Seed demo E2E | **PENDIENTE**. En `scripts/e2e/` solo hay provisioning de usuarios/tenants, no seed de catálogos |
+Un script de mantenimiento preguntó a la caja "¿cuánto debe esta factura?". Pero la caja, por una regla de seguridad, sólo responde si sabe a qué empresa perteneces — y el script corría sin identidad, así que la caja contestó "0" a todo. El script interpretó "0 = ya está pagada" y estampó el sello **PAGADA** en 83 facturas que en realidad nunca se cobraron. F964 es una de ellas.
 
-Tests: no hay suites nuevas asociadas a Q-01…Q-17; sí existen las de rondas previas (CxP, tesorería, proformas). Es decir, **no, no están todos los tests generados**.
+## Alcance confirmado
 
-## Plan de cierre
+- 184 facturas en estado `Pagada`; **83 sin ningún pago registrado**.
+- Marcadas en 3 lotes automáticos: 72 (2026-07-22), 8 (2026-07-23), 3 (2026-07-07).
+- Incluye F964, F950–F1004, folios legacy (658, 706…) y demos DLM.
 
-### Fase 1 — Bloqueantes de release (Q-01 a Q-05)
-- **Q-01**: migración que agrega `'Solicitada'` al enum, actualiza la policy del cliente y el RPC `portal_solicitar_cotizacion`; filtro de estados en `/portal/cotizaciones` y badge "Solicitud de portal" en la bandeja de ventas.
-- **Q-02**: sección de conceptos manuales en captura CxP (descripción, cantidad, monto, clave unidad, IVA) con validación de cuadre ±0.01, y propagación del mensaje real del servidor en `useAprobarFacturasLote` (singular/plural, sin navegar).
-- **Q-03**: diagnóstico de duplicados en `puertos`/`tipos_contenedor`, matching por `locode`/código en `get_top_tarifas` y en la query de sugeridas, y eliminación del estado contradictorio error+empty-state.
-- **Q-04**: verificación de rol dentro de las RPC SECURITY DEFINER de CxP (`LC_SOD_VIOLATION`), guardas de flujo en cotización (Aceptar solo si Enviada y total > 0, sin auto-aceptación) y ocultar acciones no permitidas en UI.
-- **Q-05**: `orgId` obligatorio, rol pasado como `app_role` exacto, re-verificación de `organization_members` post-alta (sin toast verde si falla), validación de duplicado en cliente y 409 en la edge function, columna de estado real en la tabla.
+## Plan de remediación
 
-### Fase 2 — Altos (Q-06 a Q-11)
-Conversión de divisas con TC del DOF en Tesorería y flujo; inputs de importes con un único source of truth; banner global por-ruta con "Reintentar" en vez de navegar; `timeoutMs`/`onRetry` en flujo de tesorería y detalles de factura; concepto libre y CTA inline en costos; matriz rol→ruta única con toast de acceso denegado.
+### 1. Migración de corrección de datos (idempotente)
+Recalcular el estado real de cada factura viva usando aritmética directa (sin `saldo_factura`):
+- `saldo = total − Σ pagos vivos − Σ NC aplicadas`
+- `saldo <= 0.01` → Pagada · `pagado > 0` → Parcialmente pagada · `vencimiento < hoy` → Vencida · resto → Emitida
+- Se excluyen `Cancelada`, `Sustituida`, `Borrador`.
+- Se ejecuta con `set_config('app.recalc_estado_factura','1')` para pasar el guard `guard_estado_factura`.
+- Deja registro en `bitacora_actividad` / `app_logs` con el conteo de facturas revertidas, para que Cobranza sepa qué revisar.
 
-### Fase 3 — Medios/bajos y prevención (Q-12, Q-13, Q-15, Q-16, Q-17)
-Autosave completo del wizard, alta de navieras + estabilidad del modal, los 9 puntos del lote medio, los 10 de pulido UX y el script `scripts/e2e/seed-demo.ts`.
+### 2. Blindar la función de saldo
+`saldo_factura` seguirá siendo fail-closed para usuarios finales, pero debe distinguir "no hay usuario autenticado" (contexto de migración/cron/service_role) de "usuario de otra organización". Se agrega la condición de que el guard sólo aplique cuando `auth.uid() IS NOT NULL`, igual que ya hace la versión más reciente en producción — y se corrige el punto que aún deja pasar NULLs.
 
-### Tests por fase
-- Unitarios: RPC de portal (estado creado), cuadre de conceptos CxP, matching de tarifas por locode, guardas SoD, mapeo de rol en alta de usuarios, conversión de divisas en resumen y flujo.
-- Componente: no-reset de IVA al teclear retenciones, banner con Reintentar, empty-state con CTA.
-- E2E: cliente solicita cotización → la ve → ventas la envía → cliente acepta.
+### 3. Guard-rail permanente contra este patrón
+- Añadir a `scripts/db/integrity-guard.sql` un check bloqueante: **cero facturas en estado `Pagada`/`Parcialmente pagada` sin pagos ni NC que lo respalden**. Así, si otro backfill vuelve a equivocarse, CI lo detiene.
+- Añadir regla al auditor de migraciones: prohibido usar funciones con guard de tenant (`saldo_factura`, `saldo_factura_bruto`, y similares) dentro de bloques `DO $backfill$`.
+
+### 4. Visibilidad en la UI
+En el detalle de factura, cuando el estado sea `Pagada` pero no exista historial de pagos, mostrar un aviso de inconsistencia en lugar de un badge verde silencioso.
+
+### 5. Pruebas y cierre
+- Test de la función de recálculo (pagada / parcial / vencida / emitida).
+- Test del nuevo check de `integrity-guard`.
+- Actualizar `CHANGELOG.md` y subir `APP_VERSION`.
 
 ## Detalles técnicos
-Cada fase cierra con `bun run lint`, tests y `audit:migrations`; toda migración nueva incluye GRANT/REVOKE explícitos para no reactivar H6. Se registra cada fase en `CHANGELOG.md` con bump de `APP_VERSION`.
 
-Sugerencia: ejecutar la Fase 1 primero y validar en preview antes de seguir.
+- Archivos: nueva migración en `supabase/migrations/`, `scripts/db/integrity-guard.sql`, `scripts/audit-migrations.ts`, componente de detalle de factura en `src/features/facturacion/`.
+- La corrección no borra ni crea pagos: sólo devuelve el estado a la realidad contable. Las facturas que sí tienen pago (como F963) no se tocan.
+- Impacto esperado: ~83 facturas volverán a `Emitida` o `Vencida`, lo que hará que la cartera por cobrar refleje montos reales (hoy subestimados).
