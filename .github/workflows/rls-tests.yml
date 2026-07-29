@@ -490,7 +490,18 @@ jobs:
 
       - name: Diff against committed types.ts
         run: |
-          if ! diff -u src/integrations/supabase/types.ts /tmp/types.generated.ts > /tmp/types.diff; then
+          # El bloque `__InternalSupabase` (PostgrestVersion) lo agrega el
+          # generador segun la version del servidor, no el esquema: se
+          # normaliza en ambos lados para no reportar drift falso.
+          norm() {
+            sed -e '/__InternalSupabase: {/,/}/d' \
+                -e '/Allows to automatically instantiate createClient/d' \
+                -e "/instead of createClient<Database, { PostgrestVersion/d" \
+                "$1" | sed -e 's/[[:space:]]*$//' -e '/^$/d'
+          }
+          norm src/integrations/supabase/types.ts > /tmp/types.committed.norm.ts
+          norm /tmp/types.generated.ts > /tmp/types.generated.norm.ts
+          if ! diff -u /tmp/types.committed.norm.ts /tmp/types.generated.norm.ts > /tmp/types.diff; then
             echo "::warning::src/integrations/supabase/types.ts esta STALE respecto al esquema de migraciones."
             echo "::warning::Regenera con: DATABASE_URL=<bd-local-con-migraciones> bun run gen:types"
             head -120 /tmp/types.diff
@@ -504,6 +515,7 @@ jobs:
             exit 1
           fi
           echo "types.ts sincronizado con el esquema de migraciones"
+
 
   rls-tests-result:
     name: RLS tests result
