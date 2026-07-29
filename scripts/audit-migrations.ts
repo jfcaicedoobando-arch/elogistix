@@ -124,8 +124,22 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
   // H6 — SECURITY DEFINER requiere REVOKE + GRANT EXECUTE apropiados
   out.push(...scanSecurityDefiner(file, body, auditPostBaseline));
 
+  // H7 (P-10) — `ALTER TYPE ... RENAME VALUE` no reescribe los cuerpos de las
+  // funciones: cualquier función creada antes con el literal viejo queda rota
+  // en runtime (22P02). Exigimos recrear dependientes en la misma migración.
+  const renameValueRe = /alter\s+type\s+[a-z0-9_."]+\s+rename\s+value/gi;
+  if (renameValueRe.test(body) && !/create\s+(or\s+replace\s+)?function/i.test(body)) {
+    out.push({
+      file,
+      check: "H7",
+      detail:
+        "ALTER TYPE ... RENAME VALUE sin recrear funciones dependientes en el mismo archivo",
+    });
+  }
+
   return out;
 }
+
 
 /**
  * Normaliza una lista de argumentos SQL a su forma tipada canónica.
