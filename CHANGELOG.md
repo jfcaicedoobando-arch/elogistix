@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.338.0] - 2026-07-29
+- **Fix · Cuentas bancarias sin permiso (Sentry 3S/3T).** Tesorería y contabilidad veían los botones "Nueva cuenta" y eliminar, pero la base de datos les negaba el paso. Ahora esos botones sólo aparecen para administradores, y los administradores de organización sí pueden gestionar las cuentas de su propia empresa. Analogía: quitamos la manija de una puerta que estaba cerrada con llave.
+- **Fix · Detalle de factura sin proforma (Sentry 3Q).** El índice interno de la API había quedado viejo tras una migración y no encontraba la relación factura ↔ proforma; se refrescó y ya resuelve.
+- **Fix · Correos "sin resolver" en Usuarios (Sentry 3M).** El listado de cuentas de acceso sólo leía los primeros 50 registros; ahora recorre todas las páginas y cada usuario muestra su correo real.
+- **Fix · 404 en `/sistema/bitacora` (Sentry 3W).** Los enlaces viejos ahora redirigen a `/bitacora`.
+- **Mejora · Menos ruido en Sentry.** Se descartan los errores que en realidad son páginas HTML del túnel de pruebas (Cloudflare 1033) y los bloqueos de negocio 23514 ("Embarque cerrado"), y los errores de base de datos se envían con su mensaje real en vez de títulos ilegibles como "M".
+
+
 ## [13.337.0] - 2026-07-29
 - **Fix · "Error al reabrir embarque: [object Object]".** El mensaje real del servidor se perdía al convertir el error a texto, así que sólo se veía `[object Object]`. Ahora se traduce correctamente y se conserva la causa original para Sentry.
 - **Fix · Ambigüedad de la función de reapertura.** Existían dos versiones con el mismo nombre y la base de datos no sabía cuál usar. Se dejó una sola firma oficial (`reabrir_embarque`) y la variante corta de la pestaña Cierre se renombró a `reabrir_embarque_con_motivo`. Analogía: dos llaves idénticas para puertas distintas; le pusimos etiqueta a cada una.
