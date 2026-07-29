@@ -171,7 +171,9 @@ describe("costeo/services/tarifas", () => {
 
       await updateTarifaConRecargos("t7", baseInput);
 
-      const tarifaOps = mock.tableCalls.filter((c) => c.table === "costeo_tarifas")[0]?.ops ?? [];
+      const tarifaOps = mock.tableCalls
+        .filter((c) => c.table === "costeo_tarifas")
+        .flatMap((c) => c.ops);
       expect(tarifaOps).toContain("update");
 
       const recargoOps = mock.tableCalls.filter((c) => c.table === "costeo_tarifa_recargos");
