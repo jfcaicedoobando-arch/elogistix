@@ -400,6 +400,109 @@ jobs:
       - name: Guard de estados - guard_estado_factura
         run: $PSQL -f supabase/tests/guard_estado_factura.sql
 
+  types-drift:
+    name: Drift types.ts (esquema <-> tipos TS)
+    runs-on: ubuntu-24.04
+    needs: rls
+    timeout-minutes: 10
+    # v13.x (GHA-audit C6) — radar: el esquema fuente de verdad son las
+    # migraciones. Arranca en modo aviso (continue-on-error) porque la baseline
+    # committeada se genero contra la BD de produccion; una vez regenerada con
+    # `bun run gen:types` se puede volver bloqueante quitando continue-on-error.
+    continue-on-error: true
+
+    services:
+      postgres:
+        image: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+          --shm-size=256m
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+      PSQL: psql -v ON_ERROR_STOP=1 -X -q
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-bun
+
+      - name: Download database snapshot
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: rls-db-snapshot
+          path: .rls-snapshot/
+
+      - name: Create Supabase roles before restore
+        run: |
+          $PSQL <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+              CREATE ROLE anon NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+              CREATE ROLE authenticated NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+              CREATE ROLE service_role NOLOGIN BYPASSRLS;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
+              CREATE ROLE authenticator NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
+              CREATE ROLE supabase_admin NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
+              CREATE ROLE supabase_auth_admin NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
+              CREATE ROLE supabase_storage_admin NOLOGIN;
+            END IF;
+          END $$;
+          SQL
+
+      - name: Restore database snapshot
+        run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
+
+      - name: Regenerate types from migration schema
+        run: |
+          bunx supabase gen types typescript \
+            --db-url postgresql://postgres:postgres@localhost:5432/postgres \
+            --schema public > /tmp/types.generated.ts
+          wc -l /tmp/types.generated.ts
+
+      - name: Diff against committed types.ts
+        run: |
+          if ! diff -u src/integrations/supabase/types.ts /tmp/types.generated.ts > /tmp/types.diff; then
+            echo "::warning::src/integrations/supabase/types.ts esta STALE respecto al esquema de migraciones."
+            echo "::warning::Regenera con: DATABASE_URL=<bd-local-con-migraciones> bun run gen:types"
+            head -120 /tmp/types.diff
+            {
+              echo "## Drift de types.ts"
+              echo ""
+              echo '```diff'
+              head -200 /tmp/types.diff
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "types.ts sincronizado con el esquema de migraciones"
+
   rls-tests-result:
     name: RLS tests result
     runs-on: ubuntu-24.04
