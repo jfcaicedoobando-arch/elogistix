@@ -3,13 +3,12 @@
  * permite crear, timbrar, descargar, reenviar y cancelar cada una.
  */
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { FileMinus, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { listarNotasCreditoPorFactura, type ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
-import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
+import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
+import { useNotasCreditoDeFactura } from "@/features/facturacion/hooks/useNotasCreditoDeFactura";
 import { DialogCrearNotaCredito } from "@/features/facturacion/components/DialogCrearNotaCredito";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 import { DialogCancelarNotaCredito } from "@/features/facturacion/components/DialogCancelarNotaCredito";
@@ -65,10 +64,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
   const timbrar = useTimbrarNotaCredito(facturaId);
   const cancelar = useCancelarNotaCredito(facturaId);
 
-  const { data: notas = [], isLoading } = useQuery({
-    queryKey: facturasKeys.notasCredito(facturaId),
-    queryFn: () => listarNotasCreditoPorFactura(facturaId),
-  });
+  const { data: notas = [], isLoading } = useNotasCreditoDeFactura(facturaId);
 
   const conceptosSugeridos = useMemo(
     () => parseConceptosSugeridos(snapshotEmision),

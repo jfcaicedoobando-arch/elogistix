@@ -6,15 +6,13 @@
  * ocupaba un card independiente. Reduce ruido y agrupa lo que un contador
  * revisa cuando audita el CFDI.
  */
-import { useQuery } from "@tanstack/react-query";
 import { Copy, FileCheck2, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCopyText } from "@/hooks/shared";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
-import { fetchEmisorEmpresa } from "@/features/configuracion/services";
-import { queryKeys } from "@/lib/query";
+import { useEmisorEmpresa } from "@/features/facturacion/hooks/useEmisorEmpresa";
 
 interface Props {
   uuidFiscal: string;
@@ -50,11 +48,7 @@ export function FacturaTimbradoCard(props: Props) {
       errorTitle: "No se pudo copiar",
       method: "FACTURA_UUID_COPY",
     });
-  const { data: emisor } = useQuery({
-    queryKey: queryKeys.facturacion.emisorEmpresa,
-    queryFn: fetchEmisorEmpresa,
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: emisor } = useEmisorEmpresa();
 
   return (
     <Card>

@@ -18,7 +18,7 @@ import {
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { diffDias } from "./garantias/garantiasUtils";
 import { GarantiasKpiCards } from "./garantias/GarantiasKpiCards";
-import { useGarantiasColumns, type GarantiaRow } from "./garantias/useGarantiasColumns";
+import { useGarantiasColumns, type GarantiaRow } from "@/features/embarques/hooks/useGarantiasColumns";
 
 interface Props {
   embarqueId: string;

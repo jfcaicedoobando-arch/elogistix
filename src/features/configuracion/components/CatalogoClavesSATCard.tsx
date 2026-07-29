@@ -7,86 +7,24 @@
  *     (modo estricto: sólo productos del catálogo).
  */
 import { useMemo, useState } from "react";
-import { notifySuccess } from "@/lib/ui/appFeedback";
 import { Plus, Trash2, Pencil } from "lucide-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/lib/contexts/AuthContext";
-import { queryKeys } from "@/lib/query";
-import {
-  fetchCatalogoClavesSat,
-  insertCatalogoClaveSat,
-  updateCatalogoClaveSat,
-  deleteCatalogoClaveSat,
-} from "@/features/configuracion/services/catalogoClavesSat";
+import { useCatalogoClavesSATController } from "@/features/configuracion/hooks/useCatalogoClavesSATController";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { EditRow } from "./CatalogoClavesSATCard.parts";
 import {
-  EMPTY_DRAFT, TIPO_IVA_LABEL, TIPO_IVA_VARIANT, tasaFromTipo,
+  EMPTY_DRAFT, TIPO_IVA_LABEL, TIPO_IVA_VARIANT,
   type Draft, type Row,
 } from "./CatalogoClavesSATCard.constants";
 
 export function CatalogoClavesSATCard() {
-  const { organizationId } = useAuth();
-  const qc = useQueryClient();
+  const { rows, isLoading, addMut, updateMut, deleteMut } = useCatalogoClavesSATController();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [showNew, setShowNew] = useState(false);
-
-  const { data: rows = [], isLoading } = useQuery<Row[]>({
-    queryKey: queryKeys.configuracion.catalogoClavesSat(organizationId),
-    enabled: !!organizationId,
-    // SAFE-CAST: el service devuelve el row canónico; Row local es un alias estructural del mismo shape.
-    queryFn: fetchCatalogoClavesSat as unknown as () => Promise<Row[]>,
-  });
-
-  const invalidate = () => {
-    qc.invalidateQueries({ queryKey: queryKeys.configuracion.catalogoClavesSat(organizationId) });
-    qc.invalidateQueries({ queryKey: queryKeys.productosCatalogo(organizationId) });
-  };
-
-  const onError = (err: unknown) =>
-    notifyError(undefined, { title: "No se pudo guardar el producto", error: err, method: "CATALOGO_PRODUCTOS" });
-
-  const buildPayload = (d: Draft) => ({
-    patron: d.patron.trim(),
-    clave_sat: d.clave_sat.trim(),
-    activo: d.activo,
-    tipo_iva: d.tipo_iva,
-    tasa_iva_default: tasaFromTipo(d.tipo_iva),
-    clave_unidad_sat: d.clave_unidad_sat,
-  });
-
-  const addMut = useMutation({
-    mutationFn: async (d: Draft) => {
-      if (!organizationId) throw new Error("Sin organización");
-      await insertCatalogoClaveSat(organizationId, buildPayload(d));
-    },
-    onSuccess: () => { invalidate(); setShowNew(false); setDraft(EMPTY_DRAFT); notifySuccess(undefined, { title: "Producto agregado" }); },
-    onError,
-  });
-
-  const updateMut = useMutation({
-    mutationFn: async (vars: { id: string; d: Draft }) => {
-      await updateCatalogoClaveSat(vars.id, buildPayload(vars.d));
-    },
-    onSuccess: () => { invalidate(); setEditingId(null); notifySuccess(undefined, { title: "Producto actualizado" }); },
-    onError,
-  });
-
-  const deleteMut = useMutation({
-    mutationFn: async (id: string) => {
-      await deleteCatalogoClaveSat(id);
-    },
-    onSuccess: () => { invalidate(); notifySuccess(undefined, { title: "Producto eliminado" }); },
-    onError,
-  });
-
-
 
   const busy = addMut.isPending || updateMut.isPending || deleteMut.isPending;
 
@@ -103,6 +41,14 @@ export function CatalogoClavesSATCard() {
     () => draft.patron.trim().length > 0 && draft.clave_sat.trim().length >= 6 && draft.clave_unidad_sat.trim().length > 0,
     [draft],
   );
+
+  const handleAdd = () => {
+    addMut.mutate(draft, { onSuccess: () => { setShowNew(false); setDraft(EMPTY_DRAFT); } });
+  };
+
+  const handleUpdate = () => {
+    updateMut.mutate({ id: editingId as string, d: draft }, { onSuccess: () => setEditingId(null) });
+  };
 
   return (
     <Card>
@@ -144,7 +90,7 @@ export function CatalogoClavesSATCard() {
               {rows.map((r) => editingId === r.id ? (
                 <EditRow key={r.id} draft={draft} setDraft={setDraft} busy={busy} valid={validDraft}
                          onCancel={() => setEditingId(null)}
-                         onSave={() => updateMut.mutate({ id: r.id, d: draft })} />
+                         onSave={handleUpdate} />
               ) : (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.patron}</TableCell>
@@ -161,7 +107,7 @@ export function CatalogoClavesSATCard() {
               {showNew && (
                 <EditRow draft={draft} setDraft={setDraft} busy={busy} valid={validDraft}
                          onCancel={() => { setShowNew(false); setDraft(EMPTY_DRAFT); }}
-                         onSave={() => addMut.mutate(draft)} />
+                         onSave={handleAdd} />
               )}
             </TableBody>
           </Table>

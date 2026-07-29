@@ -13,15 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/shared";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { enviarProformaPorEmail } from "@/features/proformas/services/enviarEmail";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
 import { useEmailsOcultos } from "@/features/proformas/hooks/useEmailsOcultos";
+import { useEnviarProformaEmail, type EnvioProformaOk } from "@/features/proformas/hooks/useEnviarProformaEmail";
 import { DestinatariosRecientesChips } from "./DestinatariosRecientesChips";
 import { EnvioProformaExitoso } from "./EnvioProformaExitoso";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
-import { queryKeys } from "@/lib/query";
 
 interface Props {
   open: boolean;
@@ -41,16 +39,13 @@ function defaultMensaje(p: ProformaDetalleFull): string {
   ].join("\n");
 }
 
-interface EnvioOk { enlace_portal: string; estado: string }
-
 export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const { toast } = useToast();
-  const qc = useQueryClient();
   const [destinatarios, setDestinatarios] = useState("");
   const [cc, setCc] = useState("");
   const [asunto, setAsunto] = useState("");
   const [mensaje, setMensaje] = useState("");
-  const [enviado, setEnviado] = useState<EnvioOk | null>(null);
+  const [enviado, setEnviado] = useState<EnvioProformaOk | null>(null);
   const { data: memoria } = useDestinatariosSugeridos(proforma.cliente_id);
   const { ocultos, isOculto, ocultar, restaurar, restaurarVarios } = useEmailsOcultos(proforma.cliente_id);
 
@@ -74,38 +69,9 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
     setter(current ? `${current.replace(/[,;\s]+$/, "")}, ${email}` : email);
   }
 
-  interface EnviarVars {
-    to: { email: string }[];
-    ccList: string[];
-    asunto: string;
-    mensaje: string;
-  }
-
-  const enviarMut = useMutation({
-    mutationKey: queryKeys.proformas.enviarEmail(proforma.id),
-    mutationFn: async ({ to, ccList, asunto, mensaje }: EnviarVars) => {
-      return enviarProformaPorEmail({
-        proformaId: proforma.id,
-        destinatarios: to,
-        cc: ccList,
-        asunto,
-        mensaje,
-      });
-    },
-    onSuccess: async (res, vars) => {
-      setEnviado(res);
-      restaurarVarios([...vars.to.map((t) => t.email), ...vars.ccList]);
-      toast({ title: "Correo enviado", description: `Estado: ${res.estado}` });
-      await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
-    },
-    onError: (e: Error) => {
-      notifyError(undefined, {
-        title: "No se pudo enviar",
-        description: e.message,
-        error: e,
-        method: "PROFORMAS_ENVIAR_EMAIL",
-      });
-    },
+  const enviarMut = useEnviarProformaEmail(proforma.id, (res, vars) => {
+    setEnviado(res);
+    restaurarVarios([...vars.to.map((t) => t.email), ...vars.ccList]);
   });
 
   function handleEnviar() {

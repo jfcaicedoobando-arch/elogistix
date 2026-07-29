@@ -8,18 +8,16 @@
  * preferencia (`clientes.email_cc_default`) o, si no existen, los del último
  * envío. Al éxito los persiste como nueva preferencia (best-effort).
  */
-import { useQuery } from "@tanstack/react-query";
 import { EnviarDocumentoDialog } from "@/components/shared/emails/EnviarDocumentoDialog";
 import { useEnviarFacturaEmail } from "@/features/facturacion/hooks/mutations/useEnviarFacturaEmail";
+import { useFacturaClienteDefaults } from "@/features/facturacion/hooks/useFacturaClienteDefaults";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import {
-  fetchDefaultsFacturacionCliente,
   guardarDefaultsCcCliente,
   guardarDefaultsDestinatariosCliente,
 } from "@/features/facturacion/services";
 import type { Tables } from "@/integrations/supabase/types";
-import { queryKeys } from "@/lib/query";
 import { logger } from "@/lib/observability/logger";
 import { notifyWarning } from "@/lib/ui/appFeedback";
 
@@ -39,12 +37,7 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
   const { user } = useAuth();
   const mutation = useEnviarFacturaEmail(factura.id);
 
-  const { data: defaults } = useQuery({
-    queryKey: queryKeys.facturacion.clienteDefaults(factura.cliente_id),
-    enabled: !!factura.cliente_id && open,
-    queryFn: () => fetchDefaultsFacturacionCliente(factura.cliente_id!),
-    staleTime: 30_000,
-  });
+  const { data: defaults } = useFacturaClienteDefaults(factura.cliente_id, open);
 
   const totalFormateado = factura.total != null && factura.moneda
     // SAFE-CAST: factura.moneda es enum moneda validado en BD.

@@ -4,11 +4,9 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import { fetchHistorialFacturaEmitida } from "@/features/facturacion/services/historialFactura";
-import { queryKeys } from "@/lib/query";
+import { useFacturaHistorial } from "@/features/facturacion/hooks/useFacturaHistorial";
 import { formatDate } from "@/lib/formatters";
 import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
-import { useQuery } from "@tanstack/react-query";
 import { History } from "lucide-react";
 
 interface Props {
@@ -39,11 +37,7 @@ function etiquetaAccion(accion: string): string {
 }
 
 export function FacturaBitacoraCard({ facturaId }: Props) {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: queryKeys.facturas.historial(facturaId),
-    queryFn: () => fetchHistorialFacturaEmitida(facturaId, 50),
-    enabled: Boolean(facturaId),
-  });
+  const { data, isLoading, isError } = useFacturaHistorial(facturaId);
 
   const entradas = data ?? [];
 

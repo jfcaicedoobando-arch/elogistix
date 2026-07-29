@@ -5,19 +5,13 @@
  *
  * v13.190.0 · Ola 2 · Item 3
  */
-import { useState } from "react";
 import { format } from "date-fns";
 import { CheckCircle2, Link2, Link2Off, Loader2 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/formatters";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { useAuth } from "@/lib/contexts/AuthContext";
-import { sugerirMovsParaPagoProveedor } from "@/features/cxp/services/conciliacionBancaria";
-import { conciliarConPago, desconciliarMovimiento } from "@/features/tesoreria/services/conciliacion";
-import { queryKeys } from "@/lib/query";
+import { useConciliacionPagoCellController } from "@/features/cxp/hooks/useConciliacionPagoCellController";
 
 interface MovimientoVinculado {
   id: string;
@@ -39,48 +33,11 @@ interface Props {
 export function ConciliacionPagoCell({
   pagoId, fechaPago, monto, cuentaBancariaId, movimiento, disabled,
 }: Props) {
-  const [open, setOpen] = useState(false);
-  const qc = useQueryClient();
-  const { user } = useAuth();
+  const { open, setOpen, candidatos, vincular, desvincular } =
+    useConciliacionPagoCellController({
+      pagoId, fechaPago, monto, cuentaBancariaId, tieneMovimiento: !!movimiento,
+    });
 
-  const candidatos = useQuery({
-    queryKey: queryKeys.cxp.conciliacionCandidatos(pagoId),
-    queryFn: () => sugerirMovsParaPagoProveedor({
-      id: pagoId, fecha_pago: fechaPago, monto, cuenta_bancaria_id: cuentaBancariaId,
-    }),
-    enabled: open && !movimiento,
-    staleTime: 60_000,
-  });
-
-  const vincular = useMutation({
-    mutationFn: (movId: string) => conciliarConPago(movId, "cxp", pagoId, user?.id ?? null),
-    onSuccess: () => {
-      notifySuccess(undefined, { title: "Movimiento vinculado al pago" });
-      qc.invalidateQueries({ queryKey: queryKeys.pagosProveedor.all });
-      qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
-      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
-      setOpen(false);
-    },
-    onError: (err: Error) => notifyError(undefined, {
-      title: `No se pudo vincular: ${err.message}`, error: err,
-      method: "FEATURES_CXP_CONCILIACION_VINCULAR",
-    }),
-  });
-
-  const desvincular = useMutation({
-    mutationFn: (movId: string) => desconciliarMovimiento(movId),
-    onSuccess: () => {
-      notifySuccess(undefined, { title: "Movimiento desvinculado" });
-      qc.invalidateQueries({ queryKey: queryKeys.pagosProveedor.all });
-      qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
-      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
-      setOpen(false);
-    },
-    onError: (err: Error) => notifyError(undefined, {
-      title: `No se pudo desvincular: ${err.message}`, error: err,
-      method: "FEATURES_CXP_CONCILIACION_DESVINCULAR",
-    }),
-  });
 
   if (movimiento) {
     return (

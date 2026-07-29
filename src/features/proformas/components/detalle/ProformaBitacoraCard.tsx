@@ -2,12 +2,10 @@
  * ProformaBitacoraCard — feed de auditoría de la proforma (bitácora de
  * actividad). Da trazabilidad de quién envió, aceptó, editó o facturó.
  */
-import { useQuery } from "@tanstack/react-query";
 import { History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import { fetchBitacoraProforma } from "@/features/proformas/services/bitacoraProforma";
-import { queryKeys } from "@/lib/query";
+import { useProformaBitacora } from "@/features/proformas/hooks/useProformaBitacora";
 import { formatDate } from "@/lib/formatters";
 import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
 
@@ -16,12 +14,7 @@ interface Props {
 }
 
 export function ProformaBitacoraCard({ proformaId }: Props) {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: queryKeys.proformas.bitacora(proformaId),
-    queryFn: () => fetchBitacoraProforma(proformaId),
-    enabled: Boolean(proformaId),
-    staleTime: 30_000,
-  });
+  const { data, isLoading, isError } = useProformaBitacora(proformaId);
 
   const entradas = data ?? [];
 

@@ -15,7 +15,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useRegistrarPagoProveedor, useFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
-import { usePagoProveedorForm } from "./usePagoProveedorForm";
+import { usePagoProveedorForm } from "@/features/cxp/hooks/usePagoProveedorForm";
 import { PagoProveedorFormBody } from "./PagoProveedorFormBody";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { traducirErrorPagoProveedor } from "@/features/cxp/services/pagosProveedorErrors";

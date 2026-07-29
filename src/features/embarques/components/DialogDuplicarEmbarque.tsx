@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { CopiaContenedorRow } from "./duplicarEmbarque/CopiaContenedorRow";
-import { useDuplicarEmbarqueDialog } from "./duplicarEmbarque/useDuplicarEmbarqueDialog";
+import { useDuplicarEmbarqueDialog } from "@/features/embarques/hooks/useDuplicarEmbarqueDialog";
 import { MAX_COPIAS } from "./duplicarEmbarque/types";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 
