@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Anchor, Ship, Package } from "lucide-react";
+import { Anchor, Ship, Package, Coins } from "lucide-react";
 import TabPuertos from "@/features/configuracion/components/TabPuertos";
 import TabNavieras from "@/features/configuracion/components/TabNavieras";
 import TabTiposContenedor from "@/features/configuracion/components/TabTiposContenedor";
+import TabTipoCambioDof from "@/features/configuracion/components/TabTipoCambioDof";
 
 export default function TabCatalogosGlobales() {
   return (
@@ -18,6 +19,9 @@ export default function TabCatalogosGlobales() {
           <TabsTrigger value="contenedores" className="gap-1">
             <Package className="h-3.5 w-3.5" /> Tipos de Contenedor
           </TabsTrigger>
+          <TabsTrigger value="tc-dof" className="gap-1">
+            <Coins className="h-3.5 w-3.5" /> Tipo de Cambio DOF
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="puertos">
@@ -30,6 +34,10 @@ export default function TabCatalogosGlobales() {
 
         <TabsContent value="contenedores">
           <TabTiposContenedor />
+        </TabsContent>
+
+        <TabsContent value="tc-dof">
+          <TabTipoCambioDof />
         </TabsContent>
       </Tabs>
     </div>
