@@ -87,9 +87,9 @@ BEGIN
   -- 1) Helpers de capacidades por rol
   -- ────────────────────────────────────────────────────────────────────────
   PERFORM pg_temp.assert(public.can_view_financials(u_conta_a),
-    'contador SÍ debe poder ver финансas'); -- (texto revisado abajo)
+    'contador SÍ debe poder ver finanzas');
   PERFORM pg_temp.assert(public.can_view_financials(u_admin_a),
-    'admin_org SÍ debe poder ver финансas');
+    'admin_org SÍ debe poder ver finanzas');
   PERFORM pg_temp.assert(NOT public.can_view_financials(u_cs_a),
     'customer_service NO debe poder ver información financiera');
 
