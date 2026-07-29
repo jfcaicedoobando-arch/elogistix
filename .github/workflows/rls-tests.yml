@@ -102,6 +102,7 @@ jobs:
             portal_intra_org \
             rpc_provision_organization \
             rpc_financieras \
+            rpc_por_rol \
             tablas_dinero_extra \
             anon_deny_all \
             cross_tenant_mutations \
@@ -252,6 +253,7 @@ jobs:
           - portal_intra_org
           - rpc_provision_organization
           - rpc_financieras
+          - rpc_por_rol
           - tablas_dinero_extra
           - anon_deny_all
           - cross_tenant_mutations
