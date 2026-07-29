@@ -96,4 +96,6 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "No se pudo aplicar un ajuste interno de base de datos. Reporta este error a soporte.",
   LC_C5B_INCOMPLETO:
     "Un ajuste interno de base de datos quedó incompleto. Reporta este error a soporte.",
+  LC_C5B_FN_AUSENTE:
+    "Un componente interno de base de datos no está disponible. Reporta este error a soporte.",
 };
