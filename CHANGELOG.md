@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.335.0] - 2026-07-29
+- **Feature · Tipo de cambio DOF automático diario.** Nueva tabla interna `tipos_cambio_dof` con la Publicación DOF (Banxico FIX, Art. 20 CFF) de USD y EUR, alimentada por el cron `tc-dof-diario` todos los días a las 7:05 AM (CDMX). La función `exchange-rates` ahora consulta primero la tabla y sólo llama a Banxico si falta el dato, así que la app deja de depender de una API externa en cada carga. Se agregó la RPC `tc_dof_vigente(fecha)` para valuar documentos con el tipo de cambio vigente en cualquier fecha pasada, la RPC `tc_dof_upsert_manual` para corregir a mano un día, y la pestaña **Catálogos → Tipo de Cambio DOF** con historial de 90 días y captura manual. Backfill inicial de 30 días cargado. Analogía: antes preguntábamos el precio del dólar por teléfono cada vez; ahora lo anotamos en una libreta cada mañana y sólo llamamos si falta la hoja del día.
+- **Fix · Crons rechazados por falta de `CRON_SECRET`.** Las tareas `facturapi-reconciliar-cancelaciones` y `rep-retry-nocturno` exigían una clave de seguridad que nunca se había configurado, por lo que respondían 401 en cada ejecución. Se configuró la clave y se re-agendaron ambas tareas enviándola. Analogía: el vigilante pedía una contraseña que nadie le había dado a los mensajeros.
+
+
 ## [13.334.7] - 2026-07-29
 - **Fix · CI `audit:migrations` marcaba falsos H6.** El auditor comparaba la firma de la función letra por letra, así que `timestamptz` en el `GRANT` no coincidía con `timestamp with time zone` en el `CREATE` (son el mismo tipo). Ahora reconoce alias equivalentes (`timestamptz`, `int4`, `bool`, `varchar`, etc.). Analogía: el revisor pedía que dijeras "Ciudad de México" y rechazaba "CDMX" aunque fuera el mismo lugar.
 
