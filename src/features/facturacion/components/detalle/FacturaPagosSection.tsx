@@ -7,20 +7,18 @@
  * v13.232.0 · Confirmación de eliminar pago migrada a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
-import { Trash2, CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
 import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoFactura";
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
-import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
-import { PagoRepCell } from "./PagoRepCell";
+import { FacturaPagosTabla } from "./FacturaPagosTabla";
 
 interface Props {
   facturaId: string;
