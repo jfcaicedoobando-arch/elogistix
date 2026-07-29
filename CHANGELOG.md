@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.334.3] - 2026-07-29
+- Se corrigió la verificación de integridad de la base que fallaba en CI al inspeccionar funciones internas de PostgreSQL; ahora sólo revisa las funciones propias del proyecto.
+
 ## [13.334.2] - 2026-07-29
 - Se agregaron pruebas automáticas del aviso de "correos no disponibles" en Gestión de usuarios y de las pantallas nuevas del portal del cliente.
 - La revisión previa a publicar ahora verifica automáticamente la integridad de la base (funciones duplicadas, catálogos rotos y tablas sin reglas de acceso) y bloquea la promoción si encuentra algo.
