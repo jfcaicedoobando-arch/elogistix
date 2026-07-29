@@ -28,6 +28,14 @@ with expuestas as (
   where n.nspname = 'public'
     and p.prokind = 'f'
     and pg_get_function_result(p.oid) <> 'trigger'
+    -- Excluir funciones instaladas por extensiones (pgcrypto: digest/hmac, etc.):
+    -- no son RPC del proyecto y sus sobrecargas son intencionales.
+    and not exists (
+      select 1 from pg_depend d
+      where d.objid = p.oid
+        and d.classid = 'pg_proc'::regclass
+        and d.deptype = 'e'
+    )
 )
 select 'sobrecarga_ambigua' as hallazgo,
        a.proname            as objeto,
