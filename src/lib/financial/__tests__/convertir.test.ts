@@ -49,3 +49,47 @@ describe("sumarEnMxn", () => {
     expect(res.sinTipoCambio).toBe(0);
   });
 });
+
+describe("aMxn (canon C6)", () => {
+  it("MXN no requiere tipo de cambio", () => {
+    expect(aMxn(100, "MXN", null)).toEqual({ monto: 100, tc: 1, fuente: "moneda-local", completo: true });
+  });
+
+  it("convierte USD con TC directo", () => {
+    const r = aMxn(10, "USD", 20);
+    expect(r).toEqual({ monto: 200, tc: 20, fuente: "tc-directo", completo: true });
+  });
+
+  it("rechaza TC <= 1 en moneda extranjera (1 USD nunca es 1 MXN)", () => {
+    const r = aMxn(10, "USD", 1);
+    expect(r.completo).toBe(false);
+    expect(r.monto).toBe(0);
+    expect(r.fuente).toBe("sin-tc");
+  });
+
+  it("usa el fallback sólo si es confiable y lo audita", () => {
+    expect(aMxn(10, "USD", null, { fallback: 18 })).toEqual({
+      monto: 180, tc: 18, fuente: "tc-fallback", completo: true,
+    });
+    expect(aMxn(10, "USD", null, { fallback: 1 }).completo).toBe(false);
+  });
+});
+
+describe("factorEntreMonedas", () => {
+  it("misma moneda → 1", () => {
+    expect(factorEntreMonedas("USD", "USD", {})).toBe(1);
+  });
+
+  it("USD → MXN usa el TC del dólar", () => {
+    expect(factorEntreMonedas("USD", "MXN", { usd: 20 })).toBe(20);
+  });
+
+  it("EUR → USD cruza por MXN", () => {
+    expect(factorEntreMonedas("EUR", "USD", { usd: 20, eur: 22 })).toBeCloseTo(1.1, 6);
+  });
+
+  it("regresa null si falta un TC confiable", () => {
+    expect(factorEntreMonedas("EUR", "MXN", { usd: 20 })).toBeNull();
+    expect(factorEntreMonedas("USD", "MXN", { usd: 1 })).toBeNull();
+  });
+});
