@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.324.6] - 2026-07-30
+- Calidad de código: se dividieron cuatro archivos que superaban el límite de 200 líneas (estado de cuenta, permisos, conciliación bancaria y acciones del detalle de embarque) sin cambiar su comportamiento.
+
+
 ## [13.324.5] - 2026-07-30
 - Base de datos: se cerró una inconsistencia del historial de cambios; los filtros que ocultan registros eliminados en listados, tableros y reportes ahora quedan garantizados también al reconstruir la base desde cero (sin efecto visible en producción).
 - CI: el radar de drift mueve su corte histórico y ahora muestra las últimas 20 líneas del error, en vez de las primeras 10.
