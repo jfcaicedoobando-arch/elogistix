@@ -20,6 +20,8 @@ import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/types";
 import { aplicarCfdiParsed, aplicarPdfIaParsed } from "./useNuevaFacturaProveedorForm.applyParsed";
+import { useConceptosManuales } from "./useConceptosManuales";
+import { calcularCuadreConceptos } from "@/features/cxp/utils/cuadreConceptos";
 export function useNuevaFacturaProveedorForm(
   onDone: () => void,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
@@ -34,6 +36,7 @@ export function useNuevaFacturaProveedorForm(
   const [cfdiConceptos, setCfdiConceptos] = useState<CfdiConceptoParsed[]>([]);
   const [askCrearProv, setAskCrearProv] = useState<{ rfc: string; nombre: string } | null>(null);
   const [vinculos, setVinculos] = useState<VinculosState>({});
+  const manuales = useConceptosManuales();
   const [embarqueAdHoc, setEmbarqueAdHoc] = useState<EmbarqueSeleccionado | null>(
     initialEmbarqueAdHoc ?? null,
   );
@@ -137,6 +140,7 @@ export function useNuevaFacturaProveedorForm(
     setMode("manual");
     setPendingCfdi(null);
     setCfdiConceptos([]);
+    manuales.limpiar();
     setAskCrearProv(null);
     setVinculos({});
     setEmbarqueAdHoc(initialEmbarqueAdHoc ?? null);
@@ -158,14 +162,43 @@ export function useNuevaFacturaProveedorForm(
     setErrors(next);
     return Object.keys(next).length === 0;
   };
+  // v13.339.0 (Q-02): si no hay CFDI, se persisten los conceptos capturados a mano.
+  const conceptosAPersistir = cfdiConceptos.length > 0 ? cfdiConceptos : manuales.conceptos;
+
+  const cuadreManual = calcularCuadreConceptos(
+    Number(values.subtotal) || 0,
+    manuales.conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })),
+  );
+
   const submit = async () => {
     if (!validate()) {
       notifyError(undefined, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_3" });
       return;
     }
+    // Bloqueo de captura sin partidas o con partidas descuadradas (Q-02).
+    const hayVinculos = Object.keys(vinculos).length > 0;
+    if (cfdiConceptos.length === 0 && !hayVinculos) {
+      if (manuales.conceptos.length === 0) {
+        notifyError(undefined, {
+          title: "Captura los conceptos de la factura",
+          description: "Sin partidas no podrás aprobarla ni pagarla. Agrega al menos un concepto.",
+          method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_SIN_CONCEPTOS",
+        });
+        return;
+      }
+      if (!cuadreManual.puedeAprobar) {
+        notifyError(undefined, {
+          title: "Los conceptos no cuadran con el subtotal",
+          description: `Suma de conceptos ${cuadreManual.suma.toFixed(2)} vs subtotal ${(Number(values.subtotal) || 0).toFixed(2)}. Ajusta la diferencia (tolerancia 0.01).`,
+          method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DESCUADRE",
+        });
+        return;
+      }
+    }
+
     const ok = await runSubmit({
       values, total, userId: user?.id, organizationId,
-      pendingCfdi, cfdiConceptos, vinculos, embarqueAdHoc,
+      pendingCfdi, cfdiConceptos: conceptosAPersistir, vinculos, embarqueAdHoc,
       crearMutateAsync: crear.mutateAsync,
       setFolioError: () => setErrors((e) => ({ ...e, folio: "Ya existe una factura con este folio para este proveedor en esta fecha." })),
     });
@@ -175,6 +208,7 @@ export function useNuevaFacturaProveedorForm(
     values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed, handlePdfIaParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
+    conceptosManuales: manuales, cuadreManual,
     embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit, isPending: crear.isPending, organizationId,
     tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
