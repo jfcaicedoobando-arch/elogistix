@@ -79,7 +79,17 @@ const QUERY_KEY_AND_IVA_RULES = [
     selector: "Literal[value=0.16]",
     message: "No hardcodees `0.16`. Importa `TASA_IVA` desde `@/lib/financial/financialUtils` o resuelve la tasa dinámica del concepto (`resolverTasaConcepto`). Ver mem://core (Never hardcode VAT).",
   },
+  {
+    // M3 (auditoría 2026-07-29) — un solo motor de redondeo de dinero.
+    // `Math.round(x * 100) / 100` diverge de `ROUND(numeric, 2)` de Postgres
+    // en negativos (half toward +∞ vs half away from zero).
+    selector:
+      "BinaryExpression[operator='/'][right.value=100] > CallExpression[callee.object.name='Math'][callee.property.name='round']",
+    message:
+      "No redondees dinero con `Math.round(x*100)/100`. Usa `roundMoney` (o `subtotalLinea`/`sumarMontos`) de `@/lib/financial/financialUtils` — política única half-away-from-zero, idéntica a Postgres ROUND.",
+  },
 ];
+
 
 
 // Lista de features top-level bajo `src/features/`. Se usa para generar
