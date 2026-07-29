@@ -104,5 +104,10 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "El tramo de demoras no tiene condiciones de naviera válidas asociadas. Vuelve a abrir la configuración e inténtalo de nuevo.",
   LC_SEED_DEMO_NO_AUTORIZADO:
     "Solo un administrador global puede reiniciar los datos de la organización demo.",
+  LC_NO_AUTENTICADO:
+    "Tu sesión expiró. Vuelve a iniciar sesión e inténtalo de nuevo.",
+  LC_CLIENTE_NO_VINCULADO:
+    "Tu usuario aún no está vinculado a una empresa. Pide a tu ejecutivo que complete la vinculación.",
+  LC_RUTA_REQUERIDA:
+    "Indica el origen y el destino para poder continuar.",
 };
-
