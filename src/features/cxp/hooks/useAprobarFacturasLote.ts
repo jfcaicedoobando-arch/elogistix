@@ -16,6 +16,20 @@ export interface ResultadoLote {
   fallos: Array<{ id: string; error: string }>;
 }
 
+/** Errores de validación de negocio ya explicados al usuario: no son bugs. */
+const VALIDACIONES_NEGOCIO = [
+  "captura los conceptos",
+  "no cuadra",
+  "no está en estado",
+  "sin permiso",
+];
+
+function esValidacionNegocio(msg: string): boolean {
+  const m = msg.toLowerCase();
+  return VALIDACIONES_NEGOCIO.some((v) => m.includes(v));
+}
+
+
 export function useAprobarFacturasLote() {
   const qc = useQueryClient();
   const [isRunning, setIsRunning] = useState(false);
