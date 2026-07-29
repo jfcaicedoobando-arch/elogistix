@@ -65,7 +65,10 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
 
   sonnerToast.error(computedTitle, {
     description,
-    duration: Infinity,
+    // P-05: dedupe por código de error (reemplaza en vez de apilar) y
+    // auto-dismiss a 8s: los toasts persistentes tapaban los botones del header.
+    id: `err-${errorCode ?? phase ?? "generic"}`,
+    duration: 8000,
     action: {
       label: "Ver detalles",
       onClick: () => openErrorReport(debug),

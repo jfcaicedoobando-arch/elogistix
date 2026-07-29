@@ -35,7 +35,7 @@ const USER_CONTEXT_STALE_MS = 60_000;
 export function useAuthProfile(userId: string | null) {
   const queryClient = useQueryClient();
 
-  const { data } = useQuery({
+  const { data, isLoading: profileLoading } = useQuery({
     queryKey: queryKeys.auth.userContext(userId),
     enabled: !!userId,
     staleTime: USER_CONTEXT_STALE_MS,
@@ -76,5 +76,5 @@ export function useAuthProfile(userId: string | null) {
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.userContextAll });
   }, [userId, queryClient]);
 
-  return { profile, reset, refresh };
+  return { profile, profileLoading: !!userId && profileLoading, reset, refresh };
 }
