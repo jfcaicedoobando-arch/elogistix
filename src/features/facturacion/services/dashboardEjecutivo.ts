@@ -10,6 +10,7 @@
  * advertir. Antes, el `|| 1` silencioso sumaba USD como si fueran MXN 1:1.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 /**
  * Estados que representan una factura efectivamente facturada (timbrada) para
@@ -114,6 +115,10 @@ function acumularPagos(
   }
 }
 
+// FIX C3 (S6-04): caps explícitos verificados por assertNotTruncated.
+const LIMITE_FACTURAS_KPI = 5000;
+const LIMITE_PAGOS_KPI = 10000;
+
 export async function fetchDashboardEjecutivoFacturacion(
   organizationId: string | null,
   fallbackUsdMxn: number | null = null,
@@ -134,7 +139,7 @@ export async function fetchDashboardEjecutivoFacturacion(
     .gte("fecha_emision", desdeIso)
     .in("estado", [...ESTADOS_FACTURADO])
     .is("deleted_at", null)
-    .limit(5000);
+    .limit(LIMITE_FACTURAS_KPI);
   if (organizationId) qFacturas = qFacturas.eq("organization_id", organizationId);
 
   let qPagos = supabase
@@ -142,12 +147,14 @@ export async function fetchDashboardEjecutivoFacturacion(
     .select("fecha_pago, monto_aplicado_factura, tipo_cambio, moneda")
     .gte("fecha_pago", desdeIso)
     .is("deleted_at", null)
-    .limit(10000);
+    .limit(LIMITE_PAGOS_KPI);
   if (organizationId) qPagos = qPagos.eq("organization_id", organizationId);
 
   const [{ data: facturas, error: e1 }, { data: pagos, error: e2 }] = await Promise.all([qFacturas, qPagos]);
   if (e1) throw e1;
   if (e2) throw e2;
+  assertNotTruncated(facturas, LIMITE_FACTURAS_KPI, "facturacion.dashboardEjecutivo.facturas");
+  assertNotTruncated(pagos, LIMITE_PAGOS_KPI, "facturacion.dashboardEjecutivo.pagos");
 
   const tendencia: MesKpi[] = rangos.map((r) => ({ mes: r.mes, facturado_mxn: 0, cobrado_mxn: 0 }));
   const idxMes = new Map(rangos.map((r, i) => [r.mes, i]));

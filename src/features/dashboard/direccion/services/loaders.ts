@@ -2,6 +2,12 @@
  * Loaders (I/O) del Dashboard Dirección. Sin lógica de cómputo.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+
+// FIX C3 (S6-06): caps explícitos verificados por assertNotTruncated.
+const LIMITE_EMBARQUES = 3000;
+const LIMITE_FACTURAS = 10000;
+const LIMITE_PAGOS = 20000;
 
 export type EmbarqueRow = {
   id: string; modo: string | null; estado: string | null; eta: string | null;
@@ -29,10 +35,11 @@ export async function loadEmbarques(orgId: string | null, desdeIso: string): Pro
     .select("id, modo, estado, eta, cerrado_at, cliente_id, cliente_nombre, tipo_cambio_usd, tipo_cambio_eur")
     .is("deleted_at", null)
     .or(`cerrado_at.gte.${desdeIso},eta.gte.${desdeIso}`)
-    .limit(3000);
+    .limit(LIMITE_EMBARQUES);
   if (orgId) q = q.eq("organization_id", orgId);
   const { data: embarques, error } = await q;
   if (error) throw error;
+  assertNotTruncated(embarques, LIMITE_EMBARQUES, "direccion.loadEmbarques");
   const ids = (embarques ?? []).map((e) => e.id);
   if (ids.length === 0) return { embarques: [], ventas: [], costos: [] };
   const [ventasRes, costosRes] = await Promise.all([
@@ -51,16 +58,18 @@ export async function loadEmbarques(orgId: string | null, desdeIso: string): Pro
 export async function loadFacturas(orgId: string | null, desdeIso: string) {
   let qF = supabase.from("facturas")
     .select("id, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado, cliente_id, timbrado_en, uuid_fiscal, acuse_cancelacion_status")
-    .gte("fecha_emision", desdeIso).is("deleted_at", null).limit(10000);
+    .gte("fecha_emision", desdeIso).is("deleted_at", null).limit(LIMITE_FACTURAS);
   if (orgId) qF = qF.eq("organization_id", orgId);
   const { data: facturas, error } = await qF;
   if (error) throw error;
+  assertNotTruncated(facturas, LIMITE_FACTURAS, "direccion.loadFacturas");
   const ids = (facturas ?? []).map((f) => f.id);
   if (ids.length === 0) return { facturas: [] as FacturaRow[], pagos: [] as PagoRow[] };
   const { data: pagos, error: e2 } = await supabase.from("pagos_factura")
     .select("factura_id, monto_aplicado_factura, moneda, tipo_cambio, fecha_pago")
-    .in("factura_id", ids).is("deleted_at", null).limit(20000);
+    .in("factura_id", ids).is("deleted_at", null).limit(LIMITE_PAGOS);
   if (e2) throw e2;
+  assertNotTruncated(pagos, LIMITE_PAGOS, "direccion.loadPagos");
   return { facturas: (facturas ?? []) as FacturaRow[], pagos: (pagos ?? []) as PagoRow[] };
 }
 
@@ -69,9 +78,10 @@ export async function loadEmbarquesActivos(orgId: string | null): Promise<Embarq
     .select("estado, eta")
     .is("deleted_at", null)
     .not("estado", "in", "(Entregado,Cancelado)")
-    .limit(3000);
+    .limit(LIMITE_EMBARQUES);
   if (orgId) q = q.eq("organization_id", orgId);
   const { data, error } = await q;
   if (error) throw error;
+  assertNotTruncated(data, LIMITE_EMBARQUES, "direccion.loadEmbarquesActivos");
   return (data ?? []) as EmbarqueEstadoRow[];
 }

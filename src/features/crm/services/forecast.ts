@@ -3,6 +3,7 @@
  * La derivación pura vive en `lib/crm/forecast.ts`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import {
   computeForecast,
   computeReportesCRM,
@@ -12,6 +13,9 @@ import {
 } from "@/features/crm/domain/forecast";
 
 export type { ForecastResumen, ReportesCRM };
+
+// FIX C3 (S6-07): caps explícitos verificados por assertNotTruncated.
+const LIMITE_CRM = 5000;
 
 export async function fetchEtapaTipos(): Promise<Map<string, EtapaTipo>> {
   const { data, error } = await supabase
@@ -30,18 +34,18 @@ export async function fetchForecast(desde?: string, hasta?: string): Promise<For
   if (hasta) q = q.lte("fecha_estimada_cierre", hasta);
   // Cap defensivo: agregado por org; >5000 oportunidades activas es señal
   // operativa para migrar a RPC con agregación server-side.
-  q = q.limit(5000);
+  q = q.limit(LIMITE_CRM);
   const { data, error } = await q;
   if (error) throw error;
-  return computeForecast(data ?? [], etapaTipos);
+  return computeForecast(assertNotTruncated(data, LIMITE_CRM, "crm.fetchForecast"), etapaTipos);
 }
 
 export async function fetchReportesCRM(): Promise<ReportesCRM> {
   // Caps defensivos para agregados por org. >5000 leads/oportunidades activos
   // → migrar a RPC con agregación server-side.
   const [leadsR, opsR, motivosR, etapasR] = await Promise.all([
-    supabase.from("crm_leads").select("estado, fuente").limit(5000),
-    supabase.from("crm_oportunidades").select("motivo_perdida_id, etapa_id").limit(5000),
+    supabase.from("crm_leads").select("estado, fuente").limit(LIMITE_CRM),
+    supabase.from("crm_oportunidades").select("motivo_perdida_id, etapa_id").limit(LIMITE_CRM),
     supabase.from("crm_motivos_perdida").select("id, nombre"),
     supabase.from("crm_etapas_pipeline").select("id, nombre, tipo"),
   ]);
@@ -49,6 +53,8 @@ export async function fetchReportesCRM(): Promise<ReportesCRM> {
   if (opsR.error) throw opsR.error;
   if (motivosR.error) throw motivosR.error;
   if (etapasR.error) throw etapasR.error;
+  assertNotTruncated(leadsR.data, LIMITE_CRM, "crm.fetchReportes.leads");
+  assertNotTruncated(opsR.data, LIMITE_CRM, "crm.fetchReportes.oportunidades");
 
   const motivoNombre = new Map((motivosR.data ?? []).map((m) => [m.id, m.nombre]));
   const etapaInfo = new Map(
