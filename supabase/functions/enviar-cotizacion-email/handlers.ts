@@ -197,6 +197,20 @@ export async function handleSend(params: SendParams): Promise<Response> {
   if (parsed.validRecipients.length === 0) return jsonResponse(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
   if (!parsed.pdfStoragePath) return jsonResponse(cors, { error: 'pdf_path requerido (sube el PDF primero con action=prepare)' }, 400);
 
+  // M8: los destinatarios deben pertenecer al cliente de la cotización.
+  if (cot.cliente_id) {
+    const permitidos = await emailsPermitidosCliente(admin as never, cot.cliente_id);
+    const ajenos = [...parsed.validRecipients.map((d) => d.email), ...parsed.ccEmails]
+      .filter((e) => !permitidos.has(e.trim().toLowerCase()));
+    if (ajenos.length > 0) {
+      return jsonResponse(cors, {
+        error: 'Uno o más correos no pertenecen a los contactos del cliente',
+        code: DESTINATARIO_NO_PERMITIDO,
+      }, 400);
+    }
+  }
+
+
   const safeFolio = (cot.folio ?? 'cotizacion').replace(/[^A-Za-z0-9._-]+/g, '_');
   const orgSlug = await fetchOrgSlug(admin, cot.organization_id);
   const { data: signed, error: signErr } = await admin
