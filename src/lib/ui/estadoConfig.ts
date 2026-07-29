@@ -174,6 +174,8 @@ export const ESTADO_CONFIG: Record<string, EstadoVisual> = {
   Pagado: { ...DEFAULT_VISUAL, badge: "bg-success/15 text-success border border-success/30" },
 
   // ───── Estados de cotización ─────
+  // v13.339.0 (Q-01): solicitudes creadas desde el portal del cliente.
+  Solicitada: { ...DEFAULT_VISUAL, badge: "bg-accent/15 text-accent border border-accent/30" },
   Enviada: { ...DEFAULT_VISUAL, badge: "bg-info/15 text-info border border-info/30" },
   Aceptada: { ...DEFAULT_VISUAL, badge: "bg-warning/15 text-warning border border-warning/30" },
   Confirmada: { ...DEFAULT_VISUAL, badge: "bg-success/15 text-success border border-success/30" },

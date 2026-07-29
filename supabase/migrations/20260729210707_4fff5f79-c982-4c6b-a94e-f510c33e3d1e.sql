@@ -1,0 +1,1 @@
+ALTER TYPE public.estado_cotizacion ADD VALUE IF NOT EXISTS 'Solicitada' BEFORE 'Enviada';

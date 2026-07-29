@@ -15,6 +15,7 @@ import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { calcularDesgloseMoneda, parseConceptos } from "@/lib/domain/cotizacionDetalle";
+import { PORTAL_COTIZACION_ESTADOS_VISIBLES } from "@/features/portal/services/queries";
 
 export default function PortalCotizaciones() {
   const navigate = useNavigate();
@@ -26,9 +27,12 @@ export default function PortalCotizaciones() {
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [solicitudAbierta, setSolicitudAbierta] = useState(false);
 
+  // v13.339.0 (Q-01): el filtro lista SIEMPRE los estados visibles para el
+  // cliente (antes se derivaba de los datos y salía vacío sin cotizaciones).
   const estados = useMemo(() => {
-    const set = new Set(cotizaciones.map((c) => c.estado));
-    return Array.from(set).sort();
+    const set = new Set<string>(PORTAL_COTIZACION_ESTADOS_VISIBLES);
+    cotizaciones.forEach((c) => set.add(c.estado));
+    return Array.from(set);
   }, [cotizaciones]);
 
   const filtered = useMemo(() => {

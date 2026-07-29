@@ -8,6 +8,7 @@ import type { TablesInsert } from "@/integrations/supabase/types";
  */
 export const ESTADOS_COTIZACION_VALIDOS = [
   "Borrador",
+  "Solicitada",
   "Enviada",
   "Aceptada",
   "Rechazada",

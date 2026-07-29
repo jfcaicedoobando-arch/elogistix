@@ -62,7 +62,7 @@ export function useAprobarFacturasLote() {
 
       if (fallos.length === 0) {
         notifySuccess(undefined, {
-          title: `${exitos.length} factura(s) aprobada(s)`,
+          title: exitos.length === 1 ? "Factura aprobada" : `${exitos.length} facturas aprobadas`,
           description: "Todas las solicitudes de la selección se aprobaron correctamente.",
         });
       } else if (exitos.length === 0) {
@@ -71,7 +71,11 @@ export function useAprobarFacturasLote() {
         // los conceptos antes de aprobar") no son fallas técnicas: se muestran al
         // usuario pero no se reportan como excepción.
         notifyError(undefined, {
-          title: `No se pudo aprobar ninguna de las ${fallos.length} facturas`,
+          // v13.339.0 (Q-02): pluralización correcta y causa real del servidor.
+          title:
+            fallos.length === 1
+              ? "No se pudo aprobar la factura"
+              : `No se pudieron aprobar ${fallos.length} facturas`,
           description: primero,
           error: esValidacionNegocio(primero) ? undefined : new Error(primero),
           method: "USE_APROBAR_FACTURAS_LOTE",

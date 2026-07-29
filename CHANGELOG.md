@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.339.0] - 2026-07-29
+- **Fix · Solicitudes del portal invisibles (Q-01).** Las cotizaciones pedidas por el cliente se guardaban como "Borrador" y él nunca las veía. Ahora existe el estado **Solicitada**, visible tanto para el cliente como para el equipo interno. Analogía: antes el pedido caía en un cajón privado; ahora queda en la bandeja compartida.
+- **Fix · Facturas de proveedor capturadas a mano sin conceptos (Q-02).** El alta manual no permitía capturar partidas, por lo que después la factura no se podía aprobar. Se agregó la sección **Conceptos de la factura** (descripción, cantidad, importe, IVA, unidad), con validación de cuadre contra el subtotal antes de guardar.
+- **Mejora · Aprobación en lote más clara (Q-02).** El aviso ya no dice "ninguna de las 1 facturas": se corrigió el plural y ahora incluye el motivo real que devuelve el servidor.
+- **Fix · Alta de usuarios con rol equivocado (Q-05).** El alta insertaba la membresía por su cuenta forzando el rol a admin/operador/viewer, perdiendo los roles modernos (tesorero, coordinador logístico, etc.). Ahora la organización y el rol exacto los asigna el servicio de identidad, se bloquean correos duplicados con mensaje claro y se verifica la membresía antes de mostrar el mensaje de éxito. Analogía: ya no damos por hecho que la carta llegó; confirmamos el acuse.
+
 ## [13.338.1] - 2026-07-29
 - **Mejora · Tesorería administra cuentas bancarias.** El rol **Tesorero** ahora puede crear, editar y eliminar cuentas bancarias de su organización (antes sólo consultarlas). El rol **Contador** sigue con acceso de sólo lectura. Se abrió el permiso tanto en la base de datos como en la pantalla, así que el botón "Nueva cuenta" ya aparece para tesorería y no vuelve a salir el error de permisos. Analogía: le dimos la llave a quien realmente maneja la caja, no sólo al gerente.
 

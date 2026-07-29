@@ -117,6 +117,18 @@ describe("useNuevaFacturaProveedorForm", () => {
     expect(result.current.errors.provId).toMatch(/proveedor/i);
   });
 
+
+  // Q-02: sin conceptos el submit se bloquea; helper para capturar una partida
+  // manual que cuadre con el subtotal.
+  function capturarConcepto(result: { current: ReturnType<typeof useNuevaFacturaProveedorForm> }, importe: number) {
+    act(() => result.current.conceptosManuales.agregar());
+    const key = result.current.conceptosManuales.conceptos[0].key;
+    act(() => {
+      result.current.conceptosManuales.actualizar(key, "descripcion", "Servicio");
+      result.current.conceptosManuales.actualizar(key, "importe", importe);
+    });
+  }
+
   it("submit happy path llama mutateAsync con payload correcto y resetea", async () => {
     const onDone = vi.fn();
     const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });
@@ -127,6 +139,7 @@ describe("useNuevaFacturaProveedorForm", () => {
       result.current.handleChange("iva", "160");
       result.current.handleChange("categoriaId", "cat-1");
     });
+    capturarConcepto(result, 1000);
     await act(async () => { await result.current.submit(); });
     expect(mutateAsync).toHaveBeenCalledTimes(1);
     const payload = mutateAsync.mock.calls[0][0];
@@ -148,6 +161,7 @@ describe("useNuevaFacturaProveedorForm", () => {
       result.current.handleChange("subtotal", "100");
       result.current.handleChange("categoriaId", "cat-1");
     });
+    capturarConcepto(result, 100);
     await act(async () => { await result.current.submit(); });
     expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/UUID fiscal/i), expect.anything());
     expect(onDone).not.toHaveBeenCalled();
@@ -170,5 +184,38 @@ describe("useNuevaFacturaProveedorForm", () => {
     await waitFor(() => expect(result.current.askCrearProv).toEqual({ rfc: "XAXX010101000", nombre: "Otro SA" }));
     expect(result.current.pendingCfdi?.uuid).toBe("U-1");
     expect(result.current.values.folio).toBe("A-100");
+  });
+});
+
+describe("useNuevaFacturaProveedorForm · conceptos manuales (Q-02)", () => {
+  it("bloquea el submit sin conceptos y sin vínculos", async () => {
+    const onDone = vi.fn();
+    const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });
+    act(() => {
+      result.current.handleProveedor("p1", "ACME");
+      result.current.handleChange("folio", "F-9");
+      result.current.handleChange("subtotal", "500");
+      result.current.handleChange("categoriaId", "cat-1");
+    });
+    await act(async () => { await result.current.submit(); });
+    expect(mutateAsync).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/conceptos/i), expect.anything());
+  });
+
+  it("bloquea el submit si los conceptos no cuadran con el subtotal", async () => {
+    const onDone = vi.fn();
+    const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });
+    act(() => {
+      result.current.handleProveedor("p1", "ACME");
+      result.current.handleChange("folio", "F-9");
+      result.current.handleChange("subtotal", "500");
+      result.current.handleChange("categoriaId", "cat-1");
+    });
+    act(() => result.current.conceptosManuales.agregar());
+    const key = result.current.conceptosManuales.conceptos[0].key;
+    act(() => result.current.conceptosManuales.actualizar(key, "importe", 300));
+    await act(async () => { await result.current.submit(); });
+    expect(mutateAsync).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/no cuadran/i), expect.anything());
   });
 });

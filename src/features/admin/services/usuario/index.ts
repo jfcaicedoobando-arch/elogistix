@@ -102,32 +102,64 @@ export interface CreateUserResponse {
   [key: string]: unknown;
 }
 
+/**
+ * Alta de usuario (Q-05, v13.339.0).
+ *
+ * Correcciones respecto de la versión previa:
+ * - La organización destino se manda SIEMPRE a la edge function (`organization_id`),
+ *   que es quien inserta la membresía con el `app_role` exacto. Antes el cliente
+ *   hacía un insert paralelo casteando el rol a "admin"|"operador"|"viewer",
+ *   perdiendo los roles modernos (tesorero, coordinador_logistico, …).
+ * - Valida email duplicado antes de invocar.
+ * - Re-verifica la membresía después del alta: si no existe, lanza error (nada
+ *   de toast verde fantasma).
+ */
 export async function createUserViaEdgeFunction(
   params: CreateUserParams,
 ): Promise<CreateUserResponse> {
+  const emailNormalizado = params.email.trim().toLowerCase();
+
+  // 1) Duplicado en cliente: evita el viaje al servidor y da mensaje claro.
+  const existentes = await fetchUsuariosOrganizacion().catch(() => [] as UserRow[]);
+  if (existentes.some((u) => u.email.toLowerCase() === emailNormalizado)) {
+    throw new Error(`Ya existe un usuario con el correo ${emailNormalizado} en esta organización.`);
+  }
+
   const token = await getAuthToken();
   const res = await supabase.functions.invoke("user-management", {
-    body: { action: "create", email: params.email, password: params.password, role: params.role },
+    body: {
+      action: "create",
+      email: emailNormalizado,
+      password: params.password,
+      role: params.role,
+      organization_id: params.orgId,
+    },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (res.error) throw new Error(res.error.message || "Error al crear usuario");
   const body = res.data as CreateUserResponse;
   if (body?.error) throw new Error(body.error);
 
-  if (params.orgId && body?.user?.id) {
-    const { error: memberError } = await supabase.from("organization_members").insert({
-      organization_id: params.orgId,
-      user_id: body.user.id,
-      role: params.role as "admin" | "operador" | "viewer",
-    });
-    if (memberError) {
-      throw new Error(
-        `Usuario creado, pero no se pudo asignar a la organización: ${memberError.message}`,
-      );
-    }
+  const nuevoId = body?.user?.id;
+  if (!nuevoId) {
+    throw new Error("No se pudo completar el alta: el servicio de identidad no devolvió el usuario.");
+  }
+
+  // 2) Verificación post-alta: la membresía debe existir.
+  const { data: membresia, error: verifyError } = await supabase
+    .from("organization_members")
+    .select("user_id, role")
+    .eq("user_id", nuevoId)
+    .maybeSingle();
+
+  if (verifyError || !membresia) {
+    throw new Error(
+      "No se pudo completar el alta: el usuario no quedó asignado a la organización. Reintenta o contacta soporte.",
+    );
   }
 
   return body;
+
 }
 
 export async function deleteUserViaEdgeFunctionAuth(userId: string): Promise<unknown> {

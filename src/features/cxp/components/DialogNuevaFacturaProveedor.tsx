@@ -14,6 +14,7 @@ import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
+import { ConceptosManualesSection } from "./ConceptosManualesSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
@@ -27,6 +28,22 @@ interface Props {
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null;
 }
 
+/**
+ * Fuente de verdad de las partidas que alimentan el cuadre contra el subtotal:
+ * CFDI > conceptos manuales (Q-02, v13.339.0) > montos vinculados a embarques.
+ */
+function resolverConceptosParaCuadre(
+  cfdi: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null }>,
+  manuales: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null }>,
+  vinculos: Record<string, { monto?: number | string | null }>,
+): ConceptoParaCuadre[] {
+  const fuente = cfdi.length > 0 ? cfdi : manuales;
+  if (fuente.length > 0) {
+    return fuente.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad }));
+  }
+  return Object.values(vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
+}
+
 export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqueAdHoc }: Props) {
   const cats = usePresupuestoCategorias(true);
   const ctl = useNuevaFacturaProveedorForm(() => onOpenChange(false), initialEmbarqueAdHoc);
@@ -37,12 +54,10 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
   const ret = Number(ctl.values.retenciones) || 0;
   const moneda = ctl.values.moneda;
 
-  const conceptosParaCuadre = useMemo<ConceptoParaCuadre[]>(() => {
-    if (ctl.cfdiConceptos.length > 0) {
-      return ctl.cfdiConceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad }));
-    }
-    return Object.values(ctl.vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
-  }, [ctl.cfdiConceptos, ctl.vinculos]);
+  const conceptosParaCuadre = useMemo<ConceptoParaCuadre[]>(
+    () => resolverConceptosParaCuadre(ctl.cfdiConceptos, ctl.conceptosManuales.conceptos, ctl.vinculos),
+    [ctl.cfdiConceptos, ctl.conceptosManuales.conceptos, ctl.vinculos],
+  );
   const cuadre = useMemo(() => calcularCuadreConceptos(sub, conceptosParaCuadre), [sub, conceptosParaCuadre]);
 
   const footer = (
@@ -86,6 +101,15 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
         />
 
         <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />
+
+        <ConceptosManualesSection
+          oculta={ctl.cfdiConceptos.length > 0}
+          conceptos={ctl.conceptosManuales.conceptos}
+          moneda={ctl.values.moneda}
+          onAgregar={ctl.conceptosManuales.agregar}
+          onActualizar={ctl.conceptosManuales.actualizar}
+          onEliminar={ctl.conceptosManuales.eliminar}
+        />
 
         <FacturaProveedorFormFields
           values={ctl.values}

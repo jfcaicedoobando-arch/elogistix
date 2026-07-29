@@ -85,6 +85,7 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   ],
   cotizacion: [
     "Borrador",
+    "Solicitada",
     "Enviada",
     "Aceptada",
     "Confirmada",
