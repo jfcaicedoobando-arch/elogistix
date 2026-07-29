@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import PortalLayout from "../PortalLayout";
 
 const mocks = vi.hoisted(() => ({
@@ -39,13 +40,15 @@ vi.mock("@/components/layout/ThemeToggle", () => ({
 
 function renderLayout() {
   return render(
-    <MemoryRouter initialEntries={["/portal"]}>
+    <TooltipProvider>
+      <MemoryRouter initialEntries={["/portal"]}>
       <Routes>
         <Route path="/portal" element={<PortalLayout />}>
           <Route index element={<div>Contenido del portal</div>} />
         </Route>
       </Routes>
-    </MemoryRouter>,
+      </MemoryRouter>
+    </TooltipProvider>,
   );
 }
 
