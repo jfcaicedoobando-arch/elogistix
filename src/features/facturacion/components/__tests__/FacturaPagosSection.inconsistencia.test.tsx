@@ -12,6 +12,7 @@ const ncMock = vi.fn();
 vi.mock("@/features/facturacion/hooks", () => ({
   usePagosFactura: () => pagosMock(),
   useEliminarPagoFactura: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useTimbrarRep: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 vi.mock("@/features/facturacion/hooks/useSaldoFactura", () => ({
   useNotasCreditoAplicadas: () => ncMock(),
