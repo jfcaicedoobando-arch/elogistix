@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.331.3] - 2026-07-30
+- Corregido el error que impedía cargar las garantías de contenedor y las comisiones devengadas: ahora la base de datos soporta el envío a papelera de comisiones, liquidaciones y garantías en vez de borrarlas para siempre.
+- La conciliación bancaria ya no puede modificar movimientos enviados a papelera.
+
 ## [13.331.2] - 2026-07-30
 - Corrección interna de CI: los errores al guardar productos SAT y conceptos de factura ahora se detectan correctamente por las pruebas, y el catálogo de claves de datos incluye el dominio de sesión.
 

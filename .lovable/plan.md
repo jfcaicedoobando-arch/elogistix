@@ -1,38 +1,51 @@
-## Contexto
+## Estado del paquete MEDIOS (M1–M14)
 
-Del paquete de hallazgos MEDIOS ya están aplicados M3, M4, M11 (ola 1), M5, M6, M7 (ola 2 SQL), M8 (ola 3), M1/M2 (ola 4) y M9/M10 (ola 5). Verifiqué en el repo que quedan pendientes exactamente tres: M12, M13 y M14 (los loops seriales siguen en `FacturasMasivasToolbar.tsx:56,95`, no existe `src/lib/async/`, no existen los hooks/controladores de M14 ni el test anti-regresión).
+Verifiqué uno por uno contra el repo y la base de datos:
 
-## Qué voy a hacer (Ola 6)
+| Fix | Estado |
+|---|---|
+| M1 SAFE-CAST freshness | Hecho (`safe-cast-freshness.test.ts`) |
+| M2 `fromDbChecked` + ratchet | Hecho (`fromdb-zod-adoption.test.ts`) |
+| M3 `roundMoney` | Hecho |
+| M4 zod en `updateCotizacion` | Hecho |
+| M5 sincronía de espejos | Hecho (`trg_embarques_sync_espejos`, `trg_clientes_propaga_nombre`, `trg_navieras_propaga_nombre`) |
+| **M6 soft-delete en tablas de dinero** | **Incompleto — ver abajo** |
+| M7 `organization_id` en costeo | Hecho (columnas presentes) |
+| M8 seguridad (seed demo, cron secret, destinatarios) | Hecho |
+| M9 perfil con TanStack Query | Hecho |
+| M10 filtros CxP en URL (nuqs) | Hecho |
+| M11 parser fiscal unificado | Hecho |
+| M12 concurrencia limitada en acciones masivas | Hecho |
+| M13 CHECK en `*_envios.estado` | Hecho (3 constraints en BD) |
+| M14 extracción de hooks + guardrail | Hecho |
 
-### 1. M12 — Acciones masivas de facturas más rápidas y con progreso
-- Nuevo helper `src/lib/async/mapWithConcurrency.ts`: procesa en tandas con `Promise.allSettled`, concurrencia máxima configurable y callback de progreso. Sin dependencias nuevas (mismo patrón que `crm/services/leads/bulk.ts`).
-- `FacturasMasivasToolbar.tsx`: reemplazar los dos bucles seriales (ZIP de PDF+XML y reenvío de correo) por `mapWithConcurrency(..., 4, ...)`, con descarga PDF/XML en paralelo por factura. Se conservan los conteos de éxito/error y los tres tipos de aviso actuales.
-- Mostrar progreso en el botón ("Descargando 12/50…", "Reenviando 12/50…") y limpiar el estado al terminar, con guarda de desmontaje.
-- Tests del helper: no supera la concurrencia máxima, el progreso es monótono y un fallo no aborta la tanda.
+## Lo que falta: M6 (y es un bug vivo, no solo deuda)
 
-### 2. M13 — Estados válidos en tablas de envío
-Una migración que, para `cotizacion_envios`, `proforma_envios` y `factura_envios`:
-- Normaliza cualquier valor de `estado` fuera del catálogo a `fallido` (dejando aviso del conteo).
-- Agrega una restricción idempotente que solo permita `enviado`, `parcial` o `fallido` (los tres valores que ya escriben las funciones de envío).
-Descartados por falso positivo verificado: `clientes.estado` (es el estado de la república de la dirección fiscal) y `embarques.cobro_cliente_status` (ya tiene su restricción).
+La mitad de frontend de M6 sí se aplicó, pero **la migración nunca se creó**. Es como haber puesto la cerradura en la puerta sin instalar la puerta: el código ya filtra por una columna que en la base no existe.
 
-### 3. M14 — Sacar la lógica de datos de los componentes
-- **Ola 1 (los tres casos de dinero):** extraer a hooks del feature la lógica hoy embebida en `ConciliacionPagoCell.tsx` (`useConciliacionPagoCellController`), `TabDemoras.tsx` (`useTabDemorasController`) y `ProformaInconsistenteAlert.tsx` (`useAsignarConceptosProforma`), unificando las invalidaciones de caché duplicadas. Los componentes quedan presentacionales.
-- **Ola 2:** mismo criterio para los 10 `useQuery` y 7 `useMutation` restantes en componentes (organizaciones, selector de factura abierta, tarifas, diálogos de cancelar/enviar factura, bitácoras, notas de crédito, timbrado, editor de conceptos, catálogo SAT, enviar proforma).
-- **Ola 3:** mover los 7 archivos `use*.ts(x)` que viven bajo `components/` a la carpeta `hooks/` de su feature y corregir imports (movimiento puro, sin cambio de lógica).
-- **Test de arquitectura** `no-inline-query-mutations.test.ts`: bloquea nuevos `useQuery({`/`useMutation({` dentro de `src/features/*/components/**` (baseline que solo puede bajar) y prohíbe archivos `use*` bajo `components/`.
+Verificado en la base: solo `proveedores` y `bbva_movimientos` tienen `deleted_at`. **No** la tienen `comisiones_devengadas`, `liquidaciones_comision` ni `embarque_garantias_contenedor`.
+
+Pero el código ya filtra por ella:
+- `src/features/comisiones/services/devengadas.ts:53` → `.is("deleted_at", null)` sobre `comisiones_devengadas`
+- `src/features/embarques/services/garantias.ts:13` → `.is("deleted_at", null)` sobre `embarque_garantias_contenedor`
+
+Esas dos consultas hoy fallan con error de columna inexistente (42703): el tab de Garantías del embarque y las comisiones devengadas no cargan datos.
+
+Además, en `src/features/tesoreria/services/conciliacion.ts` solo 1 de las 5 consultas a `bbva_movimientos` (línea 101) filtra borrados; faltan las de las líneas 69, 127, 149 y 164.
+
+## Plan de corrección
+
+1. **Migración nueva** (idempotente, bloque `DO` con `ADD COLUMN IF NOT EXISTS`):
+   - `deleted_at timestamptz` + `deleted_by uuid` + índice parcial en `comisiones_devengadas`, `liquidaciones_comision`, `embarque_garantias_contenedor`.
+   - Sin tocar policies ni la papelera (`is_soft_delete_table`): queda documentado como follow-up en el encabezado de la migración.
+2. **Regenerar tipos** de la base y verificar que `types-drift` queda limpio.
+3. **Completar los filtros** de `deleted_at` en las 4 consultas restantes de `conciliacion.ts`.
+4. **Tests**: unit tests que verifiquen que las consultas de garantías, comisiones y conciliación incluyen el filtro; y actualizar cualquier mock afectado.
+5. **CI**: correr tests de las features tocadas, `audit:migrations`, `typecheck` y lint.
+6. **CHANGELOG + `APP_VERSION`** (`13.331.3`).
 
 ## Detalles técnicos
 
-- Concurrencia 4 para no saturar la función de envío ni el proxy de CFDI; JSZip es síncrono al añadir archivos, seguro desde las tandas.
-- Migración idempotente con `NOT VALID` + `VALIDATE CONSTRAINT` para no bloquear escrituras concurrentes.
-- Cada hook extraído mantiene los `queryKeys` canónicos y los helpers `notify*`; se respeta el límite de 200 líneas por archivo.
-
-## Verificación
-
-- `bunx vitest run src/lib/async src/features/cxp src/features/embarques` y los tests de arquitectura en verde.
-- `bun run lint -- --max-warnings 0` y typecheck limpios.
-- `bun run audit:migrations` en verde tras la migración.
-- Actualizar `CHANGELOG.md` y `APP_VERSION` a `13.331.0`.
-
-Si prefieres reducir el alcance, puedo dejar M14 Olas 2–3 para un turno aparte y cerrar hoy M12 + M13 + M14 Ola 1.
+- La migración usa el bloque de timestamp acordado del paquete (`20260730300xxx`), con nombre `YYYYMMDDHHMMSS_<uuid>.sql`.
+- El índice único `proveedores_org_rfc_unique` ya es parcial con `deleted_at IS NULL`, así que ese punto de M6 no requiere cambios.
+- El listado por RPC `proveedores_listado` sigue sin filtro server-side de borrados; queda fuera de alcance de M6 (paquete de altos), y lo señalo como pendiente conocido.

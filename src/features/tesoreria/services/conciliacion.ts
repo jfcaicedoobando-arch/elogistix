@@ -131,7 +131,8 @@ export async function conciliarConPago(
       conciliado_por: userId,
       conciliado_at: new Date().toISOString(),
     })
-    .eq("id", movId);
+    .eq("id", movId)
+    .is("deleted_at", null);
   if (error) {
     reportCaughtError(error, {
       feature: "tesoreria",
@@ -154,7 +155,8 @@ export async function desconciliarMovimiento(movId: string) {
         conciliado_por: null,
         conciliado_at: null,
       })
-      .eq("id", movId),
+      .eq("id", movId)
+      .is("deleted_at", null),
   );
 }
 
@@ -163,6 +165,7 @@ export async function ignorarMovimiento(movId: string, motivo: string) {
     supabase
       .from("bbva_movimientos")
       .update({ estado_conciliacion: "Ignorado", motivo_ignorar: motivo })
-      .eq("id", movId),
+      .eq("id", movId)
+      .is("deleted_at", null),
   );
 }
