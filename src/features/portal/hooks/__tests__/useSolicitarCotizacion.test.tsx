@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement, type ReactNode } from "react";
 import { useSolicitarCotizacion } from "../useSolicitarCotizacion";
 import { solicitarCotizacionPortal } from "@/features/portal/services/solicitudes";
@@ -23,6 +23,9 @@ const input = {
 
 function setup() {
   const queryClient = new QueryClient({
+    // El `onError` del cache consume el rechazo: sin él, Vitest lo reporta
+    // como unhandled rejection aunque el test sí lo verifique.
+    mutationCache: new MutationCache({ onError: () => {} }),
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   const invalidate = vi.spyOn(queryClient, "invalidateQueries");
