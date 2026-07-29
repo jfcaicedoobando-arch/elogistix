@@ -57,7 +57,7 @@ describe("queryClient · toast on query failure", () => {
     const [msg, opts] = toastErrorMock.mock.calls[0];
     expect(msg).toBe("No pudimos cargar la información");
     const options = opts as { duration: number; action: { label: string } };
-    expect(options.duration).toBe(Infinity);
+    expect(options.duration).toBe(8000);
     expect(options.action.label).toBe("Ver detalles");
   });
 

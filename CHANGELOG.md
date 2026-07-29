@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.334.4] - 2026-07-29
+- Se corrigieron las pruebas de CI que seguían esperando avisos de error permanentes (ahora se cierran solos a los 8 segundos).
+- Se agregaron mensajes en español para tres errores nuevos del portal (sesión expirada, cuenta sin empresa vinculada y ruta faltante).
+- La solicitud de cotización del portal ahora avisa al cliente si el envío falla.
+
 ## [13.334.3] - 2026-07-29
 - Se corrigió la verificación de integridad de la base que fallaba en CI al inspeccionar funciones internas de PostgreSQL; ahora sólo revisa las funciones propias del proyecto.
 

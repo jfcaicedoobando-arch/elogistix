@@ -34,7 +34,7 @@ describe("crmToast", () => {
     crmToast.error("Falló", new Error("boom"));
     expect(toastFn.error).toHaveBeenCalledWith("Falló", expect.objectContaining({
       description: "boom",
-      duration: Infinity,
+      duration: 8000,
       action: expect.objectContaining({ label: "Ver detalles" }),
     }));
   });
@@ -43,7 +43,7 @@ describe("crmToast", () => {
     crmToast.error("Falló", "detalle");
     expect(toastFn.error).toHaveBeenCalledWith("Falló", expect.objectContaining({
       description: "detalle",
-      duration: Infinity,
+      duration: 8000,
     }));
   });
 
@@ -51,7 +51,7 @@ describe("crmToast", () => {
     crmToast.error("Falló");
     expect(toastFn.error).toHaveBeenCalledWith("Falló", expect.objectContaining({
       description: undefined,
-      duration: Infinity,
+      duration: 8000,
     }));
   });
 

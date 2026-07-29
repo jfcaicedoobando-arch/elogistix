@@ -6,12 +6,12 @@ import { describe, it, expect } from "vitest";
 import { queryClient, shouldDehydrateCatalogQuery, queryPersister } from "../queryClient";
 
 describe("queryClient (lib/query)", () => {
-  it("aplica defaults conservadores (no refetch focus/reconnect, retry=1)", () => {
+  it("aplica defaults conservadores (no refetch focus/reconnect, retry=2)", () => {
     const opts = queryClient.getDefaultOptions().queries!;
     expect(opts.staleTime).toBe(60_000);
     expect(opts.refetchOnWindowFocus).toBe(false);
     expect(opts.refetchOnReconnect).toBe(false);
-    expect(opts.retry).toBe(1);
+    expect(opts.retry).toBe(2);
   });
 
   it("queryPersister está instanciado y es serializable", () => {

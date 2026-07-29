@@ -4,6 +4,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   solicitarCotizacionPortal,
   type SolicitudCotizacionInput,
@@ -17,6 +18,12 @@ export function useSolicitarCotizacion(clienteIds: string[]) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.portal.cotizaciones(clienteIds),
+      });
+    },
+    onError: (error) => {
+      notifyError(undefined, {
+        title: "No pudimos enviar tu solicitud",
+        error,
       });
     },
   });
