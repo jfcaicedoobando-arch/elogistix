@@ -158,7 +158,14 @@ export default function TesoreriaConciliacion() {
           Selecciona una cuenta para empezar a conciliar.
         </CardContent></Card>
       ) : (
+        <>
+        <ResumenConciliacionCards
+          resumen={resumen}
+          moneda={cuentaActual?.moneda ?? "MXN"}
+          isLoading={resumenLoading}
+        />
         <div className="grid lg:grid-cols-3 gap-4">
+
           <div className="lg:col-span-2 space-y-1">
             <div className="text-xs text-muted-foreground px-1 flex justify-between">
               <span>{movs.length} movimientos · {cuentaActual?.alias}</span>
