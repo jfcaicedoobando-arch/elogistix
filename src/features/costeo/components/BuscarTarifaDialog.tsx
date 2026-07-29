@@ -14,6 +14,7 @@ import {
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { TarifaResultCard } from "./TarifaResultCard";
 import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import type { TopTarifaRow } from "@/features/costeo/types";
@@ -34,23 +35,36 @@ interface ResultadosBodyProps {
   tipo: string;
   isFetching: boolean;
   tarifas: TopTarifaRow[];
+  error?: unknown;
+  onRetry?: () => void;
+  isRefetching?: boolean;
   onElegir?: (row: TopTarifaRow) => void;
   onOpenChange: (v: boolean) => void;
   selectLabel?: string;
 }
 
 function ResultadosBody({
-  origen, destino, tipo, isFetching, tarifas, onElegir, onOpenChange, selectLabel,
+  origen, destino, tipo, isFetching, tarifas, error, onRetry, isRefetching,
+  onElegir, onOpenChange, selectLabel,
 }: ResultadosBodyProps) {
   if (!origen || !destino || !tipo) {
     return (
       <p className="text-sm text-muted-foreground text-center py-8">
-        Selecciona ruta y tipo de contenedor para ver las tarifas vigentes.
+        Selecciona origen, destino y tipo de contenedor para ver tarifas.
       </p>
     );
   }
   if (isFetching) {
     return <p className="text-sm text-muted-foreground text-center py-8">Buscando…</p>;
+  }
+  if (error) {
+    return (
+      <ErrorStateInline
+        message={error instanceof Error ? error.message : "Error desconocido al consultar tarifas."}
+        onRetry={onRetry}
+        retrying={isRefetching}
+      />
+    );
   }
   if (tarifas.length === 0) {
     return (
@@ -95,7 +109,7 @@ export function BuscarTarifaDialog({
     }
   }, [open, initial?.puertoOrigenId, initial?.puertoDestinoId, initial?.tipoContenedorId]);
 
-  const { data: tarifas = [], isFetching } = useTopTarifas({
+  const { data: tarifas = [], isFetching, error, refetch, isRefetching } = useTopTarifas({
     puertoOrigenId: origen,
     puertoDestinoId: destino,
     tipoContenedorId: tipo,
@@ -166,6 +180,7 @@ export function BuscarTarifaDialog({
       <ResultadosBody
         origen={origen} destino={destino} tipo={tipo}
         isFetching={isFetching} tarifas={tarifas}
+        error={error} onRetry={() => void refetch()} isRefetching={isRefetching}
         onElegir={onElegir} onOpenChange={onOpenChange}
         selectLabel={selectLabel}
       />

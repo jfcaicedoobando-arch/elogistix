@@ -18,6 +18,7 @@ import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiCard } from "@/components/shared/KpiCard";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 // Mapeo entre ColumnDef.id de DataTable y los OrdenarPor del hook de filtros.
 const COL_TO_SORT: Record<string, OrdenarPor> = {
@@ -33,6 +34,7 @@ const SORT_TO_COL: Record<OrdenarPor, string> = {
 };
 
 export default function CxpPorCapturar() {
+  const { canCapturarFacturaProveedor } = usePermissions();
   const { data = [], isLoading, isError, refetch } = useCxpPorCapturar();
   const { totalPresupuestadoMxn, totalPresupuestadoUsd, facturasCapturadas } = resumirCxpPorCapturar(data);
   const filters = useCxpPorCapturarFilters(data);
@@ -48,8 +50,11 @@ export default function CxpPorCapturar() {
 
   const hideEstatus = filters.state.estatus === "sin";
   const columns = useMemo(
-    () => buildCxpPorCapturarColumns({ onCapturar: handleCapturar, hideEstatus }),
-    [hideEstatus],
+    () => buildCxpPorCapturarColumns({
+      onCapturar: canCapturarFacturaProveedor ? handleCapturar : undefined,
+      hideEstatus,
+    }),
+    [hideEstatus, canCapturarFacturaProveedor],
   );
 
   const controlledSort = {

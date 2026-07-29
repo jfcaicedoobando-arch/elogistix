@@ -54,6 +54,48 @@ const COMPRAS_WRITE_ROLES: AppRole[] = [
   "admin", "super_admin", "admin_org", "contador", "tesorero", "auxiliar_contable",
 ];
 
+/**
+ * Q-11 (v13.341.0) — Paridad sidebar ↔ rutas. Antes, muchas rutas operativas
+ * quedaban sin `allowedRoles`: el sidebar las ocultaba, pero cualquier rol podía
+ * entrar escribiendo la URL. Estos sets replican exactamente lo que cada
+ * builder de `sidebarRoleBuilders.ts` expone.
+ */
+const ADMINS: AppRole[] = ["admin", "admin_org", "super_admin"];
+const GERENTES: AppRole[] = ["gerente_operaciones", "gerente_comercial", "gerente_visor"];
+
+const EMBARQUES_ROLES: AppRole[] = [
+  ...ADMINS, "operador", "coordinador_logistico", "customer_service", "viewer",
+  "contador", "gerente_operaciones", "gerente_comercial", "gerente_visor",
+];
+const COTIZACIONES_ROLES: AppRole[] = [
+  ...ADMINS, "vendedor", "customer_service", "viewer", "operador",
+  "coordinador_logistico", "ejecutivo_pricing", "gerente_operaciones", "gerente_comercial",
+  "gerente_visor",
+];
+const FACTURACION_ROLES: AppRole[] = [
+  ...ADMINS, "contador", "tesorero", "ejecutivo_cobranza", "operador",
+  "coordinador_logistico", "gerente_operaciones", "gerente_visor",
+];
+const CLIENTES_ROLES: AppRole[] = [
+  ...ADMINS, "vendedor", "customer_service", "viewer", "operador", "coordinador_logistico",
+  "ejecutivo_pricing", "contador", "ejecutivo_cobranza", ...GERENTES,
+];
+const COSTEO_ROLES: AppRole[] = [
+  ...ADMINS, "vendedor", "operador", "coordinador_logistico", "ejecutivo_pricing",
+  "gerente_comercial",
+];
+const COMISIONES_ROLES: AppRole[] = [
+  ...ADMINS, "contador", "tesorero", "gerente_comercial", "gerente_operaciones", "gerente_visor",
+];
+const REPORTES_ROLES: AppRole[] = [
+  ...ADMINS, "ejecutivo_pricing", "contador", "tesorero", ...GERENTES,
+];
+const CRM_ROLES: AppRole[] = [
+  ...ADMINS, "vendedor", "gerente_comercial", "gerente_operaciones",
+];
+const BITACORA_ROLES: AppRole[] = [...ADMINS, "contador", "tesorero", ...GERENTES];
+const PROVEEDORES_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "ejecutivo_pricing"];
+
 export const appRoutes = (
   <Route
     element={
@@ -65,14 +107,14 @@ export const appRoutes = (
     <Route path="/inicio" element={<Dashboard />} />
     <Route path="/dashboard" element={guarded(["admin", "admin_org", "super_admin", "gerente_comercial", "gerente_visor", "gerente_operaciones"], <DireccionDashboard />)} />
     <Route path="/operaciones" element={<Operaciones />} />
-    <Route path="/embarques" element={<Embarques />} />
-    <Route path="/embarques/nuevo" element={<NuevoEmbarque />} />
-    <Route path="/embarques/:id" element={<EmbarqueDetalle />} />
-    <Route path="/embarques/:id/editar" element={<EditarEmbarque />} />
-    <Route path="/facturacion" element={<Facturacion />} />
-    <Route path="/facturacion/:id" element={<FacturaDetalle />} />
-    <Route path="/proformas" element={<ProformasListado />} />
-    <Route path="/proformas/:id" element={<ProformaDetalle />} />
+    <Route path="/embarques" element={guarded(EMBARQUES_ROLES, <Embarques />)} />
+    <Route path="/embarques/nuevo" element={guarded(EMBARQUES_ROLES, <NuevoEmbarque />)} />
+    <Route path="/embarques/:id" element={guarded(EMBARQUES_ROLES, <EmbarqueDetalle />)} />
+    <Route path="/embarques/:id/editar" element={guarded(EMBARQUES_ROLES, <EditarEmbarque />)} />
+    <Route path="/facturacion" element={guarded(FACTURACION_ROLES, <Facturacion />)} />
+    <Route path="/facturacion/:id" element={guarded(FACTURACION_ROLES, <FacturaDetalle />)} />
+    <Route path="/proformas" element={guarded(FACTURACION_ROLES, <ProformasListado />)} />
+    <Route path="/proformas/:id" element={guarded(FACTURACION_ROLES, <ProformaDetalle />)} />
 
     {/* ── Módulo Compras (v13.175.0 — rediseño Ola A) ────────────────── */}
     <Route path="/compras" element={guarded(COMPRAS_READ_ROLES, <Compras />)} />
@@ -83,8 +125,8 @@ export const appRoutes = (
     <Route path="/compras/facturas" element={guarded(FINANCE_READ_ROLES, <Cxp />)} />
     <Route path="/compras/pagos" element={guarded(FINANCE_READ_ROLES, <ComprasPagos />)} />
     <Route path="/compras/notas-credito" element={guarded(FINANCE_READ_ROLES, <ComprasNotasCredito />)} />
-    <Route path="/compras/proveedores" element={<Proveedores />} />
-    <Route path="/compras/proveedores/:id" element={<ProveedorDetalle />} />
+    <Route path="/compras/proveedores" element={guarded(PROVEEDORES_ROLES, <Proveedores />)} />
+    <Route path="/compras/proveedores/:id" element={guarded(PROVEEDORES_ROLES, <ProveedorDetalle />)} />
     <Route path="/compras/aging" element={guarded(COMPRAS_READ_ROLES, <CxpAging />)} />
     <Route path="/compras/reportes" element={guarded(FINANCE_READ_ROLES, <ComprasReportes />)} />
     <Route path="/compras/conciliacion" element={guarded(COMPRAS_READ_ROLES, <ComprasConciliacion />)} />
@@ -107,14 +149,14 @@ export const appRoutes = (
     <Route path="/tesoreria/flujo" element={guarded(TESORERIA_READ_ROLES, <TesoreriaFlujo />)} />
     <Route path="/tesoreria/pagos-programados" element={guarded(TESORERIA_READ_ROLES, <TesoreriaPagosProgramados />)} />
 
-    <Route path="/comisiones" element={<Comisiones />} />
+    <Route path="/comisiones" element={guarded(COMISIONES_ROLES, <Comisiones />)} />
     <Route path="/costeo" element={<Navigate to="/costeo/tarifas" replace />} />
-    <Route path="/costeo/tarifas" element={<CosteoTarifas />} />
-    <Route path="/costeo/buscar" element={<CosteoBuscar />} />
-    <Route path="/costeo/rutas" element={<CosteoRutas />} />
-    <Route path="/costeo/agentes" element={<CosteoAgentes />} />
-    <Route path="/costeo/navieras" element={<CosteoNavieras />} />
-    <Route path="/costeo/demoras-venta" element={<CosteoDemorasVenta />} />
+    <Route path="/costeo/tarifas" element={guarded(COSTEO_ROLES, <CosteoTarifas />)} />
+    <Route path="/costeo/buscar" element={guarded(COSTEO_ROLES, <CosteoBuscar />)} />
+    <Route path="/costeo/rutas" element={guarded(COSTEO_ROLES, <CosteoRutas />)} />
+    <Route path="/costeo/agentes" element={guarded(COSTEO_ROLES, <CosteoAgentes />)} />
+    <Route path="/costeo/navieras" element={guarded(COSTEO_ROLES, <CosteoNavieras />)} />
+    <Route path="/costeo/demoras-venta" element={guarded(COSTEO_ROLES, <CosteoDemorasVenta />)} />
 
     <Route path="/profit" element={<Navigate to="/profit/dashboard" replace />} />
     <Route path="/profit/dashboard" element={guarded(PROFIT_READ_ROLES, <ProfitDashboardEjecutivo />)} />
@@ -122,24 +164,24 @@ export const appRoutes = (
     <Route path="/profit/estado-resultados" element={guarded(PROFIT_READ_ROLES, <ProfitEstadoResultados />)} />
     <Route path="/profit/presupuesto" element={guarded(PROFIT_READ_ROLES, <ProfitPresupuesto />)} />
 
-    <Route path="/clientes" element={<Clientes />} />
-    <Route path="/clientes/:id" element={<ClienteDetalle />} />
+    <Route path="/clientes" element={guarded(CLIENTES_ROLES, <Clientes />)} />
+    <Route path="/clientes/:id" element={guarded(CLIENTES_ROLES, <ClienteDetalle />)} />
     <Route path="/clientes/:clienteId/estado-de-cuenta" element={guarded(FINANCE_READ_ROLES, <EstadoCuentaInterno />)} />
-    <Route path="/cotizaciones" element={<Cotizaciones />} />
-    <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
-    <Route path="/cotizaciones/plantillas" element={<CotizacionPlantillas />} />
-    <Route path="/cotizaciones/nueva/tarifario" element={<NuevaCotizacionInformativa />} />
-    <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
-    <Route path="/cotizaciones/:id/editar" element={<EditarCotizacion />} />
-    <Route path="/dev/pdf-preview/cotizacion/:id" element={<PdfPreviewCotizacion />} />
-    <Route path="/reportes/rentabilidad" element={<Reportes />} />
-    <Route path="/reportes/cierre-mensual" element={<CierreMensual />} />
+    <Route path="/cotizaciones" element={guarded(COTIZACIONES_ROLES, <Cotizaciones />)} />
+    <Route path="/cotizaciones/nueva" element={guarded(COTIZACIONES_ROLES, <NuevaCotizacion />)} />
+    <Route path="/cotizaciones/plantillas" element={guarded(COTIZACIONES_ROLES, <CotizacionPlantillas />)} />
+    <Route path="/cotizaciones/nueva/tarifario" element={guarded(COTIZACIONES_ROLES, <NuevaCotizacionInformativa />)} />
+    <Route path="/cotizaciones/:id" element={guarded(COTIZACIONES_ROLES, <CotizacionDetalle />)} />
+    <Route path="/cotizaciones/:id/editar" element={guarded(COTIZACIONES_ROLES, <EditarCotizacion />)} />
+    <Route path="/dev/pdf-preview/cotizacion/:id" element={guarded(COTIZACIONES_ROLES, <PdfPreviewCotizacion />)} />
+    <Route path="/reportes/rentabilidad" element={guarded(REPORTES_ROLES, <Reportes />)} />
+    <Route path="/reportes/cierre-mensual" element={guarded(REPORTES_ROLES, <CierreMensual />)} />
     <Route path="/reportes" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/ayuda" element={<Ayuda />} />
-    <Route path="/sentry" element={<SentryDiagnostico />} />
-    <Route path="/crm" element={<CrmLayout />}>{crmChildRoutes}</Route>
-    <Route path="/bitacora" element={<Bitacora />} />
+    <Route path="/sentry" element={guarded(["admin", "admin_org", "super_admin"], <SentryDiagnostico />)} />
+    <Route path="/crm" element={guarded(CRM_ROLES, <CrmLayout />)}>{crmChildRoutes}</Route>
+    <Route path="/bitacora" element={guarded(BITACORA_ROLES, <Bitacora />)} />
     {/* Sentry -3W: enlaces viejos apuntaban a /sistema/bitacora (404). */}
     <Route path="/sistema/bitacora" element={<Navigate to="/bitacora" replace />} />
 

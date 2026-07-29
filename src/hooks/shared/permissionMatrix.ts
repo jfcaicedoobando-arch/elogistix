@@ -95,6 +95,17 @@ export const PAGAR_PROVEEDOR: readonly AppRole[] = [
   "tesorero",
 ];
 
+// v13.310.0 — Q-04: segregación de funciones. Quien captura la factura (auxiliar
+// contable) NO puede aprobarla; el tesorero (paga) tampoco aprueba: sólo lee
+// `proveedor_facturas`. Espejo de `aprobar_factura_proveedor` (BD), que ahora
+// rechaza a tesorero y al usuario que capturó la factura (LC_SOD_VIOLATION).
+export const APROBAR_FACTURA_PROVEEDOR: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "contador",
+];
+
 // v13.213.40 — auxiliar_contable NO registra cobros (separación de responsabilidades):
 // sólo captura facturas de proveedor. Cobros los registran contador + ejecutivo_cobranza.
 export const REGISTRAR_COBRO: readonly AppRole[] = [

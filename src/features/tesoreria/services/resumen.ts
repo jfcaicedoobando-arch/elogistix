@@ -68,6 +68,7 @@ export async function fetchResumenTesoreria(args: {
   cxp: CxpRow[];
   organizationId?: string | null;
   tipoCambioUsd?: number;
+  tipoCambioFecha?: string | null;
   cuentas?: ResumenCuenta[];
 }): Promise<ResumenTesoreria> {
   const cuentas = args.cuentas ?? (await fetchSaldosCuentas(args.organizationId));
@@ -76,5 +77,6 @@ export async function fetchResumenTesoreria(args: {
     cobranza: args.cobranza,
     cxp: args.cxp,
     tipoCambioUsd: args.tipoCambioUsd,
+    tipoCambioFecha: args.tipoCambioFecha,
   });
 }

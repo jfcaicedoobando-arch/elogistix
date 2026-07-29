@@ -72,6 +72,13 @@ const ERROR_RULES: readonly RuleMatch[] = [
     message: "El embarque asociado no existe.",
     matches: (raw) => raw.includes("lc_cxp_embarque_no_existe"),
   },
+  // Q-04 — segregación de funciones (SOD): la RPC rechaza a tesorero y a
+  // quien capturó la factura para evitar auto-aprobación.
+  {
+    code: "LC_SOD_VIOLATION",
+    message: "No puedes aprobar o rechazar esta factura: quien la captura o el tesorero no pueden aprobarla (segregación de funciones).",
+    matches: (raw) => raw.includes("lc_sod_violation"),
+  },
   {
     code: "LC_CXP_UUID_NO_VERIFICADO",
     message: "Verifica el UUID en el SAT antes de aprobar. Si es un proveedor internacional, quita el UUID fiscal desde el detalle de la factura.",

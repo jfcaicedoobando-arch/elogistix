@@ -34,7 +34,7 @@ import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
 import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
 
 export default function Cxp() {
-  const { canEdit } = usePermissions();
+  const { canEdit, canCapturarFacturaProveedor } = usePermissions();
   const f = useCxpPageState();
   const queryClient = useQueryClient();
 
@@ -90,7 +90,7 @@ export default function Cxp() {
             <Button variant="outline" onClick={handlePdf}>
               <FileText className="h-4 w-4 mr-2" /> Reporte PDF
             </Button>
-            {canEdit && (
+            {canCapturarFacturaProveedor && (
               <Button onClick={() => f.setOpenNueva(true)}>
                 <Plus className="h-4 w-4 mr-2" /> Capturar factura
               </Button>
@@ -129,7 +129,7 @@ export default function Cxp() {
       <Card>
         <CardContent className="p-0">
           {!isLoading && data.length === 0 && !f.hayFiltros ? (
-            <CxpEmptyState canEdit={canEdit} onCapturar={() => f.setOpenNueva(true)} />
+            <CxpEmptyState canEdit={canCapturarFacturaProveedor} onCapturar={() => f.setOpenNueva(true)} />
           ) : (
             <TooltipProvider delayDuration={200}>
               <DataTable

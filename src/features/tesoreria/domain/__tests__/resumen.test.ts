@@ -121,3 +121,27 @@ describe("calcularResumenTesoreria", () => {
   });
 });
 
+
+describe("calcularResumenTesoreria — Q-06 sin TC confiable", () => {
+  const HOY2 = new Date("2026-06-15T00:00:00");
+  it("marca saldo_bancos_incompleto y expone desglose por moneda", () => {
+    const mix: ResumenCuenta[] = [
+      { id: "c1", alias: "MXN", banco: "BBVA", moneda: "MXN", saldo: 100_000 },
+      { id: "c2", alias: "USD", banco: "BBVA", moneda: "USD", saldo: 5_000 },
+    ];
+    const r = calcularResumenTesoreria({ cuentas: mix, cobranza: [], cxp: [], hoy: HOY2 });
+    expect(r.saldo_bancos_mxn).toBe(100_000);
+    expect(r.saldo_bancos_incompleto).toBe(true);
+    expect(r.saldos_por_moneda.USD).toBe(5_000);
+    expect(r.tipo_cambio_usd ?? null).toBe(null);
+  });
+
+  it("con TC propaga tipo_cambio_usd y tipo_cambio_fecha", () => {
+    const r = calcularResumenTesoreria({
+      cuentas: [{ id: "c1", alias: "MXN", banco: "BBVA", moneda: "MXN", saldo: 1 }],
+      cobranza: [], cxp: [], hoy: HOY2, tipoCambioUsd: 20, tipoCambioFecha: "2026-06-14",
+    });
+    expect(r.tipo_cambio_usd).toBe(20);
+    expect(r.tipo_cambio_fecha).toBe("2026-06-14");
+  });
+});

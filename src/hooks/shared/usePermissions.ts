@@ -2,6 +2,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import type { AppRole } from "@/types/appRole";
 import {
   ADMIN_CUENTAS_BANCARIAS,
+  APROBAR_FACTURA_PROVEEDOR,
   CAPTURAR_FACTURA_PROVEEDOR,
 
   CERRAR_EMBARQUE,
@@ -49,6 +50,7 @@ export function usePermissions() {
   // Bloque Q
   const canEmitirFactura = has(EMITIR_FACTURA_CLIENTE, roleStr);
   const canCapturarFacturaProveedor = has(CAPTURAR_FACTURA_PROVEEDOR, roleStr);
+  const canAprobarFacturaProveedor = has(APROBAR_FACTURA_PROVEEDOR, roleStr);
   const canPagarProveedor = has(PAGAR_PROVEEDOR, roleStr);
   const canRegistrarCobro = has(REGISTRAR_COBRO, roleStr);
   const canCerrarEmbarque = has(CERRAR_EMBARQUE, roleStr);
@@ -80,6 +82,7 @@ export function usePermissions() {
     canOverrideTarifaPricing,
     canEmitirFactura,
     canCapturarFacturaProveedor,
+    canAprobarFacturaProveedor,
     canPagarProveedor,
     canRegistrarCobro,
     canCerrarEmbarque,

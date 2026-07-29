@@ -3,8 +3,10 @@
  * Ver `./resumen.ts` para contexto del refactor (Auditoría Paso 4).
  */
 import { isoUtcDay } from "@/lib/date/mx";
+import { parseDateOnlyLocal } from "@/lib/date/dateOnly";
 import { aMxn } from "@/lib/financial/convertir";
 import type { CobranzaRow, CxpRow, LiquidacionRow, ResumenCuenta } from "./resumen";
+import { sumarSaldosCuentas } from "./resumen";
 
 export interface DetalleFlujo {
   id: string;
@@ -33,6 +35,16 @@ export interface FlujoProyectado {
   total_salidas_mxn: number;
   saldo_final_mxn: number;
   alertas_negativas: number;
+  /** Q-06: `true` si algún monto en divisa extranjera (saldo inicial, entradas
+   *  o salidas) no pudo convertirse a MXN por falta de TC confiable y quedó
+   *  fuera de los totales. */
+  saldo_incompleto: boolean;
+  /** Q-06: montos nominales (sin convertir) excluidos, agrupados por moneda. */
+  excluido_por_moneda: Record<string, number>;
+  /** Q-06: TC USD→MXN vigente usado para convertir (si lo hubo). */
+  tipo_cambio_usd?: number | null;
+  /** Q-06: fecha (YYYY-MM-DD) del TC DOF aplicado. */
+  tipo_cambio_fecha?: string | null;
 }
 
 export function inicioSemana(d: Date): Date {
@@ -63,6 +75,18 @@ export function toMxn(monto: number, moneda: string, tc: number | undefined): nu
   return aMxn(monto, moneda, tc).monto;
 }
 
+/** Acumulador de exclusiones (montos no convertibles) por moneda. */
+class Exclusiones {
+  incompleto = false;
+  porMoneda: Record<string, number> = {};
+
+  registrar(monto: number, moneda: string): void {
+    this.incompleto = true;
+    const m = (moneda ?? "MXN").toUpperCase();
+    this.porMoneda[m] = (this.porMoneda[m] ?? 0) + monto;
+  }
+}
+
 export function calcularFlujoProyectado(args: {
   cuentas: ResumenCuenta[];
   cobranza: CobranzaRow[];
@@ -76,12 +100,13 @@ export function calcularFlujoProyectado(args: {
    * inicial del flujo proyectado.
    */
   tipoCambioUsd?: number;
+  /** Q-06: fecha (YYYY-MM-DD) del TC DOF aplicado, sólo para exhibir en UI. */
+  tipoCambioFecha?: string | null;
 }): FlujoProyectado {
   const hoy = args.hoy ?? new Date();
   hoy.setHours(0, 0, 0, 0);
   const limite = new Date(hoy);
   limite.setDate(limite.getDate() + args.dias);
-  const tcSaldo = args.tipoCambioUsd && args.tipoCambioUsd > 0 ? args.tipoCambioUsd : 1;
 
   const semanasMap = new Map<string, SemanaFlujo>();
   let cursor = inicioSemana(hoy);
@@ -98,20 +123,31 @@ export function calcularFlujoProyectado(args: {
     cursor = new Date(cursor); cursor.setDate(cursor.getDate() + 7);
   }
 
-  const saldoInicial = args.cuentas.reduce(
-    (acc, c) => acc + (c.moneda === "USD" ? c.saldo * tcSaldo : c.saldo),
-    0,
-  );
+  const exclusiones = new Exclusiones();
+
+  // Q-06: mismo canon (`aMxn`) que el resumen para el saldo inicial de cuentas.
+  const { total: saldoInicial, incompleto: saldoInicialIncompleto, porMoneda: saldoInicialExcluido } =
+    sumarSaldosCuentas(args.cuentas, args.tipoCambioUsd);
+  if (saldoInicialIncompleto) {
+    exclusiones.incompleto = true;
+    for (const c of args.cuentas) {
+      const moneda = (c.moneda ?? "MXN").toUpperCase();
+      if (moneda === "MXN") continue;
+      const conv = aMxn(c.saldo, moneda, moneda === "USD" ? args.tipoCambioUsd : undefined);
+      if (!conv.completo) exclusiones.registrar(c.saldo, moneda);
+    }
+  }
+  void saldoInicialExcluido;
 
   const inWindow = (iso: string | null): SemanaFlujo | null => {
     if (!iso) return null;
-    const d = new Date(iso + "T00:00:00");
+    const d = parseDateOnlyLocal(iso);
     if (d < inicioSemana(hoy) || d > limite) return null;
     return semanasMap.get(isoWeekKey(d)) ?? null;
   };
 
-  aplicarCobranza(args.cobranza, inWindow);
-  aplicarCxp(args.cxp, inWindow);
+  aplicarCobranza(args.cobranza, inWindow, exclusiones);
+  aplicarCxp(args.cxp, inWindow, exclusiones);
   aplicarLiquidaciones(args.liquidaciones, inWindow);
 
 
@@ -134,35 +170,41 @@ export function calcularFlujoProyectado(args: {
     total_salidas_mxn: totalSal,
     saldo_final_mxn: saldo,
     alertas_negativas: alertas,
+    saldo_incompleto: exclusiones.incompleto,
+    excluido_por_moneda: exclusiones.porMoneda,
+    tipo_cambio_usd: args.tipoCambioUsd ?? null,
+    tipo_cambio_fecha: args.tipoCambioFecha ?? null,
   };
 }
 
 type InWindow = (iso: string | null) => SemanaFlujo | null;
 
-function aplicarCobranza(rows: CobranzaRow[], inWindow: InWindow): void {
+function aplicarCobranza(rows: CobranzaRow[], inWindow: InWindow, exclusiones: Exclusiones): void {
   for (const f of rows) {
     if (f.saldo <= 0) continue;
     const sem = inWindow(f.fecha_vencimiento); if (!sem) continue;
-    const mxn = toMxn(f.saldo, f.moneda, f.tipo_cambio);
-    sem.entradas_mxn += mxn;
+    const conv = aMxn(f.saldo, f.moneda, f.tipo_cambio);
+    if (!conv.completo) { exclusiones.registrar(f.saldo, f.moneda); continue; }
+    sem.entradas_mxn += conv.monto;
     sem.detalle_entradas.push({
       id: f.id, concepto: `${f.numero} · ${f.cliente_nombre}`,
-      monto_mxn: mxn, fecha_vencimiento: f.fecha_vencimiento!, moneda: f.moneda,
+      monto_mxn: conv.monto, fecha_vencimiento: f.fecha_vencimiento!, moneda: f.moneda,
     });
   }
 }
 
-function aplicarCxp(rows: CxpRow[], inWindow: InWindow): void {
+function aplicarCxp(rows: CxpRow[], inWindow: InWindow, exclusiones: Exclusiones): void {
   for (const c of rows) {
     // v13.315.7 (QW1) — fecha efectiva = programada > vencimiento.
     const fechaEfectiva = c.fecha_programada_pago ?? c.fecha_vencimiento;
     if (c.saldo <= 0 || !fechaEfectiva) continue;
     const sem = inWindow(fechaEfectiva); if (!sem) continue;
-    const mxn = toMxn(c.saldo, c.moneda, c.tipo_cambio_usd);
-    sem.salidas_mxn += mxn;
+    const conv = aMxn(c.saldo, c.moneda, c.tipo_cambio_usd);
+    if (!conv.completo) { exclusiones.registrar(c.saldo, c.moneda); continue; }
+    sem.salidas_mxn += conv.monto;
     sem.detalle_salidas.push({
       id: c.id, concepto: `${c.folio_proveedor} · ${c.proveedor_nombre}`,
-      monto_mxn: mxn, fecha_vencimiento: fechaEfectiva, moneda: c.moneda,
+      monto_mxn: conv.monto, fecha_vencimiento: fechaEfectiva, moneda: c.moneda,
     });
   }
 }
@@ -181,4 +223,3 @@ function aplicarLiquidaciones(rows: LiquidacionRow[], inWindow: InWindow): void 
     });
   }
 }
-

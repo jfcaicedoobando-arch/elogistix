@@ -12,6 +12,9 @@ import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { useFlujoProyectado } from "@/features/tesoreria/hooks";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatFechaEs } from "@/lib/formatters/dates";
 
 const GraficoFlujoProyectado = lazy(() => import("@/features/tesoreria/components/GraficoFlujoProyectado"));
 const TablaFlujoSemanal = lazy(() => import("@/features/tesoreria/components/TablaFlujoSemanal"));
@@ -34,6 +37,28 @@ export default function TesoreriaFlujo() {
         <KpiGridSkeleton count={4} heightClass="h-20" />
       ) : (
         <>
+          {data.tipo_cambio_usd ? (
+            <div className="flex justify-end">
+              <Badge variant="info">
+                TC DOF ${data.tipo_cambio_usd.toFixed(4)}
+                {data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""}
+              </Badge>
+            </div>
+          ) : null}
+
+          {data.saldo_incompleto && (
+            <Alert variant="warning">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                No hay tipo de cambio confiable: el flujo proyectado excluye{" "}
+                {Object.entries(data.excluido_por_moneda)
+                  .map(([moneda, monto]) => `${formatCurrency(monto, moneda)} (${moneda})`)
+                  .join(", ")}
+                .
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <KpiCard label="Saldo hoy (MXN aprox)" value={formatCurrency(data.saldo_inicial_mxn, "MXN")} />
             <KpiCard label="Entradas 90 días" value={formatCurrency(data.total_entradas_mxn, "MXN")} variant="success" />

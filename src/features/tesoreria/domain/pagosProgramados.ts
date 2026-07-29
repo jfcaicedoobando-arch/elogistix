@@ -6,6 +6,7 @@
  * `COALESCE(fecha_programada_pago, fecha_vencimiento)`.
  */
 import { isoUtcDay } from "@/lib/date/mx";
+import { parseDateOnlyLocal } from "@/lib/date/dateOnly";
 import { inicioSemana, isoWeekKey } from "./flujoProyectado";
 
 export interface FacturaProgramable {
@@ -45,7 +46,7 @@ export function agruparPorSemana(
   for (const f of facturas) {
     const fecha = fechaEfectivaPago(f);
     if (!fecha) continue;
-    const d = new Date(`${fecha}T00:00:00`);
+    const d = parseDateOnlyLocal(fecha);
     const key = isoWeekKey(d);
     let semana = map.get(key);
     if (!semana) {

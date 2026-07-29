@@ -38,6 +38,10 @@ export function useCrearFacturaManual() {
         notifySuccess(undefined, { title: "Factura manual guardada como borrador" });
       }
       qc.invalidateQueries({ queryKey: facturasKeys.all });
+      // Q-15.4: la bandeja "Por timbrar" no escuchaba esta mutación y quedaba
+      // desactualizada hasta recargar la página tras guardar un borrador.
+      // Se invalida por prefijo porque las llaves llevan `organizationId`.
+      qc.invalidateQueries({ queryKey: ['facturacion', 'bandeja'] });
       // Auditoría: la regla `ventas_sin_facturar` depende del estado de facturación
       // de los embarques. Al crear/timbrar una factura, forzamos refetch del reporte.
       qc.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });

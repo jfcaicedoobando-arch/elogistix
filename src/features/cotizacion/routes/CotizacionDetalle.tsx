@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import type { AppRole } from "@/types/appRole";
 import { useParams } from "react-router-dom";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { EnviarCotizacionDialog } from "@/features/cotizacion/components/detalle/EnviarCotizacionDialog";
@@ -35,6 +37,7 @@ const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generat
 
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
+  const { effectiveRole } = useAuth();
 
   const {
     cotizacion, isLoading, canEdit, tasaIva, embarquesVinculados,
@@ -112,6 +115,8 @@ export default function CotizacionDetalle() {
           tieneEmbarquesVinculados={embarquesVinculados.length > 0 || !!cotizacion.embarque_id}
           onCambiarEstado={handleCambiarEstado}
           onAbrirConvertir={abrirDialogConvertir}
+          total={totalUSD + totalMXN}
+          rol={effectiveRole as AppRole | null}
         />
       )}
 

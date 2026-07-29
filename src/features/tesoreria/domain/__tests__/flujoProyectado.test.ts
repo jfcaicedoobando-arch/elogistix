@@ -157,3 +157,54 @@ describe("calcularFlujoProyectado", () => {
     expect(r.total_salidas_mxn).toBe(1_000);
   });
 });
+
+describe("calcularFlujoProyectado — Q-06 conversión multi-moneda", () => {
+  const hoy = new Date("2026-06-15T00:00:00");
+
+  it("con TC confiable convierte saldo/entradas/salidas USD y marca completo", () => {
+    const cuentasMix: ResumenCuenta[] = [
+      { id: "c1", alias: "USD", banco: "BBVA", moneda: "USD", saldo: 1_000 },
+    ];
+    const cobranza: CobranzaRow[] = [
+      // El TC de la factura manda sobre el TC global (canon: `f.tipo_cambio`).
+      { id: "f1", numero: "F-1", cliente_nombre: "A", moneda: "USD", saldo: 100, tipo_cambio: 20, fecha_vencimiento: "2026-06-18" },
+    ];
+    const r = calcularFlujoProyectado({
+      cuentas: cuentasMix, cobranza, cxp: [], liquidaciones: [], dias: 14, hoy, tipoCambioUsd: 20,
+    });
+    expect(r.saldo_inicial_mxn).toBe(20_000);
+    expect(r.total_entradas_mxn).toBe(2_000);
+    expect(r.saldo_incompleto).toBe(false);
+    expect(r.tipo_cambio_usd).toBe(20);
+  });
+
+  it("sin TC confiable NO suma 1:1 y marca saldo_incompleto con desglose", () => {
+    const cuentasMix: ResumenCuenta[] = [
+      { id: "c1", alias: "USD", banco: "BBVA", moneda: "USD", saldo: 1_000 },
+    ];
+    const cobranza: CobranzaRow[] = [
+      { id: "f1", numero: "F-1", cliente_nombre: "A", moneda: "USD", saldo: 100, fecha_vencimiento: "2026-06-18" },
+    ];
+    const r = calcularFlujoProyectado({
+      cuentas: cuentasMix, cobranza, cxp: [], liquidaciones: [], dias: 14, hoy,
+    });
+    expect(r.saldo_inicial_mxn).toBe(0);
+    expect(r.total_entradas_mxn).toBe(0);
+    expect(r.saldo_incompleto).toBe(true);
+    expect(r.excluido_por_moneda.USD).toBe(1_100);
+  });
+});
+
+describe("calcularFlujoProyectado — Q-15.1 sin corrimiento de día (zona MX)", () => {
+  it("una cobranza que vence el lunes cae en la semana que inicia ese lunes", () => {
+    const hoy = new Date("2026-06-15T00:00:00"); // lunes
+    const cobranza: CobranzaRow[] = [
+      { id: "f1", numero: "F-1", cliente_nombre: "A", moneda: "MXN", saldo: 1_000, fecha_vencimiento: "2026-06-15" },
+    ];
+    const r = calcularFlujoProyectado({
+      cuentas: [], cobranza, cxp: [], liquidaciones: [], dias: 7, hoy,
+    });
+    const semanaConEntrada = r.semanas.find((s) => s.entradas_mxn > 0);
+    expect(semanaConEntrada?.inicio).toBe("2026-06-15");
+  });
+});
