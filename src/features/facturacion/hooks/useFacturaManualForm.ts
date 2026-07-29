@@ -13,7 +13,7 @@ import { useClientesFiscalOpts, type ClienteFiscalOpt } from "@/features/factura
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import { useValidarLimiteCredito, registrarExcesoCredito, type ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import { todayLocalISO } from "@/lib/date/today";
-import { notifyError } from "@/lib/feedback/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { DatosFiscalesValue } from "@/features/facturacion/components/FacturaManualDatosFiscales";
 
