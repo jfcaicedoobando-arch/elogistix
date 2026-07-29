@@ -8,18 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
-
-/**
- * P-07: sólo respetamos el deep-link si pertenece al área del rol
- * (defensa contra open-redirect y contra rebotes del guard).
- */
-function isDeepLinkPermitido(role: string | null | undefined, pathname?: string): boolean {
-  if (!pathname || !pathname.startsWith("/") || pathname.startsWith("//")) return false;
-  if (pathname === "/login") return false;
-  if (role === "cliente") return pathname.startsWith("/portal");
-  if (role === "agente_carga") return pathname.startsWith("/agente");
-  return !pathname.startsWith("/portal") && !pathname.startsWith("/agente");
-}
+import { resolveDeepLinkDestino } from "@/features/auth/utils/deepLink";
 
 interface Props {
   onForgotPassword: () => void;
@@ -46,9 +35,7 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
       // regresar a la ruta pedida — sólo si pertenece al área del rol
       // (defensa contra open-redirect).
       const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
-      const destino = isDeepLinkPermitido(role, from?.pathname)
-        ? `${from!.pathname}${from?.search ?? ""}`
-        : resolveLandingRoute(role);
+      const destino = resolveDeepLinkDestino(role, from) ?? resolveLandingRoute(role);
       navigate(destino, { replace: true });
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Error desconocido";
