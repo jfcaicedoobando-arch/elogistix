@@ -25,10 +25,16 @@ concurrency:
 
 env:
   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
-  # Migraciones anteriores o iguales a este archivo quedan exentas del radar
-  # de drift (deuda histórica ya cubierta por `_ci_drift.sql`). Toda migración
-  # posterior DEBE aplicar en una base limpia.
-  DRIFT_BASELINE: "20260729000308_6b12144a-4547-46e4-afbb-01341f02bd16.sql"
+  # Migraciones anteriores a este corte quedan exentas del radar de drift
+  # (deuda histórica ya cubierta por `_ci_drift.sql`). Toda migración posterior
+  # DEBE aplicar en una base limpia.
+  #
+  # DEBE mantenerse sincronizado con `DRIFT_CORTE` en `rls-tests.yml`:
+  # 20260729040000 deja fuera a 20260729035825 (FIX C5), que parchea por texto
+  # definiciones vigentes y no puede aplicar sobre una base reconstruida. Su
+  # estado final lo garantiza, sin anclas, la migración FIX C5-b posterior.
+  DRIFT_BASELINE: "20260729040000"
+
 
 jobs:
   # ---------------------------------------------------------------------
