@@ -49,11 +49,41 @@ export interface FacturaCobranza {
 
 const ESTADOS_ACTIVOS = ["Emitida", "Parcialmente pagada", "Vencida"] as const;
 
-interface FetchCobranzaFilters {
+export interface FetchCobranzaFilters {
   search?: string;
   cliente_id?: string;
   moneda?: FacturaRow["moneda"] | "todas";
   estatus?: EstatusCobranza | "todos";
+}
+
+/** Shape del jsonb de `cobranza_agregados` (C3c): espejo de `KPIsCobranza`. */
+export interface KpisCobranzaRemotos {
+  total_mxn: number;
+  total_usd: number;
+  vencido_mxn: number;
+  vencido_usd: number;
+  por_vencer_7d_mxn: number;
+  por_vencer_7d_usd: number;
+  facturas_vencidas: number;
+  facturas_con_saldo: number;
+}
+
+/**
+ * FIX C3c (S6-02): KPIs de cartera agregados en SQL sobre el UNIVERSO completo
+ * de facturas activas — no sobre la página visible (que sigue limitada y
+ * protegida por `assertNotTruncated`). Usar en las tarjetas de totales;
+ * `calcularKPIs(rows)` queda solo para agregados de la página cargada.
+ */
+export async function fetchCobranzaKpis(
+  filtros: FetchCobranzaFilters = {},
+): Promise<KpisCobranzaRemotos> {
+  const { data, error } = await supabase.rpc("cobranza_agregados", {
+    p_cliente_id: filtros.cliente_id ?? undefined,
+    p_moneda: filtros.moneda && filtros.moneda !== "todas" ? filtros.moneda : undefined,
+  });
+  if (error) throw error;
+  // SAFE-CAST: jsonb con el shape de la migración C3c.
+  return data as unknown as KpisCobranzaRemotos;
 }
 
 type RawFactura = Pick<
