@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.322.18] - 2026-07-29
+- Auditoría: el número de "embarques con ETA vencida" del dashboard ejecutivo ahora coincide exactamente con los hallazgos que se ven al dar clic en "Revisar" (misma definición de vencido, mismas reglas excluidas y misma zona horaria de CDMX).
+- Auditoría: al llegar desde esa tarjeta se muestra un chip "ETA vencida" que indica el filtro activo y permite quitarlo con un clic.
+
 ## [13.322.17] - 2026-07-29
 - Compras: se corrige la verificación de CFDI ante el SAT cuando el RFC contiene "&" (p. ej. AL&0807074L5), que antes devolvía el error 601 y marcaba la factura como "No encontrado". Ahora se reintenta con el escapado correcto y aparece el estatus real (Vigente/Cancelado).
 - Compras: nuevo estatus "No verificable" con aviso ámbar y acceso directo al portal del SAT cuando la consulta automática no se puede completar.
