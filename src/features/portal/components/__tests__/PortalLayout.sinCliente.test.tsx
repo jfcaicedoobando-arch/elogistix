@@ -32,11 +32,11 @@ vi.mock("@/features/portal/hooks/usePortalBreadcrumbs", () => ({
   usePortalBreadcrumbs: () => [],
 }));
 
-// El header usa el toggle de tema, que exige ThemeProvider: fuera del alcance.
-vi.mock("@/components/layout/ThemeToggle", () => ({
-  ThemeToggle: () => null,
-  default: () => null,
-}));
+// El header y la barra inferior traen tema, tooltips y queries propias:
+// quedan fuera del alcance de esta prueba, que sólo cubre la rama de contenido.
+vi.mock("../layout/PortalHeader", () => ({ PortalHeader: () => null }));
+vi.mock("../layout/PortalBottomNav", () => ({ PortalBottomNav: () => null }));
+vi.mock("../layout/PortalBreadcrumbsBar", () => ({ PortalBreadcrumbsBar: () => null }));
 
 function renderLayout() {
   return render(
