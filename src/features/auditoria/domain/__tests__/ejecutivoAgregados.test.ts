@@ -7,6 +7,8 @@ import {
   calcularVencimientos,
   calcularRanking,
   RIESGO_UMBRAL_MXN,
+  esHallazgoEtaVencida,
+  hoyAuditoriaIso,
 } from "../ejecutivoAgregados";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
