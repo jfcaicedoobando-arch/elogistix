@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.337.0] - 2026-07-29
+- **Fix · "Error al reabrir embarque: [object Object]".** El mensaje real del servidor se perdía al convertir el error a texto, así que sólo se veía `[object Object]`. Ahora se traduce correctamente y se conserva la causa original para Sentry.
+- **Fix · Ambigüedad de la función de reapertura.** Existían dos versiones con el mismo nombre y la base de datos no sabía cuál usar. Se dejó una sola firma oficial (`reabrir_embarque`) y la variante corta de la pestaña Cierre se renombró a `reabrir_embarque_con_motivo`. Analogía: dos llaves idénticas para puertas distintas; le pusimos etiqueta a cada una.
+- **Mejora · Motivo obligatorio al reabrir.** El botón **Reabrir** del encabezado ahora pide un motivo de al menos 20 caracteres, que queda registrado en la bitácora del embarque.
+
+
+
 ## [13.336.2] - 2026-07-29
 - **Chore · CI de lint desbloqueado.** `scripts/audit-migrations.ts` había crecido por encima del límite de 250 líneas de la regla `max-lines` y el lint del CI (que no tolera advertencias) fallaba. Se extrajeron las utilidades de análisis de firmas SQL a `scripts/lib/audit-sql-signatures.ts` sin cambiar el comportamiento del auditor. No se bajó el umbral de la regla. Analogía: en vez de ensanchar la puerta, guardamos parte de las herramientas en un cajón aparte.
 

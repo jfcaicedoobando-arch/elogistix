@@ -30,7 +30,7 @@ interface Props {
   onCompartirTracking: () => void;
   onAbrirEliminar: () => void;
   onAbrirDuplicar: () => void;
-  onReabrir: () => void;
+  onReabrir: (motivo: string) => void;
   // v13.89.1 — Cierre gateado
   cierreEsSiguiente: boolean;
   rolPuedeCerrar: boolean;

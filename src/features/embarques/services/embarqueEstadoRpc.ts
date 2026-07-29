@@ -7,6 +7,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
+import { getErrorMessage } from "@/lib/errors";
+
 
 export interface AvanzarEstadoEmbarqueInput {
   embarqueId: string;
@@ -35,12 +37,18 @@ export async function avanzarEstadoEmbarqueRpc(
 export interface ReabrirEmbarqueInput {
   embarqueId: string;
   usuarioEmail: string;
+  /** Obligatorio: mínimo 20 caracteres (validado también en la RPC). */
+  motivo: string;
   requestId?: string;
 }
 
 /**
  * Reabre un embarque cerrado (estado Cerrado → Entregado). Solo admin/super_admin
- * pueden ejecutarla; el backend valida rol y estado actual.
+ * pueden ejecutarla; el backend valida rol, motivo y estado actual.
+ *
+ * v13.337.0 — el error de Postgrest (objeto plano, NO `Error`) se traduce con
+ * `getErrorMessage`; antes se hacía `String(e)`, que producía el inútil
+ * "[object Object]" tanto en el toast como en Sentry.
  */
 export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<void> {
   try {
@@ -52,17 +60,19 @@ export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<v
       ) => Promise<{ data: unknown; error: unknown }>)("reabrir_embarque", {
         p_embarque_id: input.embarqueId,
         p_usuario_email: input.usuarioEmail,
+        p_motivo: input.motivo,
         p_request_id: input.requestId,
       }),
     );
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const msg = getErrorMessage(e);
     if (/usa reabrir_embarque|bypass_cierre/i.test(msg)) {
       throw new Error(
         "El candado de embarque cerrado bloqueó la operación. Recarga la página e inténtalo de nuevo; si persiste, reporta el incidente.",
         { cause: e },
       );
     }
-    throw e instanceof Error ? e : new Error(msg);
+    throw e instanceof Error ? e : new Error(msg, { cause: e });
   }
 }
+

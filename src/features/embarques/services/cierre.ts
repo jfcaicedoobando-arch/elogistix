@@ -1,7 +1,7 @@
 /**
  * Bloque S — Cierre Financiero del Embarque.
  * Envoltorios a las RPCs `validar_cierre_embarque`, `cerrar_embarque`,
- * `reabrir_embarque` y lectura de `cierre_embarque_log`.
+ * `reabrir_embarque_con_motivo` y lectura de `cierre_embarque_log`.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -55,8 +55,13 @@ export async function cerrarEmbarque(embarqueId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/**
+ * v13.337.0 — la RPC `reabrir_embarque` se unificó a una sola firma
+ * (id + email + motivo + request_id) para eliminar la ambigüedad de overloads
+ * en PostgREST. Este flujo (tab Cierre) usa la variante corta renombrada.
+ */
 export async function reabrirEmbarque(embarqueId: string, motivo: string): Promise<void> {
-  const { error } = await supabase.rpc("reabrir_embarque" as never, {
+  const { error } = await supabase.rpc("reabrir_embarque_con_motivo" as never, {
     p_embarque_id: embarqueId,
     p_motivo: motivo,
   } as never);

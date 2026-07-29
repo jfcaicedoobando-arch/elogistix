@@ -72,7 +72,7 @@ describe("cierre service", () => {
       mockedRpc.mockResolvedValue({ data: { ok: true }, error: null });
       const motivo = "Corrección de costos por reclamo del cliente principal";
       await reabrirEmbarque("emb-3", motivo);
-      expect(mockedRpc).toHaveBeenCalledWith("reabrir_embarque", {
+      expect(mockedRpc).toHaveBeenCalledWith("reabrir_embarque_con_motivo", {
         p_embarque_id: "emb-3",
         p_motivo: motivo,
       });

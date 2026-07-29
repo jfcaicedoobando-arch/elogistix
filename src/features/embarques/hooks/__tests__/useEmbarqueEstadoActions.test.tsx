@@ -114,7 +114,7 @@ describe("useEmbarqueEstadoActions", () => {
       { wrapper: createWrapper() },
     );
     await act(async () => {
-      await result.current.handleReabrir();
+      await result.current.handleReabrir("Motivo de prueba suficientemente largo");
     });
     await waitFor(() => expect(reabrirMutateAsync).toHaveBeenCalledTimes(1));
     expect(reabrirMutateAsync).toHaveBeenCalledWith(
