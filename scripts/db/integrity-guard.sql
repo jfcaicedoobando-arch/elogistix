@@ -38,7 +38,7 @@ join expuestas b
  and b.oid <> a.oid
  and b.pronargs >= a.pronargs
 where a.nombres <@ b.nombres
-  and b.pronargs - a.pronargs <= b.pronargsdefaults_dummy_placeholder
+  and b.pronargs - a.pronargs <= b.pronargdefaults
 
 
 union all
