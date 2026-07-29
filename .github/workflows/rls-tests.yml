@@ -434,11 +434,16 @@ jobs:
       - name: Apply migrations SIN parches de drift
         id: apply
         env:
-          # Corte histórico: la migración de catch-up que registró en el
-          # historial los objetos creados a mano en el dashboard. Todo lo
-          # anterior es deuda congelada (se informa, no rompe). Todo lo
-          # posterior DEBE aplicar sobre una base limpia.
-          DRIFT_CORTE: "20260729004011"
+          # Corte histórico: todo lo anterior es deuda congelada (se informa,
+          # no rompe). Todo lo posterior DEBE aplicar sobre una base limpia.
+          #
+          # 20260729040000 mueve el corte por encima de 20260729035825 (FIX C5),
+          # que parchea por texto definiciones vigentes y no puede aplicar sobre
+          # una base reconstruida (su ancla vive en una migración legacy que
+          # falla antes). Su estado final lo garantiza, de forma determinista y
+          # sin anclas, la migración FIX C5-b posterior al corte.
+          DRIFT_CORTE: "20260729040000"
+
         run: |
           set -uo pipefail
           shopt -s nullglob
@@ -455,8 +460,10 @@ jobs:
                 echo "- \`$base\`" >> /tmp/legacy.md
               else
                 echo "::error file=$f::drift NUEVO — la migración no aplica en una base limpia"
-                sed -n '1,10p' /tmp/mig.log
+                echo "--- últimas 20 líneas de $base ---"
+                tail -n 20 /tmp/mig.log
                 nuevas="$nuevas $base"
+
               fi
             fi
           done
