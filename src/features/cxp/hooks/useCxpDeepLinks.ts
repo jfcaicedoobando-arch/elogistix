@@ -1,71 +1,35 @@
 /**
  * Deep-links de /compras/facturas.
  *
- * Encapsula dos efectos:
- *  - `?factura={id}` → abre el modal de detalle si la factura ya cargó.
- *  - `?aprobacion=pendiente|aprobada|rechazada` → activa el chip inicial.
+ * `?factura={id}` → abre el modal de detalle si la factura ya cargó y limpia
+ * el query param (nuqs, `setFacturaParam(null)`).
  *
- * En ambos casos, tras aplicar el efecto se limpia el query param con
- * `replace: true` para no ensuciar el historial.
+ * M10 (auditoría 2026-07-29): el efecto mount-only de `?aprobacion=` se
+ * eliminó — al ser `aprobacion` un filtro nuqs más (`useCxpPageState`), la URL
+ * lo inicializa sola y además reacciona a navegaciones con la página montada.
  */
-import { useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useQueryState } from "nuqs";
 import type { FacturaCxP } from "@/features/cxp/services";
-
-type AprobacionValor = "pendiente" | "aprobada" | "rechazada";
 
 export interface UseCxpDeepLinksArgs {
   data: FacturaCxP[];
   isLoading: boolean;
   onOpenDetalle: (fact: FacturaCxP) => void;
-  onSetAprobacion: (valor: AprobacionValor) => void;
 }
 
 export function useCxpDeepLinks({
   data,
   isLoading,
   onOpenDetalle,
-  onSetAprobacion,
 }: UseCxpDeepLinksArgs): void {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [facturaParam, setFacturaParam] = useQueryState("factura");
 
   useEffect(() => {
-    const id = searchParams.get("factura");
-    if (!id || isLoading) return;
-    const found = data.find((row) => row.id === id);
+    if (!facturaParam || isLoading) return;
+    const found = data.find((row) => row.id === facturaParam);
     if (!found) return;
     onOpenDetalle(found);
-    setSearchParams(
-      (sp) => {
-        const next = new URLSearchParams(sp);
-        next.delete("factura");
-        return next;
-      },
-      { replace: true },
-    );
-  }, [searchParams, data, isLoading, onOpenDetalle, setSearchParams]);
-
-  // Efecto de mount-only: aplica el chip inicial de aprobación desde el query
-  // param una sola vez. Refs para leer valores actuales sin re-suscribir.
-  const onSetAprobacionRef = useRef(onSetAprobacion);
-  const setSearchParamsRef = useRef(setSearchParams);
-  const searchParamsRef = useRef(searchParams);
-  onSetAprobacionRef.current = onSetAprobacion;
-  setSearchParamsRef.current = setSearchParams;
-  searchParamsRef.current = searchParams;
-
-  useEffect(() => {
-    const ap = searchParamsRef.current.get("aprobacion");
-    if (ap === "pendiente" || ap === "aprobada" || ap === "rechazada") {
-      onSetAprobacionRef.current(ap);
-      setSearchParamsRef.current(
-        (sp) => {
-          const next = new URLSearchParams(sp);
-          next.delete("aprobacion");
-          return next;
-        },
-        { replace: true },
-      );
-    }
-  }, []);
+    void setFacturaParam(null);
+  }, [facturaParam, data, isLoading, onOpenDetalle, setFacturaParam]);
 }

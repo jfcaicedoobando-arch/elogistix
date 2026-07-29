@@ -39,6 +39,9 @@ export function useAdminOrgInfo(id: string | undefined) {
       updateAdminOrganization(id!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.org(id!) });
+      // M9: si la org editada es la del propio usuario, su contexto de auth
+      // (nombre en sidebar/header) se revalida al instante, no en 60s.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.userContextAll });
       notifySuccess(undefined, { title: "Organización actualizada" });
       setEditing(false);
     },
@@ -51,6 +54,7 @@ export function useAdminOrgInfo(id: string | undefined) {
     mutationFn: (activo: boolean) => establecerOrganizacionActiva(id!, activo),
     onSuccess: (_, activo) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.org(id!) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.userContextAll });
       notifySuccess(undefined, { title: activo ? "Organización activada" : "Organización desactivada" });
     },
     onError: (error: Error) => {

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import type { AppRole } from "@/types/appRole";
 import { fetchUserContext, type CachedOrganization } from "@/features/auth/services";
 
@@ -18,69 +20,61 @@ const EMPTY_PROFILE: AuthProfile = {
   organization: null,
 };
 
-/** TTL para no re-fetchear el contexto del usuario en cascada. */
-const CONTEXT_TTL_MS = 60_000;
+/** Mismo TTL que la versión manual (60s), ahora expresado como `staleTime`. */
+const USER_CONTEXT_STALE_MS = 60_000;
 
 /**
  * Carga perfil + roles + organización del usuario autenticado vía
- * `services/auth.fetchUserContext`. Mantiene cache TTL e in-flight de-dupe.
+ * `services/auth.fetchUserContext`.
+ *
+ * M9 (auditoría 2026-07-29): migrado de cache manual (TTL + refs in-flight) a
+ * TanStack Query — dedupe, `staleTime` y revalidación los da el queryClient;
+ * `refresh()` es un `invalidateQueries` y `reset()` un `removeQueries`.
+ * La firma pública `{ profile, reset, refresh }` no cambia.
  */
 export function useAuthProfile(userId: string | null) {
-  const [profile, setProfile] = useState<AuthProfile>(EMPTY_PROFILE);
-  const lastFetchedFor = useRef<string | null>(null);
-  const lastFetchedAt = useRef<number>(0);
-  const inflight = useRef<Promise<void> | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchContext = useCallback(async (uid: string) => {
-    const now = Date.now();
-    if (lastFetchedFor.current === uid && now - lastFetchedAt.current < CONTEXT_TTL_MS) {
-      return;
-    }
-    if (inflight.current) {
-      return inflight.current;
-    }
-    const promise = (async () => {
+  const { data } = useQuery({
+    queryKey: queryKeys.auth.userContext(userId),
+    enabled: !!userId,
+    staleTime: USER_CONTEXT_STALE_MS,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    queryFn: async ({ queryKey }) => {
       try {
         const payload = await fetchUserContext();
-        if (!payload) return; // mantener perfil previo
-        setProfile(payload);
-        lastFetchedFor.current = uid;
-        lastFetchedAt.current = Date.now();
+        if (!payload) {
+          // Paridad con la versión TTL: mantener el perfil previo si el
+          // contexto no está disponible transitoriamente (evita parpadeos y
+          // falsos "sin organización" durante eventos de auth).
+          return queryClient.getQueryData<AuthProfile>(queryKey) ?? EMPTY_PROFILE;
+        }
+
+        return payload;
       } catch (err) {
-        // No envenenar el perfil. El listener de auth puede reintentar.
+        // No envenenar el perfil: el listener de auth puede reintentar.
         console.error("[useAuthProfile] fetchUserContext failed", err);
-        void import("@sentry/react").then(({ captureException }) =>
-          captureException(err, { tags: { feature: "auth", phase: "fetchUserContext" }, extra: { uid } }),
-        ).catch(() => undefined);
-      } finally {
-        inflight.current = null;
+        void import("@sentry/react")
+          .then(({ captureException }) =>
+            captureException(err, { tags: { feature: "auth", phase: "fetchUserContext" }, extra: { uid: userId } }),
+          )
+          .catch(() => undefined);
+        throw err;
       }
-    })();
-    inflight.current = promise;
-    return promise;
-  }, []);
+    },
+  });
+
+  const profile = userId ? (data ?? EMPTY_PROFILE) : EMPTY_PROFILE;
 
   const reset = useCallback(() => {
-    setProfile(EMPTY_PROFILE);
-    lastFetchedFor.current = null;
-    lastFetchedAt.current = 0;
-  }, []);
+    queryClient.removeQueries({ queryKey: queryKeys.auth.userContextAll });
+  }, [queryClient]);
 
   const refresh = useCallback(async () => {
     if (!userId) return;
-    // Forzar bypass de TTL
-    lastFetchedAt.current = 0;
-    await fetchContext(userId);
-  }, [userId, fetchContext]);
-
-  useEffect(() => {
-    if (userId) {
-      // Defer para evitar potencial deadlock con Supabase durante eventos de auth.
-      const t = setTimeout(() => fetchContext(userId), 0);
-      return () => clearTimeout(t);
-    }
-    reset();
-  }, [userId, fetchContext, reset]);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.auth.userContextAll });
+  }, [userId, queryClient]);
 
   return { profile, reset, refresh };
 }

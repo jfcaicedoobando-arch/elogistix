@@ -12,6 +12,7 @@ vi.mock("@sentry/react", () => sentryMock);
 const { mockFetchUserContext } = vi.hoisted(() => ({ mockFetchUserContext: vi.fn() }));
 vi.mock("@/features/auth/services", () => ({ fetchUserContext: mockFetchUserContext }));
 
+import { createWrapper } from "@/test/utils/queryWrapper";
 import { useAuthProfile } from "../useAuthProfile";
 
 // v13.137.35: spy a `console.error` administrado en beforeEach/afterEach. Antes
@@ -33,7 +34,7 @@ describe("useAuthProfile — captureException", () => {
     const boom = new Error("profile-fetch-down");
     mockFetchUserContext.mockRejectedValue(boom);
 
-    const { unmount } = renderHook(() => useAuthProfile("u-XYZ"));
+    const { unmount } = renderHook(() => useAuthProfile("u-XYZ"), { wrapper: createWrapper() });
 
     await waitFor(() =>
       expect(sentryMock.captureException).toHaveBeenCalledWith(
@@ -58,7 +59,7 @@ describe("useAuthProfile — captureException", () => {
       organizationId: "o-1",
       organization: null,
     });
-    const { unmount } = renderHook(() => useAuthProfile("u-OK"));
+    const { unmount } = renderHook(() => useAuthProfile("u-OK"), { wrapper: createWrapper() });
     await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalled());
     // microtask flush para que cualquier `.catch` ya hubiese disparado
     await Promise.resolve();
