@@ -32,7 +32,8 @@ export interface TiposCambio {
 }
 
 function normalizarMoneda(moneda: string | null | undefined): string {
-  return (moneda ?? "MXN").toUpperCase();
+  const m = (moneda ?? "").trim().toUpperCase();
+  return m === "" ? "MXN" : m;
 }
 
 /** TC confiable para moneda extranjera: finito, > 0 y > 1 (política 2). */
