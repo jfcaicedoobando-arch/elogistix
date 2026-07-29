@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.325.2] - 2026-07-30
+- Calidad de código: el catálogo de mensajes `LC_*` se dividió en dos archivos por dominio (operativo y financiero) para cumplir el límite de 200 líneas, sin cambiar ningún mensaje.
+
+
+
 ## [13.325.1] - 2026-07-30
 - CI: la validación de suites RLS ya no se corta con líneas en blanco dentro de la lista, así que vuelve a reconocer las 21 suites existentes.
 
