@@ -1,0 +1,25 @@
+# Allowlist CONGELADA de drift histórico (v13.322.8)
+#
+# Migraciones que NO aplican sobre una base limpia porque dependen de objetos
+# creados manualmente en el dashboard antes de que existiera disciplina de
+# migraciones. `_ci_drift.sql` las parcha en CI y la migración de catch-up
+# 20260729004011 ya registra esos objetos en el historial (por eso el esquema
+# final sí es reproducible; sólo el replay intermedio falla).
+#
+# REGLAS:
+#   - Esta lista sólo puede ENCOGER. Agregar una entrada = aceptar deuda nueva
+#     y debe justificarse en la revisión del PR.
+#   - Cualquier migración que falle y NO esté aquí rompe el job en rojo.
+#
+# Formato: un nombre de archivo por línea (sin ruta). '#' = comentario.
+
+20260424231755_3f492847-dfdc-44cc-b159-ee9c97b3731d.sql
+20260527061320_4cb9567e-3bbe-4452-8513-f38a418df7f9.sql
+20260531162349_62b7e5c9-030b-42b2-9b5f-d8b49fcdc988.sql
+20260602213410_c80ca8f9-6b6f-43f3-b103-bb23a04a42f8.sql
+20260602213446_32350259-eb13-45c5-a94e-719d1c0887c8.sql
+20260604020144_9a5f3c5e-8211-4954-918f-f437d0b91028.sql
+20260608032942_27e3580c-d7c9-4aed-bc58-12d7eb9896cc.sql
+20260616233650_53ebb05b-ac0f-4c29-9901-f4eeb7afc72a.sql
+20260617052908_648a9efe-61c2-400a-8a13-2b0c96d8f19b.sql
+20260622024205_269d9f37-724c-4b57-8047-fbd0119f87be.sql
