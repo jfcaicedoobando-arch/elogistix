@@ -1,6 +1,13 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import os from "os";
+
+// Forks paralelos en local: dejamos 2 núcleos libres para el dev-server/HMR
+// y topamos en 8 para acotar el uso de RAM (8 × 4 GB heap = 32 GB).
+const LOCAL_FORKS = Math.max(2, Math.min(8, os.cpus().length - 2));
+
+
 
 export default defineConfig({
   plugins: [react()],
