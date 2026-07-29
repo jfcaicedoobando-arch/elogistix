@@ -23,7 +23,7 @@ export default function GuiaPuertosMexico() {
   return (
     <div className="landing-scope min-h-screen bg-background text-foreground">
       <Seo
-        title="Principales puertos de México (2026): Manzanillo, Veracruz, LZC, ATM, ESE"
+        title="Principales puertos de México 2026: guía marítima"
         description="Guía 2026 de los 5 puertos más importantes de México: Manzanillo, Veracruz, Lázaro Cárdenas, Altamira y Ensenada. Códigos UN/LOCODE, rutas, navieras y tipo de carga."
         canonical={URL}
         ogTitle="Principales puertos marítimos de México: guía 2026"
