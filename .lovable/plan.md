@@ -1,45 +1,56 @@
-## Problema
+## Verificación previa (hecha contra el HEAD y la base real)
 
-En el módulo de Auditoría, la tarjeta roja dice "2 hallazgos en embarques con ETA vencida", pero al presionar **Revisar** la tabla muestra un conjunto distinto. El conteo y el filtro se calculan con reglas diferentes en dos lugares del código que nunca se sincronizaron.
 
-## Causa raíz (verificada en el código)
+| Fix    | Afirmación del documento                                                                       | Resultado de la verificación                                                                                                                                                                                                                                                                                                                                                                              |
+| ------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **C1** | `eliminar_embarque_completo` es SECURITY DEFINER, con GRANT a `authenticated` y sin `has_role` | **Confirmado**. La función existe, es `prosecdef = true`, tiene EXECUTE para `authenticated` y `service_role`, y su cuerpo no contiene ninguna llamada a `has_role`                                                                                                                                                                                                                                       |
+| **C2** | Las edge functions `facturapi-*` no validan rol                                                | **Confirmado**. Ninguna de las 13 funciones `facturapi-*` menciona `has_role` / rol; sólo resuelven `auth.getUser()` y la API key por org (`_shared/facturapiAuth.ts`)                                                                                                                                                                                                                                    |
+| **C3** | Pantallas de dinero expuestas al truncado de 1000 filas                                        | **Parcialmente confirmado**. No existe `assertNotTruncated` ni configuración `[api] max_rows`. Ver advertencia abajo sobre `config.toml`                                                                                                                                                                                                                                                                  |
+| **C4** | Totales de dinero calculados en cliente                                                        | **Confirmado** en los tres archivos citados (factura manual, conceptos de cotización, CxP)                                                                                                                                                                                                                                                                                                                |
+| **C5** | 6 RPCs listan/agregan filas soft-deleted                                                       | **Confirmado en base**: `embarques_listado`, `facturas_listado`, `dashboard_details`, `sidebar_alert_counts`, `operaciones_stats`, `profit_por_cliente` no mencionan `deleted_at`. También confirmado que `profit_por_embarque` **sí** filtra (no se toca). `dashboard_summary` y `embarques_list_extras` sí lo mencionan → el hueco ahí es parcial, hay que revisar caso por caso antes de reescribirlas |
+| **C6** | 6 implementaciones divergentes de conversión a MXN                                             | **Confirmado**. Los 6 archivos existen con las políticas divergentes descritas; `src/lib/financial/tcValido.ts` ya existe y `src/lib/financial/convertir.ts` todavía no                                                                                                                                                                                                                                   |
 
-La tarjeta usa `calcularVencimientos` (`src/features/auditoria/domain/ejecutivoAgregados.ts`), y el botón sólo pasa `soloVencidos: true`, que en `useHallazgosTablaState` se traduce a un único filtro: `etaHasta = new Date()`. Las diferencias:
 
-1. **Fecha inclusiva vs exclusiva.** La tarjeta cuenta `eta < hoy` (estrictamente vencidas). La tabla filtra `eta <= hoy`, así que **incluye los embarques que arriban hoy** — que no están vencidos.
-2. **Reglas con calendario propio.** La tarjeta excluye a propósito `REGLAS_CON_VENCIMIENTO_PROPIO` (cxp_vencida, cxc_vencida, proforma_vencida, etc.), porque su vencimiento no depende del ETA. La tabla **no las excluye**, así que agrega hallazgos que la tarjeta nunca contó.
-3. **Definición distinta de "pendiente".** La tarjeta considera pendiente sólo lo que **no tiene ningún registro de revisión**; la tabla considera pendiente todo lo que **no esté marcado como "revisado"** (o sea, incluye los "en progreso").
-4. **Zona horaria mezclada.** La tarjeta calcula "hoy" en UTC (`isoUtcDay`); la tabla lo calcula en horario de México (`hoyMx` / `todayLocalISO`). Entre las 18:00 y medianoche los dos "hoy" difieren en un día.
+### Dos desviaciones respecto al documento
 
-## Solución
+1. **C3a — no se puede tocar `supabase/config.toml`.** En este proyecto el archivo lo administra la plataforma; agregar `[api] max_rows` ahí se perdería o rompería la sincronización. El objetivo de C3 se cubre igual con C3b (guarda de truncado en cliente) y C3c (agregados en SQL), que son los que realmente eliminan el riesgo.
+2. **C5 — `dashboard_summary` / `embarques_list_extras**` ya filtran parcialmente; se revisará el cuerpo vigente antes de reemplazarlas para no perder lógica.
 
-Crear una única fuente de verdad para el concepto "hallazgo con ETA vencida" y hacer que tanto la tarjeta como la tabla la consuman.
+## Plan de aplicación (por etapas, verificando entre cada una)
 
-### Cambios
+**Etapa 1 — Seguridad pura (bajo riesgo, sin cambios visibles de datos)**
 
-1. **`src/features/auditoria/domain/ejecutivoAgregados.ts`**
-   - Exportar un predicado puro `esHallazgoEtaVencida(hallazgo, hoyIso)` que encapsule las tres reglas: tiene ETA, no pertenece a `REGLAS_CON_VENCIMIENTO_PROPIO`, y `eta < hoyIso`.
-   - `calcularVencimientos` pasa a usar ese predicado (mismo resultado, sin duplicar lógica).
-   - Unificar "hoy" a horario de México (`hoyMx`) en lugar de UTC, para empatar con el resto de la app.
+- C1: migración `20260730000001` con `CREATE OR REPLACE` de `eliminar_embarque_completo`, conservando cuerpo y firma vigentes, añadiendo guard de rol (`has_role`) y comparación de `organization_id`. Gatear también el botón en `EmbarqueDetalleHeaderActions.tsx`.
+- C2: chequeo de rol fiscal en las edge functions `facturapi-*`, extraído a un helper compartido para no repetirlo 13 veces.
+- Verificación: test pgTAP en `supabase/tests/rls/` (rol sin permiso y tenant ajeno reciben error) + `deno test` de las edge functions.
 
-2. **`src/features/auditoria/hooks/hallazgosTablaFilters.ts`**
-   - Agregar al contexto de filtrado una bandera `soloEtaVencida` y un predicado que reutilice `esHallazgoEtaVencida`, en vez de depender del rango de fechas.
+**Etapa 2 — Datos fantasma (C5)**
 
-3. **`src/features/auditoria/hooks/useHallazgosTablaState.ts`**
-   - Cuando llega `soloVencidos: true`, activar la bandera nueva en lugar de precargar `etaHasta = new Date()`. Así el drill-down aplica exactamente la misma regla que el conteo, y el filtro de rango de ETA queda libre para el usuario.
+- Migración `20260730000003` recreando las 6 RPCs con `deleted_at IS NULL`, respetando firma y tipo de retorno exactos; revisión previa del cuerpo vigente de `dashboard_summary` y `embarques_list_extras`.
+- Verificación: test de regresión que inserta embarque + factura, los soft-borra y asegura que ninguna de las RPCs los devuelve ni los suma.
 
-4. **Alinear la definición de "pendiente"**
-   - En la tabla, cuando el drill-down viene de la tarjeta, forzar `filtroRevision = "pendientes"` y excluir también los "en progreso", igual que hace el cálculo del dashboard.
+**Etapa 3 — Truncado (C3b + C3c)**
 
-5. **Feedback visible en la tabla**
-   - Mostrar un chip removible tipo "ETA vencida" en la barra de filtros cuando el drill-down esté activo, para que quede claro por qué la lista está acotada y se pueda quitar con un clic.
+- `assertNotTruncated` en cliente + migración con las 5 RPCs agregadoras, y migración de las pantallas de dinero a esas RPCs.
+- Sin cambios en `config.toml`.
 
-### Verificación
+**Etapa 4 — Totales server-side (C4)** — la más delicada
 
-- Tests unitarios nuevos en `ejecutivoAgregados` y `hallazgosTablaFilters` que comprueben la paridad: dado el mismo arreglo de hallazgos, el número que cuenta la tarjeta debe ser idéntico al número de filas que deja pasar el filtro (incluyendo casos borde: ETA justo hoy, regla con calendario propio, hallazgo en progreso).
-- Prueba manual contra los datos reales: confirmar que la tarjeta y la tabla muestran ambas 2.
-- Correr lint y la suite de tests de auditoría.
+- Migración `20260730000002` (C4a/C4b/C4c) con triggers, CHECKs `NOT VALID` y backfill.
+- Antes del backfill: consulta de impacto que liste cuántas facturas/cotizaciones/CxP cambian de valor y en cuánto, para revisarla contigo. Sólo después se aplica.
 
-### Detalle técnico
+**Etapa 5 — Canon de conversión (C6)**
 
-Sin cambios de base de datos ni de RPC — todo el desajuste es de lógica de presentación en el cliente. Se actualizará `APP_VERSION` y `CHANGELOG.md`.
+- Nuevo `src/lib/financial/convertir.ts` + migración de los 6 call sites + guardrail ESLint/test de arquitectura. Se omite el diff sobre `dashboardEjecutivo.ts` si la Etapa 3 ya lo eliminó.
+
+## Cierre
+
+- Regenerar `types.ts` tras las migraciones.
+- `bun run lint --max-warnings 0`, suite de tests, tests de arquitectura y suite RLS al final de cada etapa.
+- `CHANGELOG.md` + `APP_VERSION` por etapa.
+
+## Detalle técnico
+
+Las migraciones usan `CREATE OR REPLACE` conservando firma y retorno; donde el retorno cambia se requiere `DROP FUNCTION` explícito (caso `embarques_listado`), lo que obliga a re-emitir el `GRANT EXECUTE` en la misma migración. Todos los CHECK nuevos van `NOT VALID` para no bloquear el deploy con datos legacy.
+
+Nota: `.lovable/` está en tu `.gitignore`, así que este plan no se versiona. ¿Quieres que lo quite para que los planes persistan? Tu escoge que es la mejor practica
