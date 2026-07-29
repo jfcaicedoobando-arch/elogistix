@@ -23,21 +23,21 @@ export default function TesoreriaCuentas() {
     cuentas, isLoading, open, setOpen, form, setField, submit, submitting,
     deleteTarget, solicitarEliminar, cancelarEliminar, confirmarEliminar, eliminando,
   } = useTesoreriaCuentasController();
-  // Sentry JAVASCRIPT-REACT-3S/3T: `tesorero` y `contador` sólo tienen lectura
-  // en `cuentas_bancarias` (RLS). Antes veían los botones y chocaban con 42501.
-  const { canAdminTenant } = usePermissions();
+  // Sentry JAVASCRIPT-REACT-3S/3T: sólo administradores y tesorero pueden
+  // escribir en `cuentas_bancarias` (RLS). El contador sólo consulta.
+  const { canAdminCuentasBancarias } = usePermissions();
 
   return (
     <PageContainer>
       <PageHeader
         title="Cuentas bancarias"
         description={
-          canAdminTenant
+          canAdminCuentasBancarias
             ? "Alta y administración de cuentas para conciliación"
-            : "Consulta de cuentas para conciliación (sólo administradores pueden editarlas)"
+            : "Consulta de cuentas para conciliación (sólo administradores y tesorería pueden editarlas)"
         }
         actions={
-          canAdminTenant ? (
+          canAdminCuentasBancarias ? (
             <Button onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4 mr-2" /> Nueva cuenta
             </Button>
@@ -49,7 +49,7 @@ export default function TesoreriaCuentas() {
         <KpiGridSkeleton count={3} heightClass="h-32" desktopCols={3} />
       ) : cuentas.length === 0 ? (
         <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">
-          {canAdminTenant ? "Aún no hay cuentas. Crea la primera." : "Aún no hay cuentas registradas."}
+          {canAdminCuentasBancarias ? "Aún no hay cuentas. Crea la primera." : "Aún no hay cuentas registradas."}
         </CardContent></Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -61,7 +61,7 @@ export default function TesoreriaCuentas() {
                     <p className="font-semibold">{c.alias}</p>
                     <p className="text-xs text-muted-foreground">{c.banco} · {c.moneda}</p>
                   </div>
-                  {canAdminTenant && (
+                  {canAdminCuentasBancarias && (
                     <Button
                       variant="ghost" size="icon"
                       onClick={() => solicitarEliminar(c.id, c.alias)}

@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.338.1] - 2026-07-29
+- **Mejora · Tesorería administra cuentas bancarias.** El rol **Tesorero** ahora puede crear, editar y eliminar cuentas bancarias de su organización (antes sólo consultarlas). El rol **Contador** sigue con acceso de sólo lectura. Se abrió el permiso tanto en la base de datos como en la pantalla, así que el botón "Nueva cuenta" ya aparece para tesorería y no vuelve a salir el error de permisos. Analogía: le dimos la llave a quien realmente maneja la caja, no sólo al gerente.
+
+
 ## [13.338.0] - 2026-07-29
 - **Fix · Cuentas bancarias sin permiso (Sentry 3S/3T).** Tesorería y contabilidad veían los botones "Nueva cuenta" y eliminar, pero la base de datos les negaba el paso. Ahora esos botones sólo aparecen para administradores, y los administradores de organización sí pueden gestionar las cuentas de su propia empresa. Analogía: quitamos la manija de una puerta que estaba cerrada con llave.
 - **Fix · Detalle de factura sin proforma (Sentry 3Q).** El índice interno de la API había quedado viejo tras una migración y no encontraba la relación factura ↔ proforma; se refrescó y ya resuelve.

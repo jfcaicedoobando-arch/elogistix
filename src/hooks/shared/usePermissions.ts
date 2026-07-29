@@ -1,7 +1,9 @@
 import { useAuth } from "@/lib/contexts/AuthContext";
 import type { AppRole } from "@/types/appRole";
 import {
+  ADMIN_CUENTAS_BANCARIAS,
   CAPTURAR_FACTURA_PROVEEDOR,
+
   CERRAR_EMBARQUE,
   COTIZAR_SIN_DESGLOSE,
   ELIMINAR_EMBARQUE,
@@ -34,6 +36,8 @@ export function usePermissions() {
   const roleStr = effectiveRole as AppRole | null;
 
   const canAdminTenant = has(TENANT_ADMINS, roleStr);
+  const canAdminCuentasBancarias = has(ADMIN_CUENTAS_BANCARIAS, roleStr);
+
   const canEditOperations = has(OPERATIONS, roleStr);
   const canEditFinance = has(FINANCE, roleStr);
   const canViewFinancials = has(FINANCE_VIEWERS, roleStr);
@@ -67,6 +71,8 @@ export function usePermissions() {
     canViewFinancials,
     role: effectiveRole,
     canAdminTenant,
+    canAdminCuentasBancarias,
+
     canEditOperations,
     canEditFinance,
     canEditSales,
