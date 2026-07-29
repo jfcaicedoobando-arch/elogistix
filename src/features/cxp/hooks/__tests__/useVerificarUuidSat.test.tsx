@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { createQueryWrapper } from "@/test/utils/queryWrapper";
+import { createWrapper } from "@/test/utils/queryWrapper";
 
 const notify = vi.hoisted(() => ({
   notifyWarning: vi.fn(),
@@ -23,7 +23,7 @@ describe("useVerificarUuidSat — estatus 'No verificable'", () => {
       estatus: "No verificable",
       raw: "N - 601 | La expresión impresa proporcionada no es válida",
     });
-    const { result } = renderHook(() => useVerificarUuidSat(), { wrapper: createQueryWrapper() });
+    const { result } = renderHook(() => useVerificarUuidSat(), { wrapper: createWrapper() });
     result.current.mutate("f1");
 
     await waitFor(() => expect(notify.notifyWarning).toHaveBeenCalled());
@@ -35,7 +35,7 @@ describe("useVerificarUuidSat — estatus 'No verificable'", () => {
 
   it("sigue marcando error real cuando el CFDI no existe", async () => {
     svc.verificarUuidSat.mockResolvedValue({ estatus: "No Encontrado", raw: "N - 202 | No Encontrado" });
-    const { result } = renderHook(() => useVerificarUuidSat(), { wrapper: createQueryWrapper() });
+    const { result } = renderHook(() => useVerificarUuidSat(), { wrapper: createWrapper() });
     result.current.mutate("f2");
 
     await waitFor(() => expect(notify.notifyError).toHaveBeenCalled());
