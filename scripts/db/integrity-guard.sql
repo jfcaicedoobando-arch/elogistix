@@ -79,4 +79,28 @@ where n.nspname = 'public'
   and c.relrowsecurity
   and not exists (select 1 from pg_policy q where q.polrelid = c.oid)
 
+
+union all
+
+select 'factura_pagada_sin_respaldo',
+       f.numero,
+       f.estado::text
+from public.facturas f
+where f.deleted_at is null
+  and f.estado in ('Pagada'::estado_factura, 'Parcialmente pagada'::estado_factura)
+  and not exists (
+    select 1 from public.pagos_factura p
+    where p.factura_id = f.id and p.deleted_at is null
+  )
+  and not exists (
+    select 1 from public.factura_notas_credito nc
+    where nc.factura_id = f.id and nc.deleted_at is null and nc.estado = 'Aplicada'
+  )
+
 order by 1, 2;
+-- ============================================================
+-- 4) Facturas con estado de cobro sin respaldo documental.
+--    FIX-F964: un backfill que usó `saldo_factura` (con guard de tenant)
+--    desde una migración sin usuario marcó 83 facturas como "Pagada".
+--    Este check impide que vuelva a ocurrir sin ser detectado.
+-- ============================================================
