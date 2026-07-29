@@ -29,6 +29,7 @@ export default function TesoreriaConciliacion() {
   const [isAutoConciliando, setIsAutoConciliando] = useState(false);
 
   const { data: movs = [], isLoading } = useMovimientos(cuentaId ? { cuenta_bancaria_id: cuentaId, estado } : null);
+  const { data: resumen, isLoading: resumenLoading } = useConciliacionResumen(cuentaId || null);
   const importar = useImportarMovimientos();
   const conciliarPago = useConciliarPago();
   const fileRef = useRef<HTMLInputElement>(null);
