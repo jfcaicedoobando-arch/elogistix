@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.332.1] - 2026-07-29
+- CI en verde: la pantalla de onboarding se dividió en ruta + `OnboardingForm` para volver a cumplir el límite de 200 líneas por archivo.
+- Los barrels públicos de cada feature (`src/features/*/index.ts`) ya no se reportan como código muerto en el análisis de código no usado.
+- El test del diagnóstico de Sentry dejó de depender del entorno: acepta el estado `pending` mientras el SDK carga de forma diferida.
+
+
+
 ## [13.332.0] - 2026-07-29
 - Los días de crédito y la fecha de vencimiento de una factura ya no se desincronizan: al cambiar el plazo o la fecha de emisión de un borrador, el vencimiento se recalcula solo (antes una factura a 60 días podía vencer el mismo día de emisión).
 - Al convertir proformas a factura, si la proforma no trae plazo se hereda el de la ficha del cliente en lugar de facturar a 0 días.

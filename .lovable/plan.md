@@ -1,50 +1,34 @@
-## Qué está pasando
+## Qué está fallando en CI (verificado en los logs y reproducido local)
 
-Auditoría de las facturas de INDIMEX TRADING, verificada contra la base de datos:
+1. **Knip (unused files)** — marca 4 barrels como archivos no usados:
+   `src/features/proformas/index.ts`, `proformas/domain/index.ts`, `proformas/hooks/index.ts`, `src/features/tesoreria/index.ts`.
+   Son barrels públicos intencionales del piloto O4 (los deep imports están bloqueados por `feature-barrel-surface.test.ts`), no código muerto: nadie los importa todavía porque el burn-down sigue en curso.
 
-| Problema | Evidencia |
-|---|---|
-| Ficha del cliente sin plazo | `clientes.dias_credito` = vacío en INDIMEX TRADING y en INDIMEX COLOMBIA |
-| Días de crédito que no mueven el vencimiento | F1008: 60 días pero vence el mismo día de emisión (27/07 → 27/07). Igual en F1009, F1010, F1011 de otros clientes |
-| Facturas nacidas con 0 días | F1005, F1006, F1007 (sus proformas no traían plazo) |
-| Plazos divergentes | F959: 45 días en la factura vs 60 en su proforma; F966 con 58 días (contado desde la fecha de la proforma, no de la factura) |
+2. **Arquitectura (Power of 10 #4)** — reproducido local con `scripts/audit-architecture.ts`:
+   `src/features/onboarding/routes/Onboarding.tsx` tiene 203 líneas (límite 200). Creció con el bloque `<Seo>` del fix de SEO. Rompe dos tests: `architecture-baseline.test.ts` y `audit-report.test.ts`.
 
-**Causa raíz.** El trigger `facturas_set_fecha_vencimiento` sólo calcula la fecha *cuando está vacía*. Como la conversión de proforma ya inserta un vencimiento, cualquier edición posterior de los días de crédito en el borrador actualiza el número pero deja la fecha vieja. Es como un sello que sólo se estampa si la casilla está en blanco.
+3. **Tests shard 7/10** — `src/lib/observability/hooks/__tests__/useSentry.test.tsx`:
+   `expected ['disabled_dev','missing_dsn'] to include 'pending'`. En CI sí existe `VITE_SENTRY_DSN`, así que el hook (con el poll nuevo de 13.331.8) arranca en `pending` antes de que cargue el SDK diferido. El test asume un entorno sin DSN.
 
-**Causa secundaria.** Al convertir proformas, el plazo se toma de la proforma y si viene vacío se usa `0`, sin caer nunca al plazo del cliente.
+## Cambios propuestos
 
-## Plan
+### A. Knip
+En `knip.json`, añadir los barrels raíz de feature como entradas del grafo:
+```json
+"entry": [..., "src/features/*/index.ts"]
+```
+Esto también resuelve `proformas/domain/index.ts` y `proformas/hooks/index.ts`, porque el barrel raíz los re-exporta.
 
-### 1. Arreglar el trigger (raíz del bug)
-Reemplazar `facturas_set_fecha_vencimiento` para que recalcule `fecha_vencimiento = fecha_emision + dias_credito` siempre que cambie la emisión o los días, no sólo cuando esté vacía. Se respeta una fecha capturada explícitamente distinta sólo en el INSERT.
+### B. Onboarding por debajo de 200 líneas
+Extraer la UI del formulario a `src/features/onboarding/components/OnboardingForm.tsx` (campos RFC / dirección / moneda + botones + alerta de error, recibiendo estado y handlers por props) y dejar `Onboarding.tsx` como ruta delgada: guardas de sesión, `<Seo>`, `Card` y la lógica de `submit`. Objetivo: ruta ~110 líneas, componente ~95.
 
-### 2. Heredar el plazo del cliente en la conversión
-En `convertir_proformas_a_factura`, la cascada pasa a ser: parámetro recibido → plazo de la proforma → **plazo del cliente** → 0. Así una proforma sin plazo ya no produce facturas de 0 días.
+### C. Test de Sentry independiente del entorno
+Reescribir el caso "sin cliente" para que valide el contrato real: cuando `getClient()` devuelve `undefined`, `active === false` y el estado es uno de `disabled_dev | missing_dsn | pending` (nunca `active`). Añadir asserts explícitos de que `pending` sólo aparece cuando hay DSN configurado, para no perder cobertura.
 
-### 3. Prellenar en la interfaz
-- Al convertir proformas (`useTabProformasController`), si la proforma no trae plazo se propone el del cliente.
-- En los datos fiscales del borrador, mostrar junto al campo la fecha de vencimiento resultante, para que el usuario vea el efecto al cambiar los días.
+### D. Cierre
+Actualizar `CHANGELOG.md` y subir `APP_VERSION` a `13.331.10`.
 
-### 4. Corregir datos históricos
-Migración de datos puntual:
-- INDIMEX TRADING e INDIMEX COLOMBIA: `dias_credito = 30` en su ficha de cliente.
-- Recalcular `fecha_vencimiento` de las 4 facturas desalineadas (F1008, F1009, F1010, F1011) con los días ya capturados.
-- F1005, F1006, F1007: fijar 30 días y recalcular su vencimiento.
-- Las 140 facturas antiguas sin plazo quedan intactas, como acordamos.
-
-Nota: el plazo de crédito no forma parte del CFDI timbrado, así que corregirlo no afecta ningún comprobante ante el SAT; sólo ajusta cobranza y antigüedad de saldos.
-
-### 5. Blindaje
-- Test que verifique que al cambiar `dias_credito` de un borrador el vencimiento se recalcula.
-- Regla de auditoría en el módulo de auditoría: marcar facturas donde `fecha_vencimiento - fecha_emision ≠ dias_credito`.
-
-### 6. Registro
-Entrada en `CHANGELOG.md` y bump de `APP_VERSION` a `13.331.9`.
-
-## Detalles técnicos
-
-- `supabase/schema/facturacion/` + migración: nueva versión de `facturas_set_fecha_vencimiento()`; el trigger ya escucha `BEFORE INSERT OR UPDATE OF fecha_emision, dias_credito`.
-- `supabase/schema/proformas/convertir_proformas_a_factura.sql`: `COALESCE(p_dias_credito, v_first.dias_credito, v_cliente.dias_credito, 0)` en ambas ramas (MXN y USD), añadiendo `dias_credito` al SELECT de `v_cliente`.
-- `src/features/facturacion/hooks/useTabProformasController.ts`: fallback al plazo del cliente.
-- `src/features/facturacion/components/detalle/DatosFiscalesForm.tsx`: texto auxiliar con la fecha de vencimiento calculada.
-- Corrección de datos vía herramienta de inserción/actualización (no migración de esquema).
+## Verificación
+- `bunx tsx scripts/audit-architecture.ts` → 0 oversized.
+- `bunx vitest run src/lib/observability src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts`.
+- `bunx knip --strict` sin unused files.

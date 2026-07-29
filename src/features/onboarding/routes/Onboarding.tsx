@@ -9,30 +9,13 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Seo } from "@/components/shared/Seo";
 import { completeOnboarding } from "@/features/onboarding/services/completeOnboarding";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { OnboardingForm } from "@/features/onboarding/components/OnboardingForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, AlertCircle, Building2 } from "lucide-react";
+import { Loader2, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { ROUTES } from "@/constants/routes";
 import { validateOnboarding } from "@/features/onboarding/lib/onboardingValidation";
-
-const MONEDAS = [
-  { value: "MXN", label: "Peso mexicano (MXN)" },
-  { value: "USD", label: "Dólar estadounidense (USD)" },
-  { value: "EUR", label: "Euro (EUR)" },
-];
 
 export default function Onboarding() {
   const { user, organization, loading, refreshProfile } = useAuth();
@@ -118,83 +101,18 @@ export default function Onboarding() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            {error && (
-              <Alert variant="destructive" role="alert">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="onb-rfc">
-                RFC <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
-              </Label>
-              <Input
-                id="onb-rfc"
-                value={rfc}
-                onChange={(e) => setRfc(e.target.value.toUpperCase())}
-                placeholder="XAXX010101000"
-                maxLength={13}
-                autoComplete="off"
-              />
-              <p className="text-xs text-muted-foreground">
-                12 caracteres para persona moral, 13 para persona física. Requerido para emitir facturas.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="onb-direccion">
-                Dirección fiscal <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
-              </Label>
-              <Textarea
-                id="onb-direccion"
-                value={direccion}
-                onChange={(e) => setDireccion(e.target.value)}
-                placeholder="Calle, número, colonia, ciudad, estado, código postal"
-                rows={3}
-                maxLength={500}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="onb-moneda">Moneda preferida</Label>
-              <Select value={moneda} onValueChange={setMoneda}>
-                <SelectTrigger id="onb-moneda">
-                  <SelectValue placeholder="Selecciona una moneda" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONEDAS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Moneda base para mostrar montos por defecto en cotizaciones y embarques.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2 pt-2 sm:flex-row-reverse">
-              <Button type="submit" className="flex-1" disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Guardar y continuar
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={handleSkip}
-                disabled={submitting}
-              >
-                Configurar después
-              </Button>
-            </div>
-            <p className="text-center text-xs text-muted-foreground">
-              Puedes explorar la app y completar tus datos fiscales cuando quieras.
-            </p>
-          </form>
+          <OnboardingForm
+            rfc={rfc}
+            onRfcChange={setRfc}
+            direccion={direccion}
+            onDireccionChange={setDireccion}
+            moneda={moneda}
+            onMonedaChange={setMoneda}
+            error={error}
+            submitting={submitting}
+            onSubmit={handleSubmit}
+            onSkip={handleSkip}
+          />
         </CardContent>
       </Card>
     </div>
