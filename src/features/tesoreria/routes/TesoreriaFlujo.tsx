@@ -6,7 +6,9 @@ import { AlertTriangle } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { KpiGridSkeleton } from "@/components/shared/skeletons";
+import { LoadingState } from "@/components/shared/states/LoadingState";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { getErrorMessage } from "@/lib/errors";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { formatCurrency } from "@/lib/formatters/numbers";
@@ -21,7 +23,7 @@ const TablaFlujoSemanal = lazy(() => import("@/features/tesoreria/components/Tab
 
 
 export default function TesoreriaFlujo() {
-  const { data, isLoading } = useFlujoProyectado(90);
+  const { data, isLoading, error, refetch } = useFlujoProyectado(90);
 
   return (
     <PageContainer>
@@ -33,8 +35,17 @@ export default function TesoreriaFlujo() {
       />
 
 
-      {isLoading || !data ? (
-        <KpiGridSkeleton count={4} heightClass="h-20" />
+      {error ? (
+        <ErrorStateInline
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+        />
+      ) : isLoading || !data ? (
+        <LoadingState
+          label="Cargando flujo proyectado…"
+          timeoutMs={60_000}
+          onRetry={() => refetch()}
+        />
       ) : (
         <>
           {data.tipo_cambio_usd ? (

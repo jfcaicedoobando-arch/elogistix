@@ -18,7 +18,7 @@ function pick<K extends keyof EmbarqueFullData>(
  * baja la complejidad ciclomática del componente consumidor.
  */
 export function useEmbarqueDetalleData(id: string | undefined) {
-  const { data: full, isLoading } = useEmbarqueFull(id);
+  const { data: full, isLoading, error, refetch } = useEmbarqueFull(id);
   const embarque = full?.embarque ?? null;
   return {
     embarque,
@@ -30,5 +30,7 @@ export function useEmbarqueDetalleData(id: string | undefined) {
     tipoCambioUSD: tc(embarque?.tipo_cambio_usd),
     tipoCambioEUR: tc(embarque?.tipo_cambio_eur),
     isLoading,
+    error,
+    refetch,
   };
 }
