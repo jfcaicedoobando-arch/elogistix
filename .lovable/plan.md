@@ -1,23 +1,32 @@
-## Estado
+## Diagnóstico
 
-El plan C1–C6 del documento ya está aplicado y verificado (versión actual 13.324.1). Lo que sigue son dos residuos detectados al revisar, más un paso de higiene que el propio documento pedía.
+El fallo no es de las pruebas RLS: es del propio guard de CI.
 
-## Residuo 1 — `src/lib/financial/costosUSD.ts`
+En `.github/workflows/rls-tests.yml` la lista de suites existe **dos veces**:
 
-Sigue llamando a `convertirAMXN` y `convertirAUSD` (ya marcadas como deprecadas). Esas funciones tienen `tipoCambioUSD = 1` por omisión, así que un costo en dólares sin tipo de cambio se suma como si fuera pesos.
+- Líneas 91–111: lista escrita a mano dentro del paso "Validate matrix covers every test_rls_*.sql".
+- Línea 242–262: la matriz real (`matrix.suite`) que sí ejecuta las pruebas.
 
-Cambio: usar `aMxn` y `factorEntreMonedas`; cuando no haya tipo de cambio confiable, excluir el monto y exponer un contador de "montos sin TC" en el resultado, igual que hace `sumarEnMxn`.
+La matriz real ya incluye `soft_delete_rpcs` (línea 261) y el archivo `supabase/tests/rls/test_rls_soft_delete_rpcs.sql` existe. Lo que falta es esa entrada en la lista copiada del guard, por eso el diff falla.
 
-## Residuo 2 — `src/features/embarques/domain/embarqueKpis.ts`
+Analogía: es como un inventario con dos hojas; la bodega y la hoja buena coinciden, pero la fotocopia vieja no, y el auditor compara contra la fotocopia.
 
-Misma situación en el KPI de costos del embarque: `convertirAMXN(monto, moneda, tcUsd, tcEur)`. Se migra al canon y el KPI deja de contar montos no convertibles en lugar de inflarlos.
+## Cambio propuesto
 
-## Higiene
+Eliminar la duplicación en vez de solo parchar la lista: el guard leerá las suites directamente del bloque `matrix.suite` del mismo archivo.
 
-- Regenerar `src/integrations/supabase/types.ts` tras las migraciones de C4/C5, como pedía el documento, para no agregar casts manuales.
-- Tests: extender `costosUSD.test.ts` y `embarqueKpis` con casos "sin TC → excluido, contador en 1".
-- Bump de `APP_VERSION` a 13.324.2 y entrada en `CHANGELOG.md`.
+1. Reemplazar el bloque `declared=$(printf '%s\n' ... )` por una extracción del YAML:
+   - Localizar la línea `suite:` dentro de `strategy.matrix` y tomar los ítems `- <nombre>` siguientes hasta que termine la lista.
+   - Ordenar con `LC_ALL=C sort` igual que `expected`.
+2. Añadir una validación de seguridad: si la extracción devuelve 0 elementos, fallar con un mensaje claro (para que un cambio de formato del YAML no deje el guard silenciosamente inútil).
+3. Mantener el mismo mensaje de error y el resumen final `✓ matrix.suite cubre N suites`.
 
-## Detalle técnico
+Con esto, agregar un nuevo `test_rls_*.sql` solo requiere registrarlo en un lugar (`matrix.suite`), y el guard sigue fallando si se olvida.
 
-Tras esta ola, `convertirAMXN` y `convertirAUSD` quedan sin llamadores en producción y se pueden eliminar (o dejar sólo para tests legacy). Ninguna migración SQL nueva es necesaria.
+## Detalles técnicos
+
+- Solo se modifica `.github/workflows/rls-tests.yml` (paso de validación, líneas ~86–120).
+- Extracción con `awk` sobre el propio workflow, sin dependencias nuevas (nada de `yq`).
+- Se respeta `set -euo pipefail` y el estilo ShellCheck ya aplicado en este workflow (comillas en variables, sin `echo` de listas sin comillas).
+- Verificación local: ejecutar el mismo snippet en el sandbox y confirmar que `expected` y `declared` (20 suites, incluida `soft_delete_rpcs`) quedan idénticas.
+- Al terminar: bump de `APP_VERSION` y entrada en `CHANGELOG.md` según la convención del proyecto.
