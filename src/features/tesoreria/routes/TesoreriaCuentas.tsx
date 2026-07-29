@@ -48,7 +48,9 @@ export default function TesoreriaCuentas() {
       {isLoading ? (
         <KpiGridSkeleton count={3} heightClass="h-32" desktopCols={3} />
       ) : cuentas.length === 0 ? (
-        <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">Aún no hay cuentas. Crea la primera.</CardContent></Card>
+        <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">
+          {canAdminTenant ? "Aún no hay cuentas. Crea la primera." : "Aún no hay cuentas registradas."}
+        </CardContent></Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           {cuentas.map((c) => (
@@ -59,12 +61,14 @@ export default function TesoreriaCuentas() {
                     <p className="font-semibold">{c.alias}</p>
                     <p className="text-xs text-muted-foreground">{c.banco} · {c.moneda}</p>
                   </div>
-                  <Button
-                    variant="ghost" size="icon"
-                    onClick={() => solicitarEliminar(c.id, c.alias)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  {canAdminTenant && (
+                    <Button
+                      variant="ghost" size="icon"
+                      onClick={() => solicitarEliminar(c.id, c.alias)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
                 </div>
                 {c.numero_cuenta && <p className="text-xs">Cuenta: <span className="font-mono">{c.numero_cuenta}</span></p>}
                 {c.clabe && <p className="text-xs">CLABE: <span className="font-mono">{c.clabe}</span></p>}
