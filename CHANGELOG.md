@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.336.1] - 2026-07-29
+- **Fix · "Error al reabrir embarque" (P0001).** Existían dos versiones de la función `reabrir_embarque`: la de la pestaña Cierre desactivaba el candado de embarque cerrado antes de cambiar el estado, pero la del botón **Reabrir** del encabezado no, así que el propio candado la rechazaba con "Embarque cerrado: usa reabrir_embarque para modificarlo". Ahora ambas se comportan igual: desactivan el candado dentro de la transacción, registran la reapertura en la bitácora de cierre y marcan las comisiones como no definitivas. También se admite el rol `admin_org` y el mensaje de error residual se muestra en español claro. Analogía: había dos llaves para la misma puerta y una no desactivaba la alarma antes de abrir.
+
+
+
 ## [13.336.0] - 2026-07-29
 - **Fix · "Error al eliminar proforma: Embarque cerrado" (23514).** En un embarque **Cerrado**, la pestaña Facturación seguía ofreciendo Generar / Editar / Eliminar proformas, pero la base de datos bloquea cualquier cambio a los conceptos, así que la acción terminaba en un error técnico. Ahora, con el embarque cerrado, esas acciones quedan deshabilitadas y se muestra un aviso: "Reabre el embarque desde la pestaña Cierre". Como red de seguridad, si el candado se activa de todos modos (por ejemplo, si el embarque se cerró en otra pestaña), el mensaje que ve el usuario es claro y en español. Analogía: la caja fuerte ya estaba cerrada con llave; lo que faltaba era quitar el botón que invitaba a meter la mano.
 
