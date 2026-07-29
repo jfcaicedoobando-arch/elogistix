@@ -87,14 +87,7 @@ export function sumarEnMoneda(
   const total = items
     .reduce((acc, item) => {
       const moneda = esMoneda(item.moneda) ? item.moneda : target;
-      const convertido = target === 'USD'
-        ? convertirAUSD(item.monto, moneda, tcUSD, tcEUR)
-        : target === 'MXN'
-          ? convertirAMXN(item.monto, moneda, tcUSD, tcEUR)
-          // Target EUR: pasar primero a MXN y luego dividir por tcEUR.
-          : currency(convertirAMXN(item.monto, moneda, tcUSD, tcEUR), { precision: 2 })
-              .divide(tcEUR).value;
-      return acc.add(convertido);
+      return acc.add(convertirFila(item.monto, moneda, target, tcUSD, tcEUR));
     }, currency(0, { precision: 2 }))
     .value;
 
