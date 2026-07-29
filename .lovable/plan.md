@@ -1,25 +1,31 @@
-## Qué pasa
+## Problema
 
-El embarque está **Cerrado** y hay un candado en la base de datos (trigger `tg_bloquear_embarque_cerrado_self`) que rechaza cualquier cambio con el mensaje *"Embarque cerrado: usa reabrir_embarque para modificarlo"*. Ese candado sólo se abre si la operación levanta una bandera interna (`app.bypass_cierre`).
+El lint del CI corre con `--max-warnings 0`, y `scripts/audit-migrations.ts` supera el límite de la regla `max-lines` (266 líneas contables contra un máximo de 250). No es un bug funcional: el archivo creció al agregar el reconocimiento de alias de tipos Postgres para el chequeo H6.
 
-Existen **dos versiones** de la función `reabrir_embarque` en la base:
+## Solución: dividir el script en módulos
 
-| Versión | Quién la usa | Levanta la bandera |
-|---|---|---|
-| `reabrir_embarque(embarque_id, motivo)` | Pestaña **Cierre** (con motivo mín. 20 caracteres) | Sí |
-| `reabrir_embarque(embarque_id, usuario_email, request_id)` | Botón **Reabrir** del encabezado (`useEstadoEmbarque` → `reabrirEmbarqueRpc`) | **No** |
+Extraer las utilidades de análisis SQL a un módulo aparte, dejando en `scripts/audit-migrations.ts` únicamente la orquestación (constantes, `scanFile`, `main`).
 
-Analogía: hay dos llaves para la misma puerta; una desactiva la alarma antes de abrir y la otra no. El botón del encabezado está usando la llave que dispara la alarma, por eso siempre falla.
+Nuevo archivo `scripts/lib/audit-sql-signatures.ts` con:
 
-## Cambios propuestos
+- `splitTopLevelCommas`
+- `normalizeArgTypes`
+- `TYPE_ALIAS_GROUPS` y `typeVariants`
+- `stripSqlComments`
+- `extractParenArgs`
+- `findSecurityDefinerFunctions`
+- `scanSecurityDefiner`
 
-1. **Migración de base de datos**: en la versión `(embarque_id, usuario_email, request_id)`, envolver el `UPDATE embarques` con `set_config('app.bypass_cierre','on', true)` antes y `'off'` después, igual que la otra versión. Mantener `SECURITY DEFINER` + `REVOKE ALL` / `GRANT EXECUTE TO authenticated` como exige la auditoría H6.
-2. **Consistencia de permisos**: dejar ambas versiones con la misma regla (admin/super_admin de la organización) y también marcar `comisiones_devengadas.definitiva = false` en la versión del encabezado, para que reabrir por cualquiera de los dos caminos deje el embarque en el mismo estado.
-3. **Mensaje en la UI**: si el candado vuelve a dispararse por cualquier otra ruta, mapear el error `P0001` a un texto claro en español en el hook de reapertura, en lugar de mostrar el mensaje técnico.
-4. **Tests**: añadir caso en `src/features/embarques/services/__tests__/mutations.test.ts` para el mapeo de error, y una verificación SQL de que la función contiene el bypass.
-5. **CHANGELOG.md** + bump de `APP_VERSION` a `13.336.1`.
+`audit-migrations.ts` importa desde ese módulo y conserva el mismo comportamiento y salida en consola. Con esto ambos archivos quedan bajo el umbral de 250 líneas.
 
-## Detalles técnicos
+## Verificación
 
-- Archivos tocados: nueva migración SQL, `src/features/embarques/hooks/mutations/useEstadoEmbarque.ts` (mapeo de error), tests, `CHANGELOG.md`, constante de versión.
-- No se toca el trigger: el candado sigue protegiendo contra ediciones directas de embarques cerrados; sólo la RPC autorizada lo abre temporalmente dentro de su transacción.
+1. `bun run lint -- --max-warnings 0` sin advertencias.
+2. `bun run audit:migrations` con la misma salida que hoy (sin violaciones H6 falsas).
+3. Ejecutar las pruebas del script si existen (`rg` sobre `__tests__` de `audit-migrations`).
+
+## Extras
+
+- `CHANGELOG.md` + `APP_VERSION` a `13.336.2`.
+
+Nota: no se baja el umbral de la regla `max-lines`; se refactoriza, conforme a la política del proyecto de no relajar los límites de calidad.
