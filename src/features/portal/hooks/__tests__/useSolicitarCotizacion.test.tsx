@@ -56,12 +56,12 @@ describe("useSolicitarCotizacion", () => {
     const { wrapper, invalidate } = setup();
     const { result } = renderHook(() => useSolicitarCotizacion(["cli-1"]), { wrapper });
 
-    let capturado: unknown;
-    await act(async () => {
-      capturado = await result.current.mutateAsync(input).catch((e: unknown) => e);
+    act(() => {
+      result.current.mutate(input);
     });
 
-    expect((capturado as Error).message).toBe("LC_CLIENTE_NO_VINCULADO");
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toBe("LC_CLIENTE_NO_VINCULADO");
 
     expect(invalidate).not.toHaveBeenCalled();
   });
