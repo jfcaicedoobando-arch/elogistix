@@ -14,6 +14,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { orIlike } from "@/lib/search/ilike";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
@@ -48,11 +49,41 @@ export interface FacturaCobranza {
 
 const ESTADOS_ACTIVOS = ["Emitida", "Parcialmente pagada", "Vencida"] as const;
 
-interface FetchCobranzaFilters {
+export interface FetchCobranzaFilters {
   search?: string;
   cliente_id?: string;
   moneda?: FacturaRow["moneda"] | "todas";
   estatus?: EstatusCobranza | "todos";
+}
+
+/** Shape del jsonb de `cobranza_agregados` (C3c): espejo de `KPIsCobranza`. */
+export interface KpisCobranzaRemotos {
+  total_mxn: number;
+  total_usd: number;
+  vencido_mxn: number;
+  vencido_usd: number;
+  por_vencer_7d_mxn: number;
+  por_vencer_7d_usd: number;
+  facturas_vencidas: number;
+  facturas_con_saldo: number;
+}
+
+/**
+ * FIX C3c (S6-02): KPIs de cartera agregados en SQL sobre el UNIVERSO completo
+ * de facturas activas — no sobre la página visible (que sigue limitada y
+ * protegida por `assertNotTruncated`). Usar en las tarjetas de totales;
+ * `calcularKPIs(rows)` queda solo para agregados de la página cargada.
+ */
+export async function fetchCobranzaKpis(
+  filtros: FetchCobranzaFilters = {},
+): Promise<KpisCobranzaRemotos> {
+  const { data, error } = await supabase.rpc("cobranza_agregados", {
+    p_cliente_id: filtros.cliente_id ?? undefined,
+    p_moneda: filtros.moneda && filtros.moneda !== "todas" ? filtros.moneda : undefined,
+  });
+  if (error) throw error;
+  // SAFE-CAST: jsonb con el shape de la migración C3c.
+  return data as unknown as KpisCobranzaRemotos;
 }
 
 type RawFactura = Pick<
@@ -79,6 +110,9 @@ function calcularEstatus(saldo: number, diasVencido: number): EstatusCobranza {
   return "Vigente";
 }
 
+// FIX C3 (S6-02): cap explícito verificado por assertNotTruncated.
+const LIMITE_COBRANZA = 2000;
+
 export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise<FacturaCobranza[]> {
   let query = supabase
     .from("facturas")
@@ -90,7 +124,7 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
     `)
     .in("estado", [...ESTADOS_ACTIVOS])
     .order("fecha_vencimiento", { ascending: true })
-    .limit(2000);
+    .limit(LIMITE_COBRANZA);
 
   if (filtros.cliente_id) query = query.eq("cliente_id", filtros.cliente_id);
   if (filtros.moneda && filtros.moneda !== "todas") query = query.eq("moneda", filtros.moneda);
@@ -100,6 +134,7 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
 
   const { data, error } = await query;
   if (error) throw error;
+  assertNotTruncated(data, LIMITE_COBRANZA, "facturacion.fetchCobranza");
 
   // SAFE-CAST: `RawFactura` modela el join con pagos_factura; Supabase tipa unknown.
   const rows = ((data as unknown as RawFactura[] | null) ?? []).map((f): FacturaCobranza => {

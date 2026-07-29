@@ -1,4 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+
+// FIX C3 (S6-08): cap explícito verificado por assertNotTruncated.
+const LIMITE_OPS_MES = 5000;
 
 export interface LeaderboardRow {
   vendedor: string;
@@ -33,12 +37,13 @@ export async function fetchLeaderboardRaw(
       .from("crm_oportunidades")
       .select("vendedor_email, valor_real, monto_estimado, etapa_id, fecha_cierre_real")
       .gte("fecha_cierre_real", inicioMesISO)
-      .limit(5000), // defensivo: oportunidades cerradas del mes por org
+      .limit(LIMITE_OPS_MES), // defensivo: oportunidades cerradas del mes por org
     supabase.from("crm_etapas_pipeline").select("id, tipo"),
   ]);
   if (cuotasR.error) throw cuotasR.error;
   if (opsR.error) throw opsR.error;
   if (etapasR.error) throw etapasR.error;
+  assertNotTruncated(opsR.data, LIMITE_OPS_MES, "crm.leaderboard.oportunidades");
   return {
     cuotas: (cuotasR.data ?? []) as LeaderboardRawData["cuotas"],
     ops: (opsR.data ?? []) as LeaderboardRawData["ops"],

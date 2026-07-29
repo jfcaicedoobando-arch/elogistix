@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import type { Tables } from "@/integrations/supabase/types";
 
 
@@ -108,15 +109,19 @@ export async function marcarCostoPagado(input: { id: string; referenciaPago?: st
   );
 }
 
+// FIX C3 (S6-09): cap explícito verificado por assertNotTruncated.
+const LIMITE_GASTOS_PENDIENTES = 2000;
+
 export async function fetchGastosPendientes() {
-  return unwrapOr(
+  const filas = await unwrapOr(
     supabase
       .from("conceptos_costo")
       .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente)")
       .eq("estado_liquidacion", "Pendiente")
       .order("fecha_vencimiento", { ascending: true })
-      .limit(2000),
+      .limit(LIMITE_GASTOS_PENDIENTES),
     [],
   );
+  return assertNotTruncated(filas, LIMITE_GASTOS_PENDIENTES, "facturacion.fetchGastosPendientes");
 }
 

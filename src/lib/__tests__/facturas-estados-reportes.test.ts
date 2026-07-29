@@ -27,8 +27,13 @@ describe("Reportes de facturas · guardrail estados vivos", () => {
   for (const relPath of REPORTES_FILES) {
     it(`${relPath} filtra por estado (excluye Cancelada/Sustituida)`, () => {
       const src = readFileSync(resolve(process.cwd(), relPath), "utf-8");
+      // FIX C3c: si el servicio ya no lee `facturas` desde el cliente porque
+      // delega la agregación a una RPC server-side, el filtro de estados vive
+      // en SQL y este guardrail no aplica.
+      const delegaEnRpc = /supabase\.rpc\(/.test(src) && !/from\(\s*["']facturas["']/.test(src);
       // Debe existir al menos una restricción por estado sobre la tabla facturas.
       const filtraPorEstado =
+        delegaEnRpc ||
         /\.in\(\s*["']estado["']/.test(src) ||
         /\.eq\(\s*["']estado["']/.test(src) ||
         /facturas\.estado/.test(src) ||

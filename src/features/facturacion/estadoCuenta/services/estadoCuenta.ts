@@ -10,6 +10,7 @@
  * de `services/cobranza.ts` — RLS aplica idénticamente para uso interno y portal.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import type { Tables, Database } from "@/integrations/supabase/types";
 
 type FacturaRow = Tables<"facturas">;
@@ -62,6 +63,44 @@ export interface EstadoCuentaFilters {
   soloConSaldo?: boolean;
 }
 
+/** Shape del jsonb de `estado_cuenta_agregados` (C3c). */
+export interface KpisEstadoCuentaRemotos {
+  adeudado_mxn: number;
+  adeudado_usd: number;
+  vencido_mxn: number;
+  vencido_usd: number;
+  a_favor_mxn: number;
+  a_favor_usd: number;
+  facturas_vencidas: number;
+  facturas_adeudadas: number;
+}
+
+const KPIS_ESTADO_CUENTA_VACIOS: KpisEstadoCuentaRemotos = {
+  adeudado_mxn: 0, adeudado_usd: 0,
+  vencido_mxn: 0, vencido_usd: 0,
+  a_favor_mxn: 0, a_favor_usd: 0,
+  facturas_vencidas: 0, facturas_adeudadas: 0,
+};
+
+/**
+ * FIX C3c (S6-03): KPIs de adeudo agregados en SQL sobre el universo del
+ * cliente (uso interno y portal). El detalle con pagos/NC sigue vía
+ * `fetchEstadoCuenta` + guarda anti-truncamiento.
+ */
+export async function fetchEstadoCuentaKpis(
+  filters: EstadoCuentaFilters,
+): Promise<KpisEstadoCuentaRemotos> {
+  if (!filters.clienteIds.length) return KPIS_ESTADO_CUENTA_VACIOS;
+  const { data, error } = await supabase.rpc("estado_cuenta_agregados", {
+    p_cliente_ids: filters.clienteIds,
+    p_desde: filters.desde ?? undefined,
+    p_hasta: filters.hasta ?? undefined,
+  });
+  if (error) throw error;
+  // SAFE-CAST: jsonb con el shape de la migración C3c.
+  return (data as unknown as KpisEstadoCuentaRemotos) ?? KPIS_ESTADO_CUENTA_VACIOS;
+}
+
 type RawPago = {
   id: string;
   fecha_pago: string;
@@ -112,6 +151,10 @@ function calcularEstatus(saldo: number, dias: number, estado: FacturaRow["estado
 
 const ESTADOS_ACTIVOS = ["Emitida", "Parcialmente pagada", "Vencida", "Pagada"] as const;
 
+// FIX C3 (S6-03): cap explícito verificado; el estado de cuenta alimenta
+// KPIs de adeudo hacia el cliente (portal).
+const LIMITE_ESTADO_CUENTA = 2000;
+
 export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<FacturaEstadoCuenta[]> {
   if (!filters.clienteIds.length) return [];
 
@@ -126,7 +169,7 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
     .in("cliente_id", filters.clienteIds)
     .in("estado", [...ESTADOS_ACTIVOS])
     .order("fecha_emision", { ascending: false })
-    .limit(2000);
+    .limit(LIMITE_ESTADO_CUENTA);
 
   if (filters.desde) query = query.gte("fecha_emision", filters.desde);
   if (filters.hasta) query = query.lte("fecha_emision", filters.hasta);
@@ -134,6 +177,7 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
 
   const { data, error } = await query;
   if (error) throw error;
+  assertNotTruncated(data, LIMITE_ESTADO_CUENTA, "facturacion.fetchEstadoCuenta");
 
   // SAFE-CAST: el shape de joins embebidos no lo infiere Supabase.
   const rows = ((data as unknown as RawFactura[] | null) ?? []).map((f): FacturaEstadoCuenta => {

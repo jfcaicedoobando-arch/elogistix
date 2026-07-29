@@ -1,5 +1,13 @@
 project_id = "eorqadkulqtneqjbsblk"
 
+[api]
+# FIX C3 (S6-01) — Red de seguridad anti-truncado silencioso.
+# Default de PostgREST = 1000: queries de dinero con limit(2000-20000)
+# devolvían 1000 filas sin error y los totales se calculaban en JS sobre
+# el subconjunto. La solución estructural son las RPCs agregadoras (C3c)
+# y la guarda assertNotTruncated (C3b).
+max_rows = 10000
+
 [functions.process-email-queue]
 verify_jwt = true
 
