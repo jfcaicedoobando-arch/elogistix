@@ -15,7 +15,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 // el test arquitectónico lo detecte; la API key real se inyecta al SDK vía
 // `getFacturapiClient`.
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
-import { authorizeOrgMembership } from "../_shared/auth.ts";
+import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { loadFactura, validarTipoCambio, claimFactura, resolverSustitucion, cargarContexto, emitirYActualizar, type FacturaRow } from "./emitir.ts";
@@ -51,7 +51,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (factura instanceof Response) return factura;
   if (factura.facturapi_id) return jsonResponse({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
 
-  if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
+  if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 

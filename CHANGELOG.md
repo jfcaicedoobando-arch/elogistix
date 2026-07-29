@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.323.0] - 2026-07-29
+- Seguridad: eliminar un embarque ahora exige ser administrador de la plataforma, o administrador/operador de la misma organización del embarque. Antes cualquier usuario con sesión (visor, cliente, vendedor) podía borrarlo, incluso de otra empresa. El botón "Eliminar" también se oculta a quien no tiene permiso.
+- Seguridad: las funciones fiscales (timbrar, cancelar, notas de crédito, REP, descarga y reenvío de CFDI) ahora validan el rol en el servidor y no sólo la pertenencia a la organización. Timbrar y cancelar quedan para contadores y administradores; el REP suma a cobranza; la consulta/descarga se abre a los roles financieros.
+
 ## [13.322.18] - 2026-07-29
 - Auditoría: el número de "embarques con ETA vencida" del dashboard ejecutivo ahora coincide exactamente con los hallazgos que se ven al dar clic en "Revisar" (misma definición de vencido, mismas reglas excluidas y misma zona horaria de CDMX).
 - Auditoría: al llegar desde esa tarjeta se muestra un chip "ETA vencida" que indica el filtro activo y permite quitarlo con un clic.

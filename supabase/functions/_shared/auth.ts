@@ -107,3 +107,62 @@ export async function authorizeOrgMembership(
     .maybeSingle();
   return !!member;
 }
+
+/**
+ * FIX C2 (S5-02) — Listas de rol del Bloque Q, espejo server-side de
+ * `src/hooks/shared/usePermissions.ts` (EMITIR_FACTURA_CLIENTE,
+ * REGISTRAR_COBRO) y del helper SQL `es_escritor_financiero`
+ * (migración 20260722001738). Mantener sincronizadas con ambos.
+ */
+export const ROLES_EMISOR_FISCAL: readonly string[] = [
+  "super_admin", "admin_org", "admin", "contador",
+];
+export const ROLES_COBRANZA_FISCAL: readonly string[] = [
+  "super_admin", "admin_org", "admin", "contador", "ejecutivo_cobranza",
+];
+export const ROLES_CONSULTA_FISCAL: readonly string[] = [
+  "super_admin", "admin_org", "admin", "contador",
+  "tesorero", "auxiliar_contable", "ejecutivo_cobranza",
+];
+
+/**
+ * FIX C2 (S5-02) — Membresía + rol. Antes las functions `facturapi-*` sólo
+ * verificaban membresía (`authorizeOrgMembership`), así que un `viewer`
+ * podía timbrar/cancelar CFDI. Semántica:
+ *   1) super_admin/admin global (`user_roles`) → acceso cross-org.
+ *   2) Miembro de la org cuyo `organization_members.role` (rol efectivo)
+ *      está en `rolesPermitidos`.
+ *   3) Respaldo: miembro sin rol de org pero con rol global permitido
+ *      (fallback `orgRole ?? role` del frontend).
+ */
+export async function authorizeOrgRole(
+  adminClient: SupabaseClient,
+  userId: string,
+  organizationId: string,
+  rolesPermitidos: readonly string[],
+): Promise<boolean> {
+  const { data: superRole } = await adminClient
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["super_admin", "admin"])
+    .maybeSingle();
+  if (superRole) return true;
+
+  const { data: member } = await adminClient
+    .from("organization_members")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  if (!member) return false;
+  if (member.role && rolesPermitidos.includes(member.role)) return true;
+
+  const { data: globalRole } = await adminClient
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", rolesPermitidos as string[])
+    .maybeSingle();
+  return !!globalRole;
+}

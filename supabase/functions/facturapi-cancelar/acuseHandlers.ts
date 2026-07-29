@@ -4,7 +4,7 @@
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
-import { authorizeOrgMembership } from "../_shared/auth.ts";
+import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
 import { descargarAcuseCancelacionPdf } from "./descargarAcusePdf.ts";
@@ -23,7 +23,7 @@ export async function handleDescargarAcusePdf(
     .maybeSingle();
   if (facpErr || !facp) return jsonResponse({ error: "factura_not_found" }, 404);
   if (!facp.facturapi_id) return jsonResponse({ error: "no_timbrada" }, 409);
-  if (!(await authorizeOrgMembership(supabase, userId, facp.organization_id))) {
+  if (!(await authorizeOrgRole(supabase, userId, facp.organization_id, ROLES_EMISOR_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
   if (facp.estado !== "Cancelada" && facp.estado !== "Sustituida") {
@@ -68,7 +68,7 @@ export async function handleDescargarAcuseXml(
   if (fac.estado !== "Cancelada" && fac.estado !== "Sustituida") {
     return jsonResponse({ error: "no_cancelada", message: "La factura aún no está cancelada." }, 409);
   }
-  if (!(await authorizeOrgMembership(supabase, userId, fac.organization_id))) {
+  if (!(await authorizeOrgRole(supabase, userId, fac.organization_id, ROLES_EMISOR_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
   const cli = await getFacturapiClient(supabase, fac.organization_id);

@@ -9,7 +9,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
-import { authorizeOrgMembership } from "../_shared/auth.ts";
+import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -56,7 +56,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   if (pErr || !pago) return jsonResponse({ error: "pago_not_found" }, 404);
   if (!pago.facturapi_rep_id) return jsonResponse({ error: "no_timbrado_rep" }, 409);
   if (pago.estado_rep === "Cancelado") return jsonResponse({ error: "ya_cancelado" }, 409);
-  if (!(await authorizeOrgMembership(supabase, userData.user.id, pago.organization_id))) {
+  if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 

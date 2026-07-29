@@ -12,6 +12,7 @@ import {
 import { AvanzarEstadoButton } from "./header/AvanzarEstadoButton";
 import { ReabrirEmbarqueButton } from "./header/ReabrirEmbarqueButton";
 import { CancelarEmbarqueDialog } from "./header/CancelarEmbarqueDialog";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 interface Props {
   expediente: string;
@@ -53,7 +54,9 @@ export function EmbarqueDetalleHeaderActions({
   // B-058 (v13.320.39): en estados terminales/cerrados el borrado ya no aplica.
   const esTerminal = ["Entregado", "EIR", "Cerrado", "Cancelado"].includes(estadoVisual);
   const puedeCancelar = ["Borrador", "Confirmado", "En Tránsito", "Llegada", "En Aduana", "Arribo"].includes(estadoVisual);
-  const puedeEliminar = !esTerminal && !tieneDeudaPendiente;
+  // FIX C1 (S5-01): el borrado exige rol admin/operador, igual que el guard del RPC.
+  const { canEliminarEmbarque } = usePermissions();
+  const puedeEliminar = !esTerminal && !tieneDeudaPendiente && canEliminarEmbarque;
   const [cancelarOpen, setCancelarOpen] = useState(false);
   const navigate = useNavigate();
   const goEditar = () => navigate(`/embarques/${embarqueId}/editar`);
@@ -138,7 +141,7 @@ export function EmbarqueDetalleHeaderActions({
                 </DropdownMenuItem>
               </>
             )}
-            {!esTerminal && !puedeEliminar && (
+            {!esTerminal && !puedeEliminar && canEliminarEmbarque && (
               <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
                 Eliminar deshabilitado: hay CxC/CxP pendientes.
               </div>

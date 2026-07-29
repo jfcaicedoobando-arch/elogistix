@@ -138,6 +138,18 @@ const RESPONDER_PROFORMA_MANUAL: readonly AppRole[] = [
   "gerente_operaciones",
 ];
 
+// FIX C1 (S5-01) — Espejo UI del guard SQL de `eliminar_embarque_completo`:
+// super_admin o admin/operador (jerarquía `has_role`) de la misma organización.
+const ELIMINAR_EMBARQUE: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_operaciones",
+  "coordinador_logistico",
+  "operador",
+  "ejecutivo_pricing",
+];
+
 const has = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
 
@@ -162,6 +174,7 @@ export function usePermissions() {
   const canCerrarEmbarque = has(CERRAR_EMBARQUE, roleStr);
   const canHandoffCotizacion = has(HANDOFF_COTIZACION, roleStr);
   const canResponderProformaManual = has(RESPONDER_PROFORMA_MANUAL, roleStr);
+  const canEliminarEmbarque = has(ELIMINAR_EMBARQUE, roleStr);
 
   const canEdit = canEditOperations || canEditFinance;
   const isAdmin = canAdminTenant;
@@ -191,5 +204,6 @@ export function usePermissions() {
     canCerrarEmbarque,
     canHandoffCotizacion,
     canResponderProformaManual,
+    canEliminarEmbarque,
   };
 }
