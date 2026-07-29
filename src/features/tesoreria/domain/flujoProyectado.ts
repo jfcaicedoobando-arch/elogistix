@@ -3,6 +3,7 @@
  * Ver `./resumen.ts` para contexto del refactor (Auditoría Paso 4).
  */
 import { isoUtcDay } from "@/lib/date/mx";
+import { aMxn } from "@/lib/financial/convertir";
 import type { CobranzaRow, CxpRow, LiquidacionRow, ResumenCuenta } from "./resumen";
 
 export interface DetalleFlujo {
