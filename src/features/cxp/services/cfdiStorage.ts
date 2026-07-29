@@ -91,7 +91,7 @@ export async function subirArchivosCfdiFactura(params: SubirArchivosParams): Pro
 }
 
 export async function subirArchivosNcProveedor(params: SubirArchivosNcParams): Promise<void> {
-  const base = `${params.organizationId ?? "org"}/nc/${params.ncId}`;
+  const base = `${await resolverOrganizationId(params.organizationId)}/nc/${params.ncId}`;
   const update: {
     archivo_xml_url?: string | null;
     archivo_pdf_url?: string | null;
@@ -131,7 +131,7 @@ export async function subirArchivosNcProveedor(params: SubirArchivosNcParams): P
  * el archivo existente sin colisionar.
  */
 export async function adjuntarArchivoCfdiFactura(params: AdjuntarArchivoParams): Promise<string> {
-  const base = `${params.organizationId ?? "org"}/cfdi/${params.facturaId}`;
+  const base = `${await resolverOrganizationId(params.organizationId)}/cfdi/${params.facturaId}`;
   const path = `${base}/${sanitizeFileName(params.file.name)}`;
   const up = await supabase.storage.from("facturas").upload(path, params.file, {
     contentType: contentTypeFor(params.tipo),
