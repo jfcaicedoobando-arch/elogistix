@@ -13,7 +13,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
-import { authorizeOrgMembership } from "../_shared/auth.ts";
+import { authorizeOrgRole, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 
@@ -203,7 +203,7 @@ async function handle(req: Request): Promise<Response> {
   if (!loaded.ok) return loaded.res;
   const factura = loaded.factura;
 
-  if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
+  if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_CONSULTA_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 

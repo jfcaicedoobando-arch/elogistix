@@ -13,7 +13,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
-import { authorizeOrgMembership } from "../_shared/auth.ts";
+import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
@@ -100,7 +100,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .maybeSingle();
   if (fErr || !factura) return jsonResponse({ error: "factura_not_found" }, 404);
   if (!factura.facturapi_id) return jsonResponse({ error: "no_timbrada" }, 409);
-  if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
+  if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 

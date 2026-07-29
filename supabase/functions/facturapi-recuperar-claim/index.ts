@@ -9,7 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
-import { authorizeOrgMembership } from "../_shared/auth.ts";
+import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
   loadFactura, validarClaim, buscarCfdiPorExternalId, promoverFactura, liberarClaim,
@@ -41,7 +41,7 @@ Deno.serve(wrapEdgeHandler("facturapi-recuperar-claim", async (req) => {
   const factura = await loadFactura(supabase, body.factura_id);
   if (factura instanceof Response) return factura;
 
-  if (!(await authorizeOrgMembership(supabase, user.id, factura.organization_id))) {
+  if (!(await authorizeOrgRole(supabase, user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 

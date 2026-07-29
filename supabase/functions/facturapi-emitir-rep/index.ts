@@ -12,7 +12,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey, FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
-import { authorizeOrgMembership } from "../_shared/auth.ts";
+import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
 import { calcularParcialidad, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
@@ -57,7 +57,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .maybeSingle();
   if (pErr || !pago) return jsonResponse({ error: "pago_not_found", detail: pErr?.message }, 404);
   if (pago.facturapi_rep_id) return jsonResponse({ error: "ya_timbrado_rep", message: "Este pago ya tiene REP timbrado." }, 409);
-  if (!(await authorizeOrgMembership(supabase, userData.user.id, pago.organization_id))) {
+  if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 
