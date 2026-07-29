@@ -8,6 +8,7 @@ import { useCotizacionActions } from "./useCotizacionActions";
 
 export const ESTADOS_COTIZACION = [
   "Borrador",
+  "Solicitada",
   "Enviada",
   "Aceptada",
   "Rechazada",
