@@ -8,6 +8,8 @@ import {
   type TipoCambioDof,
 } from "@/features/catalogos/services/tipoCambioDof";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { exchangeRates } from "@/features/catalogos/queryKeys";
+
 
 export const tcDofKeys = {
   all: ["tipos_cambio_dof"] as const,
@@ -28,7 +30,7 @@ export function useUpsertTcDofManual() {
     mutationFn: upsertTcDofManual,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: tcDofKeys.all });
-      void qc.invalidateQueries({ queryKey: ["exchange-rates"] });
+      void qc.invalidateQueries({ queryKey: exchangeRates.all });
       notifySuccess(undefined, { title: "Tipo de cambio guardado", description: "El historial DOF se actualizó correctamente." });
     },
     onError: (error: unknown) => {

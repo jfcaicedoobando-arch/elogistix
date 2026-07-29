@@ -9,12 +9,14 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { useHistorialTcDof, useUpsertTcDofManual } from "@/features/catalogos/hooks/useTipoCambioDof";
 import type { TipoCambioDof } from "@/features/catalogos/services/tipoCambioDof";
 import { formatDate } from "@/lib/formatters/dates";
+import { formatNumber } from "@/lib/formatters";
 
 /** Formatea un TC con 4 decimales (convención Banxico/DOF). */
 function fmtTc(valor: number | null): string {
   if (valor == null) return "—";
-  return valor.toLocaleString("es-MX", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  return formatNumber(valor, { decimals: 4 });
 }
+
 
 function hoyIso(): string {
   const ahora = new Date();
