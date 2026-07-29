@@ -102,6 +102,9 @@ jobs:
     name: Guard (E2E secrets)
     needs: [guard-workflow-run]
     runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
     timeout-minutes: 2
     outputs:
       ok: ${{ steps.check.outputs.ok }}
@@ -120,6 +123,9 @@ jobs:
     needs: [guard-secrets]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -145,6 +151,9 @@ jobs:
     needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
     timeout-minutes: 25
     strategy:
       fail-fast: false
@@ -199,6 +208,9 @@ jobs:
     needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
     timeout-minutes: 20
     # NUNCA correr mutators en paralelo con otro run mutador contra el mismo
     # tenant staging — el orden serial de 09→12 asume DB estable.
@@ -277,6 +289,9 @@ jobs:
     needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -325,6 +340,9 @@ jobs:
     needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
+    # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
+    environment: e2e-staging
     timeout-minutes: 15
     # Serial: usa dos orgs dedicadas y no debe intercalarse con otras corridas.
     concurrency:

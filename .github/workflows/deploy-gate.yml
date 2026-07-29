@@ -207,6 +207,9 @@ jobs:
   promocion:
     name: Deploy gate (promoción a producción)
     runs-on: ubuntu-24.04
+    # v13.x (GHA-audit A6) — queda registrado como deployment del environment
+    # `production` y hereda sus protection rules (reviewers, ramas permitidas).
+    environment: production
     timeout-minutes: 5
     needs: [auditoria-migraciones, suite-rls, radar-drift]
     if: always()
