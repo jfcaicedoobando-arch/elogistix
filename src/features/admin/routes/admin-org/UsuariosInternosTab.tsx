@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useToast } from "@/hooks/shared";
 import { useDebouncedValue } from "@/lib/hooks";
 import { DataTable } from "@/components/shared/DataTable";
 import {
@@ -10,7 +9,10 @@ import {
 } from "@/features/admin/hooks/usuario";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { notifyWarning } from "@/lib/ui/appFeedback";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
@@ -23,9 +25,8 @@ export function UsuariosInternosTab() {
   const [busqueda, setBusqueda] = useState("");
   const busquedaDebounced = useDebouncedValue(busqueda.trim().toLowerCase(), 200);
   const [filtroRol, setFiltroRol] = useState<string>(TODOS);
-  const { toast } = useToast();
   const { user } = useAuth();
-  const { data: users = [], isLoading } = useUsuarios();
+  const { data: users = [], isLoading, refetch, isFetching } = useUsuarios();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
   const reportedRef = useRef(false);
@@ -112,6 +113,22 @@ export function UsuariosInternosTab() {
         onConfirm={confirmRoleChange}
         onCancel={() => setPendingRole(null)}
       />
+
+      {correosNoResueltos > 0 ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" aria-hidden />
+          <AlertTitle>No se pudieron cargar los correos</AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center gap-3">
+            <span>
+              {correosNoResueltos} usuario(s) se muestran sin correo porque el servicio de
+              autenticación no respondió.
+            </span>
+            <Button size="sm" variant="outline" onClick={() => void refetch()} disabled={isFetching}>
+              Reintentar
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <UsuariosToolbar
         busqueda={busqueda}
