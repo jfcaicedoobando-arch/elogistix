@@ -1,79 +1,47 @@
-## Contexto
+## Diagnóstico (verificado leyendo la config y el sandbox)
 
-De la ronda 2 (`lovable_fixes_elogistix_v2.md`) ya quedaron cerrados **Q-01, Q-02, Q-05** (v13.339.0) y **Q-14** (integrity-guard, v13.334.5). Quedan pendientes de revisar/corregir **Q-03, Q-04** (críticos) y **Q-06 a Q-13, Q-15, Q-16, Q-17**.
+El sandbox de Lovable **no** es el cuello de botella: tiene **16 vCPU y 125 GB de RAM**. El problema está en `vitest.config.ts`, que penaliza deliberadamente todo lo que no sea CI:
 
-Antes de tocar código, cada ítem se verifica contra el estado actual (algunos pudieron quedar cubiertos de paso en versiones posteriores); lo que ya esté resuelto se marca como tal en el CHANGELOG sin re-trabajarlo.
+```ts
+singleFork: !process.env.CI,        // local → 1 solo proceso
+maxForks: process.env.CI ? 2 : 1,   // local → 1 fork
+fileParallelism: !!process.env.CI,  // local → archivos en serie
+```
 
----
+Es decir: en GitHub Actions la suite corre en **10 shards × 2 forks = ~20 procesos en paralelo**, y en el sandbox corre en **1 solo proceso, un archivo a la vez**. Encima, `bun run test` en local es un `for i in 1..10` que ejecuta los 10 shards **secuencialmente** — o sea, arranca Vite 10 veces seguidas.
 
-## Ola 1 — Críticos restantes
+Analogía: en CI horneamos con 20 hornos a la vez; en el sandbox teníamos 16 hornos disponibles pero usábamos uno solo, y además metíamos las charolas de una en una.
 
-**Q-03 · Tarifas que no matchean el wizard ni el Top 3**
-- Diagnosticar duplicados reales en `puertos` (por LOCODE) y `tipos_contenedor` (por código) con consultas a la base.
-- Si hay duplicados: migración de consolidación (re-apuntar referencias al registro canónico, luego desactivar el duplicado; nunca borrar en cascada).
-- Cambiar el matching de `get_top_tarifas` y de "tarifas sugeridas" para resolver por **código** (locode / código de contenedor) en vez de por id de fila.
-- Quitar el estado contradictorio banner-de-error + empty-state simultáneos: uno u otro, con "Reintentar" cuando sea error.
+El comentario que justifica `1 fork` habla de un riesgo de OOM con "8 GB heap"; ese cálculo se hizo pensando en un sandbox de 32 GB. Con 125 GB, 6–8 forks caben de sobra.
 
-**Q-04 · Segregación de funciones (SoD)**
-- Verificación explícita de rol dentro de las RPC `SECURITY DEFINER` de CxP: captura (`admin/super_admin/contador`), aprobación (aprobador ≠ capturista), pago (`tesorero/admin`), con error `LC_SOD_VIOLATION`.
-- Cotizaciones: "Aceptar" solo con estado `Enviada` y total > 0; "Enviar" solo con `Borrador` y total > 0; registrar `aceptada_por` y bloquear auto-aceptación salvo admin.
-- UI: **ocultar** (no solo deshabilitar) acciones que el rol no puede ejecutar.
+## Plan
 
----
+### Paso 1 — Medición base (antes de tocar nada)
+- Correr la suite completa con `--reporter=verbose --slowTestThreshold=1000`, guardando el output a `/tmp/vitest-baseline.txt`.
+- Extraer el ranking de los 20 archivos más lentos y el wall-time total.
+- Entregable: tabla "archivo → segundos" para saber si el problema es paralelismo, un puñado de archivos pesados, o ambos.
 
-## Ola 2 — Dinero y datos correctos
+### Paso 2 — Habilitar paralelismo local en `vitest.config.ts`
+- Calcular los forks a partir de los núcleos reales en vez del flag `CI`:
+  - `fileParallelism: true` siempre.
+  - `singleFork: false`.
+  - `maxForks`: `CI ? 2 : min(8, nproc - 2)`; `minForks: 2`.
+  - Bajar `execArgv` local a `--max-old-space-size=4096` (8 forks × 4 GB = 32 GB ≪ 125 GB, margen amplio y evita que V8 retrase el GC).
+- Mantener `isolate: true` y `--expose-gc` para no romper las canarias de fugas de PDF.
+- Dejar el comportamiento de CI **idéntico** al actual (los shards del workflow no cambian).
 
-- **Q-06** Tesorería: convertir cada cuenta a la moneda de presentación con el TC vigente (ya existe la tabla `tipos_cambio_dof` y el hook de TC); mostrar TC y fecha usados; si no hay TC, **no sumar** — desglosar por moneda con advertencia. Aplica también a entradas/salidas proyectadas del flujo.
-- **Q-15.1** Off-by-one de semanas en el flujo proyectado (ISO vs local en `date_trunc('week')`).
-- **Q-15.2** Ejecutar pago programado contra cuenta bancaria (descontar saldo + marcar factura).
-- **Q-15.9** Totales erráticos al capturar Cant/Costo/Venta en costos de cotización (parseo/binding, doble multiplicación).
-- **Q-15.6** Alinear criterio del KPI "Por pagar 30d" con el widget "Top 10 próximas".
+### Paso 3 — Arreglar el script `test` local
+- `bun run test` deja de ser un bucle de 10 shards secuenciales y pasa a ser un `vitest run` único (que ya paraleliza internamente con el Paso 2). El modo shard queda disponible en `test:shard` para CI.
 
----
+### Paso 4 — Re-medición y validación
+- Volver a correr con `--reporter=verbose --slowTestThreshold=1000` y comparar wall-time contra la línea base.
+- Verificar que **no** aparecen fallos nuevos por paralelismo (tests que dependían del orden serial: mocks globales, fechas, canarias de PDF). Si alguno falla, se marca ese archivo con `describe.sequential` o se aísla, en vez de revertir el paralelismo global.
+- Si tras el cambio quedan archivos individuales >5 s, los reporto como candidatos a optimización específica.
 
-## Ola 3 — Estabilidad de formularios y errores
-
-- **Q-07** Inputs que se resetean (IVA se va a 0 al teclear retenciones; buscador de proveedores pierde texto): un solo *source of truth* por campo, keys estables.
-- **Q-08** Ciclo de vida del banner global: por-ruta (se limpia al navegar), acción primaria "Reintentar" in situ (nunca navegar), detalles en popover, y sin empty-state falso mientras hay error.
-- **Q-09** Completar retry real: `timeoutMs` + `onRetry` en `/tesoreria/flujo`, detalle de factura CxC y CxP, y auditar que toda pantalla con query pase `error` y `onRetry`.
-- **Q-15.3** Sanitizar errores crudos de Postgres en toasts → mensajes de negocio.
-- **Q-15.4** Refetch en "Por timbrar" tras guardar borrador CxC.
-- **Q-15.8** "Nueva cuenta bancaria" debe abrir vacía, no prellenada.
-
----
-
-## Ola 4 — Bloqueos de catálogo y navegación
-
-- **Q-10** Opción "Concepto libre" + CTA "Crear concepto" inline en costos del wizard.
-- **Q-11** Matriz rol→ruta como fuente única de la que deriven menú y guards; eliminar enlaces muertos de dashboards; toast "No tienes acceso a esa sección" en vez de redirect silencioso.
-- **Q-12** Autosave del wizard: persistir y restaurar `pasoActual` y las filas de costos; avisar explícitamente lo que no se pudo restaurar.
-- **Q-13** Alta/edición de navieras en UI, empty-state accionable en el select y corregir el desmontaje del modal.
-- **Q-15.5** Truncado del nombre de proveedor en la tabla del directorio.
-- **Q-15.7** Captura manual de movimientos en conciliación bancaria.
-
----
-
-## Ola 5 — Pulido y prevención
-
-- **Q-16** Los 10 puntos de pulido UX (pluralización, error de login duplicado, offset de toasts, CTAs en empty-states, título por ruta, saludo con nombre, dimensiones LCL en FCL, confirmación de exportar PDF, grupo "Sistema" vacío, flash del portal).
-- **Q-17** `scripts/e2e/seed-demo.ts`: 3 navieras, 2 agentes, 2 rutas, 3 tarifas vigentes, 8 productos, 2 cuentas bancarias (MXN+USD con TC), 1 cliente y 1 proveedor, idempotente y alineado con el provisioning que ya existe en `scripts/e2e/`.
-
----
-
-## Tests (obligatorio por ola, no al final)
-
-- **Unitarios**: conversión multi-divisa de tesorería (con y sin TC), cálculo de semana ISO, parseo de importes de costos, matriz rol→ruta, matching de tarifas por código.
-- **Componente**: regresión de Q-07 (subtotal → IVA → retenciones conserva los tres), banner por-ruta que se limpia al navegar, "Aceptar cotización" oculto para borradores en $0.
-- **Integración**: query que falla → a ≤15s aparece error con "Reintentar" funcional (cubre Q-09).
-- **Base de datos**: rechazo `LC_SOD_VIOLATION` por rol en las RPC de CxP.
-- Se respeta el umbral de coverage existente: se escriben tests del código nuevo, nunca se baja el umbral.
+### Paso 5 — Cierre
+- Registrar el resultado (antes/después) en `CHANGELOG.md` y bump de `APP_VERSION`.
 
 ## Notas técnicas
-
-- Cada ola cierra con `CHANGELOG.md` + bump de `APP_VERSION`, en español mexicano y con analogía breve.
-- Las migraciones nuevas pasan por `audit:migrations` (incluida la regla H8) e `integrity-guard.sql` antes de darse por buenas.
-- Se usan subagentes en paralelo para las olas 2 a 5, que tocan módulos independientes.
-
-## Sugerencia de entrega
-
-Propongo ejecutar **Ola 1 + Ola 2** en el primer turno (es lo que bloquea release y lo que corrompe cifras de dinero) y seguir con las demás; si prefieres otro orden o cerrar todo de un tirón, dímelo antes de aprobar.
+- Riesgo principal: tests que hoy pasan sólo porque corren en serie (estado global compartido, `vi.setSystemTime`, la canaria de 200 renders de PDF). El Paso 4 existe justamente para detectarlos; se aíslan uno por uno, sin desactivar el paralelismo.
+- No toco `vitest.fast.config.ts` (ya tenía 4 forks) más allá de dejar que herede la nueva base sin duplicar valores.
+- No modifico umbrales de coverage ni el workflow de GitHub Actions.
