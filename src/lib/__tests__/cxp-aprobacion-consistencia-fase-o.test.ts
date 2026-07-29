@@ -25,7 +25,11 @@ function readLatestContaining(marker: string): string {
 }
 
 describe("Fase O — Validación de aprobación CxP", () => {
-  const sql = readLatestContaining("_cxp_validar_aprobacion");
+  // Ojo: buscamos la migración que *define* la función, no la que sólo la
+  // invoca (ej. wrappers posteriores de `aprobar_factura_proveedor`).
+  const sql = readLatestContaining(
+    "CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion",
+  );
 
   it("declara la función `_cxp_validar_aprobacion(uuid)` como SECURITY DEFINER", () => {
     expect(sql).toMatch(
