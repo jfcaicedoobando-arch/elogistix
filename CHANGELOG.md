@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.329.0] - 2026-07-30
+- Las listas de cotizaciones, costos y proformas ahora validan los datos que llegan de la base antes de mostrarlos: si un monto llega corrupto o falta una columna, el error se detecta al instante en vez de aparecer como total en blanco.
+- Se limpiaron marcadores de conversión de tipos obsoletos y se agregó una prueba que impide que vuelvan a acumularse.
+- El reporte de auditoría interna ahora mide qué porcentaje de las lecturas de base de datos están validadas.
+
 ## [13.328.2] - 2026-07-30
 - M8: el reinicio de datos de la organización demo ya solo puede ejecutarlo el sistema o un administrador global.
 - M8: la reconciliación automática de cancelaciones con el SAT ahora exige la clave del proceso programado y rechaza llamadas anónimas.
