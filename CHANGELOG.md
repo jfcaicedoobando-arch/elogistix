@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.334.5] - 2026-07-29
+- La verificación de integridad de la base ya no marca como error las funciones que instalan las extensiones de PostgreSQL (cifrado); sólo revisa las funciones propias del proyecto.
+
 ## [13.334.4] - 2026-07-29
 - Se corrigieron las pruebas de CI que seguían esperando avisos de error permanentes (ahora se cierran solos a los 8 segundos).
 - Se agregaron mensajes en español para tres errores nuevos del portal (sesión expirada, cuenta sin empresa vinculada y ruta faltante).
