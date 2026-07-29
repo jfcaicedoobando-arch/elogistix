@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.331.9] - 2026-07-29
+- SEO: se acortó el título de la guía de puertos de México a menos de 60 caracteres.
+- SEO: títulos, descripciones y etiquetas sociales únicas en /reset-password y /onboarding.
+
+
+
 ## [13.331.8] - 2026-07-29
 - La pantalla de Diagnóstico de Sentry ya no reporta "no inicializado" por error: ahora espera a que el SDK termine de cargar y distingue tres estados (activo, deshabilitado en desarrollo y falta de DSN).
 - Se agregó la fila "DSN configurado en el build" para detectar de un vistazo si falta la variable de entorno.

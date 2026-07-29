@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { Seo } from "@/components/shared/Seo";
 import { completeOnboarding } from "@/features/onboarding/services/completeOnboarding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,6 +98,14 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-dvh bg-muted/30 flex items-center justify-center p-4">
+      <Seo
+        title="Configura tu agencia · Libre Carga"
+        description="Completa los datos de tu agencia de carga (RFC, dirección y moneda) para empezar a operar embarques y cotizaciones en Libre Carga."
+        canonical="https://librecarga.com/onboarding"
+        ogTitle="Configura tu agencia · Libre Carga"
+        ogDescription="Últimos datos de tu agencia antes de empezar a operar embarques y cotizaciones en Libre Carga."
+        ogUrl="https://librecarga.com/onboarding"
+      />
       <Card className="w-full max-w-xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
