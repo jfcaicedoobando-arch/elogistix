@@ -65,7 +65,7 @@ export function EmbarqueDetalleHeaderActions({
   const cierreBloqueadoPorChecklist =
     cierreEsSiguiente && rolPuedeCerrar && !cierrePuedeAvanzar && cierreMotivoBloqueo === "checklist";
 
-  const accionPrincipal = renderAccionPrincipal({
+  const accionPrincipal = AccionPrincipalEmbarque({
     canEdit, siguienteEstado, ocultarAvance, estadoVisual, avanzandoEstado,
     bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
     onAvanzarEstado, onIrACierre, onIrADocumentos, goEditar,
