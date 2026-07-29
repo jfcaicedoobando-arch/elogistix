@@ -165,7 +165,8 @@ describe("costeo/services/tarifas", () => {
 
   describe("updateTarifaConRecargos", () => {
     it("hace update + delete recargos previos + reinsert", async () => {
-      mock.setTableResult("costeo_tarifas", { data: null, error: null });
+      // M7: updateTarifaConRecargos lee la org del padre antes de reinsertar recargos.
+      mock.setTableResult("costeo_tarifas", { data: { organization_id: ORG }, error: null });
       mock.setTableResult("costeo_tarifa_recargos", { data: null, error: null });
 
       await updateTarifaConRecargos("t7", baseInput);
@@ -181,7 +182,7 @@ describe("costeo/services/tarifas", () => {
     });
 
     it("forza moneda=USD en el update", async () => {
-      mock.setTableResult("costeo_tarifas", { data: null, error: null });
+      mock.setTableResult("costeo_tarifas", { data: { organization_id: ORG }, error: null });
       mock.setTableResult("costeo_tarifa_recargos", { data: null, error: null });
       await updateTarifaConRecargos("t8", baseInput);
       const payload = mock.getMutationPayload("costeo_tarifas", "update") as Record<string, unknown>;
