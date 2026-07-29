@@ -96,6 +96,9 @@ jobs:
               gsub(/^[[:space:]]*-[[:space:]]*|[[:space:]]*$/, "");
               print; next
             }
+            # Líneas en blanco o comentarios no cierran el bloque: sólo lo hace
+            # la siguiente clave YAML (evita listas truncadas en silencio).
+            capture && /^[[:space:]]*(#.*)?$/ { next }
             capture { capture = 0 }
           ' .github/workflows/rls-tests.yml | LC_ALL=C sort)
           if [ -z "$declared" ]; then
@@ -204,7 +207,6 @@ jobs:
           - rpc_financieras
           - rpc_por_rol
           - rpc_smoke_roles
-
           - tablas_dinero_extra
           - anon_deny_all
           - cross_tenant_mutations
