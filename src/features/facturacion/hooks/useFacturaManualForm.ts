@@ -138,8 +138,10 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
     const totalMxn = calcularTotalMxn(conceptos, fiscal.moneda, fiscal.tipoCambio, tasaIva);
     if (totalMxn.tcFaltante) {
       // FIX C6: sin TC confiable no se puede validar el crédito en MXN.
-      notifyError("Captura un tipo de cambio válido", {
+      notifyError(undefined, {
+        title: "Captura un tipo de cambio válido",
         description: `La factura está en ${fiscal.moneda} y el tipo de cambio no es utilizable.`,
+        method: "FACTURA_MANUAL_TC",
       });
       return;
     }
