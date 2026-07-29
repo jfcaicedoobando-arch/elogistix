@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { FilePlus2, ListChecks, FileText } from "lucide-react";
+import { FilePlus2, ListChecks, FileText, Lock } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks";
@@ -40,7 +41,12 @@ interface Props {
   embarque: EmbarqueRow;
 }
 
-export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
+export function TabFacturacion({ facturas, canEdit: canEditProp, embarque }: Props) {
+  // v13.334.8 — Un embarque Cerrado tiene bloqueada la edición de conceptos a
+  // nivel BD (trigger `trg_bloquear_cierre`). Se refleja en la UI para no
+  // ofrecer acciones que fallarían con un error técnico.
+  const embarqueCerrado = embarque.estado === "Cerrado";
+  const canEdit = canEditProp && !embarqueCerrado;
   const tasaIva = useTasaIVA();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogInitialFiltro, setDialogInitialFiltro] = useState<FiltroContenedor>('todos');
@@ -116,6 +122,16 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
 
   return (
     <div className="space-y-4">
+      {embarqueCerrado && (
+        <Alert>
+          <Lock className="h-4 w-4" />
+          <AlertTitle>Embarque cerrado</AlertTitle>
+          <AlertDescription>
+            La facturación de este embarque está bloqueada. Reabre el embarque desde la
+            pestaña Cierre para generar, editar o eliminar proformas.
+          </AlertDescription>
+        </Alert>
+      )}
       <DetalleActionBar primary={actionPrimary} secondary={actionSecondary} />
       <FlujoFacturacionStepper
         conceptosCount={conceptos.length}

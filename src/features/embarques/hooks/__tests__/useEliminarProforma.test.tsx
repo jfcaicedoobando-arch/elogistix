@@ -64,6 +64,20 @@ describe("useEliminarProforma", () => {
     expect(invalidate).toHaveBeenCalled();
   });
 
+  it("traduce el candado de embarque cerrado a un mensaje claro", async () => {
+    svcEliminar.mockRejectedValue(
+      new Error("Embarque cerrado: edición bloqueada (tabla conceptos_venta)"),
+    );
+    const { result } = renderHook(() => useEliminarProforma(), { wrapper: wrapper(qc) });
+    await act(async () => {
+      result.current.mutate({ proformaId: "p1", embarqueId: "e1", numero: "PRO-1" });
+    });
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    expect(notifyError.mock.calls[0][1]).toMatchObject({
+      title: "Embarque cerrado: no se puede eliminar la proforma",
+    });
+  });
+
   it("otros errores siguen reportándose como error", async () => {
     svcEliminar.mockRejectedValue(new Error("permiso denegado"));
     const { result } = renderHook(() => useEliminarProforma(), { wrapper: wrapper(qc) });
