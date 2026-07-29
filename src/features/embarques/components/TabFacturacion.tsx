@@ -40,7 +40,12 @@ interface Props {
   embarque: EmbarqueRow;
 }
 
-export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
+export function TabFacturacion({ facturas, canEdit: canEditProp, embarque }: Props) {
+  // v13.334.8 — Un embarque Cerrado tiene bloqueada la edición de conceptos a
+  // nivel BD (trigger `trg_bloquear_cierre`). Se refleja en la UI para no
+  // ofrecer acciones que fallarían con un error técnico.
+  const embarqueCerrado = embarque.estado === "Cerrado";
+  const canEdit = canEditProp && !embarqueCerrado;
   const tasaIva = useTasaIVA();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogInitialFiltro, setDialogInitialFiltro] = useState<FiltroContenedor>('todos');
