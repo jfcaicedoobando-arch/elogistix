@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { FilePlus2, ListChecks, FileText } from "lucide-react";
+import { FilePlus2, ListChecks, FileText, Lock } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks";
