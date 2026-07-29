@@ -110,4 +110,10 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "Tu usuario aún no está vinculado a una empresa. Pide a tu ejecutivo que complete la vinculación.",
   LC_RUTA_REQUERIDA:
     "Indica el origen y el destino para poder continuar.",
+
+  // ── Tipo de cambio DOF ────────────────────────────────────────────────
+  LC_TC_DOF_FORBIDDEN:
+    "Solo un administrador puede capturar o modificar el tipo de cambio DOF.",
+  LC_TC_DOF_INVALIDO:
+    "El tipo de cambio capturado no es válido. Verifica la fecha y que los valores sean mayores a cero.",
 };
