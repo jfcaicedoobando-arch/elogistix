@@ -16,22 +16,32 @@ import {
   useTesoreriaCuentasController,
   type Moneda,
 } from "@/features/tesoreria/hooks/useTesoreriaCuentasController";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 export default function TesoreriaCuentas() {
   const {
     cuentas, isLoading, open, setOpen, form, setField, submit, submitting,
     deleteTarget, solicitarEliminar, cancelarEliminar, confirmarEliminar, eliminando,
   } = useTesoreriaCuentasController();
+  // Sentry JAVASCRIPT-REACT-3S/3T: `tesorero` y `contador` sólo tienen lectura
+  // en `cuentas_bancarias` (RLS). Antes veían los botones y chocaban con 42501.
+  const { canAdminTenant } = usePermissions();
 
   return (
     <PageContainer>
       <PageHeader
         title="Cuentas bancarias"
-        description="Alta y administración de cuentas para conciliación"
+        description={
+          canAdminTenant
+            ? "Alta y administración de cuentas para conciliación"
+            : "Consulta de cuentas para conciliación (sólo administradores pueden editarlas)"
+        }
         actions={
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Nueva cuenta
-          </Button>
+          canAdminTenant ? (
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" /> Nueva cuenta
+            </Button>
+          ) : undefined
         }
       />
 
