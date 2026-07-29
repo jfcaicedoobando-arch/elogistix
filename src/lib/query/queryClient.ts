@@ -146,7 +146,10 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchIntervalInBackground: false,
-      retry: 1,
+      // P-06 (auditoría E2E 2026-07-29): 2 reintentos con backoff exponencial
+      // acotado; antes un fallo transitorio dejaba la pantalla en skeleton.
+      retry: 2,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     },
   },
 });
