@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.324.3] - 2026-07-30
+- CI: la verificación de pruebas de seguridad ya no depende de una lista duplicada escrita a mano; ahora se lee automáticamente del listado real de suites, eliminando falsos fallos como el de `soft_delete_rpcs`.
+
+
+
 ## [13.324.2] - 2026-07-30
 - Costos y precios del embarque: la conversión entre monedas ya no puede caer en un tipo de cambio de 1 por omisión; si el tipo de cambio no es utilizable, el cálculo avisa en vez de sumar dólares como pesos.
 - KPIs del embarque (venta, costo, utilidad, margen): los conceptos en moneda extranjera sin tipo de cambio confiable se excluyen del total y se cuentan aparte, para no inflar la utilidad.
