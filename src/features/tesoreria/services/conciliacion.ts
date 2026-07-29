@@ -98,6 +98,7 @@ export async function listarMovimientos(f: FiltrosMovimientos): Promise<Movimien
     .from("bbva_movimientos")
     .select(BBVA_MOVIMIENTO_COLUMNS)
     .eq("cuenta_bancaria_id", f.cuenta_bancaria_id)
+    .is("deleted_at", null)
     .order("fecha", { ascending: false })
     .limit(LIMITE_MOVIMIENTOS);
   if (f.estado && f.estado !== "todos") q = q.eq("estado_conciliacion", f.estado);

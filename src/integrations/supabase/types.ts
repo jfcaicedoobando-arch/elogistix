@@ -478,6 +478,8 @@ export type Database = {
           conciliado_at: string | null
           conciliado_por: string | null
           cuenta_bancaria_id: string
+          deleted_at: string | null
+          deleted_by: string | null
           estado_conciliacion: Database["public"]["Enums"]["estado_conciliacion"]
           fecha: string
           hash_dedupe: string
@@ -498,6 +500,8 @@ export type Database = {
           conciliado_at?: string | null
           conciliado_por?: string | null
           cuenta_bancaria_id: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           estado_conciliacion?: Database["public"]["Enums"]["estado_conciliacion"]
           fecha: string
           hash_dedupe: string
@@ -518,6 +522,8 @@ export type Database = {
           conciliado_at?: string | null
           conciliado_por?: string | null
           cuenta_bancaria_id?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           estado_conciliacion?: Database["public"]["Enums"]["estado_conciliacion"]
           fecha?: string
           hash_dedupe?: string
@@ -883,6 +889,8 @@ export type Database = {
           comision_mxn: number
           created_at: string
           definitiva: boolean
+          deleted_at: string | null
+          deleted_by: string | null
           embarque_id: string | null
           estado: Database["public"]["Enums"]["estado_comision"]
           factura_id: string
@@ -903,6 +911,8 @@ export type Database = {
           comision_mxn?: number
           created_at?: string
           definitiva?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_comision"]
           factura_id: string
@@ -923,6 +933,8 @@ export type Database = {
           comision_mxn?: number
           created_at?: string
           definitiva?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_comision"]
           factura_id?: string
@@ -1524,6 +1536,7 @@ export type Database = {
           moneda: string
           monto_por_dia: number
           naviera_condicion_id: string
+          organization_id: string
           tipo_contenedor_id: string
           updated_at: string
         }
@@ -1535,6 +1548,7 @@ export type Database = {
           moneda?: string
           monto_por_dia: number
           naviera_condicion_id: string
+          organization_id: string
           tipo_contenedor_id: string
           updated_at?: string
         }
@@ -1546,10 +1560,18 @@ export type Database = {
           moneda?: string
           monto_por_dia?: number
           naviera_condicion_id?: string
+          organization_id?: string
           tipo_contenedor_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "costeo_demoras_tarifa_org_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "costeo_naviera_demoras_tarifa_naviera_condicion_id_fkey"
             columns: ["naviera_condicion_id"]
@@ -1703,6 +1725,7 @@ export type Database = {
           lado: string
           moneda: string
           monto: number
+          organization_id: string
           tarifa_id: string
         }
         Insert: {
@@ -1713,6 +1736,7 @@ export type Database = {
           lado: string
           moneda?: string
           monto?: number
+          organization_id: string
           tarifa_id: string
         }
         Update: {
@@ -1723,9 +1747,17 @@ export type Database = {
           lado?: string
           moneda?: string
           monto?: number
+          organization_id?: string
           tarifa_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "costeo_tarifa_recargos_org_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "costeo_tarifa_recargos_tarifa_id_fkey"
             columns: ["tarifa_id"]
@@ -3362,6 +3394,8 @@ export type Database = {
       embarque_garantias_contenedor: {
         Row: {
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           embarque_contenedor_id: string
           embarque_id: string
           estado: string
@@ -3380,6 +3414,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_contenedor_id: string
           embarque_id: string
           estado?: string
@@ -3398,6 +3434,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_contenedor_id?: string
           embarque_id?: string
           estado?: string
@@ -4614,6 +4652,8 @@ export type Database = {
         Row: {
           creada_por: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           fecha_pago: string | null
           id: string
           metodo_pago: string | null
@@ -4628,6 +4668,8 @@ export type Database = {
         Insert: {
           creada_por?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           fecha_pago?: string | null
           id?: string
           metodo_pago?: string | null
@@ -4642,6 +4684,8 @@ export type Database = {
         Update: {
           creada_por?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           fecha_pago?: string | null
           id?: string
           metodo_pago?: string | null
@@ -5965,6 +6009,8 @@ export type Database = {
           contacto: string
           cp: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           dias_credito: number
           direccion: string | null
           email: string
@@ -6003,6 +6049,8 @@ export type Database = {
           contacto?: string
           cp?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           dias_credito?: number
           direccion?: string | null
           email?: string
@@ -6041,6 +6089,8 @@ export type Database = {
           contacto?: string
           cp?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           dias_credito?: number
           direccion?: string | null
           email?: string
@@ -8515,6 +8565,8 @@ export type Database = {
         }
         Returns: {
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           embarque_contenedor_id: string
           embarque_id: string
           estado: string

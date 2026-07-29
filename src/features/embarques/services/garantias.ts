@@ -9,7 +9,8 @@ export async function fetchGarantiasEmbarque(embarqueId: string): Promise<Garant
   const { data, error } = await supabase
     .from("embarque_garantias_contenedor")
     .select(GARANTIA_COLS)
-    .eq("embarque_id", embarqueId);
+    .eq("embarque_id", embarqueId)
+    .is("deleted_at", null);
   if (error) throw error;
   return (data ?? []) as GarantiaContenedor[];
 }
