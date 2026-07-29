@@ -3,6 +3,8 @@ import { z } from 'npm:zod@3.23.8';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { wrapEdgeHandler } from '../_shared/sentry.ts';
 import { authenticate } from '../_shared/auth.ts';
+import { DESTINATARIO_NO_PERMITIDO, emailPerteneceACliente } from '../_shared/destinatarioCliente.ts';
+
 
 const BodySchema = z.object({
   cliente_id: z.string().uuid(),
@@ -108,7 +110,12 @@ async function resolveDestinatario(
   clienteId: string,
   contactoEmail?: string | null,
 ): Promise<string | null> {
-  if (contactoEmail) return contactoEmail;
+  // M8: un destinatario explícito debe pertenecer al cliente.
+  if (contactoEmail) {
+    const permitido = await emailPerteneceACliente(adminClient, clienteId, contactoEmail);
+    return permitido ? contactoEmail : null;
+  }
+
   const { data } = await adminClient
     .from('contactos_cliente')
     .select('email')
@@ -211,8 +218,18 @@ async function runEnvio(
   const facturas = await loadFacturasVivas(supabaseAdmin, cliente_id, fecha_desde, fecha_hasta);
   const destinatario = await resolveDestinatario(supabaseAdmin, cliente_id, contacto_email);
   if (!destinatario) {
-    return corsJson({ error: 'No hay correo de contacto para enviar el estado de cuenta' }, 400, req);
+    return contacto_email
+      ? corsJson(
+          {
+            error: 'El correo no pertenece a los contactos del cliente',
+            code: DESTINATARIO_NO_PERMITIDO,
+          },
+          400,
+          req,
+        )
+      : corsJson({ error: 'No hay correo de contacto para enviar el estado de cuenta' }, 400, req);
   }
+
 
   const templateData = await buildTemplateData(cliente, facturas, userId, supabaseAdmin, input);
   await sendEstadoCuenta(supabaseUrl, serviceRoleKey, destinatario, templateData);

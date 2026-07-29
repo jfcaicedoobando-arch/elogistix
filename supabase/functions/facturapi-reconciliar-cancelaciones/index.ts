@@ -23,6 +23,8 @@ import {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const CRON_SECRET = Deno.env.get("CRON_SECRET");
+
 
 /**
  * Limpia sólo los punteros `factura_id`/`factura_secundaria_id`.
@@ -135,6 +137,13 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
   if (req.method !== "POST" && req.method !== "GET") {
     return jsonResponse({ error: "method_not_allowed" }, 405);
   }
+
+  // M8: endpoint cron-only — mismo patrón que rep-retry-nocturno.
+  if (!CRON_SECRET || req.headers.get("X-Cron-Secret") !== CRON_SECRET) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+
+
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
