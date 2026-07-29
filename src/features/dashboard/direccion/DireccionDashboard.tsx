@@ -18,6 +18,7 @@ import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/compone
 
 export default function DireccionDashboard() {
   const { data, isLoading, error } = useDireccionKpis();
+  const { data: totales, isLoading: totalesLoading, desdeIso } = useDireccionTotales();
 
   return (
     <PageContainer>
