@@ -22,7 +22,7 @@ import { logger } from "@/lib/observability/logger";
  */
 export function useCotizacionDetalleState(id: string | undefined) {
   const navigate = useNavigate();
-  const { data: cotizacion, isLoading } = useCotizacion(id);
+  const { data: cotizacion, isLoading, error, refetch } = useCotizacion(id);
   const { canEdit, role } = usePermissions();
   const tasaIva = useTasaIVA();
   const { data: embarquesVinculados = [] } = useEmbarquesVinculados(cotizacion?.id);
@@ -64,6 +64,8 @@ export function useCotizacionDetalleState(id: string | undefined) {
     cotizacion,
     role,
     isLoading,
+    error,
+    refetch,
     canEdit,
     tasaIva,
     embarquesVinculados,
