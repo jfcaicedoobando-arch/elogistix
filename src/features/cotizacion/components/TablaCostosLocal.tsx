@@ -12,7 +12,7 @@ import { UnidadMedidaSelect } from "@/features/cotizacion/components/conceptos/U
 import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import type { FilaCostoLocal } from "./SeccionCostosInternosPLUnificado";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
-import { parseInputNumero } from "../utils/parseInputNumero";
+import { parseInputNumero, parseCantidad } from "../utils/parseInputNumero";
 
 
 function getGlobalIndex(filas: { moneda: string }[], moneda: string, localIdx: number) {
@@ -119,7 +119,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                       onChange={e => {
                         const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
                         setEditingQty({ idx: gi, raw });
-                        onUpdate(gi, "cantidad", parseInputNumero(raw));
+                        onUpdate(gi, "cantidad", parseCantidad(raw));
                       }}
                       onBlur={() => { setEditingQty(null); if (fila.cantidad === 0 || isNaN(fila.cantidad)) onUpdate(gi, "cantidad", 1); }}
                       className="h-8 text-sm text-right w-[80px]"
