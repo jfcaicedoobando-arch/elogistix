@@ -18,6 +18,7 @@ DECLARE
   v_factura_ids uuid[] := ARRAY[]::uuid[];
   v_factura_mxn_id uuid; v_factura_usd_id uuid;
   v_numero_tmp text; v_embarque_ids uuid[];
+  v_dias int;
 BEGIN
   v_cached := public.idempotency_claim(p_request_id, 'convertir_proformas_a_factura');
   IF v_cached IS NOT NULL AND (v_cached ? 'factura_ids') THEN
