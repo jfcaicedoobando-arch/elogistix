@@ -45,7 +45,7 @@ export function TotalesPeriodoCard({ totales, desdeIso, isLoading }: Props) {
           Totales del periodo por moneda
         </p>
         <p className="text-xs text-muted-foreground">
-          Desde {formatDateMx(desdeIso)} · {totales?.embarques ?? 0} embarques
+          Desde {formatDate(desdeIso)} · {totales?.embarques ?? 0} embarques
         </p>
       </div>
       {isLoading || !totales ? (
