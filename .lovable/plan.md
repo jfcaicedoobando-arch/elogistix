@@ -1,49 +1,43 @@
 ## Objetivo
 
-Aplicar los 8 `FIX GHA-*` pendientes del documento subido. Verifiqué el estado actual del repo y los 8 siguen sin aplicarse:
+Aplicar los 12 hallazgos ALTOS del documento de auditoría (A1–A12), en orden, verificando cada FIX contra el código real antes de tocarlo.
 
-- `post-deploy-smoke.yml` sólo corre por cron diario (`0 13 * * *`) + `workflow_dispatch`, y sus jobs son únicamente HTTP a edge functions.
-- No existe `supabase/tests/rls/test_rls_rpc_smoke_roles.sql`.
-- `package.json` no tiene script de generación/verificación de `types.ts`.
-- La cache key de `rls-tests.yml` no incluye todos los `supabase/tests/rls/*.sql` y varios guards viven bajo `cache-hit != 'true'`.
-- No existe `supabase/functions/deno.lock`.
-- `vitest.config.ts` tiene `maxForks: 1` fijo.
-- Ningún workflow declara `environment:`.
-- `e2e.yml` tiene `guard-secrets`, pero los jobs usan skips internos (`steps.*.outputs.skip`) que pueden ocultar fallos.
+Verifiqué ya dos puntos de partida: `FacturaPagosSection.tsx` y `DialogRegistrarPago.tsx` calculan el saldo **sin restar notas de crédito** (existe el canon correcto en `portal/services/facturaSaldo.ts`), y `eslint.config.js` sí tiene una lista `FEATURES` incompleta. El resto de los FIX se validará archivo por archivo justo antes de aplicarlos; si algún hallazgo no coincide con el código actual, lo reporto en vez de aplicarlo a ciegas.
 
-## Ola 1 — Cobertura real de RPCs (🔴)
+## Ola 1 — Dinero y consistencia de datos (frontend)
 
-**GHA-1 · rpc-smoke post-deploy**
-- Añadir trigger `workflow_dispatch` con input de entorno + disparo tras publish (además del cron) y un job nuevo `rpc-smoke` que llame por HTTP (PostgREST `/rest/v1/rpc/...`) las RPCs de dinero contra el entorno desplegado, fallando si alguna devuelve error 4xx/5xx.
+- **A1 — Canon de saldo de factura.** Promover `facturaSaldo.ts` a `src/lib/domain/` (o equivalente compartido) como única fórmula `total − Σpagos − ΣNC`, y consumirla en `FacturaPagosSection`, `DialogRegistrarPago` (incluida la validación de "excede saldo"), cobranza y estado de cuenta. Tests unitarios del canon + test de que el diálogo no permite sobrepago cuando hay NC.
+- **A5 — Invalidación cruzada portal↔interno de cotizaciones**, usando los builders de query keys.
+- **A8 — QueryKeys muertas/faltantes** (guion vs guion bajo): corregir claves e invalidaciones que nunca hacían match.
 
-**GHA-2 · suite `rls-smoke-as-role`**
-- Crear `supabase/tests/rls/test_rls_rpc_smoke_roles.sql`: fixtures mínimos + ejecución de las RPCs `SECURITY DEFINER` de dinero como `agente_carga` y otros roles, verificando que no revientan por drift de columnas ni filtran datos de otra organización.
-- Registrar la suite en la matriz de `rls-tests.yml` (la matriz ya se parsea dinámicamente, sólo hay que agregar la entrada).
+## Ola 2 — Tipos y guardarraíles
 
-**GHA-3 · drift de `types.ts`**
-- Añadir script `db:types` / `db:types:check` en `package.json` y un job en CI que regenere los tipos contra la base efímera de migraciones y falle si difieren del archivo versionado.
-- Nota: si la generación requiere el CLI de Supabase y acceso a la base, el job correrá dentro del contenedor de Postgres que ya usa `rls-tests.yml`.
+- **A2 — Canonizar `Factura`/`Cliente`/`Proveedor`/`EmbarqueRow`** derivándolos de `Tables<>`.
+- **A3 — Eliminar `as never`** donde el tipo ya existe, más regla ESLint anti-`as never`.
+- **A4 — Completar `FEATURES`** en `eslint.config.js` (añadir `anticipos-proveedor`, `cobranza`, `cxc`) y registrar los 5 imports cross-feature ya existentes en la allowlist con comentario de burn-down.
+- **A7 — ZIP masivo CFDI**: reportar fallos parciales al usuario y dejar rastro en bitácora.
+- **A9 — Caps ocultos de listados**: límite explícito y aviso de truncamiento.
 
-## Ola 2 — Robustez del pipeline (🟠)
+## Ola 3 — Permisos y RLS (2 migraciones)
 
-**GHA-4** — Mover los guards conductuales fuera del bloque `cache-hit != 'true'` y ampliar la cache key para incluir todos los `supabase/tests/rls/*.sql`.
+- **A6 — PNL/márgenes fuera del alcance de clientes y agentes**: `cerrado_snapshot`, `pnl_financiero_embarque`, `reabrir_embarque` (migración).
+- **A10 — Alinear `es_escritor_financiero` con la matriz de `usePermissions`** y RLS de `conceptos_factura` (migración).
 
-**GHA-5** — Generar `supabase/functions/deno.lock` para las 42 edge functions y añadir `--lock` en `ci.yml`, `deno-typecheck.yml` y `post-deploy-smoke.yml`.
+Ambas se acompañan de pruebas en la suite RLS existente (`supabase/tests/rls/`) para que el gate de despliegue las cubra.
 
-**GHA-8** — Ampliar `guard-secrets` para cubrir todos los secretos usados y eliminar los skips internos por job, de modo que una configuración incompleta falle en un solo punto en vez de "pasar en verde" saltando pasos.
+## Ola 4 — Modelo de datos financiero (2 migraciones)
 
-## Ola 3 — Entornos y velocidad (🟠/🟡)
-
-**GHA-7** — Declarar `environment: e2e-staging` en `e2e.yml` y `environment: production` en `deploy-gate.yml`. Las protection rules y los secretos por environment se configuran manualmente en Settings de GitHub; entregaré la lista exacta de pasos.
-
-**GHA-6** — En `vitest.config.ts`, hacer el paralelismo dependiente de `process.env.CI` (2 forks en CI, 1 en local), respetando el techo de heap documentado.
+- **A11 — Dinero en JSONB → tablas hijas (fase 1)** para `cotizaciones.conceptos_venta` y `factura_notas_credito.conceptos`: crear tablas con GRANTs + RLS, backfill idempotente y lectura dual (sin quitar todavía el JSONB).
+- **A12 — FKs e índices faltantes** en tablas de dinero.
 
 ## Detalles técnicos
 
-- Se respetan las convenciones del repo: actions pineadas a SHA con comentario `# vX.Y.Z`, `persist-credentials: false`, imagen Postgres pineada por digest, `permissions:` mínimos, runners `ubuntu-24.04`.
-- Verificación al cierre de cada ola: `actionlint`, `bun run typecheck`, `bun run audit:migrations` y la suite de tests afectada.
-- Se actualiza `CHANGELOG.md` y `APP_VERSION` por ola.
+- Migraciones idempotentes (`IF NOT EXISTS`, guards `DO $$`, `ON CONFLICT`), sin `CONCURRENTLY`, con `GRANT` obligatorio en toda tabla nueva del esquema `public`.
+- Convenciones del repo: capas Pages→Hooks→Services→Lib, query keys sólo por builders, toasts sólo con `notifySuccess/notifyError/notifyWarning`, errores con `reportCaughtError`, máximo 200 líneas por archivo.
+- Tras cada ola: `bun run lint --max-warnings 0`, `tsc`, tests de arquitectura y la suite de tests afectada; `audit:migrations` en las olas 3 y 4.
+- Al cierre de cada ola: bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
 
 ## Fuera de alcance
 
-- Crear los environments y sus protection rules en GitHub (requiere acceso a Settings del repo; se documentan los pasos).
+- No se elimina el JSONB de A11 (eso sería fase 2, tras convivencia en producción).
+- No se ejecuta el burn-down completo de la allowlist de A4 (queda documentado como deuda con plan).
