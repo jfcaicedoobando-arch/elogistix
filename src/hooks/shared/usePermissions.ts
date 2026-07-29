@@ -1,7 +1,9 @@
 import { useAuth } from "@/lib/contexts/AuthContext";
 import type { AppRole } from "@/types/appRole";
 import {
+  ADMIN_CUENTAS_BANCARIAS,
   CAPTURAR_FACTURA_PROVEEDOR,
+
   CERRAR_EMBARQUE,
   COTIZAR_SIN_DESGLOSE,
   ELIMINAR_EMBARQUE,
