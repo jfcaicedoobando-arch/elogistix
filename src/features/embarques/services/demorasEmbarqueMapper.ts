@@ -35,6 +35,20 @@ const num = (v: unknown): number => (typeof v === "number" && Number.isFinite(v)
 const maxBy = (rows: RpcContenedor[], key: keyof RpcContenedor): number =>
   rows.reduce((acc, r) => Math.max(acc, num(r[key])), 0);
 
+function mapContenedores(rows: RpcContenedor[]): DemoraContenedor[] {
+  return rows.map((c, i) => ({
+    contenedor_id: c.contenedor_id ?? `${i}`,
+    numero_contenedor: c.numero_contenedor ?? "—",
+    tipo_contenedor: c.tipo_contenedor ?? "—",
+    monto_costo_usd: num(c.monto_costo),
+    monto_venta_usd: num(c.monto_venta_usd),
+  }));
+}
+
+function diasLibresDe(rows: RpcContenedor[], fallback: unknown): number {
+  return rows.length > 0 ? maxBy(rows, "dias_libres") : num(fallback);
+}
+
 export function mapDemorasPayload(
   raw: RpcDemorasPayload,
   embarqueId: string,
@@ -43,14 +57,6 @@ export function mapDemorasPayload(
   const fechaDescarga = raw?.fecha_descarga_embarque ?? null;
   const fechaDevolucion = raw?.fecha_devolucion_embarque ?? null;
 
-  const contenedores: DemoraContenedor[] = rows.map((c, i) => ({
-    contenedor_id: c.contenedor_id ?? `${i}`,
-    numero_contenedor: c.numero_contenedor ?? "—",
-    tipo_contenedor: c.tipo_contenedor ?? "—",
-    monto_costo_usd: num(c.monto_costo),
-    monto_venta_usd: num(c.monto_venta_usd),
-  }));
-
   return {
     embarque_id: raw?.embarque_id ?? embarqueId,
     error: raw?.error,
@@ -58,11 +64,11 @@ export function mapDemorasPayload(
     fecha_descarga: fechaDescarga,
     fecha_devolucion: fechaDevolucion,
     dias_en_puerto: maxBy(rows, "dias_en_puerto"),
-    dias_libres: rows.length > 0 ? maxBy(rows, "dias_libres") : num(raw?.dias_libres_default),
+    dias_libres: diasLibresDe(rows, raw?.dias_libres_default),
     dias_excedidos: maxBy(rows, "dias_excedidos"),
     total_costo_usd: num(raw?.total_costo),
     moneda_costo: raw?.moneda_costo ?? "USD",
     total_venta_usd: num(raw?.total_venta_usd),
-    contenedores,
+    contenedores: mapContenedores(rows),
   };
 }
