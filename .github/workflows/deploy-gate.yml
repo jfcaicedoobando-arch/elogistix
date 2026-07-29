@@ -1,0 +1,284 @@
+name: deploy-gate
+
+# Gate de promoción a producción (post-merge).
+#
+# Se ejecuta DESPUÉS del merge a `main` y decide si el commit es apto para
+# promoverse a producción. Bloquea (falla + abre issue) si:
+#   1) La suite de RLS del mismo SHA no terminó en verde.
+#   2) La auditoría de migraciones/esquema falla.
+#   3) El radar de drift detecta una migración NUEVA que no aplica en limpio.
+#
+# El resultado se publica en el summary como "PROMOCIÓN AUTORIZADA/BLOQUEADA"
+# y este workflow se usa como required check del entorno de producción.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-gate-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+  # Migraciones anteriores o iguales a este archivo quedan exentas del radar
+  # de drift (deuda histórica ya cubierta por `_ci_drift.sql`). Toda migración
+  # posterior DEBE aplicar en una base limpia.
+  DRIFT_BASELINE: "20260729000308_6b12144a-4547-46e4-afbb-01341f02bd16.sql"
+
+jobs:
+  # ---------------------------------------------------------------------
+  # 1) Auditoría de migraciones y esquema (sin base de datos).
+  # ---------------------------------------------------------------------
+  auditoria-migraciones:
+    name: Gate — auditoría de migraciones
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
+      - name: audit:migrations + audit:schema + audit:rpc-columns
+        run: |
+          set -e
+          fail=0
+          bun run audit:migrations  > /tmp/g-migrations.log  2>&1 & M=$!
+          bun run audit:schema      > /tmp/g-schema.log      2>&1 & S=$!
+          bun run audit:rpc-columns > /tmp/g-rpccols.log     2>&1 & K=$!
+          wait $M || { echo '❌ audit:migrations';  cat /tmp/g-migrations.log; fail=1; }
+          wait $S || { echo '❌ audit:schema';      cat /tmp/g-schema.log;     fail=1; }
+          wait $K || { echo '❌ audit:rpc-columns'; cat /tmp/g-rpccols.log;    fail=1; }
+          if [ "$fail" = "1" ]; then
+            echo "## ❌ Gate: auditoría de migraciones" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "## ✅ Gate: auditoría de migraciones" >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------
+  # 2) Suite de RLS del mismo SHA (consumimos el workflow `rls-tests`).
+  # ---------------------------------------------------------------------
+  suite-rls:
+    name: Gate — suite de RLS
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Esperar y verificar `rls-tests` para este SHA
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const sha = context.sha;
+            const deadline = Date.now() + 25 * 60 * 1000;
+            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+            while (Date.now() < deadline) {
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head_sha: sha,
+                per_page: 100,
+              });
+              const runs = data.workflow_runs.filter((r) => r.name === 'rls-tests');
+
+              if (runs.length === 0) {
+                // El workflow tiene filtros de path: si no cambió nada de BD,
+                // no corre y no hay nada que bloquear.
+                core.info('rls-tests no se disparó para este SHA (sin cambios de BD).');
+                core.summary.addRaw('## ✅ Gate: suite de RLS (no aplica, sin cambios de BD)\n');
+                await core.summary.write();
+                return;
+              }
+
+              const pending = runs.filter((r) => r.status !== 'completed');
+              if (pending.length === 0) {
+                const failed = runs.filter((r) => r.conclusion !== 'success' && r.conclusion !== 'skipped');
+                if (failed.length > 0) {
+                  const list = failed.map((r) => `- ${r.conclusion}: ${r.html_url}`).join('\n');
+                  core.summary.addRaw(`## ❌ Gate: suite de RLS\n${list}\n`);
+                  await core.summary.write();
+                  core.setFailed(`rls-tests no está en verde para ${sha}`);
+                  return;
+                }
+                core.summary.addRaw('## ✅ Gate: suite de RLS\n');
+                await core.summary.write();
+                return;
+              }
+
+              core.info(`rls-tests en curso (${pending.length} run(s))… reintentando en 30 s`);
+              await sleep(30000);
+            }
+            core.setFailed('Timeout esperando a rls-tests: no se autoriza la promoción.');
+
+  # ---------------------------------------------------------------------
+  # 3) Radar de drift — bloqueante para migraciones nuevas.
+  # ---------------------------------------------------------------------
+  radar-drift:
+    name: Gate — radar de drift
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+          --shm-size=256m
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+      PSQL: psql -v ON_ERROR_STOP=1 -X -q
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
+        run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
+
+      - name: Aplicar migraciones SIN parches de drift
+        run: |
+          set -uo pipefail
+          shopt -s nullglob
+          nuevas=""
+          historicas=""
+          for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
+            base=$(basename "$f")
+            if ! sed -E \
+              -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
+              -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
+              "$f" | $PSQL --single-transaction > /tmp/mig.log 2>&1; then
+              sed -n '1,10p' /tmp/mig.log
+              if [[ "$base" > "$DRIFT_BASELINE" ]]; then
+                echo "::error file=$f::drift NUEVO — la migración no aplica en una base limpia"
+                nuevas="$nuevas $base"
+              else
+                echo "::warning file=$f::drift histórico (exento del gate)"
+                historicas="$historicas $base"
+              fi
+            fi
+          done
+          {
+            echo "## Gate: radar de drift"
+            echo ""
+            echo "Baseline exento: \`$DRIFT_BASELINE\`"
+            if [ -n "$historicas" ]; then
+              echo ""
+              echo "Drift histórico (no bloquea):"
+              for m in $historicas; do echo "- \`$m\`"; done
+            fi
+            if [ -n "$nuevas" ]; then
+              echo ""
+              echo "❌ Drift NUEVO (bloquea la promoción):"
+              for m in $nuevas; do echo "- \`$m\`"; done
+              echo ""
+              echo "Acción: escribir la migración que cree los objetos faltantes en lugar de crearlos a mano en producción."
+            else
+              echo ""
+              echo "✅ Ninguna migración nueva depende de objetos creados a mano."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ -z "$nuevas" ]
+
+  # ---------------------------------------------------------------------
+  # 4) Veredicto — required check para promover a producción.
+  # ---------------------------------------------------------------------
+  promocion:
+    name: Deploy gate (promoción a producción)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: [auditoria-migraciones, suite-rls, radar-drift]
+    if: always()
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Veredicto
+        id: veredicto
+        run: |
+          fail=0
+          for pair in "auditoría de migraciones:${{ needs.auditoria-migraciones.result }}" \
+                      "suite de RLS:${{ needs.suite-rls.result }}" \
+                      "radar de drift:${{ needs.radar-drift.result }}"; do
+            nombre="${pair%%:*}"
+            result="${pair##*:}"
+            if [ "$result" = "success" ]; then
+              echo "✅ $nombre"
+            else
+              echo "❌ $nombre ($result)"
+              fail=1
+            fi
+          done
+          if [ "$fail" = "1" ]; then
+            echo "## 🚫 PROMOCIÓN BLOQUEADA" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No publiques este commit en producción hasta que los gates estén en verde." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "## ✅ PROMOCIÓN AUTORIZADA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Abrir/actualizar issue de bloqueo
+        if: failure()
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const label = 'deploy-blocked';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              '🚫 **Promoción a producción bloqueada** por el deploy gate.',
+              '',
+              `- Run: ${runUrl}`,
+              `- SHA: \`${context.sha}\``,
+              '',
+              '| Gate | Resultado |',
+              '| --- | --- |',
+              `| Auditoría de migraciones | ${{ toJSON(needs.auditoria-migraciones.result) }} |`,
+              `| Suite de RLS | ${{ toJSON(needs.suite-rls.result) }} |`,
+              `| Radar de drift | ${{ toJSON(needs.radar-drift.result) }} |`,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: label,
+              per_page: 1,
+            });
+
+            if (existing.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚫 Deploy gate bloqueado (${new Date().toISOString().slice(0, 10)})`,
+                body,
+                labels: [label],
+              });
+            }
