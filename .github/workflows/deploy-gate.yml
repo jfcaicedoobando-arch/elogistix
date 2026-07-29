@@ -7,6 +7,8 @@ name: deploy-gate
 #   1) La suite de RLS del mismo SHA no terminó en verde.
 #   2) La auditoría de migraciones/esquema falla.
 #   3) El radar de drift detecta una migración NUEVA que no aplica en limpio.
+#   4) La guardia de integridad (P-10) encuentra RPC ambiguas, enums rotos o
+#      tablas con RLS sin políticas.
 #
 # El resultado se publica en el summary como "PROMOCIÓN AUTORIZADA/BLOQUEADA"
 # y este workflow se usa como required check del entorno de producción.
@@ -206,6 +208,27 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
           [ -z "$nuevas" ]
+
+      # P-10 — Guardia de integridad: sobre la base ya migrada, detecta
+      # sobrecargas ambiguas de RPC, funciones con enums renombrados y tablas
+      # con RLS activo sin políticas. Debe regresar CERO filas.
+      - name: Guardia de integridad de esquema (P-10)
+        run: |
+          set -euo pipefail
+          $PSQL -A -t -f scripts/db/integrity-guard.sql > /tmp/integrity.txt
+          filas=$(grep -c . /tmp/integrity.txt || true)
+          if [ "$filas" != "0" ]; then
+            {
+              echo "## ❌ Gate: guardia de integridad de esquema"
+              echo ""
+              echo '```'
+              cat /tmp/integrity.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            cat /tmp/integrity.txt
+            exit 1
+          fi
+          echo "## ✅ Gate: guardia de integridad de esquema" >> "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------
   # 4) Veredicto — required check para promover a producción.
