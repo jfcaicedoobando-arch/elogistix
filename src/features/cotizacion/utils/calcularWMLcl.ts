@@ -11,6 +11,7 @@
  * Sin dependencias de UI. 100% testeable.
  */
 import type { DimensionLCL } from "@/features/cotizacion/types/core";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export interface TotalesLcl {
   /** Suma de piezas de todas las filas. */
@@ -68,5 +69,5 @@ export function calcularFleteVentaLCL(
   const factor = 1 + (Number.isFinite(mk) && mk >= 0 ? mk : 0);
   const calc = wm * tarifa;
   const bruto = Math.max(calc, min);
-  return Math.round(bruto * factor * 100) / 100;
+  return roundMoney(bruto * factor);
 }

@@ -2,8 +2,9 @@
  * Helpers puros para `pnlPorContenedor.ts` — extraídos en v13.182.0
  * (Wave 2 · Power-of-10 splits). Sin cambios de comportamiento.
  */
+import { roundMoney } from "@/lib/financial/financialUtils";
 
-export const round2 = (n: number): number => Math.round(n * 100) / 100;
+export const round2 = (n: number): number => roundMoney(n);
 
 export const calcMargen = (utilidad: number, venta: number): number =>
   venta > 0 ? (utilidad / venta) * 100 : 0;

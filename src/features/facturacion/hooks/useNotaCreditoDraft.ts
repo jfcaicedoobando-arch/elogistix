@@ -16,7 +16,12 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { Tables } from "@/integrations/supabase/types";
-import { TASA_IVA } from "@/lib/financial/financialUtils";
+import {
+  TASA_IVA,
+  sumarMontos,
+  subtotalLinea,
+  calcularTotalConIVA,
+} from "@/lib/financial/financialUtils";
 import { logger } from "@/lib/observability/logger";
 
 type Moneda = Tables<"factura_notas_credito">["moneda"];
@@ -75,11 +80,16 @@ export function useNotaCreditoDraft(p: Params) {
   // `tasa_iva` es fracción (0.16 por defecto en makeConcepto).
   const monto = useMemo(
     () =>
-      conceptos.reduce((acc, c) => {
-        const base = Number(c.cantidad) * Number(c.precio_unitario);
-        const tasa = Number.isFinite(Number(c.tasa_iva)) ? Number(c.tasa_iva) : 0;
-        return acc + base * (1 + tasa);
-      }, 0),
+      // M3: redondear por línea con el motor canónico antes de sumar; el
+      // flotante crudo podía rechazar NCs legítimas por epsilon o dejar
+      // centavos fantasma en el saldo (cf. B-007).
+      sumarMontos(
+        conceptos.map((c) => {
+          const base = subtotalLinea(Number(c.cantidad), Number(c.precio_unitario));
+          const tasa = Number.isFinite(Number(c.tasa_iva)) ? Number(c.tasa_iva) : 0;
+          return calcularTotalConIVA(base, tasa);
+        }),
+      ),
     [conceptos],
   );
 

@@ -1,43 +1,45 @@
-## Objetivo
+## Contexto
 
-Aplicar los 12 hallazgos ALTOS del documento de auditoría (A1–A12), en orden, verificando cada FIX contra el código real antes de tocarlo.
+El documento subido trae 14 hallazgos de severidad media (M1–M14) con diffs propuestos. Verifiqué una muestra contra el repo real y coincide: 111 archivos con marcadores `SAFE-CAST`, 11 `useQuery` inline en `components/`, borrado duro de proveedores (`proveedoresCrud.ts:148`), dos motores de redondeo conviviendo en facturación (`Math.round` en `recalcularTotalesFactura.ts:39` / `conceptosFacturaCrud.ts` vs currency.js), `nuqs` ya instalado y sin `p-limit`.
 
-Verifiqué ya dos puntos de partida: `FacturaPagosSection.tsx` y `DialogRegistrarPago.tsx` calculan el saldo **sin restar notas de crédito** (existe el canon correcto en `portal/services/facturaSaldo.ts`), y `eslint.config.js` sí tiene una lista `FEATURES` incompleta. El resto de los FIX se validará archivo por archivo justo antes de aplicarlos; si algún hallazgo no coincide con el código actual, lo reporto en vez de aplicarlo a ciegas.
+No aplicaré los diffs a ciegas: cada FIX se re-verifica contra el archivo real antes de tocarlo (el propio documento admite 2 falsos positivos ya corregidos).
 
-## Ola 1 — Dinero y consistencia de datos (frontend)
+## Olas
 
-- **A1 — Canon de saldo de factura.** Promover `facturaSaldo.ts` a `src/lib/domain/` (o equivalente compartido) como única fórmula `total − Σpagos − ΣNC`, y consumirla en `FacturaPagosSection`, `DialogRegistrarPago` (incluida la validación de "excede saldo"), cobranza y estado de cuenta. Tests unitarios del canon + test de que el diálogo no permite sobrepago cuando hay NC.
-- **A5 — Invalidación cruzada portal↔interno de cotizaciones**, usando los builders de query keys.
-- **A8 — QueryKeys muertas/faltantes** (guion vs guion bajo): corregir claves e invalidaciones que nunca hacían match.
+### Ola 1 — Dinero y consistencia numérica (mayor riesgo real)
+- **M3**: helper canónico `roundMoney` en `src/lib/financial/financialUtils.ts` con semántica "half away from zero" (igual que Postgres), sustituyendo los `Math.round(n*100)/100` de facturación y el acumulado flotante de notas de crédito.
+- **M4**: aplicar zod (schema extendido con `conceptoVentaSchema`) a `updateCotizacion`, que hoy escribe montos sin validación.
+- **M11**: parser fiscal de conceptos unificado en `src/lib/domain/facturaConceptos.ts` y totales de cotización sin descarte silencioso.
+- Tests unitarios de redondeo (incluye negativos), validación y parser.
 
-## Ola 2 — Tipos y guardarraíles
+### Ola 2 — SQL (4 migraciones independientes)
+- **M5**: sincronización de los espejos `cliente_nombre` (cotizaciones/embarques/facturas) y pares `naviera`/`naviera_id`, `agente`/`agente_id`.
+- **M6**: `deleted_at` en tablas de dinero que no lo tienen (proveedores, comisiones, liquidaciones, movimientos BBVA, garantías), índice único de RFC excluyendo borrados, y cambiar el borrado duro de proveedores por soft-delete en el frontend.
+- **M7**: `organization_id` propio en `costeo_tarifa_recargos` y `costeo_naviera_demoras_tarifa` + policies simplificadas (aislamiento y rendimiento).
+- **M13**: CHECK de estados en `cotizacion_envios`, `proforma_envios`, `factura_envios`.
+- Cada migración con GRANTs/policies explícitos y prueba en la suite RLS.
 
-- **A2 — Canonizar `Factura`/`Cliente`/`Proveedor`/`EmbarqueRow`** derivándolos de `Tables<>`.
-- **A3 — Eliminar `as never`** donde el tipo ya existe, más regla ESLint anti-`as never`.
-- **A4 — Completar `FEATURES`** en `eslint.config.js` (añadir `anticipos-proveedor`, `cobranza`, `cxc`) y registrar los 5 imports cross-feature ya existentes en la allowlist con comentario de burn-down.
-- **A7 — ZIP masivo CFDI**: reportar fallos parciales al usuario y dejar rastro en bitácora.
-- **A9 — Caps ocultos de listados**: límite explícito y aviso de truncamiento.
+### Ola 3 — Seguridad backend (M8)
+`seed_demo_organization` restringida, cron protegido con `X-Cron-Secret` y validación de destinatario en los correos de CxC/cotización.
 
-## Ola 3 — Permisos y RLS (2 migraciones)
+### Ola 4 — Rendimiento y experiencia
+- **M12**: helper `mapWithConcurrency` y acciones masivas de facturas (ZIP/email) con concurrencia limitada y contador de progreso.
+- **M9**: perfil/organización migrado de contexto manual con TTL a TanStack Query, con invalidación desde las mutaciones admin (arregla el nombre de org desactualizado en el sidebar).
+- **M10**: filtros de CxP en la URL con `nuqs`, sin pisar la captura en curso.
 
-- **A6 — PNL/márgenes fuera del alcance de clientes y agentes**: `cerrado_snapshot`, `pnl_financiero_embarque`, `reabrir_embarque` (migración).
-- **A10 — Alinear `es_escritor_financiero` con la matriz de `usePermissions`** y RLS de `conceptos_factura` (migración).
-
-Ambas se acompañan de pruebas en la suite RLS existente (`supabase/tests/rls/`) para que el gate de despliegue las cubra.
-
-## Ola 4 — Modelo de datos financiero (2 migraciones)
-
-- **A11 — Dinero en JSONB → tablas hijas (fase 1)** para `cotizaciones.conceptos_venta` y `factura_notas_credito.conceptos`: crear tablas con GRANTs + RLS, backfill idempotente y lectura dual (sin quitar todavía el JSONB).
-- **A12 — FKs e índices faltantes** en tablas de dinero.
+### Ola 5 — Higiene arquitectónica
+- **M14 Ola 1**: extraer a hooks los 3 casos de dinero (`ConciliacionPagoCell`, `TabDemoras`, `ProformaInconsistenteAlert`) y test anti-regresión con baseline decreciente. Las olas 2–3 del propio M14 (resto de hooks y movimientos de archivos) quedan como seguimiento.
+- **M1**: test de frescura de marcadores `SAFE-CAST` contra `types.ts` y borrado de los 4 obsoletos.
+- **M2**: adopción de `fromDb(data, schema)` en los hotspots de dinero + métrica de adopción.
 
 ## Detalles técnicos
 
-- Migraciones idempotentes (`IF NOT EXISTS`, guards `DO $$`, `ON CONFLICT`), sin `CONCURRENTLY`, con `GRANT` obligatorio en toda tabla nueva del esquema `public`.
-- Convenciones del repo: capas Pages→Hooks→Services→Lib, query keys sólo por builders, toasts sólo con `notifySuccess/notifyError/notifyWarning`, errores con `reportCaughtError`, máximo 200 líneas por archivo.
-- Tras cada ola: `bun run lint --max-warnings 0`, `tsc`, tests de arquitectura y la suite de tests afectada; `audit:migrations` en las olas 3 y 4.
-- Al cierre de cada ola: bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
+- Migraciones en el bloque `20260730300xxx`, nombre `YYYYMMDDHHMMSS_<uuid>.sql`, con GRANT + RLS explícitos para pasar `audit:migrations` (H4/H6) y el radar de drift en base limpia.
+- Tras cada ola: `bun run lint --max-warnings 0`, `bunx tsc -b`, tests afectados y los tests de arquitectura (límite de 200 líneas por archivo).
+- Los nuevos códigos `LC_*` que introduzcan las migraciones necesitan su mensaje en `lcCodeMessages.*` (lo exige el test de cobertura de errores).
+- `CHANGELOG.md` + `APP_VERSION` se actualizan al cierre de cada ola.
 
 ## Fuera de alcance
 
-- No se elimina el JSONB de A11 (eso sería fase 2, tras convivencia en producción).
-- No se ejecuta el burn-down completo de la allowlist de A4 (queda documentado como deuda con plan).
+- Olas 2 y 3 de M14 (extracción masiva del resto de hooks): se dejan documentadas con la baseline del test para bajarla después.
+- Los 2 falsos positivos ya descartados (`clientes.estado`, `embarques.cobro_cliente_status`).

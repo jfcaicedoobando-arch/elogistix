@@ -13,6 +13,7 @@
  * Prohibido reimplementar esta lógica fuera de `src/lib/financial/`.
  */
 import { tcValido } from "@/lib/financial/tcValido";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export type FuenteConversion = "moneda-local" | "tc-directo" | "tc-fallback" | "sin-tc";
 
@@ -138,5 +139,5 @@ export function sumarEnMxn<T>(
     total += res.mxn;
   }
 
-  return { total: Math.round(total * 100) / 100, sinTipoCambio, excluidoPorMoneda };
+  return { total: roundMoney(total), sinTipoCambio, excluidoPorMoneda };
 }

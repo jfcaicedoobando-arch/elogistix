@@ -12,6 +12,7 @@
  */
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { TopTarifaRow, CosteoTarifaRecargo } from "@/features/costeo/types";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export interface BuildCostosDesdeTarifaArgs {
   tarifa: Pick<
@@ -30,7 +31,7 @@ export interface BuildCostosDesdeTarifaArgs {
 const aplicarMarkup = (costo: number, markup: number): number => {
   if (!Number.isFinite(costo) || costo <= 0) return 0;
   const factor = 1 + (Number.isFinite(markup) && markup >= 0 ? markup : 0);
-  return Math.round(costo * factor * 100) / 100;
+  return roundMoney(costo * factor);
 };
 
 /** Filas de costo derivadas de los recargos de la tarifa (B-073: con linkage). */

@@ -7,6 +7,7 @@
  */
 
 import { isoUtcDay } from "@/lib/date/mx";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export const TOLERANCIA_MONTO_MXN = 1;
 export const TOLERANCIA_DIAS = 5;
@@ -16,8 +17,8 @@ export const TOLERANCIA_DIAS = 5;
  *  drift (`100.01 - 100 === 0.0100000…0005`). */
 export function dentroDeTolerancia(montoA: number, montoB: number, tolerancia = TOLERANCIA_MONTO_MXN): boolean {
   if (!Number.isFinite(montoA) || !Number.isFinite(montoB)) return false;
-  const delta = Math.round(Math.abs(montoA - montoB) * 100) / 100;
-  const tol = Math.round(tolerancia * 100) / 100;
+  const delta = roundMoney(Math.abs(montoA - montoB));
+  const tol = roundMoney(tolerancia);
   return delta <= tol;
 }
 

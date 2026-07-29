@@ -14,6 +14,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { run, unwrapOr } from "@/lib/supabase/response";
 import { resolverTasa, type TipoIvaConcepto } from "./conceptosFacturaShared";
 import { recalcularTotalesFactura } from "./recalcularTotalesFactura";
+import { subtotalLinea } from "@/lib/financial/financialUtils";
 
 // Re-export para no romper call-sites externos que importan desde este archivo.
 export { recalcularTotalesFactura };
@@ -71,7 +72,7 @@ function normalizarLinea(input: ConceptoFacturaInput) {
     descripcion,
     cantidad,
     precio_unitario: precio,
-    total: Math.round(cantidad * precio * 100) / 100,
+    total: subtotalLinea(cantidad, precio),
     clave_sat: clave,
     tipo_iva,
     tasa_iva_aplicada: resolverTasa(tipo_iva),
