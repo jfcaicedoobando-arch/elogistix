@@ -53,9 +53,8 @@ export function useHallazgosTablaState(
     opts.initialResponsable ?? "todos",
   );
   const [etaDesde, setEtaDesde] = useState<Date | undefined>();
-  const [etaHasta, setEtaHasta] = useState<Date | undefined>(
-    opts.soloVencidos ? new Date() : undefined,
-  );
+  const [etaHasta, setEtaHasta] = useState<Date | undefined>();
+  const [soloEtaVencida, setSoloEtaVencida] = useState<boolean>(!!opts.soloVencidos);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
@@ -80,11 +79,12 @@ export function useHallazgosTablaState(
       filtroCliente,
       filtroRevision,
       filtroResponsable,
+      soloEtaVencida,
       userId: user?.id,
       revisiones,
     };
     return hallazgos.filter((h) => matchHallazgo(h, ctx));
-  }, [hallazgos, search, filtroRegla, filtroSev, filtroCliente, etaDesde, etaHasta, filtroRevision, filtroResponsable, revisiones, user?.id]);
+  }, [hallazgos, search, filtroRegla, filtroSev, filtroCliente, etaDesde, etaHasta, filtroRevision, filtroResponsable, soloEtaVencida, revisiones, user?.id]);
 
   const totalPages = Math.max(1, Math.ceil(filtrados.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -109,6 +109,7 @@ export function useHallazgosTablaState(
     setFiltroResponsable("todos");
     setEtaDesde(undefined);
     setEtaHasta(undefined);
+    setSoloEtaVencida(false);
     setPage(1);
     clearSelection();
   };
@@ -122,6 +123,7 @@ export function useHallazgosTablaState(
     filtroResponsable !== "todos",
     !!etaDesde,
     !!etaHasta,
+    soloEtaVencida,
   ].some(Boolean);
 
   // setter wrappers que resetean la paginación y la selección al cambiar filtro
@@ -145,6 +147,7 @@ export function useHallazgosTablaState(
     filtroResponsable,
     etaDesde,
     etaHasta,
+    soloEtaVencida,
     pageSize,
     currentPage,
     totalPages,
@@ -169,6 +172,7 @@ export function useHallazgosTablaState(
     setFiltroResponsable: wrap(setFiltroResponsable),
     setEtaDesde: wrap(setEtaDesde),
     setEtaHasta: wrap(setEtaHasta),
+    setSoloEtaVencida: wrap(setSoloEtaVencida),
     setPageSize: wrap(setPageSize),
     setPage: setPageWithClear,
     limpiar,
