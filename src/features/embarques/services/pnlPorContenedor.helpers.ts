@@ -1,8 +1,8 @@
 /**
-import { roundMoney } from "@/lib/financial/financialUtils";
  * Helpers puros para `pnlPorContenedor.ts` — extraídos en v13.182.0
  * (Wave 2 · Power-of-10 splits). Sin cambios de comportamiento.
  */
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export const round2 = (n: number): number => roundMoney(n);
 

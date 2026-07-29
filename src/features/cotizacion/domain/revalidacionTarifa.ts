@@ -1,10 +1,10 @@
 /**
-import { roundMoney } from "@/lib/financial/financialUtils";
  * Dominio puro: revalidación de tarifa al convertir cotización → embarque.
  *
  * No depende de Supabase ni React. Toda la matemática y la clasificación de
  * severidad vive aquí para ser testeable de forma aislada.
  */
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export type SeveridadRevalidacion = "sin_cambios" | "informativa" | "bloqueante";
 
