@@ -2,7 +2,6 @@
  * Orquestador: dispara loaders en paralelo y aplica cálculos puros.
  */
 import { inicioMesUtc, ym, ventanaDireccionDesdeIso } from "./mxn";
-import { inicioMesUtc, ym, ventanaDireccionDesdeIso } from "./mxn";
 import { loadEmbarques, loadEmbarquesActivos, loadFacturas } from "./loaders";
 import {
   agregarEmbarques, calcularAntiguedad, calcularHero, calcularMargen6m,
