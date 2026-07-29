@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.328.2] - 2026-07-30
+- M8: el reinicio de datos de la organización demo ya solo puede ejecutarlo el sistema o un administrador global.
+- M8: la reconciliación automática de cancelaciones con el SAT ahora exige la clave del proceso programado y rechaza llamadas anónimas.
+- M8: los correos con estado de cuenta, recordatorios de cobro y cotizaciones solo pueden enviarse a contactos registrados del cliente.
+
+
+
 ## [13.328.1] - 2026-07-30
 - Se agregaron mensajes claros para dos errores nuevos de tarifas y demoras (recargo/tramo sin registro padre).
 - Corrección de higiene de código: se documentó una conversión de tipos en el parser de conceptos de cotización.
