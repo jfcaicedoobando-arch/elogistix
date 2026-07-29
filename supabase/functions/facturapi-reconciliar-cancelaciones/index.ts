@@ -136,6 +136,13 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
     return jsonResponse({ error: "method_not_allowed" }, 405);
   }
 
+  // M8: endpoint cron-only — mismo patrón que rep-retry-nocturno.
+  if (!CRON_SECRET || req.headers.get("X-Cron-Secret") !== CRON_SECRET) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+
+
+
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
   const { data: pendientes, error: fetchErr } = await supabase
