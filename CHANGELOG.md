@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.330.0] - 2026-07-30
+- El nombre y datos de tu organización ahora se actualizan al instante en el menú lateral cuando un administrador los edita (antes tardaban hasta un minuto).
+- Los filtros de Compras > Facturas de proveedor viven en la dirección web: puedes copiar y compartir el enlace con los filtros ya aplicados y funcionan los accesos directos tipo "pendientes de aprobar".
+- Al editar una factura de proveedor, la captura en curso ya no se pierde si el sistema actualiza los datos en segundo plano.
+
 ## [13.329.0] - 2026-07-30
 - Las listas de cotizaciones, costos y proformas ahora validan los datos que llegan de la base antes de mostrarlos: si un monto llega corrupto o falta una columna, el error se detecta al instante en vez de aparecer como total en blanco.
 - Se limpiaron marcadores de conversión de tipos obsoletos y se agregó una prueba que impide que vuelvan a acumularse.
