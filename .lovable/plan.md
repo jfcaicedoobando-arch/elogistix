@@ -1,47 +1,38 @@
-## Diagnóstico (verificado leyendo la config y el sandbox)
+## Objetivo
 
-El sandbox de Lovable **no** es el cuello de botella: tiene **16 vCPU y 125 GB de RAM**. El problema está en `vitest.config.ts`, que penaliza deliberadamente todo lo que no sea CI:
+Dejar la suite en verde. Hoy fallan 12 archivos por tres causas distintas (ninguna es culpa del paralelismo que ya aplicamos).
 
-```ts
-singleFork: !process.env.CI,        // local → 1 solo proceso
-maxForks: process.env.CI ? 2 : 1,   // local → 1 fork
-fileParallelism: !!process.env.CI,  // local → archivos en serie
-```
+## Diagnóstico confirmado
 
-Es decir: en GitHub Actions la suite corre en **10 shards × 2 forks = ~20 procesos en paralelo**, y en el sandbox corre en **1 solo proceso, un archivo a la vez**. Encima, `bun run test` en local es un `for i in 1..10` que ejecuta los 10 shards **secuencialmente** — o sea, arranca Vite 10 veces seguidas.
+| # | Archivo | Causa real (verificada al correr los tests) |
+|---|---|---|
+| 1 | `src/features/tesoreria/routes/__tests__/TesoreriaConciliacion.test.tsx` (6 tests) | El `vi.mock` de `@/features/tesoreria/hooks` no exporta `useRegistrarMovimientoManual`, hook que la ruta empezó a usar al agregar el alta manual en Conciliación. El mock quedó viejo. |
+| 2 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionDraftAutosave.test.tsx` (2 tests) | El test asume que **nada** se guarda antes del debounce, pero el hook ahora persiste una vez en el montaje. El test quedó viejo respecto al comportamiento nuevo. |
+| 3 | `src/__tests__/audit-report.test.ts`, `architecture/no-inline-query-mutations.test.ts`, `architecture/safe-cast-freshness.test.ts`, `architecture/safe-casts-services.test.ts` (7 tests) | Deuda real de arquitectura acumulada en las olas 2–5: 10 archivos productivos >200 líneas fuera de allowlist, 2 hooks `use*.ts(x)` dentro de `components/`, 1 cast HIGH sin marcador y entradas de baseline SAFE-CAST caducadas. |
 
-Analogía: en CI horneamos con 20 hornos a la vez; en el sandbox teníamos 16 hornos disponibles pero usábamos uno solo, y además metíamos las charolas de una en una.
-
-El comentario que justifica `1 fork` habla de un riesgo de OOM con "8 GB heap"; ese cálculo se hizo pensando en un sandbox de 32 GB. Con 125 GB, 6–8 forks caben de sobra.
+Analogía: (1) y (2) son "la lista de invitados quedó vieja"; (3) es "sí hay platos sucios en la cocina".
 
 ## Plan
 
-### Paso 1 — Medición base (antes de tocar nada)
-- Correr la suite completa con `--reporter=verbose --slowTestThreshold=1000`, guardando el output a `/tmp/vitest-baseline.txt`.
-- Extraer el ranking de los 20 archivos más lentos y el wall-time total.
-- Entregable: tabla "archivo → segundos" para saber si el problema es paralelismo, un puñado de archivos pesados, o ambos.
+**Fase 1 — Mocks y timers (rápido, sin tocar producción)**
+- Agregar `useRegistrarMovimientoManual` (y cualquier otro export faltante) al mock del test de Conciliación, devolviendo el mismo shape de mutación que los demás.
+- Ajustar el test de autosave al contrato actual: en vez de exigir `null` antes del debounce, verificar que tras el debounce se escribió el snapshot esperado y que el unmount cancela el timer pendiente (sin escrituras extra). Antes de cambiar el test, confirmar en el hook que el guardado inicial es intencional; si no lo es, se corrige el hook en lugar del test.
 
-### Paso 2 — Habilitar paralelismo local en `vitest.config.ts`
-- Calcular los forks a partir de los núcleos reales en vez del flag `CI`:
-  - `fileParallelism: true` siempre.
-  - `singleFork: false`.
-  - `maxForks`: `CI ? 2 : min(8, nproc - 2)`; `minForks: 2`.
-  - Bajar `execArgv` local a `--max-old-space-size=4096` (8 forks × 4 GB = 32 GB ≪ 125 GB, margen amplio y evita que V8 retrase el GC).
-- Mantener `isolate: true` y `--expose-gc` para no romper las canarias de fugas de PDF.
-- Dejar el comportamiento de CI **idéntico** al actual (los shards del workflow no cambian).
+**Fase 2 — Deuda de arquitectura (la de verdad)**
+- Listar los 10 archivos >200 líneas y partirlos por responsabilidad (extraer subcomponentes/hook de estado), siguiendo la regla Power of 10. Los que no sean divisibles con seguridad se documentan y se agregan a la allowlist con justificación.
+- Mover los 2 hooks que viven bajo `components/` a la carpeta `hooks/` de su feature y actualizar imports.
+- Resolver el cast HIGH: tipar correctamente o, si es genuinamente seguro, anotarlo con `// SAFE-CAST:`.
+- Podar de la baseline de `safe-cast-freshness` las entradas ya resueltas (la baseline solo puede encoger).
 
-### Paso 3 — Arreglar el script `test` local
-- `bun run test` deja de ser un bucle de 10 shards secuenciales y pasa a ser un `vitest run` único (que ya paraleliza internamente con el Paso 2). El modo shard queda disponible en `test:shard` para CI.
+**Fase 3 — Verificación**
+- Correr los 12 archivos afectados, después la suite completa con el paralelismo nuevo (~10 min) y confirmar 0 fallos.
+- Correr `bun run lint --max-warnings 0` y el typecheck, porque partir archivos suele destapar imports huérfanos.
 
-### Paso 4 — Re-medición y validación
-- Volver a correr con `--reporter=verbose --slowTestThreshold=1000` y comparar wall-time contra la línea base.
-- Verificar que **no** aparecen fallos nuevos por paralelismo (tests que dependían del orden serial: mocks globales, fechas, canarias de PDF). Si alguno falla, se marca ese archivo con `describe.sequential` o se aísla, en vez de revertir el paralelismo global.
-- Si tras el cambio quedan archivos individuales >5 s, los reporto como candidatos a optimización específica.
-
-### Paso 5 — Cierre
-- Registrar el resultado (antes/después) en `CHANGELOG.md` y bump de `APP_VERSION`.
+**Fase 4 — Cierre**
+- Registrar en `CHANGELOG.md` tanto el paralelismo de Vitest (que quedó pendiente) como estas correcciones, y subir `APP_VERSION` a `13.342.0`.
 
 ## Notas técnicas
-- Riesgo principal: tests que hoy pasan sólo porque corren en serie (estado global compartido, `vi.setSystemTime`, la canaria de 200 renders de PDF). El Paso 4 existe justamente para detectarlos; se aíslan uno por uno, sin desactivar el paralelismo.
-- No toco `vitest.fast.config.ts` (ya tenía 4 forks) más allá de dejar que herede la nueva base sin duplicar valores.
-- No modifico umbrales de coverage ni el workflow de GitHub Actions.
+
+- No se toca `vitest.config.ts`: el paralelismo ya quedó bien y los mismos 12 fallos existían en serie.
+- CI no cambia; sigue con su propio sharding.
+- Fase 2 es la única que modifica código productivo; el riesgo está en los imports tras mover/partir archivos, por eso el typecheck va inmediatamente después.
