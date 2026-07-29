@@ -6,6 +6,7 @@
  * (`diasVencido`, `calcularEstatus`) sin tocar la capa de datos.
  */
 import type { Tables, Database } from "@/integrations/supabase/types";
+import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 
 export type FacturaRow = Tables<"facturas">;
 export type Moneda = Database["public"]["Enums"]["moneda"];
