@@ -1,51 +1,42 @@
-## Estado del paquete MEDIOS (M1–M14)
+## Diagnóstico (verificado en el código)
 
-Verifiqué uno por uno contra el repo y la base de datos:
+Encontré **dos problemas reales**, uno de configuración y uno de la propia pantalla de diagnóstico.
 
-| Fix | Estado |
-|---|---|
-| M1 SAFE-CAST freshness | Hecho (`safe-cast-freshness.test.ts`) |
-| M2 `fromDbChecked` + ratchet | Hecho (`fromdb-zod-adoption.test.ts`) |
-| M3 `roundMoney` | Hecho |
-| M4 zod en `updateCotizacion` | Hecho |
-| M5 sincronía de espejos | Hecho (`trg_embarques_sync_espejos`, `trg_clientes_propaga_nombre`, `trg_navieras_propaga_nombre`) |
-| **M6 soft-delete en tablas de dinero** | **Incompleto — ver abajo** |
-| M7 `organization_id` en costeo | Hecho (columnas presentes) |
-| M8 seguridad (seed demo, cron secret, destinatarios) | Hecho |
-| M9 perfil con TanStack Query | Hecho |
-| M10 filtros CxP en URL (nuqs) | Hecho |
-| M11 parser fiscal unificado | Hecho |
-| M12 concurrencia limitada en acciones masivas | Hecho |
-| M13 CHECK en `*_envios.estado` | Hecho (3 constraints en BD) |
-| M14 extracción de hooks + guardrail | Hecho |
+**1. Falta el DSN en el build (causa principal)**
+`src/lib/observability/sentry/core.ts` línea 45 lee `import.meta.env.VITE_SENTRY_DSN`. Si está vacío, `initSentry()` se sale de inmediato y ni siquiera llama a `Sentry.init` (líneas 51–57). Revisé el `.env` del proyecto: **no contiene ninguna variable `VITE_SENTRY_*`** (sólo las de Supabase). Como Vite reemplaza estas variables *en tiempo de build*, el bundle publicado en librecarga.com salió con el DSN vacío → Sentry apagado.
 
-## Lo que falta: M6 (y es un bug vivo, no solo deuda)
+Analogía: es una alarma bien instalada pero sin la línea telefónica conectada; suena internamente y nadie la recibe.
 
-La mitad de frontend de M6 sí se aplicó, pero **la migración nunca se creó**. Es como haber puesto la cerradura en la puerta sin instalar la puerta: el código ya filtra por una columna que en la base no existe.
+**2. Falso negativo en la pantalla `/sentry` (bug secundario)**
+`src/lib/observability/hooks/useSentryInfo.ts` lee `Sentry.getClient()` dentro de un `useMemo(..., [])`, o sea **una sola vez en el primer render**. Pero en `main.tsx` el SDK se carga con `import()` dinámico, así que el cliente puede existir *después* de ese render. Resultado: aunque Sentry sí arranque, la tarjeta se queda congelada en "NO está inicializado" y los botones de prueba quedan deshabilitados. Este bug hay que arreglarlo igual, si no, no podremos confirmar que el fix 1 funcionó.
 
-Verificado en la base: solo `proveedores` y `bbva_movimientos` tienen `deleted_at`. **No** la tienen `comisiones_devengadas`, `liquidaciones_comision` ni `embarque_garantias_contenedor`.
+## Cambios propuestos
 
-Pero el código ya filtra por ella:
-- `src/features/comisiones/services/devengadas.ts:53` → `.is("deleted_at", null)` sobre `comisiones_devengadas`
-- `src/features/embarques/services/garantias.ts:13` → `.is("deleted_at", null)` sobre `embarque_garantias_contenedor`
+**A. Configurar el DSN**
+- Agregar `VITE_SENTRY_DSN` (el valor que ya tienes) al `.env` del proyecto para que entre al build de producción.
+- Dejar documentados en `.env.example` los overrides opcionales que el código ya soporta (`VITE_SENTRY_ENV`, `VITE_BUILD_HASH`, sample rates) — el archivo ya los lista, sólo se verifica que coincidan con lo que lee el código.
 
-Esas dos consultas hoy fallan con error de columna inexistente (42703): el tab de Garantías del embarque y las comisiones devengadas no cargan datos.
+**B. Arreglar `useSentryInfo` (falso negativo)**
+- Cambiar el `useMemo([])` por estado reactivo: leer `Sentry.getClient()` al montar y reintentar con un pequeño poll (o suscribirse al término de la carga diferida) hasta que el cliente exista, con un tope de intentos y `clearInterval` en el cleanup del efecto.
 
-Además, en `src/features/tesoreria/services/conciliacion.ts` solo 1 de las 5 consultas a `bbva_movimientos` (línea 101) filtra borrados; faltan las de las líneas 69, 127, 149 y 164.
+**C. Mensaje honesto en la pantalla de diagnóstico**
+- Distinguir tres estados en lugar de dos:
+  - **Activo** — hay cliente Sentry.
+  - **Deshabilitado en desarrollo** — `import.meta.env.MODE === "development"` (comportamiento intencional; hoy se muestra como error rojo y confunde).
+  - **No inicializado — falta DSN** — sin DSN configurado, con la indicación de qué variable falta.
+- Mostrar una fila extra "DSN configurado en el build: sí/no" para que el diagnóstico se pueda hacer sin abrir la consola.
 
-## Plan de corrección
+**D. Verificación**
+- Build de producción y revisión del bundle para confirmar que el DSN quedó embebido.
+- Tras publicar, entrar a `/sentry` en librecarga.com, confirmar el badge **Activo** y usar "Enviar error de prueba" para verificar que el evento llega al proyecto Sentry.
 
-1. **Migración nueva** (idempotente, bloque `DO` con `ADD COLUMN IF NOT EXISTS`):
-   - `deleted_at timestamptz` + `deleted_by uuid` + índice parcial en `comisiones_devengadas`, `liquidaciones_comision`, `embarque_garantias_contenedor`.
-   - Sin tocar policies ni la papelera (`is_soft_delete_table`): queda documentado como follow-up en el encabezado de la migración.
-2. **Regenerar tipos** de la base y verificar que `types-drift` queda limpio.
-3. **Completar los filtros** de `deleted_at` en las 4 consultas restantes de `conciliacion.ts`.
-4. **Tests**: unit tests que verifiquen que las consultas de garantías, comisiones y conciliación incluyen el filtro; y actualizar cualquier mock afectado.
-5. **CI**: correr tests de las features tocadas, `audit:migrations`, `typecheck` y lint.
-6. **CHANGELOG + `APP_VERSION`** (`13.331.3`).
+**E. Registro**
+- Entrada en `CHANGELOG.md` y bump de `APP_VERSION`.
 
-## Detalles técnicos
+## Nota técnica
 
-- La migración usa el bloque de timestamp acordado del paquete (`20260730300xxx`), con nombre `YYYYMMDDHHMMSS_<uuid>.sql`.
-- El índice único `proveedores_org_rfc_unique` ya es parcial con `deleted_at IS NULL`, así que ese punto de M6 no requiere cambios.
-- El listado por RPC `proveedores_listado` sigue sin filtro server-side de borrados; queda fuera de alcance de M6 (paquete de altos), y lo señalo como pendiente conocido.
+No toco `core.ts` salvo que la verificación lo exija: la política de "sin DSN hardcodeado" y de no inicializar en desarrollo es intencional (documentada en el propio archivo, 13.310.0) y la mantengo.
+
+## Lo que necesito de ti
+
+Al aprobar el plan, pégame el DSN público de Sentry (empieza con `https://...@oXXXX.ingest.us.sentry.io/XXXX`). Es un valor público, seguro de vivir en el bundle del navegador — así lo documenta ya tu propio `.env.example`.
