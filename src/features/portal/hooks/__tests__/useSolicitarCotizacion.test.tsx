@@ -55,9 +55,13 @@ describe("useSolicitarCotizacion", () => {
   });
 
   it("propaga el error y no invalida caché", async () => {
-    // `mockImplementation` evita crear la promesa rechazada antes de tiempo
-    // (con `mockRejectedValue` Vitest la marca como unhandled rejection).
-    solicitar.mockImplementation(() => Promise.reject(new Error("LC_CLIENTE_NO_VINCULADO")));
+    // Se adjunta un `catch` vacío a la promesa para que Vitest no la marque
+    // como unhandled rejection; React Query recibe igual el rechazo.
+    solicitar.mockImplementation(() => {
+      const fallo = Promise.reject(new Error("LC_CLIENTE_NO_VINCULADO"));
+      fallo.catch(() => {});
+      return fallo;
+    });
     const { wrapper, invalidate } = setup();
     const { result } = renderHook(() => useSolicitarCotizacion(["cli-1"]), { wrapper });
 
