@@ -303,10 +303,107 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  rls-guards:
+    name: Guards conductuales + schema invariants (siempre)
+    runs-on: ubuntu-24.04
+    needs: rls
+    timeout-minutes: 10
+    # v13.x (GHA-audit A3) — estos guards estaban condicionados a
+    # `cache-hit != 'true'` en el job `rls`: con snapshot cacheado el PR quedaba
+    # verde sin ejecutarlos. Aqui corren SIEMPRE sobre el dump restaurado
+    # (sus fixtures son BEGIN...ROLLBACK, asi que no contaminan nada).
+
+    services:
+      postgres:
+        image: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+          --shm-size=256m
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+      PSQL: psql -v ON_ERROR_STOP=1 -X -q
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Download database snapshot
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: rls-db-snapshot
+          path: .rls-snapshot/
+
+      - name: Create Supabase roles before restore
+        run: |
+          $PSQL <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+              CREATE ROLE anon NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+              CREATE ROLE authenticated NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+              CREATE ROLE service_role NOLOGIN BYPASSRLS;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
+              CREATE ROLE authenticator NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
+              CREATE ROLE supabase_admin NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
+              CREATE ROLE supabase_auth_admin NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
+              CREATE ROLE supabase_storage_admin NOLOGIN;
+            END IF;
+          END $$;
+          SQL
+
+      - name: Restore database snapshot
+        run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
+
+      - name: Verify schema invariants (triggers/functions esperados)
+        run: $PSQL -f supabase/tests/schema-invariants.sql
+
+      - name: CxP guard - tests conductuales de sobrepago (FIX-R3-01)
+        run: $PSQL -f supabase/tests/cxp_guard_sobrepago.sql
+
+      - name: FIX-45 - whitelist de EXECUTE para anon
+        run: $PSQL -f supabase/tests/fix45_anon_execute_whitelist.sql
+
+      - name: Aging CxP - paridad NC soft-deleted (FIX-AGING-NC-01)
+        run: $PSQL -f supabase/tests/aging_nc_deleted_at.sql
+
+      - name: CxC guard - tests conductuales de sobrepago
+        run: $PSQL -f supabase/tests/cxc_guard_sobrepago.sql
+
+      - name: Conversion de moneda - convertir_monto_pago_a_factura
+        run: $PSQL -f supabase/tests/convertir_monto_pago.sql
+
+      - name: Guard de estados - guard_estado_factura
+        run: $PSQL -f supabase/tests/guard_estado_factura.sql
+
   rls-tests-result:
     name: RLS tests result
     runs-on: ubuntu-24.04
-    needs: rls-suites
+    needs: [rls-suites, rls-guards]
     if: always()
     permissions:
       contents: read
@@ -339,13 +436,18 @@ jobs:
         # Job único para usar como required check en branch protection,
         # evitando tener que listar las 19 suites individualmente.
         run: |
-          result="${{ needs.rls-suites.result }}"
-          echo "rls-suites result: $result"
-          if [ "$result" != "success" ]; then
-            echo "::error::Una o más suites RLS fallaron (resultado: $result)"
+          suites="${{ needs.rls-suites.result }}"
+          guards="${{ needs.rls-guards.result }}"
+          echo "rls-suites result: $suites"
+          echo "rls-guards result: $guards"
+          fail=0
+          [ "$suites" = "success" ] || fail=1
+          [ "$guards" = "success" ] || fail=1
+          if [ "$fail" = "1" ]; then
+            echo "::error::Una o más suites RLS o guards conductuales fallaron"
             exit 1
           fi
-          echo "✓ Todas las suites RLS pasaron"
+          echo "✓ Todas las suites RLS y los guards conductuales pasaron"
 
 
 
