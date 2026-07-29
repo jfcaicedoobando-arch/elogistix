@@ -157,7 +157,18 @@ describe("reabrirEmbarqueRpc", () => {
       reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "u@d.com" }),
     ).rejects.toThrow("Solo administradores");
   });
+
+  it("traduce el error del candado de embarque cerrado a un mensaje claro", async () => {
+    mock.setRpcResult("reabrir_embarque", {
+      data: null,
+      error: new Error("Embarque cerrado: usa reabrir_embarque para modificarlo"),
+    });
+    await expect(
+      reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "u@d.com" }),
+    ).rejects.toThrow(/candado de embarque cerrado/i);
+  });
 });
+
 
 describe("duplicarEmbarqueRpc", () => {
   it("valida el array devuelto y propaga los expedientes", async () => {
