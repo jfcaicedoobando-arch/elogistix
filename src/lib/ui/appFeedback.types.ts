@@ -25,6 +25,12 @@ export interface ErrorNotifyOptions {
   payload?: unknown;
   /** Correlation ID si el backend lo devolvió. */
   requestId?: string;
+  /**
+   * Q-08 — Acción primaria del toast (p. ej. "Reintentar"). Cuando viene,
+   * "Ver detalles" pasa a acción secundaria y NUNCA se navega fuera de la
+   * pantalla actual (perdía wizards a medio llenar).
+   */
+  action?: { label: string; onClick: () => void };
 }
 
 /** Opciones comunes para success/warning/info (todas con debug opcional). */

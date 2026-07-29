@@ -3,6 +3,7 @@
  * Extraído de `proveedorFacturas.ts` para respetar el límite Power of 10 (≤200 líneas).
  */
 import type { FacturaCxP } from "./proveedorFacturas";
+import { esFacturaPorPagar } from "./cxpPorPagarFiltro";
 
 export interface KPIsCxP {
   por_pagar_mxn: number;
@@ -29,10 +30,10 @@ export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {
     facturas_vencidas: 0,
   };
   for (const f of filas) {
-    if (f.saldo <= 0) continue;
-    // Rechazadas se excluyen de aging/tesorería: no son deuda real
-    // hasta que sean reaprobadas.
-    if (f.estatus === "Rechazada" || f.estatus === "Cancelada") continue;
+    // Rechazadas/Canceladas se excluyen de aging/tesorería: no son deuda real
+    // hasta que sean reaprobadas. Criterio compartido con el widget "Top 10
+    // próximas a pagar" (Q-15.6): ver `esFacturaPorPagar`.
+    if (!esFacturaPorPagar(f)) continue;
     const usd = f.moneda === "USD";
     if (usd) k.por_pagar_usd += f.saldo; else k.por_pagar_mxn += f.saldo;
     // B-020 (v13.320.39): KPI Vencido considera días vencidos reales,

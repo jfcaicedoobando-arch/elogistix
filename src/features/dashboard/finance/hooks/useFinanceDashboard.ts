@@ -9,6 +9,7 @@ import { useResumenTesoreria } from "@/features/tesoreria/hooks";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useHuecoFacturacion } from "@/features/facturacion/hooks/useHuecoFacturacion";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
+import { esFacturaPorPagar } from "@/features/cxp/services/cxpPorPagarFiltro";
 
 export interface AgingBuckets {
   b0_15: number;
@@ -45,9 +46,9 @@ export function useFinanceDashboard() {
   }, [cobranzaQ.data]);
 
   const cxpPorPagar = useMemo(() => {
-    const filas = (cxpQ.data ?? []).filter(
-      (f) => f.saldo > 0 && (f.estatus === "Por vencer" || f.estatus === "Vencida"),
-    );
+    // Mismo criterio que el KPI "Por pagar 30d" (Q-15.6): incluye "Por
+    // aprobar" para no anunciar "Nada por pagar" cuando sí hay saldo pendiente.
+    const filas = (cxpQ.data ?? []).filter(esFacturaPorPagar);
     return filas
       .slice()
       .sort((a, b) => (a.fecha_vencimiento ?? "9999").localeCompare(b.fecha_vencimiento ?? "9999"))

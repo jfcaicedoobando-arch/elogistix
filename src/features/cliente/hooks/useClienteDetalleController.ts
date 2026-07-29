@@ -27,7 +27,7 @@ export function useClienteDetalleController() {
   const navigate = useNavigate();
 
   // Queries
-  const { data: cliente, isLoading: loadingCliente } = useCliente(id);
+  const { data: cliente, isLoading: loadingCliente, error: errorCliente, refetch: refetchCliente } = useCliente(id);
   const { data: contactos = [], isLoading: loadingContactos } = useContactosCliente(id);
   const { data: embarquesCliente = [], isLoading: loadingEmbarques } = useEmbarquesCliente(id);
   const { data: cotizacionesCliente = [], isLoading: loadingCotizaciones } = useCotizacionesCliente(id);
@@ -57,6 +57,8 @@ export function useClienteDetalleController() {
     navigate,
     cliente,
     loadingCliente,
+    errorCliente,
+    refetchCliente,
     contactos,
     loadingContactos,
     embarquesCliente,

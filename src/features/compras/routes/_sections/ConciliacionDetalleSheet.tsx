@@ -27,7 +27,7 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
   const navigate = useNavigate();
   const embarqueId = embarque?.embarque_id ?? null;
 
-  const { data: filas = [], isLoading } = useQuery({
+  const { data: filas = [], isLoading, error, refetch } = useQuery({
     queryKey: compras.conciliacionDetalle(embarqueId),
     queryFn: () => fetchReconciliacionEmbarque(embarqueId as string),
     enabled: Boolean(embarqueId),
@@ -72,6 +72,8 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
             <div className="mt-4">
               <CuerpoTabla
                 isLoading={isLoading}
+                error={error}
+                onRetry={() => refetch()}
                 filas={filas}
                 expandidos={expandidos}
                 onToggle={toggle}

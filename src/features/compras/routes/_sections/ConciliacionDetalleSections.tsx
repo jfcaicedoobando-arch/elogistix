@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import EmptyState from "@/components/empty/EmptyState";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { getErrorMessage } from "@/lib/errors";
 import { formatCurrency } from "@/lib/formatters";
 import {
   calcularResumen,
@@ -164,15 +166,20 @@ function TotalesMonedaFooter({ totalesPorMoneda }: { totalesPorMoneda: TotalesMo
 }
 
 export function CuerpoTabla({
-  isLoading, filas, expandidos, onToggle, onVincular, totalesPorMoneda,
+  isLoading, error, onRetry, filas, expandidos, onToggle, onVincular, totalesPorMoneda,
 }: {
   isLoading: boolean;
+  error?: unknown;
+  onRetry?: () => void;
   filas: FilasType;
   expandidos: Set<string>;
   onToggle: (id: string) => void;
   onVincular: (conceptoId: string) => void;
   totalesPorMoneda: TotalesMoneda;
 }) {
+  if (error) {
+    return <ErrorStateInline message={getErrorMessage(error)} onRetry={onRetry} />;
+  }
   if (isLoading) {
     return <ListSkeleton rows={3} />;
   }

@@ -14,7 +14,7 @@ import { usePermissions } from "@/hooks/shared";
 
 export function useFacturaDetalleController(id: string | undefined) {
   const { canEdit, canRegistrarCobro } = usePermissions();
-  const { data: factura, isLoading } = useFactura(id);
+  const { data: factura, isLoading, error, refetch } = useFactura(id);
   const acuse = useAcuseCancelacion(factura);
   const { data: pagos = [] } = usePagosFactura(id);
   const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura ?? 0), 0);
@@ -32,7 +32,7 @@ export function useFacturaDetalleController(id: string | undefined) {
   const timbrarRep = useTimbrarRep(factura?.id);
 
   return {
-    canEdit, factura, isLoading, acuse, flags,
+    canEdit, factura, isLoading, error, refetch, acuse, flags,
     pagoRepPendiente, handleDownload, eliminar, eliminando,
     conceptosVivos, timbrarRep, saldo, totalPagado,
   };

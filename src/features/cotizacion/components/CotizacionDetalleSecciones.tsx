@@ -8,6 +8,8 @@ import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { formatDate } from "@/lib/formatters";
 import { RecotizarModal } from "@/features/cotizacion/components/versionado/RecotizarModal";
 import { CrearEmbarqueConRevalidacion } from "@/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion";
+import { accionesCotizacionPermitidas } from "@/features/cotizacion/domain/cotizacion";
+import type { AppRole } from "@/types/appRole";
 
 
 
@@ -72,20 +74,25 @@ interface AccionesProps {
   tieneEmbarquesVinculados?: boolean;
   onCambiarEstado: (e: "Enviada" | "Aceptada" | "Rechazada") => void;
   onAbrirConvertir: () => void;
+  total: number;
+  rol: AppRole | null | undefined;
 }
 
 
-function AccionesBorrador({ cotizacionId, onCambiarEstado }: { cotizacionId: string; onCambiarEstado: AccionesProps["onCambiarEstado"] }) {
+function AccionesBorrador({ cotizacionId, onCambiarEstado, puedeEnviar }: { cotizacionId: string; onCambiarEstado: AccionesProps["onCambiarEstado"]; puedeEnviar: boolean }) {
   const navigate = useNavigate();
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => navigate(`/cotizaciones/${cotizacionId}/editar`)}>Editar</Button>
-      <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Enviada")}>Marcar como Enviada</Button>
+      {puedeEnviar && (
+        <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Enviada")}>Marcar como Enviada</Button>
+      )}
     </>
   );
 }
 
-function AccionesBorradorOEnviada({ onCambiarEstado }: { onCambiarEstado: AccionesProps["onCambiarEstado"] }) {
+function AccionesBorradorOEnviada({ onCambiarEstado, puedeAceptarRechazar }: { onCambiarEstado: AccionesProps["onCambiarEstado"]; puedeAceptarRechazar: boolean }) {
+  if (!puedeAceptarRechazar) return null;
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Rechazada")}>Rechazar</Button>
@@ -106,9 +113,10 @@ function AccionCrearEmbarque({ cotizacionId, numContenedores }: { cotizacionId: 
 export function CotizacionDetalleAcciones({
   estado, esProspecto, numContenedores, cotizacionId, version,
   tieneEmbarquesVinculados = false,
-  onCambiarEstado, onAbrirConvertir,
+  onCambiarEstado, onAbrirConvertir, total, rol,
 }: AccionesProps) {
   const [recotizarOpen, setRecotizarOpen] = useState(false);
+  const acciones = accionesCotizacionPermitidas(estado, total, rol);
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
   const esAceptada = estado === "Aceptada";
   const mostrarCrearEmbarque = esAceptada && !esProspecto && !tieneEmbarquesVinculados;
@@ -118,8 +126,8 @@ export function CotizacionDetalleAcciones({
 
   return (
     <div className="flex flex-wrap gap-2">
-      {estado === "Borrador" && <AccionesBorrador cotizacionId={cotizacionId} onCambiarEstado={onCambiarEstado} />}
-      {esBorradorOEnviada && <AccionesBorradorOEnviada onCambiarEstado={onCambiarEstado} />}
+      {estado === "Borrador" && <AccionesBorrador cotizacionId={cotizacionId} onCambiarEstado={onCambiarEstado} puedeEnviar={acciones.enviar} />}
+      {esBorradorOEnviada && <AccionesBorradorOEnviada onCambiarEstado={onCambiarEstado} puedeAceptarRechazar={acciones.aceptar} />}
       {esAceptada && esProspecto && (
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}

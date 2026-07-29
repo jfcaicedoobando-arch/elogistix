@@ -24,7 +24,7 @@ import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
 
 export default function ComprasPorAprobar() {
-  const { canEdit } = usePermissions();
+  const { canEdit, canAprobarFacturaProveedor } = usePermissions();
   const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("pendiente");
   const [search, setSearch] = useState("");
   const [detalle, setDetalle] = useState<FacturaCxP | null>(null);
@@ -42,7 +42,7 @@ export default function ComprasPorAprobar() {
   const { data: aprobadas = [] } = useFacturasCxP({ aprobacion: "aprobada" });
   const { data: rechazadas = [] } = useFacturasCxP({ aprobacion: "rechazada" });
 
-  const seleccionEnLote = canEdit && aprobacion === "pendiente";
+  const seleccionEnLote = canAprobarFacturaProveedor && aprobacion === "pendiente";
 
   const columns = useMemo(() => {
     const base = buildCxPColumns();

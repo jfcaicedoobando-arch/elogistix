@@ -50,8 +50,8 @@ export function DialogDetallePagosProveedor({
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
   const [aCerrarSinPago, setACerrarSinPago] = useState<FacturaCxP | null>(null);
   const [openCancel, setOpenCancel] = useState(false);
-  const { canEditFinance, isAdmin } = usePermissions();
-  const puedeAprobar = canEditFinance || isAdmin;
+  const { canAprobarFacturaProveedor } = usePermissions();
+  const puedeAprobar = canAprobarFacturaProveedor;
   const flags = computeFacturaFlags(f, canEdit);
 
   return (

@@ -24,6 +24,8 @@ const flujo = (saldoFinal: number, semanas: SemanaFlujo[] = []): FlujoProyectado
   total_salidas_mxn: 0,
   saldo_final_mxn: saldoFinal,
   alertas_negativas: semanas.filter((s) => s.saldo_proyectado_mxn < 0).length,
+  saldo_incompleto: false,
+  excluido_por_moneda: {},
 });
 
 const tesoreria = (over: Partial<ResumenTesoreria> = {}): ResumenTesoreria => ({
@@ -37,6 +39,8 @@ const tesoreria = (over: Partial<ResumenTesoreria> = {}): ResumenTesoreria => ({
   top_deudores: [],
   top_acreedores: [],
   saldo_bancos_mxn: 0,
+  saldo_bancos_incompleto: false,
+  saldos_por_moneda: {},
   cartera_vencida_total_mxn: 0,
   cartera_vencida_count: 0,
   cxp_vencidas_count: 0,

@@ -39,8 +39,19 @@ export interface ResumenTesoreria {
   flujo: FlujoMes;
   top_deudores: TopItem[];
   top_acreedores: TopItem[];
-  /** v13.300.49 — Saldo bancario total convertido a MXN (MXN + USD*TC). */
+  /** v13.300.49 — Saldo bancario total convertido a MXN (MXN + USD*TC).
+   *  Q-06: sólo suma monedas con TC confiable; ver `saldo_bancos_incompleto`. */
   saldo_bancos_mxn: number;
+  /** Q-06: `true` si alguna cuenta en divisa extranjera no pudo convertirse
+   *  (sin TC vigente) y quedó fuera de `saldo_bancos_mxn`. */
+  saldo_bancos_incompleto: boolean;
+  /** Q-06: saldo nominal (sin convertir) agrupado por moneda, para mostrar
+   *  el desglose cuando no hay TC disponible. */
+  saldos_por_moneda: Record<string, number>;
+  /** Q-06: TC USD→MXN vigente usado para convertir (si lo hubo). */
+  tipo_cambio_usd?: number | null;
+  /** Q-06: fecha (YYYY-MM-DD) del TC DOF aplicado. */
+  tipo_cambio_fecha?: string | null;
   /** v13.300.49 — Cartera vencida completa (sin truncar a Top-5). */
   cartera_vencida_total_mxn: number;
   cartera_vencida_count: number;

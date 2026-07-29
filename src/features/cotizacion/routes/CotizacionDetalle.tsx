@@ -1,6 +1,10 @@
 import { useState } from "react";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import type { AppRole } from "@/types/appRole";
 import { useParams } from "react-router-dom";
 import { DetailSkeleton } from "@/components/shared/skeletons";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { getErrorMessage } from "@/lib/errors";
 import { EnviarCotizacionDialog } from "@/features/cotizacion/components/detalle/EnviarCotizacionDialog";
 import { HistorialEnviosCard } from "@/features/cotizacion/components/detalle/HistorialEnviosCard";
 import { useHistorialEnviosCotizacion } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
@@ -35,9 +39,10 @@ const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generat
 
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
+  const { effectiveRole } = useAuth();
 
   const {
-    cotizacion, isLoading, canEdit, tasaIva, embarquesVinculados,
+    cotizacion, isLoading, error, refetch, canEdit, tasaIva, embarquesVinculados,
     conceptosVentaUSD, conceptosVentaMXN,
     totalUSD, subtotalMXN, ivaMXN, totalMXN,
     nombreDestinatario,
@@ -51,6 +56,14 @@ export default function CotizacionDetalle() {
   const { data: envios = [] } = useHistorialEnviosCotizacion(cotizacion?.id);
 
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
+
+  if (error) {
+    return (
+      <PageContainer>
+        <ErrorStateInline message={getErrorMessage(error)} onRetry={() => refetch()} />
+      </PageContainer>
+    );
+  }
 
   if (isLoading) {
     return <DetailSkeleton sections={1} />;
@@ -112,6 +125,8 @@ export default function CotizacionDetalle() {
           tieneEmbarquesVinculados={embarquesVinculados.length > 0 || !!cotizacion.embarque_id}
           onCambiarEstado={handleCambiarEstado}
           onAbrirConvertir={abrirDialogConvertir}
+          total={totalUSD + totalMXN}
+          rol={effectiveRole as AppRole | null}
         />
       )}
 

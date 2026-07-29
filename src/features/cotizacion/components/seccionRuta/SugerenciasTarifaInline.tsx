@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
 import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./aplicarTarifa";
@@ -67,7 +68,7 @@ export default function SugerenciasTarifaInline({
     [tipoContenedor, tipos],
   );
 
-  const { data: tarifas = [], isFetching } = useTopTarifas({
+  const { data: tarifas = [], isFetching, error, refetch, isRefetching } = useTopTarifas({
     puertoOrigenId,
     puertoDestinoId,
     tipoContenedorId,
@@ -92,8 +93,7 @@ export default function SugerenciasTarifaInline({
     return (
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-dashed p-3">
         <p className="text-sm text-muted-foreground">
-          Selecciona puertos del catálogo y tipo de contenedor para ver
-          sugerencias automáticas, o busca manualmente.
+          Selecciona origen, destino y tipo de contenedor para ver tarifas.
         </p>
         <Button type="button" size="sm" variant="default" onClick={() => setOpenDialog(true)}>
           <Search className="size-4 mr-2" /> Buscar tarifa
@@ -135,14 +135,22 @@ export default function SugerenciasTarifaInline({
         </div>
       )}
 
-      {!isFetching && tarifas.length === 0 && (
+      {!isFetching && error && (
+        <ErrorStateInline
+          message={error instanceof Error ? error.message : "Error desconocido al consultar tarifas."}
+          onRetry={() => void refetch()}
+          retrying={isRefetching}
+        />
+      )}
+
+      {!isFetching && !error && tarifas.length === 0 && (
         <p className="text-sm text-muted-foreground rounded-md border border-dashed p-3">
           No hay tarifas vigentes para esta combinación. Cotiza manualmente o
           captura una nueva en "Tarifas marítimas".
         </p>
       )}
 
-      {!isFetching && tarifas.length > 0 && (
+      {!isFetching && !error && tarifas.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {tarifas.map((t, i) => (
             <TarifaResultCard

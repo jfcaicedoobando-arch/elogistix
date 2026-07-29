@@ -12,6 +12,10 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { withOrgPrefix } from "@/lib/filenames";
 import { ROUTES } from "@/constants/routes";
 import { todayLocalISO } from "@/lib/date/today";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
+import { formatFechaEs } from "@/lib/formatters/dates";
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "warn" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
@@ -70,7 +74,28 @@ export default function Tesoreria() {
       ) : (
         <>
           <section>
-            <h3 className="text-sm font-semibold mb-2 text-muted-foreground">Saldos en bancos</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-muted-foreground">Saldos en bancos</h3>
+              {data.tipo_cambio_usd ? (
+                <Badge variant="info">
+                  TC DOF ${data.tipo_cambio_usd.toFixed(4)}
+                  {data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""}
+                </Badge>
+              ) : null}
+            </div>
+            {data.saldo_bancos_incompleto && (
+              <Alert variant="warning" className="mb-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  No hay tipo de cambio confiable: el saldo bancario total excluye{" "}
+                  {Object.entries(data.saldos_por_moneda)
+                    .filter(([moneda]) => moneda !== "MXN")
+                    .map(([moneda, monto]) => `${formatCurrency(monto, moneda)} (${moneda})`)
+                    .join(", ")}
+                  .
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {data.cuentas.length === 0 ? (
                 <Card><CardContent density="compact" className="text-sm text-muted-foreground">Sin cuentas. <Link to={ROUTES.TESORERIA_CUENTAS} className="text-accent underline">Da de alta una</Link>.</CardContent></Card>

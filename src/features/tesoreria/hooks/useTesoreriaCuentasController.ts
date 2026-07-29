@@ -35,6 +35,14 @@ export function useTesoreriaCuentasController() {
 
   const reset = () => setForm(INITIAL_FORM);
 
+  /** Q-15.8: abrir el modal siempre parte de un formulario limpio; antes
+   *  conservaba el prellenado (o los datos capturados y cancelados) de la
+   *  sesión anterior. Al abrir (`v === true`) se resetea el formulario. */
+  const handleOpenChange = (v: boolean) => {
+    if (v) reset();
+    setOpen(v);
+  };
+
   const submit = async () => {
     if (!form.alias.trim()) {
       notifyError(undefined, { title: "Captura un alias", method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_1" });
@@ -72,7 +80,7 @@ export function useTesoreriaCuentasController() {
     cuentas,
     isLoading,
     open,
-    setOpen,
+    setOpen: handleOpenChange,
     form,
     setField,
     submit,

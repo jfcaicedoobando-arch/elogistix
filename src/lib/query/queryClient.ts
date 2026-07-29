@@ -127,6 +127,12 @@ function notifyQueryFailure(err: unknown, query: Query<unknown, unknown, unknown
     error: err,
     method: "QUERY_CACHE",
     context: { queryKey: query.queryKey, root },
+    // Q-08: la acción primaria reintenta en el lugar; nunca navega fuera de
+    // la pantalla (antes se perdía el wizard de cotización a medio llenar).
+    action: {
+      label: "Reintentar",
+      onClick: () => { void queryClient.refetchQueries({ queryKey: query.queryKey }); },
+    },
   });
 }
 

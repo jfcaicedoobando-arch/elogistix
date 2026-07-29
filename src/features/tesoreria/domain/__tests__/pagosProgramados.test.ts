@@ -75,3 +75,14 @@ describe("agruparPorSemana", () => {
     expect(agruparPorSemana(facturas)).toHaveLength(0);
   });
 });
+
+describe("agruparPorSemana — Q-15.1 sin corrimiento de zona horaria (MX)", () => {
+  it("una factura que vence lunes cae en la semana que inicia ese lunes exacto", () => {
+    const facturas: FacturaProgramable[] = [
+      factura({ id: "z1", fecha_vencimiento: "2026-08-03", fecha_programada_pago: null }), // lunes
+    ];
+    const semanas = agruparPorSemana(facturas);
+    expect(semanas).toHaveLength(1);
+    expect(semanas[0].semanaInicio).toBe("2026-08-03");
+  });
+});

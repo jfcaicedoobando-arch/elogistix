@@ -17,6 +17,7 @@ export type {
   CxpRow,
   LiquidacionRow,
 } from "./resumen.types";
+import { aMxn } from "@/lib/financial/convertir";
 import type {
   ResumenCuenta,
   FlujoMes,
@@ -38,6 +39,8 @@ export function calcularResumenTesoreria(args: {
    * proporciona, se usa `1` (compatibilidad con callers que no manejan TC).
    */
   tipoCambioUsd?: number;
+  /** Q-06: fecha (YYYY-MM-DD) del TC DOF aplicado, sólo para exhibir en UI. */
+  tipoCambioFecha?: string | null;
 }): ResumenTesoreria {
   const hoy = args.hoy ?? new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -66,10 +69,8 @@ export function calcularResumenTesoreria(args: {
     dias: (f) => f.dias_vencido,
   });
 
-  const saldo_bancos_mxn = args.cuentas.reduce(
-    (acc, c) => acc + (c.moneda === "USD" ? c.saldo * tc : c.saldo),
-    0,
-  );
+  const { total: saldo_bancos_mxn, incompleto: saldo_bancos_incompleto, porMoneda: saldos_por_moneda } =
+    sumarSaldosCuentas(args.cuentas, args.tipoCambioUsd);
 
   return {
     cuentas: args.cuentas,
@@ -77,11 +78,37 @@ export function calcularResumenTesoreria(args: {
     top_deudores,
     top_acreedores,
     saldo_bancos_mxn,
+    saldo_bancos_incompleto,
+    saldos_por_moneda,
+    tipo_cambio_usd: args.tipoCambioUsd ?? null,
+    tipo_cambio_fecha: args.tipoCambioFecha ?? null,
     cartera_vencida_total_mxn: vencidasCobranza.total_mxn,
     cartera_vencida_count: vencidasCobranza.count,
     cxp_vencidas_count: vencidasCxp.count,
     cxp_vencidas_total_mxn: vencidasCxp.total_mxn,
   };
+}
+
+/**
+ * Q-06 · Suma saldos de cuentas convirtiendo divisas con `aMxn` (canon único).
+ * Sin TC confiable, la cuenta en divisa extranjera NO se suma a `total`
+ * (queda marcada en `incompleto` y su monto nominal en `porMoneda`).
+ */
+export function sumarSaldosCuentas(
+  cuentas: ResumenCuenta[],
+  tipoCambioUsd?: number,
+): { total: number; incompleto: boolean; porMoneda: Record<string, number> } {
+  let total = 0;
+  let incompleto = false;
+  const porMoneda: Record<string, number> = {};
+  for (const c of cuentas) {
+    const moneda = (c.moneda ?? "MXN").toUpperCase();
+    porMoneda[moneda] = (porMoneda[moneda] ?? 0) + c.saldo;
+    const conv = aMxn(c.saldo, moneda, moneda === "USD" ? tipoCambioUsd : undefined);
+    if (conv.completo) total += conv.monto;
+    else incompleto = true;
+  }
+  return { total, incompleto, porMoneda };
 }
 
 function calcularFlujo(

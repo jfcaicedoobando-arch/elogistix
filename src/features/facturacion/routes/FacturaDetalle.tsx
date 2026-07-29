@@ -15,6 +15,8 @@ import { useVolverAFacturaOriginal } from "@/features/facturacion/hooks/useVolve
 import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
 import { useFacturaDetalleController } from "@/features/facturacion/hooks/useFacturaDetalleController";
 import { FacturaDetalleView } from "@/features/facturacion/components/detalle/FacturaDetalleView";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { getErrorMessage } from "@/lib/errors";
 
 function FacturaNoEncontrada() {
   return (
@@ -33,7 +35,7 @@ function FacturaNoEncontrada() {
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const controller = useFacturaDetalleController(id);
-  const { canEdit, factura, isLoading, flags } = controller;
+  const { canEdit, factura, isLoading, error, refetch, flags } = controller;
   useRegisterBreadcrumbLabel(id, factura?.numero);
   const dialogs = useFacturaDetalleDialogs();
   const { puedeTimbrarDesdeSistema } = flags;
@@ -45,6 +47,17 @@ export default function FacturaDetalle() {
     return (
       <PageContainer>
         <DetailSkeleton />
+      </PageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageContainer>
+        <ErrorStateInline
+          message={getErrorMessage(error)}
+          onRetry={() => void refetch()}
+        />
       </PageContainer>
     );
   }

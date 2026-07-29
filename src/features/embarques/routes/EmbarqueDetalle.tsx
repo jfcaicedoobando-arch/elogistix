@@ -17,6 +17,8 @@ import DialogDuplicarEmbarque from "@/features/embarques/components/DialogDuplic
 import { EmbarqueDetalleHeader } from "@/features/embarques/components/EmbarqueDetalleHeader";
 import { EmbarqueDetalleTabs } from "@/features/embarques/components/EmbarqueDetalleTabs";
 import { LoadingState, NotFoundState } from "./EmbarqueDetalleStates";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { getErrorMessage } from "@/lib/errors";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
@@ -46,7 +48,7 @@ export default function EmbarqueDetalle() {
   const { canEdit } = usePermissions();
   const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen", "tab", TABS_LEGACY);
 
-  const { embarque, isLoading } = useEmbarqueDetalleData(id);
+  const { embarque, isLoading, error, refetch } = useEmbarqueDetalleData(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
@@ -54,6 +56,13 @@ export default function EmbarqueDetalle() {
 
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
+  if (error) {
+    return (
+      <PageContainer>
+        <ErrorStateInline message={getErrorMessage(error)} onRetry={() => refetch()} />
+      </PageContainer>
+    );
+  }
   if (isLoading) return <LoadingState />;
   if (!embarque) return <NotFoundState />;
 

@@ -28,7 +28,7 @@ import { ComprasCapturaTrend } from "./_sections/ComprasCapturaTrend";
 import { ROUTES } from "@/constants/routes";
 
 export default function Compras() {
-  const { canEdit } = usePermissions();
+  const { canCapturarFacturaProveedor } = usePermissions();
   const { data: cxp = [], kpis } = useFacturasCxP();
   const { data: porCapturar = [] } = useCxpPorCapturar();
   const { rowsFiltradas: aging, totales: agingTotales, monedaActiva: agingMoneda } = useCxpAging();
@@ -69,7 +69,7 @@ export default function Compras() {
         icon={<ShoppingCart className="h-6 w-6 text-accent" />}
         title="Compras"
         description="Facturas de proveedor, aprobaciones y pagos."
-        actions={canEdit ? (
+        actions={canCapturarFacturaProveedor ? (
           <Button onClick={() => setOpenNueva(true)}>
             <Plus className="h-4 w-4 mr-2" /> Capturar factura
           </Button>

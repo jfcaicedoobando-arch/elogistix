@@ -25,7 +25,8 @@ function AvanceBadge({ row }: { row: RowData }) {
 }
 
 interface BuildOpts {
-  onCapturar: (row: RowData) => void;
+  /** Si es `undefined`, el usuario no tiene permiso de captura: se oculta la columna/botón. */
+  onCapturar?: (row: RowData) => void;
   hideEstatus?: boolean;
 }
 
@@ -121,7 +122,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
         );
       },
     },
-    {
+    onCapturar ? {
       id: "acciones",
       header: "",
       meta: { width: "w-[56px]", align: "center" },
@@ -143,7 +144,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
           </Tooltip>
         </div>
       ),
-    },
+    } : null,
   ];
   return defineColumns<RowData>(all.filter((c): c is ColumnDef<RowData, unknown> => c !== null));
 }
