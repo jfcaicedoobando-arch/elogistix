@@ -16,29 +16,41 @@ import {
   useTesoreriaCuentasController,
   type Moneda,
 } from "@/features/tesoreria/hooks/useTesoreriaCuentasController";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 export default function TesoreriaCuentas() {
   const {
     cuentas, isLoading, open, setOpen, form, setField, submit, submitting,
     deleteTarget, solicitarEliminar, cancelarEliminar, confirmarEliminar, eliminando,
   } = useTesoreriaCuentasController();
+  // Sentry JAVASCRIPT-REACT-3S/3T: `tesorero` y `contador` sólo tienen lectura
+  // en `cuentas_bancarias` (RLS). Antes veían los botones y chocaban con 42501.
+  const { canAdminTenant } = usePermissions();
 
   return (
     <PageContainer>
       <PageHeader
         title="Cuentas bancarias"
-        description="Alta y administración de cuentas para conciliación"
+        description={
+          canAdminTenant
+            ? "Alta y administración de cuentas para conciliación"
+            : "Consulta de cuentas para conciliación (sólo administradores pueden editarlas)"
+        }
         actions={
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Nueva cuenta
-          </Button>
+          canAdminTenant ? (
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" /> Nueva cuenta
+            </Button>
+          ) : undefined
         }
       />
 
       {isLoading ? (
         <KpiGridSkeleton count={3} heightClass="h-32" desktopCols={3} />
       ) : cuentas.length === 0 ? (
-        <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">Aún no hay cuentas. Crea la primera.</CardContent></Card>
+        <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">
+          {canAdminTenant ? "Aún no hay cuentas. Crea la primera." : "Aún no hay cuentas registradas."}
+        </CardContent></Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           {cuentas.map((c) => (
@@ -49,12 +61,14 @@ export default function TesoreriaCuentas() {
                     <p className="font-semibold">{c.alias}</p>
                     <p className="text-xs text-muted-foreground">{c.banco} · {c.moneda}</p>
                   </div>
-                  <Button
-                    variant="ghost" size="icon"
-                    onClick={() => solicitarEliminar(c.id, c.alias)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  {canAdminTenant && (
+                    <Button
+                      variant="ghost" size="icon"
+                      onClick={() => solicitarEliminar(c.id, c.alias)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
                 </div>
                 {c.numero_cuenta && <p className="text-xs">Cuenta: <span className="font-mono">{c.numero_cuenta}</span></p>}
                 {c.clabe && <p className="text-xs">CLABE: <span className="font-mono">{c.clabe}</span></p>}

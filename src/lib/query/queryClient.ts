@@ -28,6 +28,9 @@ function isExpectedBusinessError(err: unknown): boolean {
   if (!err || typeof err !== "object") return false;
   const e = err as { code?: unknown; name?: unknown; message?: unknown; status?: unknown };
   if (typeof e.code === "string" && e.code === "P0001") return true;
+  // 13.338.0 — 23514 (check constraint) son guardas de negocio: "Embarque
+  // cerrado: edición bloqueada". La UI ya lo explica. Ver Sentry -40.
+  if (typeof e.code === "string" && e.code === "23514") return true;
   if (typeof e.name === "string" && BUSINESS_ERROR_NAMES.has(e.name)) return true;
   if (e.status === 504) return true;
   if (typeof e.message === "string") {
@@ -36,6 +39,27 @@ function isExpectedBusinessError(err: unknown): boolean {
   }
   return false;
 }
+
+/**
+ * Convierte errores crudos de PostgREST (objetos planos con `code`, `details`,
+ * `hint`, `message`) en `Error` reales para que Sentry agrupe por mensaje en
+ * vez de titular "Object captured as exception with keys: …" o "M".
+ * Devuelve también tags derivados (`pg_code`).
+ */
+function normalizeForSentry(err: unknown): { error: unknown; pgTags: Record<string, string> } {
+  if (err instanceof Error || !err || typeof err !== "object") {
+    return { error: err, pgTags: {} };
+  }
+  const e = err as { code?: unknown; message?: unknown; details?: unknown; hint?: unknown };
+  const message = typeof e.message === "string" && e.message.length > 0
+    ? e.message
+    : "unknown error";
+  const normalized = new Error(message, { cause: err });
+  const pgTags: Record<string, string> = {};
+  if (typeof e.code === "string") pgTags.pg_code = e.code;
+  return { error: normalized, pgTags };
+}
+
 
 /**
  * Reporta a Sentry los errores que React Query rescata en su pipeline
@@ -69,12 +93,13 @@ function reportQueryError(
       .catch(() => undefined);
     return;
   }
-  const tags: Record<string, string> = { feature: "react_query", kind };
+  const { error: normalized, pgTags } = normalizeForSentry(err);
+  const tags: Record<string, string> = { feature: "react_query", kind, ...pgTags };
   if (rootKey) tags[kind === "query" ? "query_root" : "mutation_root"] = rootKey.slice(0, 64);
   if (opKey && kind === "mutation") tags.mutation_op = opKey.slice(0, 64);
   void import("@sentry/react")
     .then(({ captureException }) =>
-      captureException(err, { tags, extra: meta }),
+      captureException(normalized, { tags, extra: meta }),
     )
     .catch(() => undefined);
 }
