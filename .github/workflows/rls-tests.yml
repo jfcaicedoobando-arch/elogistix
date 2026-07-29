@@ -258,6 +258,7 @@ jobs:
           - anon_deny_all
           - cross_tenant_mutations
           - policy_linter
+          - soft_delete_rpcs
           - storage_objects
 
     services:
