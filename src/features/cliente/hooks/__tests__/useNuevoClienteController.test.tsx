@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { useNuevoClienteController } from "../useNuevoClienteController";
+import { useNuevoClienteController, DOC_CSF } from "../useNuevoClienteController";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
 vi.mock("@/features/cliente/hooks/useClientes", () => ({
@@ -45,6 +45,33 @@ describe("useNuevoClienteController", () => {
     
     expect(result.current.step).toBe(2);
     expect(result.current.documentos).toHaveLength(11); // DOCS_OBLIGATORIOS length
+  });
+
+  it("P-08: sólo la CSF bloquea el alta; el resto del expediente es opcional", () => {
+    const { result } = renderHook(() => useNuevoClienteController(vi.fn()), { wrapper: createWrapper() });
+
+    act(() => {
+      result.current.handleChange("nombre", "Cliente Test");
+      result.current.handleChange("rfc", "TEST123456");
+      result.current.handleChange("cp", "12345");
+      result.current.handleChange("regimen_fiscal", "601");
+      result.current.handleChange("email", "test@example.com");
+      result.current.handleChange("telefono", "5555555555");
+      result.current.handleChange("contacto", "Juan Pérez");
+    });
+    act(() => { result.current.handleNext(); });
+
+    expect(result.current.docsRequeridosCompletos).toBe(false);
+
+    act(() => {
+      result.current.handleFileChange(
+        DOC_CSF,
+        new File(["x"], "csf.pdf", { type: "application/pdf" }),
+      );
+    });
+
+    expect(result.current.docsRequeridosCompletos).toBe(true);
+    expect(result.current.documentos.filter((d) => d.requerido).length).toBe(1);
   });
 
   it("handles CSF upload and extraction", async () => {

@@ -8278,6 +8278,23 @@ export type Database = {
         Args: { p_motivo?: string; p_proforma_id: string; p_respuesta: string }
         Returns: Json
       }
+      portal_solicitar_cotizacion: {
+        Args: {
+          p_cliente_id: string
+          p_descripcion_mercancia?: string
+          p_destino: string
+          p_modo: Database["public"]["Enums"]["modo_transporte"]
+          p_notas?: string
+          p_origen: string
+          p_tipo: Database["public"]["Enums"]["tipo_operacion"]
+          p_tipo_contenedor?: string
+          p_tipo_embarque?: string
+        }
+        Returns: {
+          folio: string
+          id: string
+        }[]
+      }
       portal_update_contacto: {
         Args: { _nombre: string; _telefono: string }
         Returns: undefined

@@ -1,4 +1,8 @@
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { DashboardSkeleton } from "@/components/shared/skeletons";
+import { SolicitarCotizacionDialog } from "@/features/portal/components/SolicitarCotizacionDialog";
 
 import {
   usePortalEmbarques,
@@ -18,6 +22,7 @@ import { PortalFacturacionPendienteCard } from "@/features/portal/components/das
 import { PortalEmbarquesRecientesCard } from "@/features/portal/components/dashboard/PortalEmbarquesRecientesCard";
 
 export default function PortalDashboard() {
+  const [solicitudAbierta, setSolicitudAbierta] = useState(false);
   const { data: clientUsers = [] } = usePortalClientUsers();
   const { data: clienteName } = usePortalClienteName();
   const { data: orgName } = usePortalOrgName();
@@ -44,7 +49,21 @@ export default function PortalDashboard() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <PortalWelcomeCard clienteName={clienteName} orgName={orgName} />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex-1">
+          <PortalWelcomeCard clienteName={clienteName} orgName={orgName} />
+        </div>
+        <Button className="sm:self-stretch" onClick={() => setSolicitudAbierta(true)}>
+          <Plus className="h-4 w-4 mr-1" aria-hidden /> Solicitar cotización
+        </Button>
+      </div>
+
+      <SolicitarCotizacionDialog
+        open={solicitudAbierta}
+        onOpenChange={setSolicitudAbierta}
+        clienteId={clienteIds[0]}
+        clienteIds={clienteIds}
+      />
 
       <PortalKpiGrid
         values={{

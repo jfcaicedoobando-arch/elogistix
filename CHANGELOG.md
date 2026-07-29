@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.334.0] - 2026-07-29
+- Portal del cliente: nuevo botón "Solicitar cotización" en el inicio y en Mis Cotizaciones; la solicitud llega al equipo comercial como cotización en borrador con folio propio.
+- Portal del cliente: si la cuenta todavía no está vinculada a una empresa, ahora se explica con una pantalla clara en lugar de mostrar tableros vacíos.
+- Al entrar por un enlace directo sin sesión, después de iniciar sesión se regresa a la página pedida (antes siempre caía en el inicio); sólo se respetan rutas del área que corresponde a cada rol.
+- Cuando el cliente aún no tiene cotizaciones, el estado vacío invita a solicitar la primera en vez de sugerir limpiar filtros.
+- Alta de clientes: sólo la Constancia de Situación Fiscal es obligatoria; los demás documentos quedan marcados como opcionales y pueden subirse después desde el detalle del cliente.
+
+
 ## [13.333.0] - 2026-07-29
 - Se eliminaron funciones duplicadas en la base que provocaban el error "no se pudo elegir la función" al generar el número de expediente de un embarque nuevo.
 - Tesorería: los roles Tesorero y Contador ya pueden ver las cuentas bancarias y los movimientos BBVA de su empresa (antes el módulo les salía vacío); el Tesorero además puede conciliar movimientos.

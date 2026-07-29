@@ -4,7 +4,9 @@ import { PageSkeleton } from "@/components/shared/skeletons";
 import { usePortalCotizaciones, usePortalClientUsers } from "@/features/portal/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { ClipboardList, Ship } from "lucide-react";
+import { ClipboardList, Ship, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SolicitarCotizacionDialog } from "@/features/portal/components/SolicitarCotizacionDialog";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
@@ -22,6 +24,7 @@ export default function PortalCotizaciones() {
   const tasaIva = useTasaIVA();
   const [search, setSearch] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [solicitudAbierta, setSolicitudAbierta] = useState(false);
 
   const estados = useMemo(() => {
     const set = new Set(cotizaciones.map((c) => c.estado));
@@ -52,7 +55,21 @@ export default function PortalCotizaciones() {
       <PageHeader
         icon={<ClipboardList className="h-6 w-6 text-accent" />}
         title="Mis Cotizaciones"
-        actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>}
+        actions={
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>
+            <Button size="sm" onClick={() => setSolicitudAbierta(true)}>
+              <Plus className="h-4 w-4 mr-1" aria-hidden /> Solicitar cotización
+            </Button>
+          </div>
+        }
+      />
+
+      <SolicitarCotizacionDialog
+        open={solicitudAbierta}
+        onOpenChange={setSolicitudAbierta}
+        clienteId={clienteIds[0]}
+        clienteIds={clienteIds}
       />
 
       <PortalFiltersBar
@@ -81,13 +98,18 @@ export default function PortalCotizaciones() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={ClipboardList}
-          title="No se encontraron cotizaciones"
-          description="Ajusta los filtros o busca con otro término."
+          title={search || filtroEstado !== "todos" ? "No se encontraron cotizaciones" : "Aún no tienes cotizaciones"}
+          description={search || filtroEstado !== "todos"
+            ? "Ajusta los filtros o busca con otro término."
+            : "Solicita tu primera cotización y nuestro equipo te enviará una propuesta."}
           primaryAction={search || filtroEstado !== "todos" ? {
             label: "Limpiar filtros",
             variant: "outline",
             onClick: () => { setSearch(""); setFiltroEstado("todos"); },
-          } : undefined}
+          } : {
+            label: "Solicitar cotización",
+            onClick: () => setSolicitudAbierta(true),
+          }}
         />
       ) : (
         <div className="grid gap-3">

@@ -7,3 +7,4 @@ export * from "./facturaSaldo";
 export * from "./columns";
 export * from "./notificaciones";
 export * from "./perfil";
+export * from "./solicitudes";

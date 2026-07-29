@@ -5,3 +5,4 @@ export * from './usePortalData';
 export * from './usePortalDocumentDownload';
 export * from './usePortalEmbarquesController';
 export * from './usePortalPerfil';
+export * from './useSolicitarCotizacion';

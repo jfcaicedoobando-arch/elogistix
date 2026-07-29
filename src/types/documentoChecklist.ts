@@ -6,4 +6,6 @@ export interface DocumentoChecklist {
   nombre: string;
   archivo?: string;
   adjuntado: boolean;
+  /** Si es false, el documento puede completarse después del alta. */
+  requerido?: boolean;
 }
