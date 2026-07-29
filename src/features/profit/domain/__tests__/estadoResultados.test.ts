@@ -85,12 +85,12 @@ describe("buildEstadoResultados – conversión EUR", () => {
     expect(er.utilidad.total).toBe((200 - 50) * 19.5);
   });
 
-  it("usa fallback 1 cuando tipo_cambio_eur es null", () => {
+  it("FIX C6: excluye el monto cuando tipo_cambio_eur es null (nunca lo suma como MXN)", () => {
     const eurEmb: EmbarqueER = { id: "e-eur2", modo: "Marítimo", tipo_cambio_usd: 17, tipo_cambio_eur: null };
     const ventas: ConceptoVentaER[] = [
       { embarque_id: "e-eur2", descripcion: "Flete EUR", total: 100, moneda: "EUR" },
     ];
     const er = buildEstadoResultados([eurEmb], ventas, []);
-    expect(er.totalIngresos.total).toBe(100);
+    expect(er.totalIngresos.total).toBe(0);
   });
 });
