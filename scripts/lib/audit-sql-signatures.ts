@@ -189,3 +189,37 @@ export function scanSecurityDefiner(
   }
   return out;
 }
+
+/**
+ * H8 (FIX-F964) — Backfills que invocan funciones con guard multi-tenant.
+ *
+ * `saldo_factura` y similares devuelven 0 cuando `auth.uid()` es NULL (contexto
+ * de migración). Un backfill que las use interpreta ese 0 como "saldo cero" y
+ * corrompe datos masivamente. Regla: dentro de un bloque `DO $...$` que
+ * contenga UPDATE/INSERT/DELETE, están prohibidas estas funciones.
+ */
+export const FUNCIONES_CON_GUARD_TENANT = [
+  "saldo_factura",
+  "saldo_factura_bruto",
+  "current_user_org_id",
+];
+
+export function scanBackfillTenantGuard(file: string, body: string): Violation[] {
+  const out: Violation[] = [];
+  const doBlockRe = /\bdo\s+\$([a-z0-9_]*)\$([\s\S]*?)\$\1\$/gi;
+  for (const m of body.matchAll(doBlockRe)) {
+    const block = m[2];
+    if (!/\b(update|insert\s+into|delete\s+from)\b/i.test(block)) continue;
+    for (const fn of FUNCIONES_CON_GUARD_TENANT) {
+      const re = new RegExp(`\\b(?:public\\.)?${fn}\\s*\\(`, "i");
+      if (re.test(block)) {
+        out.push({
+          file,
+          check: "H8",
+          detail: `backfill DO $$ usa public.${fn}() (guard multi-tenant → devuelve 0 sin auth.uid())`,
+        });
+      }
+    }
+  }
+  return out;
+}

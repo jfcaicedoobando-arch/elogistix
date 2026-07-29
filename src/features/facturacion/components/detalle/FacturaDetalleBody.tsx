@@ -79,6 +79,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
         facturaNumero={factura.numero}
         totalFactura={Number(factura.total)}
         moneda={factura.moneda}
+        estadoFactura={factura.estado}
         canEdit={canEdit}
         onRegistrarPago={onRegistrarPago}
       />

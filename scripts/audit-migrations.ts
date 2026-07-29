@@ -32,7 +32,11 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { scanSecurityDefiner, type Violation } from "./lib/audit-sql-signatures";
+import {
+  scanSecurityDefiner,
+  scanBackfillTenantGuard,
+  type Violation,
+} from "./lib/audit-sql-signatures";
 
 
 const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
@@ -138,6 +142,9 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
         "ALTER TYPE ... RENAME VALUE sin recrear funciones dependientes en el mismo archivo",
     });
   }
+
+  // H8 (FIX-F964) — backfills que usan funciones con guard multi-tenant.
+  out.push(...scanBackfillTenantGuard(file, body));
 
   return out;
 }

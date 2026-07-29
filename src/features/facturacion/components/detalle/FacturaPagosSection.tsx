@@ -7,8 +7,9 @@
  * v13.232.0 · Confirmación de eliminar pago migrada a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
-import { CheckCircle2, Clock } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
@@ -26,12 +27,14 @@ interface Props {
   totalFactura: number;
   moneda: string;
   canEdit: boolean;
+  /** Estado actual de la factura (para detectar inconsistencias contables). */
+  estadoFactura?: string;
   /** @deprecated Ahora el botón vive en `FacturaDetalleActionsBar`. */
   onRegistrarPago?: () => void;
 }
 
 export function FacturaPagosSection({
-  facturaId, facturaNumero, totalFactura, moneda, canEdit,
+  facturaId, facturaNumero, totalFactura, moneda, canEdit, estadoFactura,
 }: Props) {
   const { data: pagos = [], isLoading } = usePagosFactura(facturaId);
   const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(facturaId);
@@ -47,6 +50,13 @@ export function FacturaPagosSection({
     notasAplicadas,
   );
   const liquidada = sinSaldo && pagos.length > 0;
+
+  // FIX-F964: el estado dice "Pagada" pero no hay respaldo (ni pagos ni NC aplicadas).
+  const inconsistente =
+    !isLoading &&
+    (estadoFactura === "Pagada" || estadoFactura === "Parcialmente pagada") &&
+    pagos.length === 0 &&
+    notasAplicadas.length === 0;
 
   const handleEliminar = async () => {
     if (!pagoAEliminar) return;
@@ -84,6 +94,17 @@ export function FacturaPagosSection({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {inconsistente && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Estado inconsistente</AlertTitle>
+              <AlertDescription>
+                La factura aparece como «{estadoFactura}» pero no tiene pagos ni notas de
+                crédito aplicadas que lo respalden. Verifica con Cobranza antes de usarla
+                en reportes.
+              </AlertDescription>
+            </Alert>
+          )}
           {isLoading ? (
             <ListSkeleton rows={3} />
           ) : pagos.length === 0 ? (
