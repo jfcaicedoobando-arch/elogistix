@@ -5,7 +5,8 @@
  * Conversión a MXN usando tipo_cambio_usd / tipo_cambio_eur del embarque.
  */
 import currency from "currency.js";
-import { convertirAMXN, calcularMargen, type Moneda } from "@/lib/financial/financialUtils";
+import { calcularMargen } from "@/lib/financial/financialUtils";
+import { convertirMxn } from "@/lib/financial/convertir";
 
 export type ModoColumna = "Marítimo" | "Aéreo" | "Terrestre" | "Otros";
 export const MODOS_COLUMNAS: readonly ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre", "Otros"] as const;
