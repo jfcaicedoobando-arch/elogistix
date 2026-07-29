@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useToast } from "@/hooks/shared";
 import { useDebouncedValue } from "@/lib/hooks";
 import { DataTable } from "@/components/shared/DataTable";
 import {
@@ -10,7 +9,10 @@ import {
 } from "@/features/admin/hooks/usuario";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { notifyWarning } from "@/lib/ui/appFeedback";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
@@ -23,24 +25,30 @@ export function UsuariosInternosTab() {
   const [busqueda, setBusqueda] = useState("");
   const busquedaDebounced = useDebouncedValue(busqueda.trim().toLowerCase(), 200);
   const [filtroRol, setFiltroRol] = useState<string>(TODOS);
-  const { toast } = useToast();
   const { user } = useAuth();
-  const { data: users = [], isLoading } = useUsuarios();
+  const { data: users = [], isLoading, refetch, isFetching } = useUsuarios();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
-  const warnedRef = useRef(false);
+  const reportedRef = useRef(false);
+
+  // P-09: si la edge function `user-management` falla, los correos quedan como
+  // placeholder. Antes sólo había un toast efímero; ahora mostramos un banner
+  // persistente con reintento y lo reportamos a Sentry una sola vez.
+  const correosNoResueltos = useMemo(
+    () => users.filter((u) => u.email === UNRESOLVED_EMAIL).length,
+    [users],
+  );
 
   useEffect(() => {
-    if (isLoading || warnedRef.current) return;
-    const unresolved = users.filter((u) => u.email === UNRESOLVED_EMAIL).length;
-    if (unresolved > 0) {
-      warnedRef.current = true;
-      notifyWarning(undefined, {
-        title: "Correos no disponibles",
-        description: `No se pudieron resolver los correos de ${unresolved} usuario(s). Verifica la conexión con el servidor de autenticación.`,
-      });
-    }
-  }, [users, isLoading, toast]);
+    if (isLoading || reportedRef.current || correosNoResueltos === 0) return;
+    reportedRef.current = true;
+    reportCaughtError(
+      new Error("user-management: correos sin resolver"),
+      { feature: "admin_usuarios", op: "list_emails" },
+      { correosNoResueltos, total: users.length },
+    );
+  }, [correosNoResueltos, isLoading, users.length]);
+
 
 
   const confirmRoleChange = async () => {
@@ -105,6 +113,22 @@ export function UsuariosInternosTab() {
         onConfirm={confirmRoleChange}
         onCancel={() => setPendingRole(null)}
       />
+
+      {correosNoResueltos > 0 ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" aria-hidden />
+          <AlertTitle>No se pudieron cargar los correos</AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center gap-3">
+            <span>
+              {correosNoResueltos} usuario(s) se muestran sin correo porque el servicio de
+              autenticación no respondió.
+            </span>
+            <Button size="sm" variant="outline" onClick={() => void refetch()} disabled={isFetching}>
+              Reintentar
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <UsuariosToolbar
         busqueda={busqueda}

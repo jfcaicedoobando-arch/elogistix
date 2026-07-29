@@ -45,9 +45,14 @@ export const useAuth = () => useContext(AuthContext);
  * Toda la lógica vive en `contexts/auth/` para mantener responsabilidades aisladas.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, session, loading, lastEvent } = useAuthSession();
-  const { profile, reset: resetProfile, refresh: refreshProfile } = useAuthProfile(user?.id ?? null);
+  const { user, session, loading: sessionLoading, lastEvent } = useAuthSession();
+  const { profile, profileLoading, reset: resetProfile, refresh: refreshProfile } = useAuthProfile(user?.id ?? null);
   const { clearLoginAudit } = useLoginAudit(user, lastEvent);
+
+  // P-04: `loading` debe cubrir también la resolución del perfil/rol. Si sólo
+  // cubriera la sesión, `ProtectedRoute` monta la app interna (sidebar + RPCs)
+  // durante la ventana en que `user != null` pero `role == null`.
+  const loading = sessionLoading || (!!user && profileLoading);
 
   // effectiveRole: orgRole para usuarios regulares, rol global para super_admin
   const effectiveRole: AppRole | null =
