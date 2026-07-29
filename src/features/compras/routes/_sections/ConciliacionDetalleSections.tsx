@@ -14,8 +14,6 @@ import { formatCurrency } from "@/lib/formatters";
 import {
   calcularResumen,
   calcularResumenPorEstatus,
-  calcularResumenPorMoneda,
-  fetchReconciliacionEmbarque,
 } from "@/features/embarques/services/reconciliacionCostos";
 import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
 import {
@@ -23,8 +21,13 @@ import {
   EstatusCount,
   ResumenTile,
 } from "./ConciliacionDetalleParts";
-import { classFromNumber, toneFromNumber } from "./ConciliacionDetalleHelpers";
-import { FilaRenglon } from "./ConciliacionDetalleFilaRenglon";
+import { toneFromNumber } from "./ConciliacionDetalleHelpers";
+import {
+  TablaBody,
+  TotalesMonedaFooter,
+  type FilasType,
+  type TotalesMoneda,
+} from "./ConciliacionDetalleCuerpoTabla";
 
 export function HeaderPanel({
   embarque, onOpenEmbarque,
