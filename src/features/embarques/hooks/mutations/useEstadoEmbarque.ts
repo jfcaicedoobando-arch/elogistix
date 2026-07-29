@@ -108,13 +108,15 @@ export function useSyncEstadoEmbarque() {
 export function useReabrirEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueId, usuarioEmail, requestId }: { embarqueId: string; usuarioEmail: string; requestId?: string }) => {
+    mutationFn: async ({ embarqueId, usuarioEmail, motivo, requestId }: { embarqueId: string; usuarioEmail: string; motivo: string; requestId?: string }) => {
       await reabrirEmbarqueRpc({
         embarqueId,
         usuarioEmail,
+        motivo,
         requestId: requestId ?? newRequestId(),
       });
     },
+
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
