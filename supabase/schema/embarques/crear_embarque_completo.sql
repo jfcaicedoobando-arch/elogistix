@@ -53,8 +53,8 @@ BEGIN
     CASE WHEN p_embarque->>'etd' IS NOT NULL THEN (p_embarque->>'etd')::date END,
     CASE WHEN p_embarque->>'eta' IS NOT NULL THEN (p_embarque->>'eta')::date END,
     -- FIX-BL-11: sin default; NULL si no viene.
-    NULLIF(p_embarque->>'tipo_cambio_usd','')::numeric,
-    NULLIF(p_embarque->>'tipo_cambio_eur','')::numeric,
+    NULLIF(NULLIF(p_embarque->>'tipo_cambio_usd','')::numeric, 0),
+    NULLIF(NULLIF(p_embarque->>'tipo_cambio_eur','')::numeric, 0),
     COALESCE(p_embarque->>'tipo_carga','Carga General'),
     p_embarque->>'msds_archivo', COALESCE(p_embarque->>'operador',''),
     v_org_id
@@ -137,8 +137,8 @@ BEGIN
     CASE WHEN p_embarque->>'etd' IS NOT NULL THEN (p_embarque->>'etd')::date END,
     CASE WHEN p_embarque->>'eta' IS NOT NULL THEN (p_embarque->>'eta')::date END,
     -- FIX-BL-11: sin default.
-    NULLIF(p_embarque->>'tipo_cambio_usd','')::numeric,
-    NULLIF(p_embarque->>'tipo_cambio_eur','')::numeric,
+    NULLIF(NULLIF(p_embarque->>'tipo_cambio_usd','')::numeric, 0),
+    NULLIF(NULLIF(p_embarque->>'tipo_cambio_eur','')::numeric, 0),
     COALESCE(p_embarque->>'tipo_carga','Carga General'),
     p_embarque->>'msds_archivo', COALESCE(p_embarque->>'operador',''),
     v_org_id,
