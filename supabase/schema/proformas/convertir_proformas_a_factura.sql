@@ -127,11 +127,11 @@ BEGIN
       v_numero_tmp, v_first.embarque_id, v_first.expediente, v_first.cliente_id, v_first.cliente_nombre,
       0, 0, 0, 'MXN'::public.moneda, 1,
       CURRENT_DATE,
-      CURRENT_DATE + make_interval(days => COALESCE(p_dias_credito, v_first.dias_credito, 0)),
+      CURRENT_DATE + make_interval(days => v_dias),
       'Borrador'::estado_factura, v_org,
       CASE WHEN array_length(p_proforma_ids, 1) = 1 THEN p_proforma_ids[1] ELSE NULL END,
       p_serie_id, NULL, NULL,
-      v_cliente.rfc, p_uso_cfdi, p_forma_pago, p_metodo_pago, COALESCE(p_dias_credito, v_first.dias_credito, 0),
+      v_cliente.rfc, p_uso_cfdi, p_forma_pago, p_metodo_pago, v_dias,
       p_notas, 'conversion_proforma'
     ) RETURNING id INTO v_factura_mxn_id;
 
@@ -187,11 +187,11 @@ BEGIN
       v_numero_tmp, v_first.embarque_id, v_first.expediente, v_first.cliente_id, v_first.cliente_nombre,
       0, 0, 0, 'USD'::public.moneda, 1,
       CURRENT_DATE,
-      CURRENT_DATE + make_interval(days => COALESCE(p_dias_credito, v_first.dias_credito, 0)),
+      CURRENT_DATE + make_interval(days => v_dias),
       'Borrador'::estado_factura, v_org,
       CASE WHEN array_length(p_proforma_ids, 1) = 1 THEN p_proforma_ids[1] ELSE NULL END,
       p_serie_id, NULL, NULL,
-      v_cliente.rfc, p_uso_cfdi, p_forma_pago, p_metodo_pago, COALESCE(p_dias_credito, v_first.dias_credito, 0),
+      v_cliente.rfc, p_uso_cfdi, p_forma_pago, p_metodo_pago, v_dias,
       p_notas, 'conversion_proforma'
     ) RETURNING id INTO v_factura_usd_id;
 
