@@ -47,7 +47,7 @@ async function loadCotizacion(
 ) {
   const { data: cot, error } = await admin
     .from('cotizaciones')
-    .select('id, folio, organization_id, cliente_nombre, origen, destino, incoterm, modo, fecha_vigencia, estado, deleted_at')
+    .select('id, folio, organization_id, cliente_id, cliente_nombre, origen, destino, incoterm, modo, fecha_vigencia, estado, deleted_at')
     .eq('id', cotizacionId)
     .maybeSingle();
   if (error || !cot) return { res: json({ error: 'Cotización no encontrada' }, 404) };
