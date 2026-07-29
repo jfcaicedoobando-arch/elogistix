@@ -34,6 +34,8 @@ export default function GuiaIncoterms2020() {
         ogTitle="Guía Incoterms 2020 México: las 11 reglas explicadas"
         ogDescription="EXW, FCA, FOB, CIF, DAP, DDP y todos los Incoterms 2020 aplicados al comercio exterior mexicano."
         ogUrl={URL}
+        ogType="article"
+        ogImage="https://librecarga.com/og-image.jpg"
         jsonLd={[FAQ_JSONLD, ARTICLE_JSONLD, BREADCRUMB_JSONLD]}
       />
       <LandingNav />
