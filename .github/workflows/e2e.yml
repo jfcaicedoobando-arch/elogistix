@@ -209,7 +209,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'package.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
@@ -289,7 +289,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'package.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
@@ -365,7 +365,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'package.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
@@ -461,7 +461,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock', 'package.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 

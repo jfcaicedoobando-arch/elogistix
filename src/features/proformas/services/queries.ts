@@ -12,13 +12,37 @@ import type {
   ProformaPendienteConEmbarque,
 } from "./types";
 
+/**
+ * O8 (auditoría 2026-07-29): selects explícitos por caso de uso.
+ * PROFORMA_LISTA_SELECT cubre la bandeja unificada `/proformas`
+ * (TabProformas + filtros + CSV). PROFORMA_EMBARQUE_SELECT cubre el tab de
+ * facturación del embarque. Si una pantalla necesita otra columna,
+ * añadirla aquí con su consumidor en el comentario — no volver a `*`.
+ */
+const PROFORMA_LISTA_SELECT = [
+  "id", "numero", "expediente", "cliente_id", "cliente_nombre", "operador",
+  "dias_credito", "organization_id",
+  "subtotal_usd", "iva_usd", "total_usd", "subtotal_mxn", "iva_mxn", "total_mxn",
+  "fecha_emision", "estado_proforma", "estado_cliente", "folio_factura_externa",
+  "fecha_facturacion", "factura_id", "created_at",
+  "facturas:factura_id(factura_pdf_url, factura_xml_url)",
+].join(", ");
+
+const PROFORMA_EMBARQUE_SELECT = [
+  "id", "numero", "embarque_id", "factura_id",
+  "estado_proforma", "estado_revision", "estado_aprobacion", "estado_cliente",
+  "motivo_rechazo", "rechazada_at", "consolidada_en",
+  "total_mxn", "total_usd", "created_at",
+  "facturas:factura_id(factura_pdf_url, factura_xml_url)",
+].join(", ");
+
 export async function fetchProformasEmbarque(embarqueId: string): Promise<ProformaConFactura[]> {
   // M2: boundary de dinero validado (identidad + total/subtotal/iva).
   return fromDbChecked<ProformaConFactura[]>(
     await unwrapOr(
       supabase
         .from("proformas")
-        .select("*, facturas:factura_id(factura_pdf_url, factura_xml_url)")
+        .select(PROFORMA_EMBARQUE_SELECT)
         .eq("embarque_id", embarqueId)
         // Las proformas en papelera (`deleted_at`) no deben listarse: se veían
         // como vivas y al intentar borrarlas de nuevo el RPC respondía
@@ -56,20 +80,6 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
   return fromDb<ProformaDetalleFull>(mergeProformaDetalle(data));
 }
 
-export async function fetchProformasAprobadas(organizationId: string): Promise<ProformaConFactura[]> {
-  return fromDb<ProformaConFactura[]>(
-    await unwrapOr(
-      supabase
-        .from("proformas")
-        .select("*, facturas:factura_id(factura_pdf_url, factura_xml_url)")
-        .eq("organization_id", organizationId)
-        .eq("estado_revision", "aprobada")
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false }),
-      [],
-    ),
-  );
-}
 
 /**
  * Trae TODAS las proformas de la organización (pendientes, aprobadas y
@@ -81,7 +91,7 @@ export async function fetchProformasTodas(organizationId: string): Promise<Profo
     await unwrapOr(
       supabase
         .from("proformas")
-        .select("*, facturas:factura_id(factura_pdf_url, factura_xml_url)")
+        .select(PROFORMA_LISTA_SELECT)
         .eq("organization_id", organizationId)
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),

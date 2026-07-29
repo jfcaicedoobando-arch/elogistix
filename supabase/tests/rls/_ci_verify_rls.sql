@@ -21,10 +21,11 @@ DECLARE
   missing_rls text := '';
   -- Whitelist de tablas que NO requieren RLS (catálogos compartidos / internas)
   whitelist text[] := ARRAY[
-    'ratelimit_buckets',           -- bucket de rate limiting interno
-    '_backup_merge_embarques_20260602',
-    '_backup_merge_fk_remap_20260602',
-    '_backup_conceptos_venta_elimp00195_20260706'
+    'ratelimit_buckets'            -- bucket de rate limiting interno
+    -- O6 (auditoría 2026-07-29, S7-18): eliminadas las 3 entradas
+    -- '_backup_*' (tablas dropped en 20260717042435 y 20260717033242).
+    -- Política: los backups temporales viven fuera de `public` o con
+    -- RLS deny-all; NUNCA se whitelistean aquí.
   ];
 BEGIN
   -- 1) Tablas con RLS pero sin policies

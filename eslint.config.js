@@ -154,6 +154,19 @@ const CROSS_FEATURE_ALLOWLIST = [
   "src/features/proformas/routes/ProformasListado.tsx",
   "src/features/reportes/routes/CierreMensual.tsx",
   "src/features/tesoreria/routes/TesoreriaCuentas.tsx",
+  // O5 (auditoría 2026-07-29, S3-14): imports ya colados por el hueco de
+  // utils/ y constants/ al ampliar la regla cross-feature. Mismo burn-down:
+  // salen promoviendo el helper a src/lib/ o duplicándolo en el consumidor.
+  // Candidatos de promoción: cotizacion/utils/resolveTipoContenedorNombre
+  // (5 consumidores cross, incl. src/pdf y src/generators) y
+  // auditoria/utils/diffFields (4 consumidores en 3 features).
+  "src/features/cliente/hooks/useClienteDetalleHandlers.ts",
+  "src/features/embarques/components/contenedores/SeccionContenedoresReadonly.tsx",
+  "src/features/embarques/components/tabResumen/RutaPorModo.tsx",
+  "src/features/embarques/hooks/useEditarEmbarqueWizard.helpers.ts",
+  "src/features/embarques/hooks/useEditarEmbarqueWizard.ts",
+  "src/features/portal-agente/routes/AgenteInicio.tsx",
+  "src/features/proveedor/hooks/useProveedorDetalleController.ts",
 ];
 
 // Overrides por feature: prohíben importar hacia carpetas internas
@@ -183,6 +196,14 @@ const crossFeatureOverrides = FEATURES.map((self) => ({
         {
           group: [`@/features/${f}/lib/*`, `@/features/${f}/lib/**`],
           message: `Cross-feature: no importes de '${f}/lib'. Promueve a 'src/lib/' (ui/domain/formatters). Ver Bloque 2.3.`,
+        },
+        {
+          group: [`@/features/${f}/utils/*`, `@/features/${f}/utils/**`],
+          message: `Cross-feature: no importes de '${f}/utils'. Promueve el helper a 'src/lib/' o duplícalo en tu feature. Ver Bloque 2.3 y O5 (auditoría 2026-07-29).`,
+        },
+        {
+          group: [`@/features/${f}/constants/*`, `@/features/${f}/constants/**`],
+          message: `Cross-feature: no importes de '${f}/constants'. Promueve la constante a 'src/constants/'. Ver Bloque 2.3 y O5.`,
         },
       ]),
     }],

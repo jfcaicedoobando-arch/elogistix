@@ -11,7 +11,8 @@ import { ChevronDown, ChevronRight, Trophy } from "lucide-react";
 import { TarifaFila, TarifaColumnHeader, type FilaTarifa } from "./TarifaFila";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
 import { useAprobacionTarifa } from "../hooks/useAprobacionTarifa";
-import { usd, vigenciaHint } from "../routes/CosteoTarifas.helpers";
+import { usd } from "../routes/CosteoTarifas.helpers";
+import { buildGruposTarifas } from "../utils/tarifasAgrupacion";
 import { todayLocalISO } from "@/lib/date/today";
 
 interface TarifaRow extends FilaTarifa {
@@ -28,58 +29,8 @@ interface Props {
   onEliminar: (id: string) => void;
 }
 
-interface Grupo {
-  key: string;
-  rutaLabel: string;
-  contenedor: string;
-  rows: TarifaRow[];
-  mejor: TarifaRow | null;
-  agentes: number;
-  porVencer: number;
-  promedio: number | null;
-  deltaMax: number | null;
-  elegiblesCount: number;
-}
-
-function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
-  const map = new Map<string, Grupo>();
-  for (const t of tarifas) {
-    const key = `${t.puerto_origen_nombre}→${t.puerto_destino_nombre}|${t.tipo_contenedor_nombre}`;
-    let g = map.get(key);
-    if (!g) {
-      g = {
-        key,
-        rutaLabel: `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
-        contenedor: t.tipo_contenedor_nombre,
-        rows: [], mejor: null, agentes: 0, porVencer: 0,
-        promedio: null, deltaMax: null, elegiblesCount: 0,
-      };
-      map.set(key, g);
-    }
-    g.rows.push(t);
-  }
-  const today = todayLocalISO();
-  for (const g of map.values()) {
-    g.rows.sort((a, b) => a.total_comparable - b.total_comparable);
-    const elegibles = g.rows.filter(
-      (r) => (r.estado_aprobacion ?? "vigente") === "vigente" && r.vigente_hasta >= today && r.estado !== "reemplazada",
-    );
-    g.mejor = elegibles[0] ?? null;
-    g.agentes = new Set(g.rows.map((r) => r.agente_nombre)).size;
-    g.porVencer = elegibles.filter((r) => vigenciaHint(r.vigente_hasta).tone === "warn").length;
-    g.elegiblesCount = elegibles.length;
-    if (elegibles.length >= 2) {
-      const suma = elegibles.reduce((acc, r) => acc + r.total_comparable, 0);
-      g.promedio = suma / elegibles.length;
-      const peor = elegibles[elegibles.length - 1].total_comparable;
-      g.deltaMax = peor - elegibles[0].total_comparable;
-    }
-  }
-  return Array.from(map.values()).sort((a, b) => a.rutaLabel.localeCompare(b.rutaLabel));
-}
-
 export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }: Props) {
-  const grupos = useMemo(() => buildGrupos(tarifas), [tarifas]);
+  const grupos = useMemo(() => buildGruposTarifas(tarifas, todayLocalISO()), [tarifas]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const { aprobar, rechazar, reactivar } = useAprobacionTarifa();
   const [rechazandoId, setRechazandoId] = useState<string | null>(null);
@@ -124,7 +75,11 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
                 </div>
               )}
               {g.mejor && (
-                <Badge className="bg-success/15 text-success border-success/30 tabular-nums min-w-[150px] justify-end" variant="outline">
+                <Badge
+                  className="bg-success/15 text-success border-success/30 tabular-nums min-w-[150px] justify-end"
+                  variant="outline"
+                  title="Menor total comparable (flete base + recargos incluidos en total) entre tarifas aprobadas, vigentes y no reemplazadas"
+                >
                   <Trophy className="size-3 mr-1" />Mejor {usd(g.mejor.total_comparable)}
                 </Badge>
               )}

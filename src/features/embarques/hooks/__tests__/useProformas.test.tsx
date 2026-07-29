@@ -17,7 +17,6 @@ const crearProforma = vi.fn().mockResolvedValue({ id: "prof-1", numero: "P-1", e
 
 vi.mock("@/features/proformas/services", () => ({
   fetchProformasEmbarque: vi.fn().mockResolvedValue([]),
-  fetchProformasAprobadas: vi.fn().mockResolvedValue([]),
   fetchProformasTodas: (...args: unknown[]) => fetchProformasTodas(...args),
   fetchProformasPendientes: vi.fn().mockResolvedValue([]),
   crearProforma: (...args: unknown[]) => crearProforma(...args),

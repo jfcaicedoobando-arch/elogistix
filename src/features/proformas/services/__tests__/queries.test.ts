@@ -13,9 +13,7 @@ vi.mock("@/lib/supabase/cast", async (importOriginal) => ({
 import {
   fetchProformasEmbarque,
   fetchProformaPorId,
-  fetchProformasAprobadas,
   fetchProformasTodas,
-
   fetchProformasPendientes,
   fetchClienteParaPdf,
   fetchEmbarqueParaPdf,
@@ -60,15 +58,6 @@ describe("proformas queries", () => {
       facturas_asociadas: [],
       envios: [],
     });
-  });
-
-  it("fetchProformasAprobadas filtra estado_revision=aprobada", async () => {
-    mock.setTableResult("proformas", { data: [], error: null });
-    await fetchProformasAprobadas("org");
-    const call = mock.tableCalls[0];
-    const eqArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "eq");
-    expect(eqArgs).toContainEqual(["eq", ["organization_id", "org"]]);
-    expect(eqArgs).toContainEqual(["eq", ["estado_revision", "aprobada"]]);
   });
 
   it("fetchProformasPendientes deriva contenedores_lista únicos", async () => {
@@ -138,12 +127,6 @@ describe("proformas queries", () => {
       expect(isOps()).toContainEqual(["is", ["deleted_at", null]]);
     });
 
-    it("fetchProformasAprobadas filtra deleted_at IS NULL", async () => {
-      mock.setTableResult("proformas", { data: [], error: null });
-      await fetchProformasAprobadas("org");
-      expect(isOps()).toContainEqual(["is", ["deleted_at", null]]);
-    });
-
     it("fetchProformasTodas filtra deleted_at IS NULL", async () => {
       mock.setTableResult("proformas", { data: [], error: null });
       await fetchProformasTodas("org");
@@ -152,3 +135,23 @@ describe("proformas queries", () => {
   });
 });
 
+
+describe("O8: selects explícitos (sin comodín) en listados de proformas", () => {
+  it("fetchProformasEmbarque no incluye `*` en las columnas seleccionadas", async () => {
+    mock.setTableResult("proformas", { data: [], error: null });
+    await fetchProformasEmbarque("emb-1");
+    const call = mock.tableCalls[0];
+    const selectArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "select");
+    expect(selectArgs[0][1][0]).not.toMatch(/^\*|,\s*\*/);
+    expect(selectArgs[0][1][0]).toContain("numero");
+  });
+
+  it("fetchProformasTodas no incluye `*` en las columnas seleccionadas", async () => {
+    mock.setTableResult("proformas", { data: [], error: null });
+    await fetchProformasTodas("org");
+    const call = mock.tableCalls[0];
+    const selectArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "select");
+    expect(selectArgs[0][1][0]).not.toMatch(/^\*|,\s*\*/);
+    expect(selectArgs[0][1][0]).toContain("cliente_nombre");
+  });
+});

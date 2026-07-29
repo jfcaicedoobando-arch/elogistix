@@ -9,6 +9,7 @@ import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { AlertCircle } from "lucide-react";
 import { fmtPnl, pctPnl, deltaPnl } from "@/lib/formatters/pnl";
+import { calcularAlertasPnl, PNL_UMBRAL_MARGEN_MIN_PCT } from "@/features/embarques/domain/pnlAlertas";
 import { usePnlFinanciero } from "@/features/embarques/hooks/usePnlFinanciero";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { KpiCard } from "@/components/shared/KpiCard";
@@ -45,9 +46,6 @@ export function TabPnl({ embarqueId }: Props) {
 
   const ventaReal = data.venta.real_mxn;
   const costoReal = data.costo.real_mxn;
-  const utilidadReal = ventaReal - costoReal;
-  const margenReal = ventaReal > 0 ? (utilidadReal / ventaReal) * 100 : 0;
-
   const ventaPresup = data.venta.presupuestada_mxn;
   const costoPresup = data.costo.presupuestado_mxn;
   const utilidadPresup = ventaPresup - costoPresup;
@@ -55,11 +53,9 @@ export function TabPnl({ embarqueId }: Props) {
 
   const dVenta = deltaPnl(ventaReal, ventaPresup);
   const dCosto = deltaPnl(costoReal, costoPresup);
+  const { utilidadReal, margenReal, alertaSobrecosto, alertaVenta, alertaMargen } =
+    calcularAlertasPnl({ ventaReal, costoReal, ventaPresup, costoPresup, deltaCostoPct: dCosto.pct });
   const dUtilidad = deltaPnl(utilidadReal, utilidadPresup);
-
-  const alertaSobrecosto = costoPresup > 0 && dCosto.pct > 10;
-  const alertaVenta = ventaPresup > 0 && ventaReal < ventaPresup;
-  const alertaMargen = ventaReal > 0 && margenReal < 15;
 
   return (
     <div className="space-y-6">
@@ -93,7 +89,7 @@ export function TabPnl({ embarqueId }: Props) {
           variant={
             utilidadReal < 0 || margenReal < 0
               ? "destructive"
-              : margenReal < 15
+              : margenReal < PNL_UMBRAL_MARGEN_MIN_PCT
                 ? "warning"
                 : "success"
           }
