@@ -69,7 +69,7 @@ export function FacturaPagosTabla({
                   <PagoRepCell
                     pagoId={p.id}
                     facturaId={facturaId}
-                    estadoRep={p.estado_rep}
+                    estadoRep={p.estado_rep ?? null}
                     serieRep={p.serie_rep ?? null}
                     folioRep={p.folio_rep ?? null}
                     onPreview={onPreviewRep}
