@@ -1,5 +1,8 @@
 # Changelog
 
+
+## [13.322.7] - 2026-07-29
+- Integración continua: las auditorías automáticas ya no fallan en el servidor por herramientas ausentes; la revisión de avisos usa búsqueda propia y la de base de datos se omite cuando no hay conexión disponible.
 ## [13.322.6] - 2026-07-29
 - Pruebas: se corrigió el proveedor de prueba de la suite de permisos por rol, que se creaba sin tipo y violaba una validación de la base.
 
