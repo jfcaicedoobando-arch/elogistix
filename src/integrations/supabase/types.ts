@@ -6354,6 +6354,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tipos_cambio_dof: {
+        Row: {
+          created_at: string
+          eur_mxn: number | null
+          fecha: string
+          fecha_publicacion_usd: string | null
+          fuente: string
+          origen: string
+          updated_at: string
+          usd_mxn: number
+        }
+        Insert: {
+          created_at?: string
+          eur_mxn?: number | null
+          fecha: string
+          fecha_publicacion_usd?: string | null
+          fuente?: string
+          origen?: string
+          updated_at?: string
+          usd_mxn: number
+        }
+        Update: {
+          created_at?: string
+          eur_mxn?: number | null
+          fecha?: string
+          fecha_publicacion_usd?: string | null
+          fuente?: string
+          origen?: string
+          updated_at?: string
+          usd_mxn?: number
+        }
+        Relationships: []
+      }
       tipos_contenedor: {
         Row: {
           activo: boolean
@@ -8654,6 +8687,16 @@ export type Database = {
           expediente: string
           match_tipo: string
           score: number
+        }[]
+      }
+      tc_dof_vigente: {
+        Args: { _fecha?: string }
+        Returns: {
+          eur_mxn: number
+          fecha: string
+          fuente: string
+          origen: string
+          usd_mxn: number
         }[]
       }
       transicion_embarque_valida: {
