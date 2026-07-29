@@ -78,10 +78,13 @@ describe("useCotizacionDraftAutosave hook", () => {
   it("persiste tras el debounce cuando enabled=true", () => {
     vi.useFakeTimers();
     const { result } = renderWithForm(true);
+    // Q-12: al montar se escribe una vez (paso/costos viven fuera de RHF),
+    // así que limpiamos para medir sólo el efecto del debounce.
+    window.localStorage.clear();
     act(() => {
       result.current.setValue("cliente_id", "c-42");
     });
-    // Antes del debounce: no hay nada.
+    // Antes del debounce: el cambio de RHF aún no se escribió.
     expect(window.localStorage.getItem(draftKey(USER))).toBeNull();
     act(() => {
       vi.advanceTimersByTime(900);
@@ -89,7 +92,7 @@ describe("useCotizacionDraftAutosave hook", () => {
     const raw = window.localStorage.getItem(draftKey(USER));
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
-    expect(parsed.version).toBe(2);
+    expect(parsed.version).toBe(3);
     expect(parsed.values.cliente_id).toBe("c-42");
   });
 
@@ -108,6 +111,7 @@ describe("useCotizacionDraftAutosave hook", () => {
   it("cancela el timer en unmount", () => {
     vi.useFakeTimers();
     const { result, unmount } = renderWithForm(true);
+    window.localStorage.clear();
     act(() => {
       result.current.setValue("cliente_id", "c-x");
     });
@@ -118,6 +122,7 @@ describe("useCotizacionDraftAutosave hook", () => {
     expect(window.localStorage.getItem(draftKey(USER))).toBeNull();
   });
 });
+
 
 describe("useCotizacionDraftAutosave flush (P1 — v13.294.1)", () => {
   function renderWithFlush(enabled: boolean) {

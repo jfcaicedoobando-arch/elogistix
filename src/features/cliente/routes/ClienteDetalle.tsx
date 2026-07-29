@@ -1,13 +1,5 @@
 "use memo";
 import { useParams } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-import TabPortalCliente from "@/features/cliente/components/TabPortalCliente";
-import Cliente360Panel from "@/features/crm/components/Cliente360Panel";
-import { DataTable } from "@/components/shared/DataTable";
-import { embarqueColumns, cotizacionColumns } from "@/features/cliente/components/clienteColumns";
-import TablaContactos from "@/features/cliente/components/TablaContactos";
 import ClienteSummaryCards from "@/features/cliente/components/ClienteSummaryCards";
 import { ClienteDetalleDialogs } from "@/features/cliente/components/detalle/ClienteDetalleDialogs";
 import {
@@ -17,11 +9,10 @@ import {
 } from "@/features/cliente/components/detalle/ClienteDetalleHeader";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { getErrorMessage } from "@/lib/errors";
-import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
-import { ClienteCreditoCard } from "@/features/cliente/components/detalle/ClienteCreditoCard";
 import { useClienteDetalleController } from "@/features/cliente/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { ClienteDetalleTabs } from "./_sections/ClienteDetalleTabs";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -93,78 +84,19 @@ export default function ClienteDetalle() {
         profitUSD={financials?.profitUSD ?? 0}
       />
 
-      <Tabs defaultValue="informacion">
-        <TabsList>
-          <TabsTrigger value="informacion">Información</TabsTrigger>
-          <TabsTrigger value="embarques">Embarques ({embarquesCliente.length})</TabsTrigger>
-          <TabsTrigger value="cotizaciones">Cotizaciones ({cotizacionesCliente.length})</TabsTrigger>
-          <TabsTrigger value="crm">CRM</TabsTrigger>
-          <TabsTrigger value="portal">Portal</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="informacion" className="space-y-6">
-          <ClienteInformacionCard
-            direccion={cliente.direccion}
-            ciudad={cliente.ciudad}
-            estado={cliente.estado}
-            cp={cliente.cp}
-            contacto={cliente.contacto}
-            email={cliente.email}
-            telefono={cliente.telefono}
-          />
-
-          <ClienteCreditoCard clienteId={cliente.id} />
-
-          <TablaContactos
-            contactos={contactos}
-            isLoading={loadingContactos}
-            canEdit={canEdit}
-            onAdd={openNewContact}
-            onEdit={openEditContact}
-            onDelete={startDelete}
-          />
-        </TabsContent>
-
-        <TabsContent value="embarques">
-          <Card>
-            <CardContent className="p-0">
-              <DataTable
-                columns={embarqueColumns}
-                data={embarquesCliente}
-                isLoading={loadingEmbarques}
-                emptyMessage="Sin embarques registrados"
-                getRowHref={(e) => `/embarques/${e.id}`}
-                rowKey={(e) => e.id}
-                density="compact"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="cotizaciones">
-          <Card>
-            <CardContent className="p-0">
-              <DataTable
-                columns={cotizacionColumns}
-                data={cotizacionesCliente}
-                isLoading={loadingCotizaciones}
-                emptyMessage="Sin cotizaciones registradas"
-                getRowHref={(c) => `/cotizaciones/${c.id}`}
-                rowKey={(c) => c.id}
-                density="compact"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="crm">
-          <Cliente360Panel clienteId={cliente.id} />
-        </TabsContent>
-
-        <TabsContent value="portal">
-          <TabPortalCliente clienteId={cliente.id} organizationId={cliente.organization_id} canEdit={canEdit} />
-        </TabsContent>
-      </Tabs>
+      <ClienteDetalleTabs
+        cliente={cliente}
+        contactos={contactos}
+        loadingContactos={loadingContactos}
+        canEdit={canEdit}
+        embarquesCliente={embarquesCliente}
+        loadingEmbarques={loadingEmbarques}
+        cotizacionesCliente={cotizacionesCliente}
+        loadingCotizaciones={loadingCotizaciones}
+        openNewContact={openNewContact}
+        openEditContact={openEditContact}
+        startDelete={startDelete}
+      />
 
       <ClienteDetalleDialogs
         cliente={{

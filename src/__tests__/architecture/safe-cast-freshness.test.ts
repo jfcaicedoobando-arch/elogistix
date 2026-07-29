@@ -67,7 +67,7 @@ const BASELINE = new Set<string>([
   "src/features/embarques/services/garantias.ts::set_garantia_estado",
   "src/features/embarques/services/garantias.ts::refrescar_garantia_desde_tarifa",
   "src/features/embarques/services/mutations.ts::actualizar_embarque_completo",
-  "src/features/embarques/services/mutations.ts::reabrir_embarque",
+  // v13.342.0: `reabrir_embarque` ya está tipado en types.ts y el cast se eliminó.
   "src/features/embarques/services/reconciliacion3Columnas.ts::cotizacion_id",
   "src/features/proformas/components/AccionesProforma.tsx::estado_cliente",
   "src/features/proformas/domain/proformaClienteEstado.ts::estado_cliente",

@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
 import type { AplicarTarifaOptions } from "./aplicarTarifa";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
-import { useSugerenciasTarifaInline } from "./useSugerenciasTarifaInline";
+import { useSugerenciasTarifaInline } from "@/features/cotizacion/hooks/useSugerenciasTarifaInline";
 import { SugerenciasTarifaResultados } from "./SugerenciasTarifaResultados";
 import { SugerenciasTarifaSinIds } from "./SugerenciasTarifaSinIds";
 
