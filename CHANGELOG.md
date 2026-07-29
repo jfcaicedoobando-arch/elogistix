@@ -1,6 +1,12 @@
 # Changelog
 
 
+## [13.322.2] - 2026-07-29
+- Seguridad: aprobar o rechazar una factura de proveedor ahora exige, además del rol financiero, pertenecer a la organización dueña de la factura.
+- Pruebas: nueva suite de RLS que valida por rol (contador, admin, servicio al cliente) quién puede ejecutar las operaciones sensibles y bloquea el acceso entre organizaciones.
+- CI: nuevo radar que aplica todas las migraciones en una base limpia y reporta cuáles dependen de cambios hechos a mano en producción.
+
+
 ## [13.322.1] - 2026-07-29
 - Seguridad: la búsqueda de mejores tarifas ya no puede devolver tarifas de otra organización aunque se le indique explícitamente; siempre valida membresía.
 - P&L del embarque: se corrigió el desglose por concepto, que consultaba campos inexistentes y fallaba al calcularse.
