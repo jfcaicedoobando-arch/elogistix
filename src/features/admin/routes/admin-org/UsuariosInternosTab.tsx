@@ -28,19 +28,26 @@ export function UsuariosInternosTab() {
   const { data: users = [], isLoading } = useUsuarios();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
-  const warnedRef = useRef(false);
+  const reportedRef = useRef(false);
+
+  // P-09: si la edge function `user-management` falla, los correos quedan como
+  // placeholder. Antes sólo había un toast efímero; ahora mostramos un banner
+  // persistente con reintento y lo reportamos a Sentry una sola vez.
+  const correosNoResueltos = useMemo(
+    () => users.filter((u) => u.email === UNRESOLVED_EMAIL).length,
+    [users],
+  );
 
   useEffect(() => {
-    if (isLoading || warnedRef.current) return;
-    const unresolved = users.filter((u) => u.email === UNRESOLVED_EMAIL).length;
-    if (unresolved > 0) {
-      warnedRef.current = true;
-      notifyWarning(undefined, {
-        title: "Correos no disponibles",
-        description: `No se pudieron resolver los correos de ${unresolved} usuario(s). Verifica la conexión con el servidor de autenticación.`,
-      });
-    }
-  }, [users, isLoading, toast]);
+    if (isLoading || reportedRef.current || correosNoResueltos === 0) return;
+    reportedRef.current = true;
+    reportCaughtError(
+      new Error("user-management: correos sin resolver"),
+      { feature: "admin_usuarios", op: "list_emails" },
+      { correosNoResueltos, total: users.length },
+    );
+  }, [correosNoResueltos, isLoading, users.length]);
+
 
 
   const confirmRoleChange = async () => {
