@@ -7,21 +7,36 @@ import { embarqueColumns, cotizacionColumns } from "@/features/cliente/component
 import TablaContactos from "@/features/cliente/components/TablaContactos";
 import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
 import { ClienteCreditoCard } from "@/features/cliente/components/detalle/ClienteCreditoCard";
-import type { Cliente, ContactoCliente } from "@/features/cliente/types/cliente";
+import type { EmbarqueCliente, CotizacionCliente } from "@/features/cliente/components/clienteColumns";
+import type { ContactoCliente } from "@/features/cliente/types/cliente";
+
+/** Sólo los campos del cliente que consumen las pestañas (evita acoplarse a la fila completa). */
+interface ClienteTabsData {
+  id: string;
+  organization_id: string;
+  direccion: string;
+  ciudad: string;
+  estado: string;
+  cp: string;
+  contacto: string;
+  email: string;
+  telefono: string;
+}
 
 interface Props {
-  cliente: Cliente;
+  cliente: ClienteTabsData;
   contactos: ContactoCliente[];
   loadingContactos: boolean;
   canEdit: boolean;
-  embarquesCliente: { id: string }[];
+  embarquesCliente: EmbarqueCliente[];
   loadingEmbarques: boolean;
-  cotizacionesCliente: { id: string }[];
+  cotizacionesCliente: CotizacionCliente[];
   loadingCotizaciones: boolean;
   openNewContact: () => void;
   openEditContact: (c: ContactoCliente) => void;
-  startDelete: (c: ContactoCliente) => void;
+  startDelete: (contactoId: string) => void;
 }
+
 
 export function ClienteDetalleTabs({
   cliente,
