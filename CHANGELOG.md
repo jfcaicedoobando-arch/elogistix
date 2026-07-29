@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.324.4] - 2026-07-30
+- CI: se renombró una prueba con título duplicado para que la auditoría de calidad de pruebas vuelva a pasar en verde.
+
+
+
 ## [13.324.3] - 2026-07-30
 - CI: la verificación de pruebas de seguridad ya no depende de una lista duplicada escrita a mano; ahora se lee automáticamente del listado real de suites, eliminando falsos fallos como el de `soft_delete_rpcs`.
 
