@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.334.7] - 2026-07-29
+- **Fix · CI `audit:migrations` marcaba falsos H6.** El auditor comparaba la firma de la función letra por letra, así que `timestamptz` en el `GRANT` no coincidía con `timestamp with time zone` en el `CREATE` (son el mismo tipo). Ahora reconoce alias equivalentes (`timestamptz`, `int4`, `bool`, `varchar`, etc.). Analogía: el revisor pedía que dijeras "Ciudad de México" y rechazaba "CDMX" aunque fuera el mismo lugar.
+
 ## [13.334.6] - 2026-07-29
 - **Fix · Editar embarque truena con `embarques_tc_eur_pos` (23514).** Guardar un embarque sin tipo de cambio EUR fallaba porque llegaba un `0` a la base y la regla exige un valor mayor a cero. El saneo ya existía en la app desde 13.320.18, pero la versión publicada seguía siendo la 13.320.14. Ahora el blindaje también vive en la base: `crear_embarque_completo` y `actualizar_embarque_completo` tratan un tipo de cambio vacío **o cero** como "sin dato" (al editar conservan el valor previo). Analogía: el formulario dejaba la casilla "pesos por euro" en blanco y el traductor la entregaba como "cero pesos por euro" — un dato imposible; ahora tanto el traductor como el archivero lo entienden como "no aplica".
 

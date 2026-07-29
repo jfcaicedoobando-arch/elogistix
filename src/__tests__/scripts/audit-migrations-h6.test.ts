@@ -110,3 +110,27 @@ describe("audit-migrations H6", () => {
     expect(v.every((x) => x.detail.includes("public.b(text)"))).toBe(true);
   });
 });
+
+describe("audit-migrations H6 · alias de tipos", () => {
+  it("acepta timestamptz en GRANT/REVOKE cuando el CREATE usa 'timestamp with time zone'", () => {
+    const sql = `
+      CREATE OR REPLACE FUNCTION public.actualizar_x(_id uuid, _at timestamp with time zone DEFAULT NULL::timestamp with time zone)
+      RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$ BEGIN RETURN; END; $$;
+
+      REVOKE ALL ON FUNCTION public.actualizar_x(uuid, timestamptz) FROM PUBLIC;
+      GRANT EXECUTE ON FUNCTION public.actualizar_x(uuid, timestamptz) TO authenticated;
+    `;
+    expect(scan(sql)).toEqual([]);
+  });
+
+  it("acepta int4/bool/varchar como alias de integer/boolean/character varying", () => {
+    const sql = `
+      CREATE OR REPLACE FUNCTION public.alias_y(_n integer, _b boolean, _s character varying)
+      RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$ BEGIN RETURN; END; $$;
+
+      REVOKE ALL ON FUNCTION public.alias_y(int4, bool, varchar) FROM PUBLIC;
+      GRANT EXECUTE ON FUNCTION public.alias_y(int4, bool, varchar) TO service_role;
+    `;
+    expect(scan(sql)).toEqual([]);
+  });
+});
