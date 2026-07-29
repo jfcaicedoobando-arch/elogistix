@@ -17,7 +17,7 @@
 -- No cambia el comportamiento en producción: allí es un no-op.
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION public._c5b_patch(p_fn regprocedure, p_old text, p_new text)
+CREATE OR REPLACE FUNCTION public._c5b_patch(p_fn text, p_old text, p_new text)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY INVOKER
@@ -25,8 +25,14 @@ SET search_path = public
 AS $helper$
 DECLARE
   d text;
+  r regprocedure;
 BEGIN
-  d := pg_get_functiondef(p_fn);
+  r := to_regprocedure(p_fn);
+  IF r IS NULL THEN
+    RAISE NOTICE 'LC_C5B_FN_AUSENTE (no-op): %', p_fn;
+    RETURN;
+  END IF;
+  d := pg_get_functiondef(r);
   IF position(p_old in d) = 0 THEN
     RAISE NOTICE 'LC_C5B_ANCLA_AUSENTE (no-op): % / %', p_fn::text, left(p_old, 60);
     RETURN;
@@ -35,11 +41,11 @@ BEGIN
 END;
 $helper$;
 
-REVOKE ALL ON FUNCTION public._c5b_patch(regprocedure, text, text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._c5b_patch(text, text, text) FROM PUBLIC, anon, authenticated;
 
 -- 1) embarques_listado ---------------------------------------
 SELECT public._c5b_patch(
-  'public.embarques_listado(uuid,text,text,uuid,text,text,date,date,text,text,integer,integer)'::regprocedure,
+  'public.embarques_listado(uuid,text,text,uuid,text,text,date,date,text,text,integer,integer)',
 $old$      FROM embarques e
       WHERE ( $1 IS NULL OR e.organization_id = $1 )$old$,
 $new$      FROM embarques e
@@ -47,7 +53,7 @@ $new$      FROM embarques e
         AND ( $1 IS NULL OR e.organization_id = $1 )$new$);
 
 SELECT public._c5b_patch(
-  'public.embarques_listado(uuid,text,text,uuid,text,text,date,date,text,text,integer,integer)'::regprocedure,
+  'public.embarques_listado(uuid,text,text,uuid,text,text,date,date,text,text,integer,integer)',
 $old$      FROM conceptos_costo cc
       WHERE cc.embarque_id IN (SELECT id FROM counted)$old$,
 $new$      FROM conceptos_costo cc
@@ -55,7 +61,7 @@ $new$      FROM conceptos_costo cc
         AND cc.deleted_at IS NULL             -- FIX C5$new$);
 
 SELECT public._c5b_patch(
-  'public.embarques_listado(uuid,text,text,uuid,text,text,date,date,text,text,integer,integer)'::regprocedure,
+  'public.embarques_listado(uuid,text,text,uuid,text,text,date,date,text,text,integer,integer)',
 $old$      FROM documentos_embarque d
       WHERE d.embarque_id IN (SELECT id FROM counted)$old$,
 $new$      FROM documentos_embarque d
@@ -64,7 +70,7 @@ $new$      FROM documentos_embarque d
 
 -- 2) facturas_listado ----------------------------------------
 SELECT public._c5b_patch(
-  'public.facturas_listado(uuid,text,text,date,date,integer,integer)'::regprocedure,
+  'public.facturas_listado(uuid,text,text,date,date,integer,integer)',
 $old$    FROM facturas f
     WHERE ( p_organization_id IS NULL$old$,
 $new$    FROM facturas f
@@ -73,7 +79,7 @@ $new$    FROM facturas f
 
 -- 3) dashboard_details ---------------------------------------
 SELECT public._c5b_patch(
-  'public.dashboard_details()'::regprocedure,
+  'public.dashboard_details()',
 $old$      FROM embarques e
       WHERE (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))$old$,
 $new$      FROM embarques e
@@ -81,7 +87,7 @@ $new$      FROM embarques e
         AND (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))$new$);
 
 SELECT public._c5b_patch(
-  'public.dashboard_details()'::regprocedure,
+  'public.dashboard_details()',
 $old$               SELECT 1 FROM facturas f
                WHERE f.embarque_id = eb.id
                  AND f.estado::text NOT IN ('Cancelada','Borrador')$old$,
@@ -92,7 +98,7 @@ $new$               SELECT 1 FROM facturas f
 
 -- 4) sidebar_alert_counts ------------------------------------
 SELECT public._c5b_patch(
-  'public.sidebar_alert_counts()'::regprocedure,
+  'public.sidebar_alert_counts()',
 $old$    (SELECT count(*) FROM embarques e
      WHERE e.eta IS NOT NULL$old$,
 $new$    (SELECT count(*) FROM embarques e
@@ -100,7 +106,7 @@ $new$    (SELECT count(*) FROM embarques e
        AND e.eta IS NOT NULL$new$);
 
 SELECT public._c5b_patch(
-  'public.sidebar_alert_counts()'::regprocedure,
+  'public.sidebar_alert_counts()',
 $old$    (SELECT count(*) FROM facturas f
      WHERE f.estado = 'Vencida'$old$,
 $new$    (SELECT count(*) FROM facturas f
@@ -108,7 +114,7 @@ $new$    (SELECT count(*) FROM facturas f
        AND f.estado = 'Vencida'$new$);
 
 SELECT public._c5b_patch(
-  'public.sidebar_alert_counts()'::regprocedure,
+  'public.sidebar_alert_counts()',
 $old$     JOIN embarques e ON e.id = g.embarque_id
      WHERE g.estado = 'depositado'$old$,
 $new$     JOIN embarques e ON e.id = g.embarque_id
@@ -117,7 +123,7 @@ $new$     JOIN embarques e ON e.id = g.embarque_id
 
 -- 5) operaciones_stats ---------------------------------------
 SELECT public._c5b_patch(
-  'public.operaciones_stats()'::regprocedure,
+  'public.operaciones_stats()',
 $old$    FROM embarques e
     WHERE (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))$old$,
 $new$    FROM embarques e
@@ -126,7 +132,7 @@ $new$    FROM embarques e
 
 -- 6) profit_por_cliente --------------------------------------
 SELECT public._c5b_patch(
-  'public.profit_por_cliente(date,date,text)'::regprocedure,
+  'public.profit_por_cliente(date,date,text)',
 $old$  LEFT JOIN conceptos_venta cv ON cv.embarque_id = e.id
   LEFT JOIN conceptos_costo cc_agg ON cc_agg.embarque_id = e.id
   WHERE (_fecha_desde IS NULL OR e.eta >= _fecha_desde)$old$,
@@ -137,7 +143,7 @@ $new$  LEFT JOIN conceptos_venta cv ON cv.embarque_id = e.id AND cv.deleted_at I
 
 -- 7) dashboard_summary ---------------------------------------
 SELECT public._c5b_patch(
-  'public.dashboard_summary()'::regprocedure,
+  'public.dashboard_summary()',
 $old$      FROM embarques e
       WHERE (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))$old$,
 $new$      FROM embarques e
@@ -146,7 +152,7 @@ $new$      FROM embarques e
 
 -- 8) operadores_distintos ------------------------------------
 SELECT public._c5b_patch(
-  'public.operadores_distintos()'::regprocedure,
+  'public.operadores_distintos()',
 $old$  WHERE e.operador IS NOT NULL AND e.operador != ''$old$,
 $new$  WHERE e.deleted_at IS NULL                  -- FIX C5
     AND e.operador IS NOT NULL AND e.operador != ''$new$);
@@ -186,7 +192,7 @@ $function$;
 REVOKE ALL ON FUNCTION public.embarques_list_extras(uuid[]) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.embarques_list_extras(uuid[]) TO authenticated, service_role;
 
-DROP FUNCTION public._c5b_patch(regprocedure, text, text);
+DROP FUNCTION public._c5b_patch(text, text, text);
 
 DO $verify$
 DECLARE
@@ -198,7 +204,12 @@ BEGIN
     'operaciones_stats','profit_por_cliente','dashboard_summary','operadores_distintos',
     'embarques_list_extras'
   ] LOOP
-    IF NOT EXISTS (
+    -- Tolerante: si la función no existe en esta base (deuda histórica previa
+    -- al corte), no hay nada que verificar. Sólo falla si existe SIN el filtro.
+    IF EXISTS (
+      SELECT 1 FROM pg_proc p
+      WHERE p.proname = v_fn AND p.pronamespace = 'public'::regnamespace
+    ) AND NOT EXISTS (
       SELECT 1 FROM pg_proc p
       WHERE p.proname = v_fn
         AND p.pronamespace = 'public'::regnamespace
