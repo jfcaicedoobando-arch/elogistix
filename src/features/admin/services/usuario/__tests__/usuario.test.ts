@@ -97,17 +97,32 @@ describe("services/usuario", () => {
     expect(r.user?.id).toBe("u1");
   });
 
-  it("createUserViaEdgeFunction inserta membership cuando orgId presente", async () => {
+  it("createUserViaEdgeFunction manda organization_id a la edge function (Q-05)", async () => {
     mock.invoke.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
-    mock.setTableResult("organization_members", { data: null, error: null });
+    mock.setTableResult("organization_members", {
+      data: { user_id: "u1", role: "tesorero" },
+      error: null,
+    });
     await createUserViaEdgeFunction({
-      email: "a@b.com",
+      email: "Nuevo@B.com",
       password: "xx",
-      role: "admin",
+      role: "tesorero",
       orgId: "org1",
     });
-    expect(mock.tableCalls.some((c) => c.table === "organization_members")).toBe(true);
+    const body = mock.invoke.mock.calls.find((c) => c[1]?.body?.action === "create")?.[1].body;
+    expect(body.organization_id).toBe("org1");
+    expect(body.role).toBe("tesorero");
+    expect(body.email).toBe("nuevo@b.com");
   });
+
+  it("createUserViaEdgeFunction falla si la membresía no quedó creada (Q-05)", async () => {
+    mock.invoke.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    mock.setTableResult("organization_members", { data: null, error: null });
+    await expect(
+      createUserViaEdgeFunction({ email: "a@b.com", password: "xx", role: "viewer", orgId: "o1" }),
+    ).rejects.toThrow(/no quedó asignado/);
+  });
+
 
   it("createUserViaEdgeFunction lanza si body trae error", async () => {
     mock.invoke.mockResolvedValue({ data: { error: "bad" }, error: null });
