@@ -52,7 +52,9 @@ describe("useSolicitarCotizacion", () => {
   });
 
   it("propaga el error y no invalida caché", async () => {
-    solicitar.mockRejectedValue(new Error("LC_CLIENTE_NO_VINCULADO"));
+    // `mockImplementation` evita crear la promesa rechazada antes de tiempo
+    // (con `mockRejectedValue` Vitest la marca como unhandled rejection).
+    solicitar.mockImplementation(() => Promise.reject(new Error("LC_CLIENTE_NO_VINCULADO")));
     const { wrapper, invalidate } = setup();
     const { result } = renderHook(() => useSolicitarCotizacion(["cli-1"]), { wrapper });
 

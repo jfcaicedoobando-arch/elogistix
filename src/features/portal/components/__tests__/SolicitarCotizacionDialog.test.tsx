@@ -86,7 +86,7 @@ describe("SolicitarCotizacionDialog (P-07)", () => {
   });
 
   it("notifica el error y no cierra el diálogo si la solicitud falla", async () => {
-    mocks.mutateAsync.mockRejectedValue(new Error("LC_CLIENTE_NO_VINCULADO"));
+    mocks.mutateAsync.mockImplementation(() => Promise.reject(new Error("LC_CLIENTE_NO_VINCULADO")));
     const onOpenChange = vi.fn();
     renderDialog({ onOpenChange });
 
