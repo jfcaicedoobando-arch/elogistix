@@ -1,7 +1,8 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useBreadcrumbLabels } from "@/lib/contexts/BreadcrumbContext";
-import { usePortalClienteName, usePortalOrgName } from "@/features/portal/hooks";
+import { usePortalClienteName, usePortalOrgName, usePortalClientUsers } from "@/features/portal/hooks";
+import { PortalSinCliente } from "./PortalSinCliente";
 import { APP_VERSION } from "@/constants/appVersion";
 import { PortalHeader } from "./layout/PortalHeader";
 import { PortalBreadcrumbsBar } from "./layout/PortalBreadcrumbsBar";
@@ -16,6 +17,8 @@ export default function PortalLayout() {
   const navigate = useNavigate();
   const { data: clienteName } = usePortalClienteName();
   const { data: orgName } = usePortalOrgName();
+  const { data: clientUsers, isLoading: cargandoVinculo } = usePortalClientUsers();
+  const sinClienteVinculado = !cargandoVinculo && (clientUsers?.length ?? 0) === 0;
   const labels = useBreadcrumbLabels();
   const breadcrumbs = usePortalBreadcrumbs(location.pathname, labels);
   const activeSection = getActiveSectionLabel(location.pathname);
@@ -46,7 +49,11 @@ export default function PortalLayout() {
       </div>
 
       <main className="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6">
-        <Outlet />
+        {sinClienteVinculado ? (
+          <PortalSinCliente email={user?.email} onSignOut={handleSignOut} />
+        ) : (
+          <Outlet />
+        )}
       </main>
 
       <footer className="hidden md:block border-t bg-card/40 mt-auto">

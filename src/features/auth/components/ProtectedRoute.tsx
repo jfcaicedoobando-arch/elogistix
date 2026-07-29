@@ -23,7 +23,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // P-07: conservar el deep-link solicitado para volver tras el login.
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   const redirectTo = resolveProtectedRouteRedirect({
