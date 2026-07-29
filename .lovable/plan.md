@@ -1,20 +1,40 @@
-## Qué pasó
 
-Verifiqué el embarque `ELIMP00351` en la base: hoy tiene `tipo_cambio_usd` y `tipo_cambio_eur` en blanco (NULL), y la restricción es `CHECK (tipo_cambio_eur > 0)`. El guardado intentó escribir `0`, y la base lo rechazó.
+## Sí, se puede — y ya tenemos casi todas las piezas
 
-Analogía: el formulario dejó la casilla "pesos por euro" vacía, pero el traductor entregó "cero pesos por euro" — un dato imposible, y el archivero lo rechazó.
+Hoy el tipo de cambio DOF se consulta **en vivo** a Banxico cada vez que alguien lo necesita (edge function `exchange-rates`, series SF43718 USD y SF46410 EUR, con caché en memoria de 12 h). Si Banxico se cae, la app muestra error y no hay historial guardado.
 
-Ese traductor **ya está arreglado en el código actual** (`embarqueToDb.ts` usa `tcOrNull`, que manda "no aplica" cuando el campo va vacío). El arreglo salió en la versión **13.320.18**, pero el reporte de error viene de la versión **13.320.14**: Valeria está usando una versión publicada más vieja que el arreglo. Hoy el código del proyecto va en 13.334.5.
+También ya existe un cron diario en la base (`marcar_facturas_vencidas_diario`, 6:00 AM), así que la infraestructura de `pg_cron` + `pg_net` está probada.
 
-## Plan
+Analogía: hoy le hablamos al banco por teléfono cada vez que queremos saber el precio del dólar. Lo que propongo es que un asistente llame una vez al día, lo anote en una libreta nuestra, y que todos consulten la libreta.
 
-1. **Republicar la app** (causa real). Sin republicar, los usuarios siguen con el bundle viejo que manda `0`.
-2. **Blindaje en la base de datos** (para que nunca vuelva a depender del navegador): actualizar el RPC `actualizar_embarque_completo` y los dos overloads de `crear_embarque_completo` para que un `0` o cadena vacía en `tipo_cambio_usd` / `tipo_cambio_eur` se trate como "sin dato" (`NULLIF(valor, 0)`) en lugar de intentar guardarse.
-3. **Test de regresión**: caso en `embarqueToDb.test.ts` (si no existe ya) y una prueba SQL corta que confirme que guardar con TC `0` deja el campo vacío en vez de reventar.
-4. **CHANGELOG + bump de `APP_VERSION`** siguiendo el formato del proyecto.
+## Qué se va a construir
+
+**1. Tabla interna `tipos_cambio_dof`**
+- Un renglón por día: fecha DOF, USD→MXN, EUR→MXN, fuente (`banxico_sie`), y de dónde vino (automático o manual).
+- Catálogo global (no por cliente): todos los usuarios autenticados pueden leerla; sólo el proceso automático puede escribir.
+
+**2. Edge function `tc-dof-diario`**
+- Reutiliza la lógica ya probada de `exchange-rates` (misma selección de "Publicación DOF vigente").
+- Guarda/actualiza el renglón del día. Si Banxico no responde, **no guarda nada** (nunca inventa un valor) y deja el error en los logs.
+- Incluye modo *backfill* para llenar de golpe los últimos 30 días al arrancar.
+
+**3. Cronjob diario**
+- Todos los días a las **7:00 AM hora CDMX** (después de que el DOF ya publicó).
+- Llama a la edge function. Si falla, reintento automático a las 10:00 AM (el guardado es idempotente: escribir dos veces el mismo día no duplica).
+
+**4. La app lee primero de la tabla**
+- `exchange-rates` consulta la tabla antes de llamar a Banxico; sólo llama a Banxico si el día no está registrado.
+- Beneficios: respuestas instantáneas, no se agota la cuota del token de Banxico, y queda historial auditable (puedes justificar ante el SAT qué TC se usó cada día).
+- El comportamiento visible no cambia: los flujos fiscales siguen rechazando valores de fallback.
+
+**5. Pantalla de consulta (opcional, incluida)**
+- Tabla simple en Configuración → catálogos con el historial de TC DOF y botón "Actualizar ahora" para admins, por si el cron falló un día.
 
 ## Detalle técnico
 
-- Constraints confirmados: `embarques_tc_usd_pos`, `embarques_tc_eur_pos` → `> 0`, ambas columnas nullable.
-- Único punto del frontend que escribe estos campos: `src/features/embarques/domain/mappers/embarqueToDb.ts` → `partesFinancieras`. Ya sanea vía `tcOrNull`.
-- Migración: redeploy de las funciones con `NULLIF(NULLIF(p_embarque->>'tipo_cambio_eur','')::numeric, 0)`, conservando `SECURITY DEFINER` + `REVOKE ALL FROM PUBLIC` / `GRANT EXECUTE TO authenticated` para no romper la regla H6 de `audit:migrations`.
+- Tabla `public.tipos_cambio_dof`: `fecha date PK`, `usd_mxn numeric(12,4)`, `eur_mxn numeric(12,4)`, `fuente text`, `origen text` (`cron` | `manual`), `created_at`/`updated_at` + trigger. GRANT `SELECT` a `authenticated`, `ALL` a `service_role`; RLS con política de lectura para autenticados y escritura sólo service_role.
+- Extracción de la lógica compartida de `supabase/functions/exchange-rates/index.ts` a `supabase/functions/_shared/banxicoDof.ts` para no duplicar (`extraerPublicacionDof`, `rangoUltimosDias`, etc.), conservando los tests actuales.
+- Cron con `cron.schedule` + `net.http_post` creado vía la herramienta de datos (no migración), porque el SQL lleva la URL y la anon key del proyecto.
+- RPC `tc_dof_vigente(_fecha date default current_date)` `SECURITY DEFINER` con `REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE … TO authenticated` (regla H6 del auditor de migraciones).
+- Tests: unitarios del upsert/backfill (Deno) y del servicio/hook nuevo; nada rompe el contrato `{ usdMxn, eurMxn }`.
+- `CHANGELOG.md` + bump de `APP_VERSION`.
