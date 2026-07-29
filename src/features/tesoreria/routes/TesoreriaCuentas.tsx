@@ -23,9 +23,9 @@ export default function TesoreriaCuentas() {
     cuentas, isLoading, open, setOpen, form, setField, submit, submitting,
     deleteTarget, solicitarEliminar, cancelarEliminar, confirmarEliminar, eliminando,
   } = useTesoreriaCuentasController();
-  // Sentry JAVASCRIPT-REACT-3S/3T: `tesorero` y `contador` sólo tienen lectura
-  // en `cuentas_bancarias` (RLS). Antes veían los botones y chocaban con 42501.
-  const { canAdminTenant } = usePermissions();
+  // Sentry JAVASCRIPT-REACT-3S/3T: sólo administradores y tesorero pueden
+  // escribir en `cuentas_bancarias` (RLS). El contador sólo consulta.
+  const { canAdminCuentasBancarias: canAdminTenant } = usePermissions();
 
   return (
     <PageContainer>
@@ -34,7 +34,7 @@ export default function TesoreriaCuentas() {
         description={
           canAdminTenant
             ? "Alta y administración de cuentas para conciliación"
-            : "Consulta de cuentas para conciliación (sólo administradores pueden editarlas)"
+            : "Consulta de cuentas para conciliación (sólo administradores y tesorería pueden editarlas)"
         }
         actions={
           canAdminTenant ? (
