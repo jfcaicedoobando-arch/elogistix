@@ -1,43 +1,48 @@
-## Estado verificado hoy
+## Verificación previa (contra la base y el código reales)
 
-Ya aplicado (comprobado en código y base de datos):
-- **C1** guard de rol/tenant en borrado de embarques.
-- **C2** rol fiscal en las 11 edge functions `facturapi-*`.
-- **C3a/C3b/C3c** — existen en la base las 5 funciones agregadoras (`cobranza_agregados`, `estado_cuenta_agregados`, `conciliacion_resumen`, `dashboard_facturacion_kpis`, `direccion_totales`) y la guarda anti-truncamiento.
-- **C5** filtro de eliminados en las RPCs de listado + suite RLS en CI.
-- Cobranza y Estado de cuenta ya leen sus tarjetas del servidor (v13.323.3).
+Consulté la base de datos y el repo antes de escribir esto. Estado actual:
 
-Pendiente (verificado):
-1. **Cableado UI restante de C3c**: `fetchConciliacionResumen` y `fetchDireccionTotales` existen pero **ningún componente las consume todavía** — Conciliación bancaria y el tablero de Dirección siguen sumando en el navegador.
-2. **C4 · Totales de dinero server-side**: en la base **no existen** `recalc_factura_totales`, `cotizacion_totales_conceptos` ni `recalcular_subtotal_cotizacion`. Los totales de factura manual, cotización y CxP los sigue calculando el navegador.
-3. **C6 · Canon único de conversión de moneda**: **no existe** `src/lib/financial/convertir.ts`; siguen vivas 6 implementaciones con políticas distintas cuando falta tipo de cambio (unas suman dólares como si fueran pesos).
+| Fix | Estado verificado |
+|---|---|
+| C1 · guard en `eliminar_embarque_completo` | Ya aplicado (turno anterior) |
+| C2 · rol en edge functions `facturapi-*` | Ya aplicado (helper compartido de autorización) |
+| C3a · `max_rows` | Ya aplicado en `supabase/config.toml` |
+| C3b · `assertNotTruncated` | Ya aplicado + tests |
+| C3c · 5 RPCs agregadoras + consumo en UI | Ya aplicado (Cobranza, Estado de Cuenta, Conciliación, Dashboard Ejecutivo, Dirección) |
+| C4a · totales de factura server-side | **Parcial**: hoy `recalc_factura_retenciones` ya re-deriva subtotal/IVA/retenciones/total desde los conceptos, pero **faltan** el guard anti-escritura directa, el CHECK de consistencia y el backfill |
+| C4b · cotizaciones | **No aplicado** (no existen `cotizacion_totales_conceptos` ni `recalcular_subtotal_cotizacion`) |
+| C4c · CxP `proveedor_facturas.total` | **No aplicado** (no existe `guard_proveedor_factura_total`) |
+| C6 · canon de moneda | **Parcial**: existe `src/lib/financial/convertir.ts` y ya lo usan Estado de Resultados y proyección de facturación; faltan 5 call sites + deprecación + guardrail |
 
-## Plan propuesto (3 olas)
+Mediciones de impacto (datos reales, hoy):
+- Facturas con descuadre `total ≠ subtotal+IVA−retenciones`: **0**. Borradores cuyos totales cambiarían con el backfill: **0** → C4a es seguro.
+- Facturas de proveedor con descuadre: **0** → el backfill de C4c no mueve nada.
+- Cotizaciones vivas: 146. Con el subtotal canónico (neto sin IVA, sólo moneda principal) **cambiarían 13**, con una diferencia acumulada de ~370,282. Es el único punto con impacto visible para el usuario.
 
-### Ola A — Cerrar C3c en la interfaz
-- Conectar la tarjeta de resumen de Conciliación bancaria a `conciliacion_resumen`.
-- Conectar los totales del tablero de Dirección a `direccion_totales`.
-- Mismo criterio ya usado: si hay filtros que la función del servidor no cubre, se vuelve al cálculo local para que tabla y tarjetas siempre cuadren.
-- Tests de los hooks nuevos.
+Diferencias detectadas contra el documento:
+- Mi C4a vigente calcula la base con `conceptos_factura.total`; el documento usa `cantidad × precio_unitario` y añade el fallback de tasa por `tipo_iva`. Verifiqué que en los datos actuales ambos coinciden, pero adopto la versión del documento por ser más explícita.
+- El documento pide `dashboardEjecutivo.ts` en C6 "sólo si no se aplicó C3c" → se omite, ya se aplicó C3c.
+- El jsonb `conceptos_venta` sí trae las claves que la función espera (`cantidad`, `precio_unitario`, `moneda`, `aplica_iva`, `tasa_iva_aplicada`).
 
-### Ola B — C4 · Totales calculados en el servidor
-Una migración con tres partes:
-- **Facturas**: función canónica que re-deriva subtotal, IVA (respetando tasa por renglón y exentos), retenciones y total desde los conceptos; trigger anti-escritura directa y CHECK de consistencia con tolerancia de un centavo. No toca facturas ya timbradas.
-- **Cotizaciones**: función que calcula totales por moneda desde el JSON de conceptos (subtotal neto, sin IVA, sin mezclar monedas), RPC para persistir y trigger que valida los renglones.
-- **CxP**: trigger que impone `total = subtotal + IVA + IEPS − retenciones`, rechaza totales negativos y bloquea bajar el total por debajo de lo ya pagado/acreditado.
-Después: regenerar tipos y ajustar los puntos del frontend que hoy persisten totales calculados en el cliente.
+## Plan
 
-Nota: el documento incluye un relleno de datos históricos que **corrige cifras visibles** de registros viejos inconsistentes. Antes de aplicarlo se listan los registros afectados para que los revises.
+### Etapa 1 — C4a completo (bajo riesgo)
+Migración con: función canónica `recalc_factura_totales(uuid)` (fórmula del documento), `recalc_factura_retenciones` como wrapper, trigger `trg_facturas_totales_guard` (BEFORE UPDATE de los campos de totales, re-deriva si la factura tiene renglones), CHECK `facturas_totales_consistentes` NOT VALID y backfill de facturas sin `snapshot_emision` (medido: 0 filas cambian). Las facturas emitidas siguen protegidas por `factura_inmutable`.
 
-### Ola C — C6 · Canon único de moneda
-- Crear el módulo canónico con la regla explícita: **sin tipo de cambio confiable no se suma** (se reporta aparte, nunca se simula 1 a 1).
-- Migrar los 6 sitios divergentes + el diálogo de registrar pago (que hoy deduce el tipo de cambio dividiendo montos).
-- Marcar como obsoletas las funciones viejas y añadir guardas (ESLint + test de arquitectura) para que no nazca una séptima implementación.
+### Etapa 2 — C4c CxP (bajo riesgo)
+Trigger `guard_proveedor_factura_total`: impone `total = subtotal+IVA+IEPS−retenciones`, rechaza negativos (`LC_CXP_TOTAL_NEGATIVO`) y bloquea reducir el total por debajo de lo ya pagado + notas de crédito aplicadas (`LC_CXP_TOTAL_MENOR_PAGADO`). CHECKs NOT VALID + backfill (0 filas). Añadir tests unitarios del mapeo de estos dos errores a mensajes en español en `appFeedback`.
+
+### Etapa 3 — C4b Cotizaciones (riesgo medio, requiere tu visto bueno)
+Función `cotizacion_totales_conceptos(jsonb)`, RPC `recalcular_subtotal_cotizacion(uuid)`, trigger que valida el jsonb (`LC_COTIZACION_CONCEPTO_INVALIDO`) e impone el subtotal server-side, y backfill de las 146 cotizaciones vivas.
+Antes del backfill genero el listado de las **13 cotizaciones que cambian** (folio, valor actual → valor canónico) para que lo revises. Si prefieres, aplico funciones y trigger sin backfill y las 13 se corrigen solas en su próxima edición.
+
+### Etapa 4 — C6 restante
+Migrar a `convertir.ts` los call sites que aún tienen políticas divergentes: `flujoProyectado.ts`, `calcularTotalMxn.ts` + `useFacturaManualForm.ts`, `dashboard/direccion/services/mxn.ts`, `bandejas/domain/carteraFx.ts` y `DialogRegistrarPago.tsx` (deja de derivar el TC dividiendo montos; usa un puente explícito entre monedas). Marcar `convertirAMXN/convertirAUSD` como `@deprecated` sin default `= 1`, y añadir la regla ESLint + el test de arquitectura que impide una séptima implementación.
+
+### Etapa 5 — Cierre
+Regenerar tipos, `audit:migrations`, suite RLS afectada, `bun run lint --max-warnings 0`, tests, bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
 
 ## Detalles técnicos
-- Migraciones nuevas con nombres generados por la plataforma; incluyen GRANTs y `search_path` fijo como exige la auditoría de migraciones.
-- Tras C4: regenerar `types.ts` y correr `audit:rpc-columns`, suite RLS y `bun run test`.
-- Se registra cada ola en `CHANGELOG.md` con bump de `APP_VERSION`.
-
-## Orden sugerido
-Ola A (rápida, cierra C3c) → Ola B (la de mayor riesgo, con revisión de datos antes del relleno) → Ola C.
+- Todas las migraciones nuevas llevan `SET search_path = public` y `REVOKE ... FROM PUBLIC, anon` + `GRANT ... TO authenticated, service_role` en las funciones nuevas, para no reabrir violaciones H4/H6 del auditor de migraciones.
+- Los CHECK se crean `NOT VALID` para no fallar sobre histórico; hoy no hay filas en descuadre, así que en la práctica quedan limpios.
+- El trigger de cotizaciones ignora el `subtotal` que manda el cliente; hay que revisar que el wizard no dependa de leer de vuelta su propio valor inmediatamente tras guardar (se valida con los tests del wizard).
