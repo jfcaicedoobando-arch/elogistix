@@ -93,75 +93,15 @@ export function FacturaPagosSection({
               Aún no se han registrado pagos para esta factura.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-xs text-muted-foreground border-b">
-                  <tr>
-                    <th className="text-left py-2 px-2">Fecha</th>
-                    <th className="text-right py-2 px-2">Monto</th>
-                    <th className="text-right py-2 px-2">Aplicado</th>
-                    <th className="text-left py-2 px-2">Forma</th>
-                    <th className="text-left py-2 px-2">Referencia</th>
-                    <th className="text-left py-2 px-2">REP</th>
-                    {canEdit && <th className="w-10"></th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagos.map((p) => (
-                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="py-2 px-2 whitespace-nowrap">{formatDate(p.fecha_pago)}</td>
-                      <td className="py-2 px-2 text-right tabular-nums">
-                        {formatCurrency(Number(p.monto), p.moneda)}
-                      </td>
-                      <td className="py-2 px-2 text-right tabular-nums">
-                        {formatCurrency(Number(p.monto_aplicado_factura), moneda)}
-                      </td>
-                      <td className="py-2 px-2">{labelDeCatalogo(FORMAS_PAGO_SAT, p.forma_pago)}</td>
-                      <td className="py-2 px-2 max-w-[200px] truncate" title={p.referencia ?? ""}>
-                        {p.referencia || "—"}
-                      </td>
-                      <td className="py-2 px-2">
-                        <PagoRepCell
-                          pagoId={p.id}
-                          facturaId={facturaId}
-                          estadoRep={p.estado_rep}
-                          serieRep={p.serie_rep ?? null}
-                          folioRep={p.folio_rep ?? null}
-                          onPreview={(id, label) => setPreviewRep({ id, label })}
-                        />
-                      </td>
-                      {canEdit && (
-                        <td className="py-2 px-2">
-                          {(() => {
-                            const repVivo = !!p.uuid_rep && !p.rep_cancelado_en;
-                            return (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                disabled={repVivo}
-                                title={
-                                  repVivo
-                                    ? "Cancela el REP (complemento de pago) antes de eliminar este pago"
-                                    : "Eliminar pago"
-                                }
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (repVivo) return;
-                                  setPagoAEliminar(p.id);
-                                }}
-                                aria-label="Eliminar pago"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            );
-                          })()}
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <FacturaPagosTabla
+              pagos={pagos}
+              facturaId={facturaId}
+              moneda={moneda}
+              canEdit={canEdit}
+              onEliminar={setPagoAEliminar}
+              onPreviewRep={(id, label) => setPreviewRep({ id, label })}
+            />
+
           )}
 
           <div className="border-t pt-3 grid grid-cols-2 gap-2">
