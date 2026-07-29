@@ -25,6 +25,13 @@ vi.mock("@/features/tesoreria/hooks", () => ({
   useMovimientos: () => mockUseMovimientos(),
   useImportarMovimientos: () => mockUseImportarMovimientos(),
   useConciliarPago: () => mockUseConciliarPago(),
+  useConciliacionResumen: () => ({
+    data: {
+      total_movimientos: 2, pendientes: 1, conciliados: 1, ignorados: 0,
+      cargos_pendientes: 0, abonos_pendientes: 0,
+    },
+    isLoading: false,
+  }),
 }));
 
 vi.mock("@/features/tesoreria/components/PanelConciliacionMovimiento", () => ({
