@@ -40,13 +40,30 @@ function contentTypeFor(tipo: TipoAdjuntoCfdi): string {
   return tipo === "XML" ? "application/xml" : "application/pdf";
 }
 
-
-
+/**
+ * v13.322.14 — El primer segmento de la ruta DEBE ser el organization_id real
+ * para satisfacer la RLS del bucket `facturas`. Antes se usaba el literal
+ * `"org"` cuando venía indefinido, lo que siempre provocaba
+ * "new row violates row-level security policy". Ahora se resuelve vía RPC.
+ */
+async function resolverOrganizationId(
+  organizationId: string | null | undefined,
+): Promise<string> {
+  if (organizationId) return organizationId;
+  const { data, error } = await supabase.rpc("current_user_org_id");
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo determinar la organización del usuario para subir el archivo.",
+    );
+  }
+  return data;
+}
 
 export async function subirArchivosCfdiFactura(params: SubirArchivosParams): Promise<void> {
   // 13.114.14: el primer segmento DEBE ser el organization_id para satisfacer
   // la política RLS del bucket `facturas` (`foldername(name)[1] = org_id`).
-  const base = `${params.organizationId ?? "org"}/cfdi/${params.facturaId}`;
+  const base = `${await resolverOrganizationId(params.organizationId)}/cfdi/${params.facturaId}`;
   const update: { archivo_xml_url?: string | null; archivo_pdf_url?: string | null } = {};
 
   if (params.xmlFile) {
