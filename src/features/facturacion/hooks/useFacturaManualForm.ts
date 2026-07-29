@@ -135,9 +135,16 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const handleSubmit = async (timbrarAlGuardar: boolean) => {
     if (!cliente || !organizationId) return;
     const totalMxn = calcularTotalMxn(conceptos, fiscal.moneda, fiscal.tipoCambio, tasaIva);
+    if (totalMxn.tcFaltante) {
+      // FIX C6: sin TC confiable no se puede validar el crédito en MXN.
+      notifyError("Captura un tipo de cambio válido", {
+        description: `La factura está en ${fiscal.moneda} y el tipo de cambio no es utilizable.`,
+      });
+      return;
+    }
     try {
       const resultado = await validarLimite({
-        clienteId: cliente.id, clienteNombre: cliente.nombre, montoAdicionalMxn: totalMxn,
+        clienteId: cliente.id, clienteNombre: cliente.nombre, montoAdicionalMxn: totalMxn.mxn,
       });
       if (resultado?.rebasa) {
         setCreditoAlerta({ ...resultado, timbrar: timbrarAlGuardar });
