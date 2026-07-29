@@ -14,6 +14,7 @@ import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
+import { ConceptosManualesSection } from "./ConceptosManualesSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
@@ -41,8 +42,15 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
     if (ctl.cfdiConceptos.length > 0) {
       return ctl.cfdiConceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad }));
     }
+    // v13.339.0 (Q-02): los conceptos manuales también alimentan el cuadre.
+    if (ctl.conceptosManuales.conceptos.length > 0) {
+      return ctl.conceptosManuales.conceptos.map((c) => ({
+        monto: Number(c.importe) || 0,
+        cantidad: c.cantidad,
+      }));
+    }
     return Object.values(ctl.vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
-  }, [ctl.cfdiConceptos, ctl.vinculos]);
+  }, [ctl.cfdiConceptos, ctl.conceptosManuales.conceptos, ctl.vinculos]);
   const cuadre = useMemo(() => calcularCuadreConceptos(sub, conceptosParaCuadre), [sub, conceptosParaCuadre]);
 
   const footer = (
@@ -86,6 +94,16 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
         />
 
         <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />
+
+        {ctl.cfdiConceptos.length === 0 && (
+          <ConceptosManualesSection
+            conceptos={ctl.conceptosManuales.conceptos}
+            moneda={ctl.values.moneda}
+            onAgregar={ctl.conceptosManuales.agregar}
+            onActualizar={ctl.conceptosManuales.actualizar}
+            onEliminar={ctl.conceptosManuales.eliminar}
+          />
+        )}
 
         <FacturaProveedorFormFields
           values={ctl.values}
