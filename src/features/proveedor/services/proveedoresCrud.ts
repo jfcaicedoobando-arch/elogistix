@@ -151,14 +151,13 @@ export async function updateProveedor(
   await run(supabase.from("proveedores").update(changes).eq("id", id));
 }
 
-export async function deleteProveedor(id: string): Promise<void> {
+export async function deleteProveedor(id: string, userId: string | null = null): Promise<void> {
   // M6: soft-delete. El índice proveedores_org_rfc_unique es parcial
   // (deleted_at IS NULL): re-capturar el mismo RFC tras borrar ya no colisiona.
-  const { data: authData } = await supabase.auth.getUser();
   await run(
     supabase
       .from("proveedores")
-      .update({ deleted_at: new Date().toISOString(), deleted_by: authData.user?.id ?? null })
+      .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
       .eq("id", id),
   );
 }
