@@ -8,7 +8,7 @@ import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   listarMovimientos, importarMovimientos, conciliarConPago, desconciliarMovimiento,
-  ignorarMovimiento, sugerirCandidatos,
+  ignorarMovimiento, sugerirCandidatos, fetchConciliacionResumen,
   type FiltrosMovimientos, type MovimientoBBVA,
 } from "@/features/tesoreria/services";
 import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
@@ -22,6 +22,20 @@ export function useMovimientos(filtros: FiltrosMovimientos | null) {
     staleTime: 30_000,
   });
 }
+
+/**
+ * FIX C3c: resumen (conteos y montos pendientes) calculado en el servidor sobre
+ * todos los movimientos de la cuenta, no sólo sobre la página visible.
+ */
+export function useConciliacionResumen(cuentaBancariaId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.tesoreria.conciliacionResumen(cuentaBancariaId),
+    queryFn: () => fetchConciliacionResumen(cuentaBancariaId!),
+    enabled: !!cuentaBancariaId,
+    staleTime: 30_000,
+  });
+}
+
 
 export function useImportarMovimientos() {
   const { user } = useAuth();
