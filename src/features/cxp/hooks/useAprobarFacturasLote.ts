@@ -66,11 +66,17 @@ export function useAprobarFacturasLote() {
           description: "Todas las solicitudes de la selección se aprobaron correctamente.",
         });
       } else if (exitos.length === 0) {
+        const primero = fallos[0].error;
+        // Sentry JAVASCRIPT-REACT-3V: las validaciones de negocio (p. ej. "captura
+        // los conceptos antes de aprobar") no son fallas técnicas: se muestran al
+        // usuario pero no se reportan como excepción.
         notifyError(undefined, {
           title: `No se pudo aprobar ninguna de las ${fallos.length} facturas`,
-          error: new Error(fallos[0].error),
+          description: primero,
+          error: esValidacionNegocio(primero) ? undefined : new Error(primero),
           method: "USE_APROBAR_FACTURAS_LOTE",
         });
+
       } else {
         notifySuccess(undefined, {
           title: `${exitos.length} aprobada(s), ${fallos.length} con error`,
