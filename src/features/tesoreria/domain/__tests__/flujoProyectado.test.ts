@@ -40,9 +40,10 @@ describe("toMxn", () => {
   it("convierte USD usando tc", () => {
     expect(toMxn(100, "USD", 18)).toBe(1800);
   });
-  it("regresa monto sin convertir si tc inválido", () => {
-    expect(toMxn(100, "USD", 0)).toBe(100);
-    expect(toMxn(100, "USD", undefined)).toBe(100);
+  it("excluye el monto (0) si el tc no es confiable — FIX C6", () => {
+    expect(toMxn(100, "USD", 0)).toBe(0);
+    expect(toMxn(100, "USD", undefined)).toBe(0);
+    expect(toMxn(100, "USD", 1)).toBe(0);
   });
 });
 

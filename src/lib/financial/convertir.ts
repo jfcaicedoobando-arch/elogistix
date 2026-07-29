@@ -1,18 +1,91 @@
 /**
- * FIX C6 — Canon único de conversión a MXN.
+ * FIX C6 — CANON ÚNICO de conversión de moneda del ERP.
  *
- * Regla no negociable: una moneda extranjera SIN tipo de cambio válido nunca
- * se suma como si fuera MXN (TC=1). Se reporta aparte para que la UI pueda
- * advertir "hay montos sin tipo de cambio" en lugar de mostrar cifras falsas.
+ * Política (la única válida):
+ *   1. MXN → factor 1 (`fuente: 'moneda-local'`).
+ *   2. USD/EUR → requieren un TC explícito y confiable: `tcValido(tc)` y `tc > 1`
+ *      (1 USD nunca es 1 MXN; un TC ≤ 1 para moneda extranjera es dato corrupto).
+ *   3. Sin TC confiable NO se suma: `completo: false` con `monto: 0`. El consumidor
+ *      decide (excluir y contar, marcar en UI o bloquear). Nunca se simula 1:1.
+ *   4. El fallback (p. ej. TC del día) sólo aplica si se pasa explícito y queda
+ *      auditado en `fuente: 'tc-fallback'`.
  *
- * Usa este módulo en vez de llamar `convertirAMXN` con `?? 1`.
+ * Prohibido reimplementar esta lógica fuera de `src/lib/financial/`.
  */
-import { convertirAMXN, type Moneda } from "@/lib/financial/financialUtils";
 import { tcValido } from "@/lib/financial/tcValido";
+
+export type FuenteConversion = "moneda-local" | "tc-directo" | "tc-fallback" | "sin-tc";
+
+export interface ConversionMxn {
+  /** MXN equivalente; 0 cuando `completo` es false (NO es el monto nativo). */
+  monto: number;
+  /** TC aplicado (1 para MXN; null si no hubo conversión posible). */
+  tc: number | null;
+  fuente: FuenteConversion;
+  /** false = no hubo TC confiable y el monto NO debe sumarse a totales MXN. */
+  completo: boolean;
+}
 
 export interface TiposCambio {
   usd?: number | null;
   eur?: number | null;
+}
+
+function normalizarMoneda(moneda: string | null | undefined): string {
+  const m = (moneda ?? "").trim().toUpperCase();
+  return m === "" ? "MXN" : m;
+}
+
+/** TC confiable para moneda extranjera: finito, > 0 y > 1 (política 2). */
+export function tcConfiable(v: unknown): number | null {
+  const tc = tcValido(v);
+  return tc !== null && tc > 1 ? tc : null;
+}
+
+/** Convierte un monto a MXN. Única vía autorizada de conversión a MXN. */
+export function aMxn(
+  monto: number | null | undefined,
+  moneda: string | null | undefined,
+  tipoCambio: number | null | undefined,
+  opts?: { fallback?: number | null },
+): ConversionMxn {
+  const bruto = Number(monto ?? 0);
+  const m = Number.isFinite(bruto) ? bruto : 0;
+  if (normalizarMoneda(moneda) === "MXN") {
+    return { monto: m, tc: 1, fuente: "moneda-local", completo: true };
+  }
+  const directo = tcConfiable(tipoCambio);
+  if (directo) return { monto: m * directo, tc: directo, fuente: "tc-directo", completo: true };
+
+  const fb = tcConfiable(opts?.fallback);
+  if (fb) return { monto: m * fb, tc: fb, fuente: "tc-fallback", completo: true };
+
+  return { monto: 0, tc: null, fuente: "sin-tc", completo: false };
+}
+
+/** Tipo de cambio de `moneda` a MXN según las tasas disponibles. */
+function tcDeMoneda(moneda: string | null | undefined, tasas: TiposCambio): number | null {
+  const mon = normalizarMoneda(moneda);
+  if (mon === "MXN") return 1;
+  if (mon === "USD") return tcConfiable(tasas.usd);
+  if (mon === "EUR") return tcConfiable(tasas.eur);
+  return null;
+}
+
+/**
+ * Factor para convertir de `origen` a `destino` usando MXN como puente.
+ * `null` cuando falta un TC confiable en cualquiera de las dos patas.
+ */
+export function factorEntreMonedas(
+  origen: string | null | undefined,
+  destino: string | null | undefined,
+  tasas: TiposCambio,
+): number | null {
+  if (normalizarMoneda(origen) === normalizarMoneda(destino)) return 1;
+  const tcOrigen = tcDeMoneda(origen, tasas);
+  const tcDestino = tcDeMoneda(destino, tasas);
+  if (!tcOrigen || !tcDestino) return null;
+  return tcOrigen / tcDestino;
 }
 
 export interface ResultadoConversion {
@@ -22,29 +95,16 @@ export interface ResultadoConversion {
   tcFaltante: boolean;
 }
 
-function normalizarMoneda(moneda: string | null | undefined): Moneda {
-  const m = (moneda ?? "MXN").toUpperCase();
-  return (m === "USD" || m === "EUR" ? m : "MXN") as Moneda;
-}
-
-/** Convierte un monto a MXN aplicando el canon (nunca colapsa a TC=1). */
+/** Variante con las tasas agrupadas (USD/EUR) que usan los reportes. */
 export function convertirMxn(
   monto: number | null | undefined,
   moneda: string | null | undefined,
   tc: TiposCambio,
 ): ResultadoConversion {
-  const valor = Number(monto ?? 0);
-  const seguro = Number.isFinite(valor) ? valor : 0;
   const mon = normalizarMoneda(moneda);
-  if (mon === "MXN") return { mxn: seguro, tcFaltante: false };
-
-  const tasa = mon === "USD" ? tcValido(tc.usd) : tcValido(tc.eur);
-  if (!tasa) return { mxn: null, tcFaltante: true };
-
-  return {
-    mxn: convertirAMXN(seguro, mon, mon === "USD" ? tasa : 0, mon === "EUR" ? tasa : 0),
-    tcFaltante: false,
-  };
+  const tasa = mon === "USD" ? tc.usd : mon === "EUR" ? tc.eur : null;
+  const res = aMxn(monto, mon, mon === "MXN" ? 1 : tasa);
+  return res.completo ? { mxn: res.monto, tcFaltante: false } : { mxn: null, tcFaltante: true };
 }
 
 export interface TotalMxn {

@@ -13,6 +13,7 @@ import { useClientesFiscalOpts, type ClienteFiscalOpt } from "@/features/factura
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import { useValidarLimiteCredito, registrarExcesoCredito, type ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import { todayLocalISO } from "@/lib/date/today";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { DatosFiscalesValue } from "@/features/facturacion/components/FacturaManualDatosFiscales";
 
@@ -135,9 +136,18 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const handleSubmit = async (timbrarAlGuardar: boolean) => {
     if (!cliente || !organizationId) return;
     const totalMxn = calcularTotalMxn(conceptos, fiscal.moneda, fiscal.tipoCambio, tasaIva);
+    if (totalMxn.tcFaltante) {
+      // FIX C6: sin TC confiable no se puede validar el crédito en MXN.
+      notifyError(undefined, {
+        title: "Captura un tipo de cambio válido",
+        description: `La factura está en ${fiscal.moneda} y el tipo de cambio no es utilizable.`,
+        method: "FACTURA_MANUAL_TC",
+      });
+      return;
+    }
     try {
       const resultado = await validarLimite({
-        clienteId: cliente.id, clienteNombre: cliente.nombre, montoAdicionalMxn: totalMxn,
+        clienteId: cliente.id, clienteNombre: cliente.nombre, montoAdicionalMxn: totalMxn.mxn,
       });
       if (resultado?.rebasa) {
         setCreditoAlerta({ ...resultado, timbrar: timbrarAlGuardar });

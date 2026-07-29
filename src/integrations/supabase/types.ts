@@ -7478,6 +7478,17 @@ export type Database = {
         Args: { p_estado: string; p_vigente_hasta: string }
         Returns: string
       }
+      cotizacion_totales_conceptos: {
+        Args: { p_conceptos: Json }
+        Returns: {
+          iva_mxn: number
+          iva_usd: number
+          subtotal_mxn: number
+          subtotal_usd: number
+          total_mxn: number
+          total_usd: number
+        }[]
+      }
       cotizaciones_listado: {
         Args: {
           p_cliente_id?: string
@@ -8340,6 +8351,10 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: undefined
       }
+      recalc_factura_totales: {
+        Args: { p_factura_id: string }
+        Returns: undefined
+      }
       recalcular_cobro_embarques: {
         Args: { p_embarque_ids: string[] }
         Returns: undefined
@@ -8351,6 +8366,10 @@ export type Database = {
       recalcular_estado_liquidacion_factura: {
         Args: { p_factura_id: string }
         Returns: undefined
+      }
+      recalcular_subtotal_cotizacion: {
+        Args: { p_cotizacion_id: string }
+        Returns: number
       }
       recompute_embarque_tiene_proforma: {
         Args: { p_embarque_id: string }
