@@ -9,6 +9,27 @@ const LIMITE_EMBARQUES = 3000;
 const LIMITE_FACTURAS = 10000;
 const LIMITE_PAGOS = 20000;
 
+/** Totales por moneda del dashboard de Dirección (jsonb de `direccion_totales`, C3c). */
+export interface DireccionTotales {
+  embarques: number;
+  ventas: Record<string, number>;
+  costos: Record<string, number>;
+  facturado: Record<string, number>;
+  cobrado: Record<string, number>;
+}
+
+/**
+ * FIX C3c (S6-04): totales de Dirección agregados en SQL por moneda, sin
+ * mezclar divisas — la conversión a MXN equivalente la hace el cliente con el
+ * canon (FIX C6). Los loaders de detalle siguen para los widgets que listan.
+ */
+export async function fetchDireccionTotales(desdeIso: string): Promise<DireccionTotales> {
+  const { data, error } = await supabase.rpc("direccion_totales", { p_desde: desdeIso });
+  if (error) throw error;
+  // SAFE-CAST: jsonb con el shape de la migración C3c.
+  return data as unknown as DireccionTotales;
+}
+
 export type EmbarqueRow = {
   id: string; modo: string | null; estado: string | null; eta: string | null;
   cerrado_at: string | null; cliente_id: string | null; cliente_nombre: string | null;
