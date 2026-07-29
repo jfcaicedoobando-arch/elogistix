@@ -35,6 +35,19 @@ bun run e2e
 | `bun run e2e:report` | Abre el reporte HTML de la última corrida. |
 | `bun run e2e:provision` | Provisiona/reset admin + portal en staging (edge function). |
 | `bun run e2e:provision-multi-tenant` | Provisiona orgs A/B para el spec 26. |
+| `bun run e2e:seed` | Siembra idempotente de catálogos demo (navieras, agentes, rutas, tarifas, productos, cuentas bancarias, cliente y proveedor). |
+
+### Semilla de catálogos (`e2e:seed`)
+
+Requiere `DATABASE_URL` (o `SUPABASE_DB_URL`) y `E2E_ORG_ID` en el entorno o en
+`.env.e2e`. Usa UPSERT por clave natural, así que puede correrse tantas veces
+como haga falta sin duplicar datos:
+
+```bash
+E2E_ORG_ID=<uuid-org-demo> bun run e2e:seed
+```
+
+Los datos viven en `src/lib/e2e/seedDemoData.ts` (módulo puro, con test unitario).
 
 ## Setup local (una sola vez)
 

@@ -9,8 +9,10 @@ import { useAdminOrganizacionesController } from "@/features/admin/hooks";
 import { AdminOrganizacionesFilters } from "@/features/admin/components/AdminOrganizacionesFilters";
 import { NuevaOrganizacionDialog } from "@/features/admin/components/NuevaOrganizacionDialog";
 import { buildAdminOrganizacionesColumns } from "@/features/admin/components/AdminOrganizacionesColumns";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function AdminOrganizaciones() {
+  useDocumentTitle('Organizaciones');
   const { state, setters, data, createOrg } = useAdminOrganizacionesController();
   const columns = useMemo(() => buildAdminOrganizacionesColumns(), []);
 

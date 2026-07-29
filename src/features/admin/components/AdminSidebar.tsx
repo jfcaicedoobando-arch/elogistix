@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 
-const adminGroups: { label: string; items: { title: string; url: string; icon: typeof LayoutDashboard }[] }[] = [
+export const adminGroups: { label: string; items: { title: string; url: string; icon: typeof LayoutDashboard }[] }[] = [
   {
     label: "Plataforma",
     items: [

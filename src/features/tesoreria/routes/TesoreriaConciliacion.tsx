@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Upload, FileSpreadsheet, Sparkles } from "lucide-react";
+import { Upload, FileSpreadsheet, Sparkles, Plus } from "lucide-react";
 import { notifyInfo } from "@/lib/ui/appFeedback";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,33 +7,41 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useCuentasBancarias, useMovimientos, useImportarMovimientos, useConciliarPago, useConciliacionResumen } from "@/features/tesoreria/hooks";
+import {
+  type MovimientoManualInput,
+} from "@/features/tesoreria/domain/movimientoManual";
+import { useCuentasBancarias, useMovimientos, useImportarMovimientos, useConciliarPago, useConciliacionResumen, useRegistrarMovimientoManual } from "@/features/tesoreria/hooks";
+import { useAutoConciliarExactos } from "@/features/tesoreria/hooks/useAutoConciliarExactos";
 import { ResumenConciliacionCards } from "@/features/tesoreria/components/ResumenConciliacionCards";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { parseEstadoCuentaBBVA } from "@/features/tesoreria/domain/import/bbva";
 import { PanelConciliacionMovimiento } from "@/features/tesoreria/components/PanelConciliacionMovimiento";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
-import { sugerirCandidatos } from "@/features/tesoreria/services/sugerirCandidatos";
-import { encontrarCandidatosExactos, seleccionarMatchUnico } from "@/features/tesoreria/domain/conciliacionMatcher";
 
-import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { movimientoColumns } from "./_sections/movimientoColumns";
+import { MovimientoManualDialog } from "./_sections/MovimientoManualDialog";
 
 export default function TesoreriaConciliacion() {
   const { data: cuentas = [] } = useCuentasBancarias();
   const [cuentaId, setCuentaId] = useState<string>("");
   const [estado, setEstado] = useState<"Pendiente" | "Conciliado" | "Ignorado" | "todos">("Pendiente");
   const [sel, setSel] = useState<MovimientoBBVA | null>(null);
-  const [isAutoConciliando, setIsAutoConciliando] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualForm, setManualForm] = useState<Partial<MovimientoManualInput>>({
+    tipo: "cargo",
+  });
 
   const { data: movs = [], isLoading } = useMovimientos(cuentaId ? { cuenta_bancaria_id: cuentaId, estado } : null);
   const { data: resumen, isLoading: resumenLoading } = useConciliacionResumen(cuentaId || null);
   const importar = useImportarMovimientos();
   const conciliarPago = useConciliarPago();
+  const registrarManual = useRegistrarMovimientoManual();
   const fileRef = useRef<HTMLInputElement>(null);
   const columns = useMemo(() => movimientoColumns, []);
+  const { isAutoConciliando, handleConciliarExactos } = useAutoConciliarExactos(movs, conciliarPago.mutateAsync);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,52 +63,29 @@ export default function TesoreriaConciliacion() {
     }
   };
 
-  const handleConciliarExactos = async () => {
-    if (!movs.length) return;
-    setIsAutoConciliando(true);
-    let conciliados = 0;
-    let revision = 0;
+  const abrirModalManual = () => {
+    setManualForm({ cuentaBancariaId: cuentaId || undefined, fecha: undefined, concepto: "", referencia: "", tipo: "cargo", monto: undefined });
+    setManualOpen(true);
+  };
 
-    const pendientes = movs.filter((m) => m.estado_conciliacion === "Pendiente");
+  const setManualField = <K extends keyof MovimientoManualInput>(key: K, value: MovimientoManualInput[K]) =>
+    setManualForm((prev) => ({ ...prev, [key]: value }));
 
-    for (const m of pendientes) {
-      try {
-        const candidatos = await sugerirCandidatos(m);
-        const exactos = encontrarCandidatosExactos(m, candidatos);
-        const unico = seleccionarMatchUnico(exactos);
-
-        if (unico) {
-          // Usamos mutateAsync para esperar el resultado antes de contar éxito
-          await conciliarPago.mutateAsync({
-            movId: m.id,
-            tipo: unico.tipo,
-            pagoId: unico.pago_id,
-          });
-          conciliados++;
-        } else {
-          revision++;
-        }
-      } catch (err) {
-        // Falló el guard o la red, cuenta como revisión
-        revision++;
-      }
-    }
-
-    if (conciliados > 0) {
-      notifySuccess(undefined, {
-        title: `${conciliados} movimientos conciliados automáticamente`,
-        description: revision > 0 ? `${revision} requieren revisión manual` : undefined,
-      });
-    } else if (revision > 0) {
-      notifyWarning(undefined, {
-        title: "No se encontraron matches exactos únicos",
-        description: `${revision} movimientos pendientes requieren revisión`,
-      });
-    }
-    setIsAutoConciliando(false);
+  const handleGuardarManual = async () => {
+    const { cuentaBancariaId, fecha, concepto, referencia, tipo, monto } = manualForm as MovimientoManualInput;
+    await registrarManual.mutateAsync({
+      cuentaBancariaId,
+      fecha,
+      concepto,
+      referencia,
+      cargo: tipo === "cargo" ? monto : 0,
+      abono: tipo === "abono" ? monto : 0,
+    });
+    setManualOpen(false);
   };
 
   const cuentaActual = cuentas.find((c) => c.id === cuentaId);
+  const pendientesCount = movs.filter((m) => m.estado_conciliacion === "Pendiente").length;
 
   return (
     <PageContainer>
@@ -132,14 +117,18 @@ export default function TesoreriaConciliacion() {
           </Select>
 
           <div className="flex-1" />
-          
+
           <Button
             variant="outline"
             onClick={handleConciliarExactos}
-            disabled={!cuentaId || isAutoConciliando || movs.filter(m => m.estado_conciliacion === "Pendiente").length === 0}
+            disabled={!cuentaId || isAutoConciliando || pendientesCount === 0}
           >
             <Sparkles className="h-4 w-4 mr-2 text-primary" />
             {isAutoConciliando ? "Conciliando..." : "Conciliar exactos"}
+          </Button>
+
+          <Button variant="outline" onClick={abrirModalManual} disabled={!cuentaId}>
+            <Plus className="h-4 w-4 mr-2" /> Movimiento manual
           </Button>
 
           <input
@@ -187,6 +176,16 @@ export default function TesoreriaConciliacion() {
         </div>
         </>
       )}
+
+      <MovimientoManualDialog
+        open={manualOpen}
+        onOpenChange={setManualOpen}
+        cuentas={cuentas}
+        manualForm={manualForm}
+        setManualField={setManualField}
+        onGuardar={handleGuardarManual}
+        isPending={registrarManual.isPending}
+      />
     </PageContainer>
   );
 }

@@ -4,7 +4,7 @@
  * Fase J: sort por columna, filtro "solo excesos", barra + badge por fila.
  */
 import { useMemo, useState } from "react";
-import { FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { FileText, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { KpiCard } from "@/components/shared/KpiCard";
@@ -19,6 +19,7 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { withOrgPrefix } from "@/lib/filenames";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { usePdfExport } from "@/hooks/shared";
 import { VsRealFila } from "./VsRealFila";
 import type { FilaVsReal } from "@/features/presupuesto/services";
 
@@ -55,7 +56,10 @@ export function TabVsReal() {
   const periodoCtl = usePeriodoMesUrl("periodo_vs_real");
   const { mesActual, setMesKey } = periodoCtl;
   const periodo = mesActual.key;
-  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const { isExporting: generandoPdf, run: runPdfExport } = usePdfExport({
+    successTitle: "Reporte PDF descargado",
+    method: "PRESUPUESTO_VS_REAL_EXPORT_PDF",
+  });
   const [sortKey, setSortKey] = useState<SortKey>("variacion");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [soloExcesos, setSoloExcesos] = useState(false);
@@ -74,16 +78,15 @@ export function TabVsReal() {
     return ordenarFilas(base, sortKey, sortDir);
   }, [data, sortKey, sortDir, soloExcesos]);
 
-  const handlePdf = async () => {
-    if (!data || generandoPdf) return;
-    setGenerandoPdf(true);
-    try {
+  const handlePdf = () => {
+    if (!data) return;
+    void runPdfExport(async () => {
       const { ReportePresupuestoDocument } = await import("@/pdf/documents/ReportePresupuestoDocument");
       await descargarPdf(
         <ReportePresupuestoDocument resumen={data} />,
         await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),
       );
-    } finally { setGenerandoPdf(false); }
+    });
   };
 
   const sinPresupuestoGlobal = !!data && data.total_presupuesto_mxn === 0;
@@ -108,7 +111,8 @@ export function TabVsReal() {
           <Label htmlFor="solo-excesos" className="text-xs">Solo excesos</Label>
         </div>
         <Button variant="outline" onClick={handlePdf} disabled={!data || generandoPdf}>
-          <FileText className="h-4 w-4 mr-2" /> {generandoPdf ? "Generando…" : "PDF"}
+          {generandoPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+          {generandoPdf ? "Generando…" : "PDF"}
         </Button>
       </div>
 

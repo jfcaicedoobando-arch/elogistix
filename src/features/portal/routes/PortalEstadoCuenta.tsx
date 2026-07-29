@@ -3,8 +3,10 @@ import { PageSkeleton } from "@/components/shared/skeletons";
 import { Wallet } from "lucide-react";
 import { usePortalClientUsers } from "@/features/portal/hooks";
 import { EstadoCuentaModule } from "@/features/facturacion/estadoCuenta/components/EstadoCuentaModule";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function PortalEstadoCuenta() {
+  useDocumentTitle('Estado de cuenta');
   const { data: clientUsers = [], isLoading } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
 

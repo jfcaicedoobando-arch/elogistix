@@ -16,8 +16,10 @@ import { useProveedoresCrear } from "@/features/proveedor/hooks/useProveedoresCr
 import { ProveedoresImportDialog } from "../components/ProveedoresImportDialog";
 
 import { PageContainer } from "@/components/shared/PageContainer";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function Proveedores() {
+  useDocumentTitle("Proveedores");
   const [search, setSearch] = useState("");
   const [origen, setOrigen] = useState<OrigenFiltro>("todos");
   const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("todos");
@@ -71,6 +73,8 @@ export default function Proveedores() {
         search={search}
         origen={origen}
         onSelect={(id) => navigate(`/proveedores/${id}`)}
+        canCreate={canEdit}
+        onCreateNew={() => setNuevoOpen(true)}
       />
 
       <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={handleAdd} />

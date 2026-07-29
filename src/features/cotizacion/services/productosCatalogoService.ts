@@ -4,6 +4,7 @@
  * Encapsula el acceso a `catalogo_claves_sat` para que los hooks/contexts
  * no importen el cliente Supabase directo (regla arquitectónica).
  */
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ProductoCatalogo {
@@ -34,4 +35,44 @@ export async function fetchProductosCatalogo(
     clave_unidad_sat: r.clave_unidad_sat,
     nombre_unidad: r.nombre_unidad,
   }));
+}
+
+export interface CrearProductoCatalogoInput {
+  nombre: string;
+  clave_sat: string;
+  tipo_iva: ProductoCatalogo["tipo_iva"];
+  clave_unidad_sat: string;
+}
+
+/**
+ * Q-10 (Ola 4): alta rápida de producto/servicio desde el CTA "Crear concepto"
+ * del combobox de costos del wizard, sin salir a Configuración.
+ */
+export async function crearProductoCatalogo(
+  organizationId: string,
+  input: CrearProductoCatalogoInput,
+): Promise<ProductoCatalogo> {
+  const { data, error } = await supabase
+    .from("catalogo_claves_sat")
+    .insert({
+      organization_id: organizationId,
+      patron: input.nombre,
+      clave_sat: input.clave_sat,
+      tipo_iva: input.tipo_iva,
+      tasa_iva_default: input.tipo_iva === "gravado_16" ? TASA_IVA : 0,
+      clave_unidad_sat: input.clave_unidad_sat,
+      activo: true,
+    })
+    .select("id, patron, clave_sat, tipo_iva, tasa_iva_default, clave_unidad_sat, nombre_unidad")
+    .single();
+  if (error) throw error;
+  return {
+    id: data.id,
+    nombre: data.patron,
+    clave_sat: data.clave_sat,
+    tipo_iva: data.tipo_iva as ProductoCatalogo["tipo_iva"],
+    tasa_iva_default: data.tasa_iva_default,
+    clave_unidad_sat: data.clave_unidad_sat,
+    nombre_unidad: data.nombre_unidad,
+  };
 }

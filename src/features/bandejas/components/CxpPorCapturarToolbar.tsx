@@ -5,6 +5,7 @@
 import { ArrowDownAZ, ArrowUpZA, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { pluralizar } from "@/lib/format/pluralizar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -107,7 +108,7 @@ export function CxpPorCapturarToolbar({
         </Button>
 
         <div className="ml-auto text-xs text-muted-foreground tabular-nums">
-          {isFiltered ? `${totalFiltradas} de ${totalGlobal}` : `${totalGlobal}`} embarques
+          {isFiltered ? `${totalFiltradas} de ${totalGlobal} ${pluralizar(totalGlobal, "embarque", { includeCount: false })}` : pluralizar(totalGlobal, "embarque")}
         </div>
       </div>
 

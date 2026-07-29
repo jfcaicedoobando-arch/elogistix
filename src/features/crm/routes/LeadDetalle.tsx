@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/features/crm/components/ConvertirLeadDialog";
 import ConvertirLeadSheet from "@/features/crm/components/ConvertirLeadSheet";
 import { LeadLineageCard } from "@/features/crm/components/LineageCard";
@@ -31,6 +31,7 @@ export default function LeadDetalle() {
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
   const { data: lead, isLoading } = useLead(id);
+  useDocumentTitle(lead ? `Lead · ${lead.empresa}` : "Lead");
   const actualizar = useActualizarLead();
   const eliminar = useEliminarLead();
 

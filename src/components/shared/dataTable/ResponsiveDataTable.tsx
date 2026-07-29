@@ -28,6 +28,8 @@ interface Props<T> {
   data: T[];
   isLoading?: boolean;
   emptyMessage?: string;
+  /** Nodo custom para el empty state (CTA accionable). Si se define, reemplaza `emptyMessage`. */
+  emptyState?: ReactNode;
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
   getRowHref?: (item: T) => string | null;
@@ -47,7 +49,7 @@ interface Props<T> {
 
 export function ResponsiveDataTable<T>(props: Props<T>) {
   const {
-    data, isLoading, emptyMessage = "Sin resultados", onRowClick,
+    data, isLoading, emptyMessage = "Sin resultados", emptyState, onRowClick,
     getRowHref, getRowAriaLabel,
     rowKey, mobileCard, pagination, skeletonRows = 5, className,
   } = props;
@@ -72,10 +74,12 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
             ))}
           </SkeletonGroup>
         ) : data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-            <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />
-            <span>{emptyMessage}</span>
-          </div>
+          emptyState ?? (
+            <div className="flex flex-col items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+              <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />
+              <span>{emptyMessage}</span>
+            </div>
+          )
         ) : (
           <ul className="divide-y">
             {data.map((row) => {

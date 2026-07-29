@@ -16,7 +16,12 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
   const { register, watch } = useFormContext<EmbarqueFormValues>();
   const tipoCarga = watch("tipoCarga");
   const modo = watch("modo");
+  const tipoServicio = watch("tipoServicio");
   const esMaritimo = modo === "Marítimo";
+  // Q-3: en marítimo FCL las dimensiones viven por contenedor; sólo se
+  // capturan peso/volumen/piezas totales para carga aérea/terrestre o LCL.
+  const esFcl = esMaritimo && tipoServicio === "FCL";
+  const mostrarDimensiones = !esFcl;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -56,7 +61,7 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
 
       {tipoCarga === "Mercancía Peligrosa" && <MsdsUploadSection onMsdsUpload={onMsdsUpload} />}
 
-      {!esMaritimo && (
+      {mostrarDimensiones && (
         <>
           <div className="space-y-2">
             <LabelHeredable field="pesoKg" getter={(c) => String(c.peso_kg || "")} htmlFor="emb-peso-kg">

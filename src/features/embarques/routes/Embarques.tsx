@@ -1,5 +1,6 @@
 "use memo";
 import { useDeferredValue } from "react";
+import { useDocumentTitle } from "@/hooks/shared";
 import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,7 @@ function buildDescription(contenedoresCount: number, expedientesCount: number, e
 }
 
 export default function Embarques() {
+  useDocumentTitle("Embarques");
   const {
     state, clientes, operadoresUnicos, columns, isLoading, isError, refetch, isEmptyState,
     exportarCsv, exportandoCsv,

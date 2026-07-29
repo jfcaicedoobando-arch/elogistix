@@ -14,7 +14,7 @@ import {
   fetchEmbarqueParaPdf,
   type ProformaRow,
 } from "@/features/proformas/services";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface ProformaInput {
   id: string;
@@ -64,6 +64,7 @@ export function useDescargarProformaPdf() {
           tasaIva,
           conceptosConsolidados: consolidados,
         });
+        notifySuccess(undefined, { title: "Proforma PDF descargada" });
       } catch (e) {
         notifyError(undefined, { title: "Error al generar PDF: " + (e as Error).message, error: e, method: "USE_DESCARGAR_PROFORMA_PDF" });
       } finally {

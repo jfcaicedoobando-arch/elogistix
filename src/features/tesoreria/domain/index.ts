@@ -5,3 +5,4 @@
 export * from "./resumen";
 export * from "./flujoProyectado";
 export * from "./pagosProgramados";
+export * from "./movimientoManual";

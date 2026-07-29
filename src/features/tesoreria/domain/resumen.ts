@@ -129,7 +129,11 @@ function calcularFlujo(
     else flujo.por_cobrar_mxn += f.saldo;
   }
   for (const f of cxp) {
-    if (!enVentana(f.fecha_vencimiento) || f.saldo <= 0) continue;
+    // Q-15.6 — mismo criterio de fecha efectiva que el flujo semanal y el
+    // widget "Próximas a pagar": programada > vencimiento. Antes el KPI
+    // "Por pagar 30d" miraba sólo el vencimiento y no cuadraba con el widget.
+    const fechaEfectiva = f.fecha_programada_pago ?? f.fecha_vencimiento;
+    if (!enVentana(fechaEfectiva) || f.saldo <= 0) continue;
     if (f.moneda === "USD") flujo.por_pagar_usd += f.saldo;
     else flujo.por_pagar_mxn += f.saldo;
   }

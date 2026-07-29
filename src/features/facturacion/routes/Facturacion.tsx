@@ -34,7 +34,7 @@ import { BandejaPorCobrar } from "@/features/facturacion/components/bandejas/Ban
 import { BandejaVencidas } from "@/features/facturacion/components/bandejas/BandejaVencidas";
 import { BandejaRepPendientes } from "@/features/facturacion/components/bandejas/BandejaRepPendientes";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { buildFacturaColumns } from "./facturacionColumns";
 
 const LEGACY_TAB_REDIRECTS: Record<string, string> = {
@@ -58,6 +58,7 @@ const BANDEJAS_VALIDAS: BandejaId[] = [
 ];
 
 export default function Facturacion() {
+  useDocumentTitle("Facturación");
   const [searchParams, setSearchParams] = useSearchParams();
   const legacyTab = searchParams.get("tab");
   const redirectTo = legacyTab ? LEGACY_TAB_REDIRECTS[legacyTab] : undefined;
@@ -166,6 +167,7 @@ export default function Facturacion() {
               exportarFacturasCsv={exportarFacturasCsv}
               exportarLayoutContable={exportarLayoutContable}
               columns={facturaColumns}
+              onCreateNew={() => setOpenFacturaManual(true)}
               data={paginatedFacturas}
               facturasFiltradas={facturasFiltradas}
               totalFacturas={facturas.length}

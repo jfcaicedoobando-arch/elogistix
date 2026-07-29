@@ -33,6 +33,17 @@ export * from "./appFeedback.types";
 export * from "./appFeedback.sentry";
 
 /** Emite un toast bloqueante (error) con payload de debug copiable. */
+/** Título por defecto del toast de error según paso/fase (extraído para
+ *  mantener `notifyError` bajo el límite de complejidad del linter). */
+function tituloPorDefecto(step: number | undefined, phase: string | undefined): string {
+  if (typeof step === "number") {
+    const label = STEP_LABELS[step] ?? `Paso ${step}`;
+    return `Revisa el Paso ${step}: ${label}`;
+  }
+  if (phase) return `Error: ${phase}`;
+  return "Error";
+}
+
 export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOptions) {
   const {
     step, phase, errors, message, description: descOpt, title, error, context,
@@ -40,17 +51,7 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   } = opts;
   const description = descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined);
 
-  let computedTitle = title;
-  if (!computedTitle) {
-    if (typeof step === "number") {
-      const label = STEP_LABELS[step] ?? `Paso ${step}`;
-      computedTitle = `Revisa el Paso ${step}: ${label}`;
-    } else if (phase) {
-      computedTitle = `Error: ${phase}`;
-    } else {
-      computedTitle = "Error";
-    }
-  }
+  const computedTitle = title ?? tituloPorDefecto(step, phase);
 
   const debug = buildErrorReport({
     title: computedTitle,
@@ -147,3 +148,8 @@ export function notifyInfo(
   });
 }
 
+/** Descarta todos los toasts vivos (p. ej. al cambiar de ruta, Q-08).
+ *  Punto único de acceso a `sonner` para no importarlo desde componentes. */
+export function dismissAllToasts() {
+  sonnerToast.dismiss();
+}

@@ -11,9 +11,10 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import EtapasPipelineEditor from "@/features/crm/components/EtapasPipelineEditor";
 import MotivosPerdidaEditor from "@/features/crm/components/MotivosPerdidaEditor";
 import PlantillasMensajeEditor from "@/features/crm/components/PlantillasMensajeEditor";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 
 export default function CrmConfiguracion() {
+  useDocumentTitle('Configuración del CRM');
   const { canEditCrm } = usePermissions();
   if (!canEditCrm) {
     return <div className="p-8 text-center text-sm text-muted-foreground">No tienes permiso para configurar el CRM.</div>;

@@ -15,12 +15,14 @@ import PortalCotizacionConfirmDialog from "@/features/portal/components/cotizaci
 import DatosGeneralesCard from "@/features/portal/components/cotizacion/DatosGeneralesCard";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: cot, isLoading } = usePortalCotizacion(id);
   useRegisterBreadcrumbLabel(id, cot?.folio);
+  useDocumentTitle(cot ? `Cotización · ${cot.folio}` : "Cotización");
   const totales = usePortalCotizacionDetalle(cot);
   const {
     confirmAction,

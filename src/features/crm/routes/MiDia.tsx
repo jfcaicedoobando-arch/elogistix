@@ -12,8 +12,10 @@ import { CotizacionesSinRespuestaCard } from "@/features/crm/components/crmDashb
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { formatFechaLarga } from "@/lib/formatters/dates";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function MiDia() {
+  useDocumentTitle('Mi día');
   const vm = useCrmInicioVM();
   const hoy = formatFechaLarga(new Date(), { weekday: "long", day: "numeric", month: "long" });
 

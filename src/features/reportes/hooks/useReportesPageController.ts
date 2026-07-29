@@ -9,6 +9,7 @@ import { useRentabilidadClientes } from "@/features/cliente/hooks/useRentabilida
 import { toTitleCase } from "@/lib/formatters";
 import type { SortField } from "@/features/reportes/components/ReportesTablaClientes";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { usePdfExport } from "@/hooks/shared";
 
 /**
  * Controller-hook que absorbe todo el estado, derivaciones y handlers de la
@@ -32,6 +33,10 @@ export function useReportesPageController() {
   );
 
   const { clientes, kpis, isLoading } = useRentabilidadClientes(filtros);
+  const { isExporting: isExportingPdf, run: runPdfExport } = usePdfExport({
+    successTitle: "Reporte PDF descargado",
+    method: "REPORTES_RENTABILIDAD_EXPORT_PDF",
+  });
 
   const sorted = useMemo(() => {
     // v13.301.65 · Dedupe defensivo por `cliente_id` para evitar warnings de
@@ -87,21 +92,23 @@ export function useReportesPageController() {
     );
   };
 
-  const handleExportPdf = async () => {
-    const mod: { generarRentabilidadPdf: typeof GenerarRentabilidadPdfFn } = await import(
-      "@/generators/rentabilidadPdf"
-    );
-    await mod.generarRentabilidadPdf({
-      fechaDesde: filtros.fechaDesde,
-      fechaHasta: filtros.fechaHasta,
-      modo: filtros.modo,
-      kpis: {
-        total_venta_usd: kpis.revenue,
-        total_costo_usd: kpis.revenue - kpis.profit,
-        total_profit_usd: kpis.profit,
-        margen_promedio: kpis.margenProm,
-      },
-      clientes: sorted,
+  const handleExportPdf = () => {
+    void runPdfExport(async () => {
+      const mod: { generarRentabilidadPdf: typeof GenerarRentabilidadPdfFn } = await import(
+        "@/generators/rentabilidadPdf"
+      );
+      await mod.generarRentabilidadPdf({
+        fechaDesde: filtros.fechaDesde,
+        fechaHasta: filtros.fechaHasta,
+        modo: filtros.modo,
+        kpis: {
+          total_venta_usd: kpis.revenue,
+          total_costo_usd: kpis.revenue - kpis.profit,
+          total_profit_usd: kpis.profit,
+          margen_promedio: kpis.margenProm,
+        },
+        clientes: sorted,
+      });
     });
   };
 
@@ -125,6 +132,7 @@ export function useReportesPageController() {
     // acciones
     handleExport,
     handleExportPdf,
+    isExportingPdf,
     canExport: sorted.length > 0,
   };
 }

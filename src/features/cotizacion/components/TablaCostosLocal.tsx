@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, PenLine } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { ProfitBadge } from "@/components/shared/ProfitBadge";
@@ -86,6 +86,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                       onSelect={(p) => {
                         onUpdate(gi, "concepto", p.nombre);
                         onUpdate(gi, "clave_sat", p.clave_sat);
+                        onUpdate(gi, "concepto_libre", false);
                         onUpdate(gi, "aplica_iva", p.tipo_iva === "gravado_16");
                         onUpdate(gi, "tasa_iva_aplicada", tasaDesdeTipoIva(p.tipo_iva));
                         // Sólo pre-llena unidad si la fila no tenía una elegida a mano.
@@ -93,8 +94,24 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                           onUpdate(gi, "unidad_medida", p.clave_unidad_sat);
                         }
                       }}
+                      onConceptoLibre={(texto) => {
+                        // Q-10/Q-12: concepto sin clave SAT — se marca `concepto_libre`
+                        // para que la fila sea válida sin bloquear el wizard; la clave
+                        // SAT se pedirá manualmente en el paso de facturación.
+                        onUpdate(gi, "concepto", texto);
+                        onUpdate(gi, "clave_sat", "");
+                        onUpdate(gi, "concepto_libre", true);
+                      }}
                       placeholder="Selecciona concepto"
                     />
+                    {fila.concepto_libre && (
+                      <p
+                        className="mt-0.5 flex items-center gap-1 text-2xs text-warning"
+                        data-testid={`concepto-libre-aviso-${gi}`}
+                      >
+                        <PenLine className="h-3 w-3" /> Concepto libre: se pedirá la clave SAT al facturar.
+                      </p>
+                    )}
                   </div>
                   <Input value={fila.proveedor} onChange={e => onUpdate(gi, "proveedor", e.target.value)} className="h-9 text-sm w-[120px]" placeholder="Proveedor" />
                   <div className="w-[130px]">

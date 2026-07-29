@@ -7,10 +7,12 @@ import { useOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { OportunidadDetalleContent } from "@/features/crm/components/oportunidadDetalle/OportunidadDetalleContent";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function OportunidadDetalle() {
   const { id } = useParams<{ id: string }>();
   const { data: op, isLoading } = useOportunidad(id);
+  useDocumentTitle(op ? `Oportunidad · ${op.nombre}` : "Oportunidad");
   const { data: etapas = [] } = useEtapasPipeline();
 
   if (isLoading) {

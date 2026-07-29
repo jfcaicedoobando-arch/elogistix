@@ -16,3 +16,15 @@ export function calcTotalsPL(rows: { cantidad: number; costo: number; venta: num
     })),
   );
 }
+
+/**
+ * Q-10 (Ola 4): una fila de costo es válida para el wizard aunque no tenga
+ * `clave_sat` si se marcó explícitamente como "concepto libre" — la clave
+ * se pedirá después en el paso de facturación (`concepto_libre: true`).
+ * Filas legacy (sin `clave_sat` y sin el flag) siguen viéndose como
+ * "pendientes" (warning) en `ProductoServicioSelect`.
+ */
+export function esFilaCostoValida(fila: { concepto: string; clave_sat?: string; concepto_libre?: boolean }): boolean {
+  if (!fila.concepto?.trim()) return false;
+  return Boolean(fila.clave_sat) || Boolean(fila.concepto_libre);
+}

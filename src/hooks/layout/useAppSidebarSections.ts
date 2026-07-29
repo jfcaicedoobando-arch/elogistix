@@ -15,6 +15,7 @@ import {
   ROLE_BUILDERS,
   buildAdmin,
   buildDefaultSections,
+  filterSectionsByRole,
   type BuilderDeps,
   type SidebarSection,
 } from "@/hooks/layout/sidebarRoleBuilders";
@@ -69,15 +70,9 @@ export function useAppSidebarSections(): SidebarSection[] {
 
   const deps: BuilderDeps = { crmItems, sistemaItems };
   const builder = effectiveRole ? ROLE_BUILDERS[effectiveRole] : undefined;
-  if (builder) {
-    const sections = builder(deps);
-    if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
-    if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });
-    return patchSidebarBadges(sections, badgeCounts);
-  }
-
-  const sections = isAdmin ? buildAdmin(deps) : buildDefaultSections(deps);
+  const sections = builder ? builder(deps) : isAdmin ? buildAdmin(deps) : buildDefaultSections(deps);
   if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
   if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });
-  return patchSidebarBadges(sections, badgeCounts);
+  const accessible = filterSectionsByRole(sections, effectiveRole ?? role);
+  return patchSidebarBadges(accessible, badgeCounts).filter((sec) => sec.items.length > 0);
 }

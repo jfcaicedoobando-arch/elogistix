@@ -7,7 +7,7 @@ import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatDate } from "@/lib/formatters";
 import { fetchClienteFichaEstadoCuenta } from "../services/clienteFicha";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 
 const CSV_COLUMNS = [
@@ -50,6 +50,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     try {
       const data = await fetchClienteFichaEstadoCuenta(clienteIds[0]);
       await generarEstadoCuentaPdf(data);
+      notifySuccess(undefined, { title: "Estado de cuenta PDF descargado" });
     } catch (err) {
       notifyError(undefined, {
         title: "No se pudo generar el PDF",
@@ -69,6 +70,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
         CSV_COLUMNS,
         buildCsvRows(rows),
       );
+      notifySuccess(undefined, { title: "CSV descargado" });
     } catch (err) {
       notifyError(undefined, {
         title: "No se pudo generar el CSV",

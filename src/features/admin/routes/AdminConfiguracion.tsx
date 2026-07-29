@@ -8,8 +8,10 @@ import ConfigOrganizacion from "@/features/admin/components/ConfigOrganizacion";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function AdminConfiguracion() {
+  useDocumentTitle('Configuración Global');
   return (
     <PageContainer>
       <PageHeader

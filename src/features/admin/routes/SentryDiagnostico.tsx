@@ -11,7 +11,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { APP_VERSION } from "@/constants/appVersion";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { toast } from "@/hooks/shared";
+import { toast, useDocumentTitle } from "@/hooks/shared";
 import { useSentryInfo, maskDsn } from "@/lib/observability/hooks";
 import type { SentryStatus } from "@/lib/observability/hooks";
 
@@ -155,6 +155,7 @@ function PipelineCard({ active }: { active: boolean }) {
 }
 
 export default function SentryDiagnostico() {
+  useDocumentTitle('Diagnóstico de Sentry');
   const sentryInfo = useSentryInfo();
   return (
     <PageContainer>

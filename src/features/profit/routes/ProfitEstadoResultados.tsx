@@ -1,4 +1,4 @@
-import { Calendar, Download, FileText, Info } from "lucide-react";
+import { Calendar, Download, FileText, Info, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
@@ -20,10 +20,15 @@ import { withOrgPrefix } from "@/lib/filenames";
 import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
 import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
+import { usePdfExport } from "@/hooks/shared";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
   const data = c.data;
+  const { isExporting: exportandoPdf, run: runPdfExport } = usePdfExport({
+    successTitle: "Reporte PDF descargado",
+    method: "PROFIT_ESTADO_RESULTADOS_EXPORT_PDF",
+  });
 
   const handleExport = () => {
     if (!data) return;
@@ -34,13 +39,15 @@ export default function ProfitEstadoResultados() {
     );
   };
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = () => {
     if (!data) return;
-    const { ReporteEERRDocument } = await import("@/pdf/documents/ReporteEERRDocument");
-    await descargarPdf(
-      <ReporteEERRDocument periodo={c.mesActual.key} fuente={c.fuente} data={data} />,
-      await withOrgPrefix(`Reporte_EERR_${c.mesActual.key}.pdf`),
-    );
+    void runPdfExport(async () => {
+      const { ReporteEERRDocument } = await import("@/pdf/documents/ReporteEERRDocument");
+      await descargarPdf(
+        <ReporteEERRDocument periodo={c.mesActual.key} fuente={c.fuente} data={data} />,
+        await withOrgPrefix(`Reporte_EERR_${c.mesActual.key}.pdf`),
+      );
+    });
   };
 
 
@@ -71,8 +78,9 @@ export default function ProfitEstadoResultados() {
           <Button variant="outline" onClick={handleExport} disabled={!data || sinDatos === true}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
-          <Button variant="outline" onClick={handleExportPdf} disabled={!data || sinDatos === true}>
-            <FileText className="h-4 w-4 mr-2" /> PDF
+          <Button variant="outline" onClick={handleExportPdf} disabled={!data || sinDatos === true || exportandoPdf}>
+            {exportandoPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+            {exportandoPdf ? "Generando…" : "PDF"}
           </Button>
         </CardContent>
       </Card>

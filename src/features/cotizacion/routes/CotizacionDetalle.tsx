@@ -5,30 +5,15 @@ import { useParams } from "react-router-dom";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { getErrorMessage } from "@/lib/errors";
-import { EnviarCotizacionDialog } from "@/features/cotizacion/components/detalle/EnviarCotizacionDialog";
-import { HistorialEnviosCard } from "@/features/cotizacion/components/detalle/HistorialEnviosCard";
-import { useHistorialEnviosCotizacion } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
-import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
-import TablaConceptosGenerico from "@/features/cotizacion/components/TablaConceptosGenerico";
-import ResumenTotalesCotizacion from "@/features/cotizacion/components/ResumenTotalesCotizacion";
-import DialogConvertirProspecto from "@/features/cotizacion/components/DialogConvertirProspecto";
-import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/SeccionMercanciaCotizacionDetalle";
-import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/features/cotizacion/components/CotizacionDetalleSecciones";
-import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
-import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
-import { VersionesCotizacionCard } from "@/features/cotizacion/components/detalle/VersionesCotizacionCard";
-import { CotizacionInactivaBanner } from "@/features/cotizacion/components/detalle/CotizacionInactivaBanner";
-import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "./detalle/CotizacionDetalleCards";
-import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner";
-
-
-import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
+import { CotizacionDetalleContenido } from "@/features/cotizacion/components/detalle/CotizacionDetalleContenido";
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { FileX } from "lucide-react";
 
+import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
+import { useHistorialEnviosCotizacion } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
 import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
@@ -97,99 +82,32 @@ export default function CotizacionDetalle() {
         yaEnviada={envios.length > 0}
       />
 
-      <CotizacionInactivaBanner
-        cotizacionId={cotizacion.id}
-        estado={cotizacion.estado}
-        updatedAt={cotizacion.updated_at}
+      <CotizacionDetalleContenido
+        cotizacion={cotizacion}
+        id={id!}
         canEdit={canEdit}
-      />
-
-      <ReaprobacionTarifaBanner
-        cotizacionId={cotizacion.id}
-        estado={(cotizacion as { estado_revalidacion?: string }).estado_revalidacion}
-        deltaJsonb={(cotizacion as { revalidacion_delta_jsonb?: unknown }).revalidacion_delta_jsonb}
-      />
-
-
-      {cotizacion.sin_desglose_costos && (
-        <SinDesgloseBanner onCargarCostos={() => navigate(`/cotizaciones/${cotizacion.id}/editar`)} />
-      )}
-
-      {canEdit && (
-        <CotizacionDetalleAcciones
-          estado={cotizacion.estado}
-          esProspecto={cotizacion.es_prospecto}
-          numContenedores={cotizacion.num_contenedores}
-          cotizacionId={id!}
-          version={(cotizacion as { version?: number }).version ?? 1}
-          tieneEmbarquesVinculados={embarquesVinculados.length > 0 || !!cotizacion.embarque_id}
-          onCambiarEstado={handleCambiarEstado}
-          onAbrirConvertir={abrirDialogConvertir}
-          total={totalUSD + totalMXN}
-          rol={effectiveRole as AppRole | null}
-        />
-      )}
-
-
-
-      {cotizacion.es_prospecto && (
-        <ProspectoBanner
-          empresa={cotizacion.prospecto_empresa}
-          contacto={cotizacion.prospecto_contacto}
-          email={cotizacion.prospecto_email}
-          telefono={cotizacion.prospecto_telefono}
-        />
-      )}
-
-      <CotizacionDatosGeneralesCard cotizacion={cotizacion} />
-      <SeccionMercanciaCotizacionDetalle cotizacion={cotizacion} />
-
-      <TablaConceptosGenerico moneda="USD" conceptos={conceptosVentaUSD} total={totalUSD} />
-      <TablaConceptosGenerico moneda="MXN" conceptos={conceptosVentaMXN} subtotal={subtotalMXN} iva={ivaMXN} total={totalMXN} />
-      <ResumenTotalesCotizacion totalUSD={totalUSD} totalMXN={totalMXN} />
-
-      {canEdit && (
-        <SeccionCostosInternosPLUnificado
-          tipo="detalle"
-          cotizacionId={cotizacion.id}
-          conceptosUSD={conceptosVentaUSD}
-          conceptosMXN={conceptosVentaMXN}
-        />
-      )}
-
-      {cotizacion.comentario_cliente && <ComentarioClienteCard texto={cotizacion.comentario_cliente} />}
-      {cotizacion.notas && <NotasCard texto={cotizacion.notas} />}
-
-      <CotizacionDetalleEmbarques
-        embarques={embarquesVinculados}
-        cotizacionEstado={cotizacion.estado}
-      />
-
-      <HistorialEnviosCard envios={envios} />
-
-      <VersionesCotizacionCard cotizacionId={cotizacion.id} />
-
-
-      <DialogConvertirProspecto
-        open={showConvertir}
-        onOpenChange={setShowConvertir}
+        tasaIva={tasaIva}
+        embarquesVinculados={embarquesVinculados}
+        conceptosVentaUSD={conceptosVentaUSD}
+        conceptosVentaMXN={conceptosVentaMXN}
+        totalUSD={totalUSD}
+        subtotalMXN={subtotalMXN}
+        ivaMXN={ivaMXN}
+        totalMXN={totalMXN}
+        showConvertir={showConvertir}
+        setShowConvertir={setShowConvertir}
         clienteForm={clienteForm}
         setClienteForm={setClienteForm}
-        onConvertir={handleConvertir}
-        isPending={convertirProspecto.isPending}
+        handleCambiarEstado={handleCambiarEstado}
+        abrirDialogConvertir={abrirDialogConvertir}
+        handleConvertir={handleConvertir}
+        convertirProspecto={convertirProspecto}
+        navigate={navigate}
+        effectiveRole={effectiveRole as AppRole | null}
+        envios={envios}
+        enviarOpen={enviarOpen}
+        setEnviarOpen={setEnviarOpen}
       />
-
-      <EnviarCotizacionDialog
-        open={enviarOpen}
-        onOpenChange={setEnviarOpen}
-        cotizacion={cotizacion}
-        totalMxn={totalMXN}
-        totalUsd={totalUSD}
-        tasaIva={tasaIva}
-        envioPrevio={envios[0]}
-      />
-
     </PageContainer>
   );
 }
-

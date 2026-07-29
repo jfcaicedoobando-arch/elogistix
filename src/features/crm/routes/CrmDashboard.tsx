@@ -14,6 +14,7 @@ import { KpiStrip } from "@/components/shared/KpiStrip";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
+import { useDocumentTitle } from "@/hooks/shared";
 
 function StatStripItem({ icon: Icon, label, value }: { icon: typeof Target; label: string; value: string | number }) {
   return (
@@ -121,6 +122,7 @@ function ForecastMesCard() {
 }
 
 export default function CrmDashboard() {
+  useDocumentTitle('Resumen ejecutivo CRM');
   const vm = useCrmInicioVM();
   const { isLoading } = vm;
   const { data: forecast, isLoading: loadingForecast } = useForecast();

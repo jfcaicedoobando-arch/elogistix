@@ -1,3 +1,5 @@
+import { hasRouteAccess } from "@/lib/access/roleRouteMatrix";
+import type { AppRole } from "@/types/appRole";
 import {
   SIDEBAR_DASHBOARD_ITEMS,
   SIDEBAR_VENTAS_ITEMS,
@@ -169,4 +171,19 @@ export function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
     { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
     { label: "Sistema", items: filterSistema(deps.sistemaItems, ["/ayuda", "/bitacora"]) },
   ];
+}
+
+/**
+ * Q-16 (2) — Filtra los ítems visibles de cada sección por la matriz
+ * rol→ruta (`hasRouteAccess`), evitando que un builder liste manualmente
+ * una URL a la que ese rol ya no tiene acceso (drift builder↔matriz).
+ */
+export function filterSectionsByRole(
+  sections: SidebarSection[],
+  role: AppRole | null | undefined,
+): SidebarSection[] {
+  return sections.map((sec) => ({
+    ...sec,
+    items: sec.items.filter((it) => hasRouteAccess(role, it.url)),
+  }));
 }

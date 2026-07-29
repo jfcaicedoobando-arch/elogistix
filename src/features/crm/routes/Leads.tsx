@@ -18,7 +18,7 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { toTitleCase } from "@/lib/formatters";
 import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
 import { listLeads } from "@/features/crm/services/leads";
@@ -39,6 +39,7 @@ interface LeadsFilters extends Record<string, string> {
 const DEFAULTS: LeadsFilters = { estado: "todos", fuente: "todos" };
 
 export default function Leads() {
+  useDocumentTitle('Leads');
   const { canEditCrm } = usePermissions();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 

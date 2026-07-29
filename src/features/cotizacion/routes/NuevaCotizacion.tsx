@@ -13,6 +13,7 @@ import {
   loadDraft,
   clearDraft,
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
 import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard/CotizacionSuccessDialog";
 import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
@@ -61,6 +62,8 @@ export default function NuevaCotizacion() {
     userId,
     enabled: true,
     cotizacionId: w.cotizacionId,
+    currentStep: w.currentStep,
+    costosInternos: w.costosInternos,
   });
 
   // P0 — Detectar borrador existente (re-evalúa cuando el userId async llega).
@@ -77,6 +80,15 @@ export default function NuevaCotizacion() {
       // en la cotización huérfana en vez de INSERTar una nueva.
       if (draftDetectado.cotizacionId) {
         w.setCotizacionId(draftDetectado.cotizacionId);
+      }
+      // Q-12: restaurar paso y costos internos (viven fuera de RHF).
+      w.setCurrentStep(draftDetectado.currentStep);
+      w.setCostosInternos(draftDetectado.costosInternos);
+      if (draftDetectado.noRestaurado.length > 0) {
+        notifyWarning(undefined, {
+          title: "Borrador restaurado parcialmente",
+          description: `No se pudo recuperar: ${draftDetectado.noRestaurado.join("; ")}.`,
+        });
       }
     }
     setBanderaBorrador(false);

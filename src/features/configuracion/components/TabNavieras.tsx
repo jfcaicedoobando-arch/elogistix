@@ -4,12 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAllNavieras, useAdminNavieras } from "@/features/catalogos/hooks";
 import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-
-type Naviera = { id: string; code: string; name: string; activo: boolean };
+import { NavieraFormDialog } from "@/components/shared/NavieraFormDialog";
+import type { Naviera } from "@/features/catalogos/services";
 
 export default function TabNavieras() {
   const { data: navieras = [], isLoading } = useAllNavieras();
@@ -17,6 +17,9 @@ export default function TabNavieras() {
   const [busqueda, setBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
+  // Q-13/Q-12 (Ola 4): edición reutiliza el mismo `NavieraFormDialog` del
+  // empty-state de `NavieraSelect` — un solo lugar cuida el fix de overlay.
+  const [navieraEnEdicion, setNavieraEnEdicion] = useState<Naviera | null>(null);
 
   const handleAgregar = () => {
     if (!nuevoCode.trim() || !nuevoName.trim()) return;
@@ -41,12 +44,17 @@ export default function TabNavieras() {
       cell: ({ row }) => <Switch checked={row.original.activo} onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })} />,
     },
     {
-      id: "eliminar", header: "",
-      meta: { headerClassName: "w-12" },
+      id: "acciones", header: "",
+      meta: { headerClassName: "w-24" },
       cell: ({ row }) => (
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarNaviera.mutate(row.original.id)} aria-label={`Eliminar naviera ${row.original.name}`}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setNavieraEnEdicion(row.original)} aria-label={`Editar naviera ${row.original.name}`}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarNaviera.mutate(row.original.id)} aria-label={`Eliminar naviera ${row.original.name}`}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       ),
     },
   ]);
@@ -87,6 +95,11 @@ export default function TabNavieras() {
         </div>
         <p className="text-xs text-muted-foreground">{navieras.length} navieras en total · {navieras.filter(n => n.activo).length} activas</p>
       </CardContent>
+      <NavieraFormDialog
+        open={!!navieraEnEdicion}
+        onOpenChange={(open) => { if (!open) setNavieraEnEdicion(null); }}
+        naviera={navieraEnEdicion}
+      />
     </Card>
   );
 }

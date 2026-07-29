@@ -7,6 +7,8 @@ import { useDebounce, useListPageState } from "@/hooks/shared";
 import { toTitleCase } from "@/lib/formatters";
 import type { Enums } from "@/types/db";
 import { proveedorColumns } from "./proveedorTableColumns";
+import EmptyState from "@/components/empty/EmptyState";
+import { Truck } from "lucide-react";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 
@@ -16,9 +18,11 @@ interface Props {
   origen?: "Nacional" | "Extranjero" | "todos";
   onSelect: (id: string) => void;
   onTotalChange?: (total: number) => void;
+  canCreate?: boolean;
+  onCreateNew?: () => void;
 }
 
-export function ProveedorTable({ tipo, search, origen, onSelect, onTotalChange }: Props) {
+export function ProveedorTable({ tipo, search, origen, onSelect, onTotalChange, canCreate, onCreateNew }: Props) {
   const { page, setPage, pageSize, setPageSize, resetPage } = useListPageState({});
   const debouncedSearch = useDebounce(search, 300);
 
@@ -50,6 +54,14 @@ export function ProveedorTable({ tipo, search, origen, onSelect, onTotalChange }
           data={proveedores}
           isLoading={isLoading && proveedores.length === 0}
           emptyMessage="Sin proveedores registrados"
+          emptyState={
+            <EmptyState
+              icon={Truck}
+              title={search ? "No se encontraron proveedores" : "Aún no hay proveedores"}
+              description={search ? "Ajusta la búsqueda e intenta de nuevo." : "Registra tu primer proveedor para llevar el control de compras y gastos."}
+              primaryAction={canCreate && onCreateNew ? { label: "Crear proveedor", onClick: onCreateNew } : undefined}
+            />
+          }
           onRowClick={(p) => onSelect(p.id)}
           rowKey={(p) => p.id}
           density="comfortable"

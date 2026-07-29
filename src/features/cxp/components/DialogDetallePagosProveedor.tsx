@@ -27,6 +27,8 @@ import { ConceptosFacturaSection } from "./ConceptosFacturaSection";
 import { AnticiposAplicadosSection } from "@/features/anticipos-proveedor/components/AnticiposAplicadosSection";
 import { usePermissions } from "@/hooks/shared";
 import { formatDate } from "@/lib/formatters/dates";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Props {
   open: boolean;
@@ -41,9 +43,15 @@ interface Props {
 export function DialogDetallePagosProveedor({
   open, onOpenChange, factura, canEdit, onPagar, onEditar, onEliminar,
 }: Props) {
-  const { data: facturaFresh } = useFacturaProveedor(factura?.id, factura ?? undefined);
-  const f = facturaFresh ?? factura;
-  const { data: pagos = [], isLoading } = usePagosProveedor(f?.id);
+  const facturaQ = useFacturaProveedor(factura?.id, factura ?? undefined);
+  const f = facturaQ.data ?? factura;
+  const pagosQ = usePagosProveedor(f?.id);
+  const pagos = pagosQ.data ?? [];
+  const isLoading = pagosQ.isLoading;
+  // Q-09 — el detalle de CxP no exponía el error de sus queries: si fallaba,
+  // el modal se quedaba en blanco sin manera de reintentar.
+  const errorCarga = facturaQ.error ?? pagosQ.error;
+  const recargar = () => { void facturaQ.refetch(); void pagosQ.refetch(); };
   const eliminar = useEliminarPagoProveedor(f?.id ?? "");
   const cerrarSinPago = useCerrarFacturaProveedorSinPago();
   const cancelar = useCancelarFacturaProveedor();
@@ -71,10 +79,21 @@ export function DialogDetallePagosProveedor({
 
           {f && <FacturaResumen f={f} pagosCount={pagos.length} />}
 
-          <BodySections
-            f={f} pagos={pagos} isLoading={isLoading} canEdit={canEdit}
-            onEliminarPago={setPagoAEliminar}
-          />
+          {errorCarga ? (
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <ErrorStateInline
+                title="No pudimos cargar el detalle de la factura"
+                message={getErrorMessage(errorCarga)}
+                onRetry={recargar}
+                retrying={facturaQ.isFetching || pagosQ.isFetching}
+              />
+            </div>
+          ) : (
+            <BodySections
+              f={f} pagos={pagos} isLoading={isLoading} canEdit={canEdit}
+              onEliminarPago={setPagoAEliminar}
+            />
+          )}
 
           <div className="px-6 py-3 border-t flex justify-end bg-background">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>

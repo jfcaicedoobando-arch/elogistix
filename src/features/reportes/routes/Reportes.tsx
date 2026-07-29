@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Download, FileText, ChevronDown } from "lucide-react";
+import { Download, FileText, ChevronDown, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +36,7 @@ export default function Reportes() {
     handleSort,
     handleExport,
     handleExportPdf,
+    isExportingPdf,
     canExport,
   } = useReportesPageController();
 
@@ -56,7 +57,7 @@ export default function Reportes() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={handleExportPdf}>
+                  <DropdownMenuItem onClick={handleExportPdf} disabled={isExportingPdf}>
                     <FileText className="h-4 w-4 mr-2" /> PDF
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleExport}>
@@ -67,8 +68,9 @@ export default function Reportes() {
             </div>
             {/* Desktop */}
             <div className="hidden sm:flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!canExport}>
-                <FileText className="h-4 w-4 mr-2" /> PDF
+              <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!canExport || isExportingPdf}>
+                {isExportingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                {isExportingPdf ? "Generando…" : "PDF"}
               </Button>
               <Button variant="outline" size="sm" onClick={handleExport} disabled={!canExport}>
                 <Download className="h-4 w-4 mr-2" /> Exportar CSV

@@ -53,6 +53,7 @@
     "e2e:local": "E2E_BASE_URL=http://localhost:8080 playwright test",
     "e2e:staging": "playwright test",
     "e2e:provision-multi-tenant": "tsx scripts/e2e/provision-multi-tenant.ts",
+    "e2e:seed": "tsx scripts/e2e/seed-demo.ts",
     "ci:local": "bun run lint && bun run lint:unused && bun run test && bun run build"
   },
   "dependencies": {

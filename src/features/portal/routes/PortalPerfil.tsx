@@ -6,6 +6,7 @@ import { usePortalPerfil } from "@/features/portal/hooks";
 import { EditarContactoDialog } from "@/features/portal/components/perfil/EditarContactoDialog";
 import { CambiarPasswordDialog } from "@/features/portal/components/perfil/CambiarPasswordDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { useDocumentTitle } from "@/hooks/shared";
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
@@ -19,6 +20,7 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 }
 
 export default function PortalPerfil() {
+  useDocumentTitle('Mi perfil');
   const { data, isLoading, isError } = usePortalPerfil();
   const [editContacto, setEditContacto] = useState(false);
   const [cambiarPass, setCambiarPass] = useState(false);
