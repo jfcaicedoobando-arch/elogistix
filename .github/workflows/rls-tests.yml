@@ -401,9 +401,9 @@ jobs:
     name: Drift radar — migraciones sin _ci_drift
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # No bloquea el merge: es un radar. Cuando el resumen quede en 0 bloques
-    # de drift, se puede volver obligatorio quitando `continue-on-error`.
-    continue-on-error: true
+    # Sólo falla con drift NUEVO (posterior al baseline). La deuda histórica
+    # cubierta por `_ci_drift.sql` se reporta como warning informativo.
+
 
     services:
       postgres:
