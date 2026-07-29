@@ -1,24 +1,15 @@
-import { useState, useMemo } from "react";
 import { FilePlus2, ListChecks, FileText, Lock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
-import { useTasaIVA } from "@/features/catalogos/hooks";
-import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks";
-import { useProformasEmbarque, useEliminarProforma } from "@/features/embarques/hooks";
-import { useDescargarProformaPdf } from "@/features/embarques/hooks";
-import { useContenedoresEmbarque } from "@/features/embarques/hooks";
-import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
 import { HistorialProformas } from "./facturacion/HistorialProformas";
-import { esBorradorVacio, esBorradorSinConceptos } from "./facturacion/esBorradorVacio";
-import { calcularEstadosConceptos } from "./facturacion/estadoConceptoBadge";
 import { FlujoFacturacionStepper } from "./facturacion/FlujoFacturacionStepper";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
 import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
 import { AvisoProformasRechazadas } from "./facturacion/AvisoProformasRechazadas";
 import { DialogEliminarProforma } from "./facturacion/DialogEliminarProforma";
-import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
+import { useTabFacturacionState } from "./facturacion/useTabFacturacionState";
 import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<'embarques'>;
@@ -45,66 +36,24 @@ export function TabFacturacion({ facturas, canEdit: canEditProp, embarque }: Pro
   // v13.334.8 — Un embarque Cerrado tiene bloqueada la edición de conceptos a
   // nivel BD (trigger `trg_bloquear_cierre`). Se refleja en la UI para no
   // ofrecer acciones que fallarían con un error técnico.
-  const embarqueCerrado = embarque.estado === "Cerrado";
-  const canEdit = canEditProp && !embarqueCerrado;
-  const tasaIva = useTasaIVA();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogInitialFiltro, setDialogInitialFiltro] = useState<FiltroContenedor>('todos');
-  const { data: conceptos = [] } = useEmbarqueConceptosVenta(embarque.id);
-  const { data: contenedores = [] } = useContenedoresEmbarque(embarque.id);
-  const { data: proformas = [] } = useProformasEmbarque(embarque.id);
-  const eliminarProforma = useEliminarProforma();
-  const { descargar: descargarProformaPdf } = useDescargarProformaPdf();
-  const [proformaAEliminar, setProformaAEliminar] = useState<{ id: string; numero: string } | null>(null);
-  const { registerRef } = useFocusSection();
-
-  // Mapa concepto.id → estado tri-valor (pendiente | en_proforma | facturado).
-  // Ya se lee directo de `conceptos_venta.estado_facturacion` — el trigger
-  // `trg_sync_conceptos_venta_facturado` lo mantiene consistente con
-  // `proformas.estado_proforma`.
-  const estadosConceptos = useMemo(
-    () => calcularEstadosConceptos(conceptos),
-    [conceptos]
-  );
-
-  const conceptosPendientes = useMemo(
-    () => conceptos.filter(c => c.estado_facturacion !== 'en_proforma'),
-    [conceptos]
-  );
-
-  // Conceptos verdaderamente huérfanos (sin proforma asignada) — usados por la
-  // alerta de proforma inconsistente.
-  const conceptosHuerfanos = useMemo(
-    () => conceptos.filter(c => c.estado_facturacion === 'pendiente' && !c.proforma_id),
-    [conceptos]
-  );
-
-  const borradorVacio = useMemo(
-    () =>
-      proformas.find((p) => esBorradorVacio(p) || esBorradorSinConceptos(p, conceptos)) ??
-      null,
-    [proformas, conceptos],
-  );
-
-  const handleDescargarProforma = async (proformaId: string) => {
-    const proforma = proformas.find(p => p.id === proformaId);
-    if (!proforma) return;
-    await descargarProformaPdf(proforma, { embarqueOverride: embarque });
-  };
+  const s = useTabFacturacionState(embarque, canEditProp);
+  const {
+    embarqueCerrado, canEdit, tasaIva, conceptos, contenedores, proformas,
+    estadosConceptos, conceptosPendientes, conceptosHuerfanos, borradorVacio,
+    eliminarProforma, proformaAEliminar, setProformaAEliminar,
+    dialogOpen, setDialogOpen, dialogInitialFiltro, abrirGenerarProforma,
+    handleDescargarProforma, registerRef,
+  } = s;
 
   // Barra unificada arriba del tab. Reutiliza `useFocusSection` para saltar
   // a las secciones (Proformas / Facturas) sin duplicar handlers.
   const hayConceptosPendientes = conceptos.some(c => c.estado_facturacion !== 'en_proforma');
-  const abrirGenerarProforma = () => {
-    setDialogInitialFiltro('todos');
-    setDialogOpen(true);
-  };
   const scrollTo = (id: string) => {
     const el = document.querySelector<HTMLElement>(`[data-focus="${id}"]`);
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   const actionPrimary: DetalleActionItem | null = hayConceptosPendientes && canEdit
-    ? { id: "gen-proforma", label: "Generar proforma", icon: FilePlus2, onClick: abrirGenerarProforma }
+    ? { id: "gen-proforma", label: "Generar proforma", icon: FilePlus2, onClick: () => abrirGenerarProforma() }
     : null;
   const actionSecondary: DetalleActionItem[] = [];
   if (proformas.length > 0) {
@@ -147,14 +96,8 @@ export function TabFacturacion({ facturas, canEdit: canEditProp, embarque }: Pro
           tasaIva={tasaIva}
           canEdit={canEdit}
           estadosConceptos={estadosConceptos}
-          onGenerarProforma={() => {
-            setDialogInitialFiltro('todos');
-            setDialogOpen(true);
-          }}
-          onGenerarProformaContenedor={(contenedorId) => {
-            setDialogInitialFiltro(contenedorId);
-            setDialogOpen(true);
-          }}
+          onGenerarProforma={() => abrirGenerarProforma()}
+          onGenerarProformaContenedor={(contenedorId) => abrirGenerarProforma(contenedorId)}
         />
       </div>
 
@@ -168,7 +111,6 @@ export function TabFacturacion({ facturas, canEdit: canEditProp, embarque }: Pro
       )}
 
       <AvisoProformasRechazadas proformas={proformas} />
-
 
       <div ref={registerRef("proformas")} data-focus="proformas">
         <HistorialProformas
