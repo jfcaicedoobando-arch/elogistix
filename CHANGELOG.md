@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.323.3] - 2026-07-30
+- Cobranza y Estado de cuenta: las tarjetas de totales (adeudado, vencido, por vencer, saldo a favor) ahora leen las cifras agregadas en el servidor, no la página visible de la tabla.
+- Si se aplica búsqueda de texto, filtro de estatus, moneda o "sólo con saldo", los totales vuelven a calcularse sobre las filas mostradas para que tabla y tarjetas siempre cuadren.
+
+
+
 ## [13.323.2] - 2026-07-30
 - Cifras de dinero: los totales de Cobranza, Estado de cuenta, Conciliación bancaria, Dashboard de Facturación y Dashboard de Dirección ahora se suman en el servidor. Antes se calculaban en el navegador sobre un máximo de filas descargadas, así que con mucho volumen las cifras podían salir cortas sin avisar.
 - Los agregados ignoran registros eliminados, respetan el aislamiento por organización y anclan el "hoy" a la zona horaria de Ciudad de México.
