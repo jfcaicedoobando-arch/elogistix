@@ -38,7 +38,7 @@ export async function upsertTcDofManual(input: {
     supabase.rpc("tc_dof_upsert_manual", {
       _fecha: input.fecha,
       _usd: input.usdMxn,
-      _eur: input.eurMxn ?? null,
+      _eur: input.eurMxn ?? undefined,
     }),
   );
 }
