@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [13.322.8] - 2026-07-29
+- Base de datos: se documentaron formalmente cuatro piezas (dos campos de proformas y las dos tablas de seguimiento) que existían sin registro; no cambia ningún dato, pero ahora la base puede reconstruirse fielmente desde cero.
+- Integración continua: el radar de cambios manuales usa una lista congelada de deuda histórica, ya no genera advertencias amarillas en cada revisión y avisa cuando una entrada de esa lista ya se puede borrar.
+
 ## [13.322.7] - 2026-07-29
 - Integración continua: las auditorías automáticas ya no fallan en el servidor por herramientas ausentes; la revisión de avisos usa búsqueda propia y la de base de datos se omite cuando no hay conexión disponible.
 ## [13.322.6] - 2026-07-29
