@@ -356,7 +356,11 @@ jobs:
     runs-on: ubuntu-24.04
     needs: rls-suites
     if: always()
+    permissions:
+      contents: read
+      actions: read
     steps:
+
       - name: Detallar suites fallidas
         # El resultado agregado sólo dice "failure": sin esto hay que abrir a
         # mano las 19 suites para saber cuál rompió. Aquí listamos las suites
