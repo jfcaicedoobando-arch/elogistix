@@ -78,7 +78,7 @@ describe("fetchDashboardEjecutivoFacturacion (RPC C3c)", () => {
     });
   });
 
-  it("propaga el error de la RPC", async () => {
+  it("propaga el error de la RPC dashboard_facturacion_kpis", async () => {
     mock.setRpcResult("dashboard_facturacion_kpis", { data: null, error: new Error("F") });
     await expect(fetchDashboardEjecutivoFacturacion("org", null, HOY)).rejects.toThrow("F");
   });
