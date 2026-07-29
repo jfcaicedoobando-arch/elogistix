@@ -7,6 +7,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { run, unwrapOr } from "@/lib/supabase/response";
 import { resolverTasa, type TipoIvaConcepto } from "./conceptosFacturaShared";
+import { roundMoney, subtotalLinea, calcularIVA } from "@/lib/financial/financialUtils";
 
 export async function recalcularTotalesFactura(facturaId: string): Promise<void> {
   const data = await unwrapOr(
@@ -23,7 +24,7 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
   let retIsr = 0;
   let retIva = 0;
   for (const c of data) {
-    const importe = Number(c.cantidad) * Number(c.precio_unitario);
+    const importe = subtotalLinea(Number(c.cantidad), Number(c.precio_unitario));
     subtotal += importe;
     let tasa: number;
     if (c.tasa_iva_aplicada != null) {
@@ -32,11 +33,11 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
       const tipo = c.tipo_iva as TipoIvaConcepto | null | undefined;
       tasa = tipo ? (resolverTasa(tipo) ?? 0) : 0;
     }
-    iva += importe * tasa;
+    iva += calcularIVA(importe, tasa);
     retIsr += importe * Number(c.tasa_ret_isr ?? 0);
     retIva += importe * Number(c.tasa_ret_iva ?? 0);
   }
-  const r = (n: number) => Math.round(n * 100) / 100;
+  const r = roundMoney;
   const subtotalR = r(subtotal);
   const ivaR = r(iva);
   const retIsrR = r(retIsr);

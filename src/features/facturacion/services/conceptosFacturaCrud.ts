@@ -71,7 +71,7 @@ function normalizarLinea(input: ConceptoFacturaInput) {
     descripcion,
     cantidad,
     precio_unitario: precio,
-    total: Math.round(cantidad * precio * 100) / 100,
+    total: subtotalLinea(cantidad, precio),
     clave_sat: clave,
     tipo_iva,
     tasa_iva_aplicada: resolverTasa(tipo_iva),
