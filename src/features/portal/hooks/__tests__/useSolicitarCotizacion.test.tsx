@@ -1,0 +1,67 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createElement, type ReactNode } from "react";
+import { useSolicitarCotizacion } from "../useSolicitarCotizacion";
+import { solicitarCotizacionPortal } from "@/features/portal/services/solicitudes";
+import { queryKeys } from "@/lib/query";
+
+vi.mock("@/features/portal/services/solicitudes", () => ({
+  solicitarCotizacionPortal: vi.fn(),
+}));
+
+const solicitar = solicitarCotizacionPortal as unknown as ReturnType<typeof vi.fn>;
+
+const input = {
+  clienteId: "cli-1",
+  modo: "Marítimo" as const,
+  tipo: "Importación" as const,
+  origen: "Shanghái",
+  destino: "Manzanillo",
+  tipoEmbarque: "FCL",
+};
+
+function setup() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+  const wrapper = ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client: queryClient }, children);
+  return { wrapper, invalidate };
+}
+
+describe("useSolicitarCotizacion", () => {
+  beforeEach(() => solicitar.mockReset());
+
+  it("invalida el listado de cotizaciones del cliente al tener éxito", async () => {
+    solicitar.mockResolvedValue({ id: "cot-1", folio: "COT-0001" });
+    const { wrapper, invalidate } = setup();
+    const { result } = renderHook(() => useSolicitarCotizacion(["cli-1"]), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync(input);
+    });
+
+    expect(solicitar).toHaveBeenCalledWith(input);
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({
+        queryKey: queryKeys.portal.cotizaciones(["cli-1"]),
+      }),
+    );
+  });
+
+  it("propaga el error y no invalida caché", async () => {
+    solicitar.mockRejectedValue(new Error("LC_CLIENTE_NO_VINCULADO"));
+    const { wrapper, invalidate } = setup();
+    const { result } = renderHook(() => useSolicitarCotizacion(["cli-1"]), { wrapper });
+
+    await expect(
+      act(async () => {
+        await result.current.mutateAsync(input);
+      }),
+    ).rejects.toThrow("LC_CLIENTE_NO_VINCULADO");
+
+    expect(invalidate).not.toHaveBeenCalled();
+  });
+});
