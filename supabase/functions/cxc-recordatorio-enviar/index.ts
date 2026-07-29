@@ -3,6 +3,8 @@ import { z } from 'npm:zod@3.23.8';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { wrapEdgeHandler } from '../_shared/sentry.ts';
 import { authenticate } from '../_shared/auth.ts';
+import { DESTINATARIO_NO_PERMITIDO, emailPerteneceACliente } from '../_shared/destinatarioCliente.ts';
+
 
 const SITE_NAME = 'elogistix';
 const FROM_DOMAIN = 'librecarga.com';
