@@ -44,12 +44,18 @@ where a.nombres <@ b.nombres
 union all
 
 -- 2) Funciones que aún usan literales de enum renombrados
+--    Se excluyen agregados/ventana e internas: pg_get_functiondef() lanza error
+--    ("array_agg is an aggregate function") si se le pasa algo que no sea una
+--    función plana escrita en un lenguaje con cuerpo SQL/plpgsql.
 select 'enum_renombrado',
        p.proname,
        'IndirectoOperacion'
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
+join pg_language l on l.oid = p.prolang
 where n.nspname = 'public'
+  and p.prokind = 'f'
+  and l.lanname in ('sql', 'plpgsql')
   and pg_get_functiondef(p.oid) ilike '%IndirectoOperacion%'
 
 union all
