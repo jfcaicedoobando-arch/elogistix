@@ -1,7 +1,12 @@
 # Changelog
 
 
+## [13.322.4] - 2026-07-29
+- Pruebas: cuando falla la validación de aislamiento (RLS), el resumen ahora indica exactamente qué grupo de pruebas falló y enlaza a su registro, en vez de reportar sólo "una o más fallaron".
+
+
 ## [13.322.3] - 2026-07-29
+
 - Despliegue: nuevo control automático posterior a la fusión que bloquea la promoción a producción si fallan las pruebas de aislamiento (RLS), la auditoría de migraciones o el radar de cambios manuales en la base.
 - El resultado se publica como "PROMOCIÓN AUTORIZADA" o "PROMOCIÓN BLOQUEADA" y, si bloquea, abre o actualiza un issue con el detalle.
 - El radar de cambios manuales sólo bloquea por migraciones nuevas; la deuda histórica queda exenta mediante una línea base declarada.
