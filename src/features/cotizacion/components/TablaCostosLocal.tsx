@@ -143,6 +143,10 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                       className="h-8 text-sm text-right w-[110px]"
                     />
                   </div>
+                  {/* Q-15.9 — totales visibles por partida: el multiplicador queda explícito. */}
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {fila.cantidad} × costo = {formatCurrency(costoTotal, moneda)} · venta {formatCurrency(ventaTotal, moneda)}
+                  </span>
                   <span className={`text-sm font-medium w-[100px] text-right ${profit >= 0 ? "text-success" : "text-destructive"}`}>
                     {formatCurrency(profit, moneda)}
                   </span>
