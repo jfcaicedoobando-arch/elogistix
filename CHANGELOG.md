@@ -1,6 +1,11 @@
 # Changelog
 
+## [13.331.8] - 2026-07-29
+- La pantalla de Diagnóstico de Sentry ya no reporta "no inicializado" por error: ahora espera a que el SDK termine de cargar y distingue tres estados (activo, deshabilitado en desarrollo y falta de DSN).
+- Se agregó la fila "DSN configurado en el build" para detectar de un vistazo si falta la variable de entorno.
+
 ## [13.331.7] - 2026-07-29
+
 - Actualizada la librería de lectura de archivos Excel (importación de estados de cuenta) a la versión 0.20.3, que corrige dos vulnerabilidades de seguridad altas.
 
 
