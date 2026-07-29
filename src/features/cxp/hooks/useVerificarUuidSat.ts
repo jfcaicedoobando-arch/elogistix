@@ -38,6 +38,7 @@ export function useVerificarUuidSat() {
       if (estatus === "Vigente") notifySuccess(undefined, { title: "CFDI Vigente en SAT" });
       else if (estatus === "Cancelado")
         notifyWarning(undefined, { title: "CFDI Cancelado en SAT", description: detalle });
+      else if (estatus === "No verificable") notificarNoVerificable(detalle);
       else if (estatus === "No Encontrado")
         notifyError(undefined, {
           title: "CFDI No encontrado en SAT",
