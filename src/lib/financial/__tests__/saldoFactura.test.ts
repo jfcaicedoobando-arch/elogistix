@@ -20,7 +20,7 @@ describe("calcularSaldoFactura (canon A1)", () => {
     expect(calcularSaldoFactura(100, [{ monto_aplicado_factura: 500 }]).saldo).toBe(0);
   });
 
-  it("tolera valores nulos o no numéricos", () => {
+  it("tolera pagos y notas de crédito con montos nulos o no numéricos", () => {
     const r = calcularSaldoFactura(500, [{ monto_aplicado_factura: null }], [{ monto: undefined }]);
     expect(r.saldo).toBe(500);
   });
