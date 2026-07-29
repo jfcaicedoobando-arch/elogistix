@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.323.1] - 2026-07-29
+- Datos: los listados y tableros (embarques, facturas, dashboard, alertas laterales, operaciones, profit por cliente) ya no consideran registros eliminados, evitando conteos y montos inflados por "fantasmas".
+- Calidad: nueva suite de regresión RLS `soft_delete_rpcs` en CI que verifica automáticamente que las 9 funciones de listado/agregación ignoren lo borrado.
+
 ## [13.323.0] - 2026-07-29
 - Seguridad: eliminar un embarque ahora exige ser administrador de la plataforma, o administrador/operador de la misma organización del embarque. Antes cualquier usuario con sesión (visor, cliente, vendedor) podía borrarlo, incluso de otra empresa. El botón "Eliminar" también se oculta a quien no tiene permiso.
 - Seguridad: las funciones fiscales (timbrar, cancelar, notas de crédito, REP, descarga y reenvío de CFDI) ahora validan el rol en el servidor y no sólo la pertenencia a la organización. Timbrar y cancelar quedan para contadores y administradores; el REP suma a cobranza; la consulta/descarga se abre a los roles financieros.
