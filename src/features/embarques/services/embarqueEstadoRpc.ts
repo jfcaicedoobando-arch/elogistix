@@ -7,6 +7,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
+import { getErrorMessage } from "@/lib/errors";
+
 
 export interface AvanzarEstadoEmbarqueInput {
   embarqueId: string;
