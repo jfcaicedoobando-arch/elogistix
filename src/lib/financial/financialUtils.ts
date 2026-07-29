@@ -22,6 +22,21 @@ const money = (n: number) => currency(n, { precision: 2 });
 const ratio = (n: number) => currency(n, { precision: 4 });
 
 /**
+ * Redondeo canónico de dinero a 2 decimales. Política: "half away from zero",
+ * idéntica a `ROUND(numeric, 2)` de Postgres. NO uses `Math.round(n*100)/100`:
+ * en negativos diverge de la BD (Math.round redondea .5 hacia +∞: −2.505→−2.50
+ * vs −2.51 en Postgres). El `Number.EPSILON` corrige el error de binario en
+ * casos como 1.005 (cuyo double es 1.00499999…).
+ */
+export function roundMoney(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  const abs = Math.abs(n);
+  const redondeado = Math.round((abs + Number.EPSILON) * 100) / 100;
+  return n < 0 ? -redondeado : redondeado;
+}
+
+
+/**
  * Subtotal de una línea (cantidad × precio_unitario) redondeado a 2 decimales
  * con `currency.js`. Usar SIEMPRE en lugar de la multiplicación directa antes
  * de acumular a un total padre, para evitar drift de punto flotante.
