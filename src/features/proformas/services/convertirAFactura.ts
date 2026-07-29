@@ -46,7 +46,7 @@ export async function convertirProformaAFactura(
     p_metodo_pago: params.metodoPago,
     p_forma_pago: params.formaPago,
     p_uso_cfdi: params.usoCfdi,
-    p_dias_credito: params.diasCredito ?? 0,
+    p_dias_credito: params.diasCredito ?? undefined,
     p_notas: params.notas ?? undefined,
     p_request_id: params.requestId ?? undefined,
   });
