@@ -27,9 +27,12 @@ import {
   type ClienteRow,
 } from "@/features/cliente/components/clientesTableConfig";
 import { ClienteMobileCard } from "@/features/cliente/components/ClienteMobileCard";
+import EmptyState from "@/components/empty/EmptyState";
 import { useState, useMemo } from "react";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function Clientes() {
+  useDocumentTitle("Clientes");
   const { canEdit } = usePermissions();
   const { organizationId } = useOrgFilter();
   const queryClient = useQueryClient();
@@ -113,6 +116,14 @@ export default function Clientes() {
               data={clientes as ClienteRow[]}
               isLoading={isLoading}
               emptyMessage={search ? "No se encontraron clientes" : "No hay clientes registrados"}
+              emptyState={
+                <EmptyState
+                  icon={Building2}
+                  title={search ? "No se encontraron clientes" : "Aún no hay clientes"}
+                  description={search ? "Ajusta la búsqueda e intenta de nuevo." : "Crea tu primer cliente para empezar a cotizar y facturar."}
+                  primaryAction={canEdit ? { label: "Crear cliente", onClick: () => setDialogOpen(true) } : undefined}
+                />
+              }
               getRowHref={(c) => `/clientes/${c.id}`}
               rowKey={(c) => c.id}
               density="comfortable"

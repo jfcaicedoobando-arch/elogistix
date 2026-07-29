@@ -18,6 +18,7 @@ import { PortalEmbarqueStepper } from "@/features/portal/components/embarqueDeta
 
 import { usePortalEmbarqueDetalleController } from "@/features/embarques/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();
@@ -35,6 +36,7 @@ export default function PortalEmbarqueDetalle() {
     progressSteps,
   } = usePortalEmbarqueDetalleController(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
+  useDocumentTitle(embarque ? `Embarque · ${embarque.expediente}` : "Embarque");
 
   if (isLoading) {
     return <DetailSkeleton />;

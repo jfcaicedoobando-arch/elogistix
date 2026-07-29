@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { usePermissions, useToast } from "@/hooks/shared";
+import { usePermissions, useToast, useDocumentTitle } from "@/hooks/shared";
 import { useIdempotenciaLog, type FnFilter } from "@/features/admin/hooks";
 import type { IdempotenciaRow } from "@/features/admin/services";
 
@@ -46,6 +46,7 @@ const dtf = {
 };
 
 export default function Idempotencia() {
+  useDocumentTitle('Idempotencia');
   const { isAdmin } = usePermissions();
   const { toast } = useToast();
   const { filtroFn, setFiltroFn, rows, isLoading, isFetching, refetch, totales } =

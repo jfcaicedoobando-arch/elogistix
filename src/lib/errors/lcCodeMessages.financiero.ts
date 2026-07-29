@@ -107,6 +107,14 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_MOVIMIENTO_YA_VINCULADO:
     "El movimiento bancario ya está vinculado a otro pago. Desvincúlalo antes de reutilizarlo.",
 
+  // ── Tesorería · cuentas bancarias / ejecución de pago (Q-15.2) ─────────
+  LC_CUENTA_NO_EXISTE: "La cuenta bancaria no existe o fue eliminada.",
+  LC_CUENTA_ORG_MISMATCH: "La cuenta bancaria pertenece a otra organización.",
+  LC_PAGO_MONEDA_CUENTA_MISMATCH:
+    "La moneda de la cuenta bancaria no coincide con la de la factura.",
+  LC_CUENTA_SALDO_INSUFICIENTE:
+    "El saldo de la cuenta bancaria es insuficiente para este pago.",
+
   // ── Divisas / tipo de cambio ───────────────────────────────────────────
   LC_MONEDA_NO_SOPORTADA: "Moneda no soportada por el sistema.",
   LC_TC_REQUERIDO: "Captura el tipo de cambio del día.",

@@ -17,11 +17,13 @@ import PortalFacturaConceptosTable from "@/features/portal/components/factura/Po
 import PortalFacturaPagosCard from "@/features/portal/components/factura/PortalFacturaPagosCard";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { useDocumentTitle } from "@/hooks/shared";
 export default function PortalFacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: factura, isLoading } = usePortalFactura(id);
   useRegisterBreadcrumbLabel(id, factura?.numero);
+  useDocumentTitle(factura ? `Factura · ${factura.numero}` : "Factura");
 
   const handleDownload = async (stored: string, kind: "PDF" | "XML") => {
     try {

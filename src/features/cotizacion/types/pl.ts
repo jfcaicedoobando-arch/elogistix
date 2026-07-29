@@ -35,6 +35,12 @@ export interface FilaCostoLocal {
    */
   costeo_tarifa_id?: string | null;
   costeo_tarifa_recargo_id?: string | null;
+  /**
+   * Q-10 (Ola 4): la fila se capturó como "concepto libre" (texto sin match
+   * en `catalogo_claves_sat`). El paso de facturación debe pedir la clave
+   * SAT manualmente antes de timbrar — `clave_sat` queda vacío a propósito.
+   */
+  concepto_libre?: boolean;
 }
 
 

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { formatPhoneMx } from "@/lib/formatters/phone";
 import { formatFechaHora } from "@/lib/formatters";
 
-import { useToast } from "@/hooks/shared";
+import { useToast, useDocumentTitle } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { todayLocalISO } from "@/lib/date/today";
 
@@ -49,6 +49,7 @@ function toCsv(rows: DemoLead[]): string {
 }
 
 export default function AdminDemoLeads() {
+  useDocumentTitle('Leads de la demo');
   const { toast } = useToast();
   const { data, isLoading } = useQuery({ queryKey: queryKeys.demoLeads.all, queryFn: fetchDemoLeads });
   const rows = data ?? [];

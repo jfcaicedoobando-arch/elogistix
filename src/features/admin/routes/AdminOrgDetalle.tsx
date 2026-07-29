@@ -10,6 +10,7 @@ import { useAdminOrgDetalle } from "@/features/admin/hooks";
 import { PageContainer } from "@/components/shared/PageContainer";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function AdminOrgDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +30,7 @@ export default function AdminOrgDetalle() {
     cancelEditing, saveEditing, invalidateMembers,
   } = useAdminOrgDetalle(id);
   useRegisterBreadcrumbLabel(id, org?.nombre);
+  useDocumentTitle(org ? `Organización · ${org.nombre}` : "Organización");
 
   if (!org) return null;
   const isActive = org.activo !== false;

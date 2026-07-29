@@ -8,8 +8,8 @@ import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   listarMovimientos, importarMovimientos, conciliarConPago, desconciliarMovimiento,
-  ignorarMovimiento, sugerirCandidatos, fetchConciliacionResumen,
-  type FiltrosMovimientos, type MovimientoBBVA,
+  ignorarMovimiento, sugerirCandidatos, fetchConciliacionResumen, registrarMovimientoManual,
+  type FiltrosMovimientos, type MovimientoBBVA, type MovimientoManualPayload,
 } from "@/features/tesoreria/services";
 import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
 import { useMutationWithFeedback } from "@/hooks/shared";
@@ -90,5 +90,18 @@ export function useIgnorarMovimiento() {
     successTitle: "Movimiento ignorado",
     errorTitle: "Error al ignorar movimiento",
     errorMethod: "IGNORAR_MOVIMIENTO",
+  });
+}
+
+/** Q-15.7: alta manual de movimiento bancario (fuera del importador). */
+export function useRegistrarMovimientoManual() {
+  const { user } = useAuth();
+  return useMutationWithFeedback({
+    mutationFn: (v: Omit<MovimientoManualPayload, "userId">) =>
+      registrarMovimientoManual({ ...v, userId: user?.id ?? null }),
+    invalidate: queryKeys.tesoreria.all,
+    successTitle: "Movimiento registrado",
+    errorTitle: "Error al registrar movimiento",
+    errorMethod: "REGISTRAR_MOVIMIENTO_MANUAL",
   });
 }

@@ -16,6 +16,9 @@ import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelecti
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { FacturasMasivasToolbar } from "@/features/facturacion/components/FacturasMasivasToolbar";
 import { FacturasEmitidasFooter } from "@/features/facturacion/components/FacturasEmitidasFooter";
+import EmptyState from "@/components/empty/EmptyState";
+import { Receipt } from "lucide-react";
+import { usePermissions } from "@/hooks/shared";
 import type { ColumnDef } from "@/components/shared/DataTable";
 import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
 import type { ChipItem } from "@/hooks/shared/useTableFilters";
@@ -52,9 +55,11 @@ interface Props {
   setPage: (n: number) => void;
   pageSize: number;
   setPageSize: (n: number) => void;
+  onCreateNew?: () => void;
 }
 
 export function TabFacturasEmitidas(p: Props) {
+  const { canEmitirFactura } = usePermissions();
   const selection = useRowSelection();
   const columnsConSeleccion = useMemo(
     () => [buildSelectionColumn<Factura>(), ...p.columns],
@@ -161,6 +166,14 @@ export function TabFacturasEmitidas(p: Props) {
             data={p.data}
             isLoading={p.isLoading}
             emptyMessage="No se encontraron facturas"
+            emptyState={
+              <EmptyState
+                icon={Receipt}
+                title={p.search ? "No se encontraron facturas" : "Aún no hay facturas emitidas"}
+                description={p.search ? "Ajusta los filtros o busca con otro término." : "Las facturas emitidas desde embarques o proformas aparecerán aquí."}
+                primaryAction={!p.search && canEmitirFactura && p.onCreateNew ? { label: "Crear factura", onClick: p.onCreateNew } : undefined}
+              />
+            }
             rowKey={(f) => f.id}
             density="comfortable"
             getRowHref={(f) => `/facturacion/${f.id}`}

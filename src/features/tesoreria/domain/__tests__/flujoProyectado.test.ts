@@ -23,12 +23,14 @@ describe("inicioSemana", () => {
 });
 
 describe("isoWeekKey", () => {
+  // Q-15.1: el contrato es "date-only local"; se construyen los Date con
+  // componentes locales, igual que `parseDateOnlyLocal`.
   it("genera formato YYYY-Www con padding", () => {
-    expect(isoWeekKey(new Date("2026-01-05T00:00:00Z"))).toMatch(/^2026-W0\d$/);
+    expect(isoWeekKey(new Date(2026, 0, 5))).toMatch(/^2026-W0\d$/);
   });
   it("es consistente dentro de la misma semana", () => {
-    const a = isoWeekKey(new Date("2026-06-15T00:00:00Z"));
-    const b = isoWeekKey(new Date("2026-06-19T00:00:00Z"));
+    const a = isoWeekKey(new Date(2026, 5, 15));
+    const b = isoWeekKey(new Date(2026, 5, 19));
     expect(a).toBe(b);
   });
 });

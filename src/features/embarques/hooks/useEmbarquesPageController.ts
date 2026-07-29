@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "@/generators/exportCsv";
+import { pluralizar } from "@/lib/format/pluralizar";
 import { calcularEstadoEmbarque, usePrefetchEmbarque } from "@/features/embarques/hooks/useEmbarques";
 import { useOperadoresDistintos } from "@/features/catalogos/hooks/useOperadoresDistintos";
 import { useClientesForSelect } from "@/features/cliente/hooks/useClientes";
@@ -128,7 +129,7 @@ export function useEmbarquesPageController() {
 
       notifySuccess(undefined, {
         title: "CSV exportado",
-        description: `${filtradosFinal.length} embarques exportados con los filtros actuales.`,
+        description: `${pluralizar(filtradosFinal.length, "embarque")} exportado${filtradosFinal.length === 1 ? "" : "s"} con los filtros actuales.`,
       });
     } catch (err: unknown) {
       notifyError(undefined, { title: "Error al exportar", description: getErrorMessage(err), error: err, method: "USE_EMBARQUES_PAGE_CONTROLLER" });

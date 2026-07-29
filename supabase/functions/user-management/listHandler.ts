@@ -6,6 +6,11 @@ import { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 
+const ALLOWED_ROLES = new Set([
+  "admin", "admin_org", "operador", "coordinador_logistico",
+  "ejecutivo_pricing", "gerente_operaciones", "super_admin",
+]);
+
 export async function resolveOrgScope(
   adminClient: SupabaseClient,
   userId: string,
@@ -24,16 +29,58 @@ export async function resolveOrgScope(
   return orgId;
 }
 
+/** Verifica si el usuario tiene alguno de los roles habilitados para listar usuarios. */
+async function tieneRolPermitido(adminClient: SupabaseClient, callerId: string): Promise<boolean> {
+  const { data: rolesData } = await adminClient.from("user_roles").select("role").eq("user_id", callerId);
+  const { data: orgRoles } = await adminClient.from("organization_members").select("role").eq("user_id", callerId);
+  const roles = [
+    ...((rolesData ?? []) as Array<{ role: string }>).map((r) => r.role),
+    ...((orgRoles ?? []) as Array<{ role: string }>).map((r) => r.role),
+  ];
+  return roles.some((r) => ALLOWED_ROLES.has(r));
+}
+
+/**
+ * Sentry JAVASCRIPT-REACT-3M: `listUsers()` pagina de 50 en 50 por defecto,
+ * así que los usuarios fuera de la primera página quedaban sin correo
+ * ("sin resolver") en la tabla de /usuarios. Recorremos todas las páginas.
+ */
+async function listarTodosLosUsuarios(
+  adminClient: SupabaseClient,
+): Promise<Array<{ id: string; email: string; created_at: string }>> {
+  const baseRows: Array<{ id: string; email: string; created_at: string }> = [];
+  const PER_PAGE = 1000;
+  const MAX_PAGES = 20;
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: PER_PAGE });
+    if (error) throw error;
+    const pageUsers = (data?.users ?? []) as Array<{ id: string; email?: string; created_at: string }>;
+    for (const u of pageUsers) {
+      baseRows.push({ id: u.id, email: u.email ?? "", created_at: u.created_at });
+    }
+    if (pageUsers.length < PER_PAGE) break;
+  }
+  return baseRows;
+}
+
+/** Filtra el listado global a sólo los miembros de la organización dada. */
+async function filtrarPorOrganizacion(
+  adminClient: SupabaseClient,
+  orgId: string,
+  baseRows: Array<{ id: string; email: string; created_at: string }>,
+): Promise<Array<{ id: string; email: string; created_at: string }>> {
+  const { data: members } = await adminClient
+    .from("organization_members")
+    .select("user_id")
+    .eq("organization_id", orgId);
+  const allowedIds = new Set(((members ?? []) as Array<{ user_id: string }>).map((m) => m.user_id));
+  return baseRows.filter((u) => allowedIds.has(u.id));
+}
+
 export async function handleList(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
   const { cors, log, callerId, adminClient } = ctx;
 
-  const { data: rolesData } = await adminClient.from("user_roles").select("role").eq("user_id", callerId);
-  const { data: orgRoles } = await adminClient.from("organization_members").select("role").eq("user_id", callerId);
-  const ALLOWED = new Set(["admin", "admin_org", "operador", "coordinador_logistico", "ejecutivo_pricing", "gerente_operaciones", "super_admin"]);
-  const allowed = [
-    ...((rolesData ?? []) as Array<{ role: string }>).map((r) => r.role),
-    ...((orgRoles ?? []) as Array<{ role: string }>).map((r) => r.role),
-  ].some((r) => ALLOWED.has(r));
+  const allowed = await tieneRolPermitido(adminClient, callerId);
   if (!allowed) {
     log.finish(403, "role_not_allowed", { user_id: callerId });
     return errorResponse("Solo admins/operadores pueden listar usuarios", 403, cors);
@@ -48,32 +95,11 @@ export async function handleList(ctx: HandlerCtx, admin: AdminAccess): Promise<R
     return errorResponse(msg.replace(/^403:/, ""), 403, cors);
   }
 
-  // Sentry JAVASCRIPT-REACT-3M: `listUsers()` pagina de 50 en 50 por defecto,
-  // así que los usuarios fuera de la primera página quedaban sin correo
-  // ("sin resolver") en la tabla de /usuarios. Recorremos todas las páginas.
-  const baseRows: Array<{ id: string; email: string; created_at: string }> = [];
-  const PER_PAGE = 1000;
-  const MAX_PAGES = 20;
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: PER_PAGE });
-    if (error) throw error;
-    const pageUsers = (data?.users ?? []) as Array<{ id: string; email?: string; created_at: string }>;
-    for (const u of pageUsers) {
-      baseRows.push({ id: u.id, email: u.email ?? "", created_at: u.created_at });
-    }
-    if (pageUsers.length < PER_PAGE) break;
-  }
+  const baseRows = await listarTodosLosUsuarios(adminClient);
 
-
-  let result = baseRows;
-  if (!admin.isGlobalAdmin && orgId) {
-    const { data: members } = await adminClient
-      .from("organization_members")
-      .select("user_id")
-      .eq("organization_id", orgId);
-    const allowedIds = new Set(((members ?? []) as Array<{ user_id: string }>).map((m) => m.user_id));
-    result = baseRows.filter((u) => allowedIds.has(u.id));
-  }
+  const result = !admin.isGlobalAdmin && orgId
+    ? await filtrarPorOrganizacion(adminClient, orgId, baseRows)
+    : baseRows;
 
   log.finish(200, "users_listed", {
     user_id: callerId,

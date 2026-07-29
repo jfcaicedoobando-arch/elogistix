@@ -5,8 +5,7 @@
  * Regla de fecha efectiva idéntica a QW1 (`flujoProyectado.ts`):
  * `COALESCE(fecha_programada_pago, fecha_vencimiento)`.
  */
-import { isoUtcDay } from "@/lib/date/mx";
-import { parseDateOnlyLocal } from "@/lib/date/dateOnly";
+import { parseDateOnlyLocal, formatDateOnlyLocal } from "@/lib/date/dateOnly";
 import { inicioSemana, isoWeekKey } from "./flujoProyectado";
 
 export interface FacturaProgramable {
@@ -55,8 +54,8 @@ export function agruparPorSemana(
       fin.setDate(fin.getDate() + 6);
       semana = {
         semanaKey: key,
-        semanaInicio: isoUtcDay(inicio),
-        semanaFin: isoUtcDay(fin),
+        semanaInicio: formatDateOnlyLocal(inicio),
+        semanaFin: formatDateOnlyLocal(fin),
         facturas: [],
         totalesPorMoneda: {},
       };

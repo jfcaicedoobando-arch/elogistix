@@ -10,10 +10,12 @@ import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { Ship } from "lucide-react";
 import { useAgenteEmbarques } from "@/features/portal-agente/hooks";
+import { useDocumentTitle } from "@/hooks/shared";
 
 type EmbarqueAgente = ReturnType<typeof useAgenteEmbarques>["data"] extends readonly (infer U)[] | undefined ? U : never;
 
 export default function AgenteEmbarques() {
+  useDocumentTitle('Mis Embarques');
   const { data: embarques = [], isLoading } = useAgenteEmbarques();
 
   const columns = useMemo<ColumnDef<EmbarqueAgente, unknown>[]>(

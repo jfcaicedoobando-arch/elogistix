@@ -7827,6 +7827,17 @@ export type Database = {
           mes: number
         }[]
       }
+      ejecutar_pago_programado: {
+        Args: {
+          p_cuenta_bancaria_id: string
+          p_factura_id: string
+          p_fecha: string
+          p_metodo_pago?: string
+          p_monto: number
+          p_referencia?: string
+        }
+        Returns: Json
+      }
       eliminar_embarque_completo: {
         Args: { p_embarque_id: string }
         Returns: undefined

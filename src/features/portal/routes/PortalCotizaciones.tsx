@@ -16,8 +16,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { calcularDesgloseMoneda, parseConceptos } from "@/lib/domain/cotizacionDetalle";
 import { PORTAL_COTIZACION_ESTADOS_VISIBLES } from "@/features/portal/services/queries";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function PortalCotizaciones() {
+  useDocumentTitle('Mis Cotizaciones');
   const navigate = useNavigate();
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);

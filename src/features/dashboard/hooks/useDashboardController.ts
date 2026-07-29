@@ -20,6 +20,14 @@ function getSaludo(): string {
   return "Buenas noches";
 }
 
+function firstName(email: string | null | undefined): string {
+  if (!email) return "";
+  const local = email.split("@")[0] ?? "";
+  const cleaned = local.replace(/[._-]+/g, " ").trim();
+  if (!cleaned) return "";
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
 function getHoyStr(): string {
   return formatFechaLarga(new Date());
 }
@@ -98,9 +106,10 @@ export function useDashboardController() {
     };
   }, [scope, operadorEmail, data]);
 
+  const nombre = firstName(user?.email);
   const { saludo, hoyStr } = useMemo(
-    () => ({ saludo: getSaludo(), hoyStr: getHoyStr() }),
-    [],
+    () => ({ saludo: nombre ? `${getSaludo()}, ${nombre}` : getSaludo(), hoyStr: getHoyStr() }),
+    [nombre],
   );
 
   return {

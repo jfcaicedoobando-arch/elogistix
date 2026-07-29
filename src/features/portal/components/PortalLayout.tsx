@@ -10,6 +10,7 @@ import { PortalBottomNav } from "./layout/PortalBottomNav";
 import { usePortalBreadcrumbs } from "@/features/portal/hooks/usePortalBreadcrumbs";
 import { getActiveSectionLabel } from "./layout/portalNav";
 import { ROUTES } from "@/constants/routes";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
 export default function PortalLayout() {
   const { signOut, user } = useAuth();
@@ -49,7 +50,9 @@ export default function PortalLayout() {
       </div>
 
       <main className="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6">
-        {sinClienteVinculado ? (
+        {cargandoVinculo ? (
+          <div className="p-2"><ListSkeleton rows={6} /></div>
+        ) : sinClienteVinculado ? (
           <PortalSinCliente email={user?.email} onSignOut={handleSignOut} />
         ) : (
           <Outlet />

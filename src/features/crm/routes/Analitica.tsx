@@ -10,7 +10,7 @@ import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 
@@ -129,6 +129,7 @@ function EmbudoYPerdidas() {
 }
 
 export default function Analitica() {
+  useDocumentTitle("Analítica CRM");
   const { canEdit } = usePermissions();
   return (
     <PageContainer>

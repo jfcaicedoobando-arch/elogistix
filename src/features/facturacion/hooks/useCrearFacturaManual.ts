@@ -8,7 +8,7 @@ import {
   type CrearFacturaManualInput,
 } from "@/features/facturacion/services/facturaManual";
 import { emitirFacturapi } from "@/features/facturacion/services/facturapi";
-import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
+import { facturas as facturasKeys, facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
@@ -41,7 +41,7 @@ export function useCrearFacturaManual() {
       // Q-15.4: la bandeja "Por timbrar" no escuchaba esta mutación y quedaba
       // desactualizada hasta recargar la página tras guardar un borrador.
       // Se invalida por prefijo porque las llaves llevan `organizationId`.
-      qc.invalidateQueries({ queryKey: ['facturacion', 'bandeja'] });
+      qc.invalidateQueries({ queryKey: facturacionKeys.bandejaPrefix() });
       // Auditoría: la regla `ventas_sin_facturar` depende del estado de facturación
       // de los embarques. Al crear/timbrar una factura, forzamos refetch del reporte.
       qc.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });

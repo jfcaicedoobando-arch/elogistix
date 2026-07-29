@@ -12,12 +12,14 @@ import {
   useAdminRecentOrgs,
 } from "@/features/admin/hooks";
 import { formatDate } from "@/lib/formatters";
+import { useDocumentTitle } from "@/hooks/shared";
 
 const AdminDashboardActivityChart = lazy(
   () => import("@/features/admin/components/AdminDashboardActivityChart"),
 );
 
 export default function AdminDashboard() {
+  useDocumentTitle('Dashboard Super Admin');
   const navigate = useNavigate();
   const { data: stats, isLoading } = useAdminDashboardStats();
   const { data: activity = [], isLoading: loadingActivity } = useAdminOrgActivity();

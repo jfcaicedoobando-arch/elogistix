@@ -15,7 +15,7 @@ import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import SearchInput from "@/components/shared/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable } from "@/components/shared/DataTable";
-import { useDebounce } from "@/hooks/shared";
+import { useDebounce, useDocumentTitle } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { LoadingState } from "@/components/shared/states/LoadingState";
@@ -29,6 +29,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function Oportunidades() {
+  useDocumentTitle('Oportunidades');
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filtros, setFiltros] = useState<OportunidadesFiltros>(FILTROS_DEFAULT);

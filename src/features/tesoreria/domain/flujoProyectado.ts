@@ -2,8 +2,7 @@
  * Lógica pura: flujo de caja proyectado por semana ISO a N días.
  * Ver `./resumen.ts` para contexto del refactor (Auditoría Paso 4).
  */
-import { isoUtcDay } from "@/lib/date/mx";
-import { parseDateOnlyLocal } from "@/lib/date/dateOnly";
+import { parseDateOnlyLocal, formatDateOnlyLocal } from "@/lib/date/dateOnly";
 import { aMxn } from "@/lib/financial/convertir";
 import type { CobranzaRow, CxpRow, LiquidacionRow, ResumenCuenta } from "./resumen";
 import { sumarSaldosCuentas } from "./resumen";
@@ -57,9 +56,11 @@ export function inicioSemana(d: Date): Date {
 }
 
 export function isoWeekKey(d: Date): string {
-  // v13.303.84 — usar getUTC* al construir la fecha base para no cambiar de
-  // semana ISO cuando el runner corre en TZ negativa (America/Mexico_City).
-  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  // Q-15.1 — todas las fechas del flujo son "date-only" ancladas a medianoche
+  // LOCAL (`parseDateOnlyLocal` / `new Date(y, m, d)`). Leerlas con getUTC*
+  // corría la semana un día atrás en zonas UTC+ (off-by-one). Se usan los
+  // componentes locales y se hace la aritmética ISO en UTC sobre esa base.
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const dayNum = t.getUTCDay() || 7;
   t.setUTCDate(t.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
@@ -115,8 +116,8 @@ export function calcularFlujoProyectado(args: {
     const key = isoWeekKey(cursor);
     semanasMap.set(key, {
       semana_iso: key,
-      inicio: isoUtcDay(cursor),
-      fin: isoUtcDay(fin),
+      inicio: formatDateOnlyLocal(cursor),
+      fin: formatDateOnlyLocal(fin),
       entradas_mxn: 0, salidas_mxn: 0, flujo_neto_mxn: 0, saldo_proyectado_mxn: 0,
       detalle_entradas: [], detalle_salidas: [],
     });
@@ -214,7 +215,7 @@ function aplicarLiquidaciones(rows: LiquidacionRow[], inWindow: InWindow): void 
     const [y, m] = l.periodo.split("-").map(Number);
     if (!y || !m) continue;
     const dueDate = new Date(y, m, 5);
-    const iso = isoUtcDay(dueDate);
+    const iso = formatDateOnlyLocal(dueDate);
     const sem = inWindow(iso); if (!sem) continue;
     sem.salidas_mxn += Number(l.total_mxn);
     sem.detalle_salidas.push({

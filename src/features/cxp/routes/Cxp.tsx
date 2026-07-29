@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { Plus, FileText, Download } from "lucide-react";
+import { Plus, FileText, Download, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ import { ColumnVisibilityMenu } from "@/components/shared/ColumnVisibilityMenu";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { CxpRouteDialogs } from "@/features/cxp/routes/_sections/CxpRouteDialogs";
-import { usePermissions, useColumnVisibility } from "@/hooks/shared";
+import { usePermissions, useColumnVisibility, usePdfExport, useDocumentTitle } from "@/hooks/shared";
 import {
   useFacturasCxP,
   useEliminarFacturaProveedor,
@@ -34,16 +34,18 @@ import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
 import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
 
 export default function Cxp() {
+  useDocumentTitle("Facturas de proveedor");
   const { canEdit, canCapturarFacturaProveedor } = usePermissions();
   const f = useCxpPageState();
   const queryClient = useQueryClient();
 
   const { data = [], isLoading, isError, refetch, kpis } = useFacturasCxP(f.queryArgs);
   const eliminar = useEliminarFacturaProveedor();
+  const { isExporting: exportandoPdf, run: runPdfExport } = usePdfExport({ successTitle: "Reporte PDF descargado", method: "CXP_EXPORT_PDF" });
 
   useCxpDeepLinks({ data, isLoading, onOpenDetalle: f.setDetalle });
 
-  const handlePdf = async () => {
+  const handlePdf = () => runPdfExport(async () => {
     const fecha = todayLocalISO();
     // P18: Se pide la cartera CxC solo al presionar el botón (fetchQuery cachea con la misma queryKey).
     const cobranzaKey = queryKeys.facturas.cobranza({});
@@ -58,7 +60,7 @@ export default function Cxp() {
       <ReporteCarteraDocument fechaCorte={fecha} cxc={cxc} cxp={data} />,
       await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),
     );
-  };
+  });
 
   const onEliminar = useCallback((fact: FacturaCxP) => {
     if (fact.pagado > 0) {
@@ -87,8 +89,12 @@ export default function Cxp() {
             <Button variant="outline" onClick={() => exportarCxpCsv(data)} disabled={data.length === 0}>
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
-            <Button variant="outline" onClick={handlePdf}>
-              <FileText className="h-4 w-4 mr-2" /> Reporte PDF
+            <Button variant="outline" onClick={handlePdf} disabled={exportandoPdf}>
+              {exportandoPdf ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4 mr-2" />
+              )} {exportandoPdf ? "Generando…" : "Reporte PDF"}
             </Button>
             {canCapturarFacturaProveedor && (
               <Button onClick={() => f.setOpenNueva(true)}>

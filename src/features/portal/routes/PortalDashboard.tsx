@@ -20,8 +20,10 @@ import { PortalEstadoEmbarquesCard } from "@/features/portal/components/dashboar
 import { PortalProximosArribosCard } from "@/features/portal/components/dashboard/PortalProximosArribosCard";
 import { PortalFacturacionPendienteCard } from "@/features/portal/components/dashboard/PortalFacturacionPendienteCard";
 import { PortalEmbarquesRecientesCard } from "@/features/portal/components/dashboard/PortalEmbarquesRecientesCard";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function PortalDashboard() {
+  useDocumentTitle('Portal');
   const [solicitudAbierta, setSolicitudAbierta] = useState(false);
   const { data: clientUsers = [] } = usePortalClientUsers();
   const { data: clienteName } = usePortalClienteName();

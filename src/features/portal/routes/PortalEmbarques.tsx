@@ -12,9 +12,10 @@ import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
 import { PortalEmbarquesMobileFilters } from "@/features/portal/components/PortalEmbarquesMobileFilters";
 import { Ship, Package, ChevronDown } from "lucide-react";
 import { usePortalEmbarquesController } from "@/features/portal/hooks";
-import { useIsMobile } from "@/hooks/shared";
+import { useIsMobile, useDocumentTitle } from "@/hooks/shared";
 
 export default function PortalEmbarques() {
+  useDocumentTitle('Mis Embarques');
   const isMobile = useIsMobile();
   const {
     isLoading,

@@ -22,6 +22,7 @@ import { NavieraCondicionForm } from "@/features/costeo/components/NavieraCondic
 import { DemorasTarifaEditor } from "@/features/costeo/components/DemorasTarifaEditor";
 import { CartaGarantiaBadge } from "@/features/costeo/components/CartaGarantiaBadge";
 import type { CosteoNavieraCondicion } from "@/features/costeo/types/navieraCondicion";
+import { useDocumentTitle } from "@/hooks/shared";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -31,6 +32,7 @@ interface FilaNaviera {
 }
 
 export default function AgenteGarantias() {
+  useDocumentTitle('Carta Garantía y Demoras');
   const { data: navieras = [], isLoading: loadingNav } = useNavierasCatalogo();
   const { data: condiciones = [], isLoading: loadingCond } = useCondicionesNaviera();
   const [seleccion, setSeleccion] = useState<FilaNaviera | null>(null);

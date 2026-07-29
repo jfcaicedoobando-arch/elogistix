@@ -7,6 +7,8 @@ export const facturacion = {
   clienteDefaults: (clienteId?: string | null) => ['cliente_defaults_facturacion', clienteId] as const,
   clientesFiscalOpts: (organizationId?: string | null) => ['clientes_fiscal_opts', organizationId] as const,
   emisorEmpresa: ['emisor-empresa'] as const,
+  /** Prefijo de todas las bandejas (invalidación por dominio). */
+  bandejaPrefix: () => ['facturacion', 'bandeja'] as const,
   bandejaPorTimbrar: (organizationId?: string | null) => ['facturacion', 'bandeja', 'por-timbrar', organizationId] as const,
   bandejaPorEnviar: (organizationId?: string | null) => ['facturacion', 'bandeja', 'por-enviar', organizationId] as const,
   bandejaRepPendientes: (organizationId?: string | null) => ['facturacion', 'bandeja', 'rep-pendientes', organizationId] as const,

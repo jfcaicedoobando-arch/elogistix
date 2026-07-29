@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { toast } from "sonner";
+import { dismissAllToasts } from "@/lib/ui/appFeedback";
 
 /**
  * Q-08 — Limpia los toasts de error al cambiar de ruta.
@@ -15,7 +15,7 @@ export function RouteToastCleanup() {
 
   useEffect(() => {
     return () => {
-      toast.dismiss();
+      dismissAllToasts();
     };
   }, [pathname]);
 

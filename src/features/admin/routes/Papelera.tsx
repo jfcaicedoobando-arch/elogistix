@@ -10,13 +10,14 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { Navigate } from "react-router-dom";
 import { usePapelera, type SoftTable, type TrashRow } from "@/features/admin/hooks";
 import { TABLAS, GRUPOS } from "./papelera/tablas";
 import { buildPapeleraColumns } from "./papelera/columns";
 
 export default function Papelera() {
+  useDocumentTitle('Papelera');
   const { isAdmin } = usePermissions();
   const { tabla, setTabla, rows, isLoading, counts, restore, purge } = usePapelera(isAdmin);
   const [purgeTarget, setPurgeTarget] = useState<TrashRow | null>(null);

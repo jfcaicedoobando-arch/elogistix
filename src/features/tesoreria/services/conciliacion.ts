@@ -160,6 +160,33 @@ export async function desconciliarMovimiento(movId: string) {
   );
 }
 
+/** Q-15.7: alta manual de un movimiento bancario (captura fuera del importador). */
+export interface MovimientoManualPayload {
+  cuentaBancariaId: string;
+  fecha: string;
+  concepto: string;
+  referencia?: string;
+  cargo: number;
+  abono: number;
+  userId: string | null;
+}
+
+export async function registrarMovimientoManual(input: MovimientoManualPayload): Promise<void> {
+  const hashDedupe = `manual-${crypto.randomUUID()}`;
+  await run(
+    supabase.from("bbva_movimientos").insert({
+      cuenta_bancaria_id: input.cuentaBancariaId,
+      fecha: input.fecha,
+      concepto: input.concepto,
+      referencia: input.referencia ?? "",
+      cargo: input.cargo,
+      abono: input.abono,
+      hash_dedupe: hashDedupe,
+      importado_por: input.userId,
+    }),
+  );
+}
+
 export async function ignorarMovimiento(movId: string, motivo: string) {
   await run(
     supabase

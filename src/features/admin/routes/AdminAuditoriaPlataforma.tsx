@@ -15,6 +15,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BackfillLegacyCard } from "@/features/admin/components/BackfillLegacyCard";
 import { MigrarRolesLegacyCard } from "@/features/admin/components/MigrarRolesLegacyCard";
+import { useDocumentTitle } from "@/hooks/shared";
 
 const KPIS_PREVISTOS = [
   "Uso por organización (embarques, cotizaciones, usuarios activos).",
@@ -25,6 +26,7 @@ const KPIS_PREVISTOS = [
 ];
 
 export default function AdminAuditoriaPlataforma() {
+  useDocumentTitle('Auditoría de plataforma');
   return (
     <PageContainer>
       <PageHeader

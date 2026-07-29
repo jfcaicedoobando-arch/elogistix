@@ -16,6 +16,7 @@ export {
   useConciliarPago,
   useDesconciliar,
   useIgnorarMovimiento,
+  useRegistrarMovimientoManual,
 } from "./useTesoreriaMovimientos";
 export { useResumenTesoreria } from "./useResumenTesoreria";
 export { useFlujoProyectado } from "./useFlujoProyectado";

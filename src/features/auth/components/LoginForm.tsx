@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { resolveDeepLinkDestino } from "@/features/auth/utils/deepLink";
 
@@ -41,7 +40,6 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
       const raw = err instanceof Error ? err.message : "Error desconocido";
       const friendly = translateAuthError(raw);
       setLoginError(friendly);
-      notifyError(undefined, { title: "No pudimos iniciar sesión", description: friendly, error: err, method: "HANDLE_LOGIN" });
     } finally {
       setLoading(false);
     }

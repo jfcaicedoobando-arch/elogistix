@@ -155,3 +155,8 @@ export async function fetchExchangeRates(fecha?: string): Promise<ExchangeRates>
 }
 
 
+
+/** Q-13: edición de código/nombre de una naviera desde el catálogo admin. */
+export async function updateNaviera(id: string, input: { code: string; name: string }): Promise<void> {
+  await run(supabase.from("navieras").update(input).eq("id", id));
+}

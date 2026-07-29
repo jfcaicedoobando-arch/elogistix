@@ -1,9 +1,11 @@
 import { Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import type { AppRole } from "@/types/appRole";
 import { anyRoleSatisfies } from "@/lib/auth/roleHierarchy";
 import { resolveProtectedRouteRedirect } from "@/features/auth/utils/resolveProtectedRouteRedirect";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,6 +15,20 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { user, role, effectiveRole, organization, loading } = useAuth();
   const location = useLocation();
+
+  const sinAcceso =
+    !loading &&
+    Boolean(user) &&
+    Boolean(allowedRoles) &&
+    Boolean(effectiveRole) &&
+    !anyRoleSatisfies(allowedRoles as AppRole[], effectiveRole as AppRole);
+
+  // Aviso al usuario por qué fue redirigido, en lugar de un silencio total.
+  useEffect(() => {
+    if (sinAcceso) {
+      notifyWarning(undefined, { title: "No tienes acceso a esa sección" });
+    }
+  }, [sinAcceso, location.pathname]);
 
   if (loading) {
     return (
@@ -36,7 +52,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to={redirectTo} replace />;
   }
 
-  if (allowedRoles && effectiveRole && !anyRoleSatisfies(allowedRoles, effectiveRole as AppRole)) {
+  if (sinAcceso) {
     return <Navigate to="/" replace />;
   }
 

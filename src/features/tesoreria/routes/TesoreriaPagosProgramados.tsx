@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Inbox } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchPagosProgramables,
@@ -9,15 +9,35 @@ import { agruparPorSemana, type FacturaProgramable } from "@/features/tesoreria/
 import { tesoreria as tesoreriaKeys } from "@/features/tesoreria/queryKeys";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { defineColumns } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
-import { formatDate, formatCurrency } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 import { ToneBadge } from "@/components/shared/ToneBadge";
-import { Card, CardContent } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/shared/skeletons";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
+import { useEjecutarPagoProgramado } from "@/features/tesoreria/hooks/useEjecutarPagoProgramado";
+import { formatDateOnlyLocal } from "@/lib/date/dateOnly";
+import { EjecutarPagoDialog, type FormPago } from "./_sections/EjecutarPagoDialog";
+import { PagosProgramadosTablas } from "./_sections/PagosProgramadosTablas";
 
 type FiltroBandeja = "todas" | "programadas" | "treinta_dias";
+
+/** Filtra la lista completa de facturas programables según el filtro explícito del usuario. */
+function filtrarProgramables(data: FacturaProgramableRow[], filtro: FiltroBandeja): FacturaProgramable[] {
+  let rows = data;
+  if (filtro === "programadas") rows = rows.filter((r) => r.fecha_programada_pago);
+  if (filtro === "treinta_dias") {
+    const limite = new Date();
+    limite.setDate(limite.getDate() + 30);
+    rows = rows.filter((r) => {
+      const f = r.fecha_programada_pago ?? r.fecha_vencimiento;
+      return f && new Date(`${f}T00:00:00`) <= limite;
+    });
+  }
+  return rows as FacturaProgramable[];
+}
 
 export default function TesoreriaPagosProgramados() {
   // B-030: fetch directo sin filtro implícito de estado (antes la RPC
@@ -30,20 +50,47 @@ export default function TesoreriaPagosProgramados() {
 
   // Filtro EXPLÍCITO del usuario — por defecto se muestra todo.
   const [filtro, setFiltro] = useState<FiltroBandeja>("todas");
+  const [facturaPago, setFacturaPago] = useState<FacturaProgramable | null>(null);
+  const [form, setForm] = useState<FormPago>({
+    cuentaBancariaId: "", fecha: formatDateOnlyLocal(new Date()), monto: 0, metodoPago: "Transferencia", referencia: "",
+  });
 
-  const programables = useMemo(() => {
-    let rows = data as FacturaProgramableRow[];
-    if (filtro === "programadas") rows = rows.filter((r) => r.fecha_programada_pago);
-    if (filtro === "treinta_dias") {
-      const limite = new Date();
-      limite.setDate(limite.getDate() + 30);
-      rows = rows.filter((r) => {
-        const f = r.fecha_programada_pago ?? r.fecha_vencimiento;
-        return f && new Date(`${f}T00:00:00`) <= limite;
-      });
-    }
-    return rows as FacturaProgramable[];
-  }, [data, filtro]);
+  const { data: cuentas = [] } = useCuentasBancarias();
+  const ejecutarPago = useEjecutarPagoProgramado();
+
+  const cuentasCompatibles = useMemo(
+    () => cuentas.filter((c) => c.moneda === facturaPago?.moneda),
+    [cuentas, facturaPago],
+  );
+
+  const abrirDialogoPago = (f: FacturaProgramable) => {
+    setFacturaPago(f);
+    setForm({
+      cuentaBancariaId: "",
+      fecha: formatDateOnlyLocal(new Date()),
+      monto: f.saldo,
+      metodoPago: "Transferencia",
+      referencia: "",
+    });
+  };
+
+  const setField = <K extends keyof FormPago>(key: K, value: FormPago[K]) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  const handleEjecutar = async () => {
+    if (!facturaPago) return;
+    await ejecutarPago.mutateAsync({
+      facturaId: facturaPago.id,
+      cuentaBancariaId: form.cuentaBancariaId,
+      fecha: form.fecha,
+      monto: form.monto,
+      metodoPago: form.metodoPago,
+      referencia: form.referencia,
+    });
+    setFacturaPago(null);
+  };
+
+  const programables = useMemo(() => filtrarProgramables(data as FacturaProgramableRow[], filtro), [data, filtro]);
 
   const semanas = useMemo(() => agruparPorSemana(programables), [programables]);
   // B-030: pendientes sin fecha efectiva — antes se descartaban en silencio.
@@ -100,6 +147,16 @@ export default function TesoreriaPagosProgramados() {
       }),
       meta: { width: "w-[120px]", align: "right", className: "font-semibold" },
     },
+    {
+      id: "acciones",
+      header: "",
+      meta: { width: "w-[130px]", align: "right" },
+      cell: ({ row }) => (
+        <Button size="sm" variant="outline" onClick={() => abrirDialogoPago(row.original)}>
+          <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago
+        </Button>
+      ),
+    },
   ]), []);
 
   if (isLoading) {
@@ -132,61 +189,17 @@ export default function TesoreriaPagosProgramados() {
         </Select>
       </div>
 
-      {semanas.length === 0 && sinFecha.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 flex flex-col items-center justify-center text-center">
-            <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">Sin pagos para mostrar</h3>
-            <p className="text-sm text-muted-foreground">
-              Las facturas de proveedor con fecha de vencimiento o programada aparecerán aquí.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-8">
-          {semanas.map((s) => (
-            <section key={s.semanaKey}>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 px-1">
-                Semana del {formatDate(s.semanaInicio)} al {formatDate(s.semanaFin)}
-              </h2>
-              <Card>
-                <CardContent className="p-0">
-                  <DataTable
-                    columns={columns}
-                    data={s.facturas}
-                    rowKey={(r) => r.id}
-                    density="compact"
-                    hoverable={false}
-                    footer={() => (
-                      <div className="flex flex-wrap gap-x-6 gap-y-1 py-3 px-4 bg-muted/30">
-                        <span className="text-xs font-bold uppercase text-muted-foreground">Totales:</span>
-                        {Object.entries(s.totalesPorMoneda).map(([moneda, total]) => (
-                          <span key={moneda} className="text-sm font-semibold tabular-nums">
-                            {formatCurrency(total, moneda)}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-            </section>
-          ))}
+      <PagosProgramadosTablas semanas={semanas} sinFecha={sinFecha} columns={columns} />
 
-          {sinFecha.length > 0 && (
-            <section>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 px-1">
-                Sin fecha de pago ({sinFecha.length})
-              </h2>
-              <Card>
-                <CardContent className="p-0">
-                  <DataTable columns={columns} data={sinFecha} rowKey={(r) => r.id} density="compact" hoverable={false} />
-                </CardContent>
-              </Card>
-            </section>
-          )}
-        </div>
-      )}
+      <EjecutarPagoDialog
+        facturaPago={facturaPago}
+        onClose={() => setFacturaPago(null)}
+        cuentasCompatibles={cuentasCompatibles}
+        form={form}
+        setField={setField}
+        onEjecutar={handleEjecutar}
+        isPending={ejecutarPago.isPending}
+      />
     </PageContainer>
   );
 }

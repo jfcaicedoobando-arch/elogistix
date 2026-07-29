@@ -13,12 +13,13 @@ import { DiagnosticoFilters } from "@/features/admin/components/DiagnosticoFilte
 import { DiagnosticoHealthPanel } from "@/features/admin/components/DiagnosticoHealthPanel";
 import AlertasSistemaPanel from "@/features/admin/components/AlertasSistemaPanel";
 import { diagnosticoColumns } from "@/features/admin/components/DiagnosticoColumns";
-import { useDebounce } from "@/hooks/shared";
+import { useDebounce, useDocumentTitle } from "@/hooks/shared";
 import { formatNumber } from "@/lib/formatters";
 
 const DIAGNOSTICO_PAGE_SIZE = 50;
 
 export default function Diagnostico() {
+  useDocumentTitle('Diagnóstico');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DIAGNOSTICO_PAGE_SIZE);
   const [level, setLevel] = useState<AppLogLevel | "todos">("todos");

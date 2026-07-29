@@ -38,63 +38,14 @@ const guarded = (roles: AppRole[], element: ReactNode) => (
   <ProtectedRoute allowedRoles={roles}>{element}</ProtectedRoute>
 );
 
-const TESORERIA_ROLES: AppRole[] = ["admin", "super_admin", "contador", "tesorero"];
-
-const FINANCE_READ_ROLES: AppRole[] = [
-  "admin", "super_admin", "admin_org",
-  "contador", "tesorero", "auxiliar_contable", "ejecutivo_cobranza",
-  "gerente_operaciones", "gerente_visor",
-];
-const TESORERIA_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor"];
-const PROFIT_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor", "gerente_comercial"];
-const COMPRAS_READ_ROLES: AppRole[] = [
-  ...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor",
-];
-const COMPRAS_WRITE_ROLES: AppRole[] = [
-  "admin", "super_admin", "admin_org", "contador", "tesorero", "auxiliar_contable",
-];
-
-/**
- * Q-11 (v13.341.0) — Paridad sidebar ↔ rutas. Antes, muchas rutas operativas
- * quedaban sin `allowedRoles`: el sidebar las ocultaba, pero cualquier rol podía
- * entrar escribiendo la URL. Estos sets replican exactamente lo que cada
- * builder de `sidebarRoleBuilders.ts` expone.
- */
-const ADMINS: AppRole[] = ["admin", "admin_org", "super_admin"];
-const GERENTES: AppRole[] = ["gerente_operaciones", "gerente_comercial", "gerente_visor"];
-
-const EMBARQUES_ROLES: AppRole[] = [
-  ...ADMINS, "operador", "coordinador_logistico", "customer_service", "viewer",
-  "contador", "gerente_operaciones", "gerente_comercial", "gerente_visor",
-];
-const COTIZACIONES_ROLES: AppRole[] = [
-  ...ADMINS, "vendedor", "customer_service", "viewer", "operador",
-  "coordinador_logistico", "ejecutivo_pricing", "gerente_operaciones", "gerente_comercial",
-  "gerente_visor",
-];
-const FACTURACION_ROLES: AppRole[] = [
-  ...ADMINS, "contador", "tesorero", "ejecutivo_cobranza", "operador",
-  "coordinador_logistico", "gerente_operaciones", "gerente_visor",
-];
-const CLIENTES_ROLES: AppRole[] = [
-  ...ADMINS, "vendedor", "customer_service", "viewer", "operador", "coordinador_logistico",
-  "ejecutivo_pricing", "contador", "ejecutivo_cobranza", ...GERENTES,
-];
-const COSTEO_ROLES: AppRole[] = [
-  ...ADMINS, "vendedor", "operador", "coordinador_logistico", "ejecutivo_pricing",
-  "gerente_comercial",
-];
-const COMISIONES_ROLES: AppRole[] = [
-  ...ADMINS, "contador", "tesorero", "gerente_comercial", "gerente_operaciones", "gerente_visor",
-];
-const REPORTES_ROLES: AppRole[] = [
-  ...ADMINS, "ejecutivo_pricing", "contador", "tesorero", ...GERENTES,
-];
-const CRM_ROLES: AppRole[] = [
-  ...ADMINS, "vendedor", "gerente_comercial", "gerente_operaciones",
-];
-const BITACORA_ROLES: AppRole[] = [...ADMINS, "contador", "tesorero", ...GERENTES];
-const PROVEEDORES_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "ejecutivo_pricing"];
+import {
+  FINANCE_READ_ROLES, TESORERIA_READ_ROLES, PROFIT_READ_ROLES,
+  COMPRAS_READ_ROLES, EMBARQUES_ROLES, COTIZACIONES_ROLES,
+  FACTURACION_ROLES, CLIENTES_ROLES, COSTEO_ROLES, COMISIONES_ROLES, REPORTES_ROLES,
+  CRM_ROLES, BITACORA_ROLES, PROVEEDORES_ROLES,
+  DASHBOARD_DIRECCION_ROLES, CARTERA_ROLES, COMPRAS_POR_CAPTURAR_ROLES, COMPRAS_POR_PAGAR_ROLES,
+  SENTRY_ROLES, PAPELERA_ROLES, IDEMPOTENCIA_ROLES, AUDITORIA_ROLES, USUARIOS_ROLES, CONFIGURACION_ROLES,
+} from "@/lib/access/roleRouteMatrix";
 
 export const appRoutes = (
   <Route
@@ -105,7 +56,7 @@ export const appRoutes = (
     }
   >
     <Route path="/inicio" element={<Dashboard />} />
-    <Route path="/dashboard" element={guarded(["admin", "admin_org", "super_admin", "gerente_comercial", "gerente_visor", "gerente_operaciones"], <DireccionDashboard />)} />
+    <Route path="/dashboard" element={guarded(DASHBOARD_DIRECCION_ROLES, <DireccionDashboard />)} />
     <Route path="/operaciones" element={<Operaciones />} />
     <Route path="/embarques" element={guarded(EMBARQUES_ROLES, <Embarques />)} />
     <Route path="/embarques/nuevo" element={guarded(EMBARQUES_ROLES, <NuevoEmbarque />)} />
@@ -118,9 +69,9 @@ export const appRoutes = (
 
     {/* ── Módulo Compras (v13.175.0 — rediseño Ola A) ────────────────── */}
     <Route path="/compras" element={guarded(COMPRAS_READ_ROLES, <Compras />)} />
-    <Route path="/compras/por-capturar" element={guarded(COMPRAS_WRITE_ROLES.concat(["gerente_operaciones", "gerente_visor"]), <CxpPorCapturar />)} />
+    <Route path="/compras/por-capturar" element={guarded(COMPRAS_POR_CAPTURAR_ROLES, <CxpPorCapturar />)} />
     <Route path="/compras/por-aprobar" element={guarded(COMPRAS_READ_ROLES, <ComprasPorAprobar />)} />
-    <Route path="/compras/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"], <CxpPorPagar />)} />
+    <Route path="/compras/por-pagar" element={guarded(COMPRAS_POR_PAGAR_ROLES, <CxpPorPagar />)} />
     <Route path="/compras/anticipos" element={guarded(COMPRAS_READ_ROLES, <AnticiposProveedor />)} />
     <Route path="/compras/facturas" element={guarded(FINANCE_READ_ROLES, <Cxp />)} />
     <Route path="/compras/pagos" element={guarded(FINANCE_READ_ROLES, <ComprasPagos />)} />
@@ -140,8 +91,8 @@ export const appRoutes = (
 
     {/* v13.145.10 — bandeja eliminada; se redirige a /proformas con filtro Aceptada. */}
     <Route path="/facturacion/por-emitir" element={<Navigate to="/proformas?estado=aceptada" replace />} />
-    <Route path="/cartera" element={guarded(["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"], <Cartera />)} />
-    <Route path="/cobranza/aging" element={guarded(["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"], <CxcAging />)} />
+    <Route path="/cartera" element={guarded(CARTERA_ROLES, <Cartera />)} />
+    <Route path="/cobranza/aging" element={guarded(CARTERA_ROLES, <CxcAging />)} />
 
     <Route path="/tesoreria" element={guarded(TESORERIA_READ_ROLES, <Tesoreria />)} />
     <Route path="/tesoreria/cuentas" element={guarded(TESORERIA_READ_ROLES, <TesoreriaCuentas />)} />
@@ -179,16 +130,16 @@ export const appRoutes = (
     <Route path="/reportes" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/ayuda" element={<Ayuda />} />
-    <Route path="/sentry" element={guarded(["admin", "admin_org", "super_admin"], <SentryDiagnostico />)} />
+    <Route path="/sentry" element={guarded(SENTRY_ROLES, <SentryDiagnostico />)} />
     <Route path="/crm" element={guarded(CRM_ROLES, <CrmLayout />)}>{crmChildRoutes}</Route>
     <Route path="/bitacora" element={guarded(BITACORA_ROLES, <Bitacora />)} />
     {/* Sentry -3W: enlaces viejos apuntaban a /sistema/bitacora (404). */}
     <Route path="/sistema/bitacora" element={<Navigate to="/bitacora" replace />} />
 
-    <Route path="/papelera" element={guarded(["admin", "super_admin"], <Papelera />)} />
-    <Route path="/idempotencia" element={guarded(["admin", "super_admin"], <Idempotencia />)} />
-    <Route path="/auditoria" element={guarded(["admin", "admin_org", "viewer", "customer_service"], <Auditoria />)} />
-    <Route path="/usuarios" element={guarded(["admin", "admin_org", "super_admin"], <Usuarios />)} />
-    <Route path="/configuracion" element={guarded(["admin", "admin_org", "contador", "super_admin"], <Configuracion />)} />
+    <Route path="/papelera" element={guarded(PAPELERA_ROLES, <Papelera />)} />
+    <Route path="/idempotencia" element={guarded(IDEMPOTENCIA_ROLES, <Idempotencia />)} />
+    <Route path="/auditoria" element={guarded(AUDITORIA_ROLES, <Auditoria />)} />
+    <Route path="/usuarios" element={guarded(USUARIOS_ROLES, <Usuarios />)} />
+    <Route path="/configuracion" element={guarded(CONFIGURACION_ROLES, <Configuracion />)} />
   </Route>
 );

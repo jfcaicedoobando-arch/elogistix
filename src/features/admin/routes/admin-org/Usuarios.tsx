@@ -12,10 +12,12 @@ import {
 } from "@/features/admin/hooks/usuario";
 import { UsuariosInternosTab } from "./UsuariosInternosTab";
 import { PortalUsuariosTab } from "./PortalUsuariosTab";
+import { useDocumentTitle } from "@/hooks/shared";
 
 type TabId = "internos" | "cliente" | "agente";
 
 export default function Usuarios() {
+  useDocumentTitle('Gestión de usuarios');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [tab, setTab] = useState<TabId>("internos");
 

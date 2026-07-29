@@ -12,8 +12,10 @@ import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
 import { PortalFacturasMobileFilters } from "@/features/portal/components/facturas/PortalFacturasMobileFilters";
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function PortalFacturas() {
+  useDocumentTitle('Mis Facturas');
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
   const { data: facturas = [], isLoading } = usePortalFacturas(clienteIds);

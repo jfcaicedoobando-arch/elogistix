@@ -70,7 +70,7 @@ describe("useCotizacionDraftAutosave hook", () => {
     return renderHook(() => {
        
       const form = useForm<any>({ defaultValues: { cliente_id: "" } });
-      useCotizacionDraftAutosave({ form, userId: USER, enabled, cotizacionId: null });
+      useCotizacionDraftAutosave({ form, userId: USER, enabled, cotizacionId: null, currentStep: 1, costosInternos: [] });
       return form;
     });
   }
@@ -124,7 +124,7 @@ describe("useCotizacionDraftAutosave flush (P1 — v13.294.1)", () => {
     return renderHook(() => {
        
       const form = useForm<any>({ defaultValues: { cliente_id: "seed" } });
-      const api = useCotizacionDraftAutosave({ form, userId: USER, enabled, cotizacionId: null });
+      const api = useCotizacionDraftAutosave({ form, userId: USER, enabled, cotizacionId: null, currentStep: 1, costosInternos: [] });
       return { form, api };
     });
   }
@@ -170,3 +170,41 @@ describe("useCotizacionDraftAutosave flush (P1 — v13.294.1)", () => {
   });
 });
 
+
+describe("loadDraft — Q-12: restauración de paso y costos internos", () => {
+  it("restaura currentStep y costosInternos cuando el draft es v3, y avisa lo que no aplica", () => {
+    const draft = {
+      version: 3,
+      savedAt: Date.now(),
+      cotizacionId: "cot-1",
+      values: { cliente_id: "c-9" },
+      currentStep: 2,
+      costosInternos: [{ id: "f1", concepto: "Flete", monto: 100 }],
+    };
+    window.localStorage.setItem(draftKey(USER), JSON.stringify(draft));
+
+    const out = loadDraft(USER);
+
+    expect(out?.currentStep).toBe(2);
+    expect(out?.costosInternos).toEqual([{ id: "f1", concepto: "Flete", monto: 100 }]);
+    // Sólo se avisa lo que nunca sobrevive a JSON.stringify (el MSDS).
+    expect(out?.noRestaurado).toEqual([
+      "El archivo MSDS adjunto (si lo había) — vuelve a adjuntarlo",
+    ]);
+  });
+
+  it("avisa que no se pudo restaurar el paso ni los costos cuando el draft es legacy (sin version 3)", () => {
+    const draftLegacy = { version: 1, savedAt: Date.now(), values: { cliente_id: "c-1" } };
+    window.localStorage.setItem(draftKey(USER), JSON.stringify(draftLegacy));
+
+    const out = loadDraft(USER);
+
+    expect(out?.currentStep).toBe(1);
+    expect(out?.costosInternos).toEqual([]);
+    expect(out?.noRestaurado).toEqual([
+      "El archivo MSDS adjunto (si lo había) — vuelve a adjuntarlo",
+      "El paso del asistente en el que ibas — se reinicia en el Paso 1",
+      "Los costos internos capturados — tendrás que volver a agregarlos",
+    ]);
+  });
+});

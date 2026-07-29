@@ -1,0 +1,145 @@
+/**
+ * Q-11 (remanente) — Matriz rol→ruta como fuente única.
+ *
+ * Antes, los sets de roles vivían duplicados/dispersos entre
+ * `appRoutes.tsx` (guards) y `sidebarRoleBuilders.ts` (menú), lo que
+ * permitía que ambos se desincronizaran. Este módulo centraliza, por ruta
+ * base, qué roles tienen acceso. `appRoutes.tsx` lo usa para los guards y
+ * el sidebar lo usa (vía `hasRouteAccess`) para no listar ítems muertos.
+ */
+import type { AppRole } from "@/types/appRole";
+
+const ADMINS: AppRole[] = ["admin", "admin_org", "super_admin"];
+const GERENTES: AppRole[] = ["gerente_operaciones", "gerente_comercial", "gerente_visor"];
+
+export const TESORERIA_ROLES: AppRole[] = ["admin", "super_admin", "contador", "tesorero"];
+export const FINANCE_READ_ROLES: AppRole[] = [
+  ...ADMINS, "contador", "tesorero", "auxiliar_contable", "ejecutivo_cobranza",
+  "gerente_operaciones", "gerente_visor",
+];
+export const TESORERIA_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor"];
+export const PROFIT_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor", "gerente_comercial"];
+export const COMPRAS_READ_ROLES: AppRole[] = [
+  ...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor",
+];
+export const COMPRAS_WRITE_ROLES: AppRole[] = [
+  "admin", "super_admin", "admin_org", "contador", "tesorero", "auxiliar_contable",
+];
+
+export const EMBARQUES_ROLES: AppRole[] = [
+  ...ADMINS, "operador", "coordinador_logistico", "customer_service", "viewer",
+  "contador", "gerente_operaciones", "gerente_comercial", "gerente_visor",
+];
+export const COTIZACIONES_ROLES: AppRole[] = [
+  ...ADMINS, "vendedor", "customer_service", "viewer", "operador",
+  "coordinador_logistico", "ejecutivo_pricing", "gerente_operaciones", "gerente_comercial",
+  "gerente_visor",
+];
+export const FACTURACION_ROLES: AppRole[] = [
+  ...ADMINS, "contador", "tesorero", "ejecutivo_cobranza", "operador",
+  "coordinador_logistico", "gerente_operaciones", "gerente_visor",
+];
+export const CLIENTES_ROLES: AppRole[] = [
+  ...ADMINS, "vendedor", "customer_service", "viewer", "operador", "coordinador_logistico",
+  "ejecutivo_pricing", "contador", "ejecutivo_cobranza", ...GERENTES,
+];
+export const COSTEO_ROLES: AppRole[] = [
+  ...ADMINS, "vendedor", "operador", "coordinador_logistico", "ejecutivo_pricing",
+  "gerente_comercial",
+];
+export const COMISIONES_ROLES: AppRole[] = [
+  ...ADMINS, "contador", "tesorero", "gerente_comercial", "gerente_operaciones", "gerente_visor",
+];
+export const REPORTES_ROLES: AppRole[] = [
+  ...ADMINS, "ejecutivo_pricing", "contador", "tesorero", ...GERENTES,
+];
+export const CRM_ROLES: AppRole[] = [
+  ...ADMINS, "vendedor", "gerente_comercial", "gerente_operaciones",
+];
+export const BITACORA_ROLES: AppRole[] = [...ADMINS, "contador", "tesorero", ...GERENTES];
+export const PROVEEDORES_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "ejecutivo_pricing"];
+
+export const DASHBOARD_DIRECCION_ROLES: AppRole[] = ["admin", "admin_org", "super_admin", "gerente_comercial", "gerente_visor", "gerente_operaciones"];
+export const CARTERA_ROLES: AppRole[] = ["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"];
+export const COMPRAS_POR_CAPTURAR_ROLES: AppRole[] = [...COMPRAS_WRITE_ROLES, "gerente_operaciones", "gerente_visor"];
+export const COMPRAS_POR_PAGAR_ROLES: AppRole[] = ["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"];
+export const SENTRY_ROLES: AppRole[] = ["admin", "admin_org", "super_admin"];
+export const PAPELERA_ROLES: AppRole[] = ["admin", "super_admin"];
+export const IDEMPOTENCIA_ROLES: AppRole[] = ["admin", "super_admin"];
+export const AUDITORIA_ROLES: AppRole[] = ["admin", "admin_org", "viewer", "customer_service"];
+export const USUARIOS_ROLES: AppRole[] = ["admin", "admin_org", "super_admin"];
+export const CONFIGURACION_ROLES: AppRole[] = ["admin", "admin_org", "contador", "super_admin"];
+
+
+/**
+ * Mapa `ruta base → roles permitidos`. Rutas no listadas aquí (`/inicio`,
+ * `/operaciones`, `/ayuda`, redirects, etc.) son accesibles para cualquier
+ * usuario autenticado.
+ */
+export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.freeze({
+  "/dashboard": DASHBOARD_DIRECCION_ROLES,
+  "/embarques": EMBARQUES_ROLES,
+  "/facturacion": FACTURACION_ROLES,
+  "/proformas": FACTURACION_ROLES,
+  "/compras": COMPRAS_READ_ROLES,
+  "/compras/por-capturar": COMPRAS_POR_CAPTURAR_ROLES,
+  "/compras/por-aprobar": COMPRAS_READ_ROLES,
+  "/compras/por-pagar": COMPRAS_POR_PAGAR_ROLES,
+  "/compras/anticipos": COMPRAS_READ_ROLES,
+  "/compras/facturas": FINANCE_READ_ROLES,
+  "/compras/pagos": FINANCE_READ_ROLES,
+  "/compras/notas-credito": FINANCE_READ_ROLES,
+  "/compras/proveedores": PROVEEDORES_ROLES,
+  "/compras/aging": COMPRAS_READ_ROLES,
+  "/compras/reportes": FINANCE_READ_ROLES,
+  "/compras/conciliacion": COMPRAS_READ_ROLES,
+  "/cartera": CARTERA_ROLES,
+  "/cobranza/aging": CARTERA_ROLES,
+  "/tesoreria": TESORERIA_READ_ROLES,
+  "/tesoreria/cuentas": TESORERIA_READ_ROLES,
+  "/tesoreria/conciliacion": TESORERIA_READ_ROLES,
+  "/tesoreria/flujo": TESORERIA_READ_ROLES,
+  "/tesoreria/pagos-programados": TESORERIA_READ_ROLES,
+  "/comisiones": COMISIONES_ROLES,
+  "/costeo": COSTEO_ROLES,
+  "/costeo/tarifas": COSTEO_ROLES,
+  "/costeo/buscar": COSTEO_ROLES,
+  "/costeo/rutas": COSTEO_ROLES,
+  "/costeo/agentes": COSTEO_ROLES,
+  "/costeo/navieras": COSTEO_ROLES,
+  "/costeo/demoras-venta": COSTEO_ROLES,
+  "/profit": PROFIT_READ_ROLES,
+  "/profit/dashboard": PROFIT_READ_ROLES,
+  "/profit/proyeccion": PROFIT_READ_ROLES,
+  "/profit/estado-resultados": PROFIT_READ_ROLES,
+  "/profit/presupuesto": PROFIT_READ_ROLES,
+  "/clientes": CLIENTES_ROLES,
+  "/cotizaciones": COTIZACIONES_ROLES,
+  "/reportes/rentabilidad": REPORTES_ROLES,
+  "/reportes/cierre-mensual": REPORTES_ROLES,
+  "/crm": CRM_ROLES,
+  "/bitacora": BITACORA_ROLES,
+  "/sentry": SENTRY_ROLES,
+  "/papelera": PAPELERA_ROLES,
+  "/idempotencia": IDEMPOTENCIA_ROLES,
+  "/auditoria": AUDITORIA_ROLES,
+  "/usuarios": USUARIOS_ROLES,
+  "/configuracion": CONFIGURACION_ROLES,
+});
+
+/** Quita querystring de una URL de sidebar (ej. `/proformas?estado=aceptada`). */
+function basePath(url: string): string {
+  return url.split("?")[0] ?? url;
+}
+
+/**
+ * ¿El rol tiene acceso a la ruta? Rutas no listadas en la matriz son de
+ * acceso libre para cualquier usuario autenticado.
+ */
+export function hasRouteAccess(role: AppRole | null | undefined, url: string): boolean {
+  const path = basePath(url);
+  const allowed = ROLE_ROUTE_MATRIX[path];
+  if (!allowed) return true;
+  if (!role) return false;
+  return allowed.includes(role);
+}

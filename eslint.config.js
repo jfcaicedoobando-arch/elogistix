@@ -121,6 +121,9 @@ const CROSS_FEATURE_ALLOWLIST = [
   "src/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion.tsx",
   "src/features/cotizacion/components/seccionRuta/OrigenDestinoBlock.tsx",
   "src/features/cotizacion/components/seccionRuta/SugerenciasTarifaInline.tsx",
+  // Extraídos de SugerenciasTarifaInline (refactor de complejidad): heredan su excepción legacy.
+  "src/features/cotizacion/components/seccionRuta/SugerenciasTarifaResultados.tsx",
+  "src/features/cotizacion/components/seccionRuta/SugerenciasTarifaSinIds.tsx",
   "src/features/dashboardEjecutivo/components/BandaKPIs.tsx",
   "src/features/dashboardEjecutivo/services/types.ts",
   "src/features/embarques/components/TabSeguros.tsx",

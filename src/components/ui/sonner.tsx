@@ -22,6 +22,7 @@ export function Toaster() {
   return (
     <SonnerToaster
       position="top-right"
+      offset={{ top: "72px", right: "16px" }}
       closeButton
       expand
       duration={4000}

@@ -19,7 +19,7 @@ import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   listActividades, ACTIVIDAD_SORTABLE_KEYS,
@@ -39,6 +39,7 @@ type ActividadesFilters = { tipo: string; estado: string; responsable: string } 
 const DEFAULTS: ActividadesFilters = { tipo: "todos", estado: "pendientes", responsable: "todos" };
 
 export default function Actividades() {
+  useDocumentTitle('Actividades CRM');
   const { canEditCrm } = usePermissions();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();

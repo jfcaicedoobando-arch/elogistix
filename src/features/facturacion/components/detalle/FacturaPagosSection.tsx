@@ -7,10 +7,7 @@
  * v13.232.0 · Confirmación de eliminar pago migrada a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatCurrency } from "@/lib/formatters";
@@ -20,6 +17,9 @@ import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import { FacturaPagosTabla } from "./FacturaPagosTabla";
+import { FacturaPagosHeader } from "./FacturaPagosHeader";
+import { FacturaEstadoInconsistenteAlert } from "./FacturaEstadoInconsistenteAlert";
+import { esEstadoInconsistente } from "./facturaEstadoInconsistente";
 
 interface Props {
   facturaId: string;
@@ -51,12 +51,12 @@ export function FacturaPagosSection({
   );
   const liquidada = sinSaldo && pagos.length > 0;
 
-  // FIX-F964: el estado dice "Pagada" pero no hay respaldo (ni pagos ni NC aplicadas).
-  const inconsistente =
-    !isLoading &&
-    (estadoFactura === "Pagada" || estadoFactura === "Parcialmente pagada") &&
-    pagos.length === 0 &&
-    notasAplicadas.length === 0;
+  const inconsistente = esEstadoInconsistente({
+    isLoading,
+    estadoFactura,
+    pagosCount: pagos.length,
+    notasAplicadasCount: notasAplicadas.length,
+  });
 
   const handleEliminar = async () => {
     if (!pagoAEliminar) return;
@@ -80,31 +80,9 @@ export function FacturaPagosSection({
   return (
     <>
       <Card>
-        <CardHeader className="flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-muted-foreground" /> Historial de pagos
-            </CardTitle>
-            {pagos.length > 0 && (
-              <Badge variant={liquidada ? "default" : "secondary"} className="gap-1">
-                {liquidada ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                {liquidada ? "Liquidada" : "Saldo pendiente"}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
+        <FacturaPagosHeader hayPagos={pagos.length > 0} liquidada={liquidada} />
         <CardContent className="space-y-3">
-          {inconsistente && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Estado inconsistente</AlertTitle>
-              <AlertDescription>
-                La factura aparece como «{estadoFactura}» pero no tiene pagos ni notas de
-                crédito aplicadas que lo respalden. Verifica con Cobranza antes de usarla
-                en reportes.
-              </AlertDescription>
-            </Alert>
-          )}
+          {inconsistente && <FacturaEstadoInconsistenteAlert estadoFactura={estadoFactura} />}
           {isLoading ? (
             <ListSkeleton rows={3} />
           ) : pagos.length === 0 ? (

@@ -53,3 +53,17 @@ export function diasHastaFecha(iso: string, hoy: Date = new Date()): number {
   base.setHours(0, 0, 0, 0);
   return Math.round((target.getTime() - base.getTime()) / 86_400_000);
 }
+
+/**
+ * Q-15.1 · Formatea un `Date` a `YYYY-MM-DD` usando sus componentes LOCALES.
+ * Es el espejo exacto de `parseDateOnlyLocal`: si el Date se creó con
+ * `new Date(y, m, d)` (medianoche local), este helper devuelve ese mismo día
+ * en cualquier zona horaria. Usar `isoUtcDay` sobre un Date local corre el
+ * día uno hacia atrás en zonas UTC+ (off-by-one de semanas del flujo).
+ */
+export function formatDateOnlyLocal(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
