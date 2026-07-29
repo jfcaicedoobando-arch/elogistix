@@ -140,6 +140,8 @@ export const appRoutes = (
     <Route path="/sentry" element={<SentryDiagnostico />} />
     <Route path="/crm" element={<CrmLayout />}>{crmChildRoutes}</Route>
     <Route path="/bitacora" element={<Bitacora />} />
+    {/* Sentry -3W: enlaces viejos apuntaban a /sistema/bitacora (404). */}
+    <Route path="/sistema/bitacora" element={<Navigate to="/bitacora" replace />} />
 
     <Route path="/papelera" element={guarded(["admin", "super_admin"], <Papelera />)} />
     <Route path="/idempotencia" element={guarded(["admin", "super_admin"], <Idempotencia />)} />
