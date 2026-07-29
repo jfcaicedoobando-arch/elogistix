@@ -66,7 +66,7 @@ describe("useSolicitarCotizacion", () => {
     const { result } = renderHook(() => useSolicitarCotizacion(["cli-1"]), { wrapper });
 
     const onError = vi.fn();
-    act(() => {
+    await act(async () => {
       result.current.mutate(input, { onError });
     });
 
