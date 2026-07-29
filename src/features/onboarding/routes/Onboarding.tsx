@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { Seo } from "@/components/shared/Seo";
 import { completeOnboarding } from "@/features/onboarding/services/completeOnboarding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
