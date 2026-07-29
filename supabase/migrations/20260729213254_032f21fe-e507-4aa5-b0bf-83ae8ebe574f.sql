@@ -2,6 +2,7 @@
 DROP POLICY IF EXISTS "Tenant CRUD proveedor_facturas" ON public.proveedor_facturas;
 
 -- Lectura amplia (incluye tesorero: necesita ver para pagar)
+DROP POLICY IF EXISTS "Tenant read proveedor_facturas" ON public.proveedor_facturas;
 CREATE POLICY "Tenant read proveedor_facturas"
 ON public.proveedor_facturas
 FOR SELECT TO authenticated
@@ -26,6 +27,7 @@ USING (
 );
 
 -- Escritura restringida (sin tesorero)
+DROP POLICY IF EXISTS "Captura proveedor_facturas insert" ON public.proveedor_facturas;
 CREATE POLICY "Captura proveedor_facturas insert"
 ON public.proveedor_facturas
 FOR INSERT TO authenticated
@@ -48,6 +50,7 @@ WITH CHECK (
   )
 );
 
+DROP POLICY IF EXISTS "Captura proveedor_facturas update" ON public.proveedor_facturas;
 CREATE POLICY "Captura proveedor_facturas update"
 ON public.proveedor_facturas
 FOR UPDATE TO authenticated
@@ -88,6 +91,7 @@ WITH CHECK (
   )
 );
 
+DROP POLICY IF EXISTS "Captura proveedor_facturas delete" ON public.proveedor_facturas;
 CREATE POLICY "Captura proveedor_facturas delete"
 ON public.proveedor_facturas
 FOR DELETE TO authenticated
