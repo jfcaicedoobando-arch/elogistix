@@ -32,7 +32,7 @@ export function useEstadoCuenta(filters: EstadoCuentaFilters) {
 
   const remotoHabilitado = puedeAgregarEnServidor(filters) && filters.clienteIds.length > 0;
   const kpisQuery = useQuery({
-    queryKey: [...estadoCuentaKeys.list(filters), "kpis"],
+    queryKey: estadoCuentaKeys.kpis(filters),
     queryFn: () => fetchEstadoCuentaKpis(filters),
     enabled: remotoHabilitado,
     staleTime: 30_000,
