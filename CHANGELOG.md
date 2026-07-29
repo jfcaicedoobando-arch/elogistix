@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.336.2] - 2026-07-29
+- **Chore · CI de lint desbloqueado.** `scripts/audit-migrations.ts` había crecido por encima del límite de 250 líneas de la regla `max-lines` y el lint del CI (que no tolera advertencias) fallaba. Se extrajeron las utilidades de análisis de firmas SQL a `scripts/lib/audit-sql-signatures.ts` sin cambiar el comportamiento del auditor. No se bajó el umbral de la regla. Analogía: en vez de ensanchar la puerta, guardamos parte de las herramientas en un cajón aparte.
+
+
+
 ## [13.336.1] - 2026-07-29
 - **Fix · "Error al reabrir embarque" (P0001).** Existían dos versiones de la función `reabrir_embarque`: la de la pestaña Cierre desactivaba el candado de embarque cerrado antes de cambiar el estado, pero la del botón **Reabrir** del encabezado no, así que el propio candado la rechazaba con "Embarque cerrado: usa reabrir_embarque para modificarlo". Ahora ambas se comportan igual: desactivan el candado dentro de la transacción, registran la reapertura en la bitácora de cierre y marcan las comisiones como no definitivas. También se admite el rol `admin_org` y el mensaje de error residual se muestra en español claro. Analogía: había dos llaves para la misma puerta y una no desactivaba la alarma antes de abrir.
 
