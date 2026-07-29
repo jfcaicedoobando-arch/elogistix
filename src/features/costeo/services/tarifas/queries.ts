@@ -4,8 +4,16 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoTarifa, CosteoTarifaRecargo, CosteoTarifaRow } from "@/features/costeo/types";
 
+// O8 (auditoría 2026-07-29): `*` → columnas explícitas. La lista cubre el
+// listado agrupado/tabla, KPIs, filtros y `buildInitialFromTarifa`
+// (editar/duplicar). Columnas de la tabla no incluidas por no usarse en el
+// listado: aprobada_en, aprobada_por, creado_por, dias_libres_almacenaje_lcl,
+// frecuencia_override, reemplazada_por, updated_at.
 const SELECT = `
-  *,
+  id, organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
+  flete_base, moneda, dias_libres_demoras, transit_time_dias, notas,
+  vigente_desde, vigente_hasta, estado, estado_aprobacion, motivo_rechazo,
+  created_at,
   costeo_agentes:agente_id(nombre),
   navieras:naviera_id(name),
   tipos_contenedor:tipo_contenedor_id(name),

@@ -1,6 +1,12 @@
 // Edge function: provisiona/garantiza el usuario demo, lo agrega a la organización demo,
 // re-siembra los datos de ejemplo y devuelve credenciales para que el frontend haga signIn.
 // Es seguro que la contraseña sea pública: es una cuenta demo compartida.
+//
+// BY DESIGN (auditoría 2026-07-29, O9/S5-17): credenciales fijas a propósito —
+// habilitan el botón "Ver demo" del login. No mover a secretos/vault. La
+// destrucción/re-siembra está restringida a service_role/super_admin por el
+// guard LC_SEED_DEMO_NO_AUTORIZADO de seed_demo_organization (M8).
+// Documentación: README.md § "Cuenta demo".
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";

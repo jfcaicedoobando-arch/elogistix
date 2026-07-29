@@ -447,16 +447,11 @@ jobs:
             reports/coverage-report.md
           retention-days: 30
 
-      # Codecov upload (informational — no falla el job si el token no está).
-      # Para activar reporting nominal: agregar `CODECOV_TOKEN` como secret de repo.
-      - name: Upload coverage to Codecov
-        if: always()
-        continue-on-error: true
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
-        with:
-          files: coverage/lcov.info
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+      # B4 (GHA-audit 2026-07-29): step Codecov eliminado — `CODECOV_TOKEN`
+      # no está registrado y el step fallaba siempre (silenciado). El
+      # reporting queda cubierto por el step summary + el artifact
+      # `coverage` de arriba. Para reactivarlo: registrar el secret y
+      # restaurar el step (ver git history de este archivo).
 
   # ---------------------------------------------------------------------
   # 9) CI SUCCESS — aggregator para branch protection.

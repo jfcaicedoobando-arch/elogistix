@@ -14,7 +14,6 @@ vi.mock("@/features/cliente/services", () => ({
 vi.mock("@/features/proformas/services", () => ({
   fetchClienteParaPdf: mockClientePdf,
   fetchProformasEmbarque: vi.fn(),
-  fetchProformasAprobadas: vi.fn(),
   fetchProformasPendientes: vi.fn(),
   crearProforma: vi.fn(),
   eliminarProforma: vi.fn(),

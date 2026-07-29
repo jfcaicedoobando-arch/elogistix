@@ -9,6 +9,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { formatCurrency } from "@/lib/formatters";
 import type { FilaPnlContenedor } from "@/features/embarques/services/pnlPorContenedor";
 import { KpiCard } from "@/components/shared/KpiCard";
+import { PNL_UMBRAL_MARGEN_MIN_PCT } from "@/features/embarques/domain/pnlAlertas";
 
 interface TablaProps {
   moneda: string;
@@ -106,7 +107,7 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
           <KpiCard
             label="Margen"
             value={pct(margen)}
-            variant={margen < 15 ? "warning" : "success"}
+            variant={margen < PNL_UMBRAL_MARGEN_MIN_PCT ? "warning" : "success"}
           />
         </div>
 

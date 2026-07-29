@@ -77,7 +77,9 @@ src/
 ├── generators/     → Generación pura de archivos (PDF, CSV). Sin I/O.
 └── integrations/   → Clientes auto-generados (Supabase). NO editar.
 
-> **Regla cross-feature:** un feature no puede importar internals de otro feature. Excepciones documentadas en `CROSS_FEATURE_ALLOWLIST` de `eslint.config.js` (44 entradas hoy, marcadas ARCH-DEBT y en burn-down).
+> **Regla cross-feature:** un feature no puede importar internals de otro feature. Excepciones documentadas en `CROSS_FEATURE_ALLOWLIST` de `eslint.config.js` (44 entradas hoy, marcadas ARCH-DEBT y en burn-down). Cubre `components/`, `domain/`, `lib/`, `utils/` y `constants/` de otros features (O5, auditoría 2026-07-29).
+>
+> **Barrel raíz por feature (piloto O4, 2026-07-29):** `tesoreria` y `proformas` tienen `index.ts` raíz y deep imports externos bloqueados por `src/__tests__/architecture/feature-barrel-surface.test.ts`. Burn-down del resto de features: (1) un feature entra al piloto cuando tiene barrels de subcapa (`services/hooks/domain`) y ≤5 deep imports externos; (2) al crear su barrel raíz se añade a `BARRELED_FEATURES` y sus deep imports existentes a la baseline del test; (3) meta trimestral: 8 features adicionales por trimestre.
 >
 > Notas históricas: `src/pages/`, `src/contexts/` y `src/hooks/<dominio>/` **ya no existen**; su contenido migró a `features/<dominio>/routes/`, `lib/contexts/` y `features/<dominio>/hooks/` respectivamente. `src/utils/` se eliminó en v8.206.0.
 

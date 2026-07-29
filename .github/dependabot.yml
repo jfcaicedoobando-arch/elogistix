@@ -1,4 +1,9 @@
 version: 2
+# NOTA (GHA-audit 2026-07-29, H10): el digest pineado de la imagen Postgres
+# de los tests RLS (`postgres@sha256:...` en `rls-tests.yml`, env/services)
+# NO es actualizable por dependabot (los ecosistemas github-actions/docker
+# no inspeccionan esa posición del YAML). Política: bump manual trimestral
+# verificando la suite RLS completa.
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"

@@ -2,23 +2,17 @@
  * DialogTimbrarFactura — Revisión previa al timbrado CFDI 4.0.
  * Migrado a `FormDialogShell` (v13.120.0). El estado y el handler viven
  * en `useTimbrarFacturaDialog` para respetar el límite de 200 líneas.
+ * vO7 — queries al hook `useTimbradoContext` y footer a componente propio;
+ * se elimina el `eslint-disable complexity`.
  */
 import { Stamp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { useFactura } from "@/features/facturacion/hooks/useFactura";
-import {
-  fetchClienteFiscal,
-  fetchDefaultsFacturacionCliente,
-  type ClienteFiscalRow,
-  type DefaultsFacturacionCliente,
-} from "@/features/facturacion/services";
-import { useQuery } from "@tanstack/react-query";
-import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
+import { buildEstadoTimbrado } from "@/features/facturacion/utils/estadoTimbrado";
 import { useTimbrarFacturaDialog } from "@/features/facturacion/hooks/useTimbrarFacturaDialog";
+import { useTimbradoContext } from "@/features/facturacion/hooks/useTimbradoContext";
 import { TimbrarCompacto, TimbrarCompleto } from "./DialogTimbrarFactura.parts";
+import { DialogTimbrarFacturaFooter } from "./DialogTimbrarFacturaFooter";
 import { ReferenciasEmbarquePreview } from "./ReferenciasEmbarquePreview";
-import { queryKeys } from "@/lib/query";
 
 interface Props {
   facturaId: string | null;
@@ -26,56 +20,19 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
-// eslint-disable-next-line complexity
 export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
-  const { data: factura } = useFactura(facturaId ?? undefined);
-
-  const { data: cliente } = useQuery<ClienteFiscalRow | null>({
-    queryKey: queryKeys.facturacion.clienteFiscal(factura?.cliente_id),
-    enabled: !!factura?.cliente_id,
-    queryFn: () => fetchClienteFiscal(factura!.cliente_id),
-  });
-
-  const { data: defaults } = useQuery<DefaultsFacturacionCliente | null>({
-    queryKey: queryKeys.facturacion.clienteDefaults(factura?.cliente_id),
-    enabled: !!factura?.cliente_id,
-    queryFn: () => fetchDefaultsFacturacionCliente(factura!.cliente_id),
-    staleTime: 30_000,
-  });
-
+  const { factura, cliente, defaults } = useTimbradoContext(facturaId);
   const dlg = useTimbrarFacturaDialog(factura, cliente, defaults, () => onOpenChange(false));
 
   if (!facturaId || !factura) return null;
 
-  const { checks, puedeTimbrar } = buildChecksTimbrado({
-    rfc: cliente?.rfc ?? factura.rfc_cliente ?? "",
-    cp: cliente?.codigo_postal ?? "",
-    regimen: cliente?.regimen_fiscal ?? "",
+  const { checks, puedeTimbrar, esFastPath } = buildEstadoTimbrado(factura, cliente, {
     usoCfdi: dlg.usoCfdi,
     formaPago: dlg.formaPago,
     metodoPago: dlg.metodoPago,
-    moneda: factura.moneda ?? "MXN",
-    tipoCambio: factura.tipo_cambio == null ? null : Number(factura.tipo_cambio),
   });
 
-  const esFastPath =
-    puedeTimbrar &&
-    Boolean(factura.uso_cfdi && factura.forma_pago && factura.metodo_pago);
   const mostrarCompacto = esFastPath && !dlg.modoExpandido;
-
-  const footer = (
-    <>
-      {mostrarCompacto && (
-        <Button variant="ghost" onClick={() => dlg.setModoExpandido(true)} className="mr-auto">
-          Editar datos fiscales
-        </Button>
-      )}
-      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-      <Button onClick={dlg.onConfirm} disabled={!puedeTimbrar || dlg.timbrarPending}>
-        {dlg.timbrarPending ? "Timbrando…" : "Timbrar ahora"}
-      </Button>
-    </>
-  );
 
   return (
     <FormDialogShell
@@ -89,7 +46,16 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
           : "Revisa los datos fiscales antes de emitir el CFDI 4.0 a través de Facturapi."
       }
       size={mostrarCompacto ? "md" : "lg"}
-      footer={footer}
+      footer={
+        <DialogTimbrarFacturaFooter
+          mostrarCompacto={mostrarCompacto}
+          puedeTimbrar={puedeTimbrar}
+          timbrando={dlg.timbrarPending}
+          onExpandir={() => dlg.setModoExpandido(true)}
+          onCancelar={() => onOpenChange(false)}
+          onConfirm={dlg.onConfirm}
+        />
+      }
     >
       {mostrarCompacto ? (
         <TimbrarCompacto

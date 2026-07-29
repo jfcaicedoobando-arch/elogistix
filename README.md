@@ -52,6 +52,14 @@ npm run dev
 
 La app se sirve en `http://localhost:8080`. Las variables de entorno (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`) son provistas automáticamente por Lovable Cloud y viven en `.env` (no editar a mano).
 
+### Cuenta demo (by design)
+
+La plataforma expone una cuenta demo pública (`demo@librecarga.com`, contraseña fija `demo-libre-carga-2026`, definida en `supabase/functions/demo-access/index.ts`). Es **intencional**: habilita el botón "Ver demo" del login sin alta previa. Sus límites de seguridad, verificados en la auditoría 2026-07-29 (O9/S5-17):
+
+- La sesión demo es rol `operador` sobre la **org demo**, aislada de los tenants reales por RLS (cobertura enforced en CI).
+- La re-siembra (`seed_demo_organization`) solo es ejecutable por `service_role` o `super_admin` (guard M8); la edge `demo-access` la invoca con service key.
+- Las credenciales NO son un secreto: no moverlas a vault ni rotarlas (el flujo del login depende de que sean estables). El riesgo residual aceptado es que cualquiera puede operar datos ficticios de la org demo; si eso deja de ser aceptable, la opción documentada es un proyecto de backend separado para demo, no credenciales secretas.
+
 ### Comandos útiles
 
 ```sh

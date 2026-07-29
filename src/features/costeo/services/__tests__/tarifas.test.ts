@@ -212,5 +212,15 @@ describe("costeo/services/tarifas", () => {
       mock.setTableResult("costeo_tarifas", { data: null, error: { message: "rls" } });
       await expect(marcarTarifaReemplazada("t11")).rejects.toThrow();
     });
+    it("O8: fetchCosteoTarifas usa columnas explícitas (sin select '*')", async () => {
+      mock.setTableResult("costeo_tarifas", { data: [], error: null });
+      await fetchCosteoTarifas(ORG);
+      const call = mock.tableCalls.find((c) => c.table === "costeo_tarifas");
+      const idx = call?.ops.indexOf("select") ?? -1;
+      const selectArg = String(call?.opArgs[idx]?.[0] ?? "");
+      expect(selectArg.trim()).not.toBe("*");
+      expect(selectArg).toContain("flete_base");
+      expect(selectArg).toContain("recargos:costeo_tarifa_recargos");
+    });
   });
 });

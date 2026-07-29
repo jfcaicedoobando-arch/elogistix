@@ -11,6 +11,9 @@ import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import ResumenPL from "./ResumenPL";
 import TablaCostosDetalle from "./TablaCostosDetalle";
 import { calcTotalsPL, type FilaCostoDetalle } from "./costosPLTypes";
+// O3: match costos↔conceptos centralizado. OJO: por nombre normalizado con
+// fallback posicional — ver comentario de riesgo en matchConceptoVenta.ts.
+import { matchConceptoVenta } from "@/features/cotizacion/utils/matchConceptoVenta";
 
 interface Props {
   cotizacionId: string;
@@ -35,20 +38,17 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
     if (isLoading || initialized) return;
 
     if (costosGuardados && costosGuardados.length > 0) {
-      const normalize = (s: string) => (s ?? '').trim().toLowerCase();
-      let idxUSD = 0;
-      let idxMXN = 0;
+      const idxUSD = { idx: 0 };
+      const idxMXN = { idx: 0 };
       const mapped: FilaCostoDetalle[] = costosGuardados.map((c) => {
         let venta = 0;
         let aplica_iva = false;
         if (c.moneda === "USD") {
-          const cv = conceptosUSD.find(v => normalize(v.descripcion) === normalize(c.concepto))
-            || conceptosUSD[idxUSD++];
+          const cv = matchConceptoVenta(conceptosUSD, c.concepto, idxUSD);
           venta = cv ? cv.cantidad * cv.precio_unitario : 0;
           aplica_iva = cv?.aplica_iva ?? false;
         } else {
-          const cv = conceptosMXN.find(v => normalize(v.descripcion) === normalize(c.concepto))
-            || conceptosMXN[idxMXN++];
+          const cv = matchConceptoVenta(conceptosMXN, c.concepto, idxMXN);
           venta = cv ? cv.cantidad * cv.precio_unitario : 0;
         }
         return {
