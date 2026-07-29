@@ -48,6 +48,13 @@ describe("proveedorFacturas service", () => {
       // Solo neq, order, limit que son base
       expect(calls[0].ops).not.toContain("eq");
     });
+    it("excluye facturas borradas lógicamente (deleted_at IS NULL)", async () => {
+      mock.setTableResult("proveedor_facturas", { data: [], error: null });
+      await fetchFacturasCxP();
+      const calls = mock.tableCalls.filter(c => c.table === "proveedor_facturas");
+      expect(calls[0].ops).toContain("is");
+    });
+
 
     it("lanza error si falla la consulta", async () => {
       mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error fetch" } });
