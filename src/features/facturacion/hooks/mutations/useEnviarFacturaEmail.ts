@@ -17,7 +17,7 @@ export function useEnviarFacturaEmail(facturaId: string | undefined) {
         notifyError(undefined, { title: "No se pudo enviar el correo", method: "FEATURES_FACTURACION_HOOKS_MUTATIONS_USEENVIARFACTURAEMAIL_1" });
       }
       if (facturaId) {
-        qc.invalidateQueries({ queryKey: queryKeys.facturas.legacyDetail(facturaId) });
+        qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(facturaId) });
         qc.invalidateQueries({ queryKey: queryKeys.facturas.envios(facturaId) });
       }
       qc.invalidateQueries({ queryKey: queryKeys.facturas.all });

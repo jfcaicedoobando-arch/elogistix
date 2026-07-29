@@ -39,8 +39,9 @@ export function ProformaInconsistenteAlert({
     },
     onSuccess: () => {
       notifySuccess(undefined, { title: `Conceptos asignados a ${proformaBorrador.numero}` });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.proformasEmbarque(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVentaDash(embarqueId) });
+      // A8: la key viva de proformas por embarque vive en el factory de proformas.
+      qc.invalidateQueries({ queryKey: queryKeys.proformas.embarque(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) });
     },
     onError: (err: unknown) => {

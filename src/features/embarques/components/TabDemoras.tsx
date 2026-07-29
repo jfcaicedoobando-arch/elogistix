@@ -50,7 +50,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
         delete next[vars.id];
         return next;
       });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.contenedoresLegacy(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.contenedores(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
     },
