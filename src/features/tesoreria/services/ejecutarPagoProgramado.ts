@@ -32,5 +32,8 @@ export async function ejecutarPagoProgramado(
     p_referencia: input.referencia ?? "",
   });
   if (error) throw error;
+  // SAFE-CAST: la RPC devuelve `Json` en los tipos generados; el shape real lo
+  // fija el contrato de `ejecutar_pago_programado` (ver mem://principles/safe-cast).
   return data as unknown as EjecutarPagoProgramadoResultado;
+
 }
