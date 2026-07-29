@@ -34,7 +34,9 @@ export function equivalenteMxn(
   let facturasSinTc = 0;
 
   if ((nativos.USD || 0) > 0) {
-    if (tcUsdMxn > 1) totalMxn = money(totalMxn + nativos.USD * tcUsdMxn);
+    // FIX C6: el canon único decide si el TC es confiable (1 USD nunca es 1 MXN).
+    const conv = aMxn(nativos.USD, "USD", tcUsdMxn);
+    if (conv.completo) totalMxn = money(totalMxn + conv.monto);
     else facturasSinTc += 1;
   }
 
