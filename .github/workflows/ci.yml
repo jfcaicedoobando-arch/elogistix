@@ -38,6 +38,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
@@ -67,6 +70,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
@@ -92,6 +98,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
@@ -111,6 +120,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
 
       - name: Setup Bun + install
         id: setup-bun
@@ -119,7 +131,10 @@ jobs:
       # v13.303.5 — Los audits son procesos tsx independientes: paralelizamos.
       # v13.309.36 (FIX-R2-04) — Añadidos `audit:schema` y `audit:migrations`
       # para que los guardrails documentados en migrations-hygiene.md sí corran.
-      - name: Audits en paralelo (arch + casts + tests + schema + migrations)
+      # v13.322.1 (GHA-audit A2) — `audit:rpc-sync`, `audit:rpc-columns` y
+      # `audit:sonner` existían en package.json pero NINGÚN workflow los
+      # invocaba: guardrails muertos. Se cablean aquí, en paralelo.
+      - name: Audits en paralelo (arch + casts + tests + schema + migrations + rpc + sonner)
         run: |
           set -e
           bun run audit:arch       > /tmp/audit-arch.log       2>&1 &
@@ -132,17 +147,28 @@ jobs:
           S=$!
           bun run audit:migrations > /tmp/audit-migrations.log 2>&1 &
           M=$!
+          bun run audit:rpc-sync    > /tmp/audit-rpc-sync.log    2>&1 &
+          R=$!
+          bun run audit:rpc-columns > /tmp/audit-rpc-columns.log 2>&1 &
+          K=$!
+          bun run audit:sonner      > /tmp/audit-sonner.log      2>&1 &
+          N=$!
           fail=0
           wait $A || { echo '❌ audit:arch';       cat /tmp/audit-arch.log;       fail=1; }
           wait $C || { echo '❌ audit:casts';      cat /tmp/audit-casts.log;      fail=1; }
           wait $T || { echo '❌ audit:tests';      cat /tmp/audit-tests.log;      fail=1; }
           wait $S || { echo '❌ audit:schema';     cat /tmp/audit-schema.log;     fail=1; }
           wait $M || { echo '❌ audit:migrations'; cat /tmp/audit-migrations.log; fail=1; }
+          wait $R || { echo '❌ audit:rpc-sync';    cat /tmp/audit-rpc-sync.log;    fail=1; }
+          wait $K || { echo '❌ audit:rpc-columns'; cat /tmp/audit-rpc-columns.log; fail=1; }
+          wait $N || { echo '❌ audit:sonner';      cat /tmp/audit-sonner.log;      fail=1; }
           exit $fail
 
-      # v13.303.5 — Los architecture gating tests se sacaron del matrix de
-      # Vitest (excluidos vía `test:coverage:shard`) y se corren SÓLO aquí.
-      # Antes se ejecutaban en `quality` Y también en algún shard del matrix.
+      # v13.322.1 (GHA-audit A4) — Los architecture gating tests se excluyen
+      # del matrix de Vitest cuando se corre con `--shard` (ver
+      # vitest.config.ts) y se corren SÓLO aquí, con un gate visible y con
+      # nombre propio. Antes el comentario decía eso pero la exclusión no
+      # existía: corrían dos veces.
       - name: Architecture gating tests (oversized, casts, layers, shadow folders)
         run: bunx vitest run src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/__tests__/audit-casts-classifier.test.ts
 
@@ -174,18 +200,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
-
-      - name: Cache Vite build
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: |
-            node_modules/.vite
-          key: ${{ runner.os }}-vite-${{ hashFiles('bun.lock', 'vite.config.ts') }}
-          restore-keys: |
-            ${{ runner.os }}-vite-
 
       # v13.303.5 — `ANALYZE=true` (rollup-plugin-visualizer) es costoso.
       # Sólo lo activamos en push a `main` para tener el snapshot histórico.
@@ -220,6 +240,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # v13.322.1 (GHA-audit H4) — este job SÍ hace `git fetch origin` del
+          # base SHA para el gate de paths, así que conserva credenciales.
+          persist-credentials: true
 
       # Gate de paths: los 42 tests Deno solo corren si el PR toca
       # supabase/functions o este workflow. En push a main corren siempre
@@ -294,6 +318,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
@@ -340,15 +367,6 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - name: Upload JUnit report (shard ${{ matrix.shard }})
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: junit-${{ matrix.shard }}
-          path: reports/junit.xml
-          if-no-files-found: ignore
-          retention-days: 7
-
   # ---------------------------------------------------------------------
   # 8) COVERAGE — merge de blobs y reporte.
   # ---------------------------------------------------------------------
@@ -361,6 +379,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
+          persist-credentials: false
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun

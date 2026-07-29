@@ -21,6 +21,18 @@ export default defineConfig({
       "dist/**",
       "src/**/*.perf.test.tsx",
       "src/**/*.perf.ts",
+      // v13.322.1 (GHA-audit A4) · Los architecture gating tests corren en un
+      // step dedicado del job `audits` de CI. Cuando la suite se ejecuta con
+      // `--shard` (matrix de CI) los excluimos para no ejecutarlos dos veces
+      // y para que su fallo no se diluya entre 10 shards.
+      ...(process.argv.some((a) => a.startsWith("--shard"))
+        ? [
+            "src/lib/__tests__/architecture.test.ts",
+            "src/lib/__tests__/architecture-baseline.test.ts",
+            "src/__tests__/audit-report.test.ts",
+            "src/__tests__/audit-casts-classifier.test.ts",
+          ]
+        : []),
     ],
     // Reporter JUnit (12.85.0): además de los defaults, escribimos test-results.xml
     // para que dashboards externos (GitHub Actions test reporter, Jenkins, etc.)

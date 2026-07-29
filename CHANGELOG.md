@@ -1,6 +1,16 @@
 # Changelog
 
 
+## [13.322.1] - 2026-07-29
+- Seguridad: la búsqueda de mejores tarifas ya no puede devolver tarifas de otra organización aunque se le indique explícitamente; siempre valida membresía.
+- P&L del embarque: se corrigió el desglose por concepto, que consultaba campos inexistentes y fallaba al calcularse.
+- CI: se activaron tres auditorías que existían pero nunca se ejecutaban (sincronía de RPCs, columnas de RPCs y uso de toasts), se eliminó un paso muerto de reportes y se alinearon los lotes de pruebas locales con los de CI.
+- Supply chain: versión de Bun fijada, descarga de actionlint verificada por checksum (sin ejecutar scripts remotos), revisión de dependencias con licencias prohibidas y credenciales de Git deshabilitadas en los flujos que no las necesitan.
+
+
+
+
+
 ## [13.322.0] - 2026-07-28
 - Detalle de proforma: nuevo diseño en 2 columnas con totales integrados en la tabla de conceptos, historial vertical con envíos al portal, bitácora de actividad, días de crédito heredados del cliente y accesos rápidos para copiar la liga del portal o verla como cliente.
 
