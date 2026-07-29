@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.324.9] - 2026-07-30
+- Seguridad y CI: la función interna de listados de embarques ya no es ejecutable por visitantes anónimos y se eliminó una constante sin uso que rompía la verificación de tipos.
+
 ## [13.324.8] - 2026-07-30
 - CI: la suite RLS de borrado suave ya crea su factura de prueba con subtotal e IVA congruentes, cumpliendo la validación de totales.
 
