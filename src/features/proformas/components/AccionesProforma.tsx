@@ -10,12 +10,12 @@
  */
 import { useState } from "react";
 import {
-  Download, Ship, Receipt, Mail, CheckCircle2, XCircle, AlertTriangle, Link2, Eye,
+  Download, Ship, Receipt, Mail, CheckCircle2, XCircle, Link2, Eye,
 } from "lucide-react";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
-import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { EnviarProformaDialog } from "@/features/proformas/components/EnviarProformaDialog";
 import { RespuestaClienteManualDialog } from "@/features/proformas/components/RespuestaClienteManualDialog";
+import { AlertaLimiteCreditoDialog } from "@/features/proformas/components/AlertaLimiteCreditoDialog";
 import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
 import {
   useValidarLimiteCredito,
@@ -25,7 +25,6 @@ import {
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { usePermissions } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { formatCurrency } from "@/lib/formatters";
 import { resolverDiasCredito } from "@/features/proformas/domain/proformaDetalleHelpers";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
@@ -59,10 +58,6 @@ function computarFlags(
       !facturada && estadoCliente === "pendiente" && canResponderProformaManual,
     mostrarHint: !clienteAcepto && !facturada,
   };
-}
-
-function fmtMxn(v: number): string {
-  return formatCurrency(v, "MXN");
 }
 
 export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props) {
@@ -190,29 +185,12 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
           modo={manualOpen}
         />
       )}
-      <ConfirmActionDialog
-        open={!!creditoAlerta}
+      <AlertaLimiteCreditoDialog
+        resultado={creditoAlerta}
+        clienteNombre={proforma.cliente_nombre}
+        montoNuevaFactura={Number(proforma.total_mxn ?? 0)}
         onOpenChange={(o) => { if (!o) setCreditoAlerta(null); }}
-        title="Límite de crédito excedido"
-        titleIcon={<AlertTriangle className="h-5 w-5 text-warning" />}
-        confirmLabel="Facturar de todas formas"
-        cancelLabel="Cancelar"
-        size="md"
         onConfirm={onConfirmarExceso}
-        description={creditoAlerta ? (
-          <div className="space-y-1 text-sm">
-            <p>
-              <strong>{proforma.cliente_nombre ?? "El cliente"}</strong> excederá su límite en
-              {" "}<strong>{fmtMxn(creditoAlerta.excedentePotencialMxn)}</strong>.
-            </p>
-            <p className="text-muted-foreground">
-              Límite: {fmtMxn(creditoAlerta.exposicion.limiteMxn ?? 0)} · En uso: {fmtMxn(creditoAlerta.exposicion.enUsoMxn)} · Nueva factura: {fmtMxn(Number(proforma.total_mxn ?? 0))}
-            </p>
-            <p className="text-xs text-muted-foreground pt-2">
-              Se registrará en bitácora que continuaste a pesar del exceso.
-            </p>
-          </div>
-        ) : null}
       />
     </div>
   );

@@ -1,6 +1,9 @@
 # Changelog
 
 
+## [13.322.11] - 2026-07-29
+- Mantenimiento: se dividieron cinco archivos que superaban el límite de tamaño del proyecto (acciones de proforma, consultas del portal, servicios del portal de agente, wizard de cotización y botón de crear embarque); sin cambios visibles para el usuario.
+
 ## [13.322.10] - 2026-07-29
 - Base de datos: se registraron formalmente cinco campos de proformas y facturas de proveedor que existían sin historial; no cambia datos ni comportamiento.
 - Integración continua: el radar de cambios manuales vuelve a usar un corte por fecha (más confiable que la lista de archivos) y sólo falla ante deuda nueva.
