@@ -401,9 +401,9 @@ jobs:
     name: Drift radar — migraciones sin _ci_drift
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # No bloquea el merge: es un radar. Cuando el resumen quede en 0 bloques
-    # de drift, se puede volver obligatorio quitando `continue-on-error`.
-    continue-on-error: true
+    # Sólo falla con drift NUEVO (posterior al baseline). La deuda histórica
+    # cubierta por `_ci_drift.sql` se reporta como warning informativo.
+
 
     services:
       postgres:
@@ -438,34 +438,50 @@ jobs:
 
       - name: Apply migrations SIN parches de drift
         id: apply
+        env:
+          # Migraciones <= a este archivo son deuda histórica cubierta por
+          # `_ci_drift.sql`: se reportan como warning pero no fallan el job.
+          DRIFT_BASELINE: "20260729000308_6b12144a-4547-46e4-afbb-01341f02bd16.sql"
         run: |
           set -uo pipefail
           shopt -s nullglob
-          failed=""
+          legacy=""
+          nuevas=""
           for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
             base=$(basename "$f")
             if ! sed -E \
               -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
               -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
               "$f" | $PSQL --single-transaction > /tmp/mig.log 2>&1; then
-              echo "::warning file=$f::drift — la migración falla sin _ci_drift.sql"
-              sed -n '1,10p' /tmp/mig.log
-              failed="$failed $base"
+              if [[ "$base" > "$DRIFT_BASELINE" ]]; then
+                echo "::error file=$f::drift NUEVO — la migración no aplica en una base limpia"
+                sed -n '1,10p' /tmp/mig.log
+                nuevas="$nuevas $base"
+              else
+                echo "::warning file=$f::drift histórico (exento del radar)"
+                legacy="$legacy $base"
+              fi
             fi
           done
           {
             echo "## Drift radar — migraciones aplicadas en limpio"
-            if [ -z "$failed" ]; then
+            echo ""
+            if [ -n "$nuevas" ]; then
+              echo "❌ Drift NUEVO (posterior a \`$DRIFT_BASELINE\`):"
+              for m in $nuevas; do echo "- \`$m\`"; done
               echo ""
-              echo "✓ Todas las migraciones aplican sin \`_ci_drift.sql\`."
-              echo "Se puede quitar \`continue-on-error\` de este job."
+              echo "Acción: escribir la migración real que cree esas columnas/tablas."
             else
+              echo "✓ Sin drift nuevo posterior a \`$DRIFT_BASELINE\`."
+            fi
+            if [ -n "$legacy" ]; then
               echo ""
-              echo "Migraciones que dependen de objetos creados a mano en prod:"
-              for m in $failed; do echo "- \`$m\`"; done
+              echo "<details><summary>Drift histórico exento ($(echo $legacy | wc -w))</summary>"
               echo ""
-              echo "Acción: escribir la migración real que cree esas columnas/tablas"
-              echo "y borrar el bloque correspondiente de \`supabase/tests/rls/_ci_drift.sql\`."
+              for m in $legacy; do echo "- \`$m\`"; done
+              echo ""
+              echo "</details>"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-          [ -z "$failed" ]
+          [ -z "$nuevas" ]
+
