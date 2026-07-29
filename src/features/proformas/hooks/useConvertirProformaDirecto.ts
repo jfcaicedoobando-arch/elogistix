@@ -46,7 +46,7 @@ export function useConvertirProformaDirecto() {
         metodoPago: "PPD",
         formaPago: "99",
         usoCfdi: "G03",
-        diasCredito: input.diasCredito ?? 0,
+        diasCredito: input.diasCredito ?? null,
         notas: null,
         requestId: crypto.randomUUID(),
       });
