@@ -15,6 +15,8 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
+import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoFactura";
+import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
