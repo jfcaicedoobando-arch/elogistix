@@ -77,36 +77,45 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
             </div>
           </div>
         )}
-        {last && !last.sin_eventos && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-              <Stat label="Descarga" value={last.fecha_descarga ? formatDate(last.fecha_descarga) : '—'} />
-              <Stat label="Devolución" value={last.fecha_devolucion ? formatDate(last.fecha_devolucion) : '—'} />
-              <Stat label="Días puerto" value={(last.dias_en_puerto ?? 0).toString()} />
-              <Stat label="Días libres" value={(last.dias_libres ?? 0).toString()} />
-              <Stat label="Excedidos" value={(last.dias_excedidos ?? 0).toString()}
-                className={(last.dias_excedidos ?? 0) > 0 ? 'text-destructive font-bold' : ''} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground uppercase">Costo total (naviera, {last.moneda_costo ?? 'USD'})</p>
-                <p className="text-lg font-bold tabular-nums">{formatCurrency(last.total_costo_usd, (last.moneda_costo ?? 'USD') as 'USD')}</p>
-              </div>
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground uppercase">Venta total (cliente)</p>
-                <p className="text-lg font-bold tabular-nums text-success">{formatCurrency(last.total_venta_usd, 'USD')}</p>
-              </div>
-            </div>
-            {last.contenedores.length > 0 && (
-              <div className="text-xs text-muted-foreground">
-                <Badge variant="outline" className="mr-2">{last.contenedores.length} contenedor(es)</Badge>
-                Generados con origen <code className="text-xs">demoras_auto</code>; aparecen en las tablas de Venta y Costo de abajo.
-              </div>
-            )}
-          </div>
-        )}
+        {last && !last.sin_eventos && <DemorasResumen data={last} />}
       </CardContent>
     </Card>
+  );
+}
+
+function DemorasResumen({ data }: { data: DemoraDesglose }) {
+  const excedidos = data.dias_excedidos ?? 0;
+  const moneda = (data.moneda_costo ?? 'USD') as 'USD';
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+        <Stat label="Descarga" value={data.fecha_descarga ? formatDate(data.fecha_descarga) : '—'} />
+        <Stat label="Devolución" value={data.fecha_devolucion ? formatDate(data.fecha_devolucion) : '—'} />
+        <Stat label="Días puerto" value={(data.dias_en_puerto ?? 0).toString()} />
+        <Stat label="Días libres" value={(data.dias_libres ?? 0).toString()} />
+        <Stat
+          label="Excedidos"
+          value={excedidos.toString()}
+          className={excedidos > 0 ? 'text-destructive font-bold' : ''}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-md border p-3">
+          <p className="text-xs text-muted-foreground uppercase">Costo total (naviera, {moneda})</p>
+          <p className="text-lg font-bold tabular-nums">{formatCurrency(data.total_costo_usd, moneda)}</p>
+        </div>
+        <div className="rounded-md border p-3">
+          <p className="text-xs text-muted-foreground uppercase">Venta total (cliente)</p>
+          <p className="text-lg font-bold tabular-nums text-success">{formatCurrency(data.total_venta_usd, 'USD')}</p>
+        </div>
+      </div>
+      {data.contenedores.length > 0 && (
+        <div className="text-xs text-muted-foreground">
+          <Badge variant="outline" className="mr-2">{data.contenedores.length} contenedor(es)</Badge>
+          Generados con origen <code className="text-xs">demoras_auto</code>; aparecen en las tablas de Venta y Costo de abajo.
+        </div>
+      )}
+    </div>
   );
 }
 
