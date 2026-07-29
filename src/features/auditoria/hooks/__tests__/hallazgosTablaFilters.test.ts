@@ -26,6 +26,7 @@ const baseCtx: MatchCtx = {
   filtroCliente: "todos",
   filtroRevision: "todos",
   filtroResponsable: "todos",
+  soloEtaVencida: false,
   userId: "u1",
   revisiones: undefined,
 };
@@ -93,5 +94,34 @@ describe("matchHallazgo", () => {
     expect(matchHallazgo(h, { ...baseCtx, filtroResponsable: "vencidos", revisiones: revVencido })).toBe(true);
     expect(matchHallazgo(h, { ...baseCtx, filtroResponsable: "vencidos", revisiones: revRevisado })).toBe(false);
     expect(matchHallazgo(h, { ...baseCtx, filtroResponsable: "vencidos" })).toBe(false);
+  });
+});
+
+describe("matchHallazgo — drill-down 'ETA vencida' (paridad con el dashboard)", () => {
+  const ctx: MatchCtx = { ...baseCtx, soloEtaVencida: true, today: "2026-07-10" };
+
+  it("acepta ETA estrictamente anterior a hoy", () => {
+    expect(matchHallazgo(mkHallazgo({ eta: "2026-07-09" }), ctx)).toBe(true);
+  });
+
+  it("rechaza ETA de hoy (no está vencida)", () => {
+    expect(matchHallazgo(mkHallazgo({ eta: "2026-07-10" }), ctx)).toBe(false);
+  });
+
+  it("rechaza hallazgos sin ETA", () => {
+    expect(matchHallazgo(mkHallazgo({ eta: null }), ctx)).toBe(false);
+  });
+
+  it("rechaza reglas con calendario propio", () => {
+    expect(matchHallazgo(mkHallazgo({ eta: "2026-07-01", regla: "cxp_vencida" }), ctx)).toBe(false);
+    expect(matchHallazgo(mkHallazgo({ eta: "2026-07-01", regla: "proforma_vencida" }), ctx)).toBe(false);
+  });
+
+  it("rechaza hallazgos con revisión abierta (en progreso o revisada)", () => {
+    const h = mkHallazgo({ eta: "2026-07-01" });
+    const revisiones = new Map([[revisionKey(h), { estado_revision: "en_progreso" }]]);
+    expect(matchHallazgo(h, { ...ctx, revisiones })).toBe(false);
+    const revisadas = new Map([[revisionKey(h), { estado_revision: "revisado" }]]);
+    expect(matchHallazgo(h, { ...ctx, revisiones: revisadas })).toBe(false);
   });
 });

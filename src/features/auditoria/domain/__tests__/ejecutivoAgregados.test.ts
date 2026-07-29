@@ -153,3 +153,36 @@ describe("ejecutivoAgregados", () => {
   });
 });
 
+
+describe("esHallazgoEtaVencida — paridad tarjeta/tabla", () => {
+  const base = {
+    embarque_id: "e1",
+    expediente: "EXP-001",
+    cliente_nombre: "ACME",
+    severidad: "critico",
+    detalle: "x",
+  } as unknown as HallazgoAuditoria;
+
+  it("sólo cuenta ETA estrictamente anterior a hoy", () => {
+    expect(esHallazgoEtaVencida({ ...base, regla: "docs_faltantes", eta: "2026-07-09" }, "2026-07-10")).toBe(true);
+    expect(esHallazgoEtaVencida({ ...base, regla: "docs_faltantes", eta: "2026-07-10" }, "2026-07-10")).toBe(false);
+  });
+
+  it("excluye reglas con calendario propio y hallazgos sin ETA", () => {
+    expect(esHallazgoEtaVencida({ ...base, regla: "cxp_vencida", eta: "2026-07-01" }, "2026-07-10")).toBe(false);
+    expect(esHallazgoEtaVencida({ ...base, regla: "docs_faltantes", eta: null }, "2026-07-10")).toBe(false);
+  });
+
+  it("el conteo de la tarjeta coincide con el predicado del filtro", () => {
+    const hoy = hoyAuditoriaIso();
+    const ayer = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const hallazgos = [
+      { ...base, regla: "docs_faltantes", eta: ayer },
+      { ...base, regla: "cxp_vencida", eta: ayer },
+      { ...base, regla: "docs_faltantes", eta: hoy },
+    ] as HallazgoAuditoria[];
+    const { pendientesVencidos } = calcularVencimientos(hallazgos);
+    const porFiltro = hallazgos.filter((h) => esHallazgoEtaVencida(h, hoy)).length;
+    expect(porFiltro).toBe(pendientesVencidos);
+  });
+});
