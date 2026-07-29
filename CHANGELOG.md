@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.323.2] - 2026-07-30
+- Cifras de dinero: los totales de Cobranza, Estado de cuenta, Conciliación bancaria, Dashboard de Facturación y Dashboard de Dirección ahora se suman en el servidor. Antes se calculaban en el navegador sobre un máximo de filas descargadas, así que con mucho volumen las cifras podían salir cortas sin avisar.
+- Los agregados ignoran registros eliminados, respetan el aislamiento por organización y anclan el "hoy" a la zona horaria de Ciudad de México.
+- Moneda extranjera sin tipo de cambio confiable sigue sin sumarse: se cuenta aparte para poder advertirlo en pantalla.
+
 ## [13.323.1] - 2026-07-29
 - Datos: los listados y tableros (embarques, facturas, dashboard, alertas laterales, operaciones, profit por cliente) ya no consideran registros eliminados, evitando conteos y montos inflados por "fantasmas".
 - Calidad: nueva suite de regresión RLS `soft_delete_rpcs` en CI que verifica automáticamente que las 9 funciones de listado/agregación ignoren lo borrado.
