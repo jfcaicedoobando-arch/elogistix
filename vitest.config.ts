@@ -5,7 +5,8 @@ import os from "os";
 
 // Forks paralelos en local: dejamos 2 núcleos libres para el dev-server/HMR
 // y topamos en 8 para acotar el uso de RAM (8 × 4 GB heap = 32 GB).
-const LOCAL_FORKS = Math.max(2, Math.min(8, os.cpus().length - 2));
+// `VITEST_FORKS` permite afinar el valor sin editar la config (benchmarks).
+const LOCAL_FORKS = Number(process.env.VITEST_FORKS) || Math.max(2, Math.min(8, os.cpus().length - 2));
 
 
 
