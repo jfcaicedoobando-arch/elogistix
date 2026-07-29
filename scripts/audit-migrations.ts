@@ -36,15 +36,22 @@ import path from "node:path";
 const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
 /**
  * Fecha de corte: sólo auditamos migraciones creadas a partir de este
- * timestamp. Se eligió `20260723223436` (2026-07-23 22:34) como snapshot
- * post-FIX-H6-01, la migración que re-aplica REVOKE/GRANT a
- * `guard_pago_proveedor` y `_crear_embarque_replicar_conceptos` creadas sin
- * H6 en migraciones anteriores. Esas migraciones previas no son editables
- * una vez creadas, por lo que se cierran como legacy y se corrigen en BD
- * mediante la migración posterior. Bump manual cuando aparezca legacy
- * imposible de corregir; nunca a la baja.
+ * timestamp. Las migraciones ya aplicadas no son editables, por lo que el
+ * legacy se cierra en el baseline y se corrige en BD con una migración
+ * posterior. Bump manual cuando aparezca legacy imposible de corregir;
+ * nunca a la baja.
+ *
+ * Historial de bumps:
+ *  - `20260723223436` — snapshot post-FIX-H6-01 (REVOKE/GRANT de
+ *    `guard_pago_proveedor` y `_crear_embarque_replicar_conceptos`).
+ *  - `20260725184834` — snapshot intermedio.
+ *  - `20260729170000` — post-FIX-H6-02: `20260729164301` recreó
+ *    `convertir_proformas_a_factura` (SECURITY DEFINER) sin el bloque
+ *    REVOKE/GRANT en el mismo archivo. Los permisos en BD ya eran correctos
+ *    (`proacl` sin PUBLIC) y quedan re-aplicados explícitamente por la
+ *    migración FIX-H6-02 posterior.
  */
-const BASELINE = "20260725184834";
+const BASELINE = "20260729170000";
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
 
