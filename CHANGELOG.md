@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.342.0] - 2026-07-30
+- **Mejora · Suite de pruebas 3.3× más rápida.** Las pruebas locales ahora corren en paralelo aprovechando los núcleos reales de la máquina (antes se ejecutaban en un solo proceso). El tiempo bajó de ~32 a ~10 minutos, igualando lo que ya tardaban en GitHub. Analogía: abrimos todas las cajas del supermercado en vez de atender con una sola.
+- **Fix · 12 pruebas rotas en verde.** Se corrigieron los mocks de Conciliación de Tesorería y las expectativas del autoguardado de cotizaciones (versión de borrador y guardado inicial).
+- **Mejora · Deuda de arquitectura saldada.** Se dividieron los 10 archivos que superaban el techo de 200 líneas (queryClient, pagos programados, detalle de cliente, conciliación de compras, costos locales, autoguardado de cotizaciones, entre otros) y se movieron a `hooks/` dos hooks que vivían por error en `components/`. Se limpiaron casts obsoletos tras publicar `reabrir_embarque` en los tipos generados.
+
 ## [13.340.0] - 2026-07-29
 - **Fix crítico · 83 facturas marcadas como "Pagada" sin pago (caso F964).** Un backfill de julio preguntaba el saldo con `saldo_factura()`, función que por seguridad multi-tenant devuelve 0 cuando no hay usuario autenticado. Al correr dentro de una migración, contestó "0" para todas y el script las selló como pagadas. Analogía: el cajero contestó "no debes nada" simplemente porque no sabía quién eras. Se recalculó el estado real de todas las facturas vivas a partir de sus pagos y notas de crédito: F964 y las demás volvieron a **Emitida**/**Vencida** y la cartera por cobrar ya refleja montos reales. No se borró ni creó ningún pago.
 - **Fix · `saldo_factura` blindada.** El guard de tenant ahora sólo aplica a usuarios finales autenticados; en migraciones, crones y `service_role` devuelve el saldo real.
