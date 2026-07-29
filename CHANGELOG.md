@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.326.1] - 2026-07-30
+- Se añadió el mensaje amigable faltante para el código interno `LC_C5B_FN_AUSENTE`, que hacía fallar la validación de cobertura de errores en CI.
+
+
 ## [13.326.0] - 2026-07-30
 - Saldos de factura unificados (A1): un solo cálculo oficial que ya descuenta pagos **y** notas de crédito aplicadas en detalle de factura, registro de pagos, cobranza, estado de cuenta y portal del cliente.
 - Sincronización portal ↔ interno (A5): cuando el cliente acepta o rechaza una cotización, la bandeja interna se actualiza sola; y al editar la cotización internamente, el portal refleja el cambio sin recargar.
