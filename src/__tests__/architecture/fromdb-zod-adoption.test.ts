@@ -25,7 +25,7 @@ const BASELINE_SIN_SCHEMA: Record<string, number> = {
   embarques: 4,
   operaciones: 1,
   portal: 2,
-  proformas: 7,
+  proformas: 6,
   proveedor: 2,
   lib: 1,
 };
