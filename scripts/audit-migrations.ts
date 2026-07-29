@@ -259,7 +259,20 @@ function scanSecurityDefiner(file: string, body: string, auditPostBaseline: bool
   const out: Violation[] = [];
   const fns = findSecurityDefinerFunctions(body);
   for (const { name: fnName, argTypes, allowNoGrants } of fns) {
-    const sigForRe = argTypes.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*").replace(/,/g, "\\s*,\\s*");
+    // La firma acepta alias equivalentes (p. ej. `timestamptz` ≡ `timestamp with time zone`).
+    const sigForRe =
+      argTypes.trim() === ""
+        ? ""
+        : argTypes
+            .split(",")
+            .map((t) => {
+              const alts = typeVariants(t).map((v) =>
+                v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*"),
+              );
+              return `(?:${alts.join("|")})`;
+            })
+            .join("\\s*,\\s*");
+
     const revokeRe = new RegExp(
       `revoke\\s+(?:all|execute)[^;]*on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*from\\s+[^;]*\\bpublic\\b`,
       "i",
