@@ -8689,6 +8689,10 @@ export type Database = {
           score: number
         }[]
       }
+      tc_dof_upsert_manual: {
+        Args: { _eur?: number; _fecha: string; _usd: number }
+        Returns: undefined
+      }
       tc_dof_vigente: {
         Args: { _fecha?: string }
         Returns: {
