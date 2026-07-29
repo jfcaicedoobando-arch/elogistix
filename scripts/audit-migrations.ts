@@ -182,6 +182,33 @@ function normalizeArgTypes(rawArgs: string): string {
     .join(", ");
 }
 
+/** Grupos de alias de tipos Postgres equivalentes en la firma de una función. */
+const TYPE_ALIAS_GROUPS: string[][] = [
+  ["timestamptz", "timestamp with time zone"],
+  ["timestamp", "timestamp without time zone"],
+  ["timetz", "time with time zone"],
+  ["int", "int4", "integer"],
+  ["int8", "bigint"],
+  ["int2", "smallint"],
+  ["bool", "boolean"],
+  ["varchar", "character varying"],
+  ["char", "character"],
+  ["float8", "double precision"],
+  ["float4", "real"],
+  ["numeric", "decimal"],
+];
+
+/** Devuelve todas las formas equivalentes de un tipo (incluyéndolo). */
+function typeVariants(type: string): string[] {
+  const t = type.trim().toLowerCase();
+  const base = t.replace(/\[\]$/, "");
+  const isArray = t.endsWith("[]");
+  const group = TYPE_ALIAS_GROUPS.find((g) => g.includes(base));
+  const variants = group ?? [base];
+  return isArray ? variants.map((v) => `${v}[]`) : variants;
+}
+
+
 
 function stripSqlComments(sql: string): string {
   // Quita comentarios `-- ...` (fin de línea) y `/* ... */` (bloque, no anidado).
@@ -232,7 +259,20 @@ function scanSecurityDefiner(file: string, body: string, auditPostBaseline: bool
   const out: Violation[] = [];
   const fns = findSecurityDefinerFunctions(body);
   for (const { name: fnName, argTypes, allowNoGrants } of fns) {
-    const sigForRe = argTypes.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*").replace(/,/g, "\\s*,\\s*");
+    // La firma acepta alias equivalentes (p. ej. `timestamptz` ≡ `timestamp with time zone`).
+    const sigForRe =
+      argTypes.trim() === ""
+        ? ""
+        : argTypes
+            .split(",")
+            .map((t) => {
+              const alts = typeVariants(t).map((v) =>
+                v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*"),
+              );
+              return `(?:${alts.join("|")})`;
+            })
+            .join("\\s*,\\s*");
+
     const revokeRe = new RegExp(
       `revoke\\s+(?:all|execute)[^;]*on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*from\\s+[^;]*\\bpublic\\b`,
       "i",
