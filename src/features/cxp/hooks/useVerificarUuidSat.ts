@@ -6,6 +6,7 @@ import {
   type VerificarUuidResult,
 } from "@/features/cxp/services/verificarUuidSat";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { notificarNoVerificable } from "./satNoVerificable";
 import { queryKeys } from "@/lib/query";
 
 const METHOD = "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT";
