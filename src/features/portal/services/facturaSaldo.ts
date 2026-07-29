@@ -1,48 +1,24 @@
 /**
- * B-082 — Cálculo puro del saldo de una factura en el portal cliente.
+ * B-082 — Saldo de una factura en el portal cliente.
  *
- * El saldo que ve el cliente debe descontar tanto los pagos aplicados como
- * las notas de crédito aplicadas. Sin I/O para poder testearse aislado.
+ * A1 (2026-07-29): la implementación vive en el canon único
+ * `@/lib/financial/saldoFactura`. Este módulo se conserva como wrapper para
+ * no romper la API ni los tests del portal.
  */
-import { sumarMontos } from "@/lib/financial/financialUtils";
+import {
+  calcularSaldoFactura,
+  type PagoAplicadoLike,
+  type NotaCreditoAplicadaLike,
+  type SaldoFactura,
+} from "@/lib/financial/saldoFactura";
 
-export interface PagoAplicadoLike {
-  monto_aplicado_factura?: number | string | null;
-}
-
-export interface NotaCreditoAplicadaLike {
-  monto?: number | string | null;
-}
-
-export interface SaldoFacturaPortal {
-  total: number;
-  pagado: number;
-  notasCredito: number;
-  saldo: number;
-  liquidada: boolean;
-}
-
-const num = (v: unknown): number => {
-  const n = Number(v ?? 0);
-  return Number.isFinite(n) ? n : 0;
-};
+export type { PagoAplicadoLike, NotaCreditoAplicadaLike };
+export type SaldoFacturaPortal = SaldoFactura;
 
 export function calcularSaldoFacturaPortal(
   total: number,
   pagos: readonly PagoAplicadoLike[] = [],
   notasCredito: readonly NotaCreditoAplicadaLike[] = [],
 ): SaldoFacturaPortal {
-  const totalFactura = num(total);
-  const pagado = sumarMontos(pagos.map((p) => num(p.monto_aplicado_factura)));
-  const nc = sumarMontos(notasCredito.map((n) => num(n.monto)));
-  const bruto = sumarMontos([totalFactura, -pagado, -nc]);
-  const saldo = bruto > 0 ? bruto : 0;
-
-  return {
-    total: totalFactura,
-    pagado,
-    notasCredito: nc,
-    saldo,
-    liquidada: saldo < 0.01,
-  };
+  return calcularSaldoFactura(total, pagos, notasCredito);
 }
