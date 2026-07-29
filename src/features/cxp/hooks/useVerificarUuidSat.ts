@@ -6,6 +6,7 @@ import {
   type VerificarUuidResult,
 } from "@/features/cxp/services/verificarUuidSat";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { notificarNoVerificable } from "./satNoVerificable";
 import { queryKeys } from "@/lib/query";
 
 const METHOD = "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT";
@@ -38,6 +39,7 @@ export function useVerificarUuidSat() {
       if (estatus === "Vigente") notifySuccess(undefined, { title: "CFDI Vigente en SAT" });
       else if (estatus === "Cancelado")
         notifyWarning(undefined, { title: "CFDI Cancelado en SAT", description: detalle });
+      else if (estatus === "No verificable") notificarNoVerificable(detalle);
       else if (estatus === "No Encontrado")
         notifyError(undefined, {
           title: "CFDI No encontrado en SAT",

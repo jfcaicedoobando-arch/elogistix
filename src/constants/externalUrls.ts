@@ -4,6 +4,10 @@
  */
 export const WHATSAPP_SEND_BASE = "https://wa.me/";
 
+/** Portal público del SAT para verificar un CFDI manualmente. */
+export const SAT_VERIFICA_CFDI_URL =
+  "https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx";
+
 /**
  * Construye el URL de WhatsApp Click-to-Chat.
  * @param tel Número en formato internacional, sólo dígitos (sin `+`, espacios o guiones).

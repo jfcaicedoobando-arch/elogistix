@@ -50,8 +50,16 @@ export function UuidFiscalField({
   onVerify: () => void;
   esExtranjero?: boolean;
 }) {
-  const variant: "default" | "secondary" | "destructive" =
-    estatus === "Vigente" ? "default" : estatus === "Cancelado" ? "destructive" : "secondary";
+  // "No verificable" (601): el SAT rechazó la consulta automática, no es un
+  // CFDI inválido — se muestra ámbar para invitar a revisión manual.
+  const variant: "default" | "secondary" | "destructive" | "warning" =
+    estatus === "Vigente"
+      ? "default"
+      : estatus === "Cancelado"
+        ? "destructive"
+        : estatus === "No verificable"
+          ? "warning"
+          : "secondary";
   return (
     <div className="flex flex-col gap-1 min-w-0 col-span-2 md:col-span-1">
       <span className="text-label uppercase tracking-wider text-muted-foreground font-medium">

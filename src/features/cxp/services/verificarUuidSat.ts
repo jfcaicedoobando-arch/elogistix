@@ -9,7 +9,12 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export type EstatusSat = "Vigente" | "Cancelado" | "No Encontrado" | "Error";
+/**
+ * "No verificable" (v13.322.17): el SAT rechazó la expresión impresa
+ * (código 601). Pasa con RFCs que contienen `&` — hay que consultar el CFDI
+ * manualmente en el portal del SAT.
+ */
+export type EstatusSat = "Vigente" | "Cancelado" | "No Encontrado" | "No verificable" | "Error";
 export type TipoCfdi = "cxp" | "cxc";
 
 export interface VerificarUuidResult {

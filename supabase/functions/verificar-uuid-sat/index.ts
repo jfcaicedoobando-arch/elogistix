@@ -18,6 +18,12 @@ import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
+import {
+  buildSoapEnvelope,
+  esExpresionInvalida,
+  variantesAIntentar,
+  type AmpersandVariant,
+} from "./expresion.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -26,34 +32,6 @@ const SAT_ENDPOINT = "https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaC
 // Alias local con firma (cors, body, status) para conservar los callsites de este handler.
 const json = (cors: Record<string, string>, body: unknown, status = 200): Response =>
   _jsonResponse(body, status, cors);
-
-/**
- * v13.320.62 — Escapa un valor antes de meterlo en el sobre SOAP.
- * Sin esto, un RFC con `&` (ej. `AL&0807074L5`) rompe el XML del request
- * y el SAT responde con un cuerpo que no podemos interpretar.
- * OJO: los separadores `&amp;` de la expresión NO pasan por aquí.
- */
-function escapeXmlValue(v: string): string {
-  return v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function buildSoapEnvelope(rfcEmisor: string, rfcReceptor: string, total: number, uuid: string) {
-  // Formato oficial SAT — total con 6 decimales, string escape básico.
-  const totalStr = total.toFixed(6);
-  const re = escapeXmlValue(rfcEmisor);
-  const rr = escapeXmlValue(rfcReceptor);
-  const id = escapeXmlValue(uuid);
-  const expr = `?re=${re}&amp;rr=${rr}&amp;tt=${totalStr}&amp;id=${id}`;
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
-  <soapenv:Header/>
-  <soapenv:Body>
-    <tem:Consulta>
-      <tem:expresionImpresa>${expr}</tem:expresionImpresa>
-    </tem:Consulta>
-  </soapenv:Body>
-</soapenv:Envelope>`;
-}
 
 /**
  * v13.320.62 — el regex anterior (`<[a-z]:?Estado>`) exigía un prefijo de
@@ -66,16 +44,27 @@ function parseSatResponse(xml: string): { estado: string; codigo: string } {
   return { estado: estado.trim(), codigo: codigo.trim() };
 }
 
-function mapEstatus(estado: string, codigo: string): "Vigente" | "Cancelado" | "No Encontrado" | "Error" {
+type EstatusSat = "Vigente" | "Cancelado" | "No Encontrado" | "No verificable" | "Error";
+
+function mapEstatus(estado: string, codigo: string): EstatusSat {
   const e = estado.toLowerCase();
   if (e.includes("vigente")) return "Vigente";
   if (e.includes("cancelado")) return "Cancelado";
+  if (esExpresionInvalida(codigo, estado)) return "No verificable";
   if (codigo.includes("N - 202") || /no.*encontrad/i.test(estado)) return "No Encontrado";
   return "Error";
 }
 
-async function consultarSat(rfcEmisor: string, rfcReceptor: string, total: number, uuid: string) {
-  const envelope = buildSoapEnvelope(rfcEmisor, rfcReceptor, total, uuid);
+interface ResultadoSat {
+  estatus: EstatusSat;
+  raw: string;
+}
+
+async function consultarSatVariante(
+  datos: { rfcEmisor: string; rfcReceptor: string; total: number; uuid: string },
+  variant: AmpersandVariant,
+): Promise<ResultadoSat> {
+  const envelope = buildSoapEnvelope(datos, variant);
   const res = await fetch(SAT_ENDPOINT, {
     method: "POST",
     headers: {
@@ -85,10 +74,27 @@ async function consultarSat(rfcEmisor: string, rfcReceptor: string, total: numbe
     body: envelope,
   });
   const xml = await res.text();
-  if (!res.ok) return { estatus: "Error" as const, raw: xml.slice(0, 500) };
+  if (!res.ok) return { estatus: "Error", raw: xml.slice(0, 500) };
   const { estado, codigo } = parseSatResponse(xml);
   return { estatus: mapEstatus(estado, codigo), raw: `${codigo} | ${estado}` };
 }
+
+/**
+ * v13.322.17 — Cuando algún RFC trae `&` (ej. `AL&0807074L5`) el SAT parte la
+ * expresión en el separador equivocado y devuelve 601. Reintentamos con otras
+ * codificaciones del ampersand y nos quedamos con la primera respuesta útil.
+ */
+async function consultarSat(rfcEmisor: string, rfcReceptor: string, total: number, uuid: string) {
+  const datos = { rfcEmisor, rfcReceptor, total, uuid };
+  const variantes = variantesAIntentar(rfcEmisor, rfcReceptor);
+  let ultimo: ResultadoSat = { estatus: "Error", raw: "" };
+  for (const variant of variantes) {
+    ultimo = await consultarSatVariante(datos, variant);
+    if (ultimo.estatus !== "No verificable") return ultimo;
+  }
+  return ultimo;
+}
+
 
 /**
  * v13.320.62 — Defensa contra datos históricos: RFCs importados de CFDI antes

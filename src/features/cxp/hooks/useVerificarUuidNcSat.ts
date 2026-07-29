@@ -7,6 +7,7 @@ import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { verificarUuidNcSat, type EstatusSat } from "@/features/cxp/services/verificarUuidNcSat";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { notificarNoVerificable } from "./satNoVerificable";
 
 export function useVerificarUuidNcSat(facturaId: string | undefined) {
   const qc = useQueryClient();
@@ -16,6 +17,7 @@ export function useVerificarUuidNcSat(facturaId: string | undefined) {
     onSuccess: (res: { estatus: EstatusSat }) => {
       if (res.estatus === "Vigente") notifySuccess(undefined, { title: "CFDI Vigente en SAT" });
       else if (res.estatus === "Cancelado") notifyWarning(undefined, { title: "CFDI Cancelado en SAT" });
+      else if (res.estatus === "No verificable") notificarNoVerificable();
       else if (res.estatus === "No Encontrado")
         notifyError(undefined, { title: "CFDI No encontrado en SAT", method: "USE_VERIFICAR_UUID_NC_SAT" });
       else

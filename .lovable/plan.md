@@ -1,28 +1,44 @@
-## Qué está pasando
+## Qué pasó
 
-En `/compras/facturas` aparecen facturas que **ya fueron eliminadas**. Al darles clic en "Eliminar", la base de datos responde `LC_FACTURA_PROVEEDOR_NOT_FOUND` porque para ella ese registro ya no existe.
+Al verificar la factura de proveedor **FP-000051** contra el SAT, el servicio respondió `N - 601: La expresión impresa proporcionada no es válida` y la app lo tradujo como "CFDI No encontrado en SAT" — un mensaje engañoso, porque el SAT ni siquiera llegó a buscar el comprobante: rechazó la petición por mal formada.
 
-Analogía: es como una lista de contactos que sigue mostrando a alguien que ya borraste; al marcarle, la línea está desconectada.
+## Causa (verificada)
 
-Verificado en la base: la factura **FP-000002** fue eliminada el 28/07 a las 17:31 y sigue apareciendo en el listado. Hoy no se registró ninguna eliminación nueva, lo que confirma que el clic fue sobre una fila fantasma.
+- El proveedor de esa factura tiene el RFC **`AL&0807074L5`** (con ampersand). En la base de datos hay 17 verificaciones "Vigente" exitosas y la única fallida es justo la de este RFC.
+- La cadena que se envía al SAT usa `&` como separador de campos (`?re=…&rr=…&tt=…&id=…`). Al insertar un RFC que ya trae `&`, el SAT parte la cadena en el lugar equivocado y devuelve 601. Es un caso conocido y de larga data del web service del SAT.
+- El formato del total (`371.200000`) **no** es la causa: montos con la misma forma (`179.800000`) sí devolvieron "Vigente".
 
-## Causa raíz
+## Qué se va a hacer
 
-`fetchFacturasCxP` y `fetchFacturaProveedor` (en `src/features/cxp/services/proveedorFacturas.ts`) filtran por estado `Cancelada`, pero **no filtran `deleted_at IS NULL`**. Todas las demás consultas de facturas de proveedor (reportes, presupuesto, tesorería, profit, reconciliación) sí lo hacen — es el único par que quedó sin el filtro.
+**1. Reintento con variantes de codificación del ampersand** (`supabase/functions/verificar-uuid-sat/index.ts`)
 
-## Cambios
+Cuando algún RFC contenga `&`, la consulta se intentará en cascada hasta obtener una respuesta válida:
+1. `&` literal (comportamiento actual),
+2. `&amp;` dentro del valor (doble escape en el sobre SOAP, como pide el Anexo 20),
+3. `%26` (percent-encoding).
 
-1. **`src/features/cxp/services/proveedorFacturas.ts`**
-   - Agregar `.is("deleted_at", null)` a la consulta del listado (`fetchFacturasCxP`).
-   - Agregar el mismo filtro a `fetchFacturaProveedor` (detalle), para que un deep-link a una factura borrada devuelva "no encontrada" en vez de mostrarla como viva.
+Se detiene en el primer intento cuyo `CodigoEstatus` no sea 601. Para RFCs sin `&` no cambia nada: un solo intento.
 
-2. **`src/features/cxp/hooks/useFacturaProveedorMutations.ts`**
-   - En `onError` de la eliminación: si el error trae `LC_FACTURA_PROVEEDOR_NOT_FOUND`, mostrar un mensaje claro ("Esta factura ya había sido eliminada; actualizamos la lista") e invalidar `queryKeys.cxp.all` para que la fila fantasma desaparezca sola.
+**2. Nuevo estatus "No verificable"** en lugar de un falso "No Encontrado"
 
-3. **Tests** — agregar caso en los tests de servicios de CxP verificando que el listado aplica el filtro `deleted_at IS NULL`.
+- La función mapeará el código 601 (tras agotar las variantes) a `No verificable` en vez de `Error`/`No Encontrado`.
+- El hook `useVerificarUuidSat` mostrará un aviso ámbar con copy claro: el SAT rechazó la consulta automática por el `&` del RFC y hay que verificar manualmente en el portal del SAT, con enlace directo a `verificacfdi.facturaelectronica.sat.gob.mx`.
+- Mismo tratamiento en `useVerificarUuidNcSat` (notas de crédito) para no dejar el flujo a medias.
 
-4. **Versión y changelog** — bump de `APP_VERSION` a `13.322.16` y entrada en `CHANGELOG.md`.
+**3. Ajuste menor de formato del total**
 
-## Fuera de alcance
+Se omitirán los ceros no significativos según el Anexo 20 (`371.2` en vez de `371.200000`, `1.0`, `0.0`). No es la causa del error actual, pero es lo que exige la norma y reduce riesgo de futuros 601.
 
-No se toca la función de base de datos `soft_delete_proveedor_factura`: su comportamiento es correcto (rechazar el borrado de algo ya borrado). El problema es de la lectura, no del borrado.
+**4. Tests**
+
+- Unitarios de la construcción de la expresión: RFC con `&`, sin `&`, formato de total (`0.99`, `1.0`, `0.0`, `371.2`).
+- Test del mapeo 601 → `No verificable` y de que el hook emite el aviso ámbar con enlace, no un error rojo.
+
+**5. Versionado**
+
+Bump de `APP_VERSION` a `13.322.17` y entrada en `CHANGELOG.md`.
+
+## Detalle técnico
+
+- Sin cambios de base de datos: `uuid_estatus_sat` es texto libre y ya admite el nuevo valor. Se revisará que los badges de estatus SAT en la UI de compras contemplen `No verificable` con estilo ámbar.
+- El estatus se seguirá persistiendo para que la lista muestre el resultado; una factura "No verificable" no bloqueará la aprobación, sólo pedirá revisión manual.

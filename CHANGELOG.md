@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.322.17] - 2026-07-29
+- Compras: se corrige la verificación de CFDI ante el SAT cuando el RFC contiene "&" (p. ej. AL&0807074L5), que antes devolvía el error 601 y marcaba la factura como "No encontrado". Ahora se reintenta con el escapado correcto y aparece el estatus real (Vigente/Cancelado).
+- Compras: nuevo estatus "No verificable" con aviso ámbar y acceso directo al portal del SAT cuando la consulta automática no se puede completar.
+
 ## [13.322.16] - 2026-07-29
 - Compras: las facturas de proveedor eliminadas ya no aparecen en el listado ni en el detalle; se corrige el error "LC_FACTURA_PROVEEDOR_NOT_FOUND" al intentar borrarlas de nuevo y ahora la lista se refresca sola si eso ocurre.
 
