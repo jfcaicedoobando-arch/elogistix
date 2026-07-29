@@ -30,7 +30,7 @@ export function useUpsertTcDofManual() {
     mutationFn: upsertTcDofManual,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: tcDofKeys.all });
-      void qc.invalidateQueries({ queryKey: ["exchange-rates"] });
+      void qc.invalidateQueries({ queryKey: exchangeRates.all });
       notifySuccess(undefined, { title: "Tipo de cambio guardado", description: "El historial DOF se actualizó correctamente." });
     },
     onError: (error: unknown) => {
