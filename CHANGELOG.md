@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.322.16] - 2026-07-29
+- Compras: las facturas de proveedor eliminadas ya no aparecen en el listado ni en el detalle; se corrige el error "LC_FACTURA_PROVEEDOR_NOT_FOUND" al intentar borrarlas de nuevo y ahora la lista se refresca sola si eso ocurre.
+
+
+
 ## [13.322.15] - 2026-07-29
 - Mantenimiento: se simplificó el código del resumen de demoras automáticas para cumplir el límite de complejidad; sin cambios visibles para el usuario.
 

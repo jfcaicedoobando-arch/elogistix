@@ -136,6 +136,7 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
   let q = supabase
     .from("proveedor_facturas")
     .select(PROVEEDOR_FACTURAS_SELECT)
+    .is("deleted_at", null)
     .neq("estado", "Cancelada")
     .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
     .range(from, to);
@@ -171,6 +172,7 @@ export async function fetchFacturaProveedor(id: string): Promise<FacturaCxP | nu
     .from("proveedor_facturas")
     .select(PROVEEDOR_FACTURAS_SELECT)
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
