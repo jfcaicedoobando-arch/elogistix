@@ -163,3 +163,15 @@ RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
 
 GRANT USAGE ON SCHEMA cron, net, pgmq, vault TO anon, authenticated, service_role;
 
+
+-- ---------------------------------------------------------------------------
+-- publication supabase_realtime
+-- Existe por defecto en Supabase; en Postgres vanilla no. No es drift del
+-- proyecto sino diferencia de plataforma → pertenece al bootstrap.
+-- ---------------------------------------------------------------------------
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    CREATE PUBLICATION supabase_realtime;
+  END IF;
+END $$;
