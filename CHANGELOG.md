@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.325.3] - 2026-07-30
+- Rendimiento: la suma de conceptos en una misma moneda ahora acumula en centavos enteros (sin crear un objeto por fila) y el camino con conversión reutiliza el tipo de cambio por moneda; el canario de performance vuelve a pasar. Los importes no cambian.
+
+
+
 ## [13.325.2] - 2026-07-30
 - Calidad de código: el catálogo de mensajes `LC_*` se dividió en dos archivos por dominio (operativo y financiero) para cumplir el límite de 200 líneas, sin cambiar ningún mensaje.
 
