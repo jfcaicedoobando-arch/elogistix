@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [13.322.10] - 2026-07-29
+- Base de datos: se registraron formalmente cinco campos de proformas y facturas de proveedor que existían sin historial; no cambia datos ni comportamiento.
+- Integración continua: el radar de cambios manuales vuelve a usar un corte por fecha (más confiable que la lista de archivos) y sólo falla ante deuda nueva.
+
 ## [13.322.9] - 2026-07-29
 - Integración continua: se corrigieron dos advertencias de estilo en los scripts de los flujos automáticos; sin cambios de comportamiento.
 
