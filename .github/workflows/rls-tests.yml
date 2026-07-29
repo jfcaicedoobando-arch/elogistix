@@ -439,14 +439,15 @@ jobs:
       - name: Apply migrations SIN parches de drift
         id: apply
         env:
-          # Allowlist congelada de deuda histórica. Ver el encabezado del
-          # archivo: sólo puede encoger, nunca crecer sin justificación.
-          DRIFT_ALLOWLIST: supabase/tests/rls/_drift_allowlist.txt
+          # Corte histórico: la migración de catch-up que registró en el
+          # historial los objetos creados a mano en el dashboard. Todo lo
+          # anterior es deuda congelada (se informa, no rompe). Todo lo
+          # posterior DEBE aplicar sobre una base limpia.
+          DRIFT_CORTE: "20260729004011"
         run: |
           set -uo pipefail
           shopt -s nullglob
-          allow=$(grep -vE '^\s*(#|$)' "$DRIFT_ALLOWLIST" | tr -d '\r')
-          legacy=""
+          legacy=0
           nuevas=""
           for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
             base=$(basename "$f")
@@ -454,9 +455,9 @@ jobs:
               -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
               -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
               "$f" | $PSQL --single-transaction > /tmp/mig.log 2>&1; then
-              if grep -qxF "$base" <<< "$allow"; then
-                echo "::notice file=$f::drift histórico exento (allowlist congelada)"
-                legacy="$legacy $base"
+              if [[ "${base%%_*}" < "$DRIFT_CORTE" ]]; then
+                legacy=$((legacy + 1))
+                echo "- \`$base\`" >> /tmp/legacy.md
               else
                 echo "::error file=$f::drift NUEVO — la migración no aplica en una base limpia"
                 sed -n '1,10p' /tmp/mig.log
@@ -464,32 +465,22 @@ jobs:
               fi
             fi
           done
-          # Entradas muertas: en la allowlist pero ya aplican limpio → limpiar.
-          muertas=""
-          for m in $allow; do
-            if ! grep -qw -- "$m" <<< "$legacy"; then muertas="$muertas $m"; fi
-          done
           {
             echo "## Drift radar — migraciones aplicadas en limpio"
             echo ""
             if [ -n "$nuevas" ]; then
-              echo "❌ Drift NUEVO (fuera de la allowlist):"
+              echo "❌ Drift NUEVO (posterior al corte $DRIFT_CORTE):"
               for m in $nuevas; do echo "- \`$m\`"; done
               echo ""
               echo "Acción: escribir la migración real que cree esas columnas/tablas."
             else
-              echo "✓ Sin drift fuera de la allowlist congelada."
+              echo "✓ Sin drift nuevo. Nada posterior al corte $DRIFT_CORTE quedó fuera del historial."
             fi
-            if [ -n "$muertas" ]; then
+            if [ "$legacy" -gt 0 ]; then
               echo ""
-              echo "🧹 Entradas de la allowlist que ya aplican limpio (se pueden borrar):"
-              for m in $muertas; do echo "- \`$m\`"; done
-            fi
-            if [ -n "$legacy" ]; then
+              echo "<details><summary>Deuda histórica congelada ($legacy migraciones previas al corte)</summary>"
               echo ""
-              echo "<details><summary>Deuda histórica exenta ($(wc -w <<< "$legacy"))</summary>"
-              echo ""
-              for m in $legacy; do echo "- \`$m\`"; done
+              cat /tmp/legacy.md
               echo ""
               echo "</details>"
             fi
