@@ -113,7 +113,7 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_TC_NO_DISPONIBLE:
     "El tipo de cambio de la factura no está disponible. Refresca antes de emitir la nota de crédito.",
   LC_TC_DOF_NO_DISPONIBLE:
-    "No fue posible obtener el tipo de cambio del DOF. Intenta de nuevo en unos segundos.",,
+    "No fue posible obtener el tipo de cambio del DOF. Intenta de nuevo en unos segundos.",
   // ── Segregación de funciones (SoD) · Q-04 ──────────────────────────────
   LC_SOD_VIOLATION:
     "Segregación de funciones: quien captura una factura de proveedor no puede aprobarla, y el rol Tesorero no aprueba facturas. Pide la aprobación a Contabilidad o a un administrador.",
