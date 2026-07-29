@@ -357,9 +357,31 @@ jobs:
     needs: rls-suites
     if: always()
     steps:
+      - name: Detallar suites fallidas
+        # El resultado agregado sólo dice "failure": sin esto hay que abrir a
+        # mano las 19 suites para saber cuál rompió. Aquí listamos las suites
+        # fallidas con su enlace directo, en el log y en el summary.
+        if: needs.rls-suites.result != 'success'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const jobs = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              { owner: context.repo.owner, repo: context.repo.repo, run_id: context.runId, per_page: 100 },
+            );
+            const fallidas = jobs.filter(
+              (j) => j.name.startsWith('RLS suite —') && j.conclusion !== 'success' && j.conclusion !== 'skipped',
+            );
+            const lineas = fallidas.length
+              ? fallidas.map((j) => `- **${j.name.replace('RLS suite — ', '')}** (${j.conclusion}) → ${j.html_url}`)
+              : ['- (no se pudo identificar la suite; revisa los artifacts `rls-suite-log-*`)'];
+            for (const l of lineas) core.error(l);
+            core.summary.addRaw(`## ❌ Suites RLS fallidas\n${lineas.join('\n')}\n`);
+            await core.summary.write();
+
       - name: Aggregate matrix result
         # Job único para usar como required check en branch protection,
-        # evitando tener que listar las 7 suites individualmente.
+        # evitando tener que listar las 19 suites individualmente.
         run: |
           result="${{ needs.rls-suites.result }}"
           echo "rls-suites result: $result"
@@ -368,6 +390,7 @@ jobs:
             exit 1
           fi
           echo "✓ Todas las suites RLS pasaron"
+
 
 
   migration-clean-apply:
