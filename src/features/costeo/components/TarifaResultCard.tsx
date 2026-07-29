@@ -3,11 +3,9 @@
  * v13.69.1: sub-componentes presentacionales extraídos a TarifaResultCardParts.tsx
  * para cumplir Power of 10 (≤200 líneas) tras el refactor de complejidad.
  */
-import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query";
 import { Card } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
+import { useRecargosDeTarifa } from "@/features/costeo/hooks/useRecargosDeTarifa";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import type { RankingMeta } from "@/features/costeo/utils/rankingLabels";
 import { cn } from "@/lib/utils";
@@ -32,11 +30,7 @@ interface Props {
 }
 
 export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir", meta }: Props) {
-  const { data: recargos = [] } = useQuery({
-    queryKey: queryKeys.costeo.tarifas.recargos(row.id),
-    queryFn: () => fetchRecargosDeTarifa(row.id),
-    staleTime: 60 * 1000,
-  });
+  const { data: recargos = [] } = useRecargosDeTarifa(row.id);
 
   const esGanador = meta?.esGanador ?? rank === 1;
   const etiquetas = meta?.etiquetasMejorEn ?? (rank === 1 ? ["Mejor precio"] : []);

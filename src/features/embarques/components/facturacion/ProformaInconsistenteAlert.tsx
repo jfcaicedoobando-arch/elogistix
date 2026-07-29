@@ -5,17 +5,13 @@
  * conceptos pendientes al borrador o eliminarlo.
  */
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { notifySuccess } from "@/lib/ui/appFeedback";
+import { useMemo } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { asignarConceptosAProforma } from "@/features/proformas/services";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import type { Tables } from "@/types/db";
+import { useAsignarConceptosProforma } from "@/features/embarques/hooks/useAsignarConceptosProforma";
 
-import { notifyError } from "@/lib/ui/appFeedback";
-import { queryKeys } from "@/lib/query";
 interface Props {
   proformaBorrador: ProformaConFactura;
   conceptosPendientes: Tables<"conceptos_venta">[];
@@ -29,27 +25,18 @@ export function ProformaInconsistenteAlert({
   embarqueId,
   onEliminarBorrador,
 }: Props) {
-  const qc = useQueryClient();
-  const [busy, setBusy] = useState(false);
+  const conceptoIds = useMemo(
+    () => conceptosPendientes.map((c) => c.id),
+    [conceptosPendientes],
+  );
 
-  const asignar = useMutation({
-    mutationFn: async () => {
-      const ids = conceptosPendientes.map((c) => c.id);
-      await asignarConceptosAProforma(proformaBorrador.id, ids);
-    },
-    onSuccess: () => {
-      notifySuccess(undefined, { title: `Conceptos asignados a ${proformaBorrador.numero}` });
-      // A8: la key viva de proformas por embarque vive en el factory de proformas.
-      qc.invalidateQueries({ queryKey: queryKeys.proformas.embarque(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) });
-    },
-    onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(undefined, { title: `No se pudieron asignar los conceptos: ${msg}`, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_FACTURACION_PROFORMAINCONSISTENTEALERT_1" });
-    },
-    onSettled: () => setBusy(false),
+  const asignar = useAsignarConceptosProforma({
+    proformaId: proformaBorrador.id,
+    proformaNumero: proformaBorrador.numero,
+    embarqueId,
+    conceptoIds,
   });
+
 
   if (conceptosPendientes.length === 0) return null;
   const n = conceptosPendientes.length;
@@ -70,11 +57,8 @@ export function ProformaInconsistenteAlert({
           <Button
             size="sm"
             variant="default"
-            disabled={busy || asignar.isPending}
-            onClick={() => {
-              setBusy(true);
-              asignar.mutate();
-            }}
+            disabled={asignar.isPending}
+            onClick={() => asignar.mutate()}
           >
             {asignar.isPending ? (
               <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Asignando…</>
@@ -82,7 +66,7 @@ export function ProformaInconsistenteAlert({
               <>Asignar {n} concepto{n !== 1 ? "s" : ""} a esta proforma</>
             )}
           </Button>
-          <Button size="sm" variant="outline" onClick={onEliminarBorrador} disabled={busy}>
+          <Button size="sm" variant="outline" onClick={onEliminarBorrador} disabled={asignar.isPending}>
             Eliminar borrador
           </Button>
         </div>

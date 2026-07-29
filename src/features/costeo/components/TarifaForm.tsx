@@ -23,7 +23,7 @@ import {
   computeValido, getTituloModal,
 } from "./TarifaForm.helpers";
 import { formatUSD } from "@/lib/formatters";
-import { useTarifaSubmit } from "./useTarifaSubmit";
+import { useTarifaSubmit } from "@/features/costeo/hooks/useTarifaSubmit";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
 
 interface Props {

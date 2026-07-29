@@ -6,7 +6,7 @@ import { APP_VERSION } from "@/constants/appVersion";
 import { PortalHeader } from "./layout/PortalHeader";
 import { PortalBreadcrumbsBar } from "./layout/PortalBreadcrumbsBar";
 import { PortalBottomNav } from "./layout/PortalBottomNav";
-import { usePortalBreadcrumbs } from "./layout/usePortalBreadcrumbs";
+import { usePortalBreadcrumbs } from "@/features/portal/hooks/usePortalBreadcrumbs";
 import { getActiveSectionLabel } from "./layout/portalNav";
 import { ROUTES } from "@/constants/routes";
 

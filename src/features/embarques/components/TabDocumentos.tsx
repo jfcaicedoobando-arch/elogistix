@@ -8,7 +8,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { AgregarDocumentoDialog } from "./tabDocumentos/AgregarDocumentoDialog";
-import { useDocumentoColumns } from "./tabDocumentos/useDocumentoColumns";
+import { useDocumentoColumns } from "@/features/embarques/hooks/useDocumentoColumns";
 
 interface Props {
   embarqueId: string;

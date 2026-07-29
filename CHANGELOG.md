@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.331.0] - 2026-07-30
+- Reorganización interna: la lógica que consulta y guarda datos salió de las pantallas y quedó en hooks reutilizables por módulo (admin, costeo, CxP, embarques, facturación, portal y anticipos), lo que reduce recargas innecesarias y facilita corregir errores sin tocar la interfaz.
+- Se añadió una prueba automática que impide volver a mezclar esa lógica dentro de los componentes.
+
 ## [13.330.1] - 2026-07-30
 - Corrección interna: las pruebas de aprobación de tarifas ahora reflejan cómo se envía realmente el motivo vacío al servidor.
 

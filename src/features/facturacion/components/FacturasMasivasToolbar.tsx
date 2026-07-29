@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { fetchCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
+import { mapWithConcurrency } from "@/lib/async/mapWithConcurrency";
 
 async function obtenerBytes(stored: string | null, facturaId: string, tipo: "pdf" | "xml"): Promise<ArrayBuffer | null> {
   if (!stored && !facturaId) return null;
@@ -42,9 +43,16 @@ interface Props {
 export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState<null | "zip" | "email" | "mark">(null);
+  const [progreso, setProgreso] = useState<{ hechas: number; total: number } | null>(null);
   const [confirmEmailOpen, setConfirmEmailOpen] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
   const ids = Array.from(selectedIds);
   const disabled = ids.length === 0;
+
+  const avanzarProgreso = (hechas: number, total: number) => {
+    if (mountedRef.current) setProgreso({ hechas, total });
+  };
 
   const descargarZip = async () => {
     setBusy("zip");
@@ -52,28 +60,34 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       const data = await fetchFacturasParaZip(ids);
       const zip = new JSZip();
       const folder = zip.folder("facturas")!;
-      let count = 0;
-      for (const f of data ?? []) {
-        try {
-          const pdf = await obtenerBytes(f.factura_pdf_url, f.id, "pdf");
-          if (pdf) {
-            folder.file(`${f.numero}.pdf`, pdf);
-            count++;
-          }
-        } catch { /* skip */ }
-        try {
-          const xml = await obtenerBytes(f.factura_xml_url, f.id, "xml");
+      const facturas = data ?? [];
+      setProgreso({ hechas: 0, total: facturas.length });
+      // M12: concurrencia limitada (4) en vez de ~2×N awaits seriales.
+      const { ok } = await mapWithConcurrency(
+        facturas,
+        4,
+        async (f) => {
+          const [pdf, xml] = await Promise.all([
+            obtenerBytes(f.factura_pdf_url, f.id, "pdf").catch(() => null),
+            obtenerBytes(f.factura_xml_url, f.id, "xml").catch(() => null),
+          ]);
+          if (pdf) folder.file(`${f.numero}.pdf`, pdf);
           if (xml) folder.file(`${f.numero}.xml`, xml);
-        } catch { /* skip */ }
-      }
+          return pdf != null;
+        },
+        avanzarProgreso,
+      );
+      const count = ok.filter((r) => r.value).length;
       const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
       saveAs(blob, `facturas-${todayLocalISO()}.zip`);
       notifySuccess(undefined, { title: `${count} factura(s) descargadas` });
+
     } catch (e) {
       notifyError(undefined, { title: `Error al generar ZIP: ${(e as Error).message}`, error: e, method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_1" });
       reportCaughtError(e, { feature: "facturacion", op: "generar_zip_masivo" }, { total: ids.length });
     } finally {
       setBusy(null);
+      setProgreso(null);
     }
   };
 
@@ -92,13 +106,12 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
     const errores: string[] = [];
     try {
       const { enviarCfdiFactura } = await import("@/features/facturacion/services/enviarCfdiEmail");
-      for (const id of ids) {
-        try {
-          await enviarCfdiFactura(id);
-          ok++;
-        } catch (e) {
-          errores.push(`${id.slice(0, 8)}…: ${(e as Error).message}`);
-        }
+      setProgreso({ hechas: 0, total: ids.length });
+      // M12: concurrencia limitada (4) — conserva conteo ok/errores y toasts.
+      const res = await mapWithConcurrency(ids, 4, (id) => enviarCfdiFactura(id), avanzarProgreso);
+      ok = res.ok.length;
+      for (const e of res.errores) {
+        errores.push(`${e.item.slice(0, 8)}…: ${(e.error as Error).message}`);
       }
       if (ok > 0) qc.invalidateQueries({ queryKey: facturasKeys.all });
       if (errores.length === 0) {
@@ -118,6 +131,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       }
     } finally {
       setBusy(null);
+      setProgreso(null);
     }
   };
 
@@ -144,11 +158,11 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       <div className="flex-1" />
       <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={descargarZip}>
         {busy === "zip" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
-        Descargar ZIP
+        {busy === "zip" && progreso ? `Descargando ${progreso.hechas}/${progreso.total}…` : "Descargar ZIP"}
       </Button>
       <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={() => setConfirmEmailOpen(true)}>
         {busy === "email" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
-        Reenviar por email
+        {busy === "email" && progreso ? `Reenviando ${progreso.hechas}/${progreso.total}…` : "Reenviar por email"}
       </Button>
       <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={marcarEnviada}>
         {busy === "mark" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}

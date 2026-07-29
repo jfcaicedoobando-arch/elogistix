@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { Building2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
-import { admin as adminKeys } from "@/features/admin/queryKeys";
+import { useNuevaOrganizacionUsuarios } from "@/features/admin/hooks/useNuevaOrganizacionUsuarios";
 
 interface Props {
   open: boolean;
@@ -27,12 +25,7 @@ export function NuevaOrganizacionDialog({
   open, onOpenChange, nombre, onNombreChange, rfc, onRfcChange,
   ownerUserId, onOwnerUserIdChange, onCreate, isPending,
 }: Props) {
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: adminKeys.allUsersOptions,
-    queryFn: fetchAvailableUsers,
-    enabled: open,
-    staleTime: 60_000,
-  });
+  const { data: users = [], isLoading } = useNuevaOrganizacionUsuarios(open);
 
   const [query, setQuery] = useState("");
   useEffect(() => { if (!open) setQuery(""); }, [open]);

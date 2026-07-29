@@ -1,63 +1,38 @@
 ## Contexto
 
-Del paquete M1–M14 ya están aplicados (verificado en repo): **M3, M4, M5, M6, M7, M8, M11, M13**.
+Del paquete de hallazgos MEDIOS ya están aplicados M3, M4, M11 (ola 1), M5, M6, M7 (ola 2 SQL), M8 (ola 3), M1/M2 (ola 4) y M9/M10 (ola 5). Verifiqué en el repo que quedan pendientes exactamente tres: M12, M13 y M14 (los loops seriales siguen en `FacturasMasivasToolbar.tsx:56,95`, no existe `src/lib/async/`, no existen los hooks/controladores de M14 ni el test anti-regresión).
 
-Quedan **6 hallazgos**, todos verificados como pendientes hoy:
+## Qué voy a hacer (Ola 6)
 
-| Fix | Estado verificado |
-|---|---|
-| M1 | Los 4 marcadores `SAFE-CAST` obsoletos siguen presentes |
-| M2 | `cast.ts:32` conserva el docstring falso; `readSchemas.ts` no existe |
-| M9 | `useAuthProfile.ts:22` sigue con `CONTEXT_TTL_MS` manual, sin `useQuery` |
-| M10 | `useCxpPageState.ts` usa 10 `useState`, sin nuqs |
-| M12 | `src/lib/async/` no existe; `FacturasMasivasToolbar.tsx:56,95` tiene los 2 loops seriales |
-| M14 | 11 `useQuery` inline + 6 archivos con `useMutation` inline + los 7 hooks en `components/` |
+### 1. M12 — Acciones masivas de facturas más rápidas y con progreso
+- Nuevo helper `src/lib/async/mapWithConcurrency.ts`: procesa en tandas con `Promise.allSettled`, concurrencia máxima configurable y callback de progreso. Sin dependencias nuevas (mismo patrón que `crm/services/leads/bulk.ts`).
+- `FacturasMasivasToolbar.tsx`: reemplazar los dos bucles seriales (ZIP de PDF+XML y reenvío de correo) por `mapWithConcurrency(..., 4, ...)`, con descarga PDF/XML en paralelo por factura. Se conservan los conteos de éxito/error y los tres tipos de aviso actuales.
+- Mostrar progreso en el botón ("Descargando 12/50…", "Reenviando 12/50…") y limpiar el estado al terminar, con guarda de desmontaje.
+- Tests del helper: no supera la concurrencia máxima, el progreso es monótono y un fallo no aborta la tanda.
 
-Propongo 3 olas, cada una verde en typecheck + lint + tests antes de pasar a la siguiente.
+### 2. M13 — Estados válidos en tablas de envío
+Una migración que, para `cotizacion_envios`, `proforma_envios` y `factura_envios`:
+- Normaliza cualquier valor de `estado` fuera del catálogo a `fallido` (dejando aviso del conteo).
+- Agrega una restricción idempotente que solo permita `enviado`, `parcial` o `fallido` (los tres valores que ya escriben las funciones de envío).
+Descartados por falso positivo verificado: `clientes.estado` (es el estado de la república de la dirección fiscal) y `embarques.cobro_cliente_status` (ya tiene su restricción).
 
----
-
-## Ola 4 — Higiene de tipos y validación de fronteras (M1 + M2)
-
-**M1 — SAFE-CAST obsoletos**
-- Eliminar los 4 casts y sus marcadores en `aprobacion.ts`, `proveedoresCrud.ts`, `useTabProformasController.ts`, `eliminarBorrador.ts` (los tipos generados ya los cubren).
-- Borrar el `;` huérfano de `useTabProformasController.ts:14`.
-- Nuevo test `src/__tests__/architecture/safe-cast-freshness.test.ts`: falla si un marcador que alega "los tipos aún no…" menciona un identificador que ya existe en `types.ts`.
-
-**M2 — adopción de zod en `fromDb`**
-- Corregir el docstring de `src/lib/supabase/cast.ts`.
-- Nuevo `src/features/cotizacion/services/readSchemas.ts` con schemas de lectura `.passthrough()` para las fronteras de dinero.
-- Migrar 5 call sites (proformas/queries, cotización queries + costos + crear).
-- Ratchet `fromdb-zod-adoption.test.ts` (la baseline solo puede bajar) y métrica `fromDb {total, conSchema, ratio}` en `scripts/audit-report.ts`.
-
-## Ola 5 — Estado de servidor y URL (M9 + M10)
-
-**M9 — perfil/organización sobre TanStack Query**
-- Reescribir `useAuthProfile` con `useQuery` (`staleTime` 60s, misma firma pública `{profile, reset, refresh}`), exportando `userContextKey`.
-- `useAdminOrgInfo` invalida ese key en `updateOrg`/`toggleActivo` para que el encabezado/sidebar refleje el nombre nuevo al instante.
-
-**M10 — filtros de CxP en la URL**
-- Migrar `useCxpPageState` a `useTableFilters` (nuqs), eliminando el efecto de reset de página.
-- `useCxpDeepLinks` a `useQueryState("factura")`; se borra el efecto mount-only de `?aprobacion=` (queda reactivo gratis).
-- `useEditarFacturaProveedorForm`: sincronizar row→estado solo al cambiar de factura, para no pisar la captura en curso en un refetch.
-- Tests de filtros por URL.
-
-## Ola 6 — Rendimiento y organización de código (M12 + M14)
-
-**M12 — acciones masivas concurrentes**
-- Nuevo helper `src/lib/async/mapWithConcurrency.ts` (tandas + `Promise.allSettled` + `onProgress`, sin dependencias nuevas) con su test.
-- `FacturasMasivasToolbar`: concurrencia 4 en ZIP y reenvío, contador "Descargando 12/50…", guard de desmontaje, misma lógica de toasts.
-
-**M14 — hooks fuera de componentes**
-- Extraer los 11 `useQuery` y 11 `useMutation` inline a hooks en `features/*/hooks/`.
-- Mover los 7 hooks que hoy viven en `components/` a su carpeta `hooks/` y actualizar imports.
-- Respetando el límite de 200 líneas por archivo (Power of 10).
-
----
+### 3. M14 — Sacar la lógica de datos de los componentes
+- **Ola 1 (los tres casos de dinero):** extraer a hooks del feature la lógica hoy embebida en `ConciliacionPagoCell.tsx` (`useConciliacionPagoCellController`), `TabDemoras.tsx` (`useTabDemorasController`) y `ProformaInconsistenteAlert.tsx` (`useAsignarConceptosProforma`), unificando las invalidaciones de caché duplicadas. Los componentes quedan presentacionales.
+- **Ola 2:** mismo criterio para los 10 `useQuery` y 7 `useMutation` restantes en componentes (organizaciones, selector de factura abierta, tarifas, diálogos de cancelar/enviar factura, bitácoras, notas de crédito, timbrado, editor de conceptos, catálogo SAT, enviar proforma).
+- **Ola 3:** mover los 7 archivos `use*.ts(x)` que viven bajo `components/` a la carpeta `hooks/` de su feature y corregir imports (movimiento puro, sin cambio de lógica).
+- **Test de arquitectura** `no-inline-query-mutations.test.ts`: bloquea nuevos `useQuery({`/`useMutation({` dentro de `src/features/*/components/**` (baseline que solo puede bajar) y prohíbe archivos `use*` bajo `components/`.
 
 ## Detalles técnicos
 
-- Migraciones SQL: **ninguna**; esta tanda es 100% frontend/scripts.
-- Guardrails a respetar: ESLint de `queryKey` inline, límite de 200 líneas, `notify*` para toasts, marcador `// SAFE-CAST` solo cuando siga siendo cierto.
-- Verificación por ola: `bun run typecheck`, `bun run lint --max-warnings 0`, tests de arquitectura y los suites tocados.
-- Al cierre de cada ola: entrada en `CHANGELOG.md` y bump de `APP_VERSION` (13.329.0 → 13.331.0).
+- Concurrencia 4 para no saturar la función de envío ni el proxy de CFDI; JSZip es síncrono al añadir archivos, seguro desde las tandas.
+- Migración idempotente con `NOT VALID` + `VALIDATE CONSTRAINT` para no bloquear escrituras concurrentes.
+- Cada hook extraído mantiene los `queryKeys` canónicos y los helpers `notify*`; se respeta el límite de 200 líneas por archivo.
+
+## Verificación
+
+- `bunx vitest run src/lib/async src/features/cxp src/features/embarques` y los tests de arquitectura en verde.
+- `bun run lint -- --max-warnings 0` y typecheck limpios.
+- `bun run audit:migrations` en verde tras la migración.
+- Actualizar `CHANGELOG.md` y `APP_VERSION` a `13.331.0`.
+
+Si prefieres reducir el alcance, puedo dejar M14 Olas 2–3 para un turno aparte y cerrar hoy M12 + M13 + M14 Ola 1.

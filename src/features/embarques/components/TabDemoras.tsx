@@ -7,22 +7,13 @@
  * permite capturar esos valores; un trigger AFTER UPDATE recalcula
  * automáticamente al guardar.
  */
-import { useCallback, useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
 import { Clock } from "lucide-react";
-import { useContenedoresEmbarque } from "@/features/embarques/hooks";
-import { actualizarDemorasContenedor } from "@/features/embarques/services/contenedores";
-import { notifySuccess } from "@/lib/ui/appFeedback";
-import { notifyError } from "@/lib/ui/appFeedback";
-import { queryKeys } from "@/lib/query";
-import {
-  buildDemorasColumns,
-  type DraftPatch,
-  type EditableRow,
-} from "./_sections/tabDemorasColumns";
+import { useTabDemorasController } from "@/features/embarques/hooks/useTabDemorasController";
+import { buildDemorasColumns } from "./_sections/tabDemorasColumns";
 
 interface Props {
   embarqueId: string;
@@ -30,58 +21,14 @@ interface Props {
 }
 
 export function TabDemoras({ embarqueId, canEdit }: Props) {
-  const { data: contenedores = [], isLoading } = useContenedoresEmbarque(embarqueId);
-  const qc = useQueryClient();
-  const [drafts, setDrafts] = useState<Record<string, DraftPatch>>({});
-
-  const rows = useMemo<EditableRow[]>(
-    // SAFE-CAST: `contenedores` viene de supabase/types con columnas nuevas (13.66.11) aún no regeneradas; shape compatible con EditableRow en runtime.
-    () => contenedores as unknown as EditableRow[],
-    [contenedores],
-  );
-
-  const updateMut = useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: DraftPatch }) =>
-      actualizarDemorasContenedor(id, patch),
-    onSuccess: (_, vars) => {
-      notifySuccess(undefined, { title: "Demoras del contenedor actualizadas" });
-      setDrafts((d) => {
-        const next = { ...d };
-        delete next[vars.id];
-        return next;
-      });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.contenedores(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
-    },
-    onError: (err: Error) => notifyError(undefined, { title: err.message, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_TABDEMORAS_1" }),
-  });
-
-  const setDraft = useCallback((id: string, patch: DraftPatch) => {
-    setDrafts((d) => ({ ...d, [id]: { ...d[id], ...patch } }));
-  }, []);
-
-  const valorActual = useCallback(<K extends keyof DraftPatch>(
-    row: EditableRow,
-    field: K,
-  ): DraftPatch[K] => {
-    const draft = drafts[row.id];
-    if (draft && field in draft) return draft[field];
-    return row[field] as DraftPatch[K];
-  }, [drafts]);
-
-  const guardar = useCallback((id: string) => {
-    const patch = drafts[id];
-    if (!patch) return;
-    updateMut.mutate({ id, patch });
-  }, [drafts, updateMut]);
+  const { rows, isLoading, drafts, isPending, setDraft, valorActual, guardar } =
+    useTabDemorasController(embarqueId);
 
   const columns = useMemo(
-    () => buildDemorasColumns({
-      canEdit, drafts, isPending: updateMut.isPending, valorActual, setDraft, guardar,
-    }),
-    [canEdit, drafts, updateMut.isPending, valorActual, setDraft, guardar],
+    () => buildDemorasColumns({ canEdit, drafts, isPending, valorActual, setDraft, guardar }),
+    [canEdit, drafts, isPending, valorActual, setDraft, guardar],
   );
+
 
   if (isLoading) return <div className="text-sm text-muted-foreground p-6">Cargando contenedores…</div>;
 

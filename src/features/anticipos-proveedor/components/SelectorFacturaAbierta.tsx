@@ -1,28 +1,13 @@
 /** Selector de facturas ABIERTAS (saldo > 0, no canceladas) de un proveedor. Usado por AplicarAnticipoDialog. */
-/* eslint-disable react-refresh/only-export-components */
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { fetchFacturasCxP } from "@/features/cxp/services";
 import { formatCurrency } from "@/lib/formatters";
-import { cxp as cxpKeys } from "@/features/cxp/queryKeys";
-
-const OPEN_ESTATUS = new Set(["Vigente", "Parcial", "Por vencer", "Vencida"]);
+import { useFacturasAbiertasProveedor } from "@/features/anticipos-proveedor/hooks/useFacturasAbiertasProveedor";
 
 interface Props {
   proveedorId: string | null;
   value: string;
   onChange: (facturaId: string, saldo: number, moneda: string) => void;
-}
-
-export function useFacturasAbiertasProveedor(proveedorId: string | null) {
-  return useQuery({
-    queryKey: cxpKeys.facturasAbiertasProveedor(proveedorId),
-    queryFn: () => fetchFacturasCxP({ proveedor_id: proveedorId ?? undefined, pageSize: 500 }),
-    enabled: Boolean(proveedorId),
-    select: (rows) => rows.filter((f) => OPEN_ESTATUS.has(f.estatus) && f.saldo > 0.01),
-    staleTime: 15_000,
-  });
 }
 
 export function SelectorFacturaAbierta({ proveedorId, value, onChange }: Props) {
