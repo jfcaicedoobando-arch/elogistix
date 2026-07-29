@@ -59,11 +59,6 @@ function computarFlags(
     mostrarHint: !clienteAcepto && !facturada,
   };
 }
-
-function fmtMxn(v: number): string {
-  return formatCurrency(v, "MXN");
-}
-
 export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props) {
   const cargando = downloadingId === proforma.id;
   const [enviarOpen, setEnviarOpen] = useState(false);
