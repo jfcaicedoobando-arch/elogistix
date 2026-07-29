@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { RouteToastCleanup } from "@/components/shared/RouteToastCleanup";
 import { ErrorDetailsDialog } from "@/components/ui/ErrorDetailsDialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -40,6 +41,7 @@ const App = () => {
       <Toaster />
       <ErrorDetailsDialog />
       <BrowserRouter>
+        <RouteToastCleanup />
         <NuqsAdapter>
           <BreadcrumbProvider>
             <SentryErrorContextSync />
