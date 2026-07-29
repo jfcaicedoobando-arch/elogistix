@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.324.1] - 2026-07-30
+- Dinero: se cierra el canon de conversión. Tesorería (flujo proyectado), Dashboard Dirección, Cartera y el pago de facturas ya usan la misma regla: si falta un tipo de cambio confiable, el monto en dólares o euros se excluye en lugar de sumarse como pesos.
+- Factura manual: si la factura es en moneda extranjera y el tipo de cambio no es válido, se avisa y no se guarda, en vez de validar el crédito con cifras infladas.
+
+
+
 ## [13.324.0] - 2026-07-30
 - Conciliación bancaria: nuevo resumen arriba de la tabla (movimientos, pendientes, conciliados, ignorados y montos pendientes) calculado en el servidor sobre toda la cuenta, no sólo sobre la página visible.
 - Dashboard Dirección: nueva tarjeta "Totales del periodo por moneda" (ventas, costos, facturado y cobrado) con cifras agregadas en el servidor, sin mezclar divisas.

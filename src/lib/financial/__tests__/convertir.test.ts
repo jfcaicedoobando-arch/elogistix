@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { convertirMxn, sumarEnMxn } from "@/lib/financial/convertir";
+import { convertirMxn, sumarEnMxn, aMxn, factorEntreMonedas } from "@/lib/financial/convertir";
 
 describe("convertirMxn (canon C6)", () => {
   it("devuelve el mismo monto para MXN", () => {
