@@ -8,6 +8,8 @@ import {
   type TipoCambioDof,
 } from "@/features/catalogos/services/tipoCambioDof";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { exchangeRates } from "@/features/catalogos/queryKeys";
+
 
 export const tcDofKeys = {
   all: ["tipos_cambio_dof"] as const,
