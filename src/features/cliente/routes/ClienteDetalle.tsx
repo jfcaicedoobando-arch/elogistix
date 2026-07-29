@@ -15,6 +15,8 @@ import {
   ClienteLoadingState,
   ClienteNotFoundState,
 } from "@/features/cliente/components/detalle/ClienteDetalleHeader";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { getErrorMessage } from "@/lib/errors";
 import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
 import { ClienteCreditoCard } from "@/features/cliente/components/detalle/ClienteCreditoCard";
 import { useClienteDetalleController } from "@/features/cliente/hooks";
@@ -27,6 +29,8 @@ export default function ClienteDetalle() {
     navigate,
     cliente,
     loadingCliente,
+    errorCliente,
+    refetchCliente,
     contactos,
     loadingContactos,
     embarquesCliente,
@@ -54,6 +58,13 @@ export default function ClienteDetalle() {
   } = useClienteDetalleController();
   useRegisterBreadcrumbLabel(id, cliente?.nombre);
 
+  if (errorCliente) {
+    return (
+      <PageContainer>
+        <ErrorStateInline message={getErrorMessage(errorCliente)} onRetry={() => refetchCliente()} />
+      </PageContainer>
+    );
+  }
   if (loadingCliente) return <ClienteLoadingState />;
   if (!cliente) return <ClienteNotFoundState />;
 
