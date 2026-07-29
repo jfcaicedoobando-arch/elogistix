@@ -13,23 +13,30 @@
  * El objetivo es que la baseline sólo baje, nunca suba, y quede vacía al
  * cerrar Ola B de la migración.
  */
-import { readFileSync } from "node:fs";
-import { execSync } from "node:child_process";
-import { relative, resolve } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
+import { relative, resolve, join } from "node:path";
 
 const ROOT = resolve(import.meta.dir, "..");
 
+const SONNER_IMPORT = /from\s+['"]sonner['"]/;
+
+function walk(dir: string, acc: string[] = []): string[] {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, acc);
+    else if (/\.(ts|tsx|js|jsx)$/.test(entry.name)) acc.push(full);
+  }
+  return acc;
+}
+
 function listFilesImportingSonner(): string[] {
-  const out = execSync(
-    `rg -l --no-messages "from ['\\"]sonner['\\"]" src`,
-    { cwd: ROOT, encoding: "utf8" },
-  );
-  return out
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .filter((f) => !f.includes("__tests__") && !f.endsWith(".test.ts") && !f.endsWith(".test.tsx"))
-    .map((f) => relative(ROOT, resolve(ROOT, f)))
+  return walk(resolve(ROOT, "src"))
+    .filter((f) => SONNER_IMPORT.test(readFileSync(f, "utf8")))
+    .map((f) => relative(ROOT, f))
+    .filter(
+      (f) =>
+        !f.includes("__tests__") && !f.endsWith(".test.ts") && !f.endsWith(".test.tsx"),
+    )
     .sort();
 }
 
