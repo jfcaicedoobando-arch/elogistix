@@ -21,8 +21,6 @@ import {
 
 export type {
   EstatusCobranza,
-  PagoDetalle,
-  NotaCreditoDetalle,
   FacturaEstadoCuenta,
   EstadoCuentaFilters,
   KpisEstadoCuentaRemotos,
