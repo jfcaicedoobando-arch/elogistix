@@ -1,6 +1,9 @@
 # Changelog
 
 
+## [13.322.5] - 2026-07-29
+- Integración continua: el radar de cambios manuales en la base ya no marca en rojo la deuda histórica; sólo falla cuando una migración nueva no aplica sobre una base limpia, y lista aparte las históricas exentas.
+
 ## [13.322.4] - 2026-07-29
 - Pruebas: cuando falla la validación de aislamiento (RLS), el resumen ahora indica exactamente qué grupo de pruebas falló y enlaza a su registro, en vez de reportar sólo "una o más fallaron".
 
