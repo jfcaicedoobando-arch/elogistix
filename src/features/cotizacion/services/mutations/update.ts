@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { CreateCotizacionInput } from "@/features/cotizacion/types";
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
+import { cotizacionUpdateSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import type { CotizacionInsert } from "./payloadBuilders";
 
 type CotizacionUpdate = Partial<CotizacionInsert>;
@@ -10,6 +11,7 @@ export async function updateCotizacion(
   id: string,
   data: Partial<CreateCotizacionInput>,
 ): Promise<void> {
+  parseOrThrow(cotizacionUpdateSchema, data, "No se pudo actualizar la cotización");
   const updatePayload = fromDb<CotizacionUpdate>({ ...data });
   if (data.conceptos_venta) updatePayload.conceptos_venta = toDbJson(data.conceptos_venta);
   if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = toDbJson(data.dimensiones_lcl);
