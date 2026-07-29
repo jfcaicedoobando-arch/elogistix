@@ -1,56 +1,59 @@
-## Verificación previa (hecha contra el HEAD y la base real)
+## Contexto
 
+Las Etapas 1 y 2 ya están aplicadas y verificadas (C1 permisos de borrado, C2 roles en funciones fiscales, C5 filtro de eliminados en 9 RPCs, más la suite de regresión en CI). Faltan los tres críticos restantes del documento: **C3**, **C4** y **C6**.
 
-| Fix    | Afirmación del documento                                                                       | Resultado de la verificación                                                                                                                                                                                                                                                                                                                                                                              |
-| ------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **C1** | `eliminar_embarque_completo` es SECURITY DEFINER, con GRANT a `authenticated` y sin `has_role` | **Confirmado**. La función existe, es `prosecdef = true`, tiene EXECUTE para `authenticated` y `service_role`, y su cuerpo no contiene ninguna llamada a `has_role`                                                                                                                                                                                                                                       |
-| **C2** | Las edge functions `facturapi-*` no validan rol                                                | **Confirmado**. Ninguna de las 13 funciones `facturapi-*` menciona `has_role` / rol; sólo resuelven `auth.getUser()` y la API key por org (`_shared/facturapiAuth.ts`)                                                                                                                                                                                                                                    |
-| **C3** | Pantallas de dinero expuestas al truncado de 1000 filas                                        | **Parcialmente confirmado**. No existe `assertNotTruncated` ni configuración `[api] max_rows`. Ver advertencia abajo sobre `config.toml`                                                                                                                                                                                                                                                                  |
-| **C4** | Totales de dinero calculados en cliente                                                        | **Confirmado** en los tres archivos citados (factura manual, conceptos de cotización, CxP)                                                                                                                                                                                                                                                                                                                |
-| **C5** | 6 RPCs listan/agregan filas soft-deleted                                                       | **Confirmado en base**: `embarques_listado`, `facturas_listado`, `dashboard_details`, `sidebar_alert_counts`, `operaciones_stats`, `profit_por_cliente` no mencionan `deleted_at`. También confirmado que `profit_por_embarque` **sí** filtra (no se toca). `dashboard_summary` y `embarques_list_extras` sí lo mencionan → el hueco ahí es parcial, hay que revisar caso por caso antes de reescribirlas |
-| **C6** | 6 implementaciones divergentes de conversión a MXN                                             | **Confirmado**. Los 6 archivos existen con las políticas divergentes descritas; `src/lib/financial/tcValido.ts` ya existe y `src/lib/financial/convertir.ts` todavía no                                                                                                                                                                                                                                   |
+Estado actual verificado ahora mismo:
+- `supabase/config.toml` no tiene sección `[api]` → el límite de PostgREST sigue en el default de 1000 filas.
+- No existen `src/lib/supabase/assertNotTruncated.ts` ni `src/lib/financial/convertir.ts`. Sí existe `src/lib/financial/tcValido.ts`.
+- En la base sólo existe `recalc_factura_retenciones`; no existen `recalc_factura_totales`, `cotizacion_totales_conceptos` ni ninguna de las 5 RPCs agregadoras de C3c.
+- Siguen vivas las consultas de dinero con tope alto: `loaders.ts:54/62` (10000/20000), `dashboardEjecutivo.ts:145` (10000), `cobranza.ts:93`, `estadoCuenta.ts:129`, `conciliacion.ts:72`, `facturasCrud.ts:118` (2000).
 
+En analogía simple: hoy la app pide "tráeme todas las facturas", el servidor le manda calladamente sólo las primeras mil, y la app suma esas mil y presenta el resultado como si fuera el total. Nadie se entera.
 
-### Dos desviaciones respecto al documento
+---
 
-1. **C3a — no se puede tocar `supabase/config.toml`.** En este proyecto el archivo lo administra la plataforma; agregar `[api] max_rows` ahí se perdería o rompería la sincronización. El objetivo de C3 se cubre igual con C3b (guarda de truncado en cliente) y C3c (agregados en SQL), que son los que realmente eliminan el riesgo.
-2. **C5 — `dashboard_summary` / `embarques_list_extras**` ya filtran parcialmente; se revisará el cuerpo vigente antes de reemplazarlas para no perder lógica.
+## Etapa 3 — C3: se acabó el truncado silencioso
 
-## Plan de aplicación (por etapas, verificando entre cada una)
+**3a. Red de seguridad**
+- Añadir `[api] max_rows = 10000` a `supabase/config.toml`.
+- Nota para ti: en el proyecto hosted el valor equivalente se ajusta desde la configuración del backend; te indico el paso al terminar (no se puede hacer desde el repo).
 
-**Etapa 1 — Seguridad pura (bajo riesgo, sin cambios visibles de datos)**
+**3b. Guarda visible en cliente**
+- Nuevo `src/lib/supabase/assertNotTruncated.ts` con `ResultadoTruncadoError` (código `LC_RESULTADO_TRUNCADO`).
+- Aplicarlo con constante de límite nombrada en: `cobranza.ts`, `estadoCuenta.ts`, `conciliacion.ts`, `dashboardEjecutivo.ts`, `direccion/services/loaders.ts`, `crm/services/forecast.ts`, `crm/services/leaderboard.ts`, `facturasCrud.ts`.
+- Resultado: si alguna vez se corta, la pantalla muestra un error claro en vez de una cifra equivocada.
 
-- C1: migración `20260730000001` con `CREATE OR REPLACE` de `eliminar_embarque_completo`, conservando cuerpo y firma vigentes, añadiendo guard de rol (`has_role`) y comparación de `organization_id`. Gatear también el botón en `EmbarqueDetalleHeaderActions.tsx`.
-- C2: chequeo de rol fiscal en las edge functions `facturapi-*`, extraído a un helper compartido para no repetirlo 13 veces.
-- Verificación: test pgTAP en `supabase/tests/rls/` (rol sin permiso y tenant ajeno reciben error) + `deno test` de las edge functions.
+**3c. Solución estructural: sumar en el servidor**
+- Nueva migración `20260730100000_c3_agregados_dinero_rpc.sql` con 5 funciones `STABLE SECURITY DEFINER`, guard de organización, `deleted_at IS NULL` en todas las tablas y grants revocados de `PUBLIC`/`anon`:
+  `cobranza_agregados`, `estado_cuenta_agregados`, `conciliacion_resumen`, `dashboard_facturacion_kpis`, `direccion_totales`.
+- Migrar los services y hooks consumidores a usar las RPCs (los KPIs dejan de calcularse en el navegador).
+- Política de conversión en SQL alineada con C6: moneda extranjera sin tipo de cambio confiable no se suma y se cuenta aparte para poder avisar en la UI.
 
-**Etapa 2 — Datos fantasma (C5)**
+---
 
-- Migración `20260730000003` recreando las 6 RPCs con `deleted_at IS NULL`, respetando firma y tipo de retorno exactos; revisión previa del cuerpo vigente de `dashboard_summary` y `embarques_list_extras`.
-- Verificación: test de regresión que inserta embarque + factura, los soft-borra y asegura que ninguna de las RPCs los devuelve ni los suma.
+## Etapa 4 — C4: los totales los calcula el servidor, no el navegador
 
-**Etapa 3 — Truncado (C3b + C3c)**
+Migración única `20260730000002_fix_c4_totales_server_side.sql`:
+- **C4a Facturas:** función canónica `recalc_factura_totales(uuid)` que re-deriva subtotal, IVA por renglón, retenciones y total desde `conceptos_factura`; `recalc_factura_retenciones` queda como envoltorio para no romper el trigger existente. Trigger anti-escritura directa + CHECK de consistencia con tolerancia de 1 centavo (NOT VALID). No afecta el timbrado: las facturas ya emitidas siguen protegidas por `factura_inmutable` y el backfill sólo toca las que no tienen snapshot de emisión.
+- **C4b Cotizaciones:** `cotizacion_totales_conceptos(jsonb)` (IMMUTABLE) + RPC `recalcular_subtotal_cotizacion(uuid)` + trigger de validación del jsonb (`LC_COTIZACION_CONCEPTO_INVALIDO`). Corrige la semántica rota: subtotal = neto sin IVA y separado por moneda.
+- **C4c CxP:** trigger que impone `total = subtotal + iva + ieps − retenciones`, rechaza totales negativos (`LC_CXP_TOTAL_NEGATIVO`) y bloquea bajar el total por debajo de lo ya pagado más notas de crédito aplicadas (`LC_CXP_TOTAL_MENOR_PAGADO`).
+- Ajustar el frontend afectado (factura manual, wizard de cotización, edición de factura de proveedor) para consumir los valores server-side en vez de persistir los suyos.
 
-- `assertNotTruncated` en cliente + migración con las 5 RPCs agregadoras, y migración de las pantallas de dinero a esas RPCs.
-- Sin cambios en `config.toml`.
+---
 
-**Etapa 4 — Totales server-side (C4)** — la más delicada
+## Etapa 5 — C6: una sola forma de convertir moneda
 
-- Migración `20260730000002` (C4a/C4b/C4c) con triggers, CHECKs `NOT VALID` y backfill.
-- Antes del backfill: consulta de impacto que liste cuántas facturas/cotizaciones/CxP cambian de valor y en cuánto, para revisarla contigo. Sólo después se aplica.
+- Nuevo `src/lib/financial/convertir.ts` como canon único: MXN factor 1; USD/EUR exigen tipo de cambio válido y mayor a 1; sin tipo de cambio confiable devuelve `completo: false` y no suma; fallback sólo si se pasa explícito y queda marcado como tal. Incluye `factorEntreMonedas`.
+- Migrar los 6 sitios divergentes (`flujoProyectado.ts`, `calcularTotalMxn.ts`, `direccion/services/mxn.ts`, `carteraFx.ts`, `DialogRegistrarPago.tsx` — que hoy deduce el tipo de cambio dividiendo montos — y `financialUtils.ts`, que queda deprecado sin defaults `= 1`).
+- `dashboardEjecutivo.ts` se omite aquí porque su helper desaparece con la Etapa 3c.
+- Guardrail: regla ESLint + test de arquitectura `conversion-canon-fase-c6` para impedir una séptima implementación.
 
-**Etapa 5 — Canon de conversión (C6)**
+---
 
-- Nuevo `src/lib/financial/convertir.ts` + migración de los 6 call sites + guardrail ESLint/test de arquitectura. Se omite el diff sobre `dashboardEjecutivo.ts` si la Etapa 3 ya lo eliminó.
+## Detalles técnicos y verificación
 
-## Cierre
-
-- Regenerar `types.ts` tras las migraciones.
-- `bun run lint --max-warnings 0`, suite de tests, tests de arquitectura y suite RLS al final de cada etapa.
-- `CHANGELOG.md` + `APP_VERSION` por etapa.
-
-## Detalle técnico
-
-Las migraciones usan `CREATE OR REPLACE` conservando firma y retorno; donde el retorno cambia se requiere `DROP FUNCTION` explícito (caso `embarques_listado`), lo que obliga a re-emitir el `GRANT EXECUTE` en la misma migración. Todos los CHECK nuevos van `NOT VALID` para no bloquear el deploy con datos legacy.
-
-Nota: `.lovable/` está en tu `.gitignore`, así que este plan no se versiona. ¿Quieres que lo quite para que los planes persistan? Tu escoge que es la mejor practica
+- Migraciones nuevas: `20260730000002` (C4) y `20260730100000` (C3c). Sin solape de objetos con las ya aplicadas.
+- Tras aplicar migraciones se regeneran los tipos de la base para no acumular casts.
+- Tests: unitarios para `assertNotTruncated` y `convertir.ts`; suite RLS/pgTAP nueva para las 5 RPCs agregadas (aislamiento por organización + exclusión de eliminados), registrada en la matriz de CI; casos de trigger para C4a/C4b/C4c (total inconsistente rechazado, bajar total por debajo de lo pagado rechazado).
+- Al cierre de cada etapa: lint sin warnings, tests de arquitectura y CI rápido; `APP_VERSION` + `CHANGELOG.md` actualizados por etapa.
+- Riesgo controlado a vigilar en C4a: el backfill puede corregir totales legacy visibles en facturas borrador; se reporta el conteo de filas ajustadas antes de continuar.
