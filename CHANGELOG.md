@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.333.0] - 2026-07-29
+- Se eliminaron funciones duplicadas en la base que provocaban el error "no se pudo elegir la función" al generar el número de expediente de un embarque nuevo.
+- Tesorería: los roles Tesorero y Contador ya pueden ver las cuentas bancarias y los movimientos BBVA de su empresa (antes el módulo les salía vacío); el Tesorero además puede conciliar movimientos.
+- Se cerró la ventana en la que, justo después de iniciar sesión, un usuario de portal alcanzaba a ver el menú interno antes de ser redirigido.
+- Los avisos de error ya no se quedan pegados en pantalla: se cierran solos a los 8 segundos y no se apilan tapando los botones del encabezado.
+- Las pantallas dejan de quedarse "Cargando…" para siempre: a los 15 segundos muestran un aviso con botón Reintentar, y las consultas reintentan dos veces con espera progresiva.
+- Gestión de usuarios: si el servicio de correos falla, ahora aparece un aviso fijo con botón Reintentar y el fallo se registra en el monitoreo.
+- Prevención: nueva regla de auditoría (H7) para migraciones que renombran valores de catálogo y guía SQL `scripts/db/integrity-guard.sql` para detectar funciones duplicadas, enums rotos y tablas sin reglas de acceso.
+
+
 ## [13.332.2] - 2026-07-29
 - Seguridad: se dejó explícito el contrato de permisos de la función que convierte proformas en facturas (sólo usuarios autenticados y procesos internos). Los permisos en la base ya eran correctos; ahora quedan documentados y auditados.
 - CI: la auditoría de migraciones vuelve a pasar tras actualizar su fecha de corte.
