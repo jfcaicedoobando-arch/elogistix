@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="0.072554939">
-    <testsuite name="src/services/bitacora/__tests__/index.test.ts" timestamp="2026-06-12T01:51:23.964Z" hostname="sandbox-pool-55bf7bcbdb-b28jl" tests="2" failures="0" errors="0" skipped="0" time="0.072554939">
-        <testcase classname="src/services/bitacora/__tests__/index.test.ts" name="bitacora/index &gt; fetchBitacora realiza consulta paginada y devuelve count" time="0.041274381">
-        </testcase>
-        <testcase classname="src/services/bitacora/__tests__/index.test.ts" name="bitacora/index &gt; fetchBitacora aplica filtro .eq(&apos;modulo&apos;, &apos;crm&apos;)" time="0.016679692">
-        </testcase>
-    </testsuite>
-</testsuites>

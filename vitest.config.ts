@@ -1,6 +1,14 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import os from "os";
+
+// Forks paralelos en local: dejamos 2 núcleos libres para el dev-server/HMR
+// y topamos en 8 para acotar el uso de RAM (8 × 4 GB heap = 32 GB).
+// `VITEST_FORKS` permite afinar el valor sin editar la config (benchmarks).
+const LOCAL_FORKS = Number(process.env.VITEST_FORKS) || Math.max(2, Math.min(8, os.cpus().length - 2));
+
+
 
 export default defineConfig({
   plugins: [react()],
@@ -47,23 +55,24 @@ export default defineConfig({
     hookTimeout: 15_000,
     teardownTimeout: 15_000,
     // Pool por procesos (forks). Cada archivo corre en un fork nuevo para
-    // liberar memoria al terminar (PDFs / leak regression). Con el teardown
-    // global de 12.60.20 + mocks-cleanup, el heap pico estable es ~55 MB,
-    // por lo que es seguro paralelizar 2 forks (2 × 8 GB heap = 16 GB ≪ 32 GB
-    // RAM del sandbox). Esto reduce el wall-clock de la suite ~2x sin riesgo
-    // de OOM. Subir a 3-4 forks requirió heap ≤4 GB y disparó OOM en archivos
-    // PDF pesados; 2 forks @ 8 GB es el punto óptimo verificado.
+    // liberar memoria al terminar (PDFs / leak regression).
     pool: "forks",
-    // v13.x (GHA-audit M6) — En CI (runners ubuntu-24.04, 4 vCPU/16 GB) usamos
-    // 2 forks @ 8 GB heap, el punto óptimo ya verificado arriba: recorta 30-45%
-    // el wall-time de cada shard sin riesgo de OOM. En el sandbox local
-    // conservamos 1 fork serial.
-    singleFork: !process.env.CI,
-    maxForks: process.env.CI ? 2 : 1,
-    minForks: 1,
+    // v13.342.0 — Paralelismo derivado de los núcleos REALES, no del flag CI.
+    // Antes el local corría `singleFork` + `fileParallelism: false` (1 archivo
+    // a la vez) mientras CI usaba 10 shards × 2 forks: la suite tardaba 1928 s
+    // en el sandbox contra minutos en GHA. El sandbox tiene 16 vCPU / 125 GB,
+    // así que 8 forks × 4 GB heap = 32 GB ≪ 125 GB, con margen amplio.
+    // CI se mantiene EXACTAMENTE igual (2 forks @ 8 GB, ya validado en los
+    // runners ubuntu-24.04 de 4 vCPU/16 GB).
+    singleFork: false,
+    maxForks: process.env.CI ? 2 : LOCAL_FORKS,
+    minForks: process.env.CI ? 1 : 2,
     isolate: true,
-    execArgv: ["--max-old-space-size=8192", "--expose-gc"],
-    fileParallelism: !!process.env.CI,
+    execArgv: process.env.CI
+      ? ["--max-old-space-size=8192", "--expose-gc"]
+      : ["--max-old-space-size=4096", "--expose-gc"],
+    fileParallelism: true,
+
     sequence: { shuffle: false },
     coverage: {
       provider: "v8",
