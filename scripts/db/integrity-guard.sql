@@ -98,9 +98,3 @@ where f.deleted_at is null
   )
 
 order by 1, 2;
--- ============================================================
--- 4) Facturas con estado de cobro sin respaldo documental.
---    FIX-F964: un backfill que usó `saldo_factura` (con guard de tenant)
---    desde una migración sin usuario marcó 83 facturas como "Pagada".
---    Este check impide que vuelva a ocurrir sin ser detectado.
--- ============================================================
