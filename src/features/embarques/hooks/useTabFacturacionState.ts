@@ -14,8 +14,8 @@ import {
   useContenedoresEmbarque,
 } from "@/features/embarques/hooks";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
-import { esBorradorVacio, esBorradorSinConceptos } from "./esBorradorVacio";
-import { calcularEstadosConceptos } from "./estadoConceptoBadge";
+import { esBorradorVacio, esBorradorSinConceptos } from "@/features/embarques/components/facturacion/esBorradorVacio";
+import { calcularEstadosConceptos } from "@/features/embarques/components/facturacion/estadoConceptoBadge";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
