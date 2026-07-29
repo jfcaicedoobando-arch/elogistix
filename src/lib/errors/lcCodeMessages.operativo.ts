@@ -98,4 +98,8 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "Un ajuste interno de base de datos quedó incompleto. Reporta este error a soporte.",
   LC_C5B_FN_AUSENTE:
     "Un componente interno de base de datos no está disponible. Reporta este error a soporte.",
+  LC_COSTEO_RECARGO_SIN_PADRE:
+    "El recargo no tiene una tarifa válida asociada. Vuelve a abrir la tarifa e inténtalo de nuevo.",
+  LC_COSTEO_DEMORA_SIN_PADRE:
+    "El tramo de demoras no tiene condiciones de naviera válidas asociadas. Vuelve a abrir la configuración e inténtalo de nuevo.",
 };
