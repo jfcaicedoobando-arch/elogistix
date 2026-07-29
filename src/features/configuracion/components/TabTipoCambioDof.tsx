@@ -8,7 +8,7 @@ import { Save, RefreshCw } from "lucide-react";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useHistorialTcDof, useUpsertTcDofManual } from "@/features/catalogos/hooks/useTipoCambioDof";
 import type { TipoCambioDof } from "@/features/catalogos/services/tipoCambioDof";
-import { formatDateMx } from "@/lib/dateUtils";
+import { formatDate } from "@/lib/formatters/dates";
 
 /** Formatea un TC con 4 decimales (convención Banxico/DOF). */
 function fmtTc(valor: number | null): string {
@@ -43,7 +43,7 @@ export default function TabTipoCambioDof() {
 
   const columns: ColumnDef<TipoCambioDof, unknown>[] = useMemo(
     () => defineColumns<TipoCambioDof>([
-      { id: "fecha", header: "Fecha", cell: ({ row }) => formatDateMx(row.original.fecha) },
+      { id: "fecha", header: "Fecha", cell: ({ row }) => formatDate(row.original.fecha) },
       {
         id: "usd", header: "USD / MXN",
         meta: { className: "text-right font-mono tabular-nums", headerClassName: "text-right" },
@@ -87,7 +87,7 @@ export default function TabTipoCambioDof() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-md border p-3">
               <p className="text-xs text-muted-foreground">Última publicación</p>
-              <p className="text-sm font-medium">{formatDateMx(ultimo.fecha)}</p>
+              <p className="text-sm font-medium">{formatDate(ultimo.fecha)}</p>
             </div>
             <div className="rounded-md border p-3">
               <p className="text-xs text-muted-foreground">USD / MXN</p>
