@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import type { Tables } from "@/integrations/supabase/types";
 
 
