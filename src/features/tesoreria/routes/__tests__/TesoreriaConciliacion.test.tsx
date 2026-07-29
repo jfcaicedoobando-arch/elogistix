@@ -25,6 +25,7 @@ vi.mock("@/features/tesoreria/hooks", () => ({
   useMovimientos: () => mockUseMovimientos(),
   useImportarMovimientos: () => mockUseImportarMovimientos(),
   useConciliarPago: () => mockUseConciliarPago(),
+  useRegistrarMovimientoManual: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
   useConciliacionResumen: () => ({
     data: {
       total_movimientos: 2, pendientes: 1, conciliados: 1, ignorados: 0,
