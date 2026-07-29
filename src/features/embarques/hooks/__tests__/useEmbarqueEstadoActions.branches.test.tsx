@@ -108,7 +108,7 @@ describe("useEmbarqueEstadoActions — early returns", () => {
       () => useEmbarqueEstadoActions({ ...base } as EmbarqueArg, undefined),
       { wrapper: createWrapper() },
     );
-    await act(async () => { await result.current.handleReabrir(); });
+    await act(async () => { await result.current.handleReabrir("Motivo de prueba suficientemente largo"); });
     expect(h.reabrir).not.toHaveBeenCalled();
   });
 });
@@ -223,7 +223,7 @@ describe("useEmbarqueEstadoActions — handleReabrir error y conceptos", () => {
   it("handleReabrir notifica error si mutateAsync rechaza", async () => {
     h.reabrir.mockRejectedValueOnce(new Error("nope"));
     const { result } = renderH({ estado: "Cerrado" });
-    await act(async () => { await result.current.handleReabrir(); });
+    await act(async () => { await result.current.handleReabrir("Motivo de prueba suficientemente largo"); });
     await waitFor(() => expect(h.notifyError).toHaveBeenCalledWith(
       undefined,
       expect.objectContaining({ method: "HANDLE_REABRIR_EMBARQUE" }),

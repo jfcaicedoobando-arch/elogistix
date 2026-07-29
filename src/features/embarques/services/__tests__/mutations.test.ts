@@ -143,7 +143,7 @@ describe("avanzarEstadoEmbarqueRpc", () => {
 describe("reabrirEmbarqueRpc", () => {
   it("invoca la RPC reabrir_embarque con los argumentos esperados", async () => {
     mock.setRpcResult("reabrir_embarque", { data: { id: UUID, estado: "Entregado" }, error: null });
-    await reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "admin@d.com", requestId: "req-1" });
+    await reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "admin@d.com", motivo: "Motivo de prueba suficientemente largo", requestId: "req-1" });
     const call = mock.rpcCalls.find((c) => c.fn === "reabrir_embarque");
     expect(call).toBeTruthy();
     const args = call?.args as { p_embarque_id: string; p_usuario_email: string };
@@ -154,7 +154,7 @@ describe("reabrirEmbarqueRpc", () => {
   it("propaga el error de Supabase (no admin, estado inválido, etc.)", async () => {
     mock.setRpcResult("reabrir_embarque", { data: null, error: new Error("Solo administradores") });
     await expect(
-      reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "u@d.com" }),
+      reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "u@d.com", motivo: "Motivo de prueba suficientemente largo" }),
     ).rejects.toThrow("Solo administradores");
   });
 
@@ -164,7 +164,7 @@ describe("reabrirEmbarqueRpc", () => {
       error: new Error("Embarque cerrado: usa reabrir_embarque para modificarlo"),
     });
     await expect(
-      reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "u@d.com" }),
+      reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "u@d.com", motivo: "Motivo de prueba suficientemente largo" }),
     ).rejects.toThrow(/candado de embarque cerrado/i);
   });
 });
