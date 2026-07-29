@@ -12,6 +12,10 @@ on:
     # 13:00 UTC = 07:00 CDMX (UTC-6)
     - cron: "0 13 * * *"
   workflow_dispatch:
+  # v13.x (GHA-audit C2) — Lovable dispara este evento tras cada publish, así el
+  # smoke corre en minutos y no en la siguiente corrida del cron.
+  repository_dispatch:
+    types: [lovable-deployed]
 
 permissions:
   contents: read
@@ -111,9 +115,96 @@ jobs:
             exit 1
           fi
 
+  rpc-smoke:
+    name: RPC smoke (dinero, como authenticated)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Login demo (reutiliza demo-access)
+        run: |
+          set -euo pipefail
+          curl -sS -X POST \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Authorization: Bearer ${ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "${SUPABASE_URL}/functions/v1/demo-access" > /tmp/demo.json
+          EMAIL=$(jq -r '.email' /tmp/demo.json)
+          PASSWORD=$(jq -r '.password' /tmp/demo.json)
+          if [ -z "$EMAIL" ] || [ "$EMAIL" = "null" ] || [ -z "$PASSWORD" ] || [ "$PASSWORD" = "null" ]; then
+            echo "::error::demo-access no devolvio credenciales validas"
+            cat /tmp/demo.json
+            exit 1
+          fi
+          TOKEN=$(curl -sS -X POST \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" \
+            "${SUPABASE_URL}/auth/v1/token?grant_type=password" | jq -r '.access_token')
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "::error::login demo fallo - no se obtuvo access_token"
+            exit 1
+          fi
+          echo "::add-mask::$TOKEN"
+          echo "DEMO_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+
+      - name: RPC duplicar_cotizacion - jamas 42703/500 (B-016)
+        run: |
+          set -euo pipefail
+          BODY=$(curl -sS -w '\n%{http_code}' -X POST \
+            -H "apikey: ${ANON_KEY}" -H "Authorization: Bearer ${DEMO_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"p_id":"00000000-0000-0000-0000-000000000000"}' \
+            "${SUPABASE_URL}/rest/v1/rpc/duplicar_cotizacion")
+          STATUS=$(tail -n1 <<<"$BODY")
+          PAYLOAD=$(head -n-1 <<<"$BODY")
+          echo "HTTP $STATUS - $PAYLOAD"
+          if grep -q '"code":"42703"' <<<"$PAYLOAD" || [ "$STATUS" = "500" ]; then
+            echo "::error::duplicar_cotizacion ROTA en el entorno desplegado (42703/500) - patron B-016"
+            exit 1
+          fi
+
+      - name: RPC cxc_aging_clientes - jamas 42703/42883/500
+        run: |
+          set -euo pipefail
+          BODY=$(curl -sS -w '\n%{http_code}' -X POST \
+            -H "apikey: ${ANON_KEY}" -H "Authorization: Bearer ${DEMO_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "${SUPABASE_URL}/rest/v1/rpc/cxc_aging_clientes")
+          STATUS=$(tail -n1 <<<"$BODY")
+          PAYLOAD=$(head -n-1 <<<"$BODY")
+          echo "HTTP $STATUS - $PAYLOAD"
+          if [ "$STATUS" = "500" ] || grep -qE '"code":"(42703|42883)"' <<<"$PAYLOAD"; then
+            echo "::error::cxc_aging_clientes ROTA en el entorno desplegado (42703/42883/500)"
+            exit 1
+          fi
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::cxc_aging_clientes respondio HTTP $STATUS (esperado 200)"
+            exit 1
+          fi
+          jq -e 'type == "array"' <<<"$PAYLOAD" > /dev/null
+
+      - name: Soft delete como authenticated - jamas 401/403/500 (B-001)
+        run: |
+          set -euo pipefail
+          STATUS=$(curl -sS -o /tmp/patch.json -w "%{http_code}" -X PATCH \
+            -H "apikey: ${ANON_KEY}" -H "Authorization: Bearer ${DEMO_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d '{"deleted_at":"2026-01-01T00:00:00Z"}' \
+            "${SUPABASE_URL}/rest/v1/cotizaciones?id=eq.00000000-0000-0000-0000-000000000000")
+          echo "HTTP $STATUS"
+          cat /tmp/patch.json || true
+          if [ "$STATUS" = "401" ] || [ "$STATUS" = "403" ] || [ "$STATUS" = "500" ]; then
+            echo "::error::soft delete como authenticated bloqueado (HTTP $STATUS) - patron B-001"
+            exit 1
+          fi
+          test "$STATUS" = "204"
+
   notify-failure:
     name: Notificar fallo de smoke (issue)
-    needs: [user-management-smoke, exchange-rates-smoke, tracking-public-smoke]
+    needs: [user-management-smoke, exchange-rates-smoke, tracking-public-smoke, rpc-smoke]
     if: failure()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -135,7 +226,7 @@ jobs:
               `- Trigger: \`${context.eventName}\``,
               `- SHA: \`${context.sha}\``,
               ``,
-              `Revisar logs de los jobs: user-management-smoke / exchange-rates-smoke / tracking-public-smoke.`,
+              `Revisar logs de los jobs: user-management-smoke / exchange-rates-smoke / tracking-public-smoke / rpc-smoke.`,
             ].join('\n');
 
             const { data: existing } = await github.rest.issues.listForRepo({
