@@ -138,6 +138,8 @@ export function sumarEnUSD(
  */
 export function aUSD(monto: number, moneda: string, tcUSD: number, tcEUR: number): number {
   if (moneda === 'USD') return monto;
+  // Monedas desconocidas: passthrough histórico (no hay TC que aplicar).
+  if (moneda !== 'MXN' && moneda !== 'EUR') return monto;
   if (!Number.isFinite(tcUSD) || tcUSD <= 0) {
     throw new Error('TC requerido para conversión: tipoCambioUSD inválido (0/NaN) al convertir a USD');
   }
