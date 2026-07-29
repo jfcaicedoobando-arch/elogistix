@@ -18,7 +18,7 @@ interface PagoRow {
   referencia?: string | null;
   estado_rep?: string | null;
   serie_rep?: string | null;
-  folio_rep?: string | null;
+  folio_rep?: number | string | null;
   uuid_rep?: string | null;
   rep_cancelado_en?: string | null;
 }
