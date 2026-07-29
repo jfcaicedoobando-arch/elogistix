@@ -5,6 +5,7 @@
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { logger } from "@/lib/observability/logger";
+import { parseNumeroFiscal } from "@/lib/domain/facturaConceptos";
 
 export interface ConceptosTotales {
   conceptosVentaUSD: ConceptoVentaCotizacion[];
