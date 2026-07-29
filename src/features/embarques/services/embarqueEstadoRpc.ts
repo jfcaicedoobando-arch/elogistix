@@ -53,17 +53,14 @@ export interface ReabrirEmbarqueInput {
 export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<void> {
   try {
     await run(
-      // SAFE-CAST: la RPC nueva aún no aparece en el types.ts regenerado; suprimimos el cast.
-      (supabase.rpc as unknown as (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: unknown; error: unknown }>)("reabrir_embarque", {
+      supabase.rpc("reabrir_embarque", {
         p_embarque_id: input.embarqueId,
         p_usuario_email: input.usuarioEmail,
         p_motivo: input.motivo,
         p_request_id: input.requestId,
       }),
     );
+
   } catch (e) {
     const msg = getErrorMessage(e);
     if (/usa reabrir_embarque|bypass_cierre/i.test(msg)) {
