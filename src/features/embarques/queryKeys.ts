@@ -8,8 +8,8 @@ export const embarques = {
   extrasBranchB: (visibleIds: string[]) => ['embarques', 'extras-branch-b', visibleIds] as const,
   expedientesCliente: (clienteId?: string | null, organizationId?: string | null) =>
     ['embarques', 'expedientes-cliente', clienteId, organizationId] as const,
-  conceptosVenta: (id: string) => ['conceptos_venta', id] as const,
-  conceptosCosto: (id: string) => ['conceptos_costo', id] as const,
+  conceptosVenta: (id?: string) => ['conceptos_venta', id] as const,
+  conceptosCosto: (id?: string) => ['conceptos_costo', id] as const,
   documentos: (id: string) => ['documentos_embarque', id] as const,
   notas: (id: string) => ['notas_embarque', id] as const,
   facturas: (id: string) => ['facturas', 'embarque', id] as const,
