@@ -22,6 +22,8 @@ import type { TcOrigen } from "@/features/cxp/types";
 import { aplicarCfdiParsed, aplicarPdfIaParsed } from "./useNuevaFacturaProveedorForm.applyParsed";
 import { useConceptosManuales } from "./useConceptosManuales";
 import { calcularCuadreConceptos } from "@/features/cxp/utils/cuadreConceptos";
+import { useAutoTcEffect } from "./useNuevaFacturaProveedorForm.tcEffect";
+import { puedeContinuarSubmit } from "./useNuevaFacturaProveedorForm.guard";
 export function useNuevaFacturaProveedorForm(
   onDone: () => void,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
@@ -54,16 +56,7 @@ export function useNuevaFacturaProveedorForm(
   const tcOrigenRef = useRef(tcOrigen);
   tcDofRef.current = tcDof;
   tcOrigenRef.current = tcOrigen;
-  useEffect(() => {
-    if (values.moneda === "MXN") return;
-    if (!isFechaEmisionValida(values.emision)) return;
-    const origen = tcOrigenRef.current;
-    if (origen === "manual" || origen === "cfdi") return;
-    const t = setTimeout(() => {
-      tcDofRef.current.mutate({ moneda: values.moneda as MonedaTc, fecha: values.emision, silent: true });
-    }, 250);
-    return () => clearTimeout(t);
-  }, [values.moneda, values.emision]);
+  useAutoTcEffect(values.moneda, values.emision, tcOrigenRef, tcDofRef);
 
   const handleChange = <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => {
     setValues((prev) => {
@@ -177,23 +170,8 @@ export function useNuevaFacturaProveedorForm(
     }
     // Bloqueo de captura sin partidas o con partidas descuadradas (Q-02).
     const hayVinculos = Object.keys(vinculos).length > 0;
-    if (cfdiConceptos.length === 0 && !hayVinculos) {
-      if (manuales.conceptos.length === 0) {
-        notifyError(undefined, {
-          title: "Captura los conceptos de la factura",
-          description: "Sin partidas no podrás aprobarla ni pagarla. Agrega al menos un concepto.",
-          method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_SIN_CONCEPTOS",
-        });
-        return;
-      }
-      if (!cuadreManual.puedeAprobar) {
-        notifyError(undefined, {
-          title: "Los conceptos no cuadran con el subtotal",
-          description: `Suma de conceptos ${cuadreManual.suma.toFixed(2)} vs subtotal ${(Number(values.subtotal) || 0).toFixed(2)}. Ajusta la diferencia (tolerancia 0.01).`,
-          method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DESCUADRE",
-        });
-        return;
-      }
+    if (!puedeContinuarSubmit(cfdiConceptos, hayVinculos, manuales, cuadreManual, Number(values.subtotal) || 0)) {
+      return;
     }
 
     const ok = await runSubmit({

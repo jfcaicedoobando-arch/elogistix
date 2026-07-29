@@ -4,7 +4,7 @@
  */
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
-import type { CuadreConceptos } from "@/features/cxp/utils/cuadreConceptos";
+import type { ResultadoCuadre } from "@/features/cxp/utils/cuadreConceptos";
 
 interface ConceptosManualesLike {
   conceptos: ReadonlyArray<unknown>;
@@ -18,7 +18,7 @@ export function puedeContinuarSubmit(
   cfdiConceptos: ReadonlyArray<CfdiConceptoParsed>,
   hayVinculos: boolean,
   manuales: ConceptosManualesLike,
-  cuadreManual: CuadreConceptos,
+  cuadreManual: ResultadoCuadre,
   subtotal: number,
 ): boolean {
   if (cfdiConceptos.length > 0 || hayVinculos) return true;

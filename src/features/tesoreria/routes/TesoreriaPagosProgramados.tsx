@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Wallet } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchPagosProgramables,
@@ -9,35 +8,14 @@ import { agruparPorSemana, type FacturaProgramable } from "@/features/tesoreria/
 import { tesoreria as tesoreriaKeys } from "@/features/tesoreria/queryKeys";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { defineColumns } from "@/components/shared/DataTable";
-import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
-import { formatDate } from "@/lib/formatters";
-import { ToneBadge } from "@/components/shared/ToneBadge";
 import { PageSkeleton } from "@/components/shared/skeletons";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
 import { useEjecutarPagoProgramado } from "@/features/tesoreria/hooks/useEjecutarPagoProgramado";
 import { formatDateOnlyLocal } from "@/lib/date/dateOnly";
 import { EjecutarPagoDialog, type FormPago } from "./_sections/EjecutarPagoDialog";
 import { PagosProgramadosTablas } from "./_sections/PagosProgramadosTablas";
-
-type FiltroBandeja = "todas" | "programadas" | "treinta_dias";
-
-/** Filtra la lista completa de facturas programables según el filtro explícito del usuario. */
-function filtrarProgramables(data: FacturaProgramableRow[], filtro: FiltroBandeja): FacturaProgramable[] {
-  let rows = data;
-  if (filtro === "programadas") rows = rows.filter((r) => r.fecha_programada_pago);
-  if (filtro === "treinta_dias") {
-    const limite = new Date();
-    limite.setDate(limite.getDate() + 30);
-    rows = rows.filter((r) => {
-      const f = r.fecha_programada_pago ?? r.fecha_vencimiento;
-      return f && new Date(`${f}T00:00:00`) <= limite;
-    });
-  }
-  return rows as FacturaProgramable[];
-}
+import { buildPagosProgramadosColumns, filtrarProgramables, type FiltroBandeja } from "./_sections/pagosProgramadosColumns";
 
 export default function TesoreriaPagosProgramados() {
   // B-030: fetch directo sin filtro implícito de estado (antes la RPC
@@ -99,65 +77,7 @@ export default function TesoreriaPagosProgramados() {
     [programables],
   );
 
-  const columns = useMemo(() => defineColumns<FacturaProgramable>([
-    {
-      id: "proveedor",
-      header: "Proveedor",
-      accessorFn: (r) => r.proveedor_nombre ?? "",
-      meta: { width: "min-w-[180px]", className: "font-medium truncate" },
-    },
-    {
-      id: "folio",
-      header: "Folio",
-      accessorFn: (r) => r.folio_proveedor ?? "",
-      meta: { width: "w-[120px]", className: "font-mono text-xs" },
-    },
-    {
-      id: "fecha",
-      header: "Fecha (Venc/Prog)",
-      meta: { width: "w-[150px]", className: "text-xs" },
-      cell: ({ row }) => {
-        const r = row.original;
-        const fecha = r.fecha_programada_pago ?? r.fecha_vencimiento;
-        return (
-          <div className="flex items-center gap-1.5">
-            <span>{fecha ? formatDate(fecha) : "—"}</span>
-            {r.fecha_programada_pago && (
-              <ToneBadge tone="info" size="sm">Prog.</ToneBadge>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      ...moneyColumn<FacturaProgramable>({
-        id: "monto",
-        header: "Monto",
-        accessor: (r) => r.total,
-        currencyAccessor: (r) => r.moneda,
-      }),
-      meta: { width: "w-[120px]", align: "right" },
-    },
-    {
-      ...moneyColumn<FacturaProgramable>({
-        id: "saldo",
-        header: "Saldo",
-        accessor: (r) => r.saldo,
-        currencyAccessor: (r) => r.moneda,
-      }),
-      meta: { width: "w-[120px]", align: "right", className: "font-semibold" },
-    },
-    {
-      id: "acciones",
-      header: "",
-      meta: { width: "w-[130px]", align: "right" },
-      cell: ({ row }) => (
-        <Button size="sm" variant="outline" onClick={() => abrirDialogoPago(row.original)}>
-          <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago
-        </Button>
-      ),
-    },
-  ]), []);
+  const columns = useMemo(() => buildPagosProgramadosColumns(abrirDialogoPago), []);
 
   if (isLoading) {
     return (
