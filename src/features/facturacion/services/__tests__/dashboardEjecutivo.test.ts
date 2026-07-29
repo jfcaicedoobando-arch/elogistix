@@ -10,19 +10,24 @@ import { fetchDashboardEjecutivoFacturacion } from "../dashboardEjecutivo";
 
 const HOY = new Date(Date.UTC(2026, 5, 15)); // junio 2026
 
-describe("fetchDashboardEjecutivoFacturacion", () => {
-  beforeEach(() => { mock.tableCalls.length = 0; });
+const TENDENCIA = [
+  { mes: "2026-01", facturado_mxn: 0, cobrado_mxn: 0 },
+  { mes: "2026-02", facturado_mxn: 0, cobrado_mxn: 0 },
+  { mes: "2026-03", facturado_mxn: 0, cobrado_mxn: 0 },
+  { mes: "2026-04", facturado_mxn: 0, cobrado_mxn: 0 },
+  { mes: "2026-05", facturado_mxn: 500, cobrado_mxn: 0 },
+  { mes: "2026-06", facturado_mxn: 1000, cobrado_mxn: 700 },
+];
 
-  it("genera 6 meses de tendencia y acumula MXN directo", async () => {
-    mock.setTableResult("facturas", {
-      data: [
-        { fecha_emision: "2026-06-10", total: 1000, moneda: "MXN", tipo_cambio: null },
-        { fecha_emision: "2026-05-10", total: 500, moneda: "MXN", tipo_cambio: null },
-      ],
-      error: null,
-    });
-    mock.setTableResult("pagos_factura", {
-      data: [{ fecha_pago: "2026-06-12", monto_aplicado_factura: 700, tipo_cambio: null, moneda: "MXN" }],
+describe("fetchDashboardEjecutivoFacturacion (RPC C3c)", () => {
+  beforeEach(() => {
+    mock.resetResults();
+    mock.rpcCalls.length = 0;
+  });
+
+  it("mapea la tendencia y el mes en curso desde la RPC", async () => {
+    mock.setRpcResult("dashboard_facturacion_kpis", {
+      data: { tendencia: TENDENCIA, facturas_sin_tc: 0 },
       error: null,
     });
     const res = await fetchDashboardEjecutivoFacturacion("org", null, HOY);
@@ -33,84 +38,48 @@ describe("fetchDashboardEjecutivoFacturacion", () => {
     expect(res.tendencia[res.tendencia.length - 1].mes).toBe("2026-06");
   });
 
-  it("convierte USD con tipo_cambio>1", async () => {
-    mock.setTableResult("facturas", {
-      data: [{ fecha_emision: "2026-06-01", total: 100, moneda: "USD", tipo_cambio: 20 }],
+  it("agrega en el servidor (una sola llamada RPC, sin traer filas)", async () => {
+    mock.setRpcResult("dashboard_facturacion_kpis", {
+      data: { tendencia: TENDENCIA, facturas_sin_tc: 0 },
       error: null,
     });
-    mock.setTableResult("pagos_factura", { data: [], error: null });
-    const res = await fetchDashboardEjecutivoFacturacion("org", null, HOY);
-    expect(res.facturado_mes_mxn).toBe(2000);
-  });
-
-  it("usa fallbackUsdMxn cuando tipo_cambio<=1", async () => {
-    mock.setTableResult("facturas", {
-      data: [{ fecha_emision: "2026-06-01", total: 100, moneda: "USD", tipo_cambio: 1 }],
-      error: null,
-    });
-    mock.setTableResult("pagos_factura", { data: [], error: null });
-    const res = await fetchDashboardEjecutivoFacturacion("org", 19, HOY);
-    expect(res.facturado_mes_mxn).toBe(1900);
-    expect(res.facturas_sin_tc).toBe(0);
-  });
-
-  it("cuenta facturas_sin_tc cuando USD sin TC ni fallback", async () => {
-    mock.setTableResult("facturas", {
-      data: [{ fecha_emision: "2026-06-05", total: 100, moneda: "USD", tipo_cambio: null }],
-      error: null,
-    });
-    mock.setTableResult("pagos_factura", { data: [], error: null });
-    const res = await fetchDashboardEjecutivoFacturacion("org", null, HOY);
-    expect(res.facturado_mes_mxn).toBe(0);
-    expect(res.facturas_sin_tc).toBe(1);
-  });
-
-  it("ignora filas fuera del rango de 6 meses", async () => {
-    mock.setTableResult("facturas", {
-      data: [{ fecha_emision: "2025-01-01", total: 9999, moneda: "MXN", tipo_cambio: null }],
-      error: null,
-    });
-    mock.setTableResult("pagos_factura", { data: [], error: null });
-    const res = await fetchDashboardEjecutivoFacturacion("org", null, HOY);
-    expect(res.tendencia.every((m) => m.facturado_mxn === 0)).toBe(true);
-  });
-
-  it("propaga error de facturas", async () => {
-    mock.setTableResult("facturas", { data: null, error: new Error("F") });
-    mock.setTableResult("pagos_factura", { data: [], error: null });
-    await expect(fetchDashboardEjecutivoFacturacion("org", null, HOY)).rejects.toThrow("F");
-  });
-
-  it("propaga error de pagos", async () => {
-    mock.setTableResult("facturas", { data: [], error: null });
-    mock.setTableResult("pagos_factura", { data: null, error: new Error("P") });
-    await expect(fetchDashboardEjecutivoFacturacion("org", null, HOY)).rejects.toThrow("P");
-  });
-
-  it("omite filtro organization_id cuando es null", async () => {
-    mock.setTableResult("facturas", { data: [], error: null });
-    mock.setTableResult("pagos_factura", { data: [], error: null });
-    await fetchDashboardEjecutivoFacturacion(null, null, HOY);
-    for (const call of mock.tableCalls) {
-      const eqIdx = call.ops.indexOf("eq");
-      expect(eqIdx).toBe(-1);
-    }
-  });
-
-  it("filtra facturas por estados facturados (excluye Borrador y Cancelada)", async () => {
-    mock.setTableResult("facturas", { data: [], error: null });
-    mock.setTableResult("pagos_factura", { data: [], error: null });
     await fetchDashboardEjecutivoFacturacion("org", null, HOY);
-    const facturasCall = mock.tableCalls.find((c) => c.table === "facturas");
-    expect(facturasCall).toBeDefined();
-    const inIdx = facturasCall!.ops.indexOf("in");
-    expect(inIdx).toBeGreaterThanOrEqual(0);
-    // neq no debe usarse — antes filtraba solo Cancelada y dejaba pasar Borradores.
-    expect(facturasCall!.ops.indexOf("neq")).toBe(-1);
-    const [col, estados] = facturasCall!.opArgs[inIdx] as [string, string[]];
-    expect(col).toBe("estado");
-    expect(estados).toEqual(expect.arrayContaining(["Emitida", "Parcialmente pagada", "Vencida", "Pagada"]));
-    expect(estados).not.toContain("Borrador");
-    expect(estados).not.toContain("Cancelada");
+    expect(mock.rpcCalls).toHaveLength(1);
+    expect(mock.rpcCalls[0].fn).toBe("dashboard_facturacion_kpis");
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+
+  it("propaga el fallback USD a la RPC", async () => {
+    mock.setRpcResult("dashboard_facturacion_kpis", {
+      data: { tendencia: [], facturas_sin_tc: 0 },
+      error: null,
+    });
+    await fetchDashboardEjecutivoFacturacion("org", 19, HOY);
+    expect(mock.rpcCalls[0].args).toMatchObject({ p_meses: 6, p_fallback_usd: 19 });
+  });
+
+  it("expone facturas_sin_tc que reporta la RPC", async () => {
+    mock.setRpcResult("dashboard_facturacion_kpis", {
+      data: { tendencia: TENDENCIA, facturas_sin_tc: 3 },
+      error: null,
+    });
+    const res = await fetchDashboardEjecutivoFacturacion("org", null, HOY);
+    expect(res.facturas_sin_tc).toBe(3);
+  });
+
+  it("devuelve ceros cuando la RPC no trae datos", async () => {
+    mock.setRpcResult("dashboard_facturacion_kpis", { data: null, error: null });
+    const res = await fetchDashboardEjecutivoFacturacion(null, null, HOY);
+    expect(res).toEqual({
+      facturado_mes_mxn: 0,
+      cobrado_mes_mxn: 0,
+      tendencia: [],
+      facturas_sin_tc: 0,
+    });
+  });
+
+  it("propaga el error de la RPC", async () => {
+    mock.setRpcResult("dashboard_facturacion_kpis", { data: null, error: new Error("F") });
+    await expect(fetchDashboardEjecutivoFacturacion("org", null, HOY)).rejects.toThrow("F");
   });
 });
