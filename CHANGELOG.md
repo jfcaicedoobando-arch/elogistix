@@ -6,6 +6,8 @@
 - **Fix · Correos "sin resolver" en Usuarios (Sentry 3M).** El listado de cuentas de acceso sólo leía los primeros 50 registros; ahora recorre todas las páginas y cada usuario muestra su correo real.
 - **Fix · 404 en `/sistema/bitacora` (Sentry 3W).** Los enlaces viejos ahora redirigen a `/bitacora`.
 - **Mejora · Menos ruido en Sentry.** Se descartan los errores que en realidad son páginas HTML del túnel de pruebas (Cloudflare 1033) y los bloqueos de negocio 23514 ("Embarque cerrado"), y los errores de base de datos se envían con su mensaje real en vez de títulos ilegibles como "M".
+- **Fix · Aprobación de facturas en lote (Sentry 3V).** Cuando faltaban conceptos, el aviso "Captura los conceptos antes de aprobar" se registraba como error técnico. Ahora se muestra como aviso al usuario, con el detalle del motivo, sin generar alertas falsas.
+
 
 
 ## [13.337.0] - 2026-07-29
