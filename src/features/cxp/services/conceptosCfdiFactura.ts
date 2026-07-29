@@ -9,6 +9,12 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CfdiConceptoParsed } from "./parseCfdi.types";
+import {
+  normalizarClaveSat,
+  normalizarDescripcionFiscal,
+  parseCantidadFiscal,
+  parseImporteFiscal,
+} from "@/lib/domain/facturaConceptos";
 
 export interface InsertarConceptosCfdiParams {
   facturaId: string;
@@ -27,13 +33,14 @@ export async function insertarConceptosCfdi(
     proveedor_factura_id: facturaId,
     organization_id: organizationId,
     concepto_costo_id: null,
-    descripcion: c.descripcion?.trim() || "(Sin descripción)",
-    cantidad: Number(c.cantidad ?? 1) || 1,
-    clave_unidad: c.clave_unidad ?? null,
-    monto: Number(c.importe) || 0,
-    iva: Number(c.iva) || 0,
-    ieps: Number(c.ieps) || 0,
+    descripcion: normalizarDescripcionFiscal(c.descripcion) ?? "(Sin descripción)",
+    cantidad: parseCantidadFiscal(c.cantidad),
+    clave_unidad: normalizarClaveSat(c.clave_unidad),
+    monto: parseImporteFiscal(c.importe),
+    iva: parseImporteFiscal(c.iva),
+    ieps: parseImporteFiscal(c.ieps),
   }));
+
 
   const { error } = await supabase.from("proveedor_facturas_conceptos").insert(rows);
   if (error) throw error;
