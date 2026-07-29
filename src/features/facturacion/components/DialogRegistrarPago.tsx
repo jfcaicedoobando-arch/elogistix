@@ -16,6 +16,7 @@ import { useRegistrarPagoSubmit } from "@/features/facturacion/hooks/useRegistra
 import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
+import { factorEntreMonedas } from "@/lib/financial/convertir";
 
 interface Factura {
   id: string;
@@ -38,15 +39,12 @@ function convertirAMonedaFactura(
   monto: number, monedaPago: string, monedaFactura: string,
   rates: { usdMxn: number; eurMxn: number } | undefined,
 ): number {
-  if (monedaPago === monedaFactura) return monto;
-  // FIX-11: sin TC válido devolvemos 0 en vez de tratar USD/EUR como MXN.
-  if (!rates || !rates.usdMxn || !rates.eurMxn) return 0;
-  const toMxn: Record<string, number> = { MXN: 1, USD: rates.usdMxn, EUR: rates.eurMxn };
-  const factorPago = toMxn[monedaPago];
-  const factorFactura = toMxn[monedaFactura];
-  if (!factorPago || !factorFactura) return 0;
-  const enMxn = monto * factorPago;
-  return enMxn / factorFactura;
+  // FIX C6: el factor sale del canon único (MXN como puente). Sin TC confiable
+  // devuelve null y aquí se traduce a 0: nunca se trata USD/EUR como MXN.
+  const factor = factorEntreMonedas(monedaPago, monedaFactura, {
+    usd: rates?.usdMxn, eur: rates?.eurMxn,
+  });
+  return factor === null ? 0 : monto * factor;
 }
 
 const today = () => todayLocalISO();
