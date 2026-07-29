@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.327.1] - 2026-07-30
+- **refactor(facturacion)**: se extrajo la tabla del historial de pagos a `FacturaPagosTabla` para cumplir el límite de 200 líneas (Power of 10).
+
+
+
 ## [13.327.0] - 2026-07-30
 - M3: se unificó el redondeo de dinero en un único motor (`roundMoney`), con la misma política que la base de datos (medio centavo se aleja de cero), y se migraron los 15 puntos que redondeaban por su cuenta en facturación, cotizaciones, CxP, cartera y reportes.
 - Las notas de crédito ahora redondean cada línea antes de sumar, evitando centavos fantasma en el saldo.
