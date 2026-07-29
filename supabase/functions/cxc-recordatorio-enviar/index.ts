@@ -212,8 +212,18 @@ Deno.serve(wrapEdgeHandler('cxc-recordatorio-enviar', async (req) => {
 
     const destinatario = await resolveDestinatario(supabaseAdmin, factura.cliente_id, contacto_email);
     if (!destinatario) {
-      return corsJson({ error: 'No hay correo de contacto para enviar el recordatorio' }, 400, req);
+      return contacto_email
+        ? corsJson(
+            {
+              error: 'El correo no pertenece a los contactos del cliente',
+              code: DESTINATARIO_NO_PERMITIDO,
+            },
+            400,
+            req,
+          )
+        : corsJson({ error: 'No hay correo de contacto para enviar el recordatorio' }, 400, req);
     }
+
 
     const [perfil, orgName] = await Promise.all([
       loadPerfil(supabaseAdmin, userId),
