@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.325.5] - 2026-07-30
+- Radar de drift: las migraciones recientes ya aplican sobre una base limpia. La migración de proformas declara por sí misma las columnas heredadas y el parche C5-b omite (en vez de abortar) las funciones que no existen en una base reconstruida.
+
 ## [13.325.4] - 2026-07-30
+
 - Radar de esquema: se registraron en migraciones los campos de proformas que existían sólo en la base (`consolidada_en`, `embarques_ids`, `embarque_id` opcional) y el comparador de tipos ya ignora el encabezado de versión del generador, que causaba falsas alertas de desincronización.
 
 
