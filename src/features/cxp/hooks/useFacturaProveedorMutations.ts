@@ -37,6 +37,17 @@ export function useEliminarFacturaProveedor() {
       notifySuccess(undefined, { title: "Factura de proveedor eliminada" });
     },
     onError: (error: Error) => {
+      // La fila pudo quedar "fantasma" en un cliente con caché viejo: la BD
+      // responde LC_FACTURA_PROVEEDOR_NOT_FOUND porque ya estaba borrada.
+      if (/LC_FACTURA_PROVEEDOR_NOT_FOUND/.test(error.message)) {
+        qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+        notifyError(undefined, {
+          title: "Esta factura ya había sido eliminada. Actualizamos la lista.",
+          error,
+          method: "DELETE_FACTURA_PROVEEDOR_NOT_FOUND",
+        });
+        return;
+      }
       notifyError(undefined, { title: `Error al eliminar factura proveedor: ${error.message}`, error, method: "DELETE_FACTURA_PROVEEDOR" });
     },
   });
