@@ -132,16 +132,9 @@ BEGIN
 END $$;
 
 -- ---------------------------------------------------------------------------
--- publication supabase_realtime
--- En Supabase prod existe por defecto. En CI vanilla Postgres no, y migraciones
--- posteriores hacen `ALTER PUBLICATION supabase_realtime ADD TABLE ...`.
+-- publication supabase_realtime → movida a `_ci_bootstrap.sql` (v13.322.8):
+-- no es drift del proyecto sino diferencia entre Postgres vanilla y Supabase.
 -- ---------------------------------------------------------------------------
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-    CREATE PUBLICATION supabase_realtime;
-  END IF;
-END $$;
 
 -- ---------------------------------------------------------------------------
 -- public.embarque_consecutivo_seq
