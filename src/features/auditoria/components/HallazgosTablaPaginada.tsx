@@ -4,6 +4,8 @@
  * El estado vive en `useHallazgosTablaState`.
  */
 import { useMemo, useState } from "react";
+import { X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { revisionKey } from "@/features/auditoria/hooks";
 import { useHallazgosTablaState, type UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
@@ -42,6 +44,24 @@ export function HallazgosTablaPaginada({
 
   return (
     <div className="space-y-3">
+      {state.soloEtaVencida && (
+        <div className="flex items-center gap-2">
+          <Badge variant="destructive" className="gap-1.5">
+            ETA vencida
+            <button
+              type="button"
+              aria-label="Quitar filtro de ETA vencida"
+              onClick={() => state.setSoloEtaVencida(false)}
+              className="rounded-sm opacity-80 hover:opacity-100"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            Mostrando sólo hallazgos pendientes de embarques cuyo ETA ya pasó.
+          </span>
+        </div>
+      )}
       <HallazgosFiltros
         search={state.search}
         filtroRegla={state.filtroRegla}

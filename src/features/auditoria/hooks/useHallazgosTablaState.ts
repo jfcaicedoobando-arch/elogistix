@@ -17,7 +17,6 @@ import {
   type FiltroResponsable,
   type FiltroRevision,
 } from "./hallazgosTablaFilters";
-import { todayLocalISO } from "@/lib/date/today";
 import { hoyMx } from "@/lib/date/mx";
 
 export type { FiltroRevision, FiltroResponsable } from "./hallazgosTablaFilters";
@@ -73,7 +72,7 @@ export function useHallazgosTablaState(
       q: search.trim().toLowerCase(),
       desde: etaDesde ? hoyMx(etaDesde) : null,
       hasta: etaHasta ? hoyMx(etaHasta) : null,
-      today: todayLocalISO(),
+      today: hoyMx(),
       filtroRegla,
       filtroSev,
       filtroCliente,
