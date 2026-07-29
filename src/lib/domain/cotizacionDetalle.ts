@@ -30,48 +30,67 @@ export const EMPTY_TOTALES: ConceptosTotales = Object.freeze({
   totalMXN: 0,
 }) as ConceptosTotales;
 
-function isValidConcepto(x: unknown): x is ConceptoVentaCotizacion {
-  if (!x || typeof x !== "object") return false;
+/**
+ * M11 — Normaliza una fila cruda a concepto tipado.
+ * Antes se descartaba en silencio cualquier fila con `cantidad`/`precio_unitario`
+ * en texto (`"1,200.00"`), lo que borraba dinero del total sin aviso. Ahora se
+ * coerce con el parser fiscal canónico y sólo se descarta lo irrecuperable.
+ */
+function normalizarConcepto(x: unknown): ConceptoVentaCotizacion | null {
+  if (!x || typeof x !== "object") return null;
   const c = x as Record<string, unknown>;
-  return (
-    (c.moneda === "USD" || c.moneda === "MXN") &&
-    typeof c.cantidad === "number" && Number.isFinite(c.cantidad) &&
-    typeof c.precio_unitario === "number" && Number.isFinite(c.precio_unitario)
-  );
+  if (c.moneda !== "USD" && c.moneda !== "MXN") return null;
+  const cantidad = parseNumeroFiscal(c.cantidad);
+  const precio = parseNumeroFiscal(c.precio_unitario);
+  if (cantidad == null || precio == null) return null;
+  return { ...c, cantidad, precio_unitario: precio } as unknown as ConceptoVentaCotizacion;
+}
+
+/** Resultado detallado del parseo: conceptos válidos + filas irrecuperables. */
+export interface ParseConceptosResult {
+  conceptos: ConceptoVentaCotizacion[];
+  descartados: number;
 }
 
 /**
  * Parsea el JSON crudo de `cotizacion.conceptos_venta` a un array tipado.
  * Defensivo: tolera strings malformados, payloads no-array y filas inválidas.
  */
-export function parseConceptos(raw: unknown): ConceptoVentaCotizacion[] {
-  if (raw == null) return [];
+export function parseConceptosDetallado(raw: unknown): ParseConceptosResult {
+  if (raw == null) return { conceptos: [], descartados: 0 };
   let arr: unknown = raw;
   if (typeof raw === "string") {
     try {
       arr = JSON.parse(raw);
     } catch (err) {
       logger.warn("cotizacionDetalle", "conceptos_venta: JSON inválido", err);
-      return [];
+      return { conceptos: [], descartados: 0 };
     }
   }
   if (!Array.isArray(arr)) {
     if (typeof raw !== "string") {
       logger.warn("cotizacionDetalle", "conceptos_venta con formato inválido", { raw });
     }
-    return [];
+    return { conceptos: [], descartados: 0 };
   }
-  const valid: ConceptoVentaCotizacion[] = [];
+  const conceptos: ConceptoVentaCotizacion[] = [];
   let descartados = 0;
   for (const item of arr) {
-    if (isValidConcepto(item)) valid.push(item);
+    const normalizado = normalizarConcepto(item);
+    if (normalizado) conceptos.push(normalizado);
     else descartados++;
   }
   if (descartados > 0) {
     logger.warn("cotizacionDetalle", `${descartados} concepto(s) descartado(s) por schema inválido`);
   }
-  return valid;
+  return { conceptos, descartados };
 }
+
+/** Compatibilidad: devuelve sólo los conceptos válidos. */
+export function parseConceptos(raw: unknown): ConceptoVentaCotizacion[] {
+  return parseConceptosDetallado(raw).conceptos;
+}
+
 
 /** Calcula los totales por moneda a partir de los conceptos parseados. */
 export function calcularTotalesConceptos(
