@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.322.6] - 2026-07-29
+- Pruebas: se corrigió el proveedor de prueba de la suite de permisos por rol, que se creaba sin tipo y violaba una validación de la base.
+
+
+
 
 ## [13.322.5] - 2026-07-29
 - Integración continua: el radar de cambios manuales en la base ya no marca en rojo la deuda histórica; sólo falla cuando una migración nueva no aplica sobre una base limpia, y lista aparte las históricas exentas.
