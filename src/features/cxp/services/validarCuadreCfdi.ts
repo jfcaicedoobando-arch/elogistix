@@ -13,6 +13,7 @@
  * el registro y mostrarlos al usuario.
  */
 import type { CfdiParsedResponse } from "./parseCfdi.types";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export const CUADRE_CFDI_TOLERANCIA = 0.02;
 
@@ -21,7 +22,7 @@ export interface CuadreCfdiResultado {
   errores: string[];
 }
 
-const money = (n: number) => (Math.round(n * 100) / 100).toFixed(2);
+const money = (n: number) => roundMoney(n).toFixed(2);
 
 function suma(nums: number[]): number {
   return nums.reduce((s, n) => s + (Number(n) || 0), 0);

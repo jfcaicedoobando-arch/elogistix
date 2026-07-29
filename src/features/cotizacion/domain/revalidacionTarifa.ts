@@ -1,4 +1,5 @@
 /**
+import { roundMoney } from "@/lib/financial/financialUtils";
  * Dominio puro: revalidación de tarifa al convertir cotización → embarque.
  *
  * No depende de Supabase ni React. Toda la matemática y la clasificación de
@@ -50,7 +51,7 @@ export class RevalidacionRequeridaError extends Error {
 /** % absoluto del cambio. anterior=0 → 0 si actual=0, sino 100. */
 export function calcularDeltaPct(anterior: number, actual: number): number {
   if (anterior === 0) return actual === 0 ? 0 : 100;
-  return Math.round((Math.abs(actual - anterior) / Math.abs(anterior)) * 100 * 100) / 100;
+  return roundMoney((Math.abs(actual - anterior) / Math.abs(anterior)) * 100);
 }
 
 /**
@@ -87,8 +88,8 @@ export function resumirDelta(cambios: CambioTarifa[]): {
     else total_mxn += d;
   }
   return {
-    total_usd: Math.round(total_usd * 100) / 100,
-    total_mxn: Math.round(total_mxn * 100) / 100,
+    total_usd: roundMoney(total_usd),
+    total_mxn: roundMoney(total_mxn),
     conceptos: cambios.length,
   };
 }

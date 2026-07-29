@@ -14,6 +14,7 @@
  */
 
 import { aMxn } from "@/lib/financial/convertir";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export interface SaldosNativos {
   MXN: number;
@@ -26,7 +27,7 @@ export interface EquivalenteMxnResult {
   facturasSinTc: number;
 }
 
-const money = (n: number): number => Math.round(n * 100) / 100;
+const money = (n: number): number => roundMoney(n);
 
 export function equivalenteMxn(
   nativos: SaldosNativos,

@@ -13,6 +13,7 @@ import {
   calcularFleteVentaLCL,
   calcularTotalesLcl,
 } from "@/features/cotizacion/utils/calcularWMLcl";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export interface BuildCostosLCLManualArgs {
   lclFleteManual: LclFleteManual | undefined | null;
@@ -50,7 +51,7 @@ export function buildCostosLCLManual({
 
   // El flete marítimo LCL se cotiza como UN servicio único (cantidad = 1).
   // El desglose W/M vive en el paso 1 y queda documentado en `notas`.
-  const costoTotal = Math.round(wmFacturable * tarifaWM * 100) / 100;
+  const costoTotal = roundMoney(wmFacturable * tarifaWM);
   const ventaTotal = calcularFleteVentaLCL(wmFacturable, tarifaWM, minimo, markup);
   const aplicaMinimo = tarifaWM * wmFacturable < minimo;
 

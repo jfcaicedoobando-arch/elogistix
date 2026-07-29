@@ -8,6 +8,7 @@ import type { generarRentabilidadPdf as GenerarRentabilidadPdfFn } from "@/gener
 import { useRentabilidadClientes } from "@/features/cliente/hooks/useRentabilidadClientes";
 import { toTitleCase } from "@/lib/formatters";
 import type { SortField } from "@/features/reportes/components/ReportesTablaClientes";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 /**
  * Controller-hook que absorbe todo el estado, derivaciones y handlers de la
@@ -56,7 +57,7 @@ export function useReportesPageController() {
           const nombre = toTitleCase(c.cliente_nombre);
           return {
             name: nombre.length > 18 ? nombre.slice(0, 18) + "…" : nombre,
-            profit: Math.round(c.profit_usd * 100) / 100,
+            profit: roundMoney(c.profit_usd),
           };
         }),
     [clientes],
