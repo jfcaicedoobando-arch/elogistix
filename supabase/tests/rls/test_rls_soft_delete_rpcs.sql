@@ -69,10 +69,12 @@ BEGIN
   VALUES (doc_a, emb_a, 'BL', 'Pendiente', org_a);
 
   INSERT INTO public.facturas(
-    id, numero, cliente_id, cliente_nombre, embarque_id, total, moneda,
+    id, numero, cliente_id, cliente_nombre, embarque_id,
+    subtotal, iva, total, moneda,
     fecha_emision, estado, organization_id
   ) VALUES (
-    fac_a, 'F-C5-0001', cli_a, 'Cli C5 A', emb_a, 12345, 'MXN',
+    fac_a, 'F-C5-0001', cli_a, 'Cli C5 A', emb_a,
+    12345, 0, 12345, 'MXN',
     current_date, 'Vencida', org_a
   );
 

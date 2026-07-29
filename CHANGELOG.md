@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.324.8] - 2026-07-30
+- CI: la suite RLS de borrado suave ya crea su factura de prueba con subtotal e IVA congruentes, cumpliendo la validación de totales.
+
 ## [13.324.7] - 2026-07-30
 - CI en verde: se corrigieron los tests de `eliminar_embarque_completo` (leían el comentario en vez de la definición), el formato de expediente en la suite RLS de soft-delete, 8 mensajes amigables de códigos `LC_*` faltantes y un export sin uso detectado por knip.
 

@@ -15,15 +15,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Estados que representan una factura efectivamente facturada (timbrada) para
- * los KPIs de "Facturado mes" y la tendencia. Excluye `Borrador` (aún no
- * timbrado) y `Cancelada` (revertida).
- *
- * NOTA: el filtro real vive dentro de la RPC `dashboard_facturacion_kpis`
- * (`f.estado IN ('Emitida','Parcialmente pagada','Vencida','Pagada')`); esta
- * constante se conserva como documentación/uso compartido en la UI.
+ * NOTA: el filtro de estados "facturados" vive dentro de la RPC
+ * `dashboard_facturacion_kpis`
+ * (`f.estado IN ('Emitida','Parcialmente pagada','Vencida','Pagada')`).
  */
-const ESTADOS_FACTURADO = ["Emitida", "Parcialmente pagada", "Vencida", "Pagada"] as const;
+
+
 
 export interface MesKpi {
   mes: string; // 'YYYY-MM'
