@@ -2,7 +2,7 @@
  * Hook controller para DialogNuevaFacturaProveedor.
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toggleVinculoReducer, setVinculoMontoReducer, aplicarSugerenciasReducer, type VinculosState } from "./useNuevaFacturaProveedorForm.vinculos";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
