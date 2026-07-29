@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.332.2] - 2026-07-29
+- Seguridad: se dejó explícito el contrato de permisos de la función que convierte proformas en facturas (sólo usuarios autenticados y procesos internos). Los permisos en la base ya eran correctos; ahora quedan documentados y auditados.
+- CI: la auditoría de migraciones vuelve a pasar tras actualizar su fecha de corte.
+
+
+
 ## [13.332.1] - 2026-07-29
 - CI en verde: la pantalla de onboarding se dividió en ruta + `OnboardingForm` para volver a cumplir el límite de 200 líneas por archivo.
 - Los barrels públicos de cada feature (`src/features/*/index.ts`) ya no se reportan como código muerto en el análisis de código no usado.

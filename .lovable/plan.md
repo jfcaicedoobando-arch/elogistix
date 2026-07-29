@@ -1,34 +1,30 @@
-## Qué está fallando en CI (verificado en los logs y reproducido local)
+## Diagnóstico (verificado)
 
-1. **Knip (unused files)** — marca 4 barrels como archivos no usados:
-   `src/features/proformas/index.ts`, `proformas/domain/index.ts`, `proformas/hooks/index.ts`, `src/features/tesoreria/index.ts`.
-   Son barrels públicos intencionales del piloto O4 (los deep imports están bloqueados por `feature-barrel-surface.test.ts`), no código muerto: nadie los importa todavía porque el burn-down sigue en curso.
+- El archivo `supabase/migrations/20260729164301_129478b9-…sql` (el fix de días de crédito) recrea `public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid)` como `SECURITY DEFINER` pero **no incluye** en el mismo archivo el `REVOKE ALL … FROM PUBLIC` ni el `GRANT EXECUTE … TO authenticated/service_role` que exige la regla H6 de `scripts/audit-migrations.ts`.
+- **En la base de datos los permisos sí están correctos**: consulté `pg_proc.proacl` y da `{postgres=X, authenticated=X, service_role=X, sandbox_exec=X}` — no hay `PUBLIC`. O sea, no hay exposición real; es una violación de higiene documental del archivo de migración.
+- Es la última migración del repo (no hay ninguna posterior), y el baseline actual del auditor es `20260725184834`.
+- El test `src/__tests__/scripts/audit-migrations-h6.test.ts` usa sólo `scanFile`, no depende del baseline.
 
-2. **Arquitectura (Power of 10 #4)** — reproducido local con `scripts/audit-architecture.ts`:
-   `src/features/onboarding/routes/Onboarding.tsx` tiene 203 líneas (límite 200). Creció con el bloque `<Seo>` del fix de SEO. Rompe dos tests: `architecture-baseline.test.ts` y `audit-report.test.ts`.
+## Cambios propuestos (mismo patrón que el precedente FIX-H6-01)
 
-3. **Tests shard 7/10** — `src/lib/observability/hooks/__tests__/useSentry.test.tsx`:
-   `expected ['disabled_dev','missing_dsn'] to include 'pending'`. En CI sí existe `VITE_SENTRY_DSN`, así que el hook (con el poll nuevo de 13.331.8) arranca en `pending` antes de que cargue el SDK diferido. El test asume un entorno sin DSN.
+### 1. Nueva migración de saneamiento H6
+Crear una migración que re-aplique explícitamente y de forma idempotente los permisos de la función, dejando el rastro auditable:
 
-## Cambios propuestos
-
-### A. Knip
-En `knip.json`, añadir los barrels raíz de feature como entradas del grafo:
-```json
-"entry": [..., "src/features/*/index.ts"]
+```sql
+REVOKE ALL ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) TO service_role;
 ```
-Esto también resuelve `proformas/domain/index.ts` y `proformas/hooks/index.ts`, porque el barrel raíz los re-exporta.
 
-### B. Onboarding por debajo de 200 líneas
-Extraer la UI del formulario a `src/features/onboarding/components/OnboardingForm.tsx` (campos RFC / dirección / moneda + botones + alerta de error, recibiendo estado y handlers por props) y dejar `Onboarding.tsx` como ruta delgada: guardas de sesión, `<Seo>`, `Card` y la lógica de `submit`. Objetivo: ruta ~110 líneas, componente ~95.
+No cambia el comportamiento en BD (ya está así); confirma el contrato.
 
-### C. Test de Sentry independiente del entorno
-Reescribir el caso "sin cliente" para que valide el contrato real: cuando `getClient()` devuelve `undefined`, `active === false` y el estado es uno de `disabled_dev | missing_dsn | pending` (nunca `active`). Añadir asserts explícitos de que `pending` sólo aparece cuando hay DSN configurado, para no perder cobertura.
+### 2. Bump del baseline del auditor
+En `scripts/audit-migrations.ts`, subir `BASELINE` de `20260725184834` a un timestamp posterior a la migración infractora (`20260729170000`), documentando en el comentario por qué: la migración ya aplicada no es editable y sus permisos quedan corregidos por la migración del paso 1. El baseline nunca baja, y la migración nueva y todas las futuras siguen auditadas.
 
-### D. Cierre
-Actualizar `CHANGELOG.md` y subir `APP_VERSION` a `13.331.10`.
+### 3. Cierre
+`CHANGELOG.md` + `APP_VERSION` a `13.332.2`.
 
 ## Verificación
-- `bunx tsx scripts/audit-architecture.ts` → 0 oversized.
-- `bunx vitest run src/lib/observability src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts`.
-- `bunx knip --strict` sin unused files.
+- `bun run audit:migrations` → 0 violaciones.
+- `bunx vitest run src/__tests__/scripts/audit-migrations-h6.test.ts`.
+- Consulta de `proacl` de la función tras la migración para confirmar que sigue sin `PUBLIC`.
