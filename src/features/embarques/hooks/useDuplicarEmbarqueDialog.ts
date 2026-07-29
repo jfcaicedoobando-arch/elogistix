@@ -8,7 +8,7 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useDuplicarEmbarque } from "@/features/embarques/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
-import { type CopiaContenedor, MAX_COPIAS } from "./types";
+import { type CopiaContenedor, MAX_COPIAS } from "@/features/embarques/components/duplicarEmbarque/types";
 
 function defaultCopia(origen: EmbarqueRow, idx: number): CopiaContenedor {
   const base = origen.contenedor?.trim() ?? "";

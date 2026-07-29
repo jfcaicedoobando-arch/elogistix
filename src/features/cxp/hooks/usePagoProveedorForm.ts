@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
-import { defaultMetodo, metodosFor } from "./pagoProveedorHelpers";
+import { defaultMetodo, metodosFor } from "@/features/cxp/components/pagoProveedorHelpers";
 import { todayLocalISO } from "@/lib/date/today";
 import { tcValido } from "@/lib/financial/tcValido";
 

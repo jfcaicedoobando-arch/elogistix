@@ -11,7 +11,7 @@ import {
   type EstadoGarantia,
   type GarantiaContenedor,
 } from "@/features/embarques/types/garantia";
-import { VenceBadge } from "./VenceBadge";
+import { VenceBadge } from "@/features/embarques/components/garantias/VenceBadge";
 import { useUpdateGarantia } from "@/features/embarques/hooks/useGarantiasContenedor";
 import { todayLocalISO } from "@/lib/date/today";
 
