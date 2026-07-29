@@ -85,6 +85,27 @@ function isBrowserExtensionCircularJson(
   return frames.some((f) => (f.filename ?? "").includes("<anonymous>"));
 }
 
+/**
+ * Ruido de infraestructura: el servidor devolvió una página HTML (error 1033
+ * de Cloudflare Tunnel, 502/504 del proxy, portal cautivo) en vez de JSON.
+ * El cliente serializa el doctype como excepción. No es un bug de la app.
+ * Ver Sentry JAVASCRIPT-REACT-3N/3P/3R/3Z.
+ */
+function isHtmlGatewayNoise(event: Sentry.ErrorEvent, exc: unknown): boolean {
+  const candidates: unknown[] = [
+    (exc as { message?: unknown } | undefined)?.message,
+    typeof exc === "string" ? exc : undefined,
+    event.exception?.values?.[0]?.value,
+    event.message,
+  ];
+  return candidates.some((c) => {
+    if (typeof c !== "string") return false;
+    const head = c.trim().slice(0, 400).toLowerCase();
+    if (head.startsWith("<!doctype html") || head.startsWith("<html")) return true;
+    return head.includes("error 1033") || head.includes("cloudflare tunnel error");
+  });
+}
+
 export function shouldDropSentryEvent(
   event: Sentry.ErrorEvent,
   hint: Sentry.EventHint | undefined,
@@ -98,6 +119,7 @@ export function shouldDropSentryEvent(
   if (isPostgresRlsDenied(event, hint?.originalException)) return true;
   if (isHostingAnalyticsNoise(event, hint?.originalException)) return true;
   if (isBrowserExtensionCircularJson(event, hint?.originalException)) return true;
+  if (isHtmlGatewayNoise(event, hint?.originalException)) return true;
   return false;
 }
 
