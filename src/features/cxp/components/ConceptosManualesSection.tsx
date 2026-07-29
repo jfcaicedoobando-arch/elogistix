@@ -13,6 +13,8 @@ import type { ConceptoManual } from "@/features/cxp/hooks/useConceptosManuales";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
 interface Props {
+  /** Oculta la sección cuando el desglose viene de un CFDI (inmutable). */
+  oculta?: boolean;
   conceptos: ReadonlyArray<ConceptoManual>;
   moneda: string;
   onAgregar: () => void;
@@ -30,12 +32,14 @@ function num(v: string): number {
 }
 
 export function ConceptosManualesSection({
+  oculta = false,
   conceptos,
   moneda,
   onAgregar,
   onActualizar,
   onEliminar,
 }: Props) {
+  if (oculta) return null;
   return (
     <FormSection
       icon={<ListPlus className="h-3.5 w-3.5" />}

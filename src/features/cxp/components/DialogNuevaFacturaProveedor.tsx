@@ -102,15 +102,14 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
 
         <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />
 
-        {ctl.cfdiConceptos.length === 0 && (
-          <ConceptosManualesSection
-            conceptos={ctl.conceptosManuales.conceptos}
-            moneda={ctl.values.moneda}
-            onAgregar={ctl.conceptosManuales.agregar}
-            onActualizar={ctl.conceptosManuales.actualizar}
-            onEliminar={ctl.conceptosManuales.eliminar}
-          />
-        )}
+        <ConceptosManualesSection
+          oculta={ctl.cfdiConceptos.length > 0}
+          conceptos={ctl.conceptosManuales.conceptos}
+          moneda={ctl.values.moneda}
+          onAgregar={ctl.conceptosManuales.agregar}
+          onActualizar={ctl.conceptosManuales.actualizar}
+          onEliminar={ctl.conceptosManuales.eliminar}
+        />
 
         <FacturaProveedorFormFields
           values={ctl.values}
