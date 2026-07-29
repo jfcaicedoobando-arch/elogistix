@@ -15,6 +15,31 @@ import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 export type MovimientoBBVA = Tables<"bbva_movimientos">;
 
+/** Shape del jsonb de `conciliacion_resumen` (C3c). */
+export interface ConciliacionResumen {
+  total_movimientos: number;
+  pendientes: number;
+  conciliados: number;
+  ignorados: number;
+  cargos_pendientes: number;
+  abonos_pendientes: number;
+}
+
+/**
+ * FIX C3c (S6-05): conteos y totales por estado calculados en SQL, sobre el
+ * universo completo de movimientos de la cuenta (la tabla sigue paginada).
+ */
+export async function fetchConciliacionResumen(
+  cuentaBancariaId: string,
+): Promise<ConciliacionResumen> {
+  const { data, error } = await supabase.rpc("conciliacion_resumen", {
+    p_cuenta_bancaria_id: cuentaBancariaId,
+  });
+  if (error) throw error;
+  // SAFE-CAST: jsonb con el shape de la migración C3c.
+  return data as unknown as ConciliacionResumen;
+}
+
 export interface ImportarResultado {
   total: number;
   nuevos: number;
