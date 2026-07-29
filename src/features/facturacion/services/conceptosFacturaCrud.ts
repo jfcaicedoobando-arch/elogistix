@@ -14,6 +14,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { run, unwrapOr } from "@/lib/supabase/response";
 import { resolverTasa, type TipoIvaConcepto } from "./conceptosFacturaShared";
 import { recalcularTotalesFactura } from "./recalcularTotalesFactura";
+import { subtotalLinea } from "@/lib/financial/financialUtils";
 
 // Re-export para no romper call-sites externos que importan desde este archivo.
 export { recalcularTotalesFactura };
