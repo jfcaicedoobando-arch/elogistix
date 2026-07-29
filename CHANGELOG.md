@@ -1,5 +1,7 @@
 # Changelog
 
+## [13.322.14] - 2026-07-29
+- Compras: se corrigió el error al adjuntar XML/PDF de facturas y notas de crédito de proveedor cuando no se conocía la organización; ahora se resuelve automáticamente y ya no falla la subida por seguridad.
 
 ## [13.322.13] - 2026-07-29
 - Embarques: "Recalcular demoras" ya no muestra "undefined días excedidos"; el desglose (días en puerto, días libres, excedidos, totales y contenedores) se lee correctamente y el costo de la naviera se muestra en su moneda real.
