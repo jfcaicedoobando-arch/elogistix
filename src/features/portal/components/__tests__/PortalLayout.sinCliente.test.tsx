@@ -31,6 +31,12 @@ vi.mock("@/features/portal/hooks/usePortalBreadcrumbs", () => ({
   usePortalBreadcrumbs: () => [],
 }));
 
+// El header usa el toggle de tema, que exige ThemeProvider: fuera del alcance.
+vi.mock("@/components/layout/ThemeToggle", () => ({
+  ThemeToggle: () => null,
+  default: () => null,
+}));
+
 function renderLayout() {
   return render(
     <MemoryRouter initialEntries={["/portal"]}>
