@@ -36,7 +36,7 @@ export * from "./appFeedback.sentry";
 export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOptions) {
   const {
     step, phase, errors, message, description: descOpt, title, error, context,
-    errorCode, method, payload, requestId,
+    errorCode, method, payload, requestId, action,
   } = opts;
   const description = descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined);
 
@@ -69,10 +69,9 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     // auto-dismiss a 8s: los toasts persistentes tapaban los botones del header.
     id: `err-${errorCode ?? phase ?? "generic"}`,
     duration: 8000,
-    action: {
-      label: "Ver detalles",
-      onClick: () => openErrorReport(debug),
-    },
+    // Q-08: si hay acción primaria (Reintentar), "Ver detalles" baja a secundaria.
+    action: action ?? { label: "Ver detalles", onClick: () => openErrorReport(debug) },
+    cancel: action ? { label: "Ver detalles", onClick: () => openErrorReport(debug) } : undefined,
   });
 
   // 13.114.20 / 13.300.7 / 13.301.59: reportamos a Sentry sólo cuando hay error
