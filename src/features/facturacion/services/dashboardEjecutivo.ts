@@ -59,7 +59,7 @@ export async function fetchDashboardEjecutivoFacturacion(
 ): Promise<DashboardEjecutivoKpis> {
   const { data, error } = await supabase.rpc("dashboard_facturacion_kpis", {
     p_meses: MESES_TENDENCIA,
-    p_fallback_usd: fallbackUsdMxn,
+    p_fallback_usd: fallbackUsdMxn ?? undefined,
   });
   if (error) throw error;
 
