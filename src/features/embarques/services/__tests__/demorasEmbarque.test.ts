@@ -21,11 +21,39 @@ describe("embarques/services/demorasEmbarque", () => {
     expect(mock.rpcCalls[0].args).toEqual({ p_embarque_id: "emb-1" });
   });
 
-  it("demorasEmb.calcular: retorna shape del RPC tal cual", async () => {
-    const shape = { dias_demora: 3, costo_usd: 300, venta_usd: 450 };
-    mock.setRpcResult("calcular_demoras_embarque", { data: shape, error: null });
+  it("demorasEmb.calcular: normaliza el payload del RPC (B-097)", async () => {
+    mock.setRpcResult("calcular_demoras_embarque", {
+      data: {
+        embarque_id: "emb-1",
+        fecha_descarga_embarque: "2026-01-01",
+        fecha_devolucion_embarque: "2026-01-10",
+        dias_libres_default: 7,
+        total_costo: 300,
+        moneda_costo: "USD",
+        total_venta_usd: 450,
+        contenedores: [
+          { contenedor_id: "c1", numero_contenedor: "ABC", tipo_contenedor: "40HC", dias_libres: 7, dias_en_puerto: 9, dias_excedidos: 2, monto_costo: 300, monto_venta_usd: 450 },
+        ],
+      },
+      error: null,
+    });
     const r = await calcularDemorasEmbarque("emb-1");
-    expect(r).toEqual(shape);
+    expect(r.dias_excedidos).toBe(2);
+    expect(r.dias_en_puerto).toBe(9);
+    expect(r.sin_eventos).toBe(false);
+    expect(r.total_costo_usd).toBe(300);
+    expect(r.total_venta_usd).toBe(450);
+    expect(r.contenedores[0].monto_costo_usd).toBe(300);
+  });
+
+  it("demorasEmb.calcular: marca sin_eventos cuando faltan fechas", async () => {
+    mock.setRpcResult("calcular_demoras_embarque", {
+      data: { embarque_id: "emb-1", fecha_descarga_embarque: null, fecha_devolucion_embarque: null, contenedores: [] },
+      error: null,
+    });
+    const r = await calcularDemorasEmbarque("emb-1");
+    expect(r.sin_eventos).toBe(true);
+    expect(r.dias_excedidos).toBe(0);
   });
 
   it("demorasEmb.calcular: propaga error del RPC", async () => {

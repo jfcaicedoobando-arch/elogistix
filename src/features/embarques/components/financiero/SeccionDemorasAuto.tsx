@@ -89,8 +89,8 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground uppercase">Costo total (naviera)</p>
-                <p className="text-lg font-bold tabular-nums">{formatCurrency(last.total_costo_usd, 'USD')}</p>
+                <p className="text-xs text-muted-foreground uppercase">Costo total (naviera, {last.moneda_costo ?? 'USD'})</p>
+                <p className="text-lg font-bold tabular-nums">{formatCurrency(last.total_costo_usd, (last.moneda_costo ?? 'USD') as 'USD')}</p>
               </div>
               <div className="rounded-md border p-3">
                 <p className="text-xs text-muted-foreground uppercase">Venta total (cliente)</p>

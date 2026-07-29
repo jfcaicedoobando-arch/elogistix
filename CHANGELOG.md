@@ -1,6 +1,9 @@
 # Changelog
 
 
+## [13.322.13] - 2026-07-29
+- Embarques: "Recalcular demoras" ya no muestra "undefined días excedidos"; el desglose (días en puerto, días libres, excedidos, totales y contenedores) se lee correctamente y el costo de la naviera se muestra en su moneda real.
+
 ## [13.322.12] - 2026-07-29
 - Integración continua: se corrigió una prueba que revisaba la migración equivocada de aprobación de facturas de proveedor; sin cambios visibles para el usuario.
 

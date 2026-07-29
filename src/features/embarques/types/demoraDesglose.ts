@@ -15,7 +15,10 @@ export interface DemoraDesglose {
   dias_libres: number;
   dias_excedidos: number;
   total_costo_usd: number;
+  /** Moneda del costo de la naviera (tabulador). Default 'USD'. */
+  moneda_costo?: string;
   total_venta_usd: number;
+
   contenedores: DemoraContenedor[];
   error?: string;
 }
