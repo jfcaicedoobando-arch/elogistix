@@ -5,7 +5,10 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
-vi.mock("@/lib/supabase/cast", () => ({ fromDb: <T>(v: unknown) => v as T }));
+vi.mock("@/lib/supabase/cast", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/supabase/cast")>()),
+  fromDb: <T,>(v: unknown) => v as T,
+}));
 
 import {
   fetchProformasEmbarque,

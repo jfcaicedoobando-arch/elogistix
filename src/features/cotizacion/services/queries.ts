@@ -3,7 +3,9 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CotizacionRow } from "@/features/cotizacion/types";
-import { fromDb } from "@/lib/supabase/cast";
+import { fromDbChecked } from "@/lib/supabase/cast";
+import { cotizacionRowDbSchema, cotizacionRowsDbSchema } from "./readSchemas";
+
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
 // ─── Columnas reutilizables ─────────────────────────────────────────────────
@@ -58,7 +60,11 @@ export async function fetchCotizaciones(organizationId: string | null) {
     cotizacion_costos_count: r.cotizacion_costos?.[0]?.count ?? 0,
     tarifa_vigente_hasta: r.costeo_tarifas?.vigente_hasta ?? null,
   }));
-  return fromDb<Array<CotizacionRow & { cotizacion_costos_count: number; tarifa_vigente_hasta: string | null }>>(flattened);
+  return fromDbChecked<Array<CotizacionRow & { cotizacion_costos_count: number; tarifa_vigente_hasta: string | null }>>(
+    flattened,
+    cotizacionRowsDbSchema,
+  );
+
 }
 
 // v13.303.23 — Incluimos también `En operación` para que el buscador de
@@ -72,7 +78,7 @@ export async function fetchCotizacionesAceptadas(organizationId: string | null) 
     .order("created_at", { ascending: false });
   if (organizationId) query = query.eq("organization_id", organizationId);
   const data = await unwrap(query);
-  return fromDb<CotizacionRow[]>(data);
+  return fromDbChecked<CotizacionRow[]>(data, cotizacionRowsDbSchema);
 }
 
 export async function fetchCotizacionById(id: string): Promise<CotizacionRow | null> {
@@ -83,7 +89,7 @@ export async function fetchCotizacionById(id: string): Promise<CotizacionRow | n
   const data = await unwrap(
     supabase.from("cotizaciones").select("*").eq("id", id).maybeSingle(),
   );
-  return data ? fromDb<CotizacionRow>(data) : null;
+  return data ? fromDbChecked<CotizacionRow>(data, cotizacionRowDbSchema) : null;
 }
 
 export async function fetchEmbarquesVinculados(cotizacionId: string) {

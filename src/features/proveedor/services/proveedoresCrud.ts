@@ -59,8 +59,8 @@ export async function fetchProveedoresPaginados(
     p_offset: offset,
     p_limit: pageSize,
     p_origen: origen && origen !== "todos" ? origen : undefined,
-    // SAFE-CAST: la firma del RPC tipado en Supabase aún no recoge los nuevos parámetros.
-  } as unknown as Parameters<typeof supabase.rpc<"proveedores_listado">>[1]);
+  });
+
   if (error) throw error;
 
   const rows = (data ?? []) as Array<{

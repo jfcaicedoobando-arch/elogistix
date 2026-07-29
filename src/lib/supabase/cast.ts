@@ -29,9 +29,14 @@
  * - [x] `fromDb` acepta un Zod schema opcional y valida en runtime cuando
  *       se proporciona. Si la validación falla, lanza `ZodError` con el path
  *       exacto del campo inválido (mejor que el `undefined` silencioso).
- * - [x] Adoptado en hotspots: `services/embarque/mutations.ts` (RPCs) y
- *       `services/portal/queries.ts` (joins anidados).
+ * - [ ] Adopción EN CURSO (2026-07-29, M2 de la auditoría de arquitectura):
+ *       migrados los boundaries de dinero de `proformas/services/queries.ts` y
+ *       `cotizacion/services/{queries,costos,mutations/crear}.ts` mediante
+ *       `readSchemas.ts`. El resto migra por olas; el ratchet
+ *       `src/__tests__/architecture/fromdb-zod-adoption.test.ts` impide
+ *       que el número de `fromDb` sin schema vuelva a subir.
  */
+
 import type { ZodType } from "zod";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -57,6 +62,26 @@ export function fromDb<T>(data: unknown, schema?: ZodType<T>): T {
   if (schema) return schema.parse(data) as T;
   return data as T;
 }
+
+/**
+ * Variante de `fromDb` para filas ANCHAS (tablas de 40-80 columnas) donde
+ * replicar el shape completo en zod sería ruido: valida en runtime un
+ * SUBCONJUNTO crítico (identidad + montos) y devuelve el tipo de dominio.
+ *
+ * Sirve para detectar drift de shape en boundaries de dinero (columna
+ * renombrada, `jsonb` malformado, monto que llega como `null`/`NaN`) con un
+ * `ZodError` que trae el path exacto, en vez de propagar `undefined` a las
+ * pantallas de totales.
+ *
+ * @example
+ * return fromDbChecked<CostoCotizacion[]>(data ?? [], costosCotizacionDbSchema);
+ */
+export function fromDbChecked<T>(data: unknown, guard: ZodType<unknown>): T {
+  guard.parse(data);
+  return data as T;
+}
+
+
 
 /**
  * Convierte un valor de dominio (objeto/array tipado) a `Json` para insertarlo

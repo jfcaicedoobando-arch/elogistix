@@ -1,46 +1,63 @@
-## Estado actual
+## Contexto
 
-La **Ola 1** del paquete M1–M14 ya está aplicada (v13.327.2): M3 (motor único de redondeo), M4 (validación zod al editar cotizaciones) y M11 (parser fiscal canónico + conceptos de cotización que ya no se descartan en silencio).
+Del paquete M1–M14 ya están aplicados (verificado en repo): **M3, M4, M5, M6, M7, M8, M11, M13**.
 
-El documento v2 recién subido coincide con la versión anterior en el alcance restante. Verifiqué contra el repo y la base real antes de planear:
+Quedan **6 hallazgos**, todos verificados como pendientes hoy:
 
-- `proveedores`, `comisiones_devengadas`, `liquidaciones_comision`, `bbva_movimientos` y `embarque_garantias_contenedor` **no tienen** `deleted_at` (consulta a `information_schema`), y `deleteProveedor` (`proveedoresCrud.ts:147`) sigue haciendo `.delete()` físico.
-- `costeo_tarifa_recargos` y `costeo_naviera_demoras_tarifa` **no tienen** `organization_id` propio.
-- `cotizacion_envios`, `proforma_envios` y `factura_envios` **no tienen** ningún CHECK (`pg_constraint` vacío para contype='c').
-- Los 3 marcadores `SAFE-CAST` obsoletos citados existen tal cual en aprobacion.ts:9, proveedoresCrud.ts:62 y useTabProformasController.ts:18.
-- `nuqs` ya está instalado; `p-limit` no.
+| Fix | Estado verificado |
+|---|---|
+| M1 | Los 4 marcadores `SAFE-CAST` obsoletos siguen presentes |
+| M2 | `cast.ts:32` conserva el docstring falso; `readSchemas.ts` no existe |
+| M9 | `useAuthProfile.ts:22` sigue con `CONTEXT_TTL_MS` manual, sin `useQuery` |
+| M10 | `useCxpPageState.ts` usa 10 `useState`, sin nuqs |
+| M12 | `src/lib/async/` no existe; `FacturasMasivasToolbar.tsx:56,95` tiene los 2 loops seriales |
+| M14 | 11 `useQuery` inline + 6 archivos con `useMutation` inline + los 7 hooks en `components/` |
 
-## Olas restantes
+Propongo 3 olas, cada una verde en typecheck + lint + tests antes de pasar a la siguiente.
 
-### Ola 2 — SQL (4 migraciones independientes, bloque `20260730300xxx`)
-- **M5**: espejos `cliente_nombre` (cotizaciones/embarques/facturas) y pares `naviera`/`naviera_id`, `agente`/`agente_id` mantenidos por trigger. El FK manda, el texto es espejo; en `facturas` sólo se propaga en `Borrador` (un CFDI timbrado congela el nombre del receptor). Incluye backfill de divergencias.
-- **M6**: `deleted_at`/`deleted_by` + índice parcial en las 5 tablas de dinero; `proveedores_org_rfc_unique` recreado con `AND deleted_at IS NULL`; en el front `deleteProveedor` pasa a soft-delete y las lecturas directas filtran borrados.
-- **M7**: `organization_id` propio en las 2 tablas de pricing, con backfill, NOT NULL + FK, trigger que lo fija desde el padre y policies de 1 salto (hoy hacen un JOIN por fila). Se respeta la policy de agentes que sí necesita el join.
-- **M13**: normalización previa + CHECK `estado IN ('enviado','parcial','fallido')` en las 3 tablas `*_envios`.
+---
 
-### Ola 3 — Seguridad backend (M8)
-`seed_demo_organization` restringida, cron protegido con `X-Cron-Secret` y validación del destinatario en los correos de CxC/cotización.
+## Ola 4 — Higiene de tipos y validación de fronteras (M1 + M2)
 
-### Ola 4 — Rendimiento y experiencia
-- **M12**: helper `mapWithConcurrency` propio (sin añadir `p-limit`) para las acciones masivas de facturas (ZIP/email), con contador de progreso.
-- **M9**: perfil/organización migrado del contexto manual con TTL a TanStack Query, invalidado desde las mutaciones admin (arregla el nombre de organización desactualizado en el sidebar).
-- **M10**: filtros de CxP en la URL con `nuqs`, sin pisar la captura en curso.
+**M1 — SAFE-CAST obsoletos**
+- Eliminar los 4 casts y sus marcadores en `aprobacion.ts`, `proveedoresCrud.ts`, `useTabProformasController.ts`, `eliminarBorrador.ts` (los tipos generados ya los cubren).
+- Borrar el `;` huérfano de `useTabProformasController.ts:14`.
+- Nuevo test `src/__tests__/architecture/safe-cast-freshness.test.ts`: falla si un marcador que alega "los tipos aún no…" menciona un identificador que ya existe en `types.ts`.
 
-### Ola 5 — Higiene arquitectónica
-- **M14 (ola 1)**: extraer a hooks los 3 casos de dinero (`ConciliacionPagoCell`, `TabDemoras`, `ProformaInconsistenteAlert`) + test anti-regresión con baseline decreciente.
-- **M1**: test de frescura de marcadores `SAFE-CAST` contra `types.ts` y borrado de los 3 obsoletos verificados (+ el `;` huérfano de `useTabProformasController.ts`).
-- **M2**: adopción de `fromDb(data, schema)` en los hotspots de dinero + métrica de adopción.
+**M2 — adopción de zod en `fromDb`**
+- Corregir el docstring de `src/lib/supabase/cast.ts`.
+- Nuevo `src/features/cotizacion/services/readSchemas.ts` con schemas de lectura `.passthrough()` para las fronteras de dinero.
+- Migrar 5 call sites (proformas/queries, cotización queries + costos + crear).
+- Ratchet `fromdb-zod-adoption.test.ts` (la baseline solo puede bajar) y métrica `fromDb {total, conSchema, ratio}` en `scripts/audit-report.ts`.
+
+## Ola 5 — Estado de servidor y URL (M9 + M10)
+
+**M9 — perfil/organización sobre TanStack Query**
+- Reescribir `useAuthProfile` con `useQuery` (`staleTime` 60s, misma firma pública `{profile, reset, refresh}`), exportando `userContextKey`.
+- `useAdminOrgInfo` invalida ese key en `updateOrg`/`toggleActivo` para que el encabezado/sidebar refleje el nombre nuevo al instante.
+
+**M10 — filtros de CxP en la URL**
+- Migrar `useCxpPageState` a `useTableFilters` (nuqs), eliminando el efecto de reset de página.
+- `useCxpDeepLinks` a `useQueryState("factura")`; se borra el efecto mount-only de `?aprobacion=` (queda reactivo gratis).
+- `useEditarFacturaProveedorForm`: sincronizar row→estado solo al cambiar de factura, para no pisar la captura en curso en un refetch.
+- Tests de filtros por URL.
+
+## Ola 6 — Rendimiento y organización de código (M12 + M14)
+
+**M12 — acciones masivas concurrentes**
+- Nuevo helper `src/lib/async/mapWithConcurrency.ts` (tandas + `Promise.allSettled` + `onProgress`, sin dependencias nuevas) con su test.
+- `FacturasMasivasToolbar`: concurrencia 4 en ZIP y reenvío, contador "Descargando 12/50…", guard de desmontaje, misma lógica de toasts.
+
+**M14 — hooks fuera de componentes**
+- Extraer los 11 `useQuery` y 11 `useMutation` inline a hooks en `features/*/hooks/`.
+- Mover los 7 hooks que hoy viven en `components/` a su carpeta `hooks/` y actualizar imports.
+- Respetando el límite de 200 líneas por archivo (Power of 10).
+
+---
 
 ## Detalles técnicos
 
-- Migraciones idempotentes, nombre `YYYYMMDDHHMMSS_<uuid>.sql`, con GRANT + RLS explícitos para pasar `audit:migrations` (H4/H6) y el radar de drift en base limpia.
-- Cada migración de la Ola 2 se acompaña de su bloque en la suite RLS (`supabase/tests/rls/`).
-- Los códigos `LC_*` nuevos requieren su mensaje en `lcCodeMessages.*` (lo exige el test de cobertura).
-- Tras cada ola: `bun run lint --max-warnings 0`, `bunx tsc -b`, tests afectados y los de arquitectura (límite de 200 líneas).
-- `CHANGELOG.md` + `APP_VERSION` al cierre de cada ola.
-
-## Fuera de alcance
-
-- Olas 2–3 del propio M14 (extracción masiva del resto de hooks): quedan documentadas con la baseline del test.
-- Los 2 falsos positivos ya descartados por el propio documento (`clientes.estado`, `embarques.cobro_cliente_status`).
-- Cambiar la RPC `proveedores_listado` (pertenece al paquete de críticos/altos).
+- Migraciones SQL: **ninguna**; esta tanda es 100% frontend/scripts.
+- Guardrails a respetar: ESLint de `queryKey` inline, límite de 200 líneas, `notify*` para toasts, marcador `// SAFE-CAST` solo cuando siga siendo cierto.
+- Verificación por ola: `bun run typecheck`, `bun run lint --max-warnings 0`, tests de arquitectura y los suites tocados.
+- Al cierre de cada ola: entrada en `CHANGELOG.md` y bump de `APP_VERSION` (13.329.0 → 13.331.0).

@@ -7,13 +7,9 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export async function eliminarFacturaBorrador(facturaId: string): Promise<void> {
-  // SAFE-CAST: el RPC es nuevo (v13.146.0); los tipos generados aún no lo listan.
-  const { error } = await (supabase.rpc as unknown as (
-    fn: string,
-    args: Record<string, unknown>,
-  ) => Promise<{ error: { message: string } | null }>)(
-    "eliminar_factura_borrador",
-    { p_factura_id: facturaId },
-  );
+  const { error } = await supabase.rpc("eliminar_factura_borrador", {
+    p_factura_id: facturaId,
+  });
   if (error) throw error;
 }
+
