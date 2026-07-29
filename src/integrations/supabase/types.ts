@@ -8340,6 +8340,10 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: undefined
       }
+      recalc_factura_totales: {
+        Args: { p_factura_id: string }
+        Returns: undefined
+      }
       recalcular_cobro_embarques: {
         Args: { p_embarque_ids: string[] }
         Returns: undefined
