@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.331.2] - 2026-07-30
+- Corrección interna de CI: los errores al guardar productos SAT y conceptos de factura ahora se detectan correctamente por las pruebas, y el catálogo de claves de datos incluye el dominio de sesión.
+
 ## [13.331.1] - 2026-07-30
 - Corregida la pantalla en blanco al abrir la aplicación: el sistema de datos ahora se inicializa antes que la sesión del usuario.
 
