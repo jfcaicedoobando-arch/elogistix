@@ -1,7 +1,14 @@
 # Changelog
 
 
+## [13.322.3] - 2026-07-29
+- Despliegue: nuevo control automático posterior a la fusión que bloquea la promoción a producción si fallan las pruebas de aislamiento (RLS), la auditoría de migraciones o el radar de cambios manuales en la base.
+- El resultado se publica como "PROMOCIÓN AUTORIZADA" o "PROMOCIÓN BLOQUEADA" y, si bloquea, abre o actualiza un issue con el detalle.
+- El radar de cambios manuales sólo bloquea por migraciones nuevas; la deuda histórica queda exenta mediante una línea base declarada.
+
+
 ## [13.322.2] - 2026-07-29
+
 - Seguridad: aprobar o rechazar una factura de proveedor ahora exige, además del rol financiero, pertenecer a la organización dueña de la factura.
 - Pruebas: nueva suite de RLS que valida por rol (contador, admin, servicio al cliente) quién puede ejecutar las operaciones sensibles y bloquea el acceso entre organizaciones.
 - CI: nuevo radar que aplica todas las migraciones en una base limpia y reporta cuáles dependen de cambios hechos a mano en producción.
