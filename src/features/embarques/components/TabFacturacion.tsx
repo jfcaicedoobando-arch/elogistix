@@ -9,7 +9,7 @@ import { HistorialFacturas } from "./facturacion/HistorialFacturas";
 import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
 import { AvisoProformasRechazadas } from "./facturacion/AvisoProformasRechazadas";
 import { DialogEliminarProforma } from "./facturacion/DialogEliminarProforma";
-import { useTabFacturacionState } from "./facturacion/useTabFacturacionState";
+import { useTabFacturacionState } from "@/features/embarques/hooks/useTabFacturacionState";
 import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<'embarques'>;
