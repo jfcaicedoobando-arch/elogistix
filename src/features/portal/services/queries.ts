@@ -7,20 +7,17 @@ import {
   PORTAL_DOCUMENTO_COLUMNS,
   PORTAL_COTIZACION_LIST_COLUMNS,
   PORTAL_COTIZACION_DETAIL_COLUMNS,
-  PORTAL_FACTURA_LIST_COLUMNS,
-  PORTAL_FACTURA_DETAIL_COLUMNS,
-  PORTAL_PAGO_FACTURA_COLUMNS,
-  PORTAL_NOTA_CREDITO_COLUMNS,
 } from "./columns";
-import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
-
-// v13.56.3 — Límites defensivos en consultas del portal. Si un cliente acumula
-// más de 500 embarques/facturas o 200 eventos/documentos/pagos por embarque,
-// habrá que paginar; por ahora un techo evita queries sin tope desde el portal.
-const PORTAL_LIST_MAX = 500;
-const PORTAL_RELATED_MAX = 200;
+import { PORTAL_LIST_MAX, PORTAL_RELATED_MAX } from "./limits";
 
 export { fetchPortalClientUsers, fetchPortalClienteName, fetchPortalOrgName } from "./identity";
+export {
+  fetchPortalFacturas,
+  fetchPortalFactura,
+  fetchPortalPagosFactura,
+  fetchPortalNotasCreditoFactura,
+} from "./queriesFacturas";
+
 
 
 export async function fetchPortalEmbarques(clienteIds: string[]) {
