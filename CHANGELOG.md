@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.326.2] - 2026-07-30
+- Se alineó el corte del radar de drift del gate de despliegue con el de la suite RLS, evitando que una migración histórica (FIX C5) bloqueara la promoción a producción.
+
 ## [13.326.1] - 2026-07-30
 - Se añadió el mensaje amigable faltante para el código interno `LC_C5B_FN_AUSENTE`, que hacía fallar la validación de cobertura de errores en CI.
 
