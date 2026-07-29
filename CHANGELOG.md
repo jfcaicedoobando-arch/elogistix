@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.340.0] - 2026-07-29
+- **Fix crítico · 83 facturas marcadas como "Pagada" sin pago (caso F964).** Un backfill de julio preguntaba el saldo con `saldo_factura()`, función que por seguridad multi-tenant devuelve 0 cuando no hay usuario autenticado. Al correr dentro de una migración, contestó "0" para todas y el script las selló como pagadas. Analogía: el cajero contestó "no debes nada" simplemente porque no sabía quién eras. Se recalculó el estado real de todas las facturas vivas a partir de sus pagos y notas de crédito: F964 y las demás volvieron a **Emitida**/**Vencida** y la cartera por cobrar ya refleja montos reales. No se borró ni creó ningún pago.
+- **Fix · `saldo_factura` blindada.** El guard de tenant ahora sólo aplica a usuarios finales autenticados; en migraciones, crones y `service_role` devuelve el saldo real.
+- **Mejora · Guard-rail en CI.** `integrity-guard.sql` falla si existe una factura "Pagada"/"Parcialmente pagada" sin pagos ni NC aplicadas, y el auditor de migraciones (nueva regla **H8**) prohíbe usar funciones con guard multi-tenant dentro de bloques `DO $$` que escriben datos.
+- **Mejora · Aviso en pantalla.** El detalle de factura muestra una alerta "Estado inconsistente" si el badge dice pagada pero no hay historial que lo respalde.
+
+
 ## [13.339.0] - 2026-07-29
 - **Fix · Solicitudes del portal invisibles (Q-01).** Las cotizaciones pedidas por el cliente se guardaban como "Borrador" y él nunca las veía. Ahora existe el estado **Solicitada**, visible tanto para el cliente como para el equipo interno. Analogía: antes el pedido caía en un cajón privado; ahora queda en la bandeja compartida.
 - **Fix · Facturas de proveedor capturadas a mano sin conceptos (Q-02).** El alta manual no permitía capturar partidas, por lo que después la factura no se podía aprobar. Se agregó la sección **Conceptos de la factura** (descripción, cantidad, importe, IVA, unidad), con validación de cuadre contra el subtotal antes de guardar.
