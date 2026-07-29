@@ -48,14 +48,22 @@ export async function handleList(ctx: HandlerCtx, admin: AdminAccess): Promise<R
     return errorResponse(msg.replace(/^403:/, ""), 403, cors);
   }
 
-  const { data: { users }, error } = await adminClient.auth.admin.listUsers();
-  if (error) throw error;
+  // Sentry JAVASCRIPT-REACT-3M: `listUsers()` pagina de 50 en 50 por defecto,
+  // así que los usuarios fuera de la primera página quedaban sin correo
+  // ("sin resolver") en la tabla de /usuarios. Recorremos todas las páginas.
+  const baseRows: Array<{ id: string; email: string; created_at: string }> = [];
+  const PER_PAGE = 1000;
+  const MAX_PAGES = 20;
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: PER_PAGE });
+    if (error) throw error;
+    const pageUsers = (data?.users ?? []) as Array<{ id: string; email?: string; created_at: string }>;
+    for (const u of pageUsers) {
+      baseRows.push({ id: u.id, email: u.email ?? "", created_at: u.created_at });
+    }
+    if (pageUsers.length < PER_PAGE) break;
+  }
 
-  const baseRows = users.map((u: { id: string; email?: string; created_at: string }) => ({
-    id: u.id,
-    email: u.email ?? "",
-    created_at: u.created_at,
-  }));
 
   let result = baseRows;
   if (!admin.isGlobalAdmin && orgId) {
