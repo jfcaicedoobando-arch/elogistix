@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.331.7] - 2026-07-29
+- Actualizada la librería de lectura de archivos Excel (importación de estados de cuenta) a la versión 0.20.3, que corrige dos vulnerabilidades de seguridad altas.
+
+
+
 ## [13.331.6] - 2026-07-29
 - Las guías de recursos (Carta Porte, Incoterms y Puertos) ahora se comparten en redes sociales como artículos y con imagen de vista previa.
 
