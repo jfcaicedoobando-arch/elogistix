@@ -36,29 +36,28 @@ const App = () => {
   // tracking-publico). El boundary interno de Layout sólo cubría el área
   // autenticada, dejando pantallas en blanco fuera de ella sin reporte.
   <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <ErrorDetailsDialog />
-        <BrowserRouter>
-          <NuqsAdapter>
-            <BreadcrumbProvider>
-              <SentryErrorContextSync />
-              <DemoModeBanner />
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <AppRoutes />
-              </Suspense>
-            </BreadcrumbProvider>
-          </NuqsAdapter>
-        </BrowserRouter>
-      </TooltipProvider>
-      {ReactQueryDevtools ? (
-        <Suspense fallback={null}>
-          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-        </Suspense>
-      ) : null}
-    </QueryClientProvider>
+    <TooltipProvider>
+      <Toaster />
+      <ErrorDetailsDialog />
+      <BrowserRouter>
+        <NuqsAdapter>
+          <BreadcrumbProvider>
+            <SentryErrorContextSync />
+            <DemoModeBanner />
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <AppRoutes />
+            </Suspense>
+          </BreadcrumbProvider>
+        </NuqsAdapter>
+      </BrowserRouter>
+    </TooltipProvider>
+    {ReactQueryDevtools ? (
+      <Suspense fallback={null}>
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+      </Suspense>
+    ) : null}
   </ErrorBoundary>
+
   );
 };
 
