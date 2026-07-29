@@ -17,6 +17,7 @@ import {
   isDynamicImportError,
   tryReloadForChunkError,
 } from "./lib/errors/dynamicImportError";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/query/queryClient";
 
 const previousVersion = getStoredAppVersion();
@@ -91,12 +92,16 @@ scheduleIdle(() => {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider>
-      <AuthProvider>
-        <OrganizationProvider>
-          <App />
-        </OrganizationProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    {/* QueryClientProvider debe envolver a AuthProvider: el perfil de usuario
+        se resuelve con TanStack Query (M9). */}
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <OrganizationProvider>
+            <App />
+          </OrganizationProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   </StrictMode>
 );
