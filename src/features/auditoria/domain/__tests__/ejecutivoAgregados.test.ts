@@ -13,6 +13,10 @@ import {
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
 
+
+/** Offset en días sobre "hoy" en zona CDMX (misma base que calcularVencimientos). */
+const isoMxOffset = (d: number) => hoyAuditoriaIso(new Date(Date.now() + d * 86_400_000));
+
 const h = (over: Partial<HallazgoAuditoria>): HallazgoAuditoria =>
   ({
     embarque_id: "e1", expediente: "EXP-1", cliente_nombre: "ACME",
@@ -65,10 +69,8 @@ describe("ejecutivoAgregados", () => {
   });
 
   it("calcularVencimientos distingue vencidos vs urgentes", () => {
-    const ayer = new Date(); ayer.setDate(ayer.getDate() - 1);
-    const en2 = new Date(); en2.setDate(en2.getDate() + 2);
-    const ayerIso = ayer.toISOString().slice(0, 10);
-    const en2Iso = en2.toISOString().slice(0, 10);
+    const ayerIso = isoMxOffset(-1);
+    const en2Iso = isoMxOffset(2);
     const r = calcularVencimientos([
       h({ eta: ayerIso }),
       h({ eta: en2Iso }),
@@ -79,10 +81,8 @@ describe("ejecutivoAgregados", () => {
   });
 
   it("calcularVencimientos excluye reglas con vencimiento propio (CXP/CXC/proformas)", () => {
-    const ayer = new Date(); ayer.setDate(ayer.getDate() - 5);
-    const ayerIso = ayer.toISOString().slice(0, 10);
-    const en2 = new Date(); en2.setDate(en2.getDate() + 2);
-    const en2Iso = en2.toISOString().slice(0, 10);
+    const ayerIso = isoMxOffset(-5);
+    const en2Iso = isoMxOffset(2);
     const r = calcularVencimientos([
       h({ eta: ayerIso, regla: "cxp_vencida" }),
       h({ eta: ayerIso, regla: "cxp_por_capturar_estancada" }),
@@ -177,7 +177,7 @@ describe("esHallazgoEtaVencida — paridad tarjeta/tabla", () => {
 
   it("el conteo de la tarjeta coincide con el predicado del filtro", () => {
     const hoy = hoyAuditoriaIso();
-    const ayer = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const ayer = isoMxOffset(-1);
     const hallazgos = [
       { ...base, regla: "docs_faltantes", eta: ayer },
       { ...base, regla: "cxp_vencida", eta: ayer },
