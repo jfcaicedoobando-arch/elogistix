@@ -401,8 +401,8 @@ jobs:
     name: Drift radar — migraciones sin _ci_drift
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # Sólo falla con drift NO listado en `supabase/tests/rls/_drift_allowlist.txt`.
-    # La deuda histórica congelada en esa allowlist se reporta como notice.
+    # Sólo falla con drift NUEVO (migraciones posteriores al corte histórico).
+    # La deuda anterior al corte se reporta como notice, no como warning.
 
 
     services:
