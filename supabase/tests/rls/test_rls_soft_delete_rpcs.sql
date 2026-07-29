@@ -51,7 +51,7 @@ BEGIN
     id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo,
     estado, etd, eta, operador, tipo_cambio_usd, tipo_cambio_eur
   ) VALUES (
-    emb_a, 'ELC500001', cli_a, 'Cli C5 A', org_a, 'Marítimo', 'Importación',
+    emb_a, 'ELCCC00501', cli_a, 'Cli C5 A', org_a, 'Marítimo', 'Importación',
     'Arribo', current_date - 40, current_date - 30, 'OperadorC5', 17.0, 19.0
   );
 
@@ -134,7 +134,7 @@ BEGIN
 
   v_json := public.dashboard_details();
   PERFORM pg_temp.assert(
-    (v_json::text NOT LIKE '%ELC500001%'),
+    (v_json::text NOT LIKE '%ELCCC00501%'),
     'C5: dashboard_details expone un embarque borrado'
   );
 

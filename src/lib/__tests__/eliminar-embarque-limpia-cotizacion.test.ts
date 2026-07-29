@@ -23,9 +23,23 @@ function findLatestBody(): string {
   return latest;
 }
 
+/**
+ * Índice de la ÚLTIMA definición (no del COMMENT ON FUNCTION, que también
+ * menciona el nombre y dejaba el slice vacío).
+ */
+function lastDefIndex(body: string): number {
+  let idx = -1;
+  for (const m of body.matchAll(
+    /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.eliminar_embarque_completo\b/gi,
+  )) {
+    idx = m.index ?? idx;
+  }
+  return idx;
+}
+
 describe("eliminar_embarque_completo limpia vínculo con cotización", () => {
   const body = findLatestBody();
-  const idx = body.lastIndexOf("eliminar_embarque_completo");
+  const idx = lastDefIndex(body);
   const slice = body.slice(idx);
 
   it("nulifica cotizaciones.embarque_id cuando no quedan embarques vivos", () => {
