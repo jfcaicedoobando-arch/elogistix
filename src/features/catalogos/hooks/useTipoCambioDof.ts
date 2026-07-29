@@ -7,7 +7,7 @@ import {
   upsertTcDofManual,
   type TipoCambioDof,
 } from "@/features/catalogos/services/tipoCambioDof";
-import { toastOk, toastErr } from "@/lib/appFeedback";
+import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 
 export const tcDofKeys = {
   all: ["tipos_cambio_dof"] as const,
