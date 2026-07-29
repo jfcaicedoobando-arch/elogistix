@@ -29,10 +29,10 @@ export function useUpsertTcDofManual() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: tcDofKeys.all });
       void qc.invalidateQueries({ queryKey: ["exchange-rates"] });
-      toastOk("Tipo de cambio guardado", "El historial DOF se actualizó correctamente.");
+      notifySuccess(undefined, { title: "Tipo de cambio guardado", description: "El historial DOF se actualizó correctamente." });
     },
     onError: (error: unknown) => {
-      toastErr("No se pudo guardar el tipo de cambio", error, { method: "TC_DOF_MANUAL" });
+      notifyError(undefined, { title: "No se pudo guardar el tipo de cambio", error, method: "TC_DOF_MANUAL" });
     },
   });
 }
