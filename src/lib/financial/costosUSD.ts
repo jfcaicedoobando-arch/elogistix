@@ -1,19 +1,21 @@
 /**
  * Helpers para totalizar listas de conceptos en una moneda objetivo.
- * Conversión y suma se delegan a currency.js (vía convertirAUSD/convertirAMXN)
- * para evitar errores de punto flotante. Sin React, sin formato.
+ * La conversión se delega al canon único (`@/lib/financial/convertir`) y la
+ * acumulación a currency.js, para evitar errores de punto flotante.
+ * Sin React, sin formato.
  *
  * `sumarEnMoneda` es la API estricta: detecta filas cuya `moneda` no coincide
  * con el `target` del bucket padre y SIEMPRE las convierte vía FX (nunca suma
  * nativamente valores heterogéneos). Lanza si falta TC con filas mixtas.
+ *
+ * FIX C6: ya no se usan `convertirAMXN`/`convertirAUSD` (tenían TC=1 por
+ * omisión); el factor sale de `factorEntreMonedas` y un TC no confiable
+ * produce un error explícito en vez de una suma silenciosa 1:1.
  */
 
 import currency from "currency.js";
-import {
-  convertirAUSD,
-  convertirAMXN,
-  type Moneda,
-} from "@/lib/financial/financialUtils";
+import { factorEntreMonedas } from "@/lib/financial/convertir";
+import { type Moneda } from "@/lib/financial/financialUtils";
 
 interface MontoEnMoneda {
   monto: number;
