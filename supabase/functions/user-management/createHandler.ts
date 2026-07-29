@@ -72,6 +72,12 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
     user_metadata: { skip_auto_org: true },
   });
   if (createError) {
+    // Q-05: mensaje claro para email duplicado (el proveedor devuelve textos variados).
+    const dup = /already|registered|exists|duplicate/i.test(createError.message);
+    if (dup) {
+      log.finish(409, "duplicate_email", { user_id: callerId, organization_id: targetOrgId });
+      return errorResponse(`Ya existe una cuenta con el correo ${email}.`, 409, cors);
+    }
     log.finish(400, "auth_create_failed", {
       user_id: callerId,
       organization_id: targetOrgId,
