@@ -8545,6 +8545,7 @@ export type Database = {
       saldo_factura: { Args: { p_factura_id: string }; Returns: number }
       saldo_factura_bruto: { Args: { p_factura_id: string }; Returns: number }
       seed_demo_organization: { Args: never; Returns: undefined }
+      seed_demo_organization_core: { Args: never; Returns: undefined }
       seed_presupuesto_categorias: {
         Args: { p_organization_id: string }
         Returns: undefined
