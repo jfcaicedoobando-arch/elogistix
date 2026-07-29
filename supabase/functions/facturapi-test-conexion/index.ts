@@ -9,6 +9,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { basicAuthHeader, FACTURAPI_BASE, resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 
 interface Body {
   organization_id: string;
@@ -64,13 +65,10 @@ async function authorizeRequest(req: Request, url: string, anon: string, organiz
   const sbUser = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
   const { data: claims, error } = await sbUser.auth.getClaims(authHeader.replace("Bearer ", ""));
   if (error || !claims?.claims?.sub) return { ok: false as const, status: 401, error: "unauthorized" };
-  const { data: member } = await sbUser
-    .from("organization_members")
-    .select("role")
-    .eq("user_id", claims.claims.sub)
-    .eq("organization_id", organizationId)
-    .maybeSingle();
-  if (!member) return { ok: false as const, status: 403, error: "forbidden" };
+  // FIX C2 (S5-02): probar la API key fiscal exige rol emisor fiscal.
+  const sbAdmin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const allowed = await authorizeOrgRole(sbAdmin, claims.claims.sub, organizationId, ROLES_EMISOR_FISCAL);
+  if (!allowed) return { ok: false as const, status: 403, error: "forbidden" };
   return { ok: true as const };
 }
 
