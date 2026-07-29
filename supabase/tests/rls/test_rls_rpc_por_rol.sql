@@ -67,10 +67,10 @@ BEGIN
 
   INSERT INTO public.proveedores(
     id, organization_id, nombre, rfc, contacto, email, telefono,
-    moneda_preferida, dias_credito
+    moneda_preferida, dias_credito, categoria, tipo
   ) VALUES (
     prov_a, org_a, 'Proveedor ROL A', 'XAXX010101000', 'Contacto',
-    'prov@test.local', '5555555555', 'MXN', 30
+    'prov@test.local', '5555555555', 'MXN', 30, 'Logistico', 'Naviera'
   );
 
   INSERT INTO public.presupuesto_categorias(id, organization_id, nombre)
