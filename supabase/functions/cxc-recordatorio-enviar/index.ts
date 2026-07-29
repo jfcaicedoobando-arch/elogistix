@@ -86,7 +86,12 @@ async function resolveDestinatario(
   clienteId: string,
   contactoEmail?: string | null,
 ): Promise<string | null> {
-  if (contactoEmail) return contactoEmail;
+  // M8: un destinatario explícito debe pertenecer al cliente.
+  if (contactoEmail) {
+    const permitido = await emailPerteneceACliente(adminClient, clienteId, contactoEmail);
+    return permitido ? contactoEmail : null;
+  }
+
   const { data } = await adminClient
     .from('contactos_cliente')
     .select('email')
