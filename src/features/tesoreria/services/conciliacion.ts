@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
 import { unwrapOr, run } from "@/lib/supabase/response";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 export type MovimientoBBVA = Tables<"bbva_movimientos">;
 
@@ -63,17 +64,22 @@ export interface FiltrosMovimientos {
 const BBVA_MOVIMIENTO_COLUMNS =
   "id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia, cargo, abono, saldo, hash_dedupe, estado_conciliacion, pago_factura_id, pago_proveedor_id, motivo_ignorar, conciliado_por, conciliado_at, importado_por, importado_en";
 
+// FIX C3 (S6-05): bbva_movimientos es append-only; es la primera tabla que
+// supera 1000 filas en una org activa.
+const LIMITE_MOVIMIENTOS = 2000;
+
 export async function listarMovimientos(f: FiltrosMovimientos): Promise<MovimientoBBVA[]> {
   let q = supabase
     .from("bbva_movimientos")
     .select(BBVA_MOVIMIENTO_COLUMNS)
     .eq("cuenta_bancaria_id", f.cuenta_bancaria_id)
     .order("fecha", { ascending: false })
-    .limit(2000);
+    .limit(LIMITE_MOVIMIENTOS);
   if (f.estado && f.estado !== "todos") q = q.eq("estado_conciliacion", f.estado);
   if (f.desde) q = q.gte("fecha", f.desde);
   if (f.hasta) q = q.lte("fecha", f.hasta);
-  return unwrapOr(q, [] as MovimientoBBVA[]) as Promise<MovimientoBBVA[]>;
+  const filas = (await unwrapOr(q, [] as MovimientoBBVA[])) as MovimientoBBVA[];
+  return assertNotTruncated(filas, LIMITE_MOVIMIENTOS, "tesoreria.listarMovimientos");
 }
 
 export { sugerirCandidatos,  } from "./sugerirCandidatos";

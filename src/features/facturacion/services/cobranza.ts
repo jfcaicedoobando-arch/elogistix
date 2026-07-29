@@ -14,6 +14,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { orIlike } from "@/lib/search/ilike";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
@@ -79,6 +80,9 @@ function calcularEstatus(saldo: number, diasVencido: number): EstatusCobranza {
   return "Vigente";
 }
 
+// FIX C3 (S6-02): cap explícito verificado por assertNotTruncated.
+const LIMITE_COBRANZA = 2000;
+
 export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise<FacturaCobranza[]> {
   let query = supabase
     .from("facturas")
@@ -90,7 +94,7 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
     `)
     .in("estado", [...ESTADOS_ACTIVOS])
     .order("fecha_vencimiento", { ascending: true })
-    .limit(2000);
+    .limit(LIMITE_COBRANZA);
 
   if (filtros.cliente_id) query = query.eq("cliente_id", filtros.cliente_id);
   if (filtros.moneda && filtros.moneda !== "todas") query = query.eq("moneda", filtros.moneda);
@@ -100,6 +104,7 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
 
   const { data, error } = await query;
   if (error) throw error;
+  assertNotTruncated(data, LIMITE_COBRANZA, "facturacion.fetchCobranza");
 
   // SAFE-CAST: `RawFactura` modela el join con pagos_factura; Supabase tipa unknown.
   const rows = ((data as unknown as RawFactura[] | null) ?? []).map((f): FacturaCobranza => {
