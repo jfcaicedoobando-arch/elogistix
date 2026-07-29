@@ -144,6 +144,6 @@ export function aUSD(monto: number, moneda: string, tcUSD: number, tcEUR: number
   if (moneda === 'EUR' && (!Number.isFinite(tcEUR) || tcEUR <= 0)) {
     throw new Error('TC requerido para conversión: tipoCambioEUR inválido (0/NaN) al convertir EUR a USD');
   }
-  return convertirAUSD(monto, moneda as Moneda, tcUSD, tcEUR);
+  return convertirFila(monto, moneda as Moneda, 'USD', tcUSD, tcEUR);
 }
 

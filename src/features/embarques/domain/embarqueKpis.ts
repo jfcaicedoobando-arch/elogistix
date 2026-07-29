@@ -1,8 +1,13 @@
 /**
  * Cálculos puros de KPIs financieros de un embarque (totales, utilidad, margen).
  * Extraído de useEmbarqueFinancials para hacerlo testeable sin React.
+ *
+ * FIX C6: la conversión pasa por el canon único. Un concepto en USD/EUR sin
+ * tipo de cambio confiable ya NO se suma como si fuera MXN: se excluye y se
+ * reporta en `montosSinTipoCambio` para que la UI pueda advertirlo.
  */
-import { convertirAMXN, calcularUtilidad, calcularMargen, sumarMontos, type Moneda } from "@/lib/financial/financialUtils";
+import { calcularUtilidad, calcularMargen, type Moneda } from "@/lib/financial/financialUtils";
+import { sumarEnMxn } from "@/lib/financial/convertir";
 
 export interface ConceptoVentaKpi {
   total: number;
@@ -19,17 +24,21 @@ export interface EmbarqueKpis {
   totalCosto: number;
   utilidad: number;
   margen: number;
+  /** Conceptos (venta + costo) excluidos por falta de tipo de cambio confiable. */
+  montosSinTipoCambio: number;
 }
 
-function totalEnMxn<T>(items: T[], get: (i: T) => { monto: number; moneda: Moneda }, tcUsd: number, tcEur: number): number {
-  // Cada conversión se redondea a 2 decimales antes de acumular vía
-  // `sumarMontos` (currency.js) para evitar drift de punto flotante.
-  return sumarMontos(
-    items.map((item) => {
-      const { monto, moneda } = get(item);
-      return convertirAMXN(Number(monto), moneda, tcUsd, tcEur);
-    }),
-  );
+function totalEnMxn<T>(
+  items: T[],
+  get: (i: T) => { monto: number; moneda: Moneda },
+  tcUsd: number,
+  tcEur: number,
+): { total: number; sinTipoCambio: number } {
+  const res = sumarEnMxn(items, (item) => {
+    const { monto, moneda } = get(item);
+    return { monto: Number(monto), moneda };
+  }, { usd: tcUsd, eur: tcEur });
+  return { total: res.total, sinTipoCambio: res.sinTipoCambio };
 }
 
 export function computeEmbarqueKpis(
@@ -38,12 +47,13 @@ export function computeEmbarqueKpis(
   tipoCambioUSD: number,
   tipoCambioEUR: number,
 ): EmbarqueKpis {
-  const totalVenta = totalEnMxn(conceptosVenta, (c) => ({ monto: c.total, moneda: c.moneda }), tipoCambioUSD, tipoCambioEUR);
-  const totalCosto = totalEnMxn(conceptosCosto, (c) => ({ monto: c.monto, moneda: c.moneda }), tipoCambioUSD, tipoCambioEUR);
+  const venta = totalEnMxn(conceptosVenta, (c) => ({ monto: c.total, moneda: c.moneda }), tipoCambioUSD, tipoCambioEUR);
+  const costo = totalEnMxn(conceptosCosto, (c) => ({ monto: c.monto, moneda: c.moneda }), tipoCambioUSD, tipoCambioEUR);
   return {
-    totalVenta,
-    totalCosto,
-    utilidad: calcularUtilidad(totalVenta, totalCosto),
-    margen: calcularMargen(totalVenta, totalCosto),
+    totalVenta: venta.total,
+    totalCosto: costo.total,
+    utilidad: calcularUtilidad(venta.total, costo.total),
+    margen: calcularMargen(venta.total, costo.total),
+    montosSinTipoCambio: venta.sinTipoCambio + costo.sinTipoCambio,
   };
 }
