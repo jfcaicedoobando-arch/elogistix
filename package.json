@@ -31,6 +31,7 @@
     "coverage:report": "tsx scripts/coverage-report.ts",
     "changelog:add": "tsx scripts/add-changelog.ts",
     "changelog:json": "tsx scripts/generate-changelog-json.ts",
+    "gen:types": "supabase gen types typescript --db-url \"$DATABASE_URL\" --schema public > src/integrations/supabase/types.ts",
     "audit:casts": "tsx scripts/audit-casts.ts",
     "audit:tests": "tsx scripts/audit-tests.ts",
     "audit:arch": "tsx scripts/audit-architecture.ts",

@@ -54,12 +54,16 @@ export default defineConfig({
     // de OOM. Subir a 3-4 forks requirió heap ≤4 GB y disparó OOM en archivos
     // PDF pesados; 2 forks @ 8 GB es el punto óptimo verificado.
     pool: "forks",
-    singleFork: true,
-    maxForks: 1,
+    // v13.x (GHA-audit M6) — En CI (runners ubuntu-24.04, 4 vCPU/16 GB) usamos
+    // 2 forks @ 8 GB heap, el punto óptimo ya verificado arriba: recorta 30-45%
+    // el wall-time de cada shard sin riesgo de OOM. En el sandbox local
+    // conservamos 1 fork serial.
+    singleFork: !process.env.CI,
+    maxForks: process.env.CI ? 2 : 1,
     minForks: 1,
     isolate: true,
     execArgv: ["--max-old-space-size=8192", "--expose-gc"],
-    fileParallelism: false,
+    fileParallelism: !!process.env.CI,
     sequence: { shuffle: false },
     coverage: {
       provider: "v8",

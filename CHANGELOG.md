@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.325.0] - 2026-07-30
+- CI/CD (GHA-1 a GHA-4, GHA-6 a GHA-8): humo de RPCs de dinero contra el ambiente desplegado tras cada publicación, nueva suite RLS que valida las funciones sensibles por rol, guards conductuales que ahora corren siempre (antes se saltaban cuando había caché), radar de desincronización de tipos, ambientes de despliegue con aprobación para E2E y producción, validación completa de secretos E2E y bloqueo de corridas "verdes vacías" sin tests reales. Los tests unitarios corren en 2 procesos paralelos en CI.
+
 ## [13.324.9] - 2026-07-30
 - Seguridad y CI: la función interna de listados de embarques ya no es ejecutable por visitantes anónimos y se eliminó una constante sin uso que rompía la verificación de tipos.
 
