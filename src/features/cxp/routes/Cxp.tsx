@@ -41,7 +41,7 @@ export default function Cxp() {
   const { data = [], isLoading, isError, refetch, kpis } = useFacturasCxP(f.queryArgs);
   const eliminar = useEliminarFacturaProveedor();
 
-  useCxpDeepLinks({ data, isLoading, onOpenDetalle: f.setDetalle, onSetAprobacion: f.setAprobacion });
+  useCxpDeepLinks({ data, isLoading, onOpenDetalle: f.setDetalle });
 
   const handlePdf = async () => {
     const fecha = todayLocalISO();

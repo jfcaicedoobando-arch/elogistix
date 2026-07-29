@@ -74,6 +74,10 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
   const [tcOrigen, setTcOrigen] = useState<TcOrigen>("vacio");
   const [tcFechaAplicada, setTcFechaAplicada] = useState<string | undefined>();
   const manualTcRef = useRef(false);
+  // M10 (S2-10): re-sincronizar row→state SOLO al abrir/cambiar de factura.
+  // Un refetch del mismo id (invalidación por pago, foco de ventana, staleTime
+  // agotado) no debe pisar la captura en curso del modal.
+  const lastLoadedId = useRef<string | null>(null);
 
   const tcDof = useTcDofPorFecha((r) => {
     setValues((p) => (p ? { ...p, tc: String(r.tipoCambio) } : p));
@@ -84,6 +88,8 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
 
   useEffect(() => {
     if (row) {
+      if (lastLoadedId.current === factura?.id) return;
+      lastLoadedId.current = factura?.id ?? null;
       const v = fromRow(row);
       setValues(v);
       setInitial(v);
@@ -94,6 +100,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       setTcFechaAplicada(undefined);
       manualTcRef.current = v.moneda !== "MXN" && !!v.tc;
     } else if (!factura) {
+      lastLoadedId.current = null;
       setValues(null);
       setInitial(null);
       setErrors({});

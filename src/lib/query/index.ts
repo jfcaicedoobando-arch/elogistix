@@ -44,8 +44,10 @@ import { costeo } from "@/features/costeo/queryKeys";
 import { portalAgente } from "@/features/portal-agente/queryKeys";
 import { notificaciones } from "@/features/notificaciones/queryKeys";
 import { marketing } from "@/features/marketing/queryKeys";
+import { auth } from "@/features/auth/queryKeys";
 
 export const queryKeys = {
+  auth,
   costeo,
   portalAgente,
   embarques,

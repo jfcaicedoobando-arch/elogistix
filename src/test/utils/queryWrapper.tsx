@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 
 /**
  * Crea un wrapper con un QueryClient nuevo y lo registra en
@@ -23,7 +24,11 @@ export function createWrapper() {
     __TEST_QUERY_CLIENT__?: QueryClient;
   }).__TEST_QUERY_CLIENT__ = client;
 
+  // M10: los hooks de filtros usan nuqs (URL state); el adapter de testing
+  // provee el contexto sin necesitar un Router real.
   return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    <NuqsTestingAdapter>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    </NuqsTestingAdapter>
   );
 }
