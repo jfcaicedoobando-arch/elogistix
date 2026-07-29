@@ -85,7 +85,14 @@ export function calcularUtilidad(venta: number, costo: number): number {
   return money(venta).subtract(costo).value;
 }
 
-/** Convierte un monto a MXN según su moneda */
+/**
+ * Convierte un monto a MXN según su moneda.
+ *
+ * @deprecated FIX C6 — usa `aMxn` / `sumarEnMxn` de `@/lib/financial/convertir`.
+ * Los defaults `= 1` de esta función simulan que 1 USD vale 1 MXN cuando no se
+ * pasa tipo de cambio, lo que infla o destruye los totales. El canon devuelve
+ * `completo: false` en ese caso para que el consumidor lo maneje explícitamente.
+ */
 export function convertirAMXN(
   monto: number,
   moneda: Moneda,
@@ -97,7 +104,12 @@ export function convertirAMXN(
   return monto;
 }
 
-/** Convierte un monto a USD según su moneda */
+/**
+ * Convierte un monto a USD según su moneda.
+ *
+ * @deprecated FIX C6 — usa `factorEntreMonedas` de `@/lib/financial/convertir`,
+ * que valida el tipo de cambio en lugar de dividir entre valores no confiables.
+ */
 export function convertirAUSD(
   monto: number,
   moneda: Moneda,
