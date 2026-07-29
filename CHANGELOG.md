@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.322.15] - 2026-07-29
+- Mantenimiento: se simplificó el código del resumen de demoras automáticas para cumplir el límite de complejidad; sin cambios visibles para el usuario.
+
+
 ## [13.322.14] - 2026-07-29
 - Compras: se corrigió el error al adjuntar XML/PDF de facturas y notas de crédito de proveedor cuando no se conocía la organización; ahora se resuelve automáticamente y ya no falla la subida por seguridad.
 
