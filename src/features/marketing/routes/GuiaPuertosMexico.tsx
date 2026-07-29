@@ -29,6 +29,8 @@ export default function GuiaPuertosMexico() {
         ogTitle="Principales puertos marítimos de México: guía 2026"
         ogDescription="Los 5 puertos top de México con UN/LOCODE, rutas troncales, navieras presentes y tipo de carga."
         ogUrl={URL}
+        ogType="article"
+        ogImage="https://librecarga.com/og-image.jpg"
         jsonLd={[FAQ_JSONLD, ARTICLE_JSONLD, BREADCRUMB_JSONLD]}
       />
       <LandingNav />

@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.331.6] - 2026-07-29
+- Las guías de recursos (Carta Porte, Incoterms y Puertos) ahora se comparten en redes sociales como artículos y con imagen de vista previa.
+
+
+
 ## [13.331.3] - 2026-07-30
 - Corregido el error que impedía cargar las garantías de contenedor y las comisiones devengadas: ahora la base de datos soporta el envío a papelera de comisiones, liquidaciones y garantías en vez de borrarlas para siempre.
 - La conciliación bancaria ya no puede modificar movimientos enviados a papelera.

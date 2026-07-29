@@ -28,6 +28,8 @@ export default function GuiaCartaPorte() {
         ogTitle="Guía Carta Porte 3.0 México (2026): todo lo que debes saber"
         ogDescription="Complemento CFDI Carta Porte 3.0: obligados, modos de transporte, campos del SAT, multas y checklist."
         ogUrl={URL}
+        ogType="article"
+        ogImage="https://librecarga.com/og-image.jpg"
         jsonLd={[FAQ_JSONLD, ARTICLE_JSONLD, BREADCRUMB_JSONLD]}
       />
       <LandingNav />
