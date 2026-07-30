@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.348.0] - 2026-07-30
+- **Mejora · Bitácora total del embarque.** La pestaña "Notas y actividad" ahora muestra TODO lo que le pasa al embarque en una sola línea de tiempo: notas, eventos de tracking, documentos, consultas de rastreo, cotización de origen, proformas (generada/enviada/aceptada), facturas al cliente (creada/timbrada/cancelada/enviada por correo), pagos, notas de crédito, facturas de proveedor y sus aprobaciones, pagos a proveedor, invoices del buzón, garantías, seguros y cierres/reaperturas.
+- **Mejora · Timeline agrupado por día con filtros.** Se agrupan las entradas por fecha y se pueden filtrar por Operación, Comercial, Finanzas, Riesgo o Cierre. Los montos se ocultan automáticamente para roles sin permiso financiero.
+- **Técnico.** Nueva función `actividad_embarque` (una sola consulta en vez de tres), deduplicación por hecho (evita ver el mismo cambio de estado tres veces) e índices nuevos en `factura_envios`, `embarque_garantias_historial` y `bitacora_actividad`.
+
+
+
 ## [13.347.0] - 2026-07-30
 - **Mejora · Costos y facturas de proveedor en una sola pestaña.** El buzón de invoices dejó de ser una pestaña aparte y ahora vive debajo de los conceptos de costo del embarque. Los enlaces viejos (`?tab=facturas-entrantes`) siguen funcionando y saltan directo a la sección.
 - **Mejora · El cierre exige las facturas del proveedor.** Dos reglas nuevas en el checklist: no se puede cerrar si queda algún invoice "Por capturar" y cada proveedor con costos debe tener al menos un archivo subido al buzón. Analogía: no cierras la caja del día si aún hay tickets sin registrar o proveedores sin comprobante.
