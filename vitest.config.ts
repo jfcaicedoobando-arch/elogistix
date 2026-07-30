@@ -16,6 +16,15 @@ const LOCAL_FORKS = Number(process.env.VITEST_FORKS) || Math.max(2, Math.min(8, 
 const ROOT = __dirname;
 const SPLIT = splitTestsByEnvironment(ROOT);
 
+// Alias compartido por ambos proyectos (los proyectos NO heredan el `resolve`
+// raíz, así que se define una sola vez y se reutiliza).
+const ALIAS = {
+  "@": path.resolve(ROOT, "./src"),
+  // En tests, @react-pdf/renderer apunta a un stub ligero
+  // (src/test/mocks/reactPdfStub.tsx). Evita cargar fontkit/pdfkit por archivo.
+  "@react-pdf/renderer": path.resolve(ROOT, "./src/test/mocks/reactPdfStub.tsx"),
+};
+
 const SHARDED = process.argv.some((a) => a.startsWith("--shard"));
 
 const COMMON_EXCLUDE = [
@@ -77,7 +86,7 @@ export default defineConfig({
     projects: [
       {
         plugins: [react()],
-        resolve: { alias: { "@": path.resolve(ROOT, "./src") } },
+        resolve: { alias: ALIAS },
         test: {
           ...COMMON_TEST,
           name: "node",
@@ -88,7 +97,7 @@ export default defineConfig({
       },
       {
         plugins: [react()],
-        resolve: { alias: { "@": path.resolve(ROOT, "./src") } },
+        resolve: { alias: ALIAS },
         test: {
           ...COMMON_TEST,
           name: "jsdom",
