@@ -20,7 +20,7 @@ export function DocumentoLayout({ children, rail, className }: Props) {
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_19rem] xl:grid-cols-[minmax(0,1fr)_21rem]",
+        "grid grid-cols-1 gap-4 lg:grid-cols-[1fr_19rem] xl:grid-cols-[1fr_21rem]",
         className,
       )}
     >
