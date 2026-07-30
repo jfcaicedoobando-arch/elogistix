@@ -76,7 +76,7 @@ export function FacturaTimbradoCard(props: Props) {
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="md:col-span-2 min-w-0">
-            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">UUID fiscal</p>
+            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Folio fiscal (UUID)</p>
             <div className="flex items-center gap-1">
               <p className="font-mono text-sm truncate">{uuidFiscal}</p>
               <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={copiarUuid}>
