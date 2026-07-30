@@ -55,6 +55,27 @@ export async function listarFacturasEntrantesPendientes(
 }
 
 /**
+ * v13.365.0 — Historial del buzón por estado (`capturada` / `rechazada`).
+ * Se usa en las pestañas de sólo lectura de `/compras/buzon`.
+ */
+export async function listarFacturasEntrantesPorEstado(
+  estado: "por_capturar" | "capturada" | "rechazada",
+  limite = 200,
+): Promise<FacturaEntranteRow[]> {
+  const { data, error } = await supabase
+    .from("embarque_facturas_entrantes")
+    .select(SELECT_COLS_ENTRANTES)
+    .eq("estado", estado)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(limite);
+  if (error) throw error;
+  // SAFE-CAST: el join anidado de PostgREST no se refleja en los tipos generados;
+  // las columnas provienen de SELECT_COLS_ENTRANTES y se validan en el dominio.
+  return (data ?? []) as unknown as FacturaEntranteRow[];
+}
+
+/**
  * v13.359.0 — Abre el archivo del buzón sin navegar al dominio del backend.
  *
  * Algunas extensiones (adblockers, DNS filtering corporativo) bloquean la
@@ -79,6 +100,16 @@ export async function abrirFacturaEntrante(
     descargarBlob(data, nombreArchivo);
   }
   setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+}
+
+/**
+ * v13.365.0 — URL local (`blob:`) para la vista previa embebida del buzón.
+ * El consumidor debe liberar la URL con `URL.revokeObjectURL` al cerrarla.
+ */
+export async function urlPreviaFacturaEntrante(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET_CXP_INBOX).download(path);
+  if (error) throw error;
+  return URL.createObjectURL(data);
 }
 
 export async function eliminarFacturaEntrante(

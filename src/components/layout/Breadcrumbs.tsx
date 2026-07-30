@@ -60,6 +60,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   rutas: "Rutas",
   tarifas: "Tarifas",
   buscar: "Buscar",
+  buzon: "Buzón",
   "demoras-venta": "Demoras / Venta",
   // Catálogos / dev
   catalogos: "Catálogos",

@@ -26,6 +26,8 @@ export const cxp = {
   facturasEntrantesEmbarque: (embarqueId: string) =>
     ["cxp", "facturas-entrantes", "embarque", embarqueId] as const,
   facturasEntrantesPendientes: ["cxp", "facturas-entrantes", "pendientes"] as const,
+  facturasEntrantesEstado: (estado: string) =>
+    ["cxp", "facturas-entrantes", "estado", estado] as const,
   facturasVinculablesEntrante: (embarqueId?: string | null) =>
     ["cxp", "facturas-vinculables-entrante", embarqueId ?? null] as const,
 

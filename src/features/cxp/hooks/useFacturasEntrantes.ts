@@ -8,6 +8,7 @@ import {
   capturarFacturaEntrante,
   eliminarFacturaEntrante,
   listarFacturasEntrantesPendientes,
+  listarFacturasEntrantesPorEstado,
   listarFacturasEntrantesPorEmbarque,
   rechazarFacturaEntrante,
   subirFacturaEntrante,
@@ -30,6 +31,18 @@ export function useFacturasEntrantesPendientes() {
   return useQuery({
     queryKey: cxp.facturasEntrantesPendientes,
     queryFn: () => listarFacturasEntrantesPendientes(),
+  });
+}
+
+/** v13.365.0 — Historial del buzón por estado (pestañas de sólo lectura). */
+export function useFacturasEntrantesPorEstado(
+  estado: "capturada" | "rechazada",
+  habilitado = true,
+) {
+  return useQuery({
+    queryKey: cxp.facturasEntrantesEstado(estado),
+    queryFn: () => listarFacturasEntrantesPorEstado(estado),
+    enabled: habilitado,
   });
 }
 
