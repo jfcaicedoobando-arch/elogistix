@@ -6,7 +6,7 @@
  */
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ExternalLink, FileCode2, Inbox, XCircle } from "lucide-react";
+import { CheckCircle2, ExternalLink, FileCode2, Inbox, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,17 +20,21 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { chipsArchivosEntrante, diasEnEspera, faltaXmlFiscal } from "@/lib/domain/facturasEntrantes";
 
 import {
+  useCapturarFacturaEntrante,
   useFacturasEntrantesPendientes,
   useRechazarFacturaEntrante,
 } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 import { RechazarFacturaEntranteDialog } from "@/features/bandejas/components/RechazarFacturaEntranteDialog";
+import { MarcarCapturadaDialog } from "@/features/bandejas/components/MarcarCapturadaDialog";
 
 export default function CxpBuzonEntrantes() {
   const { canCapturarFacturaProveedor } = usePermissions();
   const { data: pendientes = [], isLoading } = useFacturasEntrantesPendientes();
   const rechazar = useRechazarFacturaEntrante();
+  const capturar = useCapturarFacturaEntrante();
   const [aRechazar, setARechazar] = useState<FacturaEntranteRow | null>(null);
+  const [aCapturar, setACapturar] = useState<FacturaEntranteRow | null>(null);
   const [soloSinXml, setSoloSinXml] = useState(false);
 
   const abrirArchivo = async (path: string, nombre: string) => {
@@ -134,6 +138,11 @@ export default function CxpBuzonEntrantes() {
                   <Link to={`/embarques/${row.embarque_id}?tab=costos&focus=facturas-entrantes`}>Ir al embarque</Link>
                 </Button>
                 {canCapturarFacturaProveedor && (
+                  <Button size="sm" onClick={() => setACapturar(row)}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" /> Marcar como capturada
+                  </Button>
+                )}
+                {canCapturarFacturaProveedor && (
                   <Button size="sm" variant="ghost" onClick={() => setARechazar(row)}>
                     <XCircle className="mr-2 h-4 w-4 text-destructive" /> Rechazar
                   </Button>
@@ -143,6 +152,20 @@ export default function CxpBuzonEntrantes() {
           </Card>
         ))}
       </div>
+
+      <MarcarCapturadaDialog
+        open={Boolean(aCapturar)}
+        onOpenChange={(v) => { if (!v) setACapturar(null); }}
+        embarqueId={aCapturar?.embarque_id ?? null}
+        expediente={aCapturar?.embarques?.expediente ?? null}
+        nombreArchivo={aCapturar?.nombre_archivo ?? null}
+        pendiente={capturar.isPending}
+        onConfirm={async (facturaId) => {
+          if (!aCapturar) return;
+          await capturar.mutateAsync({ id: aCapturar.id, facturaId });
+          setACapturar(null);
+        }}
+      />
 
       <RechazarFacturaEntranteDialog
         open={Boolean(aRechazar)}
