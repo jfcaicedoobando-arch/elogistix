@@ -20,7 +20,7 @@ import { useDocumentTitle } from "@/hooks/shared";
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: cot, isLoading } = usePortalCotizacion(id);
+  const { data: cot, isLoading, isError, refetch } = usePortalCotizacion(id);
   useRegisterBreadcrumbLabel(id, cot?.folio);
   useDocumentTitle(cot ? `Cotización · ${cot.folio}` : "Cotización");
   const totales = usePortalCotizacionDetalle(cot);
