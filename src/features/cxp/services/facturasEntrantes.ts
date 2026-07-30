@@ -127,12 +127,6 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   return data.id;
 }
 
-export async function urlFirmadaFacturaEntrante(path: string, expiraEn = 3600): Promise<string> {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, expiraEn);
-  if (error) throw error;
-  return data.signedUrl;
-}
-
 /**
  * v13.359.0 — Abre el archivo del buzón sin navegar al dominio del backend.
  *
