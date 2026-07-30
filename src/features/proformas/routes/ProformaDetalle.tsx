@@ -81,63 +81,50 @@ function ProformaDetalleContent({ data }: ContentProps) {
 
   return (
     <PageContainer>
-      <ProformaDetalleHeader
-        numero={proforma.numero}
-        estadoProforma={proforma.estado_proforma}
-        estadoCliente={timeline.estadoCliente}
-        aceptadaPor={timeline.aceptadaPor}
-        clienteNombre={proforma.cliente_nombre}
-        expediente={proforma.expediente}
-        totales={totales}
-        actions={
-          <AccionesProforma
-            proforma={proforma}
-            downloadingId={downloadingId}
-            onDescargar={() => descargar(proforma)}
+      <DocumentoDetalleShell
+        kpis={buildKpisProforma({
+          totales,
+          diasCredito: proforma.dias_credito,
+          fechaEmision: proforma.fecha_emision,
+          facturada: proforma.estado_proforma === "facturada",
+        })}
+        header={
+          <ProformaDetalleHeader
+            numero={proforma.numero}
+            estadoProforma={proforma.estado_proforma}
+            estadoCliente={timeline.estadoCliente}
+            aceptadaPor={timeline.aceptadaPor}
+            clienteNombre={proforma.cliente_nombre}
+            expediente={proforma.expediente}
+            enviadaAt={timeline.enviadaAt}
+            facturada={proforma.estado_proforma === "facturada"}
+            actions={
+              <AccionesProforma
+                proforma={proforma}
+                downloadingId={downloadingId}
+                onDescargar={() => descargar(proforma)}
+              />
+            }
           />
         }
-      />
-
-      <div className="grid gap-4 lg:grid-cols-3 items-start">
-        <div className="lg:col-span-2 space-y-4">
-          <ProformaConceptosCard
-            conceptos={conceptos}
-            totales={totales}
-            emptyMessage={emptyConceptos}
-          />
-          {facturas.length > 0 && <FacturaAsociadaCard facturas={facturas} />}
-          <NotasCard notas={proforma.notas} />
-        </div>
-
-        <aside className="space-y-4">
-          <ProformaDatosGeneralesCard
-            fechaEmision={proforma.fecha_emision}
-            diasCredito={proforma.dias_credito}
-            diasCreditoCliente={clienteFull?.dias_credito}
-            folioFacturaExterna={proforma.folio_factura_externa}
-            blMaster={proforma.bl_master}
-          />
-          <ClienteBillToCard
-            cliente={clienteFull}
-            clienteNombreFallback={proforma.cliente_nombre}
-            clienteId={proforma.cliente_id}
-          />
-          {mostrarEmbarque && (
-            <EmbarqueDatosCard
-              embarque={embarqueFull}
-              embarqueId={proforma.embarque_id}
-              expediente={proforma.expediente}
-            />
-          )}
-          <TimelineProforma
+        rail={
+          <ProformaRail
+            proformaId={proforma.id}
             fechaEmision={proforma.fecha_emision}
             operador={proforma.operador}
             timeline={timeline}
             envios={proforma.envios}
           />
-          <ProformaBitacoraCard proformaId={proforma.id} />
-        </aside>
-      </div>
+        }
+      >
+        <ProformaTabs
+          proforma={proforma}
+          conceptos={conceptos}
+          totales={totales}
+          emptyConceptos={emptyConceptos}
+        />
+      </DocumentoDetalleShell>
     </PageContainer>
   );
 }
+
