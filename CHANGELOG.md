@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.354.4] - 2026-07-30
+- CI: `useNumericField` movido a `features/cotizacion/hooks/` (regla de arquitectura).
+- CI: mensaje amigable para `LC_COTIZACION_SIN_IMPORTES`.
+- CI: texto del banner de correos sin resolver corregido (pluralización).
+
+
 ## [13.354.3] - 2026-07-30
 - **test(e2e · R-03/R-09)**: nuevas pruebas end-to-end para el alta de proveedores (nacional y extranjero) y para restaurar el borrador del wizard de cotización.
 
