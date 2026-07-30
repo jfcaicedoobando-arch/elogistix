@@ -14,6 +14,8 @@ import { useSubirFacturaEntrante } from "@/features/cxp/hooks/useFacturasEntrant
 import { useSubirEntranteForm } from "@/features/cxp/hooks/useSubirEntranteForm";
 import { ArchivosEntranteDropZone } from "@/features/embarques/components/entrantes/ArchivosEntranteDropZone";
 import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiMetaPreview";
+import { SelectorProveedorEntrante } from "@/features/embarques/components/entrantes/SelectorProveedorEntrante";
+import { avisoProveedorEntrante } from "@/lib/domain/proveedorEntrante";
 
 interface Props {
   open: boolean;
@@ -25,6 +27,14 @@ interface Props {
 export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, organizationId }: Props) {
   const form = useSubirEntranteForm({ organizationId });
   const subir = useSubirFacturaEntrante();
+
+  const aviso = avisoProveedorEntrante({
+    detectadoId: form.proveedorDetectado?.id ?? null,
+    detectadoNombre: form.proveedorDetectado?.nombre ?? null,
+    seleccionadoId: form.proveedor?.id ?? null,
+    rfcEmisor: form.meta?.rfcEmisor ?? null,
+    tieneXml: Boolean(form.xml),
+  });
 
   const cerrar = () => {
     form.limpiar();
