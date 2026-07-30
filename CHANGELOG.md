@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.353.0] - 2026-07-30
+- **feat(costeo · R-10)**: el catálogo `/costeo/navieras` ya tiene botón "Nueva naviera" y estado vacío accionable; administradores, gerencia de operaciones y coordinación logística pueden dar de alta y editar navieras (antes sólo super admin).
+- **fix(cotizaciones · R-08)**: el botón "Enviar por correo" del detalle se deshabilita cuando la cotización va en $0 y explica en tooltip qué falta.
+- **fix(navegación · R-12.2)**: los guards anidados muestran un placeholder contenido, sin empujar el layout ni parpadear el sidebar mientras se resuelve la sesión.
+- **fix(copys · R-13)**: contadores pluralizados (clientes, cotizaciones, facturas, usuarios), roles con etiqueta legible en el sidebar ("Ejecutivo de Pricing") y títulos de ventana propios en Inicio y Cotizaciones.
+- **fix(clientes · R-15)**: "Nuevo cliente" pide confirmación antes de descartar la captura y los campos de crédito conservan lo tecleado hasta salir del campo.
+- **fix(cargas · R-05)**: el portal de embarques y la bandeja de pagos programados ofrecen "Reintentar" en vez de quedarse en esqueleto si la consulta falla.
+
 ## [13.352.0] - 2026-07-30
 - **fix(cotizaciones · R-01)**: la columna "Cant." ya no recorta silenciosamente a 9,999 y cada celda numérica edita su propio buffer, así que teclear en un campo ya no altera los de al lado.
 - **fix(proveedores · R-03)**: el alta de proveedor envía sólo columnas reales de la tabla, valida categoría ↔ tipo/subtipo antes de guardar y el toast muestra el error real del servidor en vez de "undefined". Alta de ruta de costeo avisa si aún no se resuelve la organización.
