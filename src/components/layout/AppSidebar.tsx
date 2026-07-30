@@ -32,10 +32,12 @@ function computeUserInitials(email: string | undefined): string {
 }
 
 function computeRoleLabel(effectiveRole: string | null | undefined): string {
-  if (effectiveRole === "super_admin") return "Super Admin";
+  // R-13: usar el catálogo de roles en vez de capitalizar el enum a mano
+  // ("Ejecutivo_pricing" → "Ejecutivo pricing").
   if (!effectiveRole) return "";
-  return effectiveRole.charAt(0).toUpperCase() + effectiveRole.slice(1);
+  return obtenerEtiquetaRol(effectiveRole);
 }
+
 
 const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props, _ref) {
   const { state, isMobile } = useSidebar();
