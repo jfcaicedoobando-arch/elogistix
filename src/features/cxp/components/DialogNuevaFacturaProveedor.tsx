@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { formatCurrency } from "@/lib/formatters";
+
 import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { usePermissions } from "@/hooks/shared";
 import { DialogFacturaProveedorSinPermiso } from "@/features/cxp/components/DialogFacturaProveedorSinPermiso";
