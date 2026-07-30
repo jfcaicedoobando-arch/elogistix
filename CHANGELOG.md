@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.346.2] - 2026-07-30
+- **Fix · Duplicar cotización ya no falla.** La regla que impide que el autor acepte su propia cotización buscaba un dato ("creado por") que nunca existió en la tabla, así que reventaba cualquier actualización, incluida la duplicación. Se agregó la columna `created_by` (se llena sola con el usuario que crea la cotización) y se corrigió el trigger. Analogía: el guardia pedía una credencial que la empresa nunca había impreso.
+- **Fix · Seguridad (FIX-45).** La función interna del trigger quedaba ejecutable por usuarios anónimos; ahora sólo la usa el sistema (`REVOKE` a PUBLIC/anon, `GRANT` a `service_role`).
+
+
 ## [13.346.1] - 2026-07-30
 - **Fix · Las pantallas de carga ya no fingen un error a los 15 s.** El aviso "No se pudo cargar la información" con botón "Reintentar" sólo aparece cuando la pantalla realmente sabe cómo reintentar; si no, sigue mostrando el spinner mientras la consulta avanza. Analogía: dejamos de colgar un letrero de "cerrado" sólo porque la fila iba lenta.
 - **Fix · Los mensajes de éxito ya no se borran al navegar.** Al cambiar de página sólo se descartan los toasts de error; las confirmaciones tipo "Guardado correctamente" sobreviven al redirect para que alcances a leerlas.
