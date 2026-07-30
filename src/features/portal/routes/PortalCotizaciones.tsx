@@ -1,26 +1,23 @@
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { usePortalCotizaciones, usePortalClientUsers } from "@/features/portal/hooks";
-import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { ClipboardList, Ship, Plus } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SolicitarCotizacionDialog } from "@/features/portal/components/SolicitarCotizacionDialog";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
 import { PortalCotizacionesMobileFilters } from "@/features/portal/components/PortalCotizacionesMobileFilters";
+import {
+  PortalCotizacionCard,
+  type PortalCotizacionCardRow,
+} from "@/features/portal/components/PortalCotizacionCard";
 import { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
-import { calcularDesgloseMoneda, parseConceptos } from "@/lib/domain/cotizacionDetalle";
 import { PORTAL_COTIZACION_ESTADOS_VISIBLES } from "@/features/portal/services/queries";
 import { useDocumentTitle } from "@/hooks/shared";
 
 export default function PortalCotizaciones() {
   useDocumentTitle('Mis Cotizaciones');
-  const navigate = useNavigate();
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
   const {
