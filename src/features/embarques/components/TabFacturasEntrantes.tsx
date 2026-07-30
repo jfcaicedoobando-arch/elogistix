@@ -29,6 +29,7 @@ import {
 } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { urlFirmadaFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 import { SubirFacturaEntranteDialog } from "@/features/embarques/components/SubirFacturaEntranteDialog";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 
 interface Props {
   embarqueId: string;
