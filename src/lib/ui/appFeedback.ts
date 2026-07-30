@@ -64,6 +64,8 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     method,
   });
 
+  const errorToastId = `err-${errorCode ?? phase ?? "generic"}`;
+  ERROR_TOAST_IDS.add(errorToastId);
   sonnerToast.error(computedTitle, {
     description,
     // P-05: dedupe por código de error (reemplaza en vez de apilar) y
