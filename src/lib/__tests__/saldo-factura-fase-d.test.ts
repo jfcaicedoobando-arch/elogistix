@@ -14,6 +14,13 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
+const MIGRATIONS_DIR = path.resolve(__dirname, "../../../supabase/migrations");
+
+/** Lee una migración concreta (contrato congelado de Fase D). */
+function readMigration(file: string): string {
+  return fs.readFileSync(path.join(MIGRATIONS_DIR, file), "utf8");
+}
+
 function readLatestMigrationWith(marker: string): string {
   const dir = path.resolve(__dirname, "../../../supabase/migrations");
   const files = fs
