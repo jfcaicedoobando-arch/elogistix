@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.369.1] - 2026-07-30
+- **fix(roles)**: corrección de alcance — el **Gerente comercial** consulta el **estado de cuenta de clientes** (`/cartera` y antigüedad de saldos `/cobranza/aging`), no el de proveedores. Se revierte el acceso a Compras (CxP) otorgado en 13.369.0.
+
 ## [13.369.0] - 2026-07-30
 - **feat(roles)**: el rol **Gerente comercial** ya puede consultar el **estado de cuenta de proveedores**: acceso de sólo lectura al hub de Compras, al directorio/ficha de proveedores (`/compras/proveedores`) y a la antigüedad de saldos (`/compras/aging`), con su entrada correspondiente en el menú lateral.
 
