@@ -8110,6 +8110,56 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_top_tarifas_por_codigo: {
+        Args: {
+          p_contenedor_code: string
+          p_destino_code: string
+          p_fecha?: string
+          p_organization_id?: string
+          p_origen_code: string
+        }
+        Returns: {
+          agente_id: string | null
+          agente_nombre: string | null
+          dias_credito: number | null
+          dias_libres_almacenaje_lcl: number | null
+          dias_libres_demoras: number | null
+          estado: string | null
+          flete_base: number | null
+          frecuencia_resuelta: string | null
+          id: string | null
+          moneda: string | null
+          naviera_carta_garantia_activa: boolean | null
+          naviera_carta_garantia_vigente_hasta: string | null
+          naviera_condicion_id: string | null
+          naviera_demora_dia_6: number | null
+          naviera_dias_libres_default: number | null
+          naviera_frecuencia: string | null
+          naviera_id: string | null
+          naviera_nombre: string | null
+          naviera_tiene_carta_garantia: boolean | null
+          organization_id: string | null
+          puerto_destino_id: string | null
+          puerto_destino_nombre: string | null
+          puerto_origen_id: string | null
+          puerto_origen_nombre: string | null
+          recargos_total: number | null
+          ruta_id: string | null
+          tarifa_frecuencia_override: string | null
+          tipo_contenedor_id: string | null
+          tipo_contenedor_nombre: string | null
+          total_comparable: number | null
+          transit_time_dias: number | null
+          vigente_desde: string | null
+          vigente_hasta: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "costeo_tarifas_vigentes_v"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_tracking_public: { Args: { p_token: string }; Returns: Json }
       get_user_context: { Args: never; Returns: Json }
       get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
@@ -8558,9 +8608,14 @@ export type Database = {
           tipo_iva: string
         }[]
       }
+      resolver_puerto_id: { Args: { p_valor: string }; Returns: string }
       resolver_reaprobacion_tarifa: {
         Args: { p_cotizacion_id: string; p_decision: string }
         Returns: undefined
+      }
+      resolver_tipo_contenedor_id: {
+        Args: { p_valor: string }
+        Returns: string
       }
       restaurar_embarque_cascade: {
         Args: { p_embarque_id: string }
