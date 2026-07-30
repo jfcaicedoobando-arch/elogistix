@@ -8,7 +8,7 @@ import { ReceiptText } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
 import { resumenFacturaRecibida } from "@/lib/domain/documentoEstados";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EstadoFacturaCxPCell } from "@/features/cxp/components/EstadoFacturaCxPCell";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 
@@ -29,7 +29,7 @@ export function FacturaProveedorHeader({ factura: f, actions }: Props) {
       backLabel="Volver a Facturas de proveedor"
       icon={<ReceiptText className="h-6 w-6 shrink-0 text-accent" />}
       title={<span className="font-mono tabular-nums">{f.folio_interno}</span>}
-      badge={<StatusBadge domain="cxp" status={f.estatus} />}
+      badge={<EstadoFacturaCxPCell factura={f} />}
       subtitle={
         <span className="flex flex-wrap items-center gap-x-2">
           <span>{f.proveedor_nombre}</span>
