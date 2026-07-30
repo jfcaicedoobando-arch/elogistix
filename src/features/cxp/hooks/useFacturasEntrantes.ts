@@ -8,6 +8,7 @@ import {
   capturarFacturaEntrante,
   eliminarFacturaEntrante,
   listarFacturasEntrantesPendientes,
+  listarFacturasEntrantesPorEstado,
   listarFacturasEntrantesPorEmbarque,
   rechazarFacturaEntrante,
   subirFacturaEntrante,
