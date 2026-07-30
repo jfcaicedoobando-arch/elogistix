@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.354.3] - 2026-07-30
+- **test(e2e · R-03/R-09)**: nuevas pruebas end-to-end para el alta de proveedores (nacional y extranjero) y para restaurar el borrador del wizard de cotización.
+
+
+
 ## [13.354.2] - 2026-07-30
 - **refactor(portal)**: la tarjeta de cada cotización del portal vive en su propio componente; sin cambios visibles.
 
