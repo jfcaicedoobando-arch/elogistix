@@ -48,6 +48,7 @@ function resolverConceptosParaCuadre(
 
 export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqueAdHoc }: Props) {
   const navigate = useNavigate();
+  const { canCapturarFacturaProveedor } = usePermissions();
   const cats = usePresupuestoCategorias(true);
   const ctl = useNuevaFacturaProveedorForm(() => onOpenChange(false), initialEmbarqueAdHoc);
 
