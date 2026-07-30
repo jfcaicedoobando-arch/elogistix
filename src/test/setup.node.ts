@@ -34,3 +34,28 @@ afterAll(() => {
   vi.restoreAllMocks();
   maybeGc();
 });
+
+/**
+ * Shim mínimo de storage para el entorno `node`.
+ *
+ * Analogía: es como darle a la cocina sólo el refrigerador, no toda la casa.
+ * Varios módulos de dominio importan `@/integrations/supabase/client`, que en
+ * su carga toca `localStorage`. En vez de mandar esos tests a jsdom (caro),
+ * les damos un almacén en memoria. NO se define `window`/`document`: si un
+ * test los necesita de verdad, falla ruidosamente y debe ir al proyecto jsdom.
+ */
+function createMemoryStorage(): Storage {
+  const map = new Map<string, string>();
+  return {
+    get length() { return map.size; },
+    clear: () => map.clear(),
+    getItem: (k: string) => (map.has(k) ? (map.get(k) as string) : null),
+    key: (i: number) => Array.from(map.keys())[i] ?? null,
+    removeItem: (k: string) => { map.delete(k); },
+    setItem: (k: string, v: string) => { map.set(k, String(v)); },
+  } as Storage;
+}
+
+const g = globalThis as unknown as Record<string, unknown>;
+if (typeof g.localStorage === "undefined") g.localStorage = createMemoryStorage();
+if (typeof g.sessionStorage === "undefined") g.sessionStorage = createMemoryStorage();
