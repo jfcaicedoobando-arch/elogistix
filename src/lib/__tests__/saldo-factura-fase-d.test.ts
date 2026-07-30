@@ -35,7 +35,7 @@ describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
   const sql = readLatestMigrationWith(
     "CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)",
   );
-  const faseD = readLatestMigrationWith("SUM(public.saldo_factura(f.id))");
+  const faseD = readMigration("20260722013500_faseD_reconsolidada_v13_305_10.sql");
 
 
   it("crea la función pública saldo_factura(uuid)", () => {
