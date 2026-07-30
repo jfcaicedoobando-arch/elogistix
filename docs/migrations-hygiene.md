@@ -53,3 +53,10 @@ Nunca a la baja. Si una migración legacy imposible de corregir aparece post-bas
   anon` + `GRANT EXECUTE … TO service_role`; el archivo original queda como
   legacy auditado y el baseline sube un segundo después de su timestamp.
 
+- `20260729170000` → `20260730051450` (2026-07-30): FIX-H6-03. La migración
+  `20260730012022_ee702830…` (Q-04, SoD en cotizaciones) creó
+  `public._cotizaciones_bloquear_auto_aceptacion()` como `SECURITY DEFINER` sin
+  `REVOKE ALL … FROM PUBLIC` ni `GRANT EXECUTE …`. La migración correctiva
+  `20260730051450` re-aplica la función con los grants correctos (y agrega la
+  columna `cotizaciones.created_by` que el trigger requería); el archivo
+  original queda como legacy auditado.
