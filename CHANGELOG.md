@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.356.0] - 2026-07-30
+- **fix(embarques · reapertura)**: `reabrir_embarque` ahora también salta el validador de transiciones (`app.bypass_transicion`), que bloqueaba `Cerrado → Entregado` con `LC_TRANSICION_INVALIDA` (requestId `d1990e5e-f394-4115-9125-7bcaefb07daa`). Se conservan rol admin, motivo ≥ 20 caracteres, estado `Cerrado` y tenancy, más `REVOKE`/`GRANT EXECUTE` (H6).
+- **fix(UX · errores)**: el fallo de reapertura ya no muestra el genérico "El estado del registro cambió en otra sesión", sino un mensaje específico de reapertura.
+- **test**: nuevo `reabrirEmbarqueRpc.test.ts` (contrato SQL del bypass + mapeo de mensajes).
+
+
+
 ## [13.355.4] - 2026-07-30
 - **fix(CI · guardrail Sentry)**: el test de imports ya no marca `import type * as Sentry` (`dropFiltersNegocio.ts`) como violación; los imports de tipo se borran al compilar y no arrastran el SDK al bundle.
 

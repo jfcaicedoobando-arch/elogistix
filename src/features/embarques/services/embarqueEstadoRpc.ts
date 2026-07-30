@@ -63,6 +63,19 @@ export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<v
 
   } catch (e) {
     const msg = getErrorMessage(e);
+    // v13.356.0 — el guardia de transiciones bloqueaba Cerrado → Entregado y el
+    // mensaje genérico del catálogo ("cambió en otra sesión") confundía al
+    // usuario. Se inspecciona el mensaje CRUDO (antes de traducir el código LC)
+    // para dar un texto específico de reapertura.
+    const raw = e && typeof e === "object" && typeof (e as { message?: unknown }).message === "string"
+      ? (e as { message: string }).message
+      : "";
+    if (/LC_TRANSICION_INVALIDA|Cerrado a Entregado/i.test(raw)) {
+      throw new Error(
+        "El validador de estados bloqueó la reapertura (Cerrado → Entregado). Recarga la página e inténtalo de nuevo; si persiste, reporta el incidente.",
+        { cause: e },
+      );
+    }
     if (/usa reabrir_embarque|bypass_cierre/i.test(msg)) {
       throw new Error(
         "El candado de embarque cerrado bloqueó la operación. Recarga la página e inténtalo de nuevo; si persiste, reporta el incidente.",
