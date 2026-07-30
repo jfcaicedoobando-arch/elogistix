@@ -60,7 +60,13 @@ export const CRM_ROLES: AppRole[] = [
   ...ADMINS, "vendedor", "gerente_comercial", "gerente_operaciones",
 ];
 export const BITACORA_ROLES: AppRole[] = [...ADMINS, "contador", "tesorero", ...GERENTES];
-export const PROVEEDORES_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "ejecutivo_pricing"];
+// v13.369.0 — El gerente comercial necesita consultar el estado de cuenta de
+// proveedores (ficha del proveedor + antigüedad de saldos) para negociar
+// tarifas; su acceso es de sólo lectura (las RLS lo limitan vía `viewer`).
+export const PROVEEDORES_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "ejecutivo_pricing", "gerente_comercial"];
+export const COMPRAS_HUB_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "gerente_comercial"];
+export const COMPRAS_AGING_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "gerente_comercial"];
+
 
 export const DASHBOARD_DIRECCION_ROLES: AppRole[] = ["admin", "admin_org", "super_admin", "gerente_comercial", "gerente_visor", "gerente_operaciones"];
 export const CARTERA_ROLES: AppRole[] = ["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"];
@@ -84,7 +90,7 @@ export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.fre
   "/embarques": EMBARQUES_ROLES,
   "/facturacion": FACTURACION_ROLES,
   "/proformas": FACTURACION_ROLES,
-  "/compras": COMPRAS_READ_ROLES,
+  "/compras": COMPRAS_HUB_ROLES,
   "/compras/por-capturar": COMPRAS_POR_CAPTURAR_ROLES,
   "/compras/buzon": COMPRAS_POR_CAPTURAR_ROLES,
   "/compras/por-aprobar": COMPRAS_READ_ROLES,
@@ -94,7 +100,7 @@ export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.fre
   "/compras/pagos": FINANCE_READ_ROLES,
   "/compras/notas-credito": FINANCE_READ_ROLES,
   "/compras/proveedores": PROVEEDORES_ROLES,
-  "/compras/aging": COMPRAS_READ_ROLES,
+  "/compras/aging": COMPRAS_AGING_ROLES,
   "/compras/reportes": FINANCE_READ_ROLES,
   "/compras/conciliacion": COMPRAS_READ_ROLES,
   "/cartera": CARTERA_ROLES,

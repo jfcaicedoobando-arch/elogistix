@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.369.0] - 2026-07-30
+- **feat(roles)**: el rol **Gerente comercial** ya puede consultar el **estado de cuenta de proveedores**: acceso de sólo lectura al hub de Compras, al directorio/ficha de proveedores (`/compras/proveedores`) y a la antigüedad de saldos (`/compras/aging`), con su entrada correspondiente en el menú lateral.
+
 ## [13.368.0] - 2026-07-30
 - **fix(CxP · CFDI duplicado)**: el UUID fiscal ahora se guarda y se compara **siempre en mayúsculas y sin espacios** (migración de datos existentes + trigger en `proveedor_facturas` y `embarque_facturas_entrantes`). Los índices únicos usan `upper(btrim(uuid_fiscal))`, así que la detección en pantalla y la regla de la base de datos ya no pueden discrepar.
 - **fix(CxP)**: la búsqueda de duplicado distingue "no existe" de "no se pudo consultar" (`BusquedaUuidFiscal`) y reintenta con el RPC seguro `buscar_factura_proveedor_por_uuid` si RLS bloquea la lectura directa. Ya no se interpreta un fallo como "no hay duplicado".
