@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DetailSkeleton } from "@/components/shared/skeletons";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 import { usePortalCotizacion } from "@/features/portal/hooks";
 import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/SeccionMercanciaCotizacionDetalle";
 import TablaConceptosGenerico from "@/features/cotizacion/components/TablaConceptosGenerico";
