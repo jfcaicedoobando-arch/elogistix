@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.351.0] - 2026-07-30
+- **feat(documentos)**: se homologó el detalle de proformas con facturas emitidas y recibidas — mismo shell (encabezado + stepper + cinta de KPIs + pestañas) y riel fijo "Historial y actividad".
+- **fix(ui 1366×768)**: el riel lateral ahora usa 19rem en pantallas `lg` y las pestañas/steppers hacen scroll horizontal en lugar de saltar de renglón.
+- **chore(ui)**: títulos de sección unificados con `DocumentoSectionTitle` en facturas de proveedor (conceptos, datos fiscales y documentos).
+
+
 ## [13.350.3] - 2026-07-30
 - **chore(arquitectura)**: el servicio de usuarios se dividió en `listado.ts` y `mutaciones.ts` (límite de 200 líneas) y el tipo `DocumentoKpi` se movió a `src/lib/domain/documentoKpis.ts` para que `lib/` no importe de `components/`.
 
