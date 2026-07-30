@@ -26,7 +26,6 @@ import {
 } from "./cotizacionDraftStorage";
 
 export { clearDraft, draftKey, loadDraft };
-export type { StoredDraft };
 
 interface Params {
   form: UseFormReturn<CotizacionFormValues>;
@@ -103,16 +102,14 @@ export function useCotizacionDraftAutosave({ form, userId, enabled, cotizacionId
   useEffect(() => {
     if (!enabled) return;
     persist(form.getValues());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, currentStep, costosInternos, persist]);
+  }, [enabled, form, currentStep, costosInternos, persist]);
 
   // B-003: al cambiar el `cotizacionId` (transición paso 1 → 2), escribimos
   // inmediatamente para no perderlo si el usuario recarga en ese momento.
   useEffect(() => {
     if (!enabled || !cotizacionId) return;
     persist(form.getValues());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, cotizacionId, persist]);
+  }, [enabled, form, cotizacionId, persist]);
 
   return { clear, flush };
 }

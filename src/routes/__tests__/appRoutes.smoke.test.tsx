@@ -17,6 +17,13 @@ import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
 import { Layout } from "@/components/layout/Layout";
 import type { AppRole } from "@/types/appRole";
+import {
+  COMPRAS_READ_ROLES,
+  FINANCE_READ_ROLES,
+  TESORERIA_READ_ROLES,
+  PROFIT_READ_ROLES,
+  AUDITORIA_ROLES,
+} from "@/lib/access/roleRouteMatrix";
 
 interface RouteProps {
   path?: string;
@@ -53,15 +60,8 @@ function getRolesFor(records: RouteRecord[], path: string): AppRole[] | null {
 }
 
 const records = collectRoutes(appRoutes);
-const TESORERIA_ROLES: AppRole[] = ["admin", "super_admin", "contador", "tesorero"];
-const FINANCE_READ_ROLES: AppRole[] = [
-  "admin", "super_admin", "admin_org",
-  "contador", "tesorero", "auxiliar_contable", "ejecutivo_cobranza",
-  "gerente_operaciones", "gerente_visor",
-];
-const TESORERIA_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor"];
-const PROFIT_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor", "gerente_comercial"];
-const COMPRAS_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"];
+// v13.343.1 — Fuente única: se importan los sets reales de la matriz en vez de
+// duplicarlos aquí (el duplicado se desincronizó en el orden de los roles).
 
 describe("routes/appRoutes — envoltura raíz", () => {
   it("la raíz envuelve Layout con ProtectedRoute", () => {
@@ -134,7 +134,7 @@ describe("routes/appRoutes — gates de rol", () => {
     ["/profit/presupuesto", PROFIT_READ_ROLES],
     ["/papelera", ["admin", "super_admin"]],
     ["/idempotencia", ["admin", "super_admin"]],
-    ["/auditoria", ["admin", "admin_org", "viewer", "customer_service"]],
+    ["/auditoria", AUDITORIA_ROLES],
     ["/usuarios", ["admin", "admin_org", "super_admin"]],
     ["/configuracion", ["admin", "admin_org", "contador", "super_admin"]],
   ];

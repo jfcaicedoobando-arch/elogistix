@@ -55,7 +55,9 @@ const buildVendedor: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Operación", items: [...filterOperacion(["/cotizaciones"]), ...crmItems] },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
   { label: "Ventas (CxC)", items: filterVentas(["/clientes"]) },
-  { label: "Análisis", items: filterAnalisis(["/profit"]) },
+  // v13.343.1 — El vendedor NO ve Profit: `PROFIT_READ_ROLES` no lo incluye y
+  // el ítem quedaba muerto (clic → pantalla sin permiso).
+
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 

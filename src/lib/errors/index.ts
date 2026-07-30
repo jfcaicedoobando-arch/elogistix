@@ -8,7 +8,6 @@ import { translateLcCode, stripLcCode } from "./lcCodes";
 import { translatePostgresError } from "./pgErrorCodes";
 
 export { translateLcCode, stripLcCode } from "./lcCodes";
-export { translatePostgresError } from "./pgErrorCodes";
 
 const FRIENDLY_ERROR_MESSAGES: Array<{ match: RegExp; message: string }> = [
   {

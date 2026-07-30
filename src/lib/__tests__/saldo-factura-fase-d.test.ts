@@ -14,7 +14,14 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-function readLatestSaldoFacturaMigration(): string {
+const MIGRATIONS_DIR = path.resolve(__dirname, "../../../supabase/migrations");
+
+/** Lee una migración concreta (contrato congelado de Fase D). */
+function readMigration(file: string): string {
+  return fs.readFileSync(path.join(MIGRATIONS_DIR, file), "utf8");
+}
+
+function readLatestMigrationWith(marker: string): string {
   const dir = path.resolve(__dirname, "../../../supabase/migrations");
   const files = fs
     .readdirSync(dir)
@@ -23,17 +30,20 @@ function readLatestSaldoFacturaMigration(): string {
     .reverse();
   for (const f of files) {
     const body = fs.readFileSync(path.join(dir, f), "utf8");
-    if (
-      body.includes("CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)")
-    ) {
-      return body;
-    }
+    if (body.includes(marker)) return body;
   }
-  throw new Error("No se encontró migración con FUNCTION public.saldo_factura");
+  throw new Error(`No se encontró migración con: ${marker}`);
 }
 
 describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
-  const sql = readLatestSaldoFacturaMigration();
+  // v13.343.1 — Se separan las dos fuentes: la última migración que redefine
+  // `saldo_factura` (puede ser una reparación puntual) y la migración canónica
+  // de Fase D que además redefine `validar_cierre_embarque`.
+  const sql = readLatestMigrationWith(
+    "CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)",
+  );
+  const faseD = readMigration("20260722013500_faseD_reconsolidada_v13_305_10.sql");
+
 
   it("crea la función pública saldo_factura(uuid)", () => {
     expect(sql).toMatch(/CREATE OR REPLACE FUNCTION public\.saldo_factura\(p_factura_id uuid\)/);
@@ -57,48 +67,48 @@ describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
 
   it("validar_cierre_embarque regla cxc_cobrada usa saldo_factura", () => {
     // Debe haber una llamada a saldo_factura(f.id) dentro de la sección de regla 6.
-    expect(sql).toMatch(/SUM\(public\.saldo_factura\(f\.id\)\)/);
+    expect(faseD).toMatch(/SUM\(public\.saldo_factura\(f\.id\)\)/);
     // El estado ok se evalúa sobre el saldo (<= 0.01), no sobre total <= pagado.
-    expect(sql).toMatch(/v_ok := \(v_cxc_saldo <= 0\.01\)/);
+    expect(faseD).toMatch(/v_ok := \(v_cxc_saldo <= 0\.01\)/);
     // Y el detalle expone total, pagado, notas_credito y saldo.
-    expect(sql).toMatch(/'notas_credito', v_cxc_ncs/);
-    expect(sql).toMatch(/'saldo', v_cxc_saldo/);
+    expect(faseD).toMatch(/'notas_credito', v_cxc_ncs/);
+    expect(faseD).toMatch(/'saldo', v_cxc_saldo/);
   });
 
   it("cierre y cobro excluyen Sustituida y Borrador (no solo Cancelada)", () => {
     // validar_cierre_embarque: filtro sobre facturas para regla cxc_cobrada.
-    expect(sql).toMatch(
+    expect(faseD).toMatch(
       /f\.estado NOT IN \('Cancelada', 'Sustituida', 'Borrador'\)/,
     );
     // recalcular_cobro_embarques: cuenta total vivas con el mismo filtro.
-    expect(sql).toMatch(
+    expect(faseD).toMatch(
       /count\(\*\) FILTER \(WHERE f\.estado NOT IN \('Cancelada','Sustituida','Borrador'\)\)/,
     );
   });
 
   it("recalcular_estado_factura considera NCs vía saldo_factura", () => {
     // Trigger recalcula usando saldo_factura, no sólo la suma de pagos.
-    expect(sql).toMatch(/v_saldo := public\.saldo_factura\(v_factura_id\)/);
-    expect(sql).toMatch(/IF v_saldo <= 0\.01 THEN[\s\S]{0,60}v_nuevo_estado := 'Pagada'/);
+    expect(faseD).toMatch(/v_saldo := public\.saldo_factura\(v_factura_id\)/);
+    expect(faseD).toMatch(/IF v_saldo <= 0\.01 THEN[\s\S]{0,60}v_nuevo_estado := 'Pagada'/);
     // Y respeta Sustituida junto a Cancelada/Borrador (no toca su estado).
-    expect(sql).toMatch(
+    expect(faseD).toMatch(
       /IF v_estado_actual IN \('Cancelada', 'Borrador', 'Sustituida'\) THEN/,
     );
   });
 
   it("registra trigger espejo sobre factura_notas_credito para recalcular estado", () => {
-    expect(sql).toMatch(/DROP TRIGGER IF EXISTS trg_recalcular_estado_factura_nc/);
-    expect(sql).toMatch(
+    expect(faseD).toMatch(/DROP TRIGGER IF EXISTS trg_recalcular_estado_factura_nc/);
+    expect(faseD).toMatch(
       /CREATE TRIGGER trg_recalcular_estado_factura_nc[\s\S]{0,200}ON public\.factura_notas_credito/,
     );
-    expect(sql).toMatch(/EXECUTE FUNCTION public\.recalcular_estado_factura\(\)/);
+    expect(faseD).toMatch(/EXECUTE FUNCTION public\.recalcular_estado_factura\(\)/);
   });
 
   it("incluye backfill idempotente que respeta facturas ya Pagada/Cancelada/Sustituida", () => {
     // El backfill debe filtrar sólo estados que puedan cambiar a Pagada.
-    expect(sql).toMatch(
+    expect(faseD).toMatch(
       /f\.estado IN \('Emitida', 'Parcialmente pagada', 'Vencida'\)/,
     );
-    expect(sql).toMatch(/public\.saldo_factura\(f\.id\) <= 0\.01/);
+    expect(faseD).toMatch(/public\.saldo_factura\(f\.id\) <= 0\.01/);
   });
 });

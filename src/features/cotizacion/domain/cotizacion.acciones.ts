@@ -3,7 +3,7 @@
  * Extraído de `cotizacion.ts` (Power-of-10).
  */
 import type { AppRole } from "@/types/appRole";
-import { FINANCE, OPERATIONS, SALES, hasRole } from "@/hooks/shared/permissionMatrix";
+import { FINANCE, OPERATIONS, SALES, hasRole } from "@/lib/access/permissionMatrix";
 
 /** Estados de cotización relevantes para las acciones del detalle. */
 export type EstadoCotizacionAccion = "Borrador" | "Solicitada" | "Enviada" | "Aceptada" | "Rechazada" | string;

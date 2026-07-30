@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { adminGroups } from "@/features/admin/components/AdminSidebar";
+import { adminGroups } from "@/features/admin/components/adminSidebarGroups";
 
 /**
  * Q-16 — Seguridad de navegación: el sidebar de Admin no debe listar grupos
