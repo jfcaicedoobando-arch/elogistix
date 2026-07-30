@@ -53,7 +53,10 @@ interface Params {
  */
 function draftTieneContenido(values: CotizacionFormValues, costos: FilaCostoLocal[]): boolean {
   if (costos.length > 0) return true;
+  // SAFE-CAST: sólo se recorren las claves del formulario para detectar si hay
+  // algún valor capturado; no se accede a ningún campo de forma tipada.
   const v = values as unknown as Record<string, unknown>;
+
   return Object.entries(v).some(([clave, valor]) => {
     if (clave === "moneda" || clave === "tipo_operacion" || clave === "modo_transporte") return false;
     if (typeof valor === "string") return valor.trim().length > 0;
