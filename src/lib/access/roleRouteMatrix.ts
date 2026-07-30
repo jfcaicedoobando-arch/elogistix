@@ -29,6 +29,9 @@ export const COMPRAS_WRITE_ROLES: AppRole[] = [
 export const EMBARQUES_ROLES: AppRole[] = [
   ...ADMINS, "operador", "coordinador_logistico", "customer_service", "viewer",
   "contador", "gerente_operaciones", "gerente_comercial", "gerente_visor",
+  // R-11: ventas/pricing necesitan consultar el estatus del embarque que
+  // cotizaron. El acceso de escritura sigue restringido por las RLS.
+  "ejecutivo_pricing", "vendedor",
 ];
 export const COTIZACIONES_ROLES: AppRole[] = [
   ...ADMINS, "vendedor", "customer_service", "viewer", "operador",

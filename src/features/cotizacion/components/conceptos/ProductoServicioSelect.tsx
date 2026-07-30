@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { useProductosCatalogo, type ProductoCatalogo } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { SALES, hasRole } from "@/lib/access/permissionMatrix";
 import { CrearConceptoInlineForm } from "./CrearConceptoInlineForm";
 
 interface Props {
@@ -35,7 +36,10 @@ interface Props {
 }
 
 export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecciona producto", disabled, onConceptoLibre }: Props) {
-  const { organizationId } = useAuth();
+  const { organizationId, role } = useAuth();
+  // R-04: el catálogo SAT es maestro contable. Ventas/pricing lo consultan,
+  // pero no dan de alta claves nuevas desde el wizard.
+  const puedeCrearConcepto = !hasRole(SALES, role);
   const { productos, isLoading, porNombre } = useProductosCatalogo(organizationId);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -133,7 +137,7 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
                   <PenLine className="h-3.5 w-3.5 mr-1.5" /> Usar "{search.trim()}" como concepto libre
                 </Button>
               )}
-              {organizationId && (
+              {organizationId && puedeCrearConcepto && (
                 <Button
                   type="button"
                   variant="ghost"
