@@ -113,3 +113,77 @@ export function rutaArchivoEntrante(params: {
   const limpio = params.nombreArchivo.replace(/[^\w.-]+/g, "_").slice(-80);
   return `${params.organizationId}/${params.embarqueId}/${params.hash.slice(0, 16)}-${limpio}`;
 }
+
+// ─── v13.360.0 — Documento = PDF + XML del mismo CFDI ───────────────────────
+
+export type TipoArchivoEntrante = "pdf" | "xml";
+
+/** Clasifica un archivo por extensión/MIME; `null` si no es PDF ni XML. */
+export function tipoArchivoEntrante(file: { name: string; type?: string }): TipoArchivoEntrante | null {
+  const nombre = file.name.toLowerCase();
+  if (nombre.endsWith(".pdf") || file.type === "application/pdf") return "pdf";
+  if (nombre.endsWith(".xml") || file.type === "text/xml" || file.type === "application/xml") return "xml";
+  return null;
+}
+
+export interface ParejaArchivosEntrantes<T extends { name: string; type?: string }> {
+  pdf: T | null;
+  xml: T | null;
+  ignorados: T[];
+}
+
+/**
+ * Acomoda una selección múltiple (arrastrar y soltar) en las dos ranuras del
+ * documento. Si llegan varios del mismo tipo, se conserva el primero.
+ */
+export function emparejarArchivosEntrantes<T extends { name: string; type?: string }>(
+  archivos: readonly T[],
+  previo: { pdf: T | null; xml: T | null } = { pdf: null, xml: null },
+): ParejaArchivosEntrantes<T> {
+  const resultado: ParejaArchivosEntrantes<T> = { pdf: previo.pdf, xml: previo.xml, ignorados: [] };
+  for (const archivo of archivos) {
+    const tipo = tipoArchivoEntrante(archivo);
+    if (tipo === "pdf" && !resultado.pdf) resultado.pdf = archivo;
+    else if (tipo === "xml" && !resultado.xml) resultado.xml = archivo;
+    else resultado.ignorados.push(archivo);
+  }
+  return resultado;
+}
+
+/** Un documento del buzón siempre debe traer al menos un archivo. */
+export function validarParejaEntrante(pareja: {
+  pdf: { name: string; size: number } | null;
+  xml: { name: string; size: number } | null;
+}): string | null {
+  if (!pareja.pdf && !pareja.xml) return "Adjunta el PDF de la factura (y el XML si el proveedor es mexicano).";
+  for (const archivo of [pareja.pdf, pareja.xml]) {
+    if (!archivo) continue;
+    const invalido = validarArchivoEntrante(archivo);
+    if (invalido) return invalido;
+  }
+  return null;
+}
+
+/**
+ * Proveedor nacional sin XML = expediente fiscal incompleto (no es deducible).
+ * Para proveedores extranjeros el PDF es suficiente.
+ */
+export function faltaXmlFiscal(params: {
+  esNacional: boolean;
+  tieneXml: boolean;
+}): boolean {
+  return params.esNacional && !params.tieneXml;
+}
+
+/** Etiquetas de archivos adjuntos para mostrar en la lista del buzón. */
+export function chipsArchivosEntrante(row: {
+  archivo_path?: string | null;
+  xml_path?: string | null;
+}): TipoArchivoEntrante[] {
+  const chips: TipoArchivoEntrante[] = [];
+  if (row.archivo_path && !row.archivo_path.toLowerCase().endsWith(".xml")) chips.push("pdf");
+  if (row.xml_path) chips.push("xml");
+  else if (row.archivo_path?.toLowerCase().endsWith(".xml")) chips.push("xml");
+  return chips;
+}
+
