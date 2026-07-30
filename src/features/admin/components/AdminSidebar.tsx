@@ -34,25 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BrandLockup } from "@/components/layout/BrandLockup";
-
-export const adminGroups: { label: string; items: { title: string; url: string; icon: typeof LayoutDashboard }[] }[] = [
-  {
-    label: "Plataforma",
-    items: [
-      { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-      { title: "Organizaciones", url: "/admin/organizaciones", icon: Building2 },
-      { title: "Auditoría plataforma", url: "/admin/auditoria", icon: ShieldCheck },
-      { title: "Leads demo", url: "/admin/demo-leads", icon: Users2 },
-      { title: "Diagnóstico", url: "/admin/diagnostico", icon: Activity },
-    ],
-  },
-  {
-    label: "Sistema",
-    items: [
-      { title: "Configuración Global", url: "/admin/configuracion", icon: Settings },
-    ],
-  },
-];
+import { adminGroups } from "./adminSidebarGroups";
 
 export function AdminSidebar() {
   const { state } = useSidebar();
