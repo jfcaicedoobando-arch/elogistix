@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   rutaArchivoEntrante,
   validarArchivoEntrante,
-} from "@/features/cxp/domain/facturasEntrantes";
+} from "@/lib/domain/facturasEntrantes";
 
 const BUCKET = "cxp-inbox";
 

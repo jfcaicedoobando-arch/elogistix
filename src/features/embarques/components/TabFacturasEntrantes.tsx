@@ -22,13 +22,13 @@ import {
   puedeEliminarEntrante,
   resumirEntrantes,
   varianteEstadoEntrante,
-} from "@/features/cxp/domain/facturasEntrantes";
+} from "@/lib/domain/facturasEntrantes";
 import {
   useEliminarFacturaEntrante,
   useFacturasEntrantes,
 } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { urlFirmadaFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
-import { SubirFacturaEntranteDialog } from "@/features/cxp/components/SubirFacturaEntranteDialog";
+import { SubirFacturaEntranteDialog } from "@/features/embarques/components/SubirFacturaEntranteDialog";
 
 interface Props {
   embarqueId: string;

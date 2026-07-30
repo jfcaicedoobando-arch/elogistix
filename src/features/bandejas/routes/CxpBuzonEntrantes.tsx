@@ -17,7 +17,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { formatDate } from "@/lib/formatters/dates";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { diasEnEspera } from "@/features/cxp/domain/facturasEntrantes";
+import { diasEnEspera } from "@/lib/domain/facturasEntrantes";
 import {
   useFacturasEntrantesPendientes,
   useRechazarFacturaEntrante,

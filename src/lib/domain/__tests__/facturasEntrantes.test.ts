@@ -9,7 +9,7 @@ import {
   rutaArchivoEntrante,
   validarArchivoEntrante,
   varianteEstadoEntrante,
-} from "@/features/cxp/domain/facturasEntrantes";
+} from "@/lib/domain/facturasEntrantes";
 
 describe("facturasEntrantes · dominio", () => {
   it("normaliza estados desconocidos a por_capturar", () => {

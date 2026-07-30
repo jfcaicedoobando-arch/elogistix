@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { validarArchivoEntrante, TAMANO_MAX_ENTRANTE_MB } from "@/features/cxp/domain/facturasEntrantes";
+import { validarArchivoEntrante, TAMANO_MAX_ENTRANTE_MB } from "@/lib/domain/facturasEntrantes";
 import { useSubirFacturaEntrante } from "@/features/cxp/hooks/useFacturasEntrantes";
 
 interface Props {

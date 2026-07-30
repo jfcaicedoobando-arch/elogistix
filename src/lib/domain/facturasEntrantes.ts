@@ -110,6 +110,6 @@ export function rutaArchivoEntrante(params: {
   hash: string;
   nombreArchivo: string;
 }): string {
-  const limpio = params.nombreArchivo.replace(/[^\w.\-]+/g, "_").slice(-80);
+  const limpio = params.nombreArchivo.replace(/[^\w.-]+/g, "_").slice(-80);
   return `${params.organizationId}/${params.embarqueId}/${params.hash.slice(0, 16)}-${limpio}`;
 }
