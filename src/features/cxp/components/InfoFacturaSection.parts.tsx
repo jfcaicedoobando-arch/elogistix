@@ -63,7 +63,7 @@ export function UuidFiscalField({
   return (
     <div className="flex flex-col gap-1 min-w-0 col-span-2 md:col-span-1">
       <span className="text-label uppercase tracking-wider text-muted-foreground font-medium">
-        UUID fiscal (CFDI)
+        Folio fiscal (UUID)
       </span>
       <span className="text-sm text-foreground truncate font-mono">
         {uuid ?? <span className="text-muted-foreground font-sans">—</span>}
