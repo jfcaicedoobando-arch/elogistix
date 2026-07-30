@@ -34,7 +34,7 @@ export function useActividadEmbarque(embarqueId: string | undefined): Resultado 
 
   const query = useQuery({
     queryKey: queryKeys.embarques.actividad(embarqueId),
-    queryFn: () => fetchActividad(embarqueId!),
+    queryFn: () => fetchActividadEmbarque(embarqueId!),
     enabled: !!embarqueId,
     staleTime: 30_000,
   });
