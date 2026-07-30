@@ -44,7 +44,9 @@ function OperationalDashboard() {
 
   return (
     <PageContainer>
+      <Seo title="Inicio · Libre Carga" description="Resumen operativo y comercial de tus embarques." />
       <PageHeader
+
         title={
           <>
             {saludo}{" "}
