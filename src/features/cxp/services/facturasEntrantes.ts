@@ -146,7 +146,7 @@ export async function abrirFacturaEntrante(
 ): Promise<void> {
   const { data, error } = await supabase.storage.from(BUCKET).download(path);
   if (error) throw error;
-  const blobUrl = URL createObjectURLPlaceholder(data);
+  const blobUrl = URL.createObjectURL(data);
   const ventana = window.open(blobUrl, "_blank", "noopener,noreferrer");
   if (!ventana) {
     descargarBlob(data, nombreArchivo);
