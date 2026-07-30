@@ -59,7 +59,9 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined),
   );
 
-  const computedTitle = title ?? tituloPorDefecto(step, phase);
+  // R-07: el título también puede venir de `err.message` con HTML crudo.
+  const computedTitle =
+    sanitizeToastText(title) ?? tituloPorDefecto(step, phase);
 
   const debug = buildErrorReport({
     title: computedTitle,
