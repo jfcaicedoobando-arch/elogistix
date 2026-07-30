@@ -40,6 +40,8 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   const { user } = useAuth();
   const { isAdmin, canEditOperations, canCapturarFacturaProveedor } = usePermissions();
   const { data, isLoading } = useFacturasEntrantes(embarqueId);
+  // v13.347.0 — deep-link desde el checklist de cierre (?tab=costos&focus=facturas-entrantes).
+  const { registerRef } = useFocusSection();
   const eliminar = useEliminarFacturaEntrante();
   const [subirOpen, setSubirOpen] = useState(false);
   const [aEliminar, setAEliminar] = useState<FacturaEntranteRow | null>(null);
