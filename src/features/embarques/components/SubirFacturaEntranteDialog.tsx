@@ -1,17 +1,19 @@
 /**
- * Diálogo para que operaciones suba el PDF/XML de una factura de proveedor
+ * Diálogo para que operaciones suba el PDF y el XML de una factura de proveedor
  * al buzón del embarque (modo archivo: no crea la factura contable).
+ *
+ * v13.360.0 — Un solo documento con ambos archivos + lectura del CFDI.
  */
-import { useRef, useState } from "react";
 import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { validarArchivoEntrante, TAMANO_MAX_ENTRANTE_MB } from "@/lib/domain/facturasEntrantes";
 import { useSubirFacturaEntrante } from "@/features/cxp/hooks/useFacturasEntrantes";
+import { useSubirEntranteForm } from "@/features/cxp/hooks/useSubirEntranteForm";
+import { ArchivosEntranteDropZone } from "@/features/embarques/components/entrantes/ArchivosEntranteDropZone";
+import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiMetaPreview";
 
 interface Props {
   open: boolean;
@@ -21,24 +23,24 @@ interface Props {
 }
 
 export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, organizationId }: Props) {
-  const [file, setFile] = useState<File | null>(null);
-  const [nota, setNota] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const form = useSubirEntranteForm({ organizationId });
   const subir = useSubirFacturaEntrante();
 
   const cerrar = () => {
-    setFile(null);
-    setNota("");
-    setError(null);
+    form.limpiar();
     onOpenChange(false);
   };
 
   const onSubmit = async () => {
-    if (!file) { setError("Selecciona el archivo de la factura."); return; }
-    const invalido = validarArchivoEntrante(file);
-    if (invalido) { setError(invalido); return; }
-    await subir.mutateAsync({ file, embarqueId, organizationId, nota });
+    await subir.mutateAsync({
+      pdf: form.pdf,
+      xml: form.xml,
+      meta: form.meta,
+      proveedorId: form.proveedor?.id ?? null,
+      embarqueId,
+      organizationId,
+      nota: form.nota,
+    });
     cerrar();
   };
 
@@ -48,38 +50,46 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
       onOpenChange={(v) => { if (!v) cerrar(); }}
       icon={Inbox}
       title="Subir factura de proveedor al buzón"
-      description="El archivo queda en el expediente del embarque. Contabilidad lo capturará como factura de proveedor."
+      description="Los proveedores mexicanos envían PDF y XML: adjunta ambos en un solo documento. Contabilidad lo capturará como factura de proveedor."
       footer={(
         <>
           <Button variant="outline" onClick={cerrar} disabled={subir.isPending}>Cancelar</Button>
-          <Button onClick={onSubmit} disabled={subir.isPending || !file}>
+          <Button onClick={onSubmit} disabled={subir.isPending || !form.listo}>
             {subir.isPending ? "Subiendo…" : "Enviar al buzón"}
           </Button>
         </>
       )}
     >
-      <FormDialogSection title="Archivo" cols={1}>
+      <FormDialogSection title="Archivos de la factura" cols={1}>
+        <ArchivosEntranteDropZone
+          pdf={form.pdf}
+          xml={form.xml}
+          onArchivos={form.agregarArchivos}
+          onQuitarPdf={form.quitarPdf}
+          onQuitarXml={form.quitarXml}
+        />
+        {form.leyendoXml && <p className="text-xs text-muted-foreground">Leyendo el XML…</p>}
+        {form.error && <p className="text-sm text-destructive">{form.error}</p>}
+        {!form.xml && form.pdf && (
+          <p className="text-xs text-warning">
+            Sin XML sólo puede capturarse como factura extranjera. Si el proveedor es mexicano, pídele el CFDI.
+          </p>
+        )}
+      </FormDialogSection>
+
+      {form.meta && !form.leyendoXml && (
+        <FormDialogSection title="Datos detectados" cols={1}>
+          <CfdiMetaPreview meta={form.meta} metaUtil={form.metaUtil} proveedor={form.proveedor} />
+        </FormDialogSection>
+      )}
+
+      <FormDialogSection title="Nota para contabilidad" cols={1}>
         <div className="space-y-2">
-          <Label htmlFor="factura-entrante-file">Factura (PDF o XML, máx. {TAMANO_MAX_ENTRANTE_MB} MB)</Label>
-          <Input
-            id="factura-entrante-file"
-            ref={inputRef}
-            type="file"
-            accept=".pdf,.xml,application/pdf,text/xml"
-            onChange={(e) => {
-              const seleccionado = e.target.files?.[0] ?? null;
-              setFile(seleccionado);
-              setError(seleccionado ? validarArchivoEntrante(seleccionado) : null);
-            }}
-          />
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="factura-entrante-nota">Nota para contabilidad (opcional)</Label>
+          <Label htmlFor="factura-entrante-nota">Opcional</Label>
           <Textarea
             id="factura-entrante-nota"
-            value={nota}
-            onChange={(e) => setNota(e.target.value)}
+            value={form.nota}
+            onChange={(e) => form.setNota(e.target.value)}
             placeholder="Ej. Invoice del agente en Shanghái, incluye THC destino."
             rows={3}
           />
