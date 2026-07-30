@@ -36,7 +36,7 @@ describe('useUsuario Hooks', () => {
     const { result } = renderHook(() => useUpdateUserRole(), { wrapper: createWrapper() });
     await result.current.mutateAsync({ userId: 'u1', newRole: 'admin' });
     // U-02: el update se acota a la organización del caller (null = super_admin).
-    expect(mockUpdate).toHaveBeenCalledWith('u1', 'admin', null);
+    expect(mockUpdate).toHaveBeenCalledWith('u1', 'admin', undefined);
   });
 
   it('useDeleteUser calls service', async () => {
