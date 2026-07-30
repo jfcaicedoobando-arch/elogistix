@@ -101,6 +101,7 @@ export function FacturaDetalleHeader(props: Props) {
           )}
         </span>
       }
+      meta={<DocumentoStatusStepper resumen={resumenFacturaEmitida(estado)} />}
       trailing={
         <div className="flex w-full flex-col items-start gap-3 lg:w-auto lg:items-end">
           <div className="text-left shrink-0 lg:text-right">
@@ -117,6 +118,7 @@ export function FacturaDetalleHeader(props: Props) {
           {actions ? <div className="w-full lg:w-auto">{actions}</div> : null}
         </div>
       }
+
 
     />
   );
