@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.362.0] - 2026-07-30
+- **fix(usuarios · seguridad)**: el listado de usuarios internos, portal cliente y portal agente ahora se acota por `organization_id` (U-01) y el cambio de rol sólo aplica a la membresía de esa organización (U-02). `super_admin` ve la columna "Organización".
+- **feat(usuarios · ciclo de vida)**: alta por invitación por correo (sin contraseña temporal), envío de restablecimiento de contraseña y "Quitar de la organización" desde el menú de cada fila (U-03/U-04).
+- **feat(usuarios · UX)**: filtro de estado (Activo / Invitación pendiente / Rol legado), carga diferida de tabs (U-05) y catálogo de roles sincronizado en la edge function `user-management`.
+- **test**: nuevas pruebas de alcance por organización, ciclo de vida y filtros puros del módulo de usuarios (U-08).
+
 ## [13.361.3] - 2026-07-30
 - **fix(compras · buzón)**: el tab de Costos y `/compras/buzon` fallaban con `column proveedores_1.origen does not exist` (42703). El select embebido pedía `origen` cuando la columna real de `proveedores` es `origen_proveedor`; se corrigió el select, el tipo de la fila y los tres consumidores que calculan `esNacional` para el badge "Falta XML". Nuevo test de regresión sobre `SELECT_COLS_ENTRANTES`.
 
