@@ -1,6 +1,6 @@
 /**
  * v13.361.0 — Fases del checklist de cierre, ordenadas según el ciclo de vida
- * real del embarque (operación → documentos → costos → facturación → cobranza
+ * real del embarque (documentos → operación → costos → facturación → cobranza
  * y pagos → rentabilidad).
  */
 
@@ -20,8 +20,8 @@ export interface FaseCierre {
 }
 
 export const FASES_CIERRE: readonly FaseCierre[] = [
-  { id: "operacion", numero: 1, titulo: "Operación" },
-  { id: "documentos", numero: 2, titulo: "Expediente documental" },
+  { id: "documentos", numero: 1, titulo: "Expediente documental" },
+  { id: "operacion", numero: 2, titulo: "Operación" },
   { id: "costos", numero: 3, titulo: "Costos y facturas de proveedor" },
   { id: "facturacion", numero: 4, titulo: "Facturación al cliente" },
   { id: "cobranza", numero: 5, titulo: "Cobranza y pagos" },
