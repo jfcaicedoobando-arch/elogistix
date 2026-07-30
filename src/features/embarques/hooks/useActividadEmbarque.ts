@@ -6,28 +6,17 @@
  */
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query';
+import { fetchActividadEmbarque } from '@/features/embarques/services/actividadEmbarque';
 import {
   agruparPorDia,
   contarPorCategoria,
-  deduplicarActividad,
   filtrarPorCategoria,
-  normalizarActividad,
-  ordenarActividad,
   type ActividadCategoria,
   type ActividadGrupo,
   type ActividadItem,
-  type ActividadRow,
 } from '@/features/embarques/domain/actividadFeed';
 
-async function fetchActividad(embarqueId: string): Promise<ActividadItem[]> {
-  const { data, error } = await supabase.rpc('actividad_embarque', { p_embarque_id: embarqueId });
-  if (error) throw error;
-  // SAFE-CAST: el RPC devuelve exactamente las columnas de ActividadRow.
-  const rows = (data ?? []) as unknown as ActividadRow[];
-  return ordenarActividad(deduplicarActividad(normalizarActividad(rows)));
-}
 
 interface Resultado {
   items: ActividadItem[];
@@ -45,7 +34,7 @@ export function useActividadEmbarque(embarqueId: string | undefined): Resultado 
 
   const query = useQuery({
     queryKey: queryKeys.embarques.actividad(embarqueId),
-    queryFn: () => fetchActividad(embarqueId!),
+    queryFn: () => fetchActividadEmbarque(embarqueId!),
     enabled: !!embarqueId,
     staleTime: 30_000,
   });
