@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.371.0] - 2026-07-30
+- **feat(estado de cuenta · UI)**: rediseño tipo Odoo/QuickBooks. Nueva ficha de encabezado con nombre del cliente, RFC, días de crédito, periodo y fecha de corte.
+- **feat(estado de cuenta)**: barra de **antigüedad de saldos** (Corriente, 1–30, 31–60, 61–90, +90 días) con importes por moneda y filtrado al hacer clic en un bucket.
+- **fix(estado de cuenta · UI)**: los KPIs ya no se truncan con dos monedas — el importe secundario baja a la línea de apoyo.
+- **feat(estado de cuenta)**: tabla en formato statement — movimientos agrupados por moneda con subtotales, columnas Vence / Días vencidos / Cargo / Abono / Saldo / **Saldo acumulado**, orden por fecha, vencimiento o saldo, búsqueda por folio o expediente y paginación progresiva.
+
 ## [13.370.0] - 2026-07-30
 - **fix(clientes · UI)**: los KPIs del detalle de cliente pasan a 3 por fila (antes 6) — en 1366×768 se truncaban etiquetas ("Embarq…") e importes ("U…"). Etiqueta "Pendiente" → "Por cobrar".
 - **fix(clientes)**: el KPI de Contactos ya suma el contacto principal del cliente (antes mostraba 0 con contacto capturado).
