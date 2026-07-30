@@ -29,6 +29,10 @@ import { shouldAttachDetails, buildDetailsAction } from "./appFeedback.details";
 import { shouldReportToSentry } from "./appFeedback.sentry";
 import type { AnyToastFn, ErrorNotifyOptions, InfoNotifyOptions } from "./appFeedback.types";
 
+/** Q-08 · ids de los toasts de error vivos, para poder descartar SÓLO errores
+ *  al cambiar de ruta sin borrar confirmaciones de éxito. */
+const ERROR_TOAST_IDS = new Set<string>();
+
 export * from "./appFeedback.types";
 export * from "./appFeedback.sentry";
 
