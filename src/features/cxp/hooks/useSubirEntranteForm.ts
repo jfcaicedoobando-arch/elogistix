@@ -22,6 +22,7 @@ export function useSubirEntranteForm({ organizationId }: Args) {
   const [xml, setXml] = useState<File | null>(null);
   const [meta, setMeta] = useState<CfdiXmlMeta | null>(null);
   const [proveedor, setProveedor] = useState<ProveedorDetectado | null>(null);
+  const [proveedorDetectado, setProveedorDetectado] = useState<ProveedorDetectado | null>(null);
   const [nota, setNota] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [leyendoXml, setLeyendoXml] = useState(false);
@@ -31,6 +32,7 @@ export function useSubirEntranteForm({ organizationId }: Args) {
     setXml(null);
     setMeta(null);
     setProveedor(null);
+    setProveedorDetectado(null);
     setNota("");
     setError(null);
   }, []);
@@ -40,12 +42,12 @@ export function useSubirEntranteForm({ organizationId }: Args) {
     try {
       const leido = await extraerCfdiXmlMetaDeArchivo(archivo);
       setMeta(leido);
-      if (leido.rfcEmisor) {
-        const encontrado = await findProveedorByRfcEnOrg(leido.rfcEmisor, organizationId);
-        setProveedor(encontrado);
-      } else {
-        setProveedor(null);
-      }
+      const encontrado = leido.rfcEmisor
+        ? await findProveedorByRfcEnOrg(leido.rfcEmisor, organizationId)
+        : null;
+      setProveedorDetectado(encontrado);
+      // Sugerencia: sólo prellena si el operador aún no eligió a mano.
+      if (encontrado) setProveedor((actual) => actual ?? encontrado);
     } catch (e) {
       notifyError(undefined, {
         title: "No se pudo leer el XML; puedes subirlo igual y contabilidad lo revisará.",
@@ -75,7 +77,7 @@ export function useSubirEntranteForm({ organizationId }: Args) {
   const quitarXml = useCallback(() => {
     setXml(null);
     setMeta(null);
-    setProveedor(null);
+    setProveedorDetectado(null);
     setError(null);
   }, []);
 
@@ -83,7 +85,7 @@ export function useSubirEntranteForm({ organizationId }: Args) {
   const listo = Boolean((pdf || xml) && !leyendoXml && !validarParejaEntrante({ pdf, xml }));
 
   return {
-    pdf, xml, meta, metaUtil, proveedor, nota, error, leyendoXml, listo,
-    setNota, setError, agregarArchivos, quitarPdf, quitarXml, limpiar,
+    pdf, xml, meta, metaUtil, proveedor, proveedorDetectado, nota, error, leyendoXml, listo,
+    setProveedor, setNota, setError, agregarArchivos, quitarPdf, quitarXml, limpiar,
   };
 }
