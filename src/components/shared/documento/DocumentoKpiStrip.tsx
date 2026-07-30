@@ -3,13 +3,9 @@
  * Números en tipografía tabular, tono semántico opcional por métrica.
  */
 import { cn } from "@/lib/utils";
+import type { DocumentoKpi } from "@/lib/domain/documentoKpis";
 
-export interface DocumentoKpi {
-  label: string;
-  value: string;
-  tone?: "default" | "success" | "warning" | "destructive";
-  hint?: string;
-}
+export type { DocumentoKpi };
 
 const TONE_CLASS: Record<NonNullable<DocumentoKpi["tone"]>, string> = {
   default: "text-foreground",
