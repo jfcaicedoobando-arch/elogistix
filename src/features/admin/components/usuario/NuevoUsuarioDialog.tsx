@@ -161,7 +161,10 @@ export default function NuevoUsuarioDialog({
         />
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
+      {/* Con invitación por correo la columna de credenciales sólo tiene el email:
+          usar una sola columna evita el hueco vacío a 1366×768. */}
+      <div className={porInvitacion ? "grid gap-5" : "grid gap-5 md:grid-cols-2"}>
+
         <NuevoUsuarioCredencialesSection
           ocultarPassword={porInvitacion}
           email={email}
