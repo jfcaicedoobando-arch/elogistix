@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
-import { formatDateMx } from "@/lib/format/date";
+import { formatDate } from "@/lib/formatters/dates";
 import { notifyError } from "@/lib/ui/appFeedback";
 import {
   diasEnEspera,
@@ -103,7 +103,7 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Subida el {formatDateMx(row.created_at)}
+                  Subida el {formatDate(row.created_at)}
                   {row.estado === "por_capturar" && ` · ${diasEnEspera(row.created_at)} día(s) en espera`}
                   {row.proveedores?.nombre ? ` · ${row.proveedores.nombre}` : ""}
                 </p>
