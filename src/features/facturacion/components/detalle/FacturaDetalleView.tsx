@@ -80,6 +80,8 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         embarqueId={factura.embarque_id}
         proformaId={factura.proforma_id}
         proformaNumero={factura.proformas?.numero ?? null}
+        clienteNombre={factura.cliente_nombre}
+        fechaEmision={factura.fecha_emision}
         total={Number(factura.total)}
         saldo={props.saldo}
         moneda={factura.moneda}
