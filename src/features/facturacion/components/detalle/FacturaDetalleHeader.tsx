@@ -14,9 +14,12 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
+import { resumenFacturaEmitida } from "@/lib/domain/documentoEstados";
 import { formatCurrency } from "@/lib/formatters";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 import { deriveFacturaBadgeEstado } from "@/features/facturacion/domain/facturaBadgeEstado";
+
 
 interface Props {
   numero: string;
