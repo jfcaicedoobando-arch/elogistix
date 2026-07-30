@@ -12,6 +12,9 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { Seo } from "@/components/shared/Seo";
+import { pluralizar } from "@/lib/format/pluralizar";
+
 import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
