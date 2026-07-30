@@ -58,7 +58,8 @@ describe("queryClient · toast on query failure", () => {
     expect(msg).toBe("No pudimos cargar la información");
     const options = opts as { duration: number; action: { label: string } };
     expect(options.duration).toBe(8000);
-    expect(options.action.label).toBe("Ver detalles");
+    // Q-08: la acción primaria reintenta en el lugar (no navega fuera).
+    expect(options.action.label).toBe("Reintentar");
   });
 
   it("respeta meta.silentError y NO muestra toast", async () => {
