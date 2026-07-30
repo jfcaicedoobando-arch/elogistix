@@ -134,6 +134,34 @@ function mensajeDuplicado(mensaje: string): string | null {
   return null;
 }
 
+/** Ranuras de archivo del renglón: el XML puede ser el principal (sólo XML) o el segundo. */
+function columnasXmlEntrante(params: {
+  soloXml: boolean;
+  principal: ArchivoSubido;
+  xmlSubido: ArchivoSubido | null;
+}) {
+  const fuente = params.xmlSubido ?? (params.soloXml ? params.principal : null);
+  return {
+    xml_path: fuente?.path ?? null,
+    xml_nombre: fuente?.nombre ?? null,
+    xml_hash: fuente?.hash ?? null,
+  };
+}
+
+/** Datos fiscales leídos del XML; todo opcional porque el PDF puede venir solo. */
+function columnasMetaEntrante(meta: CfdiXmlMeta | null | undefined) {
+  const m = meta ?? {};
+  return {
+    uuid_fiscal: m.uuid ?? null,
+    rfc_emisor: m.rfcEmisor ?? null,
+    folio_serie: m.folioSerie ?? null,
+    fecha_emision: m.fechaEmision ?? null,
+    folio_detectado: m.folioSerie ?? null,
+    total_detectado: m.total ?? null,
+    moneda_detectada: m.moneda ?? null,
+  };
+}
+
 /** Arma el renglón a insertar; aísla el mapeo para mantener baja la complejidad. */
 function filaEntranteAInsertar(params: {
   input: SubirFacturaEntranteInput;
@@ -142,29 +170,20 @@ function filaEntranteAInsertar(params: {
   userId: string | null;
 }) {
   const { input, principal, xmlSubido, userId } = params;
-  const soloXml = !input.pdf;
-  const meta = input.meta ?? null;
   return {
     embarque_id: input.embarqueId,
     organization_id: input.organizationId,
     archivo_path: principal.path,
     archivo_hash: principal.hash,
     nombre_archivo: principal.nombre,
-    xml_path: xmlSubido?.path ?? (soloXml ? principal.path : null),
-    xml_nombre: xmlSubido?.nombre ?? (soloXml ? principal.nombre : null),
-    xml_hash: xmlSubido?.hash ?? (soloXml ? principal.hash : null),
-    uuid_fiscal: meta?.uuid ?? null,
-    rfc_emisor: meta?.rfcEmisor ?? null,
-    folio_serie: meta?.folioSerie ?? null,
-    fecha_emision: meta?.fechaEmision ?? null,
-    folio_detectado: meta?.folioSerie ?? null,
-    total_detectado: meta?.total ?? null,
-    moneda_detectada: meta?.moneda ?? null,
+    ...columnasXmlEntrante({ soloXml: !input.pdf, principal, xmlSubido }),
+    ...columnasMetaEntrante(input.meta),
     nota: input.nota?.trim() || null,
     proveedor_id: input.proveedorId ?? null,
     subido_por: userId,
   };
 }
+
 
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
   const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
