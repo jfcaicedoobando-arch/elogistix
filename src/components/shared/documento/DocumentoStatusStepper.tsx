@@ -28,7 +28,8 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
   }
 
   return (
-    <ol className={cn("flex flex-wrap items-center gap-1", className)} aria-label="Ciclo de vida del documento">
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      <ol className="flex flex-wrap items-center gap-1" aria-label="Ciclo de vida del documento">
       {resumen.pasos.map((paso, i) => {
         const completado = i < resumen.indiceActual;
         const actual = i === resumen.indiceActual;
