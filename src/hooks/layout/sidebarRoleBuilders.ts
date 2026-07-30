@@ -119,10 +119,13 @@ const buildGerenteComercial: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...crmItems] },
   { label: "Ventas (CxC)", items: filterVentas(["/comisiones", "/clientes"]) },
+  // v13.369.0 — Estado de cuenta de proveedores (ficha + antigüedad de saldos).
+  { label: "Compras (CxP)", items: filterCompras(COMPRAS_PROVEEDOR_VIEW) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
   { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
 ];
+
 
 const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
