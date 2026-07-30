@@ -9,6 +9,11 @@ import { parseInputNumero } from "../../utils/parseInputNumero";
  * en medio del tecleo (la causa de que Cant./Costo/Venta se contaminaran
  * entre sí). El valor se parsea y se confirma únicamente en `onBlur`.
  */
+/** Importes: los separadores de miles se descartan antes de parsear. */
+function parseImporte(raw: string): number {
+  return parseInputNumero(raw.replace(/,/g, ""));
+}
+
 export interface NumericFieldBinding {
   value: string;
   onFocus: () => void;
@@ -28,7 +33,7 @@ export function useNumericField(
   commit: (n: number) => void,
   options: Options = {},
 ): NumericFieldBinding {
-  const { parse = parseInputNumero, fallback = 0 } = options;
+  const { parse = parseImporte, fallback = 0 } = options;
   const [raw, setRaw] = useState<string | null>(null);
 
   const onFocus = useCallback(() => {
@@ -36,7 +41,7 @@ export function useNumericField(
   }, [value]);
 
   const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const limpio = e.target.value.replace(/[^0-9.,]/g, "").replace(",", ".");
+    const limpio = e.target.value.replace(/[^0-9.,]/g, "");
     setRaw(limpio);
   }, []);
 
