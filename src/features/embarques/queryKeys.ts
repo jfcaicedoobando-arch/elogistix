@@ -19,6 +19,7 @@ export const embarques = {
   single: (id?: string) => ['embarque', id] as const,
   bitacora: (embarqueId?: string, expediente?: string) =>
     ['embarques', 'bitacora', embarqueId, expediente] as const,
+  actividad: (embarqueId?: string) => ['embarques', 'actividad', embarqueId] as const,
   adminPendientes: (embarqueId?: string) => ['embarque', embarqueId, 'admin-pendientes'] as const,
   cierreValidacion: (embarqueId?: string) => ['embarque', embarqueId, 'cierre-validacion'] as const,
   cierreLog: (embarqueId?: string) => ['embarque', embarqueId, 'cierre-log'] as const,
