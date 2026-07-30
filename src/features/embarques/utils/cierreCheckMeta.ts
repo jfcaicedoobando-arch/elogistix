@@ -9,6 +9,7 @@ import {
   fmtCxc, fmtCxp, fmtDocs, fmtMargen, fmtVentaPendientes,
   fmtSinFactura, fmtContenedores, fmtContenedoresFechas, fmtRepPendientes,
   fmtComisionesNoDefinitivas, fmtMargenMinimoPct,
+  fmtEntrantesPendientes, fmtEntrantesEvidencia,
 } from "./cierreCheckFormatters";
 
 export type ResponsableCierre =
