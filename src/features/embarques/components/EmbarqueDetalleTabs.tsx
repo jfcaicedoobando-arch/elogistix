@@ -6,6 +6,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { FileEdit } from "lucide-react";
 import { TabResumen } from "@/features/embarques/components/TabResumen";
 import { TabDocumentos } from "@/features/embarques/components/TabDocumentos";
+import { TabFacturasEntrantes } from "@/features/embarques/components/TabFacturasEntrantes";
 import { TabCostos } from "@/features/embarques/components/TabCostos";
 import { TabFacturacion } from "@/features/embarques/components/TabFacturacion";
 import { TabNotas } from "@/features/embarques/components/TabNotas";
