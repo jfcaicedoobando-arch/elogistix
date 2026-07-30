@@ -31,6 +31,8 @@ interface FacturaDetalleBodyProps {
 
 export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
   const { factura, canEdit, puedeEditarBorrador, conceptosVivos, onRegistrarPago } = props;
+  const { data: pagos = [] } = usePagosFactura(factura.id);
+  const { data: notasCredito = [] } = useNotasCreditoDeFactura(factura.id);
 
   const tabs: DocumentoTabItem[] = [
     {
