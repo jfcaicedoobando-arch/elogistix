@@ -3,6 +3,7 @@
  * Extraído de `ComprasPorAprobar.tsx` para respetar el límite de 200 líneas.
  * v13.232.0 · Migrado a `ConfirmActionDialog` (Lote 7d.2).
  */
+import { pluralizar } from "@/lib/format/pluralizar";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatCurrency } from "@/lib/formatters";
 
@@ -24,7 +25,7 @@ export function ConfirmarAprobacionLoteDialog({
       open={open}
       onOpenChange={onOpenChange}
       size="md"
-      title={`Aprobar ${cantidad} factura(s) en lote`}
+      title={`Aprobar ${pluralizar(cantidad, "factura")} en lote`}
       confirmLabel={`Aprobar ${cantidad}`}
       isPending={isRunning}
       onConfirm={onConfirm}

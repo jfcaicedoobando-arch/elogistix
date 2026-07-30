@@ -1,4 +1,5 @@
 
+import { pluralizar } from "@/lib/format/pluralizar";
 import { Building2, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -75,7 +76,7 @@ export default function Clientes() {
       <PageHeader
         icon={<Building2 className="h-6 w-6 text-accent" />}
         title="Clientes"
-        description={`${totalCount} clientes registrados`}
+        description={`${pluralizar(totalCount, "cliente")} ${totalCount === 1 ? "registrado" : "registrados"}`}
         actions={
           canEdit ? (
             <div className="hidden md:flex gap-2">

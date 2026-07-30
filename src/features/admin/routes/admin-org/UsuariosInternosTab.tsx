@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { pluralizar } from "@/lib/format/pluralizar";
 import { useDebouncedValue } from "@/lib/hooks";
 import { DataTable } from "@/components/shared/DataTable";
 import {
@@ -128,7 +129,7 @@ export function UsuariosInternosTab() {
           <AlertTitle>No se pudieron cargar los correos</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center gap-3">
             <span>
-              {correosNoResueltos} usuario(s) se muestran sin correo porque el servicio de
+              {pluralizar(correosNoResueltos, "usuario")} se muestran sin correo porque el servicio de
               autenticación no respondió.
             </span>
             <Button size="sm" variant="outline" onClick={() => void refetch()} disabled={isFetching}>

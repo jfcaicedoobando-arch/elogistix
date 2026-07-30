@@ -2,6 +2,7 @@
  * Barra de aprobación en lote para /compras/por-aprobar.
  * Extraído para bajar la complejidad ciclomática de la route.
  */
+import { pluralizar } from "@/lib/format/pluralizar";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,7 +30,7 @@ export function ComprasPorAprobarBulkBar({
     >
       <p className="text-xs text-muted-foreground">
         {hasSelection
-          ? `${selectedCount} factura(s) seleccionada(s) · ${formatCurrency(totalSelMxn, "MXN")} · ${formatCurrency(totalSelUsd, "USD")}`
+          ? `${pluralizar(selectedCount, "factura")} ${selectedCount === 1 ? "seleccionada" : "seleccionadas"} · ${formatCurrency(totalSelMxn, "MXN")} · ${formatCurrency(totalSelUsd, "USD")}`
           : "Selecciona una o más facturas para aprobarlas en lote."}
         {isRunning && progreso && (
           <span className="ml-2 text-accent">
