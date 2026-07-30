@@ -27,17 +27,27 @@ import { RechazarFacturaEntranteDialog } from "@/features/bandejas/components/Re
 
 export default function CxpBuzonEntrantes() {
   const { canCapturarFacturaProveedor } = usePermissions();
-  const { data = [], isLoading } = useFacturasEntrantesPendientes();
+  const { data: pendientes = [], isLoading } = useFacturasEntrantesPendientes();
   const rechazar = useRechazarFacturaEntrante();
   const [aRechazar, setARechazar] = useState<FacturaEntranteRow | null>(null);
+  const [soloSinXml, setSoloSinXml] = useState(false);
 
-  const abrirArchivo = async (row: FacturaEntranteRow) => {
+  const abrirArchivo = async (path: string, nombre: string) => {
     try {
-      await abrirFacturaEntrante(row.archivo_path, row.nombre_archivo);
+      await abrirFacturaEntrante(path, nombre);
     } catch (error) {
       notifyError(undefined, { title: "No se pudo abrir el archivo", error, method: "ABRIR_FACTURA_ENTRANTE" });
     }
   };
+
+  // v13.360.0 — Un CFDI mexicano sin XML no es deducible: se resalta y se filtra.
+  const sinXml = (row: FacturaEntranteRow) => faltaXmlFiscal({
+    esNacional: (row.proveedores?.origen ?? "Nacional") === "Nacional",
+    tieneXml: chipsArchivosEntrante(row).includes("xml"),
+  });
+  const totalSinXml = pendientes.filter(sinXml).length;
+  const data = soloSinXml ? pendientes.filter(sinXml) : pendientes;
+
 
   const masDeTresDias = data.filter((row) => diasEnEspera(row.created_at) >= 3).length;
 
