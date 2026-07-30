@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.363.0] - 2026-07-30
+- **fix(embarques)**: al editar un embarque el toast salía en verde pero los conceptos quitados reaparecían. El guardado sí borraba (lógico) las filas, pero la lectura del detalle no excluía `deleted_at`, así que volvía a traerlas. Se añadió el filtro en `fetchEmbarqueConceptosVenta` / `fetchEmbarqueConceptosCosto`.
+- **fix(datos)**: mismo filtro faltante en lecturas hermanas que sumaban o mostraban conceptos eliminados: hueco de facturación, gastos pendientes de facturación, operaciones del proveedor y conceptos de una proforma.
+- **fix(bitácora)**: `diffConceptos` colapsaba conceptos con el mismo nombre y proveedor, reportando "1 eliminado" cuando se habían quitado 2. Ahora agrupa por clave en listas; se extrajo a `src/features/auditoria/utils/diffConceptos.ts` (regla ≤200 líneas).
+- **test**: regresiones de borrado lógico en las consultas del detalle y suite nueva para `diffConceptos`.
+
 ## [13.362.1] - 2026-07-30
 - **fix(usuarios · UI)**: auditoría visual a 1366×768. El selector de rol mostraba etiqueta **y** descripción dentro del trigger (`SelectValue` clona el contenido del ítem), desbordando la celda y encimando el texto entre filas; ahora el trigger muestra sólo la etiqueta truncada.
 - **fix(usuarios · UI)**: el modal "Nuevo Usuario" usa una sola columna cuando el alta es por invitación, eliminando el hueco vacío junto al campo de correo.
