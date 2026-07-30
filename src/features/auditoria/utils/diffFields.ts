@@ -183,7 +183,7 @@ function agruparPorClave(lista: ConceptoLike[] | null | undefined): Map<string, 
   return out;
 }
 
-function diffBucket(k: string, antes: ConceptoLike[], despues: ConceptoLike[], out: ConceptosDiff): void {
+function diffBucket(antes: ConceptoLike[], despues: ConceptoLike[], out: ConceptosDiff): void {
   const comunes = Math.min(antes.length, despues.length);
   for (let i = 0; i < comunes; i += 1) compararConcepto(antes[i], despues[i], out);
   for (let i = comunes; i < despues.length; i += 1) {
@@ -194,7 +194,6 @@ function diffBucket(k: string, antes: ConceptoLike[], despues: ConceptoLike[], o
     out.eliminados += 1;
     out.detalle.push({ tipo: "eliminado", concepto: nombreOf(antes[i]), antes: resumen(antes[i]) });
   }
-  void k;
 }
 
 export function diffConceptos(
@@ -210,11 +209,11 @@ export function diffConceptos(
   const out: ConceptosDiff = { agregados: 0, eliminados: 0, modificados: 0, detalle: [] };
 
   for (const [k, despues] of mapAfter) {
-    diffBucket(k, mapBefore.get(k) ?? [], despues, out);
+    diffBucket(mapBefore.get(k) ?? [], despues, out);
   }
   for (const [k, antes] of mapBefore) {
     if (mapAfter.has(k)) continue;
-    diffBucket(k, antes, [], out);
+    diffBucket(antes, [], out);
   }
   return out;
 }
