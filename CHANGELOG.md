@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.350.2] - 2026-07-30
+- **chore(observabilidad)**: se dividieron los filtros de Sentry en funciones pequeñas para pasar el límite de complejidad de ESLint (CI lint verde).
+
+
+
 ## [13.350.1] - 2026-07-30
 - **Corrección · Crear concepto SAT desde cotizaciones.** Los roles comerciales (pricing, ventas, operativo) ya pueden dar de alta un concepto en línea; antes la base de datos lo rechazaba por permisos (Sentry JAVASCRIPT-REACT-3S).
 - **Corrección · Ruido en el monitoreo.** Se dejan de reportar como errores las caídas del túnel de Cloudflare (error 1033/530) y los rechazos de permisos de la base de datos (Sentry JAVASCRIPT-REACT-44/45/47/48/49).
