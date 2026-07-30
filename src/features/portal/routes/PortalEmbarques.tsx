@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { PageSkeleton } from "@/components/shared/skeletons";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
@@ -13,12 +12,15 @@ import { PortalEmbarquesMobileFilters } from "@/features/portal/components/Porta
 import { Ship, Package, ChevronDown } from "lucide-react";
 import { usePortalEmbarquesController } from "@/features/portal/hooks";
 import { useIsMobile, useDocumentTitle } from "@/hooks/shared";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 
 export default function PortalEmbarques() {
   useDocumentTitle('Mis Embarques');
   const isMobile = useIsMobile();
   const {
     isLoading,
+    isError,
+    refetch,
     embarques,
     filtered,
     grouped,
@@ -32,8 +34,16 @@ export default function PortalEmbarques() {
     setFiltroModo,
   } = usePortalEmbarquesController();
 
-  if (isLoading) {
-    return <PageSkeleton />;
+  // R-05: sin retry el portal se quedaba en esqueleto indefinido si la API fallaba.
+  if (isLoading || isError) {
+    return (
+      <LoadingState
+        label="Cargando tus embarques…"
+        error={isError}
+        onRetry={() => { void refetch(); }}
+        errorLabel="No pudimos cargar tus embarques."
+      />
+    );
   }
 
   return (

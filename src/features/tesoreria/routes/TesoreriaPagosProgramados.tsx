@@ -8,7 +8,7 @@ import { agruparPorSemana, type FacturaProgramable } from "@/features/tesoreria/
 import { tesoreria as tesoreriaKeys } from "@/features/tesoreria/queryKeys";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { PageSkeleton } from "@/components/shared/skeletons";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
 import { useEjecutarPagoProgramado } from "@/features/tesoreria/hooks/useEjecutarPagoProgramado";
@@ -20,7 +20,7 @@ import { buildPagosProgramadosColumns, filtrarProgramables, type FiltroBandeja }
 export default function TesoreriaPagosProgramados() {
   // B-030: fetch directo sin filtro implícito de estado (antes la RPC
   // `cxp_por_pagar` ocultaba captura/Borrador/por aprobar con fecha).
-  const { data = [], isLoading } = useQuery({
+  const { data = [], isLoading, isError, refetch } = useQuery({
     queryKey: tesoreriaKeys.pagosProgramables,
     queryFn: fetchPagosProgramables,
     staleTime: 30_000,
@@ -79,11 +79,17 @@ export default function TesoreriaPagosProgramados() {
 
   const columns = useMemo(() => buildPagosProgramadosColumns(abrirDialogoPago), []);
 
-  if (isLoading) {
+  // R-05: la bandeja debe ofrecer reintento si la consulta falla o se cuelga.
+  if (isLoading || isError) {
     return (
       <PageContainer>
         <PageHeader title="Pagos programados" description="Bandeja semanal de Tesorería." />
-        <PageSkeleton />
+        <LoadingState
+          label="Cargando pagos programados…"
+          error={isError}
+          onRetry={() => { void refetch(); }}
+          errorLabel="No se pudieron cargar los pagos programados."
+        />
       </PageContainer>
     );
   }

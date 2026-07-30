@@ -35,7 +35,7 @@ import {
 import { crmChildRoutes } from "./crmRoutes";
 
 const guarded = (roles: AppRole[], element: ReactNode) => (
-  <ProtectedRoute allowedRoles={roles}>{element}</ProtectedRoute>
+  <ProtectedRoute allowedRoles={roles} inline>{element}</ProtectedRoute>
 );
 
 import {

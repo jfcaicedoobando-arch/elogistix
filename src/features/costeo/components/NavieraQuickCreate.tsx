@@ -16,9 +16,13 @@ import { useAdminNavieras } from "@/features/catalogos/hooks";
 interface Props {
   /** Se invoca con el id de la naviera recién creada para seleccionarla. */
   onCreada: (id: string) => void;
+  /** `inline` = enlace discreto dentro de un formulario; `boton` = CTA de página. */
+  variante?: "inline" | "boton";
+  /** Texto del disparador. */
+  etiqueta?: string;
 }
 
-export function NavieraQuickCreate({ onCreada }: Props) {
+export function NavieraQuickCreate({ onCreada, variante = "inline", etiqueta }: Props) {
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -44,15 +48,21 @@ export function NavieraQuickCreate({ onCreada }: Props) {
 
   return (
     <>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="mt-1 h-7 px-1 text-2xs text-muted-foreground"
-        onClick={() => setOpen(true)}
-      >
-        <Plus className="mr-1 h-3 w-3" /> Agregar naviera
-      </Button>
+      {variante === "boton" ? (
+        <Button type="button" size="sm" onClick={() => setOpen(true)}>
+          <Plus className="mr-1 h-4 w-4" /> {etiqueta ?? "Nueva naviera"}
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="mt-1 h-7 px-1 text-2xs text-muted-foreground"
+          onClick={() => setOpen(true)}
+        >
+          <Plus className="mr-1 h-3 w-3" /> {etiqueta ?? "Agregar naviera"}
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">

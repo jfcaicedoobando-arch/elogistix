@@ -12,6 +12,9 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { Seo } from "@/components/shared/Seo";
+import { pluralizar } from "@/lib/format/pluralizar";
+
 import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -79,9 +82,14 @@ export default function Cotizaciones() {
 
   return (
     <PageContainer>
+      <Seo
+        title="Cotizaciones · Libre Carga"
+        description="Consulta, filtra y da seguimiento a tus cotizaciones."
+      />
       <PageHeader
         title="Cotizaciones"
-        description={`${c.filtered.length} cotizaciones encontradas`}
+        description={`${pluralizar(c.filtered.length, "cotización", { plural: "cotizaciones" })} ${c.filtered.length === 1 ? "encontrada" : "encontradas"}`}
+
         actions={
           <CotizacionesPageActions
             canEdit={c.canEdit}

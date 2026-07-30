@@ -10,9 +10,16 @@ import { notifyWarning } from "@/lib/ui/appFeedback";
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: AppRole[];
+  /**
+   * R-12.2: los guards anidados viven DENTRO del layout. Un spinner de alto
+   * completo empujaba el contenido y provocaba un parpadeo del sidebar al
+   * resolverse la sesión; con `inline` el placeholder ocupa sólo el área de
+   * contenido.
+   */
+  inline?: boolean;
 }
 
-export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, allowedRoles, inline = false }: ProtectedRouteProps) {
   const { user, role, effectiveRole, organization, loading } = useAuth();
   const location = useLocation();
 
@@ -32,8 +39,17 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (loading) {
     return (
-      <div className="flex h-dvh items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div
+        role="status"
+        aria-live="polite"
+        className={
+          inline
+            ? "flex min-h-[50vh] items-center justify-center"
+            : "flex h-dvh items-center justify-center"
+        }
+      >
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+        <span className="sr-only">Verificando permisos…</span>
       </div>
     );
   }

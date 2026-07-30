@@ -25,7 +25,7 @@ function embarqueMatchesSearch(e: EmbarqueRow, estadoVisual: string, q: string):
 export function usePortalEmbarquesController() {
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = useMemo(() => clientUsers.map((cu) => cu.cliente_id), [clientUsers]);
-  const { data: embarques = [], isLoading } = usePortalEmbarques(clienteIds);
+  const { data: embarques = [], isLoading, isError, refetch } = usePortalEmbarques(clienteIds);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialEstado = searchParams.get("estado") || "todos";
@@ -81,6 +81,8 @@ export function usePortalEmbarquesController() {
 
   return {
     isLoading,
+    isError,
+    refetch,
     embarques,
     filtered,
     grouped,

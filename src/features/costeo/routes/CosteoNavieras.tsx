@@ -20,6 +20,7 @@ import type { CosteoNavieraCondicion } from "@/features/costeo/types/navieraCond
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { NavieraQuickCreate } from "@/features/costeo/components/NavieraQuickCreate";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -106,6 +107,7 @@ export default function CosteoNavieras() {
       <PageHeader
         title="Condiciones por naviera"
         description="Carta garantía, días libres y tabulador escalonado de demoras por tipo de contenedor."
+        actions={<NavieraQuickCreate variante="boton" onCreada={() => undefined} />}
       />
 
       {isLoading ? (
@@ -117,7 +119,10 @@ export default function CosteoNavieras() {
             data={filas}
             rowKey={(f) => f.naviera_id}
             emptyState={
-              <div className="p-6 text-center text-muted-foreground">Sin navieras configuradas.</div>
+              <div className="flex flex-col items-center gap-3 p-8 text-center text-muted-foreground">
+                <p className="text-sm">Aún no hay navieras en el catálogo de tu organización.</p>
+                <NavieraQuickCreate variante="boton" onCreada={() => undefined} />
+              </div>
             }
           />
         </Card>
