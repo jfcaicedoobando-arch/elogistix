@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { diffConceptos } from "@/features/auditoria/utils/diffConceptos";
 
-describe("diffConceptos", () => {
+describe("diffConceptos · claves repetidas (regresión v13.363.0)", () => {
   it("cuenta cada fila eliminada aunque compartan nombre y proveedor", () => {
     const antes = [
       { descripcion: "Demoras", precio_unitario: 3680, cantidad: 1, moneda: "USD" },
