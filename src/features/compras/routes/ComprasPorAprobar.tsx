@@ -1,5 +1,6 @@
 /** Bandeja /compras/por-aprobar — Ola C: facturas bajo flujo de aprobación. */
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ShieldCheck, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -12,7 +13,6 @@ import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
-import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
@@ -24,10 +24,10 @@ import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
 
 export default function ComprasPorAprobar() {
-  const { canEdit, canAprobarFacturaProveedor } = usePermissions();
+  const { canAprobarFacturaProveedor } = usePermissions();
+  const navigate = useNavigate();
   const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("pendiente");
   const [search, setSearch] = useState("");
-  const [detalle, setDetalle] = useState<FacturaCxP | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { aprobar, isRunning, progreso } = useAprobarFacturasLote();
@@ -141,18 +141,11 @@ export default function ComprasPorAprobar() {
               rowKey={(f) => f.id}
               density="compact"
               initialSort={{ key: "vencimiento", dir: "asc" }}
-              onRowClick={(fact) => setDetalle(fact)}
+              onRowClick={(fact) => navigate(`/compras/facturas/${fact.id}`)}
             />
           )}
         </CardContent>
       </Card>
-
-      <DialogDetallePagosProveedor
-        open={!!detalle}
-        onOpenChange={(o) => !o && setDetalle(null)}
-        factura={detalle ? rows.find((r) => r.id === detalle.id) ?? detalle : null}
-        canEdit={canEdit}
-      />
 
       <ConfirmarAprobacionLoteDialog
         open={confirmOpen}

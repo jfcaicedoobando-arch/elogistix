@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, FileText, Download, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,12 +39,17 @@ export default function Cxp() {
   const { canEdit, canCapturarFacturaProveedor } = usePermissions();
   const f = useCxpPageState();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const abrirDetalle = useCallback(
+    (fact: FacturaCxP) => navigate(`/compras/facturas/${fact.id}`),
+    [navigate],
+  );
 
   const { data = [], isLoading, isError, refetch, kpis } = useFacturasCxP(f.queryArgs);
   const eliminar = useEliminarFacturaProveedor();
   const { isExporting: exportandoPdf, run: runPdfExport } = usePdfExport({ successTitle: "Reporte PDF descargado", method: "CXP_EXPORT_PDF" });
 
-  useCxpDeepLinks({ data, isLoading, onOpenDetalle: f.setDetalle });
+  useCxpDeepLinks({ data, isLoading, onOpenDetalle: abrirDetalle });
 
   const handlePdf = () => runPdfExport(async () => {
     const fecha = todayLocalISO();
@@ -148,7 +154,7 @@ export default function Cxp() {
                 rowKey={(f) => f.id}
                 density="compact"
                 initialSort={{ key: "folio_interno", dir: "desc" }}
-                onRowClick={(fact) => f.setDetalle(fact)}
+                onRowClick={abrirDetalle}
                 stickyHeader
                 columnVisibility={colVis.visibility}
                 onColumnVisibilityChange={(updater) => {
