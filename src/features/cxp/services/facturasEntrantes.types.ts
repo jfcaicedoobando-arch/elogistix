@@ -31,7 +31,7 @@ export interface FacturaEntranteRow {
   capturado_por: string | null;
   created_at: string;
   embarques?: { expediente: string | null } | null;
-  proveedores?: { nombre: string | null; origen?: string | null } | null;
+  proveedores?: { nombre: string | null; origen_proveedor?: string | null } | null;
 }
 
 export const SELECT_COLS_ENTRANTES =
