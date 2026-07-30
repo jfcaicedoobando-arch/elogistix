@@ -58,3 +58,15 @@ describe("shortName", () => {
     expect(shortName("")).toBe("-");
   });
 });
+
+describe("toTitleCase · códigos cortos (R-14)", () => {
+  it("preserva dígitos en códigos cortos", () => {
+    expect(toTitleCase("R3")).toBe("R3");
+    expect(toTitleCase("contenedor m2")).toBe("Contenedor M2");
+    expect(toTitleCase("ruta T1 norte")).toBe("Ruta T1 Norte");
+  });
+
+  it("sigue limpiando dígitos colgantes de raíces largas", () => {
+    expect(toTitleCase("acme123")).toBe("Acme");
+  });
+});
