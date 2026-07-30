@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.355.2] - 2026-07-30
+- **fix(seguridad · BD)**: `guard_estado_factura` y `tg_proforma_eur_no_soportada` ahora fijan `search_path = public, pg_temp` (linter Supabase 0011).
+- **chore(seguridad)**: verificado que `facturapi-reconciliar-cancelaciones` ya exige el header `X-Cron-Secret` (endpoint cron-only).
+
+
 ## [13.355.1] - 2026-07-30
 - **fix(embarques · JAVASCRIPT-REACT-4G/4H)**: la pantalla de edición ahora avisa que el embarque está cerrado y ofrece ir al detalle, en vez de dejar llenar el wizard y fallar al guardar.
 - **fix(observabilidad)**: Sentry ya no reporta validaciones esperadas (reglas de negocio `P0001`, duplicados `23505`/`23514`), pérdidas de conexión del cliente ni rechazos de promesa vacíos (JAVASCRIPT-REACT-4E/4F/4J/43).
