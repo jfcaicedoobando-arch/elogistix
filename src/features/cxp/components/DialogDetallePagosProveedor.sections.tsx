@@ -1,38 +1,11 @@
 /**
  * Sub-componentes presentacionales del detalle de factura CxP.
- * FacturaToolbar quedó reemplazado por StatusActionBar (.actionbar.tsx);
- * este archivo mantiene FacturaResumen (KPIs) y PagosTable.
+ * v13.349.0: los KPIs viven ahora en `DocumentoKpiStrip`; este archivo
+ * conserva la tabla de pagos.
  */
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import { formatCurrency } from "@/lib/formatters";
-import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
+import { HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
 import { PagoFila, type PagoRow } from "./DialogDetallePagosProveedor.fila";
-import type { FacturaCxP } from "@/features/cxp/services";
-
-/** Grilla de KPIs con énfasis contextual (Saldo si hay saldo, Pagado si liquidada). */
-export function FacturaResumen({
-  f, pagosCount,
-}: { f: FacturaCxP; pagosCount: number }) {
-  const conSaldo = f.saldo > 0.01;
-  return (
-    <div className="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-3 border-b bg-background">
-      <Kpi label="Total factura" value={formatCurrency(f.total, f.moneda)} />
-      <Kpi
-        label="Total pagado"
-        value={formatCurrency(f.pagado, f.moneda)}
-        tone="success"
-        emphasis={!conSaldo && f.pagado > 0}
-      />
-      <Kpi
-        label="Saldo pendiente"
-        value={formatCurrency(f.saldo, f.moneda)}
-        tone={conSaldo ? "warn" : "default"}
-        emphasis={conSaldo}
-      />
-      <Kpi label="# Pagos" value={String(pagosCount)} />
-    </div>
-  );
-}
 
 interface PagosTableProps {
   pagos: PagoRow[];
@@ -41,6 +14,7 @@ interface PagosTableProps {
   onEliminarPago: (id: string) => void;
 }
 
+/** Tabla de pagos aplicados a la factura de proveedor. */
 export function PagosTable({ pagos, isLoading, canEdit, onEliminarPago }: PagosTableProps) {
   if (isLoading) return <ListSkeleton rows={3} />;
   if (pagos.length === 0) {

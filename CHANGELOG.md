@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.349.0] - 2026-07-30
+- **Mejora · Detalle de factura de proveedor con página propia.** Las facturas recibidas dejan de abrirse en una ventana emergente: ahora tienen su propia página (`/compras/facturas/{id}`) con el mismo lenguaje visual que las facturas emitidas — encabezado con línea de estados (Borrador → Vigente → Aprobada → Pagada), cinta de indicadores (total, pagado, saldo y vencimiento) y pestañas enlazables de Conceptos, Proveedor y fiscal, Pagos y anticipos, y Notas de crédito, con el historial siempre visible a la derecha.
+- **Mejora · Facturas emitidas con la misma estructura.** El detalle de la factura al cliente adopta el mismo esquema de pestañas y riel lateral, inspirado en el estándar de Odoo/QuickBooks.
+- **Técnico.** Nuevos bloques compartidos (`DocumentoLayout`, `DocumentoStatusStepper`, `DocumentoKpiStrip`, `DocumentoTabs`) y lógica de ciclo de vida centralizada en `src/lib/domain/documentoEstados.ts`.
+
+
 ## [13.348.2] - 2026-07-30
 - **Técnico · Arquitectura.** El feed de actividad del embarque mueve su acceso a datos a `src/features/embarques/services/actividadEmbarque.ts`; el hook ya no usa el cliente de la base directamente y las pruebas de arquitectura vuelven a pasar.
 

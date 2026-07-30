@@ -7,7 +7,10 @@ import { FacturaDetalleModales } from "@/features/facturacion/components/detalle
 import { FacturaDetalleBody } from "@/features/facturacion/components/detalle/FacturaDetalleBody";
 import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
 import { ClaimPendingBanner } from "@/features/facturacion/components/detalle/ClaimPendingBanner";
+import { DocumentoKpiStrip } from "@/components/shared/documento/DocumentoKpiStrip";
+import { buildKpisFactura } from "@/features/facturacion/domain/facturaKpis";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
+
 import type { FacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import type { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
 import type { useTimbrarRep } from "@/features/facturacion/hooks/useTimbrarRep";
@@ -104,11 +107,14 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
       />
 
 
+      <DocumentoKpiStrip kpis={buildKpisFactura(factura, props.saldo)} />
+
       <ClaimPendingBanner
         facturaId={factura.id}
         facturapiId={factura.facturapi_id ?? null}
         facturapiClaimAt={factura.facturapi_claim_at ?? null}
       />
+
 
       {mostrarSustitutaCancelada && factura.sustituida_por && (
         <SustitutaCanceladaBanner

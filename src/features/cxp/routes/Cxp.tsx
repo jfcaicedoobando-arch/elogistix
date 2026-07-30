@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, FileText, Download, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,6 @@ import { queryKeys } from "@/lib/query";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReporteCarteraDocument se carga dinámicamente en el handler.
 import type { FacturaCxP } from "@/features/cxp/services";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { withOrgPrefix } from "@/lib/filenames";
 import { todayLocalISO } from "@/lib/date/today";
 import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
@@ -35,15 +35,20 @@ import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
 
 export default function Cxp() {
   useDocumentTitle("Facturas de proveedor");
-  const { canEdit, canCapturarFacturaProveedor } = usePermissions();
+  const { canCapturarFacturaProveedor } = usePermissions();
   const f = useCxpPageState();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const abrirDetalle = useCallback(
+    (fact: FacturaCxP) => navigate(`/compras/facturas/${fact.id}`),
+    [navigate],
+  );
 
   const { data = [], isLoading, isError, refetch, kpis } = useFacturasCxP(f.queryArgs);
   const eliminar = useEliminarFacturaProveedor();
   const { isExporting: exportandoPdf, run: runPdfExport } = usePdfExport({ successTitle: "Reporte PDF descargado", method: "CXP_EXPORT_PDF" });
 
-  useCxpDeepLinks({ data, isLoading, onOpenDetalle: f.setDetalle });
+  useCxpDeepLinks({ data, isLoading, onOpenDetalle: abrirDetalle });
 
   const handlePdf = () => runPdfExport(async () => {
     const fecha = todayLocalISO();
@@ -61,14 +66,6 @@ export default function Cxp() {
       await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),
     );
   });
-
-  const onEliminar = useCallback((fact: FacturaCxP) => {
-    if (fact.pagado > 0) {
-      notifyError(undefined, { title: "No se puede eliminar: la factura tiene pagos registrados", method: "PAGES_CXP_CXP_1" });
-      return;
-    }
-    f.setAEliminar(fact);
-  }, [f]);
 
   const columns = useMemo(() => buildCxPColumns(), []);
   const colVis = useColumnVisibility("cxp-facturas-columns", CXP_COL_DEFAULTS);
@@ -148,7 +145,7 @@ export default function Cxp() {
                 rowKey={(f) => f.id}
                 density="compact"
                 initialSort={{ key: "folio_interno", dir: "desc" }}
-                onRowClick={(fact) => f.setDetalle(fact)}
+                onRowClick={abrirDetalle}
                 stickyHeader
                 columnVisibility={colVis.visibility}
                 onColumnVisibilityChange={(updater) => {
@@ -170,9 +167,7 @@ export default function Cxp() {
       <CxpRouteDialogs
         f={f}
         data={data}
-        canEdit={canEdit}
         isPendingEliminar={eliminar.isPending}
-        onEliminar={onEliminar}
         onConfirmEliminar={async () => {
           if (!f.aEliminar) return;
           try { await eliminar.mutateAsync(f.aEliminar.id); } catch { /* hook notifica */ }

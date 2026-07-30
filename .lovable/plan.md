@@ -1,71 +1,46 @@
-# Auditoría y robustecimiento del tab "Actividad y Notas"
+## Objetivo
 
-## Qué encontré hoy
+Hoy la **factura emitida** es una página (`src/features/facturacion/routes/FacturaDetalle.tsx`) con ~8 tarjetas apiladas verticalmente (Receptor, Resumen, Timbrado, Conceptos, Pagos, Notas de crédito, Bitácora), mientras que la **factura recibida** vive dentro de un modal (`DialogDetallePagosProveedor.tsx`) con encabezado, KPIs y secciones propias. Son dos lenguajes visuales distintos para el mismo tipo de documento.
 
-El tab (`TabNotas.tsx` + `useActividadEmbarque.ts`) sólo mezcla **3 fuentes**:
+Vamos a unificar ambos en un layout estilo Odoo: encabezado con stepper de estado, cinta de KPIs, cuerpo con pestañas y una columna derecha con la bitácora siempre visible.
 
-1. `notas_embarque` (notas manuales)
-2. `eventos_embarque` (tracking)
-3. `bitacora_actividad` filtrada por `entidad_id = embarque` o `entidad_nombre = expediente`
+## Qué se construye
 
-Problemas detectados:
+### 1. Shell compartido de documento financiero
+Nuevos componentes en `src/components/shared/documento/`:
+- `DocumentoLayout` — rejilla de 2 columnas (contenido + riel de bitácora, colapsable en móvil).
+- `DocumentoStatusStepper` — pasos del ciclo de vida, con el paso actual marcado y estados terminales (Cancelada / Sustituida) en tono destructivo.
+- `DocumentoKpiStrip` — Total, Saldo, Pagado, Vencimiento, en tipografía tabular.
+- `DocumentoTabs` — pestañas sincronizadas con la URL (`?tab=`) para deep-links.
 
-| # | Severidad | Hallazgo |
-|---|---|---|
-| 1 | CRÍTICO | **Todo lo financiero es invisible.** La bitácora de facturas, proformas, CxP y pagos se guarda con el `entidad_id` de *esa* entidad (factura/proforma/proveedor), no del embarque, así que nunca entra al feed. Hoy hay 103 "crear factura", 69 borradores, 58 timbrados, 56 cambios de proforma y 46 aprobaciones CxP que no se ven desde el embarque. |
-| 2 | CRÍTICO | **Cierres y reaperturas** viven en `cierre_embarque_log` (10 registros) y sólo se ven en el tab Cierre. |
-| 3 | ALTO | **Historial de garantías** (`embarque_garantias_historial`, 23 registros) y cambios de seguros no aparecen. |
-| 4 | ALTO | **Correos enviados** (`factura_envios`, 29) y **consultas de tracking** (`tracking_intentos`) no aparecen. |
-| 5 | ALTO | **Buzón de invoices** (`embarque_facturas_entrantes`, nuevo en 13.347.0) no aparece: no se ve quién subió ni quién capturó. |
-| 6 | MEDIO | El hook **ignora el error** de la consulta: si falla la bitácora, el usuario ve "Sin actividad registrada" (mentira silenciosa). |
-| 7 | MEDIO | Deduplicación frágil: se comparan **cadenas de fecha recortadas al minuto** para evitar duplicados de "cambio de estado". Dos acciones distintas en el mismo minuto se ocultan entre sí. |
-| 8 | MEDIO | Límite fijo de 100 entradas en bitácora, sin aviso de truncado. |
-| 9 | BAJO | El feed no distingue visualmente categorías; todo es una lista plana sin agrupar por día. |
+El stepper toma la definición de pasos de un mapa por dominio (emitida: Borrador → Por timbrar → Emitida → Pagada; recibida: Borrador → Vigente → Aprobada → Pagada), ubicado en `src/lib/domain/documentoEstados.ts` con pruebas unitarias.
 
-## Qué voy a construir
+### 2. Factura emitida — reorganización
+`FacturaDetalleBody` deja de apilar tarjetas y pasa a pestañas:
+- **Conceptos** — tabla de conceptos + totales (bloque dominante, como Odoo).
+- **Cliente y fiscal** — receptor, emisor, UUID, serie, uso CFDI, forma/método de pago.
+- **Cobros** — pagos, REP y saldo.
+- **Notas de crédito** — sección existente.
+- Riel derecho: bitácora + banners (`ClaimPendingBanner`, `SustitutaCanceladaBanner`).
 
-### 1. Un solo RPC que reúne todo
+El encabezado conserva `DetailHeader` y suma stepper y cinta de KPIs; las acciones se agrupan en un botón primario contextual + menú "Más" (patrón Odoo/QBO) en lugar de una fila larga de botones.
 
-Nueva función `public.actividad_embarque(p_embarque_id uuid)` que hace `UNION ALL` de todas las fuentes ligadas al embarque y devuelve un feed ordenado por fecha. Fuentes:
+### 3. Factura recibida — de modal a página
+- Nueva ruta `/compras/facturas/:id` con `FacturaProveedorDetalle.tsx`, registrada en `appRoutes.tsx` con los mismos permisos que el módulo de compras.
+- Reutiliza el mismo shell y las secciones ya existentes (`InfoFacturaSection`, `ConceptosFacturaSection`, `AnticiposAplicadosSection`, `PagosTable`, `NotasCreditoSection`, `HistorialFacturaSection`) repartidas en pestañas: Conceptos · Proveedor y fiscal · Pagos y anticipos · Notas de crédito, con historial en el riel.
+- La `StatusActionBar` actual se adapta al encabezado compartido.
+- Los listados de compras navegan a la ruta; el modal queda como envoltorio delgado sólo mientras se migran los puntos de entrada, y se elimina al final para no dejar dos fuentes de verdad.
 
-```text
-Operación   notas_embarque · eventos_embarque · documentos_embarque
-            bitacora (entidad_id = embarque) · tracking_intentos
-Comercial   cotización origen (embarques.cotizacion_id) + su bitácora
-Finanzas    proformas (embarque_id) · facturas (vía factura_embarques)
-            pagos y notas de crédito de esas facturas · factura_envios
-            proveedor_facturas (embarque_id) + pagos a proveedor
-            embarque_facturas_entrantes (subida / captura / rechazo)
-Riesgo      embarque_garantias_historial · seguros_embarque
-Cierre      cierre_embarque_log (cerrar / reabrir con motivo)
-```
-
-- Se ejecuta con los permisos del usuario (`SECURITY INVOKER`), así que **el aislamiento multi-tenant y las RLS existentes siguen aplicando** sin abrir puertas nuevas.
-- Filtra `deleted_at` en las tablas con borrado suave.
-- **Montos ocultos**: cada fila financiera pasa por `can_view_financials()`; si el rol no tiene permiso se devuelve el evento ("Factura F1010 timbrada") con el importe en `null`, y la UI muestra "—".
-- La deduplicación de "cambio de estado" se hace por clave real (id de origen + estado destino), no por minuto recortado.
-
-### 2. Rediseño del tab
-
-- Carga completa del historial de una sola vez (según tu preferencia), con contador total en el encabezado.
-- Agrupado por día ("Hoy", "Ayer", "28/07/2026") con línea de tiempo vertical, consistente con el detalle de proforma.
-- Cada entrada: ícono y color por categoría (Operación, Comercial, Finanzas, Riesgo, Cierre), acción, usuario, hora, y detalle expandible con los cambios campo-a-campo cuando existan.
-- Enlaces profundos: una entrada de factura lleva al detalle de esa factura; una de documento al tab Documentos; una de cierre al tab Cierre.
-- Estado de error real ("No se pudo cargar la actividad" + Reintentar) en vez del falso "Sin actividad".
-- La caja para escribir notas se queda arriba, sin cambios de permisos.
-
-### 3. Pruebas
-
-- Unitarias del mapeo y agrupación por día, del enmascarado de montos y de la deduplicación de cambios de estado.
-- Prueba de RLS que confirme que un usuario de otra organización no obtiene filas del RPC.
-- Prueba de componente: error de carga muestra el aviso, no el vacío.
+### 4. Design language
+Sin colores crudos: sólo tokens semánticos y `StatusBadge`. Tipografía monoespaciada tabular para folios e importes, títulos de sección en el estilo ya usado (`text-xs font-bold uppercase tracking-wide text-primary`), densidad consistente con el detalle de embarque y proforma.
 
 ## Detalles técnicos
 
-- Migración: crea `public.actividad_embarque(uuid)` (`STABLE`, `SECURITY INVOKER`, `SET search_path = public`) con `GRANT EXECUTE` sólo a `authenticated`; se agregan índices faltantes en `factura_envios(factura_id)` y `embarque_garantias_historial(garantia_id)` si no existen.
-- Frontend: `useActividadEmbarque.ts` pasa a consumir el RPC (adiós a la mezcla en cliente); `TabNotas.tsx` se divide en `TabNotas.tsx` (contenedor + caja de nota), `ActividadTimeline.tsx` y `ActividadItem.tsx` para respetar el límite de 200 líneas por archivo.
-- Se regeneran los tipos de Supabase y se registran `CHANGELOG.md` + `APP_VERSION` = `13.348.0`.
+- Todos los archivos nuevos ≤200 líneas (Power of 10); las secciones grandes se dividen en subcomponentes.
+- Sin cambios de lógica de negocio ni de base de datos: sólo presentación y ruteo. Hooks y servicios actuales se reutilizan tal cual.
+- Pruebas: unitarias para `documentoEstados.ts` (pasos y estados terminales) y render de las pestañas con deep-link por URL en ambos detalles.
+- `CHANGELOG.md` + `APP_VERSION` → `13.349.0`.
 
-## Fuera de alcance
+## Verificación
 
-No se modifica cómo se escribe la bitácora en otros módulos: el RPC lee lo que ya existe. Si más adelante quieres que cada acción de factura también quede sellada con el embarque, eso sería un cambio aparte en los servicios de escritura.
+Captura visual con Playwright (FullHD) de ambos detalles antes y después, `bunx tsgo --noEmit`, lint y suite de pruebas.

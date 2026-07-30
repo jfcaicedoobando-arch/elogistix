@@ -24,7 +24,7 @@ import {
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
   Facturacion, FacturaDetalle, EstadoCuentaInterno, ProformaDetalle, ProformasListado,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
-  Cxp, Compras, CxpAging, CxcAging, CxpPorCapturar, CxpBuzonEntrantes, CxpPorPagar, Cartera,
+  Cxp, FacturaProveedorDetalle, Compras, CxpAging, CxcAging, CxpPorCapturar, CxpBuzonEntrantes, CxpPorPagar, Cartera,
   ComprasPagos, ComprasNotasCredito, ComprasReportes, ComprasPorAprobar, ComprasConciliacion, AnticiposProveedor,
   Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, TesoreriaPagosProgramados, Comisiones,
   CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta,
@@ -75,6 +75,8 @@ export const appRoutes = (
     <Route path="/compras/por-pagar" element={guarded(COMPRAS_POR_PAGAR_ROLES, <CxpPorPagar />)} />
     <Route path="/compras/anticipos" element={guarded(COMPRAS_READ_ROLES, <AnticiposProveedor />)} />
     <Route path="/compras/facturas" element={guarded(FINANCE_READ_ROLES, <Cxp />)} />
+    <Route path="/compras/facturas/:id" element={guarded(FINANCE_READ_ROLES, <FacturaProveedorDetalle />)} />
+
     <Route path="/compras/pagos" element={guarded(FINANCE_READ_ROLES, <ComprasPagos />)} />
     <Route path="/compras/notas-credito" element={guarded(FINANCE_READ_ROLES, <ComprasNotasCredito />)} />
     <Route path="/compras/proveedores" element={guarded(PROVEEDORES_ROLES, <Proveedores />)} />
