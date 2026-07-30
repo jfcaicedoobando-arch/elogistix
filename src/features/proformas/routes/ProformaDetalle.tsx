@@ -16,18 +16,13 @@ import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargar
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import { resolveProformaTimelineFields } from "@/features/proformas/domain/proformaClienteEstado";
-import {
-  AccionesProforma,
-  FacturaAsociadaCard,
-  NotasCard,
-} from "@/features/proformas/components/ProformaDetalleCards";
-import { ClienteBillToCard } from "@/features/proformas/components/detalle/ClienteBillToCard";
-import { EmbarqueDatosCard } from "@/features/proformas/components/detalle/EmbarqueDatosCard";
-import { ProformaDatosGeneralesCard } from "@/features/proformas/components/detalle/ProformaDatosGeneralesCard";
-import { ProformaConceptosCard } from "@/features/proformas/components/detalle/ProformaConceptosCard";
-import { ProformaBitacoraCard } from "@/features/proformas/components/detalle/ProformaBitacoraCard";
-import { TimelineProforma } from "@/features/proformas/components/detalle/TimelineProforma";
+import { AccionesProforma } from "@/features/proformas/components/ProformaDetalleCards";
+import { DocumentoDetalleShell } from "@/components/shared/documento/DocumentoDetalleShell";
+import { buildKpisProforma } from "@/features/proformas/domain/proformaKpis";
+import { ProformaTabs } from "@/features/proformas/components/detalle/ProformaTabs";
+import { ProformaRail } from "@/features/proformas/components/detalle/ProformaRail";
 import { ProformaDetalleHeader } from "@/features/proformas/components/detalle/ProformaDetalleHeader";
+
 
 export default function ProformaDetalle() {
   const { id } = useParams<{ id: string }>();
