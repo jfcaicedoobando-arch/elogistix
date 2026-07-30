@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.355.3] - 2026-07-30
+- **feat(marca)**: nuevo favicon a partir del logo de barras con flecha ascendente; regenerados `favicon.ico`, `favicon.png`, `icon-192`, `icon-512`, `icon-maskable-512` y `apple-touch-icon`.
+
+
+
 ## [13.355.2] - 2026-07-30
 - **fix(seguridad · BD)**: `guard_estado_factura` y `tg_proforma_eur_no_soportada` ahora fijan `search_path = public, pg_temp` (linter Supabase 0011).
 - **chore(seguridad)**: verificado que `facturapi-reconciliar-cancelaciones` ya exige el header `X-Cron-Secret` (endpoint cron-only).
