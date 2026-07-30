@@ -56,16 +56,28 @@ export interface EstadoRecibidaInput {
   estadoAprobacion?: string | null;
 }
 
+/** Matices que se muestran junto al paso actual, no son pasos propios. */
+const SUB_ETIQUETAS: Record<string, string> = {
+  "Parcialmente pagada": "Parcialmente pagada",
+  Vencida: "Vencida",
+};
+
+function subEtiquetaDe(estado: string): string | null {
+  return SUB_ETIQUETAS[estado] ?? null;
+}
+
 function resumen(
   pasos: PasoDocumento[],
   indiceActual: number,
   etiquetaTerminal: string | null,
+  subEtiqueta: string | null = null,
 ): EstadoDocumentoResumen {
   return {
     pasos,
     indiceActual: etiquetaTerminal ? -1 : indiceActual,
     terminal: !!etiquetaTerminal,
     etiquetaTerminal,
+    subEtiqueta: etiquetaTerminal ? null : subEtiqueta,
   };
 }
 
@@ -73,17 +85,18 @@ export function resumenFacturaEmitida(estado: string | null | undefined): Estado
   const key = estado ?? "";
   const terminal = TERMINALES_EMITIDA[key] ?? null;
   const indice = INDICE_EMITIDA[key];
-  return resumen(PASOS_EMITIDA, indice ?? 0, terminal);
+  return resumen(PASOS_EMITIDA, indice ?? 0, terminal, subEtiquetaDe(key));
 }
 
 export function resumenFacturaRecibida(input: EstadoRecibidaInput): EstadoDocumentoResumen {
   const estado = input.estado ?? "";
+  const sub = subEtiquetaDe(estado);
   if (estado === "Cancelada") return resumen(PASOS_RECIBIDA, -1, "Cancelada");
   if (estado === "Pagada") return resumen(PASOS_RECIBIDA, 3, null);
   if (input.estadoAprobacion === "rechazada") return resumen(PASOS_RECIBIDA, -1, "Rechazada");
-  if (input.estadoAprobacion === "aprobada") return resumen(PASOS_RECIBIDA, 2, null);
+  if (input.estadoAprobacion === "aprobada") return resumen(PASOS_RECIBIDA, 2, null, sub);
   if (estado === "Borrador") return resumen(PASOS_RECIBIDA, 0, null);
-  return resumen(PASOS_RECIBIDA, 1, null);
+  return resumen(PASOS_RECIBIDA, 1, null, sub);
 }
 
 export function resumenDocumento(
