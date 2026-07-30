@@ -3,12 +3,13 @@
  * al buzón del embarque (modo archivo: no crea la factura contable).
  */
 import { useRef, useState } from "react";
-import { Inbox, Paperclip } from "lucide-react";
+import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FormDialogShell, FormDialogSection } from "@/components/shared/FormDialogShell";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { validarArchivoEntrante, TAMANO_MAX_ENTRANTE_MB } from "@/features/cxp/domain/facturasEntrantes";
 import { useSubirFacturaEntrante } from "@/features/cxp/hooks/useFacturasEntrantes";
 
