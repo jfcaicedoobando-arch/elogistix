@@ -98,6 +98,11 @@ export function EmbarqueDetalleTabs({
         />
       </TabsContent>
 
+      {/* v13.346.0 — Buzón CxP: operación entrega el invoice, contabilidad lo captura. */}
+      <TabsContent value="facturas-entrantes">
+        <TabFacturasEntrantes embarqueId={embarqueId} canEdit={canEdit} />
+      </TabsContent>
+
       <TabsContent value="costos" className="space-y-6">
         <TabCostos
           
