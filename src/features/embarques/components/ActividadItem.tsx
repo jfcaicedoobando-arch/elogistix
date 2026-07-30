@@ -18,7 +18,7 @@ interface Props {
 export function ActividadItem({ item }: Props) {
   const usuario = item.usuario ? nombreDesdeEmail(item.usuario) : "Sistema";
   const monto =
-    typeof item.monto === "number" ? formatMoney(item.monto, item.moneda ?? "MXN") : null;
+    typeof item.monto === "number" ? formatCurrency(item.monto, item.moneda ?? "MXN") : null;
 
   return (
     <li className="relative text-sm">
