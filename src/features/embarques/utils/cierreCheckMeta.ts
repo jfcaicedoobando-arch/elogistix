@@ -11,6 +11,7 @@ import {
   fmtComisionesNoDefinitivas, fmtMargenMinimoPct,
   fmtEntrantesPendientes, fmtEntrantesEvidencia,
 } from "./cierreCheckFormatters";
+import type { FaseCierreId } from "./cierreCheckFases";
 
 export type ResponsableCierre =
   | "Contador" | "Tesorero" | "Cobranza" | "Auxiliar contable"
@@ -23,6 +24,10 @@ export interface CierreCheckMeta {
   ruta: ((embarqueId: string, detalle?: unknown) => string) | null;
   ctaLabel: string;
   formatDetalle: (detalle: unknown) => string | null;
+  /** v13.361.0 — Fase del ciclo de vida del embarque a la que pertenece. */
+  fase: FaseCierreId;
+  /** v13.361.0 — Orden dentro de la fase. */
+  orden: number;
 }
 
 /** Construye una ruta con tab + focus opcionales. */
@@ -42,9 +47,9 @@ const rutaContenedores = (id: string, detalle?: unknown): string => {
   return `/embarques/${id}?${params.toString()}`;
 };
 
-const cxc: CierreCheckMeta = { label: "Cuentas por cobrar al día", responsable: "Cobranza", ruta: buildRuta("facturacion", "cxc"), ctaLabel: "Ir a Facturación", formatDetalle: fmtCxc };
-const cxp: CierreCheckMeta = { label: "Cuentas por pagar al día", responsable: "Tesorero", ruta: buildRuta("costos", "cxp"), ctaLabel: "Ir a Costos", formatDetalle: fmtCxp };
-const docs: CierreCheckMeta = { label: "Documentos requeridos completos", responsable: "Coordinador logístico", ruta: buildRuta("documentos", "faltantes"), ctaLabel: "Ir a Documentos", formatDetalle: fmtDocs };
+const cxc: CierreCheckMeta = { label: "Cuentas por cobrar al día", responsable: "Cobranza", ruta: buildRuta("facturacion", "cxc"), ctaLabel: "Ir a Facturación", formatDetalle: fmtCxc, fase: "cobranza", orden: 1 };
+const cxp: CierreCheckMeta = { label: "Cuentas por pagar al día", responsable: "Tesorero", ruta: buildRuta("costos", "cxp"), ctaLabel: "Ir a Costos", formatDetalle: fmtCxp, fase: "cobranza", orden: 2 };
+const docs: CierreCheckMeta = { label: "Documentos requeridos completos", responsable: "Coordinador logístico", ruta: buildRuta("documentos", "faltantes"), ctaLabel: "Ir a Documentos", formatDetalle: fmtDocs, fase: "documentos", orden: 1 };
 
 const META: Record<string, CierreCheckMeta> = {
   cxc_sin_pendientes: cxc,
@@ -57,38 +62,38 @@ const META: Record<string, CierreCheckMeta> = {
   facturas_entrantes_capturadas: {
     label: "Invoices del buzón capturados", responsable: "Auxiliar contable",
     ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
-    formatDetalle: fmtEntrantesPendientes,
+    formatDetalle: fmtEntrantesPendientes, fase: "costos", orden: 1,
   },
   facturas_entrantes_evidencia: {
     label: "Evidencia de factura recibida por proveedor", responsable: "Operador",
     ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
-    formatDetalle: fmtEntrantesEvidencia,
+    formatDetalle: fmtEntrantesEvidencia, fase: "costos", orden: 2,
   },
   pnl_margen_minimo: {
     label: "Utilidad mínima alcanzada", responsable: "Ventas",
-    ruta: buildRuta("pnl", "utilidad"), ctaLabel: "Ver P&L", formatDetalle: fmtMargen,
+    ruta: buildRuta("pnl", "utilidad"), ctaLabel: "Ver P&L", formatDetalle: fmtMargen, fase: "rentabilidad", orden: 1,
   },
   comision_calculada: {
     label: "Comisión devengada calculada", responsable: "Sistema",
-    ruta: buildRuta("pnl", "comision"), ctaLabel: "Ver P&L", formatDetalle: () => null,
+    ruta: buildRuta("pnl", "comision"), ctaLabel: "Ver P&L", formatDetalle: () => null, fase: "rentabilidad", orden: 3,
   },
   contenedores_datos_completos: {
     label: "Datos de contenedores capturados (peso y volumen)", responsable: "Operador",
-    ruta: rutaContenedores, ctaLabel: "Ir a Resumen", formatDetalle: fmtContenedores,
+    ruta: rutaContenedores, ctaLabel: "Ir a Resumen", formatDetalle: fmtContenedores, fase: "operacion", orden: 1,
   },
   contenedores_fechas_completas: {
     label: "Fechas de descarga y devolución capturadas", responsable: "Operador",
-    ruta: rutaContenedores, ctaLabel: "Ir a Resumen", formatDetalle: fmtContenedoresFechas,
+    ruta: rutaContenedores, ctaLabel: "Ir a Resumen", formatDetalle: fmtContenedoresFechas, fase: "operacion", orden: 2,
   },
   venta_conceptos_facturados: {
     label: "Todos los conceptos de venta facturados", responsable: "Contador",
     ruta: buildRuta("facturacion", "venta-pendientes"), ctaLabel: "Ir a Facturación",
-    formatDetalle: fmtVentaPendientes,
+    formatDetalle: fmtVentaPendientes, fase: "facturacion", orden: 1,
   },
   costo_conceptos_con_factura: {
     label: "Todos los costos tienen factura de proveedor recibida", responsable: "Auxiliar contable",
     ruta: buildRuta("costos", "costo-sin-factura"), ctaLabel: "Ir a Costos",
-    formatDetalle: fmtSinFactura,
+    formatDetalle: fmtSinFactura, fase: "costos", orden: 3,
   },
   // v13.90.8 — `costos_liquidados` se eliminó del RPC: la liquidación ahora se deriva
   // automáticamente desde `pagos_proveedor` y queda cubierta por la regla `cxp_pagada`.
@@ -98,6 +103,8 @@ const META: Record<string, CierreCheckMeta> = {
     ruta: buildRuta("facturacion", "rep-pendientes"),
     ctaLabel: "Ir a Facturación",
     formatDetalle: fmtRepPendientes,
+    fase: "facturacion",
+    orden: 2,
   },
   // B-042: nombres actuales emitidos por validar_cierre_embarque
   // (migración 20260723051800). Los legacy se conservan para caché histórica.
@@ -107,6 +114,8 @@ const META: Record<string, CierreCheckMeta> = {
     ruta: buildRuta("facturacion", "rep-pendientes"),
     ctaLabel: "Ir a Facturación",
     formatDetalle: fmtRepPendientes,
+    fase: "facturacion",
+    orden: 2,
   },
   comisiones_definitivas: {
     label: "Comisiones devengadas definitivas",
@@ -114,6 +123,8 @@ const META: Record<string, CierreCheckMeta> = {
     ruta: buildRuta("pnl", "comision"),
     ctaLabel: "Ver P&L",
     formatDetalle: fmtComisionesNoDefinitivas,
+    fase: "rentabilidad",
+    orden: 4,
   },
   margen_minimo: {
     label: "Margen mínimo alcanzado",
@@ -121,6 +132,8 @@ const META: Record<string, CierreCheckMeta> = {
     ruta: buildRuta("pnl", "utilidad"),
     ctaLabel: "Ver P&L",
     formatDetalle: fmtMargenMinimoPct,
+    fase: "rentabilidad",
+    orden: 2,
   },
 };
 
@@ -131,6 +144,8 @@ const FALLBACK: CierreCheckMeta = {
   ctaLabel: "",
   // v13.320.36 (B-042) — Nunca exponer JSON crudo al usuario en el checklist.
   formatDetalle: () => null,
+  fase: "otros",
+  orden: 99,
 };
 
 export function getCierreCheckMeta(regla: string): CierreCheckMeta {

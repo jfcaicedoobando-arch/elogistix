@@ -50,6 +50,22 @@ describe("cierreCheckMeta", () => {
     expect(txt).toMatch(/3 documento/);
   });
 
+  it("toda regla conocida declara fase y orden", () => {
+    const reglas = [
+      "cxc_cobrada", "cxp_pagada", "documentos_completos", "docs_completos",
+      "facturas_entrantes_capturadas", "facturas_entrantes_evidencia",
+      "pnl_margen_minimo", "comision_calculada", "contenedores_datos_completos",
+      "contenedores_fechas_completas", "venta_conceptos_facturados",
+      "costo_conceptos_con_factura", "rep_pendientes", "rep_timbrados",
+      "comisiones_definitivas", "margen_minimo",
+    ];
+    for (const r of reglas) {
+      const m = getCierreCheckMeta(r);
+      expect(m.fase, r).not.toBe("otros");
+      expect(m.orden, r).toBeGreaterThan(0);
+    }
+  });
+
   it("regla desconocida usa fallback sin ruta", () => {
     const m = getCierreCheckMeta("regla_inexistente_xyz");
     expect(m.ruta).toBeNull();

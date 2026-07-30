@@ -1,9 +1,11 @@
 /**
  * Subcomponente presentacional: tarjeta del checklist de validaciones de cierre.
  * v13.106.1 — Modo `informativo` para embarques ya cerrados (legacy).
+ * v13.361.0 — Checklist agrupado por fase del ciclo de vida del embarque.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CierreCheckItem } from "./CierreCheckItem";
+import { CierreChecklistFase } from "./CierreChecklistFase";
+import { agruparChecksPorFase } from "@/features/embarques/utils/cierreCheckOrden";
 
 export interface CierreCheck {
   regla: string;
@@ -40,18 +42,16 @@ export function CierreChecklistCard({ isLoading, checks, embarqueId, informativo
         {!isLoading && checks.length === 0 && (
           <p className="text-sm text-muted-foreground">Sin datos.</p>
         )}
-        <ul className="space-y-2">
-          {checks.map((c) => (
-            <CierreCheckItem
-              key={c.regla}
-              regla={c.regla}
-              ok={c.ok}
-              detalle={c.detalle}
+        <div className="space-y-4">
+          {agruparChecksPorFase(checks).map((grupo) => (
+            <CierreChecklistFase
+              key={grupo.fase.id}
+              grupo={grupo}
               embarqueId={embarqueId}
               informativo={informativo}
             />
           ))}
-        </ul>
+        </div>
       </CardContent>
     </Card>
   );
