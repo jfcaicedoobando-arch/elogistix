@@ -21,6 +21,12 @@ export interface CreateUserResponse {
   [key: string]: unknown;
 }
 
+/** URL de retorno para invitaciones/restablecimientos (segura en entorno node). */
+function resetRedirectUrl(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  return `${window.location.origin}/reset-password`;
+}
+
 async function getAuthToken() {
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token;
@@ -93,7 +99,7 @@ export async function createUserViaEdgeFunction(
       password: params.password,
       role: params.role,
       organization_id: params.orgId,
-      redirect_to: `${window.location.origin}/reset-password`,
+      redirect_to: resetRedirectUrl(),
     },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
@@ -142,7 +148,7 @@ export async function enviarResetPassword(userId: string): Promise<void> {
     body: {
       action: "reset-password",
       user_id: userId,
-      redirect_to: `${window.location.origin}/reset-password`,
+      redirect_to: resetRedirectUrl(),
     },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
