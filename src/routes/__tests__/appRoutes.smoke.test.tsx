@@ -134,7 +134,7 @@ describe("routes/appRoutes — gates de rol", () => {
     ["/profit/presupuesto", PROFIT_READ_ROLES],
     ["/papelera", ["admin", "super_admin"]],
     ["/idempotencia", ["admin", "super_admin"]],
-    ["/auditoria", ["admin", "admin_org", "viewer", "customer_service"]],
+    ["/auditoria", AUDITORIA_ROLES],
     ["/usuarios", ["admin", "admin_org", "super_admin"]],
     ["/configuracion", ["admin", "admin_org", "contador", "super_admin"]],
   ];
