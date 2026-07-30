@@ -76,7 +76,7 @@ export function FacturaDocumentosSection({ factura }: Props) {
               label="ACUSE"
               icon={<ShieldCheck className="h-4 w-4" />}
               disponible
-              onAbrir={() => window.open(acuse, "_blank", "noopener,noreferrer")}
+              onAbrir={() => descargarAcuse(acuse, factura.numero)}
             />
           ) : null}
         </div>
