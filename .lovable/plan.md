@@ -49,6 +49,10 @@ Buzón → [Capturar factura]
 
 ## Detalle técnico
 
+**Se reutiliza el modal existente, no se crea otro formulario.** Es el mismo "Nueva factura de proveedor" (`DialogNuevaFacturaProveedor`) que ya se usa en Costos y en Compras, sólo abierto desde el buzón y precargado con el documento. Así el contador ve la misma pantalla que ya conoce y no hay dos formularios que mantener en paralelo.
+
+
+
 **Base de datos**
 - Ampliar `capturar_factura_entrante` para heredar también `xml_path`/`uuid_fiscal` a `proveedor_facturas` (hoy sólo copia `archivo_pdf_url`), respetando los valores ya presentes en la factura.
 - Nueva RPC `capturar_entrante_creando_factura(p_documento_id, p_payload jsonb)` que dentro de una sola transacción: valida rol (contador, auxiliar_contable, admin, super_admin), organización y `estado = 'por_capturar'`; reutiliza la lógica de creación de factura de proveedor con sus conceptos y vínculos; y aplica el cambio de estado. Con `REVOKE ALL ... FROM PUBLIC` + `GRANT EXECUTE` a `authenticated` (regla H6).
