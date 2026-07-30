@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.355.4] - 2026-07-30
+- **fix(CI · guardrail Sentry)**: el test de imports ya no marca `import type * as Sentry` (`dropFiltersNegocio.ts`) como violación; los imports de tipo se borran al compilar y no arrastran el SDK al bundle.
+
+
+
 ## [13.355.3] - 2026-07-30
 - **feat(marca)**: nuevo favicon a partir del logo de barras con flecha ascendente; regenerados `favicon.ico`, `favicon.png`, `icon-192`, `icon-512`, `icon-maskable-512` y `apple-touch-icon`.
 

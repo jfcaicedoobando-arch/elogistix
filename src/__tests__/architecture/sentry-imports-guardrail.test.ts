@@ -45,7 +45,9 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-const STATIC_IMPORT_RE = /^\s*import\s+[^;]*?from\s+["']@sentry\//m;
+/** Import estático de valor. Los `import type` se ignoran: se borran al
+ *  compilar y no arrastran el SDK al bundle. */
+const STATIC_IMPORT_RE = /^\s*import\s+(?!type\s)[^;]*?from\s+["']@sentry\//m;
 
 describe("Sentry imports guardrail", () => {
   it("ningún archivo fuera de la allowlist importa @sentry/* estático", () => {
