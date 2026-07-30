@@ -36,7 +36,7 @@ describe("detectarCfdiDuplicado", () => {
 
   it("no propaga errores de red/RLS", async () => {
     buscar.mockImplementation(async () => { throw new Error("network"); });
-    await expect(detectarCfdiDuplicado("uuid-1")).resolves.toBeNull();
+    expect(await detectarCfdiDuplicado("uuid-1")).toBeNull();
   });
 });
 
