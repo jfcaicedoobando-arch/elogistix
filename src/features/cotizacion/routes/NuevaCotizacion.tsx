@@ -57,6 +57,8 @@ export default function NuevaCotizacion() {
   // para que recargar el wizard NO duplique la cotización. Antes se apagaba con
   // `enabled: !w.cotizacionId` y el id se perdía al recargar. Sólo se apaga en
   // modo edición (initialData) — aquí siempre es alta, así que enabled=true.
+  const [restaurando, setRestaurando] = useState(false);
+
   const { flush: flushDraft } = useCotizacionDraftAutosave({
     form: w.form,
     userId,
@@ -70,7 +72,6 @@ export default function NuevaCotizacion() {
   // P0 — Detectar borrador existente (re-evalúa cuando el userId async llega).
   const draftDetectado = useMemo(() => (userId ? loadDraft(userId) : null), [userId]);
   const [banderaBorrador, setBanderaBorrador] = useState(false);
-  const [restaurando, setRestaurando] = useState(false);
   useEffect(() => {
     if (draftDetectado) setBanderaBorrador(true);
   }, [draftDetectado]);
