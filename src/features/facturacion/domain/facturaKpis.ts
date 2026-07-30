@@ -1,35 +1,26 @@
 /**
- * KPIs del encabezado de una factura emitida: total, cobrado, saldo y
- * vencimiento. Sólo formato — no calcula reglas de negocio nuevas.
+ * KPIs del encabezado de una factura emitida.
+ * v13.350.0: delega en el constructor compartido `buildKpisDocumento`
+ * para que emitidas y recibidas usen las mismas etiquetas y tonos.
  */
 import type { DocumentoKpi } from "@/components/shared/documento/DocumentoKpiStrip";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { buildKpisDocumento } from "@/lib/domain/documentoKpis";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
 
 export function buildKpisFactura(factura: FacturaDetalle, saldo?: number): DocumentoKpi[] {
   const total = Number(factura.total ?? 0);
-  const cancelada = factura.estado === "Cancelada";
   const saldoNum = typeof saldo === "number" ? saldo : total;
-  const cobrado = Math.max(total - saldoNum, 0);
-  const conSaldo = !cancelada && saldoNum > 0.005;
+  const cancelada = factura.estado === "Cancelada";
 
-  return [
-    { label: "Total", value: formatCurrency(total, factura.moneda) },
-    {
-      label: "Cobrado",
-      value: formatCurrency(cancelada ? 0 : cobrado, factura.moneda),
-      tone: !conSaldo && cobrado > 0 ? "success" : "default",
-    },
-    {
-      label: "Saldo",
-      value: formatCurrency(cancelada ? 0 : saldoNum, factura.moneda),
-      tone: conSaldo ? "warning" : "default",
-    },
-    {
-      label: "Vencimiento",
-      value: factura.fecha_vencimiento ? formatDate(factura.fecha_vencimiento) : "—",
-      tone: factura.estado === "Vencida" ? "destructive" : "default",
-      hint: `${factura.dias_credito ?? 0} días de crédito`,
-    },
-  ];
+  return buildKpisDocumento({
+    total,
+    pagado: Math.max(total - saldoNum, 0),
+    saldo: saldoNum,
+    moneda: factura.moneda,
+    cancelada,
+    fechaVencimiento: factura.fecha_vencimiento,
+    diasCredito: factura.dias_credito,
+    diasVencido: factura.estado === "Vencida" ? 1 : 0,
+    etiquetaPagado: "Cobrado",
+  });
 }

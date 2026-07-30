@@ -16,7 +16,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
 import { resumenFacturaEmitida } from "@/lib/domain/documentoEstados";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 import { deriveFacturaBadgeEstado } from "@/features/facturacion/domain/facturaBadgeEstado";
 
@@ -31,6 +31,8 @@ interface Props {
   embarqueId?: string | null;
   proformaId?: string | null;
   proformaNumero?: string | null;
+  clienteNombre?: string | null;
+  fechaEmision?: string | null;
   total: number;
   saldo?: number;
   moneda: string;
@@ -45,8 +47,8 @@ interface Props {
 export function FacturaDetalleHeader(props: Props) {
   const {
     numero, estado, acuseCancelacionStatus, cancellationStatus, sinTimbrar,
-    expediente, embarqueId, proformaId, proformaNumero, total, saldo, moneda, ambiente,
-    volverHref, volverLabel, actions,
+    expediente, embarqueId, proformaId, proformaNumero, clienteNombre, fechaEmision,
+    total, saldo, moneda, ambiente, volverHref, volverLabel, actions,
   } = props;
   const vencida = estado === "Vencida";
   const esBorradorSinFolio = (numero ?? "").startsWith("BORRADOR-");
@@ -73,9 +75,21 @@ export function FacturaDetalleHeader(props: Props) {
         </>
       }
       subtitle={
-        <span className="flex items-center gap-x-2 flex-wrap">
+        <span className="flex flex-wrap items-center gap-x-2">
+          {clienteNombre && (
+            <>
+              <span>{clienteNombre}</span>
+              <span aria-hidden>•</span>
+            </>
+          )}
+          {fechaEmision && (
+            <>
+              <span>Expedida {formatDate(fechaEmision)}</span>
+              <span aria-hidden>•</span>
+            </>
+          )}
           <span>
-            Exp:{" "}
+            Exp.:{" "}
             {embarqueId ? (
               <Link to={`/embarques/${embarqueId}`} className="font-mono text-accent hover:underline">
                 {expediente}
@@ -110,8 +124,8 @@ export function FacturaDetalleHeader(props: Props) {
               {formatCurrency(total, moneda)}
             </p>
             {mostrarSaldo && (
-              <p className="text-xs tabular-nums text-destructive mt-0.5">
-                Saldo: {formatCurrency(saldo!, moneda)}
+              <p className="mt-0.5 text-xs tabular-nums text-destructive">
+                Pendiente: {formatCurrency(saldo!, moneda)}
               </p>
             )}
           </div>

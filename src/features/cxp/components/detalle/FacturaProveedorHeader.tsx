@@ -69,6 +69,11 @@ export function FacturaProveedorHeader({ factura: f, actions }: Props) {
             <p className="text-lg font-semibold tabular-nums text-foreground">
               {formatCurrency(f.total, f.moneda)}
             </p>
+            {f.estado !== "Cancelada" && f.saldo > 0.005 && (
+              <p className="mt-0.5 text-xs tabular-nums text-destructive">
+                Pendiente: {formatCurrency(f.saldo, f.moneda)}
+              </p>
+            )}
           </div>
           {actions ? <div className="w-full lg:w-auto">{actions}</div> : null}
         </div>

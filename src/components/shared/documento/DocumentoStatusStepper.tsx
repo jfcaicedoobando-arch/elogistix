@@ -28,7 +28,8 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
   }
 
   return (
-    <ol className={cn("flex flex-wrap items-center gap-1", className)} aria-label="Ciclo de vida del documento">
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      <ol className="flex flex-wrap items-center gap-1" aria-label="Ciclo de vida del documento">
       {resumen.pasos.map((paso, i) => {
         const completado = i < resumen.indiceActual;
         const actual = i === resumen.indiceActual;
@@ -52,6 +53,12 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
           </li>
         );
       })}
-    </ol>
+      </ol>
+      {resumen.subEtiqueta ? (
+        <span className="rounded-full border border-warning/40 bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">
+          {resumen.subEtiqueta}
+        </span>
+      ) : null}
+    </div>
   );
 }

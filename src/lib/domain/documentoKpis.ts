@@ -1,0 +1,56 @@
+/**
+ * Constructor único de la cinta de KPIs de documentos financieros
+ * (facturas emitidas y recibidas). Estandariza etiquetas, tonos y pistas
+ * para que ambas pantallas hablen el mismo idioma (estilo Odoo/QuickBooks).
+ * Sólo formato: no calcula reglas de negocio.
+ */
+import type { DocumentoKpi } from "@/components/shared/documento/DocumentoKpiStrip";
+import { formatCurrency, formatDate } from "@/lib/formatters";
+
+export interface DocumentoKpiInput {
+  total: number;
+  /** Importe ya cobrado (emitida) o pagado (recibida). */
+  pagado: number;
+  /** Importe pendiente del documento. */
+  saldo: number;
+  moneda: string;
+  cancelada: boolean;
+  fechaVencimiento?: string | null;
+  diasCredito?: number | null;
+  diasVencido?: number | null;
+  /** "Cobrado" para facturas emitidas, "Pagado" para recibidas. */
+  etiquetaPagado: "Cobrado" | "Pagado";
+}
+
+const UMBRAL_SALDO = 0.005;
+
+export function buildKpisDocumento(input: DocumentoKpiInput): DocumentoKpi[] {
+  const { moneda, cancelada } = input;
+  const saldo = cancelada ? 0 : input.saldo;
+  const pagado = cancelada ? 0 : input.pagado;
+  const conSaldo = saldo > UMBRAL_SALDO;
+  const diasVencido = input.diasVencido ?? 0;
+  const vencida = conSaldo && diasVencido > 0;
+
+  return [
+    { label: "Total", value: formatCurrency(input.total, moneda) },
+    {
+      label: input.etiquetaPagado,
+      value: formatCurrency(pagado, moneda),
+      tone: !conSaldo && pagado > 0 ? "success" : "default",
+    },
+    {
+      label: "Importe pendiente",
+      value: formatCurrency(saldo, moneda),
+      tone: vencida ? "destructive" : conSaldo ? "warning" : "default",
+    },
+    {
+      label: "Vence el",
+      value: input.fechaVencimiento ? formatDate(input.fechaVencimiento) : "—",
+      tone: vencida ? "destructive" : "default",
+      hint: vencida
+        ? `${diasVencido} días vencida`
+        : `${input.diasCredito ?? 0} días de crédito`,
+    },
+  ];
+}

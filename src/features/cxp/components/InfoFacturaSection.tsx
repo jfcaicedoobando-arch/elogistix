@@ -1,53 +1,36 @@
 /**
- * Sección de información de la factura de proveedor (sólo lectura).
- * v13.307.17 — Complejidad ciclomática reducida extrayendo tres sub-bloques
- * (`FechasCreditoBlock`, `DesgloseFiscalBlock`, `ReferenciasFiscalesBlock`)
- * a `InfoFacturaSection.blocks.tsx`.
+ * Sección "Proveedor y datos fiscales" de la factura de proveedor (lectura).
+ * v13.350.0 — Los adjuntos del CFDI se movieron a la pestaña "Documentos"
+ * (`DocumentosProveedorSection`) para dar paridad con facturas emitidas.
  */
-import { FileCode2, FileText } from "lucide-react";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
-import {
-  useAdjuntarArchivoCfdiFactura,
-  useQuitarArchivoCfdiFactura,
-} from "@/features/cxp/hooks/useAdjuntoFacturaProveedor";
 import { ProgramacionPagoRow } from "@/features/cxp/components/ProgramacionPagoRow";
-import { AdjuntoRow, CanceladaBanner } from "./InfoFacturaSection.parts";
+import { CanceladaBanner } from "./InfoFacturaSection.parts";
 import { formatFechaHora } from "@/lib/formatters";
 import {
   FechasCreditoBlock, DesgloseFiscalBlock, ReferenciasFiscalesBlock,
 } from "./InfoFacturaSection.blocks";
-import type { FacturaCxP, TipoAdjuntoCfdi } from "@/features/cxp/services";
+import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
   factura: FacturaCxP;
+  /** Se conserva por compatibilidad: la edición vive en otras pestañas. */
   canEdit?: boolean;
 }
 
-export function InfoFacturaSection({ factura: f, canEdit = false }: Props) {
-  const { organizationId } = useAuth();
+export function InfoFacturaSection({ factura: f }: Props) {
   const verificar = useVerificarUuidSat();
-  const adjuntar = useAdjuntarArchivoCfdiFactura();
-  const quitar = useQuitarArchivoCfdiFactura();
   const estaCancelada = f.estado === "Cancelada";
   const verifDate = f.uuid_verificado_fecha
     ? formatFechaHora(f.uuid_verificado_fecha)
     : null;
 
-  const puedeEditarAdjuntos = canEdit && !estaCancelada;
-  const handleUpload = (file: File, tipo: TipoAdjuntoCfdi) =>
-    adjuntar.mutate({ facturaId: f.id, organizationId, tipo, file });
-  const handleRemove = (path: string, tipo: TipoAdjuntoCfdi) =>
-    quitar.mutate({ facturaId: f.id, path, tipo });
-  const busyTipo = adjuntar.isPending
-    ? adjuntar.variables?.tipo
-    : quitar.isPending ? quitar.variables?.tipo : undefined;
 
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between border-b pb-2">
         <h3 className="text-xs font-bold uppercase tracking-wide text-primary">
-          Información de la factura
+          Proveedor y datos fiscales
         </h3>
       </div>
 
@@ -64,34 +47,13 @@ export function InfoFacturaSection({ factura: f, canEdit = false }: Props) {
         onVerify={() => verificar.mutate(f.id)}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold uppercase tracking-wide text-primary">CFDI adjuntos</h4>
-          <div className="flex flex-col gap-2">
-            <AdjuntoRow
-              label="XML" icon={<FileCode2 className="h-4 w-4" />}
-              path={f.archivo_xml_url} tipo="XML"
-              canEdit={puedeEditarAdjuntos}
-              isUploading={busyTipo === "XML"}
-              onUpload={handleUpload} onRemove={handleRemove}
-            />
-            <AdjuntoRow
-              label="PDF" icon={<FileText className="h-4 w-4" />}
-              path={f.archivo_pdf_url} tipo="PDF"
-              canEdit={puedeEditarAdjuntos}
-              isUploading={busyTipo === "PDF"}
-              onUpload={handleUpload} onRemove={handleRemove}
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold uppercase tracking-wide text-primary">Programación de pago</h4>
-          <ProgramacionPagoRow
-            facturaId={f.id}
-            fechaProgramada={f.fecha_programada_pago}
-            saldo={f.saldo}
-          />
-        </div>
+      <div className="space-y-2 pt-2">
+        <h4 className="text-xs font-bold uppercase tracking-wide text-primary">Programación de pago</h4>
+        <ProgramacionPagoRow
+          facturaId={f.id}
+          fechaProgramada={f.fecha_programada_pago}
+          saldo={f.saldo}
+        />
       </div>
 
       {f.notas && (
