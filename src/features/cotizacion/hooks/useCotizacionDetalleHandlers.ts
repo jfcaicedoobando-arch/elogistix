@@ -42,7 +42,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!cotizacion) return;
     try {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
-      notifySuccess(undefined, { title: `Estado actualizado a "${estado}"` });
+      // El toast de éxito/error lo emite `useUpdateEstadoCotizacion` (evita doble toast).
       if (cotizacion.oportunidad_id) {
         try {
           await sincronizarEtapaPorEstadoCotizacion({
@@ -53,8 +53,8 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
           // No bloquear el cambio de estado de la cotización por una falla CRM.
         }
       }
-    } catch (err: unknown) {
-      notifyError(undefined, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_CAMBIAR_ESTADO" });
+    } catch {
+      // Notificado por el hook de mutación.
     }
   };
 
