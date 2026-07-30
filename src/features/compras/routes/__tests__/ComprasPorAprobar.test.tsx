@@ -13,9 +13,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 vi.mock("@/features/cxp/hooks", () => ({
   useFacturasCxP: vi.fn(() => ({ data: [], isLoading: false, kpis: {} })),
 }));
-vi.mock("@/features/cxp/components/DialogDetallePagosProveedor", () => ({
-  DialogDetallePagosProveedor: () => null,
-}));
 vi.mock("@/hooks/shared", () => ({
   usePermissions: () => ({ canEdit: true }),
 }));
