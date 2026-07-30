@@ -62,6 +62,14 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           ),
         },
         {
+          id: "estado",
+          header: "Estado",
+          accessorFn: (u) => u.estado,
+          enableSorting: true,
+          meta: { width: "w-[1%] whitespace-nowrap" },
+          cell: ({ row }) => <EstadoInvitacionCell estado={row.original.estado} />,
+        },
+        {
           id: "created_at",
           header: () => <span className="whitespace-nowrap">Fecha de registro</span>,
           accessorFn: (u) => u.created_at,
