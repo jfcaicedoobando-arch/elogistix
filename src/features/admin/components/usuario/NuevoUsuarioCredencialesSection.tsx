@@ -7,6 +7,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { evaluarFuerza, generarPassword } from "@/lib/passwords/generator";
 
 interface CredencialesProps {
+  /** U-04: en alta por invitación no se pide contraseña. */
+  ocultarPassword?: boolean;
   email: string;
   password: string;
   showPassword: boolean;
@@ -29,6 +31,7 @@ const BAR_COLOR: Record<number, string> = {
 
 export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
   const {
+    ocultarPassword = false,
     email,
     password,
     showPassword,
@@ -73,6 +76,7 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
         {emailError && <p className="text-xs text-destructive">{emailError}</p>}
       </div>
 
+      {ocultarPassword ? null : (
       <div className="space-y-1.5">
         <Label htmlFor="nu-password" className="flex items-center gap-1.5">
           <Lock className="h-3.5 w-3.5" /> Contraseña
@@ -149,6 +153,7 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
           </p>
         )}
       </div>
+      )}
     </section>
   );
 }
