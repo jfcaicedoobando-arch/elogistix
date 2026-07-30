@@ -42,6 +42,46 @@ interface Props {
   onConceptoLibre?: (texto: string) => void;
 }
 
+
+/** Pie del combobox: concepto libre y alta rápida (extraído por complejidad). */
+function PieAcciones({
+  search, onConceptoLibre, puedeCrearConcepto, onCrear, onCerrar,
+}: {
+  search: string;
+  onConceptoLibre?: (texto: string) => void;
+  puedeCrearConcepto: boolean;
+  onCrear: () => void;
+  onCerrar: () => void;
+}) {
+  const texto = search.trim();
+  return (
+    <div className="border-t p-1 space-y-1">
+      {onConceptoLibre && texto.length > 0 && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start text-xs"
+          onClick={() => { onConceptoLibre(texto); onCerrar(); }}
+        >
+          <PenLine className="h-3.5 w-3.5 mr-1.5" /> Usar "{texto}" como concepto libre
+        </Button>
+      )}
+      {puedeCrearConcepto && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start text-xs"
+          onClick={onCrear}
+        >
+          <Plus className="h-3.5 w-3.5 mr-1.5" /> Crear concepto
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecciona producto", disabled, onConceptoLibre }: Props) {
   const { organizationId, role } = useAuth();
   const puedeCrearConcepto = !role || !ROLES_SIN_ALTA_CATALOGO.includes(role);
@@ -130,30 +170,13 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
                 </>
               )}
             </CommandList>
-            <div className="border-t p-1 space-y-1">
-              {onConceptoLibre && search.trim().length > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-xs"
-                  onClick={() => { onConceptoLibre(search.trim()); cerrarYResetear(); }}
-                >
-                  <PenLine className="h-3.5 w-3.5 mr-1.5" /> Usar "{search.trim()}" como concepto libre
-                </Button>
-              )}
-              {organizationId && puedeCrearConcepto && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-xs"
-                  onClick={() => setCreando(true)}
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Crear concepto
-                </Button>
-              )}
-            </div>
+            <PieAcciones
+              search={search}
+              onConceptoLibre={onConceptoLibre}
+              puedeCrearConcepto={Boolean(organizationId) && puedeCrearConcepto}
+              onCrear={() => setCreando(true)}
+              onCerrar={cerrarYResetear}
+            />
           </Command>
         )}
       </PopoverContent>
