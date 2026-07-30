@@ -53,6 +53,17 @@ const META: Record<string, CierreCheckMeta> = {
   cxp_pagada: cxp,
   documentos_completos: docs,
   docs_completos: docs,
+  // v13.347.0 — Buzón CxP fusionado en la pestaña Costos.
+  facturas_entrantes_capturadas: {
+    label: "Invoices del buzón capturados", responsable: "Auxiliar contable",
+    ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
+    formatDetalle: fmtEntrantesPendientes,
+  },
+  facturas_entrantes_evidencia: {
+    label: "Evidencia de factura recibida por proveedor", responsable: "Operador",
+    ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
+    formatDetalle: fmtEntrantesEvidencia,
+  },
   pnl_margen_minimo: {
     label: "Utilidad mínima alcanzada", responsable: "Ventas",
     ruta: buildRuta("pnl", "utilidad"), ctaLabel: "Ver P&L", formatDetalle: fmtMargen,
