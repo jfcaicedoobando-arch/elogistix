@@ -4,6 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
+  adjuntarXmlFacturaEntrante,
   capturarFacturaEntrante,
   eliminarFacturaEntrante,
   listarFacturasEntrantesPendientes,
@@ -13,7 +14,9 @@ import {
   type FacturaEntranteRow,
   type SubirFacturaEntranteInput,
 } from "@/features/cxp/services/facturasEntrantes";
+import type { CfdiXmlMeta } from "@/lib/domain/cfdiXmlMeta";
 import { cxp } from "@/features/cxp/queryKeys";
+
 
 export function useFacturasEntrantes(embarqueId: string) {
   return useQuery({
