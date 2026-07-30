@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.360.1] - 2026-07-30
+- **chore(lint · migraciones)**: `CREATE UNIQUE INDEX uq_efe_uuid_fiscal` ahora usa `IF NOT EXISTS` (regla H4 de idempotencia) y se bajó la complejidad de `subirFacturaEntrante` extrayendo el mapeo a `facturasEntrantesFila.ts`, y de `FacturaEntranteItem` extrayendo `MetaEntrante` y `AdjuntarXmlButton`.
+
 ## [13.360.0] - 2026-07-30
 - **feat(compras · buzón de facturas)**: un documento del buzón ahora agrupa **PDF + XML del mismo CFDI**. Nueva zona de arrastre con dos ranuras (`ArchivosEntranteDropZone`), lectura del XML en el navegador (`cfdiXmlMeta`: UUID, RFC, folio, total, moneda) con vista previa y auto-detección del proveedor por RFC, índice único por `(organization_id, uuid_fiscal)` para evitar CFDI duplicados, badges PDF/XML/"Falta XML" en el embarque y en `/compras/buzon` (con KPI y filtro "sólo sin XML") y acción "Adjuntar XML" para completar documentos que llegaron sólo con PDF.
 
