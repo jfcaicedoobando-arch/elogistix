@@ -25,7 +25,7 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 // v13.66.15: reordenadas por flujo (operación → finanzas → cierre → bitácora)
 // y fusionadas (P&L+P&L Contenedor, Garantías+Demoras).
 const TABS_VALIDOS = [
-  "resumen", "tracking", "documentos",
+  "resumen", "tracking", "documentos", "facturas-entrantes",
   "costos", "garantias", "seguros", "pnl", "facturacion", "conciliacion",
   "cierre", "notas",
 ] as const;
