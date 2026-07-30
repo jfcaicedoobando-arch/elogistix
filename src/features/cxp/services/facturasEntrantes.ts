@@ -100,12 +100,6 @@ export interface SubirFacturaEntranteInput {
   nota?: string | null;
 }
 
-interface ArchivoSubido {
-  path: string;
-  hash: string;
-  nombre: string;
-}
-
 async function subirArchivo(
   file: File,
   input: SubirFacturaEntranteInput,
@@ -134,33 +128,6 @@ function mensajeDuplicado(mensaje: string): string | null {
   return null;
 }
 
-/** Ranuras de archivo del renglón: el XML puede ser el principal (sólo XML) o el segundo. */
-function columnasXmlEntrante(params: {
-  soloXml: boolean;
-  principal: ArchivoSubido;
-  xmlSubido: ArchivoSubido | null;
-}) {
-  const fuente = params.xmlSubido ?? (params.soloXml ? params.principal : null);
-  return {
-    xml_path: fuente?.path ?? null,
-    xml_nombre: fuente?.nombre ?? null,
-    xml_hash: fuente?.hash ?? null,
-  };
-}
-
-/** Datos fiscales leídos del XML; todo opcional porque el PDF puede venir solo. */
-function columnasMetaEntrante(meta: CfdiXmlMeta | null | undefined) {
-  const m: Partial<CfdiXmlMeta> = meta ?? {};
-  return {
-    uuid_fiscal: m.uuid ?? null,
-    rfc_emisor: m.rfcEmisor ?? null,
-    folio_serie: m.folioSerie ?? null,
-    fecha_emision: m.fechaEmision ?? null,
-    folio_detectado: m.folioSerie ?? null,
-    total_detectado: m.total ?? null,
-    moneda_detectada: m.moneda ?? null,
-  };
-}
 
 /** Arma el renglón a insertar; aísla el mapeo para mantener baja la complejidad. */
 function filaEntranteAInsertar(params: {
