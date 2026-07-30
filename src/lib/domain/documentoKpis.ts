@@ -4,8 +4,15 @@
  * para que ambas pantallas hablen el mismo idioma (estilo Odoo/QuickBooks).
  * Sólo formato: no calcula reglas de negocio.
  */
-import type { DocumentoKpi } from "@/components/shared/documento/DocumentoKpiStrip";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+
+/** Métrica única de la cinta de KPIs de un documento financiero. */
+export interface DocumentoKpi {
+  label: string;
+  value: string;
+  tone?: "default" | "success" | "warning" | "destructive";
+  hint?: string;
+}
 
 export interface DocumentoKpiInput {
   total: number;
