@@ -13,7 +13,11 @@ import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
+import {
+  UNRESOLVED_EMAIL,
+  fallóDirectorioUsuarios,
+} from "@/features/admin/services/usuario";
+
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
 import { obtenerRangoRol } from "@/features/admin/domain/roles/roleCatalog";
@@ -42,12 +46,16 @@ export function UsuariosInternosTab() {
   useEffect(() => {
     if (isLoading || reportedRef.current || correosNoResueltos === 0) return;
     reportedRef.current = true;
+    // Si el directorio falló por red/edge, es ruido de infraestructura: sólo
+    // reportamos cuando la respuesta fue OK pero faltaron correos (bug real).
+    if (fallóDirectorioUsuarios()) return;
     reportCaughtError(
       new Error("user-management: correos sin resolver"),
       { feature: "admin_usuarios", op: "list_emails" },
       { correosNoResueltos, total: users.length },
     );
   }, [correosNoResueltos, isLoading, users.length]);
+
 
 
 

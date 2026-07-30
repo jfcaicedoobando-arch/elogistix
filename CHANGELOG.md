@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.350.1] - 2026-07-30
+- **Corrección · Crear concepto SAT desde cotizaciones.** Los roles comerciales (pricing, ventas, operativo) ya pueden dar de alta un concepto en línea; antes la base de datos lo rechazaba por permisos (Sentry JAVASCRIPT-REACT-3S).
+- **Corrección · Ruido en el monitoreo.** Se dejan de reportar como errores las caídas del túnel de Cloudflare (error 1033/530) y los rechazos de permisos de la base de datos (Sentry JAVASCRIPT-REACT-44/45/47/48/49).
+- **Corrección · Usuarios.** El aviso de "correos sin resolver" ya no se reporta cuando la causa es una falla de red temporal (Sentry JAVASCRIPT-REACT-3M).
+
 ## [13.350.0] - 2026-07-30
 - **Mejora · Mismo vocabulario en facturas emitidas y recibidas.** Ambos detalles usan ahora los mismos indicadores ("Total", "Cobrado/Pagado", "Importe pendiente", "Vence el"), el mismo orden de pestañas (Conceptos · Contraparte y datos fiscales · Cobros/Pagos · Notas de crédito · Documentos) con contadores, y el mismo encabezado (contraparte, fecha, expediente y "Pendiente" bajo el total).
 - **Mejora · Nueva pestaña "Documentos"** en ambos tipos de factura: PDF, XML y acuse de cancelación en un solo lugar.

@@ -41,6 +41,17 @@ function derivarEstado(row: ListUsersRow | undefined): EstadoInvitacion {
 }
 
 /**
+ * Indica si la última llamada a `user-management` (action: "list") falló por
+ * red/edge. Sirve para NO reportar a Sentry los correos sin resolver cuando la
+ * causa es un fallo de conectividad y no un bug de datos.
+ */
+let ultimoListadoFallo = false;
+
+export function fallóDirectorioUsuarios(): boolean {
+  return ultimoListadoFallo;
+}
+
+/**
  * Lista los miembros de la organización combinando organization_members
  * con la edge function `user-management` (action: "list") para resolver
  * emails y created_at de auth.
@@ -55,11 +66,13 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
   const members = (membersData ?? []) as OrgMemberRow[];
 
   const authMap: Record<string, ListUsersRow> = {};
+  ultimoListadoFallo = false;
   try {
     const { data: usersData, error: fnError } = await supabase.functions.invoke("user-management", {
       body: { action: "list" },
     });
     if (fnError) {
+      ultimoListadoFallo = true;
       logger.warn("fetchUsuariosOrganizacion", "user-management invoke error:", fnError);
     } else if (Array.isArray(usersData)) {
       (usersData as ListUsersRow[]).forEach((u) => {
@@ -68,6 +81,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
     }
   } catch (err) {
     // Mantenemos la tabla funcional con placeholder UNRESOLVED_EMAIL; logueamos para debug en prod.
+    ultimoListadoFallo = true;
     logger.warn("fetchUsuariosOrganizacion", "user-management threw:", err);
   }
 
@@ -79,6 +93,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
     estado: derivarEstado(authMap[m.user_id]),
   }));
 }
+
 
 // UNRESOLVED_EMAIL vive en `./constants.ts` (extraído en Sprint 2 · ítem 4b
 // para romper el ciclo `portales.ts → ./index → portales.ts`).
