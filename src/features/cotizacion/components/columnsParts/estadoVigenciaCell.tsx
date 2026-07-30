@@ -57,6 +57,12 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
     <div className="flex flex-col gap-0.5 min-w-0">
       <div className="flex items-center gap-1.5 flex-wrap">
         <StatusBadge domain="cotizacion" status={estado} />
+        {esSolicitudPortal && (
+          <Badge variant="info" className="w-fit text-2xs whitespace-nowrap"
+            title="Solicitud capturada por el cliente desde su portal">
+            Portal
+          </Badge>
+        )}
         {sinCostos && (
           <Badge variant="warning" className="w-fit text-2xs whitespace-nowrap">Sin costos</Badge>
         )}
