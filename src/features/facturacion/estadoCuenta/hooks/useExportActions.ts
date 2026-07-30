@@ -7,7 +7,7 @@ import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatDate } from "@/lib/formatters";
 import { fetchClienteFichaEstadoCuenta } from "../services/clienteFicha";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 
 const CSV_COLUMNS = [
