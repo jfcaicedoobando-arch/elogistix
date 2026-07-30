@@ -103,7 +103,8 @@ type CotizacionFilters = Record<keyof typeof DEFAULT_FILTERS, string>;
  */
 export function useCotizacionesPageController() {
   const { canEdit } = usePermissions();
-  const { data: cotizaciones = [], isLoading } = useCotizaciones();
+  // R-06: la vista necesita distinguir "sin resultados" de "la consulta falló".
+  const { data: cotizaciones = [], isLoading, isError, refetch } = useCotizaciones();
   const { data: clientes = [] } = useClientesForSelect();
   const actions = useCotizacionActions();
 
@@ -143,6 +144,8 @@ export function useCotizacionesPageController() {
   return {
     // datos
     isLoading,
+    isError,
+    refetch,
     clientes,
     paginated,
     filtered,
