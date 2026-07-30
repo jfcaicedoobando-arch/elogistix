@@ -186,7 +186,10 @@ export {
   crearFacturaProveedor,
   existeFacturaDuplicada,
   buscarFacturaPorUuidFiscal,
+  buscarFacturaPorUuidFiscalResultado,
+  type BusquedaUuidFiscal,
   type FacturaExistentePorUuid,
+
   softDeleteFacturaProveedor,
   type NuevaFacturaProveedorPayload,
 } from "./proveedorFacturas.crud";

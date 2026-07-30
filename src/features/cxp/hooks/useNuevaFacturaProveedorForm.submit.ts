@@ -4,7 +4,9 @@
  */
 
 import { existeFacturaDuplicada } from "@/features/cxp/services";
-import { detectarCfdiDuplicado, describirFacturaExistente } from "./useNuevaFacturaProveedorForm.dup";
+import {
+  buscarCfdiDuplicado, describirFacturaExistente, type FacturaExistentePorUuid,
+} from "./useNuevaFacturaProveedorForm.dup";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
@@ -14,19 +16,40 @@ import {
 } from "./useNuevaFacturaProveedorForm.sideEffects";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
+/** Acción "Ver factura" del toast de CFDI duplicado (v13.368.0). */
+function accionVerFactura(f: FacturaExistentePorUuid) {
+  return {
+    label: "Ver factura",
+    onClick: () => { window.location.assign(`/compras/facturas/${f.id}`); },
+  };
+}
+
+function notificarCfdiDuplicado(f: FacturaExistentePorUuid, method: string, sufijo: string) {
+  notifyError(undefined, {
+    title: "Este CFDI ya está capturado",
+    description: `Ya existe como ${describirFacturaExistente(f)}. ${sufijo}`,
+    method,
+    action: accionVerFactura(f),
+  });
+}
+
 export async function handleSubmitError(e: unknown, uuidFiscal?: string | null) {
   const err = e as { message?: string; code?: string; details?: string; constraint?: string };
   const blob = `${err.message ?? ""} ${err.details ?? ""} ${err.constraint ?? ""}`.toLowerCase();
   if (err.code === "23505" && /uuid_fiscal/.test(blob)) {
-    const existente = await detectarCfdiDuplicado(uuidFiscal);
-    notifyError(undefined, {
-      title: "Este CFDI ya está capturado",
-      description: existente
-        ? `Ya existe como ${describirFacturaExistente(existente)}. Búscala en Compras › Facturas en vez de volver a capturarla.`
-        : "Ya existe una factura viva con este UUID fiscal en tu organización.",
-      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1",
-    });
+    const r = await buscarCfdiDuplicado(uuidFiscal);
+    if (r.estado === "existe") {
+      notificarCfdiDuplicado(r.factura, "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1",
+        "Búscala en Compras › Facturas en vez de volver a capturarla.");
+    } else {
+      notifyError(undefined, {
+        title: "Este CFDI ya está capturado",
+        description: "Ya existe una factura viva con este UUID fiscal, pero no tienes permiso para verla o la consulta falló. Pide a un administrador que la revise en Compras › Facturas.",
+        method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1",
+      });
+    }
   } else if (err.code === "23505" && /folio/.test(blob)) {
+
     notifyError(undefined, { title: "Ya existe una factura viva con este folio para el proveedor.", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_FOLIO" });
   } else if (err.code === "23505") {
     notifyError(undefined, { title: "Registro duplicado", description: err.message ?? undefined, method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP2" });
@@ -70,15 +93,13 @@ export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
   } catch {
     // Si la verificación falla (red, RLS), continuamos: el UNIQUE de UUID fiscal sigue protegiendo.
   }
-  const yaExiste = await detectarCfdiDuplicado(p.pendingCfdi?.uuid);
-  if (yaExiste) {
-    notifyError(undefined, {
-      title: "Este CFDI ya está capturado",
-      description: `Ya existe como ${describirFacturaExistente(yaExiste)}. No se creó un duplicado.`,
-      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_UUID_PRE",
-    });
+  const previo = await buscarCfdiDuplicado(p.pendingCfdi?.uuid);
+  if (previo.estado === "existe") {
+    notificarCfdiDuplicado(previo.factura, "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_UUID_PRE",
+      "No se creó un duplicado.");
     return { ok: false, facturaId: null };
   }
+
   try {
     const created = await p.crearMutateAsync(
       buildPayload({ values: p.values, total: p.total, userId: p.userId, pendingCfdi: p.pendingCfdi, vinculos: p.vinculos }),

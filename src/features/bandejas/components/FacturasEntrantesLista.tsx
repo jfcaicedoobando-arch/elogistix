@@ -6,6 +6,7 @@ import { Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FacturaEntranteRow } from "@/features/bandejas/components/FacturaEntranteRow";
+import { useCfdisYaCapturados } from "@/features/bandejas/hooks/useCfdisYaCapturados";
 import type { FacturaEntranteRow as Fila } from "@/features/cxp/services/facturasEntrantes";
 
 export interface AccionesEntrante {
@@ -34,6 +35,9 @@ export function FacturasEntrantesLista({
   textoVacio,
   ...acciones
 }: Props) {
+  // v13.368.0 — Sólo interesa en la bandeja activa: marcar CFDI ya capturados.
+  const facturaDeCfdi = useCfdisYaCapturados(soloLectura ? [] : rows);
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -58,15 +62,20 @@ export function FacturasEntrantesLista({
 
   return (
     <div className="space-y-2">
-      {rows.map((row) => (
-        <FacturaEntranteRow
-          key={row.id}
-          row={row}
-          puedeProcesar={puedeProcesar}
-          soloLectura={soloLectura}
-          {...acciones}
-        />
-      ))}
+      {rows.map((row) => {
+        const existente = facturaDeCfdi(row.uuid_fiscal);
+        return (
+          <FacturaEntranteRow
+            key={row.id}
+            row={row}
+            puedeProcesar={puedeProcesar}
+            soloLectura={soloLectura}
+            facturaExistenteId={existente?.id ?? null}
+            facturaExistenteFolio={existente?.folio_interno ?? null}
+            {...acciones}
+          />
+        );
+      })}
     </div>
   );
 }

@@ -28,12 +28,12 @@ describe("buscarFacturaPorUuidFiscal", () => {
       }],
       error: null,
     });
-    const res = await buscarFacturaPorUuidFiscal(`  ${UUID}  `);
+    const res = await buscarFacturaPorUuidFiscal(`  ${UUID.toLowerCase()}  `);
     expect(res?.folio_interno).toBe("FP-000123");
     const call = mock.tableCalls[0];
     expect(call.table).toBe("proveedor_facturas");
     // El UUID se envía sin espacios y sólo se buscan filas no borradas.
-    expect(call.opArgs[call.ops.indexOf("eq")]).toEqual(["uuid_fiscal", UUID]);
+    expect(call.opArgs[call.ops.indexOf("ilike")]).toEqual(["uuid_fiscal", UUID]);
     expect(call.opArgs[call.ops.indexOf("is")]).toEqual(["deleted_at", null]);
   });
 

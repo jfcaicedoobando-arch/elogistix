@@ -4,17 +4,10 @@
  * v13.365.0 — Fila compacta de una sola línea a 1366 px: barra de antigüedad,
  * proveedor como dato principal y acciones secundarias en el menú de tres puntos.
  */
-import { Link } from "react-router-dom";
-import { CheckCircle2, Eye, FileCode2, FilePlus2, MoreHorizontal, StickyNote, XCircle } from "lucide-react";
+import { StickyNote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { FacturaEntranteAcciones } from "@/features/bandejas/components/FacturaEntranteAcciones";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatDate } from "@/lib/formatters/dates";
 import { cn } from "@/lib/utils";
@@ -45,6 +38,9 @@ interface Props {
   puedeProcesar: boolean;
   /** Sólo lectura: pestañas de historial (capturadas / rechazadas). */
   soloLectura?: boolean;
+  /** v13.368.0 — Factura viva que ya usa este CFDI; bloquea volver a capturarlo. */
+  facturaExistenteId?: string | null;
+  facturaExistenteFolio?: string | null;
   onVer: (row: FacturaEntranteRow) => void;
   onVerXml: (row: FacturaEntranteRow) => void;
   onCapturar: (row: FacturaEntranteRow) => void;
@@ -57,6 +53,8 @@ export function FacturaEntranteRow({
   row,
   puedeProcesar,
   soloLectura = false,
+  facturaExistenteId = null,
+  facturaExistenteFolio = null,
   onVer,
   onVerXml,
   onCapturar,
@@ -67,6 +65,8 @@ export function FacturaEntranteRow({
   const sinXml = entranteSinXml(row);
   const chips = chipsArchivosEntrante(row);
   const proveedor = row.proveedores?.nombre ?? "Proveedor sin identificar";
+  const yaCapturado = !soloLectura && facturaExistenteId !== null;
+
 
   return (
     <Card className="relative overflow-hidden">
@@ -89,6 +89,12 @@ export function FacturaEntranteRow({
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-semibold">{proveedor}</span>
             {sinXml && <Badge variant="warning" size="sm">Falta XML</Badge>}
+            {yaCapturado && (
+              <Badge variant="neutral" size="sm">
+                CFDI ya capturado{facturaExistenteFolio ? ` · ${facturaExistenteFolio}` : ""}
+              </Badge>
+            )}
+
             {row.nota && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -106,48 +112,16 @@ export function FacturaEntranteRow({
           </p>
         </button>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => onVer(row)}>
-            <Eye className="mr-2 h-4 w-4" /> Ver
-          </Button>
-          {!soloLectura && puedeProcesar && (
-            <Button size="sm" onClick={() => onCrearFactura(row)}>
-              <FilePlus2 className="mr-2 h-4 w-4" /> Capturar factura
-            </Button>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" aria-label="Más acciones">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {row.xml_path && (
-                <DropdownMenuItem onClick={() => onVerXml(row)}>
-                  <FileCode2 className="mr-2 h-4 w-4" /> Descargar XML
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem asChild>
-                <Link to={`/embarques/${row.embarque_id}?tab=costos&focus=facturas-entrantes`}>
-                  Ir al embarque
-                </Link>
-              </DropdownMenuItem>
-              {!soloLectura && puedeProcesar && (
-                <DropdownMenuItem onClick={() => onCapturar(row)}>
-                  <CheckCircle2 className="mr-2 h-4 w-4" /> Vincular a factura existente
-                </DropdownMenuItem>
-              )}
-              {!soloLectura && puedeProcesar && (
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => onRechazar(row)}
-                >
-                  <XCircle className="mr-2 h-4 w-4" /> Rechazar
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <FacturaEntranteAcciones
+          row={row}
+          editable={!soloLectura && puedeProcesar}
+          facturaExistenteId={facturaExistenteId}
+          onVer={onVer}
+          onVerXml={onVerXml}
+          onCapturar={onCapturar}
+          onCrearFactura={onCrearFactura}
+          onRechazar={onRechazar}
+        />
       </div>
     </Card>
   );

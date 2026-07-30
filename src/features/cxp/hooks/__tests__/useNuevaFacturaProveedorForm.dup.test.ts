@@ -5,10 +5,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 const buscar = vi.hoisted(() => vi.fn());
-vi.mock("@/features/cxp/services", () => ({ buscarFacturaPorUuidFiscal: buscar }));
+vi.mock("@/features/cxp/services", () => ({ buscarFacturaPorUuidFiscalResultado: buscar }));
 
 import {
   detectarCfdiDuplicado,
+  buscarCfdiDuplicado,
   describirFacturaExistente,
 } from "../useNuevaFacturaProveedorForm.dup";
 
@@ -25,7 +26,7 @@ describe("detectarCfdiDuplicado", () => {
   beforeEach(() => buscar.mockReset());
 
   it("devuelve la factura existente", async () => {
-    buscar.mockResolvedValue(EXISTENTE);
+    buscar.mockResolvedValue({ estado: "existe", factura: EXISTENTE });
     expect(await detectarCfdiDuplicado("uuid-1")).toEqual(EXISTENTE);
   });
 
@@ -35,7 +36,13 @@ describe("detectarCfdiDuplicado", () => {
   });
 
   it("devuelve null cuando la búsqueda no encuentra nada", async () => {
-    buscar.mockResolvedValue(null);
+    buscar.mockResolvedValue({ estado: "ninguno" });
+    expect(await detectarCfdiDuplicado("uuid-1")).toBeNull();
+  });
+
+  it("marca estado error cuando la consulta falla (no lo confunde con 'no hay duplicado')", async () => {
+    buscar.mockResolvedValue({ estado: "error", mensaje: "network" });
+    expect((await buscarCfdiDuplicado("uuid-1")).estado).toBe("error");
     expect(await detectarCfdiDuplicado("uuid-1")).toBeNull();
   });
 });
