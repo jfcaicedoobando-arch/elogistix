@@ -59,11 +59,16 @@ async function fetchPortalEmailMap(userIds: string[]): Promise<Record<string, st
 
 
 
-export async function fetchUsuariosPortalCliente(): Promise<PortalClienteUserRow[]> {
-  const { data, error } = await supabase
+/** U-01: acota el listado a la organización activa (null = todas, super_admin). */
+export async function fetchUsuariosPortalCliente(
+  orgId?: string | null,
+): Promise<PortalClienteUserRow[]> {
+  let query = supabase
     .from("client_users")
     .select("id, user_id, cliente_id, created_at, clientes:cliente_id(nombre)")
     .order("created_at", { ascending: false });
+  if (orgId) query = query.eq("organization_id", orgId);
+  const { data, error } = await query;
   if (error) throw error;
   type Row = {
     id: string;
@@ -84,11 +89,16 @@ export async function fetchUsuariosPortalCliente(): Promise<PortalClienteUserRow
   }));
 }
 
-export async function fetchUsuariosPortalAgente(): Promise<PortalAgenteUserRow[]> {
-  const { data, error } = await supabase
+/** U-01: acota el listado a la organización activa (null = todas, super_admin). */
+export async function fetchUsuariosPortalAgente(
+  orgId?: string | null,
+): Promise<PortalAgenteUserRow[]> {
+  let query = supabase
     .from("agente_users")
     .select("id, user_id, agente_id, created_at, costeo_agentes:agente_id(nombre)")
     .order("created_at", { ascending: false });
+  if (orgId) query = query.eq("organization_id", orgId);
+  const { data, error } = await query;
   if (error) throw error;
   type Row = {
     id: string;

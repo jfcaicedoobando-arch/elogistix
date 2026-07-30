@@ -6,20 +6,25 @@ import {
 } from "@/features/admin/services/usuario/portales";
 import { deleteUserViaEdgeFunction } from "@/features/admin/services/usuario";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { useUsuariosOrgScope } from "./useUsuarios";
 
-export function useUsuariosPortalCliente() {
+export function useUsuariosPortalCliente(opciones?: { enabled?: boolean }) {
+  const orgScope = useUsuariosOrgScope();
   return useQuery({
-    queryKey: queryKeys.usuariosPortalCliente.all,
-    queryFn: fetchUsuariosPortalCliente,
+    queryKey: queryKeys.usuariosPortalCliente.scope(orgScope),
+    queryFn: () => fetchUsuariosPortalCliente(orgScope),
+    enabled: opciones?.enabled ?? true,
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
   });
 }
 
-export function useUsuariosPortalAgente() {
+export function useUsuariosPortalAgente(opciones?: { enabled?: boolean }) {
+  const orgScope = useUsuariosOrgScope();
   return useQuery({
-    queryKey: queryKeys.usuariosPortalAgente.all,
-    queryFn: fetchUsuariosPortalAgente,
+    queryKey: queryKeys.usuariosPortalAgente.scope(orgScope),
+    queryFn: () => fetchUsuariosPortalAgente(orgScope),
+    enabled: opciones?.enabled ?? true,
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
   });
