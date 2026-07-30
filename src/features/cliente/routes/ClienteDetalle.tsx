@@ -78,7 +78,7 @@ export default function ClienteDetalle() {
       <ClienteSummaryCards
         embarques={embarquesCliente.length}
         cotizaciones={cotizacionesCliente.length}
-        contactos={contactos.length}
+        contactos={contactos.length + (cliente.contacto?.trim() ? 1 : 0)}
         facturadoUSD={financials?.facturadoUSD ?? 0}
         pendienteUSD={financials?.pendienteUSD ?? 0}
         profitUSD={financials?.profitUSD ?? 0}

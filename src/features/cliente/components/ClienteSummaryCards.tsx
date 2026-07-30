@@ -32,7 +32,7 @@ export default function ClienteSummaryCards({ embarques, cotizaciones, contactos
       variant: "secondary",
     },
     {
-      label: "Pendiente",
+      label: "Por cobrar",
       value: formatCurrencyCompact(pendienteUSD, "USD"),
       tooltip: formatCurrency(pendienteUSD, "USD"),
       icon: AlertCircle,
@@ -47,8 +47,10 @@ export default function ClienteSummaryCards({ embarques, cotizaciones, contactos
     },
   ];
 
+  // v13.370.0: máx. 4 por fila — con 6 columnas las etiquetas y los importes
+  // se truncaban ("Embarq…", "U…") en pantallas de 1366 px.
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4">
       {items.map((it) => (
         <KpiCard
           key={it.label}
