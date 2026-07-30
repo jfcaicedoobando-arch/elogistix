@@ -23,7 +23,9 @@ export default function PortalCotizaciones() {
   const navigate = useNavigate();
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
-  const { data: cotizaciones = [], isLoading } = usePortalCotizaciones(clienteIds);
+  const {
+    data: cotizaciones = [], isLoading, isError, refetch,
+  } = usePortalCotizaciones(clienteIds);
   const tasaIva = useTasaIVA();
   const [search, setSearch] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
