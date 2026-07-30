@@ -8,7 +8,7 @@ import { ConceptosFacturaSection } from "@/features/cxp/components/ConceptosFact
 import { NotasCreditoSection } from "@/features/cxp/components/NotasCreditoSection";
 import { AnticiposAplicadosSection } from "@/features/anticipos-proveedor/components/AnticiposAplicadosSection";
 import { PagosTable } from "@/features/cxp/components/DialogDetallePagosProveedor.sections";
-import type { PagoRow } from "@/features/cxp/components/DialogDetallePagosProveedor.fila";
+type PagoRow = Parameters<typeof PagosTable>[0]["pagos"][number];
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
