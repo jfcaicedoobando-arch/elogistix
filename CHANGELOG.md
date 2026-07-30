@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.343.1] - 2026-07-30
+- **Fix · CI en verde: pruebas, lint y arquitectura.** Se ajustaron las pruebas que quedaron desfasadas del código (guardarraíl de Fase D ahora lee la migración canónica en vez de "la última que toque la función", copy del CFDI duplicado, etiqueta "Reintentar" en los avisos de red) y se ordenaron las capas: la matriz de permisos vive en `lib/access` para que el dominio la use sin romper la jerarquía, y los grupos del menú de Super Admin salieron del componente. También se eliminaron exportaciones muertas y se ocultó la sección "Análisis" al rol vendedor (los enlaces no le abrían nada). Analogía: revisamos que los planos y la obra digan lo mismo, y guardamos las herramientas en el cajón que les toca.
+
 ## [13.343.0] - 2026-07-30
 - **Fix · CFDI duplicado se avisa al cargar el XML, no al guardar.** Antes llenabas toda la factura de proveedor y hasta el botón "Guardar" aparecía el error "Ya existe una factura con este UUID fiscal", sin decirte cuál. Ahora, al cargar el XML se busca si ese CFDI ya está capturado y, si existe, se muestra una alerta con su folio y estado (p. ej. "FP-000123 · Vigente · aprobada"), un botón "Ver factura" que te lleva directo a ella y el guardado queda bloqueado. Analogía: el portero te avisa en la puerta que ya estás adentro, en vez de dejarte hacer toda la fila.
 
