@@ -29,6 +29,7 @@ import {
 } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { urlFirmadaFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 import { SubirFacturaEntranteDialog } from "@/features/embarques/components/SubirFacturaEntranteDialog";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 
 interface Props {
   embarqueId: string;
@@ -40,6 +41,8 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   const { user } = useAuth();
   const { isAdmin, canEditOperations, canCapturarFacturaProveedor } = usePermissions();
   const { data, isLoading } = useFacturasEntrantes(embarqueId);
+  // v13.347.0 — deep-link desde el checklist de cierre (?tab=costos&focus=facturas-entrantes).
+  const { registerRef } = useFocusSection();
   const eliminar = useEliminarFacturaEntrante();
   const [subirOpen, setSubirOpen] = useState(false);
   const [aEliminar, setAEliminar] = useState<FacturaEntranteRow | null>(null);
@@ -59,7 +62,7 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
 
   return (
     <>
-      <Card>
+      <Card ref={registerRef("facturas-entrantes")} data-focus="facturas-entrantes">
         <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base font-semibold">

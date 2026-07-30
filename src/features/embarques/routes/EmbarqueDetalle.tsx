@@ -25,15 +25,17 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 // v13.66.15: reordenadas por flujo (operación → finanzas → cierre → bitácora)
 // y fusionadas (P&L+P&L Contenedor, Garantías+Demoras).
 const TABS_VALIDOS = [
-  "resumen", "tracking", "documentos", "facturas-entrantes",
+  "resumen", "tracking", "documentos",
   "costos", "garantias", "seguros", "pnl", "facturacion", "conciliacion",
   "cierre", "notas",
 ] as const;
 
 // Mapa de compatibilidad con deep-links antiguos (?tab=pnl-contenedor, ?tab=demoras).
+// v13.347.0 — "facturas-entrantes" se fusionó dentro de la pestaña Costos.
 const TABS_LEGACY: Record<string, (typeof TABS_VALIDOS)[number]> = {
   "pnl-contenedor": "pnl",
   "demoras": "garantias",
+  "facturas-entrantes": "costos",
 };
 
 /**

@@ -52,7 +52,6 @@ export function EmbarqueDetalleTabs({
           <TabsTrigger value="resumen" data-testid="tab-resumen" className="whitespace-nowrap">Resumen</TabsTrigger>
           <TabsTrigger value="tracking" data-testid="tab-tracking" className="whitespace-nowrap">Tracking</TabsTrigger>
           <TabsTrigger value="documentos" data-testid="tab-documentos" className="whitespace-nowrap">Documentos</TabsTrigger>
-          <TabsTrigger value="facturas-entrantes" data-testid="tab-facturas-entrantes" className="whitespace-nowrap">Facturas proveedor</TabsTrigger>
           <TabsTrigger value="costos" data-testid="tab-costos" className="whitespace-nowrap">Costos</TabsTrigger>
           <TabsTrigger value="garantias" data-testid="tab-garantias" className="whitespace-nowrap">Demoras y Garantías</TabsTrigger>
           <TabsTrigger value="seguros" data-testid="tab-seguros" className="whitespace-nowrap">Seguros</TabsTrigger>
@@ -98,15 +97,10 @@ export function EmbarqueDetalleTabs({
           onToggleNoAplica={docHandlers.onToggleNoAplica}
         />
       </TabsContent>
-
-      {/* v13.346.0 — Buzón CxP: operación entrega el invoice, contabilidad lo captura. */}
-      <TabsContent value="facturas-entrantes">
-        <TabFacturasEntrantes embarqueId={embarqueId} canEdit={canEdit} />
-      </TabsContent>
-
+      {/* v13.347.0 — Costos y facturas de proveedor fusionados: el buzón CxP vive
+          junto a los conceptos de costo que documenta. */}
       <TabsContent value="costos" className="space-y-6">
         <TabCostos
-          
           conceptosCosto={conceptosCosto}
           totalVenta={financials.totalVenta}
           totalCosto={financials.totalCosto}
@@ -115,6 +109,8 @@ export function EmbarqueDetalleTabs({
           embarqueId={embarqueId}
           canEdit={canEdit}
         />
+        <Separator />
+        <TabFacturasEntrantes embarqueId={embarqueId} canEdit={canEdit} />
       </TabsContent>
 
       {/* Garantías y Demoras fusionadas (v13.66.15): mismo dominio (free time / depósito por contenedor). */}
