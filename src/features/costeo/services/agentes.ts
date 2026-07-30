@@ -78,6 +78,7 @@ export async function fetchProveedoresPorTipo(
       .from("proveedores")
       .select("id, nombre, pais")
       .eq("tipo", tipo)
+      .is("deleted_at", null)
       .order("nombre", { ascending: true })
       .limit(500),
     [],
