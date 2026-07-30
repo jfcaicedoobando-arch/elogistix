@@ -6,7 +6,8 @@
  * de forma aislada (Power of 10).
  */
 import { sumarMontos } from "@/lib/financial/financialUtils";
-import type { FacturaEstadoCuenta, Moneda } from "./estadoCuenta";
+import type { FacturaEstadoCuenta } from "./estadoCuenta";
+import type { Moneda } from "./estadoCuentaTypes";
 
 export type BucketAging = "corriente" | "1-30" | "31-60" | "61-90" | "90+";
 
