@@ -20,6 +20,8 @@ import { SidebarGroupBlock } from "@/components/layout/SidebarGroupBlock";
 import { SidebarUserMenu } from "@/components/layout/SidebarUserMenu";
 import { useAppSidebarSections } from "@/hooks/layout";
 import { useSidebarCollapse } from "@/hooks/layout/useSidebarCollapse";
+import { obtenerEtiquetaRol } from "@/features/admin/domain/roles/roleCatalog";
+
 
 function computeUserInitials(email: string | undefined): string {
   return (email ?? "?")
