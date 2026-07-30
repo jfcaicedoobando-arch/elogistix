@@ -14,6 +14,12 @@ import {
 
 interface Props {
   children: React.ReactNode;
+  /**
+   * Q-08 — Al cambiar este valor (típicamente la ruta activa) el boundary se
+   * limpia solo, para que un error viejo no quede pegado al navegar a otra
+   * pantalla sana.
+   */
+  resetKey?: string;
 }
 
 interface State {
@@ -82,6 +88,22 @@ export class ErrorBoundary extends React.Component<Props, State> {
       stack: error.stack,
       componentStack: errorInfo.componentStack,
     });
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (
+      this.state.hasError &&
+      prevProps.resetKey !== undefined &&
+      prevProps.resetKey !== this.props.resetKey
+    ) {
+      this.setState({
+        hasError: false,
+        error: null,
+        eventId: null,
+        componentStack: null,
+        timestamp: null,
+      });
+    }
   }
 
   handleReset = () => {

@@ -9,7 +9,7 @@ import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate, formatDateTimeShort } from "@/lib/formatters";
 import { obtenerRangoRol } from "@/features/admin/domain/roles/roleCatalog";
-import { ChangeRoleCell, UsuarioCell } from "./usuariosCells";
+import { ChangeRoleCell, EstadoInvitacionCell, UsuarioCell } from "./usuariosCells";
 
 
 interface Options {
@@ -60,6 +60,14 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
               onPendingRole={onPendingRole}
             />
           ),
+        },
+        {
+          id: "estado",
+          header: "Estado",
+          accessorFn: (u) => u.estado,
+          enableSorting: true,
+          meta: { width: "w-[1%] whitespace-nowrap" },
+          cell: ({ row }) => <EstadoInvitacionCell estado={row.original.estado} />,
         },
         {
           id: "created_at",

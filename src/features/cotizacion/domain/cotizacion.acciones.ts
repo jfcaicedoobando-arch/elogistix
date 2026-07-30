@@ -32,13 +32,32 @@ function puedeGestionarCotizacion(rol: AppRole | null | undefined): boolean {
  *  - "Aceptar" / "Rechazar": sólo si el rol puede gestionar la cotización,
  *    el estado es "Enviada" y el total es mayor a cero.
  */
+export interface ContextoSoDCotizacion {
+  /** Usuario que creó la cotización. */
+  creadaPor?: string | null;
+  /** Usuario autenticado que está viendo el detalle. */
+  usuarioActual?: string | null;
+}
+
+/** Roles que pueden saltarse la segregación de funciones (SoD). */
+const ROLES_SOD_EXENTOS: AppRole[] = ["admin", "admin_org", "super_admin"];
+
 export function accionesCotizacionPermitidas(
   estado: EstadoCotizacionAccion,
   total: number,
   rol: AppRole | null | undefined,
+  sod: ContextoSoDCotizacion = {},
 ): AccionesCotizacionPermitidas {
   const puedeGestionar = puedeGestionarCotizacion(rol);
   const tieneTotal = Number(total) > 0;
+
+  // Q-04b — Segregación de funciones: quien creó la cotización no puede
+  // aceptarla él mismo (salvo administradores). Se OCULTA la acción, no se
+  // deshabilita, para no ofrecer un botón que la base de datos rechazará.
+  const esAutor =
+    Boolean(sod.creadaPor) && Boolean(sod.usuarioActual) && sod.creadaPor === sod.usuarioActual;
+  const exentoSoD = Boolean(rol) && ROLES_SOD_EXENTOS.includes(rol as AppRole);
+  const bloqueadoPorSoD = esAutor && !exentoSoD;
 
   const enviar = puedeGestionar && tieneTotal && (estado === "Borrador" || estado === "Solicitada");
   const aceptarRechazar = puedeGestionar && tieneTotal && estado === "Enviada";
@@ -46,7 +65,7 @@ export function accionesCotizacionPermitidas(
   return {
     exportarPdf: true,
     enviar,
-    aceptar: aceptarRechazar,
+    aceptar: aceptarRechazar && !bloqueadoPorSoD,
     rechazar: aceptarRechazar,
   };
 }

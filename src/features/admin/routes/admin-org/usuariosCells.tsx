@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { UserRow } from "@/features/admin/hooks/usuario";
+import type { EstadoInvitacion } from "@/features/admin/services/usuario";
 import type { AppRole } from "@/types/appRole";
 import {
   ASSIGNABLE_ROLE_GROUPS,
@@ -19,7 +20,7 @@ import {
 } from "@/features/admin/domain/roles/roleCatalog";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, MailWarning } from "lucide-react";
 import { inicialesDeEmail } from "./usuariosCellsUtils";
 
 
@@ -130,4 +131,33 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
       </SelectContent>
     </Select>
   );
+}
+
+/**
+ * Q-05b — Estado de la cuenta: distingue una invitación pendiente
+ * (usuario creado pero que nunca inició sesión) de una cuenta activa.
+ */
+export function EstadoInvitacionCell({ estado }: { estado: EstadoInvitacion }) {
+  if (estado === "activo") {
+    return (
+      <Badge variant="outline" className="gap-1 border-emerald-500/40 text-emerald-700">
+        <CheckCircle2 className="h-3 w-3" /> Activo
+      </Badge>
+    );
+  }
+  if (estado === "pendiente") {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-700">
+            <MailWarning className="h-3 w-3" /> Invitación pendiente
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p className="text-xs">El usuario aún no ha iniciado sesión ni confirmado su correo.</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+  return <span className="text-xs text-muted-foreground">—</span>;
 }

@@ -20,6 +20,7 @@ import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "@/features/co
 import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner";
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import type { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 type DetalleState = ReturnType<typeof useCotizacionDetalleState>;
 
@@ -58,6 +59,7 @@ export function CotizacionDetalleContenido({
   handleCambiarEstado, abrirDialogConvertir, handleConvertir, convertirProspecto,
   navigate, effectiveRole, envios, enviarOpen, setEnviarOpen,
 }: Props) {
+  const { user } = useAuth();
   return (
     <>
       <CotizacionInactivaBanner
@@ -89,6 +91,8 @@ export function CotizacionDetalleContenido({
           onAbrirConvertir={abrirDialogConvertir}
           total={totalUSD + totalMXN}
           rol={effectiveRole}
+          creadaPor={(cotizacion as { created_by?: string | null }).created_by ?? null}
+          usuarioActual={user?.id ?? null}
         />
       )}
 

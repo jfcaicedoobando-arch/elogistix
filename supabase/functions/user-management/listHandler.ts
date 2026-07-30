@@ -11,6 +11,15 @@ const ALLOWED_ROLES = new Set([
   "ejecutivo_pricing", "gerente_operaciones", "super_admin",
 ]);
 
+/** Fila de auth expuesta al cliente (Q-05b incluye señales de invitación). */
+interface AuthUserRow {
+  id: string;
+  email: string;
+  created_at: string;
+  last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+}
+
 export async function resolveOrgScope(
   adminClient: SupabaseClient,
   userId: string,
@@ -47,16 +56,30 @@ async function tieneRolPermitido(adminClient: SupabaseClient, callerId: string):
  */
 async function listarTodosLosUsuarios(
   adminClient: SupabaseClient,
-): Promise<Array<{ id: string; email: string; created_at: string }>> {
-  const baseRows: Array<{ id: string; email: string; created_at: string }> = [];
+): Promise<AuthUserRow[]> {
+  const baseRows: AuthUserRow[] = [];
   const PER_PAGE = 1000;
   const MAX_PAGES = 20;
   for (let page = 1; page <= MAX_PAGES; page++) {
     const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: PER_PAGE });
     if (error) throw error;
-    const pageUsers = (data?.users ?? []) as Array<{ id: string; email?: string; created_at: string }>;
+    const pageUsers = (data?.users ?? []) as Array<{
+      id: string;
+      email?: string;
+      created_at: string;
+      last_sign_in_at?: string | null;
+      email_confirmed_at?: string | null;
+      confirmed_at?: string | null;
+    }>;
     for (const u of pageUsers) {
-      baseRows.push({ id: u.id, email: u.email ?? "", created_at: u.created_at });
+      baseRows.push({
+        id: u.id,
+        email: u.email ?? "",
+        created_at: u.created_at,
+        // Q-05b: permiten distinguir "Invitación pendiente" de "Activo".
+        last_sign_in_at: u.last_sign_in_at ?? null,
+        email_confirmed_at: u.email_confirmed_at ?? u.confirmed_at ?? null,
+      });
     }
     if (pageUsers.length < PER_PAGE) break;
   }
@@ -67,8 +90,8 @@ async function listarTodosLosUsuarios(
 async function filtrarPorOrganizacion(
   adminClient: SupabaseClient,
   orgId: string,
-  baseRows: Array<{ id: string; email: string; created_at: string }>,
-): Promise<Array<{ id: string; email: string; created_at: string }>> {
+  baseRows: AuthUserRow[],
+): Promise<AuthUserRow[]> {
   const { data: members } = await adminClient
     .from("organization_members")
     .select("user_id")

@@ -52,11 +52,18 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
   const tarifaVencida = isTarifaVencida(estado, vigHasta);
   const requiereReaprobacion =
     (r as { estado_revalidacion?: string }).estado_revalidacion === "pendiente_reaprobacion";
+  const esSolicitudPortal = !!(r as { origen_portal?: boolean | null }).origen_portal;
 
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
       <div className="flex items-center gap-1.5 flex-wrap">
         <StatusBadge domain="cotizacion" status={estado} />
+        {esSolicitudPortal && (
+          <Badge variant="info" className="w-fit text-2xs whitespace-nowrap"
+            title="Solicitud capturada por el cliente desde su portal">
+            Portal
+          </Badge>
+        )}
         {sinCostos && (
           <Badge variant="warning" className="w-fit text-2xs whitespace-nowrap">Sin costos</Badge>
         )}

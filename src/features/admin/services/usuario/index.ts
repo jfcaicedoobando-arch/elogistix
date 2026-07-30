@@ -6,11 +6,16 @@ import { logger } from "@/lib/observability/logger";
 // Re-export para no romper callers históricos que importan desde el barrel.
 export { UNRESOLVED_EMAIL };
 
+/** Estado de la cuenta dentro de la organización (Q-05b). */
+export type EstadoInvitacion = "activo" | "pendiente" | "desconocido";
+
 export interface UserRow {
   user_id: string;
   email: string;
   role: AppRole;
   created_at: string;
+  /** "pendiente" = invitado pero nunca inició sesión / sin confirmar correo. */
+  estado: EstadoInvitacion;
 }
 
 interface OrgMemberRow {
@@ -23,6 +28,16 @@ interface ListUsersRow {
   id: string;
   email: string;
   created_at: string;
+  last_sign_in_at?: string | null;
+  email_confirmed_at?: string | null;
+}
+
+/** Deriva el estado de invitación a partir de las señales de auth. */
+function derivarEstado(row: ListUsersRow | undefined): EstadoInvitacion {
+  if (!row) return "desconocido";
+  if (row.last_sign_in_at) return "activo";
+  if (row.email_confirmed_at) return "activo";
+  return "pendiente";
 }
 
 /**
@@ -39,7 +54,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
   if (membersError) throw membersError;
   const members = (membersData ?? []) as OrgMemberRow[];
 
-  const emailMap: Record<string, { email: string; created_at: string }> = {};
+  const authMap: Record<string, ListUsersRow> = {};
   try {
     const { data: usersData, error: fnError } = await supabase.functions.invoke("user-management", {
       body: { action: "list" },
@@ -48,7 +63,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
       logger.warn("fetchUsuariosOrganizacion", "user-management invoke error:", fnError);
     } else if (Array.isArray(usersData)) {
       (usersData as ListUsersRow[]).forEach((u) => {
-        emailMap[u.id] = { email: u.email, created_at: u.created_at };
+        authMap[u.id] = u;
       });
     }
   } catch (err) {
@@ -58,9 +73,10 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
 
   return members.map((m) => ({
     user_id: m.user_id,
-    email: emailMap[m.user_id]?.email || UNRESOLVED_EMAIL,
+    email: authMap[m.user_id]?.email || UNRESOLVED_EMAIL,
     role: m.role as AppRole,
-    created_at: emailMap[m.user_id]?.created_at || m.created_at || "",
+    created_at: authMap[m.user_id]?.created_at || m.created_at || "",
+    estado: derivarEstado(authMap[m.user_id]),
   }));
 }
 

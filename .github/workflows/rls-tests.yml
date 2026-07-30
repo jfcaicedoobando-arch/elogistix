@@ -161,6 +161,30 @@ jobs:
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql
 
+      # Q-14b — La guardia de integridad deja de ser exclusiva del deploy gate:
+      # bloquea también en cada PR que toque migraciones (la cache se invalida
+      # con cualquier cambio en supabase/migrations/**).
+      - name: Guardia de integridad de esquema (bloqueante)
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          $PSQL -A -t -f scripts/db/integrity-guard.sql > /tmp/integrity.txt
+          filas=$(grep -c . /tmp/integrity.txt || true)
+          if [ "$filas" != "0" ]; then
+            {
+              echo "## ❌ Guardia de integridad de esquema"
+              echo ""
+              echo '```'
+              cat /tmp/integrity.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            cat /tmp/integrity.txt
+            exit 1
+          fi
+          echo "## ✅ Guardia de integridad de esquema" >> "$GITHUB_STEP_SUMMARY"
+
+
+
       - name: Dump prepared database
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: |

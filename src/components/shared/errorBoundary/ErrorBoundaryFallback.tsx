@@ -82,10 +82,10 @@ export function ErrorBoundaryFallback({
           </details>
 
           <div className="flex flex-wrap gap-2 justify-center">
-            <Button variant="outline" onClick={onReset}>
+            <Button onClick={onReset}>
               <RefreshCw className="h-4 w-4 mr-1" /> Reintentar
             </Button>
-            <Button onClick={() => { window.location.href = "/"; }}>
+            <Button variant="outline" onClick={() => { window.location.href = "/"; }}>
               Ir al inicio
             </Button>
             <Button variant="secondary" onClick={onReport}>

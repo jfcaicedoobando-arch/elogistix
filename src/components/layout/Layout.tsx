@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -14,6 +14,7 @@ import { NotificacionesPopover } from "@/components/layout/NotificacionesPopover
 import { useIsMobile } from "@/hooks/shared/useIsMobile";
 
 export function Layout() {
+  const location = useLocation();
   // En tablet (<lg = 1024px) el sidebar arranca colapsado para liberar ancho útil.
   const [defaultOpen, setDefaultOpen] = useState(() =>
     typeof window === "undefined" ? true : window.innerWidth >= 1024
@@ -60,7 +61,7 @@ export function Layout() {
           </header>
           <main className="flex-1 overflow-auto">
             <PageContainer noSpacing>
-              <ErrorBoundary>
+              <ErrorBoundary resetKey={location.pathname}>
                 <Suspense fallback={<RouteLoadingFallback />}>
                   <Outlet />
                 </Suspense>
