@@ -79,9 +79,14 @@ export default function Cotizaciones() {
 
   return (
     <PageContainer>
+      <Seo
+        title="Cotizaciones · Libre Carga"
+        description="Consulta, filtra y da seguimiento a tus cotizaciones."
+      />
       <PageHeader
         title="Cotizaciones"
-        description={`${c.filtered.length} cotizaciones encontradas`}
+        description={`${pluralizar(c.filtered.length, "cotización", { plural: "cotizaciones" })} ${c.filtered.length === 1 ? "encontrada" : "encontradas"}`}
+
         actions={
           <CotizacionesPageActions
             canEdit={c.canEdit}
