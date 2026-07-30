@@ -7,10 +7,11 @@ import {
   fetchClienteFichaEstadoCuenta,
   type ClienteFichaEstadoCuenta,
 } from "../services/clienteFicha";
+import { estadoCuenta } from "../../queryKeys";
 
 export function useClienteFichaEstadoCuenta(clienteId: string | undefined) {
   return useQuery<ClienteFichaEstadoCuenta>({
-    queryKey: ["cliente", "ficha-estado-cuenta", clienteId],
+    queryKey: estadoCuenta.ficha(clienteId),
     queryFn: () => fetchClienteFichaEstadoCuenta(clienteId as string),
     enabled: Boolean(clienteId),
     staleTime: 5 * 60_000,
