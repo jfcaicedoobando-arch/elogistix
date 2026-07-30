@@ -9,7 +9,8 @@ import { fetchUsuariosOrganizacion, type UserRow } from "./listado";
 
 export interface CreateUserParams {
   email: string;
-  password: string;
+  /** U-04: vacío ⇒ se envía invitación por correo (sin contraseña temporal). */
+  password?: string;
   role: string;
   orgId?: string;
 }
@@ -25,11 +26,21 @@ async function getAuthToken() {
   return data.session?.access_token;
 }
 
-export async function updateUserRole(userId: string, newRole: AppRole): Promise<void> {
-  const { error } = await supabase
-    .from("organization_members")
-    .update({ role: newRole })
-    .eq("user_id", userId);
+/**
+ * Cambia el rol de un usuario dentro de UNA organización.
+ *
+ * U-02 (auditoría 2026-07-30): el filtro incluye `organization_id` para que un
+ * usuario con membresía en varias organizaciones no vea alterado su rol en
+ * todas al editarlo en una sola.
+ */
+export async function updateUserRole(
+  userId: string,
+  newRole: AppRole,
+  organizationId?: string | null,
+): Promise<void> {
+  let query = supabase.from("organization_members").update({ role: newRole }).eq("user_id", userId);
+  if (organizationId) query = query.eq("organization_id", organizationId);
+  const { error } = await query;
   if (error) throw error;
 }
 
@@ -67,7 +78,9 @@ export async function createUserViaEdgeFunction(
 ): Promise<CreateUserResponse> {
   const emailNormalizado = params.email.trim().toLowerCase();
 
-  const existentes = await fetchUsuariosOrganizacion().catch(() => [] as UserRow[]);
+  const existentes = await fetchUsuariosOrganizacion(params.orgId ?? null).catch(
+    () => [] as UserRow[],
+  );
   if (existentes.some((u) => u.email.toLowerCase() === emailNormalizado)) {
     throw new Error(`Ya existe un usuario con el correo ${emailNormalizado} en esta organización.`);
   }
@@ -75,7 +88,7 @@ export async function createUserViaEdgeFunction(
   const token = await getAuthToken();
   const res = await supabase.functions.invoke("user-management", {
     body: {
-      action: "create",
+      action: params.password ? "create" : "invite",
       email: emailNormalizado,
       password: params.password,
       role: params.role,
@@ -92,11 +105,12 @@ export async function createUserViaEdgeFunction(
     throw new Error("No se pudo completar el alta: el servicio de identidad no devolvió el usuario.");
   }
 
-  const { data: membresia, error: verifyError } = await supabase
+  let verify = supabase
     .from("organization_members")
     .select("user_id, role")
-    .eq("user_id", nuevoId)
-    .maybeSingle();
+    .eq("user_id", nuevoId);
+  if (params.orgId) verify = verify.eq("organization_id", params.orgId);
+  const { data: membresia, error: verifyError } = await verify.maybeSingle();
 
   if (verifyError || !membresia) {
     throw new Error(
@@ -105,4 +119,29 @@ export async function createUserViaEdgeFunction(
   }
 
   return body;
+}
+
+/** U-03: quita la membresía del usuario sin borrar su cuenta ni su historial. */
+export async function quitarDeOrganizacion(
+  userId: string,
+  organizationId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("organization_members")
+    .delete()
+    .eq("user_id", userId)
+    .eq("organization_id", organizationId);
+  if (error) throw error;
+}
+
+/** U-03: dispara el correo de restablecimiento de contraseña para el usuario. */
+export async function enviarResetPassword(userId: string): Promise<void> {
+  const token = await getAuthToken();
+  const res = await supabase.functions.invoke("user-management", {
+    body: { action: "reset-password", user_id: userId },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (res.error) throw new Error(res.error.message || "Error al enviar el correo");
+  const body = res.data as { error?: string };
+  if (body?.error) throw new Error(body.error);
 }
