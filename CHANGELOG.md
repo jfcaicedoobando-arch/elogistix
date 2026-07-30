@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.344.0] - 2026-07-31
+- **Mejora · Suite de pruebas 3.1× más rápida (581 s → 186 s).** Las pruebas ahora se reparten en dos "cocinas": las ~570 que sólo verifican lógica (dominio, cálculos, reglas de arquitectura) corren en un entorno ligero de Node, y sólo las ~280 que dibujan pantallas levantan el navegador simulado (jsdom). Antes *todas* pagaban ese arranque, que costaba varios segundos por archivo. Analogía: dejamos de encender el horno industrial para calentar un café. Se agregó `src/test/setup.node.ts` (limpieza de mocks + almacén en memoria) y `scripts/lib/testEnvSplit.ts`, que clasifica los archivos automáticamente al arrancar. Los 5708 tests siguen en verde.
+
 ## [13.343.1] - 2026-07-30
 - **Fix · CI en verde: pruebas, lint y arquitectura.** Se ajustaron las pruebas que quedaron desfasadas del código (guardarraíl de Fase D ahora lee la migración canónica en vez de "la última que toque la función", copy del CFDI duplicado, etiqueta "Reintentar" en los avisos de red) y se ordenaron las capas: la matriz de permisos vive en `lib/access` para que el dominio la use sin romper la jerarquía, y los grupos del menú de Super Admin salieron del componente. También se eliminaron exportaciones muertas y se ocultó la sección "Análisis" al rol vendedor (los enlaces no le abrían nada). Analogía: revisamos que los planos y la obra digan lo mismo, y guardamos las herramientas en el cajón que les toca.
 
