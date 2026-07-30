@@ -6,7 +6,7 @@
  */
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ExternalLink, Inbox, XCircle } from "lucide-react";
+import { ExternalLink, FileCode2, Inbox, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +17,8 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { formatDate } from "@/lib/formatters/dates";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { diasEnEspera } from "@/lib/domain/facturasEntrantes";
+import { chipsArchivosEntrante, diasEnEspera, faltaXmlFiscal } from "@/lib/domain/facturasEntrantes";
+
 import {
   useFacturasEntrantesPendientes,
   useRechazarFacturaEntrante,
