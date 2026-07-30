@@ -24,7 +24,7 @@ import {
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
   Facturacion, FacturaDetalle, EstadoCuentaInterno, ProformaDetalle, ProformasListado,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
-  Cxp, Compras, CxpAging, CxcAging, CxpPorCapturar, CxpPorPagar, Cartera,
+  Cxp, Compras, CxpAging, CxcAging, CxpPorCapturar, CxpBuzonEntrantes, CxpPorPagar, Cartera,
   ComprasPagos, ComprasNotasCredito, ComprasReportes, ComprasPorAprobar, ComprasConciliacion, AnticiposProveedor,
   Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, TesoreriaPagosProgramados, Comisiones,
   CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta,
