@@ -12,6 +12,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
 import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { usePermissions } from "@/hooks/shared";
+import { DialogFacturaProveedorSinPermiso } from "@/features/cxp/components/DialogFacturaProveedorSinPermiso";
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";
@@ -47,9 +48,20 @@ function resolverConceptosParaCuadre(
   return Object.values(vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
 }
 
-export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqueAdHoc }: Props) {
-  const navigate = useNavigate();
+/**
+ * R-05.2: puerta de permisos. Sin capacidad de captura mostramos el motivo en
+ * vez de un formulario que la base de datos rechazará al guardar.
+ */
+export function DialogNuevaFacturaProveedor(props: Props) {
   const { canCapturarFacturaProveedor } = usePermissions();
+  if (!canCapturarFacturaProveedor) {
+    return <DialogFacturaProveedorSinPermiso open={props.open} onOpenChange={props.onOpenChange} />;
+  }
+  return <DialogNuevaFacturaProveedorForm {...props} />;
+}
+
+function DialogNuevaFacturaProveedorForm({ open, onOpenChange, initialEmbarqueAdHoc }: Props) {
+  const navigate = useNavigate();
   const cats = usePresupuestoCategorias(true);
   const ctl = useNuevaFacturaProveedorForm(() => onOpenChange(false), initialEmbarqueAdHoc);
 
@@ -70,33 +82,15 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
         Cancelar
       </Button>
-      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar || !canCapturarFacturaProveedor}>
+      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar}>
         {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {ctl.isPending ? "Guardando…" : "Guardar factura"}
       </Button>
     </>
   );
 
-  // R-05.2: sin permiso mostramos el motivo en vez de un formulario que la
-  // base de datos rechazará al guardar.
-  if (open && !canCapturarFacturaProveedor) {
-    return (
-      <FormDialogShell
-        open={open}
-        onOpenChange={onOpenChange}
-        icon={FileSpreadsheet}
-        title="Capturar factura de proveedor"
-        description="Tu rol no puede capturar facturas de proveedor."
-        size="md"
-        footer={<Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>}
-      >
-        <p className="text-sm text-muted-foreground">
-          No tienes permiso para esta sección. Pide a un administrador, contador o auxiliar
-          contable que capture la factura.
-        </p>
-      </FormDialogShell>
-    );
-  }
+
+
 
 
   return (
