@@ -31,6 +31,8 @@ interface Props {
   embarqueId?: string | null;
   proformaId?: string | null;
   proformaNumero?: string | null;
+  clienteNombre?: string | null;
+  fechaEmision?: string | null;
   total: number;
   saldo?: number;
   moneda: string;
@@ -45,8 +47,8 @@ interface Props {
 export function FacturaDetalleHeader(props: Props) {
   const {
     numero, estado, acuseCancelacionStatus, cancellationStatus, sinTimbrar,
-    expediente, embarqueId, proformaId, proformaNumero, total, saldo, moneda, ambiente,
-    volverHref, volverLabel, actions,
+    expediente, embarqueId, proformaId, proformaNumero, clienteNombre, fechaEmision,
+    total, saldo, moneda, ambiente, volverHref, volverLabel, actions,
   } = props;
   const vencida = estado === "Vencida";
   const esBorradorSinFolio = (numero ?? "").startsWith("BORRADOR-");
