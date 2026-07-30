@@ -14,7 +14,7 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-function readLatestSaldoFacturaMigration(): string {
+function readLatestMigrationWith(marker: string): string {
   const dir = path.resolve(__dirname, "../../../supabase/migrations");
   const files = fs
     .readdirSync(dir)
@@ -23,17 +23,20 @@ function readLatestSaldoFacturaMigration(): string {
     .reverse();
   for (const f of files) {
     const body = fs.readFileSync(path.join(dir, f), "utf8");
-    if (
-      body.includes("CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)")
-    ) {
-      return body;
-    }
+    if (body.includes(marker)) return body;
   }
-  throw new Error("No se encontró migración con FUNCTION public.saldo_factura");
+  throw new Error(`No se encontró migración con: ${marker}`);
 }
 
 describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
-  const sql = readLatestSaldoFacturaMigration();
+  // v13.343.1 — Se separan las dos fuentes: la última migración que redefine
+  // `saldo_factura` (puede ser una reparación puntual) y la migración canónica
+  // de Fase D que además redefine `validar_cierre_embarque`.
+  const sql = readLatestMigrationWith(
+    "CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)",
+  );
+  const faseD = readLatestMigrationWith("SUM(public.saldo_factura(f.id))");
+
 
   it("crea la función pública saldo_factura(uuid)", () => {
     expect(sql).toMatch(/CREATE OR REPLACE FUNCTION public\.saldo_factura\(p_factura_id uuid\)/);
