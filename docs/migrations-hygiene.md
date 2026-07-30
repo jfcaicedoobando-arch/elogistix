@@ -60,3 +60,11 @@ Nunca a la baja. Si una migración legacy imposible de corregir aparece post-bas
   `20260730051450` re-aplica la función con los grants correctos (y agrega la
   columna `cotizaciones.created_by` que el trigger requería); el archivo
   original queda como legacy auditado.
+
+- `20260730051450` → `20260730163239` (2026-07-30): FIX-H6-04. La migración
+  `20260730160942_eb3cc400…` (R-08, bloqueo de envío de cotizaciones sin
+  importes) creó `public._cotizaciones_bloquear_envio_sin_importes()` como
+  `SECURITY DEFINER` con `REVOKE ALL … FROM PUBLIC` pero sin
+  `GRANT EXECUTE …`. La migración correctiva `20260730163239` re-aplica la
+  función con `REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO
+  authenticated, service_role`; el archivo original queda como legacy auditado.

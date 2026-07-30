@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.354.1] - 2026-07-30
+- **fix(base de datos · FIX-H6-04)**: se corrigieron los permisos de la validación que bloquea enviar cotizaciones sin importes; sin cambios visibles para el usuario.
+
 ## [13.354.0] - 2026-07-30
 - **fix(cotizaciones · R-08)**: la base de datos ahora rechaza enviar una cotización sin importes de venta, no sólo la interfaz.
 - **fix(portal · R-05)**: las cotizaciones del portal (listado y detalle) ofrecen "Reintentar" en vez de quedarse cargando para siempre.
