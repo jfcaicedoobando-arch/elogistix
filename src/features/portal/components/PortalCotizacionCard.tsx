@@ -30,18 +30,14 @@ interface Props {
   tasaIva: number;
 }
 
-/**
- * Tarjeta de una cotización en el listado del portal. Extraída de
- * `PortalCotizaciones` para respetar el límite de 200 líneas (Power of 10).
- */
-export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
-  const navigate = useNavigate();
-  const expediente = c.embarque_expediente ?? null;
-  const tieneEmbarque = Boolean(c.embarque_id && expediente);
+/** Deriva la etiqueta/fecha de respuesta y el total mostrado en la tarjeta. */
+function derivarResumen(c: PortalCotizacionCardRow, tasaIva: number) {
   const fechaAceptacion = c.fecha_aceptacion ?? null;
   const fechaRechazo = c.fecha_rechazo ?? null;
   const fechaRespuesta = fechaAceptacion ?? fechaRechazo;
-  const fechaRespuestaLabel = fechaAceptacion ? "Aceptada" : fechaRechazo ? "Rechazada" : null;
+  let fechaRespuestaLabel: string | null = null;
+  if (fechaAceptacion) fechaRespuestaLabel = "Aceptada";
+  else if (fechaRechazo) fechaRespuestaLabel = "Rechazada";
 
   // B-099: mostrar el TOTAL de la moneda de la cotización (subtotal + IVA por
   // fila), igual que el detalle; fallback al subtotal crudo si la cotización
@@ -50,6 +46,55 @@ export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
   const totalLista = conceptosMoneda.length > 0
     ? calcularDesgloseMoneda(conceptosMoneda, tasaIva, c.moneda === "MXN").total
     : Number(c.subtotal ?? 0);
+
+  const expediente = c.embarque_expediente ?? null;
+  return {
+    expediente,
+    tieneEmbarque: Boolean(c.embarque_id && expediente),
+    fechaRespuesta,
+    fechaRespuestaLabel,
+    totalLista,
+  };
+}
+
+/** Línea "Aceptada/Rechazada el …" del pie de la tarjeta. */
+function LineaRespuesta({ fecha, label }: { fecha: string; label: string }) {
+  // B-103: fecha date-only → sólo fecha (no "00:00").
+  const formato = fecha.includes("T") ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy";
+  return (
+    <p className="text-2xs text-muted-foreground mt-0.5 tabular-nums">
+      {label} el {formatDate(fecha, formato)}
+    </p>
+  );
+}
+
+/** Enlace al embarque cuando la cotización ya está en operación. */
+function EnlaceEmbarque({ embarqueId, expediente }: { embarqueId: string; expediente: string }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(`/portal/embarques/${embarqueId}`);
+      }}
+      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-success hover:underline"
+    >
+      <Ship className="h-3 w-3" />
+      En operación · {expediente}
+    </button>
+  );
+}
+
+/**
+ * Tarjeta de una cotización en el listado del portal. Extraída de
+ * `PortalCotizaciones` para respetar el límite de 200 líneas (Power of 10).
+ */
+export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
+  const { expediente, tieneEmbarque, fechaRespuesta, fechaRespuestaLabel, totalLista } =
+    derivarResumen(c, tasaIva);
+
 
   return (
     <Card className="transition-all hover:shadow-raised hover:border-accent/30 focus-within:ring-2 focus-within:ring-accent/40 group">
