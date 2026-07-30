@@ -5,7 +5,7 @@
  *
  * Mantiene el controller intacto y delega secciones a `NuevoClienteFormPieces`.
  */
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -19,6 +19,7 @@ import {
   ClienteFiscalSelects,
 } from "./NuevoClienteFormPieces";
 import { rfcLooksValid, cpLooksValid } from "./nuevoClienteValidators";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 
 interface Props {
@@ -29,6 +30,19 @@ interface Props {
 export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
   const c = useNuevoClienteController(() => onOpenChange(false));
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [confirmarSalida, setConfirmarSalida] = useState(false);
+
+  // R-15: no descartar la captura en silencio si el usuario ya escribió algo.
+  const hayCambios =
+    !!c.csfFile ||
+    Object.values(c.form as Record<string, unknown>).some(
+      (v) => v !== null && v !== undefined && v !== "" && v !== false,
+    );
+
+  const intentarCerrar = () => {
+    if (hayCambios) setConfirmarSalida(true);
+    else c.resetAndClose();
+  };
 
   const triggerCsfUpload = (file: File | null) => {
     if (!file || !fileInputRef.current) return;
@@ -48,9 +62,10 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
   ) : undefined;
 
   return (
+    <>
     <FormDialogShell
       open={open}
-      onOpenChange={(abierto) => { if (!abierto) c.resetAndClose(); else onOpenChange(abierto); }}
+      onOpenChange={(abierto) => { if (!abierto) intentarCerrar(); else onOpenChange(abierto); }}
       icon={UserPlus}
       title="Nuevo Cliente"
       description={
@@ -65,7 +80,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
       headerAside={headerAside}
       footer={c.step === 1 ? (
         <>
-          <Button variant="outline" onClick={c.resetAndClose}>Cancelar</Button>
+          <Button variant="outline" onClick={intentarCerrar}>Cancelar</Button>
           <Button onClick={c.handleNext} disabled={!c.isStep1Valid}>
             Siguiente <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
@@ -133,5 +148,16 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
         />
       )}
     </FormDialogShell>
+      <ConfirmActionDialog
+        open={confirmarSalida}
+        onOpenChange={setConfirmarSalida}
+        title="¿Descartar el alta del cliente?"
+        description="Perderás los datos capturados y los documentos adjuntos de este formulario."
+        confirmLabel="Descartar"
+        cancelLabel="Seguir editando"
+        variant="destructive"
+        onConfirm={() => { setConfirmarSalida(false); c.resetAndClose(); }}
+      />
+    </>
   );
 }
