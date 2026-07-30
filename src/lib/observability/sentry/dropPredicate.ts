@@ -106,6 +106,39 @@ function isHtmlGatewayNoise(event: Sentry.ErrorEvent, exc: unknown): boolean {
   });
 }
 
+/**
+ * Ruido de túnel de Cloudflare estructurado: el error viaja en `cause` con
+ * `cloudflare_error: true` / `error_code: 1033` / `status: 530`, y el mensaje
+ * queda como "unknown error" o "Failed to fetch". No es un bug de la app.
+ * Ver Sentry JAVASCRIPT-REACT-44/45/47/48/49.
+ */
+function isCloudflareTunnelNoise(event: Sentry.ErrorEvent, exc: unknown): boolean {
+  const cause = (exc as { cause?: unknown } | undefined)?.cause as
+    | { cloudflare_error?: unknown; error_code?: unknown; status?: unknown }
+    | undefined;
+  if (cause && typeof cause === "object") {
+    if (cause.cloudflare_error === true) return true;
+    if (cause.error_code === 1033 || cause.status === 530) return true;
+  }
+  const ctxCause = (event.contexts?.Error as { cause?: { cloudflare_error?: unknown } } | undefined)
+    ?.cause;
+  if (ctxCause && typeof ctxCause === "object" && ctxCause.cloudflare_error === true) return true;
+  // Túneles efímeros (`*.trycloudflare.com`): entornos de prueba, no producción.
+  const url = event.request?.url ?? (typeof window !== "undefined" ? window.location?.href : "");
+  return typeof url === "string" && url.includes(".trycloudflare.com");
+}
+
+/**
+ * `notifyError` re-envuelve el PostgrestError en un `new Error(mensaje)`, así
+ * que el código 42501 sólo sobrevive en tags/extra. Sin esto los rechazos de
+ * RLS (permiso denegado, no bug) seguían llegando. Ver JAVASCRIPT-REACT-3S.
+ */
+function isRlsDeniedFromTags(event: Sentry.ErrorEvent): boolean {
+  if (event.tags?.pg_code === "42501") return true;
+  const extra = event.extra as { original?: { code?: unknown } } | undefined;
+  return extra?.original?.code === "42501";
+}
+
 export function shouldDropSentryEvent(
   event: Sentry.ErrorEvent,
   hint: Sentry.EventHint | undefined,
@@ -117,11 +150,14 @@ export function shouldDropSentryEvent(
   if (isRecoverableLoadError(event, exc, originalMsg)) return true;
   if (isZodValidationError(exc)) return true;
   if (isPostgresRlsDenied(event, hint?.originalException)) return true;
+  if (isRlsDeniedFromTags(event)) return true;
   if (isHostingAnalyticsNoise(event, hint?.originalException)) return true;
   if (isBrowserExtensionCircularJson(event, hint?.originalException)) return true;
   if (isHtmlGatewayNoise(event, hint?.originalException)) return true;
+  if (isCloudflareTunnelNoise(event, hint?.originalException)) return true;
   return false;
 }
+
 
 /** Resuelve el environment de Sentry. Prioriza `VITE_SENTRY_ENV` (permite
  *  distinguir `preview` de `production` en builds idénticos). Fallback a MODE. */
