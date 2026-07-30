@@ -19,6 +19,8 @@ export interface EstadoDocumentoResumen {
   terminal: boolean;
   /** Etiqueta a mostrar cuando `terminal` es true. */
   etiquetaTerminal: string | null;
+  /** Matiz del paso actual (ej. "Parcialmente pagada", "Vencida"). */
+  subEtiqueta?: string | null;
 }
 
 const PASOS_EMITIDA: PasoDocumento[] = [
