@@ -70,7 +70,7 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     description,
     // P-05: dedupe por código de error (reemplaza en vez de apilar) y
     // auto-dismiss a 8s: los toasts persistentes tapaban los botones del header.
-    id: `err-${errorCode ?? phase ?? "generic"}`,
+    id: errorToastId,
     duration: 8000,
     // Q-08: si hay acción primaria (Reintentar), "Ver detalles" baja a secundaria.
     action: action ?? { label: "Ver detalles", onClick: () => openErrorReport(debug) },
