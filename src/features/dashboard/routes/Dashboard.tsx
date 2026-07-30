@@ -5,6 +5,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { Seo } from "@/components/shared/Seo";
+
 import { DashboardStatusCards } from "@/features/dashboard/components/DashboardStatusCards";
 import { AlertasDemoraCard } from "@/features/dashboard/components/AlertasDemoraCard";
 import { ProximosArribosCard } from "@/features/dashboard/components/ProximosArribosCard";
