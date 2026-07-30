@@ -31,6 +31,7 @@ import {
   handleListClients,
 } from "./handlers.ts";
 import { handleInviteAgente, handleListAgentes } from "./agenteHandlers.ts";
+import { handleInvite, handleResetPassword } from "./inviteHandler.ts";
 import { handleListPortalEmails } from "./portalEmailsHandler.ts";
 
 initSentryEdge("user-management");
@@ -38,6 +39,8 @@ initSentryEdge("user-management");
 export type Action =
   | "list"
   | "create"
+  | "invite"
+  | "reset-password"
   | "delete"
   | "invite-client"
   | "list-clients"
@@ -48,6 +51,8 @@ export type Action =
 const ACTIONS = new Set<Action>([
   "list",
   "create",
+  "invite",
+  "reset-password",
   "delete",
   "invite-client",
   "list-clients",
@@ -75,7 +80,7 @@ Deno.serve(async (req) => {
     if (!action) {
       log.finish(400, "invalid_action", { user_id: callerId });
       return errorResponse(
-        "action inválida. Use: list | create | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails",
+        "action inválida. Use: list | create | invite | reset-password | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails",
         400,
         cors,
       );
@@ -88,6 +93,10 @@ Deno.serve(async (req) => {
         return await handleList(ctx, await checkAdminAccess(adminClient, callerId));
       case "create":
         return await handleCreate(ctx, await checkAdminAccess(adminClient, callerId));
+      case "invite":
+        return await handleInvite(ctx, await checkAdminAccess(adminClient, callerId));
+      case "reset-password":
+        return await handleResetPassword(ctx, await checkAdminAccess(adminClient, callerId));
       case "delete":
         return await handleDelete(ctx, await checkAdminAccess(adminClient, callerId));
       case "invite-client":
