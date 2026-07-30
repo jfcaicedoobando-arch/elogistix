@@ -5,10 +5,7 @@
  * para aplicar sobre el dataset ya cargado. Sin React ni Supabase.
  */
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import {
-  FILTROS_DEFAULT,
-  type OportunidadesFiltros,
-} from "@/features/crm/components/oportunidadesFiltersTypes";
+import { FILTROS_DEFAULT, type OportunidadesFiltros } from "./filtros";
 
 export type VistaGuardadaId = "todas" | "mis-deals" | "cierra-mes" | "alto-valor";
 
