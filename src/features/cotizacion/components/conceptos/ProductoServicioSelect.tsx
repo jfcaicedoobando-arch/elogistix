@@ -23,7 +23,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { useProductosCatalogo, type ProductoCatalogo } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { SALES, hasRole } from "@/lib/access/permissionMatrix";
+import type { AppRole } from "@/types/appRole";
+
+/**
+ * R-04: roles puramente comerciales. El catálogo SAT es maestro contable, así
+ * que ellos lo consultan pero no dan de alta claves nuevas desde el wizard
+ * (los administradores sí conservan el CTA).
+ */
+const ROLES_SIN_ALTA_CATALOGO: readonly AppRole[] = ["vendedor", "ejecutivo_pricing", "gerente_comercial"];
 import { CrearConceptoInlineForm } from "./CrearConceptoInlineForm";
 
 interface Props {
@@ -37,9 +44,7 @@ interface Props {
 
 export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecciona producto", disabled, onConceptoLibre }: Props) {
   const { organizationId, role } = useAuth();
-  // R-04: el catálogo SAT es maestro contable. Ventas/pricing lo consultan,
-  // pero no dan de alta claves nuevas desde el wizard.
-  const puedeCrearConcepto = !hasRole(SALES, role);
+  const puedeCrearConcepto = !role || !ROLES_SIN_ALTA_CATALOGO.includes(role);
   const { productos, isLoading, porNombre } = useProductosCatalogo(organizationId);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
