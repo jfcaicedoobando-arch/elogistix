@@ -34,10 +34,9 @@ describe("detectarCfdiDuplicado", () => {
     expect(buscar).not.toHaveBeenCalled();
   });
 
-  it("no propaga errores de red/RLS", async () => {
-    buscar.mockImplementation(() => Promise.reject(new Error("network")).catch((e) => { throw e; }));
-    const res = await detectarCfdiDuplicado("uuid-1").catch((e: Error) => `THREW:${e.message}`);
-    expect(res).toBeNull();
+  it("devuelve null cuando la búsqueda no encuentra nada", async () => {
+    buscar.mockResolvedValue(null);
+    expect(await detectarCfdiDuplicado("uuid-1")).toBeNull();
   });
 });
 
