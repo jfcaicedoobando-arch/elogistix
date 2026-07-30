@@ -13,12 +13,11 @@ import {
   type FacturaEntranteRow,
   type SubirFacturaEntranteInput,
 } from "@/features/cxp/services/facturasEntrantes";
-
-export const QK_ENTRANTES = "facturas-entrantes";
+import { cxp } from "@/features/cxp/queryKeys";
 
 export function useFacturasEntrantes(embarqueId: string) {
   return useQuery({
-    queryKey: [QK_ENTRANTES, "embarque", embarqueId],
+    queryKey: cxp.facturasEntrantesEmbarque(embarqueId),
     queryFn: () => listarFacturasEntrantesPorEmbarque(embarqueId),
     enabled: Boolean(embarqueId),
   });
@@ -26,14 +25,14 @@ export function useFacturasEntrantes(embarqueId: string) {
 
 export function useFacturasEntrantesPendientes() {
   return useQuery({
-    queryKey: [QK_ENTRANTES, "pendientes"],
+    queryKey: cxp.facturasEntrantesPendientes,
     queryFn: () => listarFacturasEntrantesPendientes(),
   });
 }
 
 function useInvalidarEntrantes() {
   const qc = useQueryClient();
-  return () => { void qc.invalidateQueries({ queryKey: [QK_ENTRANTES] }); };
+  return () => { void qc.invalidateQueries({ queryKey: cxp.facturasEntrantes }); };
 }
 
 export function useSubirFacturaEntrante() {
