@@ -57,7 +57,7 @@ export function useSubirFacturaEntrante() {
 export function useEliminarFacturaEntrante() {
   const invalidar = useInvalidarEntrantes();
   return useMutation({
-    mutationFn: (row: Pick<FacturaEntranteRow, "id" | "archivo_path">) => eliminarFacturaEntrante(row),
+    mutationFn: (row: Pick<FacturaEntranteRow, "id" | "archivo_path" | "xml_path">) => eliminarFacturaEntrante(row),
     onSuccess: () => {
       invalidar();
       notifySuccess(undefined, { title: "Archivo retirado del buzón" });
