@@ -116,4 +116,11 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "Solo un administrador puede capturar o modificar el tipo de cambio DOF.",
   LC_TC_DOF_INVALIDO:
     "El tipo de cambio capturado no es válido. Verifica la fecha y que los valores sean mayores a cero.",
+  // ── Buzón de facturas entrantes (CxP Inbox) ───────────────────────────
+  LC_NOT_FOUND:
+    "No encontramos el registro. Es posible que alguien más lo haya eliminado; recarga la página.",
+  LC_ESTADO_INVALIDO:
+    "Este registro ya cambió de estado. Recarga la página para ver la información actualizada.",
+  LC_MOTIVO_REQUERIDO:
+    "Indica el motivo para poder continuar.",
 };
