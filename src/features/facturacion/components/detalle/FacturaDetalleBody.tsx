@@ -62,7 +62,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
     },
     {
       id: "fiscal",
-      label: "Cliente y fiscal",
+      label: "Cliente y datos fiscales",
       content: (
         <>
           {!!factura.cliente_id && (
@@ -90,6 +90,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
     {
       id: "cobros",
       label: "Cobros",
+      count: pagos.length,
       content: (
         <FacturaPagosSection
           facturaId={factura.id}
@@ -105,6 +106,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
     {
       id: "notas-credito",
       label: "Notas de crédito",
+      count: notasCredito.length,
       content: (
         <FacturaNotasCreditoSeccion
           facturaId={factura.id}
@@ -117,6 +119,11 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
           canEdit={canEdit}
         />
       ),
+    },
+    {
+      id: "documentos",
+      label: "Documentos",
+      content: <FacturaDocumentosSection factura={factura} />,
     },
   ];
 
