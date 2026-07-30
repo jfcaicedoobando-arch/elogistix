@@ -79,9 +79,22 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
 
       {form.meta && !form.leyendoXml && (
         <FormDialogSection title="Datos detectados" cols={1}>
-          <CfdiMetaPreview meta={form.meta} metaUtil={form.metaUtil} proveedor={form.proveedor} />
+          <CfdiMetaPreview meta={form.meta} metaUtil={form.metaUtil} />
         </FormDialogSection>
       )}
+
+      <FormDialogSection title="Proveedor" cols={1}>
+        <div className="space-y-2">
+          <Label>¿A qué proveedor del embarque corresponde?</Label>
+          <SelectorProveedorEntrante
+            embarqueId={embarqueId}
+            seleccionado={form.proveedor}
+            detectadoId={form.proveedorDetectado?.id ?? null}
+            onSeleccionar={form.setProveedor}
+          />
+          {aviso && <p className="text-xs text-warning">{aviso}</p>}
+        </div>
+      </FormDialogSection>
 
       <FormDialogSection title="Nota para contabilidad" cols={1}>
         <div className="space-y-2">
