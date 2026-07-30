@@ -27,6 +27,7 @@ import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { shouldAttachDetails, buildDetailsAction } from "./appFeedback.details";
 import { shouldReportToSentry } from "./appFeedback.sentry";
+import { sanitizeToastText } from "./sanitizeToastText";
 import type { AnyToastFn, ErrorNotifyOptions, InfoNotifyOptions } from "./appFeedback.types";
 
 /** Q-08 · ids de los toasts de error vivos, para poder descartar SÓLO errores
@@ -53,7 +54,10 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     step, phase, errors, message, description: descOpt, title, error, context,
     errorCode, method, payload, requestId, action,
   } = opts;
-  const description = descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined);
+  // R-07: nunca imprimimos HTML crudo (páginas de error de proxy) en el toast.
+  const description = sanitizeToastText(
+    descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined),
+  );
 
   const computedTitle = title ?? tituloPorDefecto(step, phase);
 
@@ -113,7 +117,7 @@ export function notifyWarning(
       ? buildDetailsAction({ ...opts, titleFinal: opts.title })
       : undefined);
   sonnerToast.warning(opts.title, {
-    description: opts.description,
+    description: sanitizeToastText(opts.description),
     duration: opts.persistent ? Infinity : opts.duration,
     id: opts.id,
     action,
@@ -130,7 +134,7 @@ export function notifySuccess(
       ? buildDetailsAction({ ...opts, titleFinal: opts.title })
       : undefined);
   sonnerToast.success(opts.title, {
-    description: opts.description,
+    description: sanitizeToastText(opts.description),
     duration: opts.persistent ? Infinity : opts.duration,
     id: opts.id,
     action,
@@ -147,7 +151,7 @@ export function notifyInfo(
       ? buildDetailsAction({ ...opts, titleFinal: opts.title })
       : undefined);
   sonnerToast(opts.title, {
-    description: opts.description,
+    description: sanitizeToastText(opts.description),
     duration: opts.persistent ? Infinity : opts.duration,
     id: opts.id,
     action,

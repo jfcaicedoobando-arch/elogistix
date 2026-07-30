@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.352.0] - 2026-07-30
+- **fix(cotizaciones · R-01)**: la columna "Cant." ya no recorta silenciosamente a 9,999 y cada celda numérica edita su propio buffer, así que teclear en un campo ya no altera los de al lado.
+- **fix(proveedores · R-03)**: el alta de proveedor envía sólo columnas reales de la tabla, valida categoría ↔ tipo/subtipo antes de guardar y el toast muestra el error real del servidor en vez de "undefined". Alta de ruta de costeo avisa si aún no se resuelve la organización.
+- **feat(cotizaciones · R-02/R-08)**: una cotización "Solicitada" ofrece "Completar cotización" y, con total en $0, se explica por qué no puede enviarse.
+- **fix(catálogo SAT · R-04)**: los roles comerciales (ventas, pricing, gerente comercial) ya no ven el CTA "Crear concepto"; el catálogo lo mantienen administración/operación.
+- **fix(cotizaciones · R-06)**: la tabla ya no parpadea a "No se encontraron cotizaciones" mientras la consulta sigue en curso y se muestra banner con "Reintentar" si falla.
+- **fix(toasts · R-07)**: nunca se imprime HTML crudo de páginas de error; el texto se limpia y se recorta (`sanitizeToastText`).
+- **fix(wizard · R-09)**: el autoguardado ya no pisa el borrador con el formulario vacío y se congela mientras se restaura, así "Restaurar" recupera paso, cliente y costos.
+- **feat(costeo · R-10)**: alta rápida de naviera desde el formulario de tarifas, sin salir a Configuración.
+- **feat(accesos · R-11)**: ventas y pricing pueden consultar Embarques (sólo lectura; la escritura la siguen bloqueando las políticas de la base).
+- **fix(formato · R-14)**: `toTitleCase` conserva códigos cortos como "R3" o "M2" y sólo limpia dígitos colgantes de raíces largas ("acme123" → "Acme").
+
 ## [13.351.0] - 2026-07-30
 - **feat(documentos)**: se homologó el detalle de proformas con facturas emitidas y recibidas — mismo shell (encabezado + stepper + cinta de KPIs + pestañas) y riel fijo "Historial y actividad".
 - **fix(ui 1366×768)**: el riel lateral ahora usa 19rem en pantallas `lg` y las pestañas/steppers hacen scroll horizontal en lugar de saltar de renglón.

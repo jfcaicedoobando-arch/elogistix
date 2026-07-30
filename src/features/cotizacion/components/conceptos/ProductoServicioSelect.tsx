@@ -23,6 +23,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { useProductosCatalogo, type ProductoCatalogo } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import type { AppRole } from "@/types/appRole";
+
+/**
+ * R-04: roles puramente comerciales. El catálogo SAT es maestro contable, así
+ * que ellos lo consultan pero no dan de alta claves nuevas desde el wizard
+ * (los administradores sí conservan el CTA).
+ */
+const ROLES_SIN_ALTA_CATALOGO: readonly AppRole[] = ["vendedor", "ejecutivo_pricing", "gerente_comercial"];
 import { CrearConceptoInlineForm } from "./CrearConceptoInlineForm";
 
 interface Props {
@@ -34,8 +42,49 @@ interface Props {
   onConceptoLibre?: (texto: string) => void;
 }
 
+
+/** Pie del combobox: concepto libre y alta rápida (extraído por complejidad). */
+function PieAcciones({
+  search, onConceptoLibre, puedeCrearConcepto, onCrear, onCerrar,
+}: {
+  search: string;
+  onConceptoLibre?: (texto: string) => void;
+  puedeCrearConcepto: boolean;
+  onCrear: () => void;
+  onCerrar: () => void;
+}) {
+  const texto = search.trim();
+  return (
+    <div className="border-t p-1 space-y-1">
+      {onConceptoLibre && texto.length > 0 && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start text-xs"
+          onClick={() => { onConceptoLibre(texto); onCerrar(); }}
+        >
+          <PenLine className="h-3.5 w-3.5 mr-1.5" /> Usar "{texto}" como concepto libre
+        </Button>
+      )}
+      {puedeCrearConcepto && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start text-xs"
+          onClick={onCrear}
+        >
+          <Plus className="h-3.5 w-3.5 mr-1.5" /> Crear concepto
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecciona producto", disabled, onConceptoLibre }: Props) {
-  const { organizationId } = useAuth();
+  const { organizationId, role } = useAuth();
+  const puedeCrearConcepto = !role || !ROLES_SIN_ALTA_CATALOGO.includes(role);
   const { productos, isLoading, porNombre } = useProductosCatalogo(organizationId);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -121,30 +170,13 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
                 </>
               )}
             </CommandList>
-            <div className="border-t p-1 space-y-1">
-              {onConceptoLibre && search.trim().length > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-xs"
-                  onClick={() => { onConceptoLibre(search.trim()); cerrarYResetear(); }}
-                >
-                  <PenLine className="h-3.5 w-3.5 mr-1.5" /> Usar "{search.trim()}" como concepto libre
-                </Button>
-              )}
-              {organizationId && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-xs"
-                  onClick={() => setCreando(true)}
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Crear concepto
-                </Button>
-              )}
-            </div>
+            <PieAcciones
+              search={search}
+              onConceptoLibre={onConceptoLibre}
+              puedeCrearConcepto={Boolean(organizationId) && puedeCrearConcepto}
+              onCrear={() => setCreando(true)}
+              onCerrar={cerrarYResetear}
+            />
           </Command>
         )}
       </PopoverContent>

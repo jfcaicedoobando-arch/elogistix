@@ -24,7 +24,10 @@ function processToken(original: string, idx: number): string {
   if (/[A-Za-z]\.([A-Za-z]\.?)+/.test(original)) {
     return original.toUpperCase();
   }
-  const cleaned = original.replace(/\d+$/, "");
+  // R-14: los dígitos finales sólo se descartan cuando el token tiene una raíz
+  // alfabética larga ("acme123" → "Acme"). Códigos cortos como "R3", "M2" o
+  // "T1" son parte del nombre y deben preservarse íntegros.
+  const cleaned = /^[A-Za-z]{3,}\d+$/.test(original) ? original.replace(/\d+$/, "") : original;
   const upper = cleaned.toUpperCase();
   const lower = cleaned.toLowerCase();
   if (TITLECASE_ACRONYMS.has(upper)) return upper;

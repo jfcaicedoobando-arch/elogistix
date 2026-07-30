@@ -10,16 +10,24 @@ export function parseInputNumero(raw: string): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-/** Tope de cantidad por partida: evita totales absurdos por typos (Q-15.9). */
-export const CANTIDAD_MAX = 9_999;
+/**
+ * R-01 — límite de saneidad para la columna "Cant.". Ya NO se aplica como
+ * clamp silencioso (eso convertía 15,000 en 9,999 y enmascaraba el bug de
+ * migración de valores entre campos); sólo se usa para VALIDAR y avisar.
+ */
+export const CANTIDAD_LIMITE_SANIDAD = 1_000_000;
 
 /**
- * Q-15.9 — parseo de la columna "Cant." Acepta separador de miles ("15,000")
- * y limita el valor a `CANTIDAD_MAX` para que un typo no dispare el total
- * de la cotización a cientos de millones.
+ * Parseo de la columna "Cant." Acepta separador de miles ("15,000") y respeta
+ * el valor tecleado tal cual: la validación de rango vive en el wizard con
+ * mensaje al usuario, nunca como reescritura silenciosa.
  */
 export function parseCantidad(raw: string): number {
   const limpio = raw.replace(/,/g, "");
-  const n = parseInputNumero(limpio);
-  return Math.min(n, CANTIDAD_MAX);
+  return parseInputNumero(limpio);
+}
+
+/** `true` cuando la cantidad supera el límite de saneidad (se avisa, no se reescribe). */
+export function cantidadFueraDeRango(n: number): boolean {
+  return n > CANTIDAD_LIMITE_SANIDAD;
 }

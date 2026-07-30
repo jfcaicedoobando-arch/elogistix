@@ -37,4 +37,16 @@ describe("CotizacionDetalleAcciones", () => {
     renderAcciones({ estado: "Enviada", total: 1500, rol: "admin" });
     expect(screen.getByRole("button", { name: /aceptar/i })).toBeInTheDocument();
   });
+
+  it("R-02 — Solicitada ofrece 'Completar cotización'", () => {
+    renderAcciones({ estado: "Solicitada", total: 0, rol: "admin" });
+    expect(screen.getByRole("button", { name: /completar cotización/i })).toBeInTheDocument();
+  });
+
+  it("R-08 — con total en cero explica por qué no se puede enviar", () => {
+    renderAcciones({ estado: "Borrador", total: 0, rol: "admin" });
+    expect(screen.queryByRole("button", { name: /marcar como enviada/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/al menos un concepto con importe/i)).toBeInTheDocument();
+  });
 });
+

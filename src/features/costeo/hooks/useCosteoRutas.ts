@@ -29,7 +29,14 @@ export function useCosteoRutaMutations() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.costeo.rutas.all });
 
   const crear = useMutation({
-    mutationFn: (input: CosteoRutaInput) => insertCosteoRuta(organizationId!, input),
+    // R-03: sin organización resuelta el insert viajaba con `organization_id`
+    // nulo y el servidor respondía un error críptico; se corta antes.
+    mutationFn: (input: CosteoRutaInput) => {
+      if (!organizationId) {
+        throw new Error("No se pudo determinar tu organización. Recarga la página e intenta de nuevo.");
+      }
+      return insertCosteoRuta(organizationId, input);
+    },
     onSuccess: () => { invalidate(); toast({ title: "Ruta agregada" }); },
     onError: (e: Error) => notifyError(undefined, { title: e instanceof CosteoRutaDuplicadaError ? "Ruta duplicada" : "Error al agregar",
       description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_1" }),

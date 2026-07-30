@@ -7,6 +7,7 @@ import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -115,12 +116,26 @@ export default function Cotizaciones() {
         </CardContent>
       </Card>
 
+      {c.isError && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>No se pudieron cargar las cotizaciones</AlertTitle>
+          <AlertDescription className="flex items-center gap-3">
+            Revisa tu conexión e intenta de nuevo.
+            <Button size="sm" variant="outline" onClick={() => c.refetch()}>Reintentar</Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardContent className="p-0">
           <ResponsiveDataTable
             columns={columns}
             data={deferredPaginated}
-            isLoading={c.isLoading}
+            // R-06: mientras el valor diferido va por detrás de la consulta real
+            // seguimos mostrando el esqueleto; si no, la tabla parpadeaba a
+            // "No se encontraron cotizaciones" con los KPIs ya en 3.
+            isLoading={c.isLoading || deferredPaginated !== c.paginated}
             emptyMessage="No se encontraron cotizaciones"
             getRowHref={(r) => `/cotizaciones/${r.id}`}
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}

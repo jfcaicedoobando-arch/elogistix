@@ -57,6 +57,8 @@ export default function NuevaCotizacion() {
   // para que recargar el wizard NO duplique la cotización. Antes se apagaba con
   // `enabled: !w.cotizacionId` y el id se perdía al recargar. Sólo se apaga en
   // modo edición (initialData) — aquí siempre es alta, así que enabled=true.
+  const [restaurando, setRestaurando] = useState(false);
+
   const { flush: flushDraft } = useCotizacionDraftAutosave({
     form: w.form,
     userId,
@@ -64,6 +66,7 @@ export default function NuevaCotizacion() {
     cotizacionId: w.cotizacionId,
     currentStep: w.currentStep,
     costosInternos: w.costosInternos,
+    paused: restaurando,
   });
 
   // P0 — Detectar borrador existente (re-evalúa cuando el userId async llega).
@@ -75,6 +78,8 @@ export default function NuevaCotizacion() {
 
   const handleRestore = useCallback(() => {
     if (draftDetectado) {
+      // R-09: congelamos el autoguardado mientras RHF aplica el reset.
+      setRestaurando(true);
       w.form.reset(draftDetectado.values);
       // B-003: restaurar el id garantiza que el siguiente "Guardar" haga UPDATE
       // en la cotización huérfana en vez de INSERTar una nueva.
@@ -92,6 +97,8 @@ export default function NuevaCotizacion() {
       }
     }
     setBanderaBorrador(false);
+    // Se reanuda en el siguiente tick, ya con los valores restaurados aplicados.
+    setTimeout(() => setRestaurando(false), 0);
   }, [draftDetectado, w]);
 
   const handleDiscard = useCallback(() => {

@@ -40,9 +40,30 @@ interface Params {
    *  reabrir el `useEffect` de watch en cada cambio (se leen al vuelo). */
   currentStep: number;
   costosInternos: FilaCostoLocal[];
+  /** R-09: mientras se restaura un borrador, el autoguardado se congela para
+   *  que el ciclo de autosave no reescriba el draft con los valores por defecto
+   *  antes de que RHF termine de aplicar `form.reset`. */
+  paused?: boolean;
 }
 
-export function useCotizacionDraftAutosave({ form, userId, enabled, cotizacionId, currentStep, costosInternos }: Params): {
+/**
+ * R-09 — Un borrador sólo se escribe si tiene algo que recordar. Sin esto, el
+ * primer ciclo de autosave (que corre al montar, con el formulario vacío)
+ * sobrescribía el borrador guardado y "Restaurar" devolvía campos en blanco.
+ */
+function draftTieneContenido(values: CotizacionFormValues, costos: FilaCostoLocal[]): boolean {
+  if (costos.length > 0) return true;
+  const v = values as unknown as Record<string, unknown>;
+  return Object.entries(v).some(([clave, valor]) => {
+    if (clave === "moneda" || clave === "tipo_operacion" || clave === "modo_transporte") return false;
+    if (typeof valor === "string") return valor.trim().length > 0;
+    if (typeof valor === "number") return valor !== 0;
+    if (Array.isArray(valor)) return valor.length > 0;
+    return false;
+  });
+}
+
+export function useCotizacionDraftAutosave({ form, userId, enabled, cotizacionId, currentStep, costosInternos, paused = false }: Params): {
   clear: () => void;
   flush: () => void;
 } {
@@ -53,6 +74,8 @@ export function useCotizacionDraftAutosave({ form, userId, enabled, cotizacionId
   stepRef.current = currentStep;
   const costosRef = useRef<FilaCostoLocal[]>(costosInternos);
   costosRef.current = costosInternos;
+  const pausedRef = useRef<boolean>(paused);
+  pausedRef.current = paused;
 
   const clear = useCallback(() => {
     clearDraft(userId);
@@ -69,6 +92,8 @@ export function useCotizacionDraftAutosave({ form, userId, enabled, cotizacionId
   }), []);
 
   const persist = useCallback((values: CotizacionFormValues) => {
+    if (pausedRef.current) return;
+    if (!draftTieneContenido(values, costosRef.current)) return;
     try {
       safeLocalStorage.setItem(draftKey(userId), JSON.stringify(buildPayload(values)));
     } catch {
