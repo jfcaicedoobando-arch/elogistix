@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.357.0] - 2026-07-30
+- **fix(CRM · datos confiables)**: nuevo trigger `trg_crm_sync_oportunidad_desde_cotizacion` que sincroniza monto, moneda y cliente de la oportunidad con su cotización; el pipeline y el forecast dejan de mostrar $0. Backfill de las 8 oportunidades existentes en cero.
+- **fix(CRM · duplicados)**: la vinculación cotización→CRM reutiliza el lead vivo con el mismo email (`findLeadIdByEmail`) en lugar de crear duplicados; fusionados los 5 leads repetidos de "Nova Trading" y reasignadas sus oportunidades.
+- **fix(seguridad · RLS)**: `gerente_comercial` y `admin_org` ya pueden crear/editar en `crm_leads`, `crm_oportunidades` y `crm_actividades` (antes solo lectura).
+- **test**: nuevo `vincularOCrear.dedupe.test.ts`.
+
+
 ## [13.356.0] - 2026-07-30
 - **fix(embarques · reapertura)**: `reabrir_embarque` ahora también salta el validador de transiciones (`app.bypass_transicion`), que bloqueaba `Cerrado → Entregado` con `LC_TRANSICION_INVALIDA` (requestId `d1990e5e-f394-4115-9125-7bcaefb07daa`). Se conservan rol admin, motivo ≥ 20 caracteres, estado `Cerrado` y tenancy, más `REVOKE`/`GRANT EXECUTE` (H6).
 - **fix(UX · errores)**: el fallo de reapertura ya no muestra el genérico "El estado del registro cambió en otra sesión", sino un mensaje específico de reapertura.

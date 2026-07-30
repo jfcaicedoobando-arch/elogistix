@@ -18,6 +18,26 @@ export function buildOpNombre(empresa: string, folio?: string): string {
 }
 
 /**
+ * Deduplicación de prospectos: busca un lead vivo del tenant con el mismo
+ * email (case-insensitive) para reutilizarlo en lugar de crear un duplicado.
+ * Devuelve `null` si no hay email o no existe coincidencia.
+ */
+export async function findLeadIdByEmail(email: string): Promise<string | null> {
+  const normalizado = email.trim().toLowerCase();
+  if (!normalizado) return null;
+  const { data, error } = await supabase
+    .from("crm_leads")
+    .select("id")
+    .ilike("email", normalizado)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.id ?? null;
+}
+
+/**
  * Busca la etapa "Cotizando" (abierta, segunda en orden por convención) o
  * la primera abierta como fallback.
  */
