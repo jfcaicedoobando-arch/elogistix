@@ -7,6 +7,7 @@ import {
   type ProspectoAClienteInput,
 } from '@/features/cotizacion/services';
 import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
+import { RevalidacionRequeridaError } from '@/features/cotizacion/domain/revalidacionTarifa';
 
 
 /** Convierte un prospecto en cliente y actualiza la cotización */
