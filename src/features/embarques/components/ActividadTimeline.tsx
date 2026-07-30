@@ -1,15 +1,9 @@
-import { CalendarDays, CircleDollarSign, FileText, Handshake, Lock, ShieldAlert } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 import { ActividadItem } from "@/features/embarques/components/ActividadItem";
-import type { ActividadCategoria, ActividadGrupo } from "@/features/embarques/domain/actividadFeed";
+import type { ActividadGrupo } from "@/features/embarques/domain/actividadFeed";
 
-export const CATEGORIA_ICON: Record<ActividadCategoria, typeof FileText> = {
-  operacion: FileText,
-  comercial: Handshake,
-  finanzas: CircleDollarSign,
-  riesgo: ShieldAlert,
-  cierre: Lock,
-};
+
 
 interface Props {
   grupos: ActividadGrupo[];
