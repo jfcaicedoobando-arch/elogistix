@@ -125,4 +125,6 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "Indica el motivo para poder continuar.",
   LC_COTIZACION_SIN_IMPORTES:
     "La cotización no tiene importes de venta capturados. Agrega al menos un concepto con precio antes de continuar.",
+  LC_VALIDACION:
+    "La validación no pasó. Revisa los motivos indicados y corrige la información antes de continuar.",
 };
