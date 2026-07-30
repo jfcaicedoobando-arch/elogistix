@@ -163,7 +163,8 @@ describe("useNuevaFacturaProveedorForm", () => {
     });
     capturarConcepto(result, 100);
     await act(async () => { await result.current.submit(); });
-    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/UUID fiscal/i), expect.anything());
+    // v13.343.1 — el copy pasó a "Este CFDI ya está capturado" (detección temprana de duplicados).
+    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/CFDI ya está capturado/i), expect.anything());
     expect(onDone).not.toHaveBeenCalled();
   });
 
