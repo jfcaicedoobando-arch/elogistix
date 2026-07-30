@@ -1,42 +1,39 @@
-## Qué pasó (diagnóstico verificado)
+## Objetivo
+Dejar el CI en verde. Revisé los logs del run 30501284428 y reproduje/confirmé cada causa en el código actual.
 
-Karol intentó capturar una factura de proveedor cuyo CFDI **ya estaba registrado** en Elogistix. La base de datos hizo bien su trabajo: existe un índice único por organización sobre el UUID fiscal (ignorando facturas borradas), y rechazó el alta.
+## 1. Arquitectura — `features/*/domain` importa hooks
+`src/features/cotizacion/domain/cotizacion.acciones.ts` importa `@/hooks/shared/permissionMatrix`, lo que rompe la jerarquía Pages→Hooks→Services→Lib.
+- Mover `FINANCE / OPERATIONS / SALES / hasRole` (matriz de permisos pura, sin React) a `src/lib/access/permissionMatrix.ts`.
+- Reexportar desde `@/hooks/shared/permissionMatrix` para no romper consumidores existentes.
+- `cotizacion.acciones.ts` importa desde `@/lib/access/permissionMatrix`.
 
-Lo confirmé en datos: hay UUIDs con varios intentos de captura, donde sólo queda una factura viva y el resto están borradas. Ejemplos reales:
+## 2. Rutas — `appRoutes.smoke.test.tsx`
+El test redefine `FINANCE_READ_ROLES` local con un orden distinto al de `src/lib/access/roleRouteMatrix.ts` (única fuente de verdad).
+- Borrar las constantes duplicadas del test e importar las reales desde `@/lib/access/roleRouteMatrix`, evitando que vuelva a desincronizarse.
 
-- `ADMINISTRACION GONG`, folio 9593 → 2 intentos borrados + 1 viva (Pagada).
-- `WAN HAI LINES`, folio CON-B-16531 → 5 intentos borrados + 1 viva (aprobada).
+## 3. Sidebar ↔ matriz de roles
+Fallan `vendedor` y `super_admin`: el sidebar les muestra ítems que `roleRouteMatrix` no permite (p.ej. `/auditoria` no incluye `super_admin`; ítems de Costeo/Profit para `vendedor`).
+- Primero listar exactamente las URLs ofensivas con un script temporal.
+- Corregir en la matriz: añadir `super_admin` a todas las rutas donde hoy falta (es rol total) y alinear los accesos de `vendedor` (Costeo/Profit) con lo que el sidebar realmente ofrece; si algún ítem no debe verse, quitarlo del builder en vez de abrir la matriz.
 
-Es decir: **no es un bug de datos, es un problema de experiencia de uso.** Analogía: el sistema deja que llenes todo el formulario de inscripción y hasta el final te dice "ya estabas inscrito", sin decirte con qué número ni dónde verlo.
+## 4. Toast de query fallida
+El código usa la acción "Reintentar" (decisión Q-08: no navegar fuera del wizard); el test aún espera "Ver detalles".
+- Actualizar `queryClient.toast.test.ts` a "Reintentar" y verificar que se llama al refetch.
 
-## Problemas concretos a corregir
+## 5. Guardrail Fase D (`saldo-factura-fase-d.test.ts`)
+El test toma "la migración más reciente que redefine `saldo_factura`", y ahora esa es la migración de reparación 13.340 (que sólo redefine la función y recalcula estados), por lo que no contiene `validar_cierre_embarque` ni el trigger de NCs.
+- Cambiar el helper para que busque la migración canónica que además contiene `validar_cierre_embarque` (o separar las aserciones: unas contra la última definición de `saldo_factura`, otras contra la última de `validar_cierre_embarque`).
 
-1. La validación previa de duplicados (`existeFacturaDuplicada`) sólo compara **proveedor + folio + fecha de emisión**. No revisa el UUID fiscal, que es el identificador único real del CFDI. Por eso el choque aparece hasta el `INSERT`.
-2. El aviso de error dice sólo "Ya existe una factura con este UUID fiscal (CFDI duplicado)" — sin folio interno, sin estado, sin manera de abrir la factura existente.
-3. Como el usuario no sabe qué pasó, reintenta: eso explica los 5 intentos borrados del mismo CFDI.
+## 6. Knip (código muerto)
+- Eliminar `src/features/compras/routes/_sections/ConciliacionDetalleTabla.tsx` (archivo sin uso tras el refactor).
+- Quitar el `export` de tipos no usados: `ConceptoVentaPrellenado`, `ConceptoCostoFromCotizacion`, `EstadoCotizacionAccion`, `AccionesCotizacionPermitidas`, `StoredDraft`, `AvanzarEstadoEmbarqueInput`, `ReabrirEmbarqueInput`, y `translatePostgresError` (o marcarlos como usados si aplican en tests).
+- Los tipos `Seed*` de `src/lib/e2e/seedDemoData.ts` son "hints" de configuración: se resuelven agregando el patrón `src/lib/e2e/**` a `ignoreExportsUsedInFile`/entry en `knip.json`.
 
-## Plan
+## 7. ESLint
+- Confirmar que el fix de `ClienteDetalleTabs.tsx` (allowlist cross-feature) ya en repo pasa, y limpiar los warnings del React Compiler en `useCotizacionDraftAutosave.ts` (refs mutadas durante render).
 
-### 1. Validar el UUID justo al cargar el XML
-- Nuevo servicio `buscarFacturaPorUuidFiscal(uuid)` en `src/features/cxp/services/proveedorFacturas.crud.ts`: busca facturas vivas (`deleted_at IS NULL`) de la organización y devuelve `id`, `folio_interno`, `folio_proveedor`, `proveedor_nombre`, `estado`, `estado_aprobacion`.
-- En el flujo de parseo del CFDI (`useNuevaFacturaProveedorForm.ts` + `CargaCfdiSection.tsx`), en cuanto se lee el UUID del XML se hace la consulta y, si ya existe, se muestra una alerta **dentro del modal**: "Este CFDI ya está capturado como FP-000123 (Vigente, aprobada)" con un botón "Ver factura" que abre el detalle, y se deshabilita el botón Guardar.
+## Verificación
+`bun run lint`, `bun run lint:unused:strict`, `bunx tsgo --noEmit`, `bun run audit:migrations` y los 5 archivos de test afectados; luego una corrida completa de vitest.
 
-### 2. Mejorar el aviso de error de respaldo
-- En `useNuevaFacturaProveedorForm.submit.ts`, cuando el `INSERT` falle con duplicado de `uuid_fiscal`, consultar la factura existente y mostrar su folio interno y estado en la descripción del toast, en vez del mensaje genérico.
-
-### 3. Extender la validación previa
-- Antes de insertar, `runSubmit` verificará también por UUID (no sólo folio+fecha), para cortar el reintento antes de tocar la base.
-
-### 4. Pruebas
-- Unitarias del nuevo servicio (encuentra viva, ignora borradas, aísla por organización).
-- Unitarias de `handleSubmitError` con el nuevo mensaje enriquecido.
-- Prueba del hook: cargar un XML con UUID ya existente bloquea el guardado.
-
-### 5. Cierre
-- Bump de `APP_VERSION` a `13.343.0` y entrada en `CHANGELOG.md`.
-
-## Notas técnicas
-
-- Índice existente: `ux_proveedor_facturas_uuid_fiscal_org` sobre `(organization_id, uuid_fiscal)` con `WHERE uuid_fiscal IS NOT NULL AND deleted_at IS NULL`. **No se modifica** — es la protección correcta.
-- No se requiere migración de base de datos; todo el cambio es de frontend/servicios.
-- No se borran ni fusionan las facturas duplicadas históricas: las repetidas ya están marcadas como borradas y sólo queda una viva por UUID.
+## Cierre
+Actualizar `CHANGELOG.md` y subir `APP_VERSION` a `13.343.1`.
