@@ -18,7 +18,12 @@ export function DocumentoLayout({ children, rail, className }: Props) {
     return <div className={cn("space-y-4", className)}>{children}</div>;
   }
   return (
-    <div className={cn("grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]", className)}>
+    <div
+      className={cn(
+        "grid grid-cols-1 gap-4 lg:grid-cols-[1fr_19rem] xl:grid-cols-[1fr_21rem]",
+        className,
+      )}
+    >
       <div className="min-w-0 space-y-4">{children}</div>
       <aside className="min-w-0 space-y-4" aria-label="Actividad del documento">
         {rail}

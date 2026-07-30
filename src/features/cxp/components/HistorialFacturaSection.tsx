@@ -2,9 +2,7 @@
  * Sección plegable con el historial unificado de una factura de proveedor:
  * captura, aprobación/rechazo, pagos, notas de crédito y eliminación.
  */
-import { useState } from "react";
 import {
-  History,
   FilePlus2,
   Check,
   X,
@@ -12,19 +10,15 @@ import {
   FileMinus2,
   Trash2,
   Circle,
-  ChevronDown,
   AlertTriangle,
   Loader2,
 } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { DocumentoRailCard } from "@/components/shared/documento/DocumentoRailCard";
 import { cn } from "@/lib/utils";
+
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
 import {
   useHistorialFactura,
@@ -99,7 +93,6 @@ function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
 }
 
 export function HistorialFacturaSection({ facturaId }: Props) {
-  const [open, setOpen] = useState(false);
   const {
     data: eventos = [],
     isLoading,
@@ -107,69 +100,47 @@ export function HistorialFacturaSection({ facturaId }: Props) {
     isError,
     error,
     refetch,
-  } = useHistorialFactura(facturaId, open);
+  } = useHistorialFactura(facturaId, true);
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="border-b">
-      <CollapsibleTrigger className="flex w-full items-center justify-between px-6 py-3 hover:bg-muted/40 transition-colors">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <History className="h-4 w-4 text-muted-foreground" />
-          <span>Historial</span>
-          {eventos.length > 0 && (
-            <Badge variant="secondary" className="font-normal">
-              {eventos.length}
-            </Badge>
-          )}
-        </div>
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform",
-            open && "rotate-180",
-          )}
-        />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="px-6 pb-5">
-        {isLoading ? (
-          <ListSkeleton rows={3} />
-        ) : isError ? (
-          <div className="flex flex-col items-center gap-2 py-4 text-center">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            <p className="text-sm text-destructive font-medium">
-              No se pudo cargar el historial.
-            </p>
-            {error instanceof Error && (
-              <p className="text-xs text-muted-foreground max-w-md truncate">
-                {error.message}
-              </p>
-            )}
-            <Button size="sm" variant="outline" onClick={() => refetch()}>
-              Reintentar
-            </Button>
-          </div>
-        ) : eventos.length === 0 && !isFetching ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Sin eventos registrados aún.
+    <DocumentoRailCard count={eventos.length}>
+      {isLoading ? (
+        <ListSkeleton rows={3} />
+      ) : isError ? (
+        <div className="flex flex-col items-center gap-2 py-4 text-center">
+          <AlertTriangle className="h-5 w-5 text-destructive" />
+          <p className="text-sm font-medium text-destructive">
+            No se pudo cargar el historial.
           </p>
-        ) : (
-          <>
-            {isFetching && eventos.length > 0 && (
-              <div className="flex items-center gap-1.5 text-label text-muted-foreground italic mb-2">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                <span>Actualizando…</span>
-              </div>
-            )}
-            {eventos.length === 0 ? (
-              <ListSkeleton rows={2} />
-            ) : (
-              <ol className="relative border-l-2 border-border ml-3 space-y-4 pl-1 mt-2">
-                {eventos.map((ev, i) => (
-                  <FilaEvento key={`${ev.tipo}-${ev.ts}-${i}`} ev={ev} />
-                ))}
-              </ol>
-            )}
-          </>
-        )}
-      </CollapsibleContent>
-    </Collapsible>
+          {error instanceof Error && (
+            <p className="max-w-md truncate text-xs text-muted-foreground">
+              {error.message}
+            </p>
+          )}
+          <Button size="sm" variant="outline" onClick={() => refetch()}>
+            Reintentar
+          </Button>
+        </div>
+      ) : eventos.length === 0 ? (
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          Sin eventos registrados aún.
+        </p>
+      ) : (
+        <>
+          {isFetching && (
+            <div className="mb-2 flex items-center gap-1.5 text-label italic text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span>Actualizando…</span>
+            </div>
+          )}
+          <ol className="relative ml-3 space-y-4 border-l-2 border-border pl-1">
+            {eventos.map((ev, i) => (
+              <FilaEvento key={`${ev.tipo}-${ev.ts}-${i}`} ev={ev} />
+            ))}
+          </ol>
+        </>
+      )}
+    </DocumentoRailCard>
   );
 }
+

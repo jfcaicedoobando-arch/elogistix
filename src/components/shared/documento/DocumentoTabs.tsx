@@ -37,7 +37,7 @@ export function DocumentoTabs({ tabs, param = "tab", className }: Props) {
 
   return (
     <Tabs value={activo} onValueChange={onChange} className={cn("w-full", className)}>
-      <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+      <TabsList className="flex h-auto w-full max-w-full justify-start gap-1 overflow-x-auto whitespace-nowrap">
         {tabs.map((t) => (
           <TabsTrigger key={t.id} value={t.id} className="gap-1.5">
             {t.label}

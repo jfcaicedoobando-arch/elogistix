@@ -3,7 +3,8 @@
  * CFDI (XML y PDF). Extraído de `InfoFacturaSection` para dar paridad con
  * el detalle de facturas emitidas (v13.350.0).
  */
-import { FileCode2, FileText } from "lucide-react";
+import { FileCode2, FileText, Paperclip } from "lucide-react";
+import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   useAdjuntarArchivoCfdiFactura,
@@ -33,11 +34,10 @@ export function DocumentosProveedorSection({ factura: f, canEdit = false }: Prop
 
   return (
     <section className="space-y-3">
-      <div className="border-b pb-2">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-primary">
-          Documentos del CFDI
-        </h3>
-      </div>
+      <DocumentoSectionTitle
+        title="Documentos del CFDI"
+        icon={<Paperclip className="h-4 w-4" />}
+      />
       <div className="flex flex-col gap-2">
         <AdjuntoRow
           label="XML" icon={<FileCode2 className="h-4 w-4" />}

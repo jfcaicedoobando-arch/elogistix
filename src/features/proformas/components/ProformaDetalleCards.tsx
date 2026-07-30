@@ -10,28 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
-import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 export { AccionesProforma } from "./AccionesProforma";
 export { EstadoBadges } from "./ProformaEstadoBadges";
 
-type Totales = ReturnType<typeof calcularTotalesProforma>;
 type FacturaAsociada = ProformaDetalleFull["facturas_asociadas"][number];
-
-
-export function TotalDestacado({ totales }: { totales: Totales }) {
-  const esUsd = totales.subtotal_usd > 0;
-  const total = esUsd ? totales.total_usd : totales.total_mxn;
-  return (
-    <div className="text-right shrink-0">
-      <p className="text-xs text-muted-foreground">Total</p>
-      <p className="text-2xl font-bold tabular-nums text-accent">
-        {formatCurrency(total, esUsd ? "USD" : "MXN")}
-      </p>
-    </div>
-  );
-}
 
 
 export function NotasCard({ notas }: { notas: string | null | undefined }) {

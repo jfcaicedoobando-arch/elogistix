@@ -7,7 +7,9 @@ import { FacturaDetalleModales } from "@/features/facturacion/components/detalle
 import { FacturaDetalleBody } from "@/features/facturacion/components/detalle/FacturaDetalleBody";
 import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
 import { ClaimPendingBanner } from "@/features/facturacion/components/detalle/ClaimPendingBanner";
-import { DocumentoKpiStrip } from "@/components/shared/documento/DocumentoKpiStrip";
+import { DocumentoDetalleShell } from "@/components/shared/documento/DocumentoDetalleShell";
+import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
+
 import { buildKpisFactura } from "@/features/facturacion/domain/facturaKpis";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
 
@@ -68,72 +70,71 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
 
   return (
     <PageContainer>
-      <FacturaDetalleHeader
-        volverHref={volverHref}
-        volverLabel={volverLabel}
-        numero={factura.numero}
-        estado={factura.estado}
-        acuseCancelacionStatus={acuseCancelacionStatus}
-        cancellationStatus={cancellationStatus}
-        sinTimbrar={sinTimbrar}
-        expediente={factura.expediente}
-        embarqueId={factura.embarque_id}
-        proformaId={factura.proforma_id}
-        proformaNumero={factura.proformas?.numero ?? null}
-        clienteNombre={factura.cliente_nombre}
-        fechaEmision={factura.fecha_emision}
-        total={Number(factura.total)}
-        saldo={props.saldo}
-        moneda={factura.moneda}
-        ambiente={factura.ambiente}
-        actions={
-          <FacturaDetalleActionsBar
-            factura={factura}
-            canEdit={canEdit}
-            flags={flags}
-            acuse={acuse}
-            eliminando={eliminando}
-            puedeEliminarBorrador={puedeEliminarBorrador}
-            timbrarRepPending={timbrarRep.isPending}
-            onTimbrar={() => setTimbrarOpen(true)}
-            onEnviarEmail={() => setEnviarOpen(true)}
-            onRegistrarPago={() => setPagoOpen(true)}
-            onTimbrarRep={handleTimbrarRep}
-            onSustituir={() => setSustituirOpen(true)}
-            onCancelar={() => setCancelarOpen(true)}
-            onEliminar={() => setEliminarOpen(true)}
-            onConsultar={() => setConsultarOpen(true)}
-            onDownload={handleDownload}
+      <DocumentoDetalleShell
+        kpis={buildKpisFactura(factura, props.saldo)}
+        header={
+          <FacturaDetalleHeader
+            volverHref={volverHref}
+            volverLabel={volverLabel}
+            numero={factura.numero}
+            estado={factura.estado}
+            acuseCancelacionStatus={acuseCancelacionStatus}
+            cancellationStatus={cancellationStatus}
+            sinTimbrar={sinTimbrar}
+            expediente={factura.expediente}
+            embarqueId={factura.embarque_id}
+            proformaId={factura.proforma_id}
+            proformaNumero={factura.proformas?.numero ?? null}
+            clienteNombre={factura.cliente_nombre}
+            fechaEmision={factura.fecha_emision}
+            ambiente={factura.ambiente}
+            actions={
+              <FacturaDetalleActionsBar
+                factura={factura}
+                canEdit={canEdit}
+                flags={flags}
+                acuse={acuse}
+                eliminando={eliminando}
+                puedeEliminarBorrador={puedeEliminarBorrador}
+                timbrarRepPending={timbrarRep.isPending}
+                onTimbrar={() => setTimbrarOpen(true)}
+                onEnviarEmail={() => setEnviarOpen(true)}
+                onRegistrarPago={() => setPagoOpen(true)}
+                onTimbrarRep={handleTimbrarRep}
+                onSustituir={() => setSustituirOpen(true)}
+                onCancelar={() => setCancelarOpen(true)}
+                onEliminar={() => setEliminarOpen(true)}
+                onConsultar={() => setConsultarOpen(true)}
+                onDownload={handleDownload}
+              />
+            }
           />
         }
-      />
-
-
-      <DocumentoKpiStrip kpis={buildKpisFactura(factura, props.saldo)} />
-
-      <ClaimPendingBanner
-        facturaId={factura.id}
-        facturapiId={factura.facturapi_id ?? null}
-        facturapiClaimAt={factura.facturapi_claim_at ?? null}
-      />
-
-
-      {mostrarSustitutaCancelada && factura.sustituida_por && (
-        <SustitutaCanceladaBanner
-          sustitutaId={factura.sustituida_por}
-          sustitutaNumero={factura.sustituida_por_ref?.numero ?? null}
+        banners={
+          <>
+            <ClaimPendingBanner
+              facturaId={factura.id}
+              facturapiId={factura.facturapi_id ?? null}
+              facturapiClaimAt={factura.facturapi_claim_at ?? null}
+            />
+            {mostrarSustitutaCancelada && factura.sustituida_por && (
+              <SustitutaCanceladaBanner
+                sustitutaId={factura.sustituida_por}
+                sustitutaNumero={factura.sustituida_por_ref?.numero ?? null}
+              />
+            )}
+          </>
+        }
+        rail={<FacturaBitacoraCard facturaId={factura.id} />}
+      >
+        <FacturaDetalleBody
+          factura={factura}
+          canEdit={canEdit}
+          puedeEditarBorrador={puedeEditarBorrador}
+          conceptosVivos={conceptosVivos}
+          onRegistrarPago={() => setPagoOpen(true)}
         />
-      )}
-
-
-      <FacturaDetalleBody
-        factura={factura}
-        canEdit={canEdit}
-        puedeEditarBorrador={puedeEditarBorrador}
-        conceptosVivos={conceptosVivos}
-        onRegistrarPago={() => setPagoOpen(true)}
-      />
-
+      </DocumentoDetalleShell>
 
       <FacturaDetalleModales
         factura={factura}
@@ -157,3 +158,4 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
     </PageContainer>
   );
 }
+

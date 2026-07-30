@@ -6,11 +6,10 @@
 import { type ReactNode } from "react";
 import { FileText } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
-import { EstadoBadges, TotalDestacado } from "@/features/proformas/components/ProformaDetalleCards";
-import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
+import { EstadoBadges } from "@/features/proformas/components/ProformaDetalleCards";
+import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
+import { resumenProforma } from "@/lib/domain/documentoEstados";
 import type { EstadoClienteProforma } from "@/features/proformas/domain/proformaClienteEstado";
-
-type Totales = ReturnType<typeof calcularTotalesProforma>;
 
 interface Props {
   numero: string;
@@ -19,7 +18,10 @@ interface Props {
   aceptadaPor: string | null;
   clienteNombre: string | null | undefined;
   expediente: string;
-  totales: Totales | null;
+  /** Fecha de envío al cliente (para el paso "Enviada" del stepper). */
+  enviadaAt?: string | null;
+  /** true cuando la proforma ya está facturada. */
+  facturada: boolean;
   /** Barra de acciones, renderizada dentro del encabezado (ola 3). */
   actions?: ReactNode;
 }
@@ -31,10 +33,12 @@ export function ProformaDetalleHeader({
   aceptadaPor,
   clienteNombre,
   expediente,
-  totales,
+  enviadaAt,
+  facturada,
   actions,
 }: Props) {
   const subtitulo = clienteNombre?.trim() || "";
+  const resumen = resumenProforma({ estadoCliente, enviadaAt, facturada });
   return (
     <DetailHeader
       backTo="/proformas"
@@ -55,14 +59,9 @@ export function ProformaDetalleHeader({
           Exp: <span className="font-mono">{expediente}</span>
         </>
       }
-      trailing={
-        totales || actions ? (
-          <div className="flex w-full flex-col items-start gap-3 lg:w-auto lg:items-end">
-            {totales ? <TotalDestacado totales={totales} /> : null}
-            {actions ? <div className="w-full lg:w-auto">{actions}</div> : null}
-          </div>
-        ) : undefined
-      }
+      meta={<DocumentoStatusStepper resumen={resumen} />}
+      trailing={actions ? <div className="w-full lg:w-auto">{actions}</div> : undefined}
+
     />
   );
 }

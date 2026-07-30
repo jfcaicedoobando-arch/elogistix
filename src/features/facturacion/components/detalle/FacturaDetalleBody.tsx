@@ -8,13 +8,13 @@ import { FacturaReceptorCard } from "@/features/facturacion/components/detalle/F
 import { FacturaTimbradoCard } from "@/features/facturacion/components/detalle/FacturaTimbradoCard";
 import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
-import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
+
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
 import { FacturaDocumentosSection } from "@/features/facturacion/components/detalle/FacturaDocumentosSection";
 import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
 import { usePagosFactura } from "@/features/facturacion/hooks";
 import { useNotasCreditoDeFactura } from "@/features/facturacion/hooks/useNotasCreditoDeFactura";
-import { DocumentoLayout } from "@/components/shared/documento/DocumentoLayout";
+
 import { DocumentoTabs, type DocumentoTabItem } from "@/components/shared/documento/DocumentoTabs";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
 import type { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
@@ -127,9 +127,6 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
     },
   ];
 
-  return (
-    <DocumentoLayout rail={<FacturaBitacoraCard facturaId={factura.id} />}>
-      <DocumentoTabs tabs={tabs} />
-    </DocumentoLayout>
-  );
+  return <DocumentoTabs tabs={tabs} />;
 }
+

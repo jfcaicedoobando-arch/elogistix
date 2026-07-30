@@ -6,6 +6,7 @@
  * Es sólo-lectura: la garantía fiscal se preserva.
  */
 import { FileText } from "lucide-react";
+import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
 import { formatCurrency } from "@/lib/formatters";
 import { useConceptosCfdiFactura, type ConceptoCfdiRow } from "@/features/cxp/hooks/useConceptosCfdiFactura";
 
@@ -23,17 +24,11 @@ export function ConceptosFacturaSection({ facturaId, moneda }: Props) {
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center gap-2 border-b pb-2">
-        <FileText className="h-3.5 w-3.5 text-primary" />
-        <h3 className="text-xs font-bold uppercase tracking-wide text-primary">
-          Conceptos de la factura
-          {conceptos.length > 0 && (
-            <span className="ml-1.5 text-muted-foreground font-normal normal-case tracking-normal">
-              ({conceptos.length})
-            </span>
-          )}
-        </h3>
-      </div>
+      <DocumentoSectionTitle
+        title="Conceptos de la factura"
+        icon={<FileText className="h-4 w-4" />}
+        count={conceptos.length}
+      />
 
       {isLoading ? (
         <div className="h-16 rounded-md border bg-muted/20 animate-pulse" />

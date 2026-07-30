@@ -12,8 +12,8 @@ import { DetailSkeleton } from "@/components/shared/skeletons";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { DocumentoLayout } from "@/components/shared/documento/DocumentoLayout";
-import { DocumentoKpiStrip } from "@/components/shared/documento/DocumentoKpiStrip";
+import { DocumentoDetalleShell } from "@/components/shared/documento/DocumentoDetalleShell";
+
 import { getErrorMessage } from "@/lib/errors";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
@@ -97,26 +97,28 @@ export default function FacturaProveedorDetalle() {
   return (
     <TooltipProvider delayDuration={150}>
       <PageContainer>
-        <FacturaProveedorHeader
-          factura={f}
-          actions={
-            <StatusActionBar
+        <DocumentoDetalleShell
+          kpis={buildKpisFacturaProveedor(f)}
+          header={
+            <FacturaProveedorHeader
               factura={f}
-              canEdit={canEdit}
-              puedeAprobar={canAprobarFacturaProveedor}
-              flags={flags}
-              onPagar={() => setPagarOpen(true)}
-              onEditar={() => setEditarOpen(true)}
-              onEliminar={() => setEliminarOpen(true)}
-              onCerrarSinPago={setACerrarSinPago}
-              onCancelar={() => setOpenCancel(true)}
+              actions={
+                <StatusActionBar
+                  factura={f}
+                  canEdit={canEdit}
+                  puedeAprobar={canAprobarFacturaProveedor}
+                  flags={flags}
+                  onPagar={() => setPagarOpen(true)}
+                  onEditar={() => setEditarOpen(true)}
+                  onEliminar={() => setEliminarOpen(true)}
+                  onCerrarSinPago={setACerrarSinPago}
+                  onCancelar={() => setOpenCancel(true)}
+                />
+              }
             />
           }
-        />
-
-        <DocumentoKpiStrip kpis={buildKpisFacturaProveedor(f)} />
-
-        <DocumentoLayout rail={<HistorialFacturaSection facturaId={f.id} />}>
+          rail={<HistorialFacturaSection facturaId={f.id} />}
+        >
           <FacturaProveedorTabs
             factura={f}
             pagos={pagos}
@@ -124,7 +126,8 @@ export default function FacturaProveedorDetalle() {
             canEdit={canEdit}
             onEliminarPago={setPagoAEliminar}
           />
-        </DocumentoLayout>
+        </DocumentoDetalleShell>
+
 
         <FacturaProveedorDialogs
           factura={f}

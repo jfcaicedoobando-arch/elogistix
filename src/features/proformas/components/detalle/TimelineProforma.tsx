@@ -16,6 +16,9 @@ interface Props {
   operador: string | null | undefined;
   timeline: ProformaTimelineFields;
   envios?: ProformaEnvioLite[];
+  /** Rendere sólo la lista, sin la tarjeta contenedora (uso dentro del riel). */
+  bare?: boolean;
+
 }
 
 interface Hito {
@@ -61,7 +64,7 @@ function toneClass(done: boolean, tone: Hito["tone"]): string {
   return "bg-primary/15 text-primary";
 }
 
-export function TimelineProforma({ fechaEmision, operador, timeline, envios }: Props) {
+export function TimelineProforma({ fechaEmision, operador, timeline, envios, bare }: Props) {
   const resumen = resumirEnvios(envios);
   const notaEnvios =
     resumen.total > 1 ? `${resumen.total} envíos · último ${formatDate(resumen.ultimoAt ?? "")}` : null;
@@ -69,13 +72,9 @@ export function TimelineProforma({ fechaEmision, operador, timeline, envios }: P
   const activos = hitos.filter((h) => h.fecha).length;
   if (activos === 0) return null;
 
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Historial</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ol className="space-y-0">
+  const lista = (
+    <ol className="space-y-0">
+
           {hitos.map((h, i) => {
             const done = !!h.fecha;
             const Icon = h.icon;
@@ -111,8 +110,18 @@ export function TimelineProforma({ fechaEmision, operador, timeline, envios }: P
               </li>
             );
           })}
-        </ol>
-      </CardContent>
+    </ol>
+  );
+
+  if (bare) return lista;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold">Historial</CardTitle>
+      </CardHeader>
+      <CardContent>{lista}</CardContent>
     </Card>
   );
 }
+

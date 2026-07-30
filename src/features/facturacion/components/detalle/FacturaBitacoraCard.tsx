@@ -2,12 +2,12 @@
  * FacturaBitacoraCard — historial de eventos de la factura leído por RPC
  * segura, incluyendo bitácora `facturas` y `facturacion`.
  */
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { DocumentoRailCard } from "@/components/shared/documento/DocumentoRailCard";
 import { useFacturaHistorial } from "@/features/facturacion/hooks/useFacturaHistorial";
 import { formatDate } from "@/lib/formatters";
 import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
-import { History } from "lucide-react";
+
 
 interface Props {
   facturaId: string;
@@ -42,51 +42,44 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
   const entradas = data ?? [];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <History className="h-4 w-4 text-muted-foreground" />
-          Historial de la factura
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <ListSkeleton rows={3} />
-        ) : isError ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
-            No se pudo cargar el historial de esta factura.
-          </p>
-        ) : entradas.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
-            Sin eventos registrados para esta factura.
-          </p>
-        ) : (
-          <ul className="divide-y">
-            {entradas.map((e) => {
-              const descripcion = describirEntrada(e);
-              const detalle = [e.entidad_nombre, e.usuario_email].filter(Boolean).join(" • ");
-              return (
-                <li key={e.id} className="py-2 text-sm">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-medium">{descripcion.titulo || etiquetaAccion(e.accion)}</span>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {formatDate(e.created_at)}
-                    </span>
-                  </div>
-                  {descripcion.contexto && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {descripcion.contexto}
-                    </p>
-                  )}
-                  {detalle && (
-                    <p className="text-xs text-muted-foreground truncate">{detalle}</p>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
+    <DocumentoRailCard count={entradas.length}>
+      {isLoading ? (
+        <ListSkeleton rows={3} />
+      ) : isError ? (
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          No se pudo cargar el historial de esta factura.
+        </p>
+      ) : entradas.length === 0 ? (
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          Sin eventos registrados para esta factura.
+        </p>
+      ) : (
+        <ul className="divide-y">
+          {entradas.map((e) => {
+            const descripcion = describirEntrada(e);
+            const detalle = [e.entidad_nombre, e.usuario_email].filter(Boolean).join(" • ");
+            return (
+              <li key={e.id} className="py-2 text-sm">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-medium">{descripcion.titulo || etiquetaAccion(e.accion)}</span>
+                  <span className="whitespace-nowrap text-xs text-muted-foreground">
+                    {formatDate(e.created_at)}
+                  </span>
+                </div>
+                {descripcion.contexto && (
+                  <p className="truncate text-xs text-muted-foreground">
+                    {descripcion.contexto}
+                  </p>
+                )}
+                {detalle && (
+                  <p className="truncate text-xs text-muted-foreground">{detalle}</p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </DocumentoRailCard>
   );
 }
+
