@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.355.0] - 2026-07-30
+- **feat(marca)**: nuevos favicons (ICO multi-tamaño, PNG 512, apple-touch-icon 180) e iconos PWA (192/512 + maskable) con el isotipo de contenedor sobre azul marino.
+- **feat(SEO)**: nueva imagen social `og-image.jpg` en 1200×630 con wordmark y mensaje en español; metas `og:image:width/height/alt` y `twitter:image:alt` corregidas.
+- **feat(PWA)**: se agregó `site.webmanifest` con nombre, colores de marca e iconos; `theme-color` en el `<head>`.
+- **fix(SEO)**: el logo de JSON-LD (Organization) ahora apunta a un icono cuadrado (`/icon-512.png`).
+
 ## [13.354.4] - 2026-07-30
 - CI: `useNumericField` movido a `features/cotizacion/hooks/` (regla de arquitectura).
 - CI: mensaje amigable para `LC_COTIZACION_SIN_IMPORTES`.
