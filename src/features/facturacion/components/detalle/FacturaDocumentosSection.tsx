@@ -48,7 +48,7 @@ function DocumentoRow({ label, icon, disponible, onAbrir }: FilaProps) {
 export function FacturaDocumentosSection({ factura }: Props) {
   const descargar = useDescargarCfdi(factura.id);
   const timbrada = !!factura.uuid_fiscal;
-  const acuse = factura.acuse_cancelacion_url ?? null;
+  const acuse = factura.acuse_cancelacion_xml ?? null;
 
   return (
     <Card>
@@ -63,13 +63,13 @@ export function FacturaDocumentosSection({ factura }: Props) {
             label="PDF"
             icon={<FileText className="h-4 w-4" />}
             disponible={timbrada}
-            onAbrir={() => void descargar(factura.pdf_url ?? null, "pdf")}
+            onAbrir={() => void descargar(factura.factura_pdf_url ?? null, "pdf")}
           />
           <DocumentoRow
             label="XML"
             icon={<FileCode2 className="h-4 w-4" />}
             disponible={timbrada}
-            onAbrir={() => void descargar(factura.xml_url ?? null, "xml")}
+            onAbrir={() => void descargar(factura.factura_xml_url ?? null, "xml")}
           />
           {acuse ? (
             <DocumentoRow
