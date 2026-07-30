@@ -46,3 +46,37 @@ describe("shouldDropSentryEvent — filtros de ruido", () => {
     expect(dropped).toBe(false);
   });
 });
+
+describe("shouldDropSentryEvent — reglas de negocio y red", () => {
+  it("descarta reglas de negocio de la BD (P0001)", () => {
+    const evt = baseEvent({ tags: { pg_code: "P0001" } });
+    const err = new Error("Embarque cerrado: usa reabrir_embarque para modificarlo");
+    expect(shouldDropSentryEvent(evt, { originalException: err })).toBe(true);
+  });
+
+  it("descarta violaciones de unicidad (23505) reportadas en extra.original", () => {
+    const evt = baseEvent({ extra: { original: { code: "23505" } } });
+    expect(shouldDropSentryEvent(evt, { originalException: new Error("duplicate key") })).toBe(true);
+  });
+
+  it("descarta pérdidas de conectividad del cliente", () => {
+    const err = new Error("No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.");
+    expect(shouldDropSentryEvent(baseEvent(), { originalException: err })).toBe(true);
+  });
+
+  it("descarta rechazos de promesa serializados vacíos", () => {
+    const evt = baseEvent({
+      exception: { values: [{ value: "Object captured as promise rejection with keys: message" }] },
+      extra: { __serialized__: { message: "" } },
+    });
+    expect(shouldDropSentryEvent(evt, {})).toBe(true);
+  });
+
+  it("conserva errores de BD que no son reglas de negocio", () => {
+    const evt = baseEvent({
+      exception: { values: [{ value: "column does not exist", stacktrace: { frames: [{ filename: "app.js" }] } }] },
+      tags: { pg_code: "42703" },
+    });
+    expect(shouldDropSentryEvent(evt, { originalException: new Error("column does not exist") })).toBe(false);
+  });
+});
