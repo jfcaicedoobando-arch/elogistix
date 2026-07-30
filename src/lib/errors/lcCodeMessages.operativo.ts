@@ -123,4 +123,6 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "Este registro ya cambió de estado. Recarga la página para ver la información actualizada.",
   LC_MOTIVO_REQUERIDO:
     "Indica el motivo para poder continuar.",
+  LC_COTIZACION_SIN_IMPORTES:
+    "La cotización no tiene importes de venta capturados. Agrega al menos un concepto con precio antes de continuar.",
 };
