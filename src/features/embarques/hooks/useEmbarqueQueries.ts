@@ -85,6 +85,14 @@ export function useExpedientesCliente(clienteId: string | undefined) {
   });
 }
 
+/** Proveedores presentes en los costos del embarque (buzón CxP). */
+export function useProveedoresDelEmbarque(embarqueId: string | undefined) {
+  return useQuery({
+    ...embarqueQueries.proveedoresDelEmbarque(embarqueId ?? ''),
+    enabled: !!embarqueId,
+  });
+}
+
 export function useProveedoresForSelect() {
   const { organizationId } = useOrgFilter();
   return useQuery(embarqueQueries.proveedoresSelect(organizationId));
