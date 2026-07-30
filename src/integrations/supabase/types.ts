@@ -7920,6 +7920,7 @@ export type Database = {
           expediente: string
           factura_id: string
           fecha_emision: string
+          fecha_programada_pago: string
           fecha_vencimiento: string
           folio_proveedor: string
           moneda: string
@@ -9018,7 +9019,6 @@ export type Database = {
         | "Aprobada"
         | "Aplicada"
         | "Cancelada"
-      estado_proforma: "Pendiente" | "Facturada" | "Cancelada"
       estado_proveedor_factura: "Borrador" | "Vigente" | "Pagada" | "Cancelada"
       incoterm:
         | "EXW"
@@ -9320,7 +9320,6 @@ export const Constants = {
         "Aplicada",
         "Cancelada",
       ],
-      estado_proforma: ["Pendiente", "Facturada", "Cancelada"],
       estado_proveedor_factura: ["Borrador", "Vigente", "Pagada", "Cancelada"],
       incoterm: [
         "EXW",
