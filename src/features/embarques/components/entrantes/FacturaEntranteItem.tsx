@@ -77,7 +77,7 @@ export function FacturaEntranteItem({
   const tieneXml = chips.includes("xml");
   const tienePdf = chips.includes("pdf");
   const faltaXml = faltaXmlFiscal({
-    esNacional: (row.proveedores?.origen ?? "Nacional") === "Nacional",
+    esNacional: (row.proveedores?.origen_proveedor ?? "Nacional") === "Nacional",
     tieneXml,
   });
 

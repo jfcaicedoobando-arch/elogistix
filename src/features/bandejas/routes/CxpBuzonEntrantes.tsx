@@ -43,7 +43,7 @@ export default function CxpBuzonEntrantes() {
 
   // v13.360.0 — Un CFDI mexicano sin XML no es deducible: se resalta y se filtra.
   const sinXml = (row: FacturaEntranteRow) => faltaXmlFiscal({
-    esNacional: (row.proveedores?.origen ?? "Nacional") === "Nacional",
+    esNacional: (row.proveedores?.origen_proveedor ?? "Nacional") === "Nacional",
     tieneXml: chipsArchivosEntrante(row).includes("xml"),
   });
   const totalSinXml = pendientes.filter(sinXml).length;
