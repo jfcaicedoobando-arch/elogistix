@@ -51,21 +51,27 @@ export async function vincularOCrearOportunidadParaCotizacion(
     return { oportunidadId: op.id, leadId: input.leadId };
   }
 
-  // Caso C — nada vinculado: crear lead + oportunidad.
-  const lead = await createLead(
-    {
-      empresa: input.prospecto.empresa,
-      contacto: input.prospecto.contacto,
-      email: input.prospecto.email,
-      telefono: input.prospecto.telefono,
-      interes_modo: input.modoTransporte,
-    },
-    input.user,
-  );
+  // Caso C — nada vinculado: reutilizar lead con el mismo email o crearlo.
+  const existenteId = await findLeadIdByEmail(input.prospecto.email);
+  const leadId =
+    existenteId ??
+    (
+      await createLead(
+        {
+          empresa: input.prospecto.empresa,
+          contacto: input.prospecto.contacto,
+          email: input.prospecto.email,
+          telefono: input.prospecto.telefono,
+          interes_modo: input.modoTransporte,
+        },
+        input.user,
+      )
+    ).id;
   const op = await crearOportunidad(
     {
       nombre: buildOpNombre(input.prospecto.empresa, input.cotizacionFolio),
-      lead_id: lead.id,
+      cliente_nombre: input.prospecto.empresa,
+      lead_id: leadId,
       etapa_id: etapa.id,
       probabilidad: etapa.probabilidad,
       modo: input.modoTransporte,
@@ -73,5 +79,5 @@ export async function vincularOCrearOportunidadParaCotizacion(
     input.user,
   );
   await setCotizacionOportunidad(input.cotizacionId, op.id);
-  return { oportunidadId: op.id, leadId: lead.id };
+  return { oportunidadId: op.id, leadId };
 }
