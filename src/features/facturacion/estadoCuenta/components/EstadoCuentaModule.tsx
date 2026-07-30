@@ -1,13 +1,12 @@
 /**
  * Shell del módulo Estado de Cuenta — reutilizado por la ruta interna
- * (`/facturacion/clientes/:clienteId/estado-de-cuenta`) y por el portal
- * cliente (`/portal/estado-de-cuenta`). Recibe los `clienteIds` ya resueltos
- * por el caller (uno en modo interno, varios en portal).
+ * (`/clientes/:clienteId/estado-de-cuenta`) y por el portal cliente
+ * (`/portal/estado-de-cuenta`). Recibe los `clienteIds` ya resueltos por el
+ * caller (uno en modo interno, varios en portal).
  */
-import { useState, useMemo } from "react";
-import { useEstadoCuenta } from "../hooks/useEstadoCuenta";
-import { useEstadoCuentaDateRange } from "../hooks/useEstadoCuentaDateRange";
+import { useEstadoCuentaVista } from "../hooks/useEstadoCuentaVista";
 import { EstadoCuentaKpiCards } from "./EstadoCuentaKpiCards";
+import { EstadoCuentaAgingBar } from "./EstadoCuentaAgingBar";
 import { EstadoCuentaFilters } from "./EstadoCuentaFilters";
 import { EstadoCuentaTable } from "./EstadoCuentaTable";
 import { ExportActions } from "./ExportActions";
@@ -19,6 +18,10 @@ interface Props {
   /** default: portal=true, interno=false */
   defaultSoloConSaldo?: boolean;
   headerRight?: React.ReactNode;
+  /** Franja de identidad del cliente (sólo modo interno). */
+  identidad?: React.ReactNode;
+  /** Si es `false`, las acciones de exportación se renderizan fuera (encabezado). */
+  mostrarExportaciones?: boolean;
 }
 
 export function EstadoCuentaModule({
@@ -26,45 +29,55 @@ export function EstadoCuentaModule({
   facturaHrefBase,
   defaultSoloConSaldo = false,
   headerRight,
+  identidad,
+  mostrarExportaciones = true,
 }: Props) {
-  const { desde, hasta, presetActivo, aplicarPreset } = useEstadoCuentaDateRange("30d");
-  const [soloConSaldo, setSoloConSaldo] = useState(defaultSoloConSaldo);
-  const [moneda, setMoneda] = useState<"MXN" | "USD" | "todas">("todas");
-
-  const filters = useMemo(
-    () => ({
-      clienteIds,
-      desde,
-      hasta,
-      moneda,
-      soloConSaldo,
-    }),
-    [clienteIds, desde, hasta, moneda, soloConSaldo],
-  );
-
-  const { rows, kpis, isLoading } = useEstadoCuenta(filters);
-
+  const v = useEstadoCuentaVista(clienteIds, defaultSoloConSaldo);
   const facturaHref = (id: string) => `${facturaHrefBase}/${id}`;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        {headerRight}
-        <ExportActions clienteIds={clienteIds} rows={rows} desde={desde} hasta={hasta} />
-      </div>
+    <div className="space-y-4">
+      {(headerRight || mostrarExportaciones) && (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {headerRight}
+          {mostrarExportaciones && (
+            <ExportActions
+              clienteIds={clienteIds}
+              rows={v.filtradas}
+              desde={v.desde}
+              hasta={v.hasta}
+            />
+          )}
+        </div>
+      )}
 
-      <EstadoCuentaKpiCards kpis={kpis} loading={isLoading} />
+      {identidad}
 
-      <EstadoCuentaFilters
-        presetActivo={presetActivo}
-        onPreset={aplicarPreset}
-        soloConSaldo={soloConSaldo}
-        onSoloConSaldoChange={setSoloConSaldo}
-        moneda={moneda}
-        onMonedaChange={setMoneda}
+      <EstadoCuentaKpiCards kpis={v.kpis} loading={v.isLoading} />
+
+      <EstadoCuentaAgingBar buckets={v.aging} activo={v.bucket} onToggle={v.toggleBucket} />
+
+      <EstadoCuentaTable
+        grupos={v.grupos}
+        isLoading={v.isLoading}
+        facturaHref={facturaHref}
+        sort={v.sort}
+        onSort={v.onSort}
+        restantes={v.restantes}
+        onVerMas={v.verMas}
+        toolbar={
+          <EstadoCuentaFilters
+            presetActivo={v.presetActivo}
+            onPreset={v.aplicarPreset}
+            soloConSaldo={v.soloConSaldo}
+            onSoloConSaldoChange={v.setSoloConSaldo}
+            moneda={v.moneda}
+            onMonedaChange={v.setMoneda}
+            busqueda={v.busqueda}
+            onBusquedaChange={v.setBusqueda}
+          />
+        }
       />
-
-      <EstadoCuentaTable rows={rows} isLoading={isLoading} facturaHref={facturaHref} />
     </div>
   );
 }

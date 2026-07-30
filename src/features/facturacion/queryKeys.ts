@@ -93,4 +93,6 @@ export const estadoCuenta = {
     moneda?: string | null;
     soloConSaldo?: boolean;
   }) => [...estadoCuenta.list(filters), "kpis"] as const,
+  /** Ficha del cliente (identidad + condiciones de crédito) del encabezado. */
+  ficha: (clienteId?: string | null) => ["estado-cuenta", "ficha", clienteId ?? null] as const,
 } as const;
