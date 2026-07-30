@@ -24,6 +24,33 @@ interface Params {
   oportunidades: CrmOportunidadRow[];
 }
 
+/**
+ * B-054: no pisar una probabilidad editada manualmente. Heurística: si la
+ * probabilidad difiere del default de la etapa ORIGEN se asume manual.
+ */
+function resolverProbabilidad(
+  op: CrmOportunidadRow | undefined,
+  etapaOrigen: CrmEtapaRow | undefined,
+  probDestinoDefault: number,
+): number {
+  if (!op || !etapaOrigen) return probDestinoDefault;
+  const esManual =
+    Number(op.probabilidad ?? 0) !== Number(etapaOrigen.probabilidad_default ?? 0);
+  return esManual ? Number(op.probabilidad ?? 0) : probDestinoDefault;
+}
+
+/** B-034: soltar en etapa "ganada" captura el cierre real con defaults. */
+function resolverCierreGanada(
+  etapaDestino: (CrmEtapaRow & { tipo?: string }) | undefined,
+  op: CrmOportunidadRow | undefined,
+): { fecha_cierre_real?: string; valor_real?: number } {
+  if (etapaDestino?.tipo !== "ganada") return {};
+  return {
+    fecha_cierre_real: todayLocalISO(),
+    valor_real: Number(op?.monto_estimado ?? 0),
+  };
+}
+
 export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
   const mover = useMoverEtapaConAutomatizacion();
   const [proximoPaso, setProximoPaso] = useState<ProximoPasoTarget | null>(null);
@@ -32,29 +59,20 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
     async (id: string, etapaId: string, prob: number) => {
       const op = oportunidades.find((o) => o.id === id);
       const etapaPrev = op?.etapa_id;
-      const probPrev = op?.probabilidad ?? 0;
-      // B-054: no pisar una probabilidad editada manualmente.
+      const probPrev = Number(op?.probabilidad ?? 0);
       const etapaOrigen = etapas.find((e) => e.id === etapaPrev);
-      const esProbManual =
-        op != null &&
-        etapaOrigen != null &&
-        Number(op.probabilidad ?? 0) !== Number(etapaOrigen.probabilidad_default ?? 0);
-      const probDestino = esProbManual ? Number(probPrev) : prob;
-
-      // B-034: soltar en etapa "ganada" captura el cierre real con defaults.
       const etapaDestino = etapas.find((e) => e.id === etapaId) as
         | (CrmEtapaRow & { tipo?: string })
         | undefined;
-      const cierreGanada =
-        etapaDestino?.tipo === "ganada"
-          ? {
-              fecha_cierre_real: todayLocalISO(),
-              valor_real: Number(op?.monto_estimado ?? 0),
-            }
-          : {};
+      const probabilidad = resolverProbabilidad(op, etapaOrigen, prob);
 
       try {
-        await mover.mutateAsync({ id, etapa_id: etapaId, probabilidad: probDestino, ...cierreGanada });
+        await mover.mutateAsync({
+          id,
+          etapa_id: etapaId,
+          probabilidad,
+          ...resolverCierreGanada(etapaDestino, op),
+        });
         const { showUndoToast } = await import("@/features/crm/hooks/useUndoToast");
         showUndoToast("Etapa actualizada", async () => {
           if (!etapaPrev) return;
