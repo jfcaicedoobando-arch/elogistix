@@ -115,6 +115,8 @@ const CROSS_FEATURE_ALLOWLIST = [
   "src/features/auth/routes/TrackingPublico.tsx",
   "src/features/bandejas/routes/CxpPorCapturar.tsx",
   "src/features/cliente/routes/ClienteDetalle.tsx",
+  // v13.343.0 — el panel 360 se movió a esta sección al dividir ClienteDetalle.
+  "src/features/cliente/routes/_sections/ClienteDetalleTabs.tsx",
   "src/features/cliente/services/financials.ts",
   "src/features/compras/routes/ComprasPorAprobar.tsx",
   "src/features/cotizacion/components/TarifaVinculadaPanel.tsx",

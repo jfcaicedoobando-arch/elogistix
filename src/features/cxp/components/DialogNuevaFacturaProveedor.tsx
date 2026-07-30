@@ -68,7 +68,7 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
         Cancelar
       </Button>
-      <Button onClick={ctl.submit} disabled={ctl.isPending || !!ctl.cfdiDuplicado}>
+      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar}>
         {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {ctl.isPending ? "Guardando…" : "Guardar factura"}
       </Button>
