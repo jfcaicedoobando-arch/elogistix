@@ -54,8 +54,16 @@ export default function PortalCotizaciones() {
     });
   }, [cotizaciones, search, filtroEstado]);
 
-  if (isLoading) {
-    return <PageSkeleton />;
+  if (isLoading || isError) {
+    // R-05: la carga nunca se queda colgada; a los 15s (o ante error) se
+    // ofrece "Reintentar" en vez de un skeleton perpetuo.
+    return (
+      <LoadingState
+        error={isError}
+        onRetry={() => void refetch()}
+        errorLabel="No pudimos cargar tus cotizaciones."
+      />
+    );
   }
 
   return (
