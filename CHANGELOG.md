@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.347.0] - 2026-07-30
+- **Mejora · Costos y facturas de proveedor en una sola pestaña.** El buzón de invoices dejó de ser una pestaña aparte y ahora vive debajo de los conceptos de costo del embarque. Los enlaces viejos (`?tab=facturas-entrantes`) siguen funcionando y saltan directo a la sección.
+- **Mejora · El cierre exige las facturas del proveedor.** Dos reglas nuevas en el checklist: no se puede cerrar si queda algún invoice "Por capturar" y cada proveedor con costos debe tener al menos un archivo subido al buzón. Analogía: no cierras la caja del día si aún hay tickets sin registrar o proveedores sin comprobante.
+
+
+
 ## [13.346.3] - 2026-07-30
 - **Fix · CI en verde.** Colores del badge de invitación migrados a tokens semánticos, mensajes amigables para los nuevos códigos `LC_NOT_FOUND` / `LC_ESTADO_INVALIDO` / `LC_MOTIVO_REQUERIDO`, casts del buzón CxP marcados como `SAFE-CAST` y baseline de higiene de migraciones movido tras la migración correctiva (FIX-H6-03).
 - **Fix · Duplicar cotización ya no falla.** La regla que impide que el autor acepte su propia cotización buscaba un dato ("creado por") que nunca existió en la tabla, así que reventaba cualquier actualización, incluida la duplicación. Se agregó la columna `created_by` (se llena sola con el usuario que crea la cotización) y se corrigió el trigger. Analogía: el guardia pedía una credencial que la empresa nunca había impreso.
