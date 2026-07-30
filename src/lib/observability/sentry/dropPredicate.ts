@@ -5,6 +5,12 @@
 import type * as Sentry from "@sentry/react";
 import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
 import { isReactRefreshHmrError, isReactRefreshStackTrace } from "./helpers";
+import {
+  isBusinessRuleViolation,
+  isNetworkConnectivityNoise,
+  isEmptySerializedRejection,
+} from "./dropFiltersNegocio";
+
 
 /** Detecta errores de chunk/HMR que se auto-recuperan con reload. */
 function isRecoverableLoadError(
@@ -149,7 +155,12 @@ const NOISE_FILTERS: ReadonlyArray<(event: Sentry.ErrorEvent, exc: unknown) => b
   isBrowserExtensionCircularJson,
   isHtmlGatewayNoise,
   isCloudflareTunnelNoise,
+  isBusinessRuleViolation,
+  isNetworkConnectivityNoise,
+  (event) => isEmptySerializedRejection(event),
 ];
+
+
 
 export function shouldDropSentryEvent(
   event: Sentry.ErrorEvent,
