@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { parseInputNumero } from "../../utils/parseInputNumero";
+import { parseInputNumero } from "../utils/parseInputNumero";
 
 /**
  * R-01 — edición local de campos numéricos en el wizard.
