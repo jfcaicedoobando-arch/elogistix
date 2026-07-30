@@ -2,7 +2,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, PenLine } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatNumber } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { ProfitBadge } from "@/components/shared/ProfitBadge";
 import { ProductoServicioSelect } from "@/features/cotizacion/components/conceptos/ProductoServicioSelect";
@@ -116,7 +116,7 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
         </span>
         {cantidadExcedida && (
           <span className="text-2xs text-destructive whitespace-nowrap">
-            Cantidad mayor a {CANTIDAD_LIMITE_SANIDAD.toLocaleString("es-MX")} — verifica el dato.
+            Cantidad mayor a {formatNumber(CANTIDAD_LIMITE_SANIDAD)} — verifica el dato.
           </span>
         )}
         <span className={`text-sm font-medium w-[100px] text-right ${profit >= 0 ? "text-success" : "text-destructive"}`}>
