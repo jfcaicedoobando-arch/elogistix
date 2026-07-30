@@ -13,7 +13,11 @@ export async function fetchEmbarqueConceptosVenta(embarqueId: string): Promise<C
     .select(
       "id, embarque_id, descripcion, cantidad, precio_unitario, total, moneda, organization_id, created_at, estado_facturacion, proforma_id, aplica_iva",
     )
-    .eq("embarque_id", embarqueId);
+    .eq("embarque_id", embarqueId)
+    // `actualizar_embarque_completo` borra en lógico (deleted_at) los conceptos
+    // pendientes que el usuario quitó. Sin este filtro el detalle volvía a
+    // mostrarlos y parecía que el guardado no se aplicaba.
+    .is("deleted_at", null);
   if (error) throw error;
   return (data ?? []) as ConceptoVentaRow[];
 }
@@ -24,7 +28,9 @@ export async function fetchEmbarqueConceptosCosto(embarqueId: string): Promise<C
     .select(
       "id, embarque_id, concepto, monto, moneda, proveedor_id, proveedor_nombre, estado_liquidacion, fecha_pago, fecha_vencimiento, referencia_pago, organization_id, created_at",
     )
-    .eq("embarque_id", embarqueId);
+    .eq("embarque_id", embarqueId)
+    .is("deleted_at", null);
   if (error) throw error;
   return (data ?? []) as ConceptoCostoRow[];
 }
+
