@@ -15,7 +15,7 @@ Verifiqué cada hallazgo contra el código actual antes de planear. Resumen de l
 
 **R-04 · Alta — RLS de `catalogo_claves_sat` excluye a ventas**
 - La policy CRUD sólo lista admin / admin_org / contador / super_admin. Confirmado.
-- Decisión de producto pendiente (ver preguntas abajo): agregar `ejecutivo_pricing` a la policy, u ocultar el CTA "Crear concepto" para ese rol.
+- Decisión tomada: **no** se amplía la policy. Se oculta el CTA "Crear concepto" para `ejecutivo_pricing`; ventas usa sólo "concepto libre". Sin migración.
 
 **R-08 · Media-alta — enviar cotización en $0**
 - `CotizacionDetalleHeader.tsx` no evalúa totales: "Enviar por correo" siempre habilitado. Confirmado.
