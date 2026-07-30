@@ -57,7 +57,7 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    (`proacl` sin PUBLIC) y quedan re-aplicados explícitamente por la
  *    migración FIX-H6-02 posterior.
  */
-const BASELINE = "20260730051450";
+const BASELINE = "20260730163239";
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
 
