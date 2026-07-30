@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.365.0] - 2026-07-30
+- **feat(buzón CxP · UI/UX 1366×768)**: rediseño de `/compras/buzon`. Cada documento ahora ocupa una sola fila (semáforo de antigüedad + proveedor/expediente/folio/fecha + acciones), con las acciones secundarias dentro de un menú para evitar el desbordamiento horizontal.
+- **feat(buzón CxP)**: toolbar de trabajo con búsqueda (proveedor, expediente, folio o archivo), chips de filtro (Sin XML, 3+ días, Con nota) y ordenamiento (más antiguos, más recientes, proveedor).
+- **feat(buzón CxP)**: KPIs accionables (`Documentos por capturar`, `Con 3 días o más`, `Sin XML del CFDI`) que aplican su filtro al hacer clic.
+- **feat(buzón CxP)**: vista previa lateral con el PDF embebido vía `blob:` para revisar el documento sin salir del buzón, con acciones de capturar/rechazar/ir al embarque.
+- **feat(buzón CxP)**: pestañas de historial **Capturadas** y **Rechazadas** (carga diferida) para dar visibilidad del cierre del ciclo.
+- **fix(navegación)**: la miga de pan ahora muestra "Buzón" con acento.
+- **test**: suite nueva `facturasEntrantesBuzon.test.ts` (15 casos) para antigüedad, detección de XML faltante, búsqueda sin acentos, filtros y resumen.
+
 ## [13.364.0] - 2026-07-30
 - **feat(buzón CxP)**: se agregó el botón **"Marcar como capturada"** en `/compras/buzon`. Abre un diálogo que lista las facturas de proveedor vivas del mismo embarque (excluye canceladas y borradas) y llama al RPC `capturar_factura_entrante`, que cierra el documento, lo vincula a la factura y le hereda el PDF. Antes el RPC y el hook existían pero ningún botón los invocaba: los documentos se quedaban "por capturar" para siempre y podían bloquear el checklist de cierre.
 - **feat(buzón CxP)**: si el embarque aún no tiene facturas capturadas, el diálogo lo explica y dirige al tab **Costos** del embarque.
