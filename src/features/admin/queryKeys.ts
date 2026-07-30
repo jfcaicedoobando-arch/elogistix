@@ -1,13 +1,17 @@
 export const usuarios = {
   all: ['usuarios'] as const,
+  /** U-01: el listado se acota por organización (null = todas, super_admin). */
+  scope: (orgId: string | null) => ['usuarios', orgId ?? 'todas'] as const,
 } as const;
 
 export const usuariosPortalCliente = {
   all: ['usuarios-portal-cliente'] as const,
+  scope: (orgId: string | null) => ['usuarios-portal-cliente', orgId ?? 'todas'] as const,
 } as const;
 
 export const usuariosPortalAgente = {
   all: ['usuarios-portal-agente'] as const,
+  scope: (orgId: string | null) => ['usuarios-portal-agente', orgId ?? 'todas'] as const,
 } as const;
 
 export const planes = {
