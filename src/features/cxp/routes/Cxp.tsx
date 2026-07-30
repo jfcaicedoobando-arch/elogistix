@@ -36,7 +36,7 @@ import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
 
 export default function Cxp() {
   useDocumentTitle("Facturas de proveedor");
-  const { canEdit, canCapturarFacturaProveedor } = usePermissions();
+  const { canCapturarFacturaProveedor } = usePermissions();
   const f = useCxpPageState();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -67,14 +67,6 @@ export default function Cxp() {
       await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),
     );
   });
-
-  const onEliminar = useCallback((fact: FacturaCxP) => {
-    if (fact.pagado > 0) {
-      notifyError(undefined, { title: "No se puede eliminar: la factura tiene pagos registrados", method: "PAGES_CXP_CXP_1" });
-      return;
-    }
-    f.setAEliminar(fact);
-  }, [f]);
 
   const columns = useMemo(() => buildCxPColumns(), []);
   const colVis = useColumnVisibility("cxp-facturas-columns", CXP_COL_DEFAULTS);
@@ -176,9 +168,7 @@ export default function Cxp() {
       <CxpRouteDialogs
         f={f}
         data={data}
-        canEdit={canEdit}
         isPendingEliminar={eliminar.isPending}
-        onEliminar={onEliminar}
         onConfirmEliminar={async () => {
           if (!f.aEliminar) return;
           try { await eliminar.mutateAsync(f.aEliminar.id); } catch { /* hook notifica */ }
