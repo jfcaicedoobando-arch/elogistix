@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.361.3] - 2026-07-30
+- **fix(compras · buzón)**: el tab de Costos y `/compras/buzon` fallaban con `column proveedores_1.origen does not exist` (42703). El select embebido pedía `origen` cuando la columna real de `proveedores` es `origen_proveedor`; se corrigió el select, el tipo de la fila y los tres consumidores que calculan `esNacional` para el badge "Falta XML". Nuevo test de regresión sobre `SELECT_COLS_ENTRANTES`.
+
+
+
 ## [13.361.2] - 2026-07-30
 - **chore(compras · buzón)**: `facturasEntrantes.ts` (275 líneas) se dividió en `facturasEntrantes.types.ts` (tipos, `SELECT_COLS`, mensajes de duplicado) y `facturasEntrantesUpload.ts` (subida de PDF/XML y adjuntar XML), cumpliendo la regla Power of 10 de ≤ 200 líneas. Se conservan los re-exports para no tocar a los importadores.
 
