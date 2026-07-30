@@ -6,11 +6,16 @@ import { logger } from "@/lib/observability/logger";
 // Re-export para no romper callers históricos que importan desde el barrel.
 export { UNRESOLVED_EMAIL };
 
+/** Estado de la cuenta dentro de la organización (Q-05b). */
+export type EstadoInvitacion = "activo" | "pendiente" | "desconocido";
+
 export interface UserRow {
   user_id: string;
   email: string;
   role: AppRole;
   created_at: string;
+  /** "pendiente" = invitado pero nunca inició sesión / sin confirmar correo. */
+  estado: EstadoInvitacion;
 }
 
 interface OrgMemberRow {
@@ -23,6 +28,16 @@ interface ListUsersRow {
   id: string;
   email: string;
   created_at: string;
+  last_sign_in_at?: string | null;
+  email_confirmed_at?: string | null;
+}
+
+/** Deriva el estado de invitación a partir de las señales de auth. */
+function derivarEstado(row: ListUsersRow | undefined): EstadoInvitacion {
+  if (!row) return "desconocido";
+  if (row.last_sign_in_at) return "activo";
+  if (row.email_confirmed_at) return "activo";
+  return "pendiente";
 }
 
 /**
