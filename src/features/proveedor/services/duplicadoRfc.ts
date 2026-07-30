@@ -37,6 +37,7 @@ export async function findProveedorByRfcEnOrg(
     .from("proveedores")
     .select("id, nombre")
     .eq("organization_id", organizationId)
+    .is("deleted_at", null)
     .ilike("rfc", norm)
     .limit(1)
     .maybeSingle();
