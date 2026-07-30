@@ -1,6 +1,15 @@
 # Changelog
 
+## [13.354.0] - 2026-07-30
+- **fix(cotizaciones · R-08)**: la base de datos ahora rechaza enviar una cotización sin importes de venta, no sólo la interfaz.
+- **fix(portal · R-05)**: las cotizaciones del portal (listado y detalle) ofrecen "Reintentar" en vez de quedarse cargando para siempre.
+- **fix(compras · R-05.2)**: si tu rol no puede capturar facturas de proveedor, el modal lo explica en vez de dejarte llenar un formulario que sería rechazado.
+- **fix(estado de cuenta · R-15.3)**: exportar un periodo sin movimientos avisa con un aviso claro en lugar de no hacer nada.
+- **fix(avisos · R-07)**: los títulos de los avisos también se sanean; ya no puede filtrarse HTML crudo de un error del servidor.
+- **fix(avisos · R-15.5)**: los avisos emergentes quedan por encima del encabezado fijo, así que el clic ya no abre el selector de organización.
+
 ## [13.353.0] - 2026-07-30
+
 - **feat(costeo · R-10)**: el catálogo `/costeo/navieras` ya tiene botón "Nueva naviera" y estado vacío accionable; administradores, gerencia de operaciones y coordinación logística pueden dar de alta y editar navieras (antes sólo super admin).
 - **fix(cotizaciones · R-08)**: el botón "Enviar por correo" del detalle se deshabilita cuando la cotización va en $0 y explica en tooltip qué falta.
 - **fix(navegación · R-12.2)**: los guards anidados muestran un placeholder contenido, sin empujar el layout ni parpadear el sidebar mientras se resuelve la sesión.

@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { PageSkeleton } from "@/components/shared/skeletons";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 import { usePortalCotizaciones, usePortalClientUsers } from "@/features/portal/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
@@ -23,7 +23,9 @@ export default function PortalCotizaciones() {
   const navigate = useNavigate();
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
-  const { data: cotizaciones = [], isLoading } = usePortalCotizaciones(clienteIds);
+  const {
+    data: cotizaciones = [], isLoading, isError, refetch,
+  } = usePortalCotizaciones(clienteIds);
   const tasaIva = useTasaIVA();
   const [search, setSearch] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
@@ -52,8 +54,16 @@ export default function PortalCotizaciones() {
     });
   }, [cotizaciones, search, filtroEstado]);
 
-  if (isLoading) {
-    return <PageSkeleton />;
+  if (isLoading || isError) {
+    // R-05: la carga nunca se queda colgada; a los 15s (o ante error) se
+    // ofrece "Reintentar" en vez de un skeleton perpetuo.
+    return (
+      <LoadingState
+        error={isError}
+        onRetry={() => void refetch()}
+        errorLabel="No pudimos cargar tus cotizaciones."
+      />
+    );
   }
 
   return (

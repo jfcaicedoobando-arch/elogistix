@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DetailSkeleton } from "@/components/shared/skeletons";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 import { usePortalCotizacion } from "@/features/portal/hooks";
 import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/SeccionMercanciaCotizacionDetalle";
 import TablaConceptosGenerico from "@/features/cotizacion/components/TablaConceptosGenerico";
@@ -20,7 +20,7 @@ import { useDocumentTitle } from "@/hooks/shared";
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: cot, isLoading } = usePortalCotizacion(id);
+  const { data: cot, isLoading, isError, refetch } = usePortalCotizacion(id);
   useRegisterBreadcrumbLabel(id, cot?.folio);
   useDocumentTitle(cot ? `Cotización · ${cot.folio}` : "Cotización");
   const totales = usePortalCotizacionDetalle(cot);
@@ -34,8 +34,15 @@ export default function PortalCotizacionDetalle() {
     isPending,
   } = usePortalCotizacionDetalleController(id);
 
-  if (isLoading) {
-    return <DetailSkeleton sections={1} />;
+  if (isLoading || isError) {
+    // R-05: sin timeout el detalle se quedaba en skeleton indefinido.
+    return (
+      <LoadingState
+        error={isError}
+        onRetry={() => void refetch()}
+        errorLabel="No pudimos cargar la cotización."
+      />
+    );
   }
 
   if (!cot) {

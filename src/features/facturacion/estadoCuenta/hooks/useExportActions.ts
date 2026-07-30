@@ -7,7 +7,7 @@ import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatDate } from "@/lib/formatters";
 import { fetchClienteFichaEstadoCuenta } from "../services/clienteFicha";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 
 const CSV_COLUMNS = [
@@ -46,6 +46,14 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
 
   const onPdf = useCallback(async () => {
     if (!soloUnCliente) return;
+    // R-15.3: antes el botón no hacía nada cuando el periodo estaba vacío.
+    if (rows.length === 0) {
+      notifyWarning(undefined, {
+        title: "No hay movimientos en el periodo seleccionado",
+        description: "Ajusta las fechas o los filtros para generar el estado de cuenta.",
+      });
+      return;
+    }
     setBusy("pdf");
     try {
       const data = await fetchClienteFichaEstadoCuenta(clienteIds[0]);
@@ -60,9 +68,16 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     } finally {
       setBusy(null);
     }
-  }, [clienteIds, soloUnCliente]);
+  }, [clienteIds, soloUnCliente, rows.length]);
 
   const onCsv = useCallback(() => {
+    if (rows.length === 0) {
+      notifyWarning(undefined, {
+        title: "No hay movimientos en el periodo seleccionado",
+        description: "Ajusta las fechas o los filtros para exportar el CSV.",
+      });
+      return;
+    }
     setBusy("csv");
     try {
       exportToCsv(

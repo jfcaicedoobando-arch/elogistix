@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
 import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
+import { usePermissions } from "@/hooks/shared";
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";
@@ -48,6 +49,7 @@ function resolverConceptosParaCuadre(
 
 export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqueAdHoc }: Props) {
   const navigate = useNavigate();
+  const { canCapturarFacturaProveedor } = usePermissions();
   const cats = usePresupuestoCategorias(true);
   const ctl = useNuevaFacturaProveedorForm(() => onOpenChange(false), initialEmbarqueAdHoc);
 
@@ -68,12 +70,34 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
         Cancelar
       </Button>
-      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar}>
+      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar || !canCapturarFacturaProveedor}>
         {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {ctl.isPending ? "Guardando…" : "Guardar factura"}
       </Button>
     </>
   );
+
+  // R-05.2: sin permiso mostramos el motivo en vez de un formulario que la
+  // base de datos rechazará al guardar.
+  if (open && !canCapturarFacturaProveedor) {
+    return (
+      <FormDialogShell
+        open={open}
+        onOpenChange={onOpenChange}
+        icon={FileSpreadsheet}
+        title="Capturar factura de proveedor"
+        description="Tu rol no puede capturar facturas de proveedor."
+        size="md"
+        footer={<Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>}
+      >
+        <p className="text-sm text-muted-foreground">
+          No tienes permiso para esta sección. Pide a un administrador, contador o auxiliar
+          contable que capture la factura.
+        </p>
+      </FormDialogShell>
+    );
+  }
+
 
   return (
     <>
