@@ -60,7 +60,13 @@ export const CRM_ROLES: AppRole[] = [
   ...ADMINS, "vendedor", "gerente_comercial", "gerente_operaciones",
 ];
 export const BITACORA_ROLES: AppRole[] = [...ADMINS, "contador", "tesorero", ...GERENTES];
-export const PROVEEDORES_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "ejecutivo_pricing"];
+// v13.369.0 — El gerente comercial necesita consultar el estado de cuenta de
+// proveedores (ficha del proveedor + antigüedad de saldos) para negociar
+// tarifas; su acceso es de sólo lectura (las RLS lo limitan vía `viewer`).
+export const PROVEEDORES_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "ejecutivo_pricing", "gerente_comercial"];
+export const COMPRAS_HUB_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "gerente_comercial"];
+export const COMPRAS_AGING_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "gerente_comercial"];
+
 
 export const DASHBOARD_DIRECCION_ROLES: AppRole[] = ["admin", "admin_org", "super_admin", "gerente_comercial", "gerente_visor", "gerente_operaciones"];
 export const CARTERA_ROLES: AppRole[] = ["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"];
