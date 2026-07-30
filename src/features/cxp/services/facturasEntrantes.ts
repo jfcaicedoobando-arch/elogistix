@@ -3,6 +3,7 @@
  * El operador sube el archivo; contabilidad lo captura o lo rechaza.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { descargarBlob } from "@/lib/downloadBlob";
 import {
   rutaArchivoEntrante,
   validarArchivoEntrante,
