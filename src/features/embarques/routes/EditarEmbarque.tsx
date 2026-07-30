@@ -68,6 +68,31 @@ export default function EditarEmbarque() {
     );
   }
 
+  // La base de datos bloquea cualquier escritura sobre un embarque cerrado
+  // (`Embarque cerrado: usa reabrir_embarque…`). Evitamos que el usuario llene
+  // el wizard para toparse con el error hasta el guardado final.
+  if ((embarque.estado ?? "").toLowerCase() === "cerrado") {
+    return (
+      <div className="max-w-xl mx-auto py-16">
+        <Alert>
+          <Lock className="h-4 w-4" />
+          <AlertTitle>Embarque cerrado</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>
+              El expediente {embarque.expediente} está cerrado, por lo que sus datos ya no
+              se pueden editar. Un administrador debe reabrirlo desde la pestaña
+              «Cierre» del detalle para volver a modificarlo.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/embarques/${id}`)}>
+              Ir al detalle del embarque
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+
   return (
     <FormProvider {...methods}>
       <EmbarqueWizardLayout
