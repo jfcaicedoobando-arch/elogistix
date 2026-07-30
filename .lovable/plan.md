@@ -1,38 +1,42 @@
-## Objetivo
+## Qué pasó (diagnóstico verificado)
 
-Dejar la suite en verde. Hoy fallan 12 archivos por tres causas distintas (ninguna es culpa del paralelismo que ya aplicamos).
+Karol intentó capturar una factura de proveedor cuyo CFDI **ya estaba registrado** en Elogistix. La base de datos hizo bien su trabajo: existe un índice único por organización sobre el UUID fiscal (ignorando facturas borradas), y rechazó el alta.
 
-## Diagnóstico confirmado
+Lo confirmé en datos: hay UUIDs con varios intentos de captura, donde sólo queda una factura viva y el resto están borradas. Ejemplos reales:
 
-| # | Archivo | Causa real (verificada al correr los tests) |
-|---|---|---|
-| 1 | `src/features/tesoreria/routes/__tests__/TesoreriaConciliacion.test.tsx` (6 tests) | El `vi.mock` de `@/features/tesoreria/hooks` no exporta `useRegistrarMovimientoManual`, hook que la ruta empezó a usar al agregar el alta manual en Conciliación. El mock quedó viejo. |
-| 2 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionDraftAutosave.test.tsx` (2 tests) | El test asume que **nada** se guarda antes del debounce, pero el hook ahora persiste una vez en el montaje. El test quedó viejo respecto al comportamiento nuevo. |
-| 3 | `src/__tests__/audit-report.test.ts`, `architecture/no-inline-query-mutations.test.ts`, `architecture/safe-cast-freshness.test.ts`, `architecture/safe-casts-services.test.ts` (7 tests) | Deuda real de arquitectura acumulada en las olas 2–5: 10 archivos productivos >200 líneas fuera de allowlist, 2 hooks `use*.ts(x)` dentro de `components/`, 1 cast HIGH sin marcador y entradas de baseline SAFE-CAST caducadas. |
+- `ADMINISTRACION GONG`, folio 9593 → 2 intentos borrados + 1 viva (Pagada).
+- `WAN HAI LINES`, folio CON-B-16531 → 5 intentos borrados + 1 viva (aprobada).
 
-Analogía: (1) y (2) son "la lista de invitados quedó vieja"; (3) es "sí hay platos sucios en la cocina".
+Es decir: **no es un bug de datos, es un problema de experiencia de uso.** Analogía: el sistema deja que llenes todo el formulario de inscripción y hasta el final te dice "ya estabas inscrito", sin decirte con qué número ni dónde verlo.
+
+## Problemas concretos a corregir
+
+1. La validación previa de duplicados (`existeFacturaDuplicada`) sólo compara **proveedor + folio + fecha de emisión**. No revisa el UUID fiscal, que es el identificador único real del CFDI. Por eso el choque aparece hasta el `INSERT`.
+2. El aviso de error dice sólo "Ya existe una factura con este UUID fiscal (CFDI duplicado)" — sin folio interno, sin estado, sin manera de abrir la factura existente.
+3. Como el usuario no sabe qué pasó, reintenta: eso explica los 5 intentos borrados del mismo CFDI.
 
 ## Plan
 
-**Fase 1 — Mocks y timers (rápido, sin tocar producción)**
-- Agregar `useRegistrarMovimientoManual` (y cualquier otro export faltante) al mock del test de Conciliación, devolviendo el mismo shape de mutación que los demás.
-- Ajustar el test de autosave al contrato actual: en vez de exigir `null` antes del debounce, verificar que tras el debounce se escribió el snapshot esperado y que el unmount cancela el timer pendiente (sin escrituras extra). Antes de cambiar el test, confirmar en el hook que el guardado inicial es intencional; si no lo es, se corrige el hook en lugar del test.
+### 1. Validar el UUID justo al cargar el XML
+- Nuevo servicio `buscarFacturaPorUuidFiscal(uuid)` en `src/features/cxp/services/proveedorFacturas.crud.ts`: busca facturas vivas (`deleted_at IS NULL`) de la organización y devuelve `id`, `folio_interno`, `folio_proveedor`, `proveedor_nombre`, `estado`, `estado_aprobacion`.
+- En el flujo de parseo del CFDI (`useNuevaFacturaProveedorForm.ts` + `CargaCfdiSection.tsx`), en cuanto se lee el UUID del XML se hace la consulta y, si ya existe, se muestra una alerta **dentro del modal**: "Este CFDI ya está capturado como FP-000123 (Vigente, aprobada)" con un botón "Ver factura" que abre el detalle, y se deshabilita el botón Guardar.
 
-**Fase 2 — Deuda de arquitectura (la de verdad)**
-- Listar los 10 archivos >200 líneas y partirlos por responsabilidad (extraer subcomponentes/hook de estado), siguiendo la regla Power of 10. Los que no sean divisibles con seguridad se documentan y se agregan a la allowlist con justificación.
-- Mover los 2 hooks que viven bajo `components/` a la carpeta `hooks/` de su feature y actualizar imports.
-- Resolver el cast HIGH: tipar correctamente o, si es genuinamente seguro, anotarlo con `// SAFE-CAST:`.
-- Podar de la baseline de `safe-cast-freshness` las entradas ya resueltas (la baseline solo puede encoger).
+### 2. Mejorar el aviso de error de respaldo
+- En `useNuevaFacturaProveedorForm.submit.ts`, cuando el `INSERT` falle con duplicado de `uuid_fiscal`, consultar la factura existente y mostrar su folio interno y estado en la descripción del toast, en vez del mensaje genérico.
 
-**Fase 3 — Verificación**
-- Correr los 12 archivos afectados, después la suite completa con el paralelismo nuevo (~10 min) y confirmar 0 fallos.
-- Correr `bun run lint --max-warnings 0` y el typecheck, porque partir archivos suele destapar imports huérfanos.
+### 3. Extender la validación previa
+- Antes de insertar, `runSubmit` verificará también por UUID (no sólo folio+fecha), para cortar el reintento antes de tocar la base.
 
-**Fase 4 — Cierre**
-- Registrar en `CHANGELOG.md` tanto el paralelismo de Vitest (que quedó pendiente) como estas correcciones, y subir `APP_VERSION` a `13.342.0`.
+### 4. Pruebas
+- Unitarias del nuevo servicio (encuentra viva, ignora borradas, aísla por organización).
+- Unitarias de `handleSubmitError` con el nuevo mensaje enriquecido.
+- Prueba del hook: cargar un XML con UUID ya existente bloquea el guardado.
+
+### 5. Cierre
+- Bump de `APP_VERSION` a `13.343.0` y entrada en `CHANGELOG.md`.
 
 ## Notas técnicas
 
-- No se toca `vitest.config.ts`: el paralelismo ya quedó bien y los mismos 12 fallos existían en serie.
-- CI no cambia; sigue con su propio sharding.
-- Fase 2 es la única que modifica código productivo; el riesgo está en los imports tras mover/partir archivos, por eso el typecheck va inmediatamente después.
+- Índice existente: `ux_proveedor_facturas_uuid_fiscal_org` sobre `(organization_id, uuid_fiscal)` con `WHERE uuid_fiscal IS NOT NULL AND deleted_at IS NULL`. **No se modifica** — es la protección correcta.
+- No se requiere migración de base de datos; todo el cambio es de frontend/servicios.
+- No se borran ni fusionan las facturas duplicadas históricas: las repetidas ya están marcadas como borradas y sólo queda una viva por UUID.
