@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.355.1] - 2026-07-30
+- **fix(embarques · JAVASCRIPT-REACT-4G/4H)**: la pantalla de edición ahora avisa que el embarque está cerrado y ofrece ir al detalle, en vez de dejar llenar el wizard y fallar al guardar.
+- **fix(observabilidad)**: Sentry ya no reporta validaciones esperadas (reglas de negocio `P0001`, duplicados `23505`/`23514`), pérdidas de conexión del cliente ni rechazos de promesa vacíos (JAVASCRIPT-REACT-4E/4F/4J/43).
+
 ## [13.355.0] - 2026-07-30
 - **feat(marca)**: nuevos favicons (ICO multi-tamaño, PNG 512, apple-touch-icon 180) e iconos PWA (192/512 + maskable) con el isotipo de contenedor sobre azul marino.
 - **feat(SEO)**: nueva imagen social `og-image.jpg` en 1200×630 con wordmark y mensaje en español; metas `og:image:width/height/alt` y `twitter:image:alt` corregidas.
