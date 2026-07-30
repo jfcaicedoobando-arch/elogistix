@@ -97,15 +97,10 @@ export function EmbarqueDetalleTabs({
           onToggleNoAplica={docHandlers.onToggleNoAplica}
         />
       </TabsContent>
-
-      {/* v13.346.0 — Buzón CxP: operación entrega el invoice, contabilidad lo captura. */}
-      <TabsContent value="facturas-entrantes">
-        <TabFacturasEntrantes embarqueId={embarqueId} canEdit={canEdit} />
-      </TabsContent>
-
+      {/* v13.347.0 — Costos y facturas de proveedor fusionados: el buzón CxP vive
+          junto a los conceptos de costo que documenta. */}
       <TabsContent value="costos" className="space-y-6">
         <TabCostos
-          
           conceptosCosto={conceptosCosto}
           totalVenta={financials.totalVenta}
           totalCosto={financials.totalCosto}
@@ -114,6 +109,8 @@ export function EmbarqueDetalleTabs({
           embarqueId={embarqueId}
           canEdit={canEdit}
         />
+        <Separator />
+        <TabFacturasEntrantes embarqueId={embarqueId} canEdit={canEdit} />
       </TabsContent>
 
       {/* Garantías y Demoras fusionadas (v13.66.15): mismo dominio (free time / depósito por contenedor). */}
