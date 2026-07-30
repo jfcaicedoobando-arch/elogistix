@@ -59,6 +59,7 @@ export function CotizacionDetalleContenido({
   handleCambiarEstado, abrirDialogConvertir, handleConvertir, convertirProspecto,
   navigate, effectiveRole, envios, enviarOpen, setEnviarOpen,
 }: Props) {
+  const { user } = useAuth();
   return (
     <>
       <CotizacionInactivaBanner
