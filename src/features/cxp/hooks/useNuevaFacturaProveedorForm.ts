@@ -14,7 +14,7 @@ import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import { notifyError } from "@/lib/ui/appFeedback";
 import {
   type PendingCfdi,
-  addDays, initialValues, calcularTotal, validateFactura,
+  addDays, initialValues, calcularTotal, validateFactura, aplicarProveedorAValues,
 } from "./useNuevaFacturaProveedorForm.helpers";
 import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
@@ -24,6 +24,7 @@ import { useConceptosManuales } from "./useConceptosManuales";
 import { calcularCuadreConceptos } from "@/features/cxp/utils/cuadreConceptos";
 import { useAutoTcEffect } from "./useNuevaFacturaProveedorForm.tcEffect";
 import { puedeContinuarSubmit } from "./useNuevaFacturaProveedorForm.guard";
+import { detectarCfdiDuplicado, type FacturaExistentePorUuid } from "./useNuevaFacturaProveedorForm.dup";
 export function useNuevaFacturaProveedorForm(
   onDone: () => void,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
@@ -36,6 +37,8 @@ export function useNuevaFacturaProveedorForm(
   const [mode, setMode] = useState<CargaMode>("manual");
   const [pendingCfdi, setPendingCfdi] = useState<PendingCfdi | null>(null);
   const [cfdiConceptos, setCfdiConceptos] = useState<CfdiConceptoParsed[]>([]);
+  // v13.343.0 — aviso temprano de CFDI ya capturado (índice único por UUID fiscal).
+  const [cfdiDuplicado, setCfdiDuplicado] = useState<FacturaExistentePorUuid | null>(null);
   const [askCrearProv, setAskCrearProv] = useState<{ rfc: string; nombre: string } | null>(null);
   const [vinculos, setVinculos] = useState<VinculosState>({});
   const manuales = useConceptosManuales();
@@ -93,21 +96,7 @@ export function useNuevaFacturaProveedorForm(
 
 
   const handleProveedor = (id: string, nombre: string, diasCreditoProv?: number) => {
-    setValues((p) => {
-      // v13.315.8 (QW2) — heredamos días de crédito del proveedor y recalculamos
-      // vencimiento. Si el proveedor no trae días definidos (undefined) o es 0,
-      // conservamos el valor actual del formulario para no perder edits manuales.
-      const nextDias = typeof diasCreditoProv === "number" && diasCreditoProv > 0
-        ? diasCreditoProv
-        : p.diasCredito;
-      return {
-        ...p,
-        provId: id,
-        provNombre: nombre,
-        diasCredito: nextDias,
-        vencimiento: addDays(p.emision, Number(nextDias) || 0),
-      };
-    });
+    setValues((p) => aplicarProveedorAValues(p, id, nombre, diasCreditoProv));
     if (errors.provId) setErrors((e) => ({ ...e, provId: undefined }));
     setVinculos({});
     setEmbarqueAdHoc(null);
@@ -133,6 +122,7 @@ export function useNuevaFacturaProveedorForm(
     setMode("manual");
     setPendingCfdi(null);
     setCfdiConceptos([]);
+    setCfdiDuplicado(null);
     manuales.limpiar();
     setAskCrearProv(null);
     setVinculos({});
@@ -146,8 +136,12 @@ export function useNuevaFacturaProveedorForm(
     setValues, setErrors, setPendingCfdi, setCfdiConceptos,
     setAskCrearProv, setTcOrigen, setTcFechaAplicada, manualTcRef,
   };
-  const handleCfdiParsed = (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) =>
-    aplicarCfdiParsed(parsedDeps, data, files);
+  const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
+    setCfdiDuplicado(null);
+    const ok = await aplicarCfdiParsed(parsedDeps, data, files);
+    if (ok) setCfdiDuplicado(await detectarCfdiDuplicado(data.cfdi?.uuid));
+    return ok;
+  };
   const handlePdfIaParsed = (data: CfdiParsedResponse, files: { pdf: File }) =>
     aplicarPdfIaParsed(parsedDeps, data, files);
   const validate = (): boolean => {
@@ -164,6 +158,13 @@ export function useNuevaFacturaProveedorForm(
   );
 
   const submit = async () => {
+    if (cfdiDuplicado) {
+      notifyError(undefined, {
+        title: "Este CFDI ya está capturado",
+        method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_UUID_UI",
+      });
+      return;
+    }
     if (!validate()) {
       notifyError(undefined, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_3" });
       return;
@@ -186,7 +187,9 @@ export function useNuevaFacturaProveedorForm(
     values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed, handlePdfIaParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
-    conceptosManuales: manuales, cuadreManual,
+    conceptosManuales: manuales, cuadreManual, cfdiDuplicado,
+    // Bloqueo de guardado: CFDI ya capturado o mutación en curso.
+    puedeGuardar: !cfdiDuplicado && !crear.isPending,
     embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit, isPending: crear.isPending, organizationId,
     tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,

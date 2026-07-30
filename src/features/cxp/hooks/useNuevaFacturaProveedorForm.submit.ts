@@ -4,6 +4,7 @@
  */
 
 import { existeFacturaDuplicada } from "@/features/cxp/services";
+import { detectarCfdiDuplicado, describirFacturaExistente } from "./useNuevaFacturaProveedorForm.dup";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
@@ -13,11 +14,18 @@ import {
 } from "./useNuevaFacturaProveedorForm.sideEffects";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
-export function handleSubmitError(e: unknown) {
+export async function handleSubmitError(e: unknown, uuidFiscal?: string | null) {
   const err = e as { message?: string; code?: string; details?: string; constraint?: string };
   const blob = `${err.message ?? ""} ${err.details ?? ""} ${err.constraint ?? ""}`.toLowerCase();
   if (err.code === "23505" && /uuid_fiscal/.test(blob)) {
-    notifyError(undefined, { title: "Ya existe una factura con este UUID fiscal (CFDI duplicado).", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1" });
+    const existente = await detectarCfdiDuplicado(uuidFiscal);
+    notifyError(undefined, {
+      title: "Este CFDI ya está capturado",
+      description: existente
+        ? `Ya existe como ${describirFacturaExistente(existente)}. Búscala en Compras › Facturas en vez de volver a capturarla.`
+        : "Ya existe una factura viva con este UUID fiscal en tu organización.",
+      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1",
+    });
   } else if (err.code === "23505" && /folio/.test(blob)) {
     notifyError(undefined, { title: "Ya existe una factura viva con este folio para el proveedor.", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_FOLIO" });
   } else if (err.code === "23505") {
@@ -56,6 +64,15 @@ export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
   } catch {
     // Si la verificación falla (red, RLS), continuamos: el UNIQUE de UUID fiscal sigue protegiendo.
   }
+  const yaExiste = await detectarCfdiDuplicado(p.pendingCfdi?.uuid);
+  if (yaExiste) {
+    notifyError(undefined, {
+      title: "Este CFDI ya está capturado",
+      description: `Ya existe como ${describirFacturaExistente(yaExiste)}. No se creó un duplicado.`,
+      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_UUID_PRE",
+    });
+    return false;
+  }
   try {
     const created = await p.crearMutateAsync(
       buildPayload({ values: p.values, total: p.total, userId: p.userId, pendingCfdi: p.pendingCfdi, vinculos: p.vinculos }),
@@ -77,7 +94,7 @@ export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
     });
     return true;
   } catch (e) {
-    handleSubmitError(e);
+    await handleSubmitError(e, p.pendingCfdi?.uuid);
     return false;
   }
 }

@@ -5,6 +5,7 @@
  * de texto plano y a la fila de totales del footer.
  */
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Loader2, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -13,6 +14,7 @@ import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";
+import { CfdiDuplicadoAlert } from "./CfdiDuplicadoAlert";
 import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
 import { ConceptosManualesSection } from "./ConceptosManualesSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
@@ -45,6 +47,7 @@ function resolverConceptosParaCuadre(
 }
 
 export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqueAdHoc }: Props) {
+  const navigate = useNavigate();
   const cats = usePresupuestoCategorias(true);
   const ctl = useNuevaFacturaProveedorForm(() => onOpenChange(false), initialEmbarqueAdHoc);
 
@@ -65,7 +68,7 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
         Cancelar
       </Button>
-      <Button onClick={ctl.submit} disabled={ctl.isPending}>
+      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar}>
         {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {ctl.isPending ? "Guardando…" : "Guardar factura"}
       </Button>
@@ -98,6 +101,15 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
           onPdfIaParsed={ctl.handlePdfIaParsed}
           cfdiReady={!!ctl.pendingCfdi && ctl.pendingCfdi.origen === "cfdi"}
           pdfIaReady={!!ctl.pendingCfdi && ctl.pendingCfdi.origen === "pdf_ia"}
+        />
+
+        <CfdiDuplicadoAlert
+          factura={ctl.cfdiDuplicado}
+          onVerFactura={(id) => {
+            ctl.reset();
+            onOpenChange(false);
+            navigate(`/compras/facturas?factura=${id}`);
+          }}
         />
 
         <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />
