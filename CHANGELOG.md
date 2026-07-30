@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.359.0] - 2026-07-30
+- **fix(compras · buzón)**: ver un archivo del buzón de facturas de proveedor fallaba con `ERR_BLOCKED_BY_CLIENT` cuando una extensión/filtro DNS bloquea el dominio del backend. Ahora el archivo se descarga como Blob (`abrirFacturaEntrante`) y se abre desde una URL local `blob:`, con fallback a descarga si el navegador bloquea la pestaña.
+
 ## [13.358.1] - 2026-07-30
 - **fix(CI · rls-tests)**: el paso "Regenerate types from migration schema" fallaba por `toomanyrequests: Rate exceeded` al bajar `postgres-meta` de public.ecr.aws. Ahora se hace `docker pull` con 4 reintentos + backoff, `gen types` con 3 reintentos y, si el registry sigue limitado, el gate de drift de `types.ts` se omite con warning en vez de romper el build por infra.
 

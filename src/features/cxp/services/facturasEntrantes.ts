@@ -3,6 +3,7 @@
  * El operador sube el archivo; contabilidad lo captura o lo rechaza.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { descargarBlob } from "@/lib/downloadBlob";
 import {
   rutaArchivoEntrante,
   validarArchivoEntrante,
@@ -126,10 +127,26 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   return data.id;
 }
 
-export async function urlFirmadaFacturaEntrante(path: string, expiraEn = 3600): Promise<string> {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, expiraEn);
+/**
+ * v13.359.0 — Abre el archivo del buzón sin navegar al dominio del backend.
+ *
+ * Algunas extensiones (adblockers, DNS filtering corporativo) bloquean la
+ * navegación directa a `*.supabase.co` con `ERR_BLOCKED_BY_CLIENT`. Por eso el
+ * archivo se descarga como Blob y se abre desde una URL local (`blob:`); si el
+ * navegador bloquea la pestaña, se cae a una descarga normal.
+ */
+export async function abrirFacturaEntrante(
+  path: string,
+  nombreArchivo: string,
+): Promise<void> {
+  const { data, error } = await supabase.storage.from(BUCKET).download(path);
   if (error) throw error;
-  return data.signedUrl;
+  const blobUrl = URL.createObjectURL(data);
+  const ventana = window.open(blobUrl, "_blank", "noopener,noreferrer");
+  if (!ventana) {
+    descargarBlob(data, nombreArchivo);
+  }
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
 }
 
 export async function eliminarFacturaEntrante(row: Pick<FacturaEntranteRow, "id" | "archivo_path">) {

@@ -27,7 +27,7 @@ import {
   useEliminarFacturaEntrante,
   useFacturasEntrantes,
 } from "@/features/cxp/hooks/useFacturasEntrantes";
-import { urlFirmadaFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 import { SubirFacturaEntranteDialog } from "@/features/embarques/components/SubirFacturaEntranteDialog";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 
@@ -53,8 +53,7 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
 
   const abrirArchivo = async (row: FacturaEntranteRow) => {
     try {
-      const url = await urlFirmadaFacturaEntrante(row.archivo_path);
-      window.open(url, "_blank", "noopener,noreferrer");
+      await abrirFacturaEntrante(row.archivo_path, row.nombre_archivo);
     } catch (error) {
       notifyError(undefined, { title: "No se pudo abrir el archivo", error, method: "ABRIR_FACTURA_ENTRANTE" });
     }
