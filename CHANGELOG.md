@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.343.0] - 2026-07-30
+- **Fix · CFDI duplicado se avisa al cargar el XML, no al guardar.** Antes llenabas toda la factura de proveedor y hasta el botón "Guardar" aparecía el error "Ya existe una factura con este UUID fiscal", sin decirte cuál. Ahora, al cargar el XML se busca si ese CFDI ya está capturado y, si existe, se muestra una alerta con su folio y estado (p. ej. "FP-000123 · Vigente · aprobada"), un botón "Ver factura" que te lleva directo a ella y el guardado queda bloqueado. Analogía: el portero te avisa en la puerta que ya estás adentro, en vez de dejarte hacer toda la fila.
+
 ## [13.342.0] - 2026-07-30
 - **Mejora · Suite de pruebas 3.3× más rápida.** Las pruebas locales ahora corren en paralelo aprovechando los núcleos reales de la máquina (antes se ejecutaban en un solo proceso). El tiempo bajó de ~32 a ~10 minutos, igualando lo que ya tardaban en GitHub. Analogía: abrimos todas las cajas del supermercado en vez de atender con una sola.
 - **Fix · 12 pruebas rotas en verde.** Se corrigieron los mocks de Conciliación de Tesorería y las expectativas del autoguardado de cotizaciones (versión de borrador y guardado inicial).
