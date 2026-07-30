@@ -12,6 +12,7 @@ export async function fetchProveedorOperaciones(
     .from("conceptos_costo")
     .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente, id, cliente_nombre)")
     .eq("proveedor_id", proveedorId)
+    .is("deleted_at", null)
     .order("fecha_vencimiento", { ascending: false, nullsFirst: false })
     .limit(1000);
   if (error) throw error;

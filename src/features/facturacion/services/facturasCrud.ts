@@ -118,6 +118,7 @@ export async function fetchGastosPendientes() {
       .from("conceptos_costo")
       .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente)")
       .eq("estado_liquidacion", "Pendiente")
+      .is("deleted_at", null)
       .order("fecha_vencimiento", { ascending: true })
       .limit(LIMITE_GASTOS_PENDIENTES),
     [],
