@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-  SelectValue,
+  
 } from "@/components/ui/select";
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { EstadoInvitacion } from "@/features/admin/services/usuario";
