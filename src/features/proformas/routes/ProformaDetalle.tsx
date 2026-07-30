@@ -66,10 +66,6 @@ function ProformaDetalleContent({ data }: ContentProps) {
 
   const { proforma, conceptos } = data;
   const timeline = resolveProformaTimelineFields(proforma);
-  const facturas = proforma.facturas_asociadas ?? [];
-  const clienteFull = proforma.cliente_full ?? null;
-  const embarqueFull = proforma.embarque_full ?? null;
-  const mostrarEmbarque = !!embarqueFull && !proforma.es_consolidada;
   const emptyConceptos = proforma.es_consolidada
     ? "Proforma consolidada (ver detalle agregado en el PDF)."
     : "Sin conceptos.";
