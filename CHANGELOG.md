@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.348.1] - 2026-07-30
+- **Corrección · Drift de tipos (CI).** Se reconcilió la base con el historial de migraciones: `cxp_por_pagar` expone la fecha programada de pago, `tracking_externo` recupera su llave foránea y campos obligatorios, `marcar_proforma_facturada` dejó de apuntar a columnas inexistentes y se eliminó un tipo huérfano (`estado_proforma`).
+- **Técnico.** El chequeo de drift ahora filtra funciones de extensiones (pgcrypto, uuid-ossp, pg_trgm) con `scripts/ci/normalize-supabase-types.ts`, que en CI caen en `public` y generaban diferencias falsas.
+
+
+
 ## [13.348.0] - 2026-07-30
 - **Mejora · Bitácora total del embarque.** La pestaña "Notas y actividad" ahora muestra TODO lo que le pasa al embarque en una sola línea de tiempo: notas, eventos de tracking, documentos, consultas de rastreo, cotización de origen, proformas (generada/enviada/aceptada), facturas al cliente (creada/timbrada/cancelada/enviada por correo), pagos, notas de crédito, facturas de proveedor y sus aprobaciones, pagos a proveedor, invoices del buzón, garantías, seguros y cierres/reaperturas.
 - **Mejora · Timeline agrupado por día con filtros.** Se agrupan las entradas por fecha y se pueden filtrar por Operación, Comercial, Finanzas, Riesgo o Cierre. Los montos se ocultan automáticamente para roles sin permiso financiero.
