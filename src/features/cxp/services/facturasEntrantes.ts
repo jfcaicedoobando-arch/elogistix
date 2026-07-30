@@ -150,7 +150,7 @@ function columnasXmlEntrante(params: {
 
 /** Datos fiscales leídos del XML; todo opcional porque el PDF puede venir solo. */
 function columnasMetaEntrante(meta: CfdiXmlMeta | null | undefined) {
-  const m = meta ?? {};
+  const m: Partial<CfdiXmlMeta> = meta ?? {};
   return {
     uuid_fiscal: m.uuid ?? null,
     rfc_emisor: m.rfcEmisor ?? null,
