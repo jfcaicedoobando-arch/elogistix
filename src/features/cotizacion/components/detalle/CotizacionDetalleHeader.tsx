@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FileDown, Mail, FileSpreadsheet } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
@@ -16,6 +17,8 @@ interface Props {
 }
 
 export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExportarPdf, onEnviarEmail, yaEnviada }: Props) {
+  // R-08: una cotización sin importe no puede enviarse al cliente.
+  const sinImporte = !(Number(cotizacion.total) > 0);
   const metaFecha = cotizacion.fecha_aceptacion
     ? `Aceptada el ${formatDate(cotizacion.fecha_aceptacion, "dd/MM/yyyy HH:mm")}`
     : cotizacion.fecha_rechazo
@@ -37,9 +40,22 @@ export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExpo
             <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
           </Button>
           {onEnviarEmail && !cotizacion.es_prospecto && (
-            <Button variant="default" size="sm" onClick={onEnviarEmail}>
-              <Mail className="h-4 w-4 mr-1" /> {yaEnviada ? "Reenviar" : "Enviar por correo"}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={sinImporte ? 0 : -1}>
+                    <Button variant="default" size="sm" onClick={onEnviarEmail} disabled={sinImporte}>
+                      <Mail className="h-4 w-4 mr-1" /> {yaEnviada ? "Reenviar" : "Enviar por correo"}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {sinImporte && (
+                  <TooltipContent>
+                    Agrega conceptos de venta con importe antes de enviar la cotización.
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           )}
         </>
       }
