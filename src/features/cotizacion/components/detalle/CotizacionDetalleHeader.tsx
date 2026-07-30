@@ -18,7 +18,7 @@ interface Props {
 
 export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExportarPdf, onEnviarEmail, yaEnviada }: Props) {
   // R-08: una cotización sin importe no puede enviarse al cliente.
-  const sinImporte = !(Number(cotizacion.total) > 0);
+  const sinImporte = !(Number(cotizacion.subtotal) > 0);
   const metaFecha = cotizacion.fecha_aceptacion
     ? `Aceptada el ${formatDate(cotizacion.fecha_aceptacion, "dd/MM/yyyy HH:mm")}`
     : cotizacion.fecha_rechazo
