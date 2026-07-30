@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.361.1] - 2026-07-30
+- **fix(embarques · cierre)**: en el checklist de cierre, "Expediente documental" ahora es la fase 1 y "Operación" (peso/volumen y fechas de descarga y devolución de contenedores) la fase 2, reflejando que los documentos se completan antes.
+
 ## [13.361.0] - 2026-07-30
 - **feat(embarques · cierre)**: el checklist de cierre ahora se agrupa y ordena según el ciclo de vida real del embarque — 1. Operación, 2. Expediente documental, 3. Costos y facturas de proveedor, 4. Facturación al cliente, 5. Cobranza y pagos, 6. Rentabilidad y comisiones — con contador `ok/total` por fase (`cierreCheckFases.ts`, `cierreCheckOrden.ts`, `CierreChecklistFase.tsx`). Sin cambios en el RPC `validar_cierre_embarque`.
 

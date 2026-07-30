@@ -13,8 +13,8 @@ describe("agruparChecksPorFase", () => {
     ]);
 
     expect(grupos.map((g) => g.fase.id)).toEqual([
-      "operacion",
       "documentos",
+      "operacion",
       "costos",
       "facturacion",
       "cobranza",
