@@ -13,7 +13,11 @@ import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
+import {
+  UNRESOLVED_EMAIL,
+  fallóDirectorioUsuarios,
+} from "@/features/admin/services/usuario";
+
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
 import { obtenerRangoRol } from "@/features/admin/domain/roles/roleCatalog";
