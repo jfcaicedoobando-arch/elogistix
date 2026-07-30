@@ -1,4 +1,3 @@
-import { useState } from "react";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import {
   AlertDialog,
@@ -98,18 +97,4 @@ export function UsuariosInternosDialogs({
       />
     </>
   );
-}
-
-export function useUsuariosInternosTargets() {
-  const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
-  const [quitarTarget, setQuitarTarget] = useState<UserRow | null>(null);
-  const [pendingRole, setPendingRole] = useState<PendingRoleChange | null>(null);
-  return {
-    deleteTarget,
-    setDeleteTarget,
-    quitarTarget,
-    setQuitarTarget,
-    pendingRole,
-    setPendingRole,
-  };
 }

@@ -22,10 +22,8 @@ import {
 
 import { useUsuarioColumns } from "./usuariosColumns";
 import { UsuariosToolbar } from "./UsuariosToolbar";
-import {
-  UsuariosInternosDialogs,
-  useUsuariosInternosTargets,
-} from "./UsuariosInternosDialogs";
+import { UsuariosInternosDialogs } from "./UsuariosInternosDialogs";
+import { useUsuariosInternosTargets } from "./usuariosInternosTargets";
 import { TODOS, filtrarUsuarios, hayFiltrosActivos } from "./usuariosInternosFiltros";
 
 export function UsuariosInternosTab() {
@@ -103,12 +101,11 @@ export function UsuariosInternosTab() {
     }
   };
 
-  const filtros = { busqueda: busquedaDebounced, rol: filtroRol, estado: filtroEstado };
-  const usuariosFiltrados = useMemo(
-    () => filtrarUsuarios(users, filtros),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [users, busquedaDebounced, filtroRol, filtroEstado],
+  const filtros = useMemo(
+    () => ({ busqueda: busquedaDebounced, rol: filtroRol, estado: filtroEstado }),
+    [busquedaDebounced, filtroRol, filtroEstado],
   );
+  const usuariosFiltrados = useMemo(() => filtrarUsuarios(users, filtros), [users, filtros]);
 
   const rolesPresentes = useMemo(() => new Set(users.map((u) => u.role)).size, [users]);
 
