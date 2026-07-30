@@ -2,45 +2,110 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import os from "os";
+import { splitTestsByEnvironment } from "./scripts/lib/testEnvSplit";
 
 // Forks paralelos en local: dejamos 2 núcleos libres para el dev-server/HMR
 // y topamos en 8 para acotar el uso de RAM (8 × 4 GB heap = 32 GB).
 // `VITEST_FORKS` permite afinar el valor sin editar la config (benchmarks).
 const LOCAL_FORKS = Number(process.env.VITEST_FORKS) || Math.max(2, Math.min(8, os.cpus().length - 2));
 
+// v13.344.0 — Reparto por entorno. Medido en el sandbox: un archivo de
+// guardrail en jsdom tarda ~25 s (13.8 s sólo en levantar el entorno + 3.1 s
+// de `setup.ts`); los mismos tests en `node` bajan a ~3 s. ~580 de los ~850
+// archivos nunca tocan el DOM, así que se les quita jsdom encima.
+const ROOT = __dirname;
+const SPLIT = splitTestsByEnvironment(ROOT);
 
+// Alias compartido por ambos proyectos (los proyectos NO heredan el `resolve`
+// raíz, así que se define una sola vez y se reutiliza).
+const ALIAS = {
+  "@": path.resolve(ROOT, "./src"),
+  // En tests, @react-pdf/renderer apunta a un stub ligero
+  // (src/test/mocks/reactPdfStub.tsx). Evita cargar fontkit/pdfkit por archivo.
+  "@react-pdf/renderer": path.resolve(ROOT, "./src/test/mocks/reactPdfStub.tsx"),
+};
+
+const SHARDED = process.argv.some((a) => a.startsWith("--shard"));
+
+const COMMON_EXCLUDE = [
+  "node_modules/**",
+  "dist/**",
+  "src/**/*.perf.test.tsx",
+  "src/**/*.perf.ts",
+  // v13.322.1 (GHA-audit A4) · Los architecture gating tests corren en un
+  // step dedicado del job `audits` de CI. Cuando la suite se ejecuta con
+  // `--shard` (matrix de CI) los excluimos para no ejecutarlos dos veces
+  // y para que su fallo no se diluya entre 10 shards.
+  ...(SHARDED
+    ? [
+        "src/lib/__tests__/architecture.test.ts",
+        "src/lib/__tests__/architecture-baseline.test.ts",
+        "src/__tests__/audit-report.test.ts",
+        "src/__tests__/audit-casts-classifier.test.ts",
+      ]
+    : []),
+];
+
+// Config común a ambos proyectos. `environment`, `setupFiles` e `include` los
+// define cada proyecto.
+const COMMON_TEST = {
+  globals: true,
+  // v13.303.75 · Fija TZ para todos los tests. Antes, los tests sensibles
+  // a timezone (`addDays`, `todayLocalISO`, `parseLocalMx`) sólo pasaban
+  // cuando el runner corría en `America/Mexico_City`. Con esto CI y locales
+  // en otra TZ producen los mismos resultados.
+  env: { TZ: "America/Mexico_City" },
+  exclude: COMMON_EXCLUDE,
+  // Suite completa medida en ~189s (sandbox Lovable). Archivo más lento: 5.1s,
+  // resto <1s. 15s por test/hook deja ~3x de margen sobre el peor caso real
+  // sin esconder tests que se cuelgan.
+  testTimeout: 15_000,
+  hookTimeout: 15_000,
+  teardownTimeout: 15_000,
+  // Pool por procesos (forks). Cada archivo corre en un fork nuevo para
+  // liberar memoria al terminar (PDFs / leak regression).
+  pool: "forks" as const,
+  // v13.342.0 — Paralelismo derivado de los núcleos REALES, no del flag CI.
+  // El sandbox tiene 16 vCPU / 125 GB, así que 8 forks × 4 GB heap = 32 GB.
+  // CI se mantiene EXACTAMENTE igual (2 forks @ 8 GB, ya validado en los
+  // runners ubuntu-24.04 de 4 vCPU/16 GB).
+  singleFork: false,
+  maxForks: process.env.CI ? 2 : LOCAL_FORKS,
+  minForks: process.env.CI ? 1 : 2,
+  isolate: true,
+  execArgv: process.env.CI
+    ? ["--max-old-space-size=8192", "--expose-gc"]
+    : ["--max-old-space-size=4096", "--expose-gc"],
+  fileParallelism: true,
+  sequence: { shuffle: false },
+};
 
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: "jsdom",
-    globals: true,
-    setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
-    // v13.303.75 · Fija TZ para todos los tests. Antes, los tests sensibles
-    // a timezone (`addDays`, `todayLocalISO`, `parseLocalMx`) sólo pasaban
-    // cuando el runner corría en `America/Mexico_City`. Con esto CI y locales
-    // en otra TZ producen los mismos resultados.
-    env: { TZ: "America/Mexico_City" },
-    // Excluimos defaults de Vitest + tests de performance que sólo deben
-    // correr bajo demanda (consumen mucha memoria y enmascaran timeouts).
-    exclude: [
-      "node_modules/**",
-      "dist/**",
-      "src/**/*.perf.test.tsx",
-      "src/**/*.perf.ts",
-      // v13.322.1 (GHA-audit A4) · Los architecture gating tests corren en un
-      // step dedicado del job `audits` de CI. Cuando la suite se ejecuta con
-      // `--shard` (matrix de CI) los excluimos para no ejecutarlos dos veces
-      // y para que su fallo no se diluya entre 10 shards.
-      ...(process.argv.some((a) => a.startsWith("--shard"))
-        ? [
-            "src/lib/__tests__/architecture.test.ts",
-            "src/lib/__tests__/architecture-baseline.test.ts",
-            "src/__tests__/audit-report.test.ts",
-            "src/__tests__/audit-casts-classifier.test.ts",
-          ]
-        : []),
+    projects: [
+      {
+        plugins: [react()],
+        resolve: { alias: ALIAS },
+        test: {
+          ...COMMON_TEST,
+          name: "node",
+          environment: "node",
+          setupFiles: ["./src/test/setup.node.ts"],
+          include: SPLIT.node,
+        },
+      },
+      {
+        plugins: [react()],
+        resolve: { alias: ALIAS },
+        test: {
+          ...COMMON_TEST,
+          name: "jsdom",
+          environment: "jsdom",
+          setupFiles: ["./src/test/setup.ts"],
+          include: SPLIT.jsdom,
+        },
+      },
     ],
     // Reporter JUnit (12.85.0): además de los defaults, escribimos test-results.xml
     // para que dashboards externos (GitHub Actions test reporter, Jenkins, etc.)
@@ -48,32 +113,7 @@ export default defineConfig({
     // no perder el output legible en consola.
     reporters: process.env.CI ? ["default", "junit"] : ["default"],
     outputFile: { junit: "./reports/junit.xml" },
-    // Suite completa medida en ~189s (sandbox Lovable). Archivo más lento: 5.1s,
-    // resto <1s. 15s por test/hook deja ~3x de margen sobre el peor caso real
-    // sin esconder tests que se cuelgan.
-    testTimeout: 15_000,
-    hookTimeout: 15_000,
-    teardownTimeout: 15_000,
-    // Pool por procesos (forks). Cada archivo corre en un fork nuevo para
-    // liberar memoria al terminar (PDFs / leak regression).
-    pool: "forks",
-    // v13.342.0 — Paralelismo derivado de los núcleos REALES, no del flag CI.
-    // Antes el local corría `singleFork` + `fileParallelism: false` (1 archivo
-    // a la vez) mientras CI usaba 10 shards × 2 forks: la suite tardaba 1928 s
-    // en el sandbox contra minutos en GHA. El sandbox tiene 16 vCPU / 125 GB,
-    // así que 8 forks × 4 GB heap = 32 GB ≪ 125 GB, con margen amplio.
-    // CI se mantiene EXACTAMENTE igual (2 forks @ 8 GB, ya validado en los
-    // runners ubuntu-24.04 de 4 vCPU/16 GB).
-    singleFork: false,
-    maxForks: process.env.CI ? 2 : LOCAL_FORKS,
-    minForks: process.env.CI ? 1 : 2,
-    isolate: true,
-    execArgv: process.env.CI
-      ? ["--max-old-space-size=8192", "--expose-gc"]
-      : ["--max-old-space-size=4096", "--expose-gc"],
-    fileParallelism: true,
 
-    sequence: { shuffle: false },
     coverage: {
       provider: "v8",
       reporter: ["text", "text-summary", "json", "json-summary", "lcov", "html"],
