@@ -11,23 +11,18 @@ import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
 
 interface Props {
   proformaId: string;
+  /** Renderiza sólo la lista, sin la tarjeta contenedora (uso en el riel). */
+  bare?: boolean;
 }
 
-export function ProformaBitacoraCard({ proformaId }: Props) {
+export function ProformaBitacoraCard({ proformaId, bare }: Props) {
   const { data, isLoading, isError } = useProformaBitacora(proformaId);
 
   const entradas = data ?? [];
 
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <History className="h-4 w-4 text-muted-foreground" />
-          Actividad
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
+  const contenido = (
+    <>
+      {isLoading ? (
           <ListSkeleton rows={3} />
         ) : isError ? (
           <p className="text-sm text-muted-foreground py-4 text-center">
@@ -61,8 +56,22 @@ export function ProformaBitacoraCard({ proformaId }: Props) {
               );
             })}
           </ul>
-        )}
-      </CardContent>
+      )}
+    </>
+  );
+
+  if (bare) return contenido;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
+          <History className="h-4 w-4 text-muted-foreground" />
+          Actividad
+        </CardTitle>
+      </CardHeader>
+      <CardContent>{contenido}</CardContent>
     </Card>
   );
 }
+

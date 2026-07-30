@@ -9,7 +9,7 @@ import { DetailHeader } from "@/components/shared/DetailHeader";
 import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
 import { resumenFacturaRecibida } from "@/lib/domain/documentoEstados";
 import { EstadoFacturaCxPCell } from "@/features/cxp/components/EstadoFacturaCxPCell";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
@@ -60,24 +60,8 @@ export function FacturaProveedorHeader({ factura: f, actions }: Props) {
         </span>
       }
       meta={<DocumentoStatusStepper resumen={resumen} />}
-      trailing={
-        <div className="flex w-full flex-col items-start gap-3 lg:w-auto lg:items-end">
-          <div className="shrink-0 text-left lg:text-right">
-            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">
-              Total
-            </p>
-            <p className="text-lg font-semibold tabular-nums text-foreground">
-              {formatCurrency(f.total, f.moneda)}
-            </p>
-            {f.estado !== "Cancelada" && f.saldo > 0.005 && (
-              <p className="mt-0.5 text-xs tabular-nums text-destructive">
-                Pendiente: {formatCurrency(f.saldo, f.moneda)}
-              </p>
-            )}
-          </div>
-          {actions ? <div className="w-full lg:w-auto">{actions}</div> : null}
-        </div>
-      }
+      trailing={actions ? <div className="w-full lg:w-auto">{actions}</div> : undefined}
+
     />
   );
 }

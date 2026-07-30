@@ -107,3 +107,29 @@ export function resumenDocumento(
     ? resumenFacturaEmitida(input.estado)
     : resumenFacturaRecibida(input);
 }
+
+const PASOS_PROFORMA: PasoDocumento[] = [
+  { id: "emitida", label: "Emitida" },
+  { id: "enviada", label: "Enviada" },
+  { id: "aceptada", label: "Aceptada" },
+  { id: "facturada", label: "Facturada" },
+];
+
+export interface EstadoProformaInput {
+  /** Respuesta del cliente: pendiente | aceptada | rechazada. */
+  estadoCliente: "pendiente" | "aceptada" | "rechazada";
+  /** Fecha en que se envió al cliente, si existe. */
+  enviadaAt?: string | null;
+  /** true cuando la proforma ya generó factura. */
+  facturada: boolean;
+}
+
+export function resumenProforma(input: EstadoProformaInput): EstadoDocumentoResumen {
+  if (input.estadoCliente === "rechazada") {
+    return resumen(PASOS_PROFORMA, -1, "Rechazada por el cliente");
+  }
+  if (input.facturada) return resumen(PASOS_PROFORMA, 3, null);
+  if (input.estadoCliente === "aceptada") return resumen(PASOS_PROFORMA, 2, null);
+  if (input.enviadaAt) return resumen(PASOS_PROFORMA, 1, null, "Pendiente del cliente");
+  return resumen(PASOS_PROFORMA, 0, null);
+}

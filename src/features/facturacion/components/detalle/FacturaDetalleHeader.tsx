@@ -16,7 +16,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
 import { resumenFacturaEmitida } from "@/lib/domain/documentoEstados";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 import { deriveFacturaBadgeEstado } from "@/features/facturacion/domain/facturaBadgeEstado";
 
@@ -33,10 +33,8 @@ interface Props {
   proformaNumero?: string | null;
   clienteNombre?: string | null;
   fechaEmision?: string | null;
-  total: number;
-  saldo?: number;
-  moneda: string;
   ambiente?: "sandbox" | "live" | null;
+
   volverHref?: string;
   volverLabel?: string;
   /** Barra de acciones del detalle, renderizada dentro del encabezado. */
@@ -48,12 +46,12 @@ export function FacturaDetalleHeader(props: Props) {
   const {
     numero, estado, acuseCancelacionStatus, cancellationStatus, sinTimbrar,
     expediente, embarqueId, proformaId, proformaNumero, clienteNombre, fechaEmision,
-    total, saldo, moneda, ambiente, volverHref, volverLabel, actions,
+    ambiente, volverHref, volverLabel, actions,
   } = props;
   const vencida = estado === "Vencida";
   const esBorradorSinFolio = (numero ?? "").startsWith("BORRADOR-");
   const estadoVisual = deriveFacturaBadgeEstado(estado, acuseCancelacionStatus, cancellationStatus);
-  const mostrarSaldo = typeof saldo === "number" && saldo > 0.005 && estado !== "Cancelada";
+
   return (
     <DetailHeader
       backTo={volverHref}
@@ -116,25 +114,9 @@ export function FacturaDetalleHeader(props: Props) {
         </span>
       }
       meta={<DocumentoStatusStepper resumen={resumenFacturaEmitida(estado)} />}
-      trailing={
-        <div className="flex w-full flex-col items-start gap-3 lg:w-auto lg:items-end">
-          <div className="text-left shrink-0 lg:text-right">
-            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Total</p>
-            <p className="text-lg font-semibold tabular-nums text-foreground">
-              {formatCurrency(total, moneda)}
-            </p>
-            {mostrarSaldo && (
-              <p className="mt-0.5 text-xs tabular-nums text-destructive">
-                Pendiente: {formatCurrency(saldo!, moneda)}
-              </p>
-            )}
-          </div>
-          {actions ? <div className="w-full lg:w-auto">{actions}</div> : null}
-        </div>
-      }
-
-
+      trailing={actions ? <div className="w-full lg:w-auto">{actions}</div> : undefined}
     />
   );
 }
+
 
