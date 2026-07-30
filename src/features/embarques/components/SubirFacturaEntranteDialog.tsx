@@ -14,8 +14,7 @@ import { useSubirFacturaEntrante } from "@/features/cxp/hooks/useFacturasEntrant
 import { useSubirEntranteForm } from "@/features/cxp/hooks/useSubirEntranteForm";
 import { ArchivosEntranteDropZone } from "@/features/embarques/components/entrantes/ArchivosEntranteDropZone";
 import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiMetaPreview";
-import { SelectorProveedorEntrante } from "@/features/embarques/components/entrantes/SelectorProveedorEntrante";
-import { avisoProveedorEntrante } from "@/lib/domain/proveedorEntrante";
+import { SeccionProveedorEntrante } from "@/features/embarques/components/entrantes/SeccionProveedorEntrante";
 
 interface Props {
   open: boolean;
@@ -27,14 +26,6 @@ interface Props {
 export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, organizationId }: Props) {
   const form = useSubirEntranteForm({ organizationId });
   const subir = useSubirFacturaEntrante();
-
-  const aviso = avisoProveedorEntrante({
-    detectadoId: form.proveedorDetectado?.id ?? null,
-    detectadoNombre: form.proveedorDetectado?.nombre ?? null,
-    seleccionadoId: form.proveedor?.id ?? null,
-    rfcEmisor: form.meta?.rfcEmisor ?? null,
-    tieneXml: Boolean(form.xml),
-  });
 
   const cerrar = () => {
     form.limpiar();
@@ -93,18 +84,14 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
         </FormDialogSection>
       )}
 
-      <FormDialogSection title="Proveedor" cols={1}>
-        <div className="space-y-2">
-          <Label>¿A qué proveedor del embarque corresponde?</Label>
-          <SelectorProveedorEntrante
-            embarqueId={embarqueId}
-            seleccionado={form.proveedor}
-            detectadoId={form.proveedorDetectado?.id ?? null}
-            onSeleccionar={form.setProveedor}
-          />
-          {aviso && <p className="text-xs text-warning">{aviso}</p>}
-        </div>
-      </FormDialogSection>
+      <SeccionProveedorEntrante
+        embarqueId={embarqueId}
+        seleccionado={form.proveedor}
+        detectado={form.proveedorDetectado}
+        rfcEmisor={form.meta?.rfcEmisor ?? null}
+        tieneXml={Boolean(form.xml)}
+        onSeleccionar={form.setProveedor}
+      />
 
       <FormDialogSection title="Nota para contabilidad" cols={1}>
         <div className="space-y-2">
