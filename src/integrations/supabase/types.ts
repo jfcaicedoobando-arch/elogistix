@@ -7099,6 +7099,25 @@ export type Database = {
         Args: { p_cotizacion_id: string }
         Returns: Json
       }
+      actividad_embarque: {
+        Args: { p_embarque_id: string }
+        Returns: {
+          accion: string
+          categoria: string
+          dedupe_key: string
+          descripcion: string
+          detalles: Json
+          fecha: string
+          id: string
+          moneda: string
+          monto: number
+          ref_id: string
+          ref_tipo: string
+          tipo: string
+          titulo: string
+          usuario: string
+        }[]
+      }
       actualizar_cotizacion_costos: {
         Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
         Returns: Json
