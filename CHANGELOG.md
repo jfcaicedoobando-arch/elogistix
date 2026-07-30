@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.361.2] - 2026-07-30
+- **chore(compras · buzón)**: `facturasEntrantes.ts` (275 líneas) se dividió en `facturasEntrantes.types.ts` (tipos, `SELECT_COLS`, mensajes de duplicado) y `facturasEntrantesUpload.ts` (subida de PDF/XML y adjuntar XML), cumpliendo la regla Power of 10 de ≤ 200 líneas. Se conservan los re-exports para no tocar a los importadores.
+
 ## [13.361.1] - 2026-07-30
 - **fix(embarques · cierre)**: en el checklist de cierre, "Expediente documental" ahora es la fase 1 y "Operación" (peso/volumen y fechas de descarga y devolución de contenedores) la fase 2, reflejando que los documentos se completan antes.
 
