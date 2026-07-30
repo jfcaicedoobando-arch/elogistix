@@ -33,6 +33,18 @@ export function useFacturasEntrantesPendientes() {
   });
 }
 
+/** v13.365.0 — Historial del buzón por estado (pestañas de sólo lectura). */
+export function useFacturasEntrantesPorEstado(
+  estado: "capturada" | "rechazada",
+  habilitado = true,
+) {
+  return useQuery({
+    queryKey: cxp.facturasEntrantesEstado(estado),
+    queryFn: () => listarFacturasEntrantesPorEstado(estado),
+    enabled: habilitado,
+  });
+}
+
 function useInvalidarEntrantes() {
   const qc = useQueryClient();
   return () => { void qc.invalidateQueries({ queryKey: cxp.facturasEntrantes }); };
