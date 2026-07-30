@@ -15,12 +15,14 @@ const ARCHIVOS = [
 describe("catálogos de proveedores filtran soft-delete", () => {
   it.each(ARCHIVOS)("%s filtra deleted_at", (archivo) => {
     const src = readFileSync(archivo, "utf8");
-    const lecturas = selects
+    const lecturas = src
+      .split('from("proveedores")')
+      .slice(1)
       .map((bloque) => bloque.slice(0, 600))
       .filter((b) => b.includes(".select(") && !b.includes(".insert(") && !b.includes(".update("));
     expect(lecturas.length).toBeGreaterThan(0);
     for (const bloque of lecturas) {
-      expect(bloque.slice(0, 600)).toContain('.is("deleted_at", null)');
+      expect(bloque).toContain('.is("deleted_at", null)');
     }
   });
 });
