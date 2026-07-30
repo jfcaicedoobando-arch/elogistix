@@ -68,12 +68,34 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
         Cancelar
       </Button>
-      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar}>
+      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar || !canCapturarFacturaProveedor}>
         {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {ctl.isPending ? "Guardando…" : "Guardar factura"}
       </Button>
     </>
   );
+
+  // R-05.2: sin permiso mostramos el motivo en vez de un formulario que la
+  // base de datos rechazará al guardar.
+  if (open && !canCapturarFacturaProveedor) {
+    return (
+      <FormDialogShell
+        open={open}
+        onOpenChange={onOpenChange}
+        icon={FileSpreadsheet}
+        title="Capturar factura de proveedor"
+        description="Tu rol no puede capturar facturas de proveedor."
+        size="md"
+        footer={<Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>}
+      >
+        <p className="text-sm text-muted-foreground">
+          No tienes permiso para esta sección. Pide a un administrador, contador o auxiliar
+          contable que capture la factura.
+        </p>
+      </FormDialogShell>
+    );
+  }
+
 
   return (
     <>
