@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -60,7 +60,7 @@ export function Layout() {
           </header>
           <main className="flex-1 overflow-auto">
             <PageContainer noSpacing>
-              <ErrorBoundary>
+              <ErrorBoundary resetKey={location.pathname}>
                 <Suspense fallback={<RouteLoadingFallback />}>
                   <Outlet />
                 </Suspense>

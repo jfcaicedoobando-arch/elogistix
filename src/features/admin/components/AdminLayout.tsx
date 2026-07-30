@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
@@ -25,7 +25,7 @@ export function AdminLayout() {
             </header>
             <main className="flex-1 overflow-auto">
               <PageContainer noSpacing>
-                <ErrorBoundary>
+                <ErrorBoundary resetKey={location.pathname}>
                   <Outlet />
                 </ErrorBoundary>
               </PageContainer>
