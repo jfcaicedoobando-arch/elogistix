@@ -1,4 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ClienteTabSection } from "./ClienteTabSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TabPortalCliente from "@/features/cliente/components/TabPortalCliente";
 import Cliente360Panel from "@/features/crm/components/Cliente360Panel";
@@ -61,18 +64,20 @@ export function ClienteDetalleTabs({
         <TabsTrigger value="portal">Portal</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="informacion" className="space-y-6">
-        <ClienteInformacionCard
-          direccion={cliente.direccion}
-          ciudad={cliente.ciudad}
-          estado={cliente.estado}
-          cp={cliente.cp}
-          contacto={cliente.contacto}
-          email={cliente.email}
-          telefono={cliente.telefono}
-        />
+      <TabsContent value="informacion" className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+        <div className="space-y-6">
+          <ClienteInformacionCard
+            direccion={cliente.direccion}
+            ciudad={cliente.ciudad}
+            estado={cliente.estado}
+            cp={cliente.cp}
+            contacto={cliente.contacto}
+            email={cliente.email}
+            telefono={cliente.telefono}
+          />
 
-        <ClienteCreditoCard clienteId={cliente.id} />
+          <ClienteCreditoCard clienteId={cliente.id} />
+        </div>
 
         <TablaContactos
           contactos={contactos}
@@ -85,36 +90,45 @@ export function ClienteDetalleTabs({
       </TabsContent>
 
       <TabsContent value="embarques">
-        <Card>
-          <CardContent className="p-0">
-            <DataTable
-              columns={embarqueColumns}
-              data={embarquesCliente}
-              isLoading={loadingEmbarques}
-              emptyMessage="Sin embarques registrados"
-              getRowHref={(e) => `/embarques/${e.id}`}
-              rowKey={(e) => e.id}
-              density="compact"
-            />
-          </CardContent>
-        </Card>
+        <ClienteTabSection title="Embarques del cliente" count={embarquesCliente.length}>
+          <DataTable
+            columns={embarqueColumns}
+            data={embarquesCliente}
+            isLoading={loadingEmbarques}
+            emptyMessage="Sin embarques registrados. Los embarques se generan al confirmar una cotización."
+            getRowHref={(e) => `/embarques/${e.id}`}
+            rowKey={(e) => e.id}
+            density="compact"
+          />
+        </ClienteTabSection>
       </TabsContent>
 
       <TabsContent value="cotizaciones">
-        <Card>
-          <CardContent className="p-0">
-            <DataTable
-              columns={cotizacionColumns}
-              data={cotizacionesCliente}
-              isLoading={loadingCotizaciones}
-              emptyMessage="Sin cotizaciones registradas"
-              getRowHref={(c) => `/cotizaciones/${c.id}`}
-              rowKey={(c) => c.id}
-              density="compact"
-            />
-          </CardContent>
-        </Card>
+        <ClienteTabSection
+          title="Cotizaciones del cliente"
+          count={cotizacionesCliente.length}
+          actions={
+            canEdit ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/cotizaciones/nueva">
+                  <Plus className="h-4 w-4 mr-1" /> Nueva cotización
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        >
+          <DataTable
+            columns={cotizacionColumns}
+            data={cotizacionesCliente}
+            isLoading={loadingCotizaciones}
+            emptyMessage="Sin cotizaciones registradas para este cliente."
+            getRowHref={(c) => `/cotizaciones/${c.id}`}
+            rowKey={(c) => c.id}
+            density="compact"
+          />
+        </ClienteTabSection>
       </TabsContent>
+
 
       <TabsContent value="crm">
         <Cliente360Panel clienteId={cliente.id} />

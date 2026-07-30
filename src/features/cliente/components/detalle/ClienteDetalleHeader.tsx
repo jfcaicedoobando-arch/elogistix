@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
+import { toTitleCase } from "@/lib/formatters";
 
 interface Cliente {
   id: string;
@@ -27,8 +28,13 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
       backTo="/clientes"
       backLabel="Volver a Clientes"
       icon={<Users className="h-6 w-6 text-accent shrink-0" />}
-      title={cliente.nombre}
-      subtitle={cliente.rfc}
+      title={toTitleCase(cliente.nombre)}
+      subtitle={
+        cliente.rfc ? (
+          <span className="font-mono text-xs tracking-wide">{cliente.rfc}</span>
+        ) : undefined
+      }
+
       trailing={
         <>
           <Button

@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.370.0] - 2026-07-30
+- **fix(clientes · UI)**: los KPIs del detalle de cliente pasan a 3 por fila (antes 6) — en 1366×768 se truncaban etiquetas ("Embarq…") e importes ("U…"). Etiqueta "Pendiente" → "Por cobrar".
+- **fix(clientes)**: el KPI de Contactos ya suma el contacto principal del cliente (antes mostraba 0 con contacto capturado).
+- **feat(clientes · UI)**: nombre del cliente con capitalización tipo título y RFC como chip monoespaciado; "Información general" pasa a rejilla de dos columnas con email `mailto:`, teléfono `tel:`, botón de copiar y "—" en campos vacíos.
+- **feat(clientes · UI)**: pestaña Información en dos columnas (≥1280 px) y pestañas Embarques/Cotizaciones con encabezado, contador, acción "Nueva cotización" y mensajes vacíos accionables.
+
 ## [13.369.1] - 2026-07-30
 - **fix(roles)**: corrección de alcance — el **Gerente comercial** consulta el **estado de cuenta de clientes** (`/cartera` y antigüedad de saldos `/cobranza/aging`), no el de proveedores. Se revierte el acceso a Compras (CxP) otorgado en 13.369.0.
 
