@@ -26,7 +26,7 @@ import { useAutoTcEffect } from "./useNuevaFacturaProveedorForm.tcEffect";
 import { puedeContinuarSubmit } from "./useNuevaFacturaProveedorForm.guard";
 import { detectarCfdiDuplicado, type FacturaExistentePorUuid } from "./useNuevaFacturaProveedorForm.dup";
 export function useNuevaFacturaProveedorForm(
-  onDone: () => void,
+  onDone: (facturaId?: string | null) => void,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
 ) {
   const { user } = useAuth();
@@ -175,13 +175,13 @@ export function useNuevaFacturaProveedorForm(
       return;
     }
 
-    const ok = await runSubmit({
+    const res = await runSubmit({
       values, total, userId: user?.id, organizationId,
       pendingCfdi, cfdiConceptos: conceptosAPersistir, vinculos, embarqueAdHoc,
       crearMutateAsync: crear.mutateAsync,
       setFolioError: () => setErrors((e) => ({ ...e, folio: "Ya existe una factura con este folio para este proveedor en esta fecha." })),
     });
-    if (ok) { reset(); onDone(); }
+    if (res.ok) { reset(); onDone(res.facturaId); }
   };
   return {
     values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,

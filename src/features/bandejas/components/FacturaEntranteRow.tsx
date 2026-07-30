@@ -5,7 +5,7 @@
  * proveedor como dato principal y acciones secundarias en el menú de tres puntos.
  */
 import { Link } from "react-router-dom";
-import { CheckCircle2, Eye, FileCode2, MoreHorizontal, StickyNote, XCircle } from "lucide-react";
+import { CheckCircle2, Eye, FileCode2, FilePlus2, MoreHorizontal, StickyNote, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -48,6 +48,8 @@ interface Props {
   onVer: (row: FacturaEntranteRow) => void;
   onVerXml: (row: FacturaEntranteRow) => void;
   onCapturar: (row: FacturaEntranteRow) => void;
+  /** v13.366.0 — Captura la factura de proveedor con los datos del documento. */
+  onCrearFactura: (row: FacturaEntranteRow) => void;
   onRechazar: (row: FacturaEntranteRow) => void;
 }
 
@@ -58,6 +60,7 @@ export function FacturaEntranteRow({
   onVer,
   onVerXml,
   onCapturar,
+  onCrearFactura,
   onRechazar,
 }: Props) {
   const antiguedad = antiguedadEntrante(row);
@@ -108,8 +111,8 @@ export function FacturaEntranteRow({
             <Eye className="mr-2 h-4 w-4" /> Ver
           </Button>
           {!soloLectura && puedeProcesar && (
-            <Button size="sm" onClick={() => onCapturar(row)}>
-              <CheckCircle2 className="mr-2 h-4 w-4" /> Capturada
+            <Button size="sm" onClick={() => onCrearFactura(row)}>
+              <FilePlus2 className="mr-2 h-4 w-4" /> Capturar factura
             </Button>
           )}
           <DropdownMenu>
@@ -129,6 +132,11 @@ export function FacturaEntranteRow({
                   Ir al embarque
                 </Link>
               </DropdownMenuItem>
+              {!soloLectura && puedeProcesar && (
+                <DropdownMenuItem onClick={() => onCapturar(row)}>
+                  <CheckCircle2 className="mr-2 h-4 w-4" /> Vincular a factura existente
+                </DropdownMenuItem>
+              )}
               {!soloLectura && puedeProcesar && (
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"

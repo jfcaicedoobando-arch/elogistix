@@ -1,8 +1,6 @@
 /**
- * Captura de factura de proveedor — soporta captura manual y carga de XML CFDI.
- * v13.303.98 · Design language "Card grid estructurada": KPI grid superior
- * (Total con emphasis, Subtotal, IVA, Retenciones) reemplaza al headerAside
- * de texto plano y a la fila de totales del footer.
+ * Captura de factura de proveedor: manual, por XML CFDI, por PDF con IA o
+ * desde el buzón CxP (v13.366.0). KPI grid superior con totales.
  */
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,30 +20,21 @@ import { ConceptosManualesSection } from "./ConceptosManualesSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
-import { Kpi } from "./DialogDetallePagosProveedor.parts";
+import { FacturaProveedorTotalesKpis } from "./FacturaProveedorTotalesKpis";
 import { calcularCuadreConceptos, type ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
-import type { EmbarqueSeleccionado } from "@/features/cxp/types";
+import { resolverConceptosParaCuadre } from "@/features/cxp/utils/conceptosParaCuadre";
+import { EntranteCapturaBanner } from "./EntranteCapturaBanner";
+import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
+import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
+import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null;
-}
-
-/**
- * Fuente de verdad de las partidas que alimentan el cuadre contra el subtotal:
- * CFDI > conceptos manuales (Q-02, v13.339.0) > montos vinculados a embarques.
- */
-function resolverConceptosParaCuadre(
-  cfdi: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null }>,
-  manuales: ReadonlyArray<{ importe?: number | string | null; cantidad?: number | null }>,
-  vinculos: Record<string, { monto?: number | string | null }>,
-): ConceptoParaCuadre[] {
-  const fuente = cfdi.length > 0 ? cfdi : manuales;
-  if (fuente.length > 0) {
-    return fuente.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad }));
-  }
-  return Object.values(vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
+  /** v13.366.0 — Captura desde el buzón CxP: precarga y marca el documento. */
+  entrante?: EntranteParaCaptura | null;
+  onCapturada?: () => void;
 }
 
 /**
@@ -60,10 +49,20 @@ export function DialogNuevaFacturaProveedor(props: Props) {
   return <DialogNuevaFacturaProveedorForm {...props} />;
 }
 
-function DialogNuevaFacturaProveedorForm({ open, onOpenChange, initialEmbarqueAdHoc }: Props) {
+function DialogNuevaFacturaProveedorForm({
+  open, onOpenChange, initialEmbarqueAdHoc, entrante, onCapturada,
+}: Props) {
   const navigate = useNavigate();
   const cats = usePresupuestoCategorias(true);
-  const ctl = useNuevaFacturaProveedorForm(() => onOpenChange(false), initialEmbarqueAdHoc);
+  const wiring = useCapturaEntranteWiring({
+    entrante, initialEmbarqueAdHoc, onCapturada,
+    onCerrar: () => onOpenChange(false),
+  });
+  const ctl = useNuevaFacturaProveedorForm(wiring.onDone, wiring.embarqueInicial);
+  const autocarga = useAutocargaEntrante({
+    entrante, abierto: open, categorias: cats.data ?? [],
+    onCfdiParsed: ctl.handleCfdiParsed, onPdfParsed: ctl.handlePdfIaParsed,
+  });
 
   const sub = Number(ctl.values.subtotal) || 0;
   const iva = Number(ctl.values.iva) || 0;
@@ -89,10 +88,6 @@ function DialogNuevaFacturaProveedorForm({ open, onOpenChange, initialEmbarqueAd
     </>
   );
 
-
-
-
-
   return (
     <>
       <FormDialogShell
@@ -104,12 +99,16 @@ function DialogNuevaFacturaProveedorForm({ open, onOpenChange, initialEmbarqueAd
         size="xl"
         footer={footer}
       >
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 -mt-1">
-          <Kpi label="Subtotal" value={formatCurrency(sub, moneda)} />
-          <Kpi label="IVA" value={formatCurrency(iva, moneda)} />
-          <Kpi label={ieps > 0 ? "IEPS" : "Retenciones"} value={formatCurrency(ieps > 0 ? ieps : ret, moneda)} />
-          <Kpi label={`Total ${moneda}`} value={formatCurrency(ctl.total, moneda)} emphasis />
-        </div>
+        <EntranteCapturaBanner
+          entrante={entrante ?? null}
+          estado={autocarga.estado}
+          mensaje={autocarga.mensaje}
+        />
+
+        <FacturaProveedorTotalesKpis
+          subtotal={sub} iva={iva} ieps={ieps} retenciones={ret}
+          total={ctl.total} moneda={moneda}
+        />
 
         <CargaCfdiSection
           mode={ctl.mode}

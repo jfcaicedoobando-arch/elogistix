@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.366.0] - 2026-07-30
+- **feat(buzón CxP)**: nuevo botón primario **"Capturar factura"** en `/compras/buzon` (fila y vista previa). Abre el formulario de captura ya prellenado con el documento: si hay XML se parsea el CFDI, y si el proveedor es extranjero se lee el PDF con IA. Al guardar, el documento se marca como capturado y se vincula a la factura creada en un solo paso.
+- **feat(buzón CxP · validación)**: antes de abrir el formulario se consulta el RPC `validar_captura_entrante` (rol autorizado, misma organización, documento aún pendiente y CFDI no duplicado). Si la puerta cierra, se explica el motivo y no se abre nada.
+- **feat(buzón CxP)**: la acción anterior se conserva como **"Vincular a factura existente"** (menú de la fila y vista previa) para documentos ya capturados en CxP.
+- **refactor**: `runSubmit` devuelve el id de la factura creada; el diálogo de captura se dividió en `FacturaProveedorTotalesKpis`, `EntranteCapturaBanner`, `useCapturaEntranteWiring` y `useAutocargaEntrante`, y el buzón en `BuzonEntrantesKpis` (Power of 10 #1 y complejidad ≤16).
+- **test**: suites nuevas `entranteListo.test.ts` (semáforo listo/revisar/bloqueado) y `capturaEntrante.test.ts` (puerta de validación, duplicados y errores de RLS).
+
 ## [13.365.0] - 2026-07-30
 - **feat(buzón CxP · UI/UX 1366×768)**: rediseño de `/compras/buzon`. Cada documento ahora ocupa una sola fila (semáforo de antigüedad + proveedor/expediente/folio/fecha + acciones), con las acciones secundarias dentro de un menú para evitar el desbordamiento horizontal.
 - **feat(buzón CxP)**: toolbar de trabajo con búsqueda (proveedor, expediente, folio o archivo), chips de filtro (Sin XML, 3+ días, Con nota) y ordenamiento (más antiguos, más recientes, proveedor).

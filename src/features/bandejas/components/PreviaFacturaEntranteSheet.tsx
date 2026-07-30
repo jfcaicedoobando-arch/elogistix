@@ -23,6 +23,7 @@ interface Props {
   puedeProcesar: boolean;
   onVerXml: (row: FacturaEntranteRow) => void;
   onCapturar: (row: FacturaEntranteRow) => void;
+  onCrearFactura: (row: FacturaEntranteRow) => void;
   onRechazar: (row: FacturaEntranteRow) => void;
 }
 
@@ -59,6 +60,7 @@ export function PreviaFacturaEntranteSheet({
   puedeProcesar,
   onVerXml,
   onCapturar,
+  onCrearFactura,
   onRechazar,
 }: Props) {
   const { url, error } = useUrlPrevia(row?.archivo_path ?? null);
@@ -86,6 +88,7 @@ export function PreviaFacturaEntranteSheet({
               procesable={procesable}
               onVerXml={onVerXml}
               onCapturar={onCapturar}
+              onCrearFactura={onCrearFactura}
               onRechazar={onRechazar}
             />
           </>

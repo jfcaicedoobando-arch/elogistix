@@ -8,14 +8,13 @@
  * filtros, KPIs accionables, vista previa lateral e historial por pestañas.
  */
 import { useState } from "react";
-import { Clock, FileCode2, Inbox } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { KpiCard } from "@/components/shared/KpiCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { DIAS_ATRASO_BUZON, type ChipBuzon } from "@/lib/domain/facturasEntrantesBuzon";
+import { type ChipBuzon } from "@/lib/domain/facturasEntrantesBuzon";
+import { BuzonEntrantesKpis } from "@/features/bandejas/components/BuzonEntrantesKpis";
 
 import {
   useCapturarFacturaEntrante,
@@ -30,6 +29,8 @@ import { FacturasEntrantesToolbar } from "@/features/bandejas/components/Factura
 import { FacturasEntrantesLista } from "@/features/bandejas/components/FacturasEntrantesLista";
 import { PreviaFacturaEntranteSheet } from "@/features/bandejas/components/PreviaFacturaEntranteSheet";
 import { useBuzonEntrantesFiltros } from "@/features/bandejas/hooks/useBuzonEntrantesFiltros";
+import { useCapturaDesdeBuzon } from "@/features/bandejas/hooks/useCapturaDesdeBuzon";
+import { DialogNuevaFacturaProveedor } from "@/features/cxp";
 
 export default function CxpBuzonEntrantes() {
   const { canCapturarFacturaProveedor } = usePermissions();
@@ -43,6 +44,7 @@ export default function CxpBuzonEntrantes() {
   const [aRechazar, setARechazar] = useState<FacturaEntranteRow | null>(null);
   const [aCapturar, setACapturar] = useState<FacturaEntranteRow | null>(null);
   const [enPrevia, setEnPrevia] = useState<FacturaEntranteRow | null>(null);
+  const captura = useCapturaDesdeBuzon();
   const { q, setQ, chip, setChip, orden, setOrden, resumen, filtradas } =
     useBuzonEntrantesFiltros(pendientes);
 
@@ -64,6 +66,7 @@ export default function CxpBuzonEntrantes() {
     onVerXml: (row: FacturaEntranteRow) =>
       void abrirArchivo(row.xml_path ?? row.archivo_path, row.xml_nombre ?? "cfdi.xml"),
     onCapturar: (row: FacturaEntranteRow) => { setEnPrevia(null); setACapturar(row); },
+    onCrearFactura: (row: FacturaEntranteRow) => { setEnPrevia(null); void captura.iniciar(row); },
     onRechazar: (row: FacturaEntranteRow) => { setEnPrevia(null); setARechazar(row); },
   };
 
@@ -74,28 +77,12 @@ export default function CxpBuzonEntrantes() {
         description="Documentos que operación recibió de los agentes y aún no se capturan en CxP."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard
-          label="Documentos por capturar"
-          value={String(resumen.total)}
-          icon={Inbox}
-          onClick={() => aplicarChip("todos")}
-        />
-        <KpiCard
-          label={`Con ${DIAS_ATRASO_BUZON} días o más`}
-          value={String(resumen.atrasados)}
-          icon={Clock}
-          variant={resumen.atrasados > 0 ? "warning" : "default"}
-          onClick={() => aplicarChip("atrasados")}
-        />
-        <KpiCard
-          label="Sin XML del CFDI"
-          value={String(resumen.sinXml)}
-          icon={FileCode2}
-          variant={resumen.sinXml > 0 ? "warning" : "default"}
-          onClick={() => aplicarChip("sin_xml")}
-        />
-      </div>
+      <BuzonEntrantesKpis
+        total={resumen.total}
+        atrasados={resumen.atrasados}
+        sinXml={resumen.sinXml}
+        onChip={aplicarChip}
+      />
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList>
@@ -160,6 +147,7 @@ export default function CxpBuzonEntrantes() {
         puedeProcesar={canCapturarFacturaProveedor}
         onVerXml={acciones.onVerXml}
         onCapturar={acciones.onCapturar}
+        onCrearFactura={acciones.onCrearFactura}
         onRechazar={acciones.onRechazar}
       />
 
@@ -175,6 +163,13 @@ export default function CxpBuzonEntrantes() {
           await capturar.mutateAsync({ id: aCapturar.id, facturaId });
           setACapturar(null);
         }}
+      />
+
+      <DialogNuevaFacturaProveedor
+        open={Boolean(captura.entrante)}
+        onOpenChange={(v) => { if (!v) captura.cerrar(); }}
+        entrante={captura.entrante}
+        onCapturada={captura.cerrar}
       />
 
       <RechazarFacturaEntranteDialog

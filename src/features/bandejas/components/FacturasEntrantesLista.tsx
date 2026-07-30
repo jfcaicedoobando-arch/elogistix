@@ -12,6 +12,7 @@ export interface AccionesEntrante {
   onVer: (row: Fila) => void;
   onVerXml: (row: Fila) => void;
   onCapturar: (row: Fila) => void;
+  onCrearFactura: (row: Fila) => void;
   onRechazar: (row: Fila) => void;
 }
 
