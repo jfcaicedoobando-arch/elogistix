@@ -93,6 +93,7 @@ export async function createUserViaEdgeFunction(
       password: params.password,
       role: params.role,
       organization_id: params.orgId,
+      redirect_to: `${window.location.origin}/reset-password`,
     },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
@@ -138,7 +139,11 @@ export async function quitarDeOrganizacion(
 export async function enviarResetPassword(userId: string): Promise<void> {
   const token = await getAuthToken();
   const res = await supabase.functions.invoke("user-management", {
-    body: { action: "reset-password", user_id: userId },
+    body: {
+      action: "reset-password",
+      user_id: userId,
+      redirect_to: `${window.location.origin}/reset-password`,
+    },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (res.error) throw new Error(res.error.message || "Error al enviar el correo");

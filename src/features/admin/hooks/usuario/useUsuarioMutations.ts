@@ -9,7 +9,8 @@ export function useCreateUser() {
   return useMutationWithFeedback({
     mutationFn: (params: CreateUserParams) => createUserViaEdgeFunction(params),
     invalidate: queryKeys.usuarios.all,
-    successTitle: "Usuario creado e invitación enviada",
+    // U-04: el copy ya no promete un correo que no siempre se envía.
+    successTitle: "Usuario dado de alta",
     errorTitle: "Error al crear usuario",
     errorMethod: "CREATE_USER",
   });
