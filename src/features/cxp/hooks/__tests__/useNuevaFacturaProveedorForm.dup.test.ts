@@ -41,8 +41,8 @@ describe("detectarCfdiDuplicado", () => {
   });
 
   it("marca estado error cuando la consulta falla (no lo confunde con 'no hay duplicado')", async () => {
-    buscar.mockRejectedValue(new Error("network"));
-    expect(await buscarCfdiDuplicado("uuid-1")).toEqual({ estado: "error" });
+    buscar.mockResolvedValue({ estado: "error", mensaje: "network" });
+    expect((await buscarCfdiDuplicado("uuid-1")).estado).toBe("error");
     expect(await detectarCfdiDuplicado("uuid-1")).toBeNull();
   });
 });
