@@ -1,14 +1,4 @@
-import {
-  LayoutDashboard,
-  Building2,
-  LogOut,
-  Settings,
-  ChevronUp,
-  User,
-  Activity,
-  ShieldCheck,
-  Users2,
-} from "lucide-react";
+import { LogOut, ChevronUp, User } from "lucide-react";
 import { NavLink } from "@/components/layout/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
