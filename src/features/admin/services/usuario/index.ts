@@ -54,7 +54,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
   if (membersError) throw membersError;
   const members = (membersData ?? []) as OrgMemberRow[];
 
-  const emailMap: Record<string, { email: string; created_at: string }> = {};
+  const authMap: Record<string, ListUsersRow> = {};
   try {
     const { data: usersData, error: fnError } = await supabase.functions.invoke("user-management", {
       body: { action: "list" },
@@ -63,7 +63,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
       logger.warn("fetchUsuariosOrganizacion", "user-management invoke error:", fnError);
     } else if (Array.isArray(usersData)) {
       (usersData as ListUsersRow[]).forEach((u) => {
-        emailMap[u.id] = { email: u.email, created_at: u.created_at };
+        authMap[u.id] = u;
       });
     }
   } catch (err) {
@@ -73,9 +73,10 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
 
   return members.map((m) => ({
     user_id: m.user_id,
-    email: emailMap[m.user_id]?.email || UNRESOLVED_EMAIL,
+    email: authMap[m.user_id]?.email || UNRESOLVED_EMAIL,
     role: m.role as AppRole,
-    created_at: emailMap[m.user_id]?.created_at || m.created_at || "",
+    created_at: authMap[m.user_id]?.created_at || m.created_at || "",
+    estado: derivarEstado(authMap[m.user_id]),
   }));
 }
 
