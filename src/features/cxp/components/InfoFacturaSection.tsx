@@ -30,7 +30,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
     <section className="space-y-4">
       <div className="flex items-center justify-between border-b pb-2">
         <h3 className="text-xs font-bold uppercase tracking-wide text-primary">
-          Información de la factura
+          Proveedor y datos fiscales
         </h3>
       </div>
 
