@@ -88,7 +88,7 @@ export default function CxpBuzonEntrantes() {
                   <ExternalLink className="mr-2 h-4 w-4" /> Ver archivo
                 </Button>
                 <Button size="sm" variant="secondary" asChild>
-                  <Link to={`/embarques/${row.embarque_id}?tab=facturas-entrantes`}>Ir al embarque</Link>
+                  <Link to={`/embarques/${row.embarque_id}?tab=costos&focus=facturas-entrantes`}>Ir al embarque</Link>
                 </Button>
                 {canCapturarFacturaProveedor && (
                   <Button size="sm" variant="ghost" onClick={() => setARechazar(row)}>
