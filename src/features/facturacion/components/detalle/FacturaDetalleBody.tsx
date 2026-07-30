@@ -1,7 +1,7 @@
 /**
  * FacturaDetalleBody — cuerpo de la factura emitida.
- * v13.349.0: layout tipo Odoo — pestañas enlazables (Conceptos · Cliente y
- * fiscal · Cobros · Notas de crédito) y riel derecho con la bitácora.
+ * v13.350.0: pestañas en espejo con facturas recibidas — Conceptos ·
+ * Cliente y datos fiscales · Cobros · Notas de crédito · Documentos.
  */
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
 import { FacturaReceptorCard } from "@/features/facturacion/components/detalle/FacturaReceptorCard";
@@ -10,7 +10,10 @@ import { FacturaConceptosTable } from "@/features/facturacion/components/detalle
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
+import { FacturaDocumentosSection } from "@/features/facturacion/components/detalle/FacturaDocumentosSection";
 import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
+import { usePagosFactura } from "@/features/facturacion/hooks";
+import { useNotasCreditoDeFactura } from "@/features/facturacion/hooks/useNotasCreditoDeFactura";
 import { DocumentoLayout } from "@/components/shared/documento/DocumentoLayout";
 import { DocumentoTabs, type DocumentoTabItem } from "@/components/shared/documento/DocumentoTabs";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
