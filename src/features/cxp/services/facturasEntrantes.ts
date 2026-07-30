@@ -48,6 +48,8 @@ export async function listarFacturasEntrantesPorEmbarque(
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
+  // SAFE-CAST: el join anidado de PostgREST no se refleja en los tipos generados;
+  // las columnas provienen de SELECT_COLS y se validan en el dominio.
   return (data ?? []) as unknown as FacturaEntranteRow[];
 }
 
@@ -62,6 +64,8 @@ export async function listarFacturasEntrantesPendientes(
     .order("created_at", { ascending: true })
     .limit(limite);
   if (error) throw error;
+  // SAFE-CAST: el join anidado de PostgREST no se refleja en los tipos generados;
+  // las columnas provienen de SELECT_COLS y se validan en el dominio.
   return (data ?? []) as unknown as FacturaEntranteRow[];
 }
 

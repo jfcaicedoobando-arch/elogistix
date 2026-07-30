@@ -140,7 +140,7 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
 export function EstadoInvitacionCell({ estado }: { estado: EstadoInvitacion }) {
   if (estado === "activo") {
     return (
-      <Badge variant="outline" className="gap-1 border-emerald-500/40 text-emerald-700">
+      <Badge variant="outline" className="gap-1 border-success/40 text-success">
         <CheckCircle2 className="h-3 w-3" /> Activo
       </Badge>
     );
@@ -149,7 +149,7 @@ export function EstadoInvitacionCell({ estado }: { estado: EstadoInvitacion }) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-700">
+          <Badge variant="outline" className="gap-1 border-warning/40 text-warning">
             <MailWarning className="h-3 w-3" /> Invitación pendiente
           </Badge>
         </TooltipTrigger>
