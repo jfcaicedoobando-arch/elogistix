@@ -172,27 +172,50 @@ function compararConcepto(cb: ConceptoLike, ca: ConceptoLike, out: ConceptosDiff
   out.detalle.push({ tipo: "modificado", concepto: nombreOf(ca), antes: rb, despues: ra });
 }
 
+function agruparPorClave(lista: ConceptoLike[] | null | undefined): Map<string, ConceptoLike[]> {
+  const out = new Map<string, ConceptoLike[]>();
+  for (const c of lista ?? []) {
+    const k = keyOf(c);
+    const bucket = out.get(k);
+    if (bucket) bucket.push(c);
+    else out.set(k, [c]);
+  }
+  return out;
+}
+
+function diffBucket(k: string, antes: ConceptoLike[], despues: ConceptoLike[], out: ConceptosDiff): void {
+  const comunes = Math.min(antes.length, despues.length);
+  for (let i = 0; i < comunes; i += 1) compararConcepto(antes[i], despues[i], out);
+  for (let i = comunes; i < despues.length; i += 1) {
+    out.agregados += 1;
+    out.detalle.push({ tipo: "agregado", concepto: nombreOf(despues[i]), despues: resumen(despues[i]) });
+  }
+  for (let i = comunes; i < antes.length; i += 1) {
+    out.eliminados += 1;
+    out.detalle.push({ tipo: "eliminado", concepto: nombreOf(antes[i]), antes: resumen(antes[i]) });
+  }
+  void k;
+}
+
 export function diffConceptos(
   before: ConceptoLike[] | null | undefined,
   after: ConceptoLike[] | null | undefined,
 ): ConceptosDiff {
-  const mapBefore = new Map((before ?? []).map((c) => [keyOf(c), c]));
-  const mapAfter = new Map((after ?? []).map((c) => [keyOf(c), c]));
+  // Se agrupa por clave en listas (no en un Map de 1 elemento): un embarque
+  // puede tener varios conceptos con el mismo nombre y proveedor (p. ej. dos
+  // "Demoras"), y antes se colapsaban y la bitácora reportaba 1 eliminado
+  // cuando en realidad se habían quitado 2.
+  const mapBefore = agruparPorClave(before);
+  const mapAfter = agruparPorClave(after);
   const out: ConceptosDiff = { agregados: 0, eliminados: 0, modificados: 0, detalle: [] };
 
-  for (const [k, ca] of mapAfter) {
-    const cb = mapBefore.get(k);
-    if (!cb) {
-      out.agregados += 1;
-      out.detalle.push({ tipo: "agregado", concepto: nombreOf(ca), despues: resumen(ca) });
-    } else {
-      compararConcepto(cb, ca, out);
-    }
+  for (const [k, despues] of mapAfter) {
+    diffBucket(k, mapBefore.get(k) ?? [], despues, out);
   }
-  for (const [k, cb] of mapBefore) {
+  for (const [k, antes] of mapBefore) {
     if (mapAfter.has(k)) continue;
-    out.eliminados += 1;
-    out.detalle.push({ tipo: "eliminado", concepto: nombreOf(cb), antes: resumen(cb) });
+    diffBucket(k, antes, [], out);
   }
   return out;
 }
+
