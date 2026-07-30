@@ -34,8 +34,15 @@ export default function PortalCotizacionDetalle() {
     isPending,
   } = usePortalCotizacionDetalleController(id);
 
-  if (isLoading) {
-    return <DetailSkeleton sections={1} />;
+  if (isLoading || isError) {
+    // R-05: sin timeout el detalle se quedaba en skeleton indefinido.
+    return (
+      <LoadingState
+        error={isError}
+        onRetry={() => void refetch()}
+        errorLabel="No pudimos cargar la cotización."
+      />
+    );
   }
 
   if (!cot) {
