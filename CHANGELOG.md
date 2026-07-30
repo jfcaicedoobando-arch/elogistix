@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.364.0] - 2026-07-30
+- **feat(buzón CxP)**: se agregó el botón **"Marcar como capturada"** en `/compras/buzon`. Abre un diálogo que lista las facturas de proveedor vivas del mismo embarque (excluye canceladas y borradas) y llama al RPC `capturar_factura_entrante`, que cierra el documento, lo vincula a la factura y le hereda el PDF. Antes el RPC y el hook existían pero ningún botón los invocaba: los documentos se quedaban "por capturar" para siempre y podían bloquear el checklist de cierre.
+- **feat(buzón CxP)**: si el embarque aún no tiene facturas capturadas, el diálogo lo explica y dirige al tab **Costos** del embarque.
+- **test**: suite nueva para `listarFacturasVinculablesEntrante` y `etiquetaFacturaVinculable`.
+
 ## [13.363.0] - 2026-07-30
 - **fix(embarques)**: al editar un embarque el toast salía en verde pero los conceptos quitados reaparecían. El guardado sí borraba (lógico) las filas, pero la lectura del detalle no excluía `deleted_at`, así que volvía a traerlas. Se añadió el filtro en `fetchEmbarqueConceptosVenta` / `fetchEmbarqueConceptosCosto`.
 - **fix(datos)**: mismo filtro faltante en lecturas hermanas que sumaban o mostraban conceptos eliminados: hueco de facturación, gastos pendientes de facturación, operaciones del proveedor y conceptos de una proforma.
