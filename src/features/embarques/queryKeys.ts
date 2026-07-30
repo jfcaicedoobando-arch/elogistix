@@ -10,6 +10,7 @@ export const embarques = {
     ['embarques', 'expedientes-cliente', clienteId, organizationId] as const,
   conceptosVenta: (id?: string) => ['conceptos_venta', id] as const,
   conceptosCosto: (id?: string) => ['conceptos_costo', id] as const,
+  proveedoresDelEmbarque: (id?: string) => ['embarques', 'proveedores-del-embarque', id] as const,
   documentos: (id: string) => ['documentos_embarque', id] as const,
   notas: (id: string) => ['notas_embarque', id] as const,
   facturas: (id: string) => ['facturas', 'embarque', id] as const,
