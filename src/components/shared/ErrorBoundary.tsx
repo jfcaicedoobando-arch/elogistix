@@ -90,6 +90,22 @@ export class ErrorBoundary extends React.Component<Props, State> {
     });
   }
 
+  componentDidUpdate(prevProps: Props) {
+    if (
+      this.state.hasError &&
+      prevProps.resetKey !== undefined &&
+      prevProps.resetKey !== this.props.resetKey
+    ) {
+      this.setState({
+        hasError: false,
+        error: null,
+        eventId: null,
+        componentStack: null,
+        timestamp: null,
+      });
+    }
+  }
+
   handleReset = () => {
     if (isDynamicImportError(this.state.error) && tryReloadForChunkError()) {
       return;
