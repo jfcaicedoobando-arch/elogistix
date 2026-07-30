@@ -64,34 +64,13 @@ export function InfoFacturaSection({ factura: f, canEdit = false }: Props) {
         onVerify={() => verificar.mutate(f.id)}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold uppercase tracking-wide text-primary">CFDI adjuntos</h4>
-          <div className="flex flex-col gap-2">
-            <AdjuntoRow
-              label="XML" icon={<FileCode2 className="h-4 w-4" />}
-              path={f.archivo_xml_url} tipo="XML"
-              canEdit={puedeEditarAdjuntos}
-              isUploading={busyTipo === "XML"}
-              onUpload={handleUpload} onRemove={handleRemove}
-            />
-            <AdjuntoRow
-              label="PDF" icon={<FileText className="h-4 w-4" />}
-              path={f.archivo_pdf_url} tipo="PDF"
-              canEdit={puedeEditarAdjuntos}
-              isUploading={busyTipo === "PDF"}
-              onUpload={handleUpload} onRemove={handleRemove}
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold uppercase tracking-wide text-primary">Programación de pago</h4>
-          <ProgramacionPagoRow
-            facturaId={f.id}
-            fechaProgramada={f.fecha_programada_pago}
-            saldo={f.saldo}
-          />
-        </div>
+      <div className="space-y-2 pt-2">
+        <h4 className="text-xs font-bold uppercase tracking-wide text-primary">Programación de pago</h4>
+        <ProgramacionPagoRow
+          facturaId={f.id}
+          fechaProgramada={f.fecha_programada_pago}
+          saldo={f.saldo}
+        />
       </div>
 
       {f.notas && (
