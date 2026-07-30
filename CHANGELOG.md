@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.350.3] - 2026-07-30
+- **chore(arquitectura)**: el servicio de usuarios se dividió en `listado.ts` y `mutaciones.ts` (límite de 200 líneas) y el tipo `DocumentoKpi` se movió a `src/lib/domain/documentoKpis.ts` para que `lib/` no importe de `components/`.
+
+
+
 ## [13.350.2] - 2026-07-30
 - **chore(observabilidad)**: se dividieron los filtros de Sentry en funciones pequeñas para pasar el límite de complejidad de ESLint (CI lint verde).
 
