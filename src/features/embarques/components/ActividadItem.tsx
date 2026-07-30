@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
-import { formatMoney } from "@/lib/financialUtils";
+import { formatCurrency, formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import { CATEGORIA_LABEL, type ActividadItem as Item } from "@/features/embarques/domain/actividadFeed";
 import { ActividadDetalles } from "@/features/embarques/components/ActividadDetalles";
 
