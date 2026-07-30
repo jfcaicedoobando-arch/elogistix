@@ -5,6 +5,7 @@ import { createLead } from "@/features/crm/services/leads/mutations";
 import { crearOportunidad } from "@/features/crm/services/oportunidades";
 import {
   buildOpNombre, resolveEtapaCotizandoId, setCotizacionOportunidad,
+  findLeadIdByEmail,
   type AuthLite, type ProspectoData,
 } from "./helpers";
 
