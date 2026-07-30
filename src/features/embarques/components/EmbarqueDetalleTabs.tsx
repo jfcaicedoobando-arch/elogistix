@@ -53,7 +53,6 @@ export function EmbarqueDetalleTabs({
           <TabsTrigger value="tracking" data-testid="tab-tracking" className="whitespace-nowrap">Tracking</TabsTrigger>
           <TabsTrigger value="documentos" data-testid="tab-documentos" className="whitespace-nowrap">Documentos</TabsTrigger>
           <TabsTrigger value="costos" data-testid="tab-costos" className="whitespace-nowrap">Costos</TabsTrigger>
-          <TabsTrigger value="costos" data-testid="tab-costos" className="whitespace-nowrap">Costos</TabsTrigger>
           <TabsTrigger value="garantias" data-testid="tab-garantias" className="whitespace-nowrap">Demoras y Garantías</TabsTrigger>
           <TabsTrigger value="seguros" data-testid="tab-seguros" className="whitespace-nowrap">Seguros</TabsTrigger>
           <TabsTrigger value="facturacion" data-testid="tab-facturacion" className="whitespace-nowrap">Facturación</TabsTrigger>
