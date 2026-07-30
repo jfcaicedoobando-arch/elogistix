@@ -87,7 +87,7 @@ export function EstadoCuentaFilaFactura({ fila, abierta, onToggle, facturaHref }
       >
         {formatCurrency(fila.saldo, fila.moneda)}
       </TableCell>
-      <TableCell className="text-right tabular-nums whitespace-nowrap text-muted-foreground">
+      <TableCell className="hidden text-right tabular-nums whitespace-nowrap text-muted-foreground 2xl:table-cell">
         {formatCurrency(fila.saldoAcumulado, fila.moneda)}
       </TableCell>
       <TableCell>

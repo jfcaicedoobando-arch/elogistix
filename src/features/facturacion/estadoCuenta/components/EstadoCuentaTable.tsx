@@ -71,7 +71,7 @@ export function EstadoCuentaTable({
         <Vacio />
       ) : (
         <div className="overflow-x-auto">
-          <Table className="text-sm">
+          <Table className="text-sm [&_td]:py-2">
             <EstadoCuentaTableHead sort={sort} onSort={onSort} />
             <TableBody>
               {isLoading

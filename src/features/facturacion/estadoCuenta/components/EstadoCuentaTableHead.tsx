@@ -44,7 +44,7 @@ export function EstadoCuentaTableHead({ sort, onSort }: Props) {
         <TableHead className="w-[112px] text-right whitespace-nowrap">Cargo</TableHead>
         <TableHead className="w-[112px] text-right whitespace-nowrap">Abono</TableHead>
         <TableHead className="w-[112px] text-right whitespace-nowrap">{boton("saldo", "Saldo", true)}</TableHead>
-        <TableHead className="w-[112px] text-right whitespace-nowrap">Acumulado</TableHead>
+        <TableHead className="hidden w-[112px] text-right whitespace-nowrap 2xl:table-cell">Acumulado</TableHead>
         <TableHead className="w-[104px]">Estatus</TableHead>
       </TableRow>
     </TableHeader>
