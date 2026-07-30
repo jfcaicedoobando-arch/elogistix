@@ -3,6 +3,8 @@
  * v13.350.0 — Los adjuntos del CFDI se movieron a la pestaña "Documentos"
  * (`DocumentosProveedorSection`) para dar paridad con facturas emitidas.
  */
+import { Building2 } from "lucide-react";
+import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
 import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
 import { ProgramacionPagoRow } from "@/features/cxp/components/ProgramacionPagoRow";
 import { CanceladaBanner } from "./InfoFacturaSection.parts";
@@ -28,11 +30,10 @@ export function InfoFacturaSection({ factura: f }: Props) {
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between border-b pb-2">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-primary">
-          Proveedor y datos fiscales
-        </h3>
-      </div>
+      <DocumentoSectionTitle
+        title="Proveedor y datos fiscales"
+        icon={<Building2 className="h-4 w-4" />}
+      />
 
       {estaCancelada && (
         <CanceladaBanner fecha={f.fecha_cancelacion} motivo={f.motivo_cancelacion} />
@@ -48,7 +49,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
       />
 
       <div className="space-y-2 pt-2">
-        <h4 className="text-xs font-bold uppercase tracking-wide text-primary">Programación de pago</h4>
+        <h4 className="text-sm font-semibold">Programación de pago</h4>
         <ProgramacionPagoRow
           facturaId={f.id}
           fechaProgramada={f.fecha_programada_pago}
@@ -58,7 +59,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
 
       {f.notas && (
         <div className="space-y-2">
-          <h4 className="text-xs font-bold uppercase tracking-wide text-primary">Notas</h4>
+          <h4 className="text-sm font-semibold">Notas</h4>
           <p className="text-sm text-foreground whitespace-pre-wrap rounded-md border bg-muted/30 p-3">
             {f.notas}
           </p>
