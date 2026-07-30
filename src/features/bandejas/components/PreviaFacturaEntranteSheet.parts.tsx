@@ -3,7 +3,7 @@
  * Extraídas para mantener la complejidad del contenedor bajo control.
  */
 import { Link } from "react-router-dom";
-import { CheckCircle2, FileCode2, XCircle } from "lucide-react";
+import { CheckCircle2, FileCode2, FilePlus2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,10 +74,13 @@ interface AccionesProps {
   procesable: boolean;
   onVerXml: (row: FacturaEntranteRow) => void;
   onCapturar: (row: FacturaEntranteRow) => void;
+  onCrearFactura: (row: FacturaEntranteRow) => void;
   onRechazar: (row: FacturaEntranteRow) => void;
 }
 
-export function PreviaAcciones({ row, procesable, onVerXml, onCapturar, onRechazar }: AccionesProps) {
+export function PreviaAcciones({
+  row, procesable, onVerXml, onCapturar, onCrearFactura, onRechazar,
+}: AccionesProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {row.xml_path && (
@@ -92,8 +95,11 @@ export function PreviaAcciones({ row, procesable, onVerXml, onCapturar, onRechaz
       </Button>
       {procesable && (
         <>
-          <Button size="sm" onClick={() => onCapturar(row)}>
-            <CheckCircle2 className="mr-2 h-4 w-4" /> Marcar como capturada
+          <Button size="sm" onClick={() => onCrearFactura(row)}>
+            <FilePlus2 className="mr-2 h-4 w-4" /> Capturar factura
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => onCapturar(row)}>
+            <CheckCircle2 className="mr-2 h-4 w-4" /> Vincular a factura existente
           </Button>
           <Button size="sm" variant="ghost" onClick={() => onRechazar(row)}>
             <XCircle className="mr-2 h-4 w-4 text-destructive" /> Rechazar

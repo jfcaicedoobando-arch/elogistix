@@ -8946,6 +8946,10 @@ export type Database = {
         Args: { next: string; prev: string }
         Returns: boolean
       }
+      validar_captura_entrante: {
+        Args: { p_documento_id: string }
+        Returns: Json
+      }
       validar_cierre_embarque: {
         Args: { p_embarque_id: string }
         Returns: Json

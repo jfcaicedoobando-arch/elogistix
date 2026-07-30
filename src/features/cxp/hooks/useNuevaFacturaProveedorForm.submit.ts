@@ -48,8 +48,14 @@ interface RunSubmitParams {
   setFolioError: () => void;
 }
 
-/** Devuelve true si la operación fue exitosa. */
-export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
+export interface ResultadoSubmit {
+  ok: boolean;
+  /** Id de la factura creada; lo usa la captura desde el buzón CxP (v13.366.0). */
+  facturaId: string | null;
+}
+
+/** Devuelve `ok: true` y el id creado si la operación fue exitosa. */
+export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
   try {
     const dup = await existeFacturaDuplicada(p.values.provId, p.values.folio, p.values.emision);
     if (dup) {
@@ -59,7 +65,7 @@ export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
         description: `Ya capturaste el folio ${p.values.folio.trim()} de este proveedor el ${p.values.emision}.`,
         method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP",
       });
-      return false;
+      return { ok: false, facturaId: null };
     }
   } catch {
     // Si la verificación falla (red, RLS), continuamos: el UNIQUE de UUID fiscal sigue protegiendo.
@@ -71,7 +77,7 @@ export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
       description: `Ya existe como ${describirFacturaExistente(yaExiste)}. No se creó un duplicado.`,
       method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_UUID_PRE",
     });
-    return false;
+    return { ok: false, facturaId: null };
   }
   try {
     const created = await p.crearMutateAsync(
@@ -92,9 +98,9 @@ export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
       title: "Factura de proveedor capturada",
       description: buildFacturaSuccessDescription(sideResult),
     });
-    return true;
+    return { ok: true, facturaId: created?.id ?? null };
   } catch (e) {
     await handleSubmitError(e, p.pendingCfdi?.uuid);
-    return false;
+    return { ok: false, facturaId: null };
   }
 }
