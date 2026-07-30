@@ -23,6 +23,9 @@ export function Toaster() {
     <SonnerToaster
       position="top-right"
       offset={{ top: "72px", right: "16px" }}
+      // R-15.5: el header sticky (z-40) capturaba los clics sobre "Ver
+      // detalles" y abría el org-switcher. Los toasts van por encima.
+      className="!z-[60] pointer-events-auto"
       closeButton
       expand
       duration={4000}
