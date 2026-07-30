@@ -80,7 +80,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
         cotizacionId: cotizacion.id,
         clienteData: clienteForm,
       });
-      notifySuccess(undefined, { title: `Cliente "${cliente.nombre}" creado exitosamente` });
+      // El toast lo emite `useConvertirProspectoACliente` (evita doble toast).
       if (cotizacion.oportunidad_id) {
         try {
           await propagarConversionProspectoCRM({
@@ -93,8 +93,8 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
         }
       }
       setShowConvertir(false);
-    } catch (err: unknown) {
-      notifyError(undefined, { title: "Error al convertir prospecto", description: getErrorMessage(err), error: err, method: "HANDLE_CONVERTIR" });
+    } catch {
+      // Notificado por el hook de mutación.
     }
   };
 
