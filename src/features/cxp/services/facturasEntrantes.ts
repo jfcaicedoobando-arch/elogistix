@@ -11,6 +11,12 @@ import {
   validarParejaEntrante,
 } from "@/lib/domain/facturasEntrantes";
 import type { CfdiXmlMeta } from "@/lib/domain/cfdiXmlMeta";
+import {
+  columnasMetaEntrante,
+  columnasXmlEntrante,
+  type ArchivoSubido,
+} from "@/features/cxp/services/facturasEntrantesFila";
+
 
 const BUCKET = "cxp-inbox";
 
