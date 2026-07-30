@@ -50,8 +50,8 @@ export default function CxpBuzonEntrantes() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard title="Documentos por capturar" value={String(data.length)} icon={Inbox} />
-        <KpiCard title="Con 3 días o más" value={String(masDeTresDias)} icon={XCircle} />
+        <KpiCard label="Documentos por capturar" value={String(data.length)} icon={Inbox} />
+        <KpiCard label="Con 3 días o más" value={String(masDeTresDias)} icon={XCircle} />
       </div>
 
       {isLoading && <Skeleton className="h-40 w-full" />}
