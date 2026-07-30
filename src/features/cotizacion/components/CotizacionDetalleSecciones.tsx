@@ -76,6 +76,10 @@ interface AccionesProps {
   onAbrirConvertir: () => void;
   total: number;
   rol: AppRole | null | undefined;
+  /** Q-04b — usuario que creó la cotización (segregación de funciones). */
+  creadaPor?: string | null;
+  /** Q-04b — usuario autenticado. */
+  usuarioActual?: string | null;
 }
 
 
@@ -91,12 +95,14 @@ function AccionesBorrador({ cotizacionId, onCambiarEstado, puedeEnviar }: { coti
   );
 }
 
-function AccionesBorradorOEnviada({ onCambiarEstado, puedeAceptarRechazar }: { onCambiarEstado: AccionesProps["onCambiarEstado"]; puedeAceptarRechazar: boolean }) {
-  if (!puedeAceptarRechazar) return null;
+function AccionesBorradorOEnviada({ onCambiarEstado, puedeAceptar, puedeRechazar }: { onCambiarEstado: AccionesProps["onCambiarEstado"]; puedeAceptar: boolean; puedeRechazar: boolean }) {
+  if (!puedeAceptar && !puedeRechazar) return null;
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Rechazada")}>Rechazar</Button>
-      <Button size="sm" onClick={() => onCambiarEstado("Aceptada")}>Aceptar</Button>
+      {puedeRechazar && (
+        <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Rechazada")}>Rechazar</Button>
+      )}
+      {puedeAceptar && <Button size="sm" onClick={() => onCambiarEstado("Aceptada")}>Aceptar</Button>}
     </>
   );
 }
@@ -113,10 +119,13 @@ function AccionCrearEmbarque({ cotizacionId, numContenedores }: { cotizacionId: 
 export function CotizacionDetalleAcciones({
   estado, esProspecto, numContenedores, cotizacionId, version,
   tieneEmbarquesVinculados = false,
-  onCambiarEstado, onAbrirConvertir, total, rol,
+  onCambiarEstado, onAbrirConvertir, total, rol, creadaPor, usuarioActual,
 }: AccionesProps) {
   const [recotizarOpen, setRecotizarOpen] = useState(false);
-  const acciones = accionesCotizacionPermitidas(estado, total, rol);
+  const acciones = accionesCotizacionPermitidas(estado, total, rol, {
+    creadaPor,
+    usuarioActual,
+  });
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
   const esAceptada = estado === "Aceptada";
   const mostrarCrearEmbarque = esAceptada && !esProspecto && !tieneEmbarquesVinculados;
@@ -127,7 +136,7 @@ export function CotizacionDetalleAcciones({
   return (
     <div className="flex flex-wrap gap-2">
       {estado === "Borrador" && <AccionesBorrador cotizacionId={cotizacionId} onCambiarEstado={onCambiarEstado} puedeEnviar={acciones.enviar} />}
-      {esBorradorOEnviada && <AccionesBorradorOEnviada onCambiarEstado={onCambiarEstado} puedeAceptarRechazar={acciones.aceptar} />}
+      {esBorradorOEnviada && <AccionesBorradorOEnviada onCambiarEstado={onCambiarEstado} puedeAceptar={acciones.aceptar} puedeRechazar={acciones.rechazar} />}
       {esAceptada && esProspecto && (
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
