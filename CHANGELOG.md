@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.368.0] - 2026-07-30
+- **fix(CxP · CFDI duplicado)**: el UUID fiscal ahora se guarda y se compara **siempre en mayúsculas y sin espacios** (migración de datos existentes + trigger en `proveedor_facturas` y `embarque_facturas_entrantes`). Los índices únicos usan `upper(btrim(uuid_fiscal))`, así que la detección en pantalla y la regla de la base de datos ya no pueden discrepar.
+- **fix(CxP)**: la búsqueda de duplicado distingue "no existe" de "no se pudo consultar" (`BusquedaUuidFiscal`) y reintenta con el RPC seguro `buscar_factura_proveedor_por_uuid` si RLS bloquea la lectura directa. Ya no se interpreta un fallo como "no hay duplicado".
+- **feat(buzón CxP)**: los documentos cuyo CFDI ya está capturado se marcan con la insignia **"CFDI ya capturado"** y su acción primaria cambia a **"Ver factura"**; capturar deja de ser posible desde ahí.
+- **feat(CxP)**: el mensaje "Este CFDI ya está capturado" nombra la factura existente (folio y estado) e incluye el botón **Ver factura**, tanto al validar como al guardar.
+- **test**: suite nueva `uuidFiscal.test.ts` (normalización y comparación de UUID fiscales).
+
 ## [13.367.0] - 2026-07-30
 - **feat(buzón CxP · subir factura)**: el modal "Subir factura de proveedor" ahora permite **escoger a qué proveedor del embarque corresponde** el documento. La lista muestra primero los proveedores que ya tienen costos en ese embarque y luego el catálogo completo de la organización, con buscador.
 - **feat(buzón CxP)**: el proveedor detectado por el RFC del CFDI se sigue prellenando como sugerencia (badge "Detectado del CFDI"), pero el operador puede sobreescribirlo. Si la elección no coincide con el RFC, o el RFC no existe en el catálogo, se muestra un aviso informativo sin bloquear la subida.

@@ -34,9 +34,16 @@ export function useCapturaDesdeBuzon() {
     try {
       const res = await validarCapturaEntrante(row.id);
       if (!res.ok) {
+        const dup = res.facturaDuplicada;
         notifyWarning(undefined, {
           title: "Este documento aún no se puede capturar",
           description: res.motivos.join(" · ") || "Revisa el estado del documento.",
+          action: dup
+            ? {
+                label: "Ver factura",
+                onClick: () => { window.location.assign(`/compras/facturas/${dup.id}`); },
+              }
+            : undefined,
         });
         return;
       }

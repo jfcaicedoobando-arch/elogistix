@@ -30,6 +30,10 @@ export const cxp = {
     ["cxp", "facturas-entrantes", "estado", estado] as const,
   facturasVinculablesEntrante: (embarqueId?: string | null) =>
     ["cxp", "facturas-vinculables-entrante", embarqueId ?? null] as const,
+  /** v13.368.0 — UUID fiscales del buzón que ya existen como factura viva. */
+  uuidsCapturados: (uuids: ReadonlyArray<string>) =>
+    ["cxp", "buzon", "uuids-capturados", uuids] as const,
+
 
 } as const;
 

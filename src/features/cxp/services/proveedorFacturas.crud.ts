@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { normalizarUuidFiscal } from "@/lib/domain/uuidFiscal";
+
 
 // folio_interno se asigna en el trigger BEFORE INSERT de la BD; el caller no lo manda.
 export type NuevaFacturaProveedorPayload =
@@ -70,26 +72,49 @@ export interface FacturaExistentePorUuid {
 }
 
 /**
- * Busca la factura VIVA (no borrada) de la organización que ya registró un
- * UUID fiscal. Permite avisar del CFDI duplicado al cargar el XML, en vez de
- * esperar al choque del índice único durante el INSERT.
+ * Resultado explícito: distinguir "no existe" de "no se pudo consultar" evita
+ * que un fallo de red o de RLS se lea como "no hay duplicado" (v13.368.0).
  */
+export type BusquedaUuidFiscal =
+  | { estado: "ninguno" }
+  | { estado: "existe"; factura: FacturaExistentePorUuid }
+  | { estado: "error" };
+
+/**
+ * Busca la factura VIVA (no borrada) de la organización que ya registró un
+ * UUID fiscal, ignorando mayúsculas/minúsculas igual que el índice único.
+ * Si la lectura directa falla (RLS), reintenta con el RPC seguro.
+ */
+export async function buscarFacturaPorUuidFiscalResultado(
+  uuidFiscal: string | null | undefined,
+): Promise<BusquedaUuidFiscal> {
+  const uuid = normalizarUuidFiscal(uuidFiscal);
+  if (!uuid) return { estado: "ninguno" };
+  const cols = "id, folio_interno, folio_proveedor, proveedor_nombre, estado, estado_aprobacion";
+  const { data, error } = await supabase
+    .from("proveedor_facturas")
+    .select(cols)
+    .ilike("uuid_fiscal", uuid)
+    .is("deleted_at", null)
+    .limit(1);
+  if (!error) {
+    return data && data.length > 0 ? { estado: "existe", factura: data[0] } : { estado: "ninguno" };
+  }
+  // SAFE-CAST: el RPC existe en BD; los tipos se regeneran tras la migración.
+  const rpc = await supabase.rpc("buscar_factura_proveedor_por_uuid" as never, { p_uuid: uuid } as never);
+  if (rpc.error) return { estado: "error" };
+  const f = rpc.data as FacturaExistentePorUuid | null;
+  return f ? { estado: "existe", factura: f } : { estado: "ninguno" };
+}
+
+/** Compatibilidad: `null` cuando no existe o no se pudo consultar. */
 export async function buscarFacturaPorUuidFiscal(
   uuidFiscal: string,
 ): Promise<FacturaExistentePorUuid | null> {
-  const uuid = uuidFiscal.trim();
-  if (!uuid) return null;
-  const data = await unwrapOr(
-    supabase
-      .from("proveedor_facturas")
-      .select("id, folio_interno, folio_proveedor, proveedor_nombre, estado, estado_aprobacion")
-      .eq("uuid_fiscal", uuid)
-      .is("deleted_at", null)
-      .limit(1),
-    [],
-  );
-  return data[0] ?? null;
+  const r = await buscarFacturaPorUuidFiscalResultado(uuidFiscal);
+  return r.estado === "existe" ? r.factura : null;
 }
+
 
 export async function softDeleteFacturaProveedor(id: string, userId: string | null) {
   await run(

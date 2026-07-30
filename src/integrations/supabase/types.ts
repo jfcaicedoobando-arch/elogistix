@@ -7396,6 +7396,10 @@ export type Database = {
           proformas_actualizadas: number
         }[]
       }
+      buscar_factura_proveedor_por_uuid: {
+        Args: { p_uuid: string }
+        Returns: Json
+      }
       busqueda_global: {
         Args: { limite?: number; termino: string }
         Returns: {
