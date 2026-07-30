@@ -9,7 +9,7 @@ import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate, formatDateTimeShort } from "@/lib/formatters";
 import { obtenerRangoRol } from "@/features/admin/domain/roles/roleCatalog";
-import { ChangeRoleCell, UsuarioCell } from "./usuariosCells";
+import { ChangeRoleCell, EstadoInvitacionCell, UsuarioCell } from "./usuariosCells";
 
 
 interface Options {

@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { UserRow } from "@/features/admin/hooks/usuario";
+import type { EstadoInvitacion } from "@/features/admin/services/usuario";
 import type { AppRole } from "@/types/appRole";
 import {
   ASSIGNABLE_ROLE_GROUPS,
@@ -19,7 +20,7 @@ import {
 } from "@/features/admin/domain/roles/roleCatalog";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, MailWarning } from "lucide-react";
 import { inicialesDeEmail } from "./usuariosCellsUtils";
 
 
