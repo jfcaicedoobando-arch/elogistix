@@ -10,7 +10,7 @@ import { UnidadMedidaSelect } from "@/features/cotizacion/components/conceptos/U
 import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import type { FilaCostoLocal } from "../SeccionCostosInternosPLUnificado";
 import { parseCantidad, cantidadFueraDeRango, CANTIDAD_LIMITE_SANIDAD } from "../../utils/parseInputNumero";
-import { useNumericField } from "./useNumericField";
+import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
 
 interface Props {
   fila: FilaCostoLocal;

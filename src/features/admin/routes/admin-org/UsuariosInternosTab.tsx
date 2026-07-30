@@ -129,7 +129,7 @@ export function UsuariosInternosTab() {
           <AlertTitle>No se pudieron cargar los correos</AlertTitle>
           <AlertDescription className="flex flex-wrap items-center gap-3">
             <span>
-              {pluralizar(correosNoResueltos, "usuario")} se muestran sin correo porque el servicio de
+              {pluralizar(correosNoResueltos, "usuario")} sin correo visible porque el servicio de
               autenticación no respondió.
             </span>
             <Button size="sm" variant="outline" onClick={() => void refetch()} disabled={isFetching}>

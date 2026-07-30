@@ -68,7 +68,7 @@ describe("UsuariosInternosTab — banner de correos sin resolver (P-09)", () => 
     render(<UsuariosInternosTab />);
 
     expect(screen.getByText(/No se pudieron cargar los correos/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 usuario\(s\) se muestran sin correo/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 usuario sin correo visible/i)).toBeInTheDocument();
     expect(mocks.reportCaughtError).toHaveBeenCalledTimes(1);
   });
 
