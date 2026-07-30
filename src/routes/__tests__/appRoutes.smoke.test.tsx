@@ -17,6 +17,13 @@ import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
 import { Layout } from "@/components/layout/Layout";
 import type { AppRole } from "@/types/appRole";
+import {
+  COMPRAS_READ_ROLES,
+  FINANCE_READ_ROLES,
+  TESORERIA_READ_ROLES,
+  PROFIT_READ_ROLES,
+  AUDITORIA_ROLES,
+} from "@/lib/access/roleRouteMatrix";
 
 interface RouteProps {
   path?: string;
