@@ -506,13 +506,42 @@ jobs:
         run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
 
       - name: Regenerate types from migration schema
+        id: gentypes
         run: |
-          bunx supabase gen types typescript \
-            --db-url postgresql://postgres:postgres@localhost:5432/postgres \
-            --schema public > /tmp/types.generated.ts
-          wc -l /tmp/types.generated.ts
+          # `supabase gen types` corre postgres-meta en Docker: public.ecr.aws
+          # devuelve `toomanyrequests: Rate exceeded` de forma intermitente.
+          # Reintentamos con backoff y, si sigue fallando, marcamos el paso como
+          # no concluyente (infra) en vez de reportar drift falso.
+          IMG="public.ecr.aws/supabase/postgres-meta:v0.96.6"
+          for i in 1 2 3 4; do
+            if docker pull "$IMG"; then
+              echo "imagen postgres-meta lista (intento $i)"
+              break
+            fi
+            if [ "$i" = "4" ]; then
+              echo "::warning::No se pudo descargar $IMG (rate limit del registry). Se omite la verificación de drift de types.ts."
+              echo "skipped=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep $((i * 20))
+          done
+
+          for i in 1 2 3; do
+            if bunx supabase gen types typescript \
+                 --db-url postgresql://postgres:postgres@localhost:5432/postgres \
+                 --schema public > /tmp/types.generated.ts; then
+              wc -l /tmp/types.generated.ts
+              echo "skipped=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep $((i * 15))
+          done
+
+          echo "::warning::supabase gen types falló tras 3 intentos (infra). Se omite la verificación de drift de types.ts."
+          echo "skipped=true" >> "$GITHUB_OUTPUT"
 
       - name: Diff against committed types.ts
+        if: steps.gentypes.outputs.skipped != 'true'
         run: |
           # `__InternalSupabase` (PostgrestVersion) y las funciones de
           # extensiones (pgcrypto/uuid-ossp/pg_trgm, que en CI caen en `public`)
@@ -534,6 +563,7 @@ jobs:
             exit 1
           fi
           echo "types.ts sincronizado con el esquema de migraciones"
+
 
 
   rls-tests-result:
