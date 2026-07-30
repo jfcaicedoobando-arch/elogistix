@@ -15,6 +15,7 @@ import {
   fetchEmbarqueConceptosCosto,
   fetchExpedientesCliente,
   fetchProveedoresForSelect,
+  fetchProveedoresDelEmbarque,
   type EmbarquesPaginadosFilters,
 } from "@/features/embarques/services";
 
@@ -66,5 +67,13 @@ export const embarqueQueries = {
       queryKey: queryKeys.proveedores.selectByOrg(organizationId),
       queryFn: () => fetchProveedoresForSelect(organizationId ?? null),
       staleTime: staleTimes.LONG,
+    }),
+
+  /** Proveedores que ya aparecen en los costos del embarque. */
+  proveedoresDelEmbarque: (embarqueId: string) =>
+    queryOptions({
+      queryKey: queryKeys.embarques.proveedoresDelEmbarque(embarqueId),
+      queryFn: () => fetchProveedoresDelEmbarque(embarqueId),
+      staleTime: staleTimes.SHORT,
     }),
 } as const;

@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.367.0] - 2026-07-30
+- **feat(buzón CxP · subir factura)**: el modal "Subir factura de proveedor" ahora permite **escoger a qué proveedor del embarque corresponde** el documento. La lista muestra primero los proveedores que ya tienen costos en ese embarque y luego el catálogo completo de la organización, con buscador.
+- **feat(buzón CxP)**: el proveedor detectado por el RFC del CFDI se sigue prellenando como sugerencia (badge "Detectado del CFDI"), pero el operador puede sobreescribirlo. Si la elección no coincide con el RFC, o el RFC no existe en el catálogo, se muestra un aviso informativo sin bloquear la subida.
+- **test**: suite nueva `proveedorEntrante.test.ts` (avisos de discrepancia y deduplicación de proveedores del embarque).
+
 ## [13.366.0] - 2026-07-30
 - **feat(buzón CxP)**: nuevo botón primario **"Capturar factura"** en `/compras/buzon` (fila y vista previa). Abre el formulario de captura ya prellenado con el documento: si hay XML se parsea el CFDI, y si el proveedor es extranjero se lee el PDF con IA. Al guardar, el documento se marca como capturado y se vincula a la factura creada en un solo paso.
 - **feat(buzón CxP · validación)**: antes de abrir el formulario se consulta el RPC `validar_captura_entrante` (rol autorizado, misma organización, documento aún pendiente y CFDI no duplicado). Si la puerta cierra, se explica el motivo y no se abre nada.

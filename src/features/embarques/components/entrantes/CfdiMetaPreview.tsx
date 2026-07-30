@@ -3,7 +3,6 @@
  * Sirven para que el operador confirme que subió la factura correcta.
  */
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
 import type { CfdiXmlMeta } from "@/lib/domain/cfdiXmlMeta";
@@ -11,7 +10,6 @@ import type { CfdiXmlMeta } from "@/lib/domain/cfdiXmlMeta";
 interface Props {
   meta: CfdiXmlMeta;
   metaUtil: boolean;
-  proveedor: { id: string; nombre: string } | null;
 }
 
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
@@ -23,7 +21,7 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   );
 }
 
-export function CfdiMetaPreview({ meta, metaUtil, proveedor }: Props) {
+export function CfdiMetaPreview({ meta, metaUtil }: Props) {
   if (!metaUtil) {
     return (
       <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3">
@@ -49,16 +47,6 @@ export function CfdiMetaPreview({ meta, metaUtil, proveedor }: Props) {
         />
         <Dato etiqueta="RFC emisor" valor={meta.rfcEmisor ?? "—"} />
         <Dato etiqueta="Fecha" valor={meta.fechaEmision ? formatDate(meta.fechaEmision) : "—"} />
-        <div className="sm:col-span-2 space-y-1">
-          <p className="text-xs text-muted-foreground">Proveedor</p>
-          {proveedor ? (
-            <Badge variant="success" size="sm">{proveedor.nombre}</Badge>
-          ) : (
-            <p className="text-xs text-warning">
-              No hay proveedor con este RFC ({meta.rfcEmisor ?? "sin RFC"}). Contabilidad lo dará de alta al capturar.
-            </p>
-          )}
-        </div>
         <p className="sm:col-span-2 truncate text-xs text-muted-foreground">UUID: {meta.uuid}</p>
       </div>
     </div>

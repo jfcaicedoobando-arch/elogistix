@@ -14,6 +14,7 @@ import { useSubirFacturaEntrante } from "@/features/cxp/hooks/useFacturasEntrant
 import { useSubirEntranteForm } from "@/features/cxp/hooks/useSubirEntranteForm";
 import { ArchivosEntranteDropZone } from "@/features/embarques/components/entrantes/ArchivosEntranteDropZone";
 import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiMetaPreview";
+import { SeccionProveedorEntrante } from "@/features/embarques/components/entrantes/SeccionProveedorEntrante";
 
 interface Props {
   open: boolean;
@@ -79,9 +80,18 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
 
       {form.meta && !form.leyendoXml && (
         <FormDialogSection title="Datos detectados" cols={1}>
-          <CfdiMetaPreview meta={form.meta} metaUtil={form.metaUtil} proveedor={form.proveedor} />
+          <CfdiMetaPreview meta={form.meta} metaUtil={form.metaUtil} />
         </FormDialogSection>
       )}
+
+      <SeccionProveedorEntrante
+        embarqueId={embarqueId}
+        seleccionado={form.proveedor}
+        detectado={form.proveedorDetectado}
+        rfcEmisor={form.meta?.rfcEmisor ?? null}
+        tieneXml={Boolean(form.xml)}
+        onSeleccionar={form.setProveedor}
+      />
 
       <FormDialogSection title="Nota para contabilidad" cols={1}>
         <div className="space-y-2">
