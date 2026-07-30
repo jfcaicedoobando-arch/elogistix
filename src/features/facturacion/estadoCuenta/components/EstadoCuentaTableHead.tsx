@@ -38,13 +38,13 @@ export function EstadoCuentaTableHead({ sort, onSort }: Props) {
         <TableHead className="w-8" />
         <TableHead className="w-[92px] whitespace-nowrap">{boton("fecha", "Fecha")}</TableHead>
         <TableHead className="w-[86px]">Folio</TableHead>
-        <TableHead className="min-w-[150px]">Concepto</TableHead>
+        <TableHead className="min-w-[110px]">Concepto</TableHead>
         <TableHead className="w-[100px] whitespace-nowrap">{boton("vencimiento", "Vence")}</TableHead>
         <TableHead className="w-[60px] text-right whitespace-nowrap">Días</TableHead>
         <TableHead className="w-[112px] text-right whitespace-nowrap">Cargo</TableHead>
         <TableHead className="w-[112px] text-right whitespace-nowrap">Abono</TableHead>
         <TableHead className="w-[112px] text-right whitespace-nowrap">{boton("saldo", "Saldo", true)}</TableHead>
-        <TableHead className="w-[120px] text-right whitespace-nowrap">Acumulado</TableHead>
+        <TableHead className="w-[112px] text-right whitespace-nowrap">Acumulado</TableHead>
         <TableHead className="w-[104px]">Estatus</TableHead>
       </TableRow>
     </TableHeader>
