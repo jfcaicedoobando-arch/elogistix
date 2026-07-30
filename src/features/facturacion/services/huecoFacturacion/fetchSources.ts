@@ -148,7 +148,11 @@ export async function fetchVentasYFacturas(
   organizationId?: string | null,
 ) {
   const [ventasRes, expedientesFacturados, embarquesConBridge, conceptosDetalle] = await Promise.all([
-    supabase.from("conceptos_venta").select("embarque_id, total, moneda").in("embarque_id", ids),
+    supabase
+      .from("conceptos_venta")
+      .select("embarque_id, total, moneda")
+      .in("embarque_id", ids)
+      .is("deleted_at", null),
     fetchExpedientesConFacturaVivaLegacy(expedientes, organizationId),
     fetchEmbarquesConFacturaViva(ids, organizationId),
     fetchConceptosVentaDeEmbarques(ids),

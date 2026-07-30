@@ -176,7 +176,8 @@ export async function fetchConceptosProforma(proformaId: string): Promise<Concep
       supabase
         .from("conceptos_venta")
         .select("*, embarque_contenedores:contenedor_id(id, numero_contenedor, tipo_contenedor)")
-        .eq("proforma_id", proformaId),
+        .eq("proforma_id", proformaId)
+        .is("deleted_at", null),
       [],
     ),
   );
