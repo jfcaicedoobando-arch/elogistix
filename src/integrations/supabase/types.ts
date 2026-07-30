@@ -2266,6 +2266,7 @@ export type Database = {
           comentario_cliente: string | null
           conceptos_venta: Json
           created_at: string
+          created_by: string | null
           deleted_at: string | null
           deleted_by: string | null
           descripcion_adicional: string
@@ -2354,6 +2355,7 @@ export type Database = {
           comentario_cliente?: string | null
           conceptos_venta?: Json
           created_at?: string
+          created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           descripcion_adicional?: string
@@ -2442,6 +2444,7 @@ export type Database = {
           comentario_cliente?: string | null
           conceptos_venta?: Json
           created_at?: string
+          created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           descripcion_adicional?: string
