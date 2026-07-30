@@ -11,6 +11,12 @@ import {
   validarParejaEntrante,
 } from "@/lib/domain/facturasEntrantes";
 import type { CfdiXmlMeta } from "@/lib/domain/cfdiXmlMeta";
+import {
+  columnasMetaEntrante,
+  columnasXmlEntrante,
+  type ArchivoSubido,
+} from "@/features/cxp/services/facturasEntrantesFila";
+
 
 const BUCKET = "cxp-inbox";
 
@@ -100,12 +106,6 @@ export interface SubirFacturaEntranteInput {
   nota?: string | null;
 }
 
-interface ArchivoSubido {
-  path: string;
-  hash: string;
-  nombre: string;
-}
-
 async function subirArchivo(
   file: File,
   input: SubirFacturaEntranteInput,
@@ -134,6 +134,30 @@ function mensajeDuplicado(mensaje: string): string | null {
   return null;
 }
 
+
+/** Arma el renglón a insertar; aísla el mapeo para mantener baja la complejidad. */
+function filaEntranteAInsertar(params: {
+  input: SubirFacturaEntranteInput;
+  principal: ArchivoSubido;
+  xmlSubido: ArchivoSubido | null;
+  userId: string | null;
+}) {
+  const { input, principal, xmlSubido, userId } = params;
+  return {
+    embarque_id: input.embarqueId,
+    organization_id: input.organizationId,
+    archivo_path: principal.path,
+    archivo_hash: principal.hash,
+    nombre_archivo: principal.nombre,
+    ...columnasXmlEntrante({ soloXml: !input.pdf, principal, xmlSubido }),
+    ...columnasMetaEntrante(input.meta),
+    nota: input.nota?.trim() || null,
+    proveedor_id: input.proveedorId ?? null,
+    subido_por: userId,
+  };
+}
+
+
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
   const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
   if (invalido) throw new Error(invalido);
@@ -141,32 +165,16 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   // El registro principal apunta al PDF cuando existe; si sólo hay XML, a él.
   const principal = await subirArchivo((input.pdf ?? input.xml) as File, input);
   const xmlSubido = input.pdf && input.xml ? await subirArchivo(input.xml, input) : null;
-  const xmlPath = xmlSubido?.path ?? (input.pdf ? null : principal.path);
-  const xmlNombre = xmlSubido?.nombre ?? (input.pdf ? null : principal.nombre);
 
   const { data: userData } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from("embarque_facturas_entrantes")
-    .insert({
-      embarque_id: input.embarqueId,
-      organization_id: input.organizationId,
-      archivo_path: principal.path,
-      archivo_hash: principal.hash,
-      nombre_archivo: principal.nombre,
-      xml_path: xmlPath,
-      xml_nombre: xmlNombre,
-      xml_hash: xmlSubido?.hash ?? null,
-      uuid_fiscal: input.meta?.uuid ?? null,
-      rfc_emisor: input.meta?.rfcEmisor ?? null,
-      folio_serie: input.meta?.folioSerie ?? null,
-      fecha_emision: input.meta?.fechaEmision ?? null,
-      folio_detectado: input.meta?.folioSerie ?? null,
-      total_detectado: input.meta?.total ?? null,
-      moneda_detectada: input.meta?.moneda ?? null,
-      nota: input.nota?.trim() || null,
-      proveedor_id: input.proveedorId ?? null,
-      subido_por: userData?.user?.id ?? null,
-    })
+    .insert(filaEntranteAInsertar({
+      input,
+      principal,
+      xmlSubido,
+      userId: userData?.user?.id ?? null,
+    }))
     .select("id")
     .single();
   if (error) {
@@ -176,6 +184,7 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   }
   return data.id;
 }
+
 
 /**
  * v13.359.0 — Abre el archivo del buzón sin navegar al dominio del backend.

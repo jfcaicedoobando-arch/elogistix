@@ -27,15 +27,59 @@ interface Props {
   onEliminar: (row: FacturaEntranteRow) => void;
 }
 
+function MetaEntrante({ row }: { row: FacturaEntranteRow }) {
+  const total = row.total_detectado;
+  return (
+    <>
+      <p className="text-xs text-muted-foreground">
+        Subida el {formatDate(row.created_at)}
+        {row.estado === "por_capturar" ? ` · ${diasEnEspera(row.created_at)} día(s) en espera` : ""}
+        {row.proveedores?.nombre ? ` · ${row.proveedores.nombre}` : ""}
+      </p>
+      {(row.folio_serie || total != null) && (
+        <p className="text-xs text-muted-foreground">
+          {row.folio_serie ? `Folio ${row.folio_serie}` : "Sin folio"}
+          {total != null ? ` · ${formatCurrency(Number(total), row.moneda_detectada ?? "MXN")}` : ""}
+        </p>
+      )}
+      {row.nota && <p className="text-xs text-muted-foreground">Nota: {row.nota}</p>}
+      {row.rechazo_motivo && <p className="text-xs text-destructive">Rechazada: {row.rechazo_motivo}</p>}
+    </>
+  );
+}
+
+function AdjuntarXmlButton({ onSelect }: { onSelect: (xml: File) => void }) {
+  const inputXml = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <Button size="sm" variant="secondary" onClick={() => inputXml.current?.click()}>
+        <Upload className="mr-2 h-4 w-4" /> Adjuntar XML
+      </Button>
+      <input
+        ref={inputXml}
+        type="file"
+        className="hidden"
+        accept=".xml,text/xml,application/xml"
+        onChange={(e) => {
+          const archivo = e.target.files?.[0];
+          if (archivo) onSelect(archivo);
+          e.target.value = "";
+        }}
+      />
+    </>
+  );
+}
+
 export function FacturaEntranteItem({
   row, puedeEliminar, puedeAdjuntarXml, onVer, onAdjuntarXml, onEliminar,
 }: Props) {
-  const inputXml = useRef<HTMLInputElement>(null);
   const chips = chipsArchivosEntrante(row);
   const tieneXml = chips.includes("xml");
   const tienePdf = chips.includes("pdf");
-  const esNacional = (row.proveedores?.origen ?? "Nacional") === "Nacional";
-  const faltaXml = faltaXmlFiscal({ esNacional, tieneXml });
+  const faltaXml = faltaXmlFiscal({
+    esNacional: (row.proveedores?.origen ?? "Nacional") === "Nacional",
+    tieneXml,
+  });
 
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -49,21 +93,7 @@ export function FacturaEntranteItem({
           {tieneXml && <Badge variant="outline" size="sm">XML</Badge>}
           {faltaXml && <Badge variant="warning" size="sm">Falta XML</Badge>}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Subida el {formatDate(row.created_at)}
-          {row.estado === "por_capturar" && ` · ${diasEnEspera(row.created_at)} día(s) en espera`}
-          {row.proveedores?.nombre ? ` · ${row.proveedores.nombre}` : ""}
-        </p>
-        {(row.folio_serie || row.total_detectado != null) && (
-          <p className="text-xs text-muted-foreground">
-            {row.folio_serie ? `Folio ${row.folio_serie}` : "Sin folio"}
-            {row.total_detectado != null
-              ? ` · ${formatCurrency(Number(row.total_detectado), row.moneda_detectada ?? "MXN")}`
-              : ""}
-          </p>
-        )}
-        {row.nota && <p className="text-xs text-muted-foreground">Nota: {row.nota}</p>}
-        {row.rechazo_motivo && <p className="text-xs text-destructive">Rechazada: {row.rechazo_motivo}</p>}
+        <MetaEntrante row={row} />
       </div>
       <div className="flex shrink-0 flex-wrap gap-2">
         {tienePdf && (
@@ -81,22 +111,7 @@ export function FacturaEntranteItem({
           </Button>
         )}
         {!tieneXml && puedeAdjuntarXml && (
-          <>
-            <Button size="sm" variant="secondary" onClick={() => inputXml.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" /> Adjuntar XML
-            </Button>
-            <input
-              ref={inputXml}
-              type="file"
-              className="hidden"
-              accept=".xml,text/xml,application/xml"
-              onChange={(e) => {
-                const archivo = e.target.files?.[0];
-                if (archivo) onAdjuntarXml(row, archivo);
-                e.target.value = "";
-              }}
-            />
-          </>
+          <AdjuntarXmlButton onSelect={(xml) => onAdjuntarXml(row, xml)} />
         )}
         {puedeEliminar && (
           <Button size="sm" variant="ghost" onClick={() => onEliminar(row)} aria-label="Retirar del buzón">
