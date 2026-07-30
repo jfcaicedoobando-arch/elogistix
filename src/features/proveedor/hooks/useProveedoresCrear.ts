@@ -46,6 +46,8 @@ export function useProveedoresCrear() {
         title: "Error al crear proveedor",
         method: "HANDLE_ADD",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
+        // R-03: sin `error` el toast mostraba "undefined" y ocultaba la causa real.
+        error: err,
       });
     }
   };

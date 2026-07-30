@@ -30,8 +30,44 @@ export interface PayloadValidado {
 }
 export interface PayloadInvalido {
   ok: false;
-  motivo: "clabe" | "swift";
+  motivo: "clabe" | "swift" | "categoria" | "tipo" | "subtipo";
   mensaje: string;
+}
+
+/**
+ * R-03 — whitelist explícita de columnas de `public.proveedores`. Antes se
+ * enviaba `{...form}` completo: cualquier campo auxiliar del formulario
+ * llegaba al insert y el servidor devolvía un error genérico.
+ */
+const COLUMNAS_PROVEEDOR = [
+  "nombre", "categoria", "tipo", "subtipo_gasto", "pais", "rfc", "contacto",
+  "email", "telefono", "moneda_preferida", "origen_proveedor", "dias_credito",
+  "cp", "direccion", "ciudad", "estado", "regimen_fiscal", "banco", "clabe",
+  "swift_bic", "iban", "aba_routing", "banco_pais", "banco_direccion",
+  "banco_intermediario", "banco_intermediario_swift", "beneficiario",
+  "referencia_pago",
+] as const;
+
+function soloColumnas(form: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const col of COLUMNAS_PROVEEDOR) {
+    if (col in form) out[col] = form[col];
+  }
+  return out;
+}
+
+/** Coherencia categoría ↔ tipo/subtipo, validada antes de tocar el servidor. */
+function validarCategoria(form: NuevoProveedorForm): PayloadInvalido | null {
+  if (!form.categoria) {
+    return { ok: false, motivo: "categoria", mensaje: "Selecciona la categoría del proveedor." };
+  }
+  if (form.categoria === "Logistico" && !form.tipo) {
+    return { ok: false, motivo: "tipo", mensaje: "Selecciona el tipo de proveedor logístico (Naviera, Transportista, etc.)." };
+  }
+  if (form.categoria === "GastoOperativo" && !form.subtipo_gasto) {
+    return { ok: false, motivo: "subtipo", mensaje: "Selecciona el subtipo de gasto operativo." };
+  }
+  return null;
 }
 
 export function preparePayload(form: NuevoProveedorForm): PayloadValidado | PayloadInvalido {
@@ -48,9 +84,18 @@ export function preparePayload(form: NuevoProveedorForm): PayloadValidado | Payl
     return { ok: false, motivo: "swift", mensaje: "El SWIFT/BIC debe tener 8 u 11 caracteres alfanuméricos." };
   }
 
-  const payload = esExtranjero
+  const errorCategoria = validarCategoria(form);
+  if (errorCategoria) return errorCategoria;
+
+  const normalizado: NuevoProveedorForm = esExtranjero
     ? { ...form, clabe: "", swift_bic: swiftTrim }
     : { ...form, clabe: clabeTrim };
-  // SAFE-CAST: el form contiene exactamente los campos requeridos por la tabla.
-  return { ok: true, payload: payload as TablesInsert<"proveedores"> };
+  // Coherencia de enums: un logístico nunca lleva subtipo de gasto y viceversa.
+  const conEnums = {
+    ...normalizado,
+    tipo: normalizado.categoria === "Logistico" ? normalizado.tipo : null,
+    subtipo_gasto: normalizado.categoria === "GastoOperativo" ? normalizado.subtipo_gasto : null,
+  };
+  // SAFE-CAST: `soloColumnas` deja exactamente las columnas de la tabla.
+  return { ok: true, payload: soloColumnas(conEnums) as TablesInsert<"proveedores"> };
 }
