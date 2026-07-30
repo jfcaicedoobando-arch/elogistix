@@ -66,7 +66,7 @@ export const COMPRAS_POR_PAGAR_ROLES: AppRole[] = ["admin", "super_admin", "admi
 export const SENTRY_ROLES: AppRole[] = ["admin", "admin_org", "super_admin"];
 export const PAPELERA_ROLES: AppRole[] = ["admin", "super_admin"];
 export const IDEMPOTENCIA_ROLES: AppRole[] = ["admin", "super_admin"];
-export const AUDITORIA_ROLES: AppRole[] = ["admin", "admin_org", "viewer", "customer_service"];
+export const AUDITORIA_ROLES: AppRole[] = ["admin", "admin_org", "super_admin", "viewer", "customer_service"];
 export const USUARIOS_ROLES: AppRole[] = ["admin", "admin_org", "super_admin"];
 export const CONFIGURACION_ROLES: AppRole[] = ["admin", "admin_org", "contador", "super_admin"];
 
