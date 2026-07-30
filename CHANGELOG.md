@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.346.1] - 2026-07-30
+- **Fix · Las pantallas de carga ya no fingen un error a los 15 s.** El aviso "No se pudo cargar la información" con botón "Reintentar" sólo aparece cuando la pantalla realmente sabe cómo reintentar; si no, sigue mostrando el spinner mientras la consulta avanza. Analogía: dejamos de colgar un letrero de "cerrado" sólo porque la fila iba lenta.
+- **Fix · Los mensajes de éxito ya no se borran al navegar.** Al cambiar de página sólo se descartan los toasts de error; las confirmaciones tipo "Guardado correctamente" sobreviven al redirect para que alcances a leerlas.
+
 ## [13.346.0] - 2026-07-31
 - **Nuevo · Buzón de facturas de proveedor por embarque.** Los operadores ya pueden subir el PDF/XML del invoice que les manda el agente directo en la pestaña "Facturas proveedor" del embarque, sin crear la factura contable. Contabilidad las ve juntas en Compras → "Buzón de facturas", abre el archivo, captura la factura de proveedor y marca el documento como capturado (o lo rechaza con un motivo que operación ve en el embarque). Analogía: operación deja el sobre en la bandeja de entrada; contabilidad es la única que lo abre y lo registra en los libros. Incluye almacenamiento privado por organización, control de duplicados por huella del archivo y pruebas del nuevo dominio.
 

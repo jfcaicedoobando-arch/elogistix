@@ -39,13 +39,17 @@ export function LoadingState({
   errorLabel = "No se pudo cargar la información.",
 }: LoadingStateProps) {
   const [timedOut, setTimedOut] = useState(false);
+  // P-06 revisado: el timeout sólo tiene sentido si el consumidor puede
+  // reintentar de verdad (`onRetry`). Sin él, mostrar "no se pudo cargar"
+  // sería un falso error en redes lentas y el botón quedaría muerto.
+  const effectiveTimeout = onRetry ? timeoutMs : 0;
 
   useEffect(() => {
-    if (!timeoutMs) return;
+    if (!effectiveTimeout) return;
     setTimedOut(false);
-    const timer = setTimeout(() => setTimedOut(true), timeoutMs);
+    const timer = setTimeout(() => setTimedOut(true), effectiveTimeout);
     return () => clearTimeout(timer);
-  }, [timeoutMs]);
+  }, [effectiveTimeout]);
 
   if (error || timedOut) {
     return (

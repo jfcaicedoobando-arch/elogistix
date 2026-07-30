@@ -29,6 +29,10 @@ import { shouldAttachDetails, buildDetailsAction } from "./appFeedback.details";
 import { shouldReportToSentry } from "./appFeedback.sentry";
 import type { AnyToastFn, ErrorNotifyOptions, InfoNotifyOptions } from "./appFeedback.types";
 
+/** Q-08 · ids de los toasts de error vivos, para poder descartar SÓLO errores
+ *  al cambiar de ruta sin borrar confirmaciones de éxito. */
+const ERROR_TOAST_IDS = new Set<string>();
+
 export * from "./appFeedback.types";
 export * from "./appFeedback.sentry";
 
@@ -64,11 +68,13 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     method,
   });
 
+  const errorToastId = `err-${errorCode ?? phase ?? "generic"}`;
+  ERROR_TOAST_IDS.add(errorToastId);
   sonnerToast.error(computedTitle, {
     description,
     // P-05: dedupe por código de error (reemplaza en vez de apilar) y
     // auto-dismiss a 8s: los toasts persistentes tapaban los botones del header.
-    id: `err-${errorCode ?? phase ?? "generic"}`,
+    id: errorToastId,
     duration: 8000,
     // Q-08: si hay acción primaria (Reintentar), "Ver detalles" baja a secundaria.
     action: action ?? { label: "Ver detalles", onClick: () => openErrorReport(debug) },
@@ -148,8 +154,11 @@ export function notifyInfo(
   });
 }
 
-/** Descarta todos los toasts vivos (p. ej. al cambiar de ruta, Q-08).
+/** Descarta SÓLO los toasts de error vivos (p. ej. al cambiar de ruta, Q-08).
+ *  Las confirmaciones de éxito/aviso sobreviven a la navegación para que el
+ *  usuario alcance a leer "Guardado correctamente" tras un redirect.
  *  Punto único de acceso a `sonner` para no importarlo desde componentes. */
 export function dismissAllToasts() {
-  sonnerToast.dismiss();
+  for (const id of ERROR_TOAST_IDS) sonnerToast.dismiss(id);
+  ERROR_TOAST_IDS.clear();
 }
