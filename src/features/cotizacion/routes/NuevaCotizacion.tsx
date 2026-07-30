@@ -64,17 +64,21 @@ export default function NuevaCotizacion() {
     cotizacionId: w.cotizacionId,
     currentStep: w.currentStep,
     costosInternos: w.costosInternos,
+    paused: restaurando,
   });
 
   // P0 — Detectar borrador existente (re-evalúa cuando el userId async llega).
   const draftDetectado = useMemo(() => (userId ? loadDraft(userId) : null), [userId]);
   const [banderaBorrador, setBanderaBorrador] = useState(false);
+  const [restaurando, setRestaurando] = useState(false);
   useEffect(() => {
     if (draftDetectado) setBanderaBorrador(true);
   }, [draftDetectado]);
 
   const handleRestore = useCallback(() => {
     if (draftDetectado) {
+      // R-09: congelamos el autoguardado mientras RHF aplica el reset.
+      setRestaurando(true);
       w.form.reset(draftDetectado.values);
       // B-003: restaurar el id garantiza que el siguiente "Guardar" haga UPDATE
       // en la cotización huérfana en vez de INSERTar una nueva.
@@ -92,6 +96,8 @@ export default function NuevaCotizacion() {
       }
     }
     setBanderaBorrador(false);
+    // Se reanuda en el siguiente tick, ya con los valores restaurados aplicados.
+    setTimeout(() => setRestaurando(false), 0);
   }, [draftDetectado, w]);
 
   const handleDiscard = useCallback(() => {
