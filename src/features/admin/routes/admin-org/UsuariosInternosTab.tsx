@@ -42,12 +42,16 @@ export function UsuariosInternosTab() {
   useEffect(() => {
     if (isLoading || reportedRef.current || correosNoResueltos === 0) return;
     reportedRef.current = true;
+    // Si el directorio falló por red/edge, es ruido de infraestructura: sólo
+    // reportamos cuando la respuesta fue OK pero faltaron correos (bug real).
+    if (fallóDirectorioUsuarios()) return;
     reportCaughtError(
       new Error("user-management: correos sin resolver"),
       { feature: "admin_usuarios", op: "list_emails" },
       { correosNoResueltos, total: users.length },
     );
   }, [correosNoResueltos, isLoading, users.length]);
+
 
 
 
