@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.358.1] - 2026-07-30
+- **fix(CI · rls-tests)**: el paso "Regenerate types from migration schema" fallaba por `toomanyrequests: Rate exceeded` al bajar `postgres-meta` de public.ecr.aws. Ahora se hace `docker pull` con 4 reintentos + backoff, `gen types` con 3 reintentos y, si el registry sigue limitado, el gate de drift de `types.ts` se omite con warning en vez de romper el build por infra.
+
+
 ## [13.358.0] - 2026-07-30
 - **feat(CRM · vistas guardadas)**: chips en Oportunidades para aplicar filtros de un clic (Todas · Mis deals · Cierra este mes · Alto valor), con detección de la vista activa (`domain/oportunidades/vistasGuardadas.ts`).
 - **feat(CRM · disciplina de pipeline)**: al mover una oportunidad a una etapa abierta se abre el diálogo de "Próximo paso" para agendar la siguiente acción (estilo Salesforce).
