@@ -83,13 +83,37 @@ interface AccionesProps {
 }
 
 
-function AccionesBorrador({ cotizacionId, onCambiarEstado, puedeEnviar }: { cotizacionId: string; onCambiarEstado: AccionesProps["onCambiarEstado"]; puedeEnviar: boolean }) {
+/**
+ * R-02 — Una cotización "Solicitada" (creada por el cliente desde el portal)
+ * también necesita entrar a captura: sin este botón quedaba en un callejón sin
+ * salida. R-08 — cuando el total es $0 se explica por qué no se puede enviar.
+ */
+function AccionesCaptura({
+  cotizacionId, onCambiarEstado, puedeEnviar, esSolicitada, total,
+}: {
+  cotizacionId: string;
+  onCambiarEstado: AccionesProps["onCambiarEstado"];
+  puedeEnviar: boolean;
+  esSolicitada: boolean;
+  total: number;
+}) {
   const navigate = useNavigate();
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => navigate(`/cotizaciones/${cotizacionId}/editar`)}>Editar</Button>
+      <Button
+        variant={esSolicitada ? "default" : "outline"}
+        size="sm"
+        onClick={() => navigate(`/cotizaciones/${cotizacionId}/editar`)}
+      >
+        {esSolicitada ? "Completar cotización" : "Editar"}
+      </Button>
       {puedeEnviar && (
         <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Enviada")}>Marcar como Enviada</Button>
+      )}
+      {!puedeEnviar && Number(total) <= 0 && (
+        <span className="self-center text-xs text-muted-foreground">
+          Agrega al menos un concepto con importe para poder enviarla.
+        </span>
       )}
     </>
   );
@@ -126,6 +150,7 @@ export function CotizacionDetalleAcciones({
     creadaPor,
     usuarioActual,
   });
+  const esEnCaptura = estado === "Borrador" || estado === "Solicitada";
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
   const esAceptada = estado === "Aceptada";
   const mostrarCrearEmbarque = esAceptada && !esProspecto && !tieneEmbarquesVinculados;
@@ -135,7 +160,15 @@ export function CotizacionDetalleAcciones({
 
   return (
     <div className="flex flex-wrap gap-2">
-      {estado === "Borrador" && <AccionesBorrador cotizacionId={cotizacionId} onCambiarEstado={onCambiarEstado} puedeEnviar={acciones.enviar} />}
+      {esEnCaptura && (
+        <AccionesCaptura
+          cotizacionId={cotizacionId}
+          onCambiarEstado={onCambiarEstado}
+          puedeEnviar={acciones.enviar}
+          esSolicitada={estado === "Solicitada"}
+          total={total}
+        />
+      )}
       {esBorradorOEnviada && <AccionesBorradorOEnviada onCambiarEstado={onCambiarEstado} puedeAceptar={acciones.aceptar} puedeRechazar={acciones.rechazar} />}
       {esAceptada && esProspecto && (
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
