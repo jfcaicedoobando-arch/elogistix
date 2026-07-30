@@ -15,7 +15,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import type { ChipBuzon } from "@/lib/domain/facturasEntrantesBuzon";
+import { DIAS_ATRASO_BUZON, type ChipBuzon } from "@/lib/domain/facturasEntrantesBuzon";
 
 import {
   useCapturarFacturaEntrante,
@@ -82,7 +82,7 @@ export default function CxpBuzonEntrantes() {
           onClick={() => aplicarChip("todos")}
         />
         <KpiCard
-          label={`Con ${3} días o más`}
+          label={`Con ${DIAS_ATRASO_BUZON} días o más`}
           value={String(resumen.atrasados)}
           icon={Clock}
           variant={resumen.atrasados > 0 ? "warning" : "default"}
