@@ -54,7 +54,7 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   const filas = data ?? [];
   const resumen = resumirEntrantes(filas);
   const sinXml = filas.filter((row) => faltaXmlFiscal({
-    esNacional: (row.proveedores?.origen ?? "Nacional") === "Nacional",
+    esNacional: (row.proveedores?.origen_proveedor ?? "Nacional") === "Nacional",
     tieneXml: chipsArchivosEntrante(row).includes("xml"),
   })).length;
   const puedeSubir = canEdit && (canEditOperations || canCapturarFacturaProveedor) && Boolean(organizationId);
