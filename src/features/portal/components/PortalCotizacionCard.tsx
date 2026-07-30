@@ -115,25 +115,12 @@ export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
                 Vigencia: {c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "—"}
               </p>
               {fechaRespuesta && fechaRespuestaLabel && (
-                <p className="text-2xs text-muted-foreground mt-0.5 tabular-nums">
-                  {/* B-103: fecha date-only → sólo fecha (no "00:00"). */}
-                  {fechaRespuestaLabel} el {formatDate(fechaRespuesta, fechaRespuesta.includes("T") ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy")}
-                </p>
+                <LineaRespuesta fecha={fechaRespuesta} label={fechaRespuestaLabel} />
               )}
-              {tieneEmbarque && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigate(`/portal/embarques/${c.embarque_id}`);
-                  }}
-                  className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-success hover:underline"
-                >
-                  <Ship className="h-3 w-3" />
-                  En operación · {expediente}
-                </button>
+              {tieneEmbarque && expediente && c.embarque_id && (
+                <EnlaceEmbarque embarqueId={c.embarque_id} expediente={expediente} />
               )}
+
             </div>
           </div>
           <p className="text-sm font-bold tabular-nums shrink-0 text-right min-w-[110px]">
