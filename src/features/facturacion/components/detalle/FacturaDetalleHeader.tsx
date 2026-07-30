@@ -75,9 +75,21 @@ export function FacturaDetalleHeader(props: Props) {
         </>
       }
       subtitle={
-        <span className="flex items-center gap-x-2 flex-wrap">
+        <span className="flex flex-wrap items-center gap-x-2">
+          {clienteNombre && (
+            <>
+              <span>{clienteNombre}</span>
+              <span aria-hidden>•</span>
+            </>
+          )}
+          {fechaEmision && (
+            <>
+              <span>Expedida {formatDate(fechaEmision)}</span>
+              <span aria-hidden>•</span>
+            </>
+          )}
           <span>
-            Exp:{" "}
+            Exp.:{" "}
             {embarqueId ? (
               <Link to={`/embarques/${embarqueId}`} className="font-mono text-accent hover:underline">
                 {expediente}
@@ -112,8 +124,8 @@ export function FacturaDetalleHeader(props: Props) {
               {formatCurrency(total, moneda)}
             </p>
             {mostrarSaldo && (
-              <p className="text-xs tabular-nums text-destructive mt-0.5">
-                Saldo: {formatCurrency(saldo!, moneda)}
+              <p className="mt-0.5 text-xs tabular-nums text-destructive">
+                Pendiente: {formatCurrency(saldo!, moneda)}
               </p>
             )}
           </div>
