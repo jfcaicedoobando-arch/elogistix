@@ -3,6 +3,9 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Lock } from "lucide-react";
+
 import { useEditarEmbarqueWizard } from "@/features/embarques/hooks";
 import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
