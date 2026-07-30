@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.360.0] - 2026-07-30
+- **feat(compras · buzón de facturas)**: un documento del buzón ahora agrupa **PDF + XML del mismo CFDI**. Nueva zona de arrastre con dos ranuras (`ArchivosEntranteDropZone`), lectura del XML en el navegador (`cfdiXmlMeta`: UUID, RFC, folio, total, moneda) con vista previa y auto-detección del proveedor por RFC, índice único por `(organization_id, uuid_fiscal)` para evitar CFDI duplicados, badges PDF/XML/"Falta XML" en el embarque y en `/compras/buzon` (con KPI y filtro "sólo sin XML") y acción "Adjuntar XML" para completar documentos que llegaron sólo con PDF.
+
 ## [13.359.1] - 2026-07-30
 - **fix(cotizaciones · toasts)**: se eliminó el doble toast en el detalle de cotización al cambiar estado, convertir prospecto y crear embarque borrador (el aviso vivía a la vez en el hook de mutación y en el handler). Ahora el toast lo emite sólo el hook, y `useCrearEmbarqueBorrador` silencia su error cuando es `RevalidacionRequeridaError` para no chocar con el aviso guiado de revalidación.
 
