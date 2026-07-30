@@ -98,9 +98,13 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
         onPendingRole(user, newRole);
       }}
     >
+      {/* El trigger muestra SOLO la etiqueta del rol: `SelectValue` clonaría el
+          contenido del `SelectItem` (etiqueta + descripción) y desbordaba la
+          celda encimando el texto entre filas (auditoría visual 1366×768). */}
       <SelectTrigger className="w-full min-w-[160px] sm:min-w-[180px] lg:min-w-[220px] max-w-[260px]">
-        <SelectValue />
+        <span className="truncate text-left">{ROLE_LABELS[user.role]}</span>
       </SelectTrigger>
+
       <SelectContent>
         {esRolLegacy(user.role) && (
           <SelectGroup>
