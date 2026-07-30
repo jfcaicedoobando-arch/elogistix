@@ -57,6 +57,31 @@ export function useSubirFacturaEntrante() {
   });
 }
 
+/** v13.360.0 — Completa un documento existente adjuntándole el XML faltante. */
+export function useAdjuntarXmlFacturaEntrante() {
+  const invalidar = useInvalidarEntrantes();
+  return useMutation({
+    mutationFn: (input: {
+      id: string;
+      xml: File;
+      meta: CfdiXmlMeta | null;
+      embarqueId: string;
+      organizationId: string;
+    }) => adjuntarXmlFacturaEntrante(input),
+    onSuccess: () => {
+      invalidar();
+      notifySuccess(undefined, { title: "XML adjuntado al documento" });
+    },
+    onError: (error) => notifyError(undefined, {
+      title: "No se pudo adjuntar el XML",
+      error,
+      method: "ADJUNTAR_XML_FACTURA_ENTRANTE",
+    }),
+  });
+}
+
+
+
 export function useEliminarFacturaEntrante() {
   const invalidar = useInvalidarEntrantes();
   return useMutation({
