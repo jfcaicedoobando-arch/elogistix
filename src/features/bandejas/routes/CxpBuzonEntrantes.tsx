@@ -59,9 +59,23 @@ export default function CxpBuzonEntrantes() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard label="Documentos por capturar" value={String(data.length)} icon={Inbox} />
+        <KpiCard label="Documentos por capturar" value={String(pendientes.length)} icon={Inbox} />
         <KpiCard label="Con 3 días o más" value={String(masDeTresDias)} icon={XCircle} />
+        <KpiCard label="Sin XML del CFDI" value={String(totalSinXml)} icon={FileCode2} />
       </div>
+
+      {totalSinXml > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant={soloSinXml ? "default" : "outline"}
+            onClick={() => setSoloSinXml((v) => !v)}
+          >
+            <FileCode2 className="mr-2 h-4 w-4" />
+            {soloSinXml ? "Ver todos" : `Ver sólo sin XML (${totalSinXml})`}
+          </Button>
+        </div>
+      )}
 
       {isLoading && <Skeleton className="h-40 w-full" />}
 
@@ -81,6 +95,10 @@ export default function CxpBuzonEntrantes() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="truncate text-sm font-medium">{row.nombre_archivo}</span>
                   <Badge variant="warning" size="sm">{diasEnEspera(row.created_at)} día(s)</Badge>
+                  {chipsArchivosEntrante(row).map((chip) => (
+                    <Badge key={chip} variant="outline" size="sm">{chip.toUpperCase()}</Badge>
+                  ))}
+                  {sinXml(row) && <Badge variant="warning" size="sm">Falta XML</Badge>}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Embarque{" "}
@@ -89,13 +107,28 @@ export default function CxpBuzonEntrantes() {
                   </Link>
                   {" · "}Subida el {formatDate(row.created_at)}
                   {row.proveedores?.nombre ? ` · ${row.proveedores.nombre}` : ""}
+                  {row.folio_serie ? ` · Folio ${row.folio_serie}` : ""}
                 </p>
                 {row.nota && <p className="text-xs text-muted-foreground">Nota: {row.nota}</p>}
               </div>
               <div className="flex shrink-0 flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => void abrirArchivo(row)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void abrirArchivo(row.archivo_path, row.nombre_archivo)}
+                >
                   <ExternalLink className="mr-2 h-4 w-4" /> Ver archivo
                 </Button>
+                {row.xml_path && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void abrirArchivo(row.xml_path!, row.xml_nombre ?? "cfdi.xml")}
+                  >
+                    <FileCode2 className="mr-2 h-4 w-4" /> XML
+                  </Button>
+                )}
+
                 <Button size="sm" variant="secondary" asChild>
                   <Link to={`/embarques/${row.embarque_id}?tab=costos&focus=facturas-entrantes`}>Ir al embarque</Link>
                 </Button>
