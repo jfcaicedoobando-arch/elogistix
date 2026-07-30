@@ -62,42 +62,10 @@ export default function Oportunidades() {
     });
   }, [opsRaw, filtros]);
 
-  const mover = useMoverEtapaConAutomatizacion();
-  const handleMover = async (id: string, etapaId: string, prob: number) => {
-    const op = opsRaw.find((o) => o.id === id);
-    const etapaPrev = op?.etapa_id;
-    const probPrev = op?.probabilidad ?? 0;
-    // B-054: no pisar una probabilidad editada manualmente. Heurística (sin
-    // flag en BD): si difiere del `probabilidad_default` de la etapa ORIGEN
-    // se asume manual y se conserva; si coincide, es heredada y adopta el
-    // default de la etapa destino.
-    const etapaOrigen = etapas.find((e) => e.id === etapaPrev);
-    const esProbManual = op != null && etapaOrigen != null
-      && Number(op.probabilidad ?? 0) !== Number(etapaOrigen.probabilidad_default ?? 0);
-    const probDestino = esProbManual ? Number(probPrev) : prob;
-    // B-034: soltar en etapa "ganada" captura el cierre real con defaults
-    // (hoy / monto estimado); el usuario puede corregirlo en Editar.
-    const etapaDestino = etapas.find((e) => e.id === etapaId) as (CrmEtapaRow & { tipo?: string }) | undefined;
-    const cierreGanada = etapaDestino?.tipo === "ganada" ? {
-      fecha_cierre_real: new Date().toISOString().slice(0, 10),
-      valor_real: Number(op?.monto_estimado ?? 0),
-    } : {};
-    try {
-      await mover.mutateAsync({ id, etapa_id: etapaId, probabilidad: probDestino, ...cierreGanada });
-      const { showUndoToast } = await import("@/features/crm/hooks/useUndoToast");
-      showUndoToast("Etapa actualizada", async () => {
-        if (!etapaPrev) return;
-        await mover.mutateAsync({ id, etapa_id: etapaPrev, probabilidad: probPrev });
-      });
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo mover",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE_MOVER",
-      });
-    }
-  };
+  const { handleMover, proximoPaso, cerrarProximoPaso } = useMoverOportunidadEtapa({
+    etapas: etapas as CrmEtapaRow[],
+    oportunidades: opsRaw,
+  });
 
   const activos = activosFiltros(filtros);
   const totalPipeline = ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0);
