@@ -118,6 +118,7 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
 export const SIDEBAR_COMPRAS_ITEMS: SidebarItem[] = [
   { title: "Dashboard", url: "/compras", icon: ShoppingCart },
   { title: "Por capturar", url: "/compras/por-capturar", icon: Inbox },
+  { title: "Buzón de facturas", url: "/compras/buzon", icon: Inbox },
   { title: "Por aprobar", url: "/compras/por-aprobar", icon: ClipboardCheck },
   { title: "Por pagar", url: "/compras/por-pagar", icon: Banknote },
   { title: "Facturas", url: "/compras/facturas", icon: Receipt },

@@ -3394,6 +3394,114 @@ export type Database = {
           },
         ]
       }
+      embarque_facturas_entrantes: {
+        Row: {
+          archivo_hash: string
+          archivo_path: string
+          capturado_por: string | null
+          created_at: string
+          deleted_at: string | null
+          embarque_id: string
+          estado: string
+          folio_detectado: string | null
+          ia_estado: string
+          ia_payload: Json | null
+          id: string
+          moneda_detectada: string | null
+          nombre_archivo: string
+          nota: string | null
+          organization_id: string
+          proveedor_factura_id: string | null
+          proveedor_id: string | null
+          rechazo_motivo: string | null
+          subido_por: string | null
+          total_detectado: number | null
+          updated_at: string
+        }
+        Insert: {
+          archivo_hash: string
+          archivo_path: string
+          capturado_por?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          embarque_id: string
+          estado?: string
+          folio_detectado?: string | null
+          ia_estado?: string
+          ia_payload?: Json | null
+          id?: string
+          moneda_detectada?: string | null
+          nombre_archivo: string
+          nota?: string | null
+          organization_id: string
+          proveedor_factura_id?: string | null
+          proveedor_id?: string | null
+          rechazo_motivo?: string | null
+          subido_por?: string | null
+          total_detectado?: number | null
+          updated_at?: string
+        }
+        Update: {
+          archivo_hash?: string
+          archivo_path?: string
+          capturado_por?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          embarque_id?: string
+          estado?: string
+          folio_detectado?: string | null
+          ia_estado?: string
+          ia_payload?: Json | null
+          id?: string
+          moneda_detectada?: string | null
+          nombre_archivo?: string
+          nota?: string | null
+          organization_id?: string
+          proveedor_factura_id?: string | null
+          proveedor_id?: string | null
+          rechazo_motivo?: string | null
+          subido_por?: string | null
+          total_detectado?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embarque_facturas_entrantes_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_facturas_entrantes_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+          {
+            foreignKeyName: "embarque_facturas_entrantes_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_facturas_entrantes_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+          {
+            foreignKeyName: "embarque_facturas_entrantes_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       embarque_garantias_contenedor: {
         Row: {
           created_at: string
@@ -7319,6 +7427,10 @@ export type Database = {
         Args: { p_factura_id: string; p_motivo: string }
         Returns: undefined
       }
+      capturar_factura_entrante: {
+        Args: { p_documento_id: string; p_factura_id: string }
+        Returns: undefined
+      }
       cartera_pendiente: {
         Args: never
         Returns: {
@@ -8510,6 +8622,10 @@ export type Database = {
       recalcular_subtotal_cotizacion: {
         Args: { p_cotizacion_id: string }
         Returns: number
+      }
+      rechazar_factura_entrante: {
+        Args: { p_documento_id: string; p_motivo: string }
+        Returns: undefined
       }
       recompute_embarque_tiene_proforma: {
         Args: { p_embarque_id: string }

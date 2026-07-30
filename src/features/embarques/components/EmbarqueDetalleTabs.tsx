@@ -6,6 +6,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { FileEdit } from "lucide-react";
 import { TabResumen } from "@/features/embarques/components/TabResumen";
 import { TabDocumentos } from "@/features/embarques/components/TabDocumentos";
+import { TabFacturasEntrantes } from "@/features/embarques/components/TabFacturasEntrantes";
 import { TabCostos } from "@/features/embarques/components/TabCostos";
 import { TabFacturacion } from "@/features/embarques/components/TabFacturacion";
 import { TabNotas } from "@/features/embarques/components/TabNotas";
@@ -51,6 +52,7 @@ export function EmbarqueDetalleTabs({
           <TabsTrigger value="resumen" data-testid="tab-resumen" className="whitespace-nowrap">Resumen</TabsTrigger>
           <TabsTrigger value="tracking" data-testid="tab-tracking" className="whitespace-nowrap">Tracking</TabsTrigger>
           <TabsTrigger value="documentos" data-testid="tab-documentos" className="whitespace-nowrap">Documentos</TabsTrigger>
+          <TabsTrigger value="facturas-entrantes" data-testid="tab-facturas-entrantes" className="whitespace-nowrap">Facturas proveedor</TabsTrigger>
           <TabsTrigger value="costos" data-testid="tab-costos" className="whitespace-nowrap">Costos</TabsTrigger>
           <TabsTrigger value="garantias" data-testid="tab-garantias" className="whitespace-nowrap">Demoras y Garantías</TabsTrigger>
           <TabsTrigger value="seguros" data-testid="tab-seguros" className="whitespace-nowrap">Seguros</TabsTrigger>
@@ -95,6 +97,11 @@ export function EmbarqueDetalleTabs({
           onDelete={docHandlers.onDelete}
           onToggleNoAplica={docHandlers.onToggleNoAplica}
         />
+      </TabsContent>
+
+      {/* v13.346.0 — Buzón CxP: operación entrega el invoice, contabilidad lo captura. */}
+      <TabsContent value="facturas-entrantes">
+        <TabFacturasEntrantes embarqueId={embarqueId} canEdit={canEdit} />
       </TabsContent>
 
       <TabsContent value="costos" className="space-y-6">

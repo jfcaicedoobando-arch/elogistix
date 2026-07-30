@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.346.0] - 2026-07-31
+- **Nuevo · Buzón de facturas de proveedor por embarque.** Los operadores ya pueden subir el PDF/XML del invoice que les manda el agente directo en la pestaña "Facturas proveedor" del embarque, sin crear la factura contable. Contabilidad las ve juntas en Compras → "Buzón de facturas", abre el archivo, captura la factura de proveedor y marca el documento como capturado (o lo rechaza con un motivo que operación ve en el embarque). Analogía: operación deja el sobre en la bandeja de entrada; contabilidad es la única que lo abre y lo registra en los libros. Incluye almacenamiento privado por organización, control de duplicados por huella del archivo y pruebas del nuevo dominio.
+
 ## [13.345.0] - 2026-07-31
 - **Mejora · Se distinguen las solicitudes que llegan del portal del cliente.** Las cotizaciones creadas por el cliente desde su portal ahora se marcan en la base (`origen_portal`) y muestran una etiqueta "Portal" en la lista, junto al estado. Las solicitudes históricas quedaron marcadas automáticamente. Analogía: los pedidos que entran por la ventanilla de autoservicio llevan un sello distinto a los que levanta el vendedor.
 - **Fix · Segregación de funciones en cotizaciones (Q-04).** El detalle de cotización ya recibe quién la creó y quién la está viendo, para ocultar el botón "Aceptar" a su propio autor (salvo administradores), como ya lo bloquea la base de datos.
