@@ -44,7 +44,6 @@ const filterCompras = (urls: string[]) =>
   SIDEBAR_COMPRAS_ITEMS.filter((it) => urls.includes(it.url));
 const COMPRAS_FULL = SIDEBAR_COMPRAS_ITEMS.map((it) => it.url);
 const COMPRAS_READ_ONLY = ["/compras", "/compras/facturas", "/compras/proveedores", "/compras/aging"];
-const COMPRAS_PROVEEDOR_VIEW = ["/compras", "/compras/proveedores", "/compras/aging"];
 
 const COMPRAS_CAPTURA = ["/compras", "/compras/por-capturar", "/compras/buzon", "/compras/facturas", "/compras/proveedores"];
 const COMPRAS_CONTADOR = ["/compras", "/compras/por-capturar", "/compras/buzon", "/compras/por-aprobar", "/compras/facturas", "/compras/notas-credito", "/compras/proveedores", "/compras/conciliacion", "/compras/aging", "/compras/reportes"];
@@ -120,9 +119,8 @@ const buildEjecutivoCobranza: Builder = ({ sistemaItems }) => [
 const buildGerenteComercial: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...crmItems] },
-  { label: "Ventas (CxC)", items: filterVentas(["/comisiones", "/clientes"]) },
-  // v13.369.0 — Estado de cuenta de proveedores (ficha + antigüedad de saldos).
-  { label: "Compras (CxP)", items: filterCompras(COMPRAS_PROVEEDOR_VIEW) },
+  // v13.369.1 — Estado de cuenta de clientes (cartera + antigüedad de saldos).
+  { label: "Ventas (CxC)", items: filterVentas(["/cartera", "/cobranza/aging", "/comisiones", "/clientes"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
   { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
