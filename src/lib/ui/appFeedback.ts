@@ -154,8 +154,11 @@ export function notifyInfo(
   });
 }
 
-/** Descarta todos los toasts vivos (p. ej. al cambiar de ruta, Q-08).
+/** Descarta SÓLO los toasts de error vivos (p. ej. al cambiar de ruta, Q-08).
+ *  Las confirmaciones de éxito/aviso sobreviven a la navegación para que el
+ *  usuario alcance a leer "Guardado correctamente" tras un redirect.
  *  Punto único de acceso a `sonner` para no importarlo desde componentes. */
 export function dismissAllToasts() {
-  sonnerToast.dismiss();
+  for (const id of ERROR_TOAST_IDS) sonnerToast.dismiss(id);
+  ERROR_TOAST_IDS.clear();
 }
