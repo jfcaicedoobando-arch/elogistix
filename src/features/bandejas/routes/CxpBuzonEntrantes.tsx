@@ -1,41 +1,50 @@
 /**
- * Buzón CxP: facturas de proveedor entregadas por operación y aún sin capturar.
+ * Buzón CxP: facturas de proveedor entregadas por operación.
  *
- * Contabilidad abre el archivo, captura la factura de proveedor desde el
- * embarque correspondiente y marca el documento como capturado o rechazado.
+ * Contabilidad revisa el archivo en la vista previa, captura la factura desde
+ * el embarque y marca el documento como capturado o rechazado.
+ *
+ * v13.365.0 — Rediseño 1366×768: filas de una línea, toolbar de búsqueda y
+ * filtros, KPIs accionables, vista previa lateral e historial por pestañas.
  */
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { CheckCircle2, ExternalLink, FileCode2, Inbox, XCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Clock, FileCode2, Inbox } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatDate } from "@/lib/formatters/dates";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { chipsArchivosEntrante, diasEnEspera, faltaXmlFiscal } from "@/lib/domain/facturasEntrantes";
+import type { ChipBuzon } from "@/lib/domain/facturasEntrantesBuzon";
 
 import {
   useCapturarFacturaEntrante,
   useFacturasEntrantesPendientes,
+  useFacturasEntrantesPorEstado,
   useRechazarFacturaEntrante,
 } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 import { RechazarFacturaEntranteDialog } from "@/features/bandejas/components/RechazarFacturaEntranteDialog";
 import { MarcarCapturadaDialog } from "@/features/bandejas/components/MarcarCapturadaDialog";
+import { FacturasEntrantesToolbar } from "@/features/bandejas/components/FacturasEntrantesToolbar";
+import { FacturasEntrantesLista } from "@/features/bandejas/components/FacturasEntrantesLista";
+import { PreviaFacturaEntranteSheet } from "@/features/bandejas/components/PreviaFacturaEntranteSheet";
+import { useBuzonEntrantesFiltros } from "@/features/bandejas/hooks/useBuzonEntrantesFiltros";
 
 export default function CxpBuzonEntrantes() {
   const { canCapturarFacturaProveedor } = usePermissions();
   const { data: pendientes = [], isLoading } = useFacturasEntrantesPendientes();
   const rechazar = useRechazarFacturaEntrante();
   const capturar = useCapturarFacturaEntrante();
+  const [tab, setTab] = useState("pendientes");
+  const capturadas = useFacturasEntrantesPorEstado("capturada", tab === "capturadas");
+  const rechazadas = useFacturasEntrantesPorEstado("rechazada", tab === "rechazadas");
+
   const [aRechazar, setARechazar] = useState<FacturaEntranteRow | null>(null);
   const [aCapturar, setACapturar] = useState<FacturaEntranteRow | null>(null);
-  const [soloSinXml, setSoloSinXml] = useState(false);
+  const [enPrevia, setEnPrevia] = useState<FacturaEntranteRow | null>(null);
+  const { q, setQ, chip, setChip, orden, setOrden, resumen, filtradas } =
+    useBuzonEntrantesFiltros(pendientes);
 
   const abrirArchivo = async (path: string, nombre: string) => {
     try {
@@ -45,16 +54,18 @@ export default function CxpBuzonEntrantes() {
     }
   };
 
-  // v13.360.0 — Un CFDI mexicano sin XML no es deducible: se resalta y se filtra.
-  const sinXml = (row: FacturaEntranteRow) => faltaXmlFiscal({
-    esNacional: (row.proveedores?.origen_proveedor ?? "Nacional") === "Nacional",
-    tieneXml: chipsArchivosEntrante(row).includes("xml"),
-  });
-  const totalSinXml = pendientes.filter(sinXml).length;
-  const data = soloSinXml ? pendientes.filter(sinXml) : pendientes;
+  const aplicarChip = (siguiente: ChipBuzon) => {
+    setTab("pendientes");
+    setChip((actual) => (actual === siguiente ? "todos" : siguiente));
+  };
 
-
-  const masDeTresDias = data.filter((row) => diasEnEspera(row.created_at) >= 3).length;
+  const acciones = {
+    onVer: (row: FacturaEntranteRow) => setEnPrevia(row),
+    onVerXml: (row: FacturaEntranteRow) =>
+      void abrirArchivo(row.xml_path ?? row.archivo_path, row.xml_nombre ?? "cfdi.xml"),
+    onCapturar: (row: FacturaEntranteRow) => { setEnPrevia(null); setACapturar(row); },
+    onRechazar: (row: FacturaEntranteRow) => { setEnPrevia(null); setARechazar(row); },
+  };
 
   return (
     <PageContainer>
@@ -64,94 +75,93 @@ export default function CxpBuzonEntrantes() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard label="Documentos por capturar" value={String(pendientes.length)} icon={Inbox} />
-        <KpiCard label="Con 3 días o más" value={String(masDeTresDias)} icon={XCircle} />
-        <KpiCard label="Sin XML del CFDI" value={String(totalSinXml)} icon={FileCode2} />
+        <KpiCard
+          label="Documentos por capturar"
+          value={String(resumen.total)}
+          icon={Inbox}
+          onClick={() => aplicarChip("todos")}
+        />
+        <KpiCard
+          label={`Con ${3} días o más`}
+          value={String(resumen.atrasados)}
+          icon={Clock}
+          variant={resumen.atrasados > 0 ? "warning" : "default"}
+          onClick={() => aplicarChip("atrasados")}
+        />
+        <KpiCard
+          label="Sin XML del CFDI"
+          value={String(resumen.sinXml)}
+          icon={FileCode2}
+          variant={resumen.sinXml > 0 ? "warning" : "default"}
+          onClick={() => aplicarChip("sin_xml")}
+        />
       </div>
 
-      {totalSinXml > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            size="sm"
-            variant={soloSinXml ? "default" : "outline"}
-            onClick={() => setSoloSinXml((v) => !v)}
-          >
-            <FileCode2 className="mr-2 h-4 w-4" />
-            {soloSinXml ? "Ver todos" : `Ver sólo sin XML (${totalSinXml})`}
-          </Button>
-        </div>
-      )}
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="pendientes">Pendientes ({resumen.total})</TabsTrigger>
+          <TabsTrigger value="capturadas">Capturadas</TabsTrigger>
+          <TabsTrigger value="rechazadas">Rechazadas</TabsTrigger>
+        </TabsList>
 
-      {isLoading && <Skeleton className="h-40 w-full" />}
+        <TabsContent value="pendientes" className="space-y-3">
+          <FacturasEntrantesToolbar
+            q={q}
+            onQChange={setQ}
+            chip={chip}
+            onChipChange={setChip}
+            orden={orden}
+            onOrdenChange={setOrden}
+            visibles={filtradas.length}
+            total={resumen.total}
+          />
+          <FacturasEntrantesLista
+            rows={filtradas}
+            isLoading={isLoading}
+            puedeProcesar={canCapturarFacturaProveedor}
+            tituloVacio={resumen.total === 0 ? "Buzón al día" : "Sin resultados"}
+            textoVacio={
+              resumen.total === 0
+                ? "No hay facturas de proveedor pendientes de capturar."
+                : "Ningún documento coincide con la búsqueda o el filtro activo."
+            }
+            {...acciones}
+          />
+        </TabsContent>
 
-      {!isLoading && data.length === 0 && (
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            No hay facturas pendientes de capturar. 🎉
-          </CardContent>
-        </Card>
-      )}
+        <TabsContent value="capturadas">
+          <FacturasEntrantesLista
+            rows={capturadas.data ?? []}
+            isLoading={capturadas.isLoading}
+            puedeProcesar={false}
+            soloLectura
+            tituloVacio="Sin documentos capturados"
+            textoVacio="Aquí aparecerán los documentos que contabilidad ya capturó en CxP."
+            {...acciones}
+          />
+        </TabsContent>
 
-      <div className="space-y-2">
-        {data.map((row) => (
-          <Card key={row.id}>
-            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="truncate text-sm font-medium">{row.nombre_archivo}</span>
-                  <Badge variant="warning" size="sm">{diasEnEspera(row.created_at)} día(s)</Badge>
-                  {chipsArchivosEntrante(row).map((chip) => (
-                    <Badge key={chip} variant="outline" size="sm">{chip.toUpperCase()}</Badge>
-                  ))}
-                  {sinXml(row) && <Badge variant="warning" size="sm">Falta XML</Badge>}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Embarque{" "}
-                  <Link className="underline underline-offset-2" to={`/embarques/${row.embarque_id}`}>
-                    {row.embarques?.expediente ?? "sin expediente"}
-                  </Link>
-                  {" · "}Subida el {formatDate(row.created_at)}
-                  {row.proveedores?.nombre ? ` · ${row.proveedores.nombre}` : ""}
-                  {row.folio_serie ? ` · Folio ${row.folio_serie}` : ""}
-                </p>
-                {row.nota && <p className="text-xs text-muted-foreground">Nota: {row.nota}</p>}
-              </div>
-              <div className="flex shrink-0 flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => void abrirArchivo(row.archivo_path, row.nombre_archivo)}
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" /> Ver archivo
-                </Button>
-                {row.xml_path && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => void abrirArchivo(row.xml_path!, row.xml_nombre ?? "cfdi.xml")}
-                  >
-                    <FileCode2 className="mr-2 h-4 w-4" /> XML
-                  </Button>
-                )}
+        <TabsContent value="rechazadas">
+          <FacturasEntrantesLista
+            rows={rechazadas.data ?? []}
+            isLoading={rechazadas.isLoading}
+            puedeProcesar={false}
+            soloLectura
+            tituloVacio="Sin documentos rechazados"
+            textoVacio="Aquí aparecerán los documentos devueltos a operación, con su motivo."
+            {...acciones}
+          />
+        </TabsContent>
+      </Tabs>
 
-                <Button size="sm" variant="secondary" asChild>
-                  <Link to={`/embarques/${row.embarque_id}?tab=costos&focus=facturas-entrantes`}>Ir al embarque</Link>
-                </Button>
-                {canCapturarFacturaProveedor && (
-                  <Button size="sm" onClick={() => setACapturar(row)}>
-                    <CheckCircle2 className="mr-2 h-4 w-4" /> Marcar como capturada
-                  </Button>
-                )}
-                {canCapturarFacturaProveedor && (
-                  <Button size="sm" variant="ghost" onClick={() => setARechazar(row)}>
-                    <XCircle className="mr-2 h-4 w-4 text-destructive" /> Rechazar
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <PreviaFacturaEntranteSheet
+        row={enPrevia}
+        onOpenChange={(v) => { if (!v) setEnPrevia(null); }}
+        puedeProcesar={canCapturarFacturaProveedor}
+        onVerXml={acciones.onVerXml}
+        onCapturar={acciones.onCapturar}
+        onRechazar={acciones.onRechazar}
+      />
 
       <MarcarCapturadaDialog
         open={Boolean(aCapturar)}
