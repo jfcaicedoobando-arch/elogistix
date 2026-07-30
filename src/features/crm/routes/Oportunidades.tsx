@@ -164,6 +164,18 @@ export default function Oportunidades() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Disciplina de pipeline: próximo paso tras mover a una etapa abierta. */}
+      <NuevaActividadDialog
+        open={proximoPaso != null}
+        onOpenChange={(o) => { if (!o) cerrarProximoPaso(); }}
+        defaultEntidad={
+          proximoPaso
+            ? { tipo: "oportunidad", id: proximoPaso.id, label: proximoPaso.nombre }
+            : undefined
+        }
+        onCreated={cerrarProximoPaso}
+      />
     </PageContainer>
   );
 }
