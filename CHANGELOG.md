@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.358.0] - 2026-07-30
+- **feat(CRM · vistas guardadas)**: chips en Oportunidades para aplicar filtros de un clic (Todas · Mis deals · Cierra este mes · Alto valor), con detección de la vista activa (`domain/oportunidades/vistasGuardadas.ts`).
+- **feat(CRM · disciplina de pipeline)**: al mover una oportunidad a una etapa abierta se abre el diálogo de "Próximo paso" para agendar la siguiente acción (estilo Salesforce).
+- **refactor**: la lógica de mover etapa (probabilidad manual, cierre real, Undo) sale de `routes/Oportunidades.tsx` al hook `useMoverOportunidadEtapa.ts`; la ruta baja de 198 a <200 líneas y ya usa `todayLocalISO`.
+- **test**: nuevo `vistasGuardadas.test.ts` (7 casos).
+
+
 ## [13.357.0] - 2026-07-30
 - **fix(CRM · datos confiables)**: nuevo trigger `trg_crm_sync_oportunidad_desde_cotizacion` que sincroniza monto, moneda y cliente de la oportunidad con su cotización; el pipeline y el forecast dejan de mostrar $0. Backfill de las 8 oportunidades existentes en cero.
 - **fix(CRM · duplicados)**: la vinculación cotización→CRM reutiliza el lead vivo con el mismo email (`findLeadIdByEmail`) en lugar de crear duplicados; fusionados los 5 leads repetidos de "Nova Trading" y reasignadas sus oportunidades.
