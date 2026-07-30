@@ -68,6 +68,23 @@ function buildQs(match: Record<string, string>): string {
 
 export function supabaseRest(page: Page) {
   return {
+    async select(table: string, match: Record<string, string>, columns = "*") {
+      const h = await readHandle(page);
+      const qs = buildQs(match);
+      const res = await fetch(
+        `${h.url}/rest/v1/${table}?select=${encodeURIComponent(columns)}&${qs}`,
+        {
+          method: "GET",
+          headers: {
+            apikey: h.anonKey,
+            Authorization: `Bearer ${h.accessToken}`,
+          },
+        },
+      );
+      if (!res.ok) throw new Error(`SELECT ${table} ${res.status}: ${await res.text()}`);
+      return (await res.json()) as Array<Record<string, unknown>>;
+    },
+
     async patch(table: string, match: Record<string, string>, payload: Record<string, unknown>) {
       const h = await readHandle(page);
       const qs = buildQs(match);
