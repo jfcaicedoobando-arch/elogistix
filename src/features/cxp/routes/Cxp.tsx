@@ -28,7 +28,6 @@ import { queryKeys } from "@/lib/query";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReporteCarteraDocument se carga dinámicamente en el handler.
 import type { FacturaCxP } from "@/features/cxp/services";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { withOrgPrefix } from "@/lib/filenames";
 import { todayLocalISO } from "@/lib/date/today";
 import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";

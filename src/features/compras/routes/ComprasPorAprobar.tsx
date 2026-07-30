@@ -13,7 +13,6 @@ import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
-import type { FacturaCxP } from "@/features/cxp/services";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
 import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
