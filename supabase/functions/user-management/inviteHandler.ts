@@ -33,27 +33,40 @@ async function resolverOrg(
   return (data?.id as string | undefined) ?? null;
 }
 
-export async function handleInvite(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
-  const { cors, log, callerId, adminClient, body } = ctx;
+/** Valida permisos y payload de la invitación. Devuelve `Response` si falla. */
+function validarInvitacion(
+  ctx: HandlerCtx,
+  admin: AdminAccess,
+): { error: Response } | { email: string; role: string } {
+  const { cors, log, callerId, body } = ctx;
+  const { email, role } = body as { email?: string; role?: string };
   if (!admin.isGlobalAdmin && !admin.orgId) {
     log.finish(403, "not_admin", { user_id: callerId });
-    return errorResponse("Solo administradores pueden invitar usuarios", 403, cors);
+    return { error: errorResponse("Solo administradores pueden invitar usuarios", 403, cors) };
   }
-  const { email, role, organization_id: orgIdPayload, redirect_to: redirectTo } = body as {
-    email?: string; role?: string; organization_id?: string; redirect_to?: string;
-  };
   if (!email || !EMAIL_REGEX.test(email)) {
     log.finish(400, "validation_failed", { user_id: callerId });
-    return errorResponse("Correo no válido", 400, cors);
+    return { error: errorResponse("Correo no válido", 400, cors) };
   }
   if (!role || !(VALID_ROLES as readonly string[]).includes(role)) {
     log.finish(400, "invalid_role", { user_id: callerId, payload: { role } });
-    return errorResponse(`Rol no soportado: ${role ?? "(vacío)"}`, 400, cors);
+    return { error: errorResponse(`Rol no soportado: ${role ?? "(vacío)"}`, 400, cors) };
   }
   if (!admin.isGlobalAdmin && !ASSIGNABLE_BY_ORG_ADMIN.has(role)) {
     log.finish(403, "role_not_assignable_by_org_admin", { user_id: callerId, payload: { role } });
-    return errorResponse("No tienes permiso para asignar ese rol", 403, cors);
+    return { error: errorResponse("No tienes permiso para asignar ese rol", 403, cors) };
   }
+  return { email, role };
+}
+
+export async function handleInvite(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
+  const { cors, log, callerId, adminClient, body } = ctx;
+  const validacion = validarInvitacion(ctx, admin);
+  if ("error" in validacion) return validacion.error;
+  const { email, role } = validacion;
+  const { organization_id: orgIdPayload, redirect_to: redirectTo } = body as {
+    organization_id?: string; redirect_to?: string;
+  };
 
   const targetOrgId = await resolverOrg(adminClient, admin, orgIdPayload);
 
