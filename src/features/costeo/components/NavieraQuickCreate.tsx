@@ -31,8 +31,9 @@ export function NavieraQuickCreate({ onCreada }: Props) {
     agregarNaviera.mutate(
       { code: code.trim().toUpperCase(), name: name.trim() },
       {
-        onSuccess: (creada: { id?: string } | null | undefined) => {
-          if (creada?.id) onCreada(creada.id);
+        onSuccess: (creada: unknown) => {
+          const id = (creada as { id?: string } | null)?.id;
+          if (id) onCreada(id);
           setCode("");
           setName("");
           setOpen(false);

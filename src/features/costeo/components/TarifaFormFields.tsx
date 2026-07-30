@@ -13,6 +13,8 @@ import { MultiRutaSelect } from "./MultiRutaSelect";
 
 interface CatalogosRow { id: string; name?: string; nombre?: string; activo?: boolean; activa?: boolean }
 
+import { NavieraQuickCreate } from "./NavieraQuickCreate";
+
 interface EntidadesProps {
   form: TarifaInput;
   setForm: (f: TarifaInput) => void;
@@ -84,6 +86,7 @@ export function EntidadesFields({ form, setForm, agentes, navieras, errores, age
             ))}
           </SelectContent>
         </Select>
+        <NavieraQuickCreate onCreada={(id) => setForm({ ...form, naviera_id: id })} />
       </div>
     </div>
   );
