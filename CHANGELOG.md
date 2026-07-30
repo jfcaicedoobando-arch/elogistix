@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.362.1] - 2026-07-30
+- **fix(usuarios · UI)**: auditoría visual a 1366×768. El selector de rol mostraba etiqueta **y** descripción dentro del trigger (`SelectValue` clona el contenido del ítem), desbordando la celda y encimando el texto entre filas; ahora el trigger muestra sólo la etiqueta truncada.
+- **fix(usuarios · UI)**: el modal "Nuevo Usuario" usa una sola columna cuando el alta es por invitación, eliminando el hueco vacío junto al campo de correo.
+
 ## [13.362.0] - 2026-07-30
 - **fix(usuarios · seguridad)**: el listado de usuarios internos, portal cliente y portal agente ahora se acota por `organization_id` (U-01) y el cambio de rol sólo aplica a la membresía de esa organización (U-02). `super_admin` ve la columna "Organización".
 - **feat(usuarios · ciclo de vida)**: alta por invitación por correo (sin contraseña temporal), envío de restablecimiento de contraseña y "Quitar de la organización" desde el menú de cada fila (U-03/U-04).
