@@ -104,11 +104,14 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
       />
 
 
+      <DocumentoKpiStrip kpis={buildKpisFactura(factura, props.saldo)} />
+
       <ClaimPendingBanner
         facturaId={factura.id}
         facturapiId={factura.facturapi_id ?? null}
         facturapiClaimAt={factura.facturapi_claim_at ?? null}
       />
+
 
       {mostrarSustitutaCancelada && factura.sustituida_por && (
         <SustitutaCanceladaBanner
