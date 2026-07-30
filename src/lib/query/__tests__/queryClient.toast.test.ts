@@ -40,7 +40,7 @@ describe("queryClient · toast on query failure", () => {
     vi.resetModules();
   });
 
-  it("emite toast.error con acción 'Ver detalles' cuando una query falla", async () => {
+  it("emite toast.error con acción 'Reintentar' cuando una query falla", async () => {
     const { queryClient } = await import("../queryClient");
     await queryClient.fetchQuery({
       queryKey: ["facturas", "listado"],
