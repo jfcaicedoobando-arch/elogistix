@@ -11,6 +11,15 @@ const ALLOWED_ROLES = new Set([
   "ejecutivo_pricing", "gerente_operaciones", "super_admin",
 ]);
 
+/** Fila de auth expuesta al cliente (Q-05b incluye señales de invitación). */
+interface AuthUserRow {
+  id: string;
+  email: string;
+  created_at: string;
+  last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+}
+
 export async function resolveOrgScope(
   adminClient: SupabaseClient,
   userId: string,
