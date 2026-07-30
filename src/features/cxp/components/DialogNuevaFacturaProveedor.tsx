@@ -20,7 +20,7 @@ import { ConceptosManualesSection } from "./ConceptosManualesSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
-import { Kpi } from "./DialogDetallePagosProveedor.parts";
+import { FacturaProveedorTotalesKpis } from "./FacturaProveedorTotalesKpis";
 import { calcularCuadreConceptos, type ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
 import { resolverConceptosParaCuadre } from "@/features/cxp/utils/conceptosParaCuadre";
 import { EntranteCapturaBanner } from "./EntranteCapturaBanner";
@@ -105,12 +105,10 @@ function DialogNuevaFacturaProveedorForm({
           mensaje={autocarga.mensaje}
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 -mt-1">
-          <Kpi label="Subtotal" value={formatCurrency(sub, moneda)} />
-          <Kpi label="IVA" value={formatCurrency(iva, moneda)} />
-          <Kpi label={ieps > 0 ? "IEPS" : "Retenciones"} value={formatCurrency(ieps > 0 ? ieps : ret, moneda)} />
-          <Kpi label={`Total ${moneda}`} value={formatCurrency(ctl.total, moneda)} emphasis />
-        </div>
+        <FacturaProveedorTotalesKpis
+          subtotal={sub} iva={iva} ieps={ieps} retenciones={ret}
+          total={ctl.total} moneda={moneda}
+        />
 
         <CargaCfdiSection
           mode={ctl.mode}
