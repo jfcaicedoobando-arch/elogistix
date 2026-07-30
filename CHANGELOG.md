@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.345.0] - 2026-07-31
+- **Mejora · Se distinguen las solicitudes que llegan del portal del cliente.** Las cotizaciones creadas por el cliente desde su portal ahora se marcan en la base (`origen_portal`) y muestran una etiqueta "Portal" en la lista, junto al estado. Las solicitudes históricas quedaron marcadas automáticamente. Analogía: los pedidos que entran por la ventanilla de autoservicio llevan un sello distinto a los que levanta el vendedor.
+- **Fix · Segregación de funciones en cotizaciones (Q-04).** El detalle de cotización ya recibe quién la creó y quién la está viendo, para ocultar el botón "Aceptar" a su propio autor (salvo administradores), como ya lo bloquea la base de datos.
+
 ## [13.344.0] - 2026-07-31
 - **Mejora · Suite de pruebas 3.1× más rápida (581 s → 186 s).** Las pruebas ahora se reparten en dos "cocinas": las ~570 que sólo verifican lógica (dominio, cálculos, reglas de arquitectura) corren en un entorno ligero de Node, y sólo las ~280 que dibujan pantallas levantan el navegador simulado (jsdom). Antes *todas* pagaban ese arranque, que costaba varios segundos por archivo. Analogía: dejamos de encender el horno industrial para calentar un café. Se agregó `src/test/setup.node.ts` (limpieza de mocks + almacén en memoria) y `scripts/lib/testEnvSplit.ts`, que clasifica los archivos automáticamente al arrancar. Los 5708 tests siguen en verde.
 
