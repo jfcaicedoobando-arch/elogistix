@@ -13,6 +13,10 @@ import { useClienteDetalleController } from "@/features/cliente/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ClienteDetalleTabs } from "./_sections/ClienteDetalleTabs";
+/** Contactos secundarios + el contacto principal del perfil (si existe). */
+function contarContactos(secundarios: number, principal?: string | null): number {
+  return secundarios + (principal && principal.trim() ? 1 : 0);
+}
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -78,7 +82,7 @@ export default function ClienteDetalle() {
       <ClienteSummaryCards
         embarques={embarquesCliente.length}
         cotizaciones={cotizacionesCliente.length}
-        contactos={contactos.length + (cliente.contacto?.trim() ? 1 : 0)}
+        contactos={contarContactos(contactos.length, cliente.contacto)}
         facturadoUSD={financials?.facturadoUSD ?? 0}
         pendienteUSD={financials?.pendienteUSD ?? 0}
         profitUSD={financials?.profitUSD ?? 0}
