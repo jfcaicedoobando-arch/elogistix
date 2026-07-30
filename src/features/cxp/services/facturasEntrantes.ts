@@ -102,6 +102,16 @@ export async function abrirFacturaEntrante(
   setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
 }
 
+/**
+ * v13.365.0 — URL local (`blob:`) para la vista previa embebida del buzón.
+ * El consumidor debe liberar la URL con `URL.revokeObjectURL` al cerrarla.
+ */
+export async function urlPreviaFacturaEntrante(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET_CXP_INBOX).download(path);
+  if (error) throw error;
+  return URL.createObjectURL(data);
+}
+
 export async function eliminarFacturaEntrante(
   row: Pick<FacturaEntranteRow, "id" | "archivo_path" | "xml_path">,
 ) {
