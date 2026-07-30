@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.348.2] - 2026-07-30
+- **Técnico · Arquitectura.** El feed de actividad del embarque mueve su acceso a datos a `src/features/embarques/services/actividadEmbarque.ts`; el hook ya no usa el cliente de la base directamente y las pruebas de arquitectura vuelven a pasar.
+
 ## [13.348.1] - 2026-07-30
 - **Corrección · Drift de tipos (CI).** Se reconcilió la base con el historial de migraciones: `cxp_por_pagar` expone la fecha programada de pago, `tracking_externo` recupera su llave foránea y campos obligatorios, `marcar_proforma_facturada` dejó de apuntar a columnas inexistentes y se eliminó un tipo huérfano (`estado_proforma`).
 - **Técnico.** El chequeo de drift ahora filtra funciones de extensiones (pgcrypto, uuid-ossp, pg_trgm) con `scripts/ci/normalize-supabase-types.ts`, que en CI caen en `public` y generaban diferencias falsas.
