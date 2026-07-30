@@ -21,9 +21,12 @@ export default function Usuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [tab, setTab] = useState<TabId>("internos");
 
-  const { data: internos = [] } = useUsuarios();
-  const { data: portalCliente = [] } = useUsuariosPortalCliente();
-  const { data: portalAgente = [] } = useUsuariosPortalAgente();
+  // U-05: cada listado invoca la edge function `user-management`, que recorre el
+  // directorio de auth. Sólo se consulta la pestaña activa para no pagar tres
+  // recorridos completos en cada visita a la página.
+  const { data: internos = [] } = useUsuarios({ enabled: tab === "internos" });
+  const { data: portalCliente = [] } = useUsuariosPortalCliente({ enabled: tab === "cliente" });
+  const { data: portalAgente = [] } = useUsuariosPortalAgente({ enabled: tab === "agente" });
 
   return (
     <PageContainer>
@@ -52,15 +55,22 @@ export default function Usuarios() {
       <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)} className="space-y-4">
         <TabsList>
           <TabsTrigger value="internos">
-            Internos <span className="ml-1 text-xs text-muted-foreground">({internos.length})</span>
+            Internos
+            {tab === "internos" ? (
+              <span className="ml-1 text-xs text-muted-foreground">({internos.length})</span>
+            ) : null}
           </TabsTrigger>
           <TabsTrigger value="cliente">
-            Portal Cliente{" "}
-            <span className="ml-1 text-xs text-muted-foreground">({portalCliente.length})</span>
+            Portal Cliente
+            {tab === "cliente" ? (
+              <span className="ml-1 text-xs text-muted-foreground">({portalCliente.length})</span>
+            ) : null}
           </TabsTrigger>
           <TabsTrigger value="agente">
-            Portal Agente{" "}
-            <span className="ml-1 text-xs text-muted-foreground">({portalAgente.length})</span>
+            Portal Agente
+            {tab === "agente" ? (
+              <span className="ml-1 text-xs text-muted-foreground">({portalAgente.length})</span>
+            ) : null}
           </TabsTrigger>
         </TabsList>
 

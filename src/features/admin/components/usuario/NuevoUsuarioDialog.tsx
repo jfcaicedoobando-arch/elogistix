@@ -7,6 +7,8 @@ import { useOrganizationsList } from "@/features/admin/hooks";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { AppRole } from "@/types/appRole";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSection";
 import { NuevoUsuarioAccesoSection } from "./NuevoUsuarioAccesoSection";
 
@@ -32,6 +34,9 @@ export default function NuevoUsuarioDialog({
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<AppRole>(DEFAULT_ROLE);
   const [orgId, setOrgId] = useState("");
+  // U-04: por defecto se invita por correo; el admin ya no tiene que inventar
+  // y comunicar una contraseña temporal.
+  const [porInvitacion, setPorInvitacion] = useState(true);
   const [touched, setTouched] = useState({ email: false, password: false });
   const createUser = useCreateUser();
 
@@ -55,14 +60,15 @@ export default function NuevoUsuarioDialog({
     setShowPassword(false);
     setRole(DEFAULT_ROLE);
     setOrgId("");
+    setPorInvitacion(true);
     setTouched({ email: false, password: false });
   };
 
   const handleSubmit = async () => {
     setTouched({ email: true, password: true });
-    if (!email || !password) return;
+    if (!email) return;
     if (!EMAIL_REGEX.test(email)) return;
-    if (password.length < PASSWORD_MIN) {
+    if (!porInvitacion && password.length < PASSWORD_MIN) {
       notifyError(undefined, {
         title: "Error",
         description: `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres`,
@@ -82,7 +88,12 @@ export default function NuevoUsuarioDialog({
     }
 
     createUser.mutate(
-      { email, password, role, orgId: showOrgSelector ? orgId : undefined },
+      {
+        email,
+        password: porInvitacion ? undefined : password,
+        role,
+        orgId: showOrgSelector ? orgId : undefined,
+      },
       {
         onSuccess: () => {
           reset();
@@ -122,8 +133,10 @@ export default function NuevoUsuarioDialog({
             {createUser.isPending ? (
               <>
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                Creando…
+                {porInvitacion ? "Enviando…" : "Creando…"}
               </>
+            ) : porInvitacion ? (
+              "Enviar invitación"
             ) : (
               "Crear usuario"
             )}
@@ -131,8 +144,26 @@ export default function NuevoUsuarioDialog({
         </>
       }
     >
+      <div className="flex items-start justify-between gap-4 rounded-md border bg-muted/30 p-3">
+        <div className="space-y-0.5">
+          <Label htmlFor="por-invitacion" className="text-sm font-medium">
+            Invitar por correo
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            El usuario recibe un correo para definir su propia contraseña. Desactívalo sólo si
+            necesitas entregarle una contraseña temporal.
+          </p>
+        </div>
+        <Switch
+          id="por-invitacion"
+          checked={porInvitacion}
+          onCheckedChange={setPorInvitacion}
+        />
+      </div>
+
       <div className="grid gap-5 md:grid-cols-2">
         <NuevoUsuarioCredencialesSection
+          ocultarPassword={porInvitacion}
           email={email}
           password={password}
           showPassword={showPassword}

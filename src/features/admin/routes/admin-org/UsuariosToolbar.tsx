@@ -24,6 +24,9 @@ interface UsuariosToolbarProps {
   totalFiltrados: number;
   total: number;
   rolesPresentes: number;
+  /** U-06: filtro por estado de la cuenta. */
+  filtroEstado: string;
+  onFiltroEstadoChange: (v: string) => void;
 }
 
 /**
@@ -38,6 +41,8 @@ export function UsuariosToolbar({
   totalFiltrados,
   total,
   rolesPresentes,
+  filtroEstado,
+  onFiltroEstadoChange,
 }: UsuariosToolbarProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -69,6 +74,17 @@ export function UsuariosToolbar({
                 ))}
               </SelectGroup>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={filtroEstado} onValueChange={onFiltroEstadoChange}>
+          <SelectTrigger className="sm:w-[200px]" aria-label="Filtrar por estado">
+            <SelectValue placeholder="Filtrar por estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={TODOS}>Todos los estados</SelectItem>
+            <SelectItem value="activo">Activos</SelectItem>
+            <SelectItem value="pendiente">Invitación pendiente</SelectItem>
+            <SelectItem value="legacy">Rol legado</SelectItem>
           </SelectContent>
         </Select>
       </div>

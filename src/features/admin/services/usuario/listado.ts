@@ -18,12 +18,17 @@ export interface UserRow {
   created_at: string;
   /** "pendiente" = invitado pero nunca inició sesión / sin confirmar correo. */
   estado: EstadoInvitacion;
+  /** U-01: organización a la que pertenece la membresía. */
+  organization_id: string;
+  organizacion_nombre: string;
 }
 
 interface OrgMemberRow {
   user_id: string;
   role: string;
   created_at: string | null;
+  organization_id: string;
+  organizations: { nombre: string | null } | null;
 }
 
 interface ListUsersRow {
@@ -76,11 +81,21 @@ async function cargarDirectorioAuth(): Promise<Record<string, ListUsersRow>> {
   return authMap;
 }
 
-export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
-  const { data: membersData, error: membersError } = await supabase
+/**
+ * Lista los miembros de una organización.
+ *
+ * U-01 (auditoría 2026-07-30): `orgId` es obligatorio en la práctica para
+ * cualquier usuario que no sea `super_admin`. Si se omite (super_admin viendo
+ * todas las organizaciones), cada fila trae `organizacion_nombre` para que la
+ * tabla pueda atribuir correctamente el usuario.
+ */
+export async function fetchUsuariosOrganizacion(orgId?: string | null): Promise<UserRow[]> {
+  let query = supabase
     .from("organization_members")
-    .select("user_id, role, created_at")
+    .select("user_id, role, created_at, organization_id, organizations(nombre)")
     .order("created_at", { ascending: false });
+  if (orgId) query = query.eq("organization_id", orgId);
+  const { data: membersData, error: membersError } = await query;
 
   if (membersError) throw membersError;
   const members = (membersData ?? []) as OrgMemberRow[];
@@ -92,5 +107,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
     role: m.role as AppRole,
     created_at: authMap[m.user_id]?.created_at || m.created_at || "",
     estado: derivarEstado(authMap[m.user_id]),
+    organization_id: m.organization_id,
+    organizacion_nombre: m.organizations?.nombre ?? "—",
   }));
 }

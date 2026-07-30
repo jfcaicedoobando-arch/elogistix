@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, CheckCircle2, MailWarning } from "lucide-react";
 import { inicialesDeEmail } from "./usuariosCellsUtils";
+import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario/constants";
 
 
 interface UsuarioCellProps {
@@ -31,7 +32,7 @@ interface UsuarioCellProps {
 
 /** Celda "Usuario": avatar + email + chip "Tú". */
 export function UsuarioCell({ user, isSelf }: UsuarioCellProps) {
-  const unresolved = user.email === "No disponible";
+  const unresolved = user.email === UNRESOLVED_EMAIL;
   return (
     <div className="flex items-center gap-3">
       <Avatar className="h-8 w-8 shrink-0 md:h-9 md:w-9">

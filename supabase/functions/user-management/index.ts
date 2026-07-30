@@ -31,6 +31,7 @@ import {
   handleListClients,
 } from "./handlers.ts";
 import { handleInviteAgente, handleListAgentes } from "./agenteHandlers.ts";
+import { handleInvite, handleResetPassword } from "./inviteHandler.ts";
 import { handleListPortalEmails } from "./portalEmailsHandler.ts";
 
 initSentryEdge("user-management");
@@ -38,6 +39,8 @@ initSentryEdge("user-management");
 export type Action =
   | "list"
   | "create"
+  | "invite"
+  | "reset-password"
   | "delete"
   | "invite-client"
   | "list-clients"
@@ -48,6 +51,8 @@ export type Action =
 const ACTIONS = new Set<Action>([
   "list",
   "create",
+  "invite",
+  "reset-password",
   "delete",
   "invite-client",
   "list-clients",
@@ -62,6 +67,34 @@ export function parseAction(raw: unknown): Action | null {
   return typeof a === "string" && ACTIONS.has(a as Action) ? (a as Action) : null;
 }
 
+type Ctx = Parameters<typeof handleList>[0];
+type AdminArg = Parameters<typeof handleList>[1];
+
+/** Acciones que requieren resolver el nivel de administrador del caller. */
+const ACCIONES_ADMIN = new Set<Action>([
+  "list",
+  "create",
+  "invite",
+  "reset-password",
+  "delete",
+  "invite-client",
+  "invite-agente",
+  "list-portal-emails",
+]);
+
+const HANDLERS: Record<Action, (ctx: Ctx, admin: AdminArg) => Promise<Response>> = {
+  list: handleList,
+  create: handleCreate,
+  invite: handleInvite,
+  "reset-password": handleResetPassword,
+  delete: handleDelete,
+  "invite-client": handleInviteClient,
+  "list-clients": (ctx) => handleListClients(ctx),
+  "invite-agente": handleInviteAgente,
+  "list-agentes": (ctx) => handleListAgentes(ctx),
+  "list-portal-emails": handleListPortalEmails,
+};
+
 Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
@@ -75,7 +108,7 @@ Deno.serve(async (req) => {
     if (!action) {
       log.finish(400, "invalid_action", { user_id: callerId });
       return errorResponse(
-        "action inválida. Use: list | create | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails",
+        "action inválida. Use: list | create | invite | reset-password | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails",
         400,
         cors,
       );
@@ -83,24 +116,11 @@ Deno.serve(async (req) => {
 
     const ctx = { req, cors, log, callerId, adminClient, body: body as Record<string, unknown> };
 
-    switch (action) {
-      case "list":
-        return await handleList(ctx, await checkAdminAccess(adminClient, callerId));
-      case "create":
-        return await handleCreate(ctx, await checkAdminAccess(adminClient, callerId));
-      case "delete":
-        return await handleDelete(ctx, await checkAdminAccess(adminClient, callerId));
-      case "invite-client":
-        return await handleInviteClient(ctx, await checkAdminAccess(adminClient, callerId));
-      case "list-clients":
-        return await handleListClients(ctx);
-      case "invite-agente":
-        return await handleInviteAgente(ctx, await checkAdminAccess(adminClient, callerId));
-      case "list-agentes":
-        return await handleListAgentes(ctx);
-      case "list-portal-emails":
-        return await handleListPortalEmails(ctx, await checkAdminAccess(adminClient, callerId));
-    }
+    const admin = ACCIONES_ADMIN.has(action)
+      ? await checkAdminAccess(adminClient, callerId)
+      : null;
+    const handler = HANDLERS[action];
+    return await handler(ctx, admin!);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error desconocido";
     const [code, ...rest] = msg.split(":");
