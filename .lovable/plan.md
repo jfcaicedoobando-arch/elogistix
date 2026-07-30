@@ -42,7 +42,7 @@ Verifiqué cada hallazgo contra el código actual antes de planear. Resumen de l
 - **R-06** empty-state falso en /cotizaciones: revisar si KPIs y tabla usan queries distintas; unificar fuente y no renderizar vacío fuera de `isSuccess`.
 - **R-07** HTML crudo en toasts: no encontré sanitización por content-type en `appFeedback`; añadir descarte de cuerpos no-JSON y auditar los ~249 puntos que llaman `notifyError` para exigir `error`.
 - **R-09** restaurar borrador vuelve vacío: depurar `loadDraft` y la carrera con el autosave (`restoringRef`) antes de cambiar la restauración.
-- **R-11** `/embarques` accesible por URL a ventas: existe `roleRouteMatrix.ts`; confirmar si `ejecutivo_pricing` está en el guard y alinear menú y matriz.
+- **R-11** `/embarques` para ventas: decisión tomada — acceso de **solo lectura**. Se agrega `ejecutivo_pricing` al guard y al menú, sin acciones de escritura (crear/editar/cerrar ocultos).
 - **R-12** deep links: no encontré manejo de `returnTo` en el guard de auth; añadir `state.from` y evitar el flash de sidebar durante el redirect.
 - **R-15** UX miscelánea: confirmación al cerrar Nuevo Cliente, campo "Días de crédito" ("030"), export PDF sin datos, empty-states en /admin/diagnostico, hit-area de "Ver detalles" vs org-switcher, copy de error para mutaciones.
 
