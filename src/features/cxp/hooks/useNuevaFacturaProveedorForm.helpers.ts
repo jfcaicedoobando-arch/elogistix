@@ -142,3 +142,26 @@ export function mapCfdiToValues(
     notas: data.ai.notas || "",
   };
 }
+
+/**
+ * Aplica el proveedor elegido a los valores del formulario: hereda sus días de
+ * crédito (si trae > 0) y recalcula el vencimiento. Extraído del hook
+ * controller (v13.343.0) para respetar el techo de 200 líneas.
+ */
+export function aplicarProveedorAValues(
+  prev: FacturaFormValues,
+  id: string,
+  nombre: string,
+  diasCreditoProv?: number,
+): FacturaFormValues {
+  const nextDias = typeof diasCreditoProv === "number" && diasCreditoProv > 0
+    ? diasCreditoProv
+    : prev.diasCredito;
+  return {
+    ...prev,
+    provId: id,
+    provNombre: nombre,
+    diasCredito: nextDias,
+    vencimiento: addDays(prev.emision, Number(nextDias) || 0),
+  };
+}

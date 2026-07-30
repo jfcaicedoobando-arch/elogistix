@@ -14,7 +14,7 @@ import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import { notifyError } from "@/lib/ui/appFeedback";
 import {
   type PendingCfdi,
-  addDays, initialValues, calcularTotal, validateFactura,
+  addDays, initialValues, calcularTotal, validateFactura, aplicarProveedorAValues,
 } from "./useNuevaFacturaProveedorForm.helpers";
 import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
@@ -96,21 +96,7 @@ export function useNuevaFacturaProveedorForm(
 
 
   const handleProveedor = (id: string, nombre: string, diasCreditoProv?: number) => {
-    setValues((p) => {
-      // v13.315.8 (QW2) — heredamos días de crédito del proveedor y recalculamos
-      // vencimiento. Si el proveedor no trae días definidos (undefined) o es 0,
-      // conservamos el valor actual del formulario para no perder edits manuales.
-      const nextDias = typeof diasCreditoProv === "number" && diasCreditoProv > 0
-        ? diasCreditoProv
-        : p.diasCredito;
-      return {
-        ...p,
-        provId: id,
-        provNombre: nombre,
-        diasCredito: nextDias,
-        vencimiento: addDays(p.emision, Number(nextDias) || 0),
-      };
-    });
+    setValues((p) => aplicarProveedorAValues(p, id, nombre, diasCreditoProv));
     if (errors.provId) setErrors((e) => ({ ...e, provId: undefined }));
     setVinculos({});
     setEmbarqueAdHoc(null);
