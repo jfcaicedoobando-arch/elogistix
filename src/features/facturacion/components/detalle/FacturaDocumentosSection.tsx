@@ -45,6 +45,17 @@ function DocumentoRow({ label, icon, disponible, onAbrir }: FilaProps) {
   );
 }
 
+/** El acuse llega como XML embebido: se descarga como archivo local. */
+function descargarAcuse(xml: string, numero: string) {
+  const blob = new Blob([xml], { type: "application/xml" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Acuse_cancelacion_${numero}.xml`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function FacturaDocumentosSection({ factura }: Props) {
   const descargar = useDescargarCfdi(factura.id);
   const timbrada = !!factura.uuid_fiscal;
