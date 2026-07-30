@@ -102,9 +102,11 @@ CREATE TABLE IF NOT EXISTS public.tracking_externo (
   provider text NOT NULL DEFAULT 'unknown',
   tracking_request_id text,
   shipment_id text,
-  request_number text NOT NULL DEFAULT '',
-  request_type text NOT NULL DEFAULT 'unknown',
-  scac text NOT NULL DEFAULT '',
+  -- Sin DEFAULT: en prod estas columnas son NOT NULL sin default. Añadirlo
+  -- aquí genera drift falso en types.ts (Insert opcional vs requerido).
+  request_number text NOT NULL,
+  request_type text NOT NULL,
+  scac text NOT NULL,
   status text NOT NULL DEFAULT 'pending',
   failed_reason text,
   last_event_at timestamptz,
