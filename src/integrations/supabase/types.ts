@@ -3406,7 +3406,9 @@ export type Database = {
           deleted_at: string | null
           embarque_id: string
           estado: string
+          fecha_emision: string | null
           folio_detectado: string | null
+          folio_serie: string | null
           ia_estado: string
           ia_payload: Json | null
           id: string
@@ -3417,9 +3419,14 @@ export type Database = {
           proveedor_factura_id: string | null
           proveedor_id: string | null
           rechazo_motivo: string | null
+          rfc_emisor: string | null
           subido_por: string | null
           total_detectado: number | null
           updated_at: string
+          uuid_fiscal: string | null
+          xml_hash: string | null
+          xml_nombre: string | null
+          xml_path: string | null
         }
         Insert: {
           archivo_hash: string
@@ -3429,7 +3436,9 @@ export type Database = {
           deleted_at?: string | null
           embarque_id: string
           estado?: string
+          fecha_emision?: string | null
           folio_detectado?: string | null
+          folio_serie?: string | null
           ia_estado?: string
           ia_payload?: Json | null
           id?: string
@@ -3440,9 +3449,14 @@ export type Database = {
           proveedor_factura_id?: string | null
           proveedor_id?: string | null
           rechazo_motivo?: string | null
+          rfc_emisor?: string | null
           subido_por?: string | null
           total_detectado?: number | null
           updated_at?: string
+          uuid_fiscal?: string | null
+          xml_hash?: string | null
+          xml_nombre?: string | null
+          xml_path?: string | null
         }
         Update: {
           archivo_hash?: string
@@ -3452,7 +3466,9 @@ export type Database = {
           deleted_at?: string | null
           embarque_id?: string
           estado?: string
+          fecha_emision?: string | null
           folio_detectado?: string | null
+          folio_serie?: string | null
           ia_estado?: string
           ia_payload?: Json | null
           id?: string
@@ -3463,9 +3479,14 @@ export type Database = {
           proveedor_factura_id?: string | null
           proveedor_id?: string | null
           rechazo_motivo?: string | null
+          rfc_emisor?: string | null
           subido_por?: string | null
           total_detectado?: number | null
           updated_at?: string
+          uuid_fiscal?: string | null
+          xml_hash?: string | null
+          xml_nombre?: string | null
+          xml_path?: string | null
         }
         Relationships: [
           {
