@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.354.2] - 2026-07-30
+- **refactor(portal)**: la tarjeta de cada cotización del portal vive en su propio componente; sin cambios visibles.
+
 ## [13.354.1] - 2026-07-30
 - **fix(base de datos · FIX-H6-04)**: se corrigieron los permisos de la validación que bloquea enviar cotizaciones sin importes; sin cambios visibles para el usuario.
 
