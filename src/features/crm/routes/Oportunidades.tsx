@@ -82,6 +82,7 @@ export default function Oportunidades() {
 
       <Card>
         <CardContent className="p-3 space-y-3">
+          <OportunidadesViewChips value={filtros} onChange={setFiltros} />
           {/* Mobile */}
           <div className="flex gap-2 md:hidden">
             <div className="flex-1 min-w-0">
