@@ -4,17 +4,24 @@
  * cantidad admitía valores sin tope y el multiplicador no era visible.
  */
 import { describe, it, expect } from "vitest";
-import { parseCantidad, parseInputNumero, CANTIDAD_MAX } from "../parseInputNumero";
+import {
+  parseCantidad,
+  parseInputNumero,
+  cantidadFueraDeRango,
+  CANTIDAD_LIMITE_SANIDAD,
+} from "../parseInputNumero";
 import { calcTotalsPL } from "@/features/cotizacion/components/costosPLTypes";
 
 describe("parseCantidad", () => {
-  it("acepta separador de miles", () => {
-    expect(parseCantidad("15,000")).toBe(CANTIDAD_MAX);
+  it("acepta separador de miles sin reescribir el valor (R-01)", () => {
+    expect(parseCantidad("15,000")).toBe(15_000);
     expect(parseCantidad("1,500")).toBe(1_500);
   });
 
-  it("limita la cantidad al tope permitido", () => {
-    expect(parseCantidad("999999")).toBe(CANTIDAD_MAX);
+  it("respeta valores altos: la validación avisa, no reescribe (R-01)", () => {
+    expect(parseCantidad("999999")).toBe(999_999);
+    expect(cantidadFueraDeRango(999_999)).toBe(false);
+    expect(cantidadFueraDeRango(CANTIDAD_LIMITE_SANIDAD + 1)).toBe(true);
   });
 
   it("degrada string vacío y negativos a 0", () => {
@@ -23,6 +30,7 @@ describe("parseCantidad", () => {
     expect(parseInputNumero("abc")).toBe(0);
   });
 });
+
 
 describe("calcTotalsPL", () => {
   const fila = (cantidad: number, costo: number, ventaTotal: number) => ({ cantidad, costo, venta: ventaTotal });
