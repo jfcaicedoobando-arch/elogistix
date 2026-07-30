@@ -90,8 +90,6 @@ export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): 
 export {
   avanzarEstadoEmbarqueRpc,
   reabrirEmbarqueRpc,
-  type AvanzarEstadoEmbarqueInput,
-  type ReabrirEmbarqueInput,
 } from "./embarqueEstadoRpc";
 
 

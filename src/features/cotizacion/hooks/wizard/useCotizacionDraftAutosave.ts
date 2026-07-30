@@ -26,7 +26,6 @@ import {
 } from "./cotizacionDraftStorage";
 
 export { clearDraft, draftKey, loadDraft };
-export type { StoredDraft };
 
 interface Params {
   form: UseFormReturn<CotizacionFormValues>;
