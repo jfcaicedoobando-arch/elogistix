@@ -59,6 +59,38 @@ export async function existeFacturaDuplicada(
   return data.length > 0;
 }
 
+/** Resumen mínimo de una factura viva que ya usa un UUID fiscal. */
+export interface FacturaExistentePorUuid {
+  id: string;
+  folio_interno: string | null;
+  folio_proveedor: string | null;
+  proveedor_nombre: string | null;
+  estado: string | null;
+  estado_aprobacion: string | null;
+}
+
+/**
+ * Busca la factura VIVA (no borrada) de la organización que ya registró un
+ * UUID fiscal. Permite avisar del CFDI duplicado al cargar el XML, en vez de
+ * esperar al choque del índice único durante el INSERT.
+ */
+export async function buscarFacturaPorUuidFiscal(
+  uuidFiscal: string,
+): Promise<FacturaExistentePorUuid | null> {
+  const uuid = uuidFiscal.trim();
+  if (!uuid) return null;
+  const data = await unwrapOr(
+    supabase
+      .from("proveedor_facturas")
+      .select("id, folio_interno, folio_proveedor, proveedor_nombre, estado, estado_aprobacion")
+      .eq("uuid_fiscal", uuid)
+      .is("deleted_at", null)
+      .limit(1),
+    [],
+  );
+  return data[0] ?? null;
+}
+
 export async function softDeleteFacturaProveedor(id: string, userId: string | null) {
   await run(
     supabase

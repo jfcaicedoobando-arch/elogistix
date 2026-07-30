@@ -185,6 +185,8 @@ export { calcularKPIsCxP, type KPIsCxP } from "./cxpKpis";
 export {
   crearFacturaProveedor,
   existeFacturaDuplicada,
+  buscarFacturaPorUuidFiscal,
+  type FacturaExistentePorUuid,
   softDeleteFacturaProveedor,
   type NuevaFacturaProveedorPayload,
 } from "./proveedorFacturas.crud";
