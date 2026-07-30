@@ -145,11 +145,10 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!ok) return;
     try {
       const embarqueId = await crearBorrador.mutateAsync(cotizacion.id);
-      notifySuccess(undefined, { title: "Embarque borrador creado", description: "Complétalo y confírmalo cuando esté listo." });
+      // El toast lo emite `useCrearEmbarqueBorrador` (evita doble toast).
       navigate(`/embarques/${embarqueId}`);
     } catch (err: unknown) {
-      if (manejarErrorRevalidacion(err, "HANDLE_CREAR_BORRADOR")) return;
-      notifyError(undefined, { title: "Error al crear el borrador", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR_BORRADOR" });
+      manejarErrorRevalidacion(err, "HANDLE_CREAR_BORRADOR");
     }
   };
 
