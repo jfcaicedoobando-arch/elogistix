@@ -31,6 +31,17 @@ const DOM_MARKERS = [
   "browserStorage",
 ];
 
+/**
+ * Overrides: tests `.ts` que SÍ necesitan DOM real (window.open, Blob+anchor,
+ * navigator) aunque no lo declaren con los marcadores de arriba, porque el uso
+ * está en el módulo bajo prueba, no en el test.
+ */
+const FORCE_JSDOM = new Set<string>([
+  "src/lib/io/__tests__/zipDownload.test.ts",
+  "src/generators/__tests__/estadoCuentaPdf.test.ts",
+  "src/services/observability/__tests__/trackNavEvent.test.ts",
+]);
+
 function walkTests(dir: string, out: string[]): void {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === "node_modules") continue;
@@ -60,7 +71,7 @@ export function splitTestsByEnvironment(root: string): TestEnvSplit {
   const node: string[] = [];
   for (const file of files) {
     const rel = path.relative(root, file).split(path.sep).join("/");
-    if (file.endsWith(".tsx")) { jsdom.push(rel); continue; }
+    if (file.endsWith(".tsx") || FORCE_JSDOM.has(rel)) { jsdom.push(rel); continue; }
     const body = fs.readFileSync(file, "utf8");
     (DOM_MARKERS.some((m) => body.includes(m)) ? jsdom : node).push(rel);
   }
