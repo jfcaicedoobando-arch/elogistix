@@ -9,6 +9,7 @@ import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 import { PageContainer } from "@/components/shared/PageContainer";
 
 export function AdminLayout() {
+  const location = useLocation();
   return (
     <BreadcrumbProvider>
       <SidebarProvider>
