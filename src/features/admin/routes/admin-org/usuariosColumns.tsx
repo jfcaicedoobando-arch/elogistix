@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByDate } from "@/components/shared/dataTable/sortingFns";
@@ -10,12 +9,15 @@ import type { AppRole } from "@/types/appRole";
 import { formatDate, formatDateTimeShort } from "@/lib/formatters";
 import { obtenerRangoRol } from "@/features/admin/domain/roles/roleCatalog";
 import { ChangeRoleCell, EstadoInvitacionCell, UsuarioCell } from "./usuariosCells";
+import { UsuarioRowActionsCell, type UsuarioRowActions } from "./UsuarioRowActionsCell";
 
 
 interface Options {
   currentUserId: string | undefined;
   onPendingRole: (user: UserRow, newRole: AppRole) => void;
-  onDelete: (user: UserRow) => void;
+  /** U-01: sólo se muestra la columna de organización cuando hay varias (super_admin). */
+  mostrarOrganizacion?: boolean;
+  acciones: UsuarioRowActions;
 }
 
 /** Sort por jerarquía de rol; empate → email asc. */
@@ -28,7 +30,12 @@ const sortByRoleHierarchy: SortingFn<UserRow> = (a: Row<UserRow>, b: Row<UserRow
   return ea.localeCompare(eb, "es-MX", { sensitivity: "base" });
 };
 
-export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Options) {
+export function useUsuarioColumns({
+  currentUserId,
+  onPendingRole,
+  mostrarOrganizacion = false,
+  acciones,
+}: Options) {
   return useMemo<ColumnDef<UserRow, unknown>[]>(
     () =>
       defineColumns<UserRow>([
@@ -46,6 +53,22 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
             <UsuarioCell user={row.original} isSelf={row.original.user_id === currentUserId} />
           ),
         },
+        ...(mostrarOrganizacion
+          ? [
+              {
+                id: "organizacion",
+                header: "Organización",
+                accessorFn: (u: UserRow) => u.organizacion_nombre,
+                enableSorting: true,
+                meta: { width: "min-w-[180px]" },
+                cell: ({ row }: { row: Row<UserRow> }) => (
+                  <Badge variant="outline" className="font-normal">
+                    {row.original.organizacion_nombre}
+                  </Badge>
+                ),
+              },
+            ]
+          : []),
         {
           id: "role",
           header: "Rol",
@@ -97,30 +120,10 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           cell: ({ row }) => {
             const u = row.original;
             if (u.user_id === currentUserId) return null;
-            return (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(u);
-                    }}
-                    aria-label={`Eliminar usuario ${u.email}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p className="text-xs">Eliminar usuario</p>
-                </TooltipContent>
-              </Tooltip>
-            );
+            return <UsuarioRowActionsCell user={u} acciones={acciones} />;
           },
         },
       ]),
-    [currentUserId, onPendingRole, onDelete],
+    [currentUserId, onPendingRole, mostrarOrganizacion, acciones],
   );
 }
