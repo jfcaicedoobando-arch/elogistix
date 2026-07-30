@@ -53,6 +53,12 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
           </li>
         );
       })}
-    </ol>
+      </ol>
+      {resumen.subEtiqueta ? (
+        <span className="rounded-full border border-warning/40 bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">
+          {resumen.subEtiqueta}
+        </span>
+      ) : null}
+    </div>
   );
 }
