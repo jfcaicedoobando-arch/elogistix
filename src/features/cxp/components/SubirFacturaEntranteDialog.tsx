@@ -58,7 +58,7 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
         </>
       )}
     >
-      <FormDialogSection title="Archivo" icon={Paperclip}>
+      <FormDialogSection title="Archivo" cols={1}>
         <div className="space-y-2">
           <Label htmlFor="factura-entrante-file">Factura (PDF o XML, máx. {TAMANO_MAX_ENTRANTE_MB} MB)</Label>
           <Input
