@@ -68,9 +68,16 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     } finally {
       setBusy(null);
     }
-  }, [clienteIds, soloUnCliente]);
+  }, [clienteIds, soloUnCliente, rows.length]);
 
   const onCsv = useCallback(() => {
+    if (rows.length === 0) {
+      notifyWarning(undefined, {
+        title: "No hay movimientos en el periodo seleccionado",
+        description: "Ajusta las fechas o los filtros para exportar el CSV.",
+      });
+      return;
+    }
     setBusy("csv");
     try {
       exportToCsv(
