@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.359.1] - 2026-07-30
+- **fix(cotizaciones · toasts)**: se eliminó el doble toast en el detalle de cotización al cambiar estado, convertir prospecto y crear embarque borrador (el aviso vivía a la vez en el hook de mutación y en el handler). Ahora el toast lo emite sólo el hook, y `useCrearEmbarqueBorrador` silencia su error cuando es `RevalidacionRequeridaError` para no chocar con el aviso guiado de revalidación.
+
 ## [13.359.0] - 2026-07-30
 - **fix(compras · buzón)**: ver un archivo del buzón de facturas de proveedor fallaba con `ERR_BLOCKED_BY_CLIENT` cuando una extensión/filtro DNS bloquea el dominio del backend. Ahora el archivo se descarga como Blob (`abrirFacturaEntrante`) y se abre desde una URL local `blob:`, con fallback a descarga si el navegador bloquea la pestaña.
 

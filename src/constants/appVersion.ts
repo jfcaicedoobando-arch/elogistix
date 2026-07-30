@@ -5,4 +5,4 @@
  * (raíz del repo). Se usa para el release de Sentry y para el reporte de
  * errores mostrado al usuario.
  */
-export const APP_VERSION = "13.359.0";
+export const APP_VERSION = "13.359.1";

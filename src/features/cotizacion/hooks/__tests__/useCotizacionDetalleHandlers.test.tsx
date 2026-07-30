@@ -78,7 +78,8 @@ describe("useCotizacionDetalleHandlers", () => {
     await act(async () => { await result.current.handleCambiarEstado("aceptada"); });
     expect(actualizarEstadoMutateAsync).toHaveBeenCalledWith({ id: "cot-1", estado: "aceptada" });
     expect(sincronizarEtapaMock).toHaveBeenCalledWith({ oportunidadId: "opp-1", estadoCotizacion: "aceptada" });
-    expect(notifySuccessMock).toHaveBeenCalled();
+    // v13.359.1 — el toast lo emite el hook de mutación, no el handler.
+    expect(notifySuccessMock).not.toHaveBeenCalled();
   });
 
   it("handleCambiarEstado swallow-ea fallas CRM pero NO bloquea el éxito", async () => {
@@ -86,7 +87,6 @@ describe("useCotizacionDetalleHandlers", () => {
     sincronizarEtapaMock.mockRejectedValue(new Error("crm down"));
     const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
     await act(async () => { await result.current.handleCambiarEstado("rechazada"); });
-    expect(notifySuccessMock).toHaveBeenCalled();
     expect(notifyErrorMock).not.toHaveBeenCalled();
   });
 
@@ -135,11 +135,11 @@ describe("useCotizacionDetalleHandlers", () => {
     expect(navigateMock).toHaveBeenCalledWith("/embarques/emb-99");
   });
 
-  it("handleCrearBorrador notifica error y NO navega si falla", async () => {
+  it("handleCrearBorrador NO navega si falla (el toast lo emite el hook)", async () => {
     crearBorradorMutateAsync.mockRejectedValue(new Error("boom"));
     const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
     await act(async () => { await result.current.handleCrearBorrador(); });
-    expect(notifyErrorMock).toHaveBeenCalled();
+    expect(notifyErrorMock).not.toHaveBeenCalled();
     expect(navigateMock).not.toHaveBeenCalled();
   });
 });

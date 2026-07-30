@@ -7,6 +7,7 @@ import {
   type ProspectoAClienteInput,
 } from '@/features/cotizacion/services';
 import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
+import { RevalidacionRequeridaError } from '@/features/cotizacion/domain/revalidacionTarifa';
 
 
 /** Convierte un prospecto en cliente y actualiza la cotización */
@@ -47,9 +48,15 @@ export function useCrearEmbarqueBorrador() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacionId) });
-      notifySuccess(undefined, { title: "Embarque borrador creado" });
+      notifySuccess(undefined, {
+        title: "Embarque borrador creado",
+        description: "Complétalo y confírmalo cuando esté listo.",
+      });
     },
     onError: (error: Error) => {
+      // La revalidación de tarifa la comunica el handler con su propio aviso
+      // guiado (mantener/refrescar/sustituir); no duplicamos toast aquí.
+      if (error instanceof RevalidacionRequeridaError) return;
       notifyError(undefined, { title: `Error al crear embarque borrador: ${error.message}`, error, method: "CREATE_EMBARQUE_BORRADOR" });
     },
   });

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getErrorMessage } from "@/lib/errors";
+
 import {
   useUpdateEstadoCotizacion,
   useConvertirProspectoACliente,
@@ -9,7 +9,7 @@ import {
 } from "@/features/cotizacion/hooks/useCotizaciones";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { tieneCostosCargados } from "@/features/cotizacion/services/candadoCostos";
-import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
+import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/features/crm/services/vincularCotizacion";
 import type { ClienteFormData } from "@/features/cliente/types/clienteForm";
 import { RevalidacionRequeridaError } from "@/features/cotizacion/domain/revalidacionTarifa";
@@ -42,7 +42,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!cotizacion) return;
     try {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
-      notifySuccess(undefined, { title: `Estado actualizado a "${estado}"` });
+      // El toast de éxito/error lo emite `useUpdateEstadoCotizacion` (evita doble toast).
       if (cotizacion.oportunidad_id) {
         try {
           await sincronizarEtapaPorEstadoCotizacion({
@@ -53,8 +53,8 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
           // No bloquear el cambio de estado de la cotización por una falla CRM.
         }
       }
-    } catch (err: unknown) {
-      notifyError(undefined, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_CAMBIAR_ESTADO" });
+    } catch {
+      // Notificado por el hook de mutación.
     }
   };
 
@@ -80,7 +80,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
         cotizacionId: cotizacion.id,
         clienteData: clienteForm,
       });
-      notifySuccess(undefined, { title: `Cliente "${cliente.nombre}" creado exitosamente` });
+      // El toast lo emite `useConvertirProspectoACliente` (evita doble toast).
       if (cotizacion.oportunidad_id) {
         try {
           await propagarConversionProspectoCRM({
@@ -93,8 +93,8 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
         }
       }
       setShowConvertir(false);
-    } catch (err: unknown) {
-      notifyError(undefined, { title: "Error al convertir prospecto", description: getErrorMessage(err), error: err, method: "HANDLE_CONVERTIR" });
+    } catch {
+      // Notificado por el hook de mutación.
     }
   };
 
@@ -145,11 +145,10 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!ok) return;
     try {
       const embarqueId = await crearBorrador.mutateAsync(cotizacion.id);
-      notifySuccess(undefined, { title: "Embarque borrador creado", description: "Complétalo y confírmalo cuando esté listo." });
+      // El toast lo emite `useCrearEmbarqueBorrador` (evita doble toast).
       navigate(`/embarques/${embarqueId}`);
     } catch (err: unknown) {
-      if (manejarErrorRevalidacion(err, "HANDLE_CREAR_BORRADOR")) return;
-      notifyError(undefined, { title: "Error al crear el borrador", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR_BORRADOR" });
+      manejarErrorRevalidacion(err, "HANDLE_CREAR_BORRADOR");
     }
   };
 
