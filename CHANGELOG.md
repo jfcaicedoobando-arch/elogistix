@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.371.1] - 2026-07-30
+- **fix(proveedores)**: un proveedor eliminado seguía apareciendo en el listado de Compras → Proveedores. El listado (`proveedores_listado`) ahora excluye los registros borrados, igual que los selectores de costos de embarque, agentes/navieras de costeo y la validación de RFC duplicado.
+
 ## [13.371.0] - 2026-07-30
 - **feat(estado de cuenta · UI)**: rediseño tipo Odoo/QuickBooks. Nueva ficha de encabezado con nombre del cliente, RFC, días de crédito, periodo y fecha de corte.
 - **feat(estado de cuenta)**: barra de **antigüedad de saldos** (Corriente, 1–30, 31–60, 61–90, +90 días) con importes por moneda y filtrado al hacer clic en un bucket.
