@@ -112,20 +112,23 @@ function isHtmlGatewayNoise(event: Sentry.ErrorEvent, exc: unknown): boolean {
  * queda como "unknown error" o "Failed to fetch". No es un bug de la app.
  * Ver Sentry JAVASCRIPT-REACT-44/45/47/48/49.
  */
-function isCloudflareTunnelNoise(event: Sentry.ErrorEvent, exc: unknown): boolean {
-  const cause = (exc as { cause?: unknown } | undefined)?.cause as
-    | { cloudflare_error?: unknown; error_code?: unknown; status?: unknown }
-    | undefined;
-  if (cause && typeof cause === "object") {
-    if (cause.cloudflare_error === true) return true;
-    if (cause.error_code === 1033 || cause.status === 530) return true;
-  }
-  const ctxCause = (event.contexts?.Error as { cause?: { cloudflare_error?: unknown } } | undefined)
-    ?.cause;
-  if (ctxCause && typeof ctxCause === "object" && ctxCause.cloudflare_error === true) return true;
-  // Túneles efímeros (`*.trycloudflare.com`): entornos de prueba, no producción.
+function hasCloudflareCause(raw: unknown): boolean {
+  if (!raw || typeof raw !== "object") return false;
+  const c = raw as { cloudflare_error?: unknown; error_code?: unknown; status?: unknown };
+  return c.cloudflare_error === true || c.error_code === 1033 || c.status === 530;
+}
+
+function isEphemeralTunnelUrl(event: Sentry.ErrorEvent): boolean {
   const url = event.request?.url ?? (typeof window !== "undefined" ? window.location?.href : "");
   return typeof url === "string" && url.includes(".trycloudflare.com");
+}
+
+function isCloudflareTunnelNoise(event: Sentry.ErrorEvent, exc: unknown): boolean {
+  if (hasCloudflareCause((exc as { cause?: unknown } | undefined)?.cause)) return true;
+  if (hasCloudflareCause((event.contexts?.Error as { cause?: unknown } | undefined)?.cause)) {
+    return true;
+  }
+  return isEphemeralTunnelUrl(event);
 }
 
 /**
@@ -139,6 +142,15 @@ function isRlsDeniedFromTags(event: Sentry.ErrorEvent): boolean {
   return extra?.original?.code === "42501";
 }
 
+/** Filtros de ruido que reciben `(event, originalException)`. */
+const NOISE_FILTERS: ReadonlyArray<(event: Sentry.ErrorEvent, exc: unknown) => boolean> = [
+  isPostgresRlsDenied,
+  isHostingAnalyticsNoise,
+  isBrowserExtensionCircularJson,
+  isHtmlGatewayNoise,
+  isCloudflareTunnelNoise,
+];
+
 export function shouldDropSentryEvent(
   event: Sentry.ErrorEvent,
   hint: Sentry.EventHint | undefined,
@@ -149,14 +161,10 @@ export function shouldDropSentryEvent(
     (typeof hint?.originalException === "string" ? hint.originalException : undefined);
   if (isRecoverableLoadError(event, exc, originalMsg)) return true;
   if (isZodValidationError(exc)) return true;
-  if (isPostgresRlsDenied(event, hint?.originalException)) return true;
   if (isRlsDeniedFromTags(event)) return true;
-  if (isHostingAnalyticsNoise(event, hint?.originalException)) return true;
-  if (isBrowserExtensionCircularJson(event, hint?.originalException)) return true;
-  if (isHtmlGatewayNoise(event, hint?.originalException)) return true;
-  if (isCloudflareTunnelNoise(event, hint?.originalException)) return true;
-  return false;
+  return NOISE_FILTERS.some((fn) => fn(event, hint?.originalException));
 }
+
 
 
 /** Resuelve el environment de Sentry. Prioriza `VITE_SENTRY_ENV` (permite
