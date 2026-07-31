@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.378.1] - 2026-07-31
+- **fix(embarques · copy)**: se elimina el anglicismo "invoice" del detalle de embarque y sus pestañas; ahora todo dice **factura** (checklist de cierre, pestaña Costos → Facturas de proveedor recibidas, diálogo de carga y zona de archivos).
+
 ## [13.378.0] - 2026-07-31
 - **test(rls)**: nueva suite `test_rls_reg_r4_cotizacion_guard.sql` — desde `Solicitada` se permite Borrador/Enviada/Aceptada/Rechazada/Vencida, se congela versión al salir, y `Solicitada → En operación` sigue bloqueada.
 - **test(rls)**: la suite `reg_r4_pricing` ahora también fija que `ejecutivo_pricing` SÍ escribe agentes, rutas y tarifas de costeo (contraprueba del retiro de permisos sobre embarques).

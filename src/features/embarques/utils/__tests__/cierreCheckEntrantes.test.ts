@@ -1,6 +1,6 @@
 /**
  * v13.347.0 — Reglas del checklist de cierre ligadas al buzón de facturas
- * de proveedor (invoices que sube operación en la pestaña Costos).
+ * de proveedor (facturas que sube operación en la pestaña Costos).
  */
 import { describe, it, expect } from "vitest";
 import { getCierreCheckMeta } from "../cierreCheckMeta";
