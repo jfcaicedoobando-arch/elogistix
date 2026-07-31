@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.379.1] - 2026-07-31
+- **fix(ui buscador global)**: la fila seleccionada dejaba el cliente y el BL ilegibles (texto gris sobre azul sólido `bg-accent`). Ahora usa una superficie de selección suave (`--selection-surface`, claro/oscuro/alto contraste) con barra de acento a la izquierda, icono en azul y texto secundario legible. Aplica también a la paleta Cmd+P del CRM.
+- **feat(ui buscador global)**: pulido visual del modal — ancho tipo Spotlight anclado arriba, lista más alta (`min(60vh,26rem)`), encabezados de grupo sticky en mayúsculas, fila a dos líneas con `title` en el subtítulo truncado, estado vacío con guía de búsqueda y pie con teclas (↑↓ navegar, ↵ abrir, esc cerrar).
+- **test**: `command.seleccion.test.tsx` blinda que la fila activa nunca vuelva a usar fondo sólido de acento ni invierta el texto secundario.
+
 ## [13.379.0] - 2026-07-31
 - **feat(embarques)**: se homologan los timelines de Resumen y Tracking en un solo componente `FasesEmbarqueStepper` (variantes `compacta` y `completa`) sobre las 8 fases canónicas de `calcularFasesEmbarque`; se elimina `TrackingFasesTimeline` y su lógica duplicada de 12 estados.
 - **feat(embarques)**: nuevo lenguaje visual de tracking — iconos Lucide por fase y modo de transporte (`timelineIconos.ts`, `FaseNodo.tsx`) en lugar de emojis, conectores que reflejan avance parcial y resaltado "en riesgo" cuando la ETA venció sin arribo.

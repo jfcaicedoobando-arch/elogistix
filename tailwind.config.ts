@@ -71,6 +71,12 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        /** Superficie de fila seleccionada (buscador global, paletas de comandos). */
+        selection: {
+          DEFAULT: "hsl(var(--selection-surface))",
+          foreground: "hsl(var(--selection-surface-foreground))",
+        },
+
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",

@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback, useDeferredValue, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Ship, Users, Truck, FileSpreadsheet, ClipboardList, Receipt, History } from "lucide-react";
+import { Search, SearchX, Ship, Users, Truck, FileSpreadsheet, ClipboardList, Receipt, History } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
+  CommandFooter,
   CommandGroup,
+  CommandKey,
   CommandInput,
   CommandItem,
   CommandList,
@@ -16,6 +18,12 @@ import { trackNavEvent } from "@/services/observability/trackNavEvent";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
 type SearchResult = GlobalSearchResult;
+
+/**
+ * Icono de la fila: gris apagado en reposo y azul de acento cuando la fila está
+ * seleccionada, para reforzar la selección sin fondo sólido.
+ */
+const ICONO_FILA = "mr-1 h-4 w-4 shrink-0 text-muted-foreground group-data-[selected=true]:text-accent";
 
 const typeIcons = {
   embarque: Ship,
@@ -114,7 +122,15 @@ export function GlobalSearch() {
           onValueChange={setQuery}
         />
         <CommandList>
-          <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+          <CommandEmpty>
+            <div className="flex flex-col items-center gap-2 py-4">
+              <SearchX className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+              <p className="text-sm font-medium text-foreground">No se encontraron resultados</p>
+              <p className="text-xs text-muted-foreground">
+                Intenta con el expediente, el BL/Guía, el RFC o el folio de la factura.
+              </p>
+            </div>
+          </CommandEmpty>
           {showRecents && (
             <CommandGroup heading="Recientes">
               {recents.map((item) => (
@@ -123,8 +139,8 @@ export function GlobalSearch() {
                   value={`reciente ${item.title}`.toLowerCase()}
                   onSelect={() => handleSelect(item.url, item.title)}
                 >
-                  <History className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="font-medium">{item.title}</span>
+                  <History className={ICONO_FILA} aria-hidden="true" />
+                  <span className="font-semibold truncate">{item.title}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -134,19 +150,43 @@ export function GlobalSearch() {
             return (
               <CommandGroup key={type} heading={typeLabels[type as keyof typeof typeLabels]}>
                 {items.map((item) => (
-                  <CommandItem key={item.id} value={`${item.label} ${item.sublabel ?? ""} ${type}`.toLowerCase()} onSelect={() => handleSelect(item.url, item.label)}>
-                    <Icon className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="font-medium">{item.label}</span>
-                    {item.sublabel && (
-                      <span className="ml-2 text-xs text-muted-foreground truncate">{item.sublabel}</span>
-                    )}
+                  <CommandItem
+                    key={item.id}
+                    value={`${item.label} ${item.sublabel ?? ""} ${type}`.toLowerCase()}
+                    onSelect={() => handleSelect(item.url, item.label)}
+                  >
+                    <Icon className={ICONO_FILA} aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold leading-tight">{item.label}</p>
+                      {item.sublabel && (
+                        <p className="truncate text-xs text-muted-foreground" title={item.sublabel}>
+                          {item.sublabel}
+                        </p>
+                      )}
+                    </div>
                   </CommandItem>
                 ))}
               </CommandGroup>
             );
           })}
         </CommandList>
+        <CommandFooter>
+          <span className="flex items-center gap-1.5">
+            <CommandKey>↑</CommandKey>
+            <CommandKey>↓</CommandKey>
+            navegar
+          </span>
+          <span className="flex items-center gap-1.5">
+            <CommandKey>↵</CommandKey>
+            abrir
+          </span>
+          <span className="flex items-center gap-1.5">
+            <CommandKey>esc</CommandKey>
+            cerrar
+          </span>
+        </CommandFooter>
       </CommandDialog>
+
     </>
   );
 }

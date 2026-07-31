@@ -28,6 +28,12 @@
     --accent: 221 83% 53%;
     --accent-foreground: 0 0% 100%;
 
+    /* Superficie de selección (filas activas en listas de comandos/búsqueda).
+       Azul de marca muy diluido: el texto secundario sigue legible encima. */
+    --selection-surface: 221 90% 96%;
+    --selection-surface-foreground: 220 40% 13%;
+
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
@@ -126,6 +132,9 @@
 
     --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
+
+    --selection-surface: 217 45% 22%;
+    --selection-surface-foreground: 210 33% 96%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 33% 96%;
@@ -240,6 +249,8 @@
   --muted-foreground: 216 16% 45%;
   --accent: 217 91% 60%;
   --accent-foreground: 0 0% 100%;
+  --selection-surface: 217 90% 92%;
+  --selection-surface-foreground: 216 47% 12%;
   --border: 216 24% 88%;
   --input: 216 24% 88%;
   --ring: 217 91% 60%;
