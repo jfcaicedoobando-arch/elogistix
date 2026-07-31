@@ -35,9 +35,18 @@ export function useEmbarqueForm() {
   const [documentosArchivos, setDocumentosArchivos] = useState<Record<string, File>>({});
   const { data: tiposDeCambio } = useExchangeRates();
 
-  // Sync tipos de cambio remotos al formulario
+  /**
+   * P1-5 — En modo edición el embarque ya trae sus tipos de cambio históricos.
+   * Los tipos de cambio remotos llegan de forma asíncrona y, si aterrizaban
+   * después del `reset`, sobrescribían los valores guardados con los del día y
+   * marcaban el formulario como sucio. Este flag congela el sync una vez que
+   * el formulario se hidrató desde un embarque existente.
+   */
+  const hidratadoDesdeEmbarque = useRef(false);
+
+  // Sync tipos de cambio remotos al formulario (sólo en captura nueva).
   useEffect(() => {
-    if (tiposDeCambio) {
+    if (tiposDeCambio && !hidratadoDesdeEmbarque.current) {
       const opts = { shouldValidate: true, shouldDirty: true } as const;
       methods.setValue("tipoCambioUSD", String(tiposDeCambio.usdMxn), opts);
       methods.setValue("tipoCambioEUR", String(tiposDeCambio.eurMxn), opts);
@@ -61,10 +70,12 @@ export function useEmbarqueForm() {
 
   const inicializarDesdeEmbarque = useCallback(
     (embarque: EmbarqueRow) => {
+      hidratadoDesdeEmbarque.current = true;
       methods.reset(mapEmbarqueRowToFormValues(embarque));
     },
     [methods],
   );
+
 
   const buildEmbarquePayload = useCallback(
     (contactos: ContactoRow[], clienteNombre: string, operador: string) =>
