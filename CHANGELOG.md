@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.381.0] - 2026-07-31
+- **feat(cierre)**: los 3 checks de "Costos y facturas de proveedor" se renombraron como secuencia numerada (Paso 1 recibimos la factura → Paso 2 capturada en el sistema → Paso 3 ligada a cada costo) y se reordenaron según ese flujo real.
+- **feat(cierre)**: cada check del checklist puede llevar una `descripcion` en lenguaje llano, visible siempre, para distinguir reglas parecidas. El detalle del pendiente ahora se resalta en lugar de mezclarse con el texto explicativo.
+
+
+
 ## [13.380.6] - 2026-07-31
 - **fix(datos)**: auditoría de los 130 embarques en `Por liquidar`/`Cerrado`. Los 27 embarques que estaban en `Por liquidar` sin CxP completo regresaron a `EIR` con nota de sistema (detalle de conceptos sin factura y pendientes del Buzón). Quedan 3 en `Por liquidar`, todos con operativo completo. Los `Cerrado` históricos no se tocaron (cierre financiero deliberado).
 
