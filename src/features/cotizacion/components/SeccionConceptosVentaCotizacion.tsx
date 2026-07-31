@@ -35,6 +35,10 @@ export default function SeccionConceptosVentaCotizacion({
 }: Props) {
   const tasaIva = useTasaIVA();
   const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
+  // P2-6.3: la nota de IVA se calcula con la tasa vigente y sólo se muestra
+  // cuando algún concepto realmente causa IVA (antes decía "16%" siempre).
+  const tasaPct = Math.round(tasaIva * 100);
+  const hayIvaMXN = conceptosMXN.some(c => c.aplica_iva) || ivaMXN > 0;
   const subtotalSinIvaUSD = sumarSubtotales(conceptosUSD, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
   const ivaUSD = totalUSD - subtotalSinIvaUSD;
   // Asersión de paridad fila ↔ bucket: cada bucket impone una moneda objetivo.
@@ -89,7 +93,7 @@ export default function SeccionConceptosVentaCotizacion({
             {hayIvaUSD ? (
               <>
                 <span className="text-sm">Subtotal s/IVA: {formatCurrency(subtotalSinIvaUSD, 'USD')}</span>
-                <span className="text-sm text-warning">IVA 16%: {formatCurrency(ivaUSD, 'USD')}</span>
+                <span className="text-sm text-warning">IVA {tasaPct}%: {formatCurrency(ivaUSD, 'USD')}</span>
                 <span className="text-sm font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
               </>
             ) : (
@@ -142,7 +146,7 @@ export default function SeccionConceptosVentaCotizacion({
           ))}
           <div className="flex flex-col items-end gap-1 pt-2 border-t">
             <span className="text-sm">Subtotal MXN: {formatCurrency(subtotalMXN, 'MXN')}</span>
-            <span className="text-sm">IVA (16%): {formatCurrency(ivaMXN, 'MXN')}</span>
+            <span className="text-sm">IVA ({tasaPct}%): {formatCurrency(ivaMXN, 'MXN')}</span>
             <span className="text-sm font-semibold">Total MXN: {formatCurrency(totalMXN, 'MXN')}</span>
           </div>
         </CardContent>
@@ -151,8 +155,13 @@ export default function SeccionConceptosVentaCotizacion({
       <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
         <span className="text-base font-bold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
         <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(totalMXN, 'MXN')}</span>
-        <span className="text-xs text-muted-foreground">* Los conceptos en MXN incluyen IVA 16%</span>
-        {hayIvaUSD && <span className="text-xs text-warning">* Algunos conceptos USD incluyen IVA 16%</span>}
+        {hayIvaMXN && (
+          <span className="text-xs text-muted-foreground">* Los conceptos en MXN incluyen IVA {tasaPct}%</span>
+        )}
+        {!hayIvaMXN && !hayIvaUSD && (
+          <span className="text-xs text-muted-foreground">* Ningún concepto causa IVA</span>
+        )}
+        {hayIvaUSD && <span className="text-xs text-warning">* Algunos conceptos USD incluyen IVA {tasaPct}%</span>}
       </div>
     </div>
   );

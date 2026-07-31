@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.375.0] - 2026-07-31
+- **fix(portal · P2-6.7)**: el modal **Solicitar cotización** ya recuerda la última elección del cliente (modo, tipo de operación y tipo de embarque) en lugar de forzar siempre Marítimo / Importación / FCL.
+- **fix(cotizaciones · P2-6.3)**: la nota de IVA usa la **tasa vigente** en vez del texto fijo "16%" y sólo aparece cuando algún concepto realmente causa IVA; si ninguno causa, se indica explícitamente.
+- **fix(embarques · P2-6.2)**: el título del editor ya no muestra "Editar embarque null" en borradores sin folio: usa `labelExpediente` (ej. "Borrador a1b2c3d4").
+- **verificado(P2-5)**: los botones de exportación del estado de cuenta ya explican con tooltip por qué están deshabilitados; el portal no tiene exportaciones.
+- **test**: nuevas pruebas de las preferencias de solicitud del portal.
+
 ## [13.374.0] - 2026-07-31
 - **fix(compras · P1-2)**: la **fecha de emisión** ahora es obligatoria al capturar una factura de proveedor y su error se muestra debajo del campo. La llave única del folio en base de datos incluye la fecha, así que sin ella el guardado fallaba con un error crudo de duplicado.
 - **fix(facturación · P1-3)**: timbrar factura, REP o nota de crédito ya no truena cuando el PAC responde sin UUID. Nuevo helper `tituloTimbrado`/`uuidCorto`: si no hay UUID, el toast de éxito simplemente omite el sufijo.

@@ -11,6 +11,7 @@ import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWi
 import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
 import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
 import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 
 const steps = [
   { title: 'Datos Generales', num: 1 },
@@ -99,7 +100,7 @@ export default function EditarEmbarque() {
   return (
     <FormProvider {...methods}>
       <EmbarqueWizardLayout
-        title={`Editar embarque ${embarque.expediente}`}
+        title={`Editar embarque ${labelExpediente(embarque.expediente, embarque.id)}`}
         subtitle="Modifica los datos generales, ruta y costos del embarque"
         steps={steps}
         currentStep={currentStep}
