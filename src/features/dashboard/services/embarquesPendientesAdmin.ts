@@ -6,22 +6,26 @@
 import { differenceInDays, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
+/** v13.380.0 — `Por liquidar` se suma al pendiente administrativo. */
+export type EstadoPendienteAdmin = "Entregado" | "EIR" | "Por liquidar";
+
 export interface EmbarquePendienteAdminItem {
   id: string;
   expediente: string | null;
   cliente_nombre: string;
-  estado: "Entregado" | "EIR";
+  estado: EstadoPendienteAdmin;
   diasEnEstado: number;
 }
 
 export interface EmbarquesPendientesAdminData {
   entregadosCount: number;
   eirCount: number;
+  porLiquidarCount: number;
   topAntiguos: EmbarquePendienteAdminItem[];
 }
 
 const COLUMNS = "id, expediente, cliente_nombre, estado, updated_at";
-const ESTADOS = ["Entregado", "EIR"] as const satisfies readonly ("Entregado" | "EIR")[];
+const ESTADOS = ["Entregado", "EIR", "Por liquidar"] as const satisfies readonly EstadoPendienteAdmin[];
 
 function diasDesde(iso: string | null | undefined): number {
   if (!iso) return 0;
