@@ -25,7 +25,9 @@ import { CerrarEmbarqueDialog, ReabrirEmbarqueDialog } from "./cierre/CierreDial
 
 // EIR sólo aplica al flujo marítimo (último paso operativo del contenedor).
 // Aéreo/terrestre cierran desde Entregado.
-const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir"]);
+// v13.380.1 — "Por liquidar" (cierre operativo listo, falta cobrar/pagar) también
+// habilita el cierre: la BD lo acepta en `cerrar_embarque`.
+const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir", "por liquidar"]);
 
 interface Props {
   embarqueId: string;
