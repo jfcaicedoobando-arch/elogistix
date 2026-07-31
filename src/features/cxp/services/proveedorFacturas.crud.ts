@@ -40,6 +40,9 @@ export async function crearFacturaProveedor(payload: NuevaFacturaProveedorPayloa
 /**
  * Verifica si ya existe una factura con el mismo proveedor + folio + fecha emisión
  * (excluyendo canceladas y borradas). Bloquea capturas duplicadas accidentales.
+ *
+ * P1-2: la fecha forma parte de la llave; sin ella no hay duplicado que evaluar
+ * (el schema del formulario ya la exige antes de llegar aquí).
  */
 export async function existeFacturaDuplicada(
   proveedorId: string,
@@ -47,6 +50,7 @@ export async function existeFacturaDuplicada(
   fechaEmision: string,
   excluirId?: string,
 ): Promise<boolean> {
+  if (!fechaEmision) return false;
   let q = supabase
     .from("proveedor_facturas")
     .select("id")
