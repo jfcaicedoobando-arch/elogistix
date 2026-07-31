@@ -35,6 +35,11 @@ describe("cierre — reglas de gating", () => {
     expect(puedeCerrar({ isAdmin: true, canEditFinance: false, estatus: "EIR" })).toBe(true);
   });
 
+  it("admin con embarque en Por liquidar puede cerrar (v13.380.1)", () => {
+    expect(puedeCerrar({ isAdmin: true, canEditFinance: false, estatus: "Por liquidar" })).toBe(true);
+  });
+
+
   it("contador (canEditFinance) con embarque entregado puede cerrar", () => {
     expect(puedeCerrar({ isAdmin: false, canEditFinance: true, estatus: "entregado" })).toBe(true);
   });
