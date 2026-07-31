@@ -11,6 +11,7 @@ import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWi
 import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
 import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
 import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 
 const steps = [
   { title: 'Datos Generales', num: 1 },
