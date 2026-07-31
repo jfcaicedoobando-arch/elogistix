@@ -1,109 +1,37 @@
 /**
  * Lógica pura para construir la línea de tiempo de fases canónicas de un
- * embarque (v13.303.22):
+ * embarque (v13.380.0):
  * Propuesta (origen COT) → Confirmado → En Tránsito → Arribo → En Aduana →
- * Entregado → EIR → Cerrado.
+ * Entregado → EIR → Por liquidar → Cerrado.
  *
  * Sin dependencias de Supabase, React Query ni UI.
+ * v13.380.2 — tipos y helpers temporales se movieron a `embarqueFasesTipos.ts`
+ * y `embarqueEstadoTemporal.ts`; aquí se re-exportan por compatibilidad.
  */
 import { calcularEstadoEmbarque } from "./embarque";
+import type {
+  EmbarqueFasesInput,
+  FaseEmbarque,
+  FaseIconoId,
+  FaseId,
+} from "./embarqueFasesTipos";
 
-export type EstadoFase = "completada" | "actual" | "pendiente";
-
-export type FaseId =
-  | "cotizacion"
-  | "confirmado"
-  | "en_transito"
-  | "arribo"
-  | "en_aduana"
-  | "entregado"
-  | "eir"
-  | "por_liquidar"
-  | "cerrado";
-
-/**
- * Identificador neutro de icono por fase. El dominio no conoce componentes de
- * UI: la capa de presentación resuelve el icono Lucide correspondiente.
- */
-export type FaseIconoId =
-  | "propuesta"
-  | "confirmado"
-  | "transito_maritimo"
-  | "transito_aereo"
-  | "transito_terrestre"
-  | "arribo"
-  | "aduana"
-  | "entregado"
-  | "eir"
-  | "por_liquidar"
-  | "cerrado";
-
-export interface FaseEmbarque {
-  id: FaseId;
-  label: string;
-  /** Identificador de icono (resuelto a Lucide en la UI). */
-  iconoId: FaseIconoId;
-  fecha: string | null;
-  estado: EstadoFase;
-}
-
-export interface EmbarqueFasesInput {
-  modo: string;
-  tipo: string;
-  estado: string;
-  etd: string | null;
-  eta: string | null;
-  fecha_creacion: string;
-  fecha_llegada_real: string | null;
-  cotizacion_id: string | null;
-  updated_at: string;
-}
-
-/** Campos mínimos para evaluar arribo / vencimiento de ETA. */
-export interface EmbarqueEstadoTemporalInput {
-  estado: string;
-  eta: string | null;
-  fecha_llegada_real: string | null;
-}
-
-/**
- * Un embarque se considera arribado si tiene fecha de llegada real o si su
- * estado ya es posterior al arribo físico.
- */
-export function esEmbarqueArribado(
-  embarque?: EmbarqueEstadoTemporalInput | null,
-): boolean {
-  if (!embarque) return false;
-  if (embarque.fecha_llegada_real != null) return true;
-  return embarque.estado === "Entregado"
-    || embarque.estado === "EIR"
-    || embarque.estado === "Por liquidar"
-    || embarque.estado === "Cerrado";
-}
-
-/**
- * ETA vencida: la fecha estimada de arribo ya pasó (fin del día en hora local
- * de México) y el embarque no ha arribado.
- *
- * `new Date("YYYY-MM-DD")` se parsea como UTC, por lo que una ETA capturada
- * "hoy" quedaba como ayer 18:00 CDMX. Aquí se parsea componente por componente.
- */
-export function esEtaVencida(
-  embarque?: EmbarqueEstadoTemporalInput | null,
-): boolean {
-  if (!embarque?.eta) return false;
-  if (esEmbarqueArribado(embarque)) return false;
-  const [y, m, d] = embarque.eta.split("-").map(Number);
-  if (!y || !m || !d) return false;
-  const finDelDiaEtaLocal = new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
-  return finDelDiaEtaLocal < Date.now();
-}
+export type {
+  EstadoFase,
+  FaseId,
+  FaseIconoId,
+  FaseEmbarque,
+  EmbarqueFasesInput,
+  EmbarqueEstadoTemporalInput,
+} from "./embarqueFasesTipos";
+export { esEmbarqueArribado, esEtaVencida } from "./embarqueEstadoTemporal";
 
 function iconoTransito(modo: string): FaseIconoId {
   if (modo === "Aéreo") return "transito_aereo";
   if (modo === "Terrestre") return "transito_terrestre";
   return "transito_maritimo";
 }
+
 
 
 // v13.380.0 — Orden: Arribo → En Aduana → Entregado → EIR → Por liquidar →
