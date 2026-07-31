@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.378.4] - 2026-07-31
+- **fix(test rls)**: la suite `reg_r4_pricing` ya no choca con el catálogo global de puertos: siembra códigos propios (`ZZR4O`/`ZZR4D`) en vez de `CNSHA`/`MXZLO`.
+
 ## [13.378.3] - 2026-07-31
 - **fix(test rls)**: se corrigen las semillas de las suites R4 — las cotizaciones que pasan a `Enviada`/`Aceptada` ahora traen `conceptos_venta` con importes (trigger `_cotizaciones_bloquear_envio_sin_importes`) y el proveedor de `reg_r4_pricing` se siembra con `categoria = 'Logistico'` + `tipo = 'Naviera'` para cumplir `proveedores_categoria_check`.
 
