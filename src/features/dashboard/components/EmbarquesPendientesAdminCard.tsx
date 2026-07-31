@@ -80,12 +80,8 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
                     </p>
                   </div>
                   <Badge
-                    variant={it.estado === "EIR" ? "outline" : "secondary"}
-                    className={
-                      it.estado === "EIR"
-                        ? "border-state-eir/40 text-state-eir"
-                        : "bg-success/10 text-success hover:bg-success/10"
-                    }
+                    variant={it.estado === "Entregado" ? "secondary" : "outline"}
+                    className={BADGE_ESTADO_PENDIENTE[it.estado]}
                   >
                     {it.estado}
                   </Badge>
