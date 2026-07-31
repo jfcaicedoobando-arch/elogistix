@@ -27,8 +27,8 @@ DECLARE
 
 BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS R4 Cot Guard');
-  INSERT INTO public.clientes(id, nombre, rfc, organization_id)
-    VALUES (cli_a, 'Cli R4 Cot Guard', 'XAXX010101000', org_a);
+  INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
+    VALUES (cli_a, 'Cli R4 Cot Guard', 'XAXX010101000', 'r4guard@example.com', org_a);
 
   -- =========================================================================
   -- TEST 1: Solicitada → Borrador
