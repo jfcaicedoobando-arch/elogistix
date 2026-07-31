@@ -9,7 +9,7 @@ import { describe, it, expect } from "vitest";
  * Replica la lógica embebida en TabCierre.tsx para validarla de forma aislada.
  * Si esta regla cambia, debe actualizarse aquí y en el componente al unísono.
  */
-const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir"]);
+const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir", "por liquidar"]);
 function puedeCerrar(opts: {
   isAdmin: boolean;
   canEditFinance: boolean;
