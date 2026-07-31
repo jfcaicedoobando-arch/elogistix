@@ -32,8 +32,11 @@ describe("getSiguienteEstado — happy path alineado con máquina de estados BD"
   it("Entregado → EIR", () => {
     expect(getSiguienteEstado("Entregado")).toBe("EIR");
   });
-  it("EIR → Cerrado", () => {
-    expect(getSiguienteEstado("EIR")).toBe("Cerrado");
+  it("EIR → Por liquidar (cierre administrativo, v13.380.0)", () => {
+    expect(getSiguienteEstado("EIR")).toBe("Por liquidar");
+  });
+  it("Por liquidar → Cerrado", () => {
+    expect(getSiguienteEstado("Por liquidar")).toBe("Cerrado");
   });
   it("Cerrado no tiene siguiente", () => {
     expect(getSiguienteEstado("Cerrado")).toBeNull();
