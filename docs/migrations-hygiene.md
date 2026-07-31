@@ -68,3 +68,12 @@ Nunca a la baja. Si una migración legacy imposible de corregir aparece post-bas
   `GRANT EXECUTE …`. La migración correctiva `20260730163239` re-aplica la
   función con `REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO
   authenticated, service_role`; el archivo original queda como legacy auditado.
+
+- `20260731220419` (2026-07-31): FIX-H6-05. La migración
+  `20260731220418_2daf3796…` (estado `Por liquidar`) recreó
+  `embarque_operativo_completo`, `promover_embarque_por_liquidar`,
+  `_trg_promover_por_liquidar`, `_trg_autocierre_por_liquidar`,
+  `avanzar_estado_embarque`, `cerrar_embarque` y `reabrir_embarque` como
+  `SECURITY DEFINER` sin `REVOKE ALL … FROM PUBLIC` / `GRANT EXECUTE …`. La
+  migración correctiva `20260731224126` re-aplica los permisos; el archivo
+  original queda como legacy auditado.

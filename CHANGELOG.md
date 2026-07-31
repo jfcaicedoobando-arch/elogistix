@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.380.4] - 2026-07-31
+- **fix(ci)**: baseline de `audit:migrations` sube a `20260731220419` (FIX-H6-05). La migración `20260731220418` (estado `Por liquidar`) recreó 7 funciones `SECURITY DEFINER` sin el bloque REVOKE/GRANT; los permisos ya están correctos en BD y se re-aplican en la migración correctiva `20260731224126`.
+- **test**: tests alineados al estado `Por liquidar` — secuencia oficial `EIR → Por liquidar → Cerrado` en `useEmbarqueEstadoActions`, gate de cierre desde `Por liquidar`, y `Por liquidar` en el conteo del dashboard.
+- **fix(errores)**: nuevo mensaje amigable para `LC_CIERRE_AUTOMATICO_NO_APLICA`.
+- **test**: el contrato H6 de `reabrir_embarque` busca los grants en la migración que los contiene (pueden vivir en una correctiva posterior).
+
+
 ## [13.380.3] - 2026-07-31
 - **fix(seguridad)**: se revocó `EXECUTE` de `PUBLIC`/`anon` en 4 funciones `SECURITY DEFINER` creadas con el estado `Por liquidar` (`_trg_autocierre_por_liquidar`, `_trg_promover_por_liquidar`, `embarque_operativo_completo`, `promover_embarque_por_liquidar`); ahora sólo `authenticated` y `service_role` pueden ejecutarlas.
 - **ci**: `supabase/tests/fix45_anon_execute_whitelist.sql` vuelve a pasar en verde.
