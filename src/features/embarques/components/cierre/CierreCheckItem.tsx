@@ -48,9 +48,13 @@ export function CierreCheckItem({ regla, ok, detalle, embarqueId, informativo = 
               {meta.responsable}
             </Badge>
           </div>
-          {detalleTxt && (
-            <p className="text-xs text-muted-foreground">{detalleTxt}</p>
+          {meta.descripcion && (
+            <p className="text-xs leading-snug text-muted-foreground">{meta.descripcion}</p>
           )}
+          {detalleTxt && (
+            <p className="text-xs font-medium text-foreground/80">{detalleTxt}</p>
+          )}
+
         </div>
       </div>
 
