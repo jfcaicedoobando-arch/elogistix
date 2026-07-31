@@ -17,18 +17,29 @@ export const formatDate = (
 };
 
 /**
+ * Zona horaria de negocio. Sin fijarla, un usuario con la laptop en otra zona
+ * (o un runner de CI en UTC) veía un día distinto al del listado. Se puede
+ * sobrescribir pasando `timeZone` en las opciones.
+ */
+export const TZ_MX = "America/Mexico_City";
+
+function withTz(options: Intl.DateTimeFormatOptions = {}): Intl.DateTimeFormatOptions {
+  return { timeZone: TZ_MX, ...options };
+}
+
+/**
  * Formato corto día+mes+hora (es-MX), p.ej. "17 jun, 14:35".
  * Usado por la campanita de notificaciones del portal.
  */
 export function formatDateTimeShort(iso: string): string {
   if (!iso) return "-";
   try {
-    return new Date(iso).toLocaleDateString("es-MX", {
+    return new Date(iso).toLocaleDateString("es-MX", withTz({
       day: "2-digit",
       month: "short",
       hour: "2-digit",
       minute: "2-digit",
-    });
+    }));
   } catch {
     return iso;
   }
@@ -36,7 +47,7 @@ export function formatDateTimeShort(iso: string): string {
 
 /**
  * Fecha corta es-MX (dd/mm/aaaa por defecto). Acepta ISO `yyyy-mm-dd`
- * (se ancla a mediodía UTC para evitar shifts de zona horaria) o ISO con hora.
+ * (se ancla a mediodía para evitar shifts de zona horaria) o ISO con hora.
  * Opciones passthrough a `toLocaleDateString`.
  * PR-5 · Ítem 3.4: reemplaza `new Date(iso).toLocaleDateString("es-MX", …)` inline.
  */
@@ -46,8 +57,11 @@ export function formatFechaEs(
 ): string {
   if (!iso) return "-";
   try {
-    const anchored = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso;
-    return new Date(anchored).toLocaleDateString("es-MX", options);
+    // Una fecha "sólo día" no tiene hora: se ancla a mediodía UTC para que
+    // ninguna zona horaria la corra al día anterior/siguiente.
+    const soloDia = /^\d{4}-\d{2}-\d{2}$/.test(iso);
+    const anchored = soloDia ? `${iso}T12:00:00Z` : iso;
+    return new Date(anchored).toLocaleDateString("es-MX", withTz(options));
   } catch {
     return iso;
   }
@@ -64,7 +78,7 @@ export function formatFechaHora(
 ): string {
   if (!iso) return "-";
   try {
-    return new Date(iso).toLocaleString("es-MX", options);
+    return new Date(iso).toLocaleString("es-MX", withTz(options));
   } catch {
     return iso;
   }
@@ -88,7 +102,7 @@ export function formatFechaLarga(
   if (!date) return "-";
   try {
     const d = typeof date === "string" ? new Date(date) : date;
-    const s = d.toLocaleDateString("es-MX", options);
+    const s = d.toLocaleDateString("es-MX", withTz(options));
     return capitalize ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   } catch {
     return String(date);
