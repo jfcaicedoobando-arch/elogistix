@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback, useDeferredValue, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Ship, Users, Truck, FileSpreadsheet, ClipboardList, Receipt, History } from "lucide-react";
+import { Search, SearchX, Ship, Users, Truck, FileSpreadsheet, ClipboardList, Receipt, History } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
+  CommandFooter,
   CommandGroup,
+  CommandKey,
   CommandInput,
   CommandItem,
   CommandList,
@@ -16,6 +18,12 @@ import { trackNavEvent } from "@/services/observability/trackNavEvent";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
 type SearchResult = GlobalSearchResult;
+
+/**
+ * Icono de la fila: gris apagado en reposo y azul de acento cuando la fila está
+ * seleccionada, para reforzar la selección sin fondo sólido.
+ */
+const ICONO_FILA = "mr-1 h-4 w-4 shrink-0 text-muted-foreground group-data-[selected=true]:text-accent";
 
 const typeIcons = {
   embarque: Ship,

@@ -89,7 +89,7 @@ const CommandItem = ({ ref, className, ...props }: React.ComponentPropsWithoutRe
       // Fila seleccionada: superficie azul MUY diluida + barra de acento a la
       // izquierda. Nunca fondo sólido: el texto secundario (gris apagado) debe
       // seguir siendo legible encima.
-      "relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none transition-colors",
+      "group relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none transition-colors",
       "before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:bg-transparent before:transition-colors",
       "data-[selected=true]:bg-selection data-[selected=true]:text-selection-foreground data-[selected=true]:before:bg-accent",
       "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
