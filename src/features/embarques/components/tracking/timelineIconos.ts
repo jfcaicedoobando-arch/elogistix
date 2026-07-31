@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   AlertTriangle,
   StickyNote,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import type { FaseIconoId } from "@/features/embarques/domain/embarqueFases";
