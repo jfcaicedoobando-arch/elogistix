@@ -75,7 +75,10 @@ export function esEmbarqueArribado(
 ): boolean {
   if (!embarque) return false;
   if (embarque.fecha_llegada_real != null) return true;
-  return embarque.estado === "Entregado" || embarque.estado === "Cerrado";
+  return embarque.estado === "Entregado"
+    || embarque.estado === "EIR"
+    || embarque.estado === "Por liquidar"
+    || embarque.estado === "Cerrado";
 }
 
 /**
