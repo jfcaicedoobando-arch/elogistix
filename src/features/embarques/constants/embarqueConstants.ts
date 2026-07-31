@@ -22,9 +22,12 @@ export function getDocsForMode(modo: string): string[] {
 // del happy path lineal, pero SÍ debe aparecer en filtros/conteos y tener
 // una transición de salida via `getSiguienteEstado`. Ver
 // `useEmbarqueEstadoActions.helpers.ts`.
+// v13.380.0 — Nuevo estado `Por liquidar` entre EIR y Cerrado: cierre
+// operativo terminado (el operador ya no tiene tareas) pero cierre financiero
+// pendiente (falta cobrar al cliente y/o pagar al proveedor).
 export const ESTADOS_EMBARQUE = [
   'Borrador', 'Confirmado', 'En Tránsito',
-  'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Cerrado',
+  'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Por liquidar', 'Cerrado',
 ] as const;
 
 export const ESTADOS_ACTIVOS = [
