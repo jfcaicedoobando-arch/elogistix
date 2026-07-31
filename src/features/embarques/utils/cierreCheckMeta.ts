@@ -19,7 +19,14 @@ export type ResponsableCierre =
 
 export interface CierreCheckMeta {
   label: string;
+  /**
+   * v13.381.0 — Explicación corta y en lenguaje llano de QUÉ valida la regla.
+   * Se muestra siempre (aunque el check esté en OK) para que el operador
+   * entienda la diferencia entre reglas parecidas.
+   */
+  descripcion?: string;
   responsable: ResponsableCierre;
+
   /** Ruta destino (relativa a la app) o null si no aplica acción. */
   ruta: ((embarqueId: string, detalle?: unknown) => string) | null;
   ctaLabel: string;
