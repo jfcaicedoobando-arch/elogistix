@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.380.1] - 2026-07-31
+- **fix(embarques)**: `TabCierre` ya permite cerrar desde `Por liquidar` (antes sólo `Entregado`/`EIR`), con textos y tooltips actualizados.
+- **fix(db)**: se propagó `Por liquidar` a 7 funciones del backend (`sidebar_alert_counts`, `embarques_admin_pendientes_count`, `embarques_alertas_ids`, `dashboard_stats`, `dashboard_summary`, `dashboard_details`, `operaciones_stats`) para que alertas, KPIs y conteos incluyan el nuevo estado.
+- **fix(dashboard)**: la lista ligera del chip también trae `Por liquidar`, y el conteo en "mis embarques" ya se acumula por estado real.
+- **fix(embarques)**: `ESTADO_A_EVENTO_TRACKING` mapea `Por liquidar` para no romper el timeline al avanzar estado.
+- **test**: pruebas actualizadas para el happy path de 9 estados (`EIR → Por liquidar → Cerrado`) y el gating de cierre.
+
+
+
 ## [13.380.0] - 2026-07-31
 - **feat(embarques)**: nuevo estado **`Por liquidar`** entre `EIR` y `Cerrado` — separa el cierre operativo (el operador ya terminó) del cierre financiero (falta cobrar al cliente y/o pagar al proveedor). Se agrega al enum `estado_embarque` y a la máquina de estados (`EIR → Por liquidar → Cerrado`, con retorno a `EIR` para correcciones y salto directo `EIR → Cerrado` si ya está liquidado).
 - **feat(embarques)**: promoción automática `EIR → Por liquidar` cuando se completan documentos y fechas de descarga/devolución de contenedores (`promover_embarque_por_liquidar` + triggers en `documentos_embarque` y `embarque_contenedores`), con nota de sistema en la bitácora del embarque.
