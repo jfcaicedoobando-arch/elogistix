@@ -18,6 +18,7 @@ export type FaseId =
   | "en_aduana"
   | "entregado"
   | "eir"
+  | "por_liquidar"
   | "cerrado";
 
 /**
@@ -34,6 +35,7 @@ export type FaseIconoId =
   | "aduana"
   | "entregado"
   | "eir"
+  | "por_liquidar"
   | "cerrado";
 
 export interface FaseEmbarque {
