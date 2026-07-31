@@ -146,7 +146,7 @@ export function calcularFasesEmbarque(
   const faseActual = faseIdParaEstado(estadoVisual);
   const orden: FaseId[] = [
     "cotizacion", "confirmado", "en_transito",
-    "arribo", "en_aduana", "entregado", "eir", "cerrado",
+    "arribo", "en_aduana", "entregado", "eir", "por_liquidar", "cerrado",
   ];
   const idxActual = orden.indexOf(faseActual);
 
@@ -158,6 +158,7 @@ export function calcularFasesEmbarque(
   const aduanaCompletada = ESTADOS_POST_ADUANA.has(estadoVisual);
   const entregadoCompletada = ESTADOS_POST_ENTREGADO.has(estadoVisual);
   const eirCompletada = ESTADOS_POST_EIR.has(estadoVisual);
+  const porLiquidarCompletada = ESTADOS_POST_POR_LIQUIDAR.has(estadoVisual);
   const cerradoCompletada = estadoVisual === "Cerrado";
 
   const fases: FaseEmbarque[] = [
