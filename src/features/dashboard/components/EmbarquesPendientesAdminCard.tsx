@@ -16,6 +16,7 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
 
   const entregados = data?.entregadosCount ?? 0;
   const eir = data?.eirCount ?? 0;
+  const porLiquidar = data?.porLiquidarCount ?? 0;
   const items = data?.topAntiguos ?? [];
 
   return (
@@ -24,7 +25,7 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
         <CardTitle className="text-base">Embarques pendientes administrativos</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <KpiCard
             icon={PackageCheck}
             label="Entregados"
@@ -38,6 +39,14 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
             label="En EIR"
             sublabel="Último paso marítimo"
             value={eir}
+            variant="warning"
+            loading={isLoading}
+          />
+          <KpiCard
+            icon={Wallet}
+            label="Por liquidar"
+            sublabel="Falta cobrar o pagar"
+            value={porLiquidar}
             variant="warning"
             loading={isLoading}
           />
