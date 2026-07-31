@@ -46,7 +46,6 @@ interface Props {
   dofLoading?: boolean;
 }
 
-const toNum = (s: string) => (s === "" ? 0 : Number(s) || 0);
 
 export function FacturaProveedorFormFields({
   values, onChange, onProveedor, categorias, errors = {},
