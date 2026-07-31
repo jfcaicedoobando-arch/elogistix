@@ -8,17 +8,13 @@
  */
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { hayDivergenciaEstado } from "./estadoDivergente";
 
 interface Props {
   /** Estado calculado a partir de las fechas (el que se muestra). */
   estadoVisual: string;
   /** Estado operativo guardado en el embarque. */
   estadoGuardado: string;
-}
-
-/** ¿Hay divergencia que valga la pena avisar? */
-export function hayDivergenciaEstado(estadoVisual: string, estadoGuardado: string): boolean {
-  return Boolean(estadoVisual) && Boolean(estadoGuardado) && estadoVisual !== estadoGuardado;
 }
 
 export function EstadoDivergenteHint({ estadoVisual, estadoGuardado }: Props) {
