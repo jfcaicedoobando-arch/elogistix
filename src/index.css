@@ -133,6 +133,9 @@
     --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
 
+    --selection-surface: 217 45% 22%;
+    --selection-surface-foreground: 210 33% 96%;
+
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 33% 96%;
 
@@ -246,6 +249,8 @@
   --muted-foreground: 216 16% 45%;
   --accent: 217 91% 60%;
   --accent-foreground: 0 0% 100%;
+  --selection-surface: 217 90% 92%;
+  --selection-surface-foreground: 216 47% 12%;
   --border: 216 24% 88%;
   --input: 216 24% 88%;
   --ring: 217 91% 60%;
