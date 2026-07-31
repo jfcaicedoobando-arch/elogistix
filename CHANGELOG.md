@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.373.0] - 2026-07-31
+- **fix(cotizaciones · P0-1)**: las cotizaciones creadas desde el portal del cliente (estado **Solicitada**) ya se pueden enviar. Los guardas `guard_estado_cotizacion` y `snapshot_cotizacion_al_enviar` bloqueaban la transición Solicitada → Enviada.
+- **fix(seguridad · P0-2)**: el rol **Ejecutivo de pricing** ya no hereda permisos de Operador, así que los embarques le quedan **solo lectura** (antes podía editarlos y mover su estado). Se le dio permiso explícito de escritura en cotizaciones, costos de cotización y versiones, con el nuevo guarda `_assert_writer_cotizacion` usado por `actualizar_cotizacion_costos` y `duplicar_cotizacion`.
+- **test(rls)**: nueva suite `test_rls_reg_r4_pricing.sql` que fija el contrato: pricing lee embarques, no los escribe, y sí escribe cotizaciones y sus costos.
+
+
+
 ## [13.372.0] - 2026-07-31
 - **fix(fechas)**: los formateadores de fecha/hora (`formatFechaHora`, `formatFechaEs`, `formatFechaLarga`, `formatDateTimeShort`) ahora fijan la zona de negocio **America/Mexico_City**. Antes se usaba la zona del navegador, así que un usuario fuera de México podía ver un día distinto al del listado. Se puede sobrescribir con `timeZone` y hay pruebas con `TZ=UTC` en el cruce de día.
 - **fix(portal · UI)**: en Facturas y Embarques del portal se distingue "aún no tienes registros" de "no se encontraron con estos filtros" — igual que ya hacía Cotizaciones.
