@@ -27,6 +27,7 @@ const ESTADOS_CANONICOS_EMBARQUE = [
   "En Aduana",
   "Entregado",
   "EIR",
+  "Por liquidar",
   "Cerrado",
   // "Llegada" es un alias legacy de "Arribo" — sigue en el enum por
   // compatibilidad y el helper lo mapea a la misma fase.
