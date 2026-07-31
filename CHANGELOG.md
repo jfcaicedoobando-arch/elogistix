@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.378.3] - 2026-07-31
+- **fix(test rls)**: se corrigen las semillas de las suites R4 — las cotizaciones que pasan a `Enviada`/`Aceptada` ahora traen `conceptos_venta` con importes (trigger `_cotizaciones_bloquear_envio_sin_importes`) y el proveedor de `reg_r4_pricing` se siembra con `categoria = 'Logistico'` + `tipo = 'Naviera'` para cumplir `proveedores_categoria_check`.
+
 ## [13.378.2] - 2026-07-31
 - **fix(ci)**: se cierran los 6 fallos del run 83165139014 — cast CRITICAL en `solicitudPreferencias.ts` (JSON.parse ahora se valida como `unknown`), `FacturaProveedorFormFields.tsx` baja de 202 a <200 líneas extrayendo `MonedaImportesSection`, allowlist de `@/components/ui/table` para las 3 sub-vistas de Estado de Cuenta (test + eslint), expedientes del fixture `reg_r4_pricing` con formato válido (`ELRPR…`), regex del guard de cotización actualizado a `Solicitada` y `/cartera` con `gerente_comercial` en el smoke de rutas.
 
