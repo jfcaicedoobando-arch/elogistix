@@ -24,7 +24,7 @@ interface EmbarqueLike {
 
 export function usePortalDashboardKpis<E extends EmbarqueLike>(embarques: E[]) {
   const embarquesActivos = useMemo(
-    () => embarques.filter((e) => !["Cerrado", "Cancelado", "EIR"].includes(e.estado)),
+    () => embarques.filter((e) => !["Cerrado", "Cancelado", "EIR", "Por liquidar"].includes(e.estado)),
     [embarques],
   );
 
