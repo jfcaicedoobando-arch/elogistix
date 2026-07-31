@@ -151,7 +151,7 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
   it("gate_cierre por rol: usuario sin permiso financiero no puede cerrar", async () => {
     h.perms = { isAdmin: false, canEditFinance: false, canEditOperations: false, isSuperAdmin: false };
     h.validacion = { data: { puede_cerrar: true } };
-    const { result } = renderH({ estado: "EIR" });
+    const { result } = renderH({ estado: "Por liquidar" });
     expect(result.current.cierreEsSiguiente).toBe(true);
     expect(result.current.rolPuedeCerrar).toBe(false);
     expect(result.current.cierreMotivoBloqueo).toBe("rol");
@@ -166,7 +166,7 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
   it("gate_cierre por checklist: rol OK pero validacion bloquea", async () => {
     h.perms = { isAdmin: false, canEditFinance: true, canEditOperations: false, isSuperAdmin: false };
     h.validacion = { data: { puede_cerrar: false } };
-    const { result } = renderH({ estado: "EIR" });
+    const { result } = renderH({ estado: "Por liquidar" });
     expect(result.current.cierreMotivoBloqueo).toBe("checklist");
     await act(async () => { await result.current.handleAvanzarEstado(); });
     expect(h.avanzar).not.toHaveBeenCalled();
@@ -175,7 +175,7 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
   it("admin bypassea checklist incompleto y avanza a Cerrado", async () => {
     h.perms = { isAdmin: true, canEditFinance: false, canEditOperations: false, isSuperAdmin: false };
     h.validacion = { data: { puede_cerrar: false } };
-    const { result } = renderH({ estado: "EIR" });
+    const { result } = renderH({ estado: "Por liquidar" });
     expect(result.current.cierrePuedeAvanzar).toBe(true);
     await act(async () => { await result.current.handleAvanzarEstado(); });
     await waitFor(() => expect(h.avanzar).toHaveBeenCalledTimes(1));
@@ -183,7 +183,7 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
 
   it("confirmarCierreSinProforma cierra dialog y dispara avance a Cerrado", async () => {
     h.perms = { isAdmin: true, canEditFinance: true, canEditOperations: true, isSuperAdmin: false };
-    const { result } = renderH({ estado: "EIR" });
+    const { result } = renderH({ estado: "Por liquidar" });
     await act(async () => { await result.current.confirmarCierreSinProforma(); });
     await waitFor(() => expect(h.avanzar).toHaveBeenCalledWith(
       expect.objectContaining({ nuevoEstado: "Cerrado" }),
