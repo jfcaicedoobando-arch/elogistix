@@ -22,6 +22,7 @@ import {
   MapPin,
   ClipboardCheck,
   Archive,
+  Wallet,
   XCircle,
 } from "lucide-react";
 
