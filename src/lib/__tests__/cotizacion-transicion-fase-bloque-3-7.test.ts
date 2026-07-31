@@ -42,7 +42,7 @@ describe("Bloque 3.7 — guard_estado_cotizacion transiciones seguras", () => {
 
   it("permite Vencida desde estados no terminales", () => {
     expect(fnBody).toMatch(
-      /v_new\s*=\s*'Vencida'\s+AND\s+v_old\s+IN\s*\(\s*'Borrador'\s*,\s*'Enviada'\s*,\s*'Aceptada'\s*\)/,
+      /v_new\s*=\s*'Vencida'\s+AND\s+v_old\s+IN\s*\(\s*'Solicitada'\s*,\s*'Borrador'\s*,\s*'Enviada'\s*,\s*'Aceptada'\s*\)/,
     );
   });
 
