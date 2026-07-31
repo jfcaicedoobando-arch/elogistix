@@ -224,6 +224,7 @@ jobs:
           - tarifas_y_costeo
           - reg_costeo
           - reg_portales
+          - reg_r4_cotizacion_guard
           - reg_r4_pricing
           - roles_no_admin
           - roles_negocio
