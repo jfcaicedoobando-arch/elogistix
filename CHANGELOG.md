@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.380.3] - 2026-07-31
+- **fix(seguridad)**: se revocó `EXECUTE` de `PUBLIC`/`anon` en 4 funciones `SECURITY DEFINER` creadas con el estado `Por liquidar` (`_trg_autocierre_por_liquidar`, `_trg_promover_por_liquidar`, `embarque_operativo_completo`, `promover_embarque_por_liquidar`); ahora sólo `authenticated` y `service_role` pueden ejecutarlas.
+- **ci**: `supabase/tests/fix45_anon_execute_whitelist.sql` vuelve a pasar en verde.
+
+
 ## [13.380.2] - 2026-07-31
 - **refactor(arquitectura)**: se divide `embarqueFases.ts` (231 líneas) en `embarqueFasesTipos.ts` (tipos) y `embarqueEstadoTemporal.ts` (`esEmbarqueArribado`/`esEtaVencida`), con re-exportaciones para no romper importadores.
 - **refactor(arquitectura)**: se divide `estadoConfig.ts` (203 líneas) en `estadoConfigBase.ts` (contrato + fallback) y `estadoConfigEmbarques.ts` (estados del embarque); `ESTADO_CONFIG` los compone.
