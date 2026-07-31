@@ -19,7 +19,14 @@ export type ResponsableCierre =
 
 export interface CierreCheckMeta {
   label: string;
+  /**
+   * v13.381.0 — Explicación corta y en lenguaje llano de QUÉ valida la regla.
+   * Se muestra siempre (aunque el check esté en OK) para que el operador
+   * entienda la diferencia entre reglas parecidas.
+   */
+  descripcion?: string;
   responsable: ResponsableCierre;
+
   /** Ruta destino (relativa a la app) o null si no aplica acción. */
   ruta: ((embarqueId: string, detalle?: unknown) => string) | null;
   ctaLabel: string;
@@ -59,16 +66,24 @@ const META: Record<string, CierreCheckMeta> = {
   documentos_completos: docs,
   docs_completos: docs,
   // v13.347.0 — Buzón CxP fusionado en la pestaña Costos.
-  facturas_entrantes_capturadas: {
-    label: "Facturas del buzón capturadas", responsable: "Auxiliar contable",
-    ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
-    formatDetalle: fmtEntrantesPendientes, fase: "costos", orden: 1,
-  },
+  // v13.381.0 — Secuencia explícita: 1) llegó · 2) se capturó · 3) se ligó al costo.
   facturas_entrantes_evidencia: {
-    label: "Evidencia de factura recibida por proveedor", responsable: "Operador",
+    label: "Paso 1 · Recibimos la factura de cada proveedor",
+    descripcion:
+      "Revisa que cada proveedor con costos en este embarque tenga al menos un archivo (PDF o XML) subido al buzón. Sólo confirma que el documento ya llegó.",
+    responsable: "Operador",
     ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
-    formatDetalle: fmtEntrantesEvidencia, fase: "costos", orden: 2,
+    formatDetalle: fmtEntrantesEvidencia, fase: "costos", orden: 1,
   },
+  facturas_entrantes_capturadas: {
+    label: "Paso 2 · Facturas del buzón capturadas en el sistema",
+    descripcion:
+      "Revisa que no queden archivos del buzón en «Por capturar». Aquí se convierte el documento recibido en una factura de proveedor con folio, montos e impuestos.",
+    responsable: "Auxiliar contable",
+    ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
+    formatDetalle: fmtEntrantesPendientes, fase: "costos", orden: 2,
+  },
+
   pnl_margen_minimo: {
     label: "Utilidad mínima alcanzada", responsable: "Ventas",
     ruta: buildRuta("pnl", "utilidad"), ctaLabel: "Ver P&L", formatDetalle: fmtMargen, fase: "rentabilidad", orden: 1,
@@ -91,10 +106,14 @@ const META: Record<string, CierreCheckMeta> = {
     formatDetalle: fmtVentaPendientes, fase: "facturacion", orden: 1,
   },
   costo_conceptos_con_factura: {
-    label: "Todos los costos tienen factura de proveedor recibida", responsable: "Auxiliar contable",
+    label: "Paso 3 · Cada costo está ligado a su factura de proveedor",
+    descripcion:
+      "Recorre los conceptos de costo del embarque y verifica que cada uno esté vinculado a una factura de proveedor vigente. Es el candado final: evita costos sin comprobante.",
+    responsable: "Auxiliar contable",
     ruta: buildRuta("costos", "costo-sin-factura"), ctaLabel: "Ir a Costos",
     formatDetalle: fmtSinFactura, fase: "costos", orden: 3,
   },
+
   // v13.90.8 — `costos_liquidados` se eliminó del RPC: la liquidación ahora se deriva
   // automáticamente desde `pagos_proveedor` y queda cubierta por la regla `cxp_pagada`.
   rep_pendientes: {
