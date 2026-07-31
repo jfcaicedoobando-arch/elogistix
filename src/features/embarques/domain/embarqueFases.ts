@@ -20,10 +20,27 @@ export type FaseId =
   | "eir"
   | "cerrado";
 
+/**
+ * Identificador neutro de icono por fase. El dominio no conoce componentes de
+ * UI: la capa de presentación resuelve el icono Lucide correspondiente.
+ */
+export type FaseIconoId =
+  | "propuesta"
+  | "confirmado"
+  | "transito_maritimo"
+  | "transito_aereo"
+  | "transito_terrestre"
+  | "arribo"
+  | "aduana"
+  | "entregado"
+  | "eir"
+  | "cerrado";
+
 export interface FaseEmbarque {
   id: FaseId;
   label: string;
-  icono: string;
+  /** Identificador de icono (resuelto a Lucide en la UI). */
+  iconoId: FaseIconoId;
   fecha: string | null;
   estado: EstadoFase;
 }
@@ -39,6 +56,50 @@ export interface EmbarqueFasesInput {
   cotizacion_id: string | null;
   updated_at: string;
 }
+
+/** Campos mínimos para evaluar arribo / vencimiento de ETA. */
+export interface EmbarqueEstadoTemporalInput {
+  estado: string;
+  eta: string | null;
+  fecha_llegada_real: string | null;
+}
+
+/**
+ * Un embarque se considera arribado si tiene fecha de llegada real o si su
+ * estado ya es posterior al arribo físico.
+ */
+export function esEmbarqueArribado(
+  embarque?: EmbarqueEstadoTemporalInput | null,
+): boolean {
+  if (!embarque) return false;
+  if (embarque.fecha_llegada_real != null) return true;
+  return embarque.estado === "Entregado" || embarque.estado === "Cerrado";
+}
+
+/**
+ * ETA vencida: la fecha estimada de arribo ya pasó (fin del día en hora local
+ * de México) y el embarque no ha arribado.
+ *
+ * `new Date("YYYY-MM-DD")` se parsea como UTC, por lo que una ETA capturada
+ * "hoy" quedaba como ayer 18:00 CDMX. Aquí se parsea componente por componente.
+ */
+export function esEtaVencida(
+  embarque?: EmbarqueEstadoTemporalInput | null,
+): boolean {
+  if (!embarque?.eta) return false;
+  if (esEmbarqueArribado(embarque)) return false;
+  const [y, m, d] = embarque.eta.split("-").map(Number);
+  if (!y || !m || !d) return false;
+  const finDelDiaEtaLocal = new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+  return finDelDiaEtaLocal < Date.now();
+}
+
+function iconoTransito(modo: string): FaseIconoId {
+  if (modo === "Aéreo") return "transito_aereo";
+  if (modo === "Terrestre") return "transito_terrestre";
+  return "transito_maritimo";
+}
+
 
 // v13.303.22 — Rankings en base al nuevo orden Arribo → En Aduana → Entregado
 // → EIR → Cerrado. Cada set representa "estados iguales o posteriores a".
@@ -99,56 +160,56 @@ export function calcularFasesEmbarque(
     {
       id: "cotizacion",
       label: "Propuesta",
-      icono: "📝",
+      iconoId: "propuesta",
       fecha: cotizacionCreatedAt ?? null,
       estado: cotizacionCompletada ? "completada" : "pendiente",
     },
     {
       id: "confirmado",
       label: "Confirmado",
-      icono: "✅",
+      iconoId: "confirmado",
       fecha: embarque.fecha_creacion,
       estado: "completada",
     },
     {
       id: "en_transito",
       label: "En Tránsito",
-      icono: "🚢",
+      iconoId: iconoTransito(embarque.modo),
       fecha: embarque.etd,
       estado: transitoCompletada ? "completada" : "pendiente",
     },
     {
       id: "arribo",
       label: "Arribo",
-      icono: "⚓",
+      iconoId: "arribo",
       fecha: embarque.fecha_llegada_real ?? embarque.eta,
       estado: arriboCompletada ? "completada" : "pendiente",
     },
     {
       id: "en_aduana",
       label: "En Aduana",
-      icono: "🛃",
+      iconoId: "aduana",
       fecha: null,
       estado: aduanaCompletada ? "completada" : "pendiente",
     },
     {
       id: "entregado",
       label: "Entregado",
-      icono: "📦",
+      iconoId: "entregado",
       fecha: null,
       estado: entregadoCompletada ? "completada" : "pendiente",
     },
     {
       id: "eir",
       label: "EIR",
-      icono: "📄",
+      iconoId: "eir",
       fecha: null,
       estado: eirCompletada ? "completada" : "pendiente",
     },
     {
       id: "cerrado",
       label: "Cerrado",
-      icono: "🏁",
+      iconoId: "cerrado",
       fecha: cerradoCompletada ? embarque.updated_at : null,
       estado: cerradoCompletada ? "completada" : "pendiente",
     },

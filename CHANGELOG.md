@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.379.0] - 2026-07-31
+- **feat(embarques)**: se homologan los timelines de Resumen y Tracking en un solo componente `FasesEmbarqueStepper` (variantes `compacta` y `completa`) sobre las 8 fases canónicas de `calcularFasesEmbarque`; se elimina `TrackingFasesTimeline` y su lógica duplicada de 12 estados.
+- **feat(embarques)**: nuevo lenguaje visual de tracking — iconos Lucide por fase y modo de transporte (`timelineIconos.ts`, `FaseNodo.tsx`) en lugar de emojis, conectores que reflejan avance parcial y resaltado "en riesgo" cuando la ETA venció sin arribo.
+- **refactor(embarques)**: la bitácora de eventos interna y la del portal comparten `TimelineEventoItem` + `TimelineLista` (agrupados por día); `TabTracking` reutiliza `esEmbarqueArribado`/`esEtaVencida` del dominio en vez de helpers locales.
+
 ## [13.378.4] - 2026-07-31
 - **fix(test rls)**: la suite `reg_r4_pricing` ya no choca con el catálogo global de puertos: siembra códigos propios (`ZZR4O`/`ZZR4D`) en vez de `CNSHA`/`MXZLO`.
 
