@@ -211,6 +211,13 @@ export function calcularFasesEmbarque(
       estado: eirCompletada ? "completada" : "pendiente",
     },
     {
+      id: "por_liquidar",
+      label: "Por liquidar",
+      iconoId: "por_liquidar",
+      fecha: null,
+      estado: porLiquidarCompletada ? "completada" : "pendiente",
+    },
+    {
       id: "cerrado",
       label: "Cerrado",
       iconoId: "cerrado",
