@@ -75,8 +75,10 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (kind === "transicion_invalida") {
       notifyError(undefined, {
         title: "Transición de estado no permitida",
-        description: `No se permite pasar de "${estadoActual}" a "${siguiente}". Refresca la página; el estado del embarque pudo cambiar en otra sesión.`,
+        description: `No se permite pasar de "${estadoActual}" a "${siguiente}". El estado del embarque pudo cambiar en otra sesión.`,
         error: err, method: "HANDLE_AVANZAR_ESTADO_TRANSICION",
+        // P2-6.6: el aviso pedía "refrescar" sin darle al usuario cómo hacerlo.
+        action: { label: "Recargar datos", onClick: () => { window.location.reload(); } },
       });
       return;
     }
