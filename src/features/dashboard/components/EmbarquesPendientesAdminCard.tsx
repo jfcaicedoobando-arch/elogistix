@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { PackageCheck, Anchor, ChevronRight } from "lucide-react";
+import { PackageCheck, Anchor, Wallet, ChevronRight } from "lucide-react";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 
