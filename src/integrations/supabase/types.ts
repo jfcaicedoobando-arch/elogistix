@@ -7038,6 +7038,7 @@ export type Database = {
       }
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
+      _assert_writer_cotizacion: { Args: { p_org: string }; Returns: undefined }
       _audit_embarques_agregar: {
         Args: { p_hallazgos: Json; p_umbrales: Json }
         Returns: Json
