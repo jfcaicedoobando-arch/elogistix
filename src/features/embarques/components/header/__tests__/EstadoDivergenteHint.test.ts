@@ -2,7 +2,7 @@
  * P2-6.5 — El chip sólo aparece cuando el estado calculado difiere del guardado.
  */
 import { describe, it, expect } from "vitest";
-import { hayDivergenciaEstado } from "../EstadoDivergenteHint";
+import { hayDivergenciaEstado } from "../estadoDivergente";
 
 describe("hayDivergenciaEstado", () => {
   it("no hay divergencia cuando coinciden", () => {
