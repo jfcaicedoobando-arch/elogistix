@@ -30,7 +30,8 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
  */
 const ESTADOS_QUE_AVANZAN_A_ARRIBO = new Set(["En Tránsito", "En Proceso"]);
 const ESTADOS_QUE_ADMITEN_LLEGADA = new Set([
-  "En Tránsito", "En Proceso", "Arribo", "En Aduana", "Entregado", "EIR", "Cerrado",
+  "En Tránsito", "En Proceso", "Arribo", "En Aduana", "Entregado", "EIR",
+  "Por liquidar", "Cerrado",
 ]);
 
 /**
