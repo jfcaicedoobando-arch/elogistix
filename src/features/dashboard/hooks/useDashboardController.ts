@@ -11,7 +11,8 @@ import { formatFechaLarga } from "@/lib/formatters/dates";
 
 export type DashboardScope = "todos" | "mios";
 
-const ESTADOS_LLEGADO = ["Arribo", "En Aduana", "Entregado"] as const;
+// v13.380.1 — Alineado con el RPC: post-arribo incluye EIR, Por liquidar y Cerrado.
+const ESTADOS_LLEGADO = ["Arribo", "En Aduana", "Entregado", "EIR", "Por liquidar", "Cerrado"] as const;
 
 function getSaludo(): string {
   const h = new Date().getHours();
