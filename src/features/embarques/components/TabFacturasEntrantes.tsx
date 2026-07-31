@@ -89,7 +89,7 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
               Facturas de proveedor recibidas
             </CardTitle>
             <CardDescription>
-              Sube el PDF y el XML del invoice en un mismo documento. No creas la factura: contabilidad la captura.
+              Sube el PDF y el XML de la factura en un mismo documento. No creas la factura: contabilidad la captura.
             </CardDescription>
             <div className="flex flex-wrap gap-2 pt-1">
               <Badge variant="warning" size="sm">{resumen.porCapturar} por capturar</Badge>

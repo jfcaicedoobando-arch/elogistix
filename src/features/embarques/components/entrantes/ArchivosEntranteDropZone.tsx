@@ -89,7 +89,7 @@ export function ArchivosEntranteDropZone({ pdf, xml, onArchivos, onQuitarPdf, on
       <div className="grid gap-2 sm:grid-cols-2">
         <ArchivoSlot
           titulo="PDF de la factura"
-          ayuda="Representación impresa del invoice"
+          ayuda="Representación impresa de la factura"
           archivo={pdf}
           icono={FileText}
           onQuitar={onQuitarPdf}

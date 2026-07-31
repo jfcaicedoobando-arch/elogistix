@@ -111,7 +111,7 @@ export const fmtEntrantesPendientes = (d: unknown): string | null => {
   const n = Number(pick(d, "pendientes") ?? 0);
   if (n <= 0) return null;
   const dias = Number(pick(d, "dias_max") ?? 0);
-  const base = `${n} invoice(s) del buzón sin capturar`;
+  const base = `${n} factura(s) del buzón sin capturar`;
   return dias > 0 ? `${base} · el más antiguo lleva ${dias} día(s)` : base;
 };
 
@@ -121,9 +121,9 @@ export const fmtEntrantesEvidencia = (d: unknown): string | null => {
   const nombres = pick(d, "proveedores");
   if (Array.isArray(nombres) && nombres.length > 0) {
     const muestra = nombres.slice(0, 3).map(String).join(", ");
-    return `${n} proveedor(es) sin invoice adjunto: ${muestra}${nombres.length > 3 ? "…" : ""}`;
+    return `${n} proveedor(es) sin factura adjunta: ${muestra}${nombres.length > 3 ? "…" : ""}`;
   }
-  return `${n} proveedor(es) sin invoice adjunto`;
+  return `${n} proveedor(es) sin factura adjunta`;
 };
 
 
