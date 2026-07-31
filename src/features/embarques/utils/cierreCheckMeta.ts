@@ -60,7 +60,7 @@ const META: Record<string, CierreCheckMeta> = {
   docs_completos: docs,
   // v13.347.0 — Buzón CxP fusionado en la pestaña Costos.
   facturas_entrantes_capturadas: {
-    label: "Invoices del buzón capturados", responsable: "Auxiliar contable",
+    label: "Facturas del buzón capturadas", responsable: "Auxiliar contable",
     ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
     formatDetalle: fmtEntrantesPendientes, fase: "costos", orden: 1,
   },

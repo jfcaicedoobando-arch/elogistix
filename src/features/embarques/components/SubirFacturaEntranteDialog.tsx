@@ -100,7 +100,7 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
             id="factura-entrante-nota"
             value={form.nota}
             onChange={(e) => form.setNota(e.target.value)}
-            placeholder="Ej. Invoice del agente en Shanghái, incluye THC destino."
+            placeholder="Ej. Factura del agente en Shanghái, incluye THC destino."
             rows={3}
           />
         </div>
