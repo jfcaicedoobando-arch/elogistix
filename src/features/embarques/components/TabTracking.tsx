@@ -136,18 +136,21 @@ export function TabTracking({ embarqueId, embarque }: Props) {
           <CardContent>
             <FasesEmbarqueStepper
               embarque={{
-            modo: embarque.modo,
-            tipo: embarque.tipo,
-            estado: embarque.estado,
-            etd: embarque.etd,
-            eta: embarque.eta,
-            fecha_creacion: embarque.fecha_creacion,
-            fecha_llegada_real: embarque.fecha_llegada_real,
-            cotizacion_id: embarque.cotizacion_id,
-            updated_at: embarque.updated_at,
-          }}
-        />
+                modo: embarque.modo,
+                tipo: embarque.tipo,
+                estado: embarque.estado,
+                etd: embarque.etd,
+                eta: embarque.eta,
+                fecha_creacion: embarque.fecha_creacion,
+                fecha_llegada_real: embarque.fecha_llegada_real,
+                cotizacion_id: embarque.cotizacion_id,
+                updated_at: embarque.updated_at,
+              }}
+            />
+          </CardContent>
+        </Card>
       )}
+
 
       {embarque && (
         <TrackingNavieraActions
