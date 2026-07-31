@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.377.0] - 2026-07-31
+- **fix(embarques · P2-6.5)**: el header del embarque avisa con chip + tooltip cuando el estado mostrado se **calculó por fechas** (ETD/ETA/llegada real) y difiere del estado operativo guardado.
+- **fix(embarques · P2-6.6)**: el aviso de "el estado cambió en otra sesión" ahora trae botón **Recargar datos** en vez de sólo pedir refrescar.
+- **verificado(Fase 3 · prorrateo/P&L)**: nuevas pruebas confirman que el encabezado cuadra al centavo contra el desglose por contenedor y que el prorrateo divide entre el número de contenedores; el hallazgo se cierra como artefacto de datos.
+- **test**: `pnlPorContenedor.consistencia`, `EstadoDivergenteHint`.
+
 ## [13.376.0] - 2026-07-31
 - **fix(portal · P2-6.4)**: la línea de tiempo del portal ya sólo muestra hitos de negocio (Zarpe, Arribo, Aduana, Entrega…); se ocultan eventos internos o generados por pruebas.
 - **fix(tesorería · P2-6.8)**: la bandeja "Vencen en 30 días" usa la misma ventana que el KPI de flujo (día 30 incluido, sin depender de la hora del día).

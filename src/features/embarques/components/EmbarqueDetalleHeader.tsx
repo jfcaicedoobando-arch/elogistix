@@ -11,6 +11,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useCotizacionFolio } from "@/features/cotizacion/hooks";
 import { useEmbarqueEstadoActions } from "@/features/embarques/hooks/useEmbarqueEstadoActions";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
+import { EstadoDivergenteHint } from "./header/EstadoDivergenteHint";
 
 /**
  * v13.309.50 · PR-S2-B: el header ahora consume internamente
@@ -76,6 +77,7 @@ export function EmbarqueDetalleHeader({
               cobroStatus={embarque.cobro_cliente_status as "pendiente" | "parcial" | "pagado" | null | undefined}
             />
             <EmbarqueBadgeAdmin embarqueId={embarqueId} estado={estadoVisual} />
+            <EstadoDivergenteHint estadoVisual={estadoVisual} estadoGuardado={embarque.estado} />
           </>
         }
         subtitle={
