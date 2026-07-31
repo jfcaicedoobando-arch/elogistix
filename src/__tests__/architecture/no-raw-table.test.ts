@@ -45,6 +45,10 @@ const ALLOWLIST: readonly string[] = [
   "src/features/embarques/components/pnl/PnlComparativaTable.tsx",
   // Estado de cuenta: filas expandibles con sub-rows (pagos + notas), no soportado por DataTable.
   "src/features/facturacion/estadoCuenta/components/EstadoCuentaTable.tsx",
+  // Sub-vistas extraídas de EstadoCuentaTable (límite 200 líneas).
+  "src/features/facturacion/estadoCuenta/components/EstadoCuentaFilaFactura.tsx",
+  "src/features/facturacion/estadoCuenta/components/EstadoCuentaGrupoMoneda.tsx",
+  "src/features/facturacion/estadoCuenta/components/EstadoCuentaTableHead.tsx",
   // Catálogos con toggles inline por fila.
   "src/features/configuracion/components/CatalogoClavesSATCard.tsx",
   "src/features/configuracion/components/CatalogoClavesSATCard.parts.tsx",

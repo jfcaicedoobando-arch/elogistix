@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.378.2] - 2026-07-31
+- **fix(ci)**: se cierran los 6 fallos del run 83165139014 — cast CRITICAL en `solicitudPreferencias.ts` (JSON.parse ahora se valida como `unknown`), `FacturaProveedorFormFields.tsx` baja de 202 a <200 líneas extrayendo `MonedaImportesSection`, allowlist de `@/components/ui/table` para las 3 sub-vistas de Estado de Cuenta (test + eslint), expedientes del fixture `reg_r4_pricing` con formato válido (`ELRPR…`), regex del guard de cotización actualizado a `Solicitada` y `/cartera` con `gerente_comercial` en el smoke de rutas.
+
 ## [13.378.1] - 2026-07-31
 - **fix(embarques · copy)**: se elimina el anglicismo "invoice" del detalle de embarque y sus pestañas; ahora todo dice **factura** (checklist de cierre, pestaña Costos → Facturas de proveedor recibidas, diálogo de carga y zona de archivos).
 
