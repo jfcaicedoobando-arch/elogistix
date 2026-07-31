@@ -87,8 +87,9 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
           const pendientes = checks.filter((c) => !c.ok).length;
           const motivo = !listoParaCierre
             ? (modo?.toLowerCase() === "marítimo"
-                ? "El embarque debe estar en EIR para cerrar."
-                : "El embarque debe estar en Entregado para cerrar.")
+                ? "El embarque debe estar en EIR o Por liquidar para cerrar."
+                : "El embarque debe estar en Entregado o Por liquidar para cerrar.")
+
             : pendientes > 0
               ? `Faltan ${pendientes} pendiente${pendientes === 1 ? "" : "s"} del checklist.`
               : null;
