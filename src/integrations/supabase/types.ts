@@ -8023,6 +8023,10 @@ export type Database = {
         Args: { _embarque_id: string }
         Returns: Json
       }
+      embarque_operativo_completo: {
+        Args: { p_embarque_id: string }
+        Returns: boolean
+      }
       embarques_admin_pendientes_count: { Args: never; Returns: number }
       embarques_alertas_ids: {
         Args: never
@@ -8584,6 +8588,10 @@ export type Database = {
           venta_mxn_native: number
           venta_usd: number
         }[]
+      }
+      promover_embarque_por_liquidar: {
+        Args: { p_embarque_id: string }
+        Returns: boolean
       }
       proveedor_salud: { Args: { p_proveedor_id: string }; Returns: Json }
       proveedores_listado: {
