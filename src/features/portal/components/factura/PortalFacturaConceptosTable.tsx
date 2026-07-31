@@ -80,7 +80,7 @@ export default function PortalFacturaConceptosTable({ snapshot, moneda, pdfDispo
 
         {/* Desktop: table */}
         <div className="hidden md:block">
-          <Table>
+          <Table className="min-w-[560px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Concepto</TableHead>
