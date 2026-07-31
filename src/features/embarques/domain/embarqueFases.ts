@@ -103,22 +103,24 @@ function iconoTransito(modo: string): FaseIconoId {
 }
 
 
-// v13.303.22 — Rankings en base al nuevo orden Arribo → En Aduana → Entregado
-// → EIR → Cerrado. Cada set representa "estados iguales o posteriores a".
+// v13.380.0 — Orden: Arribo → En Aduana → Entregado → EIR → Por liquidar →
+// Cerrado. Cada set representa "estados iguales o posteriores a".
 const ESTADOS_POST_TRANSITO = new Set([
-  "En Tránsito", "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Cerrado",
+  "En Tránsito", "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Por liquidar", "Cerrado",
 ]);
 const ESTADOS_POST_ARRIBO = new Set([
-  "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Cerrado",
+  "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Por liquidar", "Cerrado",
 ]);
 const ESTADOS_POST_ADUANA = new Set([
-  "En Aduana", "Entregado", "EIR", "Cerrado",
+  "En Aduana", "Entregado", "EIR", "Por liquidar", "Cerrado",
 ]);
-const ESTADOS_POST_ENTREGADO = new Set(["Entregado", "EIR", "Cerrado"]);
-const ESTADOS_POST_EIR = new Set(["EIR", "Cerrado"]);
+const ESTADOS_POST_ENTREGADO = new Set(["Entregado", "EIR", "Por liquidar", "Cerrado"]);
+const ESTADOS_POST_EIR = new Set(["EIR", "Por liquidar", "Cerrado"]);
+const ESTADOS_POST_POR_LIQUIDAR = new Set(["Por liquidar", "Cerrado"]);
 
 function faseIdParaEstado(estadoVisual: string): FaseId {
   if (estadoVisual === "Cerrado") return "cerrado";
+  if (estadoVisual === "Por liquidar") return "por_liquidar";
   if (estadoVisual === "EIR") return "eir";
   if (estadoVisual === "Entregado") return "entregado";
   if (estadoVisual === "En Aduana") return "en_aduana";
