@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
+import { opcionesConValorGuardado } from "@/features/embarques/domain/opcionesCatalogo";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
 const NONE = "__none__";
@@ -37,10 +38,21 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
   const { setValue, watch } = useFormContext<EmbarqueFormValues>();
   const { data: agentes = [] } = useCosteoAgentes();
   const currentId = watch("agenteId");
+  const nombreGuardado = watch("agente");
   const heredado = !!cotizacionAgenteId && currentId === cotizacionAgenteId;
   const overriden = !!cotizacionAgenteId && currentId !== cotizacionAgenteId;
 
-  const opciones = useMemo(() => agentes.filter((a) => a.activo), [agentes]);
+  // P1-5: si el catálogo aún no trae el agente guardado (o está inactivo), se
+  // inyecta una opción sintética para no pintar el select vacío.
+  const opciones = useMemo(
+    () =>
+      opcionesConValorGuardado(
+        agentes.filter((a) => a.activo).map((a) => ({ id: a.id, label: a.nombre })),
+        currentId,
+        nombreGuardado,
+      ),
+    [agentes, currentId, nombreGuardado],
+  );
 
   return (
     <div className="space-y-2">
@@ -81,7 +93,7 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
               <SelectItem value={NONE}>Sin agente</SelectItem>
               {opciones.map((a) => (
                 <SelectItem key={a.id} value={a.id}>
-                  {a.nombre}
+                  {a.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -107,8 +119,20 @@ export function NavieraEmbarqueSelector({
   const { setValue, watch } = useFormContext<EmbarqueFormValues>();
   const { data: navieras = [] } = useNavieras();
   const currentId = watch("navieraId");
+  const nombreGuardado = watch("naviera");
   const heredado = !!cotizacionNavieraId && currentId === cotizacionNavieraId;
   const overriden = !!cotizacionNavieraId && currentId !== cotizacionNavieraId;
+
+  // P1-5: misma tolerancia que en el selector de agente.
+  const opciones = useMemo(
+    () =>
+      opcionesConValorGuardado(
+        navieras.map((n) => ({ id: n.id, label: n.name })),
+        currentId,
+        nombreGuardado,
+      ),
+    [navieras, currentId, nombreGuardado],
+  );
 
   return (
     <div className={`space-y-2 ${className ?? ""}`}>
@@ -147,9 +171,9 @@ export function NavieraEmbarqueSelector({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>Sin naviera</SelectItem>
-              {navieras.map((n) => (
+              {opciones.map((n) => (
                 <SelectItem key={n.id} value={n.id}>
-                  {n.name}
+                  {n.label}
                 </SelectItem>
               ))}
             </SelectContent>
