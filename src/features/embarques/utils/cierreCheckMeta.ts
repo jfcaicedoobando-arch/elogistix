@@ -66,16 +66,24 @@ const META: Record<string, CierreCheckMeta> = {
   documentos_completos: docs,
   docs_completos: docs,
   // v13.347.0 — Buzón CxP fusionado en la pestaña Costos.
-  facturas_entrantes_capturadas: {
-    label: "Facturas del buzón capturadas", responsable: "Auxiliar contable",
-    ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
-    formatDetalle: fmtEntrantesPendientes, fase: "costos", orden: 1,
-  },
+  // v13.381.0 — Secuencia explícita: 1) llegó · 2) se capturó · 3) se ligó al costo.
   facturas_entrantes_evidencia: {
-    label: "Evidencia de factura recibida por proveedor", responsable: "Operador",
+    label: "Paso 1 · Recibimos la factura de cada proveedor",
+    descripcion:
+      "Revisa que cada proveedor con costos en este embarque tenga al menos un archivo (PDF o XML) subido al buzón. Sólo confirma que el documento ya llegó.",
+    responsable: "Operador",
     ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
-    formatDetalle: fmtEntrantesEvidencia, fase: "costos", orden: 2,
+    formatDetalle: fmtEntrantesEvidencia, fase: "costos", orden: 1,
   },
+  facturas_entrantes_capturadas: {
+    label: "Paso 2 · Facturas del buzón capturadas en el sistema",
+    descripcion:
+      "Revisa que no queden archivos del buzón en «Por capturar». Aquí se convierte el documento recibido en una factura de proveedor con folio, montos e impuestos.",
+    responsable: "Auxiliar contable",
+    ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
+    formatDetalle: fmtEntrantesPendientes, fase: "costos", orden: 2,
+  },
+
   pnl_margen_minimo: {
     label: "Utilidad mínima alcanzada", responsable: "Ventas",
     ruta: buildRuta("pnl", "utilidad"), ctaLabel: "Ver P&L", formatDetalle: fmtMargen, fase: "rentabilidad", orden: 1,
