@@ -49,8 +49,12 @@ export async function handleSubmitError(e: unknown, uuidFiscal?: string | null) 
       });
     }
   } else if (err.code === "23505" && /folio/.test(blob)) {
-
-    notifyError(undefined, { title: "Ya existe una factura viva con este folio para el proveedor.", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_FOLIO" });
+    // P1-2: la llave única es proveedor + folio + fecha de emisión (vivas).
+    notifyError(undefined, {
+      title: "Folio duplicado para este proveedor",
+      description: "Ya existe una factura viva con este folio y fecha de emisión para el proveedor. Cambia el folio o la fecha, o busca la factura existente en Compras › Facturas.",
+      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_FOLIO",
+    });
   } else if (err.code === "23505") {
     notifyError(undefined, { title: "Registro duplicado", description: err.message ?? undefined, method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP2" });
   } else {
