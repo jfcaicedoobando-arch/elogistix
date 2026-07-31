@@ -98,6 +98,7 @@ export interface ArribosEsteMes {
 // del dashboard hasta que el embarque avance a Arribo.
 export const ESTADOS_FILTRO = [
   "Confirmado", "En Tránsito", "Arribo", "En Aduana", "Entregado", "EIR",
+  "Por liquidar",
 ] as const;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
 
@@ -109,6 +110,7 @@ export const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
   "En Aduana": 0,
   Entregado: 0,
   EIR: 0,
+  "Por liquidar": 0,
 };
 
 export const EMPTY_ARRIBOS: ArribosEsteMes = {
