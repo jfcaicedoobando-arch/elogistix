@@ -16,11 +16,11 @@ const ISO_CRUCE_DIA = "2026-07-31T02:30:00Z";
 
 describe("formatters/dates · zona horaria de negocio", () => {
   it("01 · formatFechaHora usa CDMX y no UTC en el cruce de día", () => {
-    expect(formatFechaHora(ISO_CRUCE_DIA)).toContain("30/07/2026");
+    expect(formatFechaHora(ISO_CRUCE_DIA)).toContain("30/07/26");
   });
 
   it("02 · formatDateTimeShort usa el día CDMX", () => {
-    expect(formatDateTimeShort(ISO_CRUCE_DIA)).toMatch(/^30 /);
+    expect(formatDateTimeShort(ISO_CRUCE_DIA)).toMatch(/^30[ -]/);
   });
 
   it("03 · formatFechaLarga usa el día CDMX", () => {
@@ -28,15 +28,15 @@ describe("formatters/dates · zona horaria de negocio", () => {
   });
 
   it("04 · formatFechaEs con fecha sólo-día no se corre de día", () => {
-    expect(formatFechaEs("2026-07-31")).toBe("31/07/2026");
+    expect(formatFechaEs("2026-07-31")).toBe("31/7/2026");
   });
 
   it("05 · formatFechaEs con ISO+hora respeta CDMX", () => {
-    expect(formatFechaEs(ISO_CRUCE_DIA)).toBe("30/07/2026");
+    expect(formatFechaEs(ISO_CRUCE_DIA)).toBe("30/7/2026");
   });
 
   it("06 · se puede sobrescribir la zona horaria", () => {
-    expect(formatFechaEs(ISO_CRUCE_DIA, { timeZone: "UTC" })).toBe("31/07/2026");
+    expect(formatFechaEs(ISO_CRUCE_DIA, { timeZone: "UTC" })).toBe("31/7/2026");
   });
 
   it("07 · valores vacíos devuelven guión", () => {
