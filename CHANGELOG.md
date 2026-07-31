@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.378.0] - 2026-07-31
+- **test(rls)**: nueva suite `test_rls_reg_r4_cotizacion_guard.sql` — desde `Solicitada` se permite Borrador/Enviada/Aceptada/Rechazada/Vencida, se congela versión al salir, y `Solicitada → En operación` sigue bloqueada.
+- **test(rls)**: la suite `reg_r4_pricing` ahora también fija que `ejecutivo_pricing` SÍ escribe agentes, rutas y tarifas de costeo (contraprueba del retiro de permisos sobre embarques).
+- **test(e2e)**: nuevos flujos 30 (crear factura y timbrar con PAC en error, sin TypeError ni skeleton infinito), 31 (autosave del wizard conserva foco y valor ×4) y 32 (el paso 2 del editor de embarque llega hidratado).
+- **test(cxp)**: `existeFacturaDuplicada` no consulta si la fecha de emisión viene vacía y el error 23505 del folio se traduce a un mensaje accionable.
+- **chore(embarques)**: `hayDivergenciaEstado` se mueve a `estadoDivergente.ts` (lint: el archivo del componente sólo exporta componentes).
+
 ## [13.377.0] - 2026-07-31
 - **fix(embarques · P2-6.5)**: el header del embarque avisa con chip + tooltip cuando el estado mostrado se **calculó por fechas** (ETD/ETA/llegada real) y difiere del estado operativo guardado.
 - **fix(embarques · P2-6.6)**: el aviso de "el estado cambió en otra sesión" ahora trae botón **Recargar datos** en vez de sólo pedir refrescar.

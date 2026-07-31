@@ -22,6 +22,14 @@ DECLARE
   emb_a     uuid := gen_random_uuid();
   cot_a     uuid := gen_random_uuid();
   cc_new    uuid := gen_random_uuid();
+  prov_a    uuid := gen_random_uuid();
+  ag_new    uuid := gen_random_uuid();
+  pto_o     uuid := gen_random_uuid();
+  pto_d     uuid := gen_random_uuid();
+  nav_a     uuid := gen_random_uuid();
+  tipo_a    uuid := gen_random_uuid();
+  ruta_new  uuid := gen_random_uuid();
+  tar_new   uuid := gen_random_uuid();
   afectadas int;
   visible   int;
 BEGIN
@@ -42,6 +50,14 @@ BEGIN
 
   INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado)
     VALUES (cot_a, org_a, cli_a, 'Cli R4 Pricing A', 'COT-R4P-A', 'Marítimo', 'Importación', 'FOB', 'Borrador');
+
+  -- Catálogos base para las pruebas de costeo (R4 P0-2, impacto colateral)
+  INSERT INTO public.proveedores(id, nombre, organization_id)
+    VALUES (prov_a, 'Prov R4 Pricing A', org_a);
+  INSERT INTO public.puertos(id, code, name, country)
+    VALUES (pto_o, 'CNSHA', 'Shanghai', 'CN'), (pto_d, 'MXZLO', 'Manzanillo', 'MX');
+  INSERT INTO public.navieras(id, code, name) VALUES (nav_a, 'R4PN', 'Naviera R4P');
+  INSERT INTO public.tipos_contenedor(id, code, name) VALUES (tipo_a, '40HC-R4P', '40 HC R4P');
 
   -- =========================================================================
   -- TEST 1 (R4 P0-2): pricing LEE embarques de su org (hereda viewer)
@@ -98,6 +114,35 @@ BEGIN
   );
   SELECT count(*) INTO visible FROM public.cotizacion_costos WHERE id = cc_new;
   PERFORM pg_temp.assert(visible = 1, 'ejecutivo_pricing debe poder crear costos de cotización');
+
+  -- =========================================================================
+  -- TEST 6 (R4 P0-2): pricing SÍ escribe costeo_agentes de su org
+  -- =========================================================================
+  INSERT INTO public.costeo_agentes(id, organization_id, proveedor_id, nombre, pais, dias_credito, activo)
+    VALUES (ag_new, org_a, prov_a, 'Agente R4P', 'CN', 30, true);
+  SELECT count(*) INTO visible FROM public.costeo_agentes WHERE id = ag_new;
+  PERFORM pg_temp.assert(visible = 1, 'ejecutivo_pricing debe poder crear agentes de costeo');
+
+  -- =========================================================================
+  -- TEST 7 (R4 P0-2): pricing SÍ escribe costeo_rutas de su org
+  -- =========================================================================
+  INSERT INTO public.costeo_rutas(id, organization_id, puerto_origen_id, puerto_destino_id, activa)
+    VALUES (ruta_new, org_a, pto_o, pto_d, true);
+  SELECT count(*) INTO visible FROM public.costeo_rutas WHERE id = ruta_new;
+  PERFORM pg_temp.assert(visible = 1, 'ejecutivo_pricing debe poder crear rutas de costeo');
+
+  -- =========================================================================
+  -- TEST 8 (R4 P0-2): pricing SÍ escribe costeo_tarifas de su org
+  -- =========================================================================
+  INSERT INTO public.costeo_tarifas(
+    id, organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
+    moneda, flete_base, dias_libres_demoras, vigente_desde, vigente_hasta
+  ) VALUES (
+    tar_new, org_a, ag_new, nav_a, ruta_new, tipo_a,
+    'USD', 2500, 14, CURRENT_DATE, CURRENT_DATE + 30
+  );
+  SELECT count(*) INTO visible FROM public.costeo_tarifas WHERE id = tar_new;
+  PERFORM pg_temp.assert(visible = 1, 'ejecutivo_pricing debe poder crear tarifas de costeo');
 
   PERFORM pg_temp.as_postgres();
 

@@ -120,11 +120,19 @@ describe("proveedorFacturas service", () => {
       expect(call?.ops.filter(o => o === "neq")).toHaveLength(2); // neq estado y neq id
     });
 
+    it("devuelve false sin consultar si la fecha de emisión viene vacía (R4 P1-2)", async () => {
+      mock.setTableResult("proveedor_facturas", { data: [{ id: "f1" }], error: null });
+      const res = await existeFacturaDuplicada("p1", "f1", "");
+      expect(res).toBe(false);
+      expect(mock.tableCalls.find(c => c.table === "proveedor_facturas")).toBeUndefined();
+    });
+
     it("lanza error si falla existeFacturaDuplicada", async () => {
       mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error check" } });
       await expect(existeFacturaDuplicada("p1", "f1", "2024-01-01")).rejects.toThrow("Error check");
     });
   });
+
 
   describe("softDeleteFacturaProveedor", () => {
     it("invoca RPC soft_delete_proveedor_factura con id y userId", async () => {
