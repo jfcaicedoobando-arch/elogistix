@@ -12,7 +12,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { NumericInput } from "@/components/shared/NumericInput";
-import type { Database } from "@/integrations/supabase/types";
 import { FormSection, FieldError, RequiredMark } from "./facturaFormPrimitives";
 import type {
   FacturaFormValues,
@@ -21,9 +20,6 @@ import type {
 } from "@/features/cxp/types";
 import { ProveedorYFolioSection, NotasSection } from "./FacturaProveedorFormFields.sections";
 import { MonedaImportesSection } from "./FacturaProveedorFormFields.moneda";
-
-type Moneda = Database["public"]["Enums"]["moneda"];
-
 
 
 interface Props {
