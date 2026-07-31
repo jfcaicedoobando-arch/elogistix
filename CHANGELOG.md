@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.372.0] - 2026-07-31
+- **fix(fechas)**: los formateadores de fecha/hora (`formatFechaHora`, `formatFechaEs`, `formatFechaLarga`, `formatDateTimeShort`) ahora fijan la zona de negocio **America/Mexico_City**. Antes se usaba la zona del navegador, así que un usuario fuera de México podía ver un día distinto al del listado. Se puede sobrescribir con `timeZone` y hay pruebas con `TZ=UTC` en el cruce de día.
+- **fix(portal · UI)**: en Facturas y Embarques del portal se distingue "aún no tienes registros" de "no se encontraron con estos filtros" — igual que ya hacía Cotizaciones.
+- **fix(portal · UI)**: el desglose de la factura conserva ancho mínimo con scroll horizontal en pantallas angostas, para que no se compriman los importes.
+
+
 ## [13.371.1] - 2026-07-30
 - **fix(proveedores)**: un proveedor eliminado seguía apareciendo en el listado de Compras → Proveedores. El listado (`proveedores_listado`) ahora excluye los registros borrados, igual que los selectores de costos de embarque, agentes/navieras de costeo y la validación de RFC duplicado.
 
