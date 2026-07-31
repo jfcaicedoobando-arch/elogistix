@@ -47,6 +47,15 @@ export function buildFacturaFormSchema(ctx: FacturaFormValidationContext) {
       if (!values.folio.trim()) {
         refCtx.addIssue({ code: "custom", path: ["folio"], message: "Captura el folio del proveedor" });
       }
+      // P1-2: sin fecha de emisión el índice único de la BD (proveedor + folio
+      // + fecha) no puede evaluarse y el 23505 llega crudo al toast.
+      if (!values.emision.trim()) {
+        refCtx.addIssue({
+          code: "custom",
+          path: ["emision"],
+          message: "La fecha de emisión es obligatoria",
+        });
+      }
       if (!values.categoriaId) {
         refCtx.addIssue({ code: "custom", path: ["categoriaId"], message: "Selecciona una categoría contable" });
       }
