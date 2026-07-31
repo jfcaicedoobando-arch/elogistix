@@ -42,8 +42,8 @@ BEGIN
   INSERT INTO public.user_roles(user_id, role)
     VALUES (pricing_a, 'ejecutivo_pricing');
 
-  INSERT INTO public.clientes(id, nombre, organization_id)
-    VALUES (cli_a, 'Cli R4 Pricing A', org_a);
+  INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
+    VALUES (cli_a, 'Cli R4 Pricing A', 'XAXX010101000', 'r4pricing@example.com', org_a);
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
     VALUES (emb_a, 'ELR4P00001', cli_a, 'Cli R4 Pricing A', org_a, 'Marítimo', 'Importación');
