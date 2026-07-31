@@ -44,7 +44,7 @@ export function usePortalEmbarqueDetalleController(id: string | undefined) {
 
   const currentStepIndex = useMemo(() => {
     if (!estadoVisual) return -1;
-    if (estadoVisual === "Cerrado" || estadoVisual === "EIR") {
+    if (estadoVisual === "Cerrado" || estadoVisual === "EIR" || estadoVisual === "Por liquidar") {
       return PORTAL_EMBARQUE_PROGRESS_STEPS.length;
     }
     const idx = PORTAL_EMBARQUE_PROGRESS_STEPS.findIndex((s) => s.key === estadoVisual);
