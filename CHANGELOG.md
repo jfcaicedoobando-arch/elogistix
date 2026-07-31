@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.380.5] - 2026-07-31
+- **fix(embarques)**: `embarque_operativo_completo` ahora exige facturas de proveedor: todo concepto de costo debe tener su factura (no cancelada) y el Buzón CxP del embarque sin pendientes. Antes un embarque podía saltar a `Por liquidar` sin CxP capturado.
+- **feat(embarques)**: nuevos triggers de promoción al vincular facturas de proveedor a conceptos de costo (`proveedor_facturas_conceptos`) y al capturar facturas del buzón (`embarque_facturas_entrantes`).
+- **fix(datos)**: `ELIMP00270` regresó a `EIR` (le faltaba 1 factura de proveedor) con nota de auditoría.
+
+
+
 ## [13.380.4] - 2026-07-31
 - **fix(ci)**: baseline de `audit:migrations` sube a `20260731220419` (FIX-H6-05). La migración `20260731220418` (estado `Por liquidar`) recreó 7 funciones `SECURITY DEFINER` sin el bloque REVOKE/GRANT; los permisos ya están correctos en BD y se re-aplican en la migración correctiva `20260731224126`.
 - **test**: tests alineados al estado `Por liquidar` — secuencia oficial `EIR → Por liquidar → Cerrado` en `useEmbarqueEstadoActions`, gate de cierre desde `Por liquidar`, y `Por liquidar` en el conteo del dashboard.
