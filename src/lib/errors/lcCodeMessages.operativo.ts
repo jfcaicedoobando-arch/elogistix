@@ -30,6 +30,9 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
   LC_EMBARQUE_BLOQUEADO: "El embarque está bloqueado y no admite cambios.",
   LC_CIERRE_SOLO_RPC:
     "El cierre del embarque debe hacerse desde el flujo oficial (no editable manualmente).",
+  LC_CIERRE_AUTOMATICO_NO_APLICA:
+    "El cierre automático no aplica: el embarque aún tiene pendientes en el checklist de cierre.",
+
 
   // ── Cotizaciones ───────────────────────────────────────────────────────
   LC_COT_NO_ENCONTRADA: "La cotización no existe o fue eliminada.",

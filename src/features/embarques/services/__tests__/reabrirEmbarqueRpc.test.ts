@@ -43,9 +43,13 @@ describe("reabrir_embarque — contrato SQL", () => {
   });
 
   it("mantiene REVOKE + GRANT EXECUTE explícitos (H6)", () => {
-    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.reabrir_embarque/);
-    expect(sql).toMatch(/GRANT EXECUTE ON FUNCTION public\.reabrir_embarque\(uuid, text, text, uuid\) TO authenticated/);
+    // v13.380.3 — los grants pueden vivir en una migración correctiva posterior
+    // (FIX-H6-05), por eso se busca el archivo que los contiene.
+    const grants = readMigrationContaining("REVOKE ALL ON FUNCTION public.reabrir_embarque");
+    expect(grants).toMatch(/REVOKE ALL ON FUNCTION public\.reabrir_embarque/);
+    expect(grants).toMatch(/GRANT EXECUTE ON FUNCTION public\.reabrir_embarque\(uuid, text, text, uuid\) TO authenticated/);
   });
+
 });
 
 describe("reabrirEmbarqueRpc — mapeo de errores", () => {

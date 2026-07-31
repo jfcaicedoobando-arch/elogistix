@@ -56,8 +56,18 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    REVOKE/GRANT en el mismo archivo. Los permisos en BD ya eran correctos
  *    (`proacl` sin PUBLIC) y quedan re-aplicados explícitamente por la
  *    migración FIX-H6-02 posterior.
+ *  - `20260731220419` — post-FIX-H6-05: `20260731220418` (estado
+ *    `Por liquidar`) recreó `embarque_operativo_completo`,
+ *    `promover_embarque_por_liquidar`, `_trg_promover_por_liquidar`,
+ *    `_trg_autocierre_por_liquidar`, `avanzar_estado_embarque`,
+ *    `cerrar_embarque` y `reabrir_embarque` sin el bloque REVOKE/GRANT en el
+ *    mismo archivo. La migración correctiva `20260731224126` re-aplica los
+ *    permisos (`REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO
+ *    authenticated, service_role`); el archivo original queda como legacy
+ *    auditado.
  */
-const BASELINE = "20260730163239";
+const BASELINE = "20260731220419";
+
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
 

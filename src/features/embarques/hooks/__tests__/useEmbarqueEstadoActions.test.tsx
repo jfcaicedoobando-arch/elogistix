@@ -53,17 +53,19 @@ const embarque = {
 
 describe("getSiguienteEstado", () => {
   it("retorna el siguiente estado concreto en la secuencia oficial", () => {
-    // Secuencia oficial v13.303.22 (Llegada deprecada, nuevo orden Arribo→En Aduana):
+    // Secuencia oficial v13.380.0 (Llegada deprecada, nuevo orden Arribo→En Aduana):
     // Borrador → Confirmado → En Tránsito → Arribo → En Aduana →
-    // Entregado → EIR → Cerrado.
+    // Entregado → EIR → Por liquidar → Cerrado.
     expect(getSiguienteEstado("Borrador")).toBe("Confirmado");
     expect(getSiguienteEstado("Confirmado")).toBe("En Tránsito");
     expect(getSiguienteEstado("En Tránsito")).toBe("Arribo");
     expect(getSiguienteEstado("Arribo")).toBe("En Aduana");
     expect(getSiguienteEstado("En Aduana")).toBe("Entregado");
     expect(getSiguienteEstado("Entregado")).toBe("EIR");
-    expect(getSiguienteEstado("EIR")).toBe("Cerrado");
+    expect(getSiguienteEstado("EIR")).toBe("Por liquidar");
+    expect(getSiguienteEstado("Por liquidar")).toBe("Cerrado");
   });
+
 
   it("rescata embarques legacy en Cotización → Confirmado", () => {
     expect(getSiguienteEstado("Cotización")).toBe("Confirmado");

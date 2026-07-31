@@ -45,7 +45,10 @@ describe("dashboardParsers", () => {
         Arribo: 1,
         Entregado: 7,
         EIR: 4,
+        // v13.380.0 — nuevo estado `Por liquidar` (cierre administrativo).
+        "Por liquidar": 0,
       });
+
     });
 
     it("usa 0 como default para estados ausentes", () => {
