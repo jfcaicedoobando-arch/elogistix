@@ -55,7 +55,7 @@ BEGIN
   INSERT INTO public.proveedores(id, nombre, organization_id, categoria, tipo)
     VALUES (prov_a, 'Prov R4 Pricing A', org_a, 'Logistico', 'Naviera');
   INSERT INTO public.puertos(id, code, name, country)
-    VALUES (pto_o, 'CNSHA', 'Shanghai', 'CN'), (pto_d, 'MXZLO', 'Manzanillo', 'MX');
+    VALUES (pto_o, 'ZZR4O', 'Puerto R4P Origen', 'CN'), (pto_d, 'ZZR4D', 'Puerto R4P Destino', 'MX');
   INSERT INTO public.navieras(id, code, name) VALUES (nav_a, 'R4PN', 'Naviera R4P');
   INSERT INTO public.tipos_contenedor(id, code, name) VALUES (tipo_a, '40HC-R4P', '40 HC R4P');
 
