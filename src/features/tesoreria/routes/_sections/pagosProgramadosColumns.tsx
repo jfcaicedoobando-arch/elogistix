@@ -18,7 +18,10 @@ export function filtrarProgramables(data: FacturaProgramableRow[], filtro: Filtr
   let rows = data;
   if (filtro === "programadas") rows = rows.filter((r) => r.fecha_programada_pago);
   if (filtro === "treinta_dias") {
+    // P2-6.8: se normaliza a medianoche para que la bandeja y el KPI de
+    // Tesorería usen exactamente la misma ventana (día 30 incluido).
     const limite = new Date();
+    limite.setHours(0, 0, 0, 0);
     limite.setDate(limite.getDate() + 30);
     rows = rows.filter((r) => {
       const f = r.fecha_programada_pago ?? r.fecha_vencimiento;
