@@ -10,6 +10,13 @@ interface Props {
   enabled: boolean;
 }
 
+/** Estilo de badge por estado pendiente de cierre administrativo. */
+const BADGE_ESTADO_PENDIENTE: Record<string, string> = {
+  Entregado: "bg-success/10 text-success hover:bg-success/10",
+  EIR: "border-state-eir/40 text-state-eir",
+  "Por liquidar": "border-warning/40 text-warning",
+};
+
 export function EmbarquesPendientesAdminCard({ enabled }: Props) {
   const { data, isLoading } = useEmbarquesPendientesAdmin(enabled);
   if (!enabled) return null;
