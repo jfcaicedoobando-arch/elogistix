@@ -25,8 +25,6 @@ DECLARE
   versiones int;
   bloqueada boolean := false;
 
-  -- Crea una cotización nueva en estado 'Solicitada' y devuelve su id.
-  FUNCTION_PLACEHOLDER text := NULL;
 BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS R4 Cot Guard');
   INSERT INTO public.clientes(id, nombre, organization_id)
