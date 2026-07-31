@@ -106,10 +106,14 @@ const META: Record<string, CierreCheckMeta> = {
     formatDetalle: fmtVentaPendientes, fase: "facturacion", orden: 1,
   },
   costo_conceptos_con_factura: {
-    label: "Todos los costos tienen factura de proveedor recibida", responsable: "Auxiliar contable",
+    label: "Paso 3 · Cada costo está ligado a su factura de proveedor",
+    descripcion:
+      "Recorre los conceptos de costo del embarque y verifica que cada uno esté vinculado a una factura de proveedor vigente. Es el candado final: evita costos sin comprobante.",
+    responsable: "Auxiliar contable",
     ruta: buildRuta("costos", "costo-sin-factura"), ctaLabel: "Ir a Costos",
     formatDetalle: fmtSinFactura, fase: "costos", orden: 3,
   },
+
   // v13.90.8 — `costos_liquidados` se eliminó del RPC: la liquidación ahora se deriva
   // automáticamente desde `pagos_proveedor` y queda cubierta por la regla `cxp_pagada`.
   rep_pendientes: {
