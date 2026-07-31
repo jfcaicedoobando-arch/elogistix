@@ -9,12 +9,11 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 const notifyError = vi.hoisted(() => vi.fn());
 const buscarCfdiDuplicado = vi.hoisted(() => vi.fn());
-const notificarCfdiDuplicado = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/appFeedback", () => ({ notifyError, notifySuccess: vi.fn() }));
+vi.mock("@/lib/ui/appFeedback", () => ({ notifyError, notifySuccess: vi.fn() }));
 vi.mock("../useNuevaFacturaProveedorForm.dup", () => ({
   buscarCfdiDuplicado,
-  notificarCfdiDuplicado,
+  describirFacturaExistente: () => "FP-000123 · Vigente · aprobada",
 }));
 
 import { handleSubmitError } from "../useNuevaFacturaProveedorForm.submit";
@@ -23,7 +22,6 @@ describe("handleSubmitError · constraint de folio duplicado", () => {
   beforeEach(() => {
     notifyError.mockReset();
     buscarCfdiDuplicado.mockReset();
-    notificarCfdiDuplicado.mockReset();
   });
 
   it("traduce el constraint proveedor_facturas_org_prov_folio_uq", async () => {
@@ -49,12 +47,13 @@ describe("handleSubmitError · constraint de folio duplicado", () => {
       constraint: "proveedor_facturas_uuid_fiscal_uq",
     }, "UUID-1");
 
-    expect(notificarCfdiDuplicado).toHaveBeenCalledTimes(1);
-    expect(notifyError).not.toHaveBeenCalled();
+    const [, opts] = notifyError.mock.calls[0];
+    expect(opts.title).toBe("Este CFDI ya está capturado");
+    expect(buscarCfdiDuplicado).toHaveBeenCalledWith("UUID-1");
   });
 
   it("no deja pasar el mensaje crudo cuando el 23505 es de otra llave", async () => {
-    await handleSubmitError({ code: "23505", message: "duplicate key value violates unique constraint \"otra_uq\"" });
+    await handleSubmitError({ code: "23505", message: 'duplicate key value violates unique constraint "otra_uq"' });
     const [, opts] = notifyError.mock.calls[0];
     expect(opts.title).toBe("Registro duplicado");
   });
