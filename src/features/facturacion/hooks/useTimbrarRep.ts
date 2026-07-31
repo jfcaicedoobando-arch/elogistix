@@ -13,6 +13,7 @@ import { notifyError, notifyInfo } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
+import { tituloTimbrado } from "@/features/facturacion/utils/uuidCorto";
 
 
 export function useTimbrarRep(facturaId?: string) {
@@ -21,7 +22,7 @@ export function useTimbrarRep(facturaId?: string) {
     mutationKey: queryKeys.facturacion.emitirRep,
     mutationFn: (pagoId: string) => emitirRep(pagoId),
     onSuccess: (res, pagoId) => {
-      notifySuccess(undefined, { title: `REP timbrado · UUID ${res.uuid.slice(0, 8)}…` });
+      notifySuccess(undefined, { title: tituloTimbrado("REP timbrado", res.uuid) });
       if (facturaId) {
         qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
       } else {

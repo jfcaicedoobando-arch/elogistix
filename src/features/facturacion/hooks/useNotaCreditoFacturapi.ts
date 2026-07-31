@@ -8,6 +8,7 @@ import {
 import type { MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { queryKeys } from "@/lib/query";
+import { tituloTimbrado } from "@/features/facturacion/utils/uuidCorto";
 
 export function useTimbrarNotaCredito(facturaId: string) {
   const qc = useQueryClient();
@@ -15,7 +16,7 @@ export function useTimbrarNotaCredito(facturaId: string) {
     mutationKey: queryKeys.facturacion.emitirNotaCredito,
     mutationFn: (notaCreditoId: string) => timbrarNotaCreditoFacturapi(notaCreditoId),
     onSuccess: (res) => {
-      notifySuccess(undefined, { title: `Nota de crédito timbrada · UUID ${res.uuid.slice(0, 8)}…` });
+      notifySuccess(undefined, { title: tituloTimbrado("Nota de crédito timbrada", res.uuid) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
     },
