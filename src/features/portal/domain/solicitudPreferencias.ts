@@ -32,12 +32,16 @@ export function leerSolicitudPreferencias(
 ): SolicitudPreferencias {
   if (!raw) return SOLICITUD_PREFS_DEFAULT;
   try {
-    const parsed = JSON.parse(raw) as Partial<SolicitudPreferencias>;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null) {
+      return SOLICITUD_PREFS_DEFAULT;
+    }
+    const obj: Record<string, unknown> = { ...parsed };
     return {
-      modo: esTexto(parsed.modo) ? parsed.modo : SOLICITUD_PREFS_DEFAULT.modo,
-      tipo: esTexto(parsed.tipo) ? parsed.tipo : SOLICITUD_PREFS_DEFAULT.tipo,
-      tipoEmbarque: esTexto(parsed.tipoEmbarque)
-        ? parsed.tipoEmbarque
+      modo: esTexto(obj.modo) ? obj.modo : SOLICITUD_PREFS_DEFAULT.modo,
+      tipo: esTexto(obj.tipo) ? obj.tipo : SOLICITUD_PREFS_DEFAULT.tipo,
+      tipoEmbarque: esTexto(obj.tipoEmbarque)
+        ? obj.tipoEmbarque
         : SOLICITUD_PREFS_DEFAULT.tipoEmbarque,
     };
   } catch {
