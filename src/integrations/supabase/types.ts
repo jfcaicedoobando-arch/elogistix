@@ -9021,6 +9021,7 @@ export type Database = {
         | "En Tránsito"
         | "Llegada"
         | "En Proceso"
+        | "Por liquidar"
         | "Cerrado"
         | "En Aduana"
         | "Entregado"
@@ -9318,6 +9319,7 @@ export const Constants = {
         "En Tránsito",
         "Llegada",
         "En Proceso",
+        "Por liquidar",
         "Cerrado",
         "En Aduana",
         "Entregado",
