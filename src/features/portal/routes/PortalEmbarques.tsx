@@ -94,8 +94,10 @@ export default function PortalEmbarques() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={Ship}
-          title="No se encontraron embarques"
-          description="Ajusta los filtros o busca con otro término."
+          title={search || filtroEstado !== "todos" || filtroModo !== "todos" ? "No se encontraron embarques" : "Aún no tienes embarques"}
+          description={search || filtroEstado !== "todos" || filtroModo !== "todos"
+            ? "Ajusta los filtros o busca con otro término."
+            : "Aquí darás seguimiento a tus embarques: ruta, fechas estimadas y documentos."}
           primaryAction={search || filtroEstado !== "todos" || filtroModo !== "todos" ? {
             label: "Limpiar filtros",
             variant: "outline",
