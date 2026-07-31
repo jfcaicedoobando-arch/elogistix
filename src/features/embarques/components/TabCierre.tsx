@@ -70,11 +70,12 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
           <AlertTitle>Aún no se puede cerrar</AlertTitle>
           <AlertDescription>
             {modo?.toLowerCase() === "marítimo" ? (
-              <>El embarque <strong>marítimo</strong> debe estar en estado <strong>EIR</strong> (Equipo Intercambio Reparado) para ejecutar el cierre.</>
+              <>El embarque <strong>marítimo</strong> debe llegar a <strong>EIR</strong> (Equipo Intercambio Reparado) o <strong>Por liquidar</strong> para ejecutar el cierre.</>
             ) : (
-              <>El embarque debe estar en estado <strong>Entregado</strong> para ejecutar el cierre.</>
+              <>El embarque debe estar en <strong>Entregado</strong> o <strong>Por liquidar</strong> para ejecutar el cierre.</>
             )}
           </AlertDescription>
+
         </Alert>
       ) : null}
 
