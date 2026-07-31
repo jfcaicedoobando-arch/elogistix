@@ -22,6 +22,7 @@ import {
   MapPin,
   ClipboardCheck,
   Archive,
+  Wallet,
   XCircle,
 } from "lucide-react";
 
@@ -144,6 +145,17 @@ export const ESTADO_CONFIG: Record<string, EstadoVisual> = {
     border: "border-state-eir",
     text: "text-state-eir",
     glow: "shadow-[0_0_20px_hsl(var(--state-eir)/0.25)]",
+  },
+  // v13.380.0 — Cierre operativo listo, cierre financiero pendiente.
+  "Por liquidar": {
+    badge: "bg-warning/15 text-warning border border-warning/30",
+    borderLeft: "border-l-warning",
+    bar: "bg-warning",
+    icon: Wallet,
+    gradient: "from-warning to-warning/80",
+    border: "border-warning",
+    text: "text-warning",
+    glow: "shadow-[0_0_20px_hsl(var(--warning)/0.25)]",
   },
   Cerrado: {
     ...DEFAULT_VISUAL,

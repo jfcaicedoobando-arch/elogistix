@@ -10,7 +10,8 @@ import { queryKeys } from "@/lib/query";
 /** Estados en los que faltar documentos BLOQUEA el avance (hard). */
 // v13.303.22 — `Llegada` deprecado; se mantiene por retro-compatibilidad.
 const ESTADOS_BLOQUEANTES = new Set<string>([
-  "En Tránsito", "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Cerrado",
+  "En Tránsito", "Arribo", "En Aduana", "Llegada", "Entregado", "EIR",
+  "Por liquidar", "Cerrado",
 ]);
 
 export function esEstadoBloqueante(estado: string | null | undefined): boolean {

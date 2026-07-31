@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   AlertTriangle,
   StickyNote,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import type { FaseIconoId } from "@/features/embarques/domain/embarqueFases";
@@ -35,6 +36,7 @@ const ICONO_FASE: Record<FaseIconoId, LucideIcon> = {
   aduana: Landmark,
   entregado: PackageCheck,
   eir: FileCheck2,
+  por_liquidar: Wallet,
   cerrado: Flag,
 };
 

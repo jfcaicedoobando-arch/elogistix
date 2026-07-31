@@ -18,6 +18,7 @@ export type FaseId =
   | "en_aduana"
   | "entregado"
   | "eir"
+  | "por_liquidar"
   | "cerrado";
 
 /**
@@ -34,6 +35,7 @@ export type FaseIconoId =
   | "aduana"
   | "entregado"
   | "eir"
+  | "por_liquidar"
   | "cerrado";
 
 export interface FaseEmbarque {
@@ -73,7 +75,10 @@ export function esEmbarqueArribado(
 ): boolean {
   if (!embarque) return false;
   if (embarque.fecha_llegada_real != null) return true;
-  return embarque.estado === "Entregado" || embarque.estado === "Cerrado";
+  return embarque.estado === "Entregado"
+    || embarque.estado === "EIR"
+    || embarque.estado === "Por liquidar"
+    || embarque.estado === "Cerrado";
 }
 
 /**
@@ -101,22 +106,24 @@ function iconoTransito(modo: string): FaseIconoId {
 }
 
 
-// v13.303.22 — Rankings en base al nuevo orden Arribo → En Aduana → Entregado
-// → EIR → Cerrado. Cada set representa "estados iguales o posteriores a".
+// v13.380.0 — Orden: Arribo → En Aduana → Entregado → EIR → Por liquidar →
+// Cerrado. Cada set representa "estados iguales o posteriores a".
 const ESTADOS_POST_TRANSITO = new Set([
-  "En Tránsito", "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Cerrado",
+  "En Tránsito", "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Por liquidar", "Cerrado",
 ]);
 const ESTADOS_POST_ARRIBO = new Set([
-  "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Cerrado",
+  "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Por liquidar", "Cerrado",
 ]);
 const ESTADOS_POST_ADUANA = new Set([
-  "En Aduana", "Entregado", "EIR", "Cerrado",
+  "En Aduana", "Entregado", "EIR", "Por liquidar", "Cerrado",
 ]);
-const ESTADOS_POST_ENTREGADO = new Set(["Entregado", "EIR", "Cerrado"]);
-const ESTADOS_POST_EIR = new Set(["EIR", "Cerrado"]);
+const ESTADOS_POST_ENTREGADO = new Set(["Entregado", "EIR", "Por liquidar", "Cerrado"]);
+const ESTADOS_POST_EIR = new Set(["EIR", "Por liquidar", "Cerrado"]);
+const ESTADOS_POST_POR_LIQUIDAR = new Set(["Por liquidar", "Cerrado"]);
 
 function faseIdParaEstado(estadoVisual: string): FaseId {
   if (estadoVisual === "Cerrado") return "cerrado";
+  if (estadoVisual === "Por liquidar") return "por_liquidar";
   if (estadoVisual === "EIR") return "eir";
   if (estadoVisual === "Entregado") return "entregado";
   if (estadoVisual === "En Aduana") return "en_aduana";
@@ -142,7 +149,7 @@ export function calcularFasesEmbarque(
   const faseActual = faseIdParaEstado(estadoVisual);
   const orden: FaseId[] = [
     "cotizacion", "confirmado", "en_transito",
-    "arribo", "en_aduana", "entregado", "eir", "cerrado",
+    "arribo", "en_aduana", "entregado", "eir", "por_liquidar", "cerrado",
   ];
   const idxActual = orden.indexOf(faseActual);
 
@@ -154,6 +161,7 @@ export function calcularFasesEmbarque(
   const aduanaCompletada = ESTADOS_POST_ADUANA.has(estadoVisual);
   const entregadoCompletada = ESTADOS_POST_ENTREGADO.has(estadoVisual);
   const eirCompletada = ESTADOS_POST_EIR.has(estadoVisual);
+  const porLiquidarCompletada = ESTADOS_POST_POR_LIQUIDAR.has(estadoVisual);
   const cerradoCompletada = estadoVisual === "Cerrado";
 
   const fases: FaseEmbarque[] = [
@@ -205,6 +213,13 @@ export function calcularFasesEmbarque(
       iconoId: "eir",
       fecha: null,
       estado: eirCompletada ? "completada" : "pendiente",
+    },
+    {
+      id: "por_liquidar",
+      label: "Por liquidar",
+      iconoId: "por_liquidar",
+      fecha: null,
+      estado: porLiquidarCompletada ? "completada" : "pendiente",
     },
     {
       id: "cerrado",

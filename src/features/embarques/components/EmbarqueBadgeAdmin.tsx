@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CircleAlert, CheckCircle2 } from "lucide-react";
 import { useAdminPendienteResumen } from "@/features/embarques/hooks/useAdminPendienteResumen";
 
-const ESTADOS_ADMIN_PENDIENTE = new Set(["Entregado", "EIR"]);
+const ESTADOS_ADMIN_PENDIENTE = new Set(["Entregado", "EIR", "Por liquidar"]);
 
 interface Props {
   embarqueId: string;

@@ -14,11 +14,11 @@ const base: EmbarqueFasesInput = {
 };
 
 describe("calcularFasesEmbarque", () => {
-  it("devuelve 8 fases en orden canónico v13.303.22", () => {
+  it("devuelve 9 fases en orden canónico v13.380.0", () => {
     const fases = calcularFasesEmbarque(base);
     expect(fases.map((f) => f.id)).toEqual([
       "cotizacion", "confirmado", "en_transito",
-      "arribo", "en_aduana", "entregado", "eir", "cerrado",
+      "arribo", "en_aduana", "entregado", "eir", "por_liquidar", "cerrado",
     ]);
   });
 
@@ -52,9 +52,9 @@ describe("calcularFasesEmbarque", () => {
 
   it("marca cerrado actual cuando estado=Cerrado", () => {
     const fases = calcularFasesEmbarque({ ...base, estado: "Cerrado" });
-    // Índice 7 = "cerrado" en el nuevo orden.
-    expect(fases[7].estado).toBe("actual");
-    expect(fases[7].fecha).toBe(base.updated_at);
+    // Índice 8 = "cerrado" en el nuevo orden (v13.380.0).
+    expect(fases[8].estado).toBe("actual");
+    expect(fases[8].fecha).toBe(base.updated_at);
   });
 
   it("marca en_transito como actual con etd pasado y eta futuro (marítimo importación)", () => {

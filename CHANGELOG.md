@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.380.0] - 2026-07-31
+- **feat(embarques)**: nuevo estado **`Por liquidar`** entre `EIR` y `Cerrado` — separa el cierre operativo (el operador ya terminó) del cierre financiero (falta cobrar al cliente y/o pagar al proveedor). Se agrega al enum `estado_embarque` y a la máquina de estados (`EIR → Por liquidar → Cerrado`, con retorno a `EIR` para correcciones y salto directo `EIR → Cerrado` si ya está liquidado).
+- **feat(embarques)**: promoción automática `EIR → Por liquidar` cuando se completan documentos y fechas de descarga/devolución de contenedores (`promover_embarque_por_liquidar` + triggers en `documentos_embarque` y `embarque_contenedores`), con nota de sistema en la bitácora del embarque.
+- **feat(embarques)**: cierre automático al liquidar el último saldo — triggers en `pagos_factura`/`pagos_proveedor` cierran el embarque cuando está en `Por liquidar` y el checklist completo pasa; se registra como `cerrar_automatico` en `cierre_embarque_log`. Si algo falla, el pago se guarda igual.
+- **feat(embarques)**: avanzar a `Por liquidar` sólo valida documentos requeridos (operativo); el checklist financiero completo se sigue exigiendo únicamente para `Cerrado`.
+- **change(embarques)**: `reabrir_embarque` ahora regresa a `Por liquidar` (antes `Entregado`), porque la operación ya estaba terminada.
+- **feat(ui)**: `Por liquidar` con identidad visual ámbar e icono `Wallet` en `estadoConfig`/`statusRegistry`, nueva fase `por_liquidar` en el stepper de fases (9 fases canónicas), KPI propio en "Embarques pendientes administrativos" y conteo en el dashboard.
+- **data**: 31 embarques que estaban en `EIR` con su operación terminada se movieron a `Por liquidar`.
+- **test**: `embarqueFasesPorLiquidar.test.ts` cubre orden, fase actual/completada y que un embarque `Por liquidar` no dispare alertas de ETA vencida.
+
 ## [13.379.1] - 2026-07-31
 - **fix(ui buscador global)**: la fila seleccionada dejaba el cliente y el BL ilegibles (texto gris sobre azul sólido `bg-accent`). Ahora usa una superficie de selección suave (`--selection-surface`, claro/oscuro/alto contraste) con barra de acento a la izquierda, icono en azul y texto secundario legible. Aplica también a la paleta Cmd+P del CRM.
 - **feat(ui buscador global)**: pulido visual del modal — ancho tipo Spotlight anclado arriba, lista más alta (`min(60vh,26rem)`), encabezados de grupo sticky en mayúsculas, fila a dos líneas con `title` en el subtítulo truncado, estado vacío con guía de búsqueda y pie con teclas (↑↓ navegar, ↵ abrir, esc cerrar).

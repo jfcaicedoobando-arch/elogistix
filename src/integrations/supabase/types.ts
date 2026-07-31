@@ -8023,6 +8023,10 @@ export type Database = {
         Args: { _embarque_id: string }
         Returns: Json
       }
+      embarque_operativo_completo: {
+        Args: { p_embarque_id: string }
+        Returns: boolean
+      }
       embarques_admin_pendientes_count: { Args: never; Returns: number }
       embarques_alertas_ids: {
         Args: never
@@ -8585,6 +8589,10 @@ export type Database = {
           venta_usd: number
         }[]
       }
+      promover_embarque_por_liquidar: {
+        Args: { p_embarque_id: string }
+        Returns: boolean
+      }
       proveedor_salud: { Args: { p_proveedor_id: string }; Returns: Json }
       proveedores_listado: {
         Args: {
@@ -9021,6 +9029,7 @@ export type Database = {
         | "En Tránsito"
         | "Llegada"
         | "En Proceso"
+        | "Por liquidar"
         | "Cerrado"
         | "En Aduana"
         | "Entregado"
@@ -9318,6 +9327,7 @@ export const Constants = {
         "En Tránsito",
         "Llegada",
         "En Proceso",
+        "Por liquidar",
         "Cerrado",
         "En Aduana",
         "Entregado",

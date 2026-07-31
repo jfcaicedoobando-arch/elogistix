@@ -80,6 +80,7 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
     "En Aduana",
     "EIR",
     "Entregado",
+    "Por liquidar",
     "Cerrado",
     "Cancelado",
   ],

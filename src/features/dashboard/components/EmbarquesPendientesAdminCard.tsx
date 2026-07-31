@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { PackageCheck, Anchor, ChevronRight } from "lucide-react";
+import { PackageCheck, Anchor, Wallet, ChevronRight } from "lucide-react";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 
@@ -10,12 +10,20 @@ interface Props {
   enabled: boolean;
 }
 
+/** Estilo de badge por estado pendiente de cierre administrativo. */
+const BADGE_ESTADO_PENDIENTE: Record<string, string> = {
+  Entregado: "bg-success/10 text-success hover:bg-success/10",
+  EIR: "border-state-eir/40 text-state-eir",
+  "Por liquidar": "border-warning/40 text-warning",
+};
+
 export function EmbarquesPendientesAdminCard({ enabled }: Props) {
   const { data, isLoading } = useEmbarquesPendientesAdmin(enabled);
   if (!enabled) return null;
 
   const entregados = data?.entregadosCount ?? 0;
   const eir = data?.eirCount ?? 0;
+  const porLiquidar = data?.porLiquidarCount ?? 0;
   const items = data?.topAntiguos ?? [];
 
   return (
@@ -24,7 +32,7 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
         <CardTitle className="text-base">Embarques pendientes administrativos</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <KpiCard
             icon={PackageCheck}
             label="Entregados"
@@ -38,6 +46,14 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
             label="En EIR"
             sublabel="Último paso marítimo"
             value={eir}
+            variant="warning"
+            loading={isLoading}
+          />
+          <KpiCard
+            icon={Wallet}
+            label="Por liquidar"
+            sublabel="Falta cobrar o pagar"
+            value={porLiquidar}
             variant="warning"
             loading={isLoading}
           />
@@ -71,12 +87,8 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
                     </p>
                   </div>
                   <Badge
-                    variant={it.estado === "EIR" ? "outline" : "secondary"}
-                    className={
-                      it.estado === "EIR"
-                        ? "border-state-eir/40 text-state-eir"
-                        : "bg-success/10 text-success hover:bg-success/10"
-                    }
+                    variant={it.estado === "Entregado" ? "secondary" : "outline"}
+                    className={BADGE_ESTADO_PENDIENTE[it.estado]}
                   >
                     {it.estado}
                   </Badge>
