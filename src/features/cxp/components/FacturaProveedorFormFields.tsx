@@ -76,6 +76,9 @@ export function FacturaProveedorFormFields({
           <div className="space-y-1">
             <Label>Emisión</Label>
             <DatePickerMx value={values.emision} onChange={(v) => onChange("emision", v)} className="w-full" />
+            {errors?.emision && (
+              <p className="text-xs text-destructive">{errors.emision}</p>
+            )}
           </div>
           <div className="space-y-1">
             <Label>Días crédito</Label>

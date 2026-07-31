@@ -13,6 +13,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
+import { tituloTimbrado } from "@/features/facturacion/utils/uuidCorto";
 
 export interface CrearFacturaManualVars {
   input: CrearFacturaManualInput;
@@ -33,7 +34,7 @@ export function useCrearFacturaManual() {
     },
     onSuccess: (res) => {
       if (res.timbrada) {
-        notifySuccess(undefined, { title: `Factura manual timbrada · UUID ${res.uuid.slice(0, 8)}…` });
+        notifySuccess(undefined, { title: tituloTimbrado("Factura manual timbrada", res.uuid) });
       } else {
         notifySuccess(undefined, { title: "Factura manual guardada como borrador" });
       }
