@@ -6,6 +6,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/formatters";
+import { filtrarEventosVisiblesCliente } from "@/features/portal/domain/eventosVisiblesCliente";
 import type { Tables } from "@/types/db";
 
 // v13.301.90 (Fase Q.1): portal no expone `deleted_at`/`deleted_by`.
@@ -27,7 +28,9 @@ const ICONO_EVENTO_LUCIDE: Record<string, LucideIcon> = {
   Otro: FileText,
 };
 
-export function PortalEmbarqueTimeline({ eventos }: Props) {
+export function PortalEmbarqueTimeline({ eventos: eventosCrudos }: Props) {
+  // P2-6.4: el cliente sólo ve hitos de negocio, nunca eventos internos.
+  const eventos = filtrarEventosVisiblesCliente(eventosCrudos);
   return (
     <Card>
       <CardHeader className="pb-3"><CardTitle className="text-sm">Línea de Tiempo</CardTitle></CardHeader>

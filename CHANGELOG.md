@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.376.0] - 2026-07-31
+- **fix(portal · P2-6.4)**: la línea de tiempo del portal ya sólo muestra hitos de negocio (Zarpe, Arribo, Aduana, Entrega…); se ocultan eventos internos o generados por pruebas.
+- **fix(tesorería · P2-6.8)**: la bandeja "Vencen en 30 días" usa la misma ventana que el KPI de flujo (día 30 incluido, sin depender de la hora del día).
+- **verificado(P2-3, P2-4, P2-6.1)**: deep-link con `returnTo` tras login, dedupe de toasts por código y helper `pluralizar` ya estaban implementados.
+- **test**: pruebas de eventos visibles al cliente y de la ventana de 30 días.
+
 ## [13.375.0] - 2026-07-31
 - **fix(portal · P2-6.7)**: el modal **Solicitar cotización** ya recuerda la última elección del cliente (modo, tipo de operación y tipo de embarque) en lugar de forzar siempre Marítimo / Importación / FCL.
 - **fix(cotizaciones · P2-6.3)**: la nota de IVA usa la **tasa vigente** en vez del texto fijo "16%" y sólo aparece cuando algún concepto realmente causa IVA; si ninguno causa, se indica explícitamente.
