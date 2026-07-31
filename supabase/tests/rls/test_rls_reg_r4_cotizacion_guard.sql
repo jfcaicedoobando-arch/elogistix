@@ -46,8 +46,8 @@ BEGIN
   -- TEST 2: Solicitada → Enviada (+ snapshot de versión)
   -- =========================================================================
   cot_id := gen_random_uuid();
-  INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado, subtotal)
-    VALUES (cot_id, org_a, cli_a, 'Cli R4 Cot Guard', 'COT-R4G-2', 'Marítimo', 'Importación', 'FOB', 'Solicitada', 1000);
+  INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado, subtotal, conceptos_venta)
+    VALUES (cot_id, org_a, cli_a, 'Cli R4 Cot Guard', 'COT-R4G-2', 'Marítimo', 'Importación', 'FOB', 'Solicitada', 1000, '[{"descripcion":"Flete","unidad_medida":"Servicio","cantidad":1,"precio_unitario":1000,"moneda":"USD","total":1000,"aplica_iva":false}]'::jsonb);
   UPDATE public.cotizaciones SET estado = 'Enviada' WHERE id = cot_id;
   PERFORM pg_temp.assert(
     (SELECT estado::text FROM public.cotizaciones WHERE id = cot_id) = 'Enviada',
@@ -63,8 +63,8 @@ BEGIN
   -- TEST 3: Solicitada → Aceptada (+ snapshot de versión)
   -- =========================================================================
   cot_id := gen_random_uuid();
-  INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado, subtotal)
-    VALUES (cot_id, org_a, cli_a, 'Cli R4 Cot Guard', 'COT-R4G-3', 'Marítimo', 'Importación', 'FOB', 'Solicitada', 1000);
+  INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado, subtotal, conceptos_venta)
+    VALUES (cot_id, org_a, cli_a, 'Cli R4 Cot Guard', 'COT-R4G-3', 'Marítimo', 'Importación', 'FOB', 'Solicitada', 1000, '[{"descripcion":"Flete","unidad_medida":"Servicio","cantidad":1,"precio_unitario":1000,"moneda":"USD","total":1000,"aplica_iva":false}]'::jsonb);
   UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = cot_id;
   PERFORM pg_temp.assert(
     (SELECT estado::text FROM public.cotizaciones WHERE id = cot_id) = 'Aceptada',

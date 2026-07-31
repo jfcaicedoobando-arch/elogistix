@@ -52,8 +52,8 @@ BEGIN
     VALUES (cot_a, org_a, cli_a, 'Cli R4 Pricing A', 'COT-R4P-A', 'Marítimo', 'Importación', 'FOB', 'Borrador');
 
   -- Catálogos base para las pruebas de costeo (R4 P0-2, impacto colateral)
-  INSERT INTO public.proveedores(id, nombre, organization_id)
-    VALUES (prov_a, 'Prov R4 Pricing A', org_a);
+  INSERT INTO public.proveedores(id, nombre, organization_id, categoria, tipo)
+    VALUES (prov_a, 'Prov R4 Pricing A', org_a, 'Logistico', 'Naviera');
   INSERT INTO public.puertos(id, code, name, country)
     VALUES (pto_o, 'CNSHA', 'Shanghai', 'CN'), (pto_d, 'MXZLO', 'Manzanillo', 'MX');
   INSERT INTO public.navieras(id, code, name) VALUES (nav_a, 'R4PN', 'Naviera R4P');
