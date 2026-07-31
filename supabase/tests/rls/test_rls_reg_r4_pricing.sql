@@ -46,7 +46,7 @@ BEGIN
     VALUES (cli_a, 'Cli R4 Pricing A', 'XAXX010101000', 'r4pricing@example.com', org_a);
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
-    VALUES (emb_a, 'ELR4P00001', cli_a, 'Cli R4 Pricing A', org_a, 'Marítimo', 'Importación');
+    VALUES (emb_a, 'ELRPR00001', cli_a, 'Cli R4 Pricing A', org_a, 'Marítimo', 'Importación');
 
   INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado)
     VALUES (cot_a, org_a, cli_a, 'Cli R4 Pricing A', 'COT-R4P-A', 'Marítimo', 'Importación', 'FOB', 'Borrador');
@@ -87,7 +87,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       $q$INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
-         VALUES (%L, 'ELR4P09999', %L, 'Cli R4 Pricing A', %L, 'Marítimo', 'Importación')$q$,
+         VALUES (%L, 'ELRPR09999', %L, 'Cli R4 Pricing A', %L, 'Marítimo', 'Importación')$q$,
       gen_random_uuid(), cli_a, org_a
     ),
     'ejecutivo_pricing NO debe poder crear embarques'
