@@ -11,7 +11,8 @@ export function useSidebarAlerts() {
     gcTime: 10 * 60_000,
   });
 
-  // v13.89.0 — conteo de embarques con pendientes administrativos (Entregado/EIR).
+  // v13.89.0 — conteo de embarques con pendientes administrativos.
+  // v13.380.1 — incluye Entregado / EIR / Por liquidar (ver embarques_admin_pendientes_count).
   const { data: adminPendientes = 0 } = useQuery({
     queryKey: queryKeys.sidebar.adminPendientes,
     queryFn: fetchAdminPendientesCount,
