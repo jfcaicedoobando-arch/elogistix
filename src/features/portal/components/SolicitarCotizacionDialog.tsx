@@ -22,6 +22,10 @@ import { MODOS, TIPOS, type ModoTransporte, type TipoOperacion } from "@/constan
 import { useSolicitarCotizacion } from "@/features/portal/hooks/useSolicitarCotizacion";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+import {
+  guardarSolicitudPreferencias,
+  leerSolicitudPreferencias,
+} from "@/features/portal/domain/solicitudPreferencias";
 
 interface Props {
   open: boolean;
@@ -35,9 +39,12 @@ const TIPOS_EMBARQUE = ["FCL", "LCL", "Aéreo", "Terrestre"] as const;
 export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clienteIds }: Props) {
   const navigate = useNavigate();
   const solicitar = useSolicitarCotizacion(clienteIds);
-  const [modo, setModo] = useState<ModoTransporte>("Marítimo");
-  const [tipo, setTipo] = useState<TipoOperacion>("Importación");
-  const [tipoEmbarque, setTipoEmbarque] = useState<string>("FCL");
+  // P2-6.7: se recuerda la última elección del cliente en lugar de forzar
+  // siempre Marítimo / Importación / FCL.
+  const prefsIniciales = leerSolicitudPreferencias();
+  const [modo, setModo] = useState<ModoTransporte>(prefsIniciales.modo as ModoTransporte);
+  const [tipo, setTipo] = useState<TipoOperacion>(prefsIniciales.tipo as TipoOperacion);
+  const [tipoEmbarque, setTipoEmbarque] = useState<string>(prefsIniciales.tipoEmbarque);
   const [origen, setOrigen] = useState("");
   const [destino, setDestino] = useState("");
   const [mercancia, setMercancia] = useState("");
@@ -46,9 +53,10 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
   const puedeEnviar = Boolean(clienteId) && origen.trim().length > 0 && destino.trim().length > 0;
 
   const reset = () => {
-    setModo("Marítimo");
-    setTipo("Importación");
-    setTipoEmbarque("FCL");
+    const prefs = leerSolicitudPreferencias();
+    setModo(prefs.modo as ModoTransporte);
+    setTipo(prefs.tipo as TipoOperacion);
+    setTipoEmbarque(prefs.tipoEmbarque);
     setOrigen("");
     setDestino("");
     setMercancia("");
@@ -68,6 +76,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
         descripcionMercancia: mercancia,
         notas,
       });
+      guardarSolicitudPreferencias({ modo, tipo, tipoEmbarque });
       notifySuccess(undefined, {
         title: "Solicitud enviada",
         description: `Registramos tu solicitud ${res.folio}. Nuestro equipo te enviará la cotización.`,
