@@ -80,8 +80,10 @@ export default function PortalFacturas() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={Receipt}
-          title="No se encontraron facturas"
-          description="Ajusta los filtros o busca con otro término."
+          title={search || filtroEstado !== "todos" ? "No se encontraron facturas" : "Aún no tienes facturas"}
+          description={search || filtroEstado !== "todos"
+            ? "Ajusta los filtros o busca con otro término."
+            : "Aquí verás tus facturas en cuanto emitamos la primera, con su saldo y fecha de vencimiento."}
           primaryAction={search || filtroEstado !== "todos" ? {
             label: "Limpiar filtros",
             variant: "outline",
