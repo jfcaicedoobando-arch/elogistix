@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.374.0] - 2026-07-31
+- **fix(compras · P1-2)**: la **fecha de emisión** ahora es obligatoria al capturar una factura de proveedor y su error se muestra debajo del campo. La llave única del folio en base de datos incluye la fecha, así que sin ella el guardado fallaba con un error crudo de duplicado.
+- **fix(facturación · P1-3)**: timbrar factura, REP o nota de crédito ya no truena cuando el PAC responde sin UUID. Nuevo helper `tituloTimbrado`/`uuidCorto`: si no hay UUID, el toast de éxito simplemente omite el sufijo.
+- **fix(embarques · P1-5)**: al editar un embarque, los tipos de cambio remotos ya no sobrescriben los tipos de cambio históricos guardados (antes llegaban después de cargar el embarque y además lo marcaban como modificado).
+- **test**: nuevas pruebas para la fecha de emisión obligatoria en CxP y para el formateo defensivo del UUID de timbrado.
+
 ## [13.373.0] - 2026-07-31
 - **fix(cotizaciones · P0-1)**: las cotizaciones creadas desde el portal del cliente (estado **Solicitada**) ya se pueden enviar. Los guardas `guard_estado_cotizacion` y `snapshot_cotizacion_al_enviar` bloqueaban la transición Solicitada → Enviada.
 - **fix(seguridad · P0-2)**: el rol **Ejecutivo de pricing** ya no hereda permisos de Operador, así que los embarques le quedan **solo lectura** (antes podía editarlos y mover su estado). Se le dio permiso explícito de escritura en cotizaciones, costos de cotización y versiones, con el nuevo guarda `_assert_writer_cotizacion` usado por `actualizar_cotizacion_costos` y `duplicar_cotizacion`.
