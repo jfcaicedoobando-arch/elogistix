@@ -1,7 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toTitleCase } from "@/lib/formatters";
-import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
-import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
@@ -16,14 +14,25 @@ interface Props {
 }
 
 export function TabResumen({ embarque }: Props) {
-  const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado, embarque.fecha_llegada_real);
-  const currentStepIndex = ESTADOS_EMBARQUE.indexOf(estadoVisual as typeof ESTADOS_EMBARQUE[number]);
   const { data: relacionados = [] } = useEmbarquesRelacionados(embarque.id, embarque.bl_master);
   const { registerRef } = useFocusSection();
 
   return (
     <div className="space-y-6">
-      <EstadoProgresoCard currentStepIndex={currentStepIndex} arribado={Boolean(embarque.fecha_llegada_real)} />
+      <EstadoProgresoCard
+        embarque={{
+          modo: embarque.modo,
+          tipo: embarque.tipo,
+          estado: embarque.estado,
+          etd: embarque.etd,
+          eta: embarque.eta,
+          fecha_creacion: embarque.fecha_creacion,
+          fecha_llegada_real: embarque.fecha_llegada_real,
+          cotizacion_id: embarque.cotizacion_id,
+          updated_at: embarque.updated_at,
+        }}
+        arribado={Boolean(embarque.fecha_llegada_real)}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         <DatosGeneralesCard embarque={embarque} />

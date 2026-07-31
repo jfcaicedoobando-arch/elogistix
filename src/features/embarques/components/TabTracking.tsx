@@ -6,7 +6,7 @@ import { Plus, Clock, AlertTriangle } from "lucide-react";
 import { useEventosEmbarque } from "@/features/embarques/hooks";
 import { usePermissions } from "@/hooks/shared";
 
-import { TrackingFasesTimeline } from "./TrackingFasesTimeline";
+import { FasesEmbarqueStepper } from "./tracking/FasesEmbarqueStepper";
 import { TrackingEventTimeline } from "./tracking/TrackingEventTimeline";
 import { TrackingNuevoEventoForm } from "./tracking/TrackingNuevoEventoForm";
 import { TrackingNavieraActions } from "./tracking/TrackingNavieraActions";
@@ -129,8 +129,13 @@ export function TabTracking({ embarqueId, embarque }: Props) {
   return (
     <div className="space-y-6">
       {embarque && (
-        <TrackingFasesTimeline
-          embarque={{
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Avance del embarque</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FasesEmbarqueStepper
+              embarque={{
             modo: embarque.modo,
             tipo: embarque.tipo,
             estado: embarque.estado,
