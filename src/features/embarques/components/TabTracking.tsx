@@ -11,6 +11,7 @@ import { TrackingEventTimeline } from "./tracking/TrackingEventTimeline";
 import { TrackingNuevoEventoForm } from "./tracking/TrackingNuevoEventoForm";
 import { TrackingNavieraActions } from "./tracking/TrackingNavieraActions";
 import { formatDate } from "@/lib/formatters";
+import { esEmbarqueArribado, esEtaVencida } from "@/features/embarques/domain/embarqueFases";
 import type { Tables } from "@/integrations/supabase/types";
 
 
@@ -63,23 +64,6 @@ function computeFreshness(
   return { label, critical: dias >= 7 || etaProxima, etaProxima, dias };
 }
 
-function isArribado(embarque?: EmbarqueTrackingProps | null): boolean {
-  if (!embarque) return false;
-  if (embarque.fecha_llegada_real != null) return true;
-  return embarque.estado === "Entregado" || embarque.estado === "Cerrado";
-}
-
-function isEtaVencida(embarque?: EmbarqueTrackingProps | null): boolean {
-  if (!embarque?.eta) return false;
-  if (isArribado(embarque)) return false;
-  // FIX-12 · `new Date("YYYY-MM-DD")` se parsea como UTC — una ETA capturada
-  // "hoy" quedaba como ayer 18:00 CDMX y se marcaba vencida un día antes.
-  const [y, m, d] = embarque.eta.split("-").map(Number);
-  if (!y || !m || !d) return false;
-  const finDelDiaEtaLocal = new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
-  return finDelDiaEtaLocal < Date.now();
-}
-
 function EtaVencidaBanner({ eta }: { eta: string }) {
   return (
     <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
@@ -121,9 +105,9 @@ export function TabTracking({ embarqueId, embarque }: Props) {
   const { canEdit } = usePermissions();
   const [formAbierto, setFormAbierto] = useState(false);
 
-  const arribado = isArribado(embarque);
+  const arribado = esEmbarqueArribado(embarque);
   const freshness = useMemo(() => computeFreshness(eventos, embarque?.eta, arribado), [eventos, embarque?.eta, arribado]);
-  const etaVencida = isEtaVencida(embarque);
+  const etaVencida = esEtaVencida(embarque);
   const showEtaBanner = etaVencida && embarque?.eta;
 
   return (
@@ -185,7 +169,7 @@ export function TabTracking({ embarqueId, embarque }: Props) {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Línea de Tiempo</CardTitle>
+          <CardTitle className="text-sm">Línea de tiempo</CardTitle>
         </CardHeader>
         <CardContent>
           <TrackingEventTimeline eventos={eventos} isLoading={isLoading} />
