@@ -1,61 +1,26 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
-import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
+import { FasesEmbarqueStepper } from "../tracking/FasesEmbarqueStepper";
+import type { EmbarqueFasesInput } from "@/features/embarques/domain/embarqueFases";
 
 interface Props {
-  currentStepIndex: number;
+  embarque: EmbarqueFasesInput;
+  cotizacionCreatedAt?: string | null;
   arribado?: boolean;
 }
 
 /**
- * Versión compacta del stepper para el detalle de embarque.
- * En FHD la variante original ocupaba ~130px verticales sólo para mostrar
- * "paso 2/8". Esta variante libera ~80px y mantiene toda la información.
+ * Avance del embarque en el tab Resumen: misma fuente de verdad y mismo
+ * lenguaje visual que el tab Tracking, en densidad compacta (≈50px de alto).
  */
-export function EstadoProgresoCard({ currentStepIndex, arribado = false }: Props) {
-  const total = ESTADOS_EMBARQUE.length;
-  const estadoActual = labelEstadoEmbarque(ESTADOS_EMBARQUE[currentStepIndex] ?? ESTADOS_EMBARQUE[0]);
-  const progreso = total > 1 ? (currentStepIndex / (total - 1)) * 100 : 0;
-  const siguienteRaw = ESTADOS_EMBARQUE[currentStepIndex + 1];
-  const siguiente = siguienteRaw ? labelEstadoEmbarque(siguienteRaw) : null;
-
+export function EstadoProgresoCard({ embarque, cotizacionCreatedAt, arribado = false }: Props) {
   return (
     <Card data-testid="estado-progreso" data-arrived={arribado ? "true" : "false"}>
       <CardContent className="px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-baseline gap-2 min-w-0">
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">
-              Paso {currentStepIndex + 1} de {total}
-            </span>
-            <span className="text-sm font-semibold truncate">{estadoActual}</span>
-          </div>
-          {siguiente && (
-            <span className="text-xs text-muted-foreground hidden sm:inline">
-              Siguiente: <span className="text-foreground/80">{siguiente}</span>
-            </span>
-          )}
-        </div>
-
-        <div className="mt-2 flex items-center gap-1.5">
-          {ESTADOS_EMBARQUE.map((estado, i) => {
-            const label = labelEstadoEmbarque(estado);
-            return (
-              <div
-                key={estado}
-                className={`h-1.5 flex-1 rounded-full transition-colors ${
-                  i <= currentStepIndex ? "bg-accent" : "bg-muted"
-                }`}
-                title={label}
-                aria-label={label}
-              />
-            );
-          })}
-        </div>
-
-        {/* Fallback accesible: barra continua */}
-        <div className="sr-only" role="progressbar" aria-valuenow={progreso} aria-valuemin={0} aria-valuemax={100}>
-          {estadoActual} — {Math.round(progreso)}%
-        </div>
+        <FasesEmbarqueStepper
+          embarque={embarque}
+          cotizacionCreatedAt={cotizacionCreatedAt}
+          variant="compacta"
+        />
       </CardContent>
     </Card>
   );
