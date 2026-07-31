@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.380.6] - 2026-07-31
+- **fix(datos)**: auditoría de los 130 embarques en `Por liquidar`/`Cerrado`. Los 27 embarques que estaban en `Por liquidar` sin CxP completo regresaron a `EIR` con nota de sistema (detalle de conceptos sin factura y pendientes del Buzón). Quedan 3 en `Por liquidar`, todos con operativo completo. Los `Cerrado` históricos no se tocaron (cierre financiero deliberado).
+
+
+
 ## [13.380.5] - 2026-07-31
 - **fix(embarques)**: `embarque_operativo_completo` ahora exige facturas de proveedor: todo concepto de costo debe tener su factura (no cancelada) y el Buzón CxP del embarque sin pendientes. Antes un embarque podía saltar a `Por liquidar` sin CxP capturado.
 - **feat(embarques)**: nuevos triggers de promoción al vincular facturas de proveedor a conceptos de costo (`proveedor_facturas_conceptos`) y al capturar facturas del buzón (`embarque_facturas_entrantes`).
