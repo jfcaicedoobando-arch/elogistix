@@ -25,7 +25,9 @@ import { CerrarEmbarqueDialog, ReabrirEmbarqueDialog } from "./cierre/CierreDial
 
 // EIR sólo aplica al flujo marítimo (último paso operativo del contenedor).
 // Aéreo/terrestre cierran desde Entregado.
-const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir"]);
+// v13.380.1 — "Por liquidar" (cierre operativo listo, falta cobrar/pagar) también
+// habilita el cierre: la BD lo acepta en `cerrar_embarque`.
+const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir", "por liquidar"]);
 
 interface Props {
   embarqueId: string;
@@ -68,11 +70,12 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
           <AlertTitle>Aún no se puede cerrar</AlertTitle>
           <AlertDescription>
             {modo?.toLowerCase() === "marítimo" ? (
-              <>El embarque <strong>marítimo</strong> debe estar en estado <strong>EIR</strong> (Equipo Intercambio Reparado) para ejecutar el cierre.</>
+              <>El embarque <strong>marítimo</strong> debe llegar a <strong>EIR</strong> (Equipo Intercambio Reparado) o <strong>Por liquidar</strong> para ejecutar el cierre.</>
             ) : (
-              <>El embarque debe estar en estado <strong>Entregado</strong> para ejecutar el cierre.</>
+              <>El embarque debe estar en <strong>Entregado</strong> o <strong>Por liquidar</strong> para ejecutar el cierre.</>
             )}
           </AlertDescription>
+
         </Alert>
       ) : null}
 
@@ -84,8 +87,9 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
           const pendientes = checks.filter((c) => !c.ok).length;
           const motivo = !listoParaCierre
             ? (modo?.toLowerCase() === "marítimo"
-                ? "El embarque debe estar en EIR para cerrar."
-                : "El embarque debe estar en Entregado para cerrar.")
+                ? "El embarque debe estar en EIR o Por liquidar para cerrar."
+                : "El embarque debe estar en Entregado o Por liquidar para cerrar.")
+
             : pendientes > 0
               ? `Faltan ${pendientes} pendiente${pendientes === 1 ? "" : "s"} del checklist.`
               : null;

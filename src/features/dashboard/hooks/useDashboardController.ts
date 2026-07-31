@@ -11,7 +11,8 @@ import { formatFechaLarga } from "@/lib/formatters/dates";
 
 export type DashboardScope = "todos" | "mios";
 
-const ESTADOS_LLEGADO = ["Arribo", "En Aduana", "Entregado"] as const;
+// v13.380.1 — Alineado con el RPC: post-arribo incluye EIR, Por liquidar y Cerrado.
+const ESTADOS_LLEGADO = ["Arribo", "En Aduana", "Entregado", "EIR", "Por liquidar", "Cerrado"] as const;
 
 function getSaludo(): string {
   const h = new Date().getHours();
@@ -63,6 +64,7 @@ export function useDashboardController() {
     const em = data.embarquesMesSiguiente.filter((e) => mine(e.operador));
     // v13.303.13 · EIR se excluye del CTE `activos` del RPC, por eso viene
     // en su propia lista `embarquesEir`. Sumamos al conteo (no al total activos).
+    // v13.380.1 · La lista también trae los embarques en "Por liquidar".
     const eir = data.embarquesEir.filter((e) => mine(e.operador));
 
     const activos = [...ad, ...pa, ...pf, ...em];
@@ -73,13 +75,14 @@ export function useDashboardController() {
       seen.add(e.id);
       if (e.estadoReal in conteo) conteo[e.estadoReal] += 1;
     }
-    // EIR se cuenta por separado (nunca colisiona con `activos`).
+    // EIR / Por liquidar se cuentan por separado (nunca colisionan con `activos`).
     const eirSeen = new Set<string>();
     for (const e of eir) {
       if (eirSeen.has(e.id)) continue;
       eirSeen.add(e.id);
-      conteo.EIR += 1;
+      if (e.estadoReal in conteo) conteo[e.estadoReal] += 1;
     }
+
 
     const arribosScoped = {
       ...data.arribosEsteMes,

@@ -6,6 +6,7 @@
  * constante. Si la UI se desincroniza, "Avanzar estado" propone transiciones
  * inválidas y la BD rebota con `LC_TRANSICION_INVALIDA`.
  *
+ * v13.380.0: `Por liquidar` entra entre EIR y Cerrado (cierre administrativo).
  * v13.303.22: Arribo ahora va antes de En Aduana; `Llegada` sale del workflow.
  * v13.303.21: `Cotización` (Propuesta) eliminado.
  */
@@ -20,6 +21,7 @@ const HAPPY_PATH_BD = [
   "En Aduana",
   "Entregado",
   "EIR",
+  "Por liquidar",
   "Cerrado",
 ];
 

@@ -9,7 +9,7 @@ import { describe, it, expect } from "vitest";
  * Replica la lógica embebida en TabCierre.tsx para validarla de forma aislada.
  * Si esta regla cambia, debe actualizarse aquí y en el componente al unísono.
  */
-const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir"]);
+const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir", "por liquidar"]);
 function puedeCerrar(opts: {
   isAdmin: boolean;
   canEditFinance: boolean;
@@ -34,6 +34,11 @@ describe("cierre — reglas de gating", () => {
     expect(puedeCerrar({ isAdmin: true, canEditFinance: false, estatus: "eir" })).toBe(true);
     expect(puedeCerrar({ isAdmin: true, canEditFinance: false, estatus: "EIR" })).toBe(true);
   });
+
+  it("admin con embarque en Por liquidar puede cerrar (v13.380.1)", () => {
+    expect(puedeCerrar({ isAdmin: true, canEditFinance: false, estatus: "Por liquidar" })).toBe(true);
+  });
+
 
   it("contador (canEditFinance) con embarque entregado puede cerrar", () => {
     expect(puedeCerrar({ isAdmin: false, canEditFinance: true, estatus: "entregado" })).toBe(true);

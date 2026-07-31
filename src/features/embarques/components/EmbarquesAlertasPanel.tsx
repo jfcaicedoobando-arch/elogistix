@@ -45,7 +45,7 @@ const TILES: readonly TileDef[] = [
   {
     key: "admin_pendiente",
     titulo: "Cierre administrativo",
-    descripcion: "Entregado / EIR con CxC, CxP, docs o facturación pendientes.",
+    descripcion: "Entregado / EIR / Por liquidar con CxC, CxP, docs o facturación pendientes.",
     Icon: FileWarning,
     color: "text-destructive bg-destructive/10",
   },

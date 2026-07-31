@@ -65,7 +65,9 @@ export const ESTADO_A_EVENTO_TRACKING: Record<string, string> = {
   "En Aduana": "Despacho Aduanal",
   Entregado: "Entrega",
   EIR: "Liberación",
+  "Por liquidar": "Otro",
   Cerrado: "Otro",
+
 };
 
 /**
