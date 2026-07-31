@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.380.2] - 2026-07-31
+- **refactor(arquitectura)**: se divide `embarqueFases.ts` (231 líneas) en `embarqueFasesTipos.ts` (tipos) y `embarqueEstadoTemporal.ts` (`esEmbarqueArribado`/`esEtaVencida`), con re-exportaciones para no romper importadores.
+- **refactor(arquitectura)**: se divide `estadoConfig.ts` (203 líneas) en `estadoConfigBase.ts` (contrato + fallback) y `estadoConfigEmbarques.ts` (estados del embarque); `ESTADO_CONFIG` los compone.
+- **ci**: `architecture-baseline` y `audit-report` vuelven a pasar (Power of 10: ningún archivo productivo > 200 líneas fuera de allowlist).
+
+
+
 ## [13.380.1] - 2026-07-31
 - **fix(embarques)**: `TabCierre` ya permite cerrar desde `Por liquidar` (antes sólo `Entregado`/`EIR`), con textos y tooltips actualizados.
 - **fix(db)**: se propagó `Por liquidar` a 7 funciones del backend (`sidebar_alert_counts`, `embarques_admin_pendientes_count`, `embarques_alertas_ids`, `dashboard_stats`, `dashboard_summary`, `dashboard_details`, `operaciones_stats`) para que alertas, KPIs y conteos incluyan el nuevo estado.
