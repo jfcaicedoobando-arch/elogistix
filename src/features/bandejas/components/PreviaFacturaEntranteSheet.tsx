@@ -1,10 +1,10 @@
 /**
  * Vista previa lateral de un documento del buzón CxP.
  *
- * v13.365.0 — Muestra el PDF embebido (URL `blob:`, inmune a bloqueos de
- * extensiones) junto con los datos y las acciones del documento.
+ * v13.388.0 — El panel es más ancho, el PDF ocupa toda la altura sobrante y
+ * puede ampliarse a casi pantalla completa (la preferencia se recuerda).
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   urlPreviaFacturaEntrante,
@@ -17,6 +17,7 @@ import {
   PreviaVisor,
 } from "@/features/bandejas/components/PreviaFacturaEntranteSheet.parts";
 import { esRutaPdf } from "@/lib/pdf/blobPdfUrl";
+import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
 interface Props {
   row: FacturaEntranteRow | null;
@@ -55,6 +56,20 @@ function useUrlPrevia(path: string | null) {
   return { url, error };
 }
 
+/** Preferencia persistida de "vista ampliada" del visor. */
+function useVistaAmpliada() {
+  const [ampliado, setAmpliado] = useState(
+    () => safeLocalStorage.getItem(STORAGE_KEYS.cxpPreviaAmpliada) === "1",
+  );
+  const toggle = useCallback(() => {
+    setAmpliado((prev) => {
+      safeLocalStorage.setItem(STORAGE_KEYS.cxpPreviaAmpliada, prev ? "0" : "1");
+      return !prev;
+    });
+  }, []);
+  return { ampliado, toggle };
+}
+
 export function PreviaFacturaEntranteSheet({
   row,
   onOpenChange,
@@ -65,13 +80,17 @@ export function PreviaFacturaEntranteSheet({
   onRechazar,
 }: Props) {
   const { url, error } = useUrlPrevia(row?.archivo_path ?? null);
+  const { ampliado, toggle } = useVistaAmpliada();
   const esPdf = esRutaPdf(row?.archivo_path);
   const procesable = Boolean(row && row.estado === "por_capturar" && puedeProcesar);
+  const ancho = ampliado
+    ? "sm:max-w-[96vw]"
+    : "sm:max-w-[min(1100px,92vw)]";
 
   return (
     <Sheet open={Boolean(row)} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex w-full flex-col gap-4 sm:max-w-2xl">
-        <SheetHeader>
+      <SheetContent side="right" className={`flex w-full flex-col gap-3 ${ancho}`}>
+        <SheetHeader className="space-y-0">
           <SheetTitle className="truncate pr-6">
             {row?.proveedores?.nombre ?? "Documento del buzón"}
           </SheetTitle>
@@ -87,6 +106,8 @@ export function PreviaFacturaEntranteSheet({
                 error={error}
                 esPdf={esPdf}
                 nombreArchivo={row.nombre_archivo}
+                ampliado={ampliado}
+                onToggleAmpliado={toggle}
               />
             </div>
             <PreviaAcciones
