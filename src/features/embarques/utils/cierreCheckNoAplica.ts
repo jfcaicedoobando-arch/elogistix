@@ -59,6 +59,50 @@ export interface OpcionesNoAplica {
   sinComision?: boolean;
 }
 
+function marcar(
+  noAplica: Map<string, string>,
+  checks: readonly CheckMinimo[],
+  aplica: (c: CheckMinimo) => boolean,
+  motivo: string,
+): void {
+  for (const c of checks) {
+    if (aplica(c)) noAplica.set(c.regla, motivo);
+  }
+}
+
+/** CxC (y REP en OK) no evaluables cuando no hay facturas de cliente. */
+function marcarCxc(noAplica: Map<string, string>, checks: readonly CheckMinimo[]): void {
+  const cxc = checks.find((c) => REGLAS_CXC.has(c.regla));
+  if (!cxc || !sinFacturas(cxc.detalle)) return;
+  marcar(
+    noAplica,
+    checks,
+    (c) => REGLAS_CXC.has(c.regla) || (REGLAS_REP.has(c.regla) && c.ok),
+    MOTIVO_SIN_FACTURAS,
+  );
+}
+
+/** CxP no evaluable cuando no hay facturas de proveedor. */
+function marcarCxp(noAplica: Map<string, string>, checks: readonly CheckMinimo[]): void {
+  const cxp = checks.find((c) => REGLAS_CXP.has(c.regla));
+  if (!cxp || !sinFacturas(cxp.detalle)) return;
+  marcar(noAplica, checks, (c) => REGLAS_CXP.has(c.regla), MOTIVO_SIN_FACTURAS);
+}
+
+/** Margen y comisiones sólo son confiables con costos comprobados. */
+function marcarRentabilidad(noAplica: Map<string, string>, checks: readonly CheckMinimo[]): void {
+  const baseIncompleta = checks.some(
+    (c) => REGLAS_BASE_RENTABILIDAD.includes(c.regla) && !c.ok,
+  );
+  if (!baseIncompleta) return;
+  marcar(
+    noAplica,
+    checks,
+    (c) => (REGLAS_MARGEN.has(c.regla) || REGLAS_COMISION.has(c.regla)) && c.ok,
+    MOTIVO_SIN_COSTOS_COMPROBADOS,
+  );
+}
+
 export function calcularReglasNoAplica(
   checks: readonly CheckMinimo[],
   opciones: OpcionesNoAplica = {},
@@ -66,37 +110,11 @@ export function calcularReglasNoAplica(
   const noAplica = new Map<string, string>();
 
   if (opciones.sinComision) {
-    for (const c of checks) {
-      if (REGLAS_COMISION.has(c.regla)) noAplica.set(c.regla, MOTIVO_SIN_COMISION);
-    }
+    marcar(noAplica, checks, (c) => REGLAS_COMISION.has(c.regla), MOTIVO_SIN_COMISION);
   }
-  const cxc = checks.find((c) => REGLAS_CXC.has(c.regla));
-  const cxp = checks.find((c) => REGLAS_CXP.has(c.regla));
-
-  if (cxc && sinFacturas(cxc.detalle)) {
-    for (const c of checks) {
-      if (REGLAS_CXC.has(c.regla) || (REGLAS_REP.has(c.regla) && c.ok)) {
-        noAplica.set(c.regla, MOTIVO_SIN_FACTURAS);
-      }
-    }
-  }
-  if (cxp && sinFacturas(cxp.detalle)) {
-    for (const c of checks) {
-      if (REGLAS_CXP.has(c.regla)) noAplica.set(c.regla, MOTIVO_SIN_FACTURAS);
-    }
-  }
-
-  // Rentabilidad: sólo tiene sentido cuando ya existen los costos comprobados.
-  const baseIncompleta = checks.some(
-    (c) => REGLAS_BASE_RENTABILIDAD.includes(c.regla) && !c.ok,
-  );
-  if (baseIncompleta) {
-    for (const c of checks) {
-      if ((REGLAS_MARGEN.has(c.regla) || REGLAS_COMISION.has(c.regla)) && c.ok) {
-        noAplica.set(c.regla, MOTIVO_SIN_COSTOS_COMPROBADOS);
-      }
-    }
-  }
+  marcarCxc(noAplica, checks);
+  marcarCxp(noAplica, checks);
+  marcarRentabilidad(noAplica, checks);
 
   return noAplica;
 }
