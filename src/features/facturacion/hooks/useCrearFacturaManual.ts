@@ -28,6 +28,13 @@ export function useCrearFacturaManual() {
       const facturaId = await crearFacturaManual(vars.input);
       if (vars.timbrarAlGuardar) {
         const res = await emitirFacturapi(facturaId);
+        // P1-2 (R5): el toast decía "timbrada" aunque la respuesta no trajera
+        // folio/UUID y la factura quedaba "Sin folio" en Por timbrar.
+        if (!res?.uuid || !res?.folio) {
+          throw new Error(
+            "La factura se guardó pero el timbrado no devolvió folio fiscal. Revísala en Por timbrar e intenta timbrar de nuevo.",
+          );
+        }
         return { facturaId, timbrada: true as const, uuid: res.uuid };
       }
       return { facturaId, timbrada: false as const };
