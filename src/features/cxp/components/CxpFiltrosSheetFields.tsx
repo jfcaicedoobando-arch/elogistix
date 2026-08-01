@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type { EstatusCxP } from "@/features/cxp/services";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 // v13.307.16 — "Rechazada" y "Por aprobar" viven ahora en el estatus
 // primario (celda `<EstadoFacturaCxPCell />`), por lo que el sheet expone

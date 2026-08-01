@@ -23,7 +23,7 @@ import type { ColumnDef } from "@/components/shared/DataTable";
 import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
 import type { ChipItem } from "@/hooks/shared/useTableFilters";
 import type { Database } from "@/types/db";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = [

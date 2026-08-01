@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 const invalidCls = (invalid?: boolean) =>
   invalid ? "border-destructive focus-visible:ring-destructive" : undefined;

@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import type { AppLogLevel } from "@/features/admin/hooks";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 
 interface Props {
   level: AppLogLevel | "todos";

@@ -8,7 +8,7 @@ import {
 import { Timer } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import type { DemoraVentaTarifaInput } from "@/features/costeo/services/demorasVenta";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 type Tipo = { id: string; code?: string | null; name: string };
 

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { CrmEtapaRow } from "@/features/crm/hooks";
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "./oportunidadesFiltersTypes";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 interface Props {
   etapas: CrmEtapaRow[];

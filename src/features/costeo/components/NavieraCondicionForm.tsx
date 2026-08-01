@@ -18,7 +18,7 @@ import {
 } from "@/features/costeo/hooks/useNavieraCondiciones";
 import type { ProveedorOpcion } from "@/features/costeo/services/agentes";
 import type {
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
   CosteoNavieraCondicion,
   NavieraCondicionInput,
 } from "@/features/costeo/types/navieraCondicion";

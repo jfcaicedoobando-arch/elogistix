@@ -24,7 +24,7 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import { CarteraMobileList } from "./_sections/CarteraMobileList";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 /** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
 function formatNativos(b: SaldosPorMonedaCartera): string {

@@ -27,7 +27,7 @@ import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
 import { useProgramarPagoLote } from "@/features/cxp/hooks/useProgramarPagoLote";
 import { todayLocalISO } from "@/lib/date/today";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 
 interface Filters extends Record<string, string> {

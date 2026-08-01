@@ -15,7 +15,7 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/features/embarques/constants/embarqueConstants";
 import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
 import { formatDate } from "@/lib/formatters";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 interface ClienteOption { id: string; nombre: string }
 

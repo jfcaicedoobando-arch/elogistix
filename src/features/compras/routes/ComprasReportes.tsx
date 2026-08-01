@@ -28,7 +28,7 @@ import { fetchFacturasReporte } from "@/features/compras/services/reportesFetch"
 import { fetchExchangeRates } from "@/features/catalogos/services";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 
 
 function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }

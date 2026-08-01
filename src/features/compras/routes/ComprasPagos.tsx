@@ -28,7 +28,7 @@ import {
 import { buildPagosColumns } from "./_sections/pagosColumns";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 
