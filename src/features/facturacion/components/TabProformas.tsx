@@ -14,8 +14,11 @@ import { useMemo } from "react";
 import { todayLocalISO } from "@/lib/date/today";
 
 
-export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
-  const c = useTabProformasController({ isInRange });
+export function TabProformas({ isInRange, estadoInicial }: {
+  isInRange?: (fecha: string | null | undefined) => boolean;
+  estadoInicial?: FiltroEstadoProforma;
+}) {
+  const c = useTabProformasController({ isInRange, estadoInicial });
   const { canEmitirFactura } = usePermissions();
   const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
 
