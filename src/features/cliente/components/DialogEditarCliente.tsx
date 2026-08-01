@@ -16,6 +16,7 @@ import { CsfDropZone } from "@/features/cliente/components/NuevoClienteFormPiece
 import { parseCsf } from "@/features/cliente/services/csf";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { CondicionesCreditoSection } from "./CondicionesCreditoSection";
+import { ComisionClienteSection } from "./ComisionClienteSection";
 
 interface ClienteData {
   nombre: string;
@@ -31,6 +32,7 @@ interface ClienteData {
   uso_cfdi_default: string;
   dias_credito: number | null;
   limite_credito_mxn: number | null;
+  sin_comision: boolean;
 }
 
 interface Props {
@@ -184,6 +186,8 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
       </FormDialogSection>
 
       <CondicionesCreditoSection form={form} setForm={setForm} />
+
+      <ComisionClienteSection form={form} setForm={setForm} />
     </FormDialogShell>
   );
 }

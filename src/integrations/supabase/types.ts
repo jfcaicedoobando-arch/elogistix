@@ -760,6 +760,7 @@ export type Database = {
           organization_id: string
           regimen_fiscal: string | null
           rfc: string
+          sin_comision: boolean
           telefono: string
           updated_at: string
           uso_cfdi_default: string | null
@@ -786,6 +787,7 @@ export type Database = {
           organization_id?: string
           regimen_fiscal?: string | null
           rfc?: string
+          sin_comision?: boolean
           telefono?: string
           updated_at?: string
           uso_cfdi_default?: string | null
@@ -812,6 +814,7 @@ export type Database = {
           organization_id?: string
           regimen_fiscal?: string | null
           rfc?: string
+          sin_comision?: boolean
           telefono?: string
           updated_at?: string
           uso_cfdi_default?: string | null
@@ -3753,6 +3756,7 @@ export type Database = {
           reabierto_por: string | null
           seguro: boolean
           shipper: string
+          sin_comision: boolean | null
           tarifa_decision: string | null
           tarifa_delta_jsonb: Json | null
           tarifa_id: string | null
@@ -3834,6 +3838,7 @@ export type Database = {
           reabierto_por?: string | null
           seguro?: boolean
           shipper?: string
+          sin_comision?: boolean | null
           tarifa_decision?: string | null
           tarifa_delta_jsonb?: Json | null
           tarifa_id?: string | null
@@ -3915,6 +3920,7 @@ export type Database = {
           reabierto_por?: string | null
           seguro?: boolean
           shipper?: string
+          sin_comision?: boolean | null
           tarifa_decision?: string | null
           tarifa_delta_jsonb?: Json | null
           tarifa_id?: string | null
@@ -8788,6 +8794,10 @@ export type Database = {
       resolver_reaprobacion_tarifa: {
         Args: { p_cotizacion_id: string; p_decision: string }
         Returns: undefined
+      }
+      resolver_sin_comision: {
+        Args: { p_embarque_id: string }
+        Returns: boolean
       }
       resolver_tipo_contenedor_id: {
         Args: { p_valor: string }

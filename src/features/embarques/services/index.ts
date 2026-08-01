@@ -8,4 +8,5 @@ export * from "./contenedor";
 export * from "./contenedores";
 export * from "./bitacoraEmbarque";
 export * from "./alertas";
+export * from "./comisionExclusion";
 

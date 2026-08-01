@@ -43,6 +43,8 @@ export interface CheckMinimo {
 
 export const MOTIVO_SIN_FACTURAS =
   "Todavía no hay facturas registradas, así que este punto aún no se puede evaluar.";
+export const MOTIVO_SIN_COMISION =
+  "Este embarque está marcado como sin comisión (cuenta directa), así que no hay comisión que medir.";
 export const MOTIVO_SIN_COSTOS_COMPROBADOS =
   "Faltan costos con factura de proveedor o venta por facturar: el resultado todavía no es confiable.";
 
@@ -52,8 +54,22 @@ export const MOTIVO_SIN_COSTOS_COMPROBADOS =
  * - CxP: aún no hay facturas de proveedor registradas.
  * - Margen / comisiones: faltan costos comprobados o venta facturada.
  */
-export function calcularReglasNoAplica(checks: readonly CheckMinimo[]): Map<string, string> {
+export interface OpcionesNoAplica {
+  /** v13.386.0 — El embarque está excluido de comisiones (cliente o override). */
+  sinComision?: boolean;
+}
+
+export function calcularReglasNoAplica(
+  checks: readonly CheckMinimo[],
+  opciones: OpcionesNoAplica = {},
+): Map<string, string> {
   const noAplica = new Map<string, string>();
+
+  if (opciones.sinComision) {
+    for (const c of checks) {
+      if (REGLAS_COMISION.has(c.regla)) noAplica.set(c.regla, MOTIVO_SIN_COMISION);
+    }
+  }
   const cxc = checks.find((c) => REGLAS_CXC.has(c.regla));
   const cxp = checks.find((c) => REGLAS_CXP.has(c.regla));
 

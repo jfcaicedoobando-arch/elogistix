@@ -28,4 +28,6 @@ export interface ClienteFormData {
   uso_cfdi_default: string;
   dias_credito: number | null;
   limite_credito_mxn: number | null;
+  /** v13.386.0 — cuenta directa: sus embarques no generan comisión por defecto. */
+  sin_comision: boolean;
 }

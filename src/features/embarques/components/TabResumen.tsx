@@ -6,6 +6,7 @@ import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoProgresoCard } from "./tabResumen/EstadoProgresoCard";
 import { DatosGeneralesCard, RutaTransporteCard } from "./tabResumen/ResumenCards";
 import { EmbarquesRelacionadosCard } from "./tabResumen/EmbarquesRelacionadosCard";
+import { ComisionEmbarqueCard } from "./tabResumen/ComisionEmbarqueCard";
 import { OrigenCostosSection } from "./OrigenCostosSection";
 import { SeccionContenedoresReadonly } from "./contenedores/SeccionContenedoresReadonly";
 
@@ -52,6 +53,8 @@ export function TabResumen({ embarque }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      <ComisionEmbarqueCard embarqueId={embarque.id} />
 
       {embarque.modo === "Marítimo" && (
         <div ref={registerRef("contenedores")} data-focus="contenedores">

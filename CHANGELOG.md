@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.386.0] - 2026-11-19
+- Exclusión de comisiones: marca "Cuenta directa (sin comisión)" en el cliente y selector por embarque (Heredar / Sí genera / No genera).
+- El cálculo de comisiones ignora embarques excluidos y cancela las devengadas pendientes; el checklist de cierre muestra los pasos de comisión en gris "No aplica".
+- Los embarques excluidos ya no aparecen en "Embarques sin vendedora asignada".
+
 ## [13.385.0] - 2026-08-01
 - **fix(cierre)**: los checks "Comisión devengada calculada" y "Comisiones devengadas definitivas" enlazaban a `?tab=pnl&focus=comision`, que en P&L apunta a la tabla de proveedores (no hay comisiones ahí). Ahora abren el módulo **Comisiones** filtrado por el expediente del embarque (`/comisiones?q=<expediente>`) con CTA "Ir a Comisiones" y descripción en lenguaje llano.
 - **refactor(cierre)**: `CierreCheckMeta.ruta` recibe `expediente`; se propaga desde `EmbarqueDetalleTabs` → `TabCierre` → `CierreChecklistCard` → `CierreChecklistFase` → `CierreCheckItem`.
