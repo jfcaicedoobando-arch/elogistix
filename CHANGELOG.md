@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.386.4] - 2026-08-01
+- Buzón CxP: el botón "Enviar al buzón" queda deshabilitado hasta elegir el proveedor de la factura (el campo se marca como obligatorio con ayuda en pantalla).
+
 ## [13.386.3] - 2026-08-01
 - CI (ESLint): se redujo la complejidad de `CierreCheckItem` (estado del check resuelto por tabla) y de `calcularReglasNoAplica` (reglas divididas en helpers puros).
 
