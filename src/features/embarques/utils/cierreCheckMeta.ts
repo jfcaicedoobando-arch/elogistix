@@ -12,6 +12,7 @@ import {
   fmtEntrantesPendientes, fmtEntrantesEvidencia,
 } from "./cierreCheckFormatters";
 import type { FaseCierreId } from "./cierreCheckFases";
+import { ROUTES } from "@/constants/routes";
 
 export type ResponsableCierre =
   | "Contador" | "Tesorero" | "Cobranza" | "Auxiliar contable"
@@ -27,8 +28,12 @@ export interface CierreCheckMeta {
   descripcion?: string;
   responsable: ResponsableCierre;
 
-  /** Ruta destino (relativa a la app) o null si no aplica acción. */
-  ruta: ((embarqueId: string, detalle?: unknown) => string) | null;
+  /**
+   * Ruta destino (relativa a la app) o null si no aplica acción.
+   * v13.385.0 — recibe `expediente` para poder enlazar a módulos externos al
+   * detalle del embarque (p. ej. `/comisiones?q=<expediente>`).
+   */
+  ruta: ((embarqueId: string, detalle?: unknown, expediente?: string) => string) | null;
   ctaLabel: string;
   formatDetalle: (detalle: unknown) => string | null;
   /** v13.361.0 — Fase del ciclo de vida del embarque a la que pertenece. */
@@ -38,20 +43,30 @@ export interface CierreCheckMeta {
 }
 
 /** Construye una ruta con tab + focus opcionales. */
-const buildRuta = (tab: string, focus?: string) => (id: string, _detalle?: unknown): string => {
+const buildRuta = (tab: string, focus?: string) => (id: string, _detalle?: unknown, _expediente?: string): string => {
   const params = new URLSearchParams({ tab });
   if (focus) params.set("focus", focus);
   return `/embarques/${id}?${params.toString()}`;
 };
 
 /** Versión que extrae `ids` del detalle (para contenedores). */
-const rutaContenedores = (id: string, detalle?: unknown): string => {
+const rutaContenedores = (id: string, detalle?: unknown, _expediente?: string): string => {
   const ids = pick(detalle, "ids");
   const params = new URLSearchParams({ tab: "resumen", focus: "contenedores" });
   if (Array.isArray(ids) && ids.length > 0) {
     params.set("ids", ids.map(String).join(","));
   }
   return `/embarques/${id}?${params.toString()}`;
+};
+
+/**
+ * v13.385.0 — Las comisiones devengadas NO viven en el P&L del embarque (ahí
+ * `focus=comision` apuntaba a la tabla de proveedores). El módulo Comisiones es
+ * donde realmente se consultan y resuelven, filtrado por expediente vía `?q=`.
+ */
+const rutaComisiones = (_id: string, _detalle?: unknown, expediente?: string): string => {
+  const exp = (expediente ?? "").trim();
+  return exp ? `${ROUTES.COMISIONES}?q=${encodeURIComponent(exp)}` : ROUTES.COMISIONES;
 };
 
 const cxc: CierreCheckMeta = { label: "Cuentas por cobrar al día", descripcion: "El cliente ya nos pagó: no quedan facturas de venta con saldo abierto.", responsable: "Cobranza", ruta: buildRuta("facturacion", "cxc"), ctaLabel: "Ir a Facturación", formatDetalle: fmtCxc, fase: "cobranza", orden: 1 };
@@ -93,7 +108,9 @@ const META: Record<string, CierreCheckMeta> = {
   },
   comision_calculada: {
     label: "Comisión devengada calculada", responsable: "Sistema",
-    ruta: buildRuta("pnl", "comision"), ctaLabel: "Ver P&L", formatDetalle: () => null, fase: "rentabilidad", orden: 3,
+    descripcion:
+      "La comisión se devenga al cobrar la factura del cliente. Se consulta en el módulo Comisiones, filtrado por el expediente de este embarque.",
+    ruta: rutaComisiones, ctaLabel: "Ir a Comisiones", formatDetalle: () => null, fase: "rentabilidad", orden: 3,
   },
   contenedores_datos_completos: {
     label: "Datos de contenedores capturados (peso y volumen)", responsable: "Operador",
@@ -149,8 +166,10 @@ const META: Record<string, CierreCheckMeta> = {
   comisiones_definitivas: {
     label: "Comisiones devengadas definitivas",
     responsable: "Sistema",
-    ruta: buildRuta("pnl", "comision"),
-    ctaLabel: "Ver P&L",
+    descripcion:
+      "Ninguna comisión de este embarque queda en cálculo provisional. Se revisa en el módulo Comisiones, filtrado por el expediente.",
+    ruta: rutaComisiones,
+    ctaLabel: "Ir a Comisiones",
     formatDetalle: fmtComisionesNoDefinitivas,
     fase: "rentabilidad",
     orden: 4,
