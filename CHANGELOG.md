@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.386.3] - 2026-08-01
+- CI (ESLint): se redujo la complejidad de `CierreCheckItem` (estado del check resuelto por tabla) y de `calcularReglasNoAplica` (reglas divididas en helpers puros).
+
 ## [13.386.2] - 2026-08-01
 - FIX-H6-06: se re-aplicaron REVOKE/GRANT explícitos a `resolver_sin_comision` y `calcular_comision_pago` (SECURITY DEFINER).
 - Baseline del auditor de migraciones movido a `20260801011206`.
