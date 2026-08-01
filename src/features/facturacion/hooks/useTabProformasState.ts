@@ -30,9 +30,10 @@ function fechaEnRango(fecha: string | null | undefined, desde: string, hasta: st
 export function useTabProformasState(
   proformas: ProformaConFactura[],
   isInRange: (fecha: string | null | undefined) => boolean = () => true,
+  estadoInicial: FiltroEstadoProforma = "todas",
 ) {
   const [search, setSearchState] = useState("");
-  const [filtroEstado, setFiltroEstadoState] = useState<FiltroEstadoProforma>("todas");
+  const [filtroEstado, setFiltroEstadoState] = useState<FiltroEstadoProforma>(estadoInicial);
   const [filtroCliente, setFiltroClienteState] = useState<string>(TODOS);
   const [filtroOperador, setFiltroOperadorState] = useState<string>(TODOS);
   const [fechaDesde, setFechaDesdeState] = useState<string>("");
