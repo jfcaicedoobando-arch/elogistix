@@ -82,7 +82,10 @@ export function useSubirEntranteForm({ organizationId }: Args) {
   }, []);
 
   const metaUtil = useMemo(() => (meta ? metaCfdiUtil(meta) : false), [meta]);
-  const listo = Boolean((pdf || xml) && !leyendoXml && !validarParejaEntrante({ pdf, xml }));
+  // Exige proveedor: un documento sin dueño obliga a contabilidad a adivinar.
+  const listo = Boolean(
+    (pdf || xml) && proveedor && !leyendoXml && !validarParejaEntrante({ pdf, xml }),
+  );
 
   return {
     pdf, xml, meta, metaUtil, proveedor, proveedorDetectado, nota, error, leyendoXml, listo,
