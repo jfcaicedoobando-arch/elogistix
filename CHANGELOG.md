@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.389.0] - 2026-08-01
+- Cotizaciones: las solicitudes del portal (`Solicitada`) ya se pueden costear en el wizard y pasan a `Borrador` al guardar.
+- Captura manual de CxP: se valida la categoría antes de insertar y los errores de folio duplicado / campo obligatorio muestran mensajes claros.
+- Proveedores: la CLABE se valida (18 dígitos + dígito verificador) también al editar, con aviso en el campo; el SWIFT/BIC se valida en proveedores extranjeros.
+- Editar embarque: la naviera y el agente ya se precargan (faltaban `naviera_id`/`agente_id` en la consulta) y los roles de sólo lectura no pueden entrar por liga directa.
+- Cotizaciones MXN: se guarda la tasa de IVA efectiva en cada concepto, no sólo la del catálogo.
+- P&L de embarque: el desglose "Ingresos por concepto" ya muestra el presupuesto y cuadra con el KPI del encabezado.
+
 ## [13.388.1] - 2026-08-01
 - Sidebar: el módulo activo vuelve a resaltarse en rutas con querystring (`?tab=`, `?focus=`), p. ej. `/embarques/<id>?tab=cierre`. La query sólo desactiva el item base cuando pertenece a un item hermano de bandeja (`/proformas?estado=aceptada`).
 
