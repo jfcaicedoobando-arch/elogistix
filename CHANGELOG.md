@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.386.2] - 2026-08-01
+- FIX-H6-06: se re-aplicaron REVOKE/GRANT explícitos a `resolver_sin_comision` y `calcular_comision_pago` (SECURITY DEFINER).
+- Baseline del auditor de migraciones movido a `20260801011206`.
+
 ## [13.386.1] - 2026-08-01
 - Todos los clientes de Elogistix quedan marcados como "Cuenta directa (sin comisión)".
 - Se normalizó a RFC genérico extranjero (XEXX010101000) el RFC inválido de dos clientes internacionales.
