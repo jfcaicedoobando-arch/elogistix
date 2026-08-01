@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.389.6] - 2026-08-01
+- Copy unificado de rangos de fechas: nuevo módulo `src/lib/ui/rangoFechasCopy.ts` con `Desde`/`Hasta` y prefijos canónicos (Emisión, Vencimiento, Vigencia, Cierre, Pago, ETD, ETA).
+- Se eliminaron las variantes: "Emitida desde/hasta" → "Emisión desde/hasta" (proformas y facturas emitidas) y "Vigente desde/hasta" → "Vigencia desde/hasta" (tarifas, demoras, carta garantía naviera).
+- Se quitaron los placeholders ad-hoc "Desde"/"Hasta" en los filtros de proformas; todos los pickers muestran `DD/MM/AAAA`.
+- Filtros de Compras (pagos, notas de crédito, reportes), Reportes, Diagnóstico, Cartera, CxP por pagar, CxP y CRM ahora consumen las constantes compartidas.
+- Tests nuevos para el copy canónico.
+
 ## [13.389.5] - 2026-08-01
 - CI verde de nuevo: se corrigieron los 3 fallos de la corrida anterior.
 - `fetchFacturaById`: se agregó el marcador `SAFE-CAST` que faltaba en el acceso a `proforma_id` (la auditoría de casts lo marcaba como HIGH).
