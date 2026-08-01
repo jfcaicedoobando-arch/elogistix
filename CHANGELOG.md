@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.388.1] - 2026-08-01
+- Sidebar: el módulo activo vuelve a resaltarse en rutas con querystring (`?tab=`, `?focus=`), p. ej. `/embarques/<id>?tab=cierre`. La query sólo desactiva el item base cuando pertenece a un item hermano de bandeja (`/proformas?estado=aceptada`).
+
+
+
 ## [13.388.0] - 2026-08-01
 - Buzón CxP: el panel de vista previa es más ancho (hasta 1100 px / 92vw) y el PDF ocupa toda la altura sobrante.
 - El PDF se abre ajustado al ancho y sin barra de miniaturas (`#view=FitH&zoom=page-width&navpanes=0`), en lugar de arrancar al 25%.
