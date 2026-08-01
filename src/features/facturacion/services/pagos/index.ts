@@ -120,7 +120,7 @@ export async function eliminarPagoFactura(id: string): Promise<void> {
   // de verdad ante race conditions.
   const { data: pago } = await supabase
     .from("pagos_factura")
-    .select("id, uuid_rep, rep_cancelado_en")
+    .select("id, factura_id, uuid_rep, rep_cancelado_en")
     .eq("id", id)
     .maybeSingle();
   if (pago?.uuid_rep && !pago.rep_cancelado_en) {
@@ -143,7 +143,7 @@ export async function eliminarPagoFactura(id: string): Promise<void> {
   await registrarActividad({
     modulo: "facturacion",
     accion: "eliminar_pago",
-    entidadId: pago?.id ?? id,
+    entidadId: pago?.factura_id ?? null,
     detalles: { pago_id: id },
   });
 }
