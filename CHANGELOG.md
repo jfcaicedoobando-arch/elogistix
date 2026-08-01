@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.381.2] - 2026-08-01
+- **fix(tests)**: `devengadas.integration.test.ts` calculaba el "mes actual" en UTC mientras `calcularKPIsComisiones` usa la zona América/Ciudad_de_México. Entre las 18:00 y 24:00 hora MX el CI fallaba. Ahora la prueba usa `ymMx()`.
+
 ## [13.381.1] - 2026-08-01
 - **fix(cierre)**: el Paso 1 ("Recibimos la factura de cada proveedor") ahora marca pendiente cuando hay conceptos de costo **sin proveedor asignado** (antes se ignoraban y el check salía verde sin ninguna factura recibida).
 - **fix(cierre)**: el Paso 2 ("Facturas del buzón capturadas") ahora marca pendiente cuando el buzón está **vacío** y todavía hay costos sin factura de proveedor. Antes "0 pendientes" se leía como OK. Detectado en `ELIMP00353`.
