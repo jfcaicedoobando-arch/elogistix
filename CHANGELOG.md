@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.387.2] - 2026-08-01
+- CI (Power of 10): `cierreCheckMeta.ts` bajó de 202 a 174 líneas; los constructores de ruta viven ahora en `cierreCheckRutas.ts`.
+
+
+
 ## [13.387.1] - 2026-08-01
 - Sidebar: el botón "Por emitir" ahora sí filtra (`/proformas?estado=aceptada` se aplica al listado) y muestra encabezado propio.
 - El resaltado activo del sidebar distingue items con query, para no confundir "Por emitir" con "Proformas".
