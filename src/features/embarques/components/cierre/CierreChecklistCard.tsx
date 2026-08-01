@@ -25,12 +25,14 @@ interface Props {
   expediente?: string;
   /** Si true, presenta el checklist como referencia (sin badges rojos ni CTAs). */
   informativo?: boolean;
+  /** v13.386.0 — El embarque no genera comisión: los checks de comisión salen en gris. */
+  sinComision?: boolean;
   /** @deprecated — los labels están en `cierreCheckMeta`. */
   etiquetas?: Record<string, string>;
 }
 
-export function CierreChecklistCard({ isLoading, checks, embarqueId, expediente, informativo = false }: Props) {
-  const noAplica = calcularReglasNoAplica(checks);
+export function CierreChecklistCard({ isLoading, checks, embarqueId, expediente, informativo = false, sinComision = false }: Props) {
+  const noAplica = calcularReglasNoAplica(checks, { sinComision });
   return (
     <Card>
       <CardHeader>

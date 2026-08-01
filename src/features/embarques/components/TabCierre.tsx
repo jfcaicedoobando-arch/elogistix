@@ -17,6 +17,7 @@ import {
 } from "@/features/embarques/hooks/useCierreEmbarque";
 import { useCierreDialog } from "@/features/embarques/hooks/useCierreDialog";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useSinComisionEmbarque } from "@/features/embarques/hooks/useSinComisionEmbarque";
 import { CierreChecklistCard } from "./cierre/CierreChecklistCard";
 import { CierreHistorialCard } from "./cierre/CierreHistorialCard";
 import { CerrarEmbarqueDialog, ReabrirEmbarqueDialog } from "./cierre/CierreDialogs";
@@ -44,6 +45,7 @@ export function TabCierre({ embarqueId, estatus, modo, expediente }: Props) {
   const cerrarMut = useCerrarEmbarque(embarqueId);
   const reabrirMut = useReabrirEmbarque(embarqueId);
   const { canCerrarEmbarque, isAdmin, isSuperAdmin } = usePermissions();
+  const { data: comisionEstado } = useSinComisionEmbarque(embarqueId);
 
   const estatusNormalizado = (estatus ?? "").toLowerCase();
   const listoParaCierre = ESTADOS_LISTOS_PARA_CIERRE.has(estatusNormalizado);
@@ -81,7 +83,7 @@ export function TabCierre({ embarqueId, estatus, modo, expediente }: Props) {
         </Alert>
       ) : null}
 
-      <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} expediente={expediente} informativo={esCerrado} />
+      <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} expediente={expediente} informativo={esCerrado} sinComision={comisionEstado?.efectivo ?? false} />
 
       <div className="flex flex-wrap items-center gap-2">
         {!esCerrado && canCerrarEmbarque && (() => {
