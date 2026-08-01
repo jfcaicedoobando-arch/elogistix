@@ -79,7 +79,8 @@ const META: Record<string, CierreCheckMeta> = {
   facturas_entrantes_capturadas: {
     label: "Paso 2 · Facturas del buzón capturadas en el sistema",
     descripcion:
-      "Revisa que no queden archivos del buzón en «Por capturar». Aquí se convierte el documento recibido en una factura de proveedor con folio, montos e impuestos.",
+      "Revisa que no queden archivos del buzón en «Por capturar» y que el buzón no esté vacío habiendo costos sin factura. Aquí el documento recibido se vuelve factura de proveedor con folio, montos e impuestos.",
+
     responsable: "Auxiliar contable",
     ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
     formatDetalle: fmtEntrantesPendientes, fase: "costos", orden: 2,
