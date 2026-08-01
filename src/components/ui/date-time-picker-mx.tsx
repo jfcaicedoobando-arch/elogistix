@@ -64,7 +64,7 @@ export function DateTimePickerMx({
   };
 
   return (
-    <div className="inline-flex max-w-full flex-col gap-1">
+    <div className={cn("inline-flex max-w-full flex-col gap-1", className)}>
       <Popover>
         <PopoverTrigger asChild>
           <button
@@ -74,11 +74,7 @@ export function DateTimePickerMx({
             disabled={disabled}
             aria-invalid={showError || undefined}
             aria-describedby={showError ? errorId : undefined}
-            className={cn(
-              pickerTriggerClass({ showError, disabled, empty: !value }),
-              "text-left",
-              className,
-            )}
+            className={cn(pickerTriggerClass({ showError, disabled, empty: !value }), "text-left")}
           >
             <CalendarIcon className="mr-1 h-4 w-4 shrink-0 opacity-70" />
             <span className="flex-1 min-w-0 truncate">{display || placeholder}</span>
