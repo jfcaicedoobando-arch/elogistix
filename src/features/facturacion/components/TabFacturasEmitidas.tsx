@@ -109,11 +109,11 @@ export function TabFacturasEmitidas(p: Props) {
     <div className="space-y-4">
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-muted-foreground">Emitida desde</label>
-        <DatePickerMx value={p.fechaDesde} onChange={p.setFechaDesde} className="w-full" placeholder="Desde" />
+        <DatePickerMx value={p.fechaDesde} onChange={p.setFechaDesde} className="w-full" />
       </div>
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-muted-foreground">Emitida hasta</label>
-        <DatePickerMx value={p.fechaHasta} onChange={p.setFechaHasta} className="w-full" placeholder="Hasta" />
+        <DatePickerMx value={p.fechaHasta} onChange={p.setFechaHasta} className="w-full" />
       </div>
     </div>
   );

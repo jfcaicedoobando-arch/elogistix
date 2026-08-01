@@ -6,7 +6,8 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
-  PLACEHOLDER_PERIODO, pickerErrorClass, pickerTriggerClass,
+  PLACEHOLDER_PERIODO, pickerClearClass, pickerClearIconClass, pickerErrorClass,
+  pickerIconClass, pickerRootClass, pickerTriggerClass,
 } from "@/components/ui/picker-mx-shell";
 
 const MESES_ES = [
@@ -68,7 +69,7 @@ export function MonthPickerMx({
   };
 
   return (
-    <div className={cn("inline-flex max-w-full flex-col gap-1", className)}>
+    <div className={cn(pickerRootClass, className)}>
       <Popover>
         <PopoverTrigger asChild>
           <button
@@ -80,7 +81,7 @@ export function MonthPickerMx({
             aria-describedby={showError ? errorId : undefined}
             className={cn(pickerTriggerClass({ showError, disabled, empty: !value }), "text-left")}
           >
-            <CalendarIcon className="mr-1 h-4 w-4 shrink-0 opacity-70" />
+            <CalendarIcon className={pickerIconClass} />
             <span className="flex-1 min-w-0 truncate">{display || placeholder}</span>
             {clearable && value && !disabled && (
               <span
@@ -91,10 +92,10 @@ export function MonthPickerMx({
                   e.preventDefault();
                   onChange("");
                 }}
-                className="shrink-0 rounded p-0.5 hover:bg-muted text-muted-foreground"
+                className={pickerClearClass}
                 aria-label="Limpiar periodo"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className={pickerClearIconClass} />
               </span>
             )}
           </button>

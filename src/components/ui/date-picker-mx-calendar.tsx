@@ -5,6 +5,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { pickerIconClass } from "@/components/ui/picker-mx-shell";
 import { dateToIso, isoToDate, isoToDisplay } from "./date-picker-mx-helpers";
 
 interface Props {
@@ -37,9 +38,9 @@ export function DatePickerMxCalendar({
           type="button"
           disabled={disabled}
           aria-label="Abrir calendario"
-          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
         >
-          <CalendarIcon className="h-4 w-4" />
+          <CalendarIcon className={pickerIconClass} />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
