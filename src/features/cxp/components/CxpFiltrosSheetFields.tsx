@@ -8,6 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type { EstatusCxP } from "@/features/cxp/services";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 // v13.307.16 — "Rechazada" y "Por aprobar" viven ahora en el estatus
 // primario (celda `<EstadoFacturaCxPCell />`), por lo que el sheet expone
@@ -111,7 +112,7 @@ export function CxpFiltrosSheetFields(props: Props) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label>Emisión desde</Label>
+          <Label>{rangoLabel("Emisión", "desde")}</Label>
           <DatePickerMx
             value={props.fechaDesde}
             onChange={props.onFechaDesdeChange}
@@ -119,7 +120,7 @@ export function CxpFiltrosSheetFields(props: Props) {
           />
         </div>
         <div className="space-y-1">
-          <Label>Emisión hasta</Label>
+          <Label>{rangoLabel("Emisión", "hasta")}</Label>
           <DatePickerMx
             value={props.fechaHasta}
             onChange={props.onFechaHastaChange}

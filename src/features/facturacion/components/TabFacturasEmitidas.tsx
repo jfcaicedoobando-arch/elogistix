@@ -23,6 +23,7 @@ import type { ColumnDef } from "@/components/shared/DataTable";
 import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
 import type { ChipItem } from "@/hooks/shared/useTableFilters";
 import type { Database } from "@/types/db";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = [
@@ -108,11 +109,11 @@ export function TabFacturasEmitidas(p: Props) {
   const secondarySlot = (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Emitida desde</label>
+        <label className="text-xs font-medium text-muted-foreground">{rangoLabel("Emisión", "desde")}</label>
         <DatePickerMx value={p.fechaDesde} onChange={p.setFechaDesde} className="w-full" />
       </div>
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Emitida hasta</label>
+        <label className="text-xs font-medium text-muted-foreground">{rangoLabel("Emisión", "hasta")}</label>
         <DatePickerMx value={p.fechaHasta} onChange={p.setFechaHasta} className="w-full" />
       </div>
     </div>

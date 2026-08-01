@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import type { AppLogLevel } from "@/features/admin/hooks";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 interface Props {
   level: AppLogLevel | "todos";
@@ -81,7 +82,7 @@ export function DiagnosticoFilters({
         </Select>
       </div>
       <div>
-        <Label htmlFor="diag-from" className="text-xs">Desde</Label>
+        <Label htmlFor="diag-from" className="text-xs">{RANGO_DESDE_LABEL}</Label>
         <DatePickerMx
           value={from ?? ""}
           onChange={(v) => onFromChange(v || null)}
@@ -89,7 +90,7 @@ export function DiagnosticoFilters({
         />
       </div>
       <div>
-        <Label htmlFor="diag-to" className="text-xs">Hasta</Label>
+        <Label htmlFor="diag-to" className="text-xs">{RANGO_HASTA_LABEL}</Label>
         <DatePickerMx
           value={to ?? ""}
           onChange={(v) => onToChange(v || null)}

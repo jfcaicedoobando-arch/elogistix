@@ -18,6 +18,7 @@ import {
 } from "@/features/costeo/hooks/useNavieraCondiciones";
 import type { ProveedorOpcion } from "@/features/costeo/services/agentes";
 import type {
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
   CosteoNavieraCondicion,
   NavieraCondicionInput,
 } from "@/features/costeo/types/navieraCondicion";
@@ -109,7 +110,7 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
         {form.tiene_carta_garantia && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="carta-vigente">Vigente hasta *</Label>
+              <Label htmlFor="carta-vigente">{rangoLabel("Vigencia", "hasta")} *</Label>
               <DatePickerMx
                 value={form.carta_garantia_vigente_hasta ?? ""}
                 onChange={(v) =>

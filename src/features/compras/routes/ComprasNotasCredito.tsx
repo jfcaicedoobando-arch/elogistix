@@ -25,6 +25,7 @@ import {
 import { buildNotasCreditoColumns } from "./_sections/notasCreditoColumns";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 type EstadoFiltro = "todos" | NotaCreditoRow["estado"];
@@ -114,11 +115,11 @@ export default function ComprasNotasCredito() {
       <Card>
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="nc-desde" className="text-xs">Desde</Label>
+            <Label htmlFor="nc-desde" className="text-xs">{RANGO_DESDE_LABEL}</Label>
             <DatePickerMx value={desde} onChange={setDesde} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="nc-hasta" className="text-xs">Hasta</Label>
+            <Label htmlFor="nc-hasta" className="text-xs">{RANGO_HASTA_LABEL}</Label>
             <DatePickerMx value={hasta} onChange={setHasta} />
           </div>
           <div className="space-y-1">

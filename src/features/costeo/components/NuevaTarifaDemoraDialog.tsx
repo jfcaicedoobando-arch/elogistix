@@ -8,6 +8,7 @@ import {
 import { Timer } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import type { DemoraVentaTarifaInput } from "@/features/costeo/services/demorasVenta";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL, rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 type Tipo = { id: string; code?: string | null; name: string };
 
@@ -106,7 +107,7 @@ export function NuevaTarifaDemoraDialog({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="dem-vig-desde">Vigente desde</Label>
+            <Label htmlFor="dem-vig-desde">{rangoLabel("Vigencia", "desde")}</Label>
             <DatePickerMx
               value={form.vigente_desde}
               onChange={(v) => setForm({ ...form, vigente_desde: v })}
@@ -114,7 +115,7 @@ export function NuevaTarifaDemoraDialog({
             />
           </div>
           <div>
-            <Label htmlFor="dem-vig-hasta">Vigente hasta</Label>
+            <Label htmlFor="dem-vig-hasta">{rangoLabel("Vigencia", "hasta")}</Label>
             <DatePickerMx
               value={form.vigente_hasta ?? ""}
               onChange={(v) => setForm({ ...form, vigente_hasta: v || null })}
