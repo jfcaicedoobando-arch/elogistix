@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Save, RefreshCw } from "lucide-react";
@@ -105,7 +106,7 @@ export default function TabTipoCambioDof() {
         <div className="flex flex-wrap items-end gap-2 rounded-md border border-dashed p-3">
           <div className="space-y-1">
             <Label className="text-xs">Fecha</Label>
-            <Input type="date" className="w-40" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+            <DatePickerMx className="w-40" value={fecha} onChange={setFecha} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">USD / MXN</Label>

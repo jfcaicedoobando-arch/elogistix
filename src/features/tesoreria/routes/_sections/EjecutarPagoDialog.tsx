@@ -6,6 +6,7 @@ import { Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
@@ -73,7 +74,7 @@ export function EjecutarPagoDialog({
         </div>
         <div>
           <Label>Fecha *</Label>
-          <Input type="date" value={form.fecha} onChange={(e) => setField("fecha", e.target.value)} />
+          <DatePickerMx value={form.fecha} onChange={(v) => setField("fecha", v)} className="w-full" />
         </div>
         <div>
           <Label>Monto *</Label>

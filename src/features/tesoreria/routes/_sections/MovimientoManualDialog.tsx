@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   validarMovimientoManual,
@@ -63,10 +64,10 @@ export function MovimientoManualDialog({
         </div>
         <div>
           <Label>Fecha *</Label>
-          <Input
-            type="date"
+          <DatePickerMx
             value={manualForm.fecha ?? ""}
-            onChange={(e) => setManualField("fecha", e.target.value)}
+            onChange={(v) => setManualField("fecha", v)}
+            className="w-full"
           />
         </div>
         <div>
