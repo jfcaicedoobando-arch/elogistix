@@ -97,7 +97,7 @@ export async function fetchEmbarquesSinVendedora(): Promise<EmbarqueSinVendedora
   const data = await unwrapOr(
     supabase
       .from("embarques")
-      .select("id, expediente, cliente_nombre, created_at, sin_comision, clientes!inner(sin_comision)")
+      .select("id, expediente, cliente_nombre, created_at, sin_comision, clientes(sin_comision)")
       .is("vendedora_id", null)
       // v13.386.0 — Excluidos explícitos no son "pendientes por asignar".
       .or("sin_comision.is.null,sin_comision.eq.false")
@@ -116,11 +116,11 @@ export async function fetchEmbarquesSinVendedora(): Promise<EmbarqueSinVendedora
     // fuerza "sí genera", tampoco es un pendiente.
     .filter((e) => e.sin_comision === false || !e.clientes?.sin_comision)
     .map((e) => ({
-    id: e.id,
-    expediente: e.expediente,
-    cliente_nombre: e.cliente_nombre,
-    fecha_creacion: e.created_at,
-  }));
+      id: e.id,
+      expediente: e.expediente,
+      cliente_nombre: e.cliente_nombre,
+      fecha_creacion: e.created_at,
+    }));
 }
 
 export async function asignarVendedoraEmbarque(
