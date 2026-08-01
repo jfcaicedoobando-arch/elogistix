@@ -88,7 +88,7 @@ describe("pickerTriggerClass", () => {
 
   it("no deja espacios duplicados por clases vacías filtradas", () => {
     const cls = pickerTriggerClass({});
-    expect(cls).not.toMatch(/  /);
+    expect(cls).not.toMatch(/ {2}/);
     expect(cls.startsWith(" ")).toBe(false);
     expect(cls.endsWith(" ")).toBe(false);
   });
