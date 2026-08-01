@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.386.1] - 2026-08-01
+- Todos los clientes de Elogistix quedan marcados como "Cuenta directa (sin comisión)".
+- Se normalizó a RFC genérico extranjero (XEXX010101000) el RFC inválido de dos clientes internacionales.
+- Corrección de tipos: `sin_comision` propagado al detalle de cliente y sus diálogos.
+
 ## [13.386.0] - 2026-11-19
 - Exclusión de comisiones: marca "Cuenta directa (sin comisión)" en el cliente y selector por embarque (Heredar / Sí genera / No genera).
 - El cálculo de comisiones ignora embarques excluidos y cancela las devengadas pendientes; el checklist de cierre muestra los pasos de comisión en gris "No aplica".

@@ -72,6 +72,7 @@ describe("useClienteDetalleController", () => {
       uso_cfdi_default: "G03",
       dias_credito: null,
       limite_credito_mxn: null,
+      sin_comision: false,
     };
 
     await act(async () => {

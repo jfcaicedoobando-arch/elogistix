@@ -117,7 +117,7 @@ export default function ClienteDetalle() {
           uso_cfdi_default: cliente.uso_cfdi_default ?? "",
           dias_credito: cliente.dias_credito ?? null,
           limite_credito_mxn: cliente.limite_credito_mxn ?? null,
-          sin_comision: Boolean((cliente as { sin_comision?: boolean | null }).sin_comision),
+          sin_comision: Boolean(cliente.sin_comision),
         }}
         contactDialogOpen={contactDialogOpen}
         setContactDialogOpen={setContactDialogOpen}
