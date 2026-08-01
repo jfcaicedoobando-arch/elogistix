@@ -17,25 +17,41 @@ interface Props {
   embarqueId: string;
   /** Si true, los checks no-ok se muestran en muted y sin link. */
   informativo?: boolean;
+  /**
+   * v13.383.0 — El check aún no es evaluable (p. ej. no hay facturas todavía).
+   * Se muestra en gris con "No aplica aún" en lugar de verde.
+   */
+  noAplica?: boolean;
 }
 
-export function CierreCheckItem({ regla, ok, detalle, embarqueId, informativo = false }: Props) {
+export function CierreCheckItem({
+  regla,
+  ok,
+  detalle,
+  embarqueId,
+  informativo = false,
+  noAplica = false,
+}: Props) {
   const meta = getCierreCheckMeta(regla);
-  const detalleTxt = meta.formatDetalle(detalle);
-  const clickeable = !ok && !informativo && meta.ruta != null;
+  const detalleTxt = noAplica ? null : meta.formatDetalle(detalle);
+  const clickeable = !ok && !informativo && !noAplica && meta.ruta != null;
   const href = clickeable && meta.ruta ? meta.ruta(embarqueId, detalle) : null;
 
   const renderIcon = () => {
+    if (noAplica) return <MinusCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />;
     if (ok) return <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />;
     if (informativo) return <MinusCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />;
     return <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />;
   };
 
-  const estadoBadge = ok
-    ? { variant: "secondary" as const, label: "OK" }
-    : informativo
-      ? { variant: "outline" as const, label: "No aplica" }
-      : { variant: "destructive" as const, label: "Pendiente" };
+  const estadoBadge = noAplica
+    ? { variant: "outline" as const, label: "No aplica aún" }
+    : ok
+      ? { variant: "secondary" as const, label: "OK" }
+      : informativo
+        ? { variant: "outline" as const, label: "No aplica" }
+        : { variant: "destructive" as const, label: "Pendiente" };
+
 
   const inner = (
     <>
