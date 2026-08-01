@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.383.0] - 2026-08-01
+- **feat(cierre)**: en la fase "Cobranza y pagos", los checks de Cuentas por cobrar, Complementos de Pago (REP) y Cuentas por pagar ahora se muestran en **gris con "No aplica aún"** (borde punteado y nota explicativa) cuando todavía no existen facturas de cliente / de proveedor. Antes salían en verde porque el saldo era cero.
+- **fix(cierre)**: el contador `x/y` de cada fase excluye los checks "No aplica aún".
+
+
+
 ## [13.382.0] - 2026-08-01
 - **fix(cierre)**: "Complementos de Pago (REP) timbrados" se movió de la fase 4 "Facturación al cliente" a la fase 5 "Cobranza y pagos", entre "Cuentas por cobrar al día" (orden 1) y "Cuentas por pagar al día" (orden 3). El REP se timbra *después* de recibir el pago del cliente, no al facturar.
 - **feat(cierre)**: descripciones en lenguaje llano para CxC, CxP y REP.
