@@ -46,7 +46,7 @@ export const ClienteExpandible = memo(function ClienteExpandible({ cliente }: { 
                   >
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <Icon className="h-3 w-3" style={{ color: ESTADO_COLOR[estado] }} />
-                      {estado}
+                      {ESTADO_LABEL[estado]}
                     </span>
                     <span
                       className="font-semibold tabular-nums"
