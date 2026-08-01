@@ -43,16 +43,33 @@ interface Props {
   onToggleSection?: (label: string) => void;
 }
 
-function isActive(pathname: string, search: string, path: string, exact: boolean): boolean {
-  // v13.387.1 — Items de bandeja llevan query (`/proformas?estado=aceptada`):
-  // sólo se marcan activos cuando la query actual coincide.
+function isActive(
+  pathname: string,
+  search: string,
+  path: string,
+  exact: boolean,
+  queriesHermanas: string[] = [],
+): boolean {
+  // v13.388.1 — Items de bandeja llevan query (`/proformas?estado=aceptada`):
+  // sólo se marcan activos cuando la query actual coincide. El item base sigue
+  // resaltando con cualquier otra query (`?tab=`, `?focus=`), salvo que la query
+  // actual pertenezca a un item hermano de la misma ruta.
   const [rutaBase, query = ""] = path.split("?");
   const searchActual = search.startsWith("?") ? search.slice(1) : search;
   if (query) return pathname === rutaBase && searchActual === query;
-  if (searchActual) return false;
+  if (searchActual && queriesHermanas.includes(searchActual) && pathname === rutaBase) return false;
   if (rutaBase === "/" || exact) return pathname === rutaBase;
   return pathname === rutaBase || pathname.startsWith(`${rutaBase}/`);
 }
+
+/** Queries de otros items que apuntan a la misma ruta base que `item`. */
+function queriesHermanasDe(items: SidebarItem[], item: SidebarItem): string[] {
+  const base = item.url.split("?")[0];
+  return items
+    .filter((otro) => otro !== item && otro.url.split("?")[0] === base && otro.url.includes("?"))
+    .map((otro) => otro.url.split("?")[1] ?? "");
+}
+
 
 /**
  * Bloque memoizado de un grupo del sidebar. Evita reconstruir cada `renderGroup`
