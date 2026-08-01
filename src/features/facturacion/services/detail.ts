@@ -101,7 +101,9 @@ const COLUMNS = [
   "cancelacion_vence_en",
   "sustituye_a",
   "sustituida_por",
-  "proformas:proformas!facturas_proforma_id_fkey(numero)",
+  // P1-2 (R5): el embed `proformas!facturas_proforma_id_fkey` rompía TODA la
+  // query cuando el schema cache de PostgREST no tenía la FK cargada (el
+  // detalle moría con un error crudo). Se resuelve con una segunda query.
 ].join(", ");
 
 export async function fetchFacturaById(id: string): Promise<FacturaDetalle | null> {
