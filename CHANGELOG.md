@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.389.5] - 2026-08-01
+- CI verde de nuevo: se corrigieron los 3 fallos de la corrida anterior.
+- `fetchFacturaById`: se agregó el marcador `SAFE-CAST` que faltaba en el acceso a `proforma_id` (la auditoría de casts lo marcaba como HIGH).
+- Tests actualizados a los cambios de la ronda 5: el detalle de factura ahora consulta la proforma en una segunda query, y el timbrado al guardar exige folio + UUID (se agregó test del caso "timbrado sin folio").
+- Se renombró un título de test duplicado en `datosBancarios.test.ts`.
+- Cobertura de ramas: se agregaron ~275 tests dirigidos a 13 módulos sin cobertura (cálculos del dashboard de dirección, bitácora, códigos de error, metadatos CFDI, esquemas de importación CSV, helpers de costos por proveedor, errores de embarque bloqueado, exportación CSV, estatus del paso 1 del wizard, borrador de cotización y estilos de pickers) para volver a superar el umbral sin bajarlo.
+
 ## [13.389.4] - 2026-08-01
 - Date pickers: tamaño, icono de calendario y botón de limpiar unificados en un solo lugar (`pickerRootClass`, `pickerIconClass`, `pickerClearClass`); antes el picker de fecha usaba un icono e icono-botón con medidas distintas a los de fecha+hora y periodo.
 - Todos los pickers ocupan ahora el ancho de su campo por defecto (`w-full`), así que se ven iguales dentro de páginas, barras de filtros y modales sin depender de que cada pantalla pase `className="w-full"`.
