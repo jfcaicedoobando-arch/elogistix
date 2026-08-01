@@ -1,13 +1,15 @@
-import { useMemo } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Calendar as CalendarIcon, X } from "lucide-react";
 import { es } from "date-fns/locale";
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import {
+  PLACEHOLDER_FECHA_HORA, pickerErrorClass, pickerTriggerClass,
+} from "@/components/ui/picker-mx-shell";
 
 interface DateTimePickerMxProps {
   /** Valor tipo `datetime-local`: `YYYY-MM-DDTHH:mm` (o vacío). */
@@ -16,15 +18,26 @@ interface DateTimePickerMxProps {
   placeholder?: string;
   className?: string;
   title?: string;
+  disabled?: boolean;
+  errorText?: string | null;
+  id?: string;
 }
 
 /**
- * DateTime picker localizado para México (DD/MM/YYYY HH:mm).
+ * DateTime picker localizado para México (DD/MM/AAAA HH:mm).
  * Reemplaza al `<input type="datetime-local">` nativo.
+ *
+ * v13.389.3 — comparte trigger, placeholder y estados
+ * (vacío / deshabilitado / error) con `DatePickerMx` vía `picker-mx-shell`.
  */
 export function DateTimePickerMx({
-  value, onChange, placeholder = "Seleccionar", className, title,
+  value, onChange, placeholder = PLACEHOLDER_FECHA_HORA, className, title,
+  disabled = false, errorText, id,
 }: DateTimePickerMxProps) {
+  const autoErrorId = useId();
+  const errorId = id ? `${id}-error` : autoErrorId;
+  const showError = !!errorText;
+
   const { date, time } = useMemo(() => {
     if (!value) return { date: undefined as Date | undefined, time: "" };
     const [datePart, timePart = ""] = value.split("T");
@@ -51,55 +64,62 @@ export function DateTimePickerMx({
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          title={title}
-          className={cn(
-            "justify-start text-left font-normal h-10 px-3",
-            !value && "text-muted-foreground",
-            className,
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4 shrink-0 opacity-70" />
-          <span className="truncate">{display || placeholder}</span>
-          {value && (
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onChange("");
-              }}
-              className="ml-auto rounded p-0.5 hover:bg-muted text-muted-foreground"
-              aria-label="Limpiar fecha"
-            >
-              <X className="h-3.5 w-3.5" />
-            </span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={(d) => emit(d ?? undefined, time)}
-          autoFocus
-          locale={es}
-        />
-
-        <div className="border-t p-3 flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Hora</span>
-          <Input
-            type="time"
-            value={time || "09:00"}
-            onChange={(e) => emit(date, e.target.value)}
-            className="h-9 w-32"
+    <div className="inline-flex max-w-full flex-col gap-1">
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            id={id}
+            title={title}
+            disabled={disabled}
+            aria-invalid={showError || undefined}
+            aria-describedby={showError ? errorId : undefined}
+            className={cn(
+              pickerTriggerClass({ showError, disabled, empty: !value }),
+              "text-left",
+              className,
+            )}
+          >
+            <CalendarIcon className="mr-1 h-4 w-4 shrink-0 opacity-70" />
+            <span className="flex-1 min-w-0 truncate">{display || placeholder}</span>
+            {value && !disabled && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onChange("");
+                }}
+                className="shrink-0 rounded p-0.5 hover:bg-muted text-muted-foreground"
+                aria-label="Limpiar fecha"
+              >
+                <X className="h-3.5 w-3.5" />
+              </span>
+            )}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={(d) => emit(d ?? undefined, time)}
+            autoFocus
+            locale={es}
           />
-        </div>
-      </PopoverContent>
-    </Popover>
+
+          <div className="border-t p-3 flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Hora</span>
+            <Input
+              type="time"
+              value={time || "09:00"}
+              onChange={(e) => emit(date, e.target.value)}
+              className="h-9 w-32"
+            />
+          </div>
+        </PopoverContent>
+      </Popover>
+      {showError && <span id={errorId} className={pickerErrorClass}>{errorText}</span>}
+    </div>
   );
 }
