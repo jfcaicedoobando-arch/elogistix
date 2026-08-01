@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.389.4] - 2026-08-01
+- Date pickers: tamaño, icono de calendario y botón de limpiar unificados en un solo lugar (`pickerRootClass`, `pickerIconClass`, `pickerClearClass`); antes el picker de fecha usaba un icono e icono-botón con medidas distintas a los de fecha+hora y periodo.
+- Todos los pickers ocupan ahora el ancho de su campo por defecto (`w-full`), así que se ven iguales dentro de páginas, barras de filtros y modales sin depender de que cada pantalla pase `className="w-full"`.
+- Placeholders: se quitaron los textos propios ("Desde", "Hasta (ETA)") en filtros de Facturas emitidas y Embarques; ahora todos muestran el formato canónico DD/MM/AAAA y la etiqueta del campo indica el rango.
+
 ## [13.389.3] - 2026-08-01
 - Pickers de fecha: `DatePickerMx`, `DateTimePickerMx` y `MonthPickerMx` comparten ahora el mismo trigger y se ven idénticos en los estados vacío, deshabilitado y con error (`picker-mx-shell.ts`).
 - Fecha+hora y Periodo ahora aceptan `disabled` y `errorText`: antes no podían mostrarse deshabilitados ni marcar error, a diferencia del picker de fecha.
