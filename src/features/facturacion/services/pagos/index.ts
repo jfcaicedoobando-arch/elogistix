@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 
 export type PagoFactura = Tables<"pagos_factura">;
@@ -65,7 +66,23 @@ export async function registrarPagoFactura(
       .select("id")
       .single(),
   );
-  return (data as { id?: string } | null)?.id ?? null;
+  const pagoId = (data as { id?: string } | null)?.id ?? null;
+  // P2-6 (R5): los pagos de cliente no aparecían en la bitácora/actividad
+  // (sólo los de proveedor), así que la línea de tiempo quedaba incompleta.
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "registrar_pago",
+    entidadId: input.factura_id,
+    detalles: {
+      pago_id: pagoId,
+      monto: input.monto,
+      moneda: input.moneda,
+      monto_aplicado_factura: input.monto_aplicado_factura,
+      forma_pago: input.forma_pago,
+      referencia: input.referencia ?? null,
+    },
+  });
+  return pagoId;
 }
 
 /**
@@ -123,5 +140,11 @@ export async function eliminarPagoFactura(id: string): Promise<void> {
     }
     throw err;
   }
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "eliminar_pago",
+    entidadId: pago?.id ?? id,
+    detalles: { pago_id: id },
+  });
 }
 
