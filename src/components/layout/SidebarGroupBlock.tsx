@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { useLocation } from "react-router-dom";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -21,14 +21,9 @@ import { NavLink } from "@/components/layout/NavLink";
 import { cn } from "@/lib/utils";
 import { pluralS } from "@/lib/formatters";
 import { trackNavEvent } from "@/services/observability/trackNavEvent";
+import { isActive, queriesHermanasDe, esExacto, type SidebarItem } from "@/components/layout/sidebarActivo";
 
-export interface SidebarItem {
-  title: string;
-  url: string;
-  icon: LucideIcon;
-  /** Si se define, se usa este conteo en lugar de `totalAlertas`. */
-  badgeCount?: number;
-}
+export type { SidebarItem };
 
 interface Props {
   label: string;
@@ -42,34 +37,6 @@ interface Props {
   /** Alterna la sección colapsada. */
   onToggleSection?: (label: string) => void;
 }
-
-function isActive(
-  pathname: string,
-  search: string,
-  path: string,
-  exact: boolean,
-  queriesHermanas: string[] = [],
-): boolean {
-  // v13.388.1 — Items de bandeja llevan query (`/proformas?estado=aceptada`):
-  // sólo se marcan activos cuando la query actual coincide. El item base sigue
-  // resaltando con cualquier otra query (`?tab=`, `?focus=`), salvo que la query
-  // actual pertenezca a un item hermano de la misma ruta.
-  const [rutaBase, query = ""] = path.split("?");
-  const searchActual = search.startsWith("?") ? search.slice(1) : search;
-  if (query) return pathname === rutaBase && searchActual === query;
-  if (searchActual && queriesHermanas.includes(searchActual) && pathname === rutaBase) return false;
-  if (rutaBase === "/" || exact) return pathname === rutaBase;
-  return pathname === rutaBase || pathname.startsWith(`${rutaBase}/`);
-}
-
-/** Queries de otros items que apuntan a la misma ruta base que `item`. */
-function queriesHermanasDe(items: SidebarItem[], item: SidebarItem): string[] {
-  const base = item.url.split("?")[0];
-  return items
-    .filter((otro) => otro !== item && otro.url.split("?")[0] === base && otro.url.includes("?"))
-    .map((otro) => otro.url.split("?")[1] ?? "");
-}
-
 
 /**
  * Bloque memoizado de un grupo del sidebar. Evita reconstruir cada `renderGroup`
@@ -92,10 +59,9 @@ function SidebarGroupBlockBase({
   const { isMobile, setOpenMobile } = useSidebar();
   const { search } = useLocation();
 
-  const hasActive = items.some((item) => {
-    const exact = items.some((other) => other !== item && other.url.startsWith(`${item.url}/`));
-    return isActive(pathname, search, item.url, exact, queriesHermanasDe(items, item));
-  });
+  const hasActive = items.some((item) =>
+    isActive(pathname, search, item.url, esExacto(items, item), queriesHermanasDe(items, item)),
+  );
 
   const open = hasActive || !isSectionCollapsed;
 
@@ -114,7 +80,7 @@ function SidebarGroupBlockBase({
     <SidebarGroupContent>
       <SidebarMenu>
         {items.map((item) => {
-          const exact = items.some((other) => other !== item && other.url.startsWith(`${item.url}/`));
+          const exact = esExacto(items, item);
           const active = isActive(pathname, search, item.url, exact, queriesHermanasDe(items, item));
           const badge = item.badgeCount ?? 0;
           return (
@@ -136,7 +102,7 @@ function SidebarGroupBlockBase({
               >
                 <NavLink
                   to={item.url}
-                  end={item.url === "/" || items.some((other) => other !== item && other.url.startsWith(`${item.url}/`))}
+                  end={item.url === "/" || exact}
                   onClick={() => handleNavigate(item)}
                   className={cn(
                     "hover:bg-sidebar-accent/10 hover:text-sidebar-foreground",

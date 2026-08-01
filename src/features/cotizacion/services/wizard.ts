@@ -11,6 +11,8 @@ import type { CreateCotizacionInput } from "@/features/cotizacion/types";
 import type { CostoCotizacion } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import { fromDb } from "@/lib/supabase/cast";
+import { requiereTransicionABorrador } from "@/features/cotizacion/domain/estadosEditables";
+
 
 interface Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<{ id: string }> };
@@ -90,13 +92,18 @@ export async function savePaso3(opts: {
 export async function savePasoFinal(opts: {
   cotizacionId: string;
   isEditMode: boolean;
+  /** Estado actual de la cotización al abrir el wizard (P0-1 R5). */
+  estadoActual?: string | null;
   mutations: Pick<Mutations, "updateCotizacion">;
   registrarActividad: (d: { accion: string; modulo: string; entidad_id?: string | null; entidad_nombre?: string }) => void;
 }): Promise<void> {
-  const { cotizacionId, isEditMode, mutations, registrarActividad } = opts;
-  if (!isEditMode) {
+  const { cotizacionId, isEditMode, estadoActual, mutations, registrarActividad } = opts;
+  // P0-1 (R5): una cotización `Solicitada` (portal) pasa a `Borrador` al costearse,
+  // para que siga el flujo estándar Borrador → Enviada → Aceptada.
+  if (!isEditMode || requiereTransicionABorrador(estadoActual)) {
     await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } });
   }
+
   registrarActividad({
     accion: isEditMode ? "editar" : "crear", modulo: "cotizaciones",
     entidad_id: cotizacionId, entidad_nombre: "",

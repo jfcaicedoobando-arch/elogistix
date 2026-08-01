@@ -53,7 +53,9 @@ export function buildConceptosFromCostos(
         aplica_iva: tieneIva,
         total: tieneIva ? calcularTotalConIVA(subtotal, tasaAplicar) : subtotal,
         clave_sat: c.clave_sat,
-        tasa_iva_aplicada: c.tasa_iva_aplicada,
+        // P2-4 (R5): persistimos la tasa EFECTIVA, no la del catálogo. Antes quedaba
+        // `undefined` en filas manuales y el IVA se guardaba como 0 aguas abajo.
+        tasa_iva_aplicada: tieneIva ? tasaAplicar : 0,
       };
     });
 
@@ -75,7 +77,9 @@ export function buildConceptosFromCostos(
         aplica_iva: tieneIva,
         total: tieneIva ? calcularTotalConIVA(subtotal, tasaAplicar) : subtotal,
         clave_sat: c.clave_sat,
-        tasa_iva_aplicada: c.tasa_iva_aplicada,
+        // P2-4 (R5): persistimos la tasa EFECTIVA, no la del catálogo. Antes quedaba
+        // `undefined` en filas manuales y el IVA se guardaba como 0 aguas abajo.
+        tasa_iva_aplicada: tieneIva ? tasaAplicar : 0,
       };
     });
 

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, Navigate } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGen
 import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
 import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 const steps = [
   { title: 'Datos Generales', num: 1 },
@@ -24,6 +25,8 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 export default function EditarEmbarque() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+  // P2-3 (R5): roles de sólo lectura no deben poder entrar por deep-link al wizard.
+  const { canEdit } = usePermissions();
   const {
     embarque, isLoading, methods, currentStep, setCurrentStep,
     clientes, proveedoresDb, contactos, selectedCliente,
@@ -61,6 +64,10 @@ export default function EditarEmbarque() {
         </div>
       </div>
     );
+  }
+
+  if (!canEdit) {
+    return <Navigate to={`/embarques/${id}`} replace />;
   }
 
   if (!embarque) {

@@ -148,7 +148,18 @@ export async function updateProveedor(
   id: string,
   changes: TablesUpdate<"proveedores">,
 ): Promise<void> {
-  await run(supabase.from("proveedores").update(changes).eq("id", id));
+  // P2-1 (R5): un UPDATE bloqueado por RLS o sobre un id inexistente NO devuelve
+  // error en PostgREST — devuelve 0 filas. Sin este chequeo la UI mostraba
+  // "Proveedor actualizado" y nada se había guardado.
+  const { data, error } = await supabase
+    .from("proveedores")
+    .update(changes)
+    .eq("id", id)
+    .select("id");
+  if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error("No se guardaron los cambios del proveedor: no tienes permiso o el proveedor ya no existe.");
+  }
 }
 
 export async function deleteProveedor(id: string, userId: string | null = null): Promise<void> {

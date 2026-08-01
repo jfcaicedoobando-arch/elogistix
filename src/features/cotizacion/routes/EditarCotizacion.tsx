@@ -13,6 +13,8 @@ import type { NavigateFunction } from "react-router-dom";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 import type { CostoCotizacion } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { esEstadoEditableEnWizard } from "@/features/cotizacion/domain/estadosEditables";
+
 
 export default function EditarCotizacion() {
   const { id } = useParams<{ id: string }>();
@@ -29,9 +31,10 @@ export default function EditarCotizacion() {
     return <div className="p-6"><DetailSkeleton sections={1} /></div>;
   }
 
-  if (!cotizacion || !canEdit || cotizacion.estado !== "Borrador") {
+  if (!cotizacion || !canEdit || !esEstadoEditableEnWizard(cotizacion.estado)) {
     return <Navigate to={`/cotizaciones/${id}`} replace />;
   }
+
 
   return (
     <EditarCotizacionForm

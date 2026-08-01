@@ -31,6 +31,26 @@ export interface PnlPorProveedor {
   facturas_count: number;
 }
 
+/**
+ * P2-5 (R5): la RPC emite `presupuestada_mxn` (femenino) en `por_concepto` de
+ * ingresos y `presupuestado_mxn` en costos. El front lee un único nombre, por lo
+ * que normalizamos aquí; antes el desglose de ingresos mostraba 0 y no cuadraba
+ * con el KPI "Venta real · Presup." del encabezado.
+ */
+function normalizarConceptos(rows: unknown): PnlPorConcepto[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.map((r) => {
+    const row = (r ?? {}) as Record<string, unknown>;
+    const presup = row.presupuestado_mxn ?? row.presupuestada_mxn ?? 0;
+    return {
+      concepto: String(row.concepto ?? "(sin concepto)"),
+      presupuestado_mxn: Number(presup) || 0,
+      real_mxn: Number(row.real_mxn ?? 0) || 0,
+      desviacion_mxn: (Number(row.real_mxn ?? 0) || 0) - (Number(presup) || 0),
+    };
+  });
+}
+
 export interface PnlEmbarque {
   embarque_id: string;
   tipo_cambio_usd: number;
@@ -58,8 +78,8 @@ export async function fetchPnlEmbarque(embarqueId: string): Promise<PnlEmbarque>
     tipo_cambio_eur: raw.tipo_cambio_eur ?? 0,
     venta: raw.venta ?? { presupuestada_mxn: 0, real_mxn: 0, pdte_cobro_mxn: 0 },
     costo: raw.costo ?? { presupuestado_mxn: 0, real_mxn: 0, pdte_pago_mxn: 0 },
-    por_concepto: Array.isArray(raw.por_concepto) ? raw.por_concepto : [],
-    por_concepto_costo: Array.isArray(raw.por_concepto_costo) ? raw.por_concepto_costo : [],
+    por_concepto: normalizarConceptos(raw.por_concepto),
+    por_concepto_costo: normalizarConceptos(raw.por_concepto_costo),
     por_proveedor: Array.isArray(raw.por_proveedor) ? raw.por_proveedor : [],
   };
 }
