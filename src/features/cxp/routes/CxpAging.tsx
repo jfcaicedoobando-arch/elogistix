@@ -162,6 +162,8 @@ export default function CxpAging() {
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
+            isError={!!aging.error}
+            onRetry={() => void aging.refetch()}
             rowKey={(r) => r.proveedor_id}
             sortMode="server"
             controlledSort={paged.controlledSort}
