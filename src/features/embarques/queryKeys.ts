@@ -38,6 +38,7 @@ export const embarques = {
     ['embarques', 'reconciliacion3c', embarqueId, umbrales] as const,
   reconciliacion: (embarqueId?: string) => ['embarques', 'reconciliacion', embarqueId] as const,
   seguros: (embarqueId?: string) => ['embarque', embarqueId, 'seguros'] as const,
+  sinComision: (embarqueId?: string) => ['embarque', embarqueId, 'sin-comision'] as const,
 } as const;
 
 export const trackingLinks = {
