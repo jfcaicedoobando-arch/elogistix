@@ -94,7 +94,7 @@ export async function abrirFacturaEntrante(
     descargarBlob(data, nombreArchivo);
     return;
   }
-  const blobUrl = URL.createObjectURL(data);
+  const blobUrl = crearUrlPdf(data);
   const ventana = window.open(blobUrl, "_blank", "noopener,noreferrer");
   if (!ventana) {
     descargarBlob(data, nombreArchivo);
@@ -109,7 +109,9 @@ export async function abrirFacturaEntrante(
 export async function urlPreviaFacturaEntrante(path: string): Promise<string> {
   const { data, error } = await supabase.storage.from(BUCKET_CXP_INBOX).download(path);
   if (error) throw error;
-  return URL.createObjectURL(data);
+  // El Blob del almacenamiento suele venir como `application/octet-stream`;
+  // sin la etiqueta `application/pdf` Chrome bloquea el visor incrustado.
+  return crearUrlPdf(data);
 }
 
 export async function eliminarFacturaEntrante(
