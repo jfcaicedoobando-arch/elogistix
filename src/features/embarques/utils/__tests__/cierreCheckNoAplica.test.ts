@@ -3,6 +3,7 @@ import {
   calcularReglasNoAplica,
   MOTIVO_SIN_FACTURAS,
   MOTIVO_SIN_COSTOS_COMPROBADOS,
+  MOTIVO_SIN_COMISION,
 } from "../cierreCheckNoAplica";
 
 describe("calcularReglasNoAplica", () => {
@@ -69,5 +70,18 @@ describe("calcularReglasNoAplica", () => {
       { regla: "margen_minimo", ok: false, detalle: { margen_pct: 1 } },
     ]);
     expect(map.has("margen_minimo")).toBe(false);
+  });
+
+  it("marca comisiones en gris cuando el embarque no genera comisión", () => {
+    const map = calcularReglasNoAplica(
+      [
+        { regla: "costo_conceptos_con_factura", ok: true },
+        { regla: "comisiones_definitivas", ok: false, detalle: { no_definitivas: 1 } },
+        { regla: "comision_calculada", ok: false },
+      ],
+      { sinComision: true },
+    );
+    expect(map.get("comisiones_definitivas")).toBe(MOTIVO_SIN_COMISION);
+    expect(map.get("comision_calculada")).toBe(MOTIVO_SIN_COMISION);
   });
 });
