@@ -7,6 +7,7 @@ import { CheckCircle2, FileCode2, FilePlus2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PdfObjectViewer } from "@/components/shared/PdfObjectViewer";
 import { formatDate } from "@/lib/formatters/dates";
 import { antiguedadEntrante, entranteSinXml } from "@/lib/domain/facturasEntrantesBuzon";
 import { etiquetaEstadoEntrante, varianteEstadoEntrante } from "@/lib/domain/facturasEntrantes";
@@ -50,23 +51,31 @@ export function PreviaVisor({
   url,
   error,
   esPdf,
-}: { url: string | null; error: boolean; esPdf: boolean }) {
+  nombreArchivo,
+}: { url: string | null; error: boolean; esPdf: boolean; nombreArchivo?: string }) {
   if (error) {
     return (
       <p className="p-4 text-sm text-muted-foreground">
-        No se pudo cargar la vista previa. Descarga el archivo desde las acciones.
+        No se pudo cargar la vista previa (el archivo no se descargó). Usa "Ver" o descarga el
+        documento desde las acciones.
+      </p>
+    );
+  }
+  if (!esPdf) {
+    return (
+      <p className="p-4 text-sm text-muted-foreground">
+        Este documento no es un PDF: descárgalo para revisarlo.
       </p>
     );
   }
   if (!url) return <Skeleton className="h-full w-full" />;
-  if (!esPdf) {
-    return (
-      <p className="p-4 text-sm text-muted-foreground">
-        Este documento es un XML: descárgalo para revisarlo.
-      </p>
-    );
-  }
-  return <iframe src={url} title="Vista previa de la factura" className="h-full w-full" />;
+  return (
+    <PdfObjectViewer
+      url={url}
+      title="Vista previa de la factura"
+      nombreArchivo={nombreArchivo}
+    />
+  );
 }
 
 interface AccionesProps {
