@@ -66,6 +66,21 @@ describe("cierreCheckMeta", () => {
     }
   });
 
+  it("comisiones apuntan al modulo Comisiones filtrado por expediente", () => {
+    for (const regla of ["comision_calculada", "comisiones_definitivas"]) {
+      const m = getCierreCheckMeta(regla);
+      expect(m.ctaLabel, regla).toBe("Ir a Comisiones");
+      const url = m.ruta!("emb-1", undefined, "ELIMP00353");
+      expect(url, regla).toBe("/comisiones?q=ELIMP00353");
+      expect(url, regla).not.toContain("tab=pnl");
+    }
+  });
+
+  it("comisiones sin expediente van al modulo sin filtro", () => {
+    const m = getCierreCheckMeta("comisiones_definitivas");
+    expect(m.ruta!("emb-1")).toBe("/comisiones");
+  });
+
   it("regla desconocida usa fallback sin ruta", () => {
     const m = getCierreCheckMeta("regla_inexistente_xyz");
     expect(m.ruta).toBeNull();
