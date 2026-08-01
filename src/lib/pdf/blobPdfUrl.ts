@@ -23,3 +23,18 @@ export function crearUrlPdf(blob: Blob): string {
 export function esRutaPdf(path: string | null | undefined): boolean {
   return Boolean(path && /\.pdf(\?|$)/i.test(path));
 }
+
+/**
+ * Parámetros de vista para el visor nativo del navegador (v13.388.0).
+ *
+ * Sin ellos Chrome abre el PDF en modo "ajustar página" y con la barra de
+ * miniaturas, lo que en un panel angosto se ve al 25%.
+ */
+export const VISTA_PDF_ANCHO = "view=FitH&zoom=page-width&navpanes=0&toolbar=1";
+
+/** Agrega los parámetros de vista a la URL sin duplicar el `#`. */
+export function urlPdfConVista(url: string, vista: string = VISTA_PDF_ANCHO): string {
+  if (!url || !vista) return url;
+  const [base] = url.split("#");
+  return `${base}#${vista}`;
+}

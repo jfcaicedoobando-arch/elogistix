@@ -1,9 +1,11 @@
 /**
- * Piezas de la vista previa lateral del buzón CxP (v13.365.0).
+ * Piezas de la vista previa lateral del buzón CxP (v13.388.0).
  * Extraídas para mantener la complejidad del contenedor bajo control.
  */
 import { Link } from "react-router-dom";
-import { CheckCircle2, FileCode2, FilePlus2, XCircle } from "lucide-react";
+import {
+  CheckCircle2, Download, ExternalLink, FileCode2, FilePlus2, Maximize2, Minimize2, XCircle,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,9 +17,9 @@ import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrant
 
 function DatoLinea({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
-    <div className="flex justify-between gap-3 text-sm">
-      <span className="text-muted-foreground">{etiqueta}</span>
-      <span className="max-w-[60%] truncate text-right font-medium">{valor}</span>
+    <div className="min-w-0">
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{etiqueta}</p>
+      <p className="truncate text-sm font-medium" title={valor}>{valor}</p>
     </div>
   );
 }
@@ -36,7 +38,7 @@ export function PreviaBadges({ row }: { row: FacturaEntranteRow }) {
 
 export function PreviaDatos({ row }: { row: FacturaEntranteRow }) {
   return (
-    <div className="space-y-1.5 rounded-md border p-3">
+    <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-md border p-3 lg:grid-cols-4">
       <DatoLinea etiqueta="Expediente" valor={row.embarques?.expediente ?? "—"} />
       <DatoLinea etiqueta="Folio" valor={row.folio_serie ?? "—"} />
       <DatoLinea etiqueta="Archivo" valor={row.nombre_archivo} />
@@ -47,12 +49,49 @@ export function PreviaDatos({ row }: { row: FacturaEntranteRow }) {
   );
 }
 
+interface VisorProps {
+  url: string | null;
+  error: boolean;
+  esPdf: boolean;
+  nombreArchivo?: string;
+  ampliado: boolean;
+  onToggleAmpliado: () => void;
+}
+
+function VisorToolbar({ url, nombreArchivo, ampliado, onToggleAmpliado }: {
+  url: string | null; nombreArchivo?: string; ampliado: boolean; onToggleAmpliado: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 border-b bg-muted/40 px-2 py-1.5">
+      <span className="truncate text-xs text-muted-foreground">Vista previa del PDF</span>
+      <div className="flex shrink-0 items-center gap-1">
+        <Button size="sm" variant="ghost" onClick={onToggleAmpliado}>
+          {ampliado
+            ? <><Minimize2 className="mr-1.5 h-4 w-4" aria-hidden /> Reducir</>
+            : <><Maximize2 className="mr-1.5 h-4 w-4" aria-hidden /> Ampliar</>}
+        </Button>
+        {url && (
+          <>
+            <Button size="sm" variant="ghost" asChild>
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden /> Pestaña nueva
+              </a>
+            </Button>
+            <Button size="sm" variant="ghost" asChild>
+              <a href={url} download={nombreArchivo ?? "documento.pdf"}>
+                <Download className="mr-1.5 h-4 w-4" aria-hidden /> Descargar
+              </a>
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function PreviaVisor({
-  url,
-  error,
-  esPdf,
-  nombreArchivo,
-}: { url: string | null; error: boolean; esPdf: boolean; nombreArchivo?: string }) {
+  url, error, esPdf, nombreArchivo, ampliado, onToggleAmpliado,
+}: VisorProps) {
   if (error) {
     return (
       <p className="p-4 text-sm text-muted-foreground">
@@ -68,13 +107,20 @@ export function PreviaVisor({
       </p>
     );
   }
-  if (!url) return <Skeleton className="h-full w-full" />;
   return (
-    <PdfObjectViewer
-      url={url}
-      title="Vista previa de la factura"
-      nombreArchivo={nombreArchivo}
-    />
+    <div className="flex h-full min-h-0 flex-col">
+      <VisorToolbar
+        url={url}
+        nombreArchivo={nombreArchivo}
+        ampliado={ampliado}
+        onToggleAmpliado={onToggleAmpliado}
+      />
+      <div className="min-h-0 flex-1">
+        {url
+          ? <PdfObjectViewer url={url} title="Vista previa de la factura" nombreArchivo={nombreArchivo} />
+          : <Skeleton className="h-full w-full" />}
+      </div>
+    </div>
   );
 }
 
@@ -91,7 +137,7 @@ export function PreviaAcciones({
   row, procesable, onVerXml, onCapturar, onCrearFactura, onRechazar,
 }: AccionesProps) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 border-t bg-background pt-3">
       {row.xml_path && (
         <Button size="sm" variant="outline" onClick={() => onVerXml(row)}>
           <FileCode2 className="mr-2 h-4 w-4" /> Descargar XML

@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.388.0] - 2026-08-01
+- Buzón CxP: el panel de vista previa es más ancho (hasta 1100 px / 92vw) y el PDF ocupa toda la altura sobrante.
+- El PDF se abre ajustado al ancho y sin barra de miniaturas (`#view=FitH&zoom=page-width&navpanes=0`), en lugar de arrancar al 25%.
+- Nueva barra del visor con "Ampliar/Reducir" (preferencia recordada), "Pestaña nueva" y "Descargar"; los datos del documento pasan a una rejilla compacta.
+
 ## [13.387.2] - 2026-08-01
 - CI (Power of 10): `cierreCheckMeta.ts` bajó de 202 a 174 líneas; los constructores de ruta viven ahora en `cierreCheckRutas.ts`.
 
