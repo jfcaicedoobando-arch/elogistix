@@ -14,6 +14,7 @@ import {
   ESTADOS_UNIFICADOS,
   LABEL_ESTADO_UNIFICADO,
 } from "@/lib/domain/estadoUnificado";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 interface ClienteOption { id: string; nombre: string }
 
@@ -83,8 +84,7 @@ export function ProformasFiltrosCampos(props: ProformasFiltrosCamposProps) {
       value={props.fechaDesde}
       onChange={props.onFechaDesdeChange}
       className="w-full"
-      placeholder="Desde"
-      title="Emitida desde"
+      title={rangoLabel("Emisión", "desde")}
     />
   );
 
@@ -93,8 +93,7 @@ export function ProformasFiltrosCampos(props: ProformasFiltrosCamposProps) {
       value={props.fechaHasta}
       onChange={props.onFechaHastaChange}
       className="w-full"
-      placeholder="Hasta"
-      title="Emitida hasta"
+      title={rangoLabel("Emisión", "hasta")}
     />
   );
 
@@ -117,8 +116,8 @@ export function ProformasFiltrosCampos(props: ProformasFiltrosCamposProps) {
     return (
       <div className="space-y-4">
         <FieldGroup label="Operador">{OperadorSelect}</FieldGroup>
-        <FieldGroup label="Emitida desde">{FechaDesde}</FieldGroup>
-        <FieldGroup label="Emitida hasta">{FechaHasta}</FieldGroup>
+        <FieldGroup label={rangoLabel("Emisión", "desde")}>{FechaDesde}</FieldGroup>
+        <FieldGroup label={rangoLabel("Emisión", "hasta")}>{FechaHasta}</FieldGroup>
       </div>
     );
   }
@@ -128,8 +127,8 @@ export function ProformasFiltrosCampos(props: ProformasFiltrosCamposProps) {
       <FieldGroup label="Estado">{EstadoSelect}</FieldGroup>
       <FieldGroup label="Cliente">{ClienteSelect}</FieldGroup>
       <FieldGroup label="Operador">{OperadorSelect}</FieldGroup>
-      <FieldGroup label="Emitida desde">{FechaDesde}</FieldGroup>
-      <FieldGroup label="Emitida hasta">{FechaHasta}</FieldGroup>
+      <FieldGroup label={rangoLabel("Emisión", "desde")}>{FechaDesde}</FieldGroup>
+      <FieldGroup label={rangoLabel("Emisión", "hasta")}>{FechaHasta}</FieldGroup>
     </div>
   );
 }

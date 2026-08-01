@@ -19,6 +19,7 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { NuevaTarifaDemoraDialog } from "@/features/costeo/components/NuevaTarifaDemoraDialog";
 import { todayLocalISO } from "@/lib/date/today";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 const today = () => todayLocalISO();
 const EMPTY: DemoraVentaTarifaInput = {
@@ -102,7 +103,7 @@ export default function CosteoDemorasVenta() {
         {
           ...dateColumn<Tarifa>({
             id: "desde_vig",
-            header: "Vigente desde",
+            header: rangoLabel("Vigencia", "desde"),
             accessor: (t) => t.vigente_desde,
           }),
           meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
@@ -110,7 +111,7 @@ export default function CosteoDemorasVenta() {
         {
           ...dateColumn<Tarifa>({
             id: "hasta_vig",
-            header: "Vigente hasta",
+            header: rangoLabel("Vigencia", "hasta"),
             accessor: (t) => t.vigente_hasta,
           }),
           meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },

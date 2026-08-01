@@ -15,6 +15,7 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/features/embarques/constants/embarqueConstants";
 import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
 import { formatDate } from "@/lib/formatters";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 interface ClienteOption { id: string; nombre: string }
 
@@ -142,10 +143,10 @@ export default function EmbarquesFiltros(props: Props) {
               </SelectContent>
             </Select>
           </FieldGroup>
-          <FieldGroup label="ETD desde">
+          <FieldGroup label={rangoLabel("ETD", "desde")}>
             <DatePickerMx value={fechaDesde} onChange={onFechaDesdeChange} className="w-full" />
           </FieldGroup>
-          <FieldGroup label="ETA hasta">
+          <FieldGroup label={rangoLabel("ETA", "hasta")}>
             <DatePickerMx value={fechaHasta} onChange={onFechaHastaChange} className="w-full" />
           </FieldGroup>
         </div>

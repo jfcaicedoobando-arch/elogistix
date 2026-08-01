@@ -28,6 +28,7 @@ import {
 import { buildPagosColumns } from "./_sections/pagosColumns";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 
@@ -118,11 +119,11 @@ export default function ComprasPagos() {
       <Card>
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="p-desde" className="text-xs">Desde</Label>
+            <Label htmlFor="p-desde" className="text-xs">{RANGO_DESDE_LABEL}</Label>
             <DatePickerMx value={desde} onChange={setDesde} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="p-hasta" className="text-xs">Hasta</Label>
+            <Label htmlFor="p-hasta" className="text-xs">{RANGO_HASTA_LABEL}</Label>
             <DatePickerMx value={hasta} onChange={setHasta} />
           </div>
           <div className="space-y-1">

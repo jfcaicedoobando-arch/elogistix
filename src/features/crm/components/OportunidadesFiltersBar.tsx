@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { CrmEtapaRow } from "@/features/crm/hooks";
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "./oportunidadesFiltersTypes";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 interface Props {
   etapas: CrmEtapaRow[];
@@ -53,11 +54,11 @@ export default function OportunidadesFiltersBar({ etapas, vendedores, value, onC
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Cierre desde</Label>
+        <Label className="text-xs">{rangoLabel("Cierre", "desde")}</Label>
         <DatePickerMx value={value.cierreDesde} onChange={(v) => set("cierreDesde", v)} className="w-full" />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Cierre hasta</Label>
+        <Label className="text-xs">{rangoLabel("Cierre", "hasta")}</Label>
         <DatePickerMx value={value.cierreHasta} onChange={(v) => set("cierreHasta", v)} className="w-full" />
       </div>
       <div className="space-y-1">

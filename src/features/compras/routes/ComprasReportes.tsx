@@ -28,6 +28,7 @@ import { fetchFacturasReporte } from "@/features/compras/services/reportesFetch"
 import { fetchExchangeRates } from "@/features/catalogos/services";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 
 
 function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }
@@ -130,11 +131,11 @@ export default function ComprasReportes() {
       <Card>
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="rep-desde" className="text-xs">Desde</Label>
+            <Label htmlFor="rep-desde" className="text-xs">{RANGO_DESDE_LABEL}</Label>
             <DatePickerMx value={desde} onChange={setDesde} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="rep-hasta" className="text-xs">Hasta</Label>
+            <Label htmlFor="rep-hasta" className="text-xs">{RANGO_HASTA_LABEL}</Label>
             <DatePickerMx value={hasta} onChange={setHasta} />
           </div>
         </CardContent>

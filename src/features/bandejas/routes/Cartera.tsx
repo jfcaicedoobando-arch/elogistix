@@ -24,6 +24,7 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import { CarteraMobileList } from "./_sections/CarteraMobileList";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 /** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
 function formatNativos(b: SaldosPorMonedaCartera): string {
@@ -124,11 +125,11 @@ export default function Cartera() {
         secondary={
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="cartera-from">Vencimiento desde</Label>
+              <Label htmlFor="cartera-from">{rangoLabel("Vencimiento", "desde")}</Label>
               <DatePickerMx value={paged.dateFrom} onChange={paged.setDateFrom} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="cartera-to">Vencimiento hasta</Label>
+              <Label htmlFor="cartera-to">{rangoLabel("Vencimiento", "hasta")}</Label>
               <DatePickerMx value={paged.dateTo} onChange={paged.setDateTo} />
             </div>
           </div>

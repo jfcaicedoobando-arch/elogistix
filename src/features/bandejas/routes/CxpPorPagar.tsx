@@ -27,6 +27,7 @@ import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
 import { useProgramarPagoLote } from "@/features/cxp/hooks/useProgramarPagoLote";
 import { todayLocalISO } from "@/lib/date/today";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 
 interface Filters extends Record<string, string> {
@@ -140,11 +141,11 @@ export default function CxpPorPagar() {
         secondary={
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="cxp-from">Vencimiento desde</Label>
+              <Label htmlFor="cxp-from">{rangoLabel("Vencimiento", "desde")}</Label>
               <DatePickerMx value={paged.dateFrom} onChange={paged.setDateFrom} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="cxp-to">Vencimiento hasta</Label>
+              <Label htmlFor="cxp-to">{rangoLabel("Vencimiento", "hasta")}</Label>
               <DatePickerMx value={paged.dateTo} onChange={paged.setDateTo} />
             </div>
           </div>

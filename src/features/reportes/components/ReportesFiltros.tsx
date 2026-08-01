@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import { cn } from "@/lib/utils";
+import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 
 const MODOS = [
   { value: "all", label: "Todos los modos" },
@@ -79,15 +80,15 @@ export default function ReportesFiltros({ fechaDesde, fechaHasta, modo, onFechaD
           onClearAll={() => onModoChange("all")}
           triggerLabel="Filtros de fecha y modo"
         >
-          <DateField label="Desde" value={fechaDesde} onChange={onFechaDesdeChange} fullWidth />
-          <DateField label="Hasta" value={fechaHasta} onChange={onFechaHastaChange} fullWidth />
+          <DateField label={RANGO_DESDE_LABEL} value={fechaDesde} onChange={onFechaDesdeChange} fullWidth />
+          <DateField label={RANGO_HASTA_LABEL} value={fechaHasta} onChange={onFechaHastaChange} fullWidth />
           <ModoField value={modo} onChange={onModoChange} fullWidth />
         </MobileFiltersSheet>
       </div>
       {/* Desktop */}
       <div className="hidden md:flex md:flex-wrap md:gap-3 md:items-end">
-        <DateField label="Desde" value={fechaDesde} onChange={onFechaDesdeChange} />
-        <DateField label="Hasta" value={fechaHasta} onChange={onFechaHastaChange} />
+        <DateField label={RANGO_DESDE_LABEL} value={fechaDesde} onChange={onFechaDesdeChange} />
+        <DateField label={RANGO_HASTA_LABEL} value={fechaHasta} onChange={onFechaHastaChange} />
         <ModoField value={modo} onChange={onModoChange} />
       </div>
     </>

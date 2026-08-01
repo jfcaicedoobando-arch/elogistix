@@ -21,6 +21,7 @@ import type {
   CosteoNavieraCondicion,
   NavieraCondicionInput,
 } from "@/features/costeo/types/navieraCondicion";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 interface Props {
   navieraId: string;
@@ -109,7 +110,7 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
         {form.tiene_carta_garantia && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="carta-vigente">Vigente hasta *</Label>
+              <Label htmlFor="carta-vigente">{rangoLabel("Vigencia", "hasta")} *</Label>
               <DatePickerMx
                 value={form.carta_garantia_vigente_hasta ?? ""}
                 onChange={(v) =>

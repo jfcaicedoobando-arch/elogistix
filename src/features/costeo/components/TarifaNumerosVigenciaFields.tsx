@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 const invalidCls = (invalid?: boolean) =>
   invalid ? "border-destructive focus-visible:ring-destructive" : undefined;
@@ -62,7 +63,7 @@ export function VigenciaFields({ form, setForm, errores }: NumerosProps) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <div>
-        <Label htmlFor="tarifa-vig-desde">Vigente desde *</Label>
+        <Label htmlFor="tarifa-vig-desde">{rangoLabel("Vigencia", "desde")} *</Label>
         <DatePickerMx
           value={form.vigente_desde}
           onChange={(v) => setForm({ ...form, vigente_desde: v })}
@@ -70,7 +71,7 @@ export function VigenciaFields({ form, setForm, errores }: NumerosProps) {
         />
       </div>
       <div>
-        <Label htmlFor="tarifa-vig-hasta">Vigente hasta *</Label>
+        <Label htmlFor="tarifa-vig-hasta">{rangoLabel("Vigencia", "hasta")} *</Label>
         <DatePickerMx
           value={form.vigente_hasta}
           onChange={(v) => setForm({ ...form, vigente_hasta: v })}
