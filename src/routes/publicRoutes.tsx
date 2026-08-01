@@ -20,7 +20,6 @@ const GuiaIncoterms2020 = lazy(() => import("@/features/marketing/routes/GuiaInc
 const GuiaPuertosMexico = lazy(() => import("@/features/marketing/routes/GuiaPuertosMexico"));
 const Onboarding = lazy(() => import("@/features/onboarding/routes/Onboarding"));
 const PortalProforma = lazy(() => import("@/features/proformas/routes/PortalProforma"));
-const DatePickerAudit = lazy(() => import("@/features/dev/routes/DatePickerAudit"));
 
 export const publicRoutes = (
   <>
@@ -39,7 +38,6 @@ export const publicRoutes = (
     <Route path="/recursos/guia-puertos-mexico" element={<GuiaPuertosMexico />} />
     <Route path="/onboarding" element={<Onboarding />} />
     <Route path="/portal/proformas/:token" element={<PortalProforma />} />
-    <Route path="/dev/date-picker-audit" element={<DatePickerAudit />} />
     <Route path="*" element={<NotFound />} />
 
   </>
