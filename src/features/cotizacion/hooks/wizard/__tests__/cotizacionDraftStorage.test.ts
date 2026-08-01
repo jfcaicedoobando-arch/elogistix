@@ -26,12 +26,12 @@ describe("draftKey", () => {
   });
 });
 
-describe("loadDraft", () => {
-  it("devuelve null cuando no hay nada guardado", () => {
+describe("loadDraft (cotizacionDraftStorage)", () => {
+  it("devuelve null cuando no hay nada guardado en cotizacionDraftStorage", () => {
     expect(loadDraft(USER)).toBeNull();
   });
 
-  it("devuelve null si el JSON está corrupto", () => {
+  it("devuelve null si el JSON del draft está corrupto", () => {
     window.localStorage.setItem(draftKey(USER), "{ no-json");
     expect(loadDraft(USER)).toBeNull();
   });
@@ -166,7 +166,7 @@ describe("loadDraft", () => {
   });
 });
 
-describe("clearDraft", () => {
+describe("clearDraft (cotizacionDraftStorage)", () => {
   it("elimina el draft persistido del usuario", () => {
     window.localStorage.setItem(draftKey(USER), "algo");
     clearDraft(USER);

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { deriveErrorCode } from "../errorCodeDerive";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
-describe("deriveErrorCode", () => {
+describe("deriveErrorCode (mapeo de códigos)", () => {
   it("null/undefined -> UNKNOWN", () => {
     expect(deriveErrorCode(null)).toBe(ERROR_CODES.UNKNOWN);
     expect(deriveErrorCode(undefined)).toBe(ERROR_CODES.UNKNOWN);
