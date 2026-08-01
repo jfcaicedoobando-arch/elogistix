@@ -157,7 +157,7 @@ export function EmbarqueDetalleTabs({
       </TabsContent>
 
       <TabsContent value="cierre" className="space-y-6">
-        <TabCierre embarqueId={embarqueId} estatus={embarque.estado ?? ""} modo={embarque.modo} />
+        <TabCierre embarqueId={embarqueId} estatus={embarque.estado ?? ""} modo={embarque.modo} expediente={embarque.expediente ?? ""} />
       </TabsContent>
 
       <TabsContent value="notas">

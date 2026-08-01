@@ -21,13 +21,15 @@ interface Props {
   isLoading: boolean;
   checks: CierreCheck[];
   embarqueId: string;
+  /** v13.385.0 — Expediente, para enlazar checks a módulos externos. */
+  expediente?: string;
   /** Si true, presenta el checklist como referencia (sin badges rojos ni CTAs). */
   informativo?: boolean;
   /** @deprecated — los labels están en `cierreCheckMeta`. */
   etiquetas?: Record<string, string>;
 }
 
-export function CierreChecklistCard({ isLoading, checks, embarqueId, informativo = false }: Props) {
+export function CierreChecklistCard({ isLoading, checks, embarqueId, expediente, informativo = false }: Props) {
   const noAplica = calcularReglasNoAplica(checks);
   return (
     <Card>
@@ -53,6 +55,7 @@ export function CierreChecklistCard({ isLoading, checks, embarqueId, informativo
               key={grupo.fase.id}
               grupo={grupo}
               embarqueId={embarqueId}
+              expediente={expediente}
               informativo={informativo}
               noAplica={noAplica}
             />

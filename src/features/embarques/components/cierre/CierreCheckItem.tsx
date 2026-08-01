@@ -15,6 +15,8 @@ interface Props {
   ok: boolean;
   detalle?: unknown;
   embarqueId: string;
+  /** v13.385.0 — Expediente del embarque (para enlaces a módulos externos). */
+  expediente?: string;
   /** Si true, los checks no-ok se muestran en muted y sin link. */
   informativo?: boolean;
   /**
@@ -29,6 +31,7 @@ export function CierreCheckItem({
   ok,
   detalle,
   embarqueId,
+  expediente,
   informativo = false,
   motivoNoAplica,
 }: Props) {
@@ -37,7 +40,7 @@ export function CierreCheckItem({
   const detalleTxt = noAplica ? null : meta.formatDetalle(detalle);
 
   const clickeable = !ok && !informativo && !noAplica && meta.ruta != null;
-  const href = clickeable && meta.ruta ? meta.ruta(embarqueId, detalle) : null;
+  const href = clickeable && meta.ruta ? meta.ruta(embarqueId, detalle, expediente) : null;
 
   const renderIcon = () => {
     if (noAplica) return <MinusCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />;

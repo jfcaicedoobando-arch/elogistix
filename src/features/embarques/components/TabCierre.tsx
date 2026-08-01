@@ -33,10 +33,12 @@ interface Props {
   embarqueId: string;
   estatus: string;
   modo?: string;
+  /** v13.385.0 — Expediente, usado por los enlaces del checklist. */
+  expediente?: string;
 }
 
 // eslint-disable-next-line complexity
-export function TabCierre({ embarqueId, estatus, modo }: Props) {
+export function TabCierre({ embarqueId, estatus, modo, expediente }: Props) {
   const { data: validacion, isLoading } = useValidacionCierre(embarqueId);
   const { data: log = [] } = useCierreLog(embarqueId);
   const cerrarMut = useCerrarEmbarque(embarqueId);
@@ -79,7 +81,7 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
         </Alert>
       ) : null}
 
-      <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} informativo={esCerrado} />
+      <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} expediente={expediente} informativo={esCerrado} />
 
       <div className="flex flex-wrap items-center gap-2">
         {!esCerrado && canCerrarEmbarque && (() => {
