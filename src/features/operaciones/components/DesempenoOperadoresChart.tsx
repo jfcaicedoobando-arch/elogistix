@@ -43,6 +43,7 @@ export default function DesempenoOperadoresChart({ data }: Props) {
           <Bar
             key={estado}
             dataKey={estado}
+            name={ESTADO_LABEL[estado]}
             stackId="estados"
             fill={ESTADO_COLOR[estado]}
             radius={estado === "Cerrado" ? [4, 4, 0, 0] : 0}
