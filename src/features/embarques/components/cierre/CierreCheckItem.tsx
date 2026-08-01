@@ -17,25 +17,41 @@ interface Props {
   embarqueId: string;
   /** Si true, los checks no-ok se muestran en muted y sin link. */
   informativo?: boolean;
+  /**
+   * v13.383.0 — El check aún no es evaluable (p. ej. no hay facturas todavía).
+   * Se muestra en gris con "No aplica aún" en lugar de verde.
+   */
+  noAplica?: boolean;
 }
 
-export function CierreCheckItem({ regla, ok, detalle, embarqueId, informativo = false }: Props) {
+export function CierreCheckItem({
+  regla,
+  ok,
+  detalle,
+  embarqueId,
+  informativo = false,
+  noAplica = false,
+}: Props) {
   const meta = getCierreCheckMeta(regla);
-  const detalleTxt = meta.formatDetalle(detalle);
-  const clickeable = !ok && !informativo && meta.ruta != null;
+  const detalleTxt = noAplica ? null : meta.formatDetalle(detalle);
+  const clickeable = !ok && !informativo && !noAplica && meta.ruta != null;
   const href = clickeable && meta.ruta ? meta.ruta(embarqueId, detalle) : null;
 
   const renderIcon = () => {
+    if (noAplica) return <MinusCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />;
     if (ok) return <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />;
     if (informativo) return <MinusCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />;
     return <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />;
   };
 
-  const estadoBadge = ok
-    ? { variant: "secondary" as const, label: "OK" }
-    : informativo
-      ? { variant: "outline" as const, label: "No aplica" }
-      : { variant: "destructive" as const, label: "Pendiente" };
+  const estadoBadge = noAplica
+    ? { variant: "outline" as const, label: "No aplica aún" }
+    : ok
+      ? { variant: "secondary" as const, label: "OK" }
+      : informativo
+        ? { variant: "outline" as const, label: "No aplica" }
+        : { variant: "destructive" as const, label: "Pendiente" };
+
 
   const inner = (
     <>
@@ -43,13 +59,20 @@ export function CierreCheckItem({ regla, ok, detalle, embarqueId, informativo = 
         {renderIcon()}
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-medium">{meta.label}</p>
+            <p className={`text-sm font-medium ${noAplica ? "text-muted-foreground" : ""}`}>
+              {meta.label}
+            </p>
             <Badge variant="outline" className="text-2xs font-normal">
               {meta.responsable}
             </Badge>
           </div>
           {meta.descripcion && (
             <p className="text-xs leading-snug text-muted-foreground">{meta.descripcion}</p>
+          )}
+          {noAplica && (
+            <p className="text-xs text-muted-foreground">
+              Todavía no hay facturas registradas, así que este punto aún no se puede evaluar.
+            </p>
           )}
           {detalleTxt && (
             <p className="text-xs font-medium text-foreground/80">{detalleTxt}</p>
@@ -70,8 +93,10 @@ export function CierreCheckItem({ regla, ok, detalle, embarqueId, informativo = 
     </>
   );
 
-  const baseCls =
-    "flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-start sm:justify-between";
+  const baseCls = `flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-start sm:justify-between${
+    noAplica ? " border-dashed bg-muted/30" : ""
+  }`;
+
 
   if (href) {
     return (
