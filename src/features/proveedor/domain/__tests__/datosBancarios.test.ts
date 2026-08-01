@@ -15,7 +15,7 @@ describe("validarDatosBancarios", () => {
     expect(validarDatosBancarios({ esExtranjero: false, clabe: "", swiftBic: null })).toBeNull();
   });
 
-  it("rechaza CLABE con dígito verificador inválido", () => {
+  it("validarDatosBancarios: rechaza CLABE con dígito verificador inválido", () => {
     const base = "01218000123456789";
     const malo = base + String((Number(base[16]) + 1) % 10);
     const err = validarDatosBancarios({ esExtranjero: false, clabe: malo, swiftBic: null });
