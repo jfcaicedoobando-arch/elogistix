@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useLocation } from "react-router-dom";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import {
   SidebarGroup,
@@ -42,9 +43,15 @@ interface Props {
   onToggleSection?: (label: string) => void;
 }
 
-function isActive(pathname: string, path: string, exact: boolean): boolean {
-  if (path === "/" || exact) return pathname === path;
-  return pathname === path || pathname.startsWith(`${path}/`);
+function isActive(pathname: string, search: string, path: string, exact: boolean): boolean {
+  // v13.387.1 — Items de bandeja llevan query (`/proformas?estado=aceptada`):
+  // sólo se marcan activos cuando la query actual coincide.
+  const [rutaBase, query = ""] = path.split("?");
+  const searchActual = search.startsWith("?") ? search.slice(1) : search;
+  if (query) return pathname === rutaBase && searchActual === query;
+  if (searchActual) return false;
+  if (rutaBase === "/" || exact) return pathname === rutaBase;
+  return pathname === rutaBase || pathname.startsWith(`${rutaBase}/`);
 }
 
 /**
@@ -66,10 +73,11 @@ function SidebarGroupBlockBase({
   onToggleSection,
 }: Props) {
   const { isMobile, setOpenMobile } = useSidebar();
+  const { search } = useLocation();
 
   const hasActive = items.some((item) => {
     const exact = items.some((other) => other !== item && other.url.startsWith(`${item.url}/`));
-    return isActive(pathname, item.url, exact);
+    return isActive(pathname, search, item.url, exact);
   });
   const open = hasActive || !isSectionCollapsed;
 
@@ -89,7 +97,7 @@ function SidebarGroupBlockBase({
       <SidebarMenu>
         {items.map((item) => {
           const exact = items.some((other) => other !== item && other.url.startsWith(`${item.url}/`));
-          const active = isActive(pathname, item.url, exact);
+          const active = isActive(pathname, search, item.url, exact);
           const badge = item.badgeCount ?? 0;
           return (
             <SidebarMenuItem key={item.title}>

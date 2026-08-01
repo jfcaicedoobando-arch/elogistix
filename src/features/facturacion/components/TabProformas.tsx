@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
-import { useTabProformasController } from "@/features/facturacion/hooks";
+import { useTabProformasController, type FiltroEstadoProforma } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
 import ProformasFiltros from "./ProformasFiltros";
 import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
@@ -14,8 +14,11 @@ import { useMemo } from "react";
 import { todayLocalISO } from "@/lib/date/today";
 
 
-export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
-  const c = useTabProformasController({ isInRange });
+export function TabProformas({ isInRange, estadoInicial }: {
+  isInRange?: (fecha: string | null | undefined) => boolean;
+  estadoInicial?: FiltroEstadoProforma;
+}) {
+  const c = useTabProformasController({ isInRange, estadoInicial });
   const { canEmitirFactura } = usePermissions();
   const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.387.1] - 2026-08-01
+- Sidebar: el botón "Por emitir" ahora sí filtra (`/proformas?estado=aceptada` se aplica al listado) y muestra encabezado propio.
+- El resaltado activo del sidebar distingue items con query, para no confundir "Por emitir" con "Proformas".
+
+
+
 ## [13.387.0] - 2026-08-01
 - Buzón CxP: se arregló la vista previa bloqueada por Chrome ("This page has been blocked by Chrome") etiquetando el PDF como `application/pdf` antes de incrustarlo.
 - Nuevo visor `PdfObjectViewer` con respaldo (abrir en pestaña nueva / descargar) aplicado también a la vista previa de CFDI y al visor genérico de documentos.
