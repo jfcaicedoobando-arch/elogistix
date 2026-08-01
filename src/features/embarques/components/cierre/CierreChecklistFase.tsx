@@ -10,6 +10,7 @@ import type { GrupoCierre } from "@/features/embarques/utils/cierreCheckOrden";
 interface Props {
   grupo: GrupoCierre;
   embarqueId: string;
+  expediente?: string;
   informativo?: boolean;
   /** regla → motivo por el que aún no es evaluable. */
   noAplica?: Map<string, string>;
@@ -18,6 +19,7 @@ interface Props {
 export function CierreChecklistFase({
   grupo,
   embarqueId,
+  expediente,
   informativo = false,
   noAplica,
 }: Props) {
@@ -44,6 +46,7 @@ export function CierreChecklistFase({
             ok={c.ok}
             detalle={c.detalle}
             embarqueId={embarqueId}
+            expediente={expediente}
             informativo={informativo}
             motivoNoAplica={noAplica?.get(c.regla)}
           />

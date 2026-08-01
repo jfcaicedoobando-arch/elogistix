@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.385.0] - 2026-08-01
+- **fix(cierre)**: los checks "Comisión devengada calculada" y "Comisiones devengadas definitivas" enlazaban a `?tab=pnl&focus=comision`, que en P&L apunta a la tabla de proveedores (no hay comisiones ahí). Ahora abren el módulo **Comisiones** filtrado por el expediente del embarque (`/comisiones?q=<expediente>`) con CTA "Ir a Comisiones" y descripción en lenguaje llano.
+- **refactor(cierre)**: `CierreCheckMeta.ruta` recibe `expediente`; se propaga desde `EmbarqueDetalleTabs` → `TabCierre` → `CierreChecklistCard` → `CierreChecklistFase` → `CierreCheckItem`.
+
 ## [13.384.0] - 2026-08-01
 - **fix(cierre)**: auditoría de rentabilidad. "Margen mínimo alcanzado", "Utilidad mínima alcanzada", "Comisión devengada calculada" y "Comisiones devengadas definitivas" salían en verde aunque faltaran costos con factura de proveedor o venta por facturar (el margen se calculaba contra costos incompletos, inflado). Ahora se muestran en gris **"No aplica aún"** con la nota "Faltan costos con factura de proveedor o venta por facturar: el resultado todavía no es confiable."
 - **refactor(cierre)**: `calcularReglasNoAplica` recibe todos los checks del embarque (no sólo los de su fase) y devuelve `Map<regla, motivo>`, para poder condicionar una fase con datos de otra.
