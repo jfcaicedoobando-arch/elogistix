@@ -13,6 +13,8 @@ import {
   fetchCfdiFacturapi,
 } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { crearUrlPdf } from "@/lib/pdf/blobPdfUrl";
+import { PdfObjectViewer } from "@/components/shared/PdfObjectViewer";
 
 interface Props {
   open: boolean;
@@ -46,7 +48,7 @@ export function DialogPreviewCfdiPdf({
     fetchCfdiFacturapi({ tipo: "pdf", facturaId, pagoId, notaCreditoId })
       .then(({ blob }) => {
         if (revoked) return;
-        currentUrl = URL.createObjectURL(blob);
+        currentUrl = crearUrlPdf(blob);
         setBlobUrl(currentUrl);
       })
       .catch((err) => {
@@ -106,12 +108,7 @@ export function DialogPreviewCfdiPdf({
             <Loader2 className="h-4 w-4 animate-spin" /> Generando vista previa…
           </div>
         ) : (
-          <iframe
-            title={title}
-            src={blobUrl}
-            className="w-full h-full"
-            style={{ border: 0 }}
-          />
+          <PdfObjectViewer url={blobUrl} title={title} />
         )}
       </div>
     </FormDialogShell>

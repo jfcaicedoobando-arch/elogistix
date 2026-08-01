@@ -16,6 +16,7 @@ import {
   PreviaDatos,
   PreviaVisor,
 } from "@/features/bandejas/components/PreviaFacturaEntranteSheet.parts";
+import { esRutaPdf } from "@/lib/pdf/blobPdfUrl";
 
 interface Props {
   row: FacturaEntranteRow | null;
@@ -64,7 +65,7 @@ export function PreviaFacturaEntranteSheet({
   onRechazar,
 }: Props) {
   const { url, error } = useUrlPrevia(row?.archivo_path ?? null);
-  const esPdf = !row?.archivo_path.toLowerCase().endsWith(".xml");
+  const esPdf = esRutaPdf(row?.archivo_path);
   const procesable = Boolean(row && row.estado === "por_capturar" && puedeProcesar);
 
   return (
@@ -81,7 +82,12 @@ export function PreviaFacturaEntranteSheet({
             <PreviaBadges row={row} />
             <PreviaDatos row={row} />
             <div className="min-h-0 flex-1 overflow-hidden rounded-md border bg-muted/30">
-              <PreviaVisor url={url} error={error} esPdf={esPdf} />
+              <PreviaVisor
+                url={url}
+                error={error}
+                esPdf={esPdf}
+                nombreArchivo={row.nombre_archivo}
+              />
             </div>
             <PreviaAcciones
               row={row}

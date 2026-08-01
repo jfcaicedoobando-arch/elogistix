@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { cn } from "@/lib/utils";
+import { PdfObjectViewer } from "@/components/shared/PdfObjectViewer";
 
 export interface DocumentPreviewDialogProps {
   open: boolean;
@@ -59,11 +60,7 @@ export function DocumentPreviewDialog({
                 className="mx-auto max-h-full max-w-full object-contain"
               />
             ) : (
-              <iframe
-                title={title}
-                src={url}
-                className="h-[70vh] w-full border-0"
-              />
+              <PdfObjectViewer url={url} title={title} className="h-[70vh] w-full" />
             )
           ) : (
             <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
