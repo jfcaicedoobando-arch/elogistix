@@ -60,13 +60,13 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
                   ? "hover:bg-muted/60 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   : "opacity-60 cursor-default"
               }`}
-              aria-label={interactive ? `Ver ${count} embarques en ${estado}` : `Sin embarques en ${estado}`}
-              title={interactive ? `Ver detalle de ${estado}` : undefined}
+              aria-label={interactive ? `Ver ${count} embarques en ${ESTADO_LABEL[estado]}` : `Sin embarques en ${ESTADO_LABEL[estado]}`}
+              title={ESTADO_TOOLTIP[estado] ?? (interactive ? `Ver detalle de ${ESTADO_LABEL[estado]}` : undefined)}
             >
               <div className="flex items-center justify-between text-label">
                 <span className="flex items-center gap-1.5 text-muted-foreground">
                   <Icon className="h-3 w-3" style={{ color: ESTADO_COLOR[estado] }} />
-                  {estado}
+                  {ESTADO_LABEL[estado]}
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="font-semibold tabular-nums">{count}</span>
