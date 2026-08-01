@@ -145,7 +145,6 @@ export default function Cotizaciones() {
             // "No se encontraron cotizaciones" con los KPIs ya en 3.
             isLoading={c.isLoading || deferredPaginated !== c.paginated}
             emptyMessage="No se encontraron cotizaciones"
-            emptyHint={`Estás viendo la organización ${c.organizationNombre ?? "activa"}.`}
             getRowHref={(r) => `/cotizaciones/${r.id}`}
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
             rowKey={(r) => r.id}
