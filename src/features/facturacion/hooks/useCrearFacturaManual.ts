@@ -56,11 +56,16 @@ export function useCrearFacturaManual() {
       invalidateHuecoFacturacion(qc);
       invalidateProfitDependencies(qc);
     },
-    onError: (err: Error) =>
+    onError: (err: Error) => {
       notifyError(undefined, {
-        title: `No se pudo crear la factura: ${err.message}`,
+        title: `No se pudo completar la facturación: ${err.message}`,
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USECREARFACTURAMANUAL_1",
-      }),
+      });
+      // La factura pudo haberse creado y fallar sólo el timbrado: refrescamos
+      // listas y bandeja para que el borrador aparezca sin recargar la página.
+      qc.invalidateQueries({ queryKey: facturasKeys.all });
+      qc.invalidateQueries({ queryKey: facturacionKeys.bandejaPrefix() });
+    },
   });
 }
