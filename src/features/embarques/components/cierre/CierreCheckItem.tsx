@@ -26,6 +26,29 @@ interface Props {
   motivoNoAplica?: string;
 }
 
+type Estado = "no_aplica_aun" | "ok" | "informativo" | "pendiente";
+
+function resolverEstado(ok: boolean, informativo: boolean, noAplica: boolean): Estado {
+  if (noAplica) return "no_aplica_aun";
+  if (ok) return "ok";
+  if (informativo) return "informativo";
+  return "pendiente";
+}
+
+const ICONOS: Record<Estado, { Icon: typeof CheckCircle2; color: string }> = {
+  no_aplica_aun: { Icon: MinusCircle, color: "text-muted-foreground" },
+  ok: { Icon: CheckCircle2, color: "text-success" },
+  informativo: { Icon: MinusCircle, color: "text-muted-foreground" },
+  pendiente: { Icon: XCircle, color: "text-destructive" },
+};
+
+const BADGES: Record<Estado, { variant: "outline" | "secondary" | "destructive"; label: string }> = {
+  no_aplica_aun: { variant: "outline", label: "No aplica aún" },
+  ok: { variant: "secondary", label: "OK" },
+  informativo: { variant: "outline", label: "No aplica" },
+  pendiente: { variant: "destructive", label: "Pendiente" },
+};
+
 export function CierreCheckItem({
   regla,
   ok,
@@ -42,26 +65,14 @@ export function CierreCheckItem({
   const clickeable = !ok && !informativo && !noAplica && meta.ruta != null;
   const href = clickeable && meta.ruta ? meta.ruta(embarqueId, detalle, expediente) : null;
 
-  const renderIcon = () => {
-    if (noAplica) return <MinusCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />;
-    if (ok) return <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />;
-    if (informativo) return <MinusCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />;
-    return <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />;
-  };
-
-  const estadoBadge = noAplica
-    ? { variant: "outline" as const, label: "No aplica aún" }
-    : ok
-      ? { variant: "secondary" as const, label: "OK" }
-      : informativo
-        ? { variant: "outline" as const, label: "No aplica" }
-        : { variant: "destructive" as const, label: "Pendiente" };
-
+  const estado = resolverEstado(ok, informativo, noAplica);
+  const { Icon, color } = ICONOS[estado];
+  const estadoBadge = BADGES[estado];
 
   const inner = (
     <>
       <div className="flex items-start gap-2">
-        {renderIcon()}
+        <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${color}`} />
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className={`text-sm font-medium ${noAplica ? "text-muted-foreground" : ""}`}>
