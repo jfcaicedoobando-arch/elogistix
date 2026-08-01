@@ -109,10 +109,18 @@ export const fmtSinFactura = (d: unknown): string | null => {
 // v13.347.0 — Buzón CxP del embarque (facturas de proveedor recibidas).
 export const fmtEntrantesPendientes = (d: unknown): string | null => {
   const n = Number(pick(d, "pendientes") ?? 0);
-  if (n <= 0) return null;
-  const dias = Number(pick(d, "dias_max") ?? 0);
-  const base = `${n} factura(s) del buzón sin capturar`;
-  return dias > 0 ? `${base} · el más antiguo lleva ${dias} día(s)` : base;
+  if (n > 0) {
+    const dias = Number(pick(d, "dias_max") ?? 0);
+    const base = `${n} factura(s) del buzón sin capturar`;
+    return dias > 0 ? `${base} · el más antiguo lleva ${dias} día(s)` : base;
+  }
+  // v13.381.1 — Buzón vacío con costos sin respaldo: no es "nada pendiente".
+  if (pick(d, "buzon_vacio") === true) {
+    const sin = Number(pick(d, "costos_sin_factura") ?? 0);
+    const cola = sin > 0 ? ` · ${sin} costo(s) siguen sin factura` : "";
+    return `El buzón está vacío: aún no se ha capturado ninguna factura de proveedor${cola}`;
+  }
+  return null;
 };
 
 export const fmtEntrantesEvidencia = (d: unknown): string | null => {
@@ -125,6 +133,7 @@ export const fmtEntrantesEvidencia = (d: unknown): string | null => {
   }
   return `${n} proveedor(es) sin factura adjunta`;
 };
+
 
 
 export const fmtContenedores = (d: unknown): string | null => {
