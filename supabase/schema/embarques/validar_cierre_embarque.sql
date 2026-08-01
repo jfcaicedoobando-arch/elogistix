@@ -1,7 +1,7 @@
 -- Fuente canónica de public.validar_cierre_embarque
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
-
+-- v13.381.1: paso 1 incluye costos sin proveedor; paso 2 falla con buzón vacío + costos sin factura.
 CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -22,6 +22,9 @@ DECLARE
   v_venta_pendientes int; v_venta_en_proforma int;
   v_costos_sin_factura int;
   v_rep_pendientes int := 0; v_rep_ids uuid[] := ARRAY[]::uuid[];
+  v_ent_pendientes int := 0; v_ent_dias_max int := 0;
+  v_ent_total int := 0; v_ent_vacio boolean := false;
+  v_prov_sin_evidencia int := 0; v_prov_nombres text[] := ARRAY[]::text[];
   v_caller_org uuid; v_uid uuid; v_is_service boolean;
 BEGIN
   SELECT * INTO v_emb FROM embarques WHERE id=p_embarque_id;
@@ -75,6 +78,51 @@ BEGIN
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','costo_conceptos_con_factura','ok',v_ok,
     'detalle', jsonb_build_object('sin_factura', v_costos_sin_factura)));
+
+  -- Buzón CxP: ningún invoice puede quedar sin capturar.
+  SELECT COUNT(*),
+         COALESCE(MAX(GREATEST(0, (now()::date - efe.created_at::date))), 0)
+    INTO v_ent_pendientes, v_ent_dias_max
+    FROM embarque_facturas_entrantes efe
+   WHERE efe.embarque_id=p_embarque_id AND efe.deleted_at IS NULL
+     AND COALESCE(efe.estado,'por_capturar')='por_capturar';
+  SELECT COUNT(*) INTO v_ent_total
+    FROM embarque_facturas_entrantes efe
+   WHERE efe.embarque_id=p_embarque_id AND efe.deleted_at IS NULL
+     AND COALESCE(efe.estado,'por_capturar')<>'rechazada';
+  v_ent_vacio := (v_ent_total=0 AND v_costos_sin_factura>0);
+  v_ok := (v_ent_pendientes=0 AND NOT v_ent_vacio); v_puede := v_puede AND v_ok;
+  v_checks := v_checks || jsonb_build_array(jsonb_build_object(
+    'regla','facturas_entrantes_capturadas','ok',v_ok,
+    'detalle', jsonb_build_object('pendientes', v_ent_pendientes, 'dias_max', v_ent_dias_max,
+      'buzon_vacio', v_ent_vacio, 'costos_sin_factura', v_costos_sin_factura)));
+
+  -- Evidencia: cada proveedor con costos debe tener al menos un archivo en el buzón.
+  SELECT COUNT(*), COALESCE(array_agg(nombre ORDER BY nombre), ARRAY[]::text[])
+    INTO v_prov_sin_evidencia, v_prov_nombres
+    FROM (
+      -- a) Proveedores identificados con costos y sin ningun archivo en el buzon.
+      SELECT DISTINCT COALESCE(NULLIF(cc.proveedor_nombre,''), 'Proveedor sin nombre') AS nombre
+        FROM conceptos_costo cc
+       WHERE cc.embarque_id=p_embarque_id AND cc.deleted_at IS NULL
+         AND cc.proveedor_id IS NOT NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM embarque_facturas_entrantes efe
+            WHERE efe.embarque_id=p_embarque_id AND efe.deleted_at IS NULL
+              AND efe.proveedor_id=cc.proveedor_id
+              AND COALESCE(efe.estado,'por_capturar')<>'rechazada')
+      UNION
+      -- b) Costos sin proveedor asignado: imposible acreditar evidencia.
+      SELECT 'Costos sin proveedor asignado' AS nombre
+       WHERE EXISTS (
+         SELECT 1 FROM conceptos_costo cc2
+          WHERE cc2.embarque_id=p_embarque_id AND cc2.deleted_at IS NULL
+            AND cc2.proveedor_id IS NULL)
+    ) faltantes;
+  v_ok := (v_prov_sin_evidencia=0); v_puede := v_puede AND v_ok;
+  v_checks := v_checks || jsonb_build_array(jsonb_build_object(
+    'regla','facturas_entrantes_evidencia','ok',v_ok,
+    'detalle', jsonb_build_object('proveedores_sin_evidencia', v_prov_sin_evidencia, 'proveedores', v_prov_nombres)));
 
   WITH agg AS (
     SELECT COALESCE(pf.moneda,'MXN') AS moneda, COALESCE(SUM(pf.total),0) AS total,
@@ -169,4 +217,5 @@ BEGIN
 
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
 END $function$
- name:validar_cierre_embarque schema:public;
+
+;
