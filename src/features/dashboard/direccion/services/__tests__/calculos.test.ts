@@ -10,7 +10,7 @@ import {
   type EmbarqueAgg,
 } from "../calculos";
 import type {
-  EmbarqueRow, ConceptoVentaRow, ConceptoCostoRow, FacturaRow, PagoRow, EmbarqueEstadoRow,
+  EmbarqueRow, FacturaRow, EmbarqueEstadoRow,
 } from "../loaders";
 
 function embarque(over: Partial<EmbarqueRow> = {}): EmbarqueRow {
