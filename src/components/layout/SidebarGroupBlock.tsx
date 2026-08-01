@@ -94,8 +94,9 @@ function SidebarGroupBlockBase({
 
   const hasActive = items.some((item) => {
     const exact = items.some((other) => other !== item && other.url.startsWith(`${item.url}/`));
-    return isActive(pathname, search, item.url, exact);
+    return isActive(pathname, search, item.url, exact, queriesHermanasDe(items, item));
   });
+
   const open = hasActive || !isSectionCollapsed;
 
   const handleNavigate = (item: SidebarItem) => {
@@ -114,7 +115,7 @@ function SidebarGroupBlockBase({
       <SidebarMenu>
         {items.map((item) => {
           const exact = items.some((other) => other !== item && other.url.startsWith(`${item.url}/`));
-          const active = isActive(pathname, search, item.url, exact);
+          const active = isActive(pathname, search, item.url, exact, queriesHermanasDe(items, item));
           const badge = item.badgeCount ?? 0;
           return (
             <SidebarMenuItem key={item.title}>
