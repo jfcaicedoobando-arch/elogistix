@@ -38,3 +38,17 @@ describe("checklist de cierre · facturas entrantes", () => {
     expect(fmtEntrantesEvidencia({ proveedores_sin_evidencia: 0 })).toBeNull();
   });
 });
+
+describe("v13.381.1 · buzón vacío", () => {
+  it("explica el buzón vacío cuando hay costos sin factura", () => {
+    expect(
+      fmtEntrantesPendientes({ pendientes: 0, buzon_vacio: true, costos_sin_factura: 2 }),
+    ).toBe(
+      "El buzón está vacío: aún no se ha capturado ninguna factura de proveedor · 2 costo(s) siguen sin factura",
+    );
+  });
+
+  it("no dice nada cuando el buzón está vacío pero todos los costos ya tienen factura", () => {
+    expect(fmtEntrantesPendientes({ pendientes: 0, buzon_vacio: false })).toBeNull();
+  });
+});

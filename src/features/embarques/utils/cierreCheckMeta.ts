@@ -70,7 +70,8 @@ const META: Record<string, CierreCheckMeta> = {
   facturas_entrantes_evidencia: {
     label: "Paso 1 · Recibimos la factura de cada proveedor",
     descripcion:
-      "Revisa que cada proveedor con costos en este embarque tenga al menos un archivo (PDF o XML) subido al buzón. Sólo confirma que el documento ya llegó.",
+      "Revisa que cada proveedor con costos en este embarque tenga al menos un archivo (PDF o XML) subido al buzón. Si hay costos sin proveedor asignado, también cuenta como pendiente.",
+
     responsable: "Operador",
     ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
     formatDetalle: fmtEntrantesEvidencia, fase: "costos", orden: 1,
@@ -78,7 +79,8 @@ const META: Record<string, CierreCheckMeta> = {
   facturas_entrantes_capturadas: {
     label: "Paso 2 · Facturas del buzón capturadas en el sistema",
     descripcion:
-      "Revisa que no queden archivos del buzón en «Por capturar». Aquí se convierte el documento recibido en una factura de proveedor con folio, montos e impuestos.",
+      "Revisa que no queden archivos del buzón en «Por capturar» y que el buzón no esté vacío habiendo costos sin factura. Aquí el documento recibido se vuelve factura de proveedor con folio, montos e impuestos.",
+
     responsable: "Auxiliar contable",
     ruta: buildRuta("costos", "facturas-entrantes"), ctaLabel: "Ir a Costos",
     formatDetalle: fmtEntrantesPendientes, fase: "costos", orden: 2,

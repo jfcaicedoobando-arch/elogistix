@@ -1,7 +1,3 @@
--- Fuente canónica de public.validar_cierre_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
--- v13.381.1: paso 1 incluye costos sin proveedor; paso 2 falla con buzón vacío + costos sin factura.
 CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -79,13 +75,14 @@ BEGIN
     'regla','costo_conceptos_con_factura','ok',v_ok,
     'detalle', jsonb_build_object('sin_factura', v_costos_sin_factura)));
 
-  -- Buzón CxP: ningún invoice puede quedar sin capturar.
+  -- Buzón CxP: ningún archivo puede quedar sin capturar.
   SELECT COUNT(*),
          COALESCE(MAX(GREATEST(0, (now()::date - efe.created_at::date))), 0)
     INTO v_ent_pendientes, v_ent_dias_max
     FROM embarque_facturas_entrantes efe
    WHERE efe.embarque_id=p_embarque_id AND efe.deleted_at IS NULL
      AND COALESCE(efe.estado,'por_capturar')='por_capturar';
+  -- v13.381.1: buzón vacío + costos sin factura ya NO se considera "sin pendientes".
   SELECT COUNT(*) INTO v_ent_total
     FROM embarque_facturas_entrantes efe
    WHERE efe.embarque_id=p_embarque_id AND efe.deleted_at IS NULL
@@ -112,7 +109,7 @@ BEGIN
               AND efe.proveedor_id=cc.proveedor_id
               AND COALESCE(efe.estado,'por_capturar')<>'rechazada')
       UNION
-      -- b) Costos sin proveedor asignado: imposible acreditar evidencia.
+      -- b) v13.381.1: costos sin proveedor asignado, imposible acreditar evidencia.
       SELECT 'Costos sin proveedor asignado' AS nombre
        WHERE EXISTS (
          SELECT 1 FROM conceptos_costo cc2
@@ -216,6 +213,8 @@ BEGIN
       'margen_pct', v_margen_pct, 'minimo_pct', v_margen_min)));
 
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
-END $function$
+END $function$;
 
-;
+REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.validar_cierre_embarque(uuid) TO authenticated, service_role;
