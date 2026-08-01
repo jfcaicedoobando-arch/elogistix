@@ -54,8 +54,9 @@ const rutaContenedores = (id: string, detalle?: unknown): string => {
   return `/embarques/${id}?${params.toString()}`;
 };
 
-const cxc: CierreCheckMeta = { label: "Cuentas por cobrar al día", responsable: "Cobranza", ruta: buildRuta("facturacion", "cxc"), ctaLabel: "Ir a Facturación", formatDetalle: fmtCxc, fase: "cobranza", orden: 1 };
-const cxp: CierreCheckMeta = { label: "Cuentas por pagar al día", responsable: "Tesorero", ruta: buildRuta("costos", "cxp"), ctaLabel: "Ir a Costos", formatDetalle: fmtCxp, fase: "cobranza", orden: 2 };
+const cxc: CierreCheckMeta = { label: "Cuentas por cobrar al día", descripcion: "El cliente ya nos pagó: no quedan facturas de venta con saldo abierto.", responsable: "Cobranza", ruta: buildRuta("facturacion", "cxc"), ctaLabel: "Ir a Facturación", formatDetalle: fmtCxc, fase: "cobranza", orden: 1 };
+const cxp: CierreCheckMeta = { label: "Cuentas por pagar al día", descripcion: "Ya le pagamos a cada proveedor: no quedan facturas de proveedor con saldo abierto.", responsable: "Tesorero", ruta: buildRuta("costos", "cxp"), ctaLabel: "Ir a Costos", formatDetalle: fmtCxp, fase: "cobranza", orden: 3 };
+
 const docs: CierreCheckMeta = { label: "Documentos requeridos completos", responsable: "Coordinador logístico", ruta: buildRuta("documentos", "faltantes"), ctaLabel: "Ir a Documentos", formatDetalle: fmtDocs, fase: "documentos", orden: 1 };
 
 const META: Record<string, CierreCheckMeta> = {
@@ -118,26 +119,33 @@ const META: Record<string, CierreCheckMeta> = {
 
   // v13.90.8 — `costos_liquidados` se eliminó del RPC: la liquidación ahora se deriva
   // automáticamente desde `pagos_proveedor` y queda cubierta por la regla `cxp_pagada`.
+  // v13.382.0 — El REP se timbra DESPUÉS de recibir el pago del cliente, así que vive
+  // en la fase de Cobranza (entre "cobramos" y "pagamos"), no en Facturación al cliente.
   rep_pendientes: {
     label: "Complementos de Pago (REP) timbrados",
+    descripcion:
+      "Por cada pago recibido del cliente sobre una factura a crédito (PPD) el SAT exige un Complemento de Pago. Se timbra después de registrar el cobro.",
     responsable: "Contador",
     ruta: buildRuta("facturacion", "rep-pendientes"),
     ctaLabel: "Ir a Facturación",
     formatDetalle: fmtRepPendientes,
-    fase: "facturacion",
+    fase: "cobranza",
     orden: 2,
   },
   // B-042: nombres actuales emitidos por validar_cierre_embarque
   // (migración 20260723051800). Los legacy se conservan para caché histórica.
   rep_timbrados: {
     label: "Complementos de Pago (REP) timbrados",
+    descripcion:
+      "Por cada pago recibido del cliente sobre una factura a crédito (PPD) el SAT exige un Complemento de Pago. Se timbra después de registrar el cobro.",
     responsable: "Contador",
     ruta: buildRuta("facturacion", "rep-pendientes"),
     ctaLabel: "Ir a Facturación",
     formatDetalle: fmtRepPendientes,
-    fase: "facturacion",
+    fase: "cobranza",
     orden: 2,
   },
+
   comisiones_definitivas: {
     label: "Comisiones devengadas definitivas",
     responsable: "Sistema",
