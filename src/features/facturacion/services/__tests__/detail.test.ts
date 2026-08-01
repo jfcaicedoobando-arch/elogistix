@@ -39,6 +39,8 @@ const FACTURA = {
 describe("fetchFacturaById", () => {
   it("devuelve la factura cuando existe", async () => {
     mock.setTableResult("facturas", { data: FACTURA, error: null });
+    // P1-2 (R5): la proforma ya no viene embebida; se resuelve con una 2a query.
+    mock.setTableResult("proformas", { data: { numero: "PRF-001" }, error: null });
     const r = await fetchFacturaById("f1");
     expect(r).toEqual({ ...FACTURA, sustituida_por_ref: null });
   });

@@ -129,6 +129,8 @@ export async function fetchFacturaById(id: string): Promise<FacturaDetalle | nul
     if (refError) throw refError;
     sustituida_por_ref = ref ?? null;
   }
+  // SAFE-CAST: `proforma_id` existe en la tabla; el tipo generado se quedó sin la
+  // columna al quitar el embed `proformas!facturas_proforma_id_fkey` (P1-2 R5).
   const proformaId = (data as unknown as { proforma_id: string | null }).proforma_id;
   let proformas: FacturaDetalle["proformas"] = null;
   if (proformaId) {

@@ -45,7 +45,7 @@ beforeEach(() => {
 describe("useCrearFacturaManual", () => {
   it("timbrarAlGuardar=true: crea + emite, toast con UUID y resultado timbrada=true", async () => {
     crearFacturaManual.mockResolvedValue("fac-99");
-    emitirFacturapi.mockResolvedValue({ uuid: "UUID9999-rest" });
+    emitirFacturapi.mockResolvedValue({ uuid: "UUID9999-rest", folio: 991 });
     const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     const { result } = renderHook(() => useCrearFacturaManual(), { wrapper: wrapper(qc) });
 
@@ -70,6 +70,20 @@ describe("useCrearFacturaManual", () => {
     expect(emitirFacturapi).not.toHaveBeenCalled();
     expect(result.current.data).toEqual({ facturaId: "fac-100", timbrada: false });
     expect(toastSuccess).toHaveBeenCalledWith("Factura manual guardada como borrador");
+    qc.clear();
+  });
+
+  it("timbrado sin folio/UUID: error explícito en vez de toast 'timbrada'", async () => {
+    crearFacturaManual.mockResolvedValue("fac-101");
+    emitirFacturapi.mockResolvedValue({ uuid: null, folio: null });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useCrearFacturaManual(), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ input: fakeInput, timbrarAlGuardar: true });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(notifyError.mock.calls[0]![1].title).toContain("no devolvió folio fiscal");
+    expect(toastSuccess).not.toHaveBeenCalled();
     qc.clear();
   });
 
