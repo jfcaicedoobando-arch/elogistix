@@ -15,9 +15,18 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        month_caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
+        // v13.389.2 — `captionLayout="dropdown"` renderizaba los <select>
+        // nativos sin estilo junto al texto del mes (se veía "agosto agosto ›").
+        // Los selects quedan como overlay invisible sobre una píldora estilizada.
+        month_caption: "flex h-9 items-center justify-center pt-1 relative",
+        caption_label: "inline-flex items-center gap-1 text-sm font-medium",
+        dropdowns: "flex items-center gap-1.5",
+        dropdown_root:
+          "relative inline-flex items-center rounded-md border border-input bg-background px-2 py-1 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus-within:ring-2 focus-within:ring-ring",
+        dropdown: "absolute inset-0 h-full w-full cursor-pointer opacity-0",
+        months_dropdown: "capitalize",
         nav: "space-x-1 flex items-center absolute inset-x-1 top-1 justify-between",
+
         button_previous: cn(
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
