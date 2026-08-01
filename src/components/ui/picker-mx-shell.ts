@@ -38,3 +38,21 @@ export function pickerTriggerClass({ showError, disabled, empty }: PickerTrigger
 
 /** Clases del texto de error debajo de un picker MX. */
 export const pickerErrorClass = "text-xs text-destructive";
+
+/**
+ * Clases del contenedor externo (trigger + mensaje de error).
+ * `w-full` asegura que todos los pickers ocupen el ancho de su celda/campo,
+ * igual en páginas y en modales; un `w-40`/`w-[180px]` en la prop `className`
+ * lo sigue sobreescribiendo vía tailwind-merge.
+ */
+export const pickerRootClass = "flex w-full min-w-0 flex-col gap-1";
+
+/** Clases del icono de calendario (idéntico en los tres pickers). */
+export const pickerIconClass = "h-4 w-4 shrink-0 opacity-70";
+
+/** Clases del botón/afordancia para limpiar el valor. */
+export const pickerClearClass =
+  "shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground";
+
+/** Clases del icono (X) del botón de limpiar. */
+export const pickerClearIconClass = "h-3.5 w-3.5";
