@@ -119,26 +119,33 @@ const META: Record<string, CierreCheckMeta> = {
 
   // v13.90.8 — `costos_liquidados` se eliminó del RPC: la liquidación ahora se deriva
   // automáticamente desde `pagos_proveedor` y queda cubierta por la regla `cxp_pagada`.
+  // v13.382.0 — El REP se timbra DESPUÉS de recibir el pago del cliente, así que vive
+  // en la fase de Cobranza (entre "cobramos" y "pagamos"), no en Facturación al cliente.
   rep_pendientes: {
     label: "Complementos de Pago (REP) timbrados",
+    descripcion:
+      "Por cada pago recibido del cliente sobre una factura a crédito (PPD) el SAT exige un Complemento de Pago. Se timbra después de registrar el cobro.",
     responsable: "Contador",
     ruta: buildRuta("facturacion", "rep-pendientes"),
     ctaLabel: "Ir a Facturación",
     formatDetalle: fmtRepPendientes,
-    fase: "facturacion",
+    fase: "cobranza",
     orden: 2,
   },
   // B-042: nombres actuales emitidos por validar_cierre_embarque
   // (migración 20260723051800). Los legacy se conservan para caché histórica.
   rep_timbrados: {
     label: "Complementos de Pago (REP) timbrados",
+    descripcion:
+      "Por cada pago recibido del cliente sobre una factura a crédito (PPD) el SAT exige un Complemento de Pago. Se timbra después de registrar el cobro.",
     responsable: "Contador",
     ruta: buildRuta("facturacion", "rep-pendientes"),
     ctaLabel: "Ir a Facturación",
     formatDetalle: fmtRepPendientes,
-    fase: "facturacion",
+    fase: "cobranza",
     orden: 2,
   },
+
   comisiones_definitivas: {
     label: "Comisiones devengadas definitivas",
     responsable: "Sistema",
