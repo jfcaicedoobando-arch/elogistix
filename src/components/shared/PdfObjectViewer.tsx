@@ -4,9 +4,13 @@
  * Usa `<object type="application/pdf">`: si la política del navegador o una
  * extensión impide el visor incrustado, se muestra el contenido de respaldo
  * con acciones para abrir en pestaña nueva o descargar.
+ *
+ * v13.388.0 — el PDF se abre ajustado al ancho (`#view=FitH&zoom=page-width`)
+ * y sin barra de miniaturas, para que no se vea diminuto en paneles angostos.
  */
 import { Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { urlPdfConVista, VISTA_PDF_ANCHO } from "@/lib/pdf/blobPdfUrl";
 
 interface Props {
   url: string;
@@ -14,11 +18,20 @@ interface Props {
   /** Nombre sugerido al descargar desde el respaldo. */
   nombreArchivo?: string;
   className?: string;
+  /** Parámetros de vista del visor nativo. `null` para no agregar ninguno. */
+  vista?: string | null;
 }
 
-export function PdfObjectViewer({ url, title, nombreArchivo, className }: Props) {
+export function PdfObjectViewer({
+  url,
+  title,
+  nombreArchivo,
+  className,
+  vista = VISTA_PDF_ANCHO,
+}: Props) {
+  const data = vista ? urlPdfConVista(url, vista) : url;
   return (
-    <object data={url} type="application/pdf" title={title} className={className ?? "h-full w-full"}>
+    <object data={data} type="application/pdf" title={title} className={className ?? "h-full w-full"}>
       <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-sm text-muted-foreground">
           Tu navegador bloqueó la vista previa incrustada del PDF. Ábrelo en una pestaña nueva o
