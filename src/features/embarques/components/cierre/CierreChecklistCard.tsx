@@ -61,9 +61,4 @@ export function CierreChecklistCard({ isLoading, checks, embarqueId, informativo
       </CardContent>
     </Card>
   );
-
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
