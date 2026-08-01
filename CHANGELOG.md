@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.381.1] - 2026-08-01
+- **fix(cierre)**: el Paso 1 ("Recibimos la factura de cada proveedor") ahora marca pendiente cuando hay conceptos de costo **sin proveedor asignado** (antes se ignoraban y el check salía verde sin ninguna factura recibida).
+- **fix(cierre)**: el Paso 2 ("Facturas del buzón capturadas") ahora marca pendiente cuando el buzón está **vacío** y todavía hay costos sin factura de proveedor. Antes "0 pendientes" se leía como OK. Detectado en `ELIMP00353`.
+- **feat(cierre)**: nuevo detalle explicativo cuando el buzón está vacío y descripciones de los pasos 1 y 2 actualizadas.
+
 ## [13.381.0] - 2026-07-31
 - **feat(cierre)**: los 3 checks de "Costos y facturas de proveedor" se renombraron como secuencia numerada (Paso 1 recibimos la factura → Paso 2 capturada en el sistema → Paso 3 ligada a cada costo) y se reordenaron según ese flujo real.
 - **feat(cierre)**: cada check del checklist puede llevar una `descripcion` en lenguaje llano, visible siempre, para distinguir reglas parecidas. El detalle del pendiente ahora se resalta en lugar de mezclarse con el texto explicativo.
