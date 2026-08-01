@@ -15,8 +15,11 @@ import {
   calcularKPIsComisiones,
   type ComisionDevengada,
 } from "@/features/comisiones/services/devengadas";
+import { ymMx } from "@/lib/date/mx";
 
-const MES_ACTUAL = new Date().toISOString().slice(0, 7);
+// El KPI usa el mes en zona América/Ciudad_de_México, no UTC: usamos el mismo
+// helper para que la prueba no falle en las horas en que UTC y MX difieren de mes.
+const MES_ACTUAL = ymMx();
 const fechaEnMes = (yyyymm: string, dia = 15) => `${yyyymm}-${String(dia).padStart(2, "0")}T12:00:00Z`;
 
 function comision(over: Partial<ComisionDevengada>): ComisionDevengada {
