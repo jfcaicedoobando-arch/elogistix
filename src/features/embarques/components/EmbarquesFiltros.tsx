@@ -143,10 +143,10 @@ export default function EmbarquesFiltros(props: Props) {
             </Select>
           </FieldGroup>
           <FieldGroup label="ETD desde">
-            <DatePickerMx value={fechaDesde} onChange={onFechaDesdeChange} className="w-full" placeholder="Desde (ETD)" />
+            <DatePickerMx value={fechaDesde} onChange={onFechaDesdeChange} className="w-full" />
           </FieldGroup>
           <FieldGroup label="ETA hasta">
-            <DatePickerMx value={fechaHasta} onChange={onFechaHastaChange} className="w-full" placeholder="Hasta (ETA)" />
+            <DatePickerMx value={fechaHasta} onChange={onFechaHastaChange} className="w-full" />
           </FieldGroup>
         </div>
       }

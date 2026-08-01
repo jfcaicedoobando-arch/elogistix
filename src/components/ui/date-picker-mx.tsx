@@ -6,7 +6,8 @@ import {
 } from "./date-picker-mx-helpers";
 import { DatePickerMxCalendar } from "./date-picker-mx-calendar";
 import {
-  MENSAJE_FECHA_INVALIDA, PLACEHOLDER_FECHA, pickerErrorClass, pickerTriggerClass,
+  MENSAJE_FECHA_INVALIDA, PLACEHOLDER_FECHA, pickerClearClass, pickerClearIconClass,
+  pickerErrorClass, pickerRootClass, pickerTriggerClass,
 } from "@/components/ui/picker-mx-shell";
 
 interface DatePickerMxProps {
@@ -136,7 +137,7 @@ export function DatePickerMx({
   const describedBy = showError ? errorId : undefined;
 
   return (
-    <div className={cn("inline-flex flex-col gap-1", className)}>
+    <div className={cn(pickerRootClass, className)}>
       <div
         role="group"
         aria-label={title}
@@ -179,10 +180,10 @@ export function DatePickerMx({
           <button
             type="button"
             onClick={clear}
-            className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted"
+            className={pickerClearClass}
             aria-label="Limpiar fecha"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className={pickerClearIconClass} />
           </button>
         )}
       </div>
