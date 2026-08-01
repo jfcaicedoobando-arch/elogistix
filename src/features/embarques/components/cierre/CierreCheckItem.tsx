@@ -18,10 +18,10 @@ interface Props {
   /** Si true, los checks no-ok se muestran en muted y sin link. */
   informativo?: boolean;
   /**
-   * v13.383.0 — El check aún no es evaluable (p. ej. no hay facturas todavía).
-   * Se muestra en gris con "No aplica aún" en lugar de verde.
+   * v13.384.0 — Motivo por el que el check aún no es evaluable (p. ej. no hay
+   * facturas todavía). Si viene definido se muestra en gris "No aplica aún".
    */
-  noAplica?: boolean;
+  motivoNoAplica?: string;
 }
 
 export function CierreCheckItem({
@@ -30,10 +30,12 @@ export function CierreCheckItem({
   detalle,
   embarqueId,
   informativo = false,
-  noAplica = false,
+  motivoNoAplica,
 }: Props) {
+  const noAplica = Boolean(motivoNoAplica);
   const meta = getCierreCheckMeta(regla);
   const detalleTxt = noAplica ? null : meta.formatDetalle(detalle);
+
   const clickeable = !ok && !informativo && !noAplica && meta.ruta != null;
   const href = clickeable && meta.ruta ? meta.ruta(embarqueId, detalle) : null;
 
