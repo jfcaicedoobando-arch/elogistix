@@ -5,6 +5,9 @@ import {
   isoToDisplay, applyMask, parseDisplay, parseFlexible,
 } from "./date-picker-mx-helpers";
 import { DatePickerMxCalendar } from "./date-picker-mx-calendar";
+import {
+  MENSAJE_FECHA_INVALIDA, PLACEHOLDER_FECHA, pickerErrorClass, pickerTriggerClass,
+} from "@/components/ui/picker-mx-shell";
 
 interface DatePickerMxProps {
   /** ISO date string YYYY-MM-DD (o vacío) */
@@ -34,7 +37,7 @@ function isoInRange(iso: string, min?: string, max?: string): boolean {
  * (D/M/YYYY, ISO, "13 de marzo de 2026") o seleccionarla del calendario.
  */
 export function DatePickerMx({
-  value, onChange, placeholder = "DD/MM/AAAA", className, title,
+  value, onChange, placeholder = PLACEHOLDER_FECHA, className, title,
   disabled = false, readOnly = false, min, max, errorText, id, name,
 }: DatePickerMxProps) {
   const [text, setText] = useState<string>(() => isoToDisplay(value));
@@ -138,11 +141,7 @@ export function DatePickerMx({
         role="group"
         aria-label={title}
         aria-disabled={disabled || undefined}
-        className={cn(
-          "inline-flex items-center h-10 rounded-md border border-input bg-background px-2 gap-1 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0",
-          showError && "border-destructive focus-within:ring-destructive",
-          disabled && "opacity-50 cursor-not-allowed bg-muted",
-        )}
+        className={cn(pickerTriggerClass({ showError, disabled }))}
       >
         <DatePickerMxCalendar
           value={value}
@@ -188,8 +187,8 @@ export function DatePickerMx({
         )}
       </div>
       {showError && (
-        <span id={errorId} className="text-xs text-destructive">
-          {errorText ?? "Fecha inválida. Usa DD/MM/AAAA."}
+        <span id={errorId} className={pickerErrorClass}>
+          {errorText ?? MENSAJE_FECHA_INVALIDA}
         </span>
       )}
     </div>

@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.389.3] - 2026-08-01
+- Pickers de fecha: `DatePickerMx`, `DateTimePickerMx` y `MonthPickerMx` comparten ahora el mismo trigger y se ven idénticos en los estados vacío, deshabilitado y con error (`picker-mx-shell.ts`).
+- Fecha+hora y Periodo ahora aceptan `disabled` y `errorText`: antes no podían mostrarse deshabilitados ni marcar error, a diferencia del picker de fecha.
+- Placeholders unificados en español: DD/MM/AAAA, DD/MM/AAAA HH:MM y Mes AAAA.
+- Selector de periodo: el año visible se resincroniza con el valor recibido (antes se quedaba en el año de la primera apertura).
+
 ## [13.389.2] - 2026-08-01
 - Calendario: se arregló la cabecera con selectores de mes/año, que mostraba los `<select>` nativos sin estilo y el mes duplicado ("agosto agosto ›").
 - Date pickers: Tesorería (movimiento manual y ejecutar pago), Tipo de cambio DOF y los diálogos de anticipos a proveedor ahora usan `DatePickerMx` (DD/MM/AAAA) en vez del input nativo del navegador, que mostraba MM/DD/AAAA.

@@ -136,7 +136,7 @@ export default function Comisiones() {
                 <MonthPickerMx
                   value={server.m}
                   onChange={setPeriodo}
-                  className="w-[180px] h-9"
+                  className="w-[180px]"
                 />
               </>
             }
