@@ -10,10 +10,10 @@ import {
 } from "@/components/ui/select";
 import SearchInput from "@/components/shared/SearchInput";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
   ESTADOS_UNIFICADOS,
   LABEL_ESTADO_UNIFICADO,
 } from "@/lib/domain/estadoUnificado";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 interface ClienteOption { id: string; nombre: string }
 

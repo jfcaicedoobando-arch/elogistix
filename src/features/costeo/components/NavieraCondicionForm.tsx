@@ -18,10 +18,10 @@ import {
 } from "@/features/costeo/hooks/useNavieraCondiciones";
 import type { ProveedorOpcion } from "@/features/costeo/services/agentes";
 import type {
-import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
   CosteoNavieraCondicion,
   NavieraCondicionInput,
 } from "@/features/costeo/types/navieraCondicion";
+import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 
 interface Props {
   navieraId: string;
