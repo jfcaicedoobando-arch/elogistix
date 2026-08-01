@@ -21,8 +21,15 @@ export default function EditarProveedorBancariosFields({ c }: { c: Controller })
   );
 }
 
+/** Mensaje de error de campo (mismo estilo que el dialog padre). */
+function ErrorCampo({ message }: { message: string | null }) {
+  if (!message) return null;
+  return <p className="text-xs text-destructive">{message}</p>;
+}
+
 function FieldsNacional({ c }: { c: Controller }) {
   const clabe = c.form.clabe ?? "";
+  const errClabe = c.fieldErrorMessage("clabe");
   return (
     <>
       <div className="space-y-2">
@@ -44,7 +51,10 @@ function FieldsNacional({ c }: { c: Controller }) {
           placeholder="18 dígitos"
           value={clabe}
           onChange={(e) => c.setField("clabe", e.target.value.replace(/\D/g, ""))}
+          onBlur={() => c.markTouched("clabe")}
+          aria-invalid={!!errClabe}
         />
+        <ErrorCampo message={errClabe} />
       </div>
     </>
   );
@@ -75,7 +85,10 @@ function FieldsInternacional({ c }: { c: Controller }) {
           value={c.form.swift_bic ?? ""}
           maxLength={11}
           onChange={(e) => c.setField("swift_bic", e.target.value.toUpperCase())}
+          onBlur={() => c.markTouched("swift_bic")}
+          aria-invalid={!!c.fieldErrorMessage("swift_bic")}
         />
+        <ErrorCampo message={c.fieldErrorMessage("swift_bic")} />
       </div>
       <div className="space-y-2 md:col-span-2">
         <Label>IBAN o número de cuenta</Label>

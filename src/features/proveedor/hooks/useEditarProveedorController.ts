@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { validarDatosBancarios } from "@/features/proveedor/domain/datosBancarios";
 import type { Enums, Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
@@ -66,8 +67,15 @@ export function useEditarProveedorController(
     }
     if (isAgenteCarga && !form.pais) e.pais = "El país es requerido";
     if (form.email && !EMAIL_RE.test(form.email)) e.email = "Email inválido";
+    // P2-1 (R5): antes se podía guardar una CLABE de 17 dígitos sin aviso.
+    const errBanco = validarDatosBancarios({
+      esExtranjero,
+      clabe: form.clabe,
+      swiftBic: form.swift_bic,
+    });
+    if (errBanco) e[errBanco.campo] = errBanco.mensaje;
     return e;
-  }, [form.origen_proveedor, form.nombre, form.rfc, form.pais, form.email, form.tipo, form.subtipo_gasto, isAgenteCarga, isLogistico, isGasto, esExtranjero]);
+  }, [form.origen_proveedor, form.nombre, form.rfc, form.pais, form.email, form.tipo, form.subtipo_gasto, form.clabe, form.swift_bic, isAgenteCarga, isLogistico, isGasto, esExtranjero]);
 
   const isValid = Object.keys(errors).length === 0;
 
@@ -118,6 +126,8 @@ export function useEditarProveedorController(
         rfc: true,
         pais: true,
         email: true,
+        clabe: true,
+        swift_bic: true,
       });
       return;
     }

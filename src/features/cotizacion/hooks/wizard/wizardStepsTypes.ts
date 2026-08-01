@@ -47,6 +47,8 @@ export interface WizardStepsDeps {
   toast: ToastFn;
   navigate: NavigateFunction;
   isEditMode: boolean;
+  /** Estado con el que se abrió el wizard (P0-1 R5: `Solicitada` pasa a `Borrador`). */
+  estadoInicial?: string | null;
   cotizacionId: string | null;
   setCotizacionId: (id: string) => void;
   currentStep: number;

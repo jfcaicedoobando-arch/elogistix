@@ -48,7 +48,14 @@ export async function handleSubmitError(e: unknown, uuidFiscal?: string | null) 
         method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1",
       });
     }
-  } else if (err.code === "23505" && /folio/.test(blob)) {
+  } else if (err.code === "23502" && /categoria_presupuesto_id/.test(blob)) {
+    // P0-2 (R5): NOT NULL de la categoría contable — mensaje de negocio correcto.
+    notifyError(undefined, {
+      title: "Falta la categoría contable",
+      description: "Selecciona la categoría de presupuesto antes de guardar la factura.",
+      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CATEGORIA",
+    });
+  } else if (err.code === "23505" && /proveedor_facturas_org_prov_folio_uq/.test(blob)) {
     // P1-2: la llave única es proveedor + folio + fecha de emisión (vivas).
     notifyError(undefined, {
       title: "Folio duplicado para este proveedor",
@@ -58,7 +65,12 @@ export async function handleSubmitError(e: unknown, uuidFiscal?: string | null) 
   } else if (err.code === "23505") {
     notifyError(undefined, { title: "Registro duplicado", description: err.message ?? undefined, method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP2" });
   } else {
-    notifyError(undefined, { title: err.message ?? "Error al capturar", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2" });
+    // P0-2 (R5): fallback genérico — nunca reutilizar un toast de negocio.
+    notifyError(undefined, {
+      title: "No se pudo capturar la factura",
+      description: err.message ?? undefined,
+      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2",
+    });
   }
 }
 
@@ -83,6 +95,16 @@ export interface ResultadoSubmit {
 
 /** Devuelve `ok: true` y el id creado si la operación fue exitosa. */
 export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
+  // P0-2 (R5): defensa en profundidad — `categoria_presupuesto_id` es NOT NULL en BD;
+  // si el string llega vacío, el INSERT falla con 23502 y el toast confunde al usuario.
+  if (!p.values.categoriaId) {
+    notifyError(undefined, {
+      title: "Falta la categoría contable",
+      description: "Selecciona la categoría de presupuesto antes de guardar la factura.",
+      method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CATEGORIA_PRE",
+    });
+    return { ok: false, facturaId: null };
+  }
   try {
     const dup = await existeFacturaDuplicada(p.values.provId, p.values.folio, p.values.emision);
     if (dup) {

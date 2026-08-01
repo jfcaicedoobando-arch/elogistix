@@ -108,7 +108,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
 
   // ── Handlers de navegación del wizard (hook dedicado) ──
   const { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose } = useCotizacionWizardSteps({
-    form, toast, navigate, isEditMode,
+    form, toast, navigate, isEditMode, estadoInicial: initialData?.estado ?? null,
     cotizacionId, setCotizacionId,
     currentStep, setCurrentStep,
     msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,

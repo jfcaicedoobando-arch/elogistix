@@ -13,7 +13,7 @@ import { firmaCostos, type WizardStepsDeps as Deps } from "./wizardStepsTypes";
  *           este archivo bajo 200 líneas (Power-of-10).
  */
 export function useCotizacionWizardSteps({
-  form, navigate, isEditMode,
+  form, navigate, isEditMode, estadoInicial,
   cotizacionId, setCotizacionId, currentStep, setCurrentStep,
   msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
   conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
@@ -131,7 +131,7 @@ export function useCotizacionWizardSteps({
         return;
       }
       await savePasoFinal({
-        cotizacionId, isEditMode,
+        cotizacionId, isEditMode, estadoActual: estadoInicial,
         mutations: { updateCotizacion },
         registrarActividad: registrarActividad.mutate,
       });
@@ -150,7 +150,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, isEditMode },
       });
     }
-  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, onFinalized, conceptosUSD, conceptosMXN, costosInternos, tasaIva, setConceptosUSD, setConceptosMXN]);
+  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, estadoInicial, onFinalized, conceptosUSD, conceptosMXN, costosInternos, tasaIva, setConceptosUSD, setConceptosMXN]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);
