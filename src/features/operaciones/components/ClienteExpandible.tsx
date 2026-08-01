@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { toTitleCase } from "@/lib/formatters";
 import type { OperadorData } from "@/features/operaciones/hooks";
 import { ESTADOS_KEYS } from "@/features/operaciones/hooks";
-import { ESTADO_COLOR, ESTADO_ICON } from "./desempenoVisuals";
+import { ESTADO_COLOR, ESTADO_ICON, ESTADO_LABEL } from "./desempenoVisuals";
 
 export const ClienteExpandible = memo(function ClienteExpandible({ cliente }: { cliente: OperadorData["clientesDesglose"][number] }) {
   const [open, setOpen] = useState(false);
