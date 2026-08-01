@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.387.0] - 2026-08-01
+- Buzón CxP: se arregló la vista previa bloqueada por Chrome ("This page has been blocked by Chrome") etiquetando el PDF como `application/pdf` antes de incrustarlo.
+- Nuevo visor `PdfObjectViewer` con respaldo (abrir en pestaña nueva / descargar) aplicado también a la vista previa de CFDI y al visor genérico de documentos.
+- La vista previa sólo intenta incrustar archivos `.pdf`; el resto muestra aviso de descarga.
+
 ## [13.386.4] - 2026-08-01
 - Buzón CxP: el botón "Enviar al buzón" queda deshabilitado hasta elegir el proveedor de la factura (el campo se marca como obligatorio con ayuda en pantalla).
 
