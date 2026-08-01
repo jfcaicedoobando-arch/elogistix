@@ -8,6 +8,7 @@ import { Loader2, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { SelectorFacturaAbierta } from "@/features/anticipos-proveedor/components/SelectorFacturaAbierta";
@@ -130,7 +131,13 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="apl-fecha">Fecha de aplicación</Label>
-          <Input id="apl-fecha" type="date" {...register("fechaAplicacion")} />
+          <Controller
+            control={control}
+            name="fechaAplicacion"
+            render={({ field }) => (
+              <DatePickerMx value={field.value ?? ""} onChange={field.onChange} className="w-full" />
+            )}
+          />
           {errors.fechaAplicacion && <p className="text-xs text-destructive">{errors.fechaAplicacion.message}</p>}
         </div>
         <div className="space-y-1.5">

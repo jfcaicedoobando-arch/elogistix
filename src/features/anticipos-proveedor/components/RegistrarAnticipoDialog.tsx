@@ -8,6 +8,7 @@ import { Loader2, HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -119,7 +120,13 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="ant-fecha">Fecha</Label>
-          <Input id="ant-fecha" type="date" {...register("fechaAnticipo")} />
+          <Controller
+            control={control}
+            name="fechaAnticipo"
+            render={({ field }) => (
+              <DatePickerMx value={field.value ?? ""} onChange={field.onChange} className="w-full" />
+            )}
+          />
           {errors.fechaAnticipo && <p className="text-xs text-destructive">{errors.fechaAnticipo.message}</p>}
         </div>
         <div className="space-y-1.5">

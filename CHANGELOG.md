@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.389.2] - 2026-08-01
+- Calendario: se arregló la cabecera con selectores de mes/año, que mostraba los `<select>` nativos sin estilo y el mes duplicado ("agosto agosto ›").
+- Date pickers: Tesorería (movimiento manual y ejecutar pago), Tipo de cambio DOF y los diálogos de anticipos a proveedor ahora usan `DatePickerMx` (DD/MM/AAAA) en vez del input nativo del navegador, que mostraba MM/DD/AAAA.
+
 ## [13.389.1] - 2026-08-01
 - Detalle de factura: se quitó el embed frágil de proforma que rompía toda la pantalla cuando el caché de PostgREST estaba desfasado.
 - "Crear y timbrar": el toast sólo dice "timbrada" si el SAT devolvió folio y UUID; si falla el timbrado se avisa y la lista se refresca para ver el borrador.
