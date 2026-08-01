@@ -1,6 +1,7 @@
 import { Plus, Ship } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { OrgContextoHint } from "@/components/shared/OrgContextoHint";
 
 interface Props {
   canEdit: boolean;
@@ -26,6 +27,7 @@ export function EmbarquesEmptyState({ canEdit, onCreate }: Props) {
             <Plus className="h-5 w-5 mr-2" /> Crear mi primer embarque
           </Button>
         )}
+        <OrgContextoHint className="mt-6" />
       </CardContent>
     </Card>
   );

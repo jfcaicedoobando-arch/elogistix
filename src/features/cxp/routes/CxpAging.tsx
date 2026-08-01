@@ -55,7 +55,8 @@ interface Filters extends Record<string, string> { cubeta: string }
 const DEFAULTS: Filters = { cubeta: "todas" };
 
 export default function CxpAging() {
-  const { rowsFiltradas, isLoading, totales, monedas, monedaActiva, setMoneda } = useCxpAging();
+  const aging = useCxpAging();
+  const { rowsFiltradas, isLoading, totales, monedas, monedaActiva, setMoneda } = aging;
   const columns = useMemo(() => buildCxpAgingColumns(), []);
   const [drilldown, setDrilldown] = useState<{ prov: CxpAgingRow; cubeta: CubetaAging | "todas" } | null>(null);
 
@@ -162,6 +163,8 @@ export default function CxpAging() {
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
+            isError={!!aging.error}
+            onRetry={() => void aging.refetch()}
             rowKey={(r) => r.proveedor_id}
             sortMode="server"
             controlledSort={paged.controlledSort}

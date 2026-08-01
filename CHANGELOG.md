@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.389.1] - 2026-08-01
+- Detalle de factura: se quitó el embed frágil de proforma que rompía toda la pantalla cuando el caché de PostgREST estaba desfasado.
+- "Crear y timbrar": el toast sólo dice "timbrada" si el SAT devolvió folio y UUID; si falla el timbrado se avisa y la lista se refresca para ver el borrador.
+- Dashboard de operaciones: el grupo "Cerrado" ahora se llama "Finalizado" e indica en tooltip que incluye EIR y Por liquidar.
+- CxP: el botón "Registrar pago" se oculta en facturas Pagadas o Canceladas, sin depender del saldo en caché.
+- Aging CxP: si la consulta falla, la tabla muestra error con botón de reintento en vez de "Sin saldos pendientes".
+- Embarques sin datos: el estado vacío indica la organización activa para detectar contextos equivocados.
+- Bitácora: los pagos de cliente (registro y eliminación) ya se registran en la actividad.
+
 ## [13.389.0] - 2026-08-01
 - Cotizaciones: las solicitudes del portal (`Solicitada`) ya se pueden costear en el wizard y pasan a `Borrador` al guardar.
 - Captura manual de CxP: se valida la categoría antes de insertar y los errores de folio duplicado / campo obligatorio muestran mensajes claros.

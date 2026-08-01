@@ -101,7 +101,9 @@ const COLUMNS = [
   "cancelacion_vence_en",
   "sustituye_a",
   "sustituida_por",
-  "proformas:proformas!facturas_proforma_id_fkey(numero)",
+  // P1-2 (R5): el embed `proformas!facturas_proforma_id_fkey` rompía TODA la
+  // query cuando el schema cache de PostgREST no tenía la FK cargada (el
+  // detalle moría con un error crudo). Se resuelve con una segunda query.
 ].join(", ");
 
 export async function fetchFacturaById(id: string): Promise<FacturaDetalle | null> {
@@ -127,5 +129,16 @@ export async function fetchFacturaById(id: string): Promise<FacturaDetalle | nul
     if (refError) throw refError;
     sustituida_por_ref = ref ?? null;
   }
-  return { ...(data as object), sustituida_por_ref } as FacturaDetalle;
+  const proformaId = (data as unknown as { proforma_id: string | null }).proforma_id;
+  let proformas: FacturaDetalle["proformas"] = null;
+  if (proformaId) {
+    const { data: pf, error: pfError } = await supabase
+      .from("proformas")
+      .select("numero")
+      .eq("id", proformaId)
+      .maybeSingle();
+    if (pfError) throw pfError;
+    proformas = pf ? { numero: pf.numero } : null;
+  }
+  return { ...(data as object), sustituida_por_ref, proformas } as FacturaDetalle;
 }

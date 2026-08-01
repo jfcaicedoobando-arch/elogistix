@@ -28,6 +28,13 @@ export function useCrearFacturaManual() {
       const facturaId = await crearFacturaManual(vars.input);
       if (vars.timbrarAlGuardar) {
         const res = await emitirFacturapi(facturaId);
+        // P1-2 (R5): el toast decía "timbrada" aunque la respuesta no trajera
+        // folio/UUID y la factura quedaba "Sin folio" en Por timbrar.
+        if (!res?.uuid || !res?.folio) {
+          throw new Error(
+            "La factura se guardó pero el timbrado no devolvió folio fiscal. Revísala en Por timbrar e intenta timbrar de nuevo.",
+          );
+        }
         return { facturaId, timbrada: true as const, uuid: res.uuid };
       }
       return { facturaId, timbrada: false as const };
@@ -49,11 +56,16 @@ export function useCrearFacturaManual() {
       invalidateHuecoFacturacion(qc);
       invalidateProfitDependencies(qc);
     },
-    onError: (err: Error) =>
+    onError: (err: Error) => {
       notifyError(undefined, {
-        title: `No se pudo crear la factura: ${err.message}`,
+        title: `No se pudo completar la facturación: ${err.message}`,
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USECREARFACTURAMANUAL_1",
-      }),
+      });
+      // La factura pudo haberse creado y fallar sólo el timbrado: refrescamos
+      // listas y bandeja para que el borrador aparezca sin recargar la página.
+      qc.invalidateQueries({ queryKey: facturasKeys.all });
+      qc.invalidateQueries({ queryKey: facturacionKeys.bandejaPrefix() });
+    },
   });
 }

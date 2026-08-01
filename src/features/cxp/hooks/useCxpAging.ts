@@ -14,6 +14,7 @@ export interface UseCxpAgingResult {
   data: CxpAgingRow[] | undefined;
   isLoading: boolean;
   error: unknown;
+  refetch: () => void;
   monedas: string[];
   monedaActiva: string;
   setMoneda: (m: string) => void;
@@ -54,6 +55,7 @@ export function useCxpAging(fecha?: string): UseCxpAgingResult {
     data: q.data,
     isLoading: q.isLoading,
     error: q.error,
+    refetch: q.refetch,
     monedas,
     monedaActiva: monedaResuelta,
     setMoneda,
