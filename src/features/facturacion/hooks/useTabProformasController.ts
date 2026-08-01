@@ -19,6 +19,7 @@ function isConvertible(p: ProformaConFactura): boolean {
 
 export function useTabProformasController(opts?: {
   isInRange?: (fecha: string | null | undefined) => boolean;
+  estadoInicial?: FiltroEstadoProforma;
 }) {
   const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
@@ -26,7 +27,7 @@ export function useTabProformasController(opts?: {
   const { data: proformas = [], isLoading } = useProformas();
   const { descargar, downloadingId } = useDescargarProformaPdf();
 
-  const state = useTabProformasState(proformas, opts?.isInRange);
+  const state = useTabProformasState(proformas, opts?.isInRange, opts?.estadoInicial);
   const {
     filtered, paginated, counts, totalPages,
     search, filtroEstado, filtroCliente, filtroOperador, fechaDesde, fechaHasta,
