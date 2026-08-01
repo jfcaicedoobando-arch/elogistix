@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
-import { useTabProformasController } from "@/features/facturacion/hooks";
+import { useTabProformasController, type FiltroEstadoProforma } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
 import ProformasFiltros from "./ProformasFiltros";
 import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
