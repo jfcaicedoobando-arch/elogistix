@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
@@ -56,12 +56,12 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         ...classNames,
       }}
       components={{
-        Chevron: ({ orientation }) =>
-          orientation === "left" ? (
-            <ChevronLeft className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          ),
+        Chevron: ({ orientation }) => {
+          if (orientation === "left") return <ChevronLeft className="h-4 w-4" />;
+          if (orientation === "right") return <ChevronRight className="h-4 w-4" />;
+          // Orientación "down"/"up": chevron de los dropdowns de mes/año.
+          return <ChevronDown className="h-3.5 w-3.5 opacity-60" />;
+        },
       }}
       {...props}
     />
