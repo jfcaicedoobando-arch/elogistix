@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.382.0] - 2026-08-01
+- **fix(cierre)**: "Complementos de Pago (REP) timbrados" se movió de la fase 4 "Facturación al cliente" a la fase 5 "Cobranza y pagos", entre "Cuentas por cobrar al día" (orden 1) y "Cuentas por pagar al día" (orden 3). El REP se timbra *después* de recibir el pago del cliente, no al facturar.
+- **feat(cierre)**: descripciones en lenguaje llano para CxC, CxP y REP.
+
 ## [13.381.2] - 2026-08-01
 - **fix(tests)**: `devengadas.integration.test.ts` calculaba el "mes actual" en UTC mientras `calcularKPIsComisiones` usa la zona América/Ciudad_de_México. Entre las 18:00 y 24:00 hora MX el CI fallaba. Ahora la prueba usa `ymMx()`.
 
