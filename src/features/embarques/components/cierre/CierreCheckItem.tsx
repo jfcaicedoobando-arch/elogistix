@@ -59,13 +59,20 @@ export function CierreCheckItem({
         {renderIcon()}
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-medium">{meta.label}</p>
+            <p className={`text-sm font-medium ${noAplica ? "text-muted-foreground" : ""}`}>
+              {meta.label}
+            </p>
             <Badge variant="outline" className="text-2xs font-normal">
               {meta.responsable}
             </Badge>
           </div>
           {meta.descripcion && (
             <p className="text-xs leading-snug text-muted-foreground">{meta.descripcion}</p>
+          )}
+          {noAplica && (
+            <p className="text-xs text-muted-foreground">
+              Todavía no hay facturas registradas, así que este punto aún no se puede evaluar.
+            </p>
           )}
           {detalleTxt && (
             <p className="text-xs font-medium text-foreground/80">{detalleTxt}</p>
@@ -86,8 +93,10 @@ export function CierreCheckItem({
     </>
   );
 
-  const baseCls =
-    "flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-start sm:justify-between";
+  const baseCls = `flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-start sm:justify-between${
+    noAplica ? " border-dashed bg-muted/30" : ""
+  }`;
+
 
   if (href) {
     return (
