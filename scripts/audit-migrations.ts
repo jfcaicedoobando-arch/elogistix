@@ -65,8 +65,15 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    permisos (`REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO
  *    authenticated, service_role`); el archivo original queda como legacy
  *    auditado.
+ *  - `20260801011206` — post-FIX-H6-06: `20260801005827` (exclusión
+ *    `sin_comision`) recreó `resolver_sin_comision` y
+ *    `calcular_comision_pago` (SECURITY DEFINER) sin el bloque REVOKE/GRANT
+ *    completo en el mismo archivo. La migración correctiva `20260801011206`
+ *    re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon` +
+ *    `GRANT EXECUTE … TO authenticated, service_role`); el archivo original
+ *    queda como legacy auditado.
  */
-const BASELINE = "20260731220419";
+const BASELINE = "20260801011206";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
