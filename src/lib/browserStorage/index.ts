@@ -22,6 +22,7 @@ export const STORAGE_KEYS = {
   eerrFuente: "lc-eerr-fuente",
   // dashboardEjecutivoPeriodo removida en v13.300.31: el periodo ahora vive en URL (?mes=).
   tarifasViewMode: "lc-tarifas-view-mode",
+  cxpPreviaAmpliada: "lc-cxp-previa-ampliada",
 } as const;
 
 export const loginLoggedKey = (userId: string): string =>
