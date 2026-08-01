@@ -72,10 +72,9 @@ export function CierreCheckItem({
             <p className="text-xs leading-snug text-muted-foreground">{meta.descripcion}</p>
           )}
           {noAplica && (
-            <p className="text-xs text-muted-foreground">
-              Todavía no hay facturas registradas, así que este punto aún no se puede evaluar.
-            </p>
+            <p className="text-xs text-muted-foreground">{motivoNoAplica}</p>
           )}
+
           {detalleTxt && (
             <p className="text-xs font-medium text-foreground/80">{detalleTxt}</p>
           )}
