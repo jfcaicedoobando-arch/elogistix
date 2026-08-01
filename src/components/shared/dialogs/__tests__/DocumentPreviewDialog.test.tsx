@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { DocumentPreviewDialog } from "@/components/shared/dialogs/DocumentPreviewDialog";
 
 describe("<DocumentPreviewDialog />", () => {
-  it("renderiza iframe para PDFs", () => {
+  it("renderiza <object> application/pdf para PDFs", () => {
     render(
       <DocumentPreviewDialog
         open
@@ -12,9 +12,10 @@ describe("<DocumentPreviewDialog />", () => {
         url="https://example.com/file.pdf"
       />,
     );
-    const iframe = screen.getByTitle("Proforma.pdf") as HTMLIFrameElement;
-    expect(iframe.tagName).toBe("IFRAME");
-    expect(iframe.src).toContain("file.pdf");
+    const visor = screen.getByTitle("Proforma.pdf") as HTMLObjectElement;
+    expect(visor.tagName).toBe("OBJECT");
+    expect(visor.type).toBe("application/pdf");
+    expect(visor.data).toContain("file.pdf");
   });
 
   it("renderiza <img> para imágenes", () => {
