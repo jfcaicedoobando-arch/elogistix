@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { comoBlobPdf, esRutaPdf, MIME_PDF } from "@/lib/pdf/blobPdfUrl";
+import { comoBlobPdf, esRutaPdf, MIME_PDF, urlPdfConVista, VISTA_PDF_ANCHO } from "@/lib/pdf/blobPdfUrl";
 
 describe("blobPdfUrl", () => {
   it("reetiqueta un blob sin tipo como application/pdf", () => {
@@ -16,5 +16,11 @@ describe("blobPdfUrl", () => {
     expect(esRutaPdf("org/factura.PDF")).toBe(true);
     expect(esRutaPdf("org/factura.xml")).toBe(false);
     expect(esRutaPdf(null)).toBe(false);
+  });
+
+  it("agrega los parámetros de vista sin duplicar el hash", () => {
+    expect(urlPdfConVista("blob:abc")).toBe(`blob:abc#${VISTA_PDF_ANCHO}`);
+    expect(urlPdfConVista("blob:abc#view=Fit")).toBe(`blob:abc#${VISTA_PDF_ANCHO}`);
+    expect(urlPdfConVista("blob:abc", "")).toBe("blob:abc");
   });
 });
