@@ -13,7 +13,7 @@ import {
   Legend,
 } from "recharts";
 import { ESTADOS_KEYS, type ChartRow } from "@/features/operaciones/hooks";
-import { ESTADO_COLOR } from "./desempenoVisuals";
+import { ESTADO_COLOR, ESTADO_LABEL } from "./desempenoVisuals";
 
 interface Props {
   data: ChartRow[];
