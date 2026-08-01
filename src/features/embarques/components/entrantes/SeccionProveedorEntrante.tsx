@@ -38,13 +38,20 @@ export function SeccionProveedorEntrante({
   return (
     <FormDialogSection title="Proveedor" cols={1}>
       <div className="space-y-2">
-        <Label>¿A qué proveedor del embarque corresponde?</Label>
+        <Label>
+          ¿A qué proveedor del embarque corresponde? <span className="text-destructive">*</span>
+        </Label>
         <SelectorProveedorEntrante
           embarqueId={embarqueId}
           seleccionado={seleccionado}
           detectadoId={detectado?.id ?? null}
           onSeleccionar={onSeleccionar}
         />
+        {!seleccionado && (
+          <p className="text-xs text-muted-foreground">
+            Elige el proveedor para poder enviar el documento al buzón.
+          </p>
+        )}
         {aviso && <p className="text-xs text-warning">{aviso}</p>}
       </div>
     </FormDialogSection>
