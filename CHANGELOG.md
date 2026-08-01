@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.384.0] - 2026-08-01
+- **fix(cierre)**: auditoría de rentabilidad. "Margen mínimo alcanzado", "Utilidad mínima alcanzada", "Comisión devengada calculada" y "Comisiones devengadas definitivas" salían en verde aunque faltaran costos con factura de proveedor o venta por facturar (el margen se calculaba contra costos incompletos, inflado). Ahora se muestran en gris **"No aplica aún"** con la nota "Faltan costos con factura de proveedor o venta por facturar: el resultado todavía no es confiable."
+- **refactor(cierre)**: `calcularReglasNoAplica` recibe todos los checks del embarque (no sólo los de su fase) y devuelve `Map<regla, motivo>`, para poder condicionar una fase con datos de otra.
+
+
+
 ## [13.383.0] - 2026-08-01
 - **feat(cierre)**: en la fase "Cobranza y pagos", los checks de Cuentas por cobrar, Complementos de Pago (REP) y Cuentas por pagar ahora se muestran en **gris con "No aplica aún"** (borde punteado y nota explicativa) cuando todavía no existen facturas de cliente / de proveedor. Antes salían en verde porque el saldo era cero.
 - **fix(cierre)**: el contador `x/y` de cada fase excluye los checks "No aplica aún".

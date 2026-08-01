@@ -1,37 +1,73 @@
 import { describe, it, expect } from "vitest";
-import { calcularReglasNoAplica } from "../cierreCheckNoAplica";
+import {
+  calcularReglasNoAplica,
+  MOTIVO_SIN_FACTURAS,
+  MOTIVO_SIN_COSTOS_COMPROBADOS,
+} from "../cierreCheckNoAplica";
 
 describe("calcularReglasNoAplica", () => {
   it("marca CxC y REP cuando no hay facturas de cliente", () => {
-    const set = calcularReglasNoAplica([
+    const map = calcularReglasNoAplica([
       { regla: "cxc_cobrada", ok: true, detalle: { por_moneda: [], saldo_total: 0 } },
       { regla: "rep_timbrados", ok: true, detalle: { pendientes: 0 } },
     ]);
-    expect(set.has("cxc_cobrada")).toBe(true);
-    expect(set.has("rep_timbrados")).toBe(true);
+    expect(map.get("cxc_cobrada")).toBe(MOTIVO_SIN_FACTURAS);
+    expect(map.get("rep_timbrados")).toBe(MOTIVO_SIN_FACTURAS);
   });
 
   it("marca CxP cuando no hay facturas de proveedor", () => {
-    const set = calcularReglasNoAplica([
+    const map = calcularReglasNoAplica([
       { regla: "cxp_pagada", ok: true, detalle: { por_moneda: [] } },
     ]);
-    expect(set.has("cxp_pagada")).toBe(true);
+    expect(map.get("cxp_pagada")).toBe(MOTIVO_SIN_FACTURAS);
   });
 
-  it("no marca nada cuando ya hay facturas", () => {
-    const set = calcularReglasNoAplica([
+  it("no marca nada cuando ya hay facturas y la base está completa", () => {
+    const map = calcularReglasNoAplica([
       { regla: "cxc_cobrada", ok: false, detalle: { por_moneda: [{ moneda: "MXN", total: 100, saldo: 100 }] } },
       { regla: "cxp_pagada", ok: true, detalle: { por_moneda: [{ moneda: "MXN", total: 50, saldo: 0 }] } },
       { regla: "rep_timbrados", ok: true, detalle: { pendientes: 0 } },
+      { regla: "costo_conceptos_con_factura", ok: true },
+      { regla: "venta_conceptos_facturados", ok: true },
+      { regla: "margen_minimo", ok: true },
+      { regla: "comisiones_definitivas", ok: true },
     ]);
-    expect(set.size).toBe(0);
+    expect(map.size).toBe(0);
   });
 
   it("no oculta REP pendiente aunque no haya facturas (dato inconsistente)", () => {
-    const set = calcularReglasNoAplica([
+    const map = calcularReglasNoAplica([
       { regla: "cxc_cobrada", ok: true, detalle: { por_moneda: [] } },
       { regla: "rep_timbrados", ok: false, detalle: { pendientes: 2 } },
     ]);
-    expect(set.has("rep_timbrados")).toBe(false);
+    expect(map.has("rep_timbrados")).toBe(false);
+  });
+
+  it("marca margen y comisiones cuando faltan costos con factura", () => {
+    const map = calcularReglasNoAplica([
+      { regla: "costo_conceptos_con_factura", ok: false, detalle: { sin_factura: 4 } },
+      { regla: "margen_minimo", ok: true, detalle: { margen_pct: 42 } },
+      { regla: "comisiones_definitivas", ok: true, detalle: { no_definitivas: 0 } },
+      { regla: "comision_calculada", ok: true },
+    ]);
+    expect(map.get("margen_minimo")).toBe(MOTIVO_SIN_COSTOS_COMPROBADOS);
+    expect(map.get("comisiones_definitivas")).toBe(MOTIVO_SIN_COSTOS_COMPROBADOS);
+    expect(map.get("comision_calculada")).toBe(MOTIVO_SIN_COSTOS_COMPROBADOS);
+  });
+
+  it("marca margen cuando falta venta por facturar", () => {
+    const map = calcularReglasNoAplica([
+      { regla: "venta_conceptos_facturados", ok: false, detalle: { pendientes: 2 } },
+      { regla: "pnl_margen_minimo", ok: true },
+    ]);
+    expect(map.get("pnl_margen_minimo")).toBe(MOTIVO_SIN_COSTOS_COMPROBADOS);
+  });
+
+  it("respeta el margen ya reprobado (se queda en Pendiente rojo)", () => {
+    const map = calcularReglasNoAplica([
+      { regla: "costo_conceptos_con_factura", ok: false },
+      { regla: "margen_minimo", ok: false, detalle: { margen_pct: 1 } },
+    ]);
+    expect(map.has("margen_minimo")).toBe(false);
   });
 });

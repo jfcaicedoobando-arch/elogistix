@@ -2,10 +2,14 @@
  * Subcomponente presentacional: tarjeta del checklist de validaciones de cierre.
  * v13.106.1 — Modo `informativo` para embarques ya cerrados (legacy).
  * v13.361.0 — Checklist agrupado por fase del ciclo de vida del embarque.
+ * v13.384.0 — Checks aún no evaluables (sin facturas / sin costos comprobados)
+ *              se muestran en gris "No aplica aún".
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CierreChecklistFase } from "./CierreChecklistFase";
 import { agruparChecksPorFase } from "@/features/embarques/utils/cierreCheckOrden";
+import { calcularReglasNoAplica } from "@/features/embarques/utils/cierreCheckNoAplica";
+
 
 export interface CierreCheck {
   regla: string;
@@ -24,6 +28,7 @@ interface Props {
 }
 
 export function CierreChecklistCard({ isLoading, checks, embarqueId, informativo = false }: Props) {
+  const noAplica = calcularReglasNoAplica(checks);
   return (
     <Card>
       <CardHeader>
@@ -49,6 +54,7 @@ export function CierreChecklistCard({ isLoading, checks, embarqueId, informativo
               grupo={grupo}
               embarqueId={embarqueId}
               informativo={informativo}
+              noAplica={noAplica}
             />
           ))}
         </div>
