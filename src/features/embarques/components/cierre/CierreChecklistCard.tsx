@@ -28,6 +28,7 @@ interface Props {
 }
 
 export function CierreChecklistCard({ isLoading, checks, embarqueId, informativo = false }: Props) {
+  const noAplica = calcularReglasNoAplica(checks);
   return (
     <Card>
       <CardHeader>
@@ -53,8 +54,14 @@ export function CierreChecklistCard({ isLoading, checks, embarqueId, informativo
               grupo={grupo}
               embarqueId={embarqueId}
               informativo={informativo}
+              noAplica={noAplica}
             />
           ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
         </div>
       </CardContent>
     </Card>
