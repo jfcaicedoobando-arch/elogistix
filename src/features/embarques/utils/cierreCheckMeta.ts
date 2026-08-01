@@ -54,8 +54,9 @@ const rutaContenedores = (id: string, detalle?: unknown): string => {
   return `/embarques/${id}?${params.toString()}`;
 };
 
-const cxc: CierreCheckMeta = { label: "Cuentas por cobrar al día", responsable: "Cobranza", ruta: buildRuta("facturacion", "cxc"), ctaLabel: "Ir a Facturación", formatDetalle: fmtCxc, fase: "cobranza", orden: 1 };
-const cxp: CierreCheckMeta = { label: "Cuentas por pagar al día", responsable: "Tesorero", ruta: buildRuta("costos", "cxp"), ctaLabel: "Ir a Costos", formatDetalle: fmtCxp, fase: "cobranza", orden: 2 };
+const cxc: CierreCheckMeta = { label: "Cuentas por cobrar al día", descripcion: "El cliente ya nos pagó: no quedan facturas de venta con saldo abierto.", responsable: "Cobranza", ruta: buildRuta("facturacion", "cxc"), ctaLabel: "Ir a Facturación", formatDetalle: fmtCxc, fase: "cobranza", orden: 1 };
+const cxp: CierreCheckMeta = { label: "Cuentas por pagar al día", descripcion: "Ya le pagamos a cada proveedor: no quedan facturas de proveedor con saldo abierto.", responsable: "Tesorero", ruta: buildRuta("costos", "cxp"), ctaLabel: "Ir a Costos", formatDetalle: fmtCxp, fase: "cobranza", orden: 3 };
+
 const docs: CierreCheckMeta = { label: "Documentos requeridos completos", responsable: "Coordinador logístico", ruta: buildRuta("documentos", "faltantes"), ctaLabel: "Ir a Documentos", formatDetalle: fmtDocs, fase: "documentos", orden: 1 };
 
 const META: Record<string, CierreCheckMeta> = {
