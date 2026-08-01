@@ -8,6 +8,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { descargarBlob } from "@/lib/downloadBlob";
+import { crearUrlPdf } from "@/lib/pdf/blobPdfUrl";
 import {
   BUCKET_CXP_INBOX,
   SELECT_COLS_ENTRANTES,
