@@ -55,7 +55,8 @@ interface Filters extends Record<string, string> { cubeta: string }
 const DEFAULTS: Filters = { cubeta: "todas" };
 
 export default function CxpAging() {
-  const { rowsFiltradas, isLoading, totales, monedas, monedaActiva, setMoneda } = useCxpAging();
+  const aging = useCxpAging();
+  const { rowsFiltradas, isLoading, totales, monedas, monedaActiva, setMoneda } = aging;
   const columns = useMemo(() => buildCxpAgingColumns(), []);
   const [drilldown, setDrilldown] = useState<{ prov: CxpAgingRow; cubeta: CubetaAging | "todas" } | null>(null);
 
