@@ -10,7 +10,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { defaultMetodo, metodosFor } from "@/features/cxp/components/pagoProveedorHelpers";
 import { todayLocalISO } from "@/lib/date/today";
 import { tcValido } from "@/lib/financial/tcValido";
-import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
+import { useCuentasBancarias } from "@/features/tesoreria";
 import {
   validarPagoProveedor,
   type ResultadoValidacionPago,
