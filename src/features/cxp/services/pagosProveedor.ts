@@ -138,6 +138,22 @@ export async function registrarPagoProveedor(
     throw error;
   }
 
+  // R6-N1: si el pago salió de una cuenta bancaria, generamos el movimiento
+  // conciliado para que /tesoreria refleje la salida de efectivo.
+  if (input.cuenta_bancaria_id) {
+    await crearMovimientoBancarioPago({
+      pagoId: data.id,
+      organizationId,
+      cuentaBancariaId: input.cuenta_bancaria_id,
+      facturaId: input.proveedor_factura_id,
+      fechaPago: input.fecha_pago,
+      monto: input.monto,
+      moneda: input.moneda,
+      tipoCambioUsd: input.tipo_cambio_usd,
+      referencia: input.referencia,
+      userId,
+    });
+  }
 
 
   // Recalcular estado de la factura origen
