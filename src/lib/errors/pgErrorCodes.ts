@@ -53,6 +53,17 @@ export function translatePostgresError(
   }
 
   if (code === "23505" || /duplicate key value violates unique constraint/i.test(raw)) {
+    // FIX 6 (P3): constraints con mensaje de negocio propio. El nombre técnico
+    // del índice nunca se muestra al usuario.
+    if (/proveedor_facturas_org_prov_folio/i.test(raw)) {
+      return "Ya registraste una factura de este proveedor con ese folio. Verifica el folio o busca la factura existente.";
+    }
+    if (/facturas?_.*folio/i.test(raw)) {
+      return "Ya existe una factura con ese folio en tu organización. Usa un folio distinto.";
+    }
+    if (/clientes_rfc/i.test(raw)) {
+      return "Ya existe un cliente con ese RFC. Búscalo en el listado en lugar de crearlo de nuevo.";
+    }
     return "Ya existe un registro con esos mismos datos. Verifica los campos que deben ser únicos (por ejemplo folio, RFC o correo) e intenta de nuevo.";
   }
 
