@@ -14,47 +14,11 @@ import { FormSection } from "./facturaFormPrimitives";
 import { PagoSaldoRestante } from "./PagoProveedorBits";
 import { referenciaHint } from "./pagoProveedorHelpers";
 import { formatNumber } from "@/lib/formatters";
-import type { FacturaCxP } from "@/features/cxp/services";
-import type { Database } from "@/integrations/supabase/types";
-import type { CuentaBancaria } from "@/features/tesoreria";
-
-
-type Moneda = Database["public"]["Enums"]["moneda"];
-
-interface Props {
-  factura: FacturaCxP | null;
-  fecha: string;
-  setFecha: (v: string) => void;
-  metodo: string;
-  setMetodo: (v: string) => void;
-  metodosDisponibles: readonly string[];
-  monto: string;
-  setMonto: (v: string) => void;
-  moneda: Moneda;
-  setMoneda: (v: Moneda) => void;
-  tc: string;
-  setTc: (v: string) => void;
-  showTc: boolean;
-  saldoRestante: number;
-  excede: boolean;
-  esUsdPagadoEnMxn: boolean;
-  diffMxn: string;
-  setDiffMxn: (v: string) => void;
-  referencia: string;
-  setReferencia: (v: string) => void;
-  notas: string;
-  setNotas: (v: string) => void;
-  montoEnMonedaFactura: number;
-  bloqueadoPorTc: boolean;
-  /** R6-N1: cuenta bancaria de donde sale el pago. */
-  cuentas: CuentaBancaria[];
-  cuentaId: string;
-  setCuentaId: (v: string) => void;
-  requiereCuenta: boolean;
-  /** Incoherencias de IVA/totales de la factura (informativas). */
-  validacion: { error: string | null; avisos: string[] };
-}
-
+import { PagoImpactoPreview } from "./PagoImpactoPreview";
+import type {
+  Moneda,
+  PagoProveedorFormBodyProps as Props,
+} from "./PagoProveedorFormBody.types";
 
 export function PagoProveedorFormBody(p: Props) {
   return (
@@ -153,6 +117,12 @@ export function PagoProveedorFormBody(p: Props) {
         )}
 
         <PagoSaldoRestante factura={p.factura} saldoRestante={p.saldoRestante} excede={p.excede} />
+
+        <PagoImpactoPreview
+          impacto={p.impacto}
+          proveedorNombre={p.factura?.proveedor_nombre ?? "el proveedor"}
+          cargandoProveedor={p.cargandoSaldoProveedor}
+        />
 
         {p.esUsdPagadoEnMxn && p.factura && (
           <p className="text-xs text-muted-foreground">

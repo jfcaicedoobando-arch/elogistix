@@ -15,3 +15,4 @@ export * from "./useTcDofPorFecha";
 export * from "./useFacturaProveedor";
 
 
+export * from "./useSaldoProveedorCxp";

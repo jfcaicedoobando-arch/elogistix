@@ -15,6 +15,8 @@ import {
   validarPagoProveedor,
   type ResultadoValidacionPago,
 } from "@/features/cxp/services/pagoProveedorValidaciones";
+import { calcularImpactoPago } from "@/features/cxp/services/pagoImpactoPreview";
+import { useSaldoProveedorCxp } from "@/features/cxp/hooks/useSaldoProveedorCxp";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -153,6 +155,40 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
     ],
   );
 
+  // Vista previa del impacto: saldo del proveedor abierto en la moneda de la factura.
+  const saldoProveedor = useSaldoProveedorCxp(
+    factura?.proveedor_id ?? null,
+    factura?.moneda ?? null,
+    open,
+  );
+
+  const impacto = useMemo(
+    () =>
+      calcularImpactoPago({
+        factura: factura
+          ? {
+              moneda: factura.moneda,
+              saldo: factura.saldo,
+              pagado: factura.pagado,
+              total: factura.total,
+            }
+          : null,
+        montoEnMonedaFactura,
+        monto: montoNum,
+        monedaPago: moneda,
+        tcNum: tcNum || null,
+        bloqueadoPorTc,
+        cuentaEtiqueta: cuentaSeleccionada
+          ? `${cuentaSeleccionada.banco} · ${cuentaSeleccionada.alias ?? "Cuenta"} (${cuentaSeleccionada.moneda})`
+          : null,
+        proveedor: saldoProveedor.data ?? null,
+      }),
+    [
+      factura, montoEnMonedaFactura, montoNum, moneda, tcNum, bloqueadoPorTc,
+      cuentaSeleccionada, saldoProveedor.data,
+    ],
+  );
+
   return {
     fecha, setFecha, monto, setMonto, moneda, setMoneda,
     tc, setTc, metodo, setMetodo, referencia, setReferencia,
@@ -162,6 +198,6 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
     montoEnMonedaFactura, bloqueadoPorTc, tcNum,
     cuentas, cuentasDeMoneda, cuentaId, setCuentaId, requiereCuenta,
     cuentaSeleccionada, validacion,
-
+    impacto, cargandoSaldoProveedor: saldoProveedor.isLoading,
   };
 }
