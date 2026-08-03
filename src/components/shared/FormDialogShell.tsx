@@ -61,13 +61,16 @@ export function FormDialogShell({
   totalSteps,
   stepLabels,
   footer,
+  stickyTop,
+  stickyBottom,
+  bodyClassName,
   children,
 }: Props) {
   const showStepper = typeof step === "number" && typeof totalSteps === "number" && totalSteps > 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(dialogSize[size], "max-h-[90vh] flex flex-col gap-0 p-0")}>
+      <DialogContent className={cn(dialogSize[size], "max-h-[92vh] flex flex-col gap-0 p-0")}>
         <DialogHeader className="px-6 pt-6 pb-4 border-b space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3 min-w-0">
