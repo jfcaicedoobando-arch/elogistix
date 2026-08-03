@@ -3,17 +3,21 @@
  *
  * v13.365.0 — Fila compacta de una sola línea a 1366 px: barra de antigüedad,
  * proveedor como dato principal y acciones secundarias en el menú de tres puntos.
+ * v13.398.0 — Rejilla de columnas fijas (antigüedad · datos · importe · acciones),
+ * importe detectado visible, fecha de emisión y nombre de archivo relegado.
  */
 import { StickyNote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { FacturaEntranteAcciones } from "@/features/bandejas/components/FacturaEntranteAcciones";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
 import { cn } from "@/lib/utils";
 import { chipsArchivosEntrante } from "@/lib/domain/facturasEntrantes";
 import {
   antiguedadEntrante,
+  entranteSinImporte,
   entranteSinXml,
   type TonoAntiguedad,
 } from "@/lib/domain/facturasEntrantesBuzon";
@@ -63,10 +67,13 @@ export function FacturaEntranteRow({
 }: Props) {
   const antiguedad = antiguedadEntrante(row);
   const sinXml = entranteSinXml(row);
+  const sinImporte = entranteSinImporte(row);
   const chips = chipsArchivosEntrante(row);
-  const proveedor = row.proveedores?.nombre ?? "Proveedor sin identificar";
+  const nombreProveedor = row.proveedores?.nombre ?? null;
   const yaCapturado = !soloLectura && facturaExistenteId !== null;
-
+  const fecha = row.fecha_emision
+    ? `Emitida ${formatDate(row.fecha_emision)}`
+    : `Recibida ${formatDate(row.created_at)}`;
 
   return (
     <Card className="relative overflow-hidden">
@@ -87,7 +94,14 @@ export function FacturaEntranteRow({
           className="min-w-0 flex-1 text-left"
         >
           <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-semibold">{proveedor}</span>
+            {nombreProveedor ? (
+              <span className="truncate text-sm font-semibold">{nombreProveedor}</span>
+            ) : (
+              <span className="truncate text-sm italic text-muted-foreground">
+                Proveedor sin identificar
+                {row.rfc_emisor ? ` · RFC ${row.rfc_emisor}` : ""}
+              </span>
+            )}
             {sinXml && <Badge variant="warning" size="sm">Falta XML</Badge>}
             {yaCapturado && (
               <Badge variant="neutral" size="sm">
@@ -104,13 +118,31 @@ export function FacturaEntranteRow({
               </Tooltip>
             )}
           </div>
-          <p className="truncate text-xs text-muted-foreground">
-            {row.embarques?.expediente ?? "Sin expediente"}
-            {row.folio_serie ? ` · Folio ${row.folio_serie}` : ""}
-            {` · ${formatDate(row.created_at)}`}
-            {` · ${row.nombre_archivo}`}
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="shrink-0">{row.embarques?.expediente ?? "Sin expediente"}</span>
+            {row.folio_serie && <span className="shrink-0">· Folio {row.folio_serie}</span>}
+            <span className="shrink-0">· {fecha}</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="truncate text-muted-foreground/70">· {row.nombre_archivo}</span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-sm break-all">{row.nombre_archivo}</TooltipContent>
+            </Tooltip>
           </p>
         </button>
+
+        <div className="w-[128px] shrink-0 text-right">
+          {sinImporte ? (
+            <span className="text-xs text-muted-foreground">Sin importe</span>
+          ) : (
+            <>
+              <p className="truncate text-sm font-semibold tabular-nums">
+                {formatCurrency(Number(row.total_detectado), row.moneda_detectada ?? "MXN")}
+              </p>
+              <p className="text-xs text-muted-foreground">{row.moneda_detectada ?? "MXN"}</p>
+            </>
+          )}
+        </div>
 
         <FacturaEntranteAcciones
           row={row}
