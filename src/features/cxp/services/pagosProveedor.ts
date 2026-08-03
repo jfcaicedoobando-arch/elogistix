@@ -5,6 +5,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import {
+  crearMovimientoBancarioPago,
+  eliminarMovimientoBancarioPago,
+} from "./pagoProveedorMovimiento";
+
 // Fase N: el estado se recalcula por trigger BD. `decidirEstadoFactura` sigue viviendo en `./estadoFacturaProveedor` para uso puro en UI.
 
 export type PagoProveedor = Tables<"pagos_proveedor">;
@@ -138,6 +143,22 @@ export async function registrarPagoProveedor(
     throw error;
   }
 
+  // R6-N1: si el pago salió de una cuenta bancaria, generamos el movimiento
+  // conciliado para que /tesoreria refleje la salida de efectivo.
+  if (input.cuenta_bancaria_id) {
+    await crearMovimientoBancarioPago({
+      pagoId: data.id,
+      organizationId,
+      cuentaBancariaId: input.cuenta_bancaria_id,
+      facturaId: input.proveedor_factura_id,
+      fechaPago: input.fecha_pago,
+      monto: input.monto,
+      moneda: input.moneda,
+      tipoCambioUsd: input.tipo_cambio_usd,
+      referencia: input.referencia,
+      userId,
+    });
+  }
 
 
   // Recalcular estado de la factura origen
@@ -164,7 +185,10 @@ export async function eliminarPagoProveedor(id: string, facturaId: string, userI
     .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
     .eq("id", id);
   if (error) throw error;
+  // R6-N1: el movimiento bancario vinculado se da de baja con el pago.
+  await eliminarMovimientoBancarioPago(id, userId);
   await recalcularEstadoFactura(facturaId);
+
   await registrarActividad({
     modulo: "cxp",
     accion: "eliminar_pago",

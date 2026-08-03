@@ -1,4 +1,6 @@
 import { formatCurrency } from "@/lib/formatters";
+import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
+
 
 interface Props {
   totalUSD: number;
@@ -21,25 +23,38 @@ export default function ResumenTotalesCotizacion({
   ivaUSD,
   ivaMXN,
 }: Props) {
-  const monedasConIva = ivaUSD !== undefined || ivaMXN !== undefined
+  // R6-FIX2: la tasa nunca se escribe a mano; sale del helper central.
+  const tasaIva = useTasaIVA();
+  const tasaPct = `${Math.round(tasaIva * 100)}%`;
+  const hayDesglose = ivaUSD !== undefined || ivaMXN !== undefined;
+  const monedasConIva = hayDesglose
     ? [
         ivaUSD != null && ivaUSD > 0 ? "USD" : null,
         mostrarMXN && (ivaMXN == null || ivaMXN > 0) ? "MXN" : null,
       ].filter(Boolean).join(" y ")
     : null;
+  const sinIva = hayDesglose && !monedasConIva;
+
+  const nota = (() => {
+    if (sinIva) return "* Los conceptos de esta cotización están a tasa 0% o exentos de IVA.";
+    if (monedasConIva) {
+      return `* Los conceptos en ${monedasConIva} incluyen IVA según la tasa de cada concepto (general ${tasaPct}).`;
+    }
+    return `* Los conceptos en MXN incluyen IVA ${tasaPct}`;
+  })();
+
   return (
     <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
       {mostrarUSD && (
         <span className="text-base font-bold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
       )}
       {mostrarMXN && (
-        <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(totalMXN, 'MXN')}</span>
+        <span className="text-base font-bold">
+          {sinIva ? "Total MXN:" : "Total MXN (c/IVA):"} {formatCurrency(totalMXN, 'MXN')}
+        </span>
       )}
-      <span className="text-xs text-muted-foreground">
-        {monedasConIva
-          ? `* Los conceptos en ${monedasConIva} incluyen IVA según la tasa de cada concepto`
-          : "* Los conceptos en MXN incluyen IVA 16%"}
-      </span>
+      <span className="text-xs text-muted-foreground">{nota}</span>
     </div>
   );
 }
+

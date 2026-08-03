@@ -16,6 +16,8 @@ import { referenciaHint } from "./pagoProveedorHelpers";
 import { formatNumber } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
+import type { CuentaBancaria } from "@/features/tesoreria/services/cuentas";
+
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -44,7 +46,13 @@ interface Props {
   setNotas: (v: string) => void;
   montoEnMonedaFactura: number;
   bloqueadoPorTc: boolean;
+  /** R6-N1: cuenta bancaria de donde sale el pago. */
+  cuentas: CuentaBancaria[];
+  cuentaId: string;
+  setCuentaId: (v: string) => void;
+  requiereCuenta: boolean;
 }
+
 
 export function PagoProveedorFormBody(p: Props) {
   return (
@@ -65,7 +73,35 @@ export function PagoProveedorFormBody(p: Props) {
             </Select>
           </div>
         </div>
+        <div className="space-y-1">
+          <Label htmlFor="cuenta-bancaria">
+            Cuenta bancaria{p.requiereCuenta ? " *" : " (opcional)"}
+          </Label>
+          <Select value={p.cuentaId} onValueChange={p.setCuentaId}>
+            <SelectTrigger id="cuenta-bancaria">
+              <SelectValue placeholder="Selecciona la cuenta de donde sale el pago" />
+            </SelectTrigger>
+            <SelectContent>
+              {p.cuentas.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.banco} · {c.alias ?? "Cuenta"} ({c.moneda})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {p.requiereCuenta && !p.cuentaId && (
+            <p className="text-xs text-destructive">
+              Selecciona la cuenta bancaria de donde sale el pago.
+            </p>
+          )}
+          {p.cuentaId && (
+            <p className="text-label text-muted-foreground">
+              Se registrará el movimiento bancario conciliado en esta cuenta.
+            </p>
+          )}
+        </div>
       </FormSection>
+
 
       <FormSection title="Monto">
         <div className={cn("grid grid-cols-1 gap-3", p.showTc ? "sm:grid-cols-3" : "sm:grid-cols-2")}>

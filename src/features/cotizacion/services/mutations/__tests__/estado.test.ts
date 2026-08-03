@@ -11,6 +11,10 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+// La notificación al portal es un efecto aparte (R6-FIX5); se aísla aquí.
+vi.mock("../notificarClienteEnviada", () => ({
+  notificarClienteCotizacionEnviada: vi.fn().mockResolvedValue(true),
+}));
 
 import { updateEstadoCotizacion, ESTADOS_COTIZACION_VALIDOS } from "../estado";
 import { assertUpdatePayload, assertEq, findTableCall } from "@/test/helpers/assertMutation";

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.390.0] - 2026-08-03
+### Ronda 6 — auditoría E2E (FIX 1 a FIX 5)
+- **Pagos a proveedor ↔ Tesorería (P1)**: el diálogo de pago ahora exige la cuenta bancaria de salida (salvo pagos en efectivo) y genera el movimiento conciliado en `bbva_movimientos` vinculado por `pago_proveedor_id`. Al eliminar el pago, el movimiento se da de baja. Se invalidan las queries de tesorería para que los saldos se actualicen al instante.
+- **IVA en cotizaciones (P2)**: `ResumenTotalesCotizacion` ya no imprime "IVA 16%" fijo; toma la tasa de `useTasaIVA` y detecta cotizaciones a tasa 0% / exentas (el total MXN deja de decir "c/IVA").
+- **Bitácora global (P2)**: nueva política de lectura para que cualquier integrante vea la bitácora de **su** organización, backfill de `organization_id` en registros antiguos y filtro explícito por organización activa en `fetchBitacora`.
+- **Organización al iniciar sesión (P2)**: nueva función `default_user_org_id()` usada por `current_user_org_id()` y `get_user_context()`; prioriza la organización con actividad real y deja al final las de demostración. Al cambiar de tenant (super-admin) se limpia toda la caché de queries.
+- **Notificación al cliente (P2)**: al marcar una cotización como "Enviada" se inserta la notificación correspondiente en `notificaciones_cliente` para el portal.
+
 ## [13.389.6] - 2026-08-01
 - Copy unificado de rangos de fechas: nuevo módulo `src/lib/ui/rangoFechasCopy.ts` con `Desde`/`Hasta` y prefijos canónicos (Emisión, Vencimiento, Vigencia, Cierre, Pago, ETD, ETA).
 - Se eliminaron las variantes: "Emitida desde/hasta" → "Emisión desde/hasta" (proformas y facturas emitidas) y "Vigente desde/hasta" → "Vigencia desde/hasta" (tarifas, demoras, carta garantía naviera).

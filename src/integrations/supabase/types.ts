@@ -7970,6 +7970,7 @@ export type Database = {
       }
       dashboard_stats: { Args: never; Returns: Json }
       dashboard_summary: { Args: never; Returns: Json }
+      default_user_org_id: { Args: never; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
