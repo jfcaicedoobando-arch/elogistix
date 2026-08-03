@@ -17,6 +17,8 @@ import { formatNumber } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
 import type { CuentaBancaria } from "@/features/tesoreria";
+import type { ImpactoPago } from "@/features/cxp/services/pagoImpactoPreview";
+import { PagoImpactoPreview } from "./PagoImpactoPreview";
 
 
 type Moneda = Database["public"]["Enums"]["moneda"];
