@@ -63,7 +63,12 @@ export function FacturaProveedorTabs({
           />
           <AnticiposAplicadosSection facturaId={f.id} />
           <ConciliacionTesoreriaSection facturaId={f.id} monedaFactura={f.moneda} />
-          <BitacoraTesoreriaSection facturaId={f.id} monedaFactura={f.moneda} />
+          <BitacoraTesoreriaSection
+            facturaId={f.id}
+            monedaFactura={f.moneda}
+            folio={f.folio_proveedor || f.folio_interno}
+            proveedor={f.proveedor_nombre}
+          />
         </>
       ),
     },
