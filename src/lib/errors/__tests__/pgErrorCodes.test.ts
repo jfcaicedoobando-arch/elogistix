@@ -37,8 +37,20 @@ describe("getErrorMessage · errores crudos de Postgres (Q-15.3)", () => {
         'duplicate key value violates unique constraint "clientes_rfc_key"',
     };
     const msg = getErrorMessage(err);
-    expect(msg).toMatch(/ya existe un registro/i);
+    // FIX 6 (P3): mensaje específico de negocio, sin el nombre del índice.
+    expect(msg).toMatch(/ya existe un cliente con ese rfc/i);
     expect(msg).not.toMatch(/duplicate key/i);
+    expect(msg).not.toMatch(/clientes_rfc_key/i);
+  });
+
+  it("FIX 6 (P3) — folio duplicado de factura de proveedor tiene mensaje propio", () => {
+    const msg = getErrorMessage({
+      code: "23505",
+      message:
+        'duplicate key value violates unique constraint "proveedor_facturas_org_prov_folio_uq"',
+    });
+    expect(msg).toMatch(/factura de este proveedor con ese folio/i);
+    expect(msg).not.toMatch(/proveedor_facturas_org_prov_folio_uq/i);
   });
 
   it("traduce violación de check constraint (23514)", () => {
