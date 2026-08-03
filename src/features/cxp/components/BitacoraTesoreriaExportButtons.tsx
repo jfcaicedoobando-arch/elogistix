@@ -32,7 +32,7 @@ export function BitacoraTesoreriaExportButtons({
       // BOM para que Excel en Windows reconozca los acentos.
       const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
       descargarBlob(blob, nombreArchivoBitacora(folio, "csv"));
-      notifySuccess("Bitácora descargada en CSV");
+      notifySuccess(undefined, { title: "Bitácora descargada en CSV" });
     } catch (error) {
       notifyError(undefined, {
         title: "No se pudo generar el CSV",
@@ -58,7 +58,7 @@ export function BitacoraTesoreriaExportButtons({
         />,
         nombreArchivoBitacora(folio, "pdf"),
       );
-      notifySuccess("Bitácora descargada en PDF");
+      notifySuccess(undefined, { title: "Bitácora descargada en PDF" });
     } catch (error) {
       notifyError(undefined, {
         title: "No se pudo generar el PDF",
