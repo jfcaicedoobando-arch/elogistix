@@ -64,8 +64,11 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     if (isSuperAdmin) {
       setSuperAdminActiveId(id);
       safeLocalStorage.setItem(STORAGE_KEYS.superAdminActiveOrg, id);
+      // R6-FIX4: al cambiar de tenant, ninguna caché previa sigue siendo válida.
+      queryClient.clear();
     }
-  }, [isSuperAdmin]);
+  }, [isSuperAdmin, queryClient]);
+
 
   const value = useMemo<OrganizationContextType>(() => {
     if (isSuperAdmin) {
