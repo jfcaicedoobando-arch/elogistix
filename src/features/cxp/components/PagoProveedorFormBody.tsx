@@ -53,6 +53,9 @@ interface Props {
   requiereCuenta: boolean;
   /** Incoherencias de IVA/totales de la factura (informativas). */
   validacion: { error: string | null; avisos: string[] };
+  /** Vista previa del impacto del pago (factura, proveedor y banco). */
+  impacto: ImpactoPago | null;
+  cargandoSaldoProveedor?: boolean;
 }
 
 
