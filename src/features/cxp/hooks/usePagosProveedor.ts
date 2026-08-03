@@ -28,6 +28,8 @@ export function useRegistrarPagoProveedor() {
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pagos(vars.proveedor_factura_id) });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      // R6-N1: el pago genera un movimiento bancario → refrescar saldos y conciliación.
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
       // Los toasts de éxito y error los emite `DialogRegistrarPagoProveedor`
       // (única vía UI actual). Se omiten aquí para evitar el doble toast
       // reportado en 13.218.2 (Karol, registro de pago).
@@ -43,6 +45,7 @@ export function useEliminarPagoProveedor(facturaId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pagos(facturaId) });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
       notifySuccess(undefined, { title: "Pago a proveedor eliminado" });
     },
     onError: (error: Error) => {
