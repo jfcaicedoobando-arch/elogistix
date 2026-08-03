@@ -11,10 +11,9 @@ import { ConciliacionPagoCell } from "./ConciliacionPagoCell";
 
 export interface PagoRow {
   id: string;
-  metodo_pago: string;
-  notas?: string | null;
   fecha_pago: string;
   metodo_pago: string;
+  notas?: string | null;
   referencia?: string | null;
   monto: number | string;
   moneda: string;
