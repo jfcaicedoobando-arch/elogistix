@@ -34,16 +34,9 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
     .range(pagina * limite, (pagina + 1) * limite - 1);
 
   const { acciones } = filtros;
-  if (excluirLogin) query = query.neq("accion", "login");
-  if (modulo) query = query.eq("modulo", modulo);
-  if (usuarioId) query = query.eq("usuario_id", usuarioId);
-  if (entidadId) query = query.eq("entidad_id", entidadId);
-  if (fechaDesde) query = query.gte("created_at", fechaDesde);
-  if (fechaHasta) query = query.lte("created_at", fechaHasta);
-  if (acciones && acciones.length > 0) query = query.in("accion", acciones);
-  // R6-FIX3: la RLS ya permite leer la org completa; el filtro explícito evita
-  // mezclar organizaciones cuando el usuario pertenece a varias.
-  if (organizationId) query = query.eq("organization_id", organizationId);
+  query = aplicarFiltrosBitacora(query, {
+    excluirLogin, modulo, usuarioId, entidadId, fechaDesde, fechaHasta, acciones, organizationId,
+  });
 
   const { data, error, count } = await query;
   if (error) throw error;

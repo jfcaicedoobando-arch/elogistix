@@ -84,8 +84,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
     }
   };
 
-  const submitDisabled =
-    registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada || f.bloqueadoPorTc || faltaCuenta;
+  const submitDisabled = registrar.isPending || validarPago() !== null;
   const submitTitle = computeSubmitTitle(noAprobada, f.bloqueadoPorTc, faltaCuenta);
 
 
