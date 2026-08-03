@@ -12,10 +12,11 @@ interface PagosTableProps {
   isLoading: boolean;
   canEdit: boolean;
   onEliminarPago: (id: string) => void;
+  onEditarPago?: (pago: PagoRow) => void;
 }
 
 /** Tabla de pagos aplicados a la factura de proveedor. */
-export function PagosTable({ pagos, isLoading, canEdit, onEliminarPago }: PagosTableProps) {
+export function PagosTable({ pagos, isLoading, canEdit, onEliminarPago, onEditarPago }: PagosTableProps) {
   if (isLoading) return <ListSkeleton rows={3} />;
   if (pagos.length === 0) {
     return (
@@ -44,7 +45,7 @@ export function PagosTable({ pagos, isLoading, canEdit, onEliminarPago }: PagosT
         </thead>
         <tbody className="divide-y divide-border">
           {pagos.map((p) => (
-            <PagoFila key={p.id} pago={p} canEdit={canEdit} onEliminar={onEliminarPago} />
+            <PagoFila key={p.id} pago={p} canEdit={canEdit} onEliminar={onEliminarPago} onEditar={onEditarPago} />
           ))}
         </tbody>
       </table>
