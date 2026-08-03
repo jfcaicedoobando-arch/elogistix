@@ -11,6 +11,10 @@ import { defaultMetodo, metodosFor } from "@/features/cxp/components/pagoProveed
 import { todayLocalISO } from "@/lib/date/today";
 import { tcValido } from "@/lib/financial/tcValido";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
+import {
+  validarPagoProveedor,
+  type ResultadoValidacionPago,
+} from "@/features/cxp/services/pagoProveedorValidaciones";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -100,6 +104,55 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
   const bloqueadoPorTc = esUsdPagadoEnMxn && !tcNum;
   const excede = factura ? montoEnMonedaFactura > factura.saldo + 0.01 : false;
 
+  const cuentaSeleccionada = useMemo(
+    () => cuentas.find((c) => c.id === cuentaId) ?? null,
+    [cuentas, cuentaId],
+  );
+
+  // R6-N2: validación coherente de montos, IVA y totales antes de guardar.
+  const validacion: ResultadoValidacionPago = useMemo(
+    () =>
+      validarPagoProveedor({
+        factura: factura
+          ? {
+              moneda: factura.moneda,
+              saldo: factura.saldo,
+              total: factura.total,
+              subtotal: factura.subtotal,
+              iva: factura.iva,
+              ieps: factura.ieps,
+              retenciones: factura.retenciones,
+              fecha_emision: factura.fecha_emision,
+              estado_aprobacion: factura.estado_aprobacion,
+            }
+          : null,
+        fecha,
+        hoy: today,
+        montoTexto: monto,
+        monto: montoNum,
+        montoEnMonedaFactura,
+        moneda,
+        tcNum: tcNum || null,
+        bloqueadoPorTc,
+        requiereCuenta,
+        cuenta: cuentaSeleccionada
+          ? {
+              id: cuentaSeleccionada.id,
+              moneda: cuentaSeleccionada.moneda,
+              banco: cuentaSeleccionada.banco,
+              alias: cuentaSeleccionada.alias,
+            }
+          : null,
+        diffMxnTexto: diffMxn,
+        esUsdPagadoEnMxn,
+      }),
+    [
+      factura, fecha, today, monto, montoNum, montoEnMonedaFactura, moneda,
+      tcNum, bloqueadoPorTc, requiereCuenta, cuentaSeleccionada, diffMxn,
+      esUsdPagadoEnMxn,
+    ],
+  );
+
   return {
     fecha, setFecha, monto, setMonto, moneda, setMoneda,
     tc, setTc, metodo, setMetodo, referencia, setReferencia,
@@ -108,6 +161,7 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
     esUsdPagadoEnMxn, showTc, excede,
     montoEnMonedaFactura, bloqueadoPorTc, tcNum,
     cuentas, cuentasDeMoneda, cuentaId, setCuentaId, requiereCuenta,
+    cuentaSeleccionada, validacion,
 
   };
 }
