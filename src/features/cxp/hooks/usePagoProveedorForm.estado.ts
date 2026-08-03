@@ -4,6 +4,8 @@
  */
 import { useEffect, useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
+
+type OrigenProveedor = Database["public"]["Enums"]["origen_proveedor"] | null;
 import { defaultMetodo } from "@/features/cxp/components/pagoProveedorHelpers";
 import {
   valoresInicialesCreacion,
@@ -17,7 +19,7 @@ interface FacturaBase {
   saldo: number;
   moneda: Moneda;
   tipo_cambio_usd?: number | null;
-  proveedor_origen: string | null;
+  proveedor_origen: OrigenProveedor;
 }
 
 export function usePagoProveedorCampos(
