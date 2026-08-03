@@ -15,9 +15,13 @@ export interface FilaBuzon {
   created_at: string;
   archivo_path?: string | null;
   xml_path?: string | null;
+  /** v13.398.0 — Importe leído del CFDI/PDF; sin él no se puede priorizar la captura. */
+  total_detectado?: number | null;
+  moneda_detectada?: string | null;
   embarques?: { expediente: string | null } | null;
   proveedores?: { nombre: string | null; origen_proveedor?: string | null } | null;
 }
+
 
 /** Umbral (en días) a partir del cual el documento se considera atrasado. */
 export const DIAS_ATRASO_BUZON = 3;
