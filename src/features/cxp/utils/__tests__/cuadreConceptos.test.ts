@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularCuadreConceptos, sumarConceptos } from "../cuadreConceptos";
+import { calcularCuadreConceptos, sumarConceptos, totalLinea } from "../cuadreConceptos";
 
 describe("cuadreConceptos", () => {
   it("marca sin_conceptos cuando la lista está vacía", () => {
@@ -53,5 +53,30 @@ describe("cuadreConceptos", () => {
     const r = calcularCuadreConceptos(90, [{ monto: 100 }, { monto: -10 }]);
     expect(r.estado).toBe("cuadrado");
     expect(r.suma).toBeCloseTo(90, 2);
+  });
+});
+
+describe("totalLinea", () => {
+  it("multiplica importe unitario × cantidad", () => {
+    expect(totalLinea({ monto: 2750, cantidad: 8 })).toBeCloseTo(22000, 2);
+  });
+
+  it("usa 1 cuando la cantidad es 0, nula o indefinida", () => {
+    expect(totalLinea({ monto: 35, cantidad: 0 })).toBeCloseTo(35, 2);
+    expect(totalLinea({ monto: 35, cantidad: null })).toBeCloseTo(35, 2);
+    expect(totalLinea({ monto: 35 })).toBeCloseTo(35, 2);
+  });
+
+  it("el total de la tabla coincide con sumarConceptos", () => {
+    const lineas = [
+      { monto: 2750, cantidad: 8 },
+      { monto: 35, cantidad: 1 },
+      { monto: 13, cantidad: 8 },
+      { monto: 50, cantidad: 8 },
+      { monto: 50, cantidad: 1 },
+    ];
+    const totalTabla = lineas.reduce((a, l) => a + totalLinea(l), 0);
+    expect(sumarConceptos(lineas)).toBeCloseTo(totalTabla, 2);
+    expect(sumarConceptos(lineas)).toBeCloseTo(22589, 2);
   });
 });
