@@ -6,6 +6,7 @@ import {
   DIAS_ATRASO_BUZON,
   antiguedadEntrante,
   coincideBusquedaEntrante,
+  entranteSinImporte,
   entranteSinXml,
   etiquetaAntiguedad,
   filtrarEntrantes,
@@ -139,5 +140,32 @@ describe("resumirBuzon", () => {
       AHORA,
     );
     expect(res).toEqual({ total: 3, atrasados: 1, sinXml: 1 });
+  });
+});
+
+/** v13.398.0 — Importe detectado: marca y filtro. */
+describe("entranteSinImporte", () => {
+  it("marca los documentos sin total detectado", () => {
+    expect(entranteSinImporte(fila({ total_detectado: null }))).toBe(true);
+    expect(entranteSinImporte(fila())).toBe(true);
+  });
+
+  it("no marca los documentos con total positivo", () => {
+    expect(entranteSinImporte(fila({ total_detectado: 1234.5 }))).toBe(false);
+  });
+
+  it("trata el total en cero como importe faltante", () => {
+    expect(entranteSinImporte(fila({ total_detectado: 0 }))).toBe(true);
+  });
+});
+
+describe("chip sin_importe", () => {
+  it("deja sólo los documentos sin importe detectado", () => {
+    const filas = [
+      fila({ nombre_archivo: "con.pdf", total_detectado: 500, moneda_detectada: "USD" }),
+      fila({ nombre_archivo: "sin.pdf", total_detectado: null }),
+    ];
+    const resultado = filtrarEntrantes(filas, { chip: "sin_importe", ahora: AHORA });
+    expect(resultado.map((r) => r.nombre_archivo)).toEqual(["sin.pdf"]);
   });
 });

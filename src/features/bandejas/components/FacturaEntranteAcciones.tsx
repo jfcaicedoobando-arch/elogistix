@@ -39,10 +39,6 @@ export function FacturaEntranteAcciones({
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      <Button size="sm" variant="outline" onClick={() => onVer(row)}>
-        <Eye className="mr-2 h-4 w-4" /> Ver
-      </Button>
-
       {editable && yaCapturado && (
         <Button size="sm" variant="outline" asChild>
           <Link to={`/compras/facturas/${facturaExistenteId}`}>
@@ -63,6 +59,11 @@ export function FacturaEntranteAcciones({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {/* v13.398.0 — "Ver" sale de la fila (el clic en la fila ya abre la previa). */}
+          <DropdownMenuItem onClick={() => onVer(row)}>
+            <Eye className="mr-2 h-4 w-4" /> Ver documento
+          </DropdownMenuItem>
+
           {row.xml_path && (
             <DropdownMenuItem onClick={() => onVerXml(row)}>
               <FileCode2 className="mr-2 h-4 w-4" /> Descargar XML

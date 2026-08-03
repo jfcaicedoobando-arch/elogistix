@@ -71,7 +71,7 @@ export default function CxpBuzonEntrantes() {
   };
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         title="Buzón de facturas de proveedor"
         description="Documentos que operación recibió de los agentes y aún no se capturan en CxP."
@@ -81,8 +81,10 @@ export default function CxpBuzonEntrantes() {
         total={resumen.total}
         atrasados={resumen.atrasados}
         sinXml={resumen.sinXml}
+        chipActivo={chip}
         onChip={aplicarChip}
       />
+
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList>

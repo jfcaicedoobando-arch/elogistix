@@ -77,9 +77,24 @@ export function FacturasEntrantesToolbar({
         </SelectContent>
       </Select>
 
-      <span className="ml-auto text-xs text-muted-foreground">
-        {visibles} de {total} documento{total === 1 ? "" : "s"}
-      </span>
+      <div className="ml-auto flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">
+          {visibles} de {total} documento{total === 1 ? "" : "s"}
+        </span>
+        {(chip !== "todos" || q.trim() !== "") && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              onQChange("");
+              onChipChange("todos");
+            }}
+          >
+            Limpiar filtros
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
+

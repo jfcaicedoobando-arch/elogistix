@@ -3,13 +3,17 @@
  *
  * v13.365.0 — Fila compacta de una sola línea a 1366 px: barra de antigüedad,
  * proveedor como dato principal y acciones secundarias en el menú de tres puntos.
+ * v13.398.0 — Rejilla de columnas fijas (antigüedad · datos · importe · acciones),
+ * importe detectado visible, fecha de emisión y nombre de archivo relegado.
  */
-import { StickyNote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { FacturaEntranteAcciones } from "@/features/bandejas/components/FacturaEntranteAcciones";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatDate } from "@/lib/formatters/dates";
+import {
+  ImporteEntrante,
+  MetaEntrante,
+  ProveedorEntrante,
+} from "@/features/bandejas/components/FacturaEntranteRow.parts";
 import { cn } from "@/lib/utils";
 import { chipsArchivosEntrante } from "@/lib/domain/facturasEntrantes";
 import {
@@ -17,7 +21,7 @@ import {
   entranteSinXml,
   type TonoAntiguedad,
 } from "@/lib/domain/facturasEntrantesBuzon";
-import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow as Fila } from "@/features/cxp/services/facturasEntrantes";
 
 const BARRA_TONO: Record<TonoAntiguedad, string> = {
   neutral: "bg-muted",
@@ -34,19 +38,19 @@ const BADGE_TONO: Record<TonoAntiguedad, "neutral" | "info" | "warning" | "destr
 };
 
 interface Props {
-  row: FacturaEntranteRow;
+  row: Fila;
   puedeProcesar: boolean;
   /** Sólo lectura: pestañas de historial (capturadas / rechazadas). */
   soloLectura?: boolean;
   /** v13.368.0 — Factura viva que ya usa este CFDI; bloquea volver a capturarlo. */
   facturaExistenteId?: string | null;
   facturaExistenteFolio?: string | null;
-  onVer: (row: FacturaEntranteRow) => void;
-  onVerXml: (row: FacturaEntranteRow) => void;
-  onCapturar: (row: FacturaEntranteRow) => void;
+  onVer: (row: Fila) => void;
+  onVerXml: (row: Fila) => void;
+  onCapturar: (row: Fila) => void;
   /** v13.366.0 — Captura la factura de proveedor con los datos del documento. */
-  onCrearFactura: (row: FacturaEntranteRow) => void;
-  onRechazar: (row: FacturaEntranteRow) => void;
+  onCrearFactura: (row: Fila) => void;
+  onRechazar: (row: Fila) => void;
 }
 
 export function FacturaEntranteRow({
@@ -62,11 +66,7 @@ export function FacturaEntranteRow({
   onRechazar,
 }: Props) {
   const antiguedad = antiguedadEntrante(row);
-  const sinXml = entranteSinXml(row);
   const chips = chipsArchivosEntrante(row);
-  const proveedor = row.proveedores?.nombre ?? "Proveedor sin identificar";
-  const yaCapturado = !soloLectura && facturaExistenteId !== null;
-
 
   return (
     <Card className="relative overflow-hidden">
@@ -81,36 +81,17 @@ export function FacturaEntranteRow({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onVer(row)}
-          className="min-w-0 flex-1 text-left"
-        >
-          <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-semibold">{proveedor}</span>
-            {sinXml && <Badge variant="warning" size="sm">Falta XML</Badge>}
-            {yaCapturado && (
-              <Badge variant="neutral" size="sm">
-                CFDI ya capturado{facturaExistenteFolio ? ` · ${facturaExistenteFolio}` : ""}
-              </Badge>
-            )}
-
-            {row.nota && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <StickyNote className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">{row.nota}</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-          <p className="truncate text-xs text-muted-foreground">
-            {row.embarques?.expediente ?? "Sin expediente"}
-            {row.folio_serie ? ` · Folio ${row.folio_serie}` : ""}
-            {` · ${formatDate(row.created_at)}`}
-            {` · ${row.nombre_archivo}`}
-          </p>
+        <button type="button" onClick={() => onVer(row)} className="min-w-0 flex-1 text-left">
+          <ProveedorEntrante
+            row={row}
+            sinXml={entranteSinXml(row)}
+            yaCapturado={!soloLectura && facturaExistenteId !== null}
+            folioExistente={facturaExistenteFolio}
+          />
+          <MetaEntrante row={row} />
         </button>
+
+        <ImporteEntrante row={row} />
 
         <FacturaEntranteAcciones
           row={row}

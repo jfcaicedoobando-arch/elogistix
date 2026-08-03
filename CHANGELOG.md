@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.398.0] - 2026-08-03
+### Buzón de facturas de proveedor (UI/UX)
+- Cada fila muestra el importe y la moneda detectados del CFDI; los documentos sin importe se marcan y se filtran con el nuevo chip "Sin importe".
+- La línea de datos prioriza expediente · folio · fecha de emisión; el nombre de archivo queda al final, truncado y con tooltip.
+- "Proveedor sin identificar" ya no compite con los nombres reales: se muestra en tono apagado y con el RFC emisor cuando existe.
+- El botón "Ver" pasa al menú de tres puntos ("Ver documento"); la acción primaria visible es "Capturar factura".
+- El KPI usado como filtro se marca activo y la barra de trabajo ofrece "Limpiar filtros".
+- La página usa el ancho de listado denso (`width="wide"`) para aprovechar pantallas grandes.
+
 ## [13.397.3] - 2026-08-03
 ### Correcciones
 - Detalle de factura de proveedor: la conciliación automática ya no se lanza con roles sin permiso de escritura (Tesorero, Visor), que veían el toast rojo "No se pudo conciliar la tesorería" en cada apertura. Ahora se muestra una nota informativa. Nueva lista `CONCILIAR_TESORERIA` en la matriz de permisos (espejo de `_assert_writer`).
