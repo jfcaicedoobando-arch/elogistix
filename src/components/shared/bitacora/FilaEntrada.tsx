@@ -4,6 +4,7 @@ import type { EntradaBitacora } from "@/hooks/shared";
 import { nombreDesdeEmail, formatDate } from "@/lib/formatters";
 import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
 import { getEstadoVisual } from "@/lib/ui/estadoConfig";
+import { humanizarEnum } from "@/lib/ui/enumLabels";
 import { ICONOS_ACCION, COLORES_ACCION, RUTAS_MODULO, tiempoRelativo } from "./constants";
 
 function EstadoBadge({ estado, atenuado = false }: { estado: string; atenuado?: boolean }) {
