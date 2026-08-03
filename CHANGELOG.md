@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.392.2] - 2026-08-03
+### Power of 10: `pagosProveedor.ts` bajo 200 líneas
+- Nuevos módulos `pagosProveedorTypes.ts` (tipos compartidos) y `pagoProveedorBitacora.ts` (construcción pura de detalles de bitácora de tesorería); el service quedó en 191 líneas.
+
 ## [13.392.1] - 2026-08-03
 ### CI verde: imports por barrel, test de contexto y permisos de funciones
 - **O4 (deep imports)**: `usePagoProveedorForm.ts`, `PagoProveedorFormBody.tsx` y `BitacoraTesoreriaSection.tsx` ahora importan desde el barrel `@/features/tesoreria`.
