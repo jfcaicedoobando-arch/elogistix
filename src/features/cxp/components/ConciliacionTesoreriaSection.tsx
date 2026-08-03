@@ -6,8 +6,8 @@
 import { AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/format";
-import { formatFechaHoraMx } from "@/lib/date/formatMx";
+import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
+
 import { useConciliacionAutomaticaFactura } from "@/features/cxp/hooks/useConciliarTesoreria";
 import { resumenConciliacion } from "@/features/cxp/services/conciliacionResumen";
 import { ConciliacionIncidencias } from "./ConciliacionTesoreriaSection.incidencias";
