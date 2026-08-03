@@ -6,24 +6,20 @@
  * v13.395.0: soporta modo edición (`pagoEditar`) con las mismas validaciones,
  * devolviendo al saldo el importe del pago original.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type { FacturaCxP } from "@/features/cxp/services";
-import type { Database } from "@/integrations/supabase/types";
-import { defaultMetodo, metodosFor } from "@/features/cxp/components/pagoProveedorHelpers";
+import { metodosFor } from "@/features/cxp/components/pagoProveedorHelpers";
 import { todayLocalISO } from "@/lib/date/today";
 import { tcValido } from "@/lib/financial/tcValido";
 import { useCuentasBancarias } from "@/features/tesoreria";
 import { saldoDisponiblePago } from "@/features/cxp/services/pagoProveedorValidaciones";
 import { usePagoProveedorDerivados } from "./usePagoProveedorForm.derivados";
+import { usePagoProveedorCampos } from "./usePagoProveedorForm.estado";
 import {
   montoOriginalEnMonedaFactura as calcMontoOriginal,
   montoEnMonedaDeFactura,
-  valoresInicialesCreacion,
-  valoresInicialesEdicion,
   type PagoEditable,
 } from "./usePagoProveedorForm.editar";
-
-type Moneda = Database["public"]["Enums"]["moneda"];
 
 export function usePagoProveedorForm(
   factura: FacturaCxP | null,
@@ -33,36 +29,15 @@ export function usePagoProveedorForm(
   const today = todayLocalISO();
   const modo: "crear" | "editar" = pagoEditar ? "editar" : "crear";
 
-  const [fecha, setFecha] = useState(today);
-  const [monto, setMonto] = useState("");
-  const [moneda, setMoneda] = useState<Moneda>("MXN");
-  const [tc, setTc] = useState("");
-  const [metodo, setMetodo] = useState<string>("Transferencia");
-  const [referencia, setReferencia] = useState("");
-  const [notas, setNotas] = useState("");
-  const [diffMxn, setDiffMxn] = useState<string>("");
+  const {
+    fecha, setFecha, monto, setMonto, moneda, setMoneda, tc, setTc,
+    metodo, setMetodo, referencia, setReferencia, notas, setNotas,
+    diffMxn, setDiffMxn, cuentaId, setCuentaId, pagoEditarId,
+  } = usePagoProveedorCampos(factura, open, today, pagoEditar);
+
   // R6-N1: cuenta bancaria de donde sale el pago (genera el movimiento bancario).
-  const [cuentaId, setCuentaId] = useState<string>("");
   const { data: cuentas = [] } = useCuentasBancarias(true);
 
-  const pagoEditarId = pagoEditar?.id ?? null;
-
-  useEffect(() => {
-    if (!factura || !open) return;
-    const v = pagoEditar
-      ? valoresInicialesEdicion(pagoEditar)
-      : valoresInicialesCreacion(factura, today, defaultMetodo(factura.proveedor_origen));
-    setFecha(v.fecha);
-    setMonto(v.monto);
-    setMoneda(v.moneda);
-    setTc(v.tc);
-    setMetodo(v.metodo);
-    setReferencia(v.referencia);
-    setNotas(v.notas);
-    setDiffMxn(v.diffMxn);
-    if (pagoEditar) setCuentaId(v.cuentaId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [factura, open, today, pagoEditarId]);
 
   const cuentasDeMoneda = useMemo(
     () => cuentas.filter((c) => c.moneda === moneda),
