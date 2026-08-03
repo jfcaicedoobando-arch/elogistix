@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.394.0] - 2026-08-03
+### Filtros y ordenamiento en la bitácora de tesorería
+- Nuevo módulo puro `bitacoraTesoreriaFiltros.ts`: filtra por rango de fechas (Pago desde/hasta), tipo de movimiento (pago registrado / pago eliminado) y usuario/operador, con ordenamiento por fecha (reciente/antiguo).
+- Nuevo `BitacoraTesoreriaToolbar` con `DatePickerMx` (DD/MM/AAAA) y "Limpiar filtros"; contador "N de M movimientos" y estado vacío por filtros.
+- Fila extraída a `BitacoraTesoreriaSection.fila.tsx` para respetar el límite de 200 líneas.
+- 8 pruebas nuevas de filtros/orden.
+
+
+
 ## [13.393.0] - 2026-08-03
 ### Vista previa del impacto del pago a proveedor
 - Nuevo módulo puro `pagoImpactoPreview.ts`: calcula saldo/estado de la factura tras el pago, saldo agregado del proveedor en la moneda de la factura y salida de banco (con conversión a MXN).
