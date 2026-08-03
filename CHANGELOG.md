@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.398.1] - 2026-08-03
+### Buzón de facturas de proveedor (móvil)
+- Debajo de 768 px cada documento se apila en tarjeta: antigüedad y formatos en una línea, proveedor y datos, importe y acción "Capturar factura" a todo el ancho.
+- El nombre de archivo se oculta en pantallas chicas (sigue disponible al abrir el documento).
+- Barra de trabajo móvil: buscador y selector de orden a todo el ancho, chips que se acomodan en varias líneas y contador debajo.
+- KPIs en tres columnas compactas desde 640 px para evitar la tarjeta huérfana.
+
 ## [13.398.0] - 2026-08-03
 ### Buzón de facturas de proveedor (UI/UX)
 - Cada fila muestra el importe y la moneda detectados del CFDI; los documentos sin importe se marcan y se filtran con el nuevo chip "Sin importe".
