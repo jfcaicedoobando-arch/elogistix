@@ -3,34 +3,27 @@
  * Incluye lógica de diferencia cambiaria cuando la factura es USD y el pago en MXN.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import {
   crearMovimientoBancarioPago,
   eliminarMovimientoBancarioPago,
-  cargoEnMxn,
 } from "./pagoProveedorMovimiento";
+import { detallesPagoRegistrado, detallesPagoEliminado } from "./pagoProveedorBitacora";
+import type {
+  PagoProveedor,
+  PagoProveedorConMov,
+  RegistrarPagoProveedorInput,
+} from "./pagosProveedorTypes";
 
 // Fase N: el estado se recalcula por trigger BD. `decidirEstadoFactura` sigue viviendo en `./estadoFacturaProveedor` para uso puro en UI.
 
-export type PagoProveedor = Tables<"pagos_proveedor">;
+export type { PagoProveedor, PagoProveedorConMov, RegistrarPagoProveedorInput };
 
 // v13.56.1 — Columnas explícitas (auditoría: evita SELECT * en tablas financieras).
 // v13.190.0 — Incluye movimiento bancario vinculado (Ola 2 · Item 3) vía embed inverso.
 const PAGO_PROVEEDOR_COLUMNS =
   "id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, diferencia_cambiaria_mxn, metodo_pago, referencia, cuenta_bancaria_id, notas, created_by, created_at, updated_at, deleted_at, deleted_by, bbva_movimientos!bbva_movimientos_pago_proveedor_id_fkey(id, fecha, concepto, referencia, cargo, abono, estado_conciliacion)";
-
-export type PagoProveedorConMov = PagoProveedor & {
-  bbva_movimientos: Array<{
-    id: string;
-    fecha: string;
-    concepto: string | null;
-    referencia: string | null;
-    cargo: number | string;
-    abono: number | string;
-    estado_conciliacion: "Pendiente" | "Conciliado" | "Ignorado";
-  }> | null;
-};
 
 export async function listarPagosProveedor(facturaId: string): Promise<PagoProveedorConMov[]> {
   const { data, error } = await supabase
@@ -42,21 +35,6 @@ export async function listarPagosProveedor(facturaId: string): Promise<PagoProve
   if (error) throw error;
   // SAFE-CAST: embed inverso está validado por el FK bbva_movimientos_pago_proveedor_id_fkey.
   return (data ?? []) as unknown as PagoProveedorConMov[];
-}
-
-export interface RegistrarPagoProveedorInput {
-  proveedor_factura_id: string;
-  fecha_pago: string;
-  monto: number;
-  moneda: PagoProveedor["moneda"];
-  /** TC MXN por 1 USD. `null` cuando el pago y la factura son MXN (no aplica). Debe ser > 0 si se envía (check `pagos_proveedor_tc_pos`). */
-  tipo_cambio_usd: number | null;
-  metodo_pago: string;
-  referencia?: string;
-  cuenta_bancaria_id?: string | null;
-  notas?: string;
-  /** Si la factura es USD y se paga en MXN, esta es la diferencia respecto al TC original. */
-  diferencia_cambiaria_mxn?: number | null;
 }
 
 /**
@@ -162,32 +140,25 @@ export async function registrarPagoProveedor(
     });
   }
 
-
   // Recalcular estado de la factura origen
   await recalcularEstadoFactura(input.proveedor_factura_id);
   await registrarActividad({
     modulo: "cxp",
     accion: "pagar",
     entidadId: input.proveedor_factura_id,
-    detalles: {
-      pago_id: data.id,
+    detalles: detallesPagoRegistrado({
+      pagoId: data.id,
       monto: input.monto,
       moneda: input.moneda,
-      metodo_pago: input.metodo_pago,
-      referencia: input.referencia ?? null,
-      // R6-N2: bitácora de tesorería visible en el detalle de la factura.
-      cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
-      cargo_mxn: input.cuenta_bancaria_id
-        ? cargoEnMxn(input.monto, input.moneda, input.tipo_cambio_usd)
-        : null,
-      movimiento_tesoreria: input.cuenta_bancaria_id
-        ? (movimientoCreado ? "creado" : "no_creado")
-        : "sin_cuenta",
-    },
+      metodoPago: input.metodo_pago,
+      referencia: input.referencia,
+      cuentaBancariaId: input.cuenta_bancaria_id ?? null,
+      tipoCambioUsd: input.tipo_cambio_usd,
+      movimientoCreado,
+    }),
   });
   return data as PagoProveedor;
 }
-
 
 export async function eliminarPagoProveedor(id: string, facturaId: string, userId: string | null) {
   const { error } = await supabase
@@ -203,12 +174,7 @@ export async function eliminarPagoProveedor(id: string, facturaId: string, userI
     modulo: "cxp",
     accion: "eliminar_pago",
     entidadId: facturaId,
-    detalles: {
-      pago_id: id,
-      deleted_by: userId,
-      // R6-N2: el movimiento bancario asociado se da de baja junto con el pago.
-      movimiento_tesoreria: "dado_de_baja",
-    },
+    detalles: detallesPagoEliminado(id, userId),
   });
 }
 
@@ -223,4 +189,3 @@ async function recalcularEstadoFactura(_facturaId: string) {
   // no-op: el trigger BD hace el recálculo de forma transaccional.
   return;
 }
-
