@@ -17,6 +17,8 @@ interface Props {
   oculta?: boolean;
   conceptos: ReadonlyArray<ConceptoManual>;
   moneda: string;
+  /** Renglón sospechoso (línea más alta cuando la suma excede el subtotal). */
+  keyResaltado?: string | null;
   onAgregar: () => void;
   onActualizar: <K extends keyof CfdiConceptoParsed>(
     key: string,
@@ -25,6 +27,7 @@ interface Props {
   ) => void;
   onEliminar: (key: string) => void;
 }
+
 
 function num(v: string): number {
   const n = Number(v.replace(/,/g, ""));
