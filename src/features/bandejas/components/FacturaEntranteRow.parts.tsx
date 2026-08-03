@@ -89,7 +89,7 @@ export function ImporteEntrante({ row }: { row: Fila }) {
       <p className="truncate text-sm font-semibold tabular-nums">
         {formatCurrency(Number(row.total_detectado), moneda)}
       </p>
-      <p className="text-xs text-muted-foreground">{moneda}</p>
     </div>
   );
 }
+
