@@ -85,8 +85,9 @@ export function ConceptosManualesSection({
               <Input
                 className="col-span-3 md:col-span-2 h-9 text-right tabular-nums"
                 inputMode="decimal"
-                placeholder="Importe"
+                placeholder="Importe unit."
                 value={String(c.importe ?? 0)}
+
                 onChange={(e) => onActualizar(c.key, "importe", num(e.target.value))}
                 aria-label="Importe unitario"
               />
