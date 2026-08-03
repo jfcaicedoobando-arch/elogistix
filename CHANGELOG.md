@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.393.0] - 2026-08-03
+### Vista previa del impacto del pago a proveedor
+- Nuevo módulo puro `pagoImpactoPreview.ts`: calcula saldo/estado de la factura tras el pago, saldo agregado del proveedor en la moneda de la factura y salida de banco (con conversión a MXN).
+- Nuevo hook `useSaldoProveedorCxp` (saldo abierto del proveedor por moneda) y componente `PagoImpactoPreview` mostrado en `PagoProveedorForm` antes de guardar.
+- Props de `PagoProveedorFormBody` extraídas a `PagoProveedorFormBody.types.ts` para mantener el límite de 200 líneas.
+- 7 pruebas nuevas del cálculo de impacto (pago parcial, liquidación, exceso, TC faltante, conversión USD→MXN).
+
 ## [13.392.2] - 2026-08-03
 ### Power of 10: `pagosProveedor.ts` bajo 200 líneas
 - Nuevos módulos `pagosProveedorTypes.ts` (tipos compartidos) y `pagoProveedorBitacora.ts` (construcción pura de detalles de bitácora de tesorería); el service quedó en 191 líneas.
