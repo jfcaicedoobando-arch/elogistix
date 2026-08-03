@@ -17,13 +17,17 @@ interface Props {
   emisor?: { razonSocial?: string };
 }
 
+const COL_FECHA = { width: 95, flexGrow: 0, flexShrink: 0 } as const;
+const COL_MOV = { width: 90, flexGrow: 0, flexShrink: 0 } as const;
+const COL_ESTADO = { width: 115, flexGrow: 0, flexShrink: 0 } as const;
+
 const cols: PdfColumn<FilaBitacoraExport>[] = [
-  { key: "fecha", title: "Fecha", cellStyle: styles.cellQty, render: (r) => r.fecha },
-  { key: "mov", title: "Movimiento", cellStyle: styles.cellQty, render: (r) => r.movimiento },
-  { key: "monto", title: "Monto", cellStyle: styles.cellNum, render: (r) => r.monto },
-  { key: "cargo", title: "Cargo MXN", cellStyle: styles.cellNum, render: (r) => r.cargoMxn },
+  { key: "fecha", title: "Fecha", cellStyle: COL_FECHA, render: (r) => r.fecha },
+  { key: "mov", title: "Movimiento", cellStyle: COL_MOV, render: (r) => r.movimiento },
+  { key: "monto", title: "Monto", cellStyle: styles.cellNumWide, render: (r) => r.monto },
+  { key: "cargo", title: "Cargo MXN", cellStyle: styles.cellNumWide, render: (r) => r.cargoMxn },
   { key: "cuenta", title: "Cuenta", cellStyle: styles.cellDesc, render: (r) => r.cuenta },
-  { key: "estado", title: "Estado", cellStyle: styles.cellDesc, render: (r) => r.estadoMovimiento },
+  { key: "estado", title: "Estado", cellStyle: COL_ESTADO, render: (r) => r.estadoMovimiento },
   { key: "usuario", title: "Usuario", cellStyle: styles.cellDesc, render: (r) => r.usuario },
 ];
 
