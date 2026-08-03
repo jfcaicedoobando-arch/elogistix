@@ -69,21 +69,33 @@ export function coincideBusquedaEntrante(row: FilaBuzon, termino: string): boole
   return campos.some((campo) => normalizar(campo).includes(q));
 }
 
-export type ChipBuzon = "todos" | "sin_xml" | "atrasados" | "con_nota";
+/**
+ * v13.398.0 — Un documento sin importe detectado obliga a abrir el archivo
+ * para saber cuánto se debe: se marca y se puede filtrar.
+ */
+export function entranteSinImporte(row: FilaBuzon): boolean {
+  const total = row.total_detectado;
+  return total === null || total === undefined || Number(total) <= 0;
+}
+
+export type ChipBuzon = "todos" | "sin_xml" | "sin_importe" | "atrasados" | "con_nota";
 
 export const CHIPS_BUZON: readonly { id: ChipBuzon; label: string }[] = [
   { id: "todos", label: "Todos" },
   { id: "sin_xml", label: "Sin XML" },
+  { id: "sin_importe", label: "Sin importe" },
   { id: "atrasados", label: `${DIAS_ATRASO_BUZON}+ días` },
   { id: "con_nota", label: "Con nota" },
 ];
 
 function cumpleChip(row: FilaBuzon, chip: ChipBuzon, ahora?: Date): boolean {
   if (chip === "sin_xml") return entranteSinXml(row);
+  if (chip === "sin_importe") return entranteSinImporte(row);
   if (chip === "atrasados") return diasEnEspera(row.created_at, ahora) >= DIAS_ATRASO_BUZON;
   if (chip === "con_nota") return Boolean(row.nota && row.nota.trim());
   return true;
 }
+
 
 export type OrdenBuzon = "antiguos" | "recientes" | "proveedor";
 
