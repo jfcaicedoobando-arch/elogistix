@@ -185,7 +185,10 @@ export async function eliminarPagoProveedor(id: string, facturaId: string, userI
     .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
     .eq("id", id);
   if (error) throw error;
+  // R6-N1: el movimiento bancario vinculado se da de baja con el pago.
+  await eliminarMovimientoBancarioPago(id, userId);
   await recalcularEstadoFactura(facturaId);
+
   await registrarActividad({
     modulo: "cxp",
     accion: "eliminar_pago",
