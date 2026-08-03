@@ -151,10 +151,12 @@ function DialogNuevaFacturaProveedorForm({
           oculta={ctl.cfdiConceptos.length > 0}
           conceptos={ctl.conceptosManuales.conceptos}
           moneda={ctl.values.moneda}
+          keyResaltado={keyRenglonSospechoso}
           onAgregar={ctl.conceptosManuales.agregar}
           onActualizar={ctl.conceptosManuales.actualizar}
           onEliminar={ctl.conceptosManuales.eliminar}
         />
+
 
         <FacturaProveedorFormFields
           values={ctl.values}
