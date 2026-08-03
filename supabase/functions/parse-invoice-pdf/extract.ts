@@ -46,7 +46,7 @@ const TOOL_DEF = {
             properties: {
               description: { type: "string" },
               quantity: { type: "number" },
-              unit_price: { type: "number" },
+              unit_price: { type: "number", description: "Precio UNITARIO de la línea (amount / quantity)" },
               amount: { type: "number", description: "Importe de la línea (cantidad * precio)" },
               tax: { type: "number" },
             },
@@ -70,6 +70,7 @@ const SYSTEM = `Eres un asistente contable que extrae datos de facturas de prove
 - Sólo devuelve exchange_rate_usd si aparece en el PDF; si no, 0.
 - Los importes son números, no strings, sin comas de miles.
 - No inventes conceptos: extrae exactamente las líneas de la factura.
+- En cada línea devuelve SIEMPRE quantity y unit_price (precio UNITARIO) además de amount (total de la línea = quantity × unit_price). Si el PDF sólo muestra el total de la línea, calcula unit_price = amount / quantity.
 - Si un campo no aparece, usa cadena vacía (string) o 0 (número).`;
 
 interface GeminiCallParams {
