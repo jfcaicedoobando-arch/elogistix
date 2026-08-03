@@ -7,6 +7,9 @@ import { AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
+import { usePermissions } from "@/hooks/shared/usePermissions";
+import { CONCILIAR_TESORERIA, hasRole } from "@/lib/access/permissionMatrix";
+import type { AppRole } from "@/types/appRole";
 
 import { useConciliacionAutomaticaFactura } from "@/features/cxp/hooks/useConciliarTesoreria";
 import { resumenConciliacion } from "@/features/cxp/services/conciliacionResumen";
@@ -18,10 +21,26 @@ interface Props {
 }
 
 export function ConciliacionTesoreriaSection({ facturaId, monedaFactura }: Props) {
-  const conciliar = useConciliacionAutomaticaFactura(facturaId);
+  const { role } = usePermissions();
+  const puedeConciliar = hasRole(CONCILIAR_TESORERIA, role as AppRole | null);
+  const conciliar = useConciliacionAutomaticaFactura(facturaId, puedeConciliar);
   const reporte = conciliar.data ?? null;
   const resumen = resumenConciliacion(reporte);
   const factura = reporte?.facturas.find((f) => f.facturaId === facturaId) ?? null;
+
+  if (!puedeConciliar) {
+    return (
+      <section className="space-y-3">
+        <header className="space-y-0.5">
+          <h3 className="text-sm font-semibold">Conciliación de tesorería</h3>
+          <p className="text-xs text-muted-foreground">
+            Tu rol no puede ejecutar la conciliación. Solicítala a Contabilidad o a un
+            administrador para actualizar el saldo y el estatus de la factura.
+          </p>
+        </header>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-3">
@@ -42,6 +61,7 @@ export function ConciliacionTesoreriaSection({ facturaId, monedaFactura }: Props
           {conciliar.isPending ? "Conciliando…" : "Volver a conciliar"}
         </Button>
       </header>
+
 
       <div className="rounded-md border divide-y">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2.5">
