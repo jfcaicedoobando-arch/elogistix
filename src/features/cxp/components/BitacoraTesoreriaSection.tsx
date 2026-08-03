@@ -10,7 +10,7 @@ import { Banknote, Trash2, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { useBitacora } from "@/features/auditoria/hooks/useBitacora";
-import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
+import { useCuentasBancarias } from "@/features/tesoreria";
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 

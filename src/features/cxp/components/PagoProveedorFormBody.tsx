@@ -16,7 +16,7 @@ import { referenciaHint } from "./pagoProveedorHelpers";
 import { formatNumber } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
-import type { CuentaBancaria } from "@/features/tesoreria/services/cuentas";
+import type { CuentaBancaria } from "@/features/tesoreria";
 
 
 type Moneda = Database["public"]["Enums"]["moneda"];

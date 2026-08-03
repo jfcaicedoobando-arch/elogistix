@@ -7,6 +7,8 @@ WHERE b.organization_id IS NULL
 
 DROP POLICY IF EXISTS "Tenant user own bitacora" ON public.bitacora_actividad;
 
+DROP POLICY IF EXISTS "Tenant members read bitacora" ON public.bitacora_actividad;
+
 CREATE POLICY "Tenant members read bitacora"
 ON public.bitacora_actividad
 FOR SELECT
@@ -71,6 +73,9 @@ AS $$
   SELECT public.default_user_org_id();
 $$;
 
+REVOKE ALL ON FUNCTION public.current_user_org_id() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.current_user_org_id() TO authenticated, service_role;
+
 CREATE OR REPLACE FUNCTION public.get_user_context()
 RETURNS jsonb
 LANGUAGE sql
@@ -115,3 +120,6 @@ AS $$
     )
   );
 $$;
+
+REVOKE ALL ON FUNCTION public.get_user_context() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_user_context() TO authenticated, service_role;
