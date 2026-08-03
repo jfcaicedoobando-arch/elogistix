@@ -12,7 +12,8 @@ function EstadoBadge({ estado, atenuado = false }: { estado: string; atenuado?: 
     <span
       className={`inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-medium ${visual.badge} ${atenuado ? "opacity-60" : ""}`}
     >
-      {estado}
+      {/* FIX 6 (P3): si la bitácora guardó el estado como slug, se muestra en es-MX. */}
+      {humanizarEnum(estado)}
     </span>
   );
 }
