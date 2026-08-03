@@ -9,6 +9,8 @@
  * Módulo puro: sin Supabase, sin React. Todo lo que entra son números.
  */
 
+import { roundMoney } from "@/lib/financial/financialUtils";
+
 export type EstadoFacturaTrasPago = "Pagada" | "Parcialmente pagada" | "Vigente";
 
 export interface FacturaImpacto {
@@ -70,7 +72,7 @@ export interface ParamsImpactoPago {
 const TOL = 0.01;
 
 function redondear(n: number): number {
-  return Math.round(n * 100) / 100;
+  return roundMoney(n);
 }
 
 function estadoTrasPago(saldoDespues: number, pagadoDespues: number): EstadoFacturaTrasPago {

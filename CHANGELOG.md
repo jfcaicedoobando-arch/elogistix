@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.397.1] - 2026-08-03
+### Correcciones de CI
+- `BitacoraTesoreriaSection`: `entradas` ahora se memoriza (`useMemo`) para no invalidar los cálculos en cada render (react-hooks/exhaustive-deps).
+- `pagoImpactoPreview`: redondeo de dinero con `roundMoney` en lugar de `Math.round(x*100)/100`, según la política única del proyecto.
+- Renombrado el título duplicado del test de filtros de bitácora para pasar la auditoría de higiene de tests.
+
 ## [13.397.0] - 2026-08-03
 ### Descargar la bitácora de tesorería en CSV y PDF
 - Nuevos botones "CSV" y "PDF" en la sección Bitácora de tesorería (pestaña Pagos del detalle de factura de proveedor): exportan exactamente los movimientos visibles con los filtros aplicados.
