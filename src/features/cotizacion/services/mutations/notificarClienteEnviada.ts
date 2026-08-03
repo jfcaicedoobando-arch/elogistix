@@ -8,6 +8,7 @@
  * cambio de estado de la cotización.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { humanizarEnum } from "@/lib/ui/enumLabels";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
 export async function notificarClienteCotizacionEnviada(cotizacionId: string): Promise<boolean> {
