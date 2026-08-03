@@ -87,3 +87,15 @@ export function filtrarOrdenarBitacoraTesoreria<T extends EntradaFiltrable>(
   const signo = filtros.orden === "reciente" ? -1 : 1;
   return filtradas.sort((a, b) => signo * a.created_at.localeCompare(b.created_at));
 }
+
+/** Descripción legible de los filtros aplicados (para el PDF exportado). */
+export function descripcionFiltrosBitacora(filtros: FiltrosBitacoraTesoreria): string {
+  const partes: string[] = [];
+  if (filtros.desde) partes.push(`desde ${filtros.desde.split("-").reverse().join("/")}`);
+  if (filtros.hasta) partes.push(`hasta ${filtros.hasta.split("-").reverse().join("/")}`);
+  if (filtros.tipo !== "todos") partes.push(TIPO_MOVIMIENTO_LABELS[filtros.tipo]);
+  if (filtros.usuario !== "todos") partes.push(`usuario ${filtros.usuario}`);
+  const orden = ORDEN_BITACORA_LABELS[filtros.orden].toLowerCase();
+  if (partes.length === 0) return `Todos los movimientos · ${orden}`;
+  return `Filtros: ${partes.join(" · ")} · ${orden}`;
+}
