@@ -80,6 +80,8 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
         metodo_pago: f.metodo,
         referencia: f.referencia,
         notas: f.notas,
+        // R6-N1: la cuenta permite generar el movimiento bancario vinculado.
+        cuenta_bancaria_id: f.cuentaId || null,
         diferencia_cambiaria_mxn:
           f.esUsdPagadoEnMxn && f.diffMxn !== "" ? Number(f.diffMxn) : null,
       });
@@ -90,8 +92,10 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
     }
   };
 
-  const submitDisabled = registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada || f.bloqueadoPorTc;
-  const submitTitle = computeSubmitTitle(noAprobada, f.bloqueadoPorTc);
+  const submitDisabled =
+    registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada || f.bloqueadoPorTc || faltaCuenta;
+  const submitTitle = computeSubmitTitle(noAprobada, f.bloqueadoPorTc, faltaCuenta);
+
 
   const footer = (
     <>
