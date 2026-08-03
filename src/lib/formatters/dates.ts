@@ -84,6 +84,29 @@ export function formatFechaHora(
   }
 }
 
+/**
+ * FIX 6 (P3) — Fecha + hora para insertar dentro de una frase (toasts,
+ * correos). Usa reloj de 24 h para evitar el "p. m.." que aparecía al
+ * concatenar el punto final de la oración, y siempre en horario de México
+ * para que el toast no muestre un día distinto al del detalle.
+ * Ejemplo: "03/08/2026 a las 14:35".
+ */
+export function formatFechaHoraTexto(iso: string | null | undefined): string {
+  if (!iso) return "-";
+  try {
+    const d = new Date(iso);
+    const fecha = d.toLocaleDateString("es-MX", withTz({
+      day: "2-digit", month: "2-digit", year: "numeric",
+    }));
+    const hora = d.toLocaleTimeString("es-MX", withTz({
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    }));
+    return `${fecha} a las ${hora}`;
+  } catch {
+    return iso;
+  }
+}
+
 
 /**
  * Fecha larga es-MX ("lunes, 23 de julio de 2026"). Con capitalización opcional
