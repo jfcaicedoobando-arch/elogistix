@@ -45,3 +45,19 @@ export function detallesPagoEliminado(pagoId: string, userId: string | null) {
     movimiento_tesoreria: "dado_de_baja" as EstadoMovimientoTesoreria,
   };
 }
+
+export interface DetallesPagoEditadoInput extends DetallesPagoRegistradoInput {
+  montoAnterior: number;
+  monedaAnterior: PagoProveedor["moneda"];
+  cuentaAnteriorId: string | null;
+}
+
+/** Detalles del pago editado: incluye el "antes" para poder auditar el cambio. */
+export function detallesPagoEditado(input: DetallesPagoEditadoInput) {
+  return {
+    ...detallesPagoRegistrado(input),
+    monto_anterior: input.montoAnterior,
+    moneda_anterior: input.monedaAnterior,
+    cuenta_anterior_id: input.cuentaAnteriorId,
+  };
+}
