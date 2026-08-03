@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { listActiveOrganizations } from "@/features/admin/services/organization";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
@@ -38,6 +39,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const [superAdminOrgs, setSuperAdminOrgs] = useState<Organization[]>([]);
   const [superAdminActiveId, setSuperAdminActiveId] = useState<string | null>(null);
   const [loadingSA, setLoadingSA] = useState(false);
+  const queryClient = useQueryClient();
 
   const isSuperAdmin = role === "super_admin";
 
