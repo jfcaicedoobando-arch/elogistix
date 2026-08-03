@@ -8,6 +8,8 @@
 import { FileText } from "lucide-react";
 import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
 import { formatCurrency } from "@/lib/formatters";
+import { sumarConceptos, totalLinea } from "@/features/cxp/utils/cuadreConceptos";
+
 import { useConceptosCfdiFactura, type ConceptoCfdiRow } from "@/features/cxp/hooks/useConceptosCfdiFactura";
 
 interface Props {
@@ -48,13 +50,20 @@ export function ConceptosFacturaSection({ facturaId, moneda }: Props) {
 function ConceptosTable({
   conceptos, moneda,
 }: { conceptos: ReadonlyArray<ConceptoCfdiRow>; moneda: string }) {
-  const totImporte = sum(conceptos.map((c) => Number(c.monto) || 0));
+  const lineas = conceptos.map((c) => ({
+    monto: Number(c.monto) || 0,
+    cantidad: Number(c.cantidad) || 1,
+  }));
+  const totImporte = sumarConceptos(lineas);
   const totIva = sum(conceptos.map((c) => Number(c.iva) || 0));
   const totIeps = sum(conceptos.map((c) => Number(c.ieps) || 0));
   const hayIeps = totIeps > 0;
 
   return (
     <div className="rounded-md border overflow-hidden">
+      <p className="text-xs text-muted-foreground px-3 py-2 bg-muted/20 border-b">
+        El importe es unitario; el total de cada línea es importe × cantidad (sin IVA).
+      </p>
       <div className="max-h-72 overflow-y-auto">
         <table className="w-full text-xs tabular-nums">
           <thead className="bg-muted/50 text-muted-foreground uppercase tracking-wide text-2xs sticky top-0">
@@ -62,7 +71,8 @@ function ConceptosTable({
               <th className="px-2 py-1.5 text-left font-medium w-8">#</th>
               <th className="px-2 py-1.5 text-left font-medium">Descripción</th>
               <th className="px-2 py-1.5 text-right font-medium">Cant.</th>
-              <th className="px-2 py-1.5 text-right font-medium">Importe</th>
+              <th className="px-2 py-1.5 text-right font-medium">Importe unit.</th>
+              <th className="px-2 py-1.5 text-right font-medium">Total línea</th>
               <th className="px-2 py-1.5 text-right font-medium">IVA</th>
               {hayIeps && <th className="px-2 py-1.5 text-right font-medium">IEPS</th>}
             </tr>
@@ -74,8 +84,11 @@ function ConceptosTable({
                 <td className="px-2 py-1.5 max-w-[360px] truncate" title={c.descripcion}>
                   {c.descripcion || <span className="text-muted-foreground">(Sin descripción)</span>}
                 </td>
-                <td className="px-2 py-1.5 text-right">{Number(c.cantidad) || 1}</td>
-                <td className="px-2 py-1.5 text-right">{formatCurrency(Number(c.monto) || 0, moneda)}</td>
+                <td className="px-2 py-1.5 text-right">{lineas[i].cantidad}</td>
+                <td className="px-2 py-1.5 text-right">{formatCurrency(lineas[i].monto, moneda)}</td>
+                <td className="px-2 py-1.5 text-right font-medium">
+                  {formatCurrency(totalLinea(lineas[i]), moneda)}
+                </td>
                 <td className="px-2 py-1.5 text-right">{formatCurrency(Number(c.iva) || 0, moneda)}</td>
                 {hayIeps && (
                   <td className="px-2 py-1.5 text-right">{formatCurrency(Number(c.ieps) || 0, moneda)}</td>
@@ -85,7 +98,7 @@ function ConceptosTable({
           </tbody>
           <tfoot className="bg-muted/40 font-semibold sticky bottom-0">
             <tr className="border-t">
-              <td className="px-2 py-1.5" colSpan={3}>Totales</td>
+              <td className="px-2 py-1.5" colSpan={4}>Totales</td>
               <td className="px-2 py-1.5 text-right">{formatCurrency(totImporte, moneda)}</td>
               <td className="px-2 py-1.5 text-right">{formatCurrency(totIva, moneda)}</td>
               {hayIeps && <td className="px-2 py-1.5 text-right">{formatCurrency(totIeps, moneda)}</td>}
@@ -96,3 +109,4 @@ function ConceptosTable({
     </div>
   );
 }
+

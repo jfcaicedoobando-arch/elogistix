@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.399.2] - 2026-08-03
+### Fix — totales de la tabla de conceptos (CxP)
+- La vista previa de conceptos del CFDI y la tabla de conceptos del detalle sumaban la columna de importe **unitario**, por lo que el renglón "Totales" no cuadraba con el subtotal ni con el semáforo de cuadre.
+- Ambas tablas ahora muestran "Importe unit." y una columna "Total línea" (unitario × cantidad) y suman los totales de línea con el mismo helper `sumarConceptos`.
+- Nuevo helper `totalLinea` en `cuadreConceptos.ts` + tests de consistencia.
+
 ## [13.399.1] - 2026-08-03
 ### Fix — descuadre por importe de línea en parsers (IA y CFDI)
 - `parse-invoice-pdf`: la IA devolvía `amount` (total de la línea) como importe; ahora se normaliza a importe **unitario** (`unit_price` o `amount / cantidad`), evitando que las líneas con cantidad > 1 se contaran dos veces.
