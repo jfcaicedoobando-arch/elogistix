@@ -132,8 +132,14 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
   );
 }
 
-function computeSubmitTitle(noAprobada: boolean, bloqueadoPorTc: boolean): string | undefined {
+function computeSubmitTitle(
+  noAprobada: boolean,
+  bloqueadoPorTc: boolean,
+  faltaCuenta: boolean,
+): string | undefined {
   if (noAprobada) return "Requiere aprobación";
   if (bloqueadoPorTc) return "Captura el TC";
+  if (faltaCuenta) return "Selecciona la cuenta bancaria";
   return undefined;
 }
+
