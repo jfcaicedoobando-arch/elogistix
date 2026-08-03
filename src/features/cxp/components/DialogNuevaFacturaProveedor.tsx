@@ -1,6 +1,8 @@
 /**
  * Captura de factura de proveedor: manual, por XML CFDI, por PDF con IA o
- * desde el buzón CxP (v13.366.0). KPI grid superior con totales.
+ * desde el buzón CxP (v13.366.0).
+ * v13.400.0 — Optimizado para HD: ancho 4xl, dos columnas desde `lg`, KPIs de
+ * totales fijos arriba y semáforo de cuadre fijo sobre el footer.
  */
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,21 +14,16 @@ import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { usePermissions } from "@/hooks/shared";
 import { DialogFacturaProveedorSinPermiso } from "@/features/cxp/components/DialogFacturaProveedorSinPermiso";
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
-import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
-import { CargaCfdiSection } from "./CargaCfdiSection";
-import { CfdiDuplicadoAlert } from "./CfdiDuplicadoAlert";
-import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
-import { ConceptosManualesSection } from "./ConceptosManualesSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
-import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
 import { FacturaProveedorTotalesKpis } from "./FacturaProveedorTotalesKpis";
+import { ColumnaDocumento, ColumnaDatosFactura } from "./DialogNuevaFacturaProveedor.columnas";
 import { calcularCuadreConceptos, type ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
 import { resolverConceptosParaCuadre } from "@/features/cxp/utils/conceptosParaCuadre";
-import { EntranteCapturaBanner } from "./EntranteCapturaBanner";
 import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
+
 
 interface Props {
   open: boolean;
