@@ -53,7 +53,7 @@ export function BitacoraTesoreriaSection({
     return mapa;
   }, [cuentas]);
 
-  const entradas = data?.datos ?? [];
+  const entradas = useMemo(() => data?.datos ?? [], [data]);
   const usuarios = useMemo(() => usuariosBitacora(entradas), [entradas]);
   const visibles = useMemo(
     () => filtrarOrdenarBitacoraTesoreria(entradas, filtros),
