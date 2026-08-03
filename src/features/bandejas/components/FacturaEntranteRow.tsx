@@ -71,8 +71,9 @@ export function FacturaEntranteRow({
   return (
     <Card className="relative overflow-hidden">
       <div className={cn("absolute inset-y-0 left-0 w-1", BARRA_TONO[antiguedad.tono])} />
-      <div className="flex items-center gap-3 py-2.5 pl-4 pr-3">
-        <div className="flex w-[92px] shrink-0 flex-col items-start gap-1">
+      {/* v13.398.1 — En móvil la fila se apila; en ≥640 px vuelve a una línea. */}
+      <div className="flex flex-col gap-2 py-2.5 pl-4 pr-3 sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex shrink-0 flex-row items-center gap-1 sm:w-[92px] sm:flex-col sm:items-start">
           <Badge variant={BADGE_TONO[antiguedad.tono]} size="sm">{antiguedad.label}</Badge>
           <div className="flex gap-1">
             {chips.map((chip) => (
@@ -92,6 +93,7 @@ export function FacturaEntranteRow({
         </button>
 
         <ImporteEntrante row={row} />
+
 
         <FacturaEntranteAcciones
           row={row}
