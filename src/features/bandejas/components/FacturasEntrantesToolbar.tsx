@@ -42,7 +42,7 @@ export function FacturasEntrantesToolbar({
 }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative w-full max-w-xs">
+      <div className="relative w-full md:max-w-xs">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={q}
@@ -67,7 +67,7 @@ export function FacturasEntrantesToolbar({
       </div>
 
       <Select value={orden} onValueChange={(v) => onOrdenChange(v as OrdenBuzon)}>
-        <SelectTrigger className="h-9 w-[200px]" aria-label="Ordenar documentos">
+        <SelectTrigger className="h-9 w-full md:w-[200px]" aria-label="Ordenar documentos">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -77,7 +77,7 @@ export function FacturasEntrantesToolbar({
         </SelectContent>
       </Select>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="flex w-full items-center gap-2 md:ml-auto md:w-auto">
         <span className="text-xs text-muted-foreground">
           {visibles} de {total} documento{total === 1 ? "" : "s"}
         </span>
