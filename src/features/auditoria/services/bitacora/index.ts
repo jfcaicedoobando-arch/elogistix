@@ -24,6 +24,7 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
     fechaDesde,
     fechaHasta,
     excluirLogin = true,
+    organizationId,
   } = filtros;
 
   let query = supabase
@@ -40,6 +41,9 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
   if (fechaDesde) query = query.gte("created_at", fechaDesde);
   if (fechaHasta) query = query.lte("created_at", fechaHasta);
   if (acciones && acciones.length > 0) query = query.in("accion", acciones);
+  // R6-FIX3: la RLS ya permite leer la org completa; el filtro explícito evita
+  // mezclar organizaciones cuando el usuario pertenece a varias.
+  if (organizationId) query = query.eq("organization_id", organizationId);
 
   const { data, error, count } = await query;
   if (error) throw error;

@@ -24,6 +24,8 @@ export interface FiltrosBitacora {
   limite?: number;
   pagina?: number;
   excluirLogin?: boolean;
+  /** R6-FIX3: acota la lectura a una organización (evita mezclas por impersonación). */
+  organizationId?: string | null;
   /** Filtra por una o varias acciones (OR). */
   acciones?: string[];
 }
