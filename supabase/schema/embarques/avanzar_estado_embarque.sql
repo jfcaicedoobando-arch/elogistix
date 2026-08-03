@@ -30,10 +30,12 @@ BEGIN
   PERFORM public.assert_transicion_embarque(v_estado_actual, p_nuevo_estado::public.estado_embarque, v_expediente);
 
   -- v13.303.42: al confirmar un borrador sin folio, reservar expediente ahora.
+  -- v13.399.4: cast explícito enum → text; sin él Postgres no resuelve
+  -- generar_expediente(text) y lanza 42883.
   IF v_estado_actual = 'Borrador'::estado_embarque
      AND p_nuevo_estado = 'Confirmado'
      AND (v_expediente IS NULL OR v_expediente = '') THEN
-    v_expediente := public.generar_expediente(v_tipo);
+    v_expediente := public.generar_expediente(coalesce(v_tipo::text, ''));
     UPDATE embarques SET expediente = v_expediente WHERE id = p_embarque_id;
   END IF;
 
