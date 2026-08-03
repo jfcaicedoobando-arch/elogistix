@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.392.1] - 2026-08-03
+### CI verde: imports por barrel, test de contexto y permisos de funciones
+- **O4 (deep imports)**: `usePagoProveedorForm.ts`, `PagoProveedorFormBody.tsx` y `BitacoraTesoreriaSection.tsx` ahora importan desde el barrel `@/features/tesoreria`.
+- **OrganizationContext.test.tsx**: se envuelve el provider en `QueryClientProvider` (fallaba con "No QueryClient set").
+- **Auditoría de migraciones (H4/H6)**: `DROP POLICY IF EXISTS` previo a la política de bitácora y `REVOKE ALL` + `GRANT EXECUTE` para `current_user_org_id()` y `get_user_context()`, aplicados también en base de datos.
+
 ## [13.392.0] - 2026-08-03
 ### Pagos a proveedor: validaciones coherentes + bitácora de tesorería
 - **Validaciones antes de guardar** (`pagoProveedorValidaciones.ts`, módulo puro con 11 pruebas): monto > 0 y máximo 2 decimales, fecha no futura ni anterior a la emisión, tipo de cambio en rango válido, monto que no exceda el saldo, cuenta bancaria obligatoria y en la misma moneda del pago, y diferencia cambiaria numérica que no supere el monto.
