@@ -46,7 +46,7 @@ const TOOL_DEF = {
             properties: {
               description: { type: "string" },
               quantity: { type: "number" },
-              unit_price: { type: "number" },
+              unit_price: { type: "number", description: "Precio UNITARIO de la línea (amount / quantity)" },
               amount: { type: "number", description: "Importe de la línea (cantidad * precio)" },
               tax: { type: "number" },
             },
@@ -70,6 +70,7 @@ const SYSTEM = `Eres un asistente contable que extrae datos de facturas de prove
 - Sólo devuelve exchange_rate_usd si aparece en el PDF; si no, 0.
 - Los importes son números, no strings, sin comas de miles.
 - No inventes conceptos: extrae exactamente las líneas de la factura.
+- En cada línea devuelve SIEMPRE quantity y unit_price (precio UNITARIO) además de amount (total de la línea = quantity × unit_price). Si el PDF sólo muestra el total de la línea, calcula unit_price = amount / quantity.
 - Si un campo no aparece, usa cadena vacía (string) o 0 (número).`;
 
 interface GeminiCallParams {
@@ -217,13 +218,23 @@ export function mapGeminiToCfdiShape(d: GeminiExtracted, categorias: Categoria[]
         rfc: d.customer_tax_id || "",
         nombre: d.customer_name,
       },
-      conceptos: d.line_items.map((l) => ({
-        descripcion: l.description,
-        cantidad: l.quantity,
-        importe: l.amount,
-        iva: l.tax ?? 0,
-        ieps: 0,
-      })),
+      // La IA devuelve `amount` como TOTAL de la línea, pero el sistema trata
+      // `importe` como UNITARIO y lo multiplica por la cantidad. Sin normalizar,
+      // una línea con cantidad > 1 se contaba dos veces (LC_CXP_DESCUADRE).
+      conceptos: d.line_items.map((l) => {
+        const cantidad = l.quantity && l.quantity > 0 ? l.quantity : 1;
+        const unitario = l.unit_price && l.unit_price > 0
+          ? l.unit_price
+          : l.amount / cantidad;
+        return {
+          descripcion: l.description,
+          cantidad,
+          importe: Math.round(unitario * 1e6) / 1e6,
+          iva: l.tax ?? 0,
+          ieps: 0,
+        };
+      }),
+
     },
     ai: {
       categoria_id: catValida,

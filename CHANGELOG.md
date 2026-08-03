@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.399.1] - 2026-08-03
+### Fix — descuadre por importe de línea en parsers (IA y CFDI)
+- `parse-invoice-pdf`: la IA devolvía `amount` (total de la línea) como importe; ahora se normaliza a importe **unitario** (`unit_price` o `amount / cantidad`), evitando que las líneas con cantidad > 1 se contaran dos veces.
+- Se refuerza el prompt/tool schema para exigir `quantity` y `unit_price` en cada línea.
+- `parse-cfdi-xml`: mismo criterio, se usa `ValorUnitario` (o `Importe / Cantidad`) en lugar del `Importe` total de la línea.
+
+
+
 ## [13.399.0] - 2026-08-03
 ### Captura de factura de proveedor (tarjeta de cuadre)
 - La tarjeta de cuadre ahora muestra la fórmula (`Subtotal − Conceptos = diferencia`), el número de renglones considerados y aclara que la suma multiplica importe unitario × cantidad, sin IVA.
