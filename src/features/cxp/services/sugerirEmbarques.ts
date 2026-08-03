@@ -64,6 +64,7 @@ export async function buscarEmbarquesPorTexto(
     .from("embarques")
     .select("id, expediente, cliente_nombre, estado, etd, eta, bl_master, bl_house")
     .eq("organization_id", organizationId)
+    .not("estado", "in", FILTRO_ESTADOS_NO_VINCULABLES)
     .or(
       `expediente.ilike.%${term}%,bl_master.ilike.%${term}%,bl_house.ilike.%${term}%,cliente_nombre.ilike.%${term}%`,
     )
