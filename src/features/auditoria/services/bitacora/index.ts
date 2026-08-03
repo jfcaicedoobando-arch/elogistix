@@ -11,6 +11,28 @@ import type { EntradaBitacora, FiltrosBitacora } from "@/types/bitacora";
 const BITACORA_COLUMNS =
   "id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles, created_at" as const;
 
+/** Aplica los filtros opcionales de la bitácora (extraído por complejidad). */
+function aplicarFiltrosBitacora<Q extends {
+  neq: (c: string, v: string) => Q;
+  eq: (c: string, v: string) => Q;
+  gte: (c: string, v: string) => Q;
+  lte: (c: string, v: string) => Q;
+  in: (c: string, v: string[]) => Q;
+}>(query: Q, f: FiltrosBitacora & { excluirLogin: boolean }): Q {
+  let q = query;
+  if (f.excluirLogin) q = q.neq("accion", "login");
+  if (f.modulo) q = q.eq("modulo", f.modulo);
+  if (f.usuarioId) q = q.eq("usuario_id", f.usuarioId);
+  if (f.entidadId) q = q.eq("entidad_id", f.entidadId);
+  if (f.fechaDesde) q = q.gte("created_at", f.fechaDesde);
+  if (f.fechaHasta) q = q.lte("created_at", f.fechaHasta);
+  if (f.acciones && f.acciones.length > 0) q = q.in("accion", f.acciones);
+  // R6-FIX3: la RLS ya permite leer la org completa; el filtro explícito evita
+  // mezclar organizaciones cuando el usuario pertenece a varias.
+  if (f.organizationId) q = q.eq("organization_id", f.organizationId);
+  return q;
+}
+
 export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
   datos: EntradaBitacora[];
   total: number;
