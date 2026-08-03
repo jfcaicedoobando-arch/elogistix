@@ -46,7 +46,13 @@ interface Props {
   setNotas: (v: string) => void;
   montoEnMonedaFactura: number;
   bloqueadoPorTc: boolean;
+  /** R6-N1: cuenta bancaria de donde sale el pago. */
+  cuentas: CuentaBancaria[];
+  cuentaId: string;
+  setCuentaId: (v: string) => void;
+  requiereCuenta: boolean;
 }
+
 
 export function PagoProveedorFormBody(p: Props) {
   return (
