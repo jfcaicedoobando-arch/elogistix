@@ -76,6 +76,22 @@ function DialogNuevaFacturaProveedorForm({
   );
   const cuadre = useMemo(() => calcularCuadreConceptos(sub, conceptosParaCuadre), [sub, conceptosParaCuadre]);
 
+  // v13.399.0 — Con sobrante, señalamos el renglón manual de línea más alta:
+  // es el candidato típico a "importe unitario capturado como total de línea".
+  const keyRenglonSospechoso = useMemo(() => {
+    if (cuadre.estado !== "sobrante") return null;
+    const linea = (c: { importe?: number | string | null; cantidad?: number | null }) =>
+      (Number(c.importe) || 0) * (Number(c.cantidad) || 1);
+    return ctl.conceptosManuales.conceptos.reduce<{ key: string; total: number } | null>(
+      (peor, c) => {
+        const total = linea(c);
+        return !peor || total > peor.total ? { key: c.key, total } : peor;
+      },
+      null,
+    )?.key ?? null;
+  }, [cuadre.estado, ctl.conceptosManuales.conceptos]);
+
+
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
@@ -135,10 +151,12 @@ function DialogNuevaFacturaProveedorForm({
           oculta={ctl.cfdiConceptos.length > 0}
           conceptos={ctl.conceptosManuales.conceptos}
           moneda={ctl.values.moneda}
+          keyResaltado={keyRenglonSospechoso}
           onAgregar={ctl.conceptosManuales.agregar}
           onActualizar={ctl.conceptosManuales.actualizar}
           onEliminar={ctl.conceptosManuales.eliminar}
         />
+
 
         <FacturaProveedorFormFields
           values={ctl.values}
@@ -168,7 +186,13 @@ function DialogNuevaFacturaProveedorForm({
           onEmbarqueAdHoc={ctl.setEmbarqueAdHoc}
         />
 
-        <CuadreConceptosBar resultado={cuadre} subtotal={sub} moneda={moneda} />
+        <CuadreConceptosBar
+          resultado={cuadre}
+          subtotal={sub}
+          moneda={moneda}
+          renglones={conceptosParaCuadre.length}
+        />
+
       </FormDialogShell>
 
       {ctl.askCrearProv && (
