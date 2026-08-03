@@ -10,6 +10,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { defaultMetodo, metodosFor } from "@/features/cxp/components/pagoProveedorHelpers";
 import { todayLocalISO } from "@/lib/date/today";
 import { tcValido } from "@/lib/financial/tcValido";
+import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -24,6 +25,9 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
   const [referencia, setReferencia] = useState("");
   const [notas, setNotas] = useState("");
   const [diffMxn, setDiffMxn] = useState<string>("");
+  // R6-N1: cuenta bancaria de donde sale el pago (genera el movimiento bancario).
+  const [cuentaId, setCuentaId] = useState<string>("");
+  const { data: cuentas = [] } = useCuentasBancarias(true);
 
   useEffect(() => {
     if (!factura || !open) return;
@@ -36,6 +40,24 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
     setNotas("");
     setDiffMxn("");
   }, [factura, open, today]);
+
+  const cuentasDeMoneda = useMemo(
+    () => cuentas.filter((c) => c.moneda === moneda),
+    [cuentas, moneda],
+  );
+
+  // Preselección: primera cuenta de la moneda del pago; si no hay, la primera activa.
+  useEffect(() => {
+    if (!open || cuentaId || cuentas.length === 0) return;
+    setCuentaId((cuentasDeMoneda[0] ?? cuentas[0]).id);
+  }, [open, cuentaId, cuentas, cuentasDeMoneda]);
+
+  useEffect(() => {
+    if (!open) setCuentaId("");
+  }, [open]);
+
+  const requiereCuenta = metodo !== "Efectivo";
+
 
   const metodosDisponibles = useMemo(
     () => metodosFor(factura?.proveedor_origen ?? null),
