@@ -50,15 +50,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
 
   const faltaCuenta = f.requiereCuenta && !f.cuentaId;
 
-  const validarPago = (): string | null => {
-    if (!factura) return "Factura no disponible";
-    if (noAprobada) return "La factura debe estar aprobada antes de registrar pagos";
-    if (f.montoNum <= 0) return "El monto debe ser mayor a 0";
-    if (f.bloqueadoPorTc) return `Captura un tipo de cambio válido para pagar en MXN una factura ${factura.moneda}`;
-    if (f.excede) return `El monto excede el saldo pendiente (${factura.moneda})`;
-    if (faltaCuenta) return "Selecciona la cuenta bancaria de donde sale el pago";
-    return null;
-  };
+  const validarPago = () => validarPagoProveedor({ factura, noAprobada, faltaCuenta, f });
 
 
   const submit = async () => {
@@ -143,3 +135,20 @@ function computeSubmitTitle(
   return undefined;
 }
 
+/** Validaciones del pago extraídas del componente (límite de complejidad). */
+function validarPagoProveedor(a: {
+  factura: FacturaCxP | null | undefined;
+  noAprobada: boolean;
+  faltaCuenta: boolean;
+  f: { montoNum: number; bloqueadoPorTc: boolean; excede: boolean };
+}): string | null {
+  if (!a.factura) return "Factura no disponible";
+  if (a.noAprobada) return "La factura debe estar aprobada antes de registrar pagos";
+  if (a.f.montoNum <= 0) return "El monto debe ser mayor a 0";
+  if (a.f.bloqueadoPorTc) {
+    return `Captura un tipo de cambio válido para pagar en MXN una factura ${a.factura.moneda}`;
+  }
+  if (a.f.excede) return `El monto excede el saldo pendiente (${a.factura.moneda})`;
+  if (a.faltaCuenta) return "Selecciona la cuenta bancaria de donde sale el pago";
+  return null;
+}
