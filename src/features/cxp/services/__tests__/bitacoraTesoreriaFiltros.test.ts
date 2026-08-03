@@ -49,7 +49,7 @@ describe("bitacoraTesoreriaFiltros", () => {
     expect(r).toHaveLength(2);
   });
 
-  it("no muta el arreglo original", () => {
+  it("no muta el arreglo original de entradas de bitácora", () => {
     const copia = [...entradas];
     filtrarOrdenarBitacoraTesoreria(entradas, FILTROS_BITACORA_TESORERIA_INICIALES);
     expect(entradas).toEqual(copia);
