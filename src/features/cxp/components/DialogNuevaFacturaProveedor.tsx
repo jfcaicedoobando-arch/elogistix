@@ -67,26 +67,13 @@ function DialogNuevaFacturaProveedorForm({
   const ret = Number(ctl.values.retenciones) || 0;
   const moneda = ctl.values.moneda;
 
-  const conceptosParaCuadre = useMemo<ConceptoParaCuadre[]>(
-    () => resolverConceptosParaCuadre(ctl.cfdiConceptos, ctl.conceptosManuales.conceptos, ctl.vinculos),
-    [ctl.cfdiConceptos, ctl.conceptosManuales.conceptos, ctl.vinculos],
-  );
-  const cuadre = useMemo(() => calcularCuadreConceptos(sub, conceptosParaCuadre), [sub, conceptosParaCuadre]);
+  const { conceptosParaCuadre, cuadre, keyRenglonSospechoso } = useCuadreCaptura({
+    subtotal: sub,
+    cfdiConceptos: ctl.cfdiConceptos,
+    conceptosManuales: ctl.conceptosManuales.conceptos,
+    vinculos: ctl.vinculos,
+  });
 
-  // v13.399.0 — Con sobrante, señalamos el renglón manual de línea más alta:
-  // es el candidato típico a "importe unitario capturado como total de línea".
-  const keyRenglonSospechoso = useMemo(() => {
-    if (cuadre.estado !== "sobrante") return null;
-    const linea = (c: { importe?: number | string | null; cantidad?: number | null }) =>
-      (Number(c.importe) || 0) * (Number(c.cantidad) || 1);
-    return ctl.conceptosManuales.conceptos.reduce<{ key: string; total: number } | null>(
-      (peor, c) => {
-        const total = linea(c);
-        return !peor || total > peor.total ? { key: c.key, total } : peor;
-      },
-      null,
-    )?.key ?? null;
-  }, [cuadre.estado, ctl.conceptosManuales.conceptos]);
 
 
   const footer = (
