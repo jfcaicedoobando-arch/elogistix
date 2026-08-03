@@ -4,7 +4,7 @@
  * v13.190.0 · Ola 2 · Item 3 — muestra el estado de conciliación bancaria.
  */
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters";
 import { ConciliacionPagoCell } from "./ConciliacionPagoCell";
@@ -13,6 +13,7 @@ export interface PagoRow {
   id: string;
   fecha_pago: string;
   metodo_pago: string;
+  notas?: string | null;
   referencia?: string | null;
   monto: number | string;
   moneda: string;
@@ -34,9 +35,10 @@ interface Props {
   pago: PagoRow;
   canEdit: boolean;
   onEliminar: (id: string) => void;
+  onEditar?: (pago: PagoRow) => void;
 }
 
-export function PagoFila({ pago: p, canEdit, onEliminar }: Props) {
+export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
   const tc = p.tipo_cambio_usd ? Number(p.tipo_cambio_usd).toFixed(4) : "—";
   const dif = p.diferencia_cambiaria_mxn != null
     ? formatCurrency(Number(p.diferencia_cambiaria_mxn), "MXN")
@@ -71,6 +73,17 @@ export function PagoFila({ pago: p, canEdit, onEliminar }: Props) {
         />
       </td>
       <td className="px-2 py-3 text-right">
+        {canEdit && onEditar && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
+            onClick={() => onEditar(p)}
+            title="Editar pago"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+        )}
         {canEdit && (
           <Button
             variant="ghost"

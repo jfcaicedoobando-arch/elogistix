@@ -47,7 +47,16 @@ export interface ValidarPagoInput {
   /** Diferencia cambiaria capturada (texto vacío = no aplica). */
   diffMxnTexto: string;
   esUsdPagadoEnMxn: boolean;
+  /** "crear" (default) o "editar" un pago ya registrado. */
+  modo?: "crear" | "editar";
+  /**
+   * Sólo en modo "editar": monto del pago original expresado en la moneda de
+   * la factura. Se devuelve al saldo antes de validar, porque al editar ese
+   * importe deja de estar aplicado.
+   */
+  montoOriginalEnMonedaFactura?: number;
 }
+
 
 export interface ResultadoValidacionPago {
   error: string | null;
@@ -127,6 +136,16 @@ function validarDiferenciaCambiaria(a: ValidarPagoInput): string | null {
   return null;
 }
 
+/**
+ * Saldo contra el que se valida el monto. Al editar, el importe del pago
+ * original vuelve al saldo (ya no está aplicado).
+ */
+export function saldoDisponiblePago(a: ValidarPagoInput): number {
+  const saldo = a.factura?.saldo ?? 0;
+  if (a.modo !== "editar") return saldo;
+  return saldo + (a.montoOriginalEnMonedaFactura ?? 0);
+}
+
 /** Errores que bloquean el guardado, en orden de prioridad. */
 export function validarPagoProveedor(a: ValidarPagoInput): ResultadoValidacionPago {
   const avisos = calcularAvisosPago(a);
@@ -135,7 +154,8 @@ export function validarPagoProveedor(a: ValidarPagoInput): ResultadoValidacionPa
   if (factura.estado_aprobacion !== "aprobada") {
     return { error: "La factura debe estar aprobada antes de registrar pagos", avisos };
   }
-  if (factura.saldo <= TOLERANCIA) {
+  const disponible = saldoDisponiblePago(a);
+  if (disponible <= TOLERANCIA) {
     return { error: "La factura no tiene saldo pendiente", avisos };
   }
   const error =
@@ -144,11 +164,12 @@ export function validarPagoProveedor(a: ValidarPagoInput): ResultadoValidacionPa
     validarTipoCambio(a, factura) ??
     validarCuenta(a) ??
     validarDiferenciaCambiaria(a) ??
-    (a.montoEnMonedaFactura > factura.saldo + TOLERANCIA
+    (a.montoEnMonedaFactura > disponible + TOLERANCIA
       ? `El monto excede el saldo pendiente (${factura.moneda})`
       : null);
   return { error, avisos };
 }
+
 
 /** Incoherencias informativas de IVA/totales que conviene mostrar al usuario. */
 export function calcularAvisosPago(a: ValidarPagoInput): string[] {

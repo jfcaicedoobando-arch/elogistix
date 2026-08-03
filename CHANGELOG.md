@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.395.0] - 2026-08-03
+### Editar pagos a proveedor con las mismas validaciones
+- Nuevo `DialogEditarPagoProveedor` (botón lápiz en la tabla de pagos del detalle de factura de proveedor) que reutiliza el formulario y las validaciones de "Registrar pago": decimales, fecha no futura ni previa a la emisión, TC válido, coherencia cuenta/moneda y monto que no exceda el saldo.
+- `pagoProveedorValidaciones.ts`: nuevo modo `editar` con `saldoDisponiblePago`, que devuelve al saldo el importe del pago original antes de validar.
+- Nuevo servicio `actualizarPagoProveedor`: regenera el movimiento bancario vinculado y registra la acción `editar_pago` en la bitácora de tesorería (con monto/moneda/cuenta anteriores).
+- Bitácora de tesorería: nuevo tipo "Pago editado" en filtros y fila.
+- 12 pruebas nuevas de la lógica de edición.
+
+
 ## [13.394.0] - 2026-08-03
 ### Filtros y ordenamiento en la bitácora de tesorería
 - Nuevo módulo puro `bitacoraTesoreriaFiltros.ts`: filtra por rango de fechas (Pago desde/hasta), tipo de movimiento (pago registrado / pago eliminado) y usuario/operador, con ordenamiento por fecha (reciente/antiguo).

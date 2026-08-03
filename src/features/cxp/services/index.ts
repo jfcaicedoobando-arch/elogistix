@@ -1,6 +1,7 @@
 export * from "./proveedorFacturas";
 export * from "./proveedorFacturas.update";
 export * from "./pagosProveedor";
+export * from "./pagoProveedorActualizar";
 export * from "./parseCfdi";
 export * from "./cfdiStorage";
 export * from "./conceptosCostoVinculables";

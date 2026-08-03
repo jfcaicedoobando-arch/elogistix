@@ -6,7 +6,7 @@
  * fecha ascendente o descendente.
  */
 
-export type TipoMovimientoBitacora = "todos" | "pagar" | "eliminar_pago";
+export type TipoMovimientoBitacora = "todos" | "pagar" | "editar_pago" | "eliminar_pago";
 export type OrdenBitacora = "reciente" | "antiguo";
 
 export interface FiltrosBitacoraTesoreria {
@@ -31,6 +31,7 @@ export const FILTROS_BITACORA_TESORERIA_INICIALES: FiltrosBitacoraTesoreria = {
 export const TIPO_MOVIMIENTO_LABELS: Record<TipoMovimientoBitacora, string> = {
   todos: "Todos los movimientos",
   pagar: "Pago registrado",
+  editar_pago: "Pago editado",
   eliminar_pago: "Pago eliminado",
 };
 

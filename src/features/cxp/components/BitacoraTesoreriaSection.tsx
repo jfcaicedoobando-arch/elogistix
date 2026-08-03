@@ -21,7 +21,7 @@ import {
   type FiltrosBitacoraTesoreria,
 } from "@/features/cxp/services/bitacoraTesoreriaFiltros";
 
-const ACCIONES = ["pagar", "eliminar_pago"] as const;
+const ACCIONES = ["pagar", "editar_pago", "eliminar_pago"] as const;
 
 interface Props {
   facturaId: string;
