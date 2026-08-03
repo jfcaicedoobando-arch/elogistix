@@ -28,7 +28,7 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
       { respuesta: confirmAction, comentario },
       {
         onSuccess: () => {
-          const fechaTxt = formatFechaHora(new Date().toISOString());
+          const fechaTxt = formatFechaHoraTexto(new Date().toISOString());
           notifySuccess(undefined, {
             title:
               confirmAction === "Aceptada"
