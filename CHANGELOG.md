@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.400.0] - 2026-08-03
+### UI/UX — modal "Capturar factura de proveedor" optimizado para HD
+- Ancho `xl` → `4xl` y alto del shell a `92vh`: en 1366x768 el modal aprovechaba sólo el 42% del ancho.
+- Layout de dos columnas desde `lg` (`1.15fr / 1fr`): izquierda documento origen + conceptos, derecha proveedor/folio, fechas, moneda e importes, categoría y vinculación de embarque. En móvil y tablet sigue apilado.
+- `FormDialogShell` acepta `stickyTop`, `stickyBottom` y `bodyClassName` (props opcionales, sin impacto en los demás modales).
+- KPIs de totales fijos bajo el header (banda compacta de 4 columnas) y semáforo de cuadre fijo sobre el footer: subtotal, total y diferencia siempre visibles.
+- Se quitaron separadores redundantes en `FacturaProveedorFormFields` y se extrajeron las columnas a `DialogNuevaFacturaProveedor.columnas.tsx` (Power of 10 #4).
+- Sin cambios de cálculo, validaciones, permisos ni guardado.
+
+
 ## [13.399.4] - 2026-08-03
 ### Fix — no se podía confirmar un embarque en Borrador (42883)
 - `avanzar_estado_embarque` pasaba el tipo de operación como enum `tipo_operacion` a `generar_expediente(text)`; Postgres no resuelve la sobrecarga y lanzaba `function public.generar_expediente(tipo_operacion) does not exist`.
