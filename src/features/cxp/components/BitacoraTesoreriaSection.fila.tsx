@@ -50,19 +50,25 @@ export function BitacoraTesoreriaFila({
   accion, createdAt, usuarioEmail, detalles, monedaFactura, nombreCuenta,
 }: FilaProps) {
   const esBaja = accion === "eliminar_pago";
+  const esEdicion = accion === "editar_pago";
   const monto = num(detalles, "monto");
   const moneda = str(detalles, "moneda") ?? monedaFactura;
   const cargoMxn = num(detalles, "cargo_mxn");
   const cuentaId = str(detalles, "cuenta_bancaria_id");
-  const Icon = esBaja ? Trash2 : Banknote;
+  const Icon = esBaja ? Trash2 : esEdicion ? Pencil : Banknote;
 
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2.5">
       <Icon
-        className={cn("h-4 w-4 shrink-0", esBaja ? "text-destructive" : "text-success")}
+        className={cn(
+          "h-4 w-4 shrink-0",
+          esBaja ? "text-destructive" : esEdicion ? "text-primary" : "text-success",
+        )}
         aria-hidden
       />
-      <span className="text-sm font-medium">{esBaja ? "Pago eliminado" : "Pago registrado"}</span>
+      <span className="text-sm font-medium">
+        {esBaja ? "Pago eliminado" : esEdicion ? "Pago editado" : "Pago registrado"}
+      </span>
       {monto !== null && (
         <span className="text-sm tabular-nums">{formatCurrency(monto, moneda)}</span>
       )}
