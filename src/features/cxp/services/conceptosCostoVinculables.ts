@@ -11,6 +11,7 @@
  *  - El umbral 99% absorbe diferencias menores por redondeo / IVA proveedor.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { esEstadoNoVinculable } from "./sugerirEmbarques";
 
 export interface ConceptoCostoAbierto {
   id: string;
