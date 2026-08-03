@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { FormField } from "@/components/shared/FormField";
+import { PLACEHOLDER_FECHA } from "@/components/ui/picker-mx-shell";
 import { TransitoField, FclLclFields } from "./TarifaFields";
 import SeguroBlock from "./SeguroBlock";
 import type { TarifaCtx } from "./overrideHelpers";
