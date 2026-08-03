@@ -8,6 +8,8 @@
 import { FileText } from "lucide-react";
 import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
 import { formatCurrency } from "@/lib/formatters";
+import { sumarConceptos, totalLinea } from "@/features/cxp/utils/cuadreConceptos";
+
 import { useConceptosCfdiFactura, type ConceptoCfdiRow } from "@/features/cxp/hooks/useConceptosCfdiFactura";
 
 interface Props {
