@@ -172,5 +172,20 @@ export const ADMIN_CUENTAS_BANCARIAS: readonly AppRole[] = [
   "tesorero",
 ];
 
+/**
+ * v13.397.3 — Espejo UI del guard SQL `_assert_writer` usado por la RPC
+ * `conciliar_tesoreria_proveedor`. Tesorero y roles de sólo lectura NO pueden
+ * ejecutar la conciliación (la BD responde 42501), así que la UI no debe
+ * lanzarla ni ofrecer el botón.
+ */
+export const CONCILIAR_TESORERIA: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "operador",
+  "contador",
+  "auxiliar_contable",
+];
+
 export const hasRole = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
