@@ -65,7 +65,7 @@ export function MetaEntrante({ row }: { row: Fila }) {
       <span className="shrink-0">· {fecha}</span>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="hidden truncate text-muted-foreground/70 sm:inline">· {row.nombre_archivo}</span>
+          <span className="hidden truncate text-muted-foreground/70 md:inline">· {row.nombre_archivo}</span>
         </TooltipTrigger>
         <TooltipContent className="max-w-sm break-all">{row.nombre_archivo}</TooltipContent>
       </Tooltip>
@@ -77,7 +77,7 @@ export function MetaEntrante({ row }: { row: Fila }) {
 export function ImporteEntrante({ row }: { row: Fila }) {
   if (entranteSinImporte(row)) {
     return (
-      <div className="w-full shrink-0 text-left sm:w-[128px] sm:text-right">
+      <div className="w-full shrink-0 text-left md:w-[128px] md:text-right">
         <span className="text-xs text-muted-foreground">Sin importe</span>
       </div>
     );
@@ -85,7 +85,7 @@ export function ImporteEntrante({ row }: { row: Fila }) {
 
   const moneda = row.moneda_detectada ?? "MXN";
   return (
-    <div className="w-full shrink-0 text-left sm:w-[128px] sm:text-right">
+    <div className="w-full shrink-0 text-left md:w-[128px] md:text-right">
       <p className="truncate text-sm font-semibold tabular-nums">
         {formatCurrency(Number(row.total_detectado), moneda)}
       </p>

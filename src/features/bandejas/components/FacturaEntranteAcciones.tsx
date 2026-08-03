@@ -40,14 +40,14 @@ export function FacturaEntranteAcciones({
   return (
     <div className="flex shrink-0 items-center justify-end gap-2">
       {editable && yaCapturado && (
-        <Button size="sm" variant="outline" className="flex-1 sm:flex-none" asChild>
+        <Button size="sm" variant="outline" className="flex-1 md:flex-none" asChild>
           <Link to={`/compras/facturas/${facturaExistenteId}`}>
             <Eye className="mr-2 h-4 w-4" /> Ver factura
           </Link>
         </Button>
       )}
       {editable && !yaCapturado && (
-        <Button size="sm" className="flex-1 sm:flex-none" onClick={() => onCrearFactura(row)}>
+        <Button size="sm" className="flex-1 md:flex-none" onClick={() => onCrearFactura(row)}>
           <FilePlus2 className="mr-2 h-4 w-4" /> Capturar factura
         </Button>
       )}
