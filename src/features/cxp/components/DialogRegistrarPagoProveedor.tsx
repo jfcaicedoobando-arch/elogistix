@@ -48,14 +48,18 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
   const f = usePagoProveedorForm(factura, open);
   const noAprobada = !!factura && factura.estado_aprobacion !== "aprobada";
 
+  const faltaCuenta = f.requiereCuenta && !f.cuentaId;
+
   const validarPago = (): string | null => {
     if (!factura) return "Factura no disponible";
     if (noAprobada) return "La factura debe estar aprobada antes de registrar pagos";
     if (f.montoNum <= 0) return "El monto debe ser mayor a 0";
     if (f.bloqueadoPorTc) return `Captura un tipo de cambio válido para pagar en MXN una factura ${factura.moneda}`;
     if (f.excede) return `El monto excede el saldo pendiente (${factura.moneda})`;
+    if (faltaCuenta) return "Selecciona la cuenta bancaria de donde sale el pago";
     return null;
   };
+
 
   const submit = async () => {
     if (!factura) return;
