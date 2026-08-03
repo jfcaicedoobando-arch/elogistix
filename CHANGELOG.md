@@ -1,6 +1,14 @@
 # Changelog
 
+## [13.399.0] - 2026-08-03
+### Captura de factura de proveedor (tarjeta de cuadre)
+- La tarjeta de cuadre ahora muestra la fórmula (`Subtotal − Conceptos = diferencia`), el número de renglones considerados y aclara que la suma multiplica importe unitario × cantidad, sin IVA.
+- El consejo del estado "Sobran…" apunta primero a la causa real: renglones con cantidad mayor a 1 donde el importe se capturó como total de línea, o subtotal en otra moneda; el renglón negativo queda como opción para descuentos reales.
+- El campo de importe se etiqueta como "Importe unit." y la nota de la sección explica el cálculo de la línea.
+- Con sobrante se resalta en rojo el renglón de línea más alta para localizar el error de un vistazo.
+
 ## [13.398.1] - 2026-08-03
+
 ### Buzón de facturas de proveedor (móvil)
 - Debajo de 768 px cada documento se apila en tarjeta: antigüedad y formatos en una línea, proveedor y datos, importe y acción "Capturar factura" a todo el ancho.
 - El nombre de archivo se oculta en pantallas chicas (sigue disponible al abrir el documento).
