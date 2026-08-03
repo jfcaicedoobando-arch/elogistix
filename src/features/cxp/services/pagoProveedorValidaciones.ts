@@ -47,7 +47,16 @@ export interface ValidarPagoInput {
   /** Diferencia cambiaria capturada (texto vacío = no aplica). */
   diffMxnTexto: string;
   esUsdPagadoEnMxn: boolean;
+  /** "crear" (default) o "editar" un pago ya registrado. */
+  modo?: "crear" | "editar";
+  /**
+   * Sólo en modo "editar": monto del pago original expresado en la moneda de
+   * la factura. Se devuelve al saldo antes de validar, porque al editar ese
+   * importe deja de estar aplicado.
+   */
+  montoOriginalEnMonedaFactura?: number;
 }
+
 
 export interface ResultadoValidacionPago {
   error: string | null;
