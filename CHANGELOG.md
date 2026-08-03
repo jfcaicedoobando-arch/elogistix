@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.397.3] - 2026-08-03
+### Correcciones
+- Detalle de factura de proveedor: la conciliación automática ya no se lanza con roles sin permiso de escritura (Tesorero, Visor), que veían el toast rojo "No se pudo conciliar la tesorería" en cada apertura. Ahora se muestra una nota informativa. Nueva lista `CONCILIAR_TESORERIA` en la matriz de permisos (espejo de `_assert_writer`).
+
 ## [13.397.2] - 2026-08-03
 ### Correcciones de CI
 - `lcCodeMessages.financiero.ts`: agregado el mensaje amigable de `LC_CONCILIACION_SIN_ALCANCE` (test de cobertura de códigos LC_*).
