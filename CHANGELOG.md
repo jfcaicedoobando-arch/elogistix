@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.392.0] - 2026-08-03
+### Pagos a proveedor: validaciones coherentes + bitácora de tesorería
+- **Validaciones antes de guardar** (`pagoProveedorValidaciones.ts`, módulo puro con 11 pruebas): monto > 0 y máximo 2 decimales, fecha no futura ni anterior a la emisión, tipo de cambio en rango válido, monto que no exceda el saldo, cuenta bancaria obligatoria y en la misma moneda del pago, y diferencia cambiaria numérica que no supere el monto.
+- **Coherencia de IVA y totales**: aviso visible en el modal cuando `subtotal + IVA + IEPS − retenciones` no cuadra con el total, cuando el IVA no equivale a 0 %, 8 % o 16 % del subtotal, o cuando las retenciones superan el subtotal.
+- **Bitácora de tesorería visible**: nueva sección en la pestaña *Pagos* del detalle de factura de proveedor con cada movimiento generado (pago registrado / pago eliminado), monto, cargo en MXN, cuenta bancaria, estado del movimiento bancario (creado, no generado, dado de baja, sin cuenta), usuario y fecha-hora.
+- **Detalles enriquecidos en bitácora**: `registrarPagoProveedor` y `eliminarPagoProveedor` guardan cuenta bancaria, cargo en MXN y el resultado real del movimiento bancario.
+
 ## [13.391.0] - 2026-08-03
 ### Ronda 6 — FIX 6 (lote P3): pulido de copy y localización
 - **Toasts sin ruido técnico**: `sanitizeToastText` elimina nombres de constraints (`*_uq`, `*_key`, `*_pkey`…) y normaliza puntuación duplicada; nuevos mensajes de negocio para folio duplicado de factura de proveedor, folio de factura y RFC de cliente.
