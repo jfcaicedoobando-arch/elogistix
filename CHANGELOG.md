@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.396.0] - 2026-08-03
+### Conciliación automática de tesorería en CxP
+- Nueva RPC `conciliar_tesoreria_proveedor` que recalcula, desde los pagos y movimientos bancarios registrados, el saldo pendiente por factura y por proveedor (por moneda) y corrige el estatus/etapa de captura de las facturas desfasadas.
+- La RPC reporta incidencias: pagos sin movimiento de tesorería y pagos cuyo importe no coincide con el cargo bancario.
+- Nueva sección "Conciliación de tesorería" en el detalle de factura de proveedor: se ejecuta sola al abrir la pestaña de pagos, muestra saldo/estatus recalculados y permite volver a conciliar.
+- Nuevos `conciliacionTesoreria.ts`, `conciliacionResumen.ts`, `useConciliarTesoreria.ts` y 8 pruebas de la lógica pura.
+
 ## [13.395.0] - 2026-08-03
 ### Editar pagos a proveedor con las mismas validaciones
 - Nuevo `DialogEditarPagoProveedor` (botón lápiz en la tabla de pagos del detalle de factura de proveedor) que reutiliza el formulario y las validaciones de "Registrar pago": decimales, fecha no futura ni previa a la emisión, TC válido, coherencia cuenta/moneda y monto que no exceda el saldo.
