@@ -107,5 +107,7 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
     metodosDisponibles, montoNum, saldoRestante,
     esUsdPagadoEnMxn, showTc, excede,
     montoEnMonedaFactura, bloqueadoPorTc, tcNum,
+    cuentas, cuentasDeMoneda, cuentaId, setCuentaId, requiereCuenta,
+
   };
 }
