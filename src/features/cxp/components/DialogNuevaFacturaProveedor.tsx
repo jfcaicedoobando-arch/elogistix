@@ -125,7 +125,7 @@ function DialogNuevaFacturaProveedorForm({
             renglones={conceptosParaCuadre.length}
           />
         }
-        bodyClassName="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start lg:space-y-0"
+        bodyClassName="lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-6 lg:items-start lg:space-y-0"
       >
         <ColumnaDocumento
           ctl={ctl}
