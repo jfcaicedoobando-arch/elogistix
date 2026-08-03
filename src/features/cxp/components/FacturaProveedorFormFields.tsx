@@ -7,7 +7,6 @@ import { CalendarDays, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -61,8 +60,6 @@ export function FacturaProveedorFormFields({
         proveedorNombre={proveedorNombre}
       />
 
-      <Separator />
-
       <FormSection title="Fechas y crédito" icon={<CalendarDays className="h-3.5 w-3.5" />}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
@@ -91,8 +88,6 @@ export function FacturaProveedorFormFields({
         </div>
       </FormSection>
 
-      <Separator />
-
       <MonedaImportesSection
         values={values}
         onChange={onChange}
@@ -102,8 +97,6 @@ export function FacturaProveedorFormFields({
         onObtenerDof={onObtenerDof}
         dofLoading={dofLoading}
       />
-
-      <Separator />
 
       <FormSection title="Categoría contable" icon={<FileText className="h-3.5 w-3.5" />}>
         <div className="space-y-1">
@@ -124,8 +117,6 @@ export function FacturaProveedorFormFields({
           <FieldError msg={errors.categoriaId} />
         </div>
       </FormSection>
-
-      <Separator />
 
       <NotasSection value={values.notas} onChange={(v) => onChange("notas", v)} />
     </div>

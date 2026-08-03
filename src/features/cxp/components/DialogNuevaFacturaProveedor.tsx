@@ -1,6 +1,8 @@
 /**
  * Captura de factura de proveedor: manual, por XML CFDI, por PDF con IA o
- * desde el buzón CxP (v13.366.0). KPI grid superior con totales.
+ * desde el buzón CxP (v13.366.0).
+ * v13.400.0 — Optimizado para HD: ancho 4xl, dos columnas desde `lg`, KPIs de
+ * totales fijos arriba y semáforo de cuadre fijo sobre el footer.
  */
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,21 +14,16 @@ import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { usePermissions } from "@/hooks/shared";
 import { DialogFacturaProveedorSinPermiso } from "@/features/cxp/components/DialogFacturaProveedorSinPermiso";
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
-import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
-import { CargaCfdiSection } from "./CargaCfdiSection";
-import { CfdiDuplicadoAlert } from "./CfdiDuplicadoAlert";
-import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
-import { ConceptosManualesSection } from "./ConceptosManualesSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
-import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
 import { FacturaProveedorTotalesKpis } from "./FacturaProveedorTotalesKpis";
+import { ColumnaDocumento, ColumnaDatosFactura } from "./DialogNuevaFacturaProveedor.columnas";
 import { calcularCuadreConceptos, type ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
 import { resolverConceptosParaCuadre } from "@/features/cxp/utils/conceptosParaCuadre";
-import { EntranteCapturaBanner } from "./EntranteCapturaBanner";
 import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
+
 
 interface Props {
   open: boolean;
@@ -112,86 +109,39 @@ function DialogNuevaFacturaProveedorForm({
         icon={FileSpreadsheet}
         title="Capturar factura de proveedor"
         description="Registra la factura recibida. Si es de un proveedor mexicano, sube el XML CFDI y se prellenará automáticamente."
-        size="xl"
+        size="4xl"
         footer={footer}
+        stickyTop={
+          <FacturaProveedorTotalesKpis
+            subtotal={sub} iva={iva} ieps={ieps} retenciones={ret}
+            total={ctl.total} moneda={moneda}
+          />
+        }
+        stickyBottom={
+          <CuadreConceptosBar
+            resultado={cuadre}
+            subtotal={sub}
+            moneda={moneda}
+            renglones={conceptosParaCuadre.length}
+          />
+        }
+        bodyClassName="lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-6 lg:items-start lg:space-y-0"
       >
-        <EntranteCapturaBanner
-          entrante={entrante ?? null}
-          estado={autocarga.estado}
-          mensaje={autocarga.mensaje}
-        />
-
-        <FacturaProveedorTotalesKpis
-          subtotal={sub} iva={iva} ieps={ieps} retenciones={ret}
-          total={ctl.total} moneda={moneda}
-        />
-
-        <CargaCfdiSection
-          mode={ctl.mode}
-          onModeChange={ctl.setMode}
+        <ColumnaDocumento
+          ctl={ctl}
           categorias={cats.data ?? []}
-          onParsed={ctl.handleCfdiParsed}
-          onPdfIaParsed={ctl.handlePdfIaParsed}
-          cfdiReady={!!ctl.pendingCfdi && ctl.pendingCfdi.origen === "cfdi"}
-          pdfIaReady={!!ctl.pendingCfdi && ctl.pendingCfdi.origen === "pdf_ia"}
-        />
-
-        <CfdiDuplicadoAlert
-          factura={ctl.cfdiDuplicado}
-          onVerFactura={(id) => {
+          entrante={entrante ?? null}
+          autocarga={autocarga}
+          keyRenglonSospechoso={keyRenglonSospechoso}
+          onVerFacturaDuplicada={(id) => {
             ctl.reset();
             onOpenChange(false);
             navigate(`/compras/facturas?factura=${id}`);
           }}
         />
 
-        <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />
+        <ColumnaDatosFactura ctl={ctl} categorias={cats.data ?? []} />
 
-        <ConceptosManualesSection
-          oculta={ctl.cfdiConceptos.length > 0}
-          conceptos={ctl.conceptosManuales.conceptos}
-          moneda={ctl.values.moneda}
-          keyResaltado={keyRenglonSospechoso}
-          onAgregar={ctl.conceptosManuales.agregar}
-          onActualizar={ctl.conceptosManuales.actualizar}
-          onEliminar={ctl.conceptosManuales.eliminar}
-        />
-
-
-        <FacturaProveedorFormFields
-          values={ctl.values}
-          onChange={ctl.handleChange}
-          onProveedor={ctl.handleProveedor}
-          categorias={cats.data ?? []}
-          total={ctl.total}
-          errors={ctl.errors}
-          tcOrigen={ctl.tcOrigen}
-          tcFechaAplicada={ctl.tcFechaAplicada}
-          onObtenerDof={ctl.obtenerDofManual}
-          dofLoading={ctl.dofLoading}
-        />
-
-        <VincularEmbarqueSection
-          proveedorId={ctl.values.provId}
-          proveedorNombre={ctl.values.provNombre}
-          organizationId={ctl.organizationId}
-          seleccion={ctl.vinculos}
-          onToggle={ctl.toggleVinculo}
-          onChangeMonto={ctl.setVinculoMonto}
-          onAplicarSugerencias={ctl.aplicarSugerencias}
-          facturaDescripcion={ctl.values.notas || `Factura ${ctl.values.folio}`}
-          facturaMonto={Number(ctl.values.subtotal) || 0}
-          facturaMoneda={ctl.values.moneda}
-          embarqueAdHoc={ctl.embarqueAdHoc}
-          onEmbarqueAdHoc={ctl.setEmbarqueAdHoc}
-        />
-
-        <CuadreConceptosBar
-          resultado={cuadre}
-          subtotal={sub}
-          moneda={moneda}
-          renglones={conceptosParaCuadre.length}
-        />
 
       </FormDialogShell>
 

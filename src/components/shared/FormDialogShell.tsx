@@ -40,6 +40,12 @@ interface Props {
   totalSteps?: number;
   stepLabels?: string[];
   footer: ReactNode;
+  /** Banda fija bajo el header, fuera del área scrolleable (KPIs, avisos). */
+  stickyTop?: ReactNode;
+  /** Banda fija sobre el footer, fuera del área scrolleable (semáforos). */
+  stickyBottom?: ReactNode;
+  /** Clases extra del contenedor scrolleable (p.ej. layout de 2 columnas). */
+  bodyClassName?: string;
   children: ReactNode;
 }
 
@@ -55,13 +61,16 @@ export function FormDialogShell({
   totalSteps,
   stepLabels,
   footer,
+  stickyTop,
+  stickyBottom,
+  bodyClassName,
   children,
 }: Props) {
   const showStepper = typeof step === "number" && typeof totalSteps === "number" && totalSteps > 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(dialogSize[size], "max-h-[90vh] flex flex-col gap-0 p-0")}>
+      <DialogContent className={cn(dialogSize[size], "max-h-[92vh] flex flex-col gap-0 p-0")}>
         <DialogHeader className="px-6 pt-6 pb-4 border-b space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3 min-w-0">
@@ -84,7 +93,17 @@ export function FormDialogShell({
           )}
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">{children}</div>
+        {stickyTop && (
+          <div className="border-b bg-muted/30 px-6 py-3">{stickyTop}</div>
+        )}
+
+        <div className={cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName)}>
+          {children}
+        </div>
+
+        {stickyBottom && (
+          <div className="border-t bg-muted/30 px-6 py-3">{stickyBottom}</div>
+        )}
 
         <div className="border-t bg-background px-6 py-3 flex flex-wrap justify-end items-center gap-2">
           {footer}
