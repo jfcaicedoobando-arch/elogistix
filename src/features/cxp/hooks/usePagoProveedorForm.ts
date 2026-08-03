@@ -48,11 +48,11 @@ export function usePagoProveedorForm(
   useEffect(() => {
     if (!open || cuentaId || cuentas.length === 0 || pagoEditarId) return;
     setCuentaId((cuentasDeMoneda[0] ?? cuentas[0]).id);
-  }, [open, cuentaId, cuentas, cuentasDeMoneda, pagoEditarId]);
+  }, [open, cuentaId, cuentas, cuentasDeMoneda, pagoEditarId, setCuentaId]);
 
   useEffect(() => {
     if (!open) setCuentaId("");
-  }, [open]);
+  }, [open, setCuentaId]);
 
   const requiereCuenta = metodo !== "Efectivo";
 
@@ -80,7 +80,10 @@ export function usePagoProveedorForm(
     } else if (!esUsdPagadoEnMxn && moneda === facturaMoneda) {
       setMonto(facturaSaldo.toFixed(2));
     }
-  }, [esUsdPagadoEnMxn, moneda, facturaId, facturaSaldo, facturaMoneda, tcNum, open, pagoEditarId]);
+  }, [
+    esUsdPagadoEnMxn, moneda, facturaId, facturaSaldo, facturaMoneda, tcNum, open,
+    pagoEditarId, setMonto,
+  ]);
 
   // Monto expresado en la moneda de la factura (para validar contra saldo).
   const montoEnMonedaFactura = useMemo(
