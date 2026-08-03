@@ -111,8 +111,8 @@ export function SugerirEmbarqueBlock({
       {!loading && lista.length === 0 && (
         <p className="text-xs text-muted-foreground italic">
           {term.length >= 2
-            ? "No encontramos embarques con ese texto."
-            : "No hay sugerencias automáticas. Busca por expediente o BL."}
+            ? "No encontramos embarques con ese texto. Los embarques cerrados o cancelados no se muestran."
+            : "No hay sugerencias automáticas. Busca por expediente o BL (no se muestran embarques cerrados ni cancelados)."}
         </p>
       )}
 

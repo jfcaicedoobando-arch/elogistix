@@ -10,6 +10,23 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Estados de embarque que NO pueden recibir costos nuevos desde una factura
+ * de proveedor. Espejo del filtro de la RPC `sugerir_embarques_para_proveedor`
+ * y del trigger `bloquear_conceptos_en_embarque_cerrado`.
+ * `Entregado` y `Por liquidar` SÍ se permiten: todavía reciben facturas.
+ */
+export const ESTADOS_EMBARQUE_NO_VINCULABLES = ["Cerrado", "Cancelado"] as const;
+
+/** Filtro PostgREST `in (...)` para los estados no vinculables. */
+export const FILTRO_ESTADOS_NO_VINCULABLES =
+  `(${ESTADOS_EMBARQUE_NO_VINCULABLES.join(",")})`;
+
+/** `true` si el estado del embarque impide vincularle costos nuevos. */
+export function esEstadoNoVinculable(estado: string | null | undefined): boolean {
+  return !!estado && (ESTADOS_EMBARQUE_NO_VINCULABLES as readonly string[]).includes(estado);
+}
+
 export interface EmbarqueSugerido {
   embarque_id: string;
   expediente: string | null;
@@ -47,6 +64,7 @@ export async function buscarEmbarquesPorTexto(
     .from("embarques")
     .select("id, expediente, cliente_nombre, estado, etd, eta, bl_master, bl_house")
     .eq("organization_id", organizationId)
+    .not("estado", "in", FILTRO_ESTADOS_NO_VINCULABLES)
     .or(
       `expediente.ilike.%${term}%,bl_master.ilike.%${term}%,bl_house.ilike.%${term}%,cliente_nombre.ilike.%${term}%`,
     )

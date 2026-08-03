@@ -43,6 +43,24 @@ describe("fetchConceptosCostoAbiertosDeProveedor", () => {
     }]);
   });
 
+  it("descarta conceptos de embarques Cerrado o Cancelado", async () => {
+    mock.setTableResult("conceptos_costo", {
+      data: [
+        { id: "cc-1", embarque_id: "e1", concepto: "Flete", monto: "10", moneda: "USD",
+          fecha_vencimiento: null, embarques: { expediente: "A", estado: "En Tránsito" } },
+        { id: "cc-2", embarque_id: "e2", concepto: "THC", monto: "20", moneda: "USD",
+          fecha_vencimiento: null, embarques: { expediente: "B", estado: "Cerrado" } },
+        { id: "cc-3", embarque_id: "e3", concepto: "Maniobras", monto: "30", moneda: "USD",
+          fecha_vencimiento: null, embarques: { expediente: "C", estado: "Cancelado" } },
+        { id: "cc-4", embarque_id: "e4", concepto: "Demoras", monto: "40", moneda: "USD",
+          fecha_vencimiento: null, embarques: { expediente: "D", estado: "Entregado" } },
+      ],
+      error: null,
+    });
+    const out = await fetchConceptosCostoAbiertosDeProveedor("prov-1", "org-1");
+    expect(out.map((c) => c.id)).toEqual(["cc-1", "cc-4"]);
+  });
+
   it("lanza si Supabase devuelve error", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: { message: "boom" } });
     await expect(fetchConceptosCostoAbiertosDeProveedor("p", "o")).rejects.toThrow();

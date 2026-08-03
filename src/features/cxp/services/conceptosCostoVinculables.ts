@@ -11,6 +11,7 @@
  *  - El umbral 99% absorbe diferencias menores por redondeo / IVA proveedor.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { esEstadoNoVinculable } from "./sugerirEmbarques";
 
 export interface ConceptoCostoAbierto {
   id: string;
@@ -29,7 +30,7 @@ interface RowJoined {
   monto: number;
   moneda: string;
   fecha_vencimiento: string | null;
-  embarques: { expediente: string | null } | null;
+  embarques: { expediente: string | null; estado?: string | null } | null;
 }
 
 export async function fetchConceptosCostoAbiertosDeProveedor(
@@ -39,7 +40,7 @@ export async function fetchConceptosCostoAbiertosDeProveedor(
   if (!proveedorId) return [];
   let q = supabase
     .from("conceptos_costo")
-    .select("id, embarque_id, concepto, monto, moneda, fecha_vencimiento, embarques(expediente)")
+    .select("id, embarque_id, concepto, monto, moneda, fecha_vencimiento, embarques(expediente, estado)")
     .eq("proveedor_id", proveedorId)
     .eq("estado_liquidacion", "Pendiente")
     .is("deleted_at", null)
@@ -49,15 +50,19 @@ export async function fetchConceptosCostoAbiertosDeProveedor(
   const { data, error } = await q;
   if (error) throw error;
   // SAFE-CAST: shape modelado por RowJoined a partir del select con embed.
-  return ((data as unknown as RowJoined[] | null) ?? []).map((r) => ({
-    id: r.id,
-    embarque_id: r.embarque_id,
-    embarque_expediente: r.embarques?.expediente ?? null,
-    concepto: r.concepto,
-    monto: Number(r.monto),
-    moneda: r.moneda,
-    fecha_vencimiento: r.fecha_vencimiento,
-  }));
+  return ((data as unknown as RowJoined[] | null) ?? [])
+    // Un embarque Cerrado o Cancelado no puede recibir costos nuevos
+    // (lo bloquea el trigger en BD) — no debe ofrecerse para vincular.
+    .filter((r) => !esEstadoNoVinculable(r.embarques?.estado))
+    .map((r) => ({
+      id: r.id,
+      embarque_id: r.embarque_id,
+      embarque_expediente: r.embarques?.expediente ?? null,
+      concepto: r.concepto,
+      monto: Number(r.monto),
+      moneda: r.moneda,
+      fecha_vencimiento: r.fecha_vencimiento,
+    }));
 }
 
 export interface LineaVinculo {

@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.399.3] - 2026-08-03
+### Fix — no ofrecer embarques cerrados al capturar una factura de proveedor
+- La búsqueda manual de embarques (expediente / BL / cliente) ya no devuelve embarques `Cerrado` ni `Cancelado`, igual que las sugerencias automáticas.
+- La lista "Vincular a costos de embarque" descarta conceptos cuyo embarque esté `Cerrado` o `Cancelado` (antes fallaba tarde con el trigger de BD).
+- Nueva constante compartida `ESTADOS_EMBARQUE_NO_VINCULABLES` + helper `esEstadoNoVinculable` y mensaje de vacío más claro.
+
 ## [13.399.2] - 2026-08-03
 ### Fix — totales de la tabla de conceptos (CxP)
 - La vista previa de conceptos del CFDI y la tabla de conceptos del detalle sumaban la columna de importe **unitario**, por lo que el renglón "Totales" no cuadraba con el subtotal ni con el semáforo de cuadre.
