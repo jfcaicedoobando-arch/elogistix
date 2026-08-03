@@ -159,6 +159,12 @@ export function PagoProveedorFormBody(p: Props) {
 
         <PagoSaldoRestante factura={p.factura} saldoRestante={p.saldoRestante} excede={p.excede} />
 
+        <PagoImpactoPreview
+          impacto={p.impacto}
+          proveedorNombre={p.factura?.proveedor_nombre ?? "el proveedor"}
+          cargandoProveedor={p.cargandoSaldoProveedor}
+        />
+
         {p.esUsdPagadoEnMxn && p.factura && (
           <p className="text-xs text-muted-foreground">
             {p.bloqueadoPorTc
