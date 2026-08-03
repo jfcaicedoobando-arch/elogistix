@@ -1,7 +1,7 @@
 /**
  * Fila de la bitácora de tesorería (presentación pura).
  */
-import { Banknote, Trash2, AlertTriangle } from "lucide-react";
+import { Banknote, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
