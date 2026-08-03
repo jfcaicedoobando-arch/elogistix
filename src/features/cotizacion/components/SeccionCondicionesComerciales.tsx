@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, Lock } from "lucide-react";
 import { WizardSection } from "@/components/shared/WizardSection";
+import { PLACEHOLDER_FECHA } from "@/components/ui/picker-mx-shell";
 import { FormField } from "@/components/shared/FormField";
 import SeguroBlock from "./seccionRuta/SeguroBlock";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
