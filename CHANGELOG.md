@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.400.1] - 2026-08-03
+### CI — Power of 10 #4 en captura de factura de proveedor
+- `DialogNuevaFacturaProveedor.tsx` bajó de 214 a 148 líneas: los derivados de cuadre se movieron al nuevo hook `src/features/cxp/hooks/useCuadreCaptura.ts` (conceptos para cuadre, semáforo y renglón sospechoso).
+- Sin cambios de comportamiento; `architecture-baseline` y `audit-report` vuelven a pasar en verde.
+
+
 ## [13.400.0] - 2026-08-03
 ### UI/UX — modal "Capturar factura de proveedor" optimizado para HD
 - Ancho `xl` → `4xl` y alto del shell a `92vh`: en 1366x768 el modal aprovechaba sólo el 42% del ancho.
