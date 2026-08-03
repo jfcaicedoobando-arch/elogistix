@@ -36,18 +36,25 @@ export function useConciliarTesoreria() {
 
 /**
  * Dispara la conciliación una sola vez por factura (al montar el detalle).
+ * `habilitado` en falso evita lanzarla cuando el rol no tiene permiso de
+ * escritura (la BD responde 42501 y aparecería un toast de error en cada
+ * apertura del detalle).
  * Devuelve la mutación para poder relanzarla y leer el reporte.
  */
-export function useConciliacionAutomaticaFactura(facturaId: string | null) {
+export function useConciliacionAutomaticaFactura(
+  facturaId: string | null,
+  habilitado = true,
+) {
   const conciliar = useConciliarTesoreria();
   const yaConciliado = useRef<string | null>(null);
   const { mutate } = conciliar;
 
   useEffect(() => {
-    if (!facturaId || yaConciliado.current === facturaId) return;
+    if (!habilitado || !facturaId || yaConciliado.current === facturaId) return;
     yaConciliado.current = facturaId;
     mutate({ facturaId });
-  }, [facturaId, mutate]);
+  }, [facturaId, habilitado, mutate]);
 
   return conciliar;
 }
+
