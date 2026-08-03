@@ -53,7 +53,7 @@ export function ConciliacionTesoreriaSection({ facturaId, monedaFactura }: Props
           <span className="text-sm">{resumen.mensaje}</span>
           {reporte?.conciliadoAt && (
             <span className="ml-auto text-xs text-muted-foreground">
-              {formatFechaHoraMx(reporte.conciliadoAt)}
+              {formatDateTimeShort(reporte.conciliadoAt)}
             </span>
           )}
         </div>
