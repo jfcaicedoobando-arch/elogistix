@@ -19,7 +19,7 @@ export function FacturaProveedorTotalesKpis({
 }: Props) {
   const conIeps = ieps > 0;
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 -mt-1">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
       <Kpi label="Subtotal" value={formatCurrency(subtotal, moneda)} />
       <Kpi label="IVA" value={formatCurrency(iva, moneda)} />
       <Kpi
