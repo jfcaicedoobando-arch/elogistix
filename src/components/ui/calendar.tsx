@@ -1,15 +1,24 @@
 import * as React from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
+import { es } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
-function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+/**
+ * FIX 6 (P3): el locale por defecto es es-MX. Sin esto, los calendarios que no
+ * lo pasaban explícitamente (p. ej. el wizard de cotización) mostraban los
+ * meses y días de la semana en inglés.
+ */
+function Calendar({
+  className, classNames, showOutsideDays = true, locale = es, ...props
+}: CalendarProps) {
   return (
     <DayPicker
+      locale={locale}
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{

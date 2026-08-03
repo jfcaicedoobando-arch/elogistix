@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.391.0] - 2026-08-03
+### Ronda 6 — FIX 6 (lote P3): pulido de copy y localización
+- **Toasts sin ruido técnico**: `sanitizeToastText` elimina nombres de constraints (`*_uq`, `*_key`, `*_pkey`…) y normaliza puntuación duplicada; nuevos mensajes de negocio para folio duplicado de factura de proveedor, folio de factura y RFC de cliente.
+- **Fecha/hora en frases**: nuevo `formatFechaHoraTexto` (24 h, zona America/Mexico_City) usado en el toast de aceptación de cotización del portal; adiós al "p. m..".
+- **Calendarios en español**: `Calendar` usa `locale={es}` por defecto, así los pickers del wizard de cotización dejan de mostrarse en inglés; placeholders unificados a `DD/MM/AAAA`.
+- **Enums legibles**: nuevo `src/lib/ui/enumLabels.ts` (`humanizarEnum`) aplicado en la bitácora y sus badges: "importacion" → "Importación", "en_transito" → "En tránsito".
+- **Notificación al cliente más útil**: incluye folio, ruta origen → destino y tipo de operación en es-MX.
+
+
+
 ## [13.390.0] - 2026-08-03
 ### Ronda 6 — auditoría E2E (FIX 1 a FIX 5)
 - **Pagos a proveedor ↔ Tesorería (P1)**: el diálogo de pago ahora exige la cuenta bancaria de salida (salvo pagos en efectivo) y genera el movimiento conciliado en `bbva_movimientos` vinculado por `pago_proveedor_id`. Al eliminar el pago, el movimiento se da de baja. Se invalidan las queries de tesorería para que los saldos se actualicen al instante.
