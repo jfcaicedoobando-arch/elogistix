@@ -4,7 +4,6 @@
  * v13.400.0 — Optimizado para HD: ancho 4xl, dos columnas desde `lg`, KPIs de
  * totales fijos arriba y semáforo de cuadre fijo sobre el footer.
  */
-import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,8 +17,7 @@ import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
 import { FacturaProveedorTotalesKpis } from "./FacturaProveedorTotalesKpis";
 import { ColumnaDocumento, ColumnaDatosFactura } from "./DialogNuevaFacturaProveedor.columnas";
-import { calcularCuadreConceptos, type ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
-import { resolverConceptosParaCuadre } from "@/features/cxp/utils/conceptosParaCuadre";
+import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
 import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
