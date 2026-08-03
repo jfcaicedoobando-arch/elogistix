@@ -93,7 +93,17 @@ export function FormDialogShell({
           )}
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">{children}</div>
+        {stickyTop && (
+          <div className="border-b bg-muted/30 px-6 py-3">{stickyTop}</div>
+        )}
+
+        <div className={cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName)}>
+          {children}
+        </div>
+
+        {stickyBottom && (
+          <div className="border-t bg-muted/30 px-6 py-3">{stickyBottom}</div>
+        )}
 
         <div className="border-t bg-background px-6 py-3 flex flex-wrap justify-end items-center gap-2">
           {footer}
