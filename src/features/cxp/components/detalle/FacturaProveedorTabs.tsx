@@ -4,7 +4,10 @@
  * v13.350.0: nombres, orden y contadores en espejo con facturas emitidas
  * (Conceptos · Proveedor y datos fiscales · Pagos · Notas de crédito · Documentos).
  */
+import { useState } from "react";
 import { DocumentoTabs, type DocumentoTabItem } from "@/components/shared/documento/DocumentoTabs";
+import { DialogEditarPagoProveedor } from "@/features/cxp/components/DialogEditarPagoProveedor";
+import type { PagoEditable } from "@/features/cxp/hooks/usePagoProveedorForm";
 import { InfoFacturaSection } from "@/features/cxp/components/InfoFacturaSection";
 import { ConceptosFacturaSection } from "@/features/cxp/components/ConceptosFacturaSection";
 import { NotasCreditoSection } from "@/features/cxp/components/NotasCreditoSection";
@@ -28,6 +31,7 @@ interface Props {
 export function FacturaProveedorTabs({
   factura: f, pagos, pagosLoading, canEdit, onEliminarPago,
 }: Props) {
+  const [pagoEditar, setPagoEditar] = useState<PagoEditable | null>(null);
   const { data: conceptos = [] } = useConceptosCfdiFactura(f.id);
   const { data: notasCredito = [] } = useNotasCreditoFactura(f.id);
 
@@ -54,6 +58,7 @@ export function FacturaProveedorTabs({
             isLoading={pagosLoading}
             canEdit={canEdit}
             onEliminarPago={onEliminarPago}
+            onEditarPago={canEdit ? (p) => setPagoEditar(aPagoEditable(p)) : undefined}
           />
           <AnticiposAplicadosSection facturaId={f.id} />
           <BitacoraTesoreriaSection facturaId={f.id} monedaFactura={f.moneda} />
@@ -80,5 +85,32 @@ export function FacturaProveedorTabs({
     },
   ];
 
-  return <DocumentoTabs tabs={tabs} />;
+  return (
+    <>
+      <DocumentoTabs tabs={tabs} />
+      <DialogEditarPagoProveedor
+        open={pagoEditar !== null}
+        onOpenChange={(o) => !o && setPagoEditar(null)}
+        factura={f}
+        pago={pagoEditar}
+      />
+    </>
+  );
+}
+
+/** Normaliza la fila de la tabla al contrato del formulario de edición. */
+function aPagoEditable(p: PagoRow): PagoEditable {
+  return {
+    id: p.id,
+    fecha_pago: p.fecha_pago,
+    monto: Number(p.monto),
+    moneda: p.moneda as PagoEditable["moneda"],
+    tipo_cambio_usd: p.tipo_cambio_usd != null ? Number(p.tipo_cambio_usd) : null,
+    metodo_pago: p.metodo_pago,
+    referencia: p.referencia ?? null,
+    notas: p.notas ?? null,
+    cuenta_bancaria_id: p.cuenta_bancaria_id ?? null,
+    diferencia_cambiaria_mxn:
+      p.diferencia_cambiaria_mxn != null ? Number(p.diferencia_cambiaria_mxn) : null,
+  };
 }
