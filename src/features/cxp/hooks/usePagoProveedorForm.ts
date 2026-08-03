@@ -17,6 +17,8 @@ import { saldoDisponiblePago } from "@/features/cxp/services/pagoProveedorValida
 import { usePagoProveedorDerivados } from "./usePagoProveedorForm.derivados";
 import {
   montoOriginalEnMonedaFactura as calcMontoOriginal,
+  montoEnMonedaDeFactura,
+  valoresInicialesCreacion,
   valoresInicialesEdicion,
   type PagoEditable,
 } from "./usePagoProveedorForm.editar";
@@ -47,27 +49,18 @@ export function usePagoProveedorForm(
 
   useEffect(() => {
     if (!factura || !open) return;
-    if (pagoEditar) {
-      const v = valoresInicialesEdicion(pagoEditar);
-      setFecha(v.fecha);
-      setMonto(v.monto);
-      setMoneda(v.moneda);
-      setTc(v.tc);
-      setMetodo(v.metodo);
-      setReferencia(v.referencia);
-      setNotas(v.notas);
-      setDiffMxn(v.diffMxn);
-      setCuentaId(v.cuentaId);
-      return;
-    }
-    setFecha(today);
-    setMonto(factura.saldo.toFixed(2));
-    setMoneda(factura.moneda);
-    setTc(factura.tipo_cambio_usd ? String(factura.tipo_cambio_usd) : "");
-    setMetodo(defaultMetodo(factura.proveedor_origen));
-    setReferencia("");
-    setNotas("");
-    setDiffMxn("");
+    const v = pagoEditar
+      ? valoresInicialesEdicion(pagoEditar)
+      : valoresInicialesCreacion(factura, today, defaultMetodo(factura.proveedor_origen));
+    setFecha(v.fecha);
+    setMonto(v.monto);
+    setMoneda(v.moneda);
+    setTc(v.tc);
+    setMetodo(v.metodo);
+    setReferencia(v.referencia);
+    setNotas(v.notas);
+    setDiffMxn(v.diffMxn);
+    if (pagoEditar) setCuentaId(v.cuentaId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [factura, open, today, pagoEditarId]);
 
@@ -115,12 +108,16 @@ export function usePagoProveedorForm(
   }, [esUsdPagadoEnMxn, moneda, facturaId, facturaSaldo, facturaMoneda, tcNum, open, pagoEditarId]);
 
   // Monto expresado en la moneda de la factura (para validar contra saldo).
-  const montoEnMonedaFactura = useMemo(() => {
-    if (!factura) return 0;
-    if (moneda === factura.moneda) return montoNum;
-    if (esUsdPagadoEnMxn && tcNum) return montoNum / tcNum;
-    return montoNum; // otros cruces: se valida en la RPC
-  }, [factura, moneda, montoNum, esUsdPagadoEnMxn, tcNum]);
+  const montoEnMonedaFactura = useMemo(
+    () =>
+      montoEnMonedaDeFactura({
+        monedaFactura: factura?.moneda ?? null,
+        monedaPago: moneda,
+        monto: montoNum,
+        tcNum,
+      }),
+    [factura?.moneda, moneda, montoNum, tcNum],
+  );
 
   // Al editar, el importe del pago original vuelve al saldo disponible.
   const montoOriginalEnMonedaFactura = useMemo(

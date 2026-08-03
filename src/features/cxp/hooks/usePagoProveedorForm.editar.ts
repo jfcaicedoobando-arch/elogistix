@@ -65,3 +65,40 @@ export function valoresInicialesEdicion(pago: PagoEditable) {
       pago.diferencia_cambiaria_mxn != null ? String(pago.diferencia_cambiaria_mxn) : "",
   };
 }
+
+/** Valores iniciales cuando se registra un pago nuevo. */
+export function valoresInicialesCreacion(
+  factura: {
+    saldo: number;
+    moneda: Moneda;
+    tipo_cambio_usd?: number | null;
+    proveedor_origen: string | null;
+  },
+  hoy: string,
+  metodoDefault: string,
+) {
+  return {
+    fecha: hoy,
+    monto: factura.saldo.toFixed(2),
+    moneda: factura.moneda,
+    tc: factura.tipo_cambio_usd ? String(factura.tipo_cambio_usd) : "",
+    metodo: metodoDefault,
+    referencia: "",
+    notas: "",
+    cuentaId: "",
+    diffMxn: "",
+  };
+}
+
+/** Monto capturado, expresado en la moneda de la factura. */
+export function montoEnMonedaDeFactura(a: {
+  monedaFactura: Moneda | null;
+  monedaPago: Moneda;
+  monto: number;
+  tcNum: number | null;
+}): number {
+  if (!a.monedaFactura) return 0;
+  if (a.monedaPago === a.monedaFactura) return a.monto;
+  if (a.monedaPago === "MXN" && a.tcNum) return a.monto / a.tcNum;
+  return a.monto; // otros cruces: se valida en la RPC
+}
