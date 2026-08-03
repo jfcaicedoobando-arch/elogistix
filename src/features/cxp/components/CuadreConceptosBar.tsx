@@ -5,6 +5,10 @@
  * `_cxp_validar_aprobacion`. No bloquea el guardado (el usuario puede
  * dejar la factura como borrador), pero avisa exactamente cuánto falta o
  * sobra para que la factura sea aprobable.
+ *
+ * v13.399.0 — Se explica de dónde sale la suma (fórmula + renglones) y el
+ * consejo del estado "sobrante" apunta primero al error real de captura
+ * (importe unitario capturado como total de línea / mezcla de moneda).
  */
 import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
@@ -14,6 +18,8 @@ interface Props {
   resultado: ResultadoCuadre;
   subtotal: number;
   moneda: string;
+  /** Número de renglones considerados en la suma. */
+  renglones?: number;
 }
 
 interface EstadoVisual {
@@ -63,28 +69,45 @@ function visualPorEstado(estado: EstadoCuadre, diferencia: number, moneda: strin
     text: "text-destructive",
     icon: <AlertTriangle className="h-4 w-4 shrink-0" />,
     titulo: `Sobran ${formatCurrency(abs, moneda)} sobre el subtotal`,
-    ayuda: "¿Descuento del proveedor? Agrega un renglón con importe negativo por la diferencia.",
+    ayuda:
+      "Revisa los renglones con cantidad mayor a 1: el campo Importe es unitario y se multiplica por la cantidad. "
+      + `Confirma también que el subtotal esté en ${moneda}. Si de verdad es un descuento del proveedor, agrega un renglón con importe negativo.`,
   };
 }
 
-export function CuadreConceptosBar({ resultado, subtotal, moneda }: Props) {
+export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: Props) {
   const v = visualPorEstado(resultado.estado, resultado.diferencia, moneda);
+  const abs = Math.abs(resultado.diferencia);
+  const signo = resultado.diferencia > 0 ? "faltan" : "sobran";
 
   return (
     <div className={`rounded-md border ${v.border} ${v.bg} px-3 py-2 text-xs`}>
-      <div className={`flex items-center gap-2 font-medium ${v.text}`}>
+      <div className={`flex flex-wrap items-center gap-2 font-medium ${v.text}`}>
         {v.icon}
         <span>{v.titulo}</span>
-        <div className="ml-auto flex items-center gap-3 tabular-nums text-foreground">
+        <div className="ml-auto flex flex-wrap items-center gap-3 tabular-nums text-foreground">
           <span className="text-muted-foreground">
             Subtotal: <span className="font-semibold text-foreground">{formatCurrency(subtotal, moneda)}</span>
           </span>
           <span className="text-muted-foreground">
             Conceptos: <span className="font-semibold text-foreground">{formatCurrency(resultado.suma, moneda)}</span>
+            {typeof renglones === "number" && (
+              <span className="ml-1">({renglones} renglón{renglones === 1 ? "" : "es"})</span>
+            )}
           </span>
         </div>
       </div>
+      {resultado.estado !== "sin_conceptos" && (
+        <p className="text-muted-foreground mt-1 pl-6 tabular-nums">
+          {formatCurrency(subtotal, moneda)} − {formatCurrency(resultado.suma, moneda)} ={" "}
+          <span className="font-medium text-foreground">
+            {resultado.estado === "cuadrado" ? formatCurrency(0, moneda) : `${formatCurrency(abs, moneda)} (${signo})`}
+          </span>
+          {" · la suma multiplica cada importe unitario por su cantidad, sin IVA"}
+        </p>
+      )}
       <p className="text-muted-foreground mt-1 pl-6">{v.ayuda}</p>
     </div>
   );
 }
+
