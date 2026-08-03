@@ -28,14 +28,23 @@ export interface ResultadoCuadre {
 
 const TOLERANCIA = 0.01;
 
+/**
+ * Total de una línea: importe **unitario** × cantidad (cantidad nula o 0 = 1).
+ * Se usa tanto en el semáforo de cuadre como en las tablas de conceptos para
+ * que ambos números sean siempre idénticos.
+ */
+export function totalLinea(concepto: ConceptoParaCuadre): number {
+  const cantidad = concepto.cantidad && concepto.cantidad !== 0 ? concepto.cantidad : 1;
+  return currency(concepto.monto, { precision: 4 }).multiply(cantidad).value;
+}
+
 /** Suma neta de conceptos usando `currency.js` para evitar drift binario. */
 export function sumarConceptos(conceptos: ReadonlyArray<ConceptoParaCuadre>): number {
   return conceptos.reduce((acc, c) => {
-    const cantidad = c.cantidad && c.cantidad !== 0 ? c.cantidad : 1;
-    const linea = currency(c.monto, { precision: 4 }).multiply(cantidad);
-    return currency(acc, { precision: 4 }).add(linea).value;
+    return currency(acc, { precision: 4 }).add(totalLinea(c)).value;
   }, 0);
 }
+
 
 export function calcularCuadreConceptos(
   subtotal: number,
