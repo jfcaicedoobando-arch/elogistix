@@ -2,7 +2,7 @@
  * Estado crudo del formulario de pago a proveedor (campos + precarga).
  * Extraído v13.395.0 para mantener la complejidad del hook principal baja.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
 
 type OrigenProveedor = Database["public"]["Enums"]["origen_proveedor"] | null;
@@ -39,11 +39,17 @@ export function usePagoProveedorCampos(
   const [cuentaId, setCuentaId] = useState<string>("");
 
   const pagoEditarId = pagoEditar?.id ?? null;
+  // Guardamos el pago en un ref: la precarga sólo debe re-ejecutarse cuando
+  // cambia su `id` (no en cada nueva referencia del objeto), y así el effect
+  // declara todas sus dependencias sin desactivar reglas de React.
+  const pagoEditarRef = useRef(pagoEditar);
+  pagoEditarRef.current = pagoEditar;
 
   useEffect(() => {
     if (!factura || !open) return;
-    const v = pagoEditar
-      ? valoresInicialesEdicion(pagoEditar)
+    const pago = pagoEditarRef.current;
+    const v = pago
+      ? valoresInicialesEdicion(pago)
       : valoresInicialesCreacion(factura, hoy, defaultMetodo(factura.proveedor_origen));
     setFecha(v.fecha);
     setMonto(v.monto);
@@ -53,8 +59,7 @@ export function usePagoProveedorCampos(
     setReferencia(v.referencia);
     setNotas(v.notas);
     setDiffMxn(v.diffMxn);
-    if (pagoEditar) setCuentaId(v.cuentaId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (pago) setCuentaId(v.cuentaId);
   }, [factura, open, hoy, pagoEditarId]);
 
   return {

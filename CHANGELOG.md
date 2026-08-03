@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.397.2] - 2026-08-03
+### Correcciones de CI
+- `lcCodeMessages.financiero.ts`: agregado el mensaje amigable de `LC_CONCILIACION_SIN_ALCANCE` (test de cobertura de códigos LC_*).
+- `usePagoProveedorForm.estado.ts`: la precarga usa un ref para el pago en edición, eliminando el `eslint-disable` que rompía el lint con `--max-warnings 0`.
+
 ## [13.397.1] - 2026-08-03
 ### Correcciones de CI
 - `BitacoraTesoreriaSection`: `entradas` ahora se memoriza (`useMemo`) para no invalidar los cálculos en cada render (react-hooks/exhaustive-deps).

@@ -125,4 +125,7 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   // ── Segregación de funciones (SoD) · Q-04 ──────────────────────────────
   LC_SOD_VIOLATION:
     "Segregación de funciones: quien captura una factura de proveedor no puede aprobarla, y el rol Tesorero no aprueba facturas. Pide la aprobación a Contabilidad o a un administrador.",
+  // ── Conciliación de tesorería · CxP ────────────────────────────────────
+  LC_CONCILIACION_SIN_ALCANCE:
+    "Indica un proveedor o una factura para conciliar la tesorería.",
 };
