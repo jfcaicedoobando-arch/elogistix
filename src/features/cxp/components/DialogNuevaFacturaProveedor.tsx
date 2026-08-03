@@ -186,7 +186,13 @@ function DialogNuevaFacturaProveedorForm({
           onEmbarqueAdHoc={ctl.setEmbarqueAdHoc}
         />
 
-        <CuadreConceptosBar resultado={cuadre} subtotal={sub} moneda={moneda} />
+        <CuadreConceptosBar
+          resultado={cuadre}
+          subtotal={sub}
+          moneda={moneda}
+          renglones={conceptosParaCuadre.length}
+        />
+
       </FormDialogShell>
 
       {ctl.askCrearProv && (
