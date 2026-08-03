@@ -88,6 +88,7 @@ export function ConceptosManualesSection({
                 placeholder="Importe unit."
                 value={String(c.importe ?? 0)}
 
+
                 onChange={(e) => onActualizar(c.key, "importe", num(e.target.value))}
                 aria-label="Importe unitario"
               />
