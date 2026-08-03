@@ -36,3 +36,19 @@ describe("sanitizeToastText (R-07)", () => {
     expect(pareceHtml("El monto debe ser < 1000")).toBe(false);
   });
 });
+
+describe("sanitizeToastText — FIX 6 (P3)", () => {
+  it("no muestra nombres crudos de constraints", () => {
+    const out = sanitizeToastText(
+      'duplicate key value violates unique constraint "proveedor_facturas_org_prov_folio_uq"',
+    );
+    expect(out).toBeDefined();
+    expect(out).not.toContain("proveedor_facturas_org_prov_folio_uq");
+  });
+
+  it("normaliza el doble punto de 'p. m..'", () => {
+    expect(sanitizeToastText("Aceptaste la cotización el 03/08/2026, 1:05 p. m..")).toBe(
+      "Aceptaste la cotización el 03/08/2026, 1:05 p. m.",
+    );
+  });
+});
