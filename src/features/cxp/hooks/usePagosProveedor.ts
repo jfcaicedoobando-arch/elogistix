@@ -5,7 +5,9 @@ import {
   listarPagosProveedor,
   registrarPagoProveedor,
   eliminarPagoProveedor,
+  actualizarPagoProveedor,
   type RegistrarPagoProveedorInput,
+  type ActualizarPagoProveedorInput,
 } from "@/features/cxp/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { traducirErrorPagoProveedor } from "@/features/cxp/services/pagosProveedorErrors";
@@ -50,6 +52,32 @@ export function useEliminarPagoProveedor(facturaId: string) {
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: traducirErrorPagoProveedor(error), error, method: "DELETE_PAYMENT_PROVEEDOR" });
+    },
+  });
+}
+
+/**
+ * v13.395.0 — Edición de un pago existente. Las mismas validaciones de
+ * montos/IVA/totales se aplican antes de llamar a esta mutación.
+ */
+export function useActualizarPagoProveedor(facturaId: string) {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: (input: ActualizarPagoProveedorInput) =>
+      actualizarPagoProveedor(input, user?.id ?? null),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.pagos(facturaId) });
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      qc.invalidateQueries({ queryKey: queryKeys.bitacora.all });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, {
+        title: traducirErrorPagoProveedor(error),
+        error,
+        method: "UPDATE_PAYMENT_PROVEEDOR",
+      });
     },
   });
 }
