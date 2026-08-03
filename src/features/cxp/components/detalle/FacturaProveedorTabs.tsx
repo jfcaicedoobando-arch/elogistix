@@ -13,6 +13,7 @@ import { ConceptosFacturaSection } from "@/features/cxp/components/ConceptosFact
 import { NotasCreditoSection } from "@/features/cxp/components/NotasCreditoSection";
 import { DocumentosProveedorSection } from "@/features/cxp/components/detalle/DocumentosProveedorSection";
 import { BitacoraTesoreriaSection } from "@/features/cxp/components/BitacoraTesoreriaSection";
+import { ConciliacionTesoreriaSection } from "@/features/cxp/components/ConciliacionTesoreriaSection";
 import { AnticiposAplicadosSection } from "@/features/anticipos-proveedor/components/AnticiposAplicadosSection";
 import { PagosTable } from "@/features/cxp/components/DialogDetallePagosProveedor.sections";
 import { useConceptosCfdiFactura } from "@/features/cxp/hooks/useConceptosCfdiFactura";
