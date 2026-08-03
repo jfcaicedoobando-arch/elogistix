@@ -40,6 +40,12 @@ interface Props {
   totalSteps?: number;
   stepLabels?: string[];
   footer: ReactNode;
+  /** Banda fija bajo el header, fuera del área scrolleable (KPIs, avisos). */
+  stickyTop?: ReactNode;
+  /** Banda fija sobre el footer, fuera del área scrolleable (semáforos). */
+  stickyBottom?: ReactNode;
+  /** Clases extra del contenedor scrolleable (p.ej. layout de 2 columnas). */
+  bodyClassName?: string;
   children: ReactNode;
 }
 
