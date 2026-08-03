@@ -217,13 +217,23 @@ export function mapGeminiToCfdiShape(d: GeminiExtracted, categorias: Categoria[]
         rfc: d.customer_tax_id || "",
         nombre: d.customer_name,
       },
-      conceptos: d.line_items.map((l) => ({
-        descripcion: l.description,
-        cantidad: l.quantity,
-        importe: l.amount,
-        iva: l.tax ?? 0,
-        ieps: 0,
-      })),
+      // La IA devuelve `amount` como TOTAL de la línea, pero el sistema trata
+      // `importe` como UNITARIO y lo multiplica por la cantidad. Sin normalizar,
+      // una línea con cantidad > 1 se contaba dos veces (LC_CXP_DESCUADRE).
+      conceptos: d.line_items.map((l) => {
+        const cantidad = l.quantity && l.quantity > 0 ? l.quantity : 1;
+        const unitario = l.unit_price && l.unit_price > 0
+          ? l.unit_price
+          : l.amount / cantidad;
+        return {
+          descripcion: l.description,
+          cantidad,
+          importe: Math.round(unitario * 1e6) / 1e6,
+          iva: l.tax ?? 0,
+          ieps: 0,
+        };
+      }),
+
     },
     ai: {
       categoria_id: catValida,
