@@ -38,6 +38,7 @@ export function ConceptosManualesSection({
   oculta = false,
   conceptos,
   moneda,
+  keyResaltado = null,
   onAgregar,
   onActualizar,
   onEliminar,
@@ -49,14 +50,23 @@ export function ConceptosManualesSection({
       title={`Conceptos de la factura (${conceptos.length})`}
     >
       <p className="text-xs text-muted-foreground -mt-1">
-        Captura las partidas de la factura. La suma debe cuadrar con el subtotal;
-        sin conceptos la factura no se podrá aprobar ni pagar.
+        Captura las partidas de la factura. El importe es <strong>unitario</strong>: la línea se
+        calcula como importe × cantidad y la suma de líneas debe cuadrar con el subtotal.
+        Sin conceptos la factura no se podrá aprobar ni pagar.
       </p>
 
       {conceptos.length > 0 && (
         <div className="space-y-2">
           {conceptos.map((c) => (
-            <div key={c.key} className="grid grid-cols-12 gap-2 items-center">
+            <div
+              key={c.key}
+              className={
+                c.key === keyResaltado
+                  ? "grid grid-cols-12 gap-2 items-center rounded-md ring-1 ring-destructive/50 bg-destructive/5 p-1.5"
+                  : "grid grid-cols-12 gap-2 items-center"
+              }
+            >
+
               <Input
                 className="col-span-12 md:col-span-5 h-9"
                 placeholder="Descripción"
