@@ -8,6 +8,7 @@
  */
 import type { EntradaBitacora } from "@/types/bitacora";
 import { formatCurrency } from "@/lib/formatters";
+import { humanizarEnum } from "@/lib/ui/enumLabels";
 import type { DescripcionBitacora } from "./bitacoraDescripcion.types";
 import {
   describirFacturacion,
