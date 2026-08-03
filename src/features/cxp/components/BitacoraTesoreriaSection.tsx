@@ -4,48 +4,24 @@
  * Muestra, en lenguaje de negocio, cada movimiento de tesorería generado al
  * registrar o eliminar un pago: quién lo hizo, cuándo, monto, cuenta bancaria
  * y si el movimiento bancario quedó creado o dado de baja.
+ * Incluye filtros por fecha, tipo de movimiento y usuario/operador, además de
+ * ordenamiento por fecha.
  */
-import { useMemo } from "react";
-import { Banknote, Trash2, AlertTriangle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useMemo, useState } from "react";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { useBitacora } from "@/features/auditoria/hooks/useBitacora";
 import { useCuentasBancarias } from "@/features/tesoreria";
-import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
+import { BitacoraTesoreriaFila } from "./BitacoraTesoreriaSection.fila";
+import { BitacoraTesoreriaToolbar } from "./BitacoraTesoreriaToolbar";
+import {
+  FILTROS_BITACORA_TESORERIA_INICIALES,
+  filtrarOrdenarBitacoraTesoreria,
+  hayFiltrosBitacoraActivos,
+  usuariosBitacora,
+  type FiltrosBitacoraTesoreria,
+} from "@/features/cxp/services/bitacoraTesoreriaFiltros";
 
 const ACCIONES = ["pagar", "eliminar_pago"] as const;
-
-type Detalles = Record<string, unknown>;
-
-function num(d: Detalles, k: string): number | null {
-  const v = d[k];
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
-}
-function str(d: Detalles, k: string): string | null {
-  const v = d[k];
-  return typeof v === "string" && v !== "" ? v : null;
-}
-
-function EtiquetaMovimiento({ estado }: { estado: string | null }) {
-  if (estado === "creado") {
-    return <Badge variant="outline" className="text-success border-success/40">Movimiento creado</Badge>;
-  }
-  if (estado === "dado_de_baja") {
-    return <Badge variant="outline" className="text-muted-foreground">Movimiento dado de baja</Badge>;
-  }
-  if (estado === "no_creado") {
-    return (
-      <Badge variant="outline" className="text-destructive border-destructive/40">
-        <AlertTriangle className="h-3 w-3 mr-1" aria-hidden /> Movimiento no generado
-      </Badge>
-    );
-  }
-  if (estado === "sin_cuenta") {
-    return <Badge variant="outline" className="text-warning border-warning/40">Sin cuenta bancaria</Badge>;
-  }
-  return null;
-}
 
 interface Props {
   facturaId: string;
@@ -59,6 +35,9 @@ export function BitacoraTesoreriaSection({ facturaId, monedaFactura }: Props) {
     limite: 50,
   });
   const { data: cuentas = [] } = useCuentasBancarias(false);
+  const [filtros, setFiltros] = useState<FiltrosBitacoraTesoreria>(
+    FILTROS_BITACORA_TESORERIA_INICIALES,
+  );
 
   const nombreCuenta = useMemo(() => {
     const mapa = new Map<string, string>();
@@ -67,8 +46,15 @@ export function BitacoraTesoreriaSection({ facturaId, monedaFactura }: Props) {
   }, [cuentas]);
 
   const entradas = data?.datos ?? [];
+  const usuarios = useMemo(() => usuariosBitacora(entradas), [entradas]);
+  const visibles = useMemo(
+    () => filtrarOrdenarBitacoraTesoreria(entradas, filtros),
+    [entradas, filtros],
+  );
 
   if (isLoading) return <ListSkeleton rows={3} />;
+
+  const vacioPorFiltros = entradas.length > 0 && visibles.length === 0;
 
   return (
     <section className="space-y-3">
@@ -79,49 +65,38 @@ export function BitacoraTesoreriaSection({ facturaId, monedaFactura }: Props) {
         </p>
       </header>
 
+      {entradas.length > 0 && (
+        <BitacoraTesoreriaToolbar filtros={filtros} onChange={setFiltros} usuarios={usuarios} />
+      )}
+
+      {entradas.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {visibles.length} de {entradas.length} movimiento{entradas.length === 1 ? "" : "s"}
+          {hayFiltrosBitacoraActivos(filtros) ? " (con filtros aplicados)" : ""}
+        </p>
+      )}
+
       {entradas.length === 0 ? (
         <p className="text-xs text-muted-foreground rounded-md border border-dashed px-3 py-4 text-center">
           Aún no hay movimientos de tesorería para esta factura.
         </p>
+      ) : vacioPorFiltros ? (
+        <p className="text-xs text-muted-foreground rounded-md border border-dashed px-3 py-4 text-center">
+          Ningún movimiento coincide con los filtros seleccionados.
+        </p>
       ) : (
         <ul className="divide-y rounded-md border">
-          {entradas.map((e) => {
-            const d = (e.detalles ?? {}) as Detalles;
-            const esBaja = e.accion === "eliminar_pago";
-            const monto = num(d, "monto");
-            const moneda = str(d, "moneda") ?? monedaFactura;
-            const cargoMxn = num(d, "cargo_mxn");
-            const cuentaId = str(d, "cuenta_bancaria_id");
-            const Icon = esBaja ? Trash2 : Banknote;
-            return (
-              <li key={e.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2.5">
-                <Icon
-                  className={cn("h-4 w-4 shrink-0", esBaja ? "text-destructive" : "text-success")}
-                  aria-hidden
-                />
-                <span className="text-sm font-medium">
-                  {esBaja ? "Pago eliminado" : "Pago registrado"}
-                </span>
-                {monto !== null && (
-                  <span className="text-sm tabular-nums">{formatCurrency(monto, moneda)}</span>
-                )}
-                {cargoMxn !== null && moneda !== "MXN" && (
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    Cargo {formatCurrency(cargoMxn, "MXN")}
-                  </span>
-                )}
-                {cuentaId && (
-                  <span className="text-xs text-muted-foreground">
-                    {nombreCuenta.get(cuentaId) ?? "Cuenta bancaria"}
-                  </span>
-                )}
-                <EtiquetaMovimiento estado={str(d, "movimiento_tesoreria")} />
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {formatDateTimeShort(e.created_at)} · {e.usuario_email}
-                </span>
-              </li>
-            );
-          })}
+          {visibles.map((e) => (
+            <BitacoraTesoreriaFila
+              key={e.id}
+              accion={e.accion}
+              createdAt={e.created_at}
+              usuarioEmail={e.usuario_email}
+              detalles={(e.detalles ?? {}) as Record<string, unknown>}
+              monedaFactura={monedaFactura}
+              nombreCuenta={nombreCuenta}
+            />
+          ))}
         </ul>
       )}
     </section>
