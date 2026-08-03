@@ -13,8 +13,11 @@ import { useBitacora } from "@/features/auditoria/hooks/useBitacora";
 import { useCuentasBancarias } from "@/features/tesoreria";
 import { BitacoraTesoreriaFila } from "./BitacoraTesoreriaSection.fila";
 import { BitacoraTesoreriaToolbar } from "./BitacoraTesoreriaToolbar";
+import { BitacoraTesoreriaExportButtons } from "./BitacoraTesoreriaExportButtons";
+import { filasBitacoraExport } from "@/features/cxp/services/bitacoraTesoreriaExport";
 import {
   FILTROS_BITACORA_TESORERIA_INICIALES,
+  descripcionFiltrosBitacora,
   filtrarOrdenarBitacoraTesoreria,
   hayFiltrosBitacoraActivos,
   usuariosBitacora,
@@ -26,9 +29,14 @@ const ACCIONES = ["pagar", "editar_pago", "eliminar_pago"] as const;
 interface Props {
   facturaId: string;
   monedaFactura: string;
+  /** Folio mostrado en el archivo exportado. */
+  folio?: string;
+  proveedor?: string;
 }
 
-export function BitacoraTesoreriaSection({ facturaId, monedaFactura }: Props) {
+export function BitacoraTesoreriaSection({
+  facturaId, monedaFactura, folio, proveedor,
+}: Props) {
   const { data, isLoading } = useBitacora({
     entidadId: facturaId,
     acciones: [...ACCIONES],
@@ -51,6 +59,20 @@ export function BitacoraTesoreriaSection({ facturaId, monedaFactura }: Props) {
     () => filtrarOrdenarBitacoraTesoreria(entradas, filtros),
     [entradas, filtros],
   );
+  const filasExport = useMemo(
+    () =>
+      filasBitacoraExport(
+        visibles.map((e) => ({
+          accion: e.accion,
+          created_at: e.created_at,
+          usuario_email: e.usuario_email,
+          // SAFE-CAST: `detalles` es jsonb; las lecturas son defensivas por clave.
+          detalles: (e.detalles ?? {}) as Record<string, unknown>,
+        })),
+        { monedaFactura, nombreCuenta },
+      ),
+    [visibles, monedaFactura, nombreCuenta],
+  );
 
   if (isLoading) return <ListSkeleton rows={3} />;
 
@@ -58,11 +80,19 @@ export function BitacoraTesoreriaSection({ facturaId, monedaFactura }: Props) {
 
   return (
     <section className="space-y-3">
-      <header className="space-y-0.5">
-        <h3 className="text-sm font-semibold">Bitácora de tesorería</h3>
-        <p className="text-xs text-muted-foreground">
-          Movimientos bancarios generados al registrar o eliminar pagos de esta factura.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-2">
+        <div className="space-y-0.5">
+          <h3 className="text-sm font-semibold">Bitácora de tesorería</h3>
+          <p className="text-xs text-muted-foreground">
+            Movimientos bancarios generados al registrar o eliminar pagos de esta factura.
+          </p>
+        </div>
+        <BitacoraTesoreriaExportButtons
+          filas={filasExport}
+          folio={folio ?? facturaId}
+          proveedor={proveedor}
+          filtrosAplicados={descripcionFiltrosBitacora(filtros)}
+        />
       </header>
 
       {entradas.length > 0 && (

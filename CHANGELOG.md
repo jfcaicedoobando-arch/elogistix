@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.397.0] - 2026-08-03
+### Descargar la bitácora de tesorería en CSV y PDF
+- Nuevos botones "CSV" y "PDF" en la sección Bitácora de tesorería (pestaña Pagos del detalle de factura de proveedor): exportan exactamente los movimientos visibles con los filtros aplicados.
+- Nuevo `bitacoraTesoreriaExport.ts` (filas legibles, CSV con BOM para Excel y nombre de archivo `bitacora-tesoreria-<folio>-<fecha>`).
+- Nuevo `BitacoraTesoreriaDocument` (PDF horizontal con encabezado, filtros aplicados y tabla de movimientos) cargado en `import()` diferido.
+- `descripcionFiltrosBitacora` para dejar constancia en el PDF de los filtros usados (fechas en DD/MM/AAAA).
+- 8 pruebas nuevas de la lógica de exportación.
+
 ## [13.396.0] - 2026-08-03
 ### Conciliación automática de tesorería en CxP
 - Nueva RPC `conciliar_tesoreria_proveedor` que recalcula, desde los pagos y movimientos bancarios registrados, el saldo pendiente por factura y por proveedor (por moneda) y corrige el estatus/etapa de captura de las facturas desfasadas.
