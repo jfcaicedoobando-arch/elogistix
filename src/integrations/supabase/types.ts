@@ -7555,6 +7555,10 @@ export type Database = {
         Args: { p_cuenta_bancaria_id: string }
         Returns: Json
       }
+      conciliar_tesoreria_proveedor: {
+        Args: { p_factura_id?: string; p_proveedor_id?: string }
+        Returns: Json
+      }
       consolidar_proformas: {
         Args: {
           p_bl_master: string
