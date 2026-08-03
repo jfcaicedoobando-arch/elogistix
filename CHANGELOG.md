@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.399.4] - 2026-08-03
+### Fix — no se podía confirmar un embarque en Borrador (42883)
+- `avanzar_estado_embarque` pasaba el tipo de operación como enum `tipo_operacion` a `generar_expediente(text)`; Postgres no resuelve la sobrecarga y lanzaba `function public.generar_expediente(tipo_operacion) does not exist`.
+- Se agregó el cast explícito `coalesce(v_tipo::text, '')` al reservar el expediente al pasar de Borrador a Confirmado. Sin cambios de permisos ni de validaciones.
+
 ## [13.399.3] - 2026-08-03
 ### Fix — no ofrecer embarques cerrados al capturar una factura de proveedor
 - La búsqueda manual de embarques (expediente / BL / cliente) ya no devuelve embarques `Cerrado` ni `Cancelado`, igual que las sugerencias automáticas.

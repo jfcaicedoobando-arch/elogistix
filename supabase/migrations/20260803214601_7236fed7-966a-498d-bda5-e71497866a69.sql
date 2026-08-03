@@ -1,7 +1,3 @@
--- Fuente canónica de public.avanzar_estado_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
-
 CREATE OR REPLACE FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -16,7 +12,9 @@ DECLARE
   v_estado_actual public.estado_embarque;
   v_expediente text;
   v_tipo public.tipo_operacion;
-  v_estados_bloqueantes text[] := ARRAY['En Tránsito','En Aduana','Llegada','Arribo','Entregado','EIR','Cerrado'];
+  v_promovido boolean := false;
+  v_estado_final text;
+  v_estados_bloqueantes text[] := ARRAY['En Tránsito','En Aduana','Llegada','Arribo','Entregado','EIR','Por liquidar','Cerrado'];
 BEGIN
   v_resp := public.idempotency_claim(p_request_id, 'avanzar_estado_embarque');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
@@ -80,9 +78,24 @@ BEGIN
   INSERT INTO eventos_embarque (embarque_id, tipo, descripcion, ubicacion, fecha, usuario, organization_id)
   VALUES (p_embarque_id, p_tipo_evento::tipo_evento_tracking, p_descripcion_evento, '', now(), p_usuario_email, v_org_id);
 
-  v_resp := jsonb_build_object('id', p_embarque_id, 'estado', p_nuevo_estado, 'expediente', v_expediente);
+  -- Cierre operativo automático: si al llegar a EIR ya está todo lo operativo,
+  -- el embarque avanza solo a "Por liquidar".
+  IF p_nuevo_estado = 'EIR' THEN
+    BEGIN
+      v_promovido := public.promover_embarque_por_liquidar(p_embarque_id);
+    EXCEPTION WHEN OTHERS THEN
+      v_promovido := false;
+    END;
+  END IF;
+
+  v_estado_final := CASE WHEN v_promovido THEN 'Por liquidar' ELSE p_nuevo_estado END;
+
+  v_resp := jsonb_build_object(
+    'id', p_embarque_id,
+    'estado', v_estado_final,
+    'promovido_por_liquidar', v_promovido,
+    'expediente', v_expediente);
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$
- name:avanzar_estado_embarque schema:public;
+$function$;
