@@ -204,16 +204,27 @@ export function parseCfdi(xml: string): CfdiParsed {
   // razonable: un CFDI 4.0 legítimo casi nunca los excede.
   const conceptos: CfdiConcepto[] = findConceptoBlocks(xml).slice(0, 200).map((c) => {
     const imp = extractImpuestosConcepto(c);
-    const cantidad = num(attr(c, "Cantidad"));
+    const cantidadRaw = num(attr(c, "Cantidad"));
+    const cantidad = cantidadRaw > 0 ? cantidadRaw : 1;
+    // El atributo CFDI `Importe` es el TOTAL de la línea (Cantidad × ValorUnitario),
+    // pero el sistema (y el trigger `_cxp_validar_aprobacion`) tratan `importe`
+    // como UNITARIO y lo multiplican por la cantidad. Sin esta normalización una
+    // línea con cantidad > 1 se contaba dos veces (LC_CXP_DESCUADRE).
+    const importeLinea = num(attr(c, "Importe"));
+    const valorUnitario = num(attr(c, "ValorUnitario"));
+    const unitario = valorUnitario > 0
+      ? valorUnitario
+      : (cantidad > 0 ? importeLinea / cantidad : importeLinea);
     return {
       descripcion: attr(c, "Descripcion"),
-      cantidad: cantidad > 0 ? cantidad : 1,
+      cantidad,
       clave_unidad: attr(c, "ClaveUnidad"),
-      importe: num(attr(c, "Importe")),
+      importe: Math.round(unitario * 1e6) / 1e6,
       iva: imp.iva,
       ieps: imp.ieps,
     };
   });
+
 
   const fechaRaw = attr(comprobante, "Fecha"); // 2025-03-14T10:22:01
   const fecha = fechaRaw.slice(0, 10);
