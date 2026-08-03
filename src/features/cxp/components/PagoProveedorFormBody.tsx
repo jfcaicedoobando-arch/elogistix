@@ -51,12 +51,25 @@ interface Props {
   cuentaId: string;
   setCuentaId: (v: string) => void;
   requiereCuenta: boolean;
+  /** Incoherencias de IVA/totales de la factura (informativas). */
+  validacion: { error: string | null; avisos: string[] };
 }
 
 
 export function PagoProveedorFormBody(p: Props) {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+      {p.validacion.avisos.length > 0 && (
+        <div className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 space-y-1">
+          <p className="text-xs font-semibold text-warning">Revisa la factura</p>
+          <ul className="list-disc pl-4 space-y-0.5">
+            {p.validacion.avisos.map((a) => (
+              <li key={a} className="text-xs text-warning">{a}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <FormSection title="Fecha y método">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
@@ -134,6 +147,10 @@ export function PagoProveedorFormBody(p: Props) {
             </div>
           )}
         </div>
+
+        {p.validacion.error && p.monto !== "" && (
+          <p className="text-xs text-destructive">{p.validacion.error}</p>
+        )}
 
         <PagoSaldoRestante factura={p.factura} saldoRestante={p.saldoRestante} excede={p.excede} />
 

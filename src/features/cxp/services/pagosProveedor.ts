@@ -8,6 +8,7 @@ import { registrarActividad } from "@/services/bitacora/registrar";
 import {
   crearMovimientoBancarioPago,
   eliminarMovimientoBancarioPago,
+  cargoEnMxn,
 } from "./pagoProveedorMovimiento";
 
 // Fase N: el estado se recalcula por trigger BD. `decidirEstadoFactura` sigue viviendo en `./estadoFacturaProveedor` para uso puro en UI.
@@ -145,8 +146,9 @@ export async function registrarPagoProveedor(
 
   // R6-N1: si el pago salió de una cuenta bancaria, generamos el movimiento
   // conciliado para que /tesoreria refleje la salida de efectivo.
+  let movimientoCreado = false;
   if (input.cuenta_bancaria_id) {
-    await crearMovimientoBancarioPago({
+    movimientoCreado = await crearMovimientoBancarioPago({
       pagoId: data.id,
       organizationId,
       cuentaBancariaId: input.cuenta_bancaria_id,
@@ -173,6 +175,14 @@ export async function registrarPagoProveedor(
       moneda: input.moneda,
       metodo_pago: input.metodo_pago,
       referencia: input.referencia ?? null,
+      // R6-N2: bitácora de tesorería visible en el detalle de la factura.
+      cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
+      cargo_mxn: input.cuenta_bancaria_id
+        ? cargoEnMxn(input.monto, input.moneda, input.tipo_cambio_usd)
+        : null,
+      movimiento_tesoreria: input.cuenta_bancaria_id
+        ? (movimientoCreado ? "creado" : "no_creado")
+        : "sin_cuenta",
     },
   });
   return data as PagoProveedor;
@@ -193,7 +203,12 @@ export async function eliminarPagoProveedor(id: string, facturaId: string, userI
     modulo: "cxp",
     accion: "eliminar_pago",
     entidadId: facturaId,
-    detalles: { pago_id: id, deleted_by: userId },
+    detalles: {
+      pago_id: id,
+      deleted_by: userId,
+      // R6-N2: el movimiento bancario asociado se da de baja junto con el pago.
+      movimiento_tesoreria: "dado_de_baja",
+    },
   });
 }
 

@@ -9,6 +9,7 @@ import { InfoFacturaSection } from "@/features/cxp/components/InfoFacturaSection
 import { ConceptosFacturaSection } from "@/features/cxp/components/ConceptosFacturaSection";
 import { NotasCreditoSection } from "@/features/cxp/components/NotasCreditoSection";
 import { DocumentosProveedorSection } from "@/features/cxp/components/detalle/DocumentosProveedorSection";
+import { BitacoraTesoreriaSection } from "@/features/cxp/components/BitacoraTesoreriaSection";
 import { AnticiposAplicadosSection } from "@/features/anticipos-proveedor/components/AnticiposAplicadosSection";
 import { PagosTable } from "@/features/cxp/components/DialogDetallePagosProveedor.sections";
 import { useConceptosCfdiFactura } from "@/features/cxp/hooks/useConceptosCfdiFactura";
@@ -55,6 +56,7 @@ export function FacturaProveedorTabs({
             onEliminarPago={onEliminarPago}
           />
           <AnticiposAplicadosSection facturaId={f.id} />
+          <BitacoraTesoreriaSection facturaId={f.id} monedaFactura={f.moneda} />
         </>
       ),
     },
