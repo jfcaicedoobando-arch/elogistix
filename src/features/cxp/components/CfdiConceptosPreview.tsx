@@ -26,7 +26,7 @@ export function CfdiConceptosPreview({ conceptos, moneda }: Props) {
   if (conceptos.length === 0) return null;
 
   const lineas = conceptos.map((c) => ({
-    monto: Number(c.monto ?? c.importe) || 0,
+    monto: Number(c.importe) || 0,
     cantidad: Number(c.cantidad ?? 1) || 1,
   }));
   const totImporte = sumarConceptos(lineas);
