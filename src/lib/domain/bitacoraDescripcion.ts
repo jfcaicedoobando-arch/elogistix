@@ -142,9 +142,8 @@ export function describirEntrada(entrada: EntradaBitacora): DescripcionBitacora 
     return describirGenerica(accion, modulo);
   }
 
-  const accionLegible = accion.replace(/_/g, " ");
-  const titulo = accionLegible.charAt(0).toUpperCase() + accionLegible.slice(1);
-  return { titulo };
+  // FIX 6 (P3): fallback humanizado (nunca un slug crudo tipo "importacion").
+  return { titulo: humanizarEnum(accion) };
 }
 
 export { GRUPOS_ACCION } from "./bitacoraGrupos";
