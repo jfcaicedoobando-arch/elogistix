@@ -111,7 +111,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Seleccionar fecha"}
+                {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : PLACEHOLDER_FECHA}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
