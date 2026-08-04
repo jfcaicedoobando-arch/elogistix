@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.417.4] - 2026-08-05
+- Build: `src/constants/appVersion.ts` había quedado vacío y rompía la compilación (`APP_VERSION` no exportado). Se restauró la constante.
+
 ## [13.417.3] - 2026-08-05
 - CI verde: migraciones idempotentes (`IF NOT EXISTS` en índices y `DROP POLICY IF EXISTS` en `proveedor_alias`, `REVOKE`/`GRANT` en la función del T/C), `normalize()` del lector de PDF con IA dividido en helpers para bajar la complejidad, y test de alta de cliente ajustado a la razón social en MAYÚSCULAS.
 
