@@ -198,9 +198,11 @@ export function useNuevaFacturaProveedorForm(
     values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed, handlePdfIaParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
-    conceptosManuales: manuales, cuadreManual, cfdiDuplicado,
-    // Bloqueo de guardado: CFDI ya capturado o mutación en curso.
-    puedeGuardar: !cfdiDuplicado && !crear.isPending,
+    conceptosManuales: manuales, cuadreManual, cfdiDuplicado, topeVinculacion,
+    // Bloqueo de guardado: CFDI ya capturado, mutación en curso o vinculación
+    // que excede el subtotal de la factura.
+    puedeGuardar: !cfdiDuplicado && !crear.isPending && !topeVinculacion.excede,
+
     embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit, isPending: crear.isPending, organizationId,
     tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
