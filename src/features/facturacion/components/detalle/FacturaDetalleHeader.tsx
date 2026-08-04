@@ -35,7 +35,7 @@ interface Props {
   fechaEmision?: string | null;
   ambiente?: "sandbox" | "live" | null;
 
-  volverHref?: string;
+  volverHref?: string | (() => void);
   volverLabel?: string;
   /** Barra de acciones del detalle, renderizada dentro del encabezado. */
   actions?: ReactNode;

@@ -3,7 +3,7 @@
  * destinatario al enviar un CFDI. Extraído de DialogEnviarCfdi para
  * mantener el archivo padre bajo el límite Power-of-10 (200 líneas).
  */
-import { User, Loader2 } from "lucide-react";
+import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContactoEnvio } from "@/features/facturacion/hooks/useContactosClienteParaEnvio";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
