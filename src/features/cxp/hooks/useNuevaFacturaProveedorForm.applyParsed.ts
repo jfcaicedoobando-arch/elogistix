@@ -67,6 +67,14 @@ export async function aplicarPdfIaParsed(
 ): Promise<boolean> {
   const result = await procesarPdfIaParsed(data, files, deps.organizationId);
   applyResult(deps, result);
+  // v13.415.0: muchas facturas internacionales no imprimen Tax ID, así que el
+  // proveedor se identifica por nombre/alias. Pedimos verificación explícita.
+  if (result.matchOrigen === "nombre" || result.matchOrigen === "alias") {
+    notifyInfo(undefined, {
+      title: `Proveedor detectado por nombre: ${result.values.provNombre}`,
+      description: "El documento no trae Tax ID; verifica que el proveedor sea el correcto antes de guardar.",
+    });
+  }
   // v13.414.0: si la IA no copió el folio literal del documento, no lo
   // inventamos: se pide capturarlo a mano para no chocar con otra factura.
   if (!result.values.folio.trim()) {
@@ -76,4 +84,5 @@ export async function aplicarPdfIaParsed(
   }
   return true;
 }
+
 
