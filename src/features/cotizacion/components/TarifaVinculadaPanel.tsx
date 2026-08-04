@@ -1,4 +1,4 @@
-          /**
+/**
  * Panel del Paso 1 del wizard de cotización: permite elegir/cambiar/quitar la
  * tarifa marítima del módulo Costeo y autollenar tránsito, días libres y
  * estado de carta garantía. La tarifa pasa a ser fuente de verdad; cualquier
