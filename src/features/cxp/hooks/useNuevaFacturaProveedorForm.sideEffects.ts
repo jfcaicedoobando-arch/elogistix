@@ -34,6 +34,8 @@ import {
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import type { PendingCfdi, VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
+import { registrarAliasProveedor } from "@/features/proveedor/services/matchProveedorPorNombre";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 /**
  * Persiste los conceptos del XML CFDI como líneas informativas de la factura.
