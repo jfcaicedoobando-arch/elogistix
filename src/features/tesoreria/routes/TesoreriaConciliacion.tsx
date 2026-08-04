@@ -1,12 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Upload, FileSpreadsheet, Sparkles, Plus } from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
 import { notifyInfo } from "@/lib/ui/appFeedback";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
 import {
   type MovimientoManualInput,
@@ -24,6 +20,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { movimientoColumns } from "./_sections/movimientoColumns";
 import { MovimientoManualDialog } from "./_sections/MovimientoManualDialog";
+import { ConciliacionToolbar } from "./_sections/ConciliacionToolbar";
 
 export default function TesoreriaConciliacion() {
   const { data: cuentas = [] } = useCuentasBancarias();
@@ -104,52 +101,20 @@ export default function TesoreriaConciliacion() {
         description="Importa el estado de cuenta y empareja con CxC/CxP"
       />
 
-      <Card>
-        <CardContent density="compact" className="flex flex-wrap gap-3 items-center">
-          <Select value={cuentaId} onValueChange={setCuentaId}>
-            <SelectTrigger className="w-full sm:w-[260px]"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
-            <SelectContent>
-              {cuentas.length === 0
-                ? <SelectItem value="__sin" disabled>No hay cuentas activas</SelectItem>
-                : cuentas.map((c) => <SelectItem key={c.id} value={c.id}>{c.banco} · {c.alias} ({c.moneda})</SelectItem>)
-              }
-            </SelectContent>
-          </Select>
-
-          <Select value={estado} onValueChange={(v) => setEstado(v as typeof estado)} disabled={!cuentaId}>
-            <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Pendiente">Pendientes</SelectItem>
-              <SelectItem value="Conciliado">Conciliados</SelectItem>
-              <SelectItem value="Ignorado">Ignorados</SelectItem>
-              <SelectItem value="todos">Todos</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <div className="flex-1" />
-
-          <Button
-            variant="outline"
-            onClick={handleConciliarExactos}
-            disabled={!cuentaId || isAutoConciliando || pendientesCount === 0}
-          >
-            <Sparkles className="h-4 w-4 mr-2 text-primary" />
-            {isAutoConciliando ? "Conciliando..." : "Conciliar exactos"}
-          </Button>
-
-          <Button variant="outline" onClick={abrirModalManual} disabled={!cuentaId}>
-            <Plus className="h-4 w-4 mr-2" /> Movimiento manual
-          </Button>
-
-          <input
-            ref={fileRef} type="file" accept=".xlsx,.csv" onChange={handleFile} className="hidden"
-          />
-          <Button onClick={() => fileRef.current?.click()} disabled={!cuentaId || importar.isPending}>
-            <Upload className="h-4 w-4 mr-2" />
-            {importar.isPending ? "Importando..." : "Importar XLSX/CSV"}
-          </Button>
-        </CardContent>
-      </Card>
+      <ConciliacionToolbar
+        cuentas={cuentas}
+        cuentaId={cuentaId}
+        onCuentaChange={setCuentaId}
+        estado={estado}
+        onEstadoChange={setEstado}
+        pendientesCount={pendientesCount}
+        isAutoConciliando={isAutoConciliando}
+        onConciliarExactos={handleConciliarExactos}
+        onAbrirManual={abrirModalManual}
+        fileRef={fileRef}
+        onFile={handleFile}
+        importando={importar.isPending}
+      />
 
       {!cuentaId ? (
         <Card><CardContent density="compact" className="p-8 text-center text-muted-foreground">
