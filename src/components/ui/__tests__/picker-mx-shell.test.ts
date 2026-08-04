@@ -98,7 +98,7 @@ describe("constantes de estilo y textos de picker-mx-shell", () => {
   it("expone los placeholders canónicos", () => {
     expect(PLACEHOLDER_FECHA).toBe("DD/MM/AAAA");
     expect(PLACEHOLDER_FECHA_HORA).toBe("DD/MM/AAAA HH:MM");
-    expect(PLACEHOLDER_PERIODO).toBe("Mes AAAA");
+    expect(PLACEHOLDER_PERIODO).toBe("Ej. Agosto 2026");
   });
 
   it("expone el mensaje de fecha inválida", () => {

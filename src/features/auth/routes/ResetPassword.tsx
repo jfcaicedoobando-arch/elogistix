@@ -148,7 +148,7 @@ export default function ResetPassword() {
                 <Input
                   id="new-password-2"
                   type={showPwd ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Repite tu nueva contraseña"
                   autoComplete="new-password"
                   {...register("password2")}
                 />

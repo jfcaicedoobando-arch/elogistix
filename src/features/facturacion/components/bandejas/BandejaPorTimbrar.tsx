@@ -67,7 +67,7 @@ export function BandejaPorTimbrar() {
             isLoading={paged.isLoading}
             emptyIcon={Stamp}
             emptyMessage="No hay CFDI en borrador esperando timbrado."
-            emptyHint="Aparecerán aquí las facturas creadas en el sistema que aún no se hayan enviado al PAC (FacturApi). Criterio: campo timbrada = false."
+            emptyHint="Aquí aparecerán las facturas pendientes de timbrar ante el SAT."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}

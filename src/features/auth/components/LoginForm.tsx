@@ -76,7 +76,7 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
           <Input
             id="password"
             type={showPwd ? "text" : "password"}
-            placeholder="••••••••"
+            placeholder="Tu contraseña"
             value={password}
             onChange={(e) => { setPassword(e.target.value); if (loginError) setLoginError(null); }}
             onKeyUp={(e) => setCapsOn(e.getModifierState && e.getModifierState("CapsLock"))}

@@ -119,7 +119,7 @@ export function BandejaVencidas() {
             isLoading={paged.isLoading}
             emptyIcon={AlarmClock}
             emptyMessage="Sin cartera vencida — todas las facturas están al día."
-            emptyHint="Aparecerán aquí los CFDI cuyo vencimiento ya pasó y siguen con saldo pendiente. Criterio: saldo > 0 y fecha_vencimiento < hoy."
+            emptyHint="Aquí aparecerán las facturas con saldo pendiente cuya fecha de vencimiento ya pasó."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}

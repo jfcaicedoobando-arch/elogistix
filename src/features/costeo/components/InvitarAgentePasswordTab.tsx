@@ -49,7 +49,7 @@ export function InvitarAgentePasswordTab({
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             className="font-mono"
-            placeholder="••••••••"
+            placeholder="Contraseña temporal del agente"
           />
           <Button
             type="button"

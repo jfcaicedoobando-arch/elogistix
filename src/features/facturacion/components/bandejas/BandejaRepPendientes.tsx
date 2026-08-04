@@ -96,7 +96,7 @@ export function BandejaRepPendientes() {
             isLoading={paged.isLoading}
             emptyIcon={ReceiptText}
             emptyMessage="Sin complementos de pago (REP) pendientes ante el SAT."
-            emptyHint="Aparecerán aquí los pagos registrados sobre facturas PPD cuyo complemento de pago todavía no se timbra o quedó en error. Criterio: factura PPD con pago aplicado + REP en estado Pendiente o Error."
+            emptyHint="Aquí aparecerán los pagos con complemento de pago (REP) pendiente de timbrar o con error ante el SAT."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.factura_id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.factura_numero}`}

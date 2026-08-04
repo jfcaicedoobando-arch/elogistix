@@ -13,7 +13,7 @@ export const PLACEHOLDER_FECHA = "DD/MM/AAAA";
 /** Placeholder canónico del picker de fecha + hora. */
 export const PLACEHOLDER_FECHA_HORA = "DD/MM/AAAA HH:MM";
 /** Placeholder canónico del selector de periodo mensual. */
-export const PLACEHOLDER_PERIODO = "Mes AAAA";
+export const PLACEHOLDER_PERIODO = "Ej. Agosto 2026";
 
 /** Mensaje por defecto cuando el texto capturado no es una fecha válida. */
 export const MENSAJE_FECHA_INVALIDA = "Fecha inválida. Usa DD/MM/AAAA.";

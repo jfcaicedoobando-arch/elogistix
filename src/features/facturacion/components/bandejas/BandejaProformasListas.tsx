@@ -84,7 +84,7 @@ export function BandejaProformasListas() {
             isLoading={paged.isLoading}
             emptyIcon={FileCheck2}
             emptyMessage="Sin proformas aceptadas pendientes de convertir a CFDI."
-            emptyHint="Aparecerán aquí las proformas marcadas como aceptadas por el cliente que aún no tienen una factura asociada. Criterio: estado = Aceptada y sin factura_id."
+            emptyHint="Aquí aparecerán las proformas aceptadas por el cliente que todavía no se han convertido en factura."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/proformas/${r.id}`}
             getRowAriaLabel={(r) => `Abrir proforma ${r.numero || r.id}`}
