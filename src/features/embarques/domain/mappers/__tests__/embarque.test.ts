@@ -19,6 +19,7 @@ const baseValues = (over: Partial<EmbarqueFormValues> = {}): EmbarqueFormValues 
   pesoKg: "1500",
   volumenM3: "10",
   piezas: "20",
+  tipoCambioUSD: "17.25",
   ...over,
 });
 

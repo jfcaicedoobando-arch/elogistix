@@ -71,10 +71,10 @@ describe("mapEmbarqueRowToFormValues", () => {
     expect(v.subiendoMsds).toBe(false);
   });
 
-  it("DEFAULT_EMBARQUE_VALUES tiene incoterm FOB y TCs por defecto", () => {
+  it("DEFAULT_EMBARQUE_VALUES tiene incoterm FOB y TCs vacíos (se precargan del DOF)", () => {
     expect(DEFAULT_EMBARQUE_VALUES.incoterm).toBe("FOB");
     expect(DEFAULT_EMBARQUE_VALUES.tipoCarga).toBe("Carga General");
-    expect(DEFAULT_EMBARQUE_VALUES.tipoCambioUSD).toBe("17.25");
-    expect(DEFAULT_EMBARQUE_VALUES.tipoCambioEUR).toBe("18.50");
+    expect(DEFAULT_EMBARQUE_VALUES.tipoCambioUSD).toBe("");
+    expect(DEFAULT_EMBARQUE_VALUES.tipoCambioEUR).toBe("");
   });
 });

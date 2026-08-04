@@ -76,7 +76,9 @@ export const DEFAULT_EMBARQUE_VALUES: EmbarqueFormValues = {
   contenedor: "", tipoContenedor: "", contenedores: [], blMaster: "", blHouse: "",
   aeropuertoOrigen: "", aeropuertoDestino: "", aerolinea: "", mawb: "", hawb: "",
   ciudadOrigen: "", ciudadDestino: "", transportista: "", cartaPorte: "",
-  etd: "", eta: "", tipoCambioUSD: "17.25", tipoCambioEUR: "18.50",
+  // v13.410.0 — sin T/C "mágico" por defecto: se precarga del DOF al abrir el
+  // wizard y, si no hay dato, el validador obliga a capturarlo.
+  etd: "", eta: "", tipoCambioUSD: "", tipoCambioEUR: "",
   // Pack B+
   tarifaId: "", cartaGarantia: false, diasLibresDestino: "0", diasAlmacenaje: "0",
   seguro: false, valorSeguroUsd: "", notas: "",

@@ -4,4 +4,5 @@ export * from './useNavieras';
 export * from './useOperadoresDistintos';
 export * from './usePuertos';
 export * from './useTasaIVA';
+export * from './useTcInicial';
 export * from './useTiposContenedor';

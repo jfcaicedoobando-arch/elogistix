@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { uploadFile } from "@/services/storage/index";
-import { useExchangeRates } from "@/features/catalogos/hooks/useExchangeRates";
+import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import {
@@ -33,7 +33,7 @@ export function useEmbarqueForm() {
   });
 
   const [documentosArchivos, setDocumentosArchivos] = useState<Record<string, File>>({});
-  const { data: tiposDeCambio } = useExchangeRates();
+  const { data: tiposDeCambio } = useTcInicial();
 
   /**
    * P1-5 — En modo edición el embarque ya trae sus tipos de cambio históricos.
@@ -44,12 +44,15 @@ export function useEmbarqueForm() {
    */
   const hidratadoDesdeEmbarque = useRef(false);
 
-  // Sync tipos de cambio remotos al formulario (sólo en captura nueva).
+  // Precarga del T/C (DOF preferente) al abrir una captura nueva. Es una
+  // sugerencia editable: el usuario puede sobrescribirla antes de guardar.
   useEffect(() => {
     if (tiposDeCambio && !hidratadoDesdeEmbarque.current) {
       const opts = { shouldValidate: true, shouldDirty: true } as const;
       methods.setValue("tipoCambioUSD", String(tiposDeCambio.usdMxn), opts);
-      methods.setValue("tipoCambioEUR", String(tiposDeCambio.eurMxn), opts);
+      if (tiposDeCambio.eurMxn != null) {
+        methods.setValue("tipoCambioEUR", String(tiposDeCambio.eurMxn), opts);
+      }
     }
   }, [tiposDeCambio, methods]);
 

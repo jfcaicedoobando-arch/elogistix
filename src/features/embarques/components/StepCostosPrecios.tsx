@@ -1,11 +1,12 @@
 import { useFormContext } from "react-hook-form";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 import { aUSD } from "@/lib/financial/costosUSD";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { useCostosPreciosCalc } from "@/features/embarques/hooks/useCostosPreciosCalc";
 import { CostosCard, VentasCard } from "./StepCostosPreciosCards";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
@@ -74,6 +75,14 @@ export function StepCostosPrecios(props: Props) {
   const { data: contenedoresEmb = [] } = useContenedoresEmbarque(embarqueId ?? '');
   const showContenedorCol = !!embarqueId && contenedoresEmb.length >= 2;
 
+  // Origen del T/C precargado (DOF preferente) para dar trazabilidad al dato.
+  const { data: tcInicial } = useTcInicial();
+  const tcOrigen = !tcInicial
+    ? null
+    : tcInicial.fuente === "DOF"
+      ? `DOF del ${formatFechaEs(tcInicial.fecha)} · ${tcInicial.usdMxn.toFixed(4)}`
+      : `Referencia del día · ${tcInicial.usdMxn.toFixed(4)}`;
+
   const costoCols = showContenedorCol ? COSTO_COLS_CONT : COSTO_COLS_BASE;
   const ventaCols = showContenedorCol ? VENTA_COLS_CONT : VENTA_COLS_BASE;
 
@@ -123,11 +132,14 @@ export function StepCostosPrecios(props: Props) {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-xs text-muted-foreground">Tipo de Cambio USD</p>
-                <Input type="number" {...register('tipoCambioUSD')} className="text-center mt-1" />
+                <Input {...register('tipoCambioUSD')} inputMode="decimal" className="text-center mt-1 [appearance:textfield]" />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {tcOrigen ?? "Captura el tipo de cambio del día"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Tipo de Cambio EUR</p>
-                <Input type="number" {...register('tipoCambioEUR')} className="text-center mt-1" />
+                <Input {...register('tipoCambioEUR')} inputMode="decimal" className="text-center mt-1 [appearance:textfield]" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Utilidad Estimada (USD)</p>

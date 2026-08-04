@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.410.0] - 2026-08-04
+- Solución de raíz al T/C faltante: nuevo hook `useTcInicial` (DOF preferente, fallback al servicio remoto) precarga el tipo de cambio USD/EUR al crear un embarque, como sugerencia editable.
+- Se elimina el T/C "mágico" por defecto (17.25 / 18.50) en `DEFAULT_EMBARQUE_VALUES`: si no hay dato del DOF, el validador del paso 4 obliga a capturarlo antes de guardar.
+- Paso "Costos y Pricing": los inputs de T/C ya no muestran flechas de spinner y se indica el origen del dato ("DOF del DD/MM/AAAA · 18.1234").
+
+
 ## [13.409.0] - 2026-08-04
 - Proforma: cuando falta el tipo de cambio USD del embarque (`LC_PROFORMA_TC_REQUERIDO`), el modal muestra un aviso con captura del T/C (sugerencia DOF) y botón "Guardar y reintentar" que regenera la proforma sin perder la selección.
 - Nueva mutación `actualizarTipoCambioUsdEmbarque` y hook `useProformaTcRecovery`.
