@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.402.0] - 2026-08-04
+- Los resultados del buscador global resaltan las coincidencias del término buscado (expediente, BL/guía, cliente, RFC) en título y subtítulo, ignorando acentos y mayúsculas (`globalSearchResaltado.ts` + `TextoResaltado`). 10 tests nuevos.
+
 ## [13.401.4] - 2026-08-04
 - Test de auditoría `src/components/shared/__tests__/globalSearch-limites.test.ts`: fija que `GlobalSearch.tsx`, `GlobalSearch.partes.tsx` y `globalSearchMeta.ts` se mantengan ≤ 200 líneas, que el archivo de piezas sólo exporte componentes y que las constantes compartidas vivan en `globalSearchMeta.ts`.
 
