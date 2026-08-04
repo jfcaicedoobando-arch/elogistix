@@ -23,7 +23,9 @@ import { aplicarCfdiParsed, aplicarPdfIaParsed } from "./useNuevaFacturaProveedo
 import { useConceptosManuales } from "./useConceptosManuales";
 import { calcularCuadreConceptos } from "@/features/cxp/utils/cuadreConceptos";
 import { useAutoTcEffect } from "./useNuevaFacturaProveedorForm.tcEffect";
-import { puedeContinuarSubmit } from "./useNuevaFacturaProveedorForm.guard";
+import { puedeContinuarSubmit, puedeContinuarTope } from "./useNuevaFacturaProveedorForm.guard";
+import { calcularTopeVinculacion } from "@/features/cxp/utils/topeVinculacion";
+
 import { detectarCfdiDuplicado, type FacturaExistentePorUuid } from "./useNuevaFacturaProveedorForm.dup";
 export function useNuevaFacturaProveedorForm(
   onDone: (facturaId?: string | null) => void,
