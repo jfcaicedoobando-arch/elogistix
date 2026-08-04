@@ -193,9 +193,8 @@ export function useNuevaFacturaProveedorForm(
     conceptosManuales: manuales, cuadreManual, cfdiDuplicado, topeVinculacion,
     // Bloqueo de guardado: CFDI capturado, mutación en curso o tope excedido.
     puedeGuardar: !cfdiDuplicado && !crear.isPending && !topeVinculacion.excede,
-
-
     embarqueAdHoc, setEmbarqueAdHoc,
+
     reset, submit, isPending: crear.isPending, organizationId,
     tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };
