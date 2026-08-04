@@ -3,10 +3,11 @@
  * Extraído para respetar Power-of-10 (≤200 líneas por archivo).
  */
 
-import { existeFacturaDuplicada } from "@/features/cxp/services";
+import { buscarFacturaDuplicadaFolio } from "@/features/cxp/services";
 import {
   buscarCfdiDuplicado, describirFacturaExistente, type FacturaExistentePorUuid,
 } from "./useNuevaFacturaProveedorForm.dup";
+
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
@@ -106,19 +107,21 @@ export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
     return { ok: false, facturaId: null };
   }
   try {
-    const dup = await existeFacturaDuplicada(p.values.provId, p.values.folio, p.values.emision);
+    const dup = await buscarFacturaDuplicadaFolio(p.values.provId, p.values.folio, p.values.emision);
     if (dup) {
       p.setFolioError();
       notifyError(undefined, {
         title: "Factura duplicada",
-        description: `Ya capturaste el folio ${p.values.folio.trim()} de este proveedor el ${p.values.emision}.`,
+        description: `Ya existe como ${describirFacturaExistente(dup)} con el folio ${p.values.folio.trim()} y fecha ${p.values.emision}. Si es un documento distinto, corrige el folio o la fecha de emisión.`,
         method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP",
+        action: accionVerFactura(dup),
       });
       return { ok: false, facturaId: null };
     }
   } catch {
     // Si la verificación falla (red, RLS), continuamos: el UNIQUE de UUID fiscal sigue protegiendo.
   }
+
   const previo = await buscarCfdiDuplicado(p.pendingCfdi?.uuid);
   if (previo.estado === "existe") {
     notificarCfdiDuplicado(previo.factura, "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_UUID_PRE",

@@ -29,7 +29,13 @@ export interface CfdiParsedResponse {
     conceptos: CfdiConceptoParsed[];
   };
   ai: { categoria_id: string | null; notas: string };
+  /**
+   * Sólo lo manda `parse-invoice-pdf`: "baja" cuando la IA no pudo copiar el
+   * folio literal del documento, por lo que el formulario no lo precarga.
+   */
+  folio_confianza?: "alta" | "baja";
 }
+
 
 /**
  * Fase en la que falló la subida de CFDI:

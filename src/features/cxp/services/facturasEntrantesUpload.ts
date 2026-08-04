@@ -67,13 +67,35 @@ function filaEntranteAInsertar(params: {
   };
 }
 
+/**
+ * v13.414.0 — Evita gemelos en el buzón: si ya hay un documento vivo con el
+ * mismo archivo (mismo hash) en la organización, no se crea otro renglón.
+ */
+async function validarNoDuplicadoEnBuzon(hash: string, organizationId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("embarque_facturas_entrantes")
+    .select("estado")
+    .eq("organization_id", organizationId)
+    .eq("archivo_hash", hash)
+    .is("deleted_at", null)
+    .limit(1);
+  if (error || !data || data.length === 0) return;
+  throw new Error(
+    data[0].estado === "capturada"
+      ? "Este archivo ya fue capturado como factura de proveedor. Búscala en Compras › Facturas."
+      : "Este archivo ya está en el buzón esperando captura. Abre el documento existente en vez de subirlo otra vez.",
+  );
+}
+
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
   const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
   if (invalido) throw new Error(invalido);
 
   // El registro principal apunta al PDF cuando existe; si sólo hay XML, a él.
   const principal = await subirArchivo((input.pdf ?? input.xml) as File, input);
+  await validarNoDuplicadoEnBuzon(principal.hash, input.organizationId);
   const xmlSubido = input.pdf && input.xml ? await subirArchivo(input.xml, input) : null;
+
 
   const { data: userData } = await supabase.auth.getUser();
   const { data, error } = await supabase

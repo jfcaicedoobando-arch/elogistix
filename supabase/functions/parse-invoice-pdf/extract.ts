@@ -26,7 +26,8 @@ const TOOL_DEF = {
     parameters: {
       type: "object",
       properties: {
-        invoice_number: { type: "string", description: "Folio o número de factura del proveedor" },
+        invoice_number: { type: "string", description: "Folio/número TAL CUAL aparece impreso en el documento (Invoice No., Debit Note No., Bill No., 发票号). Cópialo literal, carácter por carácter. NUNCA lo construyas, traduzcas ni deduzcas: si no aparece, devuelve cadena vacía." },
+        invoice_number_confidence: { type: "string", description: "\"alta\" si copiaste el folio literal del documento; \"baja\" si lo dedujiste, no estás seguro o no aparece." },
         issue_date: { type: "string", description: "Fecha de emisión en formato YYYY-MM-DD" },
         currency: { type: "string", description: "Código ISO 4217 (USD, EUR, MXN, CNY, etc.)" },
         exchange_rate_usd: { type: "number", description: "Tipo de cambio a USD si aparece, si no 0" },
@@ -57,7 +58,7 @@ const TOOL_DEF = {
         notas: { type: "string", description: "Resumen breve (≤200 chars) de la factura" },
       },
       required: [
-        "invoice_number", "issue_date", "currency", "subtotal", "tax_total",
+        "invoice_number", "invoice_number_confidence", "issue_date", "currency", "subtotal", "tax_total",
         "total", "supplier_name", "line_items", "categoria_id", "notas",
       ],
     },
@@ -71,6 +72,7 @@ const SYSTEM = `Eres un asistente contable que extrae datos de facturas de prove
 - Los importes son números, no strings, sin comas de miles.
 - No inventes conceptos: extrae exactamente las líneas de la factura.
 - En cada línea devuelve SIEMPRE quantity y unit_price (precio UNITARIO) además de amount (total de la línea = quantity × unit_price). Si el PDF sólo muestra el total de la línea, calcula unit_price = amount / quantity.
+- invoice_number: cópialo LITERAL del documento. Está prohibido inventarlo, componerlo con fechas/números internos o reutilizar otro identificador. Si no lo encuentras, devuelve cadena vacía e invoice_number_confidence = "baja".
 - Si un campo no aparece, usa cadena vacía (string) o 0 (número).`;
 
 interface GeminiCallParams {
@@ -82,6 +84,7 @@ interface GeminiCallParams {
 
 export interface GeminiExtracted {
   invoice_number: string;
+  invoice_number_confidence: string;
   issue_date: string;
   currency: string;
   exchange_rate_usd: number;
@@ -162,6 +165,8 @@ export async function callGeminiExtract(p: GeminiCallParams): Promise<GeminiExtr
 function normalize(a: Partial<GeminiExtracted>): GeminiExtracted {
   return {
     invoice_number: String(a.invoice_number ?? "").trim(),
+    invoice_number_confidence:
+      String(a.invoice_number_confidence ?? "baja").toLowerCase() === "alta" ? "alta" : "baja",
     issue_date: String(a.issue_date ?? "").slice(0, 10),
     currency: (String(a.currency ?? "USD").toUpperCase()).slice(0, 3),
     exchange_rate_usd: Number(a.exchange_rate_usd) || 0,
@@ -196,11 +201,16 @@ export function mapGeminiToCfdiShape(d: GeminiExtracted, categorias: Categoria[]
     ? d.categoria_id
     : null;
 
+  const folioConfiable = d.invoice_number_confidence === "alta" && d.invoice_number.length > 0;
+
   return {
+    // El frontend no precarga el folio si la IA no lo copió literal (v13.414.0):
+    // un folio inventado provoca falsos "Factura duplicada".
+    folio_confianza: folioConfiable ? "alta" : "baja",
     cfdi: {
       uuid: "",
       serie: "",
-      folio: d.invoice_number,
+      folio: folioConfiable ? d.invoice_number : "",
       fecha: d.issue_date,
       moneda: monedaValida,
       tipo_cambio: d.exchange_rate_usd > 0 ? d.exchange_rate_usd : null,

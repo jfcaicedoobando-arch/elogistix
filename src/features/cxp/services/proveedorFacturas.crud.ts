@@ -38,6 +38,33 @@ export async function crearFacturaProveedor(payload: NuevaFacturaProveedorPayloa
 }
 
 /**
+ * Busca la factura viva (no cancelada ni borrada) que ya usa el mismo
+ * proveedor + folio + fecha de emisión, devolviendo su resumen para poder
+ * enlazarla desde el aviso de duplicado (v13.414.0).
+ */
+export async function buscarFacturaDuplicadaFolio(
+  proveedorId: string,
+  folioProveedor: string,
+  fechaEmision: string,
+  excluirId?: string,
+): Promise<FacturaExistentePorUuid | null> {
+  if (!fechaEmision) return null;
+  const cols = "id, folio_interno, folio_proveedor, proveedor_nombre, estado, estado_aprobacion";
+  let q = supabase
+    .from("proveedor_facturas")
+    .select(cols)
+    .eq("proveedor_id", proveedorId)
+    .eq("folio_proveedor", folioProveedor.trim())
+    .eq("fecha_emision", fechaEmision)
+    .neq("estado", "Cancelada")
+    .is("deleted_at", null)
+    .limit(1);
+  if (excluirId) q = q.neq("id", excluirId);
+  const data = await unwrapOr(q, []);
+  return data.length > 0 ? data[0] : null;
+}
+
+/**
  * Verifica si ya existe una factura con el mismo proveedor + folio + fecha emisión
  * (excluyendo canceladas y borradas). Bloquea capturas duplicadas accidentales.
  *
@@ -50,20 +77,10 @@ export async function existeFacturaDuplicada(
   fechaEmision: string,
   excluirId?: string,
 ): Promise<boolean> {
-  if (!fechaEmision) return false;
-  let q = supabase
-    .from("proveedor_facturas")
-    .select("id")
-    .eq("proveedor_id", proveedorId)
-    .eq("folio_proveedor", folioProveedor.trim())
-    .eq("fecha_emision", fechaEmision)
-    .neq("estado", "Cancelada")
-    .is("deleted_at", null)
-    .limit(1);
-  if (excluirId) q = q.neq("id", excluirId);
-  const data = await unwrapOr(q, []);
-  return data.length > 0;
+  const f = await buscarFacturaDuplicadaFolio(proveedorId, folioProveedor, fechaEmision, excluirId);
+  return f !== null;
 }
+
 
 /** Resumen mínimo de una factura viva que ya usa un UUID fiscal. */
 export interface FacturaExistentePorUuid {
