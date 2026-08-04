@@ -24,6 +24,7 @@ import {
 } from "@/features/cotizacion/hooks/useCotizacionPlantillas";
 import { EditarPlantillaDialog } from "@/features/cotizacion/components/plantillas/EditarPlantillaDialog";
 import { PlantillasTabla } from "@/features/cotizacion/components/plantillas/PlantillasTabla";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
 type FiltroVis = "todos" | PlantillaVisibilidad;
 
@@ -104,7 +105,7 @@ export default function CotizacionPlantillas() {
           </div>
 
           {isLoading ? (
-            <div className="text-sm text-muted-foreground py-8 text-center">Cargando…</div>
+            <ListSkeleton variant="card" rows={3} />
           ) : filtradas.length === 0 ? (
             <div className="text-sm text-muted-foreground py-12 text-center space-y-2">
               <p>

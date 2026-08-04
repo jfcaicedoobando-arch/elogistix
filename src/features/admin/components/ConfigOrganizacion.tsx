@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Building2 } from "lucide-react";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useConfiguracionByOrg } from "@/features/configuracion/hooks";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 export default function ConfigOrganizacion() {
   const { organizations } = useOrganization();
@@ -49,7 +50,7 @@ export default function ConfigOrganizacion() {
         )}
 
         {selectedOrgId && isLoading && (
-          <p className="text-sm text-muted-foreground py-4">Cargando configuración...</p>
+          <EmptyStateInline loading message="Cargando configuración…" />
         )}
 
         {Object.entries(grouped).map(([categoria, items]) => (

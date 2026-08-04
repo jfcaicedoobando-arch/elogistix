@@ -5,6 +5,7 @@
 import { Card } from "@/components/ui/card";
 import { Building2 } from "lucide-react";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Props {
   nombre?: string | null;
@@ -46,8 +47,15 @@ export function EstadoCuentaHeaderCard({
             <Building2 className="h-5 w-5 text-accent" />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-base font-semibold">
-              {loading ? "Cargando…" : toTitleCase(nombre ?? "") || "Cliente"}
+            <div className="truncate text-base font-semibold" aria-busy={loading || undefined}>
+              {loading ? (
+                <>
+                  <span className="sr-only">Cargando…</span>
+                  <Skeleton className="h-5 w-40" />
+                </>
+              ) : (
+                toTitleCase(nombre ?? "") || "Cliente"
+              )}
             </div>
             <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
               <span className="font-mono uppercase">{rfc || "Sin RFC"}</span>

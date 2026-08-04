@@ -6,6 +6,7 @@
 import { User, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ContactoEnvio } from "@/features/facturacion/hooks/useContactosClienteParaEnvio";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface ContactoItemProps {
   contacto: ContactoEnvio;
@@ -57,7 +58,7 @@ export function ContactosClienteList({
   if (cargando) {
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Cargando contactos…
+        <EmptyStateInline loading message="Cargando contactos…" className="py-2" />
       </div>
     );
   }

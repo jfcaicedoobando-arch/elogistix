@@ -3,7 +3,7 @@
  * Toda edición se realiza desde el wizard "Editar embarque" (paso 2).
  */
 import { useNavigate } from "react-router-dom";
-import { Loader2, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

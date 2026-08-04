@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Plus, CheckCircle2 } from "lucide-react";
+import { Plus, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";

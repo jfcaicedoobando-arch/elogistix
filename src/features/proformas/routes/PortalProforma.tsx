@@ -3,7 +3,6 @@
  * Sin autenticación. Permite al cliente aceptar o rechazar la proforma.
  */
 import { useParams } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Clock, AlertTriangle, FileSpreadsheet } from "lucide-react";
