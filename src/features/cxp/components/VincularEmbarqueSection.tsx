@@ -169,6 +169,13 @@ export function VincularEmbarqueSection({
           onChangeMonto={onChangeMonto}
         />
       </div>
+
+      <TopeVinculacionBar
+        resultado={tope}
+        subtotal={facturaMonto ?? 0}
+        moneda={facturaMoneda ?? "MXN"}
+      />
+
     </div>
   );
 }
