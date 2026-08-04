@@ -27,11 +27,24 @@ async function calcularHash(file: File): Promise<string> {
     .join("");
 }
 
+/**
+ * v13.419.0 — Traduce fallos de almacenamiento (RLS/permisos) a lenguaje claro.
+ */
+function mensajeErrorStorage(error: { message?: string } | null): string | null {
+  const msg = (error?.message ?? "").toLowerCase();
+  if (!msg) return null;
+  if (msg.includes("row-level security") || msg.includes("unauthorized") || msg.includes("permission")) {
+    return "No tienes permiso para guardar archivos en el buzón de este embarque. Verifica que el embarque pertenezca a tu organización y que tu rol permita subir facturas.";
+  }
+  return null;
+}
+
 async function subirArchivo(
   file: File,
   input: Pick<SubirFacturaEntranteInput, "organizationId" | "embarqueId">,
+  hashPrevio?: string,
 ): Promise<ArchivoSubido> {
-  const hash = await calcularHash(file);
+  const hash = hashPrevio ?? (await calcularHash(file));
   const path = rutaArchivoEntrante({
     organizationId: input.organizationId,
     embarqueId: input.embarqueId,
@@ -41,9 +54,13 @@ async function subirArchivo(
   const { error } = await supabase.storage
     .from(BUCKET_CXP_INBOX)
     .upload(path, file, { upsert: true, contentType: file.type || undefined });
-  if (error) throw error;
+  if (error) {
+    const amable = mensajeErrorStorage(error);
+    throw amable ? new Error(amable) : error;
+  }
   return { path, hash, nombre: file.name };
 }
+
 
 /** Arma el renglón a insertar; aísla el mapeo para mantener baja la complejidad. */
 function filaEntranteAInsertar(params: {
@@ -92,9 +109,15 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   if (invalido) throw new Error(invalido);
 
   // El registro principal apunta al PDF cuando existe; si sólo hay XML, a él.
-  const principal = await subirArchivo((input.pdf ?? input.xml) as File, input);
-  await validarNoDuplicadoEnBuzon(principal.hash, input.organizationId);
+  // v13.419.0 — Se valida el duplicado ANTES de subir: así el usuario ve el
+  // mensaje claro del buzón en vez de un error técnico del almacenamiento.
+  const archivoPrincipal = (input.pdf ?? input.xml) as File;
+  const hashPrincipal = await calcularHash(archivoPrincipal);
+  await validarNoDuplicadoEnBuzon(hashPrincipal, input.organizationId);
+
+  const principal = await subirArchivo(archivoPrincipal, input, hashPrincipal);
   const xmlSubido = input.pdf && input.xml ? await subirArchivo(input.xml, input) : null;
+
 
 
   const { data: userData } = await supabase.auth.getUser();
