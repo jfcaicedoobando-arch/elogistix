@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,6 @@ import { useVolver } from "@/hooks/shared/useVolver";
 
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const volver = useVolver(ROUTES.PORTAL_EMBARQUES);
   const {
     embarque,

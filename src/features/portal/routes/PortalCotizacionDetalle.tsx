@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +21,6 @@ import { useVolver } from "@/hooks/shared/useVolver";
 
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const volver = useVolver(ROUTES.PORTAL_COTIZACIONES);
   const { data: cot, isLoading, isError, refetch } = usePortalCotizacion(id);
   useRegisterBreadcrumbLabel(id, cot?.folio);

@@ -1,4 +1,4 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DetailSkeleton } from "@/components/shared/skeletons";
@@ -21,7 +21,6 @@ import { useDocumentTitle } from "@/hooks/shared";
 import { useVolver } from "@/hooks/shared/useVolver";
 export default function PortalFacturaDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const volver = useVolver(ROUTES.PORTAL_FACTURAS);
   const { data: factura, isLoading } = usePortalFactura(id);
   useRegisterBreadcrumbLabel(id, factura?.numero);
