@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
+import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
 import { Link } from "react-router-dom";
 import { Wallet, ArrowRight, FileText, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -30,7 +31,7 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
 }
 
 export default function Tesoreria() {
-  const { data, isLoading } = useResumenTesoreria();
+  const { data, isLoading, isError, refetch } = useResumenTesoreria();
 
   const handlePdf = async () => {
     if (!data) return;
@@ -69,9 +70,15 @@ export default function Tesoreria() {
         }
       />
 
-      {isLoading || !data ? (
-        <KpiGridSkeleton count={4} heightClass="h-20" />
-      ) : (
+      {/* P1-1: `|| !data` congelaba el esqueleto cuando la consulta fallaba. */}
+      <AsyncBoundary
+        isLoading={isLoading}
+        isError={isError || (!isLoading && !data)}
+        onRetry={() => void refetch()}
+        skeleton={<KpiGridSkeleton count={4} heightClass="h-20" />}
+        errorTitle="No se pudo cargar el resumen de tesorería"
+      >
+        {data ? (
         <>
           <section>
             <div className="flex items-center justify-between mb-2">
