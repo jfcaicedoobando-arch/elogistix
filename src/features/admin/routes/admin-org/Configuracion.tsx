@@ -13,6 +13,8 @@ import TabExportar from "@/features/admin/components/TabExportar";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
+
 
 function getSaveButtonLabel(isSaving: boolean): string {
   return isSaving ? "Guardando..." : "Guardar Cambios";
