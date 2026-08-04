@@ -74,6 +74,14 @@ export function StepCostosPrecios(props: Props) {
   const { data: contenedoresEmb = [] } = useContenedoresEmbarque(embarqueId ?? '');
   const showContenedorCol = !!embarqueId && contenedoresEmb.length >= 2;
 
+  // Origen del T/C precargado (DOF preferente) para dar trazabilidad al dato.
+  const { data: tcInicial } = useTcInicial();
+  const tcOrigen = !tcInicial
+    ? null
+    : tcInicial.fuente === "DOF"
+      ? `DOF del ${formatDateMx(tcInicial.fecha)} · ${tcInicial.usdMxn.toFixed(4)}`
+      : `Referencia del día · ${tcInicial.usdMxn.toFixed(4)}`;
+
   const costoCols = showContenedorCol ? COSTO_COLS_CONT : COSTO_COLS_BASE;
   const ventaCols = showContenedorCol ? VENTA_COLS_CONT : VENTA_COLS_BASE;
 
