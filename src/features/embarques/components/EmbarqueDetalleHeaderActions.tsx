@@ -46,6 +46,17 @@ interface Props {
   tieneDeudaPendiente: boolean;
 }
 
+const ESTADOS_TERMINALES = ["Entregado", "EIR", "Por liquidar", "Cerrado", "Cancelado"];
+const ESTADOS_CANCELABLES = ["Borrador", "Confirmado", "En Tránsito", "Llegada", "En Aduana", "Arribo"];
+
+/** Lint (complejidad): derivaciones de estado fuera del componente. */
+function derivarEstadoAcciones(estadoVisual: string) {
+  return {
+    esTerminal: ESTADOS_TERMINALES.includes(estadoVisual),
+    puedeCancelar: ESTADOS_CANCELABLES.includes(estadoVisual),
+  };
+}
+
 export function EmbarqueDetalleHeaderActions({
   expediente, estadoVisual, siguienteEstado, canEdit, avanzandoEstado, trackingPending,
   embarqueId, puedeReabrir, reabriendoEstado, docsFaltantes, bloqueadoPorDocs,
@@ -54,8 +65,7 @@ export function EmbarqueDetalleHeaderActions({
   onCancelar, cancelandoEmbarque, tieneDeudaPendiente,
 }: Props) {
   // B-058 (v13.320.39): en estados terminales/cerrados el borrado ya no aplica.
-  const esTerminal = ["Entregado", "EIR", "Por liquidar", "Cerrado", "Cancelado"].includes(estadoVisual);
-  const puedeCancelar = ["Borrador", "Confirmado", "En Tránsito", "Llegada", "En Aduana", "Arribo"].includes(estadoVisual);
+  const { esTerminal, puedeCancelar } = derivarEstadoAcciones(estadoVisual);
   // FIX C1 (S5-01): el borrado exige rol admin/operador, igual que el guard del RPC.
   const { canEliminarEmbarque } = usePermissions();
   const puedeEliminar = !esTerminal && !tieneDeudaPendiente && canEliminarEmbarque;
