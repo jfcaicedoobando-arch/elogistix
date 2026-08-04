@@ -17,3 +17,4 @@ export * from './createCatalogHooks';
 export * from './useCopyText';
 export * from './usePdfExport';
 export * from './useDocumentTitle';
+export * from './useCargaExpirada';
