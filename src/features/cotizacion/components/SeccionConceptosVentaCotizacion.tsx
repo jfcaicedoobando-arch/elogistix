@@ -40,7 +40,6 @@ export default function SeccionConceptosVentaCotizacion({
   // cuando algún concepto realmente causa IVA (antes decía "16%" siempre).
   // R7-FIX2: la etiqueta sale de las tasas reales de las filas (8% frontera,
   // mixtas 8/16%) en lugar de imprimir siempre la tasa global de la org.
-  const tasaPct = etiquetaTasaIva([...conceptosUSD, ...conceptosMXN], tasaIva);
   const tasaPctMXN = etiquetaTasaIva(conceptosMXN, tasaIva);
   const hayIvaMXN = conceptosMXN.some(c => c.aplica_iva) || ivaMXN > 0;
   const subtotalSinIvaUSD = sumarSubtotales(conceptosUSD, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
