@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.417.2] - 2026-08-05
+- Seguridad: la función interna que siembra el T/C del DOF en embarques nuevos ya no es ejecutable por usuarios anónimos ni por `PUBLIC` (sólo corre como disparador). Corrige la regresión de `fix45_anon_execute_whitelist.sql` en CI.
+
 ## [13.417.1] - 2026-08-05
 - Tests RLS: el test de aislamiento buscaba clientes con `LIKE 'Cliente %'`, pero el candado de razón social en MAYÚSCULAS los guarda como `CLIENTE A`, así que veía 0 registros y CI fallaba. Ahora la búsqueda es insensible a mayúsculas (`ILIKE`).
 
