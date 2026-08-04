@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.407.0] - 2026-08-04
+- Buzón CxP: al cancelar o eliminar una factura de proveedor, sus documentos vuelven a "Por capturar" y se desvinculan (`trg_reabrir_entrantes_factura`). El cierre automático (`_cerrar_entrantes_por_uuid`) ya no aplica a facturas canceladas. Backfill: 1 documento cerrado contra una factura no viva quedó reabierto.
+
+
+
 ## [13.406.0] - 2026-08-04
 - Buzón CxP: los documentos cuyo CFDI ya fue capturado se cierran automáticamente. Nuevo trigger `trg_cerrar_entrantes_por_uuid` en `proveedor_facturas` (marca `capturada`, vincula la factura y sella `capturado_por` cuando coincide el UUID fiscal dentro de la misma organización), aunque la captura se haya hecho desde el tab Costos del embarque o el archivo se haya subido dos veces. Backfill: 4 documentos que seguían en "Por capturar" quedaron cerrados.
 
