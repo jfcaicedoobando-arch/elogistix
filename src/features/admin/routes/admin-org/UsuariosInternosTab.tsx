@@ -34,7 +34,7 @@ export function UsuariosInternosTab() {
   const [filtroEstado, setFiltroEstado] = useState<string>(TODOS);
   const { user } = useAuth();
   const orgScope = useUsuariosOrgScope();
-  const { data: users = [], isLoading, refetch, isFetching } = useUsuarios();
+  const { data: users = [], isLoading, isError, refetch, isFetching } = useUsuarios();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
   const quitarDeOrg = useQuitarDeOrganizacion();
@@ -171,6 +171,8 @@ export function UsuariosInternosTab() {
           columns={columns}
           data={usuariosFiltrados}
           isLoading={isLoading}
+          isError={isError}
+          onRetry={() => void refetch()}
           emptyMessage={
             hayFiltrosActivos(filtros)
               ? "Ningún usuario coincide con los filtros aplicados."

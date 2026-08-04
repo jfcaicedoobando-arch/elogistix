@@ -13,6 +13,8 @@ import TabExportar from "@/features/admin/components/TabExportar";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
+
 
 function getSaveButtonLabel(isSaving: boolean): string {
   return isSaving ? "Guardando..." : "Guardar Cambios";
@@ -21,19 +23,29 @@ function getSaveButtonLabel(isSaving: boolean): string {
 const TABS_CON_GUARDAR = new Set(["empresa", "facturacion"]);
 
 export default function Configuracion() {
-  const { s, set, isLoading, isSaving, isDirty, handleSave } = useConfiguracionState();
+  const { s, set, isLoading, isError, refetch, isSaving, isDirty, handleSave } = useConfiguracionState();
   const { effectiveRole } = useAuth();
   const esContador = effectiveRole === "contador";
   const [tab, setTab] = useState<string>(esContador ? "facturacion" : "empresa");
 
-  if (isLoading) {
+  // P1-1: antes un fallo dejaba el esqueleto para siempre. Ahora hay error + retry.
+  if (isLoading || isError) {
     return (
       <PageContainer>
         <PageHeader title="Configuración" description="Parámetros generales del sistema" />
-        <ListSkeleton rows={4} />
+        <AsyncBoundary
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={refetch}
+          skeleton={<ListSkeleton rows={4} />}
+          errorTitle="No se pudo cargar la configuración"
+        >
+          {null}
+        </AsyncBoundary>
       </PageContainer>
     );
   }
+
 
   // Contadores sólo tienen visibilidad al catálogo de productos (pestaña Facturación).
   // No necesitan botón "Guardar" porque el catálogo tiene su propio flujo por producto.

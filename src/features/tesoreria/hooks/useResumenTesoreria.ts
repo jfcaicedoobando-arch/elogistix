@@ -11,7 +11,9 @@ import { useExchangeRates } from "@/features/catalogos/hooks/useExchangeRates";
 export function useResumenTesoreria(): {
   data: ResumenTesoreria | undefined;
   isLoading: boolean;
+  isError: boolean;
   error: unknown;
+  refetch: () => void;
 } {
   const cobranzaQ = useCobranza({});
   const cxpQ = useFacturasCxP({});
@@ -32,5 +34,11 @@ export function useResumenTesoreria(): {
       })
     : undefined;
 
-  return { data, isLoading, error };
+  const isError = Boolean(error);
+  const refetch = () => {
+    void cobranzaQ.refetch();
+    void cxpQ.refetch();
+    void cuentasQ.refetch();
+  };
+  return { data, isLoading, isError, error, refetch };
 }

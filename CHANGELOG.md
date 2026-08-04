@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.408.0] - 2026-08-04
+- P1-1 · Skeleton infinito: nuevo `AsyncBoundary` (timeout 20s + error + "Reintentar") aplicado en /configuracion, /tesoreria (incl. Cuentas), /cartera y el wizard de Nuevo Embarque (catálogos).
+- `isError`/`onRetry` propagados a `DataTable` en /usuarios (internos y portal), /facturacion y /cartera; `VirtualDataTable` ahora soporta `isError`/`onRetry` (usado en conciliación bancaria).
+- `useResumenTesoreria`, `useConfiguracionState`, `useCarteraPage`, `useTesoreriaCuentasController` y `useFacturacionPageController` exponen `isError` + `refetch`.
+
 ## [13.407.0] - 2026-08-04
 - Buzón CxP: al cancelar o eliminar una factura de proveedor, sus documentos vuelven a "Por capturar" y se desvinculan (`trg_reabrir_entrantes_factura`). El cierre automático (`_cerrar_entrantes_por_uuid`) ya no aplica a facturas canceladas. Backfill: 1 documento cerrado contra una factura no viva quedó reabierto.
 

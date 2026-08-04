@@ -24,6 +24,7 @@ import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { omitUndefined } from "@/lib/utils/omitUndefined";
 import PaginationControls from "@/components/shared/PaginationControls";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { VirtualHeaderRow, SkeletonRows, EmptyState } from "@/components/shared/VirtualTableParts";
 import { VirtualRowsContainer } from "@/components/shared/VirtualRowsContainer";
 import { useVirtualTableState } from "@/components/shared/dataTable/useVirtualTableState";
@@ -38,6 +39,9 @@ interface VirtualDataTableProps<T> {
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
   data: T[];
   isLoading?: boolean;
+  /** P1-1: pinta error + reintento en lugar de un empty-state engañoso. */
+  isError?: boolean;
+  onRetry?: () => void;
   emptyMessage?: string;
   skeletonRows?: number;
   rowKey: (item: T) => string;
@@ -58,6 +62,7 @@ interface VirtualDataTableProps<T> {
 
 const DEFAULTS = {
   isLoading: false,
+  isError: false,
   emptyMessage: "Sin resultados",
   skeletonRows: 8,
   density: "comfortable" as TableDensity,
@@ -77,7 +82,7 @@ function withDefaults<T>(props: VirtualDataTableProps<T>) {
 export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
   const {
     columns, data, rowKey, rowClassName, onRowClick, pagination, className,
-    isLoading, emptyMessage, skeletonRows, density, striped, hoverable,
+    isError, onRetry, isLoading, emptyMessage, skeletonRows, density, striped, hoverable,
     estimateRowHeight, maxHeight, overscan,
   } = withDefaults(props);
 
@@ -95,6 +100,17 @@ export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
     });
 
   const showBody = !isLoading && rows.length > 0;
+
+  if (isError) {
+    return (
+      <div className={cn("flex flex-col", className)}>
+        <ErrorStateInline
+          message="No pudimos cargar la información. Revisa tu conexión e intenta de nuevo."
+          onRetry={onRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col", className)}>

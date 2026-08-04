@@ -22,7 +22,7 @@ const INITIAL_FORM = {
 };
 
 export function useTesoreriaCuentasController() {
-  const { data: cuentas = [], isLoading } = useCuentasBancarias(false);
+  const { data: cuentas = [], isLoading, isError, refetch } = useCuentasBancarias(false);
   const crear = useCrearCuenta();
   const eliminar = useEliminarCuenta();
 
@@ -77,6 +77,9 @@ export function useTesoreriaCuentasController() {
   };
 
   return {
+    // P1-1: error + retry en lugar de esqueleto perpetuo.
+    isError,
+    refetch: () => void refetch(),
     cuentas,
     isLoading,
     open,

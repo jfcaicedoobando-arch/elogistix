@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
+import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -20,7 +21,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 
 export default function TesoreriaCuentas() {
   const {
-    cuentas, isLoading, open, setOpen, form, setField, submit, submitting,
+    cuentas, isLoading, isError, refetch, open, setOpen, form, setField, submit, submitting,
     deleteTarget, solicitarEliminar, cancelarEliminar, confirmarEliminar, eliminando,
   } = useTesoreriaCuentasController();
   // Sentry JAVASCRIPT-REACT-3S/3T: sólo administradores y tesorero pueden
@@ -45,8 +46,16 @@ export default function TesoreriaCuentas() {
         }
       />
 
-      {isLoading ? (
-        <KpiGridSkeleton count={3} heightClass="h-32" desktopCols={3} />
+      {isLoading || isError ? (
+        <AsyncBoundary
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={refetch}
+          skeleton={<KpiGridSkeleton count={3} heightClass="h-32" desktopCols={3} />}
+          errorTitle="No se pudieron cargar las cuentas bancarias"
+        >
+          {null}
+        </AsyncBoundary>
       ) : cuentas.length === 0 ? (
         <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">
           {canAdminCuentasBancarias ? "Aún no hay cuentas. Crea la primera." : "Aún no hay cuentas registradas."}
