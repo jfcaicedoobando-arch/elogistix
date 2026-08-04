@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useLeadLineage, useOportunidadLineage } from "@/features/crm/hooks";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 function Empty({ text }: { text: string }) {
   return <p className="text-xs text-muted-foreground">{text}</p>;
@@ -27,7 +28,7 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {isLoading && <p className="text-xs text-muted-foreground">Cargando…</p>}
+        {isLoading && <EmptyStateInline loading message="Cargando…" className="py-2" />}
         {!isLoading && data.length === 0 && <Empty text="Este lead aún no tiene oportunidades." />}
         {data.map((o) => (
           <DrilldownRow
@@ -89,7 +90,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
           <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
             <ClipboardList className="h-3 w-3" /> Cotizaciones <Badge variant="outline" className="ml-1">{cots.length}</Badge>
           </div>
-          {isLoadingCots && <p className="text-xs text-muted-foreground">Cargando…</p>}
+          {isLoadingCots && <EmptyStateInline loading message="Cargando…" className="py-2" />}
           {!isLoadingCots && cots.length === 0 && <Empty text="Aún no hay cotizaciones vinculadas." />}
           <div className="space-y-1">
             {cots.map((c) => (

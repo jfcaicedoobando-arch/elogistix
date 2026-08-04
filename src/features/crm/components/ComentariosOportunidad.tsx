@@ -11,6 +11,7 @@ import { crmToast } from "@/features/crm/lib/crmToast";
 import { getErrorMessage } from "@/lib/errors";
 import { formatRelativo } from "@/lib/date/relativo";
 import {
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
   useComentariosOportunidad,
   useCrearComentarioOportunidad,
 } from "@/features/crm/hooks";
@@ -62,7 +63,7 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
         )}
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <EmptyStateInline loading message="Cargando…" />
         ) : comentarios.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin comentarios todavía.</p>
         ) : (

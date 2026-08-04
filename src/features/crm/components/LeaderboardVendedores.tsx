@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useLeaderboardVendedores } from "@/features/crm/hooks";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 export default function LeaderboardVendedores() {
   const { data = [], isLoading } = useLeaderboardVendedores();
@@ -20,7 +21,7 @@ export default function LeaderboardVendedores() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <EmptyStateInline loading message="Cargando…" />
         ) : data.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin actividad de cierre este mes.</p>
         ) : (

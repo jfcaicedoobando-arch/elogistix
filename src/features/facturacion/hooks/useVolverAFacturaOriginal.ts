@@ -10,12 +10,13 @@
 import { useMemo } from "react";
 import { useFactura } from "@/features/facturacion/hooks/useFactura";
 import { findOriginalFacturaIdFor } from "@/features/facturacion/services/sustitucionPersistence";
+import { useVolver } from "@/hooks/shared/useVolver";
 
 export function useVolverAFacturaOriginal(
   id: string | undefined,
   sustituyeA?: string | null,
 ): {
-  href: string;
+  href: string | (() => void);
   label: string;
 } {
   const originalFacturaId = useMemo(() => {
@@ -24,7 +25,8 @@ export function useVolverAFacturaOriginal(
     return findOriginalFacturaIdFor(id);
   }, [id, sustituyeA]);
   const originalFactura = useFactura(originalFacturaId ?? undefined);
-  const href = originalFacturaId ? `/facturacion/${originalFacturaId}` : "/facturacion";
+  const volverAlListado = useVolver("/facturacion");
+  const href = originalFacturaId ? `/facturacion/${originalFacturaId}` : volverAlListado;
   const label = originalFacturaId
     ? `Volver a factura ${originalFactura.data?.numero ?? "original"}`
     : "Volver";

@@ -16,6 +16,7 @@ import { formatCurrencyCompact } from "@/lib/formatters";
 import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
 import { useDocumentTitle } from "@/hooks/shared";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 function StatStripItem({ icon: Icon, label, value }: { icon: typeof Target; label: string; value: string | number }) {
   return (
@@ -55,7 +56,7 @@ function EmbudoCard() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <EmptyStateInline loading message="Cargando…" />
         ) : embudo.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin oportunidades aún.</p>
         ) : (
@@ -92,7 +93,7 @@ function ForecastMesCard() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <EmptyStateInline loading message="Cargando…" />
         ) : porMes.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin datos para los próximos meses.</p>
         ) : (

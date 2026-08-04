@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
   useActualizarEtapa, useEtapasPipelineAll,
   type CrmEtapaRow, type CrmEtapaTipo,
 } from "@/features/crm/hooks";
@@ -88,7 +89,7 @@ export default function EtapasPipelineEditor() {
         </p>
       </CardHeader>
       <CardContent>
-        {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
+        {isLoading && <EmptyStateInline loading message="Cargando…" className="py-2" />}
         <div className="space-y-2">
           {etapas.map((e) => {
             const d = draft[e.id]; if (!d) return null;
