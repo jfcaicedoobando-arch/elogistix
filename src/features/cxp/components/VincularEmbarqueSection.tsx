@@ -15,6 +15,9 @@ import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features
 import type { SugerenciaVinculo } from "@/features/compras/matching/matcher";
 import { SugerirEmbarqueBlock } from "./SugerirEmbarqueBlock";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
+import { TopeVinculacionBar } from "./TopeVinculacionBar";
+import type { ResultadoTopeVinculacion } from "@/features/cxp/utils/topeVinculacion";
+
 
 import { VincularFiltroToolbar } from "./VincularFiltroToolbar";
 import { VincularListaConceptos } from "./VincularListaConceptos";
