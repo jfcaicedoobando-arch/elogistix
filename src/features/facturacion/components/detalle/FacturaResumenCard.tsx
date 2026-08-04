@@ -25,8 +25,6 @@ interface Props {
 export function FacturaResumenCard({
   factura, saldo = 0, estaCancelada = false, canEnviarRecordatorio = false, onEnviarRecordatorio,
 }: Props) {
-  const diasVencido = calcularDiasVencidoFactura(factura.fecha_vencimiento);
-  const mostrarMora = diasVencido !== null && diasVencido > 0 && saldo > 0.01 && !estaCancelada;
   const mostrarRecordatorio =
     canEnviarRecordatorio && !!onEnviarRecordatorio && puedeEnviarRecordatorio({ saldo, estaCancelada });
 
@@ -47,10 +45,11 @@ export function FacturaResumenCard({
           <Field
             label="Vencimiento"
             value={
-              <span className="inline-flex items-center gap-1.5">
-                {factura.fecha_vencimiento ? formatDate(factura.fecha_vencimiento) : "—"}
-                {mostrarMora && <BadgeMora dias={diasVencido as number} />}
-              </span>
+              <VencimientoValor
+                fecha={factura.fecha_vencimiento}
+                saldo={saldo}
+                estaCancelada={estaCancelada}
+              />
             }
           />
           <Field label="Días de crédito" value={String(factura.dias_credito ?? 0)} />
@@ -91,6 +90,20 @@ function BadgeMora({ dias }: { dias: number }) {
       aria-label={bucket.ariaLabel}
     >
       {bucket.label}
+    </span>
+  );
+}
+
+/** Fecha de vencimiento + semáforo de mora si la factura sigue con saldo. */
+function VencimientoValor(
+  { fecha, saldo, estaCancelada }: { fecha?: string | null; saldo: number; estaCancelada: boolean },
+) {
+  const dias = calcularDiasVencidoFactura(fecha);
+  const mostrarMora = dias !== null && dias > 0 && saldo > 0.01 && !estaCancelada;
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {fecha ? formatDate(fecha) : "—"}
+      {mostrarMora && <BadgeMora dias={dias} />}
     </span>
   );
 }
