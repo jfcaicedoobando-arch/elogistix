@@ -159,6 +159,11 @@ export function useNuevaFacturaProveedorForm(
     manuales.conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })),
   );
 
+  // Tope de vinculación: lo asignado a conceptos de embarque no puede exceder
+  // el subtotal de la factura (los conceptos de costo van sin impuestos).
+  const topeVinculacion = calcularTopeVinculacion(Number(values.subtotal) || 0, vinculos);
+
+
   const submit = async () => {
     if (cfdiDuplicado) {
       notifyError(undefined, {
