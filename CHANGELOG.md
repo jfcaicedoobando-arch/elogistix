@@ -1,6 +1,12 @@
 # Changelog
 
+## [13.419.0] - 2026-08-05
+- Buzón CxP: se corrigió el error "No se pudo subir la factura / new row violates row-level security policy" al reintentar subir un archivo ya existente. El bucket `cxp-inbox` no tenía política de actualización y la subida usa `upsert`; ahora se permite reemplazar dentro de la misma organización.
+- Buzón CxP: el duplicado se detecta antes de subir el archivo, así que el usuario ve el mensaje claro ("ya está en el buzón" / "ya fue capturado") en vez de un error técnico.
+- Buzón CxP: los errores de permisos del almacenamiento se traducen a lenguaje claro, y `contador`/`auxiliar_contable` ya pueden retirar archivos del buzón (antes sólo podían subirlos).
+
 ## [13.418.1] - 2026-08-05
+
 - CI: se extrajo el aviso de fallos best-effort de CxP a `useNuevaFacturaProveedorForm.bestEffort.ts` para que el archivo de efectos secundarios vuelva a quedar bajo el límite de 200 líneas (Power of 10).
 
 ## [13.418.0] - 2026-08-05
