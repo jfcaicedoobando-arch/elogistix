@@ -33,7 +33,7 @@ export function useEmbarqueForm() {
   });
 
   const [documentosArchivos, setDocumentosArchivos] = useState<Record<string, File>>({});
-  const { data: tiposDeCambio } = useExchangeRates();
+  const { data: tiposDeCambio } = useTcInicial();
 
   /**
    * P1-5 — En modo edición el embarque ya trae sus tipos de cambio históricos.
