@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.417.1] - 2026-08-05
+- Tests RLS: el test de aislamiento buscaba clientes con `LIKE 'Cliente %'`, pero el candado de razón social en MAYÚSCULAS los guarda como `CLIENTE A`, así que veía 0 registros y CI fallaba. Ahora la búsqueda es insensible a mayúsculas (`ILIKE`).
+
 ## [13.417.0] - 2026-08-05
 - Tipo de cambio del embarque: ahora todo embarque nuevo nace con el T/C USD y EUR del DOF más reciente, sin importar si se creó desde el wizard manual o al Confirmar una cotización. Esto elimina el error LC_PROFORMA_TC_REQUERIDO al generar proformas con conceptos en dólares.
 - Se rellenó el T/C faltante en los 12 embarques activos que lo tenían vacío.
