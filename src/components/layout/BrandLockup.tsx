@@ -53,7 +53,7 @@ export function BrandLockup({
   const icon = (
     <div
       className={cn(
-        "rounded-xl bg-white ring-1 ring-border/40 shadow-sm shrink-0 flex items-center justify-center overflow-hidden",
+        "rounded-xl bg-brand-surface ring-1 ring-border/40 shadow-sm shrink-0 flex items-center justify-center overflow-hidden",
         ICON_SIZE[size],
         ICON_PADDING[size],
       )}

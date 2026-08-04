@@ -48,7 +48,12 @@ export function ProveedorSaludTab({ proveedorId }: { proveedorId: string }) {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard label="Facturas últimos 12m" value={String(data.facturas_12m)} sublabel={formatCurrencyCompact(data.monto_12m, "MXN")} />
+        <KpiCard
+          label="Facturas últimos 12m"
+          value={formatCurrencyCompact(data.monto_12m, "MXN")}
+          valueTooltip={formatCurrency(data.monto_12m, "MXN")}
+          sublabel={`${data.facturas_12m} factura${data.facturas_12m === 1 ? "" : "s"}`}
+        />
         <KpiCard label="Saldo actual" value={formatCurrency(data.saldo_actual, "MXN")} variant={data.saldo_actual > 0 ? "warning" : "success"} />
         <KpiCard
           label="% Pagadas a tiempo"

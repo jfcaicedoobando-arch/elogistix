@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Upload, FileSpreadsheet, Sparkles, Plus } from "lucide-react";
 import { notifyInfo } from "@/lib/ui/appFeedback";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,7 +27,16 @@ import { MovimientoManualDialog } from "./_sections/MovimientoManualDialog";
 
 export default function TesoreriaConciliacion() {
   const { data: cuentas = [] } = useCuentasBancarias();
-  const [cuentaId, setCuentaId] = useState<string>("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [cuentaId, setCuentaIdState] = useState<string>(searchParams.get("cuenta") ?? "");
+  const setCuentaId = (id: string) => {
+    setCuentaIdState(id);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (id) next.set("cuenta", id); else next.delete("cuenta");
+      return next;
+    }, { replace: true });
+  };
   const [estado, setEstado] = useState<"Pendiente" | "Conciliado" | "Ignorado" | "todos">("Pendiente");
   const [sel, setSel] = useState<MovimientoBBVA | null>(null);
   const [manualOpen, setManualOpen] = useState(false);

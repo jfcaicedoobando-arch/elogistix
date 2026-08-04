@@ -1,4 +1,5 @@
 import { Landmark, Plus, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,9 @@ import {
   useTesoreriaCuentasController,
   type Moneda,
 } from "@/features/tesoreria/hooks/useTesoreriaCuentasController";
+import { useSaldosCuentas } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { ROUTES } from "@/constants/routes";
 
 export default function TesoreriaCuentas() {
   const {
@@ -27,6 +30,8 @@ export default function TesoreriaCuentas() {
   // Sentry JAVASCRIPT-REACT-3S/3T: sólo administradores y tesorero pueden
   // escribir en `cuentas_bancarias` (RLS). El contador sólo consulta.
   const { canAdminCuentasBancarias } = usePermissions();
+  const { data: saldos = [] } = useSaldosCuentas();
+  const navigate = useNavigate();
 
   return (
     <PageContainer>
@@ -62,8 +67,23 @@ export default function TesoreriaCuentas() {
         </CardContent></Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {cuentas.map((c) => (
-            <Card key={c.id} className={!c.activa ? "opacity-60" : ""}>
+          {cuentas.map((c) => {
+            const saldoActual = saldos.find((s) => s.id === c.id)?.saldo;
+            return (
+            <Card
+              key={c.id}
+              role="button"
+              tabIndex={0}
+              aria-label={`Ver movimientos de la cuenta ${c.alias}, ${c.banco}`}
+              className={`transition-shadow hover:shadow-raised focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer ${!c.activa ? "opacity-60" : ""}`}
+              onClick={() => navigate(`${ROUTES.TESORERIA_CONCILIACION}?cuenta=${c.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`${ROUTES.TESORERIA_CONCILIACION}?cuenta=${c.id}`);
+                }
+              }}
+            >
               <CardContent className="p-4 space-y-1">
                 <div className="flex items-start justify-between">
                   <div>
@@ -73,7 +93,8 @@ export default function TesoreriaCuentas() {
                   {canAdminCuentasBancarias && (
                     <Button
                       variant="ghost" size="icon"
-                      onClick={() => solicitarEliminar(c.id, c.alias)}
+                      aria-label={`Eliminar cuenta ${c.alias}`}
+                      onClick={(e) => { e.stopPropagation(); solicitarEliminar(c.id, c.alias); }}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -81,11 +102,15 @@ export default function TesoreriaCuentas() {
                 </div>
                 {c.numero_cuenta && <p className="text-xs">Cuenta: <span className="font-mono">{c.numero_cuenta}</span></p>}
                 {c.clabe && <p className="text-xs">CLABE: <span className="font-mono">{c.clabe}</span></p>}
-                <p className="text-sm pt-2">Saldo inicial: <span className="tabular-nums font-medium">{formatCurrency(Number(c.saldo_inicial), c.moneda)}</span></p>
+                {saldoActual !== undefined ? (
+                  <p className="text-sm pt-2">Saldo actual: <span className="tabular-nums font-medium">{formatCurrency(saldoActual, c.moneda)}</span></p>
+                ) : (
+                  <p className="text-sm pt-2">Saldo inicial: <span className="tabular-nums font-medium">{formatCurrency(Number(c.saldo_inicial), c.moneda)}</span></p>
+                )}
                 {!c.activa && <p className="text-xs text-muted-foreground italic">Cuenta inactiva</p>}
               </CardContent>
             </Card>
-          ))}
+          );})}
         </div>
       )}
 
