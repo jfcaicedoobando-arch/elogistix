@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactElement } from "react";
 import type { DocumentProps } from "@react-pdf/renderer";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Props {
   doc: ReactElement<DocumentProps>;
@@ -18,7 +19,14 @@ const LazyPDFViewer = lazy(() =>
  */
 export function PdfPreview({ doc, height = "85vh" }: Props) {
   return (
-    <Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Cargando visor PDF…</div>}>
+    <Suspense
+      fallback={
+        <div role="status" aria-busy="true" className="p-4 space-y-2">
+          <span className="sr-only">Cargando visor PDF…</span>
+          <Skeleton className="h-64 w-full" />
+        </div>
+      }
+    >
       <LazyPDFViewer style={{ width: "100%", height, border: 0 }} showToolbar>
         {doc}
       </LazyPDFViewer>

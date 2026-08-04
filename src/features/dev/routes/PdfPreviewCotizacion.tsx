@@ -8,6 +8,7 @@ import { useTasaIVA, useTiposContenedor } from "@/features/catalogos/hooks";
 import { usePdfPreviewCotizacionPage } from "@/features/cotizacion/hooks/usePdfPreviewCotizacionPage";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 
 export default function PdfPreviewCotizacionPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +17,7 @@ export default function PdfPreviewCotizacionPage() {
   const { cotizacion: { data, isLoading, error }, emisor: { data: emisor } } =
     usePdfPreviewCotizacionPage(id);
 
-  if (isLoading) return <div className="p-6 text-muted-foreground">Cargando cotización…</div>;
+  if (isLoading) return <LoadingState label="Cargando cotización…" />;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
   if (!data) return <div className="p-6">Cotización no encontrada.</div>;
 

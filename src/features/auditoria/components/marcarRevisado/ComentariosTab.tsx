@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TabsContent } from "@/components/ui/tabs";
 import type { useMarcarRevisadoController } from "@/features/auditoria/hooks";
 import type { AuditoriaRevision } from "@/features/auditoria/types";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   ctrl: ReturnType<typeof useMarcarRevisadoController>;
@@ -22,7 +23,7 @@ export function ComentariosTab({ ctrl, revisionExistente }: Props) {
         <>
           <div className="h-48 overflow-y-auto border rounded-md p-2">
             {ctrl.loadingComentarios ? (
-              <div className="text-xs text-muted-foreground">Cargando…</div>
+              <EmptyStateInline loading message="Cargando…" className="py-2" />
             ) : !ctrl.comentarios || ctrl.comentarios.length === 0 ? (
               <div className="text-xs text-muted-foreground text-center py-6">
                 Aún no hay comentarios.

@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EditRow } from "./CatalogoClavesSATCard.parts";
 import {
+import { Skeleton } from "@/components/ui/skeleton";
   EMPTY_DRAFT, TIPO_IVA_LABEL, TIPO_IVA_VARIANT,
   type Draft, type Row,
 } from "./CatalogoClavesSATCard.constants";
@@ -80,7 +81,12 @@ export function CatalogoClavesSATCard() {
             </TableHeader>
             <TableBody>
               {isLoading && (
-                <TableRow><TableCell colSpan={6} className="text-muted-foreground text-center py-4">Cargando…</TableCell></TableRow>
+                <TableRow role="status" aria-busy="true">
+                  <TableCell colSpan={6} className="py-4">
+                    <span className="sr-only">Cargando…</span>
+                    <Skeleton className="h-4 w-full" />
+                  </TableCell>
+                </TableRow>
               )}
               {!isLoading && rows.length === 0 && !showNew && (
                 <TableRow><TableCell colSpan={6} className="text-muted-foreground text-center py-4">

@@ -12,6 +12,7 @@ import {
 import type { ClientUserEnriched } from "@/features/cliente/services/usuarios";
 import PortalInviteDialog from "./PortalInviteDialog";
 import { useState } from "react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   clienteId: string;
@@ -147,7 +148,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Cargando...</p>
+            <EmptyStateInline loading message="Cargando…" className="py-4" />
           ) : (
             <DataTable
               columns={cols}

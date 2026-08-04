@@ -7,6 +7,7 @@ import { useLiquidaciones } from "@/features/comisiones/hooks";
 import { DialogGenerarLiquidacion } from "./DialogGenerarLiquidacion";
 import { DialogRegistrarPagoLiquidacion } from "./DialogRegistrarPagoLiquidacion";
 import type { LiquidacionRow } from "@/features/comisiones/services";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface VendedoraOpt { id: string; nombre: string }
 
@@ -27,7 +28,7 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 text-center text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin inline mr-2" />Cargando…
+              <EmptyStateInline loading message="Cargando…" />
             </div>
           ) : liquidaciones.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground text-center">Sin liquidaciones registradas.</p>
