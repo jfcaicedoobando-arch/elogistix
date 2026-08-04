@@ -11,7 +11,22 @@ export interface DemoAccessResult {
   email: string;
 }
 
-export async function enterDemoMode(): Promise<DemoAccessResult> {
+/**
+ * v13.420.0 (Sentry JAVASCRIPT-REACT-1G): candado en memoria para que dos
+ * clics/pestañas no disparen dos re-sembrados simultáneos de la demo.
+ */
+let enCurso: Promise<DemoAccessResult> | null = null;
+
+export function enterDemoMode(): Promise<DemoAccessResult> {
+  if (enCurso) return enCurso;
+  enCurso = ejecutarDemoAccess().finally(() => {
+    enCurso = null;
+  });
+  return enCurso;
+}
+
+async function ejecutarDemoAccess(): Promise<DemoAccessResult> {
+
   const { data, error } = await supabase.functions.invoke<{
     email: string;
     password: string;
