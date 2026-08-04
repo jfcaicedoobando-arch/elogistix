@@ -1,10 +1,13 @@
 /**
- * Validación de conceptos previa al submit (bloqueo Q-02).
+ * Validación de conceptos previa al submit (bloqueo Q-02) y del tope de
+ * vinculación (una factura no puede cubrir más de su subtotal).
  * Extraído de `useNuevaFacturaProveedorForm.ts` (Power-of-10, ≤200 líneas).
  */
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 import type { ResultadoCuadre } from "@/features/cxp/utils/cuadreConceptos";
+import { formatCurrency } from "@/lib/formatters";
+import type { ResultadoTopeVinculacion } from "@/features/cxp/utils/topeVinculacion";
 
 interface ConceptosManualesLike {
   conceptos: ReadonlyArray<unknown>;
@@ -41,3 +44,22 @@ export function puedeContinuarSubmit(
   }
   return true;
 }
+
+/**
+ * Candado del tope de vinculación: bloquea el guardado cuando la suma asignada
+ * a conceptos de costo excede el subtotal de la factura.
+ */
+export function puedeContinuarTope(
+  tope: ResultadoTopeVinculacion,
+  subtotal: number,
+  moneda: string,
+): boolean {
+  if (!tope.excede) return true;
+  notifyError(undefined, {
+    title: "Vinculaste más de lo que vale la factura",
+    description: `Asignaste ${formatCurrency(tope.asignado, moneda)} a conceptos de embarque, pero el subtotal de la factura es ${formatCurrency(subtotal, moneda)}. Sobran ${formatCurrency(tope.excedente, moneda)}: baja un monto o desmarca conceptos.`,
+    method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_TOPE_VINCULACION",
+  });
+  return false;
+}
+
