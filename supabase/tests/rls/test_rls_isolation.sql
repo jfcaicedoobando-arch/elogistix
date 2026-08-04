@@ -75,7 +75,7 @@ BEGIN
   -- Test 2: Admin de Org B solo ve clientes de Org B
   -- --------------------------------------------------------------------------
   PERFORM pg_temp.as_user(user_b);
-  SELECT COUNT(*) INTO visible_count FROM public.clientes WHERE nombre LIKE 'Cliente %';
+  SELECT COUNT(*) INTO visible_count FROM public.clientes WHERE nombre ILIKE 'Cliente %';
   PERFORM pg_temp.assert(visible_count = 1,
     format('Admin B vio %s clientes, esperaba 1', visible_count));
 
