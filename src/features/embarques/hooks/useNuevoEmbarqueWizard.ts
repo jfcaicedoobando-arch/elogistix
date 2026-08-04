@@ -10,45 +10,28 @@
  */
 import { useCallback, useRef, useState } from "react";
 import * as Sentry from "@sentry/react";
-import {
-  useProveedoresForSelect,
-} from "@/features/embarques/hooks/useEmbarques";
-import {
-  useClientesForSelect,
-  useContactosCliente,
-} from "@/features/cliente/hooks/useClientes";
+import { useContactosCliente } from "@/features/cliente/hooks/useClientes";
 import { useConceptosForm } from "@/features/cotizacion/hooks";
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import { useEmbarqueSubmitOrchestrator } from "@/features/embarques/hooks/useEmbarqueSubmitOrchestrator";
-import { useCotizacionesAceptadas } from "@/features/cotizacion/hooks";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { validateWizardStep } from "@/features/embarques/domain/embarqueWizardStepValidator";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
 import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
+import { useNuevoEmbarqueCatalogos } from "./useNuevoEmbarqueCatalogos";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useNuevoEmbarqueWizard() {
   // v13.303.26 — sin excepciones de rol: cotización siempre obligatoria.
-
-
-  const qClientes = useClientesForSelect();
-  const qProveedores = useProveedoresForSelect();
-  const qCotizaciones = useCotizacionesAceptadas();
-  const clientes = qClientes.data ?? [];
-  const proveedoresDb = qProveedores.data ?? [];
-  const cotizacionesAceptadas = qCotizaciones.data ?? [];
-  // P1-1: los catálogos alimentan los selects del paso 1 y 4. Si fallan, el
-  // wizard debe decirlo y ofrecer reintento en lugar de mostrar listas vacías.
-  const catalogosCargando =
-    qClientes.isLoading || qProveedores.isLoading || qCotizaciones.isLoading;
-  const catalogosError =
-    qClientes.isError || qProveedores.isError || qCotizaciones.isError;
-  const recargarCatalogos = () => {
-    void qClientes.refetch();
-    void qProveedores.refetch();
-    void qCotizaciones.refetch();
-  };
+  const {
+    clientes,
+    proveedoresDb,
+    cotizacionesAceptadas,
+    catalogosCargando,
+    catalogosError,
+    recargarCatalogos,
+  } = useNuevoEmbarqueCatalogos();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState<Record<number, StepValidationErrors>>({});

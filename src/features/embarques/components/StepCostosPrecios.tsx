@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
-import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
+import { useTcInicial, type TcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { useCostosPreciosCalc } from "@/features/embarques/hooks/useCostosPreciosCalc";
 import { CostosCard, VentasCard } from "./StepCostosPreciosCards";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
@@ -38,6 +38,26 @@ const COSTO_COLS_CONT = "grid-cols-[1fr_1fr_120px_90px_140px_110px_40px]";
 const VENTA_COLS_BASE = "grid-cols-[1fr_80px_120px_90px_110px_40px]";
 const VENTA_COLS_CONT = "grid-cols-[1fr_80px_120px_90px_140px_110px_40px]";
 
+/** Texto de trazabilidad del T/C precargado (helper puro: baja la complejidad del componente). */
+function describirOrigenTc(tc: TcInicial | null | undefined): string | null {
+  if (!tc) return null;
+  const valor = tc.usdMxn.toFixed(4);
+  if (tc.fuente === "DOF") return `DOF del ${formatFechaEs(tc.fecha)} · ${valor}`;
+  return `Referencia del día · ${valor}`;
+}
+
+/** T/C capturado válido (> 0) o 0 cuando falta/es inválido. */
+function tcValido(raw: string | undefined): number {
+  const n = parseFloat(raw ?? "");
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+/** Sin T/C mostramos el monto nativo; el banner de aviso fuerza la captura. */
+function convertirAUsd(monto: number, moneda: string, tcUSD: number, tcEUR: number): number {
+  if (moneda === "USD" || tcUSD <= 0) return monto;
+  return aUSD(monto, moneda, tcUSD, tcEUR);
+}
+
 export function StepCostosPrecios(props: Props) {
   const {
     conceptosVenta, conceptosCosto, proveedoresDb,
@@ -51,15 +71,9 @@ export function StepCostosPrecios(props: Props) {
   const { watch, register } = useFormContext<EmbarqueFormValues>();
   // FIX-11 (Fase 4): sin fallback silencioso a 1. Cuando falta TC, `toUSD` deja
   // el monto sin convertir y el banner `showTcWarning` fuerza la captura.
-  const tcUSDraw = parseFloat(watch('tipoCambioUSD'));
-  const tcEURraw = parseFloat(watch('tipoCambioEUR'));
-  const tcUSD = Number.isFinite(tcUSDraw) && tcUSDraw > 0 ? tcUSDraw : 0;
-  const tcEUR = Number.isFinite(tcEURraw) && tcEURraw > 0 ? tcEURraw : 0;
-  const toUSD = (monto: number, moneda: string) => {
-    if (moneda === 'USD') return monto;
-    if (tcUSD <= 0) return monto; // sin TC: muestra el nativo, banner alerta
-    return aUSD(monto, moneda, tcUSD, tcEUR);
-  };
+  const tcUSD = tcValido(watch('tipoCambioUSD'));
+  const tcEUR = tcValido(watch('tipoCambioEUR'));
+  const toUSD = (monto: number, moneda: string) => convertirAUsd(monto, moneda, tcUSD, tcEUR);
 
   const { costoCalc, ventaCalc, costoMixtoIdx, ventaMixtoIdx } =
     useCostosPreciosCalc(conceptosCosto, conceptosVenta, tcUSD, tcEUR);
@@ -77,11 +91,7 @@ export function StepCostosPrecios(props: Props) {
 
   // Origen del T/C precargado (DOF preferente) para dar trazabilidad al dato.
   const { data: tcInicial } = useTcInicial();
-  const tcOrigen = !tcInicial
-    ? null
-    : tcInicial.fuente === "DOF"
-      ? `DOF del ${formatFechaEs(tcInicial.fecha)} · ${tcInicial.usdMxn.toFixed(4)}`
-      : `Referencia del día · ${tcInicial.usdMxn.toFixed(4)}`;
+  const tcOrigen = describirOrigenTc(tcInicial);
 
   const costoCols = showContenedorCol ? COSTO_COLS_CONT : COSTO_COLS_BASE;
   const ventaCols = showContenedorCol ? VENTA_COLS_CONT : VENTA_COLS_BASE;
