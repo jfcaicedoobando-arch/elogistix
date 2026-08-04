@@ -1,4 +1,4 @@
-CREATE TABLE public.proveedor_alias (
+CREATE TABLE IF NOT EXISTS public.proveedor_alias (
   id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   organization_id uuid NOT NULL,
   proveedor_id uuid NOT NULL REFERENCES public.proveedores(id) ON DELETE CASCADE,
@@ -13,11 +13,12 @@ GRANT ALL ON public.proveedor_alias TO service_role;
 
 ALTER TABLE public.proveedor_alias ENABLE ROW LEVEL SECURITY;
 
-CREATE UNIQUE INDEX proveedor_alias_org_alias_uq
+CREATE UNIQUE INDEX IF NOT EXISTS proveedor_alias_org_alias_uq
   ON public.proveedor_alias (organization_id, alias_normalizado);
-CREATE INDEX proveedor_alias_proveedor_idx
+CREATE INDEX IF NOT EXISTS proveedor_alias_proveedor_idx
   ON public.proveedor_alias (proveedor_id);
 
+DROP POLICY IF EXISTS "Tenant read proveedor_alias" ON public.proveedor_alias;
 CREATE POLICY "Tenant read proveedor_alias" ON public.proveedor_alias
   FOR SELECT TO authenticated
   USING (
@@ -25,6 +26,7 @@ CREATE POLICY "Tenant read proveedor_alias" ON public.proveedor_alias
     OR public.has_role((SELECT auth.uid()), 'super_admin'::public.app_role)
   );
 
+DROP POLICY IF EXISTS "Tenant write proveedor_alias" ON public.proveedor_alias;
 CREATE POLICY "Tenant write proveedor_alias" ON public.proveedor_alias
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -41,6 +43,7 @@ CREATE POLICY "Tenant write proveedor_alias" ON public.proveedor_alias
     )
   );
 
+DROP POLICY IF EXISTS "Admin delete proveedor_alias" ON public.proveedor_alias;
 CREATE POLICY "Admin delete proveedor_alias" ON public.proveedor_alias
   FOR DELETE TO authenticated
   USING (

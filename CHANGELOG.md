@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.417.3] - 2026-08-05
+- CI verde: migraciones idempotentes (`IF NOT EXISTS` en índices y `DROP POLICY IF EXISTS` en `proveedor_alias`, `REVOKE`/`GRANT` en la función del T/C), `normalize()` del lector de PDF con IA dividido en helpers para bajar la complejidad, y test de alta de cliente ajustado a la razón social en MAYÚSCULAS.
+
 ## [13.417.2] - 2026-08-05
 - Seguridad: la función interna que siembra el T/C del DOF en embarques nuevos ya no es ejecutable por usuarios anónimos ni por `PUBLIC` (sólo corre como disparador). Corrige la regresión de `fix45_anon_execute_whitelist.sql` en CI.
 
