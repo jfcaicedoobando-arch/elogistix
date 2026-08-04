@@ -16,9 +16,11 @@ const ESTADOS_ADMIN_PENDIENTE = new Set(["Entregado", "EIR", "Por liquidar"]);
 interface Props {
   embarqueId: string;
   estado: string;
+  /** Navega a la pestaña de cierre del embarque (?tab=cierre). */
+  onIrACierre?: () => void;
 }
 
-export function EmbarqueBadgeAdmin({ embarqueId, estado }: Props) {
+export function EmbarqueBadgeAdmin({ embarqueId, estado, onIrACierre }: Props) {
   const aplica = ESTADOS_ADMIN_PENDIENTE.has(estado);
   const { data, isLoading } = useAdminPendienteResumen(embarqueId, aplica);
 
@@ -28,10 +30,17 @@ export function EmbarqueBadgeAdmin({ embarqueId, estado }: Props) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="success" className="gap-1">
-            <CheckCircle2 className="h-3 w-3" />
-            Listo para cerrar
-          </Badge>
+          <button
+            type="button"
+            onClick={onIrACierre}
+            aria-label="Listo para cerrar. Ir a la pestaña de cierre"
+            className="inline-flex"
+          >
+            <Badge variant="success" className="gap-1 cursor-pointer">
+              <CheckCircle2 className="h-3 w-3" />
+              Listo para cerrar
+            </Badge>
+          </button>
         </TooltipTrigger>
         <TooltipContent>Todos los pendientes administrativos están cubiertos.</TooltipContent>
       </Tooltip>
@@ -47,10 +56,17 @@ export function EmbarqueBadgeAdmin({ embarqueId, estado }: Props) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge variant="warning" className="gap-1">
-          <CircleAlert className="h-3 w-3" />
-          Admin pendiente · {data.pendientes}
-        </Badge>
+        <button
+          type="button"
+          onClick={onIrACierre}
+          aria-label={`Admin pendiente, ${data.pendientes} elemento(s). Ir a la pestaña de cierre`}
+          className="inline-flex"
+        >
+          <Badge variant="warning" className="gap-1 cursor-pointer">
+            <CircleAlert className="h-3 w-3" />
+            Admin pendiente · {data.pendientes}
+          </Badge>
+        </button>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs">
         <div className="space-y-0.5 text-xs">
