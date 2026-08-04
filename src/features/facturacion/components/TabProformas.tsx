@@ -1,4 +1,4 @@
-import { Download, Receipt, Loader2, X } from "lucide-react";
+import { Download, Receipt, Loader2, X, FileSpreadsheet } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
 import { todayLocalISO } from "@/lib/date/today";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
+import EmptyState from "@/components/empty/EmptyState";
 
 
 export function TabProformas({ isInRange, estadoInicial }: {
@@ -136,6 +137,16 @@ export function TabProformas({ isInRange, estadoInicial }: {
             data={c.paginated}
             isLoading={c.isLoading}
             emptyMessage="No hay proformas generadas"
+            emptyState={
+              c.counts.todas > 0 && c.filtered.length === 0 ? (
+                <EmptyState
+                  icon={FileSpreadsheet}
+                  title="No hay proformas con estos filtros"
+                  description="Ajusta o quita los filtros aplicados para ver el listado completo de proformas."
+                  primaryAction={{ label: "Limpiar filtros", onClick: c.clearFiltros }}
+                />
+              ) : undefined
+            }
             rowKey={(p) => p.id}
             density="comfortable"
             getRowHref={(p) => `/proformas/${p.id}`}
