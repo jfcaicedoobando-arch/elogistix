@@ -8,8 +8,8 @@ import { usePermissions } from "@/hooks/shared";
 import NuevoClienteDialog from "@/features/cliente/components/NuevoClienteDialog";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import { ErrorState } from "@/components/shared/states/ErrorState";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useTableFilters } from "@/hooks/shared/useTableFilters";
 import { useDebounce } from "@/hooks/shared";
@@ -100,14 +100,14 @@ export default function Clientes() {
         onClearAll={resetAll}
       />
 
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+      >
       <Card>
         <CardContent className="p-0">
-          {isError ? (
-            <ErrorState
-              className="m-4"
-              onRetry={() => refetch()}
-            />
-          ) : isLoading && !clientes.length ? (
+          {isLoading && !clientes.length ? (
             <div className="p-4">
               <ListSkeleton rows={8} />
             </div>
@@ -142,6 +142,7 @@ export default function Clientes() {
           )}
         </CardContent>
       </Card>
+      </CargaGuard>
 
       <NuevoClienteDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 

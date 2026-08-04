@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ExternalLink, Copy, Check, AlertCircle } from "lucide-react";
+import { ExternalLink, Copy, Check, AlertCircle, Lightbulb } from "lucide-react";
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
@@ -180,10 +180,15 @@ export function TrackingNavieraActions(props: Props) {
             </TooltipProvider>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          💡 Pega el {refLabel} en la página de la naviera, copia el último evento, regresa y registra el
-          evento abajo ↓. Actualiza el tracking al menos cada 7 días y siempre 48&nbsp;h antes del arribo.
+        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>
+            Pega el {refLabel} en la página de la naviera, copia el último evento, regresa y regístralo
+            con el botón "Registrar Evento". Actualiza el tracking al menos cada 7 días y siempre
+            48&nbsp;h antes del arribo.
+          </span>
         </p>
+
       </CardContent>
     </Card>
   );

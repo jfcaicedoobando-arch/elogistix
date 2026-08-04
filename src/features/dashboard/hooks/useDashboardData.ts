@@ -39,7 +39,7 @@ export type {
  */
 export function useDashboardData() {
   // Summary: KPIs + conteos + resumen mensual — payload pequeño, carga eager
-  const { data: summary, isLoading } = useQuery({
+  const { data: summary, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.dashboard.statsSummary,
     queryFn: fetchDashboardSummary,
     staleTime: 5 * 60_000,
@@ -116,6 +116,8 @@ export function useDashboardData() {
 
   return {
     isLoading,
+    isError,
+    refetch,
     activos,
     conteoPorEstado,
     totalActivos,

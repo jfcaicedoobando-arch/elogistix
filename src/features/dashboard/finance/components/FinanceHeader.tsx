@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/shared/PageHeader";
-import { AlertCircle, Banknote, Receipt } from "lucide-react";
+import { AlertCircle, Banknote, Hand, Receipt } from "lucide-react";
 import { formatCurrencyCompact } from "@/lib/formatters";
 
 interface Props {
@@ -62,12 +62,13 @@ export function FinanceHeader({
   const chips: Chip[] = rawChips.filter((c): c is Chip => c !== null);
 
   const titulo = (
-    <>
+    <span className="inline-flex items-center gap-2">
       {saludo}
-      {nombre ? `, ${nombre}` : ""}{" "}
-      <span role="img" aria-label="saludo" className="font-emoji">👋</span>
-    </>
+      {nombre ? `, ${nombre}` : ""}
+      <Hand className="h-6 w-6 text-warning" aria-hidden="true" />
+    </span>
   );
+
 
   return (
     <PageHeader

@@ -19,16 +19,27 @@ import { mesLabel } from "./DashboardEjecutivoFacturacionMiniSerie.helpers";
 
 interface FacturadoUi { label: string; tone: "warn" | "default"; hint: string }
 
-function buildFacturadoUi(facturasSinTc: number): FacturadoUi {
+/**
+ * R8: el KPI decía "Facturado mes" y un MXN 0 se leía como error. Nombramos el
+ * mes en curso para que un cero se entienda como "todavía no hay actividad".
+ */
+function mesEnCurso(): string {
+  return new Intl.DateTimeFormat("es-MX", { month: "long", timeZone: "America/Mexico_City" })
+    .format(new Date());
+}
+
+function buildFacturadoUi(facturasSinTc: number, mes: string): FacturadoUi {
   const sinTc = facturasSinTc > 0;
+  const base = `Facturado en ${mes}`;
   return {
-    label: sinTc ? "Facturado mes ⚠️" : "Facturado mes",
+    label: sinTc ? `${base} ⚠️` : base,
     tone: sinTc ? "warn" : "default",
     hint: sinTc
       ? `Facturas timbradas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas y borradores. ⚠️ ${facturasSinTc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
       : "Facturas timbradas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas y borradores. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar.",
   };
 }
+
 
 export function DashboardEjecutivoFacturacion() {
   const dash = useDashboardEjecutivoFacturacion();
@@ -45,7 +56,8 @@ export function DashboardEjecutivoFacturacion() {
   const cobradoArr = tendencia.map((t) => t.cobrado_mxn);
   const meses = tendencia.map((t) => mesLabel(t.mes));
 
-  const facturado = buildFacturadoUi(dash.data?.facturas_sin_tc ?? 0);
+  const mes = mesEnCurso();
+  const facturado = buildFacturadoUi(dash.data?.facturas_sin_tc ?? 0, mes);
   const listasTone: "warn" | "default" = proformasListas > 0 ? "warn" : "default";
 
   return (
@@ -64,8 +76,18 @@ export function DashboardEjecutivoFacturacion() {
           variant={facturado.tone === "warn" ? "warning" : "default"}
           valueTooltip={facturado.hint}
         />
-        <KpiCard label="Cobrado mes" value={formatCurrencyCompact(cobradoMes, "MXN")} variant="success" />
-        <KpiCard label="Por cobrar" value={formatCurrencyCompact(porCobrar, "MXN")} />
+        <KpiCard
+          label={`Cobrado en ${mes}`}
+          value={formatCurrencyCompact(cobradoMes, "MXN")}
+          variant="success"
+          valueTooltip="Pagos aplicados a facturas durante el mes en curso, en MXN equivalente. Un cero significa que aún no se registran cobros este mes."
+        />
+        <KpiCard
+          label="Saldo por cobrar"
+          value={formatCurrencyCompact(porCobrar, "MXN")}
+          valueTooltip="Saldo total pendiente de cobro de todas las facturas vivas (no sólo del mes en curso). Es el mismo universo de la pestaña 'Por cobrar'."
+        />
+
         <KpiCard
           label={`Vencido (${cob.facturas_vencidas})`}
           value={formatCurrencyCompact(vencido, "MXN")}

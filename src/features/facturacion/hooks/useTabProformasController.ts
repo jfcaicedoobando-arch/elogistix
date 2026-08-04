@@ -24,7 +24,7 @@ export function useTabProformasController(opts?: {
   const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
-  const { data: proformas = [], isLoading } = useProformas();
+  const { data: proformas = [], isLoading, isError, refetch } = useProformas();
   const { descargar, downloadingId } = useDescargarProformaPdf();
 
   const state = useTabProformasState(proformas, opts?.isInRange, opts?.estadoInicial);
@@ -113,7 +113,7 @@ export function useTabProformasController(opts?: {
     clientesDisponibles, operadoresDisponibles,
     // datos
 
-    isLoading, proformas, filtered, paginated, counts, totalPages,
+    isLoading, isError, refetch, proformas, filtered, paginated, counts, totalPages,
     // handlers para columnas (compuestas en el componente)
     descargar, downloadingId,
     // selección múltiple (Fase 3 — fusión)

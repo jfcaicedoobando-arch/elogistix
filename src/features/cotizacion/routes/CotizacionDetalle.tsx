@@ -3,8 +3,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import type { AppRole } from "@/types/appRole";
 import { useParams } from "react-router-dom";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
-import { getErrorMessage } from "@/lib/errors";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { CotizacionDetalleContenido } from "@/features/cotizacion/components/detalle/CotizacionDetalleContenido";
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
@@ -42,19 +41,7 @@ export default function CotizacionDetalle() {
 
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
 
-  if (error) {
-    return (
-      <PageContainer>
-        <ErrorStateInline message={getErrorMessage(error)} onRetry={() => refetch()} />
-      </PageContainer>
-    );
-  }
-
-  if (isLoading) {
-    return <DetailSkeleton sections={1} />;
-  }
-
-  if (!cotizacion) {
+  if (!isLoading && !error && !cotizacion) {
     return (
       <DetailNotFound
         icon={FileX}
@@ -66,48 +53,61 @@ export default function CotizacionDetalle() {
     );
   }
 
-
-  if (cotizacion.tipo_documento === "informativa") {
+  if (cotizacion?.tipo_documento === "informativa") {
     return <CotizacionInformativaDetalle cotizacion={cotizacion} />;
   }
 
   return (
     <PageContainer>
-      <CotizacionDetalleHeader
-        cotizacion={cotizacion}
-        nombreDestinatario={nombreDestinatario}
-        onBack={() => navigate("/cotizaciones")}
-        onExportarPdf={() => handleExportarPdf(cotizacion, tasaIva)}
-        onEnviarEmail={canEdit ? () => setEnviarOpen(true) : undefined}
-        yaEnviada={envios.length > 0}
-      />
+      <CargaGuard
+        isLoading={isLoading}
+        isError={!!error}
+        onRetry={() => refetch()}
+        errorTitle="No pudimos cargar la cotización"
+        errorDescription="Revisa tu conexión e intenta de nuevo."
+      >
+        {isLoading || !cotizacion ? (
+          <DetailSkeleton sections={1} />
+        ) : (
+          <>
+            <CotizacionDetalleHeader
+              cotizacion={cotizacion}
+              nombreDestinatario={nombreDestinatario}
+              onBack={() => navigate("/cotizaciones")}
+              onExportarPdf={() => handleExportarPdf(cotizacion, tasaIva)}
+              onEnviarEmail={canEdit ? () => setEnviarOpen(true) : undefined}
+              yaEnviada={envios.length > 0}
+            />
 
-      <CotizacionDetalleContenido
-        cotizacion={cotizacion}
-        id={id!}
-        canEdit={canEdit}
-        tasaIva={tasaIva}
-        embarquesVinculados={embarquesVinculados}
-        conceptosVentaUSD={conceptosVentaUSD}
-        conceptosVentaMXN={conceptosVentaMXN}
-        totalUSD={totalUSD}
-        subtotalMXN={subtotalMXN}
-        ivaMXN={ivaMXN}
-        totalMXN={totalMXN}
-        showConvertir={showConvertir}
-        setShowConvertir={setShowConvertir}
-        clienteForm={clienteForm}
-        setClienteForm={setClienteForm}
-        handleCambiarEstado={handleCambiarEstado}
-        abrirDialogConvertir={abrirDialogConvertir}
-        handleConvertir={handleConvertir}
-        convertirProspecto={convertirProspecto}
-        navigate={navigate}
-        effectiveRole={effectiveRole as AppRole | null}
-        envios={envios}
-        enviarOpen={enviarOpen}
-        setEnviarOpen={setEnviarOpen}
-      />
+            <CotizacionDetalleContenido
+              cotizacion={cotizacion}
+              id={id!}
+              canEdit={canEdit}
+              tasaIva={tasaIva}
+              embarquesVinculados={embarquesVinculados}
+              conceptosVentaUSD={conceptosVentaUSD}
+              conceptosVentaMXN={conceptosVentaMXN}
+              totalUSD={totalUSD}
+              subtotalMXN={subtotalMXN}
+              ivaMXN={ivaMXN}
+              totalMXN={totalMXN}
+              showConvertir={showConvertir}
+              setShowConvertir={setShowConvertir}
+              clienteForm={clienteForm}
+              setClienteForm={setClienteForm}
+              handleCambiarEstado={handleCambiarEstado}
+              abrirDialogConvertir={abrirDialogConvertir}
+              handleConvertir={handleConvertir}
+              convertirProspecto={convertirProspecto}
+              navigate={navigate}
+              effectiveRole={effectiveRole as AppRole | null}
+              envios={envios}
+              enviarOpen={enviarOpen}
+              setEnviarOpen={setEnviarOpen}
+            />
+          </>
+        )}
+      </CargaGuard>
     </PageContainer>
   );
 }

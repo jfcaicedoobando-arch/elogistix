@@ -16,23 +16,15 @@ import { useCallback, useMemo, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFacturasEmitidas";
-import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
 import { PeriodoFiscalSelector } from "@/features/facturacion/components/PeriodoFiscalSelector";
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
-import { BandejaTabs, type BandejaId } from "@/features/facturacion/components/bandejas/BandejaTabs";
-import { BandejaPorFacturar } from "@/features/facturacion/components/bandejas/BandejaPorFacturar";
-import { BandejaProformasListas } from "@/features/facturacion/components/bandejas/BandejaProformasListas";
-import { BandejaPorTimbrar } from "@/features/facturacion/components/bandejas/BandejaPorTimbrar";
-import { BandejaPorEnviar } from "@/features/facturacion/components/bandejas/BandejaPorEnviar";
-import { BandejaPorCobrar } from "@/features/facturacion/components/bandejas/BandejaPorCobrar";
-import { BandejaVencidas } from "@/features/facturacion/components/bandejas/BandejaVencidas";
-import { BandejaRepPendientes } from "@/features/facturacion/components/bandejas/BandejaRepPendientes";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
+import { FacturacionBandejasTabs } from "@/features/facturacion/components/bandejas/FacturacionBandejasTabs";
+import type { BandejaId } from "@/features/facturacion/components/bandejas/BandejaTabs";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { buildFacturaColumns } from "./facturacionColumns";
@@ -132,58 +124,36 @@ export default function Facturacion() {
 
         <DashboardEjecutivoFacturacion />
 
-        <Tabs value={activeBandeja} onValueChange={setActiveBandeja}>
-          <div className="sticky top-0 z-20 -mx-4 px-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 overflow-x-auto">
-            <BandejaTabs />
-          </div>
-
-          <TabsContent value="embarques-sin-factura" className="space-y-4">
-            <BandejaPorFacturar />
-          </TabsContent>
-          <TabsContent value="proformas-listas" className="space-y-4">
-            <BandejaProformasListas />
-          </TabsContent>
-          <TabsContent value="por-timbrar" className="space-y-4">
-            <BandejaPorTimbrar />
-          </TabsContent>
-          <TabsContent value="por-enviar" className="space-y-4">
-            <BandejaPorEnviar />
-          </TabsContent>
-          <TabsContent value="por-cobrar" className="space-y-4">
-            <BandejaPorCobrar />
-          </TabsContent>
-          <TabsContent value="vencidas" className="space-y-4">
-            <BandejaVencidas />
-          </TabsContent>
-          <TabsContent value="rep-pendientes" className="space-y-4">
-            <BandejaRepPendientes />
-          </TabsContent>
-          <TabsContent value="emitidas" className="space-y-4">
-            <TabFacturasEmitidas
-              search={search} setSearch={setSearch}
-              filterEstado={filterEstado} filterCliente={filterCliente} setFilter={setFilter}
-              fechaDesde={desdeIso ?? ""} setFechaDesde={setFechaDesde}
-              fechaHasta={hastaIso ?? ""} setFechaHasta={setFechaHasta}
-              clientes={clientesDisponibles}
-              onClearFiltros={clearFiltros}
-              exportarFacturasCsv={exportarFacturasCsv}
-              exportarLayoutContable={exportarLayoutContable}
-              columns={facturaColumns}
-              onCreateNew={() => setOpenFacturaManual(true)}
-              data={paginatedFacturas}
-              facturasFiltradas={facturasFiltradas}
-              totalFacturas={facturas.length}
-              isLoading={loadingFacturas}
-              isError={errorFacturas}
-              onRetry={refetchFacturas}
-              page={page} totalPages={totalPages} setPage={setPage}
-              pageSize={pageSize} setPageSize={setPageSize}
-            />
-          </TabsContent>
-          <TabsContent value="notas" className="space-y-4">
-            <NotasCreditoRecientes />
-          </TabsContent>
-        </Tabs>
+        <CargaGuard
+          isLoading={loadingFacturas}
+          isError={errorFacturas}
+          onRetry={refetchFacturas}
+          errorTitle="No se pudo cargar la información de facturación"
+          errorDescription="Ocurrió un error al obtener las facturas. Intenta de nuevo."
+        >
+          <FacturacionBandejasTabs
+            activeBandeja={activeBandeja}
+            setActiveBandeja={setActiveBandeja}
+            search={search} setSearch={setSearch}
+            filterEstado={filterEstado} filterCliente={filterCliente} setFilter={setFilter}
+            desdeIso={desdeIso} setFechaDesde={setFechaDesde}
+            hastaIso={hastaIso} setFechaHasta={setFechaHasta}
+            clientesDisponibles={clientesDisponibles}
+            clearFiltros={clearFiltros}
+            exportarFacturasCsv={exportarFacturasCsv}
+            exportarLayoutContable={exportarLayoutContable}
+            facturaColumns={facturaColumns}
+            onCreateNew={() => setOpenFacturaManual(true)}
+            paginatedFacturas={paginatedFacturas}
+            facturasFiltradas={facturasFiltradas}
+            totalFacturas={facturas.length}
+            loadingFacturas={loadingFacturas}
+            errorFacturas={errorFacturas}
+            refetchFacturas={refetchFacturas}
+            page={page} totalPages={totalPages} setPage={setPage}
+            pageSize={pageSize} setPageSize={setPageSize}
+          />
+        </CargaGuard>
 
         <FacturacionDialogs
           openFacturaManual={openFacturaManual}

@@ -165,7 +165,7 @@ function mapOperador(op: ServerOperadorRaw): OperadorData {
  * Replaces previous approach of downloading ALL embarques and aggregating client-side.
  */
 export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.operaciones.stats,
     queryFn: fetchOperacionesStats,
     staleTime: 60_000,
@@ -180,6 +180,8 @@ export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
 
   return {
     isLoading,
+    isError,
+    refetch,
     operadores,
     global,
     meses6Labels: stats?.mesesLabels ?? [],

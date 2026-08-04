@@ -14,6 +14,7 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
 import { buildCxcAgingColumns } from "@/features/cxc/components/cxcAgingColumns";
 import { useCxcAging } from "@/features/cxc/hooks/useCxcAging";
@@ -61,7 +62,7 @@ interface Filters extends Record<string, string> { cubeta: string }
 const DEFAULTS: Filters = { cubeta: "todas" };
 
 export default function CxcAging() {
-  const { data = [], isLoading, totales } = useCxcAging();
+  const { data = [], isLoading, totales, isError, refetch } = useCxcAging();
   const columns = useMemo(() => buildCxcAgingColumns(), []);
   const [drilldown] = useState<{ cli: CxcAgingRow; cubeta: CubetaAging | "todas" } | null>(null);
 
@@ -107,6 +108,13 @@ export default function CxcAging() {
         }
       />
 
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+        errorTitle="No se pudo cargar la antigüedad de saldos"
+        errorDescription="Ocurrió un error al obtener los saldos de clientes. Intenta de nuevo."
+      >
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         <KpiBucket label="Vigente" value={totales.vigente} />
         <KpiBucket label="1-30 días" value={totales.d_1_30} tone={totales.d_1_30 > 0 ? "warn" : "default"} />
@@ -162,6 +170,7 @@ export default function CxcAging() {
       </Card>
 
       {drilldown && null}
+      </CargaGuard>
     </PageContainer>
   );
 }

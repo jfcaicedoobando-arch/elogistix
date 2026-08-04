@@ -12,6 +12,16 @@ interface Props {
   isLoading: boolean;
 }
 
+/**
+ * R8: un badge "0d" no comunica nada. Con 0 días de demora la carga se venció
+ * hoy, así que lo decimos con palabras.
+ */
+function etiquetaDemora(dias: number): { badge: string; titulo: string } {
+  if (dias <= 0) return { badge: "Hoy", titulo: "Se vence hoy" };
+  return { badge: `${dias}d`, titulo: `${dias} ${dias === 1 ? "día" : "días"} de demora` };
+}
+
+
 export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLoading }: Props) {
   const navigate = useNavigate();
 
@@ -33,12 +43,14 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
               className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
             >
               <div
-                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground ${
+                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-2xs font-bold text-primary-foreground ${
                   e.diasDemora >= 5 ? "bg-destructive" : "bg-warning"
                 }`}
+                title={etiquetaDemora(e.diasDemora).titulo}
               >
-                {e.diasDemora}d
+                {etiquetaDemora(e.diasDemora).badge}
               </div>
+
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium truncate">{e.expediente}</p>
                 <p className="text-xs text-muted-foreground truncate">

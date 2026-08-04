@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useState } from "react";
 
-import { usePermissions, useTabsParam, useCargaExpirada } from "@/hooks/shared";
+import { usePermissions, useTabsParam } from "@/hooks/shared";
 import {
   calcularEstadoEmbarque,
   getSiguienteEstado,
@@ -12,14 +12,12 @@ import {
 } from "@/features/embarques/hooks";
 
 
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import DialogEliminarEmbarque from "@/features/embarques/components/DialogEliminarEmbarque";
 import DialogDuplicarEmbarque from "@/features/embarques/components/DialogDuplicarEmbarque";
 import { EmbarqueDetalleHeader } from "@/features/embarques/components/EmbarqueDetalleHeader";
 import { EmbarqueDetalleTabs } from "@/features/embarques/components/EmbarqueDetalleTabs";
 import { LoadingState, NotFoundState } from "./EmbarqueDetalleStates";
-import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
-import { getErrorMessage } from "@/lib/errors";
-
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
 // v13.66.15: reordenadas por flujo (operación → finanzas → cierre → bitácora)
@@ -57,59 +55,54 @@ export default function EmbarqueDetalle() {
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
 
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
-  // R7-FIX6: si la carga se cuelga más de 20 s, ofrecer reintento en lugar de
-  // dejar el esqueleto girando indefinidamente.
-  const cargaExpirada = useCargaExpirada(isLoading);
 
-  if (error) {
-    return (
-      <PageContainer>
-        <ErrorStateInline message={getErrorMessage(error)} onRetry={() => refetch()} />
-      </PageContainer>
-    );
-  }
-  if (isLoading && cargaExpirada) {
-    return (
-      <PageContainer>
-        <ErrorStateInline
-          message="La información del embarque está tardando demasiado en cargar. Revisa tu conexión y reintenta."
-          onRetry={() => refetch()}
-        />
-      </PageContainer>
-    );
-  }
-  if (isLoading) return <LoadingState />;
-  if (!embarque) return <NotFoundState />;
+  if (!isLoading && !error && !embarque) return <NotFoundState />;
 
-  const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado, embarque.fecha_llegada_real);
-  const siguienteEstado = getSiguienteEstado(estadoVisual);
+  const estadoVisual = embarque
+    ? calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado, embarque.fecha_llegada_real)
+    : null;
+  const siguienteEstado = estadoVisual ? getSiguienteEstado(estadoVisual) : null;
 
   return (
     <PageContainer>
-      <EmbarqueDetalleHeader
-        embarque={embarque}
-        embarqueId={id!}
-        estadoVisual={estadoVisual}
-        siguienteEstado={siguienteEstado}
-        canEdit={canEdit}
-        trackingPending={trackingPending}
-        onCompartirTracking={handleCompartirTracking}
-        onAbrirEliminar={() => setDialogEliminarAbierto(true)}
-        onAbrirDuplicar={() => setDialogDuplicarAbierto(true)}
-        onNavigateTab={(tab) => setActiveTab(tab)}
-      />
+      <CargaGuard
+        isLoading={isLoading}
+        isError={!!error}
+        onRetry={() => refetch()}
+        errorTitle="No pudimos cargar el embarque"
+        errorDescription="La información del embarque está tardando demasiado en cargar. Revisa tu conexión y reintenta."
+      >
+        {isLoading || !embarque || !estadoVisual ? (
+          <LoadingState />
+        ) : (
+          <>
+            <EmbarqueDetalleHeader
+              embarque={embarque}
+              embarqueId={id!}
+              estadoVisual={estadoVisual}
+              siguienteEstado={siguienteEstado}
+              canEdit={canEdit}
+              trackingPending={trackingPending}
+              onCompartirTracking={handleCompartirTracking}
+              onAbrirEliminar={() => setDialogEliminarAbierto(true)}
+              onAbrirDuplicar={() => setDialogDuplicarAbierto(true)}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+            />
 
-      <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
-      <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
+            <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
+            <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
 
-      <EmbarqueDetalleTabs
-        embarque={embarque}
-        embarqueId={id!}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        estadoVisual={estadoVisual}
-        canEdit={canEdit}
-      />
+            <EmbarqueDetalleTabs
+              embarque={embarque}
+              embarqueId={id!}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              estadoVisual={estadoVisual}
+              canEdit={canEdit}
+            />
+          </>
+        )}
+      </CargaGuard>
     </PageContainer>
   );
 }
