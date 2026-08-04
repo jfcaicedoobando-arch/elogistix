@@ -97,7 +97,7 @@ export default function SeccionConceptosVentaCotizacion({
             {hayIvaUSD ? (
               <>
                 <span className="text-sm">Subtotal s/IVA: {formatCurrency(subtotalSinIvaUSD, 'USD')}</span>
-                <span className="text-sm text-warning">IVA {tasaPct}%: {formatCurrency(ivaUSD, 'USD')}</span>
+                <span className="text-sm text-warning">IVA {etiquetaTasaIva(conceptosUSD, tasaIva)}: {formatCurrency(ivaUSD, 'USD')}</span>
                 <span className="text-sm font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
               </>
             ) : (
@@ -165,7 +165,7 @@ export default function SeccionConceptosVentaCotizacion({
         {!hayIvaMXN && !hayIvaUSD && (
           <span className="text-xs text-muted-foreground">* Ningún concepto causa IVA</span>
         )}
-        {hayIvaUSD && <span className="text-xs text-warning">* Algunos conceptos USD incluyen IVA {tasaPctMXN}</span>}
+        {hayIvaUSD && <span className="text-xs text-warning">* Algunos conceptos USD incluyen IVA {etiquetaTasaIva(conceptosUSD, tasaIva)}</span>}
       </div>
     </div>
   );
