@@ -19,6 +19,7 @@ import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
 import { type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
 import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { CarteraMobileList } from "./_sections/CarteraMobileList";
@@ -142,7 +143,17 @@ export default function Cartera() {
       />
 
       {/* Mobile: lista de tarjetas (sm:hidden). Las cifras nunca quedan cortadas. */}
-      <CarteraMobileList rows={paged.rows} isLoading={isLoading} />
+      <div className="sm:hidden">
+        <AsyncBoundary
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={refetch}
+          skeleton={<CarteraMobileList rows={[]} isLoading />}
+          errorTitle="No se pudo cargar la cartera"
+        >
+          <CarteraMobileList rows={paged.rows} isLoading={false} />
+        </AsyncBoundary>
+      </div>
 
       {/* Desktop / tablet: DataTable unificada con orden + paginación server-tagged. */}
       <Card className="hidden sm:block">

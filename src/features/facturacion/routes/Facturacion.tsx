@@ -96,6 +96,8 @@ export default function Facturacion() {
     paginatedFacturas, facturasFiltradas, totalPages,
     facturas,
     loadingFacturas,
+    errorFacturas,
+    refetchFacturas,
     clientesDisponibles,
     exportarFacturasCsv, exportarLayoutContable,
   } = useFacturacionPageController({ isInRange, activeTab: "facturas" });
@@ -172,6 +174,8 @@ export default function Facturacion() {
               facturasFiltradas={facturasFiltradas}
               totalFacturas={facturas.length}
               isLoading={loadingFacturas}
+              isError={errorFacturas}
+              onRetry={refetchFacturas}
               page={page} totalPages={totalPages} setPage={setPage}
               pageSize={pageSize} setPageSize={setPageSize}
             />

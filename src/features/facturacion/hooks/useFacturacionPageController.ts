@@ -42,7 +42,7 @@ export function useFacturacionPageController(opts?: {
   // badges/contadores que se ven desde cualquier tab.
   const facturasEnabled = activeTab === undefined || activeTab === "facturas";
 
-  const { data: listado, isLoading: loadingFacturas } = useFacturasListado({
+  const { data: listado, isLoading: loadingFacturas, isError: errorFacturas, refetch: refetchFacturas } = useFacturasListado({
     page,
     pageSize,
     search: debouncedSearch,
@@ -162,6 +162,9 @@ export function useFacturacionPageController(opts?: {
     clientesDisponibles,
 
     loadingFacturas,
+    // P1-1: la tabla debe pintar error + retry, no un empty-state engañoso.
+    errorFacturas,
+    refetchFacturas: () => void refetchFacturas(),
     loadingGastos,
     // permisos / mutaciones
     canEdit,

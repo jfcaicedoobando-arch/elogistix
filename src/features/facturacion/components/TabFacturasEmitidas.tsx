@@ -51,6 +51,8 @@ interface Props {
   facturasFiltradas: Factura[];
   totalFacturas: number;
   isLoading: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
   page: number;
   totalPages: number;
   setPage: (n: number) => void;
@@ -166,6 +168,8 @@ export function TabFacturasEmitidas(p: Props) {
             columns={columnsConSeleccion}
             data={p.data}
             isLoading={p.isLoading}
+            isError={p.isError}
+            onRetry={p.onRetry}
             emptyMessage="No se encontraron facturas"
             emptyState={
               <EmptyState
