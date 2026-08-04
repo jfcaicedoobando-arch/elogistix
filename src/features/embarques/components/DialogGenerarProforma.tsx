@@ -4,6 +4,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useDialogGenerarProformaController } from "@/features/embarques/hooks";
 import { PasoSeleccionConceptos } from "./proforma/PasoSeleccionConceptos";
 import { PasoConfirmacionProforma } from "./proforma/PasoConfirmacionProforma";
+import { AvisoTcRequerido } from "./proforma/AvisoTcRequerido";
 import type { Tables } from "@/types/db";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 
@@ -90,6 +91,14 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
           totales={c.totales}
           tasaIva={c.tasaIva}
           notas={c.notas}
+        />
+      )}
+
+      {c.tcRequerido && (
+        <AvisoTcRequerido
+          tcSugerido={c.tcSugerido}
+          guardando={c.guardandoTc}
+          onGuardarYReintentar={(tc) => void c.handleGuardarTcYReintentar(tc)}
         />
       )}
 
