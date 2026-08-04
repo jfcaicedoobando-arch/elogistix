@@ -57,6 +57,85 @@ function derivarEstadoAcciones(estadoVisual: string) {
   };
 }
 
+/** Lint (complejidad): menú "Más acciones" extraído del componente raíz. */
+function MenuMasAcciones(props: {
+  trackingPending: boolean;
+  puedeCancelar: boolean;
+  puedeEliminar: boolean;
+  esTerminal: boolean;
+  canEliminarEmbarque: boolean;
+  onCompartirTracking: () => void;
+  onAbrirDuplicar: () => void;
+  onAbrirEliminar: () => void;
+  onPedirCancelar: () => void;
+}) {
+  const {
+    trackingPending, puedeCancelar, puedeEliminar, esTerminal, canEliminarEmbarque,
+    onCompartirTracking, onAbrirDuplicar, onAbrirEliminar, onPedirCancelar,
+  } = props;
+  return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" aria-label="Más acciones" className="h-9 w-9 p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                onCompartirTracking();
+              }}
+              disabled={trackingPending}
+            >
+              <Share2 className="h-4 w-4 mr-2" /> Compartir tracking
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                onAbrirDuplicar();
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Duplicar embarque
+            </DropdownMenuItem>
+            {puedeCancelar && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    onPedirCancelar();
+                  }}
+                  className="text-warning focus:text-warning focus:bg-warning/10"
+                >
+                  <Ban className="h-4 w-4 mr-2" /> Cancelar embarque
+                </DropdownMenuItem>
+              </>
+            )}
+            {puedeEliminar && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    onAbrirEliminar();
+                  }}
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                </DropdownMenuItem>
+              </>
+            )}
+            {!esTerminal && !puedeEliminar && canEliminarEmbarque && (
+              <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
+                Eliminar deshabilitado: hay CxC/CxP pendientes.
+              </div>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+  );
+}
+
 export function EmbarqueDetalleHeaderActions({
   expediente, estadoVisual, siguienteEstado, canEdit, avanzandoEstado, trackingPending,
   embarqueId, puedeReabrir, reabriendoEstado, docsFaltantes, bloqueadoPorDocs,
@@ -111,65 +190,17 @@ export function EmbarqueDetalleHeaderActions({
       )}
 
       {canEdit && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" aria-label="Más acciones" className="h-9 w-9 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                onCompartirTracking();
-              }}
-              disabled={trackingPending}
-            >
-              <Share2 className="h-4 w-4 mr-2" /> Compartir tracking
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                onAbrirDuplicar();
-              }}
-            >
-              <Copy className="h-4 w-4 mr-2" /> Duplicar embarque
-            </DropdownMenuItem>
-            {puedeCancelar && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    setCancelarOpen(true);
-                  }}
-                  className="text-warning focus:text-warning focus:bg-warning/10"
-                >
-                  <Ban className="h-4 w-4 mr-2" /> Cancelar embarque
-                </DropdownMenuItem>
-              </>
-            )}
-            {puedeEliminar && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    onAbrirEliminar();
-                  }}
-                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar
-                </DropdownMenuItem>
-              </>
-            )}
-            {!esTerminal && !puedeEliminar && canEliminarEmbarque && (
-              <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
-                Eliminar deshabilitado: hay CxC/CxP pendientes.
-              </div>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <MenuMasAcciones
+          trackingPending={trackingPending}
+          puedeCancelar={puedeCancelar}
+          puedeEliminar={puedeEliminar}
+          esTerminal={esTerminal}
+          canEliminarEmbarque={canEliminarEmbarque}
+          onCompartirTracking={onCompartirTracking}
+          onAbrirDuplicar={onAbrirDuplicar}
+          onAbrirEliminar={onAbrirEliminar}
+          onPedirCancelar={() => setCancelarOpen(true)}
+        />
       )}
       <CancelarEmbarqueDialog
         open={cancelarOpen}
