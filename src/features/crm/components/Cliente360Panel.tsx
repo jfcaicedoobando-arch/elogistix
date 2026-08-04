@@ -20,28 +20,6 @@ export default function Cliente360Panel({ clienteId }: Props) {
   const navigate = useNavigate();
   const { data, isLoading } = useCliente360(clienteId);
 
-  if (isLoading) return /**
- * Vista CRM dentro de ClienteDetalle (Sprint D): oportunidades, última
- * cotización, último embarque y timeline de actividades.
- */
-import { useNavigate } from "react-router-dom";
-import { Briefcase, ClipboardList, Ship } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useCliente360 } from "@/features/crm/hooks";
-import { formatCurrencyCompact } from "@/lib/formatters";
-import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-
-interface Props {
-  clienteId: string;
-}
-
-export default function Cliente360Panel({ clienteId }: Props) {
-  const navigate = useNavigate();
-  const { data, isLoading } = useCliente360(clienteId);
-
   if (isLoading) return <EmptyStateInline loading message="Cargando datos CRM…" />;
   const d = data ?? { oportunidades: [], totalAbierto: 0, totalGanado: 0, ultimaCotizacion: null, ultimoEmbarque: null };
 
