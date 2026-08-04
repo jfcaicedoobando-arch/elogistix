@@ -58,9 +58,9 @@ export function TarifaFila({
   const ap = t.estado_aprobacion ?? "vigente";
   const hoy = todayLocalISO();
   const atenuar = !esMejor && (t.vigente_hasta < hoy || t.estado === "vencida" || t.estado === "reemplazada");
+  const esVencida = t.estado === "vencida";
   const delta = !esVencida && mejorTotal != null && !esMejor && t.total_comparable > mejorTotal
     ? t.total_comparable - mejorTotal : 0;
-  const esVencida = t.estado === "vencida";
   const nueva = !esVencida && esReciente(t.created_at);
   const puedeAprobar = ap === "borrador";
 

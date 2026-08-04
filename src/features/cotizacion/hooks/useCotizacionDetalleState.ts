@@ -4,7 +4,7 @@ import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useCotizacion, useEmbarquesVinculados } from "@/features/cotizacion/hooks/useCotizaciones";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import {
-  parseConceptos,
+  parseConceptosDetallado,
   calcularTotalesConceptos,
   getNombreDestinatario,
   EMPTY_TOTALES,
@@ -30,16 +30,25 @@ export function useCotizacionDetalleState(id: string | undefined) {
   // Dep granular: sólo recalcular cuando cambia el JSON de conceptos o la tasa IVA,
   // evitando recálculos cuando otros campos de `cotizacion` mutan por refetch.
   const conceptosRaw = cotizacion?.conceptos_venta;
+  const parsed = useMemo(() => {
+    try {
+      return parseConceptosDetallado(conceptosRaw);
+    } catch (err) {
+      logger.error("useCotizacionDetalleState", "error parseando conceptos", err);
+      reportCaughtError(err, { feature: "cotizacion", op: "parsear_conceptos" });
+      return { conceptos: [], descartados: 0 };
+    }
+  }, [conceptosRaw]);
+
   const totales = useMemo(() => {
     try {
-      const conceptos = parseConceptos(conceptosRaw);
-      return calcularTotalesConceptos(conceptos, tasaIva);
+      return calcularTotalesConceptos(parsed.conceptos, tasaIva);
     } catch (err) {
       logger.error("useCotizacionDetalleState", "error calculando totales", err);
       reportCaughtError(err, { feature: "cotizacion", op: "calcular_totales" });
       return EMPTY_TOTALES;
     }
-  }, [conceptosRaw, tasaIva]);
+  }, [parsed, tasaIva]);
 
   const handlers = useCotizacionDetalleHandlers(cotizacion ?? undefined);
 
@@ -77,6 +86,7 @@ export function useCotizacionDetalleState(id: string | undefined) {
     subtotalMXN: totales.subtotalMXN,
     ivaMXN: totales.ivaMXN,
     totalMXN: totales.totalMXN,
+    conceptosDescartados: parsed.descartados,
     // Handlers + diálogos
     ...handlers,
     navigate,
