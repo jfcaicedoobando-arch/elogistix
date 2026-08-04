@@ -44,12 +44,15 @@ export function useEmbarqueForm() {
    */
   const hidratadoDesdeEmbarque = useRef(false);
 
-  // Sync tipos de cambio remotos al formulario (sólo en captura nueva).
+  // Precarga del T/C (DOF preferente) al abrir una captura nueva. Es una
+  // sugerencia editable: el usuario puede sobrescribirla antes de guardar.
   useEffect(() => {
     if (tiposDeCambio && !hidratadoDesdeEmbarque.current) {
       const opts = { shouldValidate: true, shouldDirty: true } as const;
       methods.setValue("tipoCambioUSD", String(tiposDeCambio.usdMxn), opts);
-      methods.setValue("tipoCambioEUR", String(tiposDeCambio.eurMxn), opts);
+      if (tiposDeCambio.eurMxn != null) {
+        methods.setValue("tipoCambioEUR", String(tiposDeCambio.eurMxn), opts);
+      }
     }
   }, [tiposDeCambio, methods]);
 
