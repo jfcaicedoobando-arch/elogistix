@@ -22,11 +22,13 @@ import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
 import { EstadoSelect, ClienteSelect } from "@/features/cotizacion/components/CotizacionesFilterSelects";
 import { CotizacionesPageActions } from "@/features/cotizacion/components/CotizacionesPageActions";
+import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
   const navigate = useNavigate();
   const duplicar = useDuplicarCotizacion();
+  const { data: tcInicial } = useTcInicial();
 
   // Diferimos las filas visibles: al cambiar filtros/paginación, el re-render
   // pesado de la tabla queda en background y no bloquea el input de búsqueda.
@@ -41,8 +43,9 @@ export default function Cotizaciones() {
           duplicar.mutate(id, {
             onSuccess: (newId) => navigate(`/cotizaciones/${newId}/editar`),
           }),
+        usdMxn: tcInicial?.usdMxn,
       }),
-    [c.canEdit, c.setCotizacionAEliminar, duplicar, navigate],
+    [c.canEdit, c.setCotizacionAEliminar, duplicar, navigate, tcInicial?.usdMxn],
   );
 
   const primaryFilters = (
