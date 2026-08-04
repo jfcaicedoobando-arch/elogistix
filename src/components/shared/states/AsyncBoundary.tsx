@@ -45,7 +45,9 @@ export function AsyncBoundary({
   className,
   children,
 }: AsyncBoundaryProps) {
-  const expirada = useCargaExpirada(isLoading, timeoutMs > 0 ? timeoutMs : Number.MAX_SAFE_INTEGER);
+  const conTimeout = timeoutMs > 0;
+  const expirada = useCargaExpirada(isLoading && conTimeout, conTimeout ? timeoutMs : 20_000);
+
 
   if (isError) {
     return (
