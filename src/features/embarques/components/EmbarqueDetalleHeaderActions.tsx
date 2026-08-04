@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit, Trash2, Share2, Copy, MoreHorizontal, Ban } from "lucide-react";
+import { Edit, Trash2, Share2, Copy, MoreHorizontal, Ban, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,10 +76,20 @@ export function EmbarqueDetalleHeaderActions({
   return (
     <div className="flex gap-1.5 flex-wrap lg:flex-nowrap lg:justify-end items-center">
       {accionPrincipal}
-      {canEdit && siguienteEstado && (
+      {canEdit && siguienteEstado && !ocultarAvance && (
         <Button variant="outline" size="sm" onClick={goEditar}>
           <Edit className="h-4 w-4 mr-1" /> Editar
         </Button>
+      )}
+      {canEdit && ocultarAvance && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="outline" className="gap-1 text-muted-foreground cursor-default">
+              <Lock className="h-3 w-3" /> Cierre restringido
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>Requiere finanzas o admin para cerrar el embarque</TooltipContent>
+        </Tooltip>
       )}
 
       {puedeReabrir && (
