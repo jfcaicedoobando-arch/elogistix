@@ -18,7 +18,10 @@ interface Args {
 export function useCapturaEntranteWiring({
   entrante, initialEmbarqueAdHoc, onCerrar, onCapturada,
 }: Args) {
-  const capturar = useCapturarFacturaEntrante();
+  // El submit del formulario ya notifica "Factura de proveedor capturada":
+  // aquí silenciamos el toast del buzón para no mostrarlo doble.
+  const capturar = useCapturarFacturaEntrante({ silencioso: true });
+
 
   const embarqueInicial: EmbarqueSeleccionado | null =
     initialEmbarqueAdHoc ??

@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.404.1] - 2026-08-04
+- Fix doble toast al capturar una factura desde el buzón CxP: `useCapturarFacturaEntrante` acepta `{ silencioso: true }` y el cableado del formulario ya no repite el aviso ("Factura de proveedor capturada" + "Documento marcado como capturado").
+
+
+
 ## [13.404.0] - 2026-08-04
 - Buscador global: nuevo estado de carga con skeletons y aviso "Buscando…" (`GlobalSearchCargando`) mientras corre el debounce o la consulta; el estado vacío ("sin resultados" / "no pudimos completar la búsqueda") ya no parpadea durante la búsqueda.
 

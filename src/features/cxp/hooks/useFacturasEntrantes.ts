@@ -130,14 +130,22 @@ export function useRechazarFacturaEntrante() {
   });
 }
 
-export function useCapturarFacturaEntrante() {
+/**
+ * Marca el documento del buzón como capturado.
+ *
+ * `silencioso`: cuando la captura viene del formulario de factura (que ya
+ * avisó "Factura de proveedor capturada") se omite el segundo toast para no
+ * duplicar el mensaje.
+ */
+export function useCapturarFacturaEntrante(opciones?: { silencioso?: boolean }) {
   const invalidar = useInvalidarEntrantes();
+  const silencioso = opciones?.silencioso ?? false;
   return useMutation({
     mutationFn: ({ id, facturaId }: { id: string; facturaId: string }) =>
       capturarFacturaEntrante(id, facturaId),
     onSuccess: () => {
       invalidar();
-      notifySuccess(undefined, { title: "Documento marcado como capturado" });
+      if (!silencioso) notifySuccess(undefined, { title: "Documento marcado como capturado" });
     },
     onError: (error) => notifyError(undefined, {
       title: "No se pudo marcar como capturado",
@@ -146,3 +154,4 @@ export function useCapturarFacturaEntrante() {
     }),
   });
 }
+
