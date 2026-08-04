@@ -14,9 +14,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EditRow } from "./CatalogoClavesSATCard.parts";
 import {
-import { Skeleton } from "@/components/ui/skeleton";
   EMPTY_DRAFT, TIPO_IVA_LABEL, TIPO_IVA_VARIANT,
   type Draft, type Row,
 } from "./CatalogoClavesSATCard.constants";
