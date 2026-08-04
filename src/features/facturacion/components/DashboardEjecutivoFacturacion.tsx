@@ -24,8 +24,7 @@ interface FacturadoUi { label: string; tone: "warn" | "default"; hint: string }
  * mes en curso para que un cero se entienda como "todavía no hay actividad".
  */
 function mesEnCurso(): string {
-  return new Intl.DateTimeFormat("es-MX", { month: "long", timeZone: "America/Mexico_City" })
-    .format(new Date());
+  return formatFechaEs(new Date().toISOString(), { month: "long" });
 }
 
 function buildFacturadoUi(facturasSinTc: number, mes: string): FacturadoUi {
