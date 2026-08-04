@@ -91,12 +91,10 @@ export function useNuevaFacturaProveedorForm(
     if (values.moneda === "MXN") return;
     if (!isFechaEmisionValida(values.emision)) return;
     manualTcRef.current = false; // botón manual gana sobre "manual" previo
-    tcDof.mutate({
-      moneda: values.moneda as MonedaTc,
-      fecha: values.emision,
-      silent: false,
-    });
+    tcDof.mutate({ moneda: values.moneda as MonedaTc, fecha: values.emision, silent: false });
   };
+
+
 
 
   const handleProveedor = (id: string, nombre: string, diasCreditoProv?: number) => {
