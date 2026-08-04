@@ -97,3 +97,23 @@ export async function insertarNotaEmbarque(
     }),
   );
 }
+
+/**
+ * Captura/corrige el tipo de cambio USD→MXN del embarque.
+ * v13.409.0: usado por la recuperación inline del error
+ * `LC_PROFORMA_TC_REQUERIDO` al generar proformas con conceptos en USD.
+ */
+export async function actualizarTipoCambioUsdEmbarque(
+  embarqueId: string,
+  tipoCambioUsd: number,
+): Promise<void> {
+  if (!Number.isFinite(tipoCambioUsd) || tipoCambioUsd <= 0) {
+    throw new Error("El tipo de cambio debe ser un número mayor a cero.");
+  }
+  await run(
+    supabase
+      .from('embarques')
+      .update({ tipo_cambio_usd: tipoCambioUsd })
+      .eq('id', embarqueId),
+  );
+}
