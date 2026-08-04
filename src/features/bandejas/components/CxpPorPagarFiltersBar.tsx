@@ -12,10 +12,11 @@ export interface CxpPorPagarFiltersBarProps {
   moneda: string;
   onMonedaChange: (v: string) => void;
   monedas: string[];
-  dateFrom: string | undefined;
-  onDateFromChange: (v: string | undefined) => void;
-  dateTo: string | undefined;
-  onDateToChange: (v: string | undefined) => void;
+  dateFrom: string;
+  onDateFromChange: (v: string) => void;
+  dateTo: string;
+  onDateToChange: (v: string) => void;
+
   chips: { key: string; label: string; onRemove: () => void }[];
   activeCount: number;
   onClearAll: () => void;
