@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.406.0] - 2026-08-04
+- Buzón CxP: los documentos cuyo CFDI ya fue capturado se cierran automáticamente. Nuevo trigger `trg_cerrar_entrantes_por_uuid` en `proveedor_facturas` (marca `capturada`, vincula la factura y sella `capturado_por` cuando coincide el UUID fiscal dentro de la misma organización), aunque la captura se haya hecho desde el tab Costos del embarque o el archivo se haya subido dos veces. Backfill: 4 documentos que seguían en "Por capturar" quedaron cerrados.
+
+
+
 ## [13.405.0] - 2026-08-04
 - Candado en "Capturar factura de proveedor": la suma de conceptos de costo vinculados ya no puede exceder el subtotal de la factura. Nueva barra `Subtotal · Asignado · Disponible` (`TopeVinculacionBar`), input en rojo cuando un monto supera lo cotizado del concepto, botón "Guardar factura" deshabilitado y aviso con el excedente exacto al intentar enviar (`topeVinculacion.ts`, `puedeContinuarTope`). 8 tests nuevos.
 
