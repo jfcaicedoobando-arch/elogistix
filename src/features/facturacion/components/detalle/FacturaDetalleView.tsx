@@ -10,6 +10,7 @@ import { ClaimPendingBanner } from "@/features/facturacion/components/detalle/Cl
 import { DocumentoDetalleShell } from "@/components/shared/documento/DocumentoDetalleShell";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
 
+import { calcularDiasVencidoFactura } from "@/features/facturacion/domain/facturaAging";
 import { buildKpisFactura } from "@/features/facturacion/domain/facturaKpis";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
 
@@ -58,7 +59,9 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
     enviarOpen, setEnviarOpen, sustituirOpen, setSustituirOpen,
     cancelarOpen, setCancelarOpen, eliminarOpen, setEliminarOpen,
     consultarOpen, setConsultarOpen,
+    recordatorioOpen, setRecordatorioOpen,
   } = dialogs;
+  const saldoFactura = Number(props.saldo ?? 0);
 
   const acuseCancelacionStatus = factura.acuse_cancelacion_status ?? null;
   const cancellationStatus = factura.cancellation_status ?? null;
@@ -133,6 +136,10 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
           puedeEditarBorrador={puedeEditarBorrador}
           conceptosVivos={conceptosVivos}
           onRegistrarPago={() => setPagoOpen(true)}
+          saldo={saldoFactura}
+          estaCancelada={flags.estaCancelada}
+          canEnviarRecordatorio={canEdit}
+          onEnviarRecordatorio={() => setRecordatorioOpen(true)}
         />
       </DocumentoDetalleShell>
 
@@ -154,6 +161,18 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         onEliminar={onEliminar}
         consultarOpen={consultarOpen}
         setConsultarOpen={setConsultarOpen}
+        recordatorioOpen={recordatorioOpen}
+        setRecordatorioOpen={setRecordatorioOpen}
+        recordatorio={{
+          factura_id: factura.id,
+          numero: factura.numero,
+          total: Number(factura.total ?? 0),
+          saldo: saldoFactura,
+          moneda: factura.moneda,
+          dias_vencido: calcularDiasVencidoFactura(factura.fecha_vencimiento) ?? 0,
+          fecha_vencimiento: factura.fecha_vencimiento,
+          cliente_nombre: factura.cliente_nombre,
+        }}
       />
     </PageContainer>
   );

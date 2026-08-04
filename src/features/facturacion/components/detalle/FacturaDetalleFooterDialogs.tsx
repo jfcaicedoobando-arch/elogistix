@@ -1,5 +1,6 @@
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { DialogConsultarFacturapi } from "@/features/facturacion/components/detalle/DialogConsultarFacturapi";
+import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
 
 interface Props {
   facturaId: string;
@@ -10,6 +11,9 @@ interface Props {
   onEliminar: () => void;
   consultarOpen: boolean;
   setConsultarOpen: (v: boolean) => void;
+  recordatorioOpen?: boolean;
+  setRecordatorioOpen?: (v: boolean) => void;
+  recordatorio?: FacturaRecordatorio | null;
 }
 
 /**
@@ -21,6 +25,7 @@ export function FacturaDetalleFooterDialogs({
   facturaId, numero,
   eliminarOpen, setEliminarOpen, eliminando, onEliminar,
   consultarOpen, setConsultarOpen,
+  recordatorioOpen = false, setRecordatorioOpen, recordatorio = null,
 }: Props) {
   return (
     <>
@@ -39,6 +44,13 @@ export function FacturaDetalleFooterDialogs({
         open={consultarOpen}
         onOpenChange={setConsultarOpen}
       />
+      {setRecordatorioOpen && (
+        <DialogRecordatorioCobranza
+          open={recordatorioOpen}
+          onOpenChange={setRecordatorioOpen}
+          factura={recordatorio}
+        />
+      )}
     </>
   );
 }

@@ -27,6 +27,10 @@ interface FacturaDetalleBodyProps {
   puedeEditarBorrador: boolean;
   conceptosVivos: ConceptosVivos;
   onRegistrarPago: () => void;
+  saldo?: number;
+  estaCancelada?: boolean;
+  canEnviarRecordatorio?: boolean;
+  onEnviarRecordatorio?: () => void;
 }
 
 export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
@@ -72,7 +76,13 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
               rfcFactura={factura.rfc_cliente}
             />
           )}
-          <FacturaResumenCard factura={factura} />
+          <FacturaResumenCard
+            factura={factura}
+            saldo={props.saldo}
+            estaCancelada={props.estaCancelada}
+            canEnviarRecordatorio={props.canEnviarRecordatorio}
+            onEnviarRecordatorio={props.onEnviarRecordatorio}
+          />
           {factura.uuid_fiscal && (
             <FacturaTimbradoCard
               uuidFiscal={factura.uuid_fiscal}
