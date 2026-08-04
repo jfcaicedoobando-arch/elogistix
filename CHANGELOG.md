@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.401.2] - 2026-08-04
+- Power of 10 #4: `GlobalSearch.tsx` (216 líneas) se dividió extrayendo estado vacío, grupo de recientes, grupos de resultados y pie de atajos a `GlobalSearch.partes.tsx`. Tests de arquitectura y `audit-report` en verde.
+
+
+
 ## [13.401.1] - 2026-08-04
 - FIX-H6-07: migración correctiva que re-aplica `REVOKE ALL ... FROM PUBLIC, anon` + `GRANT EXECUTE ... TO authenticated, service_role` sobre `avanzar_estado_embarque`; baseline del auditor de migraciones subido a `20260804020030`.
 
