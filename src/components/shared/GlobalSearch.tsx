@@ -90,6 +90,10 @@ export function GlobalSearch() {
   );
 
   const showRecents = query.trim() === "" && recents.length > 0;
+  /** En progreso: el debounce aún no dispara o la consulta está en vuelo. */
+  const cargando =
+    query.trim() !== "" && (buscando || query.trim() !== debouncedQuery.trim());
+
 
   return (
     <>
