@@ -5810,6 +5810,44 @@ export type Database = {
           },
         ]
       }
+      proveedor_alias: {
+        Row: {
+          alias_normalizado: string
+          alias_original: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          organization_id: string
+          proveedor_id: string
+        }
+        Insert: {
+          alias_normalizado: string
+          alias_original?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          organization_id: string
+          proveedor_id: string
+        }
+        Update: {
+          alias_normalizado?: string
+          alias_original?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          organization_id?: string
+          proveedor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proveedor_alias_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proveedor_facturas: {
         Row: {
           aprobada_at: string | null
