@@ -1,6 +1,11 @@
 # Changelog
 
+## [13.417.0] - 2026-08-05
+- Tipo de cambio del embarque: ahora todo embarque nuevo nace con el T/C USD y EUR del DOF más reciente, sin importar si se creó desde el wizard manual o al Confirmar una cotización. Esto elimina el error LC_PROFORMA_TC_REQUERIDO al generar proformas con conceptos en dólares.
+- Se rellenó el T/C faltante en los 12 embarques activos que lo tenían vacío.
+
 ## [13.416.0] - 2026-08-05
+
 - Razón social estandarizada en MAYÚSCULAS (igual que la CSF del SAT) para clientes y proveedores: el nombre se normaliza al escribirlo, al leerlo de la CSF/IA y al guardarlo, además del candado en base de datos. Los registros existentes ya se convirtieron.
 - Los nombres de personas de contacto no se modifican.
 
