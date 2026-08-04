@@ -99,8 +99,10 @@ export function GlobalSearch() {
       </button>
 
       {/* R7-FIX1: los resultados ya vienen filtrados por la BD; cmdk no debe
-          volver a filtrarlos (ocultaba folios, RFC y BL con formato distinto). */}
-      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
+          volver a filtrarlos (ocultaba folios, RFC y BL con formato distinto).
+          `loop`: las flechas ↑/↓ dan la vuelta para operar sin mouse. */}
+      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false} loop>
+
         <CommandInput
           placeholder="Buscar por expediente, BL, cliente, factura…"
           value={query}
