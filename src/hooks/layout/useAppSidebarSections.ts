@@ -62,7 +62,18 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { data: cxpPorAprobar = 0 } = useCxpPendientesAprobacion();
   const { data: cxpPorPagar = 0 } = useCxpPorPagarCount();
   const embarquesAlertas = embarquesDemora + garantiasAtoradas + adminPendientes;
-  const badgeCounts: BadgeCounts = { embarquesAlertas, facturasVencidas, cxpPorAprobar, cxpPorPagar };
+  const embarquesHint = [
+    `${embarquesDemora} con demora`,
+    `${garantiasAtoradas} garantía(s) atorada(s)`,
+    `${adminPendientes} con administrativos pendientes`,
+  ].join(" · ");
+  const badgeCounts: BadgeCounts = {
+    embarquesAlertas,
+    facturasVencidas,
+    cxpPorAprobar,
+    cxpPorPagar,
+    embarquesHint,
+  };
 
   const sistemaItems = SIDEBAR_SISTEMA_ITEMS.map((it) =>
     it.url === "/auditoria" ? { ...it, badgeCount: auditoriaCount } : it,
