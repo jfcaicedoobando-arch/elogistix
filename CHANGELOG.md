@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.412.0] - 2026-08-04
+- R8/WAVE 2 — exactitud de datos: "Total facturado/pagado" del detalle de proveedor ahora agrupa por moneda y muestra el equivalente en MXN (antes sumaba USD y MXN como si fueran lo mismo); orden por subtotal en la lista de cotizaciones normaliza a MXN; pluralización correcta de "1 día vencida".
+- R8/WAVE 2 — coherencia de UI: tooltips que desglosan los badges del sidebar; aviso de conceptos descartados en cotizaciones (interno y portal); un solo botón "Editar" en el detalle de embarque cuando el cierre requiere finanzas; badges "Admin pendiente"/"Listo para cerrar" ahora navegan a la pestaña de cierre; stepper de fases con fecha, hora, usuario y aviso de fechas fuera de orden; badges "Nueva"/"+USD vs mejor" ya no aparecen en tarifas vencidas.
+- R8/WAVE 2 — paridad: semáforo de mora y botón "Enviar recordatorio" en el detalle de factura CxC; nueva columna "Por cobrar" en la lista de clientes (resaltada si excede el límite de crédito); estado vacío accionable "Sin capturar · Capturar" en Shipper/Consignatario del resumen de embarque; el equivalente en MXN de Cartera se oculta cuando el saldo ya es MXN.
+
 ## [13.411.0] - 2026-08-04
 - R8/FIX 1: nuevo `CargaGuard` (variante de `AsyncBoundary` que respeta los skeletons propios) aplicado a ~20 rutas de operación, ventas/CxC, compras/CxP, catálogos, CRM y administración: ninguna pantalla puede quedarse cargando para siempre; a los 20 s o ante error muestra aviso con "Reintentar".
 - Detalles menores R8: badge de demora "0d" ahora dice "Hoy" con tooltip; saludos del dashboard usan icono Lucide en lugar del emoji 👋 (que se rompía en algunas fuentes); KPIs de facturación renombrados a "Facturado en <mes>", "Cobrado en <mes>" y "Saldo por cobrar" con tooltips que explican por qué un cero es normal; aviso de tracking de naviera sin flecha "↓" ambigua.
