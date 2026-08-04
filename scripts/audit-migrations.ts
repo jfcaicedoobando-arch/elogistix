@@ -72,8 +72,15 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon` +
  *    `GRANT EXECUTE … TO authenticated, service_role`); el archivo original
  *    queda como legacy auditado.
+ *  - `20260804020030` — post-FIX-H6-07: `20260803214601` (cast de
+ *    `tipo_operacion` en `generar_expediente`) recreó `avanzar_estado_embarque`
+ *    y `20260804015413` creó el trigger `trg_notificar_cotizacion_enviada`,
+ *    ambos SECURITY DEFINER sin el bloque REVOKE/GRANT en el mismo archivo.
+ *    La migración correctiva `20260804020030` re-aplica los permisos
+ *    (`REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO authenticated,
+ *    service_role`); los archivos originales quedan como legacy auditados.
  */
-const BASELINE = "20260801011206";
+const BASELINE = "20260804020030";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
