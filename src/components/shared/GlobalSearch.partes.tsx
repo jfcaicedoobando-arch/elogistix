@@ -6,6 +6,28 @@ import { SearchX, History } from "lucide-react";
 import { CommandFooter, CommandGroup, CommandItem, CommandKey } from "@/components/ui/command";
 import type { GlobalSearchResult } from "@/hooks/shared";
 import { ICONO_FILA, typeIcons, typeLabels } from "./globalSearchMeta";
+import { resaltarCoincidencias } from "./globalSearchResaltado";
+
+/** Texto con las coincidencias de la búsqueda resaltadas. */
+export function TextoResaltado({ texto, termino }: { texto: string; termino: string }) {
+  return (
+    <>
+      {resaltarCoincidencias(texto, termino).map((seg, i) =>
+        seg.coincide ? (
+          <mark
+            key={i}
+            className="rounded-sm bg-accent/20 px-0.5 font-semibold text-accent-foreground"
+          >
+            {seg.texto}
+          </mark>
+        ) : (
+          <span key={i}>{seg.texto}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 
 
 /** Estado vacío: distingue "sin resultados" de un fallo de red. */
