@@ -49,6 +49,7 @@ export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [busquedaFallo, setBusquedaFallo] = useState(false);
   const navigate = useNavigate();
   const search = useGlobalSearch();
   const { recents } = useRecentPages();
