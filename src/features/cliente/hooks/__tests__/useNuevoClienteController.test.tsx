@@ -84,7 +84,7 @@ describe("useNuevoClienteController", () => {
       await result.current.handleCsfUpload(event);
     });
     
-    expect(result.current.form.nombre).toBe("Parsed Org");
+    expect(result.current.form.nombre).toBe("PARSED ORG");
     expect(result.current.form.rfc).toBe("PARS123");
   });
 });
