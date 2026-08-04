@@ -101,6 +101,8 @@ export function ColumnaDatosFactura({ ctl, categorias }: DatosProps) {
         facturaMoneda={ctl.values.moneda}
         embarqueAdHoc={ctl.embarqueAdHoc}
         onEmbarqueAdHoc={ctl.setEmbarqueAdHoc}
+        tope={ctl.topeVinculacion}
+
       />
     </div>
   );
