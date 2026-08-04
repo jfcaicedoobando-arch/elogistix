@@ -32,11 +32,13 @@ export async function savePaso1(opts: {
 
   let msdsArchivo: string | null = null;
   if (v.tipoCarga === "Mercancía Peligrosa" && msdsFile) {
-    const ext = msdsFile.name.split(".").pop() || "pdf";
-    const path = `cotizaciones/msds-${Date.now()}.${ext}`;
+    // v13.420.0 (Sentry JAVASCRIPT-REACT-4M): ruta con organization_id raíz.
+    const { buildMsdsPath } = await import("@/services/storage/orgPath");
+    const path = await buildMsdsPath(msdsFile.name);
     await uploadFile(path, msdsFile);
     msdsArchivo = path;
   }
+
 
   const data = buildPaso1Data();
   data.msds_archivo = msdsArchivo;

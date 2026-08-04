@@ -34,4 +34,14 @@ describe('storage/index', () => {
     const file = new File([''], 'test.txt');
     await expect(uploadFile('path', file)).rejects.toThrow('Upload Failed');
   });
+
+  it('uploadFile traduce el error de RLS a es-MX', async () => {
+    mockSupabase.storage.upload.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'new row violates row-level security policy' },
+    });
+    const file = new File([''], 'test.txt');
+    await expect(uploadFile('path', file)).rejects.toThrow(/No tienes permisos/i);
+  });
 });
+

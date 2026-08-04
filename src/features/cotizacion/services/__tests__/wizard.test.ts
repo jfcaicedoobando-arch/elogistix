@@ -3,6 +3,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const { uploadFileMock } = vi.hoisted(() => ({ uploadFileMock: vi.fn(async () => undefined) }));
 vi.mock("@/services/storage/index", () => ({ uploadFile: uploadFileMock }));
 vi.mock("@/lib/supabase/cast", () => ({ fromDb: <T,>(x: unknown) => x as T }));
+// v13.420.0: la ruta del MSDS ahora inicia con el organization_id (RLS).
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    rpc: vi.fn(async () => ({ data: "00000000-0000-0000-0000-000000000001", error: null })),
+  },
+}));
+
 
 import { savePaso1, savePaso2, savePaso3, savePasoFinal } from "../wizard";
 
@@ -58,8 +65,9 @@ describe("savePaso1", () => {
     });
     expect(uploadFileMock).toHaveBeenCalledTimes(1);
     const arg = (uploadFileMock.mock.calls[0] as unknown as [string])[0];
-    expect(arg.startsWith("cotizaciones/msds-")).toBe(true);
+    expect(arg.startsWith("00000000-0000-0000-0000-000000000001/msds/")).toBe(true);
     expect(arg.endsWith(".pdf")).toBe(true);
+
   });
 
   it("no sube MSDS si tipoCarga es general aunque haya archivo", async () => {

@@ -60,16 +60,20 @@ export function useEmbarqueForm() {
     const opts = { shouldValidate: true, shouldDirty: true } as const;
     methods.setValue("subiendoMsds", true, opts);
     try {
-      const { sanitizeFileName } = await import("@/lib/storage");
-      const ruta = `embarques/msds/${Date.now()}_${sanitizeFileName(archivo.name)}`;
+      // v13.420.0 (Sentry JAVASCRIPT-REACT-4M): la ruta debe iniciar con el
+      // organization_id; `embarques/msds/…` era rechazada por la RLS.
+      const { buildMsdsPath } = await import("@/services/storage/orgPath");
+      const ruta = await buildMsdsPath(archivo.name);
       await uploadFile(ruta, archivo);
       methods.setValue("msdsArchivo", ruta, opts);
-    } catch {
-      notifyError(undefined, { title: "Error al subir MSDS", method: "HANDLE_MSDS_UPLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    } catch (err) {
+      notifyError(undefined, { title: "Error al subir MSDS", method: "HANDLE_MSDS_UPLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED, error: err });
     } finally {
+
       methods.setValue("subiendoMsds", false, opts);
     }
   };
+
 
   const inicializarDesdeEmbarque = useCallback(
     (embarque: EmbarqueRow) => {

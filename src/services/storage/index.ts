@@ -25,10 +25,17 @@ export async function uploadFile(path: string, file: File, options: UploadFileOp
         "Ya existe un archivo con ese nombre. Renómbralo o elimínalo antes de subirlo nuevamente.",
       );
     }
+    // v13.420.0 (Sentry JAVASCRIPT-REACT-4M): traducir el error crudo de RLS.
+    if (/row-level security|violates row level security|not authorized|permission/i.test(msg)) {
+      throw new Error(
+        "No tienes permisos para guardar este archivo. Verifica que tu sesión esté activa y que el embarque pertenezca a tu organización.",
+      );
+    }
     throw error;
   }
   return data;
 }
+
 
 
 export async function getSignedUrl(path: string, expiresIn = 3600) {
