@@ -119,10 +119,11 @@ export default function CxpPorPagar() {
         moneda={paged.filters.moneda}
         onMonedaChange={(v) => paged.setFilter("moneda", v)}
         monedas={monedas}
-        dateFrom={paged.dateFrom}
+        dateFrom={paged.dateFrom ?? ""}
         onDateFromChange={paged.setDateFrom}
-        dateTo={paged.dateTo}
+        dateTo={paged.dateTo ?? ""}
         onDateToChange={paged.setDateTo}
+
         chips={paged.activeChips}
         activeCount={paged.activeCount}
         onClearAll={paged.resetAll}
