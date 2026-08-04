@@ -3,6 +3,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const { uploadFileMock } = vi.hoisted(() => ({ uploadFileMock: vi.fn(async () => undefined) }));
 vi.mock("@/services/storage/index", () => ({ uploadFile: uploadFileMock }));
 vi.mock("@/lib/supabase/cast", () => ({ fromDb: <T,>(x: unknown) => x as T }));
+// v13.420.0: la ruta del MSDS ahora inicia con el organization_id (RLS).
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    rpc: vi.fn(async () => ({ data: "00000000-0000-0000-0000-000000000001", error: null })),
+  },
+}));
+
 
 import { savePaso1, savePaso2, savePaso3, savePasoFinal } from "../wizard";
 
