@@ -123,11 +123,14 @@ export function StepCostosPrecios(props: Props) {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-xs text-muted-foreground">Tipo de Cambio USD</p>
-                <Input type="number" {...register('tipoCambioUSD')} className="text-center mt-1" />
+                <Input {...register('tipoCambioUSD')} inputMode="decimal" className="text-center mt-1 [appearance:textfield]" />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {tcOrigen ?? "Captura el tipo de cambio del día"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Tipo de Cambio EUR</p>
-                <Input type="number" {...register('tipoCambioEUR')} className="text-center mt-1" />
+                <Input {...register('tipoCambioEUR')} inputMode="decimal" className="text-center mt-1 [appearance:textfield]" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Utilidad Estimada (USD)</p>
