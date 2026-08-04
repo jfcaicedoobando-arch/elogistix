@@ -12,8 +12,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import {
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import {
   useActualizarEtapa, useEtapasPipelineAll,
   type CrmEtapaRow, type CrmEtapaTipo,
 } from "@/features/crm/hooks";

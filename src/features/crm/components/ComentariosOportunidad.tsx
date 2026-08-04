@@ -10,8 +10,8 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { getErrorMessage } from "@/lib/errors";
 import { formatRelativo } from "@/lib/date/relativo";
-import {
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import {
   useComentariosOportunidad,
   useCrearComentarioOportunidad,
 } from "@/features/crm/hooks";
