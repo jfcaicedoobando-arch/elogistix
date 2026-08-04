@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.404.0] - 2026-08-04
+- Buscador global: nuevo estado de carga con skeletons y aviso "Buscando…" (`GlobalSearchCargando`) mientras corre el debounce o la consulta; el estado vacío ("sin resultados" / "no pudimos completar la búsqueda") ya no parpadea durante la búsqueda.
+
+
+
 ## [13.403.0] - 2026-08-04
 - Navegación con teclado en el buscador global: ↑/↓ recorren los resultados con vuelta al inicio/fin (`loop` en `CommandDialog`) y Enter abre el resultado seleccionado, sin usar mouse. 5 tests nuevos (`globalSearch-teclado.test.tsx`).
 
