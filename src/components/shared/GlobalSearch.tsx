@@ -49,6 +49,7 @@ export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [busquedaFallo, setBusquedaFallo] = useState(false);
   const navigate = useNavigate();
   const search = useGlobalSearch();
   const { recents } = useRecentPages();
@@ -66,9 +67,17 @@ export function GlobalSearch() {
   }, []);
 
   const buscar = useCallback(async (terminoBusqueda: string) => {
-    const items = await search(terminoBusqueda, 5);
-    setResults(items);
+    try {
+      const items = await search(terminoBusqueda, 5);
+      setResults(items);
+      setBusquedaFallo(false);
+    } catch {
+      // R7-FIX1: un fallo de red no debe verse igual que "sin resultados".
+      setResults([]);
+      setBusquedaFallo(true);
+    }
   }, [search]);
+
 
   const debouncedQuery = useDebouncedValue(query, 300);
   useEffect(() => {
@@ -115,7 +124,9 @@ export function GlobalSearch() {
         </kbd>
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      {/* R7-FIX1: los resultados ya vienen filtrados por la BD; cmdk no debe
+          volver a filtrarlos (ocultaba folios, RFC y BL con formato distinto). */}
+      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
         <CommandInput
           placeholder="Buscar por expediente, BL, cliente, factura…"
           value={query}
@@ -125,12 +136,24 @@ export function GlobalSearch() {
           <CommandEmpty>
             <div className="flex flex-col items-center gap-2 py-4">
               <SearchX className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-              <p className="text-sm font-medium text-foreground">No se encontraron resultados</p>
-              <p className="text-xs text-muted-foreground">
-                Intenta con el expediente, el BL/Guía, el RFC o el folio de la factura.
-              </p>
+              {busquedaFallo ? (
+                <>
+                  <p className="text-sm font-medium text-foreground">No pudimos completar la búsqueda</p>
+                  <p className="text-xs text-muted-foreground">
+                    Revisa tu conexión y vuelve a escribir el término para reintentar.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-foreground">No se encontraron resultados</p>
+                  <p className="text-xs text-muted-foreground">
+                    Intenta con el expediente, el BL/Guía, el RFC o el folio de la factura.
+                  </p>
+                </>
+              )}
             </div>
           </CommandEmpty>
+
           {showRecents && (
             <CommandGroup heading="Recientes">
               {recents.map((item) => (

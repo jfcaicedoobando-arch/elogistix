@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.401.0] - 2026-08-04
+### Ronda 7 — notificaciones, buscador, IVA y accesos
+- R7-FIX5: la notificación al portal del cliente al enviar una cotización ahora la crea el trigger `notificar_cotizacion_enviada` (SECURITY DEFINER, idempotente); antes se insertaba desde el cliente y RLS la bloqueaba para roles como `ejecutivo_pricing`. Las políticas de `notificaciones_cliente` pasan de lista blanca de roles a membresía de organización.
+- R7-FIX3b: backfill de `bitacora_actividad` sin `organization_id` (59 registros) por autor, embarque/cotización relacionada y, en último caso, la organización con más eventos.
+- R7-FIX1: el buscador global deja de filtrar en el cliente (`shouldFilter={false}` en `CommandDialog`) y distingue "sin resultados" de un fallo de red.
+- R7-FIX4: el super-admin aterriza en su propia organización cuando no hay preferencia guardada.
+- R7-FIX2: las etiquetas de IVA en conceptos de cotización se derivan de la tasa real de cada renglón (`src/lib/financial/etiquetaTasaIva.ts`): "8%", "16%" o "tasas mixtas 8/16%".
+- R7-FIX6: el detalle de embarque ofrece reintento si la carga tarda más de 20 s (`useCargaExpirada`) en lugar de dejar el esqueleto girando.
+
 ## [13.400.1] - 2026-08-03
 ### CI — Power of 10 #4 en captura de factura de proveedor
 - `DialogNuevaFacturaProveedor.tsx` bajó de 214 a 148 líneas: los derivados de cuadre se movieron al nuevo hook `src/features/cxp/hooks/useCuadreCaptura.ts` (conceptos para cuadre, semáforo y renglón sospechoso).

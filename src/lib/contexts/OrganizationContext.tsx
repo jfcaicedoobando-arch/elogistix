@@ -53,14 +53,17 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setSuperAdminOrgs(orgList);
       const stored = safeLocalStorage.getItem(STORAGE_KEYS.superAdminActiveOrg);
+      // R7-FIX4: sin preferencia guardada, aterrizar en la organización propia
+      // del super-admin (la de su membresía) antes que en la primera alfabética.
+      const propia = cachedOrgId && orgList.find(o => o.id === cachedOrgId) ? cachedOrgId : null;
       const activeId = stored && orgList.find(o => o.id === stored)
         ? stored
-        : orgList[0]?.id ?? null;
+        : propia ?? orgList[0]?.id ?? null;
       setSuperAdminActiveId(activeId);
       setLoadingSA(false);
     })();
     return () => { cancelled = true; };
-  }, [user, isSuperAdmin]);
+  }, [user, isSuperAdmin, cachedOrgId]);
 
   const setActiveOrganization = useCallback((id: string) => {
     if (isSuperAdmin) {

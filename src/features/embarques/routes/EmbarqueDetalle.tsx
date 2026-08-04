@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useState } from "react";
 
-import { usePermissions, useTabsParam } from "@/hooks/shared";
+import { usePermissions, useTabsParam, useCargaExpirada } from "@/hooks/shared";
 import {
   calcularEstadoEmbarque,
   getSiguienteEstado,
@@ -57,11 +57,24 @@ export default function EmbarqueDetalle() {
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
 
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
+  // R7-FIX6: si la carga se cuelga más de 20 s, ofrecer reintento en lugar de
+  // dejar el esqueleto girando indefinidamente.
+  const cargaExpirada = useCargaExpirada(isLoading);
 
   if (error) {
     return (
       <PageContainer>
         <ErrorStateInline message={getErrorMessage(error)} onRetry={() => refetch()} />
+      </PageContainer>
+    );
+  }
+  if (isLoading && cargaExpirada) {
+    return (
+      <PageContainer>
+        <ErrorStateInline
+          message="La información del embarque está tardando demasiado en cargar. Revisa tu conexión y reintenta."
+          onRetry={() => refetch()}
+        />
       </PageContainer>
     );
   }
