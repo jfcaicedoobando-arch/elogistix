@@ -126,14 +126,16 @@ export function useDialogGenerarProformaController(
     [conceptosSeleccionados, tasaIva, ivaPorConcepto],
   );
 
-  const handleConfirmar = async () => {
+  const handleConfirmar = async (embarqueOverride?: EmbarqueRow) => {
     try {
       await submitProformaDialog({
-        embarque, conceptosSeleccionados, seleccionados, ivaPorConcepto,
+        embarque: embarqueOverride ?? embarque,
+        conceptosSeleccionados, seleccionados, ivaPorConcepto,
         notas, diasCredito, filtroContenedor, contenedores, totales, tasaIva,
         crearProformaMutateAsync: crearProforma.mutateAsync,
         fetchClienteParaPdfCached,
       });
+      tcRecovery.limpiar();
       onClose();
     } catch (err) {
       // Errores del RPC `crearProforma` ya muestran toast vía onError del hook;
@@ -145,8 +147,11 @@ export function useDialogGenerarProformaController(
       const isMutationError = !isValidation
         && typeof err === "object" && err !== null
         && "name" in err && (err as { name?: string }).name === "PostgrestError";
+      // v13.409.0: falta el TC del embarque → ofrecemos capturarlo inline.
+      const esTc = esErrorTcRequerido(message);
+      if (esTc) tcRecovery.activar();
       // El hook crearProforma ya toasteó este caso, evitamos duplicar.
-      if (!isMutationError) {
+      if (!isMutationError && !esTc) {
         toast({ title: message, variant: isValidation ? "warning" : "destructive" });
       }
       if (!isValidation && !isMutationError) {
@@ -155,6 +160,13 @@ export function useDialogGenerarProformaController(
         ).catch(() => undefined);
       }
     }
+  };
+
+  /** Guarda el TC capturado en el embarque y reintenta la generación. */
+  const handleGuardarTcYReintentar = async (tc: number) => {
+    const ok = await tcRecovery.guardarTc(tc);
+    if (!ok) return;
+    await handleConfirmar({ ...embarque, tipo_cambio_usd: tc });
   };
 
   return {
@@ -167,10 +179,15 @@ export function useDialogGenerarProformaController(
     contenedores,
     filtroContenedor, setFiltroContenedor,
     totales, tasaIva,
-    handleConfirmar,
+    handleConfirmar: () => handleConfirmar(),
+    tcRequerido: tcRecovery.tcRequerido,
+    tcSugerido: tcRecovery.tcSugerido,
+    guardandoTc: tcRecovery.guardando,
+    handleGuardarTcYReintentar,
     isPending: crearProforma.isPending,
     totalSeleccionados: seleccionados.size,
   };
 }
+
 
 
