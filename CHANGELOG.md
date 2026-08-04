@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.403.0] - 2026-08-04
+- Navegación con teclado en el buscador global: ↑/↓ recorren los resultados con vuelta al inicio/fin (`loop` en `CommandDialog`) y Enter abre el resultado seleccionado, sin usar mouse. 5 tests nuevos (`globalSearch-teclado.test.tsx`).
+
+
+
 ## [13.402.0] - 2026-08-04
 - Los resultados del buscador global resaltan las coincidencias del término buscado (expediente, BL/guía, cliente, RFC) en título y subtítulo, ignorando acentos y mayúsculas (`globalSearchResaltado.ts` + `TextoResaltado`). 10 tests nuevos.
 
