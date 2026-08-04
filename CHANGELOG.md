@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.416.0] - 2026-08-05
+- Razón social estandarizada en MAYÚSCULAS (igual que la CSF del SAT) para clientes y proveedores: el nombre se normaliza al escribirlo, al leerlo de la CSF/IA y al guardarlo, además del candado en base de datos. Los registros existentes ya se convirtieron.
+- Los nombres de personas de contacto no se modifican.
+
+
 ## [13.415.0] - 2026-08-04
 - CxP con IA — reconocimiento del proveedor: las facturas internacionales (p. ej. HK LS LIMITED) casi nunca imprimen Tax ID, y antes el sistema sólo buscaba por RFC, así que nunca vinculaba al proveedor. Ahora la búsqueda es en cascada: Tax ID → alias aprendido → nombre normalizado (sin acentos, puntuación ni sufijos tipo LIMITED / LTD / S de RL de CV).
 - CxP con IA: si el match fue por nombre se avisa "Proveedor detectado por nombre, verifícalo" y ya no se ofrece crear un proveedor duplicado cuando el nombre sí existe.
