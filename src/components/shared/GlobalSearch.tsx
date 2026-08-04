@@ -14,10 +14,12 @@ import { trackNavEvent } from "@/services/observability/trackNavEvent";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   GlobalSearchAtajos,
+  GlobalSearchCargando,
   GlobalSearchGrupo,
   GlobalSearchRecientes,
   GlobalSearchVacio,
 } from "./GlobalSearch.partes";
+
 
 type SearchResult = GlobalSearchResult;
 
@@ -26,6 +28,8 @@ export function GlobalSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [busquedaFallo, setBusquedaFallo] = useState(false);
+  const [buscando, setBuscando] = useState(false);
+
   const navigate = useNavigate();
   const search = useGlobalSearch();
   const { recents } = useRecentPages();
@@ -43,6 +47,7 @@ export function GlobalSearch() {
   }, []);
 
   const buscar = useCallback(async (terminoBusqueda: string) => {
+    setBuscando(true);
     try {
       const items = await search(terminoBusqueda, 5);
       setResults(items);
@@ -51,8 +56,11 @@ export function GlobalSearch() {
       // R7-FIX1: un fallo de red no debe verse igual que "sin resultados".
       setResults([]);
       setBusquedaFallo(true);
+    } finally {
+      setBuscando(false);
     }
   }, [search]);
+
 
   const debouncedQuery = useDebouncedValue(query, 300);
   useEffect(() => {
@@ -82,6 +90,10 @@ export function GlobalSearch() {
   );
 
   const showRecents = query.trim() === "" && recents.length > 0;
+  /** En progreso: el debounce aún no dispara o la consulta está en vuelo. */
+  const cargando =
+    query.trim() !== "" && (buscando || query.trim() !== debouncedQuery.trim());
+
 
   return (
     <>
@@ -109,24 +121,30 @@ export function GlobalSearch() {
           onValueChange={setQuery}
         />
         <CommandList>
-          <CommandEmpty>
-            <GlobalSearchVacio busquedaFallo={busquedaFallo} />
-          </CommandEmpty>
+          {!cargando && (
+            <CommandEmpty>
+              <GlobalSearchVacio busquedaFallo={busquedaFallo} />
+            </CommandEmpty>
+          )}
 
-          {showRecents && (
+          {cargando && <GlobalSearchCargando />}
+
+          {!cargando && showRecents && (
             <GlobalSearchRecientes recents={recents} onSelect={handleSelect} />
           )}
-          {Object.entries(grouped).map(([type, items]) => (
-            <GlobalSearchGrupo
-              key={type}
-              type={type}
-              items={items}
-              termino={debouncedQuery}
-              onSelect={handleSelect}
-            />
-          ))}
+          {!cargando &&
+            Object.entries(grouped).map(([type, items]) => (
+              <GlobalSearchGrupo
+                key={type}
+                type={type}
+                items={items}
+                termino={debouncedQuery}
+                onSelect={handleSelect}
+              />
+            ))}
 
         </CommandList>
+
         <GlobalSearchAtajos />
       </CommandDialog>
     </>
