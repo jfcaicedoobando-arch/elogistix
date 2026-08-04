@@ -7,6 +7,7 @@ import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 export const EMPTY_CLIENTE = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
   regimen_fiscal: "", uso_cfdi_default: "G03",

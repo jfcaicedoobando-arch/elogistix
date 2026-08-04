@@ -15,6 +15,7 @@ import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
 import { CsfDropZone } from "@/features/cliente/components/NuevoClienteFormPieces";
 import { parseCsf } from "@/features/cliente/services/csf";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { CondicionesCreditoSection } from "./CondicionesCreditoSection";
 import { ComisionClienteSection } from "./ComisionClienteSection";
 
