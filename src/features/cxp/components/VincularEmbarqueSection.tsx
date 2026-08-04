@@ -48,7 +48,10 @@ interface Props {
   facturaMoneda?: string;
   embarqueAdHoc: EmbarqueSeleccionado | null;
   onEmbarqueAdHoc: (sel: EmbarqueSeleccionado | null) => void;
+  /** Tope: lo asignado no puede exceder el subtotal de la factura. */
+  tope: ResultadoTopeVinculacion;
 }
+
 
 export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
