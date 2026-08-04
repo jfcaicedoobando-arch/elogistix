@@ -9,7 +9,7 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrencyCompact, formatFechaEs } from "@/lib/formatters";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
 
