@@ -121,24 +121,30 @@ export function GlobalSearch() {
           onValueChange={setQuery}
         />
         <CommandList>
-          <CommandEmpty>
-            <GlobalSearchVacio busquedaFallo={busquedaFallo} />
-          </CommandEmpty>
+          {!cargando && (
+            <CommandEmpty>
+              <GlobalSearchVacio busquedaFallo={busquedaFallo} />
+            </CommandEmpty>
+          )}
 
-          {showRecents && (
+          {cargando && <GlobalSearchCargando />}
+
+          {!cargando && showRecents && (
             <GlobalSearchRecientes recents={recents} onSelect={handleSelect} />
           )}
-          {Object.entries(grouped).map(([type, items]) => (
-            <GlobalSearchGrupo
-              key={type}
-              type={type}
-              items={items}
-              termino={debouncedQuery}
-              onSelect={handleSelect}
-            />
-          ))}
+          {!cargando &&
+            Object.entries(grouped).map(([type, items]) => (
+              <GlobalSearchGrupo
+                key={type}
+                type={type}
+                items={items}
+                termino={debouncedQuery}
+                onSelect={handleSelect}
+              />
+            ))}
 
         </CommandList>
+
         <GlobalSearchAtajos />
       </CommandDialog>
     </>
