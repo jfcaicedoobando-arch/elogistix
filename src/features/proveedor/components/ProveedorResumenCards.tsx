@@ -17,6 +17,10 @@ interface Props {
   totalPendiente: number;
   moneda: string;
   operacionesCount: number;
+  /** Totales en moneda nativa, para mostrar el desglose sin conversión. */
+  porMoneda?: Record<string, number>;
+  /** Monedas con saldo que no se pudieron convertir a MXN. */
+  monedasSinTc?: string[];
 }
 
 export function ProveedorResumenCards({
@@ -25,20 +29,24 @@ export function ProveedorResumenCards({
   totalPendiente,
   moneda,
   operacionesCount,
+  porMoneda = {},
+  monedasSinTc = [],
 }: Props) {
   const opsLabel = operacionesCount === 1 ? "operación" : "operaciones";
   const pctPagado =
     totalFacturado > 0
       ? Math.min(100, Math.max(0, (totalPagado / totalFacturado) * 100))
       : 0;
+  const monedasNativas = Object.entries(porMoneda).filter(([, monto]) => monto !== 0);
+  const variasMonedas = monedasNativas.length > 1;
 
   return (
     <div className="space-y-3">
       <KpiStrip desktopCols={3}>
         <KpiCard
-          label="Total facturado"
+          label="Total costeado"
           value={formatCurrency(totalFacturado, moneda)}
-          sublabel={`${operacionesCount} ${opsLabel}`}
+          sublabel={`${operacionesCount} ${opsLabel}${variasMonedas ? " · equivalente en MXN" : ""}`}
           icon={Receipt}
           iconVariant="chip"
         />

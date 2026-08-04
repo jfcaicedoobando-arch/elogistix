@@ -109,7 +109,9 @@ export default function ProveedorDetalle() {
         totalFacturado={totalFacturado}
         totalPagado={totalPagado}
         totalPendiente={totalPendiente}
-        moneda={proveedor.moneda_preferida}
+        moneda="MXN"
+        porMoneda={agregados.porMoneda}
+        monedasSinTc={agregados.monedasSinTc}
         operacionesCount={operaciones.length}
       />
 
