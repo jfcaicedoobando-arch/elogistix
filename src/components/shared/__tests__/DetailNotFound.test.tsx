@@ -23,9 +23,12 @@ describe("DetailNotFound", () => {
   it("muestra el encabezado con título y botón Volver del header", () => {
     renderNotFound();
     expect(screen.getByRole("heading", { name: "Embarque no encontrado" })).toBeInTheDocument();
-    const enlaces = screen.getAllByRole("link", { name: /volver a embarques/i });
-    expect(enlaces.length).toBeGreaterThanOrEqual(2);
-    enlaces.forEach((el) => expect(el).toHaveAttribute("href", "/embarques"));
+    // WAVE 3 (Ítem 8): el botón del encabezado usa `useVolver` (history-aware),
+    // así que puede renderizarse como botón; el CTA del estado vacío sigue siendo link.
+    const salidas = screen.getAllByText(/volver a embarques/i);
+    expect(salidas.length).toBeGreaterThanOrEqual(2);
+    const enlace = screen.getByRole("link", { name: /volver a embarques/i });
+    expect(enlace).toHaveAttribute("href", "/embarques");
   });
 
   it("muestra la descripción del estado vacío", () => {
