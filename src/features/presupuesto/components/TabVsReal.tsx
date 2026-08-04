@@ -162,8 +162,17 @@ export function TabVsReal() {
                 </thead>
                 <tbody>
                   {filasVisibles.length === 0 ? (
-                    <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
-                      {soloExcesos ? "Ninguna categoría excede el 110% este mes." : "Sin filas."}
+                    <tr><td colSpan={5} className="px-3 py-8 text-center">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {soloExcesos
+                          ? "Ninguna categoría excede el 110% este mes."
+                          : "No hay categorías de presupuesto capturadas para este periodo."}
+                      </p>
+                      {soloExcesos && (
+                        <Button variant="outline" size="sm" onClick={() => setSoloExcesos(false)}>
+                          Quitar filtro "Solo excesos"
+                        </Button>
+                      )}
                     </td></tr>
                   ) : (
                     filasVisibles.map((f, i) => <VsRealFila key={f.categoria_id} fila={f} striped={i % 2 === 1} />)
