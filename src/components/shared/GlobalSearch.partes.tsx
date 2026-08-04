@@ -30,7 +30,34 @@ export function TextoResaltado({ texto, termino }: { texto: string; termino: str
 
 
 
+/** Skeletons mientras la búsqueda está en progreso. */
+export function GlobalSearchCargando() {
+  return (
+    <div
+      className="flex flex-col gap-2 p-2"
+      role="status"
+      aria-live="polite"
+      data-testid="global-search-cargando"
+    >
+      <span className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        Buscando…
+      </span>
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="flex items-center gap-3 rounded-md px-1 py-2">
+          <Skeleton className="h-5 w-5 rounded-full" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-3.5 w-2/5" />
+            <Skeleton className="h-3 w-3/5" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Estado vacío: distingue "sin resultados" de un fallo de red. */
+
 export function GlobalSearchVacio({ busquedaFallo }: { busquedaFallo: boolean }) {
   return (
     <div className="flex flex-col items-center gap-2 py-4">
