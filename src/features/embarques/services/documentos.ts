@@ -1,7 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from '@/services/storage/index';
-import { buildEmbarqueDocPath } from '@/lib/storage';
+import { buildEmbarqueDocOrgPath } from '@/services/storage/orgPath';
 import type { TablesInsert } from '@/integrations/supabase/types';
+
 
 type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
 
@@ -39,11 +40,14 @@ export async function subirDocumentosEmbarque(
   const tareas = documentosChecklist.map(async (doc) => {
     const file = archivos[doc.nombre];
     if (file) {
-      const ruta = buildEmbarqueDocPath(expediente, doc.nombre, file.name);
+      // v13.420.0: la ruta arranca con el organization_id para cumplir la RLS
+      // del bucket `documentos` (el embarque aún no existe en este punto).
+      const ruta = await buildEmbarqueDocOrgPath(expediente, doc.nombre, file.name);
       await uploadFile(ruta, file);
       return { nombre: doc.nombre, archivo: ruta };
     }
     return { nombre: doc.nombre };
+
   });
 
   return Promise.all(tareas);
