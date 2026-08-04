@@ -34,7 +34,8 @@ const INPUT_BASE = {
   meta: null,
   nota: null,
   proveedorId: null,
-} as never;
+} as Record<string, unknown>;
+
 
 describe("subirFacturaEntrante", () => {
   beforeEach(() => {
