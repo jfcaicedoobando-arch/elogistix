@@ -109,9 +109,15 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   if (invalido) throw new Error(invalido);
 
   // El registro principal apunta al PDF cuando existe; si sólo hay XML, a él.
-  const principal = await subirArchivo((input.pdf ?? input.xml) as File, input);
-  await validarNoDuplicadoEnBuzon(principal.hash, input.organizationId);
+  // v13.419.0 — Se valida el duplicado ANTES de subir: así el usuario ve el
+  // mensaje claro del buzón en vez de un error técnico del almacenamiento.
+  const archivoPrincipal = (input.pdf ?? input.xml) as File;
+  const hashPrincipal = await calcularHash(archivoPrincipal);
+  await validarNoDuplicadoEnBuzon(hashPrincipal, input.organizationId);
+
+  const principal = await subirArchivo(archivoPrincipal, input, hashPrincipal);
   const xmlSubido = input.pdf && input.xml ? await subirArchivo(input.xml, input) : null;
+
 
 
   const { data: userData } = await supabase.auth.getUser();
