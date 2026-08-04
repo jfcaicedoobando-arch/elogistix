@@ -71,26 +71,30 @@ export default function Cartera() {
           <CardHeader className="pb-2"><CardTitle className="text-sm">Saldo total</CardTitle></CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold tabular-nums">{formatNativos(saldosNativos)}</div>
-            <div
-              className="text-xs text-muted-foreground mt-1"
-              title={eqTotal.facturasSinTc > 0 ? `${eqTotal.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
-            >
-              ≈ {formatCurrency(eqTotal.totalMxn, "MXN")} equivalente
-              {eqTotal.facturasSinTc > 0 && <span className="ml-1">({eqTotal.facturasSinTc} sin TC)</span>}
-            </div>
+            {requiereEquivalente(saldosNativos) && (
+              <div
+                className="text-xs text-muted-foreground mt-1"
+                title={eqTotal.facturasSinTc > 0 ? `${eqTotal.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
+              >
+                ≈ {formatCurrency(eqTotal.totalMxn, "MXN")} equivalente
+                {eqTotal.facturasSinTc > 0 && <span className="ml-1">({eqTotal.facturasSinTc} sin TC)</span>}
+              </div>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Vencido ({vencidasCount})</CardTitle></CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-destructive tabular-nums">{formatNativos(vencidoNativo)}</div>
-            <div
-              className="text-xs text-muted-foreground mt-1"
-              title={eqVencido.facturasSinTc > 0 ? `${eqVencido.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
-            >
-              ≈ {formatCurrency(eqVencido.totalMxn, "MXN")} equivalente
-              {eqVencido.facturasSinTc > 0 && <span className="ml-1">({eqVencido.facturasSinTc} sin TC)</span>}
-            </div>
+            {requiereEquivalente(vencidoNativo) && (
+              <div
+                className="text-xs text-muted-foreground mt-1"
+                title={eqVencido.facturasSinTc > 0 ? `${eqVencido.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
+              >
+                ≈ {formatCurrency(eqVencido.totalMxn, "MXN")} equivalente
+                {eqVencido.facturasSinTc > 0 && <span className="ml-1">({eqVencido.facturasSinTc} sin TC)</span>}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
