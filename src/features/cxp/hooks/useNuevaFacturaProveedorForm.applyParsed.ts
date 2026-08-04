@@ -7,7 +7,7 @@
 import type { Dispatch, SetStateAction, MutableRefObject } from "react";
 import type { CfdiParsedResponse, CfdiConceptoParsed } from "@/features/cxp/services";
 import type { FacturaFormValues, TcOrigen } from "@/features/cxp/types";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifyInfo } from "@/lib/ui/appFeedback";
 import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
 import { procesarPdfIaParsed } from "./useNuevaFacturaProveedorForm.pdfIa";
 import type { PendingCfdi } from "./useNuevaFacturaProveedorForm.helpers";
