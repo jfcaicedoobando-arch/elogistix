@@ -9,6 +9,7 @@ import { useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { actualizarTipoCambioUsdEmbarque } from "@/features/embarques/services";
 import { fetchHistorialTcDof } from "@/features/catalogos/services/tipoCambioDof";
+import { tcDofKeys } from "@/features/catalogos/hooks/useTipoCambioDof";
 import { queryKeys } from "@/lib/query";
 import { notifyError } from "@/lib/ui/appFeedback";
 
@@ -24,7 +25,7 @@ export function useProformaTcRecovery(embarqueId: string) {
   const [guardando, setGuardando] = useState(false);
 
   const { data: tcSugerido } = useQuery({
-    queryKey: ["tipos_cambio_dof", "sugerido-proforma"],
+    queryKey: tcDofKeys.historial(1),
     enabled: tcRequerido,
     staleTime: 15 * 60 * 1000,
     queryFn: async () => {
