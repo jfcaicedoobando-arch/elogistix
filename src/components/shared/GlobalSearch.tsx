@@ -28,6 +28,8 @@ export function GlobalSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [busquedaFallo, setBusquedaFallo] = useState(false);
+  const [buscando, setBuscando] = useState(false);
+
   const navigate = useNavigate();
   const search = useGlobalSearch();
   const { recents } = useRecentPages();
