@@ -19,6 +19,8 @@ export interface PendingCfdi {
   xmlFile: File | null;
   pdfFile: File | null;
   origen: Exclude<OrigenCarga, "manual">;
+  /** Nombre del emisor tal como lo leyó la IA en el PDF (para aprender alias). */
+  nombreEmisorDetectado?: string;
 }
 
 export interface VinculoLinea {

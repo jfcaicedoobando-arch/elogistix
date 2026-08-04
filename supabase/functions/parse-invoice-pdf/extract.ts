@@ -66,6 +66,9 @@ const TOOL_DEF = {
 };
 
 const SYSTEM = `Eres un asistente contable que extrae datos de facturas de proveedores internacionales (inglés, chino, español, etc.). Devuelve SIEMPRE el resultado vía la función extract_invoice. Reglas:
+- Emisor vs. receptor: supplier_name es QUIEN EMITE la factura y cobra — normalmente el nombre del encabezado/logo, el de "Our Bank Information / Account Name" o el de "remit payment to". customer_name es a quién se le cobra, etiquetado como "Customer Name", "Bill To", "Consignee" o "Buyer". NUNCA pongas el mismo nombre en ambos campos ni intercambies los roles.
+- supplier_name se copia LITERAL con su razón social completa (p. ej. "HK LS LIMITED"), sin traducir ni abreviar.
+- supplier_tax_id sólo si aparece impreso (Tax ID, VAT, EIN, RFC, 税号). Muchas facturas de Asia no lo traen: en ese caso devuelve cadena vacía y nunca uses el número de cuenta bancaria.
 - Fechas siempre YYYY-MM-DD. Si sólo hay mes/año, usa día 01.
 - Moneda: código ISO 4217 (USD, EUR, MXN, CNY, JPY, etc.).
 - Sólo devuelve exchange_rate_usd si aparece en el PDF; si no, 0.

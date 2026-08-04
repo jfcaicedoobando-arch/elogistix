@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.415.0] - 2026-08-04
+- CxP con IA — reconocimiento del proveedor: las facturas internacionales (p. ej. HK LS LIMITED) casi nunca imprimen Tax ID, y antes el sistema sólo buscaba por RFC, así que nunca vinculaba al proveedor. Ahora la búsqueda es en cascada: Tax ID → alias aprendido → nombre normalizado (sin acentos, puntuación ni sufijos tipo LIMITED / LTD / S de RL de CV).
+- CxP con IA: si el match fue por nombre se avisa "Proveedor detectado por nombre, verifícalo" y ya no se ofrece crear un proveedor duplicado cuando el nombre sí existe.
+- CxP con IA: al guardar una factura PDF se aprende el nombre que el proveedor usa en sus documentos como alias (`proveedor_alias`), para que la siguiente factura se empareje sola.
+- `parse-invoice-pdf`: el prompt distingue explícitamente emisor (encabezado/datos bancarios) de receptor ("Customer Name"/"Bill To") y prohíbe inventar Tax ID.
+
 ## [13.414.0] - 2026-08-04
 - CxP — falso "Factura duplicada": el aviso ahora dice cuál factura existe (folio interno, estado y aprobación), incluye botón "Ver factura" y explica que se puede corregir folio o fecha; el error del campo Folio se redactó igual.
 - CxP — folio confiable en captura con IA: `parse-invoice-pdf` exige copiar el folio LITERAL del documento y devuelve `invoice_number_confidence`; si la confianza es baja el formulario deja el folio vacío y pide capturarlo a mano (antes se guardaban folios inventados tipo `DEBIT2606…` que chocaban entre sí).

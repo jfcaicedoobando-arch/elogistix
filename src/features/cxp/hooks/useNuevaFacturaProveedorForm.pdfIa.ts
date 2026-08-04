@@ -9,6 +9,10 @@
  */
 import type { CfdiParsedResponse, CfdiConceptoParsed } from "@/features/cxp/services";
 import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
+import {
+  buscarProveedorPorNombreEnOrg,
+  type MatchOrigen,
+} from "@/features/proveedor/services/matchProveedorPorNombre";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { TcOrigen } from "@/features/cxp/types";
 import { mapCfdiToValues, type PendingCfdi } from "./useNuevaFacturaProveedorForm.helpers";
@@ -20,6 +24,31 @@ export interface ProcesarPdfIaResult {
   tcFechaAplicada?: string;
   askCrearProv: { rfc: string; nombre: string } | null;
   conceptos: CfdiConceptoParsed[];
+  /** Cómo se identificó al proveedor; la UI avisa si fue por nombre. */
+  matchOrigen: MatchOrigen;
+}
+
+/**
+ * Resuelve el proveedor en cascada: Tax ID impreso → alias aprendido →
+ * nombre normalizado. Muchas facturas asiáticas no imprimen Tax ID, así que
+ * sin el respaldo por nombre el proveedor nunca se vincularía solo.
+ */
+async function resolverProveedor(
+  rfc: string,
+  nombre: string,
+  organizationId: string | null,
+): Promise<{ provId: string; provNombre: string; origen: MatchOrigen }> {
+  if (rfc) {
+    try {
+      const found = await findProveedorByRfcEnOrg(rfc, organizationId);
+      if (found) return { provId: found.id, provNombre: found.nombre, origen: "tax_id" };
+    } catch { /* opcional */ }
+  }
+  try {
+    const { proveedor, origen } = await buscarProveedorPorNombreEnOrg(nombre, organizationId);
+    if (proveedor) return { provId: proveedor.id, provNombre: proveedor.nombre, origen };
+  } catch { /* opcional */ }
+  return { provId: "", provNombre: nombre, origen: "ninguno" };
 }
 
 export async function procesarPdfIaParsed(
@@ -29,18 +58,14 @@ export async function procesarPdfIaParsed(
 ): Promise<ProcesarPdfIaResult> {
   const c = data.cfdi;
 
-  // Lookup opcional por tax_id / RFC — para proveedores internacionales
-  // suele coincidir con el campo `rfc` guardado como Tax ID internacional.
-  let provId = "";
-  let provNombre = c.emisor.nombre;
-  let askCrearProv: { rfc: string; nombre: string } | null = null;
-  if (c.emisor.rfc) {
-    try {
-      const found = await findProveedorByRfcEnOrg(c.emisor.rfc, organizationId);
-      if (found) { provId = found.id; provNombre = found.nombre; }
-      else askCrearProv = { rfc: c.emisor.rfc, nombre: c.emisor.nombre };
-    } catch { /* opcional */ }
-  }
+  const { provId, provNombre, origen } = await resolverProveedor(
+    c.emisor.rfc ?? "",
+    c.emisor.nombre ?? "",
+    organizationId,
+  );
+  // Sólo ofrecemos crear proveedor si tampoco hubo match por nombre/alias:
+  // antes se proponía crear duplicados de proveedores ya existentes.
+  const askCrearProv = provId ? null : { rfc: c.emisor.rfc ?? "", nombre: c.emisor.nombre ?? "" };
 
   const values = mapCfdiToValues(data, provId, provNombre);
   const pendingCfdi: PendingCfdi = {
@@ -49,6 +74,7 @@ export async function procesarPdfIaParsed(
     xmlFile: null,                     // sin XML — sólo PDF
     pdfFile: files.pdf,
     origen: "pdf_ia",
+    nombreEmisorDetectado: c.emisor.nombre || "",
   };
 
   const usaTcIa = c.moneda !== "MXN" && Number(c.tipo_cambio) > 0;
@@ -59,5 +85,6 @@ export async function procesarPdfIaParsed(
     tcFechaAplicada: undefined,
     askCrearProv,
     conceptos: c.conceptos ?? [],
+    matchOrigen: origen,
   };
 }

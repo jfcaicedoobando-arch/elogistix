@@ -14,6 +14,7 @@ import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import { buildPayload, type PendingCfdi, type VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
 import {
   uploadCfdiSafe, vincularSafe, persistirConceptosCfdiSafe, buildFacturaSuccessDescription,
+  aprenderAliasProveedorSafe,
 } from "./useNuevaFacturaProveedorForm.sideEffects";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
@@ -142,6 +143,12 @@ export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
       sideResult = await vincularSafe({
         facturaId: created.id, organizationId: p.organizationId,
         values: p.values, total: p.total, vinculos: p.vinculos, embarqueAdHoc: p.embarqueAdHoc,
+      });
+      // v13.415.0: aprendemos cómo se llama el proveedor en SUS documentos para
+      // que la próxima factura PDF se empareje sola (facturas sin Tax ID).
+      await aprenderAliasProveedorSafe({
+        values: p.values, pendingCfdi: p.pendingCfdi,
+        organizationId: p.organizationId, userId: p.userId,
       });
     }
     notifySuccess(undefined, {

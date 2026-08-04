@@ -34,6 +34,8 @@ import {
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import type { PendingCfdi, VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
+import { registrarAliasProveedor } from "@/features/proveedor/services/matchProveedorPorNombre";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 /**
  * Persiste los conceptos del XML CFDI como líneas informativas de la factura.
@@ -170,4 +172,29 @@ export function buildFacturaSuccessDescription(r: VincularSafeResult): string | 
     parts.push(r.ajustesCreados === 1 ? "1 ajuste aplicado al embarque" : `${r.ajustesCreados} ajustes aplicados al embarque`);
   }
   return parts.length ? parts.join(" · ") : undefined;
+}
+
+/**
+ * Registra el nombre que el proveedor usa en sus propios documentos como alias,
+ * para que la siguiente factura PDF (sin Tax ID impreso) se empareje sola.
+ * Nunca rompe el flujo de captura: es un efecto secundario best-effort.
+ */
+export async function aprenderAliasProveedorSafe(input: {
+  values: FacturaFormValues;
+  pendingCfdi: PendingCfdi | null;
+  organizationId: string | null;
+  userId: string | undefined;
+}): Promise<void> {
+  const nombreDoc = input.pendingCfdi?.nombreEmisorDetectado?.trim();
+  if (input.pendingCfdi?.origen !== "pdf_ia" || !nombreDoc || !input.values.provId) return;
+  try {
+    await registrarAliasProveedor({
+      proveedorId: input.values.provId,
+      organizationId: input.organizationId,
+      nombreDocumento: nombreDoc,
+      userId: input.userId ?? null,
+    });
+  } catch (e) {
+    reportCaughtError(e, { feature: "cxp", op: "aprender_alias_proveedor" });
+  }
 }
