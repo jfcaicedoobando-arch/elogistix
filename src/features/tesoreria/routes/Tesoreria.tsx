@@ -168,7 +168,8 @@ export default function Tesoreria() {
             </Card>
           </div>
         </>
-      )}
+        ) : null}
+      </AsyncBoundary>
     </PageContainer>
   );
 }
