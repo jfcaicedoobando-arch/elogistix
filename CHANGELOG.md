@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.401.1] - 2026-08-04
+- FIX-H6-07: migración correctiva que re-aplica `REVOKE ALL ... FROM PUBLIC, anon` + `GRANT EXECUTE ... TO authenticated, service_role` sobre `avanzar_estado_embarque`; baseline del auditor de migraciones subido a `20260804020030`.
+
 ## [13.401.0] - 2026-08-04
 ### Ronda 7 — notificaciones, buscador, IVA y accesos
 - R7-FIX5: la notificación al portal del cliente al enviar una cotización ahora la crea el trigger `notificar_cotizacion_enviada` (SECURITY DEFINER, idempotente); antes se insertaba desde el cliente y RLS la bloqueaba para roles como `ejecutivo_pricing`. Las políticas de `notificaciones_cliente` pasan de lista blanca de roles a membresía de organización.
