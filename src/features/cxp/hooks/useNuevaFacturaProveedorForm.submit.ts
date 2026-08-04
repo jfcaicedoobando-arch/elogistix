@@ -14,6 +14,7 @@ import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import { buildPayload, type PendingCfdi, type VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
 import {
   uploadCfdiSafe, vincularSafe, persistirConceptosCfdiSafe, buildFacturaSuccessDescription,
+  aprenderAliasProveedorSafe,
 } from "./useNuevaFacturaProveedorForm.sideEffects";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
