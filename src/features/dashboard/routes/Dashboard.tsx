@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Hand } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Seo } from "@/components/shared/Seo";
 
@@ -19,6 +19,7 @@ import { useMisCotizacionesPendientesReaprobacion } from "@/features/cotizacion/
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { FinanceDashboard } from "@/features/dashboard/finance/FinanceDashboard";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
 const ROLES_FINANCIEROS = new Set([
   "contador",
@@ -38,7 +39,7 @@ export default function Dashboard() {
 function OperationalDashboard() {
   const {
     scope, setScope, showScopeToggle, operadorEmail,
-    isOperador, canViewFinancials, hideFinancials, isLoading,
+    isOperador, canViewFinancials, hideFinancials, isLoading, isError, refetch,
     cargasPorCliente, cargasActivasTotal, scoped, saludo, hoyStr,
   } = useDashboardController();
   const { data: misReaprob = 0 } = useMisCotizacionesPendientesReaprobacion();
@@ -50,11 +51,12 @@ function OperationalDashboard() {
       <PageHeader
 
         title={
-          <>
-            {saludo}{" "}
-            <span role="img" aria-label="saludo" className="font-emoji">👋</span>
-          </>
+          <span className="inline-flex items-center gap-2">
+            {saludo}
+            <Hand className="h-6 w-6 text-warning" aria-hidden="true" />
+          </span>
         }
+
         description={hoyStr}
         actions={
           <Badge variant="secondary" className="text-xs w-fit">
@@ -82,6 +84,13 @@ function OperationalDashboard() {
         </Alert>
       )}
 
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        errorTitle="No pudimos cargar el dashboard"
+        errorDescription="Revisa tu conexión e intenta de nuevo."
+      >
       {isOperador && (
         <MiOperacionSection
           alertasDemora={scoped.alertasDemora}
@@ -123,6 +132,7 @@ function OperationalDashboard() {
         isLoading={isLoading}
         hideFinancials={hideFinancials}
       />
+      </CargaGuard>
     </PageContainer>
   );
 }

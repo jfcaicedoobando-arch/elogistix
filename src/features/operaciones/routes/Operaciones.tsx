@@ -14,6 +14,7 @@ import { DesempenoOperadores } from "@/features/operaciones/components/Desempeno
 import { useOperacionesPageController } from "@/features/operaciones/hooks";
 import { useCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI.
 const OperacionesTendenciaChart = lazy(
@@ -24,7 +25,7 @@ export default function Operaciones() {
   const {
     periodo, setPeriodo,
     operadorChart, setOperadorChart,
-    isLoading, operadores, global,
+    isLoading, isError, refetch, operadores, global,
     hoyStr, chartData,
     creadasEsteMes, llegadasEsteMes,
     balancePct, contPct, totalAlertas,
@@ -43,6 +44,13 @@ export default function Operaciones() {
 
   return (
     <PageContainer>
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        errorTitle="No pudimos cargar el dashboard de operaciones"
+        errorDescription="Revisa tu conexión e intenta de nuevo."
+      >
       <PageHeader
         title="Dashboard de Operaciones"
         description={hoyStr}
@@ -120,6 +128,7 @@ export default function Operaciones() {
           </div>
         </CardContent>
       </Card>
+      </CargaGuard>
     </PageContainer>
   );
 }

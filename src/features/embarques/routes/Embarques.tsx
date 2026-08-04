@@ -8,7 +8,7 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
-import { ErrorState } from "@/components/shared/states/ErrorState";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
 import EmbarquesFiltros from "@/features/embarques/components/EmbarquesFiltros";
 import { EmbarquesAlertasPanel } from "@/features/embarques/components/EmbarquesAlertasPanel";
@@ -77,16 +77,17 @@ export default function Embarques() {
         }
       />
 
-      {isError ? (
-        <ErrorState
-          title="No pudimos cargar los embarques"
-          description="Revisa tu conexión e intenta de nuevo."
-          onRetry={() => refetch()}
-        />
-      ) : isEmptyState ? (
-        <EmbarquesEmptyState canEdit={canCrear} onCreate={goNuevo} />
-      ) : (
-        <>
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        errorTitle="No pudimos cargar los embarques"
+        errorDescription="Revisa tu conexión e intenta de nuevo."
+      >
+        {isEmptyState ? (
+          <EmbarquesEmptyState canEdit={canCrear} onCreate={goNuevo} />
+        ) : (
+          <>
           {alertasResumen ? (
             <EmbarquesAlertasPanel
               resumen={alertasResumen}
@@ -172,8 +173,9 @@ export default function Embarques() {
               />
             </CardContent>
           </Card>
-        </>
-      )}
+          </>
+        )}
+      </CargaGuard>
 
       {canCrear && !isEmptyState ? (
         <FloatingActionButton

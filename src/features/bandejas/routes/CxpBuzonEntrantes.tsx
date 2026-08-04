@@ -9,6 +9,7 @@
  */
 import { useState } from "react";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -34,7 +35,7 @@ import { DialogNuevaFacturaProveedor } from "@/features/cxp";
 
 export default function CxpBuzonEntrantes() {
   const { canCapturarFacturaProveedor } = usePermissions();
-  const { data: pendientes = [], isLoading } = useFacturasEntrantesPendientes();
+  const { data: pendientes = [], isLoading, isError, refetch } = useFacturasEntrantesPendientes();
   const rechazar = useRechazarFacturaEntrante();
   const capturar = useCapturarFacturaEntrante();
   const [tab, setTab] = useState("pendientes");
@@ -77,6 +78,13 @@ export default function CxpBuzonEntrantes() {
         description="Documentos que operación recibió de los agentes y aún no se capturan en CxP."
       />
 
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+        errorTitle="No se pudo cargar el buzón de facturas"
+        errorDescription="Revisa tu conexión y vuelve a intentar."
+      >
       <BuzonEntrantesKpis
         total={resumen.total}
         atrasados={resumen.atrasados}
@@ -184,6 +192,7 @@ export default function CxpBuzonEntrantes() {
           setARechazar(null);
         }}
       />
+      </CargaGuard>
     </PageContainer>
   );
 }

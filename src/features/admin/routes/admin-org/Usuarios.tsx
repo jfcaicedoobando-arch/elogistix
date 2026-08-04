@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NuevoUsuarioDialog from "@/features/admin/components/usuario/NuevoUsuarioDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import {
   useUsuarios,
   useUsuariosPortalCliente,
@@ -24,9 +25,17 @@ export default function Usuarios() {
   // U-05: cada listado invoca la edge function `user-management`, que recorre el
   // directorio de auth. Sólo se consulta la pestaña activa para no pagar tres
   // recorridos completos en cada visita a la página.
-  const { data: internos = [] } = useUsuarios({ enabled: tab === "internos" });
-  const { data: portalCliente = [] } = useUsuariosPortalCliente({ enabled: tab === "cliente" });
-  const { data: portalAgente = [] } = useUsuariosPortalAgente({ enabled: tab === "agente" });
+  const usuariosQ = useUsuarios({ enabled: tab === "internos" });
+  const portalClienteQ = useUsuariosPortalCliente({ enabled: tab === "cliente" });
+  const portalAgenteQ = useUsuariosPortalAgente({ enabled: tab === "agente" });
+  const internos = usuariosQ.data ?? [];
+  const portalCliente = portalClienteQ.data ?? [];
+  const portalAgente = portalAgenteQ.data ?? [];
+
+  // Sólo la pestaña activa consulta datos; la red de seguridad usa el estado
+  // de esa consulta activa.
+  const activeQuery =
+    tab === "internos" ? usuariosQ : tab === "cliente" ? portalClienteQ : portalAgenteQ;
 
   return (
     <PageContainer>
@@ -52,6 +61,13 @@ export default function Usuarios() {
         }}
       />
 
+      <CargaGuard
+        isLoading={activeQuery.isLoading}
+        isError={activeQuery.isError}
+        onRetry={activeQuery.refetch}
+        errorTitle="No se pudo cargar el listado de usuarios"
+        errorDescription="Revisa tu conexión y vuelve a intentar."
+      >
       <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)} className="space-y-4">
         <TabsList>
           <TabsTrigger value="internos">
@@ -86,6 +102,7 @@ export default function Usuarios() {
           <PortalUsuariosTab tipo="agente" />
         </TabsContent>
       </Tabs>
+      </CargaGuard>
     </PageContainer>
   );
 }

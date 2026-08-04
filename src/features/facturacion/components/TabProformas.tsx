@@ -12,6 +12,7 @@ import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConve
 import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
 import { todayLocalISO } from "@/lib/date/today";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
 
 export function TabProformas({ isInRange, estadoInicial }: {
@@ -37,6 +38,13 @@ export function TabProformas({ isInRange, estadoInicial }: {
   const puedeFusionar = seleccionados > 0 && c.fusionInfo.sameCliente && canEmitirFactura;
 
   return (
+    <CargaGuard
+      isLoading={c.isLoading}
+      isError={c.isError}
+      onRetry={c.refetch}
+      errorTitle="No se pudieron cargar las proformas"
+      errorDescription="Ocurrió un error al obtener el listado de proformas. Intenta de nuevo."
+    >
     <div className="space-y-4">
       <Card>
         <CardContent className="p-4 space-y-0">
@@ -144,5 +152,6 @@ export function TabProformas({ isInRange, estadoInicial }: {
         </CardContent>
       </Card>
     </div>
+    </CargaGuard>
   );
 }

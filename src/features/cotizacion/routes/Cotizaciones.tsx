@@ -7,7 +7,6 @@ import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -17,6 +16,7 @@ import { pluralizar } from "@/lib/format/pluralizar";
 
 import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
@@ -124,17 +124,13 @@ export default function Cotizaciones() {
         </CardContent>
       </Card>
 
-      {c.isError && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>No se pudieron cargar las cotizaciones</AlertTitle>
-          <AlertDescription className="flex items-center gap-3">
-            Revisa tu conexión e intenta de nuevo.
-            <Button size="sm" variant="outline" onClick={() => c.refetch()}>Reintentar</Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
+      <CargaGuard
+        isLoading={c.isLoading}
+        isError={c.isError}
+        onRetry={() => c.refetch()}
+        errorTitle="No se pudieron cargar las cotizaciones"
+        errorDescription="Revisa tu conexión e intenta de nuevo."
+      >
       <Card>
         <CardContent className="p-0">
           <ResponsiveDataTable
@@ -175,6 +171,7 @@ export default function Cotizaciones() {
           />
         </CardContent>
       </Card>
+      </CargaGuard>
 
       <DeleteConfirmDialog
         open={!!c.cotizacionAEliminar}

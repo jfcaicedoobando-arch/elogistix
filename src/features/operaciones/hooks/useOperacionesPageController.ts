@@ -15,7 +15,7 @@ import {
 export function useOperacionesPageController() {
   const [periodo, setPeriodo] = useState<PeriodoFiltro>("mes");
   const [operadorChart, setOperadorChart] = useState<string>("todos");
-  const { isLoading, operadores, global } = useOperacionesData(periodo);
+  const { isLoading, isError, refetch, operadores, global } = useOperacionesData(periodo);
 
   const hoyStr = useMemo(() => {
     return formatFechaLarga(new Date());
@@ -61,6 +61,8 @@ export function useOperacionesPageController() {
     operadorChart,
     setOperadorChart,
     isLoading,
+    isError,
+    refetch,
     operadores,
     global,
     hoyStr,

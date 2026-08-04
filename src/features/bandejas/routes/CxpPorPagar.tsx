@@ -8,11 +8,6 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Inbox, CalendarCheck } from "lucide-react";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Button } from "@/components/ui/button";
 import { ProgramarPagoDialog } from "./_sections/ProgramarPagoDialog";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
@@ -21,13 +16,13 @@ import { CxpPorPagarKpis } from "./_sections/CxpPorPagarKpis";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { DataTable } from "@/components/shared/DataTable";
-import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
 import { useProgramarPagoLote } from "@/features/cxp/hooks/useProgramarPagoLote";
 import { todayLocalISO } from "@/lib/date/today";
-import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { CxpPorPagarFiltersBar } from "@/features/bandejas/components/CxpPorPagarFiltersBar";
 
 
 interface Filters extends Record<string, string> {
@@ -37,7 +32,7 @@ interface Filters extends Record<string, string> {
 const DEFAULTS: Filters = { moneda: "todas", vencidas: "todas" };
 
 export default function CxpPorPagar() {
-  const { data = [], isLoading } = useCxpPorPagar();
+  const { data = [], isLoading, isError, refetch } = useCxpPorPagar();
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
   const [rowSelection, setRowSelection] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -104,52 +99,31 @@ export default function CxpPorPagar() {
 
 
 
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+        errorTitle="No se pudo cargar la bandeja de pagos"
+        errorDescription="Revisa tu conexión y vuelve a intentar."
+      >
       <CxpPorPagarKpis
         totalFacturas={data.length}
         resumen={{ saldoMXN, porMoneda, faltaTipoCambio, vencidas }}
       />
 
-      <UnifiedFiltersBar
+      <CxpPorPagarFiltersBar
         search={paged.search}
         onSearchChange={paged.setSearch}
-        searchPlaceholder="Buscar proveedor, folio o expediente…"
-        primary={
-          <>
-            <Select value={paged.filters.vencidas} onValueChange={(v) => paged.setFilter("vencidas", v)}>
-              <SelectTrigger className="w-[160px]" aria-label="Vencidas">
-                <SelectValue placeholder="Vencidas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas</SelectItem>
-                <SelectItem value="si">Solo vencidas</SelectItem>
-                <SelectItem value="no">Vigentes</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={paged.filters.moneda} onValueChange={(v) => paged.setFilter("moneda", v)}>
-              <SelectTrigger className="w-[140px]" aria-label="Moneda">
-                <SelectValue placeholder="Moneda" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas monedas</SelectItem>
-                {monedas.map((m) => (
-                  <SelectItem key={m} value={m}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </>
-        }
-        secondary={
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="cxp-from">{rangoLabel("Vencimiento", "desde")}</Label>
-              <DatePickerMx value={paged.dateFrom} onChange={paged.setDateFrom} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cxp-to">{rangoLabel("Vencimiento", "hasta")}</Label>
-              <DatePickerMx value={paged.dateTo} onChange={paged.setDateTo} />
-            </div>
-          </div>
-        }
+        vencidas={paged.filters.vencidas}
+        onVencidasChange={(v) => paged.setFilter("vencidas", v)}
+        moneda={paged.filters.moneda}
+        onMonedaChange={(v) => paged.setFilter("moneda", v)}
+        monedas={monedas}
+        dateFrom={paged.dateFrom ?? ""}
+        onDateFromChange={paged.setDateFrom}
+        dateTo={paged.dateTo ?? ""}
+        onDateToChange={paged.setDateTo}
+
         chips={paged.activeChips}
         activeCount={paged.activeCount}
         onClearAll={paged.resetAll}
@@ -188,6 +162,7 @@ export default function CxpPorPagar() {
         progreso={progreso}
         onConfirmar={handleProgramar}
       />
+      </CargaGuard>
     </PageContainer>
   );
 }

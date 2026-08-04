@@ -14,6 +14,7 @@ import { ShoppingCart, Plus, Inbox, ShieldCheck, Landmark, AlertTriangle } from 
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
@@ -29,7 +30,7 @@ import { ROUTES } from "@/constants/routes";
 
 export default function Compras() {
   const { canCapturarFacturaProveedor } = usePermissions();
-  const { data: cxp = [], kpis } = useFacturasCxP();
+  const { data: cxp = [], kpis, isLoading, isError, refetch } = useFacturasCxP();
   const { data: porCapturar = [] } = useCxpPorCapturar();
   const { rowsFiltradas: aging, totales: agingTotales, monedaActiva: agingMoneda } = useCxpAging();
   const { data: pendientesAprob = 0 } = useCxpPendientesAprobacion();
@@ -76,6 +77,13 @@ export default function Compras() {
         ) : null}
       />
 
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+        errorTitle="No se pudo cargar el dashboard de compras"
+        errorDescription="Revisa tu conexión y vuelve a intentar."
+      >
       {/* Fila 1 · 4 KPIs accionables (cada uno navega a su bandeja) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
@@ -133,6 +141,7 @@ export default function Compras() {
         <TopProveedoresCard rows={topProveedores} />
         <UltimasFacturasCard rows={ultimasFacturas} />
       </div>
+      </CargaGuard>
 
       <DialogNuevaFacturaProveedor open={openNueva} onOpenChange={setOpenNueva} />
     </PageContainer>

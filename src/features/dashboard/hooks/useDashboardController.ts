@@ -124,6 +124,8 @@ export function useDashboardController() {
     canViewFinancials,
     hideFinancials: !canViewFinancials,
     isLoading: data.isLoading,
+    isError: data.isError,
+    refetch: data.refetch,
     cargasPorCliente: data.cargasPorCliente,
     cargasActivasTotal: data.cargasActivasTotal,
     scoped,

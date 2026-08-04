@@ -11,12 +11,14 @@ import {
 } from "@/features/crm/hooks";
 
 export function useCrmInicioVM() {
-  const { data, isLoading } = useCrmDashboardData();
+  const { data, isLoading, isError, refetch } = useCrmDashboardData();
   const { data: cotsSinResp = [] } = useCotizacionesSinRespuesta(5, 5);
   const { items: nba, isLoading: nbaLoading } = useNextBestActions(5);
 
   return {
     isLoading,
+    isError,
+    refetch,
     cotsSinResp,
     nba,
     nbaLoading,

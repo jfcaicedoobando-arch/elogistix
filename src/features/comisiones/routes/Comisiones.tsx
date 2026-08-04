@@ -28,6 +28,7 @@ import { TabVendedorasConfig } from "@/features/comisiones/components/TabVendedo
 import type { EstadoComision, ComisionDevengada } from "@/features/comisiones/services";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
 
 const ESTADO_VALUES = ["todos", "Devengada", "Liquidada", "Cancelada"] as const;
@@ -55,7 +56,7 @@ export default function Comisiones() {
   const setPeriodo = (value: string) => setServer({ m: value || null });
 
   const { data: vendedoras = [] } = useUsuariosVendedores();
-  const { data: comisiones = [], isLoading, kpis } = useComisionesDevengadas({
+  const { data: comisiones = [], isLoading, isError, refetch, kpis } = useComisionesDevengadas({
     vendedora_id: server.v as string | "todas",
     estado: server.estado as EstadoComision | "todos",
     periodo: server.m || undefined,
@@ -90,6 +91,13 @@ export default function Comisiones() {
         description="Comisiones devengadas al cobrar facturas y liquidaciones a vendedoras"
       />
 
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+        errorTitle="No se pudieron cargar las comisiones"
+        errorDescription="Ocurrió un error al obtener las comisiones devengadas. Intenta de nuevo."
+      >
       <Tabs defaultValue="devengadas" className="space-y-4">
         <TabsList>
           <TabsTrigger value="devengadas">Devengadas</TabsTrigger>
@@ -179,6 +187,7 @@ export default function Comisiones() {
           <TabVendedorasConfig vendedoras={vendedoras} />
         </TabsContent>
       </Tabs>
+      </CargaGuard>
     </PageContainer>
   );
 }

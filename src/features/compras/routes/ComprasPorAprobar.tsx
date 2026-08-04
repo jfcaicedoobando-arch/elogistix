@@ -5,6 +5,7 @@ import { ShieldCheck, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { DataTable } from "@/components/shared/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,7 +32,7 @@ export default function ComprasPorAprobar() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { aprobar, isRunning, progreso } = useAprobarFacturasLote();
 
-  const { data: rows = [], isLoading } = useFacturasCxP({
+  const { data: rows = [], isLoading, isError, refetch } = useFacturasCxP({
     aprobacion,
     search: search || undefined,
   });
@@ -70,6 +71,13 @@ export default function ComprasPorAprobar() {
         description="Solicitudes de aprobación de facturas de proveedor. Revisa, aprueba o rechaza cada solicitud."
       />
 
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+        errorTitle="No se pudo cargar la bandeja de aprobación"
+        errorDescription="Revisa tu conexión y vuelve a intentar."
+      >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
           icon={ClipboardCheck}
@@ -155,6 +163,7 @@ export default function ComprasPorAprobar() {
         isRunning={isRunning}
         onConfirm={() => void handleAprobarLote()}
       />
+      </CargaGuard>
     </PageContainer>
   );
 }

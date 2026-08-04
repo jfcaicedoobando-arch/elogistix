@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiStrip } from "@/components/shared/KpiStrip";
+import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
@@ -124,7 +125,7 @@ function ForecastMesCard() {
 export default function CrmDashboard() {
   useDocumentTitle('Resumen ejecutivo CRM');
   const vm = useCrmInicioVM();
-  const { isLoading } = vm;
+  const { isLoading, isError, refetch } = vm;
   const { data: forecast, isLoading: loadingForecast } = useForecast();
   const f = forecast ?? { totalPipeline: 0, totalPonderado: 0, totalGanado: 0 };
 
@@ -135,25 +136,33 @@ export default function CrmDashboard() {
         description="Indicadores y gráficas de lectura rápida del CRM"
       />
 
-      <KpiStrip desktopCols={4} className="sm:border sm:rounded-md sm:bg-card sm:overflow-hidden sm:gap-0">
-        <StatStripItem icon={Users} label="Leads" value={v(isLoading, vm.kpis.leads)} />
-        <StatStripItem icon={Target} label="Oportunidades abiertas" value={v(isLoading, vm.kpis.oportunidadesAbiertas)} />
-        <StatStripItem icon={Activity} label="Actividades pendientes" value={v(isLoading, vm.kpis.actividadesPendientes)} />
-        <StatStripItem icon={TrendingUp} label="Pipeline ponderado" value={isLoading ? "…" : formatCurrencyCompact(vm.kpis.pipelinePonderado, "MXN")} />
-      </KpiStrip>
+      <CargaGuard
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+        errorTitle="No se pudo cargar el resumen del CRM"
+        errorDescription="Revisa tu conexión y vuelve a intentar."
+      >
+        <KpiStrip desktopCols={4} className="sm:border sm:rounded-md sm:bg-card sm:overflow-hidden sm:gap-0">
+          <StatStripItem icon={Users} label="Leads" value={v(isLoading, vm.kpis.leads)} />
+          <StatStripItem icon={Target} label="Oportunidades abiertas" value={v(isLoading, vm.kpis.oportunidadesAbiertas)} />
+          <StatStripItem icon={Activity} label="Actividades pendientes" value={v(isLoading, vm.kpis.actividadesPendientes)} />
+          <StatStripItem icon={TrendingUp} label="Pipeline ponderado" value={isLoading ? "…" : formatCurrencyCompact(vm.kpis.pipelinePonderado, "MXN")} />
+        </KpiStrip>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <TotalCard label="Pipeline" value={f.totalPipeline} isLoading={loadingForecast} />
-        <TotalCard label="Ponderado" value={f.totalPonderado} isLoading={loadingForecast} />
-        <TotalCard label="Ganado" value={f.totalGanado} isLoading={loadingForecast} />
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <TotalCard label="Pipeline" value={f.totalPipeline} isLoading={loadingForecast} />
+          <TotalCard label="Ponderado" value={f.totalPonderado} isLoading={loadingForecast} />
+          <TotalCard label="Ganado" value={f.totalGanado} isLoading={loadingForecast} />
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <EmbudoCard />
-        <ForecastMesCard />
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <EmbudoCard />
+          <ForecastMesCard />
+        </div>
 
-      <LeaderboardVendedores />
+        <LeaderboardVendedores />
+      </CargaGuard>
     </PageContainer>
   );
 }
