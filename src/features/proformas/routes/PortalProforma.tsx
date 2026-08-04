@@ -15,6 +15,7 @@ import { PortalProformaResumen } from "@/features/proformas/components/portal/Po
 import { PortalProformaAcciones } from "@/features/proformas/components/portal/PortalProformaAcciones";
 
 import { formatFechaHora } from "@/lib/formatters";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 
 function fechaMx(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -50,7 +51,7 @@ function ContenidoPortal({ state }: { state: PortalState }) {
     return (
       <Card>
         <CardContent className="py-10 flex items-center justify-center gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" /> Cargando proforma…
+          
         </CardContent>
       </Card>
     );

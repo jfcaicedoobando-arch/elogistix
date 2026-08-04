@@ -12,6 +12,7 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { formatNumber } from "@/lib/formatters";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   embarqueId: string;
@@ -71,7 +72,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
       <CardContent>
         {isLoading ? (
           <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cargando contenedores…
+            <EmptyStateInline loading message="Cargando contenedores…" />
           </div>
         ) : error ? (
           <p className="text-sm text-destructive">

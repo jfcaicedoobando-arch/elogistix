@@ -14,6 +14,7 @@ import EmptyState from "@/components/empty/EmptyState";
 import { Clock } from "lucide-react";
 import { useTabDemorasController } from "@/features/embarques/hooks/useTabDemorasController";
 import { buildDemorasColumns } from "./_sections/tabDemorasColumns";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   embarqueId: string;
@@ -30,7 +31,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
   );
 
 
-  if (isLoading) return <div className="text-sm text-muted-foreground p-6">Cargando contenedores…</div>;
+  if (isLoading) return <EmptyStateInline loading message="Cargando contenedores…" />;
 
   return (
     <div className="space-y-4">

@@ -15,6 +15,7 @@ import { formatFechaHora } from "@/lib/formatters";
 import { useToast, useDocumentTitle } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { todayLocalISO } from "@/lib/date/today";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 
 function toCsv(rows: DemoLead[]): string {
@@ -86,7 +87,7 @@ export default function AdminDemoLeads() {
       />
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <EmptyStateInline loading message="Cargando…" />
       ) : rows.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
