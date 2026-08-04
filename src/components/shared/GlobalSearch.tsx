@@ -14,10 +14,12 @@ import { trackNavEvent } from "@/services/observability/trackNavEvent";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   GlobalSearchAtajos,
+  GlobalSearchCargando,
   GlobalSearchGrupo,
   GlobalSearchRecientes,
   GlobalSearchVacio,
 } from "./GlobalSearch.partes";
+
 
 type SearchResult = GlobalSearchResult;
 
