@@ -70,5 +70,15 @@ export function useConfiguracionState() {
     });
   };
 
-  return { s, set, isLoading, isSaving: updateConfig.isPending, isDirty, handleSave };
+  return {
+    s,
+    set,
+    isLoading,
+    // P1-1: la pantalla necesita distinguir "cargando" de "no se pudo cargar".
+    isError,
+    refetch: () => void refetch(),
+    isSaving: updateConfig.isPending,
+    isDirty,
+    handleSave,
+  };
 }
