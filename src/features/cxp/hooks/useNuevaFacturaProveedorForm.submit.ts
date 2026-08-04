@@ -3,10 +3,11 @@
  * Extraído para respetar Power-of-10 (≤200 líneas por archivo).
  */
 
-import { existeFacturaDuplicada } from "@/features/cxp/services";
+import { buscarFacturaDuplicadaFolio } from "@/features/cxp/services";
 import {
   buscarCfdiDuplicado, describirFacturaExistente, type FacturaExistentePorUuid,
 } from "./useNuevaFacturaProveedorForm.dup";
+
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
