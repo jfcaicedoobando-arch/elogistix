@@ -39,7 +39,7 @@ export function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigSt
 const INITIAL_STATE: ConfigState = buildStateFromConfig(undefined);
 
 export function useConfiguracionState() {
-  const { data: config, isLoading } = useConfiguracion();
+  const { data: config, isLoading, isError, refetch } = useConfiguracion();
   const updateConfig = useUpdateConfiguracion();
   const [s, setS] = useState<ConfigState>(INITIAL_STATE);
   const [baseline, setBaseline] = useState<ConfigState>(INITIAL_STATE);
