@@ -13,6 +13,7 @@ import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
 import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useVolver } from "@/hooks/shared/useVolver";
 
 const steps = [
   { title: 'Datos Generales', num: 1 },
@@ -27,6 +28,7 @@ export default function EditarEmbarque() {
   const [searchParams] = useSearchParams();
   // P2-3 (R5): roles de sólo lectura no deben poder entrar por deep-link al wizard.
   const { canEdit } = usePermissions();
+  const volver = useVolver("/embarques");
   const {
     embarque, isLoading, methods, currentStep, setCurrentStep,
     clientes, proveedoresDb, contactos, selectedCliente,
@@ -74,7 +76,7 @@ export default function EditarEmbarque() {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <p className="text-muted-foreground">Embarque no encontrado</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate("/embarques")}>Volver</Button>
+        <Button variant="outline" className="mt-4" onClick={volver}>Volver</Button>
       </div>
     );
   }
