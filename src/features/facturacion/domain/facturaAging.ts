@@ -10,7 +10,8 @@ export function calcularDiasVencidoFactura(
   hoy: Date = new Date(),
 ): number | null {
   if (!fechaVencimiento) return null;
-  return -diasHastaFecha(fechaVencimiento, hoy);
+  // `|| 0` normaliza el -0 que produce negar un cero (rompe toBe(0)).
+  return -diasHastaFecha(fechaVencimiento, hoy) || 0;
 }
 
 /**
