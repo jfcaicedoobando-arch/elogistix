@@ -49,6 +49,8 @@ export default function Cartera() {
     eqTotal,
     eqVencido,
     isLoading,
+    isError,
+    refetch,
     columns,
   } = useCarteraPage((row) => setRecordatorio(row));
 
@@ -150,6 +152,8 @@ export default function Cartera() {
             data={paged.rows}
             rowKey={(r) => r.factura_id}
             isLoading={paged.isLoading}
+            isError={isError}
+            onRetry={refetch}
             getRowHref={(r) => `/facturacion/${r.factura_id}`}
             getRowAriaLabel={(r) => `Ver factura ${r.numero ?? ""}`}
             sortMode="server"

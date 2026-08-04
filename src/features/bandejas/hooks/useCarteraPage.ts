@@ -14,7 +14,7 @@ export interface CarteraFilters extends Record<string, string> {
 export const DEFAULT_FILTERS: CarteraFilters = { moneda: "todas", urgencia: "accionable" };
 
 export function useCarteraPage(onRecordatorio?: (row: CarteraRow) => void) {
-  const { data = [], isLoading } = useCarteraPendiente();
+  const { data = [], isLoading, isError, refetch } = useCarteraPendiente();
   const { data: rates } = useExchangeRates();
   const tcUsdMxn = rates?.usdMxn ?? 0;
 
@@ -66,6 +66,9 @@ export function useCarteraPage(onRecordatorio?: (row: CarteraRow) => void) {
   return {
     data,
     isLoading,
+    // P1-1: la pantalla debe poder distinguir "sin cartera" de "no cargó".
+    isError,
+    refetch: () => void refetch(),
     monedas,
     paged,
     scoped,

@@ -61,6 +61,8 @@ export function PortalUsuariosTab({ tipo }: Props) {
           columns={columns}
           data={data}
           isLoading={query.isLoading}
+          isError={query.isError}
+          onRetry={() => void query.refetch()}
           emptyMessage={
             tipo === "cliente"
               ? "Aún no hay clientes con acceso al Portal Cliente."
