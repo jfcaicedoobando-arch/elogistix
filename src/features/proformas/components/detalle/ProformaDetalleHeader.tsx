@@ -6,6 +6,7 @@
 import { type ReactNode } from "react";
 import { FileText } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { EstadoBadges } from "@/features/proformas/components/ProformaDetalleCards";
 import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
 import { resumenProforma } from "@/lib/domain/documentoEstados";
@@ -37,11 +38,12 @@ export function ProformaDetalleHeader({
   facturada,
   actions,
 }: Props) {
+  const volver = useVolver("/proformas");
   const subtitulo = clienteNombre?.trim() || "";
   const resumen = resumenProforma({ estadoCliente, enviadaAt, facturada });
   return (
     <DetailHeader
-      backTo="/proformas"
+      backTo={volver}
       backLabel="Volver a Proformas"
       icon={<FileText className="h-6 w-6 text-accent shrink-0" />}
       title={<span className="font-mono tabular-nums">{numero}</span>}

@@ -6,6 +6,7 @@ import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ReceiptText } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
 import { resumenFacturaRecibida } from "@/lib/domain/documentoEstados";
 import { EstadoFacturaCxPCell } from "@/features/cxp/components/EstadoFacturaCxPCell";
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function FacturaProveedorHeader({ factura: f, actions }: Props) {
+  const volver = useVolver("/compras/facturas");
   const resumen = resumenFacturaRecibida({
     estado: f.estado,
     estadoAprobacion: f.estado_aprobacion,
@@ -25,7 +27,7 @@ export function FacturaProveedorHeader({ factura: f, actions }: Props) {
 
   return (
     <DetailHeader
-      backTo="/compras/facturas"
+      backTo={volver}
       backLabel="Volver a Facturas de proveedor"
       icon={<ReceiptText className="h-6 w-6 shrink-0 text-accent" />}
       title={<span className="font-mono tabular-nums">{f.folio_interno}</span>}

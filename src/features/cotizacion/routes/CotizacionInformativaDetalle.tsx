@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
@@ -33,6 +34,7 @@ async function descargarTarifario(cotizacion: CotizacionRow) {
 }
 
 export default function CotizacionInformativaDetalle({ cotizacion }: Props) {
+  const volver = useVolver("/cotizaciones");
   const tarifas = parseTarifasInformativas(cotizacion.tarifas_informativas);
   const { data: tiposContenedor = [] } = useTiposContenedor();
 
@@ -47,7 +49,7 @@ export default function CotizacionInformativaDetalle({ cotizacion }: Props) {
   return (
     <PageContainer>
       <DetailHeader
-        backTo="/cotizaciones"
+        backTo={volver}
         backLabel="Volver a Cotizaciones"
         title={`Tarifario ${cotizacion.folio}`}
         subtitle={`Cliente: ${cotizacion.cliente_nombre}`}

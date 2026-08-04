@@ -4,6 +4,7 @@
 import { lazy, Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { LoadingState } from "@/components/shared/states/LoadingState";
@@ -24,11 +25,12 @@ const TablaFlujoSemanal = lazy(() => import("@/features/tesoreria/components/Tab
 
 export default function TesoreriaFlujo() {
   const { data, isLoading, error, refetch } = useFlujoProyectado(90);
+  const volver = useVolver("/tesoreria");
 
   return (
     <PageContainer>
       <DetailHeader
-        backTo="/tesoreria"
+        backTo={volver}
         backLabel="Volver a Tesorería"
         title="Flujo de caja proyectado · 90 días"
         subtitle="Proyección semanal de entradas (CxC) y salidas (CxP + comisiones) sobre vencimientos."

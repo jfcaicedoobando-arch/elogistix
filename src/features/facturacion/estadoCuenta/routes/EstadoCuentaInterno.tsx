@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { Wallet } from "lucide-react";
 import { EstadoCuentaModule } from "../components/EstadoCuentaModule";
 import { EstadoCuentaHeaderCard } from "../components/EstadoCuentaHeaderCard";
@@ -11,11 +12,12 @@ export default function EstadoCuentaInterno() {
   const { clienteId = "" } = useParams<{ clienteId: string }>();
   const { data: ficha, isLoading } = useClienteFichaEstadoCuenta(clienteId || undefined);
   const { desde, hasta } = useEstadoCuentaDateRange("30d");
+  const volver = useVolver(`/clientes/${clienteId}`);
 
   return (
     <PageContainer width="wide">
       <DetailHeader
-        backTo={`/clientes/${clienteId}`}
+        backTo={volver}
         backLabel="Volver a Cliente"
         icon={<Wallet className="h-6 w-6 shrink-0 text-accent" />}
         title="Estado de cuenta"

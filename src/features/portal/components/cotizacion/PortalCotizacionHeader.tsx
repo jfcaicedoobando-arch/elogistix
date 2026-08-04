@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, ClipboardList } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { ROUTES } from "@/constants/routes";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
@@ -27,12 +28,13 @@ export default function PortalCotizacionHeader({
   onAceptar,
   onRechazar,
 }: PortalCotizacionHeaderProps) {
+  const volver = useVolver(ROUTES.PORTAL_COTIZACIONES);
   const showActions = estado === "Enviada";
 
   return (
     <>
       <DetailHeader
-        backTo={ROUTES.PORTAL_COTIZACIONES}
+        backTo={volver}
         backLabel="Volver a Cotizaciones"
         icon={<ClipboardList className="h-6 w-6 text-accent shrink-0" />}
         title={<span className="font-mono tabular-nums">{folio}</span>}

@@ -7,6 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
@@ -30,6 +31,7 @@ export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
+  const volver = useVolver(ROUTES.CRM_LEADS);
   const { data: lead, isLoading } = useLead(id);
   useDocumentTitle(lead ? `Lead · ${lead.empresa}` : "Lead");
   const actualizar = useActualizarLead();
@@ -78,7 +80,7 @@ export default function LeadDetalle() {
   if (!lead) {
     return (
       <PageContainer>
-        <DetailHeader backTo={ROUTES.CRM_LEADS} backLabel="Volver a Leads" titleAs="h2" title="Lead no encontrado" />
+        <DetailHeader backTo={volver} backLabel="Volver a Leads" titleAs="h2" title="Lead no encontrado" />
         <ErrorState
           title="Lead no encontrado"
           description="El lead que buscas no existe o fue eliminado."
@@ -90,7 +92,7 @@ export default function LeadDetalle() {
   return (
     <PageContainer>
       <DetailHeader
-        backTo={ROUTES.CRM_LEADS}
+        backTo={volver}
         backLabel="Volver a Leads"
         icon={<UserPlus className="h-6 w-6 text-accent shrink-0" />}
         title={lead.empresa}
