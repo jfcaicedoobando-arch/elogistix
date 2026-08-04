@@ -66,9 +66,17 @@ export function GlobalSearch() {
   }, []);
 
   const buscar = useCallback(async (terminoBusqueda: string) => {
-    const items = await search(terminoBusqueda, 5);
-    setResults(items);
+    try {
+      const items = await search(terminoBusqueda, 5);
+      setResults(items);
+      setBusquedaFallo(false);
+    } catch {
+      // R7-FIX1: un fallo de red no debe verse igual que "sin resultados".
+      setResults([]);
+      setBusquedaFallo(true);
+    }
   }, [search]);
+
 
   const debouncedQuery = useDebouncedValue(query, 300);
   useEffect(() => {
