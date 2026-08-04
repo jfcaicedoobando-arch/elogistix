@@ -151,9 +151,10 @@ export function useNuevaFacturaProveedorForm(
     manuales.conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })),
   );
 
-  // Tope de vinculación: lo asignado a conceptos de embarque no puede exceder
-  // el subtotal de la factura (los conceptos de costo van sin impuestos).
+  // Tope: lo vinculado a conceptos de embarque no puede exceder el subtotal.
   const topeVinculacion = calcularTopeVinculacion(Number(values.subtotal) || 0, vinculos);
+
+
 
 
   const submit = async () => {
