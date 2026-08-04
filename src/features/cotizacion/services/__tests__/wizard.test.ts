@@ -65,8 +65,9 @@ describe("savePaso1", () => {
     });
     expect(uploadFileMock).toHaveBeenCalledTimes(1);
     const arg = (uploadFileMock.mock.calls[0] as unknown as [string])[0];
-    expect(arg.startsWith("cotizaciones/msds-")).toBe(true);
+    expect(arg.startsWith("00000000-0000-0000-0000-000000000001/msds/")).toBe(true);
     expect(arg.endsWith(".pdf")).toBe(true);
+
   });
 
   it("no sube MSDS si tipoCarga es general aunque haya archivo", async () => {
