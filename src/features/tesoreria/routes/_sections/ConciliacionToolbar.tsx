@@ -32,7 +32,7 @@ interface Props {
   isAutoConciliando: boolean;
   onConciliarExactos: () => void;
   onAbrirManual: () => void;
-  fileRef: RefObject<HTMLInputElement>;
+  fileRef: RefObject<HTMLInputElement | null>;
   onFile: (e: ChangeEvent<HTMLInputElement>) => void;
   importando: boolean;
 }
