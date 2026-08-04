@@ -2,8 +2,10 @@
  * Piezas presentacionales del buscador global. Extraídas de `GlobalSearch.tsx`
  * para respetar Power of 10 (≤ 200 líneas por archivo).
  */
-import { SearchX, History } from "lucide-react";
+import { SearchX, History, Loader2 } from "lucide-react";
 import { CommandFooter, CommandGroup, CommandItem, CommandKey } from "@/components/ui/command";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import type { GlobalSearchResult } from "@/hooks/shared";
 import { ICONO_FILA, typeIcons, typeLabels } from "./globalSearchMeta";
 import { resaltarCoincidencias } from "./globalSearchResaltado";
