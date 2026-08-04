@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.401.3] - 2026-08-04
+- Lint: las constantes `ICONO_FILA`, `typeIcons` y `typeLabels` se movieron a `src/components/shared/globalSearchMeta.ts` para que `GlobalSearch.partes.tsx` sólo exporte componentes (react-refresh/only-export-components sin warnings).
+
 ## [13.401.2] - 2026-08-04
+
 - Power of 10 #4: `GlobalSearch.tsx` (216 líneas) se dividió extrayendo estado vacío, grupo de recientes, grupos de resultados y pie de atajos a `GlobalSearch.partes.tsx`. Tests de arquitectura y `audit-report` en verde.
 
 
