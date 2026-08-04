@@ -28,7 +28,7 @@ const TONE_VALUE: Record<KpiTone, string> = {
 };
 
 export function KpiCard({
-  label, value, sub, tone = "default", hint, to, icon,
+  label, value, sub, tone = "default", hint, to, icon, valueTooltip,
 }: {
   label: string;
   value: string | number;
@@ -37,6 +37,8 @@ export function KpiCard({
   hint?: string;
   to?: string;
   icon?: React.ReactNode;
+  /** Tooltip nativo con la cifra exacta cuando `value` viene en notación compacta. */
+  valueTooltip?: string;
 }) {
   const body = (
     <Card className={cn(
@@ -70,7 +72,7 @@ export function KpiCard({
             <span className="text-muted-foreground/60 shrink-0">{icon}</span>
           ) : null}
         </div>
-        <p className={cn("text-2xl font-semibold tabular-nums mt-2", TONE_VALUE[tone])}>{value}</p>
+        <p className={cn("text-2xl font-semibold tabular-nums mt-2", TONE_VALUE[tone])} title={valueTooltip}>{value}</p>
         {sub && <p className="text-xs text-muted-foreground mt-0.5 tabular-nums truncate">{sub}</p>}
       </CardContent>
     </Card>

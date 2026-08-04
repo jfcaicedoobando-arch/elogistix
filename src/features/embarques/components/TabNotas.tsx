@@ -13,6 +13,7 @@ import type { NotaEmbarqueRow } from "@/features/embarques/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { ActividadTimeline } from "@/features/embarques/components/ActividadTimeline";
 import { ActividadFiltros } from "@/features/embarques/components/ActividadFiltros";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   notas: NotaEmbarqueRow[];
@@ -96,7 +97,7 @@ export function TabNotas({ embarqueId, expediente }: Props) {
         <ActividadFiltros conteos={conteos} categoria={categoria} onChange={setCategoria} />
 
         {isLoading ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">Cargando actividad...</p>
+          <EmptyStateInline loading message="Cargando actividad…" className="py-6" />
         ) : isError ? (
           <div className="py-6 text-center">
             <p className="text-sm text-muted-foreground">No se pudo cargar la actividad.</p>

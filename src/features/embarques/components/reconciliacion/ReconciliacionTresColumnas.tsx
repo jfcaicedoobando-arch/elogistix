@@ -19,6 +19,7 @@ import type { FilaReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
 import { fmt, pct, colorPorClasificacion } from "./reconciliacionFormat";
 import { ResumenReconciliacion } from "./ResumenReconciliacion";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   embarqueId: string;
@@ -95,7 +96,7 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
   );
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Cargando reconciliación…</p>;
+    return <EmptyStateInline loading message="Cargando reconciliación…" />;
   }
   if (error) {
     return (

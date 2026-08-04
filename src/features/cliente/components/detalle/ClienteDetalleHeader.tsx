@@ -2,6 +2,7 @@ import { Pencil, FileText, Loader2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { toTitleCase } from "@/lib/formatters";
 
@@ -23,9 +24,10 @@ interface Props {
 
 export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
   const navigate = useNavigate();
+  const volver = useVolver("/clientes");
   return (
     <DetailHeader
-      backTo="/clientes"
+      backTo={volver}
       backLabel="Volver a Clientes"
       icon={<Users className="h-6 w-6 text-accent shrink-0" />}
       title={toTitleCase(cliente.nombre)}

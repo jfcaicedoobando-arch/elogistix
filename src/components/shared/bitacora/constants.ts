@@ -1,6 +1,4 @@
 import { Plus, Edit, Trash2, RefreshCw, Upload, LogIn, Receipt, MessageSquare, FileX } from "lucide-react";
-import { formatFechaEs } from "@/lib/formatters";
-
 export const ICONOS_ACCION: Record<string, typeof Plus> = {
   crear: Plus,
   editar: Edit,
@@ -37,16 +35,3 @@ export const RUTAS_MODULO: Record<string, string> = {
   usuarios: "/usuarios",
   cotizaciones: "/cotizaciones",
 };
-
-export function tiempoRelativo(fecha: string): string {
-  const ahora = Date.now();
-  const diff = ahora - new Date(fecha).getTime();
-  const minutos = Math.floor(diff / 60000);
-  if (minutos < 1) return "hace un momento";
-  if (minutos < 60) return `hace ${minutos} min`;
-  const horas = Math.floor(minutos / 60);
-  if (horas < 24) return `hace ${horas}h`;
-  const dias = Math.floor(horas / 24);
-  if (dias < 7) return `hace ${dias}d`;
-  return formatFechaEs(fecha, { day: "2-digit", month: "short" });
-}

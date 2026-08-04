@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FileDown, Mail, FileSpreadsheet } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase, formatDate } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExportarPdf, onEnviarEmail, yaEnviada }: Props) {
+  const volver = useVolver("/cotizaciones");
   // R-08: una cotización sin importe no puede enviarse al cliente.
   const sinImporte = !(Number(cotizacion.subtotal) > 0);
   const metaFecha = cotizacion.fecha_aceptacion
@@ -27,7 +29,7 @@ export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExpo
 
   return (
     <DetailHeader
-      backTo="/cotizaciones"
+      backTo={volver}
       backLabel="Volver a Cotizaciones"
       icon={<FileSpreadsheet className="h-6 w-6 text-accent shrink-0" />}
       title={cotizacion.folio}

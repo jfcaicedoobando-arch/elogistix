@@ -7,10 +7,13 @@ import { cn } from "@/lib/utils";
 interface DetailHeaderProps {
   /**
    * Ruta destino del botón Volver. Si es número, hace `navigate(n)` (ej. -1).
+   * Si es una función (ver `useVolver`), se invoca directamente al hacer clic:
+   * úsala para volver al historial cuando el usuario navegó desde dentro de la
+   * app (conserva filtros/pestaña de origen) con una ruta de respaldo.
    * Usa `null` en páginas públicas sin página padre (portal, tracking) para
    * ocultar el botón por completo y conservar sólo título + badge + acciones.
    */
-  backTo?: string | number | null;
+  backTo?: string | number | null | (() => void);
   /** Label accesible del botón Volver. */
   backLabel?: string;
 
@@ -79,7 +82,7 @@ export function DetailHeader({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(backTo)}
+          onClick={() => (typeof backTo === "function" ? backTo() : navigate(backTo))}
           className={backClasses}
         >
           <ArrowLeft className="h-4 w-4 mr-1" />

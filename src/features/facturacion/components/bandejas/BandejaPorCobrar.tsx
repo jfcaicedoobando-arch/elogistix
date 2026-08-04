@@ -121,7 +121,7 @@ export function BandejaPorCobrar() {
             isLoading={paged.isLoading}
             emptyIcon={Wallet}
             emptyMessage="Sin facturas vigentes con saldo por cobrar."
-            emptyHint="Aparecerán aquí los CFDI (PPD o PUE) timbrados con saldo pendiente cuya fecha de vencimiento aún no llega. Criterio: saldo > 0 y estatus_cobranza ≠ Vencida."
+            emptyHint="Aquí aparecerán las facturas con saldo por cobrar cuya fecha de vencimiento todavía no llega."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}

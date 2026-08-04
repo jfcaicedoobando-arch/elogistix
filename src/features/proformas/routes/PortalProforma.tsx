@@ -3,10 +3,9 @@
  * Sin autenticación. Permite al cliente aceptar o rechazar la proforma.
  */
 import { useParams } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Clock, AlertTriangle, FileSpreadsheet, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, AlertTriangle, FileSpreadsheet } from "lucide-react";
 import { Seo } from "@/components/shared/Seo";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 
@@ -15,6 +14,7 @@ import { PortalProformaResumen } from "@/features/proformas/components/portal/Po
 import { PortalProformaAcciones } from "@/features/proformas/components/portal/PortalProformaAcciones";
 
 import { formatFechaHora } from "@/lib/formatters";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 
 function fechaMx(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -47,13 +47,7 @@ function ContenidoPortal({ state }: { state: PortalState }) {
   const { loading, error, data, submitting, responder } = state;
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent className="py-10 flex items-center justify-center gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" /> Cargando proforma…
-        </CardContent>
-      </Card>
-    );
+    return <LoadingState label="Cargando proforma…" />;
   }
 
   if (error || data?.estado_link === "token_invalido") {

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useCliente360 } from "@/features/crm/hooks";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   clienteId: string;
@@ -19,7 +20,9 @@ export default function Cliente360Panel({ clienteId }: Props) {
   const navigate = useNavigate();
   const { data, isLoading } = useCliente360(clienteId);
 
-  if (isLoading) return <p className="text-sm text-muted-foreground p-4">Cargando datos CRM…</p>;
+  if (isLoading) return <EmptyStateInline loading message="Cargando datos CRM…" />;
+
+
   const d = data ?? { oportunidades: [], totalAbierto: 0, totalGanado: 0, ultimaCotizacion: null, ultimoEmbarque: null };
 
   return (

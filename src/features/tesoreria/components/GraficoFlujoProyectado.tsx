@@ -6,7 +6,7 @@ import {
   Tooltip as RTooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import type { SemanaFlujo } from "@/features/tesoreria/services";
-import { formatCurrencyCompact } from "@/lib/formatters/numbers";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters/numbers";
 
 interface Props { semanas: SemanaFlujo[] }
 
@@ -24,7 +24,7 @@ export default function GraficoFlujoProyectado({ semanas }: Props) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis dataKey="semana" tick={{ fontSize: 11 }} />
         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCurrencyCompact(Number(v), "MXN")} />
-        <RTooltip formatter={(v: number) => formatCurrencyCompact(Math.abs(v), "MXN")} />
+        <RTooltip formatter={(v: number) => formatCurrency(Math.abs(v), "MXN")} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="Entradas" fill="hsl(var(--kpi-success))" />
         <Bar dataKey="Salidas" fill="hsl(var(--destructive))" />

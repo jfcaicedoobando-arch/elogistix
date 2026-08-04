@@ -76,7 +76,7 @@ describe("diasVencido", () => {
   it("positivo cuando ya pasó (2026-06-20 vs hoy 2026-06-26)", () => {
     expect(diasVencido("2026-06-20")).toBe(6);
   });
-  it("negativo cuando aún no vence", () => {
+  it("diasVencido: negativo cuando aún no vence", () => {
     expect(diasVencido("2026-07-01")).toBe(-5);
   });
 });

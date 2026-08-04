@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
@@ -34,6 +35,7 @@ interface Props {
 
 export function OportunidadDetalleContent({ op, etapas }: Props) {
   const { canEdit } = usePermissions();
+  const volver = useVolver("/crm/oportunidades");
   const [editOpen, setEditOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
 
@@ -59,7 +61,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
   return (
     <div className="space-y-4 p-6">
       <DetailHeader
-        backTo="/crm/oportunidades"
+        backTo={volver}
         backLabel="Volver a Oportunidades"
         icon={<Target className="h-6 w-6 text-accent shrink-0" />}
         title={op.nombre}

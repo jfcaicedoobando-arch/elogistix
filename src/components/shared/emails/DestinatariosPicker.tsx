@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { type Contacto } from "@/hooks/emails/useEnvioDocumentoForm";
 import { CLIENTE_PRINCIPAL_ID, esContactoProveedor } from "@/features/cotizacion/services/envios";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   contactos: Contacto[];
@@ -52,7 +53,7 @@ export function DestinatariosPicker({
   contactos, loadingContactos, seleccionados, onToggle,
 }: Props) {
   if (loadingContactos) {
-    return <p className="text-sm text-muted-foreground">Cargando contactos…</p>;
+    return <EmptyStateInline loading message="Cargando contactos…" className="py-4" />;
   }
   const clienteContactos = contactos.filter((c) => !esContactoProveedor(c));
   if (clienteContactos.length === 0) return null;

@@ -3,7 +3,7 @@
  * Toda edición se realiza desde el wizard "Editar embarque" (paso 2).
  */
 import { useNavigate } from "react-router-dom";
-import { Loader2, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { formatNumber } from "@/lib/formatters";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   embarqueId: string;
@@ -71,7 +72,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
       <CardContent>
         {isLoading ? (
           <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cargando contenedores…
+            <EmptyStateInline loading message="Cargando contenedores…" />
           </div>
         ) : error ? (
           <p className="text-sm text-destructive">

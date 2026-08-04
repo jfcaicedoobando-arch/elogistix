@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,10 +17,11 @@ import { AvisoConceptosDescartados } from "@/features/cotizacion/components/Avis
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useDocumentTitle } from "@/hooks/shared";
+import { useVolver } from "@/hooks/shared/useVolver";
 
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const volver = useVolver(ROUTES.PORTAL_COTIZACIONES);
   const { data: cot, isLoading, isError, refetch } = usePortalCotizacion(id);
   useRegisterBreadcrumbLabel(id, cot?.folio);
   useDocumentTitle(cot ? `Cotización · ${cot.folio}` : "Cotización");
@@ -50,7 +51,7 @@ export default function PortalCotizacionDetalle() {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Cotización no encontrada.</p>
-        <Button variant="link" onClick={() => navigate(ROUTES.PORTAL_COTIZACIONES)}>
+        <Button variant="link" onClick={volver}>
           Volver a cotizaciones
         </Button>
       </div>

@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Building2, CheckCircle2, XCircle } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 
 interface OrgHeaderProps {
   nombre: string;
@@ -13,9 +14,10 @@ interface OrgHeaderProps {
 }
 
 export function OrgHeader({ nombre, rfc, plan, activo, toggleActivoPending, onToggleActivo }: OrgHeaderProps) {
+  const volver = useVolver("/admin/organizaciones");
   return (
     <DetailHeader
-      backTo="/admin/organizaciones"
+      backTo={volver}
       backLabel="Volver a Organizaciones"
       icon={<Building2 className="h-6 w-6 text-primary shrink-0" />}
       title={nombre}

@@ -9,6 +9,7 @@ import { Inbox } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { handleRowClick, handleRowKeyDown } from "@/components/shared/dataTable/rowNav";
 import type { CarteraRow } from "./carteraColumns";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
 interface Props {
   rows: CarteraRow[];
@@ -21,7 +22,7 @@ export function CarteraMobileList({ rows, isLoading }: Props) {
     <Card className="sm:hidden">
       <CardContent className="p-0">
         {isLoading && (
-          <div className="py-8 text-center text-muted-foreground">Cargando...</div>
+          <ListSkeleton variant="card" rows={4} />
         )}
         {!isLoading && rows.length === 0 && (
           <div className="py-8 text-center text-muted-foreground">

@@ -16,6 +16,7 @@ import { useTimbrarNotaCredito, useCancelarNotaCredito } from "@/features/factur
 import { FacturaNotasCreditoTable } from "./FacturaNotasCreditoTable";
 import type { Tables } from "@/integrations/supabase/types";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 type Moneda = Tables<"facturas">["moneda"];
 
@@ -103,7 +104,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <EmptyStateInline loading message="Cargando…" className="py-2" />
         ) : notas.length === 0 ? (
           <p className="text-sm text-muted-foreground">Esta factura no tiene notas de crédito.</p>
         ) : (

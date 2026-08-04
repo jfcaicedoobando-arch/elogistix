@@ -41,7 +41,7 @@ interface FacturaDetalleViewProps {
   timbrarRep: TimbrarRepMutation;
   handleDownload: DescargarCfdiHandler;
   onEliminar: () => void;
-  volverHref: string;
+  volverHref: string | (() => void);
   volverLabel: string;
   dialogs: DialogsBundle;
   saldo?: number;

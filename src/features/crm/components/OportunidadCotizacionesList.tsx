@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useOportunidadCotizaciones } from "@/features/crm/hooks";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   oportunidadId: string;
@@ -26,7 +27,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <EmptyStateInline loading message="Cargando…" />
         ) : data.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Aún no se ha creado ninguna cotización para esta oportunidad. Usa el botón "Crear cotización" arriba.

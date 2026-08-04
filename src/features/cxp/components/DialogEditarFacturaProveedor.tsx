@@ -14,6 +14,7 @@ import { useEditarFacturaProveedorForm } from "@/features/cxp/hooks";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { Kpi } from "./DialogDetallePagosProveedor.parts";
 import type { FacturaCxP } from "@/features/cxp/services";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   factura: FacturaCxP | null;
@@ -130,7 +131,7 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
     >
       {ctl.isLoadingRow && (
         <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cargando factura…
+          <EmptyStateInline loading message="Cargando factura…" />
         </div>
       )}
 

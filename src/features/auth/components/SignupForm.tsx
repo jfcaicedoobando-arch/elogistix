@@ -156,7 +156,7 @@ export function SignupForm() {
         <Input
           id="signup-password2"
           type="password"
-          placeholder="••••••••"
+          placeholder="Repite tu contraseña"
           autoComplete="new-password"
           {...register("password2")}
         />

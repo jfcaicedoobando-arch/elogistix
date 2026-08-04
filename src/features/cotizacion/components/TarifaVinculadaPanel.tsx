@@ -25,6 +25,7 @@ import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { resolveTipoContenedorId, computeTarifaWarnings } from "./tarifaVinculadaPanel.helpers";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 const OPTS = { shouldValidate: true, shouldDirty: true } as const;
 
@@ -109,7 +110,7 @@ export default function TarifaVinculadaPanel({
 
 
         {tarifaId && isLoading && (
-          <p className="text-sm text-muted-foreground">Cargando tarifa…</p>
+          <EmptyStateInline loading message="Cargando tarifa…" className="py-2" />
         )}
 
         {tarifaId && !isLoading && !tarifa && (

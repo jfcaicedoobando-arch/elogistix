@@ -5,7 +5,8 @@ import { nombreDesdeEmail, formatDate } from "@/lib/formatters";
 import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
 import { getEstadoVisual } from "@/lib/ui/estadoConfig";
 import { humanizarEnum } from "@/lib/ui/enumLabels";
-import { ICONOS_ACCION, COLORES_ACCION, RUTAS_MODULO, tiempoRelativo } from "./constants";
+import { ICONOS_ACCION, COLORES_ACCION, RUTAS_MODULO } from "./constants";
+import { formatRelativo } from "@/lib/date/relativo";
 
 function EstadoBadge({ estado, atenuado = false }: { estado: string; atenuado?: boolean }) {
   const visual = getEstadoVisual(estado);
@@ -53,7 +54,7 @@ export function FilaEntrada({
             className="text-xs text-muted-foreground"
             title={formatDate(entrada.created_at, "dd/MM/yyyy HH:mm")}
           >
-            {tiempoRelativo(entrada.created_at)}
+            {formatRelativo(entrada.created_at)}
           </span>
         </div>
 

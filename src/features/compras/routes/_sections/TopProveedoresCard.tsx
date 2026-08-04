@@ -5,6 +5,7 @@
 import { Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 export interface TopProveedorRow {
   nombre: string;
@@ -29,7 +30,7 @@ export function TopProveedoresCard({ isLoading, rows }: Props) {
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">Cargando…</div>
+          <EmptyStateInline loading message="Cargando…" />
         ) : rows.length === 0 ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
             Sin facturas en el período seleccionado.

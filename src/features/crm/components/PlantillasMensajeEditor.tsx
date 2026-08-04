@@ -23,6 +23,7 @@ import {
 } from "@/features/crm/hooks";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 const VARIABLES = ["{{contacto}}", "{{empresa}}", "{{vendedor}}", "{{monto}}", "{{moneda}}", "{{etapa}}"];
 
 
@@ -103,7 +104,7 @@ export default function PlantillasMensajeEditor() {
 
         {/* Lista */}
         {isLoading ? (
-          <div className="text-sm text-muted-foreground py-4 text-center">Cargando…</div>
+          <EmptyStateInline loading message="Cargando…" />
         ) : data.length === 0 ? (
           <div className="text-sm text-muted-foreground py-4 text-center">Sin plantillas todavía</div>
         ) : (

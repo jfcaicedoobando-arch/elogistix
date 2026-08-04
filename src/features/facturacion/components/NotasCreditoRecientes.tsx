@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useNotasCreditoRecientes, type EstadoNotaCredito } from "@/features/facturacion/hooks";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
   Borrador: "bg-muted text-muted-foreground",
@@ -94,7 +95,7 @@ export function NotasCreditoRecientes() {
             </div>
 
             {isLoading ? (
-              <p className="p-4 text-sm text-muted-foreground">Cargando…</p>
+              <EmptyStateInline loading message="Cargando…" />
             ) : filtradas.length === 0 ? (
               <p className="p-4 text-sm text-muted-foreground">No hay notas de crédito que coincidan.</p>
             ) : (

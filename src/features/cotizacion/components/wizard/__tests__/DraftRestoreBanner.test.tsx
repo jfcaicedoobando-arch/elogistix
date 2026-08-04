@@ -6,7 +6,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
 
 describe("DraftRestoreBanner", () => {
-  it("muestra 'unos segundos' cuando el draft es reciente", () => {
+  it("muestra 'hace un momento' cuando el draft es reciente", () => {
     render(
       <DraftRestoreBanner
         savedAt={Date.now() - 5 * 1000}
@@ -14,7 +14,7 @@ describe("DraftRestoreBanner", () => {
         onDiscard={vi.fn()}
       />,
     );
-    expect(screen.getByText(/unos segundos/)).toBeInTheDocument();
+    expect(screen.getByText(/hace un momento/)).toBeInTheDocument();
   });
 
   it("muestra minutos entre 1 y 59", () => {

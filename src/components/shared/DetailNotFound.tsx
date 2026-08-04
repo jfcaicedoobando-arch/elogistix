@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { Button } from "@/components/ui/button";
 
@@ -36,9 +37,10 @@ export function DetailNotFound({
   backLabel,
   withContainer = true,
 }: DetailNotFoundProps) {
+  const volver = useVolver(backTo);
   const content = (
     <div className="space-y-2">
-      <DetailHeader backTo={backTo} backLabel={backLabel} title={title} />
+      <DetailHeader backTo={volver} backLabel={backLabel} title={title} />
       <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
         <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Icon className="h-8 w-8" />

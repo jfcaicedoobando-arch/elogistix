@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.413.0] - 2026-08-04
+- R8/WAVE 3 — copy y estados vacíos: se eliminó la jerga técnica de las 7 bandejas de facturación (ya no dice "timbrada = false" ni "saldo > 0"), placeholder de mes más claro y CTA en proformas y presupuestos vacíos.
+- R8/WAVE 3 — carga y tiempo: se reemplazó el texto "Cargando…" por skeletons en ~20 pantallas y se unificaron los 4 helpers duplicados de tiempo relativo en `src/lib/date/relativo.ts`.
+- R8/WAVE 3 — navegación: nuevo hook `useVolver` (prefiere el historial y cae a la ruta padre) aplicado a ~15 detalles, de modo que "Volver" ya no pierde filtros ni pestaña; se quitó el botón redundante junto al breadcrumb.
+- R8/WAVE 3 — KPIs y bancos: tooltips con la cifra exacta en KPIs compactos de CxP, salud de proveedor y flujo de tesorería; las tarjetas de cuentas bancarias ahora son navegables a conciliación filtrada por cuenta y muestran saldo actual.
+- R8/WAVE 3 — accesibilidad y marca: placeholders de contraseña descriptivos (ya no parecen precargados) y fondo del logo adaptado a modo oscuro con el nuevo token `--brand-surface`.
+- Mantenimiento: `EmbarqueDetalleHeaderActions` y `TesoreriaConciliacion` divididos para respetar el límite de 200 líneas; complejidad de `TarifaFila` reducida.
+
 ## [13.412.0] - 2026-08-04
 - R8/WAVE 2 — exactitud de datos: "Total facturado/pagado" del detalle de proveedor ahora agrupa por moneda y muestra el equivalente en MXN (antes sumaba USD y MXN como si fueran lo mismo); orden por subtotal en la lista de cotizaciones normaliza a MXN; pluralización correcta de "1 día vencida".
 - R8/WAVE 2 — coherencia de UI: tooltips que desglosan los badges del sidebar; aviso de conceptos descartados en cotizaciones (interno y portal); un solo botón "Editar" en el detalle de embarque cuando el cierre requiere finanzas; badges "Admin pendiente"/"Listo para cerrar" ahora navegan a la pestaña de cierre; stepper de fases con fecha, hora, usuario y aviso de fechas fuera de orden; badges "Nueva"/"+USD vs mejor" ya no aparecen en tarifas vencidas.

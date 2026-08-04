@@ -51,18 +51,36 @@ function esReciente(createdAt?: string): boolean {
   return Date.now() - t < SIETE_DIAS_MS;
 }
 
+/**
+ * Lint (complejidad): la fila mezclaba render y ~6 derivaciones booleanas.
+ * Se extraen a un helper puro para mantener el componente por debajo del
+ * límite de complejidad sin cambiar comportamiento.
+ */
+function derivarEstadoFila(
+  t: Props["t"],
+  esMejor: boolean,
+  mejorTotal: number | null | undefined,
+) {
+  const ap = t.estado_aprobacion ?? "vigente";
+  const hoy = todayLocalISO();
+  const esVencida = t.estado === "vencida";
+  const atenuar = !esMejor && (t.vigente_hasta < hoy || esVencida || t.estado === "reemplazada");
+  const delta = !esVencida && mejorTotal != null && !esMejor && t.total_comparable > mejorTotal
+    ? t.total_comparable - mejorTotal : 0;
+  return {
+    ap,
+    atenuar,
+    delta,
+    nueva: !esVencida && esReciente(t.created_at),
+    puedeAprobar: ap === "borrador",
+  };
+}
+
 export function TarifaFila({
   t, esMejor, mejorTotal,
   onEditar, onDuplicar, onEliminar, onAprobar, onRechazar, onReactivar, pending,
 }: Props) {
-  const ap = t.estado_aprobacion ?? "vigente";
-  const hoy = todayLocalISO();
-  const atenuar = !esMejor && (t.vigente_hasta < hoy || t.estado === "vencida" || t.estado === "reemplazada");
-  const esVencida = t.estado === "vencida";
-  const delta = !esVencida && mejorTotal != null && !esMejor && t.total_comparable > mejorTotal
-    ? t.total_comparable - mejorTotal : 0;
-  const nueva = !esVencida && esReciente(t.created_at);
-  const puedeAprobar = ap === "borrador";
+  const { ap, atenuar, delta, nueva, puedeAprobar } = derivarEstadoFila(t, esMejor, mejorTotal);
 
   return (
     <div

@@ -6,19 +6,12 @@
 import { useEffect, useState } from "react";
 import { Check, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatRelativo } from "@/lib/date/relativo";
 import type { AutoSaveEstado } from "@/features/facturacion/hooks/useAutoSaveDatosFiscales";
 
 interface Props {
   estado: AutoSaveEstado;
   ultimoGuardado: number | null;
-}
-
-function formatoRelativo(ts: number): string {
-  const seg = Math.max(0, Math.round((Date.now() - ts) / 1000));
-  if (seg < 5) return "hace un momento";
-  if (seg < 60) return `hace ${seg}s`;
-  const min = Math.round(seg / 60);
-  return `hace ${min} min`;
 }
 
 export function AutoSaveIndicator({ estado, ultimoGuardado }: Props) {
@@ -48,7 +41,7 @@ export function AutoSaveIndicator({ estado, ultimoGuardado }: Props) {
     return (
       <span className={cn("flex items-center gap-1 text-xs text-success")}>
         <Check className="h-3 w-3" />
-        Guardado{ultimoGuardado ? ` ${formatoRelativo(ultimoGuardado)}` : ""}
+        Guardado{ultimoGuardado ? ` ${formatRelativo(new Date(ultimoGuardado))}` : ""}
       </span>
     );
   }

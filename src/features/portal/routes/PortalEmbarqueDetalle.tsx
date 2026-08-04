@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,10 +19,11 @@ import { PortalEmbarqueStepper } from "@/features/portal/components/embarqueDeta
 import { usePortalEmbarqueDetalleController } from "@/features/embarques/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useDocumentTitle } from "@/hooks/shared";
+import { useVolver } from "@/hooks/shared/useVolver";
 
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const volver = useVolver(ROUTES.PORTAL_EMBARQUES);
   const {
     embarque,
     isLoading,
@@ -47,7 +48,7 @@ export default function PortalEmbarqueDetalle() {
       <div className="text-center py-20">
         <Ship className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
         <p className="text-muted-foreground font-medium">Embarque no encontrado</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate(ROUTES.PORTAL_EMBARQUES)}>Volver</Button>
+        <Button variant="outline" className="mt-4" onClick={volver}>Volver</Button>
       </div>
     );
   }
@@ -55,7 +56,7 @@ export default function PortalEmbarqueDetalle() {
   return (
     <div className="space-y-6">
       <DetailHeader
-        backTo={ROUTES.PORTAL_EMBARQUES}
+        backTo={volver}
         backLabel="Volver a Embarques"
         icon={<Ship className="h-6 w-6 text-accent shrink-0" />}
         title={embarque.expediente}

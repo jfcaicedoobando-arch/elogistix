@@ -19,6 +19,7 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { diffDias } from "./garantias/garantiasUtils";
 import { GarantiasKpiCards } from "./garantias/GarantiasKpiCards";
 import { useGarantiasColumns, type GarantiaRow } from "@/features/embarques/hooks/useGarantiasColumns";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   embarqueId: string;
@@ -57,7 +58,7 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
   const { columns } = useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal });
   const refrescarMut = useRefrescarGarantiasDesdeTarifa(embarqueId);
 
-  if (isLoading) return <div className="text-sm text-muted-foreground p-6">Cargando garantías…</div>;
+  if (isLoading) return <EmptyStateInline loading message="Cargando garantías…" />;
 
   return (
     <div className="space-y-4">

@@ -33,6 +33,10 @@
     --selection-surface: 221 90% 96%;
     --selection-surface-foreground: 220 40% 13%;
 
+    /* Superficie del isotipo de marca: el logo es azul marino sobre claro,
+       así que en dark mode se atenúa a un blanco roto para no encandilar. */
+    --brand-surface: 0 0% 100%;
+
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
@@ -116,6 +120,8 @@
 
     --card: 220 35% 13%;
     --card-foreground: 210 33% 96%;
+
+    --brand-surface: 210 25% 92%;
 
     --popover: 220 38% 11%;
     --popover-foreground: 210 33% 96%;

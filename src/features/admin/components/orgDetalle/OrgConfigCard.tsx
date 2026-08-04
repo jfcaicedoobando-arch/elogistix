@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Settings } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface ConfigItem {
   id: string;
@@ -25,7 +26,7 @@ export function OrgConfigCard({ loading, totalItems, grouped }: OrgConfigCardPro
         <CardDescription>Parámetros de configuración de esta organización</CardDescription>
       </CardHeader>
       <CardContent>
-        {loading && <p className="text-sm text-muted-foreground">Cargando...</p>}
+        {loading && <EmptyStateInline loading message="Cargando…" className="py-4" />}
         {!loading && totalItems === 0 && (
           <p className="text-sm text-muted-foreground">Sin configuración personalizada.</p>
         )}

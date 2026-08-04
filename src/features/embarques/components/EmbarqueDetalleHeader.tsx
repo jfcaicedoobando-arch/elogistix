@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 
 import { toTitleCase } from "@/lib/formatters";
 import { EmbarqueStatusChip } from "./EmbarqueStatusChip";
@@ -40,6 +41,7 @@ export function EmbarqueDetalleHeader({
   onNavigateTab,
 }: Props) {
 
+  const volver = useVolver("/embarques");
   const { isAdmin } = usePermissions();
   const puedeReabrir = isAdmin && estadoVisual === "Cerrado";
   const { data: cotizacionFolio } = useCotizacionFolio(embarque.cotizacion_id);
@@ -65,7 +67,7 @@ export function EmbarqueDetalleHeader({
   return (
     <>
       <DetailHeader
-        backTo="/embarques"
+        backTo={volver}
         backLabel="Volver a Embarques"
         title={labelExpediente(embarque.expediente, embarque.id)}
         badge={

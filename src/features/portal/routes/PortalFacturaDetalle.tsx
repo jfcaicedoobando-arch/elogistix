@@ -1,4 +1,4 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DetailSkeleton } from "@/components/shared/skeletons";
@@ -18,9 +18,10 @@ import PortalFacturaPagosCard from "@/features/portal/components/factura/PortalF
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useDocumentTitle } from "@/hooks/shared";
+import { useVolver } from "@/hooks/shared/useVolver";
 export default function PortalFacturaDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const volver = useVolver(ROUTES.PORTAL_FACTURAS);
   const { data: factura, isLoading } = usePortalFactura(id);
   useRegisterBreadcrumbLabel(id, factura?.numero);
   useDocumentTitle(factura ? `Factura · ${factura.numero}` : "Factura");
@@ -42,7 +43,7 @@ export default function PortalFacturaDetalle() {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Factura no encontrada.</p>
-        <Button variant="link" onClick={() => navigate(ROUTES.PORTAL_FACTURAS)}>
+        <Button variant="link" onClick={volver}>
           Volver a facturas
         </Button>
       </div>
@@ -56,7 +57,7 @@ export default function PortalFacturaDetalle() {
   return (
     <div className="space-y-5">
       <DetailHeader
-        backTo={ROUTES.PORTAL_FACTURAS}
+        backTo={volver}
         backLabel="Volver a Facturas"
         icon={<Receipt className="h-6 w-6 text-accent shrink-0" />}
         title={<span className="font-mono tabular-nums">{factura.numero}</span>}

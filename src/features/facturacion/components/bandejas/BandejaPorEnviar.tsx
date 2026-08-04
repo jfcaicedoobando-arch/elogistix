@@ -118,7 +118,7 @@ export function BandejaPorEnviar() {
               isLoading={paged.isLoading}
               emptyIcon={MailWarning}
               emptyMessage="Todos los CFDI timbrados ya se enviaron al cliente."
-              emptyHint="Aparecerán aquí los CFDI ya timbrados que todavía no tienen registro de envío por correo. Criterio: timbrada = true y sin fecha_envio."
+              emptyHint="Aquí aparecerán las facturas ya timbradas que todavía no se han enviado por correo al cliente."
               rowKey={(r) => r.id}
               getRowHref={(r) => `/facturacion/${r.id}`}
               getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}

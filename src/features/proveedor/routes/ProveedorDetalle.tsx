@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { toTitleCase } from "@/lib/formatters";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
@@ -27,6 +28,7 @@ import { ProveedorSaludTab } from "../components/ProveedorSaludTab";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
+  const volver = useVolver("/compras/proveedores");
   const {
     proveedor, isLoading, isDeleting, operaciones,
     totalFacturado, totalPagado, totalPendiente, agregados,
@@ -62,7 +64,7 @@ export default function ProveedorDetalle() {
   return (
     <PageContainer>
       <DetailHeader
-        backTo="/compras/proveedores"
+        backTo={volver}
         backLabel="Volver a Proveedores"
         icon={<Truck className="h-6 w-6 text-accent shrink-0" />}
         title={nombreFmt}

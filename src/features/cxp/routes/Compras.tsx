@@ -21,7 +21,7 @@ import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
 import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
 import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
 import { usePermissions } from "@/hooks/shared";
-import { formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { TopProveedoresCard, UltimasFacturasCard } from "./_sections/ComprasDashboardCards";
 import { KpiCard } from "./_sections/ComprasDashboardTiles";
 import { ComprasAgingChart } from "./_sections/ComprasAgingChart";
@@ -99,6 +99,7 @@ export default function Compras() {
           label="Por aprobar"
           value={pendientesAprob}
           sub={pendientesAprob > 0 ? formatCurrencyCompact(metrics.porAprobarMonto, "MXN") : "sin pendientes"}
+          valueTooltip={pendientesAprob > 0 ? formatCurrency(metrics.porAprobarMonto, "MXN") : undefined}
           to={ROUTES.COMPRAS_POR_APROBAR}
           icon={<ShieldCheck className="h-4 w-4" />}
           tone={pendientesAprob > 0 ? "warn" : "default"}
@@ -108,6 +109,7 @@ export default function Compras() {
           label="Por pagar"
           value={`${formatCurrencyCompact(kpis.por_pagar_mxn, "MXN")} · ${formatCurrencyCompact(kpis.por_pagar_usd, "USD")}`}
           sub={porPagar7d > 0 ? `${formatCurrencyCompact(porPagar7d, "MXN")} vencen en 7 d` : `${metrics.facturasConSaldo} facturas con saldo`}
+          valueTooltip={`${formatCurrency(kpis.por_pagar_mxn, "MXN")} · ${formatCurrency(kpis.por_pagar_usd, "USD")}`}
           to={ROUTES.COMPRAS_POR_PAGAR}
           icon={<Landmark className="h-4 w-4" />}
           tone={porPagar7d > 0 ? "warn" : "default"}
@@ -119,6 +121,7 @@ export default function Compras() {
           sub={vencidoTotal > 0
             ? `${formatCurrencyCompact(kpis.vencido_mxn, "MXN")} · ${formatCurrencyCompact(kpis.vencido_usd, "USD")}`
             : "al corriente"}
+          valueTooltip={vencidoTotal > 0 ? formatCurrency(vencidoTotal, "MXN") : undefined}
           to={ROUTES.COMPRAS_AGING}
           icon={<AlertTriangle className="h-4 w-4" />}
           tone={vencidoTotal > 0 ? "danger" : "success"}

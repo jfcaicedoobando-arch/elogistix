@@ -22,6 +22,7 @@ import { type FacturapiAmbiente } from "@/features/configuracion/services/factur
 import FacturapiCredencialesForm from "./FacturapiCredencialesForm";
 import { FacturapiWebhookUrlSection } from "./FacturapiWebhookUrlSection";
 import FacturapiOnboardingWizard from "./FacturapiOnboardingWizard";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 function HeaderBadges({ configurado, ambiente }: { configurado: boolean; ambiente: FacturapiAmbiente }) {
   return (
     <>
@@ -104,7 +105,7 @@ export default function FacturapiCredencialesCard() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
+        {isLoading && <EmptyStateInline loading message="Cargando…" className="py-4" />}
 
         <div className="flex items-center justify-between gap-3 rounded border border-dashed p-3 bg-muted/30">
           <div className="space-y-0.5">
