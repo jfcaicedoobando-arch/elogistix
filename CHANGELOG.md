@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.411.0] - 2026-08-04
+- R8/FIX 1: nuevo `CargaGuard` (variante de `AsyncBoundary` que respeta los skeletons propios) aplicado a ~20 rutas de operación, ventas/CxC, compras/CxP, catálogos, CRM y administración: ninguna pantalla puede quedarse cargando para siempre; a los 20 s o ante error muestra aviso con "Reintentar".
+- Detalles menores R8: badge de demora "0d" ahora dice "Hoy" con tooltip; saludos del dashboard usan icono Lucide en lugar del emoji 👋 (que se rompía en algunas fuentes); KPIs de facturación renombrados a "Facturado en <mes>", "Cobrado en <mes>" y "Saldo por cobrar" con tooltips que explican por qué un cero es normal; aviso de tracking de naviera sin flecha "↓" ambigua.
+
+
+
 ## [13.410.3] - 2026-08-04
 - Triage UI/UX R8 documentado en `docs/auditoria/triage_uiux_r8.md`: validación con Playwright a 1920x1080 de los 7 hallazgos WAVE 1 (sólo FIX 1 es real; FIX 2–FIX 7 no reproducibles) + 4 hallazgos menores nuevos.
 
