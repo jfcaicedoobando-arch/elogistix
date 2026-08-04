@@ -67,8 +67,9 @@ export function useEmbarqueForm() {
       await uploadFile(ruta, archivo);
       methods.setValue("msdsArchivo", ruta, opts);
     } catch (err) {
-      notifyError(err, { title: "Error al subir MSDS", method: "HANDLE_MSDS_UPLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al subir MSDS", method: "HANDLE_MSDS_UPLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED, error: err });
     } finally {
+
       methods.setValue("subiendoMsds", false, opts);
     }
   };
