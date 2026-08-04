@@ -63,7 +63,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       setLoadingSA(false);
     })();
     return () => { cancelled = true; };
-  }, [user, isSuperAdmin]);
+  }, [user, isSuperAdmin, cachedOrgId]);
 
   const setActiveOrganization = useCallback((id: string) => {
     if (isSuperAdmin) {
