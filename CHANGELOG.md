@@ -1,6 +1,13 @@
 # Changelog
 
+## [13.420.0] - 2026-08-05
+- Adjuntos (Sentry JAVASCRIPT-REACT-4M): se corrigió "new row violates row-level security policy" al subir MSDS de embarque/cotización y documentos en el alta de embarque. Las rutas del bucket `documentos` ahora inician con el `organization_id` y la política lo acepta (se conserva la validación por expediente).
+- Adjuntos: los errores de permisos de almacenamiento se muestran en español claro y el fallo de MSDS ya se reporta con contexto en vez de quedar como promesa no atendida.
+- Demo (Sentry JAVASCRIPT-REACT-1G): `seed_demo_organization` toma un candado de transacción y el frontend comparte la promesa en curso, evitando el error de llave foránea `pagos_proveedor_proveedor_factura_id_fkey` por re-sembrados simultáneos.
+- Sentry JAVASCRIPT-REACT-4K (`generar_expediente(tipo_operacion) does not exist`): verificado como resuelto por la migración del 03/08; se cerró el issue.
+
 ## [13.419.0] - 2026-08-05
+
 - Buzón CxP: se corrigió el error "No se pudo subir la factura / new row violates row-level security policy" al reintentar subir un archivo ya existente. El bucket `cxp-inbox` no tenía política de actualización y la subida usa `upsert`; ahora se permite reemplazar dentro de la misma organización.
 - Buzón CxP: el duplicado se detecta antes de subir el archivo, así que el usuario ve el mensaje claro ("ya está en el buzón" / "ya fue capturado") en vez de un error técnico.
 - Buzón CxP: los errores de permisos del almacenamiento se traducen a lenguaje claro, y `contador`/`auxiliar_contable` ya pueden retirar archivos del buzón (antes sólo podían subirlos).
