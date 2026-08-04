@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { uploadFile } from "@/services/storage/index";
-import { useExchangeRates } from "@/features/catalogos/hooks/useExchangeRates";
+import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import {
