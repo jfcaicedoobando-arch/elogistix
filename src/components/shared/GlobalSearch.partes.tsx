@@ -2,36 +2,11 @@
  * Piezas presentacionales del buscador global. Extraídas de `GlobalSearch.tsx`
  * para respetar Power of 10 (≤ 200 líneas por archivo).
  */
-import { SearchX, Ship, Users, Truck, FileSpreadsheet, ClipboardList, Receipt, History } from "lucide-react";
+import { SearchX, History } from "lucide-react";
 import { CommandFooter, CommandGroup, CommandItem, CommandKey } from "@/components/ui/command";
 import type { GlobalSearchResult } from "@/hooks/shared";
+import { ICONO_FILA, typeIcons, typeLabels } from "./globalSearchMeta";
 
-/**
- * Icono de la fila: gris apagado en reposo y azul de acento cuando la fila está
- * seleccionada, para reforzar la selección sin fondo sólido.
- */
-export const ICONO_FILA =
-  "mr-1 h-4 w-4 shrink-0 text-muted-foreground group-data-[selected=true]:text-accent";
-
-export const typeIcons = {
-  embarque: Ship,
-  cliente: Users,
-  proveedor: Truck,
-  factura: Receipt,
-  factura_proveedor: Receipt,
-  cotizacion: ClipboardList,
-  proforma: FileSpreadsheet,
-};
-
-export const typeLabels = {
-  embarque: "Embarques",
-  cliente: "Clientes",
-  proveedor: "Proveedores",
-  factura: "Facturas",
-  factura_proveedor: "Facturas de proveedor",
-  cotizacion: "Cotizaciones",
-  proforma: "Proformas",
-};
 
 /** Estado vacío: distingue "sin resultados" de un fallo de red. */
 export function GlobalSearchVacio({ busquedaFallo }: { busquedaFallo: boolean }) {
