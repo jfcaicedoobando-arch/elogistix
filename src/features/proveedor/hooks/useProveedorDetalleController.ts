@@ -82,6 +82,7 @@ export function useProveedorDetalleController() {
     totalFacturado,
     totalPagado,
     totalPendiente,
+    agregados,
     canEdit,
     isAdmin,
     editOpen,

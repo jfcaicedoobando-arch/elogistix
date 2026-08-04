@@ -29,7 +29,7 @@ export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const {
     proveedor, isLoading, isDeleting, operaciones,
-    totalFacturado, totalPagado, totalPendiente,
+    totalFacturado, totalPagado, totalPendiente, agregados,
     canEdit, isAdmin, editOpen, setEditOpen,
     deleteOpen, setDeleteOpen, handleUpdate, handleDelete,
   } = useProveedorDetalleController();

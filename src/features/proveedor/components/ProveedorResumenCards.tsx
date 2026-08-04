@@ -68,6 +68,25 @@ export function ProveedorResumenCards({
         />
       </KpiStrip>
 
+      {(variasMonedas || monedasSinTc.length > 0) && (
+        <div className="text-xs text-muted-foreground">
+          {variasMonedas && (
+            <span>
+              Desglose nativo:{" "}
+              {monedasNativas
+                .map(([mon, monto]) => formatCurrency(monto, mon))
+                .join(" · ")}
+            </span>
+          )}
+          {monedasSinTc.length > 0 && (
+            <span className="text-warning">
+              {variasMonedas ? " · " : ""}
+              {monedasSinTc.join(", ")} sin tipo de cambio: no se incluye en el equivalente
+            </span>
+          )}
+        </div>
+      )}
+
       {totalFacturado > 0 && (
         <div className="space-y-1.5">
           <div
