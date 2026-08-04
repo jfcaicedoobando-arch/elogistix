@@ -76,3 +76,27 @@ export function TabResumen({ embarque }: Props) {
     </div>
   );
 }
+
+/** Campo de "Partes" con estado vacío accionable hacia la edición del embarque. */
+function ParteCampo({ label, valor, embarqueId }: { label: string; valor?: string | null; embarqueId: string }) {
+  const texto = toTitleCase(valor ?? "");
+  return (
+    <div className="space-y-1">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      {texto ? (
+        <div className="text-foreground">{texto}</div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground italic">Sin capturar</span>
+          <Link
+            to={`/embarques/${embarqueId}/editar`}
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            <Pencil className="h-3 w-3" />
+            Capturar
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
