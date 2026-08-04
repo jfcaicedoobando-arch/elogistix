@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.418.1] - 2026-08-05
+- CI: se extrajo el aviso de fallos best-effort de CxP a `useNuevaFacturaProveedorForm.bestEffort.ts` para que el archivo de efectos secundarios vuelva a quedar bajo el límite de 200 líneas (Power of 10).
+
 ## [13.418.0] - 2026-08-05
 - CxP: se corrigió el falso error "El CFDI no cuadra y no se puede registrar" al subir facturas de proveedor con líneas de cantidad mayor a 1. El validador sumaba el importe unitario sin multiplicarlo por la cantidad (ej. 155.00 vs subtotal 435.00); ahora usa el mismo cálculo de total de línea que la UI.
 
