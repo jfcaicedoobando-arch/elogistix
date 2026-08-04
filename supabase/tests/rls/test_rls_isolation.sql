@@ -66,7 +66,8 @@ BEGIN
   -- Test 1: Admin de Org A solo ve clientes de Org A
   -- --------------------------------------------------------------------------
   PERFORM pg_temp.as_user(user_a);
-  SELECT COUNT(*) INTO visible_count FROM public.clientes WHERE nombre LIKE 'Cliente %';
+  -- ILIKE: el trigger `_normalizar_razon_social` guarda el nombre en MAYÚSCULAS
+  SELECT COUNT(*) INTO visible_count FROM public.clientes WHERE nombre ILIKE 'Cliente %';
   PERFORM pg_temp.assert(visible_count = 1,
     format('Admin A vio %s clientes, esperaba 1', visible_count));
 
