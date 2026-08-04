@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import {
   calcularDesgloseMoneda,
-  parseConceptos,
+  parseConceptosDetallado,
 } from "@/lib/domain/cotizacionDetalle";
 
 interface CotizacionLike {
@@ -16,7 +16,7 @@ export function usePortalCotizacionDetalle(cot: CotizacionLike | null | undefine
     // B-093: parseo defensivo fila a fila — los conceptos legacy (formato
     // viejo, sin `total`/`tasa_iva_aplicada`/`descripcion`) ya no rompen el
     // render ("USDNaN", Total USD $0.00, fila vacía).
-    const conceptos = parseConceptos(cot?.conceptos_venta);
+    const { conceptos, descartados } = parseConceptosDetallado(cot?.conceptos_venta);
 
     const conceptosUSD = conceptos.filter((c) => c.moneda === "USD");
     const conceptosMXN = conceptos.filter((c) => c.moneda === "MXN");
@@ -35,6 +35,7 @@ export function usePortalCotizacionDetalle(cot: CotizacionLike | null | undefine
       subtotalMXN: mxn.subtotal,
       ivaMXN: mxn.iva,
       totalMXN: mxn.total,
+      conceptosDescartados: descartados,
     };
   }, [cot, tasaIva]);
 }

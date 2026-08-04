@@ -55,11 +55,14 @@ export function calcularAgregadosProveedor(
   const monedasSinTc: string[] = [];
 
   for (const [moneda, monto] of Object.entries(porMoneda)) {
-    const conv = aMxn(monto, moneda, tcUsdMxn);
+    // Sólo MXN (1:1) y USD (con TC del día) son convertibles aquí; el resto se
+    // reporta como "sin TC" en lugar de convertirse con una tasa equivocada.
+    const tc = moneda === "USD" ? tcUsdMxn : moneda === "MXN" ? 1 : 0;
+    const conv = aMxn(monto, moneda, tc);
     if (conv.completo) {
       totalFacturado = money(totalFacturado + conv.monto);
       const pagadoNativo = pagadoPorMoneda[moneda] ?? 0;
-      const convPagado = aMxn(pagadoNativo, moneda, tcUsdMxn);
+      const convPagado = aMxn(pagadoNativo, moneda, tc);
       if (convPagado.completo) totalPagado = money(totalPagado + convPagado.monto);
     } else if (monto !== 0) {
       monedasSinTc.push(moneda);

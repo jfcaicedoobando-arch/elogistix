@@ -39,6 +39,8 @@ export interface FaseEmbarque {
   iconoId: FaseIconoId;
   fecha: string | null;
   estado: EstadoFase;
+  /** Usuario/actor que registró el evento, cuando el dato está disponible. */
+  usuario?: string | null;
 }
 
 export interface EmbarqueFasesInput {
