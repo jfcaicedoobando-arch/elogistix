@@ -3,9 +3,12 @@ import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useEmbarqueForm } from "../useEmbarqueForm";
 
-vi.mock("@/features/catalogos/hooks/useExchangeRates", () => ({
-  useExchangeRates: () => ({
-    data: { usdMxn: 20, eurMxn: 22 },
+// v13.410.1: el hook precarga el T/C vía `useTcInicial` (DOF preferente), no
+// directamente desde `useExchangeRates`.
+vi.mock("@/features/catalogos/hooks/useTcInicial", () => ({
+  useTcInicial: () => ({
+    data: { usdMxn: 20, eurMxn: 22, fecha: "2026-08-04", fuente: "DOF" },
+    isLoading: false,
   }),
 }));
 

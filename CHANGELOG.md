@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.410.2] - 2026-08-04
+- CI verde: `useEmbarqueForm.test` ahora mockea `useTcInicial` (el hook ya no consume `useExchangeRates` directo).
+- `StepCostosPrecios` baja de complejidad 19 → 16 extrayendo helpers puros (`describirOrigenTc`, `tcValido`, `convertirAUsd`).
+- Power of 10: nuevo `useNuevoEmbarqueCatalogos` (extraído de `useNuevoEmbarqueWizard`) y compactación de `TabFacturasEmitidas`; ambos archivos vuelven a ≤200 líneas.
+
 ## [13.410.1] - 2026-08-04
 - CI post-deploy: el smoke de `duplicar_cotizacion` ya no marca falso positivo B-016. Un bloqueo de negocio (`P0001`/`P0002`, p.ej. "Cotización no encontrada" con UUID inexistente) es la respuesta esperada; sólo falla ante `42703`/`42883` o un 500 sin código de negocio.
 

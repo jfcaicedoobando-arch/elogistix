@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-
-import { Download, ChevronDown } from "lucide-react";
+import { Download, ChevronDown, Receipt } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -17,7 +16,6 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import { FacturasMasivasToolbar } from "@/features/facturacion/components/FacturasMasivasToolbar";
 import { FacturasEmitidasFooter } from "@/features/facturacion/components/FacturasEmitidasFooter";
 import EmptyState from "@/components/empty/EmptyState";
-import { Receipt } from "lucide-react";
 import { usePermissions } from "@/hooks/shared";
 import type { ColumnDef } from "@/components/shared/DataTable";
 import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
@@ -60,7 +58,6 @@ interface Props {
   setPageSize: (n: number) => void;
   onCreateNew?: () => void;
 }
-
 export function TabFacturasEmitidas(p: Props) {
   const { canEmitirFactura } = usePermissions();
   const selection = useRowSelection();
@@ -82,7 +79,6 @@ export function TabFacturasEmitidas(p: Props) {
     if (p.fechaHasta) c.push({ key: "hasta", label: `Hasta: ${p.fechaHasta}`, onRemove: () => p.setFechaHasta("") });
     return c;
   }, [p]);
-
   const primarySlot = (
     <>
       <Select value={p.filterEstado} onValueChange={(v) => p.setFilter("estado", v)}>
@@ -107,17 +103,16 @@ export function TabFacturasEmitidas(p: Props) {
       </Select>
     </>
   );
-
+  const rangoFecha = (etiqueta: "desde" | "hasta", value: string, onChange: (v: string) => void) => (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-muted-foreground">{rangoLabel("Emisión", etiqueta)}</label>
+      <DatePickerMx value={value} onChange={onChange} className="w-full" />
+    </div>
+  );
   const secondarySlot = (
     <div className="space-y-4">
-      <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">{rangoLabel("Emisión", "desde")}</label>
-        <DatePickerMx value={p.fechaDesde} onChange={p.setFechaDesde} className="w-full" />
-      </div>
-      <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">{rangoLabel("Emisión", "hasta")}</label>
-        <DatePickerMx value={p.fechaHasta} onChange={p.setFechaHasta} className="w-full" />
-      </div>
+      {rangoFecha("desde", p.fechaDesde, p.setFechaDesde)}
+      {rangoFecha("hasta", p.fechaHasta, p.setFechaHasta)}
     </div>
   );
 
