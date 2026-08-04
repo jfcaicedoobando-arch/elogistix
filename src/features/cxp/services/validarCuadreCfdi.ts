@@ -4,7 +4,7 @@
  * como gasto en CxP.
  *
  * Reglas (tolerancia = ±0.02 MXN por redondeo de centavos):
- *  1. Σ importes de conceptos ≈ subtotal
+ *  1. Σ (importe unitario × cantidad) de conceptos ≈ subtotal
  *  2. Σ IVA por concepto ≈ iva_trasladado
  *  3. Σ IEPS por concepto ≈ ieps_trasladado
  *  4. subtotal + iva + ieps - retenciones ≈ total
@@ -14,6 +14,7 @@
  */
 import type { CfdiParsedResponse } from "./parseCfdi.types";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { totalLinea } from "@/features/cxp/utils/cuadreConceptos";
 
 export const CUADRE_CFDI_TOLERANCIA = 0.02;
 
@@ -44,7 +45,13 @@ export function validarCuadreCfdi(cfdi: CfdiParsedResponse["cfdi"]): CuadreCfdiR
   const retenciones = Number(cfdi.retenciones) || 0;
   const total = Number(cfdi.total) || 0;
 
-  const sumSub = suma(conceptos.map((c) => Number(c.importe) || 0));
+  // `importe` es UNITARIO (el parser lo normaliza dividiendo entre la cantidad),
+  // así que el total de línea es importe × cantidad — misma regla que la UI.
+  const sumSub = suma(
+    conceptos.map((c) =>
+      totalLinea({ monto: Number(c.importe) || 0, cantidad: c.cantidad ?? 1 }),
+    ),
+  );
   const sumIva = suma(conceptos.map((c) => Number(c.iva) || 0));
   const sumIeps = suma(conceptos.map((c) => Number(c.ieps) || 0));
 

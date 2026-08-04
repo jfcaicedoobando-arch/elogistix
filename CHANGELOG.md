@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.418.0] - 2026-08-05
+- CxP: se corrigió el falso error "El CFDI no cuadra y no se puede registrar" al subir facturas de proveedor con líneas de cantidad mayor a 1. El validador sumaba el importe unitario sin multiplicarlo por la cantidad (ej. 155.00 vs subtotal 435.00); ahora usa el mismo cálculo de total de línea que la UI.
+
+
 ## [13.417.4] - 2026-08-05
 - Build: `src/constants/appVersion.ts` había quedado vacío y rompía la compilación (`APP_VERSION` no exportado). Se restauró la constante.
 

@@ -23,6 +23,30 @@ describe("validarCuadreCfdi", () => {
     expect(validarCuadreCfdi(makeCfdi()).ok).toBe(true);
   });
 
+  it("acepta líneas con cantidad > 1 (importe unitario × cantidad)", () => {
+    const r = validarCuadreCfdi(
+      makeCfdi({
+        subtotal: 435, iva_trasladado: 69.6, ieps_trasladado: 0, retenciones: 0,
+        total: 504.6,
+        conceptos: [{ descripcion: "Maniobra", cantidad: 3, importe: 145, iva: 69.6, ieps: 0 }],
+      }),
+    );
+    expect(r.ok).toBe(true);
+  });
+
+  it("rechaza cantidad > 1 cuando el total de línea no cuadra con el subtotal", () => {
+    const r = validarCuadreCfdi(
+      makeCfdi({
+        subtotal: 500, iva_trasladado: 69.6, ieps_trasladado: 0, retenciones: 0,
+        total: 569.6,
+        conceptos: [{ descripcion: "Maniobra", cantidad: 3, importe: 145, iva: 69.6, ieps: 0 }],
+      }),
+    );
+    expect(r.ok).toBe(false);
+    expect(r.errores.join(" ")).toMatch(/subtotal/i);
+  });
+
+
   it("tolera diferencias ≤ 0.02 por redondeo", () => {
     const r = validarCuadreCfdi(
       makeCfdi({ subtotal: 10000.01, total: 11832.01 }),
