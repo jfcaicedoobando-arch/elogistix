@@ -119,9 +119,11 @@ export function GlobalSearch() {
               key={type}
               type={type}
               items={items}
+              termino={debouncedQuery}
               onSelect={handleSelect}
             />
           ))}
+
         </CommandList>
         <GlobalSearchAtajos />
       </CommandDialog>
