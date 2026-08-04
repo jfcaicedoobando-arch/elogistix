@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
+import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 
 import {
   clienteInsertSchema,
@@ -159,8 +160,9 @@ export {
 
 export async function createCliente(cliente: TablesInsert<"clientes">) {
   parseOrThrow(clienteInsertSchema, cliente, "Cliente");
+  const payload = { ...cliente, nombre: normalizarRazonSocial(cliente.nombre) };
   return unwrap(
-    supabase.from("clientes").insert(cliente).select().single(),
+    supabase.from("clientes").insert(payload).select().single(),
   );
 }
 
@@ -169,8 +171,12 @@ export async function updateCliente(
   updates: Partial<Cliente>,
 ): Promise<Cliente> {
   parseOrThrow(clienteUpdateSchema, updates, "Cliente");
+  const payload =
+    updates.nombre === undefined
+      ? updates
+      : { ...updates, nombre: normalizarRazonSocial(updates.nombre) };
   return unwrap(
-    supabase.from("clientes").update(updates).eq("id", id).select().single(),
+    supabase.from("clientes").update(payload).eq("id", id).select().single(),
   );
 }
 

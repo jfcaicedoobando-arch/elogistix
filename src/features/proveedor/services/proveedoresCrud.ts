@@ -132,7 +132,8 @@ export async function fetchProveedor(id: string): Promise<Proveedor | null> {
 }
 
 export async function insertProveedor(prov: TablesInsert<"proveedores">): Promise<Proveedor> {
-  const { data, error } = await supabase.from("proveedores").insert(prov).select().single();
+  const payload = { ...prov, nombre: normalizarRazonSocial(prov.nombre) };
+  const { data, error } = await supabase.from("proveedores").insert(payload).select().single();
   if (error) {
     // 23505 = unique_violation (índice proveedores_org_rfc_unique)
     if ((error as { code?: string }).code === "23505") {
@@ -151,9 +152,13 @@ export async function updateProveedor(
   // P2-1 (R5): un UPDATE bloqueado por RLS o sobre un id inexistente NO devuelve
   // error en PostgREST — devuelve 0 filas. Sin este chequeo la UI mostraba
   // "Proveedor actualizado" y nada se había guardado.
+  const payload =
+    changes.nombre === undefined
+      ? changes
+      : { ...changes, nombre: normalizarRazonSocial(changes.nombre) };
   const { data, error } = await supabase
     .from("proveedores")
-    .update(changes)
+    .update(payload)
     .eq("id", id)
     .select("id");
   if (error) throw error;
