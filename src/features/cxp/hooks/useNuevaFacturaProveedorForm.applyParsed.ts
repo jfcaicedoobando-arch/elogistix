@@ -67,5 +67,13 @@ export async function aplicarPdfIaParsed(
 ): Promise<boolean> {
   const result = await procesarPdfIaParsed(data, files, deps.organizationId);
   applyResult(deps, result);
+  // v13.414.0: si la IA no copió el folio literal del documento, no lo
+  // inventamos: se pide capturarlo a mano para no chocar con otra factura.
+  if (!result.values.folio.trim()) {
+    deps.setErrors({
+      folio: "Captura el folio tal como aparece impreso en el documento (la IA no lo detectó con certeza).",
+    });
+  }
   return true;
 }
+
