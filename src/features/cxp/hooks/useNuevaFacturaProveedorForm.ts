@@ -3,10 +3,12 @@
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
  */
 import { useMemo, useRef, useState } from "react";
-import { toggleVinculoReducer, setVinculoMontoReducer, aplicarSugerenciasReducer, type VinculosState } from "./useNuevaFacturaProveedorForm.vinculos";
+import type { VinculosState } from "./useNuevaFacturaProveedorForm.vinculos";
+import { crearAccionesVinculos } from "./useNuevaFacturaProveedorForm.acciones";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
-import type { CfdiParsedResponse, ConceptoCostoAbierto, CfdiConceptoParsed } from "@/features/cxp/services";
+import type { CfdiParsedResponse, CfdiConceptoParsed } from "@/features/cxp/services";
+
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
