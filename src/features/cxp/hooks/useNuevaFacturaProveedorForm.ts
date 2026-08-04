@@ -143,14 +143,12 @@ export function useNuevaFacturaProveedorForm(
   };
   // v13.339.0 (Q-02): si no hay CFDI, se persisten los conceptos capturados a mano.
   const conceptosAPersistir = cfdiConceptos.length > 0 ? cfdiConceptos : manuales.conceptos;
-
-  const cuadreManual = calcularCuadreConceptos(
-    Number(values.subtotal) || 0,
-    manuales.conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })),
-  );
-
+  const cuadreManual = calcularCuadreConceptos(Number(values.subtotal) || 0,
+    manuales.conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })));
   // Tope: lo vinculado a conceptos de embarque no puede exceder el subtotal.
   const topeVinculacion = calcularTopeVinculacion(Number(values.subtotal) || 0, vinculos);
+
+
 
 
 
