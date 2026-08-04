@@ -104,19 +104,9 @@ export function useNuevaFacturaProveedorForm(
     setEmbarqueAdHoc(null);
   };
 
-  const toggleVinculo = (c: ConceptoCostoAbierto, checked: boolean) => {
-    setVinculos((prev) => toggleVinculoReducer(prev, c, checked));
-  };
+  const { toggleVinculo, setVinculoMonto, aplicarSugerencias } =
+    crearAccionesVinculos(setVinculos);
 
-  const setVinculoMonto = (conceptoId: string, monto: number) => {
-    setVinculos((prev) => setVinculoMontoReducer(prev, conceptoId, monto));
-  };
-
-  const aplicarSugerencias = (sugs: ReadonlyArray<{
-    conceptoId: string; concepto: string; monto: number; embarque_id: string;
-  }>) => {
-    setVinculos(() => aplicarSugerenciasReducer(sugs));
-  };
 
   const reset = () => {
     setValues(initialValues());
