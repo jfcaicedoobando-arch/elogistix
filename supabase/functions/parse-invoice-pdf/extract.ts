@@ -165,33 +165,49 @@ export async function callGeminiExtract(p: GeminiCallParams): Promise<GeminiExtr
   }
 }
 
+/** Texto recortado y sin espacios sobrantes (nunca `undefined`). */
+function txt(v: unknown, max = 500): string {
+  return String(v ?? "").trim().slice(0, max);
+}
+
+/** Número seguro: cualquier valor no numérico cae a 0. */
+function num(v: unknown): number {
+  return Number(v) || 0;
+}
+
+function normalizeLineItems(items: unknown): GeminiExtracted["line_items"] {
+  if (!Array.isArray(items)) return [];
+  return items.map((l) => ({
+    description: txt((l as { description?: unknown })?.description, 500),
+    quantity: num((l as { quantity?: unknown })?.quantity) || undefined,
+    unit_price: num((l as { unit_price?: unknown })?.unit_price) || undefined,
+    amount: num((l as { amount?: unknown })?.amount),
+    tax: num((l as { tax?: unknown })?.tax),
+  }));
+}
+
 function normalize(a: Partial<GeminiExtracted>): GeminiExtracted {
+  const confianza = txt(a.invoice_number_confidence ?? "baja", 10).toLowerCase();
   return {
-    invoice_number: String(a.invoice_number ?? "").trim(),
-    invoice_number_confidence:
-      String(a.invoice_number_confidence ?? "baja").toLowerCase() === "alta" ? "alta" : "baja",
-    issue_date: String(a.issue_date ?? "").slice(0, 10),
-    currency: (String(a.currency ?? "USD").toUpperCase()).slice(0, 3),
-    exchange_rate_usd: Number(a.exchange_rate_usd) || 0,
-    subtotal: Number(a.subtotal) || 0,
-    tax_total: Number(a.tax_total) || 0,
-    retention_total: Number(a.retention_total) || 0,
-    total: Number(a.total) || 0,
-    supplier_name: String(a.supplier_name ?? "").trim(),
-    supplier_tax_id: String(a.supplier_tax_id ?? "").trim(),
-    customer_name: String(a.customer_name ?? "").trim(),
-    customer_tax_id: String(a.customer_tax_id ?? "").trim(),
-    line_items: Array.isArray(a.line_items) ? a.line_items.map((l) => ({
-      description: String(l.description ?? "").slice(0, 500),
-      quantity: Number(l.quantity) || undefined,
-      unit_price: Number(l.unit_price) || undefined,
-      amount: Number(l.amount) || 0,
-      tax: Number(l.tax) || 0,
-    })) : [],
-    categoria_id: String(a.categoria_id ?? "").trim(),
-    notas: String(a.notas ?? "").slice(0, 300),
+    invoice_number: txt(a.invoice_number, 100),
+    invoice_number_confidence: confianza === "alta" ? "alta" : "baja",
+    issue_date: txt(a.issue_date, 10),
+    currency: txt(a.currency ?? "USD", 3).toUpperCase(),
+    exchange_rate_usd: num(a.exchange_rate_usd),
+    subtotal: num(a.subtotal),
+    tax_total: num(a.tax_total),
+    retention_total: num(a.retention_total),
+    total: num(a.total),
+    supplier_name: txt(a.supplier_name, 300),
+    supplier_tax_id: txt(a.supplier_tax_id, 50),
+    customer_name: txt(a.customer_name, 300),
+    customer_tax_id: txt(a.customer_tax_id, 50),
+    line_items: normalizeLineItems(a.line_items),
+    categoria_id: txt(a.categoria_id, 64),
+    notas: txt(a.notas, 300),
   };
 }
+
 
 /**
  * Mapea el resultado de Gemini al shape `CfdiParsedResponse` que consume el
