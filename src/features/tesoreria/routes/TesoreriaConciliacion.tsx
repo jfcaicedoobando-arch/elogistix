@@ -34,7 +34,7 @@ export default function TesoreriaConciliacion() {
     tipo: "cargo",
   });
 
-  const { data: movs = [], isLoading } = useMovimientos(cuentaId ? { cuenta_bancaria_id: cuentaId, estado } : null);
+  const { data: movs = [], isLoading, isError: movsError, refetch: refetchMovs } = useMovimientos(cuentaId ? { cuenta_bancaria_id: cuentaId, estado } : null);
   const { data: resumen, isLoading: resumenLoading } = useConciliacionResumen(cuentaId || null);
   const importar = useImportarMovimientos();
   const conciliarPago = useConciliarPago();
@@ -166,6 +166,8 @@ export default function TesoreriaConciliacion() {
               onRowClick={setSel}
               rowClassName={(m) => (sel?.id === m.id ? "bg-accent/10" : "")}
               isLoading={isLoading}
+              isError={movsError}
+              onRetry={() => void refetchMovs()}
               emptyMessage="No hay movimientos."
               maxHeight={560}
             />
