@@ -16,6 +16,7 @@ const ARCHIVOS = [
   "src/components/shared/GlobalSearch.tsx",
   "src/components/shared/GlobalSearch.partes.tsx",
   "src/components/shared/globalSearchMeta.ts",
+  "src/components/shared/globalSearchResaltado.ts",
 ] as const;
 
 function leer(rel: string): string {

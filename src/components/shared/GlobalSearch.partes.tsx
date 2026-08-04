@@ -6,6 +6,28 @@ import { SearchX, History } from "lucide-react";
 import { CommandFooter, CommandGroup, CommandItem, CommandKey } from "@/components/ui/command";
 import type { GlobalSearchResult } from "@/hooks/shared";
 import { ICONO_FILA, typeIcons, typeLabels } from "./globalSearchMeta";
+import { resaltarCoincidencias } from "./globalSearchResaltado";
+
+/** Texto con las coincidencias de la búsqueda resaltadas. */
+export function TextoResaltado({ texto, termino }: { texto: string; termino: string }) {
+  return (
+    <>
+      {resaltarCoincidencias(texto, termino).map((seg, i) =>
+        seg.coincide ? (
+          <mark
+            key={i}
+            className="rounded-sm bg-accent/20 px-0.5 font-semibold text-accent-foreground"
+          >
+            {seg.texto}
+          </mark>
+        ) : (
+          <span key={i}>{seg.texto}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 
 
 /** Estado vacío: distingue "sin resultados" de un fallo de red. */
@@ -59,10 +81,12 @@ interface GrupoProps {
   type: string;
   items: GlobalSearchResult[];
   onSelect: (url: string, title?: string) => void;
+  /** Término escrito por el usuario, para resaltar las coincidencias. */
+  termino?: string;
 }
 
 /** Grupo de resultados de un tipo (embarques, clientes, etc.). */
-export function GlobalSearchGrupo({ type, items, onSelect }: GrupoProps) {
+export function GlobalSearchGrupo({ type, items, onSelect, termino = "" }: GrupoProps) {
   const Icon = typeIcons[type as keyof typeof typeIcons];
   return (
     <CommandGroup heading={typeLabels[type as keyof typeof typeLabels]}>
@@ -74,13 +98,16 @@ export function GlobalSearchGrupo({ type, items, onSelect }: GrupoProps) {
         >
           <Icon className={ICONO_FILA} aria-hidden="true" />
           <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold leading-tight">{item.label}</p>
+            <p className="truncate font-semibold leading-tight">
+              <TextoResaltado texto={item.label} termino={termino} />
+            </p>
             {item.sublabel && (
               <p className="truncate text-xs text-muted-foreground" title={item.sublabel}>
-                {item.sublabel}
+                <TextoResaltado texto={item.sublabel} termino={termino} />
               </p>
             )}
           </div>
+
         </CommandItem>
       ))}
     </CommandGroup>
