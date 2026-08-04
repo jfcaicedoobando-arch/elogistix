@@ -1,11 +1,12 @@
 import { useFormContext } from "react-hook-form";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 import { aUSD } from "@/lib/financial/costosUSD";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { useCostosPreciosCalc } from "@/features/embarques/hooks/useCostosPreciosCalc";
 import { CostosCard, VentasCard } from "./StepCostosPreciosCards";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
@@ -79,7 +80,7 @@ export function StepCostosPrecios(props: Props) {
   const tcOrigen = !tcInicial
     ? null
     : tcInicial.fuente === "DOF"
-      ? `DOF del ${formatDateMx(tcInicial.fecha)} · ${tcInicial.usdMxn.toFixed(4)}`
+      ? `DOF del ${formatFechaEs(tcInicial.fecha)} · ${tcInicial.usdMxn.toFixed(4)}`
       : `Referencia del día · ${tcInicial.usdMxn.toFixed(4)}`;
 
   const costoCols = showContenedorCol ? COSTO_COLS_CONT : COSTO_COLS_BASE;
