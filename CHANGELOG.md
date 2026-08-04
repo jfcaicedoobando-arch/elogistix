@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.410.1] - 2026-08-04
+- CI post-deploy: el smoke de `duplicar_cotizacion` ya no marca falso positivo B-016. Un bloqueo de negocio (`P0001`/`P0002`, p.ej. "Cotización no encontrada" con UUID inexistente) es la respuesta esperada; sólo falla ante `42703`/`42883` o un 500 sin código de negocio.
+
 ## [13.410.0] - 2026-08-04
 - Solución de raíz al T/C faltante: nuevo hook `useTcInicial` (DOF preferente, fallback al servicio remoto) precarga el tipo de cambio USD/EUR al crear un embarque, como sugerencia editable.
 - Se elimina el T/C "mágico" por defecto (17.25 / 18.50) en `DEFAULT_EMBARQUE_VALUES`: si no hay dato del DOF, el validador del paso 4 obliga a capturarlo antes de guardar.

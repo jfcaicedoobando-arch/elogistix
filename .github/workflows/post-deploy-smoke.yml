@@ -148,7 +148,7 @@ jobs:
           echo "::add-mask::$TOKEN"
           echo "DEMO_TOKEN=$TOKEN" >> "$GITHUB_ENV"
 
-      - name: RPC duplicar_cotizacion - jamas 42703/500 (B-016)
+      - name: RPC duplicar_cotizacion - jamas 42703/42883 (B-016)
         run: |
           set -euo pipefail
           BODY=$(curl -sS -w '\n%{http_code}' -X POST \
@@ -159,8 +159,17 @@ jobs:
           STATUS=$(tail -n1 <<<"$BODY")
           PAYLOAD=$(head -n-1 <<<"$BODY")
           echo "HTTP $STATUS - $PAYLOAD"
-          if grep -q '"code":"42703"' <<<"$PAYLOAD" || [ "$STATUS" = "500" ]; then
-            echo "::error::duplicar_cotizacion ROTA en el entorno desplegado (42703/500) - patron B-016"
+          # La funcion ROTA se detecta por SQLSTATE de esquema/firma (42703/42883),
+          # no por el HTTP status: un bloqueo de negocio con RAISE (P0001/P0002,
+          # p.ej. "Cotizacion no encontrada") es la respuesta ESPERADA para un UUID
+          # inexistente y PostgREST lo devuelve como 500/404 segun el codigo.
+          if grep -qE '"code":"(42703|42883)"' <<<"$PAYLOAD"; then
+            echo "::error::duplicar_cotizacion ROTA en el entorno desplegado (42703/42883) - patron B-016"
+            exit 1
+          fi
+          # Un 500 SIN codigo de negocio (P0001/P0002) si es un fallo real.
+          if [ "$STATUS" = "500" ] && ! grep -qE '"code":"(P0001|P0002)"' <<<"$PAYLOAD"; then
+            echo "::error::duplicar_cotizacion devolvio 500 sin bloqueo de negocio - patron B-016"
             exit 1
           fi
 
