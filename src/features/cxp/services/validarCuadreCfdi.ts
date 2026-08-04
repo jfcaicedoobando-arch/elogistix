@@ -14,6 +14,7 @@
  */
 import type { CfdiParsedResponse } from "./parseCfdi.types";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { totalLinea } from "@/features/cxp/utils/cuadreConceptos";
 
 export const CUADRE_CFDI_TOLERANCIA = 0.02;
 
