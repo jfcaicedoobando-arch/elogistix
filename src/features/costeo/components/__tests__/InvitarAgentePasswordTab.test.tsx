@@ -33,7 +33,7 @@ describe("InvitarAgentePasswordTab", () => {
 
   it("dispara onPasswordChange al teclear", () => {
     const props = renderTab();
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), { target: { value: "secret12" } });
+    fireEvent.change(screen.getByPlaceholderText("Contraseña temporal del agente"), { target: { value: "secret12" } });
     expect(props.onPasswordChange).toHaveBeenCalledWith("secret12");
   });
 

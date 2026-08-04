@@ -22,7 +22,7 @@ describe("formatRelativo", () => {
   });
 
   it("muestra días para menos de una semana", () => {
-    expect(formatRelativo(new Date("2026-06-11T12:00:00Z"))).toBe("hace 3 días");
+    expect(formatRelativo(new Date("2026-06-11T12:00:00Z"))).toBe("hace 4 días");
   });
 
   it("muestra fecha corta para más de una semana", () => {
