@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
-import { notificarClienteCotizacionEnviada } from "./notificarClienteEnviada";
 
 /**
  * Estados válidos del enum `estado_cotizacion` en la base de datos.
@@ -48,9 +47,7 @@ export async function updateEstadoCotizacion(
     .update(update)
     .eq("id", id);
   if (error) throw error;
-
-  // R6-FIX5: avisar al cliente en su portal cuando la cotización se envía.
-  if (estado === "Enviada") {
-    await notificarClienteCotizacionEnviada(id);
-  }
+  // R7-FIX5: la notificación al portal del cliente la crea el trigger
+  // `notificar_cotizacion_enviada` en la BD (SECURITY DEFINER e idempotente).
+  // Antes se insertaba desde aquí y RLS la bloqueaba para varios roles.
 }
