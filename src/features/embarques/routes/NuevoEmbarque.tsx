@@ -10,6 +10,8 @@ import { useNuevoEmbarqueWizard } from "@/features/embarques/hooks";
 import { CotizacionVinculadaProvider } from "@/features/embarques/hooks/useHeredadoCotizacion";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 const steps = [
   { title: "Datos Generales", num: 1 },
   { title: "Datos de Ruta", num: 2 },
@@ -52,6 +54,14 @@ export default function NuevoEmbarque() {
         onFinish={w.handleFinish}
         validateStep={(step) => w.validateStep(step)}
       >
+        <AsyncBoundary
+          isLoading={w.catalogosCargando}
+          isError={w.catalogosError}
+          onRetry={w.recargarCatalogos}
+          skeleton={<ListSkeleton rows={5} />}
+          errorTitle="No se pudieron cargar los catálogos"
+          errorDescription="Sin clientes, proveedores y cotizaciones no podemos abrir el wizard. Reintenta."
+        >
         {w.currentStep === 1 && (
           <StepDatosGenerales
             clientes={w.clientes}
@@ -99,6 +109,7 @@ export default function NuevoEmbarque() {
             errors={w.validationErrors[4] || {}}
           />
         )}
+        </AsyncBoundary>
       </EmbarqueWizardLayout>
       </CotizacionVinculadaProvider>
     </FormProvider>
