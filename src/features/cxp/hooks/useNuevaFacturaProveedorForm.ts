@@ -3,10 +3,12 @@
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
  */
 import { useMemo, useRef, useState } from "react";
-import { toggleVinculoReducer, setVinculoMontoReducer, aplicarSugerenciasReducer, type VinculosState } from "./useNuevaFacturaProveedorForm.vinculos";
+import type { VinculosState } from "./useNuevaFacturaProveedorForm.vinculos";
+import { crearAccionesVinculos } from "./useNuevaFacturaProveedorForm.acciones";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
-import type { CfdiParsedResponse, ConceptoCostoAbierto, CfdiConceptoParsed } from "@/features/cxp/services";
+import type { CfdiParsedResponse, CfdiConceptoParsed } from "@/features/cxp/services";
+
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
@@ -23,7 +25,9 @@ import { aplicarCfdiParsed, aplicarPdfIaParsed } from "./useNuevaFacturaProveedo
 import { useConceptosManuales } from "./useConceptosManuales";
 import { calcularCuadreConceptos } from "@/features/cxp/utils/cuadreConceptos";
 import { useAutoTcEffect } from "./useNuevaFacturaProveedorForm.tcEffect";
-import { puedeContinuarSubmit } from "./useNuevaFacturaProveedorForm.guard";
+import { puedeContinuarSubmit, puedeContinuarTope } from "./useNuevaFacturaProveedorForm.guard";
+import { calcularTopeVinculacion } from "@/features/cxp/utils/topeVinculacion";
+
 import { detectarCfdiDuplicado, type FacturaExistentePorUuid } from "./useNuevaFacturaProveedorForm.dup";
 export function useNuevaFacturaProveedorForm(
   onDone: (facturaId?: string | null) => void,
@@ -87,12 +91,10 @@ export function useNuevaFacturaProveedorForm(
     if (values.moneda === "MXN") return;
     if (!isFechaEmisionValida(values.emision)) return;
     manualTcRef.current = false; // botón manual gana sobre "manual" previo
-    tcDof.mutate({
-      moneda: values.moneda as MonedaTc,
-      fecha: values.emision,
-      silent: false,
-    });
+    tcDof.mutate({ moneda: values.moneda as MonedaTc, fecha: values.emision, silent: false });
   };
+
+
 
 
   const handleProveedor = (id: string, nombre: string, diasCreditoProv?: number) => {
@@ -102,19 +104,9 @@ export function useNuevaFacturaProveedorForm(
     setEmbarqueAdHoc(null);
   };
 
-  const toggleVinculo = (c: ConceptoCostoAbierto, checked: boolean) => {
-    setVinculos((prev) => toggleVinculoReducer(prev, c, checked));
-  };
+  const { toggleVinculo, setVinculoMonto, aplicarSugerencias } =
+    crearAccionesVinculos(setVinculos);
 
-  const setVinculoMonto = (conceptoId: string, monto: number) => {
-    setVinculos((prev) => setVinculoMontoReducer(prev, conceptoId, monto));
-  };
-
-  const aplicarSugerencias = (sugs: ReadonlyArray<{
-    conceptoId: string; concepto: string; monto: number; embarque_id: string;
-  }>) => {
-    setVinculos(() => aplicarSugerenciasReducer(sugs));
-  };
 
   const reset = () => {
     setValues(initialValues());
@@ -151,11 +143,15 @@ export function useNuevaFacturaProveedorForm(
   };
   // v13.339.0 (Q-02): si no hay CFDI, se persisten los conceptos capturados a mano.
   const conceptosAPersistir = cfdiConceptos.length > 0 ? cfdiConceptos : manuales.conceptos;
+  const cuadreManual = calcularCuadreConceptos(Number(values.subtotal) || 0,
+    manuales.conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })));
+  // Tope: lo vinculado a conceptos de embarque no puede exceder el subtotal.
+  const topeVinculacion = calcularTopeVinculacion(Number(values.subtotal) || 0, vinculos);
 
-  const cuadreManual = calcularCuadreConceptos(
-    Number(values.subtotal) || 0,
-    manuales.conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })),
-  );
+
+
+
+
 
   const submit = async () => {
     if (cfdiDuplicado) {
@@ -171,9 +167,13 @@ export function useNuevaFacturaProveedorForm(
     }
     // Bloqueo de captura sin partidas o con partidas descuadradas (Q-02).
     const hayVinculos = Object.keys(vinculos).length > 0;
+    if (!puedeContinuarTope(topeVinculacion, Number(values.subtotal) || 0, values.moneda)) {
+      return;
+    }
     if (!puedeContinuarSubmit(cfdiConceptos, hayVinculos, manuales, cuadreManual, Number(values.subtotal) || 0)) {
       return;
     }
+
 
     const res = await runSubmit({
       values, total, userId: user?.id, organizationId,
@@ -187,10 +187,11 @@ export function useNuevaFacturaProveedorForm(
     values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed, handlePdfIaParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
-    conceptosManuales: manuales, cuadreManual, cfdiDuplicado,
-    // Bloqueo de guardado: CFDI ya capturado o mutación en curso.
-    puedeGuardar: !cfdiDuplicado && !crear.isPending,
+    conceptosManuales: manuales, cuadreManual, cfdiDuplicado, topeVinculacion,
+    // Bloqueo de guardado: CFDI capturado, mutación en curso o tope excedido.
+    puedeGuardar: !cfdiDuplicado && !crear.isPending && !topeVinculacion.excede,
     embarqueAdHoc, setEmbarqueAdHoc,
+
     reset, submit, isPending: crear.isPending, organizationId,
     tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };

@@ -15,6 +15,9 @@ import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features
 import type { SugerenciaVinculo } from "@/features/compras/matching/matcher";
 import { SugerirEmbarqueBlock } from "./SugerirEmbarqueBlock";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
+import { TopeVinculacionBar } from "./TopeVinculacionBar";
+import type { ResultadoTopeVinculacion } from "@/features/cxp/utils/topeVinculacion";
+
 
 import { VincularFiltroToolbar } from "./VincularFiltroToolbar";
 import { VincularListaConceptos } from "./VincularListaConceptos";
@@ -45,12 +48,15 @@ interface Props {
   facturaMoneda?: string;
   embarqueAdHoc: EmbarqueSeleccionado | null;
   onEmbarqueAdHoc: (sel: EmbarqueSeleccionado | null) => void;
+  /** Tope: lo asignado no puede exceder el subtotal de la factura. */
+  tope: ResultadoTopeVinculacion;
 }
+
 
 export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
   onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
-  embarqueAdHoc, onEmbarqueAdHoc,
+  embarqueAdHoc, onEmbarqueAdHoc, tope,
 }: Props) {
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
@@ -163,6 +169,13 @@ export function VincularEmbarqueSection({
           onChangeMonto={onChangeMonto}
         />
       </div>
+
+      <TopeVinculacionBar
+        resultado={tope}
+        subtotal={facturaMonto ?? 0}
+        moneda={facturaMoneda ?? "MXN"}
+      />
+
     </div>
   );
 }

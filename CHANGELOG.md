@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.405.0] - 2026-08-04
+- Candado en "Capturar factura de proveedor": la suma de conceptos de costo vinculados ya no puede exceder el subtotal de la factura. Nueva barra `Subtotal · Asignado · Disponible` (`TopeVinculacionBar`), input en rojo cuando un monto supera lo cotizado del concepto, botón "Guardar factura" deshabilitado y aviso con el excedente exacto al intentar enviar (`topeVinculacion.ts`, `puedeContinuarTope`). 8 tests nuevos.
+
+
+
 ## [13.404.1] - 2026-08-04
 - Fix doble toast al capturar una factura desde el buzón CxP: `useCapturarFacturaEntrante` acepta `{ silencioso: true }` y el cableado del formulario ya no repite el aviso ("Factura de proveedor capturada" + "Documento marcado como capturado").
 
