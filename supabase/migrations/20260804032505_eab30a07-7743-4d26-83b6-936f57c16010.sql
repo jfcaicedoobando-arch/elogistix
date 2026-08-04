@@ -43,3 +43,5 @@ UPDATE public.embarque_facturas_entrantes e
    AND pf.deleted_at IS NULL
    AND pf.organization_id = e.organization_id
    AND upper(btrim(pf.uuid_fiscal)) = upper(btrim(e.uuid_fiscal));
+GRANT EXECUTE ON FUNCTION public._cerrar_entrantes_por_uuid() TO service_role;
+GRANT EXECUTE ON FUNCTION public._cerrar_entrantes_por_uuid() TO postgres;
