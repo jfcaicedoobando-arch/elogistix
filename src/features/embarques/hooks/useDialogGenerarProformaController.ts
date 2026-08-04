@@ -19,6 +19,7 @@ import {
 } from "@/lib/domain/conceptosPorContenedor";
 import { submitProformaDialog, ProformaValidationError } from "@/features/embarques/services/submitProformaDialog";
 import { toast } from "@/hooks/shared";
+import { useProformaTcRecovery, esErrorTcRequerido } from "./useProformaTcRecovery";
 import {
   calcularTotalesProforma,
   buildInitialProformaState,
@@ -43,6 +44,7 @@ export function useDialogGenerarProformaController(
   const fetchClienteParaPdfCached = useFetchClienteParaPdf();
   const { data: diasCreditoDefault } = useDiasCreditoCliente(embarque.cliente_id, open);
   const { data: contenedores = [] } = useContenedoresEmbarque(embarque.id);
+  const tcRecovery = useProformaTcRecovery(embarque.id);
 
   const [paso, setPaso] = useState<PasoProformaDialog>("seleccion");
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
