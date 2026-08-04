@@ -179,7 +179,7 @@ export function useNuevaFacturaProveedorForm(
       values, total, userId: user?.id, organizationId,
       pendingCfdi, cfdiConceptos: conceptosAPersistir, vinculos, embarqueAdHoc,
       crearMutateAsync: crear.mutateAsync,
-      setFolioError: () => setErrors((e) => ({ ...e, folio: "Ya existe una factura con este folio para este proveedor en esta fecha." })),
+      setFolioError: () => setErrors((e) => ({ ...e, folio: "Ya existe una factura viva con este folio y fecha para el proveedor. Si es un documento distinto, corrige el folio o la fecha de emisión." })),
     });
     if (res.ok) { reset(); onDone(res.facturaId); }
   };
