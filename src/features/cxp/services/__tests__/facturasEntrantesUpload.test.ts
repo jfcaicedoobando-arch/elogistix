@@ -34,7 +34,9 @@ const INPUT_BASE = {
   meta: null,
   nota: null,
   proveedorId: null,
-} as Record<string, unknown>;
+  pdf: null as File | null,
+  xml: null as File | null,
+};
 
 
 describe("subirFacturaEntrante", () => {
