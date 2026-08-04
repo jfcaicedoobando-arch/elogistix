@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { getErrorMessage } from "@/lib/errors";
-import { formatFechaHora } from "@/lib/formatters/dates";
+import { formatRelativo } from "@/lib/date/relativo";
 import {
   useComentariosOportunidad,
   useCrearComentarioOportunidad,
@@ -18,10 +18,6 @@ import {
 interface Props {
   oportunidadId: string;
   canEdit: boolean;
-}
-
-function formatRelativeDate(iso: string): string {
-  return formatFechaHora(iso);
 }
 
 export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props) {
@@ -75,7 +71,7 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
               <li key={c.id} className="border rounded-md p-2 bg-muted/30">
                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
                   <span className="font-medium text-foreground">{c.autor_email || "Usuario"}</span>
-                  <span>{formatRelativeDate(c.created_at)}</span>
+                  <span>{formatRelativo(c.created_at)}</span>
                 </div>
                 <p className="text-sm whitespace-pre-wrap">{c.texto}</p>
               </li>

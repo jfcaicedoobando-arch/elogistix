@@ -6,6 +6,7 @@
 import { useMemo } from "react";
 import { RotateCcw, X, FileClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatRelativo } from "@/lib/date/relativo";
 
 interface Props {
   savedAt: number;
@@ -13,18 +14,8 @@ interface Props {
   onDiscard: () => void;
 }
 
-function formatRelative(savedAt: number): string {
-  const diffMs = Date.now() - savedAt;
-  const mins = Math.round(diffMs / 60000);
-  if (mins < 1) return "hace unos segundos";
-  if (mins < 60) return `hace ${mins} min`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `hace ${hrs} h`;
-  return "hace más de 1 día";
-}
-
 export function DraftRestoreBanner({ savedAt, onRestore, onDiscard }: Props) {
-  const relative = useMemo(() => formatRelative(savedAt), [savedAt]);
+  const relative = useMemo(() => formatRelativo(new Date(savedAt)), [savedAt]);
   return (
     <div
       role="status"
