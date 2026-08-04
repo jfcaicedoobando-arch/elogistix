@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.409.0] - 2026-08-04
+- Proforma: cuando falta el tipo de cambio USD del embarque (`LC_PROFORMA_TC_REQUERIDO`), el modal muestra un aviso con captura del T/C (sugerencia DOF) y botón "Guardar y reintentar" que regenera la proforma sin perder la selección.
+- Nueva mutación `actualizarTipoCambioUsdEmbarque` y hook `useProformaTcRecovery`.
+
 ## [13.408.0] - 2026-08-04
 - P1-1 · Skeleton infinito: nuevo `AsyncBoundary` (timeout 20s + error + "Reintentar") aplicado en /configuracion, /tesoreria (incl. Cuentas), /cartera y el wizard de Nuevo Embarque (catálogos).
 - `isError`/`onRetry` propagados a `DataTable` en /usuarios (internos y portal), /facturacion y /cartera; `VirtualDataTable` ahora soporta `isError`/`onRetry` (usado en conciliación bancaria).

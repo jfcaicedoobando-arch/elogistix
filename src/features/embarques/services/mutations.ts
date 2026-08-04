@@ -146,4 +146,5 @@ export {
   actualizarFechaLlegadaRealEmbarque,
   actualizarEtaEmbarque,
   insertarNotaEmbarque,
+  actualizarTipoCambioUsdEmbarque,
 } from "./embarqueDirectMutations";
