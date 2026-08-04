@@ -29,7 +29,7 @@ export function NuevoProveedorStep1({ c }: { c: Controller }) {
 
       <div className="space-y-2">
         <Label>Nombre *</Label>
-        <Input value={c.form.nombre} onChange={(e) => c.setField("nombre", e.target.value)} />
+        <Input value={c.form.nombre} onChange={(e) => c.setField("nombre", e.target.value.toLocaleUpperCase("es-MX"))} />
       </div>
 
       {c.isLogistico && <TipoLogisticoSelect c={c} />}

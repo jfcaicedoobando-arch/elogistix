@@ -4,6 +4,7 @@
  * que el controller fusionará en el form. Solo aplica a proveedores nacionales.
  */
 import { notifySuccess } from "@/lib/ui/appFeedback";
+import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
 import type { NuevoProveedorForm } from "./useNuevoProveedorController.constants";
 
@@ -17,7 +18,7 @@ export type CsfPatch = Partial<
 
 function buildCsfPatch(data: CsfParsedData): CsfPatch {
   return {
-    nombre: data.nombre?.trim() || undefined,
+    nombre: normalizarRazonSocial(data.nombre) || undefined,
     rfc: data.rfc?.trim() || undefined,
     cp: data.cp?.trim() || undefined,
     direccion: data.direccion?.trim() || undefined,

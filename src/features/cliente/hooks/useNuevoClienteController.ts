@@ -7,6 +7,7 @@ import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 export const EMPTY_CLIENTE = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
   regimen_fiscal: "", uso_cfdi_default: "G03",
@@ -43,7 +44,10 @@ export function useNuevoClienteController(onClose: () => void) {
   const [csfFile, setCsfFile] = useState<File | null>(null);
 
   const handleChange = (field: keyof ClienteForm, value: string) =>
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm(prev => ({
+      ...prev,
+      [field]: field === "nombre" ? value.toLocaleUpperCase("es-MX") : value,
+    }));
 
   // B-024 · email/teléfono/contacto son NOT NULL en BD (trigger NULLIF('')→NULL
   // provocaba 23502 crudo). Los exigimos aquí para bloquear el paso 1.
@@ -134,7 +138,8 @@ export function useNuevoClienteController(onClose: () => void) {
       const datos = await parseCsf(file);
       setForm(prev => ({
         ...prev,
-        nombre: datos.nombre || prev.nombre,
+        nombre: normalizarRazonSocial(datos.nombre) || prev.nombre,
+
         rfc: datos.rfc || prev.rfc,
         cp: datos.cp || prev.cp,
         direccion: datos.direccion || prev.direccion,
