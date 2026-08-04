@@ -56,7 +56,7 @@ interface Props {
 export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
   onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
-  embarqueAdHoc, onEmbarqueAdHoc,
+  embarqueAdHoc, onEmbarqueAdHoc, tope,
 }: Props) {
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
