@@ -178,9 +178,13 @@ export function useNuevaFacturaProveedorForm(
     }
     // Bloqueo de captura sin partidas o con partidas descuadradas (Q-02).
     const hayVinculos = Object.keys(vinculos).length > 0;
+    if (!puedeContinuarTope(topeVinculacion, Number(values.subtotal) || 0, values.moneda)) {
+      return;
+    }
     if (!puedeContinuarSubmit(cfdiConceptos, hayVinculos, manuales, cuadreManual, Number(values.subtotal) || 0)) {
       return;
     }
+
 
     const res = await runSubmit({
       values, total, userId: user?.id, organizationId,
