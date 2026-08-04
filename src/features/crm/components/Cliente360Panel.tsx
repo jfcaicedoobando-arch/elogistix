@@ -20,6 +20,9 @@ export default function Cliente360Panel({ clienteId }: Props) {
   const navigate = useNavigate();
   const { data, isLoading } = useCliente360(clienteId);
 
+  if (isLoading) return <EmptyStateInline loading message="Cargando datos CRM…" />;
+
+
   const d = data ?? { oportunidades: [], totalAbierto: 0, totalGanado: 0, ultimaCotizacion: null, ultimoEmbarque: null };
 
   return (
