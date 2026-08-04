@@ -5,6 +5,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/formatters";
+import { lineaExcedeOriginal } from "@/features/cxp/utils/topeVinculacion";
 import type { ConceptoCostoAbierto } from "@/features/cxp/hooks";
 import type { Grupo } from "./vincularEmbarqueHelpers";
 import type { SeleccionLinea } from "@/features/cxp/types";
@@ -35,6 +36,8 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
             {g.items.map((it) => {
               const sel = seleccion[it.id];
               const checked = !!sel;
+              const excede = checked
+                && lineaExcedeOriginal({ monto: sel.monto, montoOriginal: it.monto });
               return (
                 <div key={it.id} className="px-3 py-2 flex items-center gap-3 text-sm">
                   <Checkbox
@@ -46,6 +49,11 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
                     <div className="truncate" title={it.concepto}>{it.concepto}</div>
                     <div className="text-xs text-muted-foreground">
                       Cotizado: {formatCurrency(it.monto, it.moneda)}
+                      {excede && (
+                        <span className="text-destructive ml-1">
+                          · el monto asignado supera lo cotizado
+                        </span>
+                      )}
                     </div>
                   </div>
                   {checked && (
@@ -57,7 +65,10 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
                         inputMode="decimal"
                         value={sel.monto}
                         onChange={(e) => onChangeMonto(it.id, Number(e.target.value) || 0)}
-                        className="w-28 h-8 text-right tabular-nums"
+                        aria-invalid={excede || undefined}
+                        className={`w-28 h-8 text-right tabular-nums ${
+                          excede ? "border-destructive text-destructive" : ""
+                        }`}
                       />
                     </div>
                   )}
@@ -70,3 +81,4 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
     </>
   );
 }
+
