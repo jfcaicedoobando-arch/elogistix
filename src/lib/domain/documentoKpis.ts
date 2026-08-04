@@ -5,6 +5,7 @@
  * Sólo formato: no calcula reglas de negocio.
  */
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { pluralizar } from "@/lib/format/pluralizar";
 
 /** Métrica única de la cinta de KPIs de un documento financiero. */
 export interface DocumentoKpi {
@@ -56,8 +57,8 @@ export function buildKpisDocumento(input: DocumentoKpiInput): DocumentoKpi[] {
       value: input.fechaVencimiento ? formatDate(input.fechaVencimiento) : "—",
       tone: vencida ? "destructive" : "default",
       hint: vencida
-        ? `${diasVencido} días vencida`
-        : `${input.diasCredito ?? 0} días de crédito`,
+        ? `${pluralizar(diasVencido, "día")} de atraso`
+        : `${pluralizar(input.diasCredito ?? 0, "día")} de crédito`,
     },
   ];
 }

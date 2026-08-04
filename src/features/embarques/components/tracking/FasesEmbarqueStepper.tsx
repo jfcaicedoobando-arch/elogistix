@@ -1,9 +1,11 @@
 import { useMemo } from "react";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, formatFechaHora } from "@/lib/formatters";
+import { TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   calcularFasesEmbarque,
   esEtaVencida,
+  hayFechasFueraDeOrden,
   type EmbarqueFasesInput,
   type FaseEmbarque,
 } from "@/features/embarques/domain/embarqueFases";
@@ -27,8 +29,22 @@ function textoFecha(fase: FaseEmbarque): string {
 }
 
 function tituloNodo(fase: FaseEmbarque): string {
-  const fecha = fase.fecha ? formatDate(fase.fecha, "dd/MM/yyyy") : "sin fecha";
-  return `${fase.label} — ${fecha}`;
+  if (!fase.fecha) return `${fase.label} — sin fecha`;
+  const fechaHora = formatFechaHora(fase.fecha, {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+  const usuario = fase.usuario ? ` · ${fase.usuario}` : "";
+  return `${fase.label} — ${fechaHora}${usuario}`;
+}
+
+function AvisoFechasFueraDeOrden() {
+  return (
+    <div className="mt-2 flex items-center gap-1.5 text-xs text-warning">
+      <TriangleAlert className="size-3.5 shrink-0" />
+      Fechas de etapas fuera de orden — revisar bitácora
+    </div>
+  );
 }
 
 function claseConector(siguiente: FaseEmbarque["estado"]): string {
@@ -166,8 +182,14 @@ function StepperCompleto({ fases, enRiesgo }: { fases: FaseEmbarque[]; enRiesgo:
 export function FasesEmbarqueStepper({ embarque, cotizacionCreatedAt, variant = "completa" }: Props) {
   const fases = useFases(embarque, cotizacionCreatedAt);
   const enRiesgo = esEtaVencida(embarque);
+  const fueraDeOrden = useMemo(() => hayFechasFueraDeOrden(fases), [fases]);
 
-  return variant === "compacta"
-    ? <StepperCompacto fases={fases} enRiesgo={enRiesgo} />
-    : <StepperCompleto fases={fases} enRiesgo={enRiesgo} />;
+  return (
+    <>
+      {variant === "compacta"
+        ? <StepperCompacto fases={fases} enRiesgo={enRiesgo} />
+        : <StepperCompleto fases={fases} enRiesgo={enRiesgo} />}
+      {fueraDeOrden && <AvisoFechasFueraDeOrden />}
+    </>
+  );
 }
