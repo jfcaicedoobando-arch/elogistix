@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.414.0] - 2026-08-04
+- CxP — falso "Factura duplicada": el aviso ahora dice cuál factura existe (folio interno, estado y aprobación), incluye botón "Ver factura" y explica que se puede corregir folio o fecha; el error del campo Folio se redactó igual.
+- CxP — folio confiable en captura con IA: `parse-invoice-pdf` exige copiar el folio LITERAL del documento y devuelve `invoice_number_confidence`; si la confianza es baja el formulario deja el folio vacío y pide capturarlo a mano (antes se guardaban folios inventados tipo `DEBIT2606…` que chocaban entre sí).
+- Buzón CxP: se valida antes de insertar que el archivo no esté ya en el buzón (pendiente o ya capturado), evitando documentos gemelos que reventaban al capturarse.
+
+
+
 ## [13.413.0] - 2026-08-04
 - R8/WAVE 3 — copy y estados vacíos: se eliminó la jerga técnica de las 7 bandejas de facturación (ya no dice "timbrada = false" ni "saldo > 0"), placeholder de mes más claro y CTA en proformas y presupuestos vacíos.
 - R8/WAVE 3 — carga y tiempo: se reemplazó el texto "Cargando…" por skeletons en ~20 pantallas y se unificaron los 4 helpers duplicados de tiempo relativo en `src/lib/date/relativo.ts`.
