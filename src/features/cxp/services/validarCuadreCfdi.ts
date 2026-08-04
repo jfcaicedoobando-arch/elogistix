@@ -45,7 +45,13 @@ export function validarCuadreCfdi(cfdi: CfdiParsedResponse["cfdi"]): CuadreCfdiR
   const retenciones = Number(cfdi.retenciones) || 0;
   const total = Number(cfdi.total) || 0;
 
-  const sumSub = suma(conceptos.map((c) => Number(c.importe) || 0));
+  // `importe` es UNITARIO (el parser lo normaliza dividiendo entre la cantidad),
+  // así que el total de línea es importe × cantidad — misma regla que la UI.
+  const sumSub = suma(
+    conceptos.map((c) =>
+      totalLinea({ monto: Number(c.importe) || 0, cantidad: c.cantidad ?? 1 }),
+    ),
+  );
   const sumIva = suma(conceptos.map((c) => Number(c.iva) || 0));
   const sumIeps = suma(conceptos.map((c) => Number(c.ieps) || 0));
 
