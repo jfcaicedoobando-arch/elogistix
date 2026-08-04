@@ -4,7 +4,7 @@
  * como gasto en CxP.
  *
  * Reglas (tolerancia = ±0.02 MXN por redondeo de centavos):
- *  1. Σ importes de conceptos ≈ subtotal
+ *  1. Σ (importe unitario × cantidad) de conceptos ≈ subtotal
  *  2. Σ IVA por concepto ≈ iva_trasladado
  *  3. Σ IEPS por concepto ≈ ieps_trasladado
  *  4. subtotal + iva + ieps - retenciones ≈ total
