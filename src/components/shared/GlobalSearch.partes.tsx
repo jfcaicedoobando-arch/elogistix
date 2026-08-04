@@ -81,10 +81,12 @@ interface GrupoProps {
   type: string;
   items: GlobalSearchResult[];
   onSelect: (url: string, title?: string) => void;
+  /** Término escrito por el usuario, para resaltar las coincidencias. */
+  termino?: string;
 }
 
 /** Grupo de resultados de un tipo (embarques, clientes, etc.). */
-export function GlobalSearchGrupo({ type, items, onSelect }: GrupoProps) {
+export function GlobalSearchGrupo({ type, items, onSelect, termino = "" }: GrupoProps) {
   const Icon = typeIcons[type as keyof typeof typeIcons];
   return (
     <CommandGroup heading={typeLabels[type as keyof typeof typeLabels]}>
@@ -96,13 +98,16 @@ export function GlobalSearchGrupo({ type, items, onSelect }: GrupoProps) {
         >
           <Icon className={ICONO_FILA} aria-hidden="true" />
           <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold leading-tight">{item.label}</p>
+            <p className="truncate font-semibold leading-tight">
+              <TextoResaltado texto={item.label} termino={termino} />
+            </p>
             {item.sublabel && (
               <p className="truncate text-xs text-muted-foreground" title={item.sublabel}>
-                {item.sublabel}
+                <TextoResaltado texto={item.sublabel} termino={termino} />
               </p>
             )}
           </div>
+
         </CommandItem>
       ))}
     </CommandGroup>
