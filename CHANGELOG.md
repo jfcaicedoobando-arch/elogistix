@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.410.3] - 2026-08-04
+- Triage UI/UX R8 documentado en `docs/auditoria/triage_uiux_r8.md`: validación con Playwright a 1920x1080 de los 7 hallazgos WAVE 1 (sólo FIX 1 es real; FIX 2–FIX 7 no reproducibles) + 4 hallazgos menores nuevos.
+
+
+
 ## [13.410.2] - 2026-08-04
 - CI verde: `useEmbarqueForm.test` ahora mockea `useTcInicial` (el hook ya no consume `useExchangeRates` directo).
 - `StepCostosPrecios` baja de complejidad 19 → 16 extrayendo helpers puros (`describirOrigenTc`, `tcValido`, `convertirAUsd`).
