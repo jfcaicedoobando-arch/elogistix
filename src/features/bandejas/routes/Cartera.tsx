@@ -17,6 +17,7 @@ import { Inbox } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
 import { type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
+import { requiereEquivalente } from "@/features/bandejas/domain/carteraFx";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
