@@ -76,7 +76,7 @@ export function EmbarqueDetalleHeader({
               tieneProforma={embarque.tiene_proforma}
               cobroStatus={embarque.cobro_cliente_status as "pendiente" | "parcial" | "pagado" | null | undefined}
             />
-            <EmbarqueBadgeAdmin embarqueId={embarqueId} estado={estadoVisual} />
+            <EmbarqueBadgeAdmin embarqueId={embarqueId} estado={estadoVisual} onIrACierre={onIrACierre} />
             <EstadoDivergenteHint estadoVisual={estadoVisual} estadoGuardado={embarque.estado} />
           </>
         }

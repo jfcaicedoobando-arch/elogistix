@@ -10,6 +10,8 @@ export interface SidebarItem {
   icon: LucideIcon;
   /** Si se define, se usa este conteo en lugar de `totalAlertas`. */
   badgeCount?: number;
+  /** Texto del tooltip del badge: explica de qué está compuesto el conteo. */
+  badgeHint?: string;
 }
 
 export function isActive(

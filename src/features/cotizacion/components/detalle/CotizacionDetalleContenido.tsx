@@ -19,6 +19,7 @@ import { CotizacionInactivaBanner } from "@/features/cotizacion/components/detal
 import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "@/features/cotizacion/routes/detalle/CotizacionDetalleCards";
 import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner";
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
+import { AvisoConceptosDescartados } from "@/features/cotizacion/components/AvisoConceptosDescartados";
 import type { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
@@ -36,6 +37,7 @@ interface Props {
   subtotalMXN: number;
   ivaMXN: number;
   totalMXN: number;
+  conceptosDescartados: number;
   showConvertir: boolean;
   setShowConvertir: (v: boolean) => void;
   clienteForm: DetalleState["clienteForm"];
@@ -54,7 +56,7 @@ interface Props {
 /** Renderiza el cuerpo de la vista de detalle (todo lo que va bajo el header). */
 export function CotizacionDetalleContenido({
   cotizacion, id, canEdit, tasaIva, embarquesVinculados,
-  conceptosVentaUSD, conceptosVentaMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN,
+  conceptosVentaUSD, conceptosVentaMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
   showConvertir, setShowConvertir, clienteForm, setClienteForm,
   handleCambiarEstado, abrirDialogConvertir, handleConvertir, convertirProspecto,
   navigate, effectiveRole, envios, enviarOpen, setEnviarOpen,
@@ -107,6 +109,11 @@ export function CotizacionDetalleContenido({
 
       <CotizacionDatosGeneralesCard cotizacion={cotizacion} />
       <SeccionMercanciaCotizacionDetalle cotizacion={cotizacion} />
+
+      <AvisoConceptosDescartados
+        descartados={conceptosDescartados}
+        conceptosValidos={conceptosVentaUSD.length + conceptosVentaMXN.length}
+      />
 
       <TablaConceptosGenerico moneda="USD" conceptos={conceptosVentaUSD} total={totalUSD} />
       <TablaConceptosGenerico moneda="MXN" conceptos={conceptosVentaMXN} subtotal={subtotalMXN} iva={ivaMXN} total={totalMXN} />

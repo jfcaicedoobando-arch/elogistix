@@ -166,6 +166,24 @@ export function calcularFasesEmbarque(
   return fases;
 }
 
+/**
+ * Detecta si las fechas de las fases (en orden canónico) están fuera de
+ * secuencia cronológica. Ignora fases sin fecha capturada. Uso puramente
+ * informativo: no bloquea ninguna acción, sólo dispara un aviso discreto en
+ * el stepper para que se revise la bitácora.
+ */
+export function hayFechasFueraDeOrden(fases: FaseEmbarque[]): boolean {
+  let anterior: number | null = null;
+  for (const fase of fases) {
+    if (!fase.fecha) continue;
+    const t = new Date(fase.fecha).getTime();
+    if (Number.isNaN(t)) continue;
+    if (anterior !== null && t < anterior) return true;
+    anterior = t;
+  }
+  return false;
+}
+
 function startOfToday(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);

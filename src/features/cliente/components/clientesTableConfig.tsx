@@ -7,7 +7,7 @@
  */
 import type { ColumnDef } from "@tanstack/react-table";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
-import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
+import { toTitleCase, formatPhoneMx, correctSpanishPlace, formatCurrency } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 
 export type ClienteRow = {
@@ -72,6 +72,31 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
         const estado = correctSpanishPlace(row.original.estado);
         if (!ciudad && !estado) return <span className="text-muted-foreground">—</span>;
         return [ciudad, estado].filter(Boolean).join(", ");
+      },
+    },
+    {
+      id: "por_cobrar",
+      header: "Por cobrar",
+      accessorFn: (c) => Number(c.saldo_pendiente_mxn ?? 0),
+      enableSorting: true,
+      meta: {
+        width: "w-[130px]",
+        className: "text-xs text-right tabular-nums whitespace-nowrap",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => {
+        const saldo = Number(row.original.saldo_pendiente_mxn ?? 0);
+        const limite = row.original.limite_credito_mxn ?? null;
+        const excedido = limite != null && limite > 0 && saldo > limite;
+        if (saldo <= 0.01) return <span className="text-muted-foreground">—</span>;
+        return (
+          <span
+            className={excedido ? "font-semibold text-destructive" : "font-medium"}
+            title={limite && limite > 0 ? `Límite de crédito: ${formatCurrency(limite, "MXN")}` : undefined}
+          >
+            {formatCurrency(saldo, "MXN")}
+          </span>
+        );
       },
     },
     {

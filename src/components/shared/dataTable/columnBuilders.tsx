@@ -77,6 +77,10 @@ export interface MoneyColumnOpts<T> {
   currencyAccessor?: Getter<T, string | null | undefined>;
   defaultCurrency?: string;
   align?: "left" | "right";
+  /** Normaliza el monto (p.ej. a MXN) para ordenar de forma consistente en multimoneda. */
+  normalizar?: Getter<T, number | null | undefined>;
+  /** Tooltip del encabezado (title nativo), útil para aclarar el criterio de orden. */
+  headerTooltip?: string;
 }
 
 export function moneyColumn<T>({
@@ -86,10 +90,12 @@ export function moneyColumn<T>({
   currencyAccessor,
   defaultCurrency = "MXN",
   align = "right",
+  normalizar,
+  headerTooltip,
 }: MoneyColumnOpts<T>): ColumnDef<T, unknown> {
   return {
     id,
-    header,
+    header: headerTooltip ? () => <span title={headerTooltip}>{header}</span> : header,
     accessorFn: (row) => accessor(row) ?? 0,
     cell: ({ row }) => {
       const amount = accessor(row.original) ?? 0;
@@ -106,6 +112,19 @@ export function moneyColumn<T>({
       );
     },
     enableSorting: true,
+    // Con `normalizar` el orden usa el equivalente convertido (p.ej. MXN); los
+    // valores no convertibles de forma confiable se envían al final.
+    ...(normalizar
+      ? {
+          sortingFn: (rowA, rowB) => {
+            const a = normalizar(rowA.original);
+            const b = normalizar(rowB.original);
+            const fa = a == null || !Number.isFinite(a) ? Number.POSITIVE_INFINITY : a;
+            const fb = b == null || !Number.isFinite(b) ? Number.POSITIVE_INFINITY : b;
+            return fa - fb;
+          },
+        }
+      : {}),
   };
 }
 

@@ -1,6 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/features/proveedor/hooks/useProveedores";
+import { calcularAgregadosProveedor } from "@/features/proveedor/domain/agregadosProveedor";
+import { useExchangeRates } from "@/features/catalogos/hooks";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/features/auditoria/hooks/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
@@ -21,12 +23,15 @@ export function useProveedorDetalleController() {
   const registrarActividad = useRegistrarActividad();
 
   const { data: operaciones = [] } = useProveedorOperaciones(id);
+  const { data: rates } = useExchangeRates();
 
-  const totalFacturado = operaciones.reduce((sum, o) => sum + o.monto, 0);
-  const totalPagado = operaciones
-    .filter(o => o.estadoLiquidacion === 'Pagado')
-    .reduce((sum, o) => sum + o.monto, 0);
-  const totalPendiente = totalFacturado - totalPagado;
+  // FIX 9.1 — Los conceptos vienen en moneda nativa: se agregan por moneda y se
+  // convierten a un único equivalente MXN (nunca se suman USD como si fueran MXN).
+  const agregados = useMemo(
+    () => calcularAgregadosProveedor(operaciones, rates?.usdMxn ?? 0),
+    [operaciones, rates?.usdMxn],
+  );
+  const { totalFacturado, totalPagado, totalPendiente } = agregados;
 
   // NOTA (v13.320.63): los toasts de éxito/error de update y delete los emite
   // `useProveedorMutations`. No los repitas aquí o el usuario ve doble aviso.
@@ -77,6 +82,7 @@ export function useProveedorDetalleController() {
     totalFacturado,
     totalPagado,
     totalPendiente,
+    agregados,
     canEdit,
     isAdmin,
     editOpen,

@@ -29,7 +29,7 @@ export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const {
     proveedor, isLoading, isDeleting, operaciones,
-    totalFacturado, totalPagado, totalPendiente,
+    totalFacturado, totalPagado, totalPendiente, agregados,
     canEdit, isAdmin, editOpen, setEditOpen,
     deleteOpen, setDeleteOpen, handleUpdate, handleDelete,
   } = useProveedorDetalleController();
@@ -109,7 +109,9 @@ export default function ProveedorDetalle() {
         totalFacturado={totalFacturado}
         totalPagado={totalPagado}
         totalPendiente={totalPendiente}
-        moneda={proveedor.moneda_preferida}
+        moneda="MXN"
+        porMoneda={agregados.porMoneda}
+        monedasSinTc={agregados.monedasSinTc}
         operacionesCount={operaciones.length}
       />
 

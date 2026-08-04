@@ -49,3 +49,13 @@ export function equivalenteMxn(
 
   return { totalMxn, facturasSinTc };
 }
+
+/**
+ * FIX 12.4 — El equivalente en MXN sólo aporta información cuando hay saldo en
+ * otra moneda. Si todo está en MXN, mostrar "≈ $X MXN equivalente" repite el
+ * mismo número y sólo agrega ruido.
+ */
+export function requiereEquivalente(nativos: SaldosNativos): boolean {
+  if ((nativos.USD || 0) > 0) return true;
+  return Object.values(nativos.otras || {}).some((monto) => (monto || 0) > 0);
+}

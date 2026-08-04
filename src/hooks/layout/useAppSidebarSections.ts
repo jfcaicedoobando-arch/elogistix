@@ -27,18 +27,24 @@ interface BadgeCounts {
   facturasVencidas: number;
   cxpPorAprobar: number;
   cxpPorPagar: number;
+  /** FIX 9.2 — desglose del badge compuesto de Embarques, para el tooltip. */
+  embarquesHint?: string;
 }
 
 function patchSidebarBadges(sections: SidebarSection[], counts: BadgeCounts): SidebarSection[] {
-  const { embarquesAlertas, facturasVencidas, cxpPorAprobar, cxpPorPagar } = counts;
+  const { embarquesAlertas, facturasVencidas, cxpPorAprobar, cxpPorPagar, embarquesHint } = counts;
   if (embarquesAlertas <= 0 && facturasVencidas <= 0 && cxpPorAprobar <= 0 && cxpPorPagar <= 0) return sections;
   return sections.map((sec) => ({
     ...sec,
     items: sec.items.map((it) => {
-      if (it.url === "/embarques" && embarquesAlertas > 0) return { ...it, badgeCount: embarquesAlertas };
-      if (it.url === "/facturacion" && facturasVencidas > 0) return { ...it, badgeCount: facturasVencidas };
-      if (it.url === "/compras/por-aprobar" && cxpPorAprobar > 0) return { ...it, badgeCount: cxpPorAprobar };
-      if (it.url === "/compras/por-pagar" && cxpPorPagar > 0) return { ...it, badgeCount: cxpPorPagar };
+      if (it.url === "/embarques" && embarquesAlertas > 0)
+        return { ...it, badgeCount: embarquesAlertas, badgeHint: embarquesHint };
+      if (it.url === "/facturacion" && facturasVencidas > 0)
+        return { ...it, badgeCount: facturasVencidas, badgeHint: `${facturasVencidas} factura(s) vencida(s) por cobrar` };
+      if (it.url === "/compras/por-aprobar" && cxpPorAprobar > 0)
+        return { ...it, badgeCount: cxpPorAprobar, badgeHint: `${cxpPorAprobar} factura(s) de proveedor esperando aprobación` };
+      if (it.url === "/compras/por-pagar" && cxpPorPagar > 0)
+        return { ...it, badgeCount: cxpPorPagar, badgeHint: `${cxpPorPagar} factura(s) de proveedor por pagar` };
       return it;
     }),
   }));
@@ -56,7 +62,18 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { data: cxpPorAprobar = 0 } = useCxpPendientesAprobacion();
   const { data: cxpPorPagar = 0 } = useCxpPorPagarCount();
   const embarquesAlertas = embarquesDemora + garantiasAtoradas + adminPendientes;
-  const badgeCounts: BadgeCounts = { embarquesAlertas, facturasVencidas, cxpPorAprobar, cxpPorPagar };
+  const embarquesHint = [
+    `${embarquesDemora} con demora`,
+    `${garantiasAtoradas} garantía(s) atorada(s)`,
+    `${adminPendientes} con administrativos pendientes`,
+  ].join(" · ");
+  const badgeCounts: BadgeCounts = {
+    embarquesAlertas,
+    facturasVencidas,
+    cxpPorAprobar,
+    cxpPorPagar,
+    embarquesHint,
+  };
 
   const sistemaItems = SIDEBAR_SISTEMA_ITEMS.map((it) =>
     it.url === "/auditoria" ? { ...it, badgeCount: auditoriaCount } : it,

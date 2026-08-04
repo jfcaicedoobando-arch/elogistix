@@ -28,7 +28,7 @@ export default function CotizacionDetalle() {
   const {
     cotizacion, isLoading, error, refetch, canEdit, tasaIva, embarquesVinculados,
     conceptosVentaUSD, conceptosVentaMXN,
-    totalUSD, subtotalMXN, ivaMXN, totalMXN,
+    totalUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
     nombreDestinatario,
     showConvertir, setShowConvertir,
     clienteForm, setClienteForm,
@@ -91,6 +91,7 @@ export default function CotizacionDetalle() {
               subtotalMXN={subtotalMXN}
               ivaMXN={ivaMXN}
               totalMXN={totalMXN}
+              conceptosDescartados={conceptosDescartados}
               showConvertir={showConvertir}
               setShowConvertir={setShowConvertir}
               clienteForm={clienteForm}

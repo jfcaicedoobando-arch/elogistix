@@ -13,6 +13,7 @@ import PortalCotizacionHeader from "@/features/portal/components/cotizacion/Port
 import PortalCotizacionEstadoBanner from "@/features/portal/components/cotizacion/PortalCotizacionEstadoBanner";
 import PortalCotizacionConfirmDialog from "@/features/portal/components/cotizacion/PortalCotizacionConfirmDialog";
 import DatosGeneralesCard from "@/features/portal/components/cotizacion/DatosGeneralesCard";
+import { AvisoConceptosDescartados } from "@/features/cotizacion/components/AvisoConceptosDescartados";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useDocumentTitle } from "@/hooks/shared";
@@ -59,7 +60,7 @@ export default function PortalCotizacionDetalle() {
   const {
     conceptosUSD, conceptosMXN,
     subtotalUSD, ivaUSD, totalUSD,
-    subtotalMXN, ivaMXN, totalMXN,
+    subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
   } = totales;
   // cast: comentario_cliente vive en la fila DB pero no en el tipo dominio mínimo
   const comentarioCliente = (cot as { comentario_cliente?: string | null }).comentario_cliente;
@@ -88,6 +89,11 @@ export default function PortalCotizacionDetalle() {
 
 
       <SeccionMercanciaCotizacionDetalle cotizacion={cot} />
+
+      <AvisoConceptosDescartados
+        descartados={conceptosDescartados}
+        conceptosValidos={conceptosUSD.length + conceptosMXN.length}
+      />
 
       {conceptosUSD.length > 0 && (
         // B-081: el USD también se desglosa (subtotal / IVA / total).

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toTitleCase } from "@/lib/formatters";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
@@ -43,14 +45,8 @@ export function TabResumen({ embarque }: Props) {
       <Card>
         <CardHeader className="pb-3"><CardTitle className="text-sm">Partes</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-          <div className="space-y-1">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Shipper</div>
-            <div className="text-foreground">{toTitleCase(embarque.shipper) || "—"}</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Consignatario</div>
-            <div className="text-foreground">{toTitleCase(embarque.consignatario) || "—"}</div>
-          </div>
+          <ParteCampo label="Shipper" valor={embarque.shipper} embarqueId={embarque.id} />
+          <ParteCampo label="Consignatario" valor={embarque.consignatario} embarqueId={embarque.id} />
         </CardContent>
       </Card>
 
@@ -76,6 +72,30 @@ export function TabResumen({ embarque }: Props) {
           blMaster={embarque.bl_master}
           relacionados={relacionados}
         />
+      )}
+    </div>
+  );
+}
+
+/** Campo de "Partes" con estado vacío accionable hacia la edición del embarque. */
+function ParteCampo({ label, valor, embarqueId }: { label: string; valor?: string | null; embarqueId: string }) {
+  const texto = toTitleCase(valor ?? "");
+  return (
+    <div className="space-y-1">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      {texto ? (
+        <div className="text-foreground">{texto}</div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground italic">Sin capturar</span>
+          <Link
+            to={`/embarques/${embarqueId}/editar`}
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            <Pencil className="h-3 w-3" />
+            Capturar
+          </Link>
+        </div>
       )}
     </div>
   );

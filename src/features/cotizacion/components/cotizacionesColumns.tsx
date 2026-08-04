@@ -14,11 +14,14 @@ import {
   actionsColumn,
 } from "@/components/shared/dataTable/columnBuilders";
 import { Trash2, Copy } from "lucide-react";
+import { normalizarSubtotalMxn } from "@/features/cotizacion/domain/ordenSubtotalMxn";
 
 export interface BuildParams {
   canEdit: boolean;
   onEliminar: (id: string) => void;
   onDuplicar?: (id: string) => void;
+  /** TC USD→MXN vigente, usado sólo para ordenar el subtotal multimoneda. */
+  usdMxn?: number | null;
 }
 
 export function buildCotizacionesColumns(params: BuildParams): ColumnDef<CotizacionListItem, unknown>[] {
@@ -79,6 +82,10 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       header: "Subtotal",
       accessor: (r) => r.subtotal,
       currencyAccessor: (r) => r.moneda,
+      // FIX 10: ordenar por equivalente en MXN evita mezclar montos nominales
+      // de MXN y USD; sin TC confiable el valor queda al final.
+      normalizar: (r) => normalizarSubtotalMxn(r.subtotal, r.moneda, params.usdMxn),
+      headerTooltip: "Ordenado por equivalente en MXN",
     }),
     {
       id: "estado_vigencia",
