@@ -49,14 +49,7 @@ export function FacturaResumenCard({
             value={
               <span className="inline-flex items-center gap-1.5">
                 {factura.fecha_vencimiento ? formatDate(factura.fecha_vencimiento) : "—"}
-                {mostrarMora && (
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums whitespace-nowrap ${agingVencidoBucket(diasVencido as number).className}`}
-                    aria-label={agingVencidoBucket(diasVencido as number).ariaLabel}
-                  >
-                    {agingVencidoBucket(diasVencido as number).label}
-                  </span>
-                )}
+                {mostrarMora && <BadgeMora dias={diasVencido as number} />}
               </span>
             }
           />
@@ -86,5 +79,18 @@ function Field({ label, value, mono }: { label: string; value: React.ReactNode; 
       <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
       <div className={`text-sm font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
     </div>
+  );
+}
+
+/** Semáforo de mora (mismo criterio que la bandeja de vencidas). */
+function BadgeMora({ dias }: { dias: number }) {
+  const bucket = agingVencidoBucket(dias);
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums whitespace-nowrap ${bucket.className}`}
+      aria-label={bucket.ariaLabel}
+    >
+      {bucket.label}
+    </span>
   );
 }
