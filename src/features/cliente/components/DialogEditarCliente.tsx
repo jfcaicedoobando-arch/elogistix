@@ -58,7 +58,12 @@ function TextField({
       </Label>
       <Input
         value={form[field]}
-        onChange={(e) => setForm((p) => ({ ...p, [field]: e.target.value }))}
+        onChange={(e) =>
+          setForm((p) => ({
+            ...p,
+            [field]: field === "nombre" ? e.target.value.toLocaleUpperCase("es-MX") : e.target.value,
+          }))
+        }
         className="mt-1"
       />
     </div>
@@ -86,7 +91,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
       const data = await parseCsf(file);
       setForm((prev) => ({
         ...prev,
-        nombre: data.nombre?.trim() || prev.nombre,
+        nombre: normalizarRazonSocial(data.nombre) || prev.nombre,
         rfc: data.rfc?.trim() || prev.rfc,
         cp: data.cp?.trim() || prev.cp,
         direccion: data.direccion?.trim() || prev.direccion,

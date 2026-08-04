@@ -77,7 +77,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
           <Label>Nombre *</Label>
           <Input
             value={c.form.nombre}
-            onChange={(e) => c.setField("nombre", e.target.value)}
+            onChange={(e) => c.setField("nombre", e.target.value.toLocaleUpperCase("es-MX"))}
             onBlur={() => c.markTouched("nombre")}
           />
           <FieldError message={c.fieldErrorMessage("nombre")} />
