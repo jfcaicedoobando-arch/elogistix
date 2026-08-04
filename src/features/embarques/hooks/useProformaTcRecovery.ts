@@ -28,10 +28,8 @@ export function useProformaTcRecovery(embarqueId: string) {
     queryKey: tcDofKeys.historial(1),
     enabled: tcRequerido,
     staleTime: 15 * 60 * 1000,
-    queryFn: async () => {
-      const rows = await fetchHistorialTcDof(1);
-      return rows[0]?.usd_mxn ?? null;
-    },
+    queryFn: () => fetchHistorialTcDof(1),
+    select: (rows) => rows[0]?.usd_mxn ?? null,
   });
 
   const activar = useCallback(() => setTcRequerido(true), []);
