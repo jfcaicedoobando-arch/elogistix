@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.401.4] - 2026-08-04
+- Test de auditoría `src/components/shared/__tests__/globalSearch-limites.test.ts`: fija que `GlobalSearch.tsx`, `GlobalSearch.partes.tsx` y `globalSearchMeta.ts` se mantengan ≤ 200 líneas, que el archivo de piezas sólo exporte componentes y que las constantes compartidas vivan en `globalSearchMeta.ts`.
+
 ## [13.401.3] - 2026-08-04
+
 - Lint: las constantes `ICONO_FILA`, `typeIcons` y `typeLabels` se movieron a `src/components/shared/globalSearchMeta.ts` para que `GlobalSearch.partes.tsx` sólo exporte componentes (react-refresh/only-export-components sin warnings).
 
 ## [13.401.2] - 2026-08-04
