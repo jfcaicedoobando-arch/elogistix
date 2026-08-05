@@ -45,7 +45,7 @@ export function BandaOrigenYAlertas({
   );
 }
 
-/** Columna izquierda: de dónde viene la factura y qué partidas trae. */
+/** Columna izquierda: de dónde viene la factura, partidas, fechas e importes. */
 export function ColumnaDocumento({
   ctl, categorias, keyRenglonSospechoso,
 }: Omit<Props, "entrante" | "autocarga" | "onVerFacturaDuplicada">) {
@@ -80,6 +80,18 @@ export function ColumnaDocumento({
           Sube el documento y aquí aparecerán las partidas de la factura.
         </p>
       )}
+
+      {/* v13.423.0 — Fechas e importes viven aquí para no dejar hueca esta
+          columna ni obligar a un scroll largo del lado derecho. */}
+      <FechasEImportesBlock
+        values={ctl.values}
+        onChange={ctl.handleChange}
+        errors={ctl.errors}
+        tcOrigen={ctl.tcOrigen}
+        tcFechaAplicada={ctl.tcFechaAplicada}
+        onObtenerDof={ctl.obtenerDofManual}
+        dofLoading={ctl.dofLoading}
+      />
     </div>
   );
 }
@@ -89,7 +101,7 @@ interface DatosProps {
   categorias: CategoriaPresupuestoLite[];
 }
 
-/** Columna derecha: datos fiscales de la factura y vinculación al embarque. */
+/** Columna derecha: proveedor, categoría, notas y vinculación al embarque. */
 export function ColumnaDatosFactura({ ctl, categorias }: DatosProps) {
   return (
     <div className="space-y-5 min-w-0">
@@ -100,10 +112,7 @@ export function ColumnaDatosFactura({ ctl, categorias }: DatosProps) {
         categorias={categorias}
         total={ctl.total}
         errors={ctl.errors}
-        tcOrigen={ctl.tcOrigen}
-        tcFechaAplicada={ctl.tcFechaAplicada}
-        onObtenerDof={ctl.obtenerDofManual}
-        dofLoading={ctl.dofLoading}
+        sinFechasEImportes
       />
 
       {ctl.values.provId ? (
@@ -130,3 +139,4 @@ export function ColumnaDatosFactura({ ctl, categorias }: DatosProps) {
     </div>
   );
 }
+
