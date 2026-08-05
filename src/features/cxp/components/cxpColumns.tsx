@@ -5,6 +5,7 @@ import {
   dateColumn,
 } from "@/components/shared/dataTable/columnBuilders";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { toTitleCase } from "@/lib/formatters";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { EstadoFacturaCxPCell } from "./EstadoFacturaCxPCell";
@@ -45,10 +46,8 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
             : "";
         return (
           <div className="flex flex-col gap-0.5 min-w-0">
-            {/* v13.424.0 — Sin toTitleCase: la razón social se guarda y muestra en
-                MAYÚSCULAS (estándar SAT), igual que en /compras/por-pagar. */}
-            <span className="truncate" title={row.original.proveedor_nombre}>
-              {row.original.proveedor_nombre}
+            <span className="truncate" title={toTitleCase(row.original.proveedor_nombre)}>
+              {toTitleCase(row.original.proveedor_nombre)}
             </span>
             {origen && (
               <Badge variant="outline" className={`${badgeCls} text-2xs px-1.5 py-0 h-4 w-fit font-normal`}>

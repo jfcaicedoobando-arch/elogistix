@@ -47,7 +47,9 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       accessorFn: (r) => r.proveedor_nombre ?? "",
       enableSorting: true,
       meta: { width: "min-w-[180px]", className: "font-medium max-w-[240px] truncate", sticky: true },
-      cell: ({ row }) => row.original.proveedor_nombre ?? "—",
+      // v13.424.0 — Razón social en Title Case, igual que /compras/facturas,
+      // clientes y reportes (el dato se guarda en MAYÚSCULAS para el SAT).
+      cell: ({ row }) => toTitleCase(row.original.proveedor_nombre ?? "") || "—",
     },
     {
       id: "folio",
