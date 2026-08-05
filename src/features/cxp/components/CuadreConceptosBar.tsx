@@ -86,7 +86,7 @@ export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: P
 
 
   return (
-    <div className={`rounded-md border ${v.border} ${v.bg} px-3 py-2 text-xs`}>
+    <div className={`rounded-md border ${v.border} ${v.bg} px-3 py-2 text-xs`} aria-live="polite">
       <div className={`flex flex-wrap items-center gap-2 font-medium ${v.text}`}>
         {v.icon}
         <span>{v.titulo}</span>
