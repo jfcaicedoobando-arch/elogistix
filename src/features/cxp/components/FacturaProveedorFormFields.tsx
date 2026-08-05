@@ -60,43 +60,18 @@ export function FacturaProveedorFormFields({
         proveedorNombre={proveedorNombre}
       />
 
-      <FormSection title="Fechas y crédito" icon={<CalendarDays className="h-3.5 w-3.5" />}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="space-y-1">
-            <Label>Emisión</Label>
-            <DatePickerMx value={values.emision} onChange={(v) => onChange("emision", v)} className="w-full" />
-            {errors?.emision && (
-              <p className="text-xs text-destructive">{errors.emision}</p>
-            )}
-          </div>
-          <div className="space-y-1">
-            <Label>Días crédito</Label>
-            <NumericInput
-              value={values.diasCredito}
-              onChange={(n) => onChange("diasCredito", n)}
-              aria-label="Días de crédito"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>Vencimiento</Label>
-            <Input
-              value={values.vencimiento ? values.vencimiento.split("-").reverse().join("/") : ""}
-              readOnly
-              className="bg-muted"
-            />
-          </div>
-        </div>
-      </FormSection>
+      {!sinFechasEImportes && (
+        <FechasEImportesBlock
+          values={values}
+          onChange={onChange}
+          errors={errors}
+          tcOrigen={tcOrigen}
+          tcFechaAplicada={tcFechaAplicada}
+          onObtenerDof={onObtenerDof}
+          dofLoading={dofLoading}
+        />
+      )}
 
-      <MonedaImportesSection
-        values={values}
-        onChange={onChange}
-        errors={errors}
-        tcOrigen={tcOrigen}
-        tcFechaAplicada={tcFechaAplicada}
-        onObtenerDof={onObtenerDof}
-        dofLoading={dofLoading}
-      />
 
       <FormSection title="Categoría contable" icon={<FileText className="h-3.5 w-3.5" />}>
         <div className="space-y-1">
