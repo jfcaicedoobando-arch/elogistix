@@ -82,6 +82,8 @@ export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: P
   const v = visualPorEstado(resultado.estado, resultado.diferencia, moneda);
   const abs = Math.abs(resultado.diferencia);
   const signo = resultado.diferencia > 0 ? "faltan" : "sobran";
+  const [abierto, setAbierto] = useState(false);
+
 
   return (
     <div className={`rounded-md border ${v.border} ${v.bg} px-3 py-2 text-xs`}>
