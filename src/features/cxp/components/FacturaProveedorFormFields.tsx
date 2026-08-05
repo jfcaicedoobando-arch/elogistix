@@ -37,12 +37,18 @@ interface Props {
   onObtenerDof?: () => void;
   /** Estado de carga del auto-fetch/click del botón "Obtener DOF". */
   dofLoading?: boolean;
+  /**
+   * v13.423.0 — Omite "Fechas y crédito" + "Moneda e importes" porque el modal
+   * de captura los coloca en la otra columna (ver `FechasEImportesBlock`).
+   */
+  sinFechasEImportes?: boolean;
 }
 
 
 export function FacturaProveedorFormFields({
   values, onChange, onProveedor, categorias, errors = {},
-  proveedorReadOnly = false, proveedorNombre,
+  proveedorReadOnly = false, proveedorNombre, sinFechasEImportes = false,
+
   tcOrigen = "vacio", tcFechaAplicada, onObtenerDof, dofLoading = false,
 }: Props) {
   
