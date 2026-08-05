@@ -14,6 +14,8 @@ import { CfdiDuplicadoAlert } from "./CfdiDuplicadoAlert";
 import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
 import { ConceptosManualesSection } from "./ConceptosManualesSection";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
+import { FechasEImportesBlock } from "./FacturaProveedorFechasImportes";
+
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 
 type Ctl = ReturnType<typeof useNuevaFacturaProveedorForm>;
