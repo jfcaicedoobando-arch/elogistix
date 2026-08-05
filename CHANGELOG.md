@@ -1,6 +1,12 @@
 # Changelog
 
+## [13.423.0] - 2026-08-05
+- Modal "Capturar factura de proveedor" en pantallas de 1280×720: el cuerpo pasó de ~290 px a ~460 px de alto útil. El modal ahora aprovecha casi todo el alto disponible y las ayudas secundarias se ocultan en pantallas bajas.
+- Modal de captura: las tarjetas de origen del documento quedan en un renglón compacto (la ayuda vive en el tooltip) y la barra de cuadre se reduce a un renglón cuando aún no hay conceptos.
+- Modal de captura: "Fechas y crédito" y "Moneda e importes" se movieron a la columna izquierda para equilibrar ambas columnas y evitar scroll largo; la fecha de emisión ya no se corta.
+
 ## [13.422.0] - 2026-08-05
+
 - Modal "Capturar factura de proveedor" (UI/UX): el origen del documento (a mano / XML CFDI / PDF con IA) pasó de pestañas escondidas en una columna a una banda de tarjetas de ancho completo — es la primera decisión y ahora se lee primero.
 - Modal de captura: la banda de 4 KPIs se sustituyó por un chip **Total** en el encabezado con desglose en popover; se recupera alto útil y desaparece la celda que mostraba "IEPS" o "Retenciones" en el mismo lugar.
 - Modal de captura: la barra de cuadre quedó en un renglón con desplegable "¿Por qué no cuadra?" y `aria-live`; el aviso del buzón y la alerta de CFDI duplicado se muestran a ancho completo.
