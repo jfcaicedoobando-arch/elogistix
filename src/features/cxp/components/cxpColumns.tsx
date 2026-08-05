@@ -4,6 +4,7 @@ import {
   moneyColumn,
   dateColumn,
 } from "@/components/shared/dataTable/columnBuilders";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
@@ -23,19 +24,19 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "folio_interno", header: "Folio",
       accessorFn: (f) => f.folio_interno, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_interno),
-      meta: { width: "w-[95px]", className: "font-mono text-xs font-semibold whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.folio, className: "font-mono text-xs font-semibold whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.folio_interno,
     },
     {
       id: "folio", header: "Folio prov.",
       accessorFn: (f) => f.folio_proveedor, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_proveedor),
-      meta: { width: "w-[120px]", className: "whitespace-nowrap text-xs text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.folio, className: "whitespace-nowrap text-xs text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.folio_proveedor,
     },
     {
       id: "proveedor", header: "Proveedor",
-      meta: { width: "min-w-[160px]", className: "max-w-[220px]" },
+      meta: { width: COL_W.texto, className: "max-w-[220px]" },
       cell: ({ row }) => {
         const origen = row.original.proveedor_origen;
         const badgeCls = origen === "Nacional"
@@ -62,18 +63,18 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
         id: "emision", header: "Emisión",
         accessor: (f) => f.fecha_emision,
       }),
-      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
       ...dateColumn<FacturaCxP>({
         id: "vencimiento", header: "Vencimiento",
         accessor: (f) => f.fecha_vencimiento,
       }),
-      meta: { width: "w-[95px] xl:w-[110px]", className: "text-xs whitespace-nowrap" },
+      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" },
     },
     {
       id: "moneda", header: "Mon.",
-      meta: { width: "w-[60px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.tiny, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.moneda,
     },
     {
@@ -82,7 +83,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
         accessor: (f) => f.total,
         currencyAccessor: (f) => f.moneda,
       }),
-      meta: { width: "w-[120px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
       ...moneyColumn<FacturaCxP>({
@@ -90,7 +91,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
         accessor: (f) => f.pagado,
         currencyAccessor: (f) => f.moneda,
       }),
-      meta: { width: "w-[120px]", align: "right", className: "tabular-nums whitespace-nowrap text-success hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap text-success hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
       ...moneyColumn<FacturaCxP>({
@@ -98,13 +99,13 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
         accessor: (f) => f.saldo,
         currencyAccessor: (f) => f.moneda,
       }),
-      meta: { width: "w-[115px] xl:w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
     },
     {
       id: "estado", header: "Estado",
       accessorFn: (f) => f.estatus, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.estatus),
-      meta: { width: "w-[160px]" },
+      meta: { width: COL_W.estado },
       cell: ({ row }) => <EstadoFacturaCxPCell factura={row.original} />,
     },
   ]);
