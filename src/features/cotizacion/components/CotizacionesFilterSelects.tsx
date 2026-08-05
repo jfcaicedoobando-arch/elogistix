@@ -29,7 +29,7 @@ export function ClienteSelect({
         <SelectItem value="todos">Todos los clientes</SelectItem>
         {clientes.map((cli) => (
           <SelectItem key={cli.id} value={cli.id}>
-            {cli.nombre.split(" ").slice(0, 3).join(" ")}
+            {cli.nombre}
           </SelectItem>
         ))}
       </SelectContent>

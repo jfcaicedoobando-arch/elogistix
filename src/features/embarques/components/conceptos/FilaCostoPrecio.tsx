@@ -37,8 +37,10 @@ export function FilaCostoPrecio({
   return (
     <div className={`grid ${cols} gap-2 items-center`}>
       <Select value={costo.proveedorId} onValueChange={v => update(costo.id, 'proveedorId', v)}>
-        <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
-        <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
+        <SelectTrigger className="text-sm" title={proveedoresDb.find(p => p.id === costo.proveedorId)?.nombre}>
+          <SelectValue placeholder="Proveedor" />
+        </SelectTrigger>
+        <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}</SelectContent>
       </Select>
       <ConceptoCatalogoSelect
         value={costo.concepto}
