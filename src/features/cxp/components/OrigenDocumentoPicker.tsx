@@ -79,10 +79,6 @@ export function OrigenDocumentoPicker({ mode, onModeChange }: Props) {
                   ? "border-primary bg-primary/5 ring-1 ring-primary/30"
                   : "bg-card hover:border-muted-foreground/40 hover:bg-muted/40",
               )}
-            >
-              {activo && (
-                <Check className="absolute right-2 top-2 h-3.5 w-3.5 text-primary" aria-hidden />
-              )}
               title={o.ayuda}
             >
               {activo && (
