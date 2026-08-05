@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.424.0] - 2026-08-05
+- Armonización visual global: los velos de los diálogos (Dialog, AlertDialog, Sheet) ahora son idénticos; antes AlertDialog y Sheet usaban un negro al 80% y Dialog un velo tenue con desenfoque.
+- Se eliminaron colores y sombras "a mano": el pie y la barra del sitio público usan el token de superficie de marca y las barras fijas usan la nueva sombra `shadow-sticky-top` (con variante para modo oscuro).
+- Nueva escala canónica de anchos de columna (`COL_W`) adoptada en las tablas de compras, por pagar, proveedores, clientes y portal: folios, fechas, importes y estados ya miden igual en todos los listados.
+- Tarjetas de indicadores unificadas: portal del cliente, bandeja "Por pagar" y detalle de oportunidad (CRM) dejaron de usar tarjetas artesanales y ahora usan la tarjeta KPI estándar.
+- CRM: se quitó el encabezado "CRM" duplicado (se veían dos títulos apilados) y las pestañas quedaron alineadas al mismo margen que el resto de los módulos.
+- Razón social de proveedores con el mismo formato de lectura en "Facturas de proveedor" y "Por pagar".
+
+
+
 ## [13.423.0] - 2026-08-05
 - Modal "Capturar factura de proveedor" en pantallas de 1280×720: el cuerpo pasó de ~290 px a ~460 px de alto útil. El modal ahora aprovecha casi todo el alto disponible y las ayudas secundarias se ocultan en pantallas bajas.
 - Modal de captura: las tarjetas de origen del documento quedan en un renglón compacto (la ayuda vive en el tooltip) y la barra de cuadre se reduce a un renglón cuando aún no hay conceptos.
