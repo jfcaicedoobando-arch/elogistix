@@ -15,8 +15,12 @@ import { DialogFacturaProveedorSinPermiso } from "@/features/cxp/components/Dial
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
-import { FacturaProveedorTotalesKpis } from "./FacturaProveedorTotalesKpis";
-import { ColumnaDocumento, ColumnaDatosFactura } from "./DialogNuevaFacturaProveedor.columnas";
+import { TotalesChipDesglose } from "./TotalesChipDesglose";
+import { PendientesGuardarHint } from "./PendientesGuardarHint";
+import {
+  BandaOrigenYAlertas, ColumnaDocumento, ColumnaDatosFactura,
+} from "./DialogNuevaFacturaProveedor.columnas";
+
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
 import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
