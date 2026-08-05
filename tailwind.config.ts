@@ -160,6 +160,9 @@ export default {
         card: "var(--shadow-card)",
         raised: "var(--shadow-raised)",
         overlay: "var(--shadow-overlay)",
+        // v13.424.0 — Barras sticky (footers de wizard, CTA móvil): antes usaban
+        // `shadow-[0_-8px_24px_-12px_rgba(0,0,0,.4)]` con negro literal.
+        "sticky-top": "var(--shadow-sticky-top)",
       },
       keyframes: {
         "accordion-down": {
