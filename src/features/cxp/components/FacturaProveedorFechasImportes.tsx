@@ -34,7 +34,7 @@ export function FechasEImportesBlock({
       <FormSection title="Fechas y crédito" icon={<CalendarDays className="h-3.5 w-3.5" />}>
         {/* La fecha de emisión necesita más ancho: el icono y la "x" de limpiar
             truncaban el valor a "05/08/20" en columnas de tres campos. */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[1.3fr_0.7fr_1fr]">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-[1.3fr_0.7fr_1fr]">
           <div className="space-y-1">
             <Label>Emisión</Label>
             <DatePickerMx
