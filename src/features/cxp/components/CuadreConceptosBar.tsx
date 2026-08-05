@@ -10,9 +10,12 @@
  * consejo del estado "sobrante" apunta primero al error real de captura
  * (importe unitario capturado como total de línea / mezcla de moneda).
  */
-import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, AlertTriangle, Info, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatCurrency } from "@/lib/formatters";
 import type { EstadoCuadre, ResultadoCuadre } from "@/features/cxp/utils/cuadreConceptos";
+
 
 interface Props {
   resultado: ResultadoCuadre;
@@ -79,9 +82,11 @@ export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: P
   const v = visualPorEstado(resultado.estado, resultado.diferencia, moneda);
   const abs = Math.abs(resultado.diferencia);
   const signo = resultado.diferencia > 0 ? "faltan" : "sobran";
+  const [abierto, setAbierto] = useState(false);
+
 
   return (
-    <div className={`rounded-md border ${v.border} ${v.bg} px-3 py-2 text-xs`}>
+    <div className={`rounded-md border ${v.border} ${v.bg} px-3 py-2 text-xs`} aria-live="polite">
       <div className={`flex flex-wrap items-center gap-2 font-medium ${v.text}`}>
         {v.icon}
         <span>{v.titulo}</span>
@@ -97,17 +102,29 @@ export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: P
           </span>
         </div>
       </div>
-      {resultado.estado !== "sin_conceptos" && (
-        <p className="text-muted-foreground mt-1 pl-6 tabular-nums">
-          {formatCurrency(subtotal, moneda)} − {formatCurrency(resultado.suma, moneda)} ={" "}
-          <span className="font-medium text-foreground">
-            {resultado.estado === "cuadrado" ? formatCurrency(0, moneda) : `${formatCurrency(abs, moneda)} (${signo})`}
-          </span>
-          {" · la suma multiplica cada importe unitario por su cantidad, sin IVA"}
-        </p>
+      {resultado.estado !== "cuadrado" && resultado.estado !== "sin_conceptos" && (
+        <Collapsible open={abierto} onOpenChange={setAbierto}>
+          <CollapsibleTrigger className="mt-1 ml-6 flex items-center gap-1 text-2xs font-medium text-muted-foreground underline-offset-2 hover:underline">
+            ¿Por qué no cuadra?
+            <ChevronDown className={`h-3 w-3 transition-transform ${abierto ? "rotate-180" : ""}`} aria-hidden />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pl-6">
+            <p className="text-muted-foreground mt-1 tabular-nums">
+              {formatCurrency(subtotal, moneda)} − {formatCurrency(resultado.suma, moneda)} ={" "}
+              <span className="font-medium text-foreground">
+                {`${formatCurrency(abs, moneda)} (${signo})`}
+              </span>
+              {" · la suma multiplica cada importe unitario por su cantidad, sin IVA"}
+            </p>
+            <p className="text-muted-foreground mt-1">{v.ayuda}</p>
+          </CollapsibleContent>
+        </Collapsible>
       )}
-      <p className="text-muted-foreground mt-1 pl-6">{v.ayuda}</p>
+      {resultado.estado === "sin_conceptos" && (
+        <p className="text-muted-foreground mt-1 pl-6">{v.ayuda}</p>
+      )}
     </div>
   );
 }
+
 

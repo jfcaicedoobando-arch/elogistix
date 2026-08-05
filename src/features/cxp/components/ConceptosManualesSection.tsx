@@ -50,7 +50,7 @@ export function ConceptosManualesSection({
       title={`Conceptos de la factura (${conceptos.length})`}
     >
       <p className="text-xs text-muted-foreground -mt-1">
-        Captura las partidas de la factura. El importe es <strong>unitario</strong>: la línea se
+        Captura las partidas de la factura. El precio es <strong>unitario</strong>: el total de línea se
         calcula como importe × cantidad y la suma de líneas debe cuadrar con el subtotal.
         Sin conceptos la factura no se podrá aprobar ni pagar.
       </p>
@@ -85,12 +85,12 @@ export function ConceptosManualesSection({
               <Input
                 className="col-span-3 md:col-span-2 h-9 text-right tabular-nums"
                 inputMode="decimal"
-                placeholder="Importe unit."
+                placeholder="Precio unit."
                 value={String(c.importe ?? 0)}
 
 
                 onChange={(e) => onActualizar(c.key, "importe", num(e.target.value))}
-                aria-label="Importe unitario"
+                aria-label="Precio unitario"
               />
               <Input
                 className="col-span-3 md:col-span-2 h-9 text-right tabular-nums"
@@ -120,7 +120,7 @@ export function ConceptosManualesSection({
                 </Button>
               </div>
               <p className="col-span-12 text-2xs text-muted-foreground text-right -mt-1">
-                Línea: {formatCurrency((Number(c.importe) || 0) * (Number(c.cantidad) || 1), moneda)}
+                Total línea: {formatCurrency((Number(c.importe) || 0) * (Number(c.cantidad) || 1), moneda)}
               </p>
             </div>
           ))}
