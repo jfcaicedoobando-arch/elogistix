@@ -40,12 +40,9 @@ export default function CrmLayout() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* v13.424.0 — Encabezado unificado: mismo padding (p-4 sm:p-6) y token
-          tipográfico `text-display` que el resto de los módulos. */}
-      <div className="px-4 sm:px-6 pt-4 pb-2">
-        <h1 className="text-display font-bold tracking-tight text-foreground">CRM</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Leads, oportunidades y actividades comerciales</p>
-      </div>
+      {/* v13.424.0 — Se eliminó el encabezado "CRM" duplicado: el breadcrumb del
+          shell ya indica el módulo y cada ruta hija trae su propio PageHeader.
+          Antes se veían dos títulos apilados ("CRM" + "Resumen ejecutivo"). */}
       <div className="border-b bg-background">
         <div className="px-4 sm:px-6 flex items-center gap-2 h-11">
           <nav className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 h-11 -mb-px">
