@@ -3,14 +3,11 @@
  * Inputs numéricos sin spinners (NumericInput), secciones con iconos
  * y agrupación moneda+importes. El total vive en el header del dialog.
  */
-import { CalendarDays, FileText } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { FileText } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { NumericInput } from "@/components/shared/NumericInput";
 import { FormSection, FieldError, RequiredMark } from "./facturaFormPrimitives";
 import type {
   FacturaFormValues,
@@ -18,7 +15,8 @@ import type {
   TcOrigen,
 } from "@/features/cxp/types";
 import { ProveedorYFolioSection, NotasSection } from "./FacturaProveedorFormFields.sections";
-import { MonedaImportesSection } from "./FacturaProveedorFormFields.moneda";
+import { FechasEImportesBlock } from "./FacturaProveedorFechasImportes";
+
 
 
 interface Props {
@@ -39,12 +37,18 @@ interface Props {
   onObtenerDof?: () => void;
   /** Estado de carga del auto-fetch/click del botón "Obtener DOF". */
   dofLoading?: boolean;
+  /**
+   * v13.423.0 — Omite "Fechas y crédito" + "Moneda e importes" porque el modal
+   * de captura los coloca en la otra columna (ver `FechasEImportesBlock`).
+   */
+  sinFechasEImportes?: boolean;
 }
 
 
 export function FacturaProveedorFormFields({
   values, onChange, onProveedor, categorias, errors = {},
-  proveedorReadOnly = false, proveedorNombre,
+  proveedorReadOnly = false, proveedorNombre, sinFechasEImportes = false,
+
   tcOrigen = "vacio", tcFechaAplicada, onObtenerDof, dofLoading = false,
 }: Props) {
   
@@ -60,43 +64,18 @@ export function FacturaProveedorFormFields({
         proveedorNombre={proveedorNombre}
       />
 
-      <FormSection title="Fechas y crédito" icon={<CalendarDays className="h-3.5 w-3.5" />}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="space-y-1">
-            <Label>Emisión</Label>
-            <DatePickerMx value={values.emision} onChange={(v) => onChange("emision", v)} className="w-full" />
-            {errors?.emision && (
-              <p className="text-xs text-destructive">{errors.emision}</p>
-            )}
-          </div>
-          <div className="space-y-1">
-            <Label>Días crédito</Label>
-            <NumericInput
-              value={values.diasCredito}
-              onChange={(n) => onChange("diasCredito", n)}
-              aria-label="Días de crédito"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>Vencimiento</Label>
-            <Input
-              value={values.vencimiento ? values.vencimiento.split("-").reverse().join("/") : ""}
-              readOnly
-              className="bg-muted"
-            />
-          </div>
-        </div>
-      </FormSection>
+      {!sinFechasEImportes && (
+        <FechasEImportesBlock
+          values={values}
+          onChange={onChange}
+          errors={errors}
+          tcOrigen={tcOrigen}
+          tcFechaAplicada={tcFechaAplicada}
+          onObtenerDof={onObtenerDof}
+          dofLoading={dofLoading}
+        />
+      )}
 
-      <MonedaImportesSection
-        values={values}
-        onChange={onChange}
-        errors={errors}
-        tcOrigen={tcOrigen}
-        tcFechaAplicada={tcFechaAplicada}
-        onObtenerDof={onObtenerDof}
-        dofLoading={dofLoading}
-      />
 
       <FormSection title="Categoría contable" icon={<FileText className="h-3.5 w-3.5" />}>
         <div className="space-y-1">

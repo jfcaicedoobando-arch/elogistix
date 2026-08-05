@@ -79,22 +79,30 @@ export function OrigenDocumentoPicker({ mode, onModeChange }: Props) {
                   ? "border-primary bg-primary/5 ring-1 ring-primary/30"
                   : "bg-card hover:border-muted-foreground/40 hover:bg-muted/40",
               )}
+              title={o.ayuda}
             >
               {activo && (
                 <Check className="absolute right-2 top-2 h-3.5 w-3.5 text-primary" aria-hidden />
               )}
-              <Icono
-                className={cn("h-4 w-4", activo ? "text-primary" : "text-muted-foreground")}
-                aria-hidden
-              />
-              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5 short:gap-2">
+                <Icono
+                  className={cn(
+                    "h-4 w-4 shrink-0",
+                    activo ? "text-primary" : "text-muted-foreground",
+                  )}
+                  aria-hidden
+                />
                 <span className="text-sm font-medium leading-tight">{o.titulo}</span>
                 {o.etiqueta && (
                   <Badge variant="secondary" className="text-2xs">{o.etiqueta}</Badge>
                 )}
               </div>
-              <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{o.ayuda}</p>
+              {/* En pantallas bajas la ayuda vive en el tooltip nativo. */}
+              <p className="mt-0.5 text-xs leading-snug text-muted-foreground short:hidden">
+                {o.ayuda}
+              </p>
             </button>
+
           );
         })}
       </div>
