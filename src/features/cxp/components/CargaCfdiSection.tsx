@@ -37,14 +37,7 @@ export function CargaCfdiSection({
   return (
     <div className="rounded-lg border bg-muted/30">
 
-          Cargar XML CFDI <Badge variant="secondary" className="ml-1 text-2xs">México</Badge>
-        </TabButton>
-        <TabButton active={mode === "pdf_ia"} onClick={() => onModeChange("pdf_ia")} extraClass="border-l">
-          <Sparkles className="h-3.5 w-3.5 inline mr-1 -mt-0.5" />
-          PDF por IA
-          <Badge variant="secondary" className="ml-1 text-2xs">Internacional</Badge>
-        </TabButton>
-      </div>
+
 
       {mode === "cfdi" && (
         <div className="p-4 space-y-3">
