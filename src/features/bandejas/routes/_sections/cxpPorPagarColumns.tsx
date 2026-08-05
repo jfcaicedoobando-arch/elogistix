@@ -4,6 +4,7 @@
  */
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatDate, toTitleCase } from "@/lib/formatters";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
@@ -39,14 +40,14 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       ),
       enableSorting: false,
       enableHiding: false,
-      meta: { width: "w-[40px]" },
+      meta: { width: COL_W.micro },
     },
     {
       id: "proveedor",
       header: "Proveedor",
       accessorFn: (r) => r.proveedor_nombre ?? "",
       enableSorting: true,
-      meta: { width: "min-w-[180px]", className: "font-medium max-w-[240px] truncate", sticky: true },
+      meta: { width: COL_W.texto, className: "font-medium max-w-[240px] truncate", sticky: true },
       // v13.424.0 — Razón social en Title Case, igual que /compras/facturas,
       // clientes y reportes (el dato se guarda en MAYÚSCULAS para el SAT).
       cell: ({ row }) => toTitleCase(row.original.proveedor_nombre ?? "") || "—",
@@ -56,14 +57,14 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       header: "Folio",
       accessorFn: (r) => r.folio_proveedor ?? "",
       enableSorting: true,
-      meta: { width: "w-[130px]", className: "font-mono text-xs whitespace-nowrap" },
+      meta: { width: COL_W.folio, className: "font-mono text-xs whitespace-nowrap" },
       cell: ({ row }) => row.original.folio_proveedor ?? "—",
     },
     {
       id: "embarque",
       header: "Embarque",
       enableSorting: false,
-      meta: { width: "w-[130px]", className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+      meta: { width: COL_W.folio, className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
       cell: ({ row }) => row.original.expediente ?? "—",
     },
     {
@@ -71,7 +72,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       header: "Vencimiento",
       accessorFn: (r) => r.fecha_vencimiento ?? "",
       enableSorting: true,
-      meta: { width: "w-[150px]", className: "text-xs whitespace-nowrap" },
+      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" },
       cell: ({ row }) => (
         <span className="inline-flex items-center gap-1.5">
           {row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—"}
@@ -86,7 +87,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       header: "Días",
       accessorFn: (r) => r.dias_para_vencer ?? 0,
       enableSorting: true,
-      meta: { width: "w-[100px]", align: "center" },
+      meta: { width: COL_W.estado, align: "center" },
       cell: ({ row }) => {
         const dias = row.original.dias_para_vencer ?? 0;
         return (
@@ -104,7 +105,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
         accessor: (r) => Number(r.total),
         currencyAccessor: (r) => r.moneda,
       }),
-      meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
       ...moneyColumn<CxpRow>({
@@ -113,7 +114,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
         accessor: (r) => Number(r.pagado),
         currencyAccessor: (r) => r.moneda,
       }),
-      meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap text-success hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap text-success hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
       ...moneyColumn<CxpRow>({
@@ -122,7 +123,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
         accessor: (r) => Number(r.saldo),
         currencyAccessor: (r) => r.moneda,
       }),
-      meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
     },
   ]);
 }
