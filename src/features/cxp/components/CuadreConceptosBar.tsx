@@ -120,9 +120,12 @@ export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: P
           </CollapsibleContent>
         </Collapsible>
       )}
+      {/* v13.423.0 — Sin conceptos la ayuda se esconde en pantallas bajas:
+          el renglón único deja aire para el formulario. */}
       {resultado.estado === "sin_conceptos" && (
-        <p className="text-muted-foreground mt-1 pl-6">{v.ayuda}</p>
+        <p className="text-muted-foreground mt-1 pl-6 hidden short:hidden md:block">{v.ayuda}</p>
       )}
+
     </div>
   );
 }
