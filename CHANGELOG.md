@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.422.0] - 2026-08-05
+- Modal "Capturar factura de proveedor" (UI/UX): el origen del documento (a mano / XML CFDI / PDF con IA) pasó de pestañas escondidas en una columna a una banda de tarjetas de ancho completo — es la primera decisión y ahora se lee primero.
+- Modal de captura: la banda de 4 KPIs se sustituyó por un chip **Total** en el encabezado con desglose en popover; se recupera alto útil y desaparece la celda que mostraba "IEPS" o "Retenciones" en el mismo lugar.
+- Modal de captura: la barra de cuadre quedó en un renglón con desplegable "¿Por qué no cuadra?" y `aria-live`; el aviso del buzón y la alerta de CFDI duplicado se muestran a ancho completo.
+- Modal de captura: junto a "Guardar factura" se listan los pendientes (proveedor, folio, importe, tipo de cambio); la vinculación a embarque y las partidas muestran un estado guía mientras faltan datos; `Ctrl/Cmd + Enter` guarda.
+- Modal de captura: en las partidas manuales el campo se llama **Precio unitario** y cada renglón muestra "Total línea".
+
 ## [13.421.0] - 2026-08-05
 - Buzón CxP: se corrigió el error falso "No se pudo marcar como capturado / LC_ESTADO_INVALIDO: el documento ya fue capturada". El trigger `trg_cerrar_entrantes_por_uuid` ya cerraba el documento al guardar la factura con el mismo UUID fiscal, y el paso final volvía a intentarlo. Ahora `capturar_factura_entrante` es idempotente: si el documento ya está vinculado a la misma factura, termina sin error.
 - Buzón CxP: si el documento está vinculado a **otra** factura o fue rechazado, se conserva el bloqueo con mensajes explícitos.
