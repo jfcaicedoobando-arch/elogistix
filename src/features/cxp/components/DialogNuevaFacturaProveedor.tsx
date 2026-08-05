@@ -76,6 +76,12 @@ function DialogNuevaFacturaProveedorForm({
 
   const footer = (
     <>
+      <PendientesGuardarHint
+        values={ctl.values}
+        total={ctl.total}
+        topeExcedido={ctl.topeVinculacion.excede}
+        cfdiDuplicado={!!ctl.cfdiDuplicado}
+      />
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
         Cancelar
       </Button>
@@ -96,8 +102,8 @@ function DialogNuevaFacturaProveedorForm({
         description="Registra la factura recibida. Si es de un proveedor mexicano, sube el XML CFDI y se prellenará automáticamente."
         size="4xl"
         footer={footer}
-        stickyTop={
-          <FacturaProveedorTotalesKpis
+        headerAside={
+          <TotalesChipDesglose
             subtotal={sub} iva={iva} ieps={ieps} retenciones={ret}
             total={ctl.total} moneda={moneda}
           />
@@ -110,25 +116,38 @@ function DialogNuevaFacturaProveedorForm({
             renglones={conceptosParaCuadre.length}
           />
         }
-        bodyClassName="lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-6 lg:items-start lg:space-y-0"
       >
-        <ColumnaDocumento
-          ctl={ctl}
-          categorias={cats.data ?? []}
-          entrante={entrante ?? null}
-          autocarga={autocarga}
-          keyRenglonSospechoso={keyRenglonSospechoso}
-          onVerFacturaDuplicada={(id) => {
-            ctl.reset();
-            onOpenChange(false);
-            navigate(`/compras/facturas?factura=${id}`);
+        <div
+          className="space-y-5"
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && ctl.puedeGuardar) {
+              e.preventDefault();
+              void ctl.submit();
+            }
           }}
-        />
+        >
+          <BandaOrigenYAlertas
+            ctl={ctl}
+            entrante={entrante ?? null}
+            autocarga={autocarga}
+            onVerFacturaDuplicada={(id: string) => {
+              ctl.reset();
+              onOpenChange(false);
+              navigate(`/compras/facturas?factura=${id}`);
+            }}
+          />
 
-        <ColumnaDatosFactura ctl={ctl} categorias={cats.data ?? []} />
-
-
+          <div className="lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-6 lg:items-start">
+            <ColumnaDocumento
+              ctl={ctl}
+              categorias={cats.data ?? []}
+              keyRenglonSospechoso={keyRenglonSospechoso}
+            />
+            <ColumnaDatosFactura ctl={ctl} categorias={cats.data ?? []} />
+          </div>
+        </div>
       </FormDialogShell>
+
 
       {ctl.askCrearProv && (
         <CrearProveedorDesdeCfdiDialog
