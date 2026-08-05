@@ -148,8 +148,8 @@ export default function Facturacion() {
             refetchFacturas={refetchFacturas}
             page={page} totalPages={totalPages} setPage={setPage}
             pageSize={pageSize} setPageSize={setPageSize}
-          />
-        </CargaGuard>
+        />
+
 
         <FacturacionDialogs
           openFacturaManual={openFacturaManual}
