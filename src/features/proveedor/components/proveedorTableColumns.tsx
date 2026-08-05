@@ -26,7 +26,7 @@ export const proveedorColumns: ColumnDef<ProveedorListItem, unknown>[] = defineC
     accessorFn: (p) => p.nombre,
     enableSorting: true,
     sortingFn: sortByString<ProveedorListItem>((p) => p.nombre),
-    meta: { width: COL_W.texto, className: "max-w-[280px]", className: "font-medium" },
+    meta: { width: COL_W.texto, className: "max-w-[280px] font-medium" },
     cell: ({ row }) => {
       const nombre = toTitleCase(row.original.nombre ?? "");
       return (
