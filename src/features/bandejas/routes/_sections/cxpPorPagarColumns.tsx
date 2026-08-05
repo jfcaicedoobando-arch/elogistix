@@ -4,7 +4,7 @@
  */
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, toTitleCase } from "@/lib/formatters";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
 import type { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
