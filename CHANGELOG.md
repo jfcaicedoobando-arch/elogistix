@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.425.1] - 2026-08-05
+- Facturación: una carga lenta de la bandeja "Emitidas" ya no oculta todas las pestañas. Antes, si esa consulta tardaba más de 20 s, la pantalla completa se reemplazaba por un error y no podías entrar a ninguna otra bandeja; ahora el aviso de error/reintento aparece sólo dentro de "Emitidas".
+
 ## [13.425.0] - 2026-08-05
 - Armonización visual (cierre): la escala canónica de anchos de columna (`COL_W`) se extendió a los 32 listados restantes — facturación, embarques, cotizaciones, proformas, comisiones, CRM, tesorería, auditoría, costeo, admin y portal de agente. Folios, fechas, importes, estados y acciones ya miden exactamente igual en toda la aplicación.
 - Se eliminaron los anchos "a mano" (95, 100, 110, 115, 130, 150 px para el mismo tipo de dato) que hacían que dos tablas con las mismas columnas se vieran distintas al cambiar de módulo.
