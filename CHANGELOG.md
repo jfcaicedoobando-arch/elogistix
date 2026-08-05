@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.421.0] - 2026-08-05
+- Buzón CxP: se corrigió el error falso "No se pudo marcar como capturado / LC_ESTADO_INVALIDO: el documento ya fue capturada". El trigger `trg_cerrar_entrantes_por_uuid` ya cerraba el documento al guardar la factura con el mismo UUID fiscal, y el paso final volvía a intentarlo. Ahora `capturar_factura_entrante` es idempotente: si el documento ya está vinculado a la misma factura, termina sin error.
+- Buzón CxP: si el documento está vinculado a **otra** factura o fue rechazado, se conserva el bloqueo con mensajes explícitos.
+
+
+
 ## [13.420.0] - 2026-08-05
 - Adjuntos (Sentry JAVASCRIPT-REACT-4M): se corrigió "new row violates row-level security policy" al subir MSDS de embarque/cotización y documentos en el alta de embarque. Las rutas del bucket `documentos` ahora inician con el `organization_id` y la política lo acepta (se conserva la validación por expediente).
 - Adjuntos: los errores de permisos de almacenamiento se muestran en español claro y el fallo de MSDS ya se reporta con contexto en vez de quedar como promesa no atendida.
