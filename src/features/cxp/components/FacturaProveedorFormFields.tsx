@@ -3,14 +3,11 @@
  * Inputs numéricos sin spinners (NumericInput), secciones con iconos
  * y agrupación moneda+importes. El total vive en el header del dialog.
  */
-import { CalendarDays, FileText } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { FileText } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { NumericInput } from "@/components/shared/NumericInput";
 import { FormSection, FieldError, RequiredMark } from "./facturaFormPrimitives";
 import type {
   FacturaFormValues,
@@ -18,7 +15,8 @@ import type {
   TcOrigen,
 } from "@/features/cxp/types";
 import { ProveedorYFolioSection, NotasSection } from "./FacturaProveedorFormFields.sections";
-import { MonedaImportesSection } from "./FacturaProveedorFormFields.moneda";
+import { FechasEImportesBlock } from "./FacturaProveedorFechasImportes";
+
 
 
 interface Props {
