@@ -97,7 +97,7 @@ export function TabFacturasEmitidas(p: Props) {
         <SelectContent>
           <SelectItem value="todos">Todos los clientes</SelectItem>
           {p.clientes.map((c) => (
-            <SelectItem key={c.id} value={c.id}>{c.nombre.split(" ").slice(0, 3).join(" ")}</SelectItem>
+            <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
           ))}
         </SelectContent>
       </Select>

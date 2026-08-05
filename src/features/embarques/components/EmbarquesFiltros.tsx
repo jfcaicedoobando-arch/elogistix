@@ -106,7 +106,7 @@ export default function EmbarquesFiltros(props: Props) {
               <SelectItem value="todos">Todos los clientes</SelectItem>
               {clientes.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
-                  {c.nombre.split(" ").slice(0, 3).join(" ")}
+                  {c.nombre}
                 </SelectItem>
               ))}
             </SelectContent>

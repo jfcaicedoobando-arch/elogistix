@@ -60,7 +60,7 @@ export function ProformasFiltrosCampos(props: ProformasFiltrosCamposProps) {
         <SelectItem value="todos">Todos los clientes</SelectItem>
         {props.clientes.map((c) => (
           <SelectItem key={c.id} value={c.id}>
-            {c.nombre.split(" ").slice(0, 3).join(" ")}
+            {c.nombre}
           </SelectItem>
         ))}
       </SelectContent>
