@@ -15,6 +15,7 @@ import {
 import type { useFacturas } from "@/features/facturacion/hooks";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 import { deriveFacturaBadgeEstado } from "@/features/facturacion/domain/facturaBadgeEstado";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
@@ -32,7 +33,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
       id: "numero", header: "# Factura",
       accessorFn: (f) => f.numero, enableSorting: true,
       sortingFn: sortByString<Factura>((f) => f.numero),
-      meta: { width: "w-[140px]", className: "font-medium whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => {
         const numero = row.original.numero ?? "";
         const esBorradorSinFolio = numero.startsWith("BORRADOR-");
@@ -61,13 +62,13 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
     {
       id: "expediente", header: "Expediente",
       // Oculto en tableta (<xl) — visible desde el # Factura sticky y detalle.
-      meta: { width: "w-[110px]", className: "whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.expediente,
     },
     {
       id: "proforma", header: "Proforma",
       // Oculto en tableta (<xl).
-      meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.proformas?.numero
         ? <span className="font-mono">{row.original.proformas.numero}</span>
         : <span className="text-muted-foreground">—</span>,
@@ -85,14 +86,14 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
     }),
     {
       ...dateColumn<Factura>({ id: "emision", header: "Emisión", accessor: (f) => f.fecha_emision }),
-      meta: { width: "w-[110px]", className: "whitespace-nowrap" },
+      meta: { width: COL_W.fecha, className: "whitespace-nowrap" },
     },
     {
       id: "vencimiento", header: "Vencimiento",
       accessorFn: (f) => f.fecha_vencimiento, enableSorting: true,
       sortingFn: sortByDate<Factura>((f) => f.fecha_vencimiento),
       // Oculto en tableta (<xl).
-      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatDate(row.original.fecha_vencimiento),
     },
     statusColumn<Factura>({
@@ -108,7 +109,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
     {
       id: "archivos", header: "Archivos",
       // QW4 Tanda 1 — visible desde tableta (>=lg) para descarga rápida.
-      meta: { width: "w-[110px]", className: "hidden lg:table-cell", headerClassName: "hidden lg:table-cell" },
+      meta: { width: COL_W.fecha, className: "hidden lg:table-cell", headerClassName: "hidden lg:table-cell" },
       cell: ({ row }) => {
         const f = row.original;
         const timbrada = !!(f as { uuid_fiscal?: string | null }).uuid_fiscal;

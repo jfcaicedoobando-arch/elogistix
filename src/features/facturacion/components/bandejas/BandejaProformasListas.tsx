@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useProformasListas, type FilaProformaLista } from "@/features/facturacion/hooks/useProformasListas";
 import { BandejaShell } from "./BandejaShell";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 const columns = defineColumns<FilaProformaLista>([
   {
@@ -17,7 +18,7 @@ const columns = defineColumns<FilaProformaLista>([
     header: "Nº proforma",
     accessorFn: (r) => r.numero ?? "",
     enableSorting: true,
-    meta: { width: "w-[140px]", className: "font-mono whitespace-nowrap", sticky: true },
+    meta: { width: COL_W.monto, className: "font-mono whitespace-nowrap", sticky: true },
     cell: ({ row }) => row.original.numero || "—",
   },
   clientColumn<FilaProformaLista>({ accessor: (r) => r.cliente_nombre }),
@@ -26,7 +27,7 @@ const columns = defineColumns<FilaProformaLista>([
     header: "Expediente",
     accessorFn: (r) => r.expediente ?? "",
     enableSorting: true,
-    meta: { width: "w-[120px]", className: "font-mono text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+    meta: { width: COL_W.folio, className: "font-mono text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
     cell: ({ row }) => row.original.expediente ?? "—",
   },
   {
@@ -34,7 +35,7 @@ const columns = defineColumns<FilaProformaLista>([
     header: "Total",
     accessorFn: (r) => (r.total_usd && r.total_usd > 0 ? r.total_usd : r.total_mxn ?? 0),
     enableSorting: true,
-    meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap font-medium" },
+    meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" },
     cell: ({ row }) => {
       const r = row.original;
       if (r.total_usd && r.total_usd > 0) return formatCurrency(r.total_usd, "USD");
@@ -43,7 +44,7 @@ const columns = defineColumns<FilaProformaLista>([
     },
   },
   { ...dateColumn<FilaProformaLista>({ id: "aprobada", header: "Aprobada", accessor: (r) => r.created_at }),
-    meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" } },
+    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
 ]);
 
 export function BandejaProformasListas() {

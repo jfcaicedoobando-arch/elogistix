@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { defineColumns } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import type {
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
   EmbarqueConciliacion,
   EstadoConciliacion,
 } from "@/features/compras/services/conciliacionEmbarques";
@@ -94,7 +95,7 @@ export function buildConciliacionColumns() {
       id: "estado_conciliacion",
       header: "Conciliación",
       accessorFn: (r) => r.estado_conciliacion,
-      meta: { width: "w-[130px]" },
+      meta: { width: COL_W.monto },
       cell: ({ row }) => {
         const meta = CONCILIACION_ESTADO_LABELS[row.original.estado_conciliacion];
         const Icon = meta.icon;

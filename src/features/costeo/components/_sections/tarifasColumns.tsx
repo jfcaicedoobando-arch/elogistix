@@ -8,6 +8,7 @@ import { TarifaRowActions } from "../TarifaRowActions";
 import { TarifaQuickApprovalButtons } from "../TarifaQuickApprovalButtons";
 import { usd, formatVigencia, vigenciaHint } from "../../routes/CosteoTarifas.helpers";
 import type { CosteoTarifaEstado } from "@/features/costeo/types";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export interface TarifaRow {
   id: string;
@@ -165,7 +166,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
     {
       id: "acciones",
       header: "Acciones",
-      meta: { width: "w-[160px]", align: "right" },
+      meta: { width: COL_W.nombre, align: "right" },
       cell: ({ row }) => {
         const t = row.original;
         const ap = t.estado_aprobacion ?? "vigente";

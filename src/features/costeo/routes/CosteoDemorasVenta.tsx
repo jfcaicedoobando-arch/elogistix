@@ -20,6 +20,7 @@ import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAl
 import { NuevaTarifaDemoraDialog } from "@/features/costeo/components/NuevaTarifaDemoraDialog";
 import { todayLocalISO } from "@/lib/date/today";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 const today = () => todayLocalISO();
 const EMPTY: DemoraVentaTarifaInput = {
@@ -75,19 +76,19 @@ export default function CosteoDemorasVenta() {
         {
           id: "tipo",
           header: "Tipo contenedor",
-          meta: { width: "min-w-[160px]", className: "font-medium", sticky: true },
+          meta: { width: COL_W.nombre, className: "font-medium", sticky: true },
           cell: ({ row }) => tipoMap.get(row.original.tipo_contenedor_id) ?? "—",
         },
         {
           id: "desde",
           header: "Desde día",
-          meta: { width: "w-[110px]", align: "right", className: "tabular-nums" },
+          meta: { width: COL_W.fecha, align: "right", className: "tabular-nums" },
           cell: ({ row }) => row.original.desde_dia,
         },
         {
           id: "hasta",
           header: "Hasta día",
-          meta: { width: "w-[110px]", align: "right", className: "tabular-nums" },
+          meta: { width: COL_W.fecha, align: "right", className: "tabular-nums" },
           cell: ({ row }) =>
             row.original.hasta_dia ?? <span aria-label="sin límite">∞</span>,
         },
@@ -98,7 +99,7 @@ export default function CosteoDemorasVenta() {
             accessor: (t) => Number(t.monto_por_dia_usd),
             defaultCurrency: "USD",
           }),
-          meta: { width: "w-[150px]", align: "right", className: "tabular-nums whitespace-nowrap font-medium" },
+          meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" },
         },
         {
           ...dateColumn<Tarifa>({
@@ -106,7 +107,7 @@ export default function CosteoDemorasVenta() {
             header: rangoLabel("Vigencia", "desde"),
             accessor: (t) => t.vigente_desde,
           }),
-          meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+          meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
         },
         {
           ...dateColumn<Tarifa>({
@@ -114,12 +115,12 @@ export default function CosteoDemorasVenta() {
             header: rangoLabel("Vigencia", "hasta"),
             accessor: (t) => t.vigente_hasta,
           }),
-          meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+          meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
         },
         {
           id: "acciones",
           header: "",
-          meta: { width: "w-[50px]", align: "right" },
+          meta: { width: COL_W.micro, align: "right" },
           cell: ({ row }) => (
             <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
               <Button

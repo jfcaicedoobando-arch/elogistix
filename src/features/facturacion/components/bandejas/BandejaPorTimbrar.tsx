@@ -9,6 +9,7 @@ import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataT
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useFacturasPorTimbrar, type FilaPorTimbrar } from "@/features/facturacion/hooks/useBandejas";
 import { BandejaShell } from "./BandejaShell";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 const columns = defineColumns<FilaPorTimbrar>([
   {
@@ -16,7 +17,7 @@ const columns = defineColumns<FilaPorTimbrar>([
     header: "Folio interno",
     accessorFn: (r) => r.numero,
     enableSorting: true,
-    meta: { width: "w-[160px]", className: "font-mono whitespace-nowrap", sticky: true },
+    meta: { width: COL_W.nombre, className: "font-mono whitespace-nowrap", sticky: true },
     cell: ({ row }) =>
       row.original.numero.startsWith("BORRADOR-")
         ? <span className="text-muted-foreground italic">Sin folio</span>
@@ -24,10 +25,10 @@ const columns = defineColumns<FilaPorTimbrar>([
   },
   clientColumn<FilaPorTimbrar>({ accessor: (r) => r.cliente_nombre }),
   { ...dateColumn<FilaPorTimbrar>({ id: "emision", header: "Emisión", accessor: (r) => r.fecha_emision }),
-    meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" } },
+    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
   { ...moneyColumn<FilaPorTimbrar>({ id: "total", header: "Total",
       accessor: (r) => r.total, currencyAccessor: (r) => r.moneda }),
-    meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },
+    meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },
 ]);
 
 export function BandejaPorTimbrar() {

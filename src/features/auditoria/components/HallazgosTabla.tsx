@@ -19,6 +19,7 @@ import { ExplicarHallazgoButton } from "./ExplicarHallazgoButton";
 import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
 import { buildSelectColumn } from "./hallazgosTablaSelectColumn";
 import { todayLocalISO } from "@/lib/date/today";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 interface Props {
   visibles: HallazgoAuditoria[];
@@ -56,12 +57,12 @@ export function HallazgosTabla(props: Props) {
 
   const cols: ColumnDef<HallazgoAuditoria, unknown>[] = defineColumns<HallazgoAuditoria>([
     buildSelectColumn({ revisiones, selectedIds, selectablesEnPagina, onToggleSelected, onToggleAllVisible }),
-    { id: "sev", header: "Severidad", meta: { width: "w-[100px]" },
+    { id: "sev", header: "Severidad", meta: { width: COL_W.fecha },
       cell: ({ row }) => {
         const sev = severidadConfig[row.original.severidad];
         return <Badge variant="outline" className={cn("text-2xs", sev.className)}>{sev.label}</Badge>;
       } },
-    { id: "exp", header: "Expediente", meta: { width: "w-[130px]", className: "font-medium tabular-nums text-xs" },
+    { id: "exp", header: "Expediente", meta: { width: COL_W.monto, className: "font-medium tabular-nums text-xs" },
       cell: ({ row }) => {
         const h = row.original;
         return (
@@ -75,12 +76,12 @@ export function HallazgosTabla(props: Props) {
           </button>
         );
       } },
-    { id: "regla", header: "Regla", meta: { width: "w-[160px]", className: "text-xs text-muted-foreground" }, cell: ({ row }) => reglaLabel[row.original.regla] },
+    { id: "regla", header: "Regla", meta: { width: COL_W.nombre, className: "text-xs text-muted-foreground" }, cell: ({ row }) => reglaLabel[row.original.regla] },
     { id: "detalle", header: "Detalle", meta: { className: "text-xs" },
       cell: ({ row }) => {
         return <HallazgoDetalleCell hallazgo={row.original} />;
       } },
-    { id: "resp", header: "Responsable", meta: { width: "w-[170px]", className: "text-xs" },
+    { id: "resp", header: "Responsable", meta: { width: COL_W.ruta, className: "text-xs" },
       cell: ({ row }) => {
         const h = row.original;
         const revision = getRevision(h);
@@ -114,7 +115,7 @@ export function HallazgosTabla(props: Props) {
           </button>
         );
       } },
-    { id: "rev", header: "Revisión", meta: { width: "w-[150px]" },
+    { id: "rev", header: "Revisión", meta: { width: COL_W.monto },
       cell: ({ row }) => {
         const h = row.original;
         const revision = getRevision(h);
@@ -147,7 +148,7 @@ export function HallazgosTabla(props: Props) {
           </Button>
         );
       } },
-    { id: "open", header: "", meta: { width: "w-[80px]" },
+    { id: "open", header: "", meta: { width: COL_W.short },
       cell: ({ row }) => {
         const h = row.original;
         return (

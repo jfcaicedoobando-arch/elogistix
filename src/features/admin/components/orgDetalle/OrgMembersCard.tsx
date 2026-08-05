@@ -17,6 +17,7 @@ import { Trash2, UserPlus, Users } from "lucide-react";
 import type { MemberRow } from "@/features/admin/hooks";
 import type { AppRole } from "@/types/appRole";
 import {
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
   ASSIGNABLE_ROLE_GROUPS,
   LEGACY_ROLES,
   ROLE_BADGE_CLASSES,
@@ -40,18 +41,18 @@ export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onR
   const [memberAEliminar, setMemberAEliminar] = useState<MemberRow | null>(null);
 
   const columns: ColumnDef<MemberRow, unknown>[] = defineColumns<MemberRow>([
-    { id: "email", header: "Usuario", meta: { width: "min-w-[200px]", className: "font-medium" }, cell: ({ row }) => row.original.email ?? row.original.user_id },
+    { id: "email", header: "Usuario", meta: { width: COL_W.texto, className: "font-medium" }, cell: ({ row }) => row.original.email ?? row.original.user_id },
     {
       id: "role",
       header: "Rol",
-      meta: { width: "w-[180px]" },
+      meta: { width: COL_W.ruta },
       cell: ({ row }) => {
         const r = row.original.role as AppRole;
         return <Badge className={ROLE_BADGE_CLASSES[r] ?? ""}>{ROLE_LABELS[r] ?? r}</Badge>;
       },
     },
     {
-      id: "change_role", header: "Cambiar rol", meta: { width: "w-[220px]" },
+      id: "change_role", header: "Cambiar rol", meta: { width: COL_W.texto },
       cell: ({ row }) => {
         const m = row.original;
         const currentRole = m.role as AppRole;

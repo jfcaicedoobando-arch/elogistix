@@ -10,6 +10,7 @@ import { formatDate, formatDateTimeShort } from "@/lib/formatters";
 import { obtenerRangoRol } from "@/features/admin/domain/roles/roleCatalog";
 import { ChangeRoleCell, EstadoInvitacionCell, UsuarioCell } from "./usuariosCells";
 import { UsuarioRowActionsCell, type UsuarioRowActions } from "./UsuarioRowActionsCell";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 
 interface Options {
@@ -60,7 +61,7 @@ export function useUsuarioColumns({
                 header: "Organización",
                 accessorFn: (u: UserRow) => u.organizacion_nombre,
                 enableSorting: true,
-                meta: { width: "min-w-[180px]" },
+                meta: { width: COL_W.ruta },
                 cell: ({ row }: { row: Row<UserRow> }) => (
                   <Badge variant="outline" className="font-normal">
                     {row.original.organizacion_nombre}
@@ -75,7 +76,7 @@ export function useUsuarioColumns({
           accessorFn: (u) => u.role,
           enableSorting: true,
           sortingFn: sortByRoleHierarchy,
-          meta: { width: "w-[260px]" },
+          meta: { width: COL_W.texto },
           cell: ({ row }) => (
             <ChangeRoleCell
               user={row.original}
@@ -116,7 +117,7 @@ export function useUsuarioColumns({
         {
           id: "actions",
           header: "",
-          meta: { width: "w-[50px]" },
+          meta: { width: COL_W.micro },
           cell: ({ row }) => {
             const u = row.original;
             if (u.user_id === currentUserId) return null;

@@ -23,6 +23,7 @@ import { DemorasTarifaEditor } from "@/features/costeo/components/DemorasTarifaE
 import { CartaGarantiaBadge } from "@/features/costeo/components/CartaGarantiaBadge";
 import type { CosteoNavieraCondicion } from "@/features/costeo/types/navieraCondicion";
 import { useDocumentTitle } from "@/hooks/shared";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -62,7 +63,7 @@ export default function AgenteGarantias() {
         id: "scac",
         header: "SCAC",
         accessorFn: (f) => f.naviera_code,
-        meta: { className: "font-mono text-xs", width: "w-[100px]" },
+        meta: { className: "font-mono text-xs", width: COL_W.fecha },
         cell: ({ row }) => row.original.naviera_code,
       },
       {

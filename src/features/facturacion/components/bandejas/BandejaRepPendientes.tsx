@@ -11,6 +11,7 @@ import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataT
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { usePagosRepPendientes, type FilaRepPendiente } from "@/features/facturacion/hooks/useBandejas";
 import { BandejaShell } from "./BandejaShell";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 function badgeTone(estado: string): "outline" | "destructive" {
   return estado === "Error" ? "destructive" : "outline";
@@ -22,21 +23,21 @@ const columns = defineColumns<FilaRepPendiente>([
     header: "Factura",
     accessorFn: (r) => r.factura_numero,
     enableSorting: true,
-    meta: { width: "w-[140px]", className: "font-mono whitespace-nowrap", sticky: true },
+    meta: { width: COL_W.monto, className: "font-mono whitespace-nowrap", sticky: true },
     cell: ({ row }) => row.original.factura_numero,
   },
   clientColumn<FilaRepPendiente>({ accessor: (r) => r.cliente_nombre }),
   { ...dateColumn<FilaRepPendiente>({ id: "fecha_pago", header: "Fecha pago", accessor: (r) => r.fecha_pago }),
-    meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" } },
+    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
   { ...moneyColumn<FilaRepPendiente>({ id: "monto", header: "Monto",
       accessor: (r) => r.monto, currencyAccessor: (r) => r.moneda }),
-    meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },
+    meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },
   {
     id: "estado",
     header: "Estado REP",
     accessorFn: (r) => r.estado_rep,
     enableSorting: true,
-    meta: { width: "w-[120px]" },
+    meta: { width: COL_W.folio },
     cell: ({ row }) => <Badge variant={badgeTone(row.original.estado_rep)}>{row.original.estado_rep}</Badge>,
   },
 ]);

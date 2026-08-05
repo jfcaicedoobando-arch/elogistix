@@ -15,6 +15,7 @@ import {
 } from "@/components/shared/dataTable/columnBuilders";
 import { Trash2, Copy } from "lucide-react";
 import { normalizarSubtotalMxn } from "@/features/cotizacion/domain/ordenSubtotalMxn";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export interface BuildParams {
   canEdit: boolean;
@@ -31,7 +32,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       header: "Folio",
       accessorFn: (r) => r.folio,
       enableSorting: true,
-      meta: { width: "w-[120px]", className: "font-medium whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.folio, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.folio,
     },
     clientColumn<CotizacionListItem>({
@@ -42,7 +43,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       id: "tipo_doc",
       header: "Tipo",
       // Oculto en tableta (<xl) — información secundaria (Tarifario vs Transaccional).
-      meta: { width: "w-[100px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const esInfo = row.original.tipo_documento === "informativa";
         return (
@@ -56,14 +57,14 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       id: "modo",
       header: "Modo",
       // Oculto en tableta (<xl).
-      meta: { width: "w-[80px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.short, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.modo,
     },
     {
       id: "ruta",
       header: "Origen → Destino",
       // Oculto en tableta (<xl) — la ruta se ve en el detalle.
-      meta: { width: "min-w-[160px]", className: "text-xs max-w-[200px] hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.nombre, className: "text-xs max-w-[200px] hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const r = row.original;
         const ruta = `${r.origen || "-"} → ${r.destino || "-"}`;
@@ -92,7 +93,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       header: "Estado",
       accessorFn: (r) => r.estado,
       enableSorting: true,
-      meta: { width: "w-[180px]" },
+      meta: { width: COL_W.ruta },
       // renderEstadoVigencia usa StatusBadge internamente (Oleada 1 migrado)
       cell: ({ row }) => renderEstadoVigencia(row.original),
     },
@@ -104,7 +105,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
         format: "dd/MM/yyyy HH:mm",
       }),
       // Fecha oculta en tableta (<xl).
-      meta: { width: "w-[130px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
   ];
 

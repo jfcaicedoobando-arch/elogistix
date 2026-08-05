@@ -7,6 +7,7 @@ import { sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatDate, formatDateTimeShort } from "@/lib/formatters";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import type {
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
   PortalAgenteUserRow,
   PortalClienteUserRow,
 } from "@/features/admin/services/usuario/portales";
@@ -70,7 +71,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
               "es-MX",
               { sensitivity: "base" },
             ),
-          meta: { width: "min-w-[220px]" },
+          meta: { width: COL_W.texto },
           cell: ({ row }) => (
             <span className="text-sm">{getVinculadoNombre(row.original, tipo)}</span>
           ),
@@ -99,7 +100,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
         {
           id: "actions",
           header: "",
-          meta: { width: "w-[50px]" },
+          meta: { width: COL_W.micro },
           cell: ({ row }) => (
             <Tooltip>
               <TooltipTrigger asChild>
