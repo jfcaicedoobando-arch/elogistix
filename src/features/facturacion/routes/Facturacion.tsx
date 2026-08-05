@@ -124,14 +124,10 @@ export default function Facturacion() {
 
         <DashboardEjecutivoFacturacion />
 
-        <CargaGuard
-          isLoading={loadingFacturas}
-          isError={errorFacturas}
-          onRetry={refetchFacturas}
-          errorTitle="No se pudo cargar la información de facturación"
-          errorDescription="Ocurrió un error al obtener las facturas. Intenta de nuevo."
-        >
-          <FacturacionBandejasTabs
+        {/* v13.425.1 — el guard global se quitó: sólo la bandeja "Emitidas"
+            depende de esta query y ya pinta su propio error/reintento.
+            Antes, 20 s de carga lenta desmontaban las 8 bandejas. */}
+        <FacturacionBandejasTabs
             activeBandeja={activeBandeja}
             setActiveBandeja={setActiveBandeja}
             search={search} setSearch={setSearch}
