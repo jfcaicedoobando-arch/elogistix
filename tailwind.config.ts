@@ -14,6 +14,14 @@ export default {
       },
     },
     extend: {
+      // v13.423.0 — Breakpoint por ALTO de pantalla. Las laptops de 720-768 px
+      // dejan muy poco cuerpo útil en los modales largos (captura de facturas):
+      // con `short:` se compactan ayudas y descripciones sin tocar el diseño
+      // de las pantallas grandes.
+      screens: {
+        short: { raw: "(max-height: 800px)" },
+      },
+
       fontFamily: {
         sans: ["Inter", "sans-serif"],
         // v13.139.18 (F-03 auditoría 3): stack defensivo para emoji.
