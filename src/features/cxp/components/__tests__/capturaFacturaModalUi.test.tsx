@@ -3,7 +3,7 @@
  * "Capturar factura de proveedor" (v13.422.0).
  */
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { OrigenDocumentoPicker } from "../OrigenDocumentoPicker";
 import { pendientesDeCaptura, PendientesGuardarHint } from "../PendientesGuardarHint";
@@ -27,14 +27,14 @@ const values: FacturaFormValues = {
 };
 
 describe("OrigenDocumentoPicker", () => {
-  it("marca la opción activa y avisa el cambio", async () => {
+  it("marca la opción activa y avisa el cambio", () => {
     const onModeChange = vi.fn();
     render(<OrigenDocumentoPicker mode="manual" onModeChange={onModeChange} />);
 
     const manual = screen.getByRole("radio", { name: /capturar a mano/i });
     expect(manual).toHaveAttribute("aria-checked", "true");
 
-    await userEvent.click(screen.getByRole("radio", { name: /xml del cfdi/i }));
+    fireEvent.click(screen.getByRole("radio", { name: /xml del cfdi/i }));
     expect(onModeChange).toHaveBeenCalledWith("cfdi");
   });
 });
