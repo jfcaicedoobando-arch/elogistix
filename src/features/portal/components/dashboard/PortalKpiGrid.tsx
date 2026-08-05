@@ -7,7 +7,6 @@ type KpiKey = "embarques" | "cotizaciones" | "facturas";
 interface KpiDef {
   key: KpiKey;
   label: string;
-  shortLabel: string;
   icon: LucideIcon;
   href: string;
   variant: KpiVariant;
@@ -19,9 +18,9 @@ interface KpiDef {
  * `KpiCard` canónica con `iconVariant="chip"`, igual que el resto del ERP.
  */
 const KPIS: KpiDef[] = [
-  { key: "embarques", label: "Embarques activos", shortLabel: "Embarques", icon: Ship, href: ROUTES.PORTAL_EMBARQUES, variant: "accent" },
-  { key: "cotizaciones", label: "Cotizaciones pendientes", shortLabel: "Cotizaciones", icon: ClipboardList, href: ROUTES.PORTAL_COTIZACIONES, variant: "info" },
-  { key: "facturas", label: "Facturas pendientes", shortLabel: "Facturas", icon: Receipt, href: ROUTES.PORTAL_FACTURAS, variant: "warning" },
+  { key: "embarques", label: "Embarques activos", icon: Ship, href: ROUTES.PORTAL_EMBARQUES, variant: "accent" },
+  { key: "cotizaciones", label: "Cotizaciones pendientes", icon: ClipboardList, href: ROUTES.PORTAL_COTIZACIONES, variant: "info" },
+  { key: "facturas", label: "Facturas pendientes", icon: Receipt, href: ROUTES.PORTAL_FACTURAS, variant: "warning" },
 ];
 
 interface Props {
