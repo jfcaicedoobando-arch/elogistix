@@ -5,6 +5,7 @@
  * v13.172.16: se elimina el `actionsColumn` "Ver detalle" porque duplica la
  * navegación de fila (`onRowClick` en `Clientes.tsx` ya va a `/clientes/:id`).
  */
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import type { ColumnDef } from "@tanstack/react-table";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace, formatCurrency } from "@/lib/formatters";
@@ -30,7 +31,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       accessorFn: (c) => c.nombre,
       enableSorting: true,
       sortingFn: sortByString<ClienteRow>((c) => c.nombre),
-      meta: { width: "min-w-[240px]", className: "font-medium", sticky: true },
+      meta: { width: COL_W.texto, className: "font-medium", sticky: true },
       cell: ({ row }) => {
         const nombre = toTitleCase(row.original.nombre ?? "");
         const limite = row.original.limite_credito_mxn ?? null;
@@ -57,7 +58,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       enableSorting: true,
       sortingFn: sortByString<ClienteRow>((c) => c.rfc),
       // Se oculta en <md porque en móvil ya se muestra en la mobile card.
-      meta: { width: "w-[130px]", className: "text-xs font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+      meta: { width: COL_W.folio, className: "text-xs font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" },
       cell: ({ row }) => (row.original.rfc || "").toUpperCase(),
     },
     {
@@ -66,7 +67,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       accessorFn: (c) => c.ciudad,
       enableSorting: true,
       sortingFn: sortByString<ClienteRow>((c) => c.ciudad),
-      meta: { width: "w-[150px]", className: "text-xs" },
+      meta: { width: COL_W.nombre, className: "text-xs" },
       cell: ({ row }) => {
         const ciudad = correctSpanishPlace(row.original.ciudad);
         const estado = correctSpanishPlace(row.original.estado);
@@ -80,7 +81,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       accessorFn: (c) => Number(c.saldo_pendiente_mxn ?? 0),
       enableSorting: true,
       meta: {
-        width: "w-[130px]",
+        width: COL_W.estado,
         className: "text-xs text-right tabular-nums whitespace-nowrap",
         headerClassName: "text-right",
       },
@@ -103,7 +104,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       id: "contacto",
       header: "Contacto",
       // Oculto en tableta (<xl) para evitar overflow horizontal.
-      meta: { width: "w-[140px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.nombre, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = toTitleCase(row.original.contacto);
         return v ? v : <span className="text-muted-foreground">—</span>;
@@ -112,7 +113,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
     {
       id: "telefono",
       header: "Teléfono",
-      meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = formatPhoneMx(row.original.telefono);
         return v ? v : <span className="text-muted-foreground">—</span>;

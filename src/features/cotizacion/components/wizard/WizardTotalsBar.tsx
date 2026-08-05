@@ -35,7 +35,7 @@ export function WizardTotalsBar({ plUSD, plMXN, totalVentaMXN }: Props) {
     <div
       role="status"
       aria-label="Totales de la cotización"
-      className="sticky bottom-0 left-0 right-0 z-10 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)]"
+      className="sticky bottom-0 left-0 right-0 z-10 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sticky-top"
     >
       <div className="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-sm">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1">

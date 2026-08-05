@@ -40,12 +40,11 @@ export default function CrmLayout() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-3 sm:px-6 pt-4 pb-2">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">CRM</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Leads, oportunidades y actividades comerciales</p>
-      </div>
+      {/* v13.424.0 — Se eliminó el encabezado "CRM" duplicado: el breadcrumb del
+          shell ya indica el módulo y cada ruta hija trae su propio PageHeader.
+          Antes se veían dos títulos apilados ("CRM" + "Resumen ejecutivo"). */}
       <div className="border-b bg-background">
-        <div className="px-3 sm:px-6 flex items-center gap-2 h-11">
+        <div className="px-4 sm:px-6 flex items-center gap-2 h-11">
           <nav className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 h-11 -mb-px">
             {TABS.map((t) => {
               const showBadge = t.to === "/crm/actividades" && vencidas > 0;
