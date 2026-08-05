@@ -8,10 +8,10 @@ import { Progress } from "@/components/ui/progress";
 import { defineColumns } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import type {
-import { COL_W } from "@/components/shared/dataTable/columnWidths";
   EmbarqueConciliacion,
   EstadoConciliacion,
 } from "@/features/compras/services/conciliacionEmbarques";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export const CONCILIACION_ESTADO_LABELS: Record<EstadoConciliacion, {
   label: string;

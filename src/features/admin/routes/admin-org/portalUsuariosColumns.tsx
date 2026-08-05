@@ -7,10 +7,10 @@ import { sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatDate, formatDateTimeShort } from "@/lib/formatters";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import type {
-import { COL_W } from "@/components/shared/dataTable/columnWidths";
   PortalAgenteUserRow,
   PortalClienteUserRow,
 } from "@/features/admin/services/usuario/portales";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export type PortalUserRow = PortalClienteUserRow | PortalAgenteUserRow;
 

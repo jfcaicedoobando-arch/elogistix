@@ -14,11 +14,11 @@ import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/features/embarques/hooks";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import {
-import { COL_W } from "@/components/shared/dataTable/columnWidths";
   getEstadoUnificado,
   rankEstadoUnificado,
   LABEL_ESTADO_UNIFICADO,
 } from "@/lib/domain/estadoUnificado";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 
 

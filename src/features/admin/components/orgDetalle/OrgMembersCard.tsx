@@ -17,12 +17,12 @@ import { Trash2, UserPlus, Users } from "lucide-react";
 import type { MemberRow } from "@/features/admin/hooks";
 import type { AppRole } from "@/types/appRole";
 import {
-import { COL_W } from "@/components/shared/dataTable/columnWidths";
   ASSIGNABLE_ROLE_GROUPS,
   LEGACY_ROLES,
   ROLE_BADGE_CLASSES,
   ROLE_LABELS,
 } from "@/features/admin/domain/roles/roleCatalog";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 interface OrgMembersCardProps {
   members: MemberRow[];
