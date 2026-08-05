@@ -15,6 +15,7 @@ import { RentabilidadSection } from "@/features/dashboard/direccion/components/R
 import { CarteraSection } from "@/features/dashboard/direccion/components/CarteraSection";
 import { PulsoSection } from "@/features/dashboard/direccion/components/PulsoSection";
 import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 export default function DireccionDashboard() {
   const { data, isLoading, error } = useDireccionKpis();
@@ -45,15 +46,15 @@ export default function DireccionDashboard() {
           <TotalesPeriodoCard totales={totales} desdeIso={desdeIso} isLoading={totalesLoading} />
 
           <section className="space-y-2">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Rentabilidad</h2>
+            <SectionHeading variant="overline">Rentabilidad</SectionHeading>
             <RentabilidadSection margen6m={data.margen_6m} porModo={data.margen_por_modo} />
           </section>
           <section className="space-y-2">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Riesgo y cartera</h2>
+            <SectionHeading variant="overline">Riesgo y cartera</SectionHeading>
             <CarteraSection antiguedad={data.antiguedad} topClientes={data.top_clientes} />
           </section>
           <section className="space-y-2">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Pulso del negocio</h2>
+            <SectionHeading variant="overline">Pulso del negocio</SectionHeading>
             <PulsoSection pulso={data.pulso} />
           </section>
         </>

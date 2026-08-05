@@ -28,7 +28,7 @@ const NONE = "__none__";
 function BadgeHerencia({ heredado }: { heredado: boolean }) {
   if (!heredado) return null;
   return (
-    <Badge variant="secondary" className="text-[10px] font-normal">
+    <Badge variant="secondary" className="text-2xs font-normal">
       Cotización
     </Badge>
   );
@@ -101,7 +101,7 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
         )}
       />
       {overriden ? (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-label text-muted-foreground">
           Cambiaste el agente heredado de la cotización.
         </p>
       ) : null}
@@ -181,7 +181,7 @@ export function NavieraEmbarqueSelector({
         )}
       />
       {overriden ? (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-label text-muted-foreground">
           Cambiaste la naviera heredada de la cotización.
         </p>
       ) : null}

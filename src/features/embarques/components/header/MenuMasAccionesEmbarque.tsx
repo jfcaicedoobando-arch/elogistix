@@ -85,7 +85,7 @@ export function MenuMasAccionesEmbarque(props: {
               </>
             )}
             {!esTerminal && !puedeEliminar && canEliminarEmbarque && (
-              <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
+              <div className="px-2 py-1.5 text-label text-muted-foreground">
                 Eliminar deshabilitado: hay CxC/CxP pendientes.
               </div>
             )}

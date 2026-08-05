@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 import type { AgingBucket, BucketAging } from "../services/estadoCuentaAging";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props {
   buckets: AgingBucket[];
@@ -32,9 +33,9 @@ export function EstadoCuentaAgingBar({ buckets, activo, onToggle }: Props) {
   return (
     <Card className="overflow-hidden">
       <div className="border-b px-4 py-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <SectionHeading variant="overline">
           Antigüedad de saldos
-        </h2>
+        </SectionHeading>
       </div>
       <div className="grid grid-cols-2 divide-x divide-y sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0">
         {buckets.map((b) => {
@@ -52,7 +53,7 @@ export function EstadoCuentaAgingBar({ buckets, activo, onToggle }: Props) {
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-medium text-muted-foreground">{b.label}</span>
-                <span className="text-[11px] tabular-nums text-muted-foreground">{b.conteo}</span>
+                <span className="text-label tabular-nums text-muted-foreground">{b.conteo}</span>
               </div>
               <div className={cn("mt-1 space-y-0.5", TONO[b.id])}>
                 {importes(b).map((txt) => (

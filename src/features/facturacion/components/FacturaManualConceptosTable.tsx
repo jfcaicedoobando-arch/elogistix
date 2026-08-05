@@ -54,7 +54,7 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
         </Button>
       </div>
       <div className="border rounded-lg overflow-hidden">
-        <div className="grid grid-cols-12 gap-2 bg-muted/60 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="grid grid-cols-12 gap-2 bg-muted/60 px-3 py-2 text-label font-semibold uppercase tracking-wider text-muted-foreground">
           <div className="col-span-4">Descripción</div>
           <div className="col-span-2">Clave SAT</div>
           <div className="col-span-1">Cant.</div>

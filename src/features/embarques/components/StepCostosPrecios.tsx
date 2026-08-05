@@ -143,7 +143,7 @@ export function StepCostosPrecios(props: Props) {
               <div>
                 <p className="text-xs text-muted-foreground">Tipo de Cambio USD</p>
                 <Input {...register('tipoCambioUSD')} inputMode="decimal" className="text-center mt-1 [appearance:textfield]" />
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p className="text-label text-muted-foreground mt-1">
                   {tcOrigen ?? "Captura el tipo de cambio del día"}
                 </p>
               </div>

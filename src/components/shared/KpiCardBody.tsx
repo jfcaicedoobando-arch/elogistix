@@ -1,5 +1,7 @@
 import { CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArrowUpRight, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { kpiIconChipClasses } from "@/lib/ui/kpiTones";
 import type { LucideIcon } from "lucide-react";
@@ -25,17 +27,46 @@ export interface KpiBodyProps {
   variant: KpiVariant;
   iconVariant: KpiIconVariant;
   valueTooltip?: string;
+  /** Ayuda contextual: muestra un icono de info con tooltip junto al label. */
+  hint?: string;
+  /** Afordancia de navegación (flecha) cuando la card es un enlace. */
+  showArrow?: boolean;
   children?: React.ReactNode;
 }
 
+/** Fila de etiqueta canónica: label truncado + hint opcional. */
+function KpiLabel({ label, hint }: { label: string; hint?: string }) {
+  return (
+    <div className="flex items-center gap-1.5 min-w-0">
+      <p className="text-xs text-muted-foreground truncate" title={label}>{label}</p>
+      {hint && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label={`Información: ${label}`}
+              className="inline-flex shrink-0 rounded-sm text-muted-foreground/70 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <Info className="h-3 w-3" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[260px] text-xs">{hint}</TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  );
+}
+
 export function KpiBodyInline({
-  label, value, valueStr, loading, delta, deltaVariant, sublabel, Icon, variant, valueTooltip, children,
+  label, value, valueStr, loading, delta, deltaVariant, sublabel, Icon, variant,
+  valueTooltip, hint, showArrow, children,
 }: KpiBodyProps) {
   return (
     <CardContent className="p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-1 min-w-0">
-          <p className="text-xs text-muted-foreground truncate">{label}</p>
+          <KpiLabel label={label} hint={hint} />
           {loading ? (
             <Skeleton className="h-7 w-20" />
           ) : (
@@ -48,18 +79,23 @@ export function KpiBodyInline({
           )}
           {delta && <p className={cn("text-xs tabular-nums", kpiDeltaClass(deltaVariant))}>{delta}</p>}
           {sublabel && !delta && (
-            <p className="text-xs text-muted-foreground truncate">{sublabel}</p>
+            <p className="text-xs text-muted-foreground truncate" title={sublabel}>{sublabel}</p>
           )}
           {children}
         </div>
-        {Icon && <Icon className={cn("h-5 w-5 shrink-0", kpiIconStyles[variant])} />}
+        {showArrow ? (
+          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-primary" />
+        ) : Icon ? (
+          <Icon className={cn("h-5 w-5 shrink-0", kpiIconStyles[variant])} />
+        ) : null}
       </div>
     </CardContent>
   );
 }
 
 export function KpiBodyChip({
-  label, value, valueStr, loading, delta, deltaVariant, sublabel, Icon, variant, valueTooltip, children,
+  label, value, valueStr, loading, delta, deltaVariant, sublabel, Icon, variant,
+  valueTooltip, hint, children,
 }: KpiBodyProps) {
   const tone = kpiVariantToTone[variant];
   return (
@@ -76,7 +112,7 @@ export function KpiBodyChip({
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-muted-foreground truncate" title={label}>{label}</p>
+        <KpiLabel label={label} hint={hint} />
         {loading ? (
           <Skeleton className="h-8 w-24 mt-1" />
         ) : (
@@ -84,7 +120,7 @@ export function KpiBodyChip({
             <p
               className={cn(
                 kpiValueSize(valueStr, "chip"),
-                "font-bold text-foreground tabular-nums leading-tight truncate",
+                "font-semibold text-foreground tabular-nums leading-tight truncate",
               )}
               title={valueTooltip ?? valueStr}
             >

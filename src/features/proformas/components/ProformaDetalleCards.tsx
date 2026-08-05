@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 export { AccionesProforma } from "./AccionesProforma";
 export { EstadoBadges } from "./ProformaEstadoBadges";
@@ -85,7 +86,7 @@ export function FacturaAsociadaCard({ facturas }: { facturas: FacturaAsociada[] 
   }
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-semibold">Facturas asociadas ({facturas.length})</h2>
+      <SectionHeading count={facturas.length}>Facturas asociadas</SectionHeading>
       <p className="text-xs text-muted-foreground -mt-2">
         Esta proforma se dividió en varios CFDI (el SAT no permite CFDI multi-moneda).
       </p>

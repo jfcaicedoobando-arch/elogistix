@@ -66,7 +66,7 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
                 {paso2 ? "Confirmar eliminación" : `¿Eliminar la factura ${factura.folio_proveedor}?`}
               </h2>
               <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                <span className="px-2 py-0.5 bg-muted text-muted-foreground text-[11px] font-bold tracking-wider rounded border border-border font-mono">
+                <span className="px-2 py-0.5 bg-muted text-muted-foreground text-label font-bold tracking-wider rounded border border-border font-mono">
                   {factura.folio_interno}
                 </span>
                 <span className="text-sm text-muted-foreground">
@@ -83,7 +83,7 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
             {estatusMeta && (
               <div className="px-6 py-2 bg-muted/40 border-y border-border flex items-center gap-2">
                 <div className={cn("w-2 h-2 rounded-full", TONE_DOT[estatusMeta.tone])} />
-                <span className={cn("text-[11px] font-bold tracking-wide uppercase", TONE_TEXT[estatusMeta.tone])}>
+                <span className={cn("text-label font-bold tracking-wide uppercase", TONE_TEXT[estatusMeta.tone])}>
                   {estatusMeta.label}
                 </span>
               </div>

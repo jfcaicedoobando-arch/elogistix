@@ -17,6 +17,7 @@ import {
 } from "@/features/dashboard/hooks";
 import { WidgetCard, Row } from "./MiOperacionWidgets";
 import { buildPendientes } from "./miOperacionUtils";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props {
   alertasDemora: AlertaDemora[];
@@ -45,9 +46,9 @@ export const MiOperacionSection = memo(function MiOperacionSection({
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+      <SectionHeading variant="overline">
         Mi operación
-      </h2>
+      </SectionHeading>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <WidgetCard
           icon={AlertCircle}

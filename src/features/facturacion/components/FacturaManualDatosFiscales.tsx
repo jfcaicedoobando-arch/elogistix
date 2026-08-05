@@ -57,7 +57,7 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
           className="h-9"
         />
         {diasReadonly && diasReadonlyReason && (
-          <p className="text-[11px] text-muted-foreground">{diasReadonlyReason}</p>
+          <p className="text-label text-muted-foreground">{diasReadonlyReason}</p>
         )}
       </div>
       <div className="space-y-1.5">

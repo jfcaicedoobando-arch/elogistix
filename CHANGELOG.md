@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.426.0] - 2026-08-05
+- Armonización visual global (encabezados y tarjetas): los títulos de sección de toda la aplicación se unificaron en un solo componente (`SectionHeading`). Antes había 6 variantes distintas del mismo `h2` (unos en negritas grandes, otros en minúsculas grises), así que cambiar de módulo se sentía como cambiar de programa.
+- Tesorería, Dirección, Mi día (CRM), estado de cuenta, salud de plataforma, proformas, proveedores, embarques (Demoras/Garantías) y el portal de agente ya comparten el mismo tamaño, peso y espaciado de encabezado.
+- Las tarjetas de indicadores (KPI) de Compras, Antigüedad de saldos, Analítica CRM y Diagnóstico de salud dejaron de tener copias locales y ahora usan la tarjeta canónica, con la misma tipografía, tono de color y afordancia de clic.
+- Antigüedad de saldos: las cifras ya no se cortan a la mitad en pantallas de 1280 px — se muestran en notación compacta (MXN 23.5K) y la cifra exacta aparece al pasar el mouse.
+- Anticipos de proveedor: el estado "no hay anticipos" ya usa el componente compartido, y los esqueletos de carga hechos a mano en conceptos de factura y estado de cuenta se cambiaron por el esqueleto estándar.
+
 ## [13.425.2] - 2026-08-05
 - Los nombres de proveedores y clientes ya se muestran completos en los selectores. Antes el sistema borraba palabras a propósito (sólo las 2 o 3 primeras), así que "COSCO SHIPPING LINES MÉXICO" aparecía como "COSCO SHIPPING" y dos empresas con inicio parecido se volvían indistinguibles.
 - Las listas desplegables ahora pueden ser más anchas que el campo (con tope para no salirse de la pantalla) y los nombres muy largos se acomodan en dos líneas. En el campo cerrado el nombre se recorta con "…" pero se ve completo al pasar el mouse.

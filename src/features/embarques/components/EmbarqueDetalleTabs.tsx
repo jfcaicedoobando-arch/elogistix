@@ -20,6 +20,7 @@ import { TabCierre } from "@/features/embarques/components/TabCierre";
 import { TabDemoras } from "@/features/embarques/components/TabDemoras";
 import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
 import { useEmbarqueDetalleTabsData } from "@/features/embarques/hooks/useEmbarqueDetalleTabsData";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import type {
   EmbarqueDetalleTabsProps,
   PnlView,
@@ -116,13 +117,13 @@ export function EmbarqueDetalleTabs({
       {/* Garantías y Demoras fusionadas (v13.66.15): mismo dominio (free time / depósito por contenedor). */}
       <TabsContent value="garantias" className="space-y-6">
         <section aria-labelledby="seccion-demoras" className="space-y-3">
-          <h2 id="seccion-demoras" className="text-base font-semibold">Demoras</h2>
+          <SectionHeading id="seccion-demoras">Demoras</SectionHeading>
           <SeccionDemorasAuto embarqueId={embarqueId} canEdit={canEdit} />
           <TabDemoras embarqueId={embarqueId} canEdit={canEdit} />
         </section>
         <Separator />
         <section aria-labelledby="seccion-garantias" className="space-y-3">
-          <h2 id="seccion-garantias" className="text-base font-semibold">Garantías</h2>
+          <SectionHeading id="seccion-garantias">Garantías</SectionHeading>
           <TabGarantias embarqueId={embarqueId} canEdit={canEdit} fechaLlegadaReal={embarque.fecha_llegada_real ?? null} />
         </section>
       </TabsContent>

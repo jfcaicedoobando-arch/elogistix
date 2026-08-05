@@ -58,7 +58,7 @@ function Tile({
 }: { label: string; value: string; valueClassName?: string; title?: string }) {
   return (
     <div className="min-w-0" title={title}>
-      <p className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">{label}</p>
+      <p className="text-2xs uppercase tracking-wide text-muted-foreground truncate">{label}</p>
       <p className={cn("text-sm tabular-nums truncate", valueClassName ?? "font-medium")}>{value}</p>
     </div>
   );

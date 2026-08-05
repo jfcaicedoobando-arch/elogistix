@@ -23,6 +23,8 @@ interface KpiCardProps {
    *  `chip` = a la izquierda, con fondo pastel tintado según variant. */
   iconVariant?: KpiIconVariant;
   sublabel?: string;
+  /** Ayuda contextual (icono de info + tooltip junto al label). */
+  hint?: string;
   /** Tooltip nativo sobre el valor. Útil cuando el valor viene en notación
    *  compacta (p.ej. "USD 1.2M") y se quiere mostrar el valor completo. */
   valueTooltip?: string;
@@ -49,6 +51,7 @@ export function KpiCard({
   variant = "default",
   iconVariant = "inline",
   sublabel,
+  hint,
   valueTooltip,
   onClick,
   to,
@@ -61,7 +64,8 @@ export function KpiCard({
 
   const bodyProps: KpiBodyProps = {
     label, value, valueStr, loading, delta, deltaVariant, sublabel,
-    Icon, variant, iconVariant, valueTooltip, children,
+    Icon, variant, iconVariant, valueTooltip, hint,
+    showArrow: Boolean(to), children,
   };
 
   const card = (
@@ -70,6 +74,7 @@ export function KpiCard({
         "transition-shadow h-full",
         kpiVariantStyles[variant],
         (onClick || to) && "cursor-pointer hover:shadow-raised",
+        to && "group-hover:border-primary/40 group-hover:bg-muted/30",
         className,
       )}
       onClick={interactive ? onClick : undefined}
@@ -90,7 +95,7 @@ export function KpiCard({
     return (
       <Link
         to={to}
-        className="block focus:outline-none focus:ring-2 focus:ring-ring rounded-lg"
+        className="group block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {card}
       </Link>
