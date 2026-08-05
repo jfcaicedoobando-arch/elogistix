@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.425.2] - 2026-08-05
+- Los nombres de proveedores y clientes ya se muestran completos en los selectores. Antes el sistema borraba palabras a propósito (sólo las 2 o 3 primeras), así que "COSCO SHIPPING LINES MÉXICO" aparecía como "COSCO SHIPPING" y dos empresas con inicio parecido se volvían indistinguibles.
+- Las listas desplegables ahora pueden ser más anchas que el campo (con tope para no salirse de la pantalla) y los nombres muy largos se acomodan en dos líneas. En el campo cerrado el nombre se recorta con "…" pero se ve completo al pasar el mouse.
+
 ## [13.425.1] - 2026-08-05
 - Facturación: una carga lenta de la bandeja "Emitidas" ya no oculta todas las pestañas. Antes, si esa consulta tardaba más de 20 s, la pantalla completa se reemplazaba por un error y no podías entrar a ninguna otra bandeja; ahora el aviso de error/reintento aparece sólo dentro de "Emitidas".
 
