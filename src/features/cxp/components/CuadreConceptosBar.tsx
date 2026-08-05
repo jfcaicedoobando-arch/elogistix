@@ -10,9 +10,12 @@
  * consejo del estado "sobrante" apunta primero al error real de captura
  * (importe unitario capturado como total de línea / mezcla de moneda).
  */
-import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, AlertTriangle, Info, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatCurrency } from "@/lib/formatters";
 import type { EstadoCuadre, ResultadoCuadre } from "@/features/cxp/utils/cuadreConceptos";
+
 
 interface Props {
   resultado: ResultadoCuadre;
