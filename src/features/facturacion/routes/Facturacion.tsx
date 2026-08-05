@@ -22,7 +22,6 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
 import { PeriodoFiscalSelector } from "@/features/facturacion/components/PeriodoFiscalSelector";
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
-import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { FacturacionBandejasTabs } from "@/features/facturacion/components/bandejas/FacturacionBandejasTabs";
 import type { BandejaId } from "@/features/facturacion/components/bandejas/BandejaTabs";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
