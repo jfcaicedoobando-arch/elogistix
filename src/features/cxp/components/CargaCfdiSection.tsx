@@ -1,22 +1,21 @@
 /**
- * Sección de carga de facturas para el modal de captura CxP.
- * v13.303.99: agrega tercer modo "pdf_ia" (Gemini) para facturas de
- * proveedores internacionales sin XML CFDI.
+ * Panel de carga del documento para el modal de captura CxP.
+ * v13.422.0 — El selector de origen se movió a `OrigenDocumentoPicker` (banda
+ * de ancho completo); aquí sólo vive el panel del modo elegido.
  */
 import { useRef } from "react";
-import { Upload, FileText, Loader2, CheckCircle2, X, Sparkles } from "lucide-react";
+import { Upload, FileText, Loader2, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
 import { useCargaCfdi } from "@/features/cxp/hooks/useCargaCfdi";
 import { CargaPdfIaSection } from "./CargaPdfIaSection";
+import type { CargaMode } from "./OrigenDocumentoPicker";
 
-export type CargaMode = "manual" | "cfdi" | "pdf_ia";
+export type { CargaMode } from "./OrigenDocumentoPicker";
 
 interface Props {
   mode: CargaMode;
-  onModeChange: (m: CargaMode) => void;
   categorias: { id: string; nombre: string }[];
   onParsed: (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => void;
   onPdfIaParsed: (data: CfdiParsedResponse, files: { pdf: File }) => void;
@@ -24,26 +23,8 @@ interface Props {
   pdfIaReady: boolean;
 }
 
-function TabButton({ active, onClick, children, extraClass = "" }: {
-  active: boolean; onClick: () => void; children: React.ReactNode; extraClass?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex-1 px-4 py-2.5 text-sm font-medium transition-colors",
-        active ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground",
-        extraClass,
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
 export function CargaCfdiSection({
-  mode, onModeChange, categorias, onParsed, onPdfIaParsed, cfdiReady, pdfIaReady,
+  mode, categorias, onParsed, onPdfIaParsed, cfdiReady, pdfIaReady,
 }: Props) {
   const { xml, pdf, loading, setXml, setPdf, reset, handleXml, procesar } = useCargaCfdi({
     categorias, onParsed,
@@ -51,13 +32,11 @@ export function CargaCfdiSection({
   const xmlInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
+  if (mode === "manual") return null;
+
   return (
     <div className="rounded-lg border bg-muted/30">
-      <div className="flex border-b">
-        <TabButton active={mode === "manual"} onClick={() => onModeChange("manual")}>
-          Captura manual
-        </TabButton>
-        <TabButton active={mode === "cfdi"} onClick={() => onModeChange("cfdi")} extraClass="border-l">
+
           Cargar XML CFDI <Badge variant="secondary" className="ml-1 text-2xs">México</Badge>
         </TabButton>
         <TabButton active={mode === "pdf_ia"} onClick={() => onModeChange("pdf_ia")} extraClass="border-l">
