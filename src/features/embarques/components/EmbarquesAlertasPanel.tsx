@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { EmbarqueAlertaFiltro } from "@/features/embarques/hooks/useEmbarquesFilters";
 import type { EmbarquesAlertasResumen } from "@/features/embarques/services/alertas";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props {
   resumen: EmbarquesAlertasResumen;
@@ -59,7 +60,7 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
-          <h2 className="text-sm font-semibold">Alertas activas</h2>
+          <SectionHeading>Alertas activas</SectionHeading>
           <Badge variant="secondary" className="text-2xs">
             {resumen.total}
           </Badge>

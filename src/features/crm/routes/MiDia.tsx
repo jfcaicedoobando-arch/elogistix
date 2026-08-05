@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { formatFechaLarga } from "@/lib/formatters/dates";
 import { useDocumentTitle } from "@/hooks/shared";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 export default function MiDia() {
   useDocumentTitle('Mi día');
@@ -28,13 +29,13 @@ export default function MiDia() {
       <CrmSubheader context={`Mi día · ${hoy}`} />
 
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hoy</h2>
+        <SectionHeading variant="overline">Hoy</SectionHeading>
         <NextBestActionsCard items={vm.nba} isLoading={vm.nbaLoading} />
         <ActividadesHoyCard items={vm.actividadesHoy} />
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Esta semana</h2>
+        <SectionHeading variant="overline">Esta semana</SectionHeading>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <CerrandoSemanaCard items={vm.cerrandoSemana} />
           <CotizacionesSinRespuestaCard items={vm.cotsSinResp} />

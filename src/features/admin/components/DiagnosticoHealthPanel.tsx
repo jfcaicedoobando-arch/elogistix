@@ -14,6 +14,7 @@ import {
 import HealthKpisRow from "@/features/admin/components/diagnosticoHealth/HealthKpisRow";
 import HealthSlowestTable from "@/features/admin/components/diagnosticoHealth/HealthSlowestTable";
 import { formatFechaEs } from "@/lib/formatters/dates";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 // Lazy: difiere recharts fuera del TTI del panel de diagnóstico.
 const HealthTimelineChart = lazy(
@@ -69,7 +70,7 @@ export function DiagnosticoHealthPanel() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Salud de la plataforma</h2>
+        <SectionHeading>Salud de la plataforma</SectionHeading>
         <Select value={String(rangeIdx)} onValueChange={(v) => setRangeIdx(Number(v))}>
           <SelectTrigger className="w-[200px]">
             <SelectValue />

@@ -12,6 +12,7 @@ import { useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { PageContainer } from "@/components/shared/PageContainer";
 
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
@@ -22,9 +23,9 @@ function ForecastPanel() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Pipeline</CardTitle></CardHeader><CardContent className="text-2xl font-bold">{isLoading ? "…" : fmt(f.totalPipeline)}</CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Ponderado</CardTitle></CardHeader><CardContent className="text-2xl font-bold">{isLoading ? "…" : fmt(f.totalPonderado)}</CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Ganado</CardTitle></CardHeader><CardContent className="text-2xl font-bold">{isLoading ? "…" : fmt(f.totalGanado)}</CardContent></Card>
+        <KpiCard label="Pipeline" value={fmt(f.totalPipeline)} loading={isLoading} />
+        <KpiCard label="Ponderado" value={fmt(f.totalPonderado)} loading={isLoading} />
+        <KpiCard label="Ganado" value={fmt(f.totalGanado)} loading={isLoading} variant="success" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>

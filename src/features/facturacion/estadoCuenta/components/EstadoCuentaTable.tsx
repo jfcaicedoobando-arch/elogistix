@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Inbox } from "lucide-react";
 import { EstadoCuentaTableHead } from "./EstadoCuentaTableHead";
 import { EstadoCuentaGrupoMoneda } from "./EstadoCuentaGrupoMoneda";
+import { Skeleton } from "@/components/ui/skeleton";
 import type {
   GrupoMoneda,
   OrdenEstadoCuenta,
@@ -78,7 +79,7 @@ export function EstadoCuentaTable({
                 ? Array.from({ length: 6 }).map((_, i) => (
                     <TableRow key={`sk-${i}`}>
                       <TableCell colSpan={11}>
-                        <div className="h-6 animate-pulse rounded bg-muted" />
+                        <Skeleton className="h-6" />
                       </TableCell>
                     </TableRow>
                   ))

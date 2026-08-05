@@ -41,7 +41,7 @@ function Field({
         {value}
       </p>
       {badge && (
-        <Badge variant="outline" className="mt-1 text-[10px] font-normal">
+        <Badge variant="outline" className="mt-1 text-2xs font-normal">
           {badge}
         </Badge>
       )}

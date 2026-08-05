@@ -19,6 +19,7 @@ import { CancelarAnticipoDialog } from "../components/CancelarAnticipoDialog";
 import { usePermissions } from "@/hooks/shared";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
 import { PageSkeleton } from "@/components/shared/skeletons";
+import EmptyState from "@/components/empty/EmptyState";
 import { buildAnticipoColumns } from "./_sections/buildAnticipoColumns";
 
 export default function AnticiposProveedor() {
@@ -107,18 +108,16 @@ export default function AnticiposProveedor() {
       <Card>
         <CardContent className="p-0">
           {data.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Inbox className="h-10 w-10 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold">No hay anticipos</h3>
-              <p className="text-muted-foreground max-w-sm mx-auto mt-2">
-                No se encontraron anticipos registrados con los filtros seleccionados.
-              </p>
-              {estado === "todos" && proveedorId === "todos" && canEditFinance && (
-                <Button variant="outline" className="mt-4" onClick={() => setOpenRegistrar(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> Registrar primer anticipo
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              icon={Inbox}
+              title="No hay anticipos"
+              description="No se encontraron anticipos registrados con los filtros seleccionados."
+              primaryAction={
+                estado === "todos" && proveedorId === "todos" && canEditFinance
+                  ? { label: "Registrar primer anticipo", onClick: () => setOpenRegistrar(true), variant: "outline" }
+                  : undefined
+              }
+            />
           ) : (
             <DataTable
               columns={columns}

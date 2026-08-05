@@ -1,9 +1,11 @@
 /**
- * KpiBucket para la página de aging CxP — extraído (v13.317.9).
+ * `KpiBucket` — cubeta de aging CxP.
+ *
+ * v13.426.0 — Armonización visual global: dejó de reimplementar `Card` y ahora
+ * compone la tarjeta KPI canónica (`@/components/shared/KpiCard`).
  */
-import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
+import { KpiCard } from "@/components/shared/KpiCard";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 
 interface Props {
   label: string;
@@ -13,16 +15,12 @@ interface Props {
 }
 
 export function KpiBucket({ label, value, moneda, tone = "default" }: Props) {
-  const toneCls =
-    tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : "text-foreground";
   return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn("text-xl font-semibold tabular-nums mt-1", toneCls)}>
-          {formatCurrency(value, moneda)}
-        </p>
-      </CardContent>
-    </Card>
+    <KpiCard
+      label={label}
+      value={formatCurrencyCompact(value, moneda)}
+      valueTooltip={formatCurrency(value, moneda)}
+      variant={tone === "danger" ? "destructive" : tone === "warn" ? "warning" : "default"}
+    />
   );
 }

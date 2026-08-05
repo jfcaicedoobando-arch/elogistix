@@ -6,6 +6,7 @@
  * Es sólo-lectura: la garantía fiscal se preserva.
  */
 import { FileText } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
 import { formatCurrency } from "@/lib/formatters";
 import { sumarConceptos, totalLinea } from "@/features/cxp/utils/cuadreConceptos";
@@ -33,7 +34,7 @@ export function ConceptosFacturaSection({ facturaId, moneda }: Props) {
       />
 
       {isLoading ? (
-        <div className="h-16 rounded-md border bg-muted/20 animate-pulse" />
+        <Skeleton className="h-16 rounded-md" />
       ) : conceptos.length === 0 ? (
         <p className="text-xs text-muted-foreground rounded-md border bg-muted/20 px-3 py-3">
           Esta factura no tiene conceptos capturados del CFDI. Si el proveedor

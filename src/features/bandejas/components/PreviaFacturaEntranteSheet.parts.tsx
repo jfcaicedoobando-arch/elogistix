@@ -18,7 +18,7 @@ import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrant
 function DatoLinea({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{etiqueta}</p>
+      <p className="text-label uppercase tracking-wide text-muted-foreground">{etiqueta}</p>
       <p className="truncate text-sm font-medium" title={valor}>{valor}</p>
     </div>
   );

@@ -11,6 +11,7 @@ import { User as UserIcon } from "lucide-react";
 import { actualizarPasswordAgente } from "@/features/portal-agente/services/perfil";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 export default function AgentePerfil() {
   const { data: ctx } = useAgenteContext();
@@ -58,7 +59,7 @@ export default function AgentePerfil() {
       </Card>
 
       <Card className="p-4 space-y-3">
-        <h2 className="text-sm font-semibold">Cambiar contraseña</h2>
+        <SectionHeading>Cambiar contraseña</SectionHeading>
         <div className="space-y-2">
           <Label>Nueva contraseña</Label>
           <Input

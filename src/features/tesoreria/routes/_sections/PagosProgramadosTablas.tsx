@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { FacturaProgramable, SemanaPagosProgramados } from "@/features/tesoreria/domain/pagosProgramados";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props {
   semanas: SemanaPagosProgramados[];
@@ -33,9 +34,9 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
     <div className="space-y-8">
       {semanas.map((s) => (
         <section key={s.semanaKey}>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 px-1">
+          <SectionHeading variant="overline" className="mb-3 px-1">
             Semana del {formatDate(s.semanaInicio)} al {formatDate(s.semanaFin)}
-          </h2>
+          </SectionHeading>
           <Card>
             <CardContent className="p-0">
               <DataTable
@@ -62,9 +63,9 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
 
       {sinFecha.length > 0 && (
         <section>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 px-1">
+          <SectionHeading variant="overline" className="mb-3 px-1">
             Sin fecha de pago ({sinFecha.length})
-          </h2>
+          </SectionHeading>
           <Card>
             <CardContent className="p-0">
               <DataTable columns={columns} data={sinFecha} rowKey={(r) => r.id} density="compact" hoverable={false} />

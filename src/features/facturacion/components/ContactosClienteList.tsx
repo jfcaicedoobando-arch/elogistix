@@ -28,11 +28,11 @@ function ContactoItem({ contacto: c, seleccionado, onPick }: ContactoItemProps) 
           <User className="h-3 w-3 text-muted-foreground" />
           {c.nombre ?? "(Sin nombre)"}
           {c.esFacturacion && (
-            <Badge variant="secondary" className="h-4 px-1 text-[10px]">Facturación</Badge>
+            <Badge variant="secondary" className="h-4 px-1 text-2xs">Facturación</Badge>
           )}
         </div>
         {c.tipo && !c.esFacturacion && (
-          <span className="text-[10px] text-muted-foreground">{c.tipo}</span>
+          <span className="text-2xs text-muted-foreground">{c.tipo}</span>
         )}
       </div>
       <div className="text-muted-foreground mt-0.5 truncate">{c.email}</div>

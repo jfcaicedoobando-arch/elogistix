@@ -12,6 +12,7 @@ import {
 import { useProveedorSalud } from "@/features/cxp/hooks/useProveedorSalud";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 function semaforoToneFromPct(pct: number | null): "good" | "warn" | "bad" {
   if (pct == null) return "warn";
@@ -35,7 +36,7 @@ export function ProveedorSaludTab({ proveedorId }: { proveedorId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <h2 className="text-base font-semibold">Salud del proveedor</h2>
+        <SectionHeading>Salud del proveedor</SectionHeading>
         <Badge
           className={cn(
             tonePct === "good" && "bg-success/15 text-success border-success/30",

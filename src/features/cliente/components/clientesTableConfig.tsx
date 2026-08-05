@@ -43,7 +43,7 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
               {nombre}
             </span>
             {excedido && (
-              <Badge variant="destructive" className="shrink-0 text-[10px] px-1.5 py-0">
+              <Badge variant="destructive" className="shrink-0 text-2xs px-1.5 py-0">
                 Crédito excedido
               </Badge>
             )}
