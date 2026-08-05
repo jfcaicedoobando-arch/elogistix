@@ -11,6 +11,7 @@ import type {
   EmbarqueConciliacion,
   EstadoConciliacion,
 } from "@/features/compras/services/conciliacionEmbarques";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export const CONCILIACION_ESTADO_LABELS: Record<EstadoConciliacion, {
   label: string;
@@ -94,7 +95,7 @@ export function buildConciliacionColumns() {
       id: "estado_conciliacion",
       header: "Conciliación",
       accessorFn: (r) => r.estado_conciliacion,
-      meta: { width: "w-[130px]" },
+      meta: { width: COL_W.monto },
       cell: ({ row }) => {
         const meta = CONCILIACION_ESTADO_LABELS[row.original.estado_conciliacion];
         const Icon = meta.icon;

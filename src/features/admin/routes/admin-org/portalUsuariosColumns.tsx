@@ -10,6 +10,7 @@ import type {
   PortalAgenteUserRow,
   PortalClienteUserRow,
 } from "@/features/admin/services/usuario/portales";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export type PortalUserRow = PortalClienteUserRow | PortalAgenteUserRow;
 
@@ -70,7 +71,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
               "es-MX",
               { sensitivity: "base" },
             ),
-          meta: { width: "min-w-[220px]" },
+          meta: { width: COL_W.texto },
           cell: ({ row }) => (
             <span className="text-sm">{getVinculadoNombre(row.original, tipo)}</span>
           ),
@@ -99,7 +100,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
         {
           id: "actions",
           header: "",
-          meta: { width: "w-[50px]" },
+          meta: { width: COL_W.micro },
           cell: ({ row }) => (
             <Tooltip>
               <TooltipTrigger asChild>

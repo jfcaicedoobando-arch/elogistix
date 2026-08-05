@@ -8,6 +8,7 @@ import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { LEAD_ESTADOS, useActualizarLead, type CrmLeadEstado, type CrmLeadRow } from "@/features/crm/hooks";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 const ESTADO_VARIANT: Record<CrmLeadEstado, "default" | "secondary" | "outline" | "destructive"> = {
   Nuevo: "default",
@@ -61,7 +62,7 @@ export function makeLeadsColumns(
       id: "sel", header: () => (
         <Checkbox checked={allSelected} onCheckedChange={() => toggleAll(allRows)} aria-label="Seleccionar todos" />
       ),
-      meta: { width: "w-[40px]" },
+      meta: { width: COL_W.micro },
       cell: ({ row }) => (
         <div onClick={(e) => e.stopPropagation()}>
           <Checkbox checked={selected.has(row.original.id)} onCheckedChange={() => toggle(row.original.id)} />
@@ -72,16 +73,16 @@ export function makeLeadsColumns(
       id: "empresa", header: "Empresa",
       accessorFn: (l) => l.empresa, enableSorting: true,
       sortingFn: sortByString<CrmLeadRow>((l) => l.empresa),
-      meta: { width: "min-w-[180px]", className: "font-medium whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.ruta, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => toTitleCase(row.original.empresa),
     },
-    { id: "contacto", header: "Contacto", meta: { width: "w-[160px]", className: "text-xs" }, cell: ({ row }) => toTitleCase(row.original.contacto ?? "") },
-    { id: "email", header: "Email", meta: { width: "w-[200px]", className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.email ?? "" },
-    { id: "fuente", header: "Fuente", meta: { width: "w-[120px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.fuente },
+    { id: "contacto", header: "Contacto", meta: { width: COL_W.nombre, className: "text-xs" }, cell: ({ row }) => toTitleCase(row.original.contacto ?? "") },
+    { id: "email", header: "Email", meta: { width: COL_W.texto, className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.email ?? "" },
+    { id: "fuente", header: "Fuente", meta: { width: COL_W.folio, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.fuente },
     {
-      id: "estado", header: "Estado", meta: { width: "w-[160px]" },
+      id: "estado", header: "Estado", meta: { width: COL_W.nombre },
       cell: ({ row }) => <EstadoCell lead={row.original} />,
     },
-    { id: "score", header: "Score", meta: { width: "w-[60px]", align: "center", className: "text-center text-xs tabular-nums" }, cell: ({ row }) => row.original.score },
+    { id: "score", header: "Score", meta: { width: COL_W.tiny, align: "center", className: "text-center text-xs tabular-nums" }, cell: ({ row }) => row.original.score },
   ]);
 }

@@ -9,6 +9,7 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getDiasVencidosTone } from "@/lib/ui/uiMappings";
 import { cn } from "@/lib/utils";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineColumns<FilaHueco>([
   {
@@ -17,7 +18,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.expediente,
     enableSorting: true,
     sortingFn: sortByString<FilaHueco>((f) => f.expediente),
-    meta: { width: "w-[120px]", sticky: true, className: "font-mono font-medium whitespace-nowrap" },
+    meta: { width: COL_W.folio, sticky: true, className: "font-mono font-medium whitespace-nowrap" },
     cell: ({ row }) => row.original.expediente || "—",
   },
   {
@@ -26,7 +27,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.cliente_nombre,
     enableSorting: true,
     sortingFn: sortByString<FilaHueco>((f) => f.cliente_nombre),
-    meta: { width: "min-w-[180px]", className: "max-w-[260px] truncate" },
+    meta: { width: COL_W.ruta, className: "max-w-[260px] truncate" },
     cell: ({ row }) => (
       <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span>
     ),
@@ -37,7 +38,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.operador,
     enableSorting: true,
     sortingFn: sortByString<FilaHueco>((f) => f.operador),
-    meta: { width: "w-[140px]", className: "truncate text-sm" },
+    meta: { width: COL_W.monto, className: "truncate text-sm" },
     cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span>,
   },
   {
@@ -46,7 +47,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.eta,
     enableSorting: true,
     sortingFn: sortByDate<FilaHueco>((f) => f.eta),
-    meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
+    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" },
     cell: ({ row }) => formatDate(row.original.eta),
   },
   {
@@ -55,7 +56,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.bl_master ?? f.bl_house ?? "",
     enableSorting: true,
     sortingFn: sortByString<FilaHueco>((f) => f.bl_master ?? f.bl_house ?? ""),
-    meta: { width: "w-[160px]", className: "font-mono text-xs whitespace-nowrap" },
+    meta: { width: COL_W.nombre, className: "font-mono text-xs whitespace-nowrap" },
     cell: ({ row }) => {
       const m = row.original.bl_master?.trim();
       const h = row.original.bl_house?.trim();
@@ -78,7 +79,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.diasDesdeEta,
     enableSorting: true,
     sortingFn: sortByNumber<FilaHueco>((f) => f.diasDesdeEta),
-    meta: { width: "w-[140px]", align: "center" },
+    meta: { width: COL_W.monto, align: "center" },
     cell: ({ row }) => {
       const d = row.original.diasDesdeEta;
       // v13.217.0 — Con la ventana ampliada a hoy+3, `d` puede ser negativo
@@ -107,7 +108,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.ventaUsd,
     enableSorting: true,
     sortingFn: sortByNumber<FilaHueco>((f) => f.ventaUsd),
-    meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap" },
+    meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap" },
     cell: ({ row }) => formatCurrency(row.original.ventaUsd, "USD"),
   },
   {
@@ -116,7 +117,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.ventaMxn,
     enableSorting: true,
     sortingFn: sortByNumber<FilaHueco>((f) => f.ventaMxn),
-    meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap font-medium" },
+    meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" },
     cell: ({ row }) => formatCurrency(row.original.ventaMxn, "MXN"),
   },
 ]);

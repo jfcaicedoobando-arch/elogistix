@@ -21,6 +21,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { NavieraQuickCreate } from "@/features/costeo/components/NavieraQuickCreate";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -54,19 +55,19 @@ export default function CosteoNavieras() {
           header: "Naviera",
           accessorFn: (f) => f.naviera_nombre,
           enableSorting: true,
-          meta: { width: "min-w-[180px]", className: "font-medium whitespace-nowrap", sticky: true },
+          meta: { width: COL_W.ruta, className: "font-medium whitespace-nowrap", sticky: true },
           cell: ({ row }) => row.original.naviera_nombre,
         },
         {
           id: "scac",
           header: "SCAC",
-          meta: { width: "w-[100px]", className: "font-mono text-xs" },
+          meta: { width: COL_W.fecha, className: "font-mono text-xs" },
           cell: ({ row }) => row.original.naviera_code,
         },
         {
           id: "carta",
           header: "Carta garantía",
-          meta: { width: "w-[160px]" },
+          meta: { width: COL_W.nombre },
           cell: ({ row }) => (
             <CartaGarantiaBadge
               tieneCarta={row.original.condicion?.tiene_carta_garantia ?? false}
@@ -77,19 +78,19 @@ export default function CosteoNavieras() {
         {
           id: "diaslibres",
           header: "Días libres",
-          meta: { width: "w-[110px]", align: "right", className: "tabular-nums" },
+          meta: { width: COL_W.fecha, align: "right", className: "tabular-nums" },
           cell: ({ row }) => row.original.condicion?.dias_libres_demoras_default ?? "—",
         },
         {
           id: "vinculo",
           header: "Proveedor vinculado",
-          meta: { width: "w-[160px]", className: "text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+          meta: { width: COL_W.nombre, className: "text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
           cell: ({ row }) => (row.original.condicion ? "Vinculado" : "Sin configurar"),
         },
         {
           id: "acciones",
           header: "Acciones",
-          meta: { width: "w-[140px]", align: "right" },
+          meta: { width: COL_W.monto, align: "right" },
           cell: ({ row }) => (
             <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
               <Button size="sm" variant="outline" onClick={() => setSeleccion(row.original)}>

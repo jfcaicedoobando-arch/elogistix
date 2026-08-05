@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { type ColumnDef } from "@/components/shared/DataTable";
 import { revisionKey } from "@/features/auditoria/hooks";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export interface SelectColumnArgs {
   revisiones: Map<string, AuditoriaRevision> | undefined;
@@ -42,7 +43,7 @@ export function buildSelectColumn({
         aria-label="Seleccionar todos los hallazgos pendientes de la página"
       />
     ),
-    meta: { width: "w-[36px]" },
+    meta: { width: COL_W.micro },
     cell: ({ row }) => {
       const h = row.original;
       const rev = revisiones?.get(revisionKey(h));

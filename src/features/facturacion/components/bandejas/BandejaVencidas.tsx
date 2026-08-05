@@ -12,6 +12,7 @@ import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
 import { agingVencidoBucket } from "@/features/facturacion/utils/aging";
 import { BandejaShell } from "./BandejaShell";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 interface FilaVencida {
   id: string;
@@ -32,18 +33,18 @@ const columns = defineColumns<FilaVencida>([
     header: "Folio",
     accessorFn: (r) => r.numero,
     enableSorting: true,
-    meta: { width: "w-[140px]", className: "font-mono whitespace-nowrap", sticky: true },
+    meta: { width: COL_W.monto, className: "font-mono whitespace-nowrap", sticky: true },
     cell: ({ row }) => row.original.numero,
   },
   clientColumn<FilaVencida>({ accessor: (r) => r.cliente_nombre }),
   { ...dateColumn<FilaVencida>({ id: "vencimiento", header: "Venció", accessor: (r) => r.fecha_vencimiento }),
-    meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" } },
+    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
   {
     id: "dias",
     header: "Antigüedad",
     accessorFn: (r) => r.dias_vencido,
     enableSorting: true,
-    meta: { width: "w-[110px]", align: "center" },
+    meta: { width: COL_W.fecha, align: "center" },
     cell: ({ row }) => {
       const b = agingVencidoBucket(row.original.dias_vencido);
       return (
@@ -58,7 +59,7 @@ const columns = defineColumns<FilaVencida>([
   },
   { ...moneyColumn<FilaVencida>({ id: "saldo", header: "Saldo",
       accessor: (r) => r.saldo, currencyAccessor: (r) => r.moneda }),
-    meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" } },
+    meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-semibold" } },
 ]);
 
 export function BandejaVencidas() {

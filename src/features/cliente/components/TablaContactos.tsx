@@ -6,6 +6,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import type { Tables, Enums } from "@/types/db";
 import { toTitleCase, correctSpanishPlace } from "@/lib/formatters";
 import EmptyState from "@/components/empty/EmptyState";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
 
@@ -36,7 +37,7 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
     {
       id: "acciones",
       header: "Acciones",
-      meta: { width: "w-[80px]" },
+      meta: { width: COL_W.short },
       cell: ({ row }) => {
         const c = row.original;
         return canEdit ? (

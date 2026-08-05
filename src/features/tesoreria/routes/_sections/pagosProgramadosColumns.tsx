@@ -10,6 +10,7 @@ import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import type { FacturaProgramableRow } from "@/features/tesoreria/services/pagosProgramados";
 import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export type FiltroBandeja = "todas" | "programadas" | "treinta_dias";
 
@@ -37,18 +38,18 @@ export function buildPagosProgramadosColumns(abrirDialogoPago: (f: FacturaProgra
       id: "proveedor",
       header: "Proveedor",
       accessorFn: (r) => r.proveedor_nombre ?? "",
-      meta: { width: "min-w-[180px]", className: "font-medium truncate" },
+      meta: { width: COL_W.ruta, className: "font-medium truncate" },
     },
     {
       id: "folio",
       header: "Folio",
       accessorFn: (r) => r.folio_proveedor ?? "",
-      meta: { width: "w-[120px]", className: "font-mono text-xs" },
+      meta: { width: COL_W.folio, className: "font-mono text-xs" },
     },
     {
       id: "fecha",
       header: "Fecha (Venc/Prog)",
-      meta: { width: "w-[150px]", className: "text-xs" },
+      meta: { width: COL_W.monto, className: "text-xs" },
       cell: ({ row }) => {
         const r = row.original;
         const fecha = r.fecha_programada_pago ?? r.fecha_vencimiento;
@@ -69,7 +70,7 @@ export function buildPagosProgramadosColumns(abrirDialogoPago: (f: FacturaProgra
         accessor: (r) => r.total,
         currencyAccessor: (r) => r.moneda,
       }),
-      meta: { width: "w-[120px]", align: "right" },
+      meta: { width: COL_W.folio, align: "right" },
     },
     {
       ...moneyColumn<FacturaProgramable>({
@@ -78,12 +79,12 @@ export function buildPagosProgramadosColumns(abrirDialogoPago: (f: FacturaProgra
         accessor: (r) => r.saldo,
         currencyAccessor: (r) => r.moneda,
       }),
-      meta: { width: "w-[120px]", align: "right", className: "font-semibold" },
+      meta: { width: COL_W.folio, align: "right", className: "font-semibold" },
     },
     {
       id: "acciones",
       header: "",
-      meta: { width: "w-[130px]", align: "right" },
+      meta: { width: COL_W.monto, align: "right" },
       cell: ({ row }) => (
         <Button size="sm" variant="outline" onClick={() => abrirDialogoPago(row.original)}>
           <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago

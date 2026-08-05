@@ -11,6 +11,7 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
 import type { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export type CarteraRow = NonNullable<ReturnType<typeof useCarteraPendiente>["data"]>[number];
 
@@ -21,7 +22,7 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
       header: "Folio",
       accessorFn: (r) => r.numero ?? "",
       enableSorting: true,
-      meta: { width: "w-[130px]", className: "font-medium whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.numero ?? "—",
     },
     {
@@ -29,7 +30,7 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
       header: "Cliente",
       accessorFn: (r) => r.cliente_nombre ?? "",
       enableSorting: true,
-      meta: { width: "min-w-[180px]", className: "max-w-[240px] truncate" },
+      meta: { width: COL_W.ruta, className: "max-w-[240px] truncate" },
       cell: ({ row }) => (
         <span title={row.original.cliente_nombre ?? undefined}>
           {row.original.cliente_nombre ?? "—"}
@@ -40,7 +41,7 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
       id: "embarque",
       header: "Embarque",
       enableSorting: false,
-      meta: { width: "w-[130px]", className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+      meta: { width: COL_W.monto, className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
       cell: ({ row }) => row.original.expediente ?? "—",
     },
     {
@@ -49,14 +50,14 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
         header: "Vencimiento",
         accessor: (r) => r.fecha_vencimiento,
       }),
-      meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" },
+      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" },
     },
     {
       id: "dias",
       header: "Días vencido",
       accessorFn: (r) => r.dias_vencido,
       enableSorting: true,
-      meta: { width: "w-[130px]", align: "center", className: "whitespace-nowrap" },
+      meta: { width: COL_W.monto, align: "center", className: "whitespace-nowrap" },
       cell: ({ row }) => {
         const d = row.original.dias_vencido;
         if (d > 0) return <Badge variant="destructive">Vencida {d}d</Badge>;
@@ -75,7 +76,7 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
         accessor: (r) => Number(r.total),
         currencyAccessor: (r) => r.moneda,
       }),
-      meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
       ...moneyColumn<CarteraRow>({
@@ -84,13 +85,13 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
         accessor: (r) => Number(r.saldo),
         currencyAccessor: (r) => r.moneda,
       }),
-      meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
     },
     {
       id: "ultimo",
       header: "Último contacto",
       enableSorting: false,
-      meta: { width: "w-[130px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) =>
         row.original.ultimo_contacto ? (
           formatDate(row.original.ultimo_contacto)
@@ -102,7 +103,7 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
       id: "acciones",
       header: "",
       enableSorting: false,
-      meta: { width: "w-[60px]", align: "right" },
+      meta: { width: COL_W.tiny, align: "right" },
       cell: ({ row }) =>
         onRecordatorio ? (
           <Button

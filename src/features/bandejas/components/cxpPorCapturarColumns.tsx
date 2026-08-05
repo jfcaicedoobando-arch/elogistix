@@ -12,6 +12,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
 import { estatusDeFila } from "@/features/bandejas/hooks/useCxpPorCapturarFilters";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 const CAPTURA_STATUS: Record<"sin" | "parcial" | "completo", string> = {
   sin: "Sin captura",
@@ -38,14 +39,14 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
       header: "Expediente",
       accessorFn: (r) => r.expediente ?? "",
       enableSorting: true,
-      meta: { width: "w-[130px]", className: "font-mono text-sm whitespace-nowrap" },
+      meta: { width: COL_W.monto, className: "font-mono text-sm whitespace-nowrap" },
       cell: ({ row }) => row.original.expediente ?? "—",
     },
     {
       id: "cliente",
       header: "Cliente",
       accessorFn: (r) => r.cliente_nombre ?? "",
-      meta: { width: "min-w-[180px]", className: "max-w-[240px] truncate" },
+      meta: { width: COL_W.ruta, className: "max-w-[240px] truncate" },
       cell: ({ row }) => (
         <span title={row.original.cliente_nombre ?? ""}>{row.original.cliente_nombre ?? "—"}</span>
       ),
@@ -53,7 +54,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
     {
       id: "avance",
       header: "Avance",
-      meta: { width: "w-[220px]" },
+      meta: { width: COL_W.texto },
       cell: ({ row }) => {
         const presupMxn = Number(row.original.presupuestado_mxn) || 0;
         const presupUsd = Number(row.original.presupuestado_usd) || 0;
@@ -88,7 +89,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
     hideEstatus ? null : {
       id: "estatus",
       header: "Estatus",
-      meta: { width: "w-[110px]", align: "center" },
+      meta: { width: COL_W.fecha, align: "center" },
       cell: ({ row }) => <AvanceBadge row={row.original} />,
     },
     {
@@ -96,7 +97,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
       header: "Facturas",
       accessorFn: (r) => r.facturas_capturadas,
       enableSorting: true,
-      meta: { width: "w-[90px]", align: "center", className: "tabular-nums" },
+      meta: { width: COL_W.short, align: "center", className: "tabular-nums" },
       cell: ({ row }) => {
         const n = row.original.facturas_capturadas;
         if (n === 0) return <span className="text-muted-foreground">0</span>;
@@ -108,7 +109,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
       header: "Última factura",
       accessorFn: (r) => r.ultima_factura_fecha ?? "",
       enableSorting: true,
-      meta: { width: "w-[150px]", className: "text-sm" },
+      meta: { width: COL_W.monto, className: "text-sm" },
       cell: ({ row }) => {
         const r = row.original;
         if (!r.ultima_factura_fecha) return <span className="text-muted-foreground">—</span>;
@@ -125,7 +126,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
     onCapturar ? {
       id: "acciones",
       header: "",
-      meta: { width: "w-[56px]", align: "center" },
+      meta: { width: COL_W.acciones, align: "center" },
       cell: ({ row }) => (
         <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
           <Tooltip>

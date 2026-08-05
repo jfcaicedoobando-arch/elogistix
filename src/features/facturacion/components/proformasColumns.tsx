@@ -18,6 +18,7 @@ import {
   rankEstadoUnificado,
   LABEL_ESTADO_UNIFICADO,
 } from "@/lib/domain/estadoUnificado";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 
 
@@ -39,7 +40,7 @@ export function buildProformasColumns({
       id: "_select",
       header: "",
       enableSorting: false,
-      meta: { width: "w-[40px]", className: "text-center" },
+      meta: { width: COL_W.micro, className: "text-center" },
       cell: ({ row }) => {
         const p = row.original;
         const selectable = selection.isSelectable(p);
@@ -69,7 +70,7 @@ export function buildProformasColumns({
       accessorFn: (p) => p.numero,
       enableSorting: true,
       sortingFn: sortByString<ProformaConFactura>((p) => p.numero),
-      meta: { width: "w-[140px]", className: "font-medium whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.numero,
     },
     {
@@ -79,7 +80,7 @@ export function buildProformasColumns({
       enableSorting: true,
       sortingFn: sortByString<ProformaConFactura>((p) => p.expediente),
       // Oculto en tableta (<xl) — visible desde el # Proforma sticky y detalle.
-      meta: { width: "w-[120px]", className: "whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.folio, className: "whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.expediente,
     },
     {
@@ -88,7 +89,7 @@ export function buildProformasColumns({
       accessorFn: (p) => p.cliente_nombre,
       enableSorting: true,
       sortingFn: sortByString<ProformaConFactura>((p) => p.cliente_nombre),
-      meta: { width: "min-w-[180px]", className: "max-w-[220px] truncate" },
+      meta: { width: COL_W.ruta, className: "max-w-[220px] truncate" },
       cell: ({ row }) => <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span>,
     },
     {
@@ -98,7 +99,7 @@ export function buildProformasColumns({
       enableSorting: true,
       sortingFn: sortByString<ProformaConFactura>((p) => p.operador),
       // Oculto en tableta (<xl) para eliminar scroll horizontal en /proformas.
-      meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.operador ? nombreDesdeEmail(row.original.operador) : <span className="text-muted-foreground">—</span>,
     },
     {
@@ -107,7 +108,7 @@ export function buildProformasColumns({
       accessorFn: (p) => p.fecha_emision,
       enableSorting: true,
       sortingFn: sortByDate<ProformaConFactura>((p) => p.fecha_emision),
-      meta: { width: "w-[100px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatDate(row.original.fecha_emision),
     },
     {
@@ -118,7 +119,7 @@ export function buildProformasColumns({
       accessorFn: (p) => rankEstadoUnificado(p),
       enableSorting: true,
       sortingFn: (a, b) => rankEstadoUnificado(a.original) - rankEstadoUnificado(b.original),
-      meta: { width: "w-[140px]" },
+      meta: { width: COL_W.monto },
       cell: ({ row }) => {
         const estado = getEstadoUnificado(row.original);
         const label = LABEL_ESTADO_UNIFICADO[estado];

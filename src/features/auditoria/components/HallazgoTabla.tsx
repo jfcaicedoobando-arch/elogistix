@@ -5,6 +5,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import type { HallazgoAuditoria, ReglaAuditoria, SeveridadAuditoria } from "@/features/auditoria/types";
 import { cn } from "@/lib/utils";
 import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 const reglaToTab: Record<ReglaAuditoria, string> = {
   docs_faltantes: "documentos",
@@ -48,22 +49,22 @@ function formatEta(eta: string | null): string {
 
 export function HallazgoTabla({ hallazgos }: Props) {
   const cols: ColumnDef<HallazgoAuditoria, unknown>[] = defineColumns<HallazgoAuditoria>([
-    { id: "sev", header: "Severidad", meta: { width: "w-[110px]" },
+    { id: "sev", header: "Severidad", meta: { width: COL_W.fecha },
       cell: ({ row }) => (
         <Badge variant="outline" className={cn("text-2xs", severidadConfig[row.original.severidad].className)}>
           {severidadConfig[row.original.severidad].label}
         </Badge>
       ) },
-    { id: "exp", header: "Expediente", meta: { width: "w-[140px]", className: "font-medium tabular-nums" }, cell: ({ row }) => row.original.expediente },
+    { id: "exp", header: "Expediente", meta: { width: COL_W.monto, className: "font-medium tabular-nums" }, cell: ({ row }) => row.original.expediente },
     { id: "cliente", header: "Cliente", meta: { className: "truncate max-w-[200px]" },
       cell: ({ row }) => <span title={row.original.cliente_nombre}>{row.original.cliente_nombre || "—"}</span> },
-    { id: "estado", header: "Estado", meta: { width: "w-[110px]", className: "text-xs text-muted-foreground" }, cell: ({ row }) => row.original.estado },
-    { id: "eta", header: "ETA", meta: { width: "w-[110px]", className: "text-xs tabular-nums text-muted-foreground" }, cell: ({ row }) => formatEta(row.original.eta) },
+    { id: "estado", header: "Estado", meta: { width: COL_W.fecha, className: "text-xs text-muted-foreground" }, cell: ({ row }) => row.original.estado },
+    { id: "eta", header: "ETA", meta: { width: COL_W.fecha, className: "text-xs tabular-nums text-muted-foreground" }, cell: ({ row }) => formatEta(row.original.eta) },
     { id: "detalle", header: "Detalle", meta: { className: "text-sm" },
       cell: ({ row }) => {
         return <HallazgoDetalleCell hallazgo={row.original} />;
       } },
-    { id: "acc", header: "", meta: { width: "w-[90px]" },
+    { id: "acc", header: "", meta: { width: COL_W.short },
       cell: ({ row }) => {
         const h = row.original;
         const url = `${window.location.origin}/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`;

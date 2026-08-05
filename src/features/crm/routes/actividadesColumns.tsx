@@ -8,9 +8,10 @@ import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import ActividadRowActions from "@/features/crm/components/ActividadRowActions";
 import type { CrmActividadRow } from "@/features/crm/hooks";
 import { formatFechaHora } from "@/lib/formatters/dates";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
-  { id: "tipo", header: "Tipo", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
+  { id: "tipo", header: "Tipo", meta: { width: COL_W.fecha }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
   { id: "asunto", header: "Asunto", meta: { className: "font-medium" }, cell: ({ row }) => row.original.asunto },
   { id: "entidad", header: "Entidad", meta: { className: "text-xs" }, cell: ({ row }) => row.original.entidad_tipo },
   { id: "responsable", header: "Responsable", meta: { className: "text-xs" }, cell: ({ row }) => row.original.responsable_email || "—" },
@@ -25,7 +26,7 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
         return "Pendiente";
       },
     }),
-    meta: { width: "w-[110px]" },
+    meta: { width: COL_W.fecha },
   },
   {
     id: "fecha_programada", header: "Programada", meta: { className: "text-xs" },
@@ -34,6 +35,6 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
 ]);
 
 export const actividadActionColumn: ColumnDef<CrmActividadRow, unknown> = {
-  id: "acciones", header: "", meta: { width: "w-[110px]" },
+  id: "acciones", header: "", meta: { width: COL_W.fecha },
   cell: ({ row }) => <ActividadRowActions actividad={row.original} />,
 };

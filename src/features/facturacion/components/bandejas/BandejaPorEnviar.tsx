@@ -17,6 +17,7 @@ import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useFacturasPorEnviar, type FilaPorEnviar } from "@/features/facturacion/hooks/useBandejas";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 import { BandejaShell } from "./BandejaShell";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 interface EnviarButtonProps {
   onClick: () => void;
@@ -56,20 +57,20 @@ export function BandejaPorEnviar() {
       header: "Folio",
       accessorFn: (r) => r.numero,
       enableSorting: true,
-      meta: { width: "w-[140px]", className: "font-mono whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.monto, className: "font-mono whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.numero,
     },
     clientColumn<FilaPorEnviar>({ accessor: (r) => r.cliente_nombre }),
     { ...dateColumn<FilaPorEnviar>({ id: "emision", header: "Emisión", accessor: (r) => r.fecha_emision }),
-      meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" } },
+      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
     { ...moneyColumn<FilaPorEnviar>({ id: "total", header: "Total",
         accessor: (r) => r.total, currencyAccessor: (r) => r.moneda }),
-      meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },
+      meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },
     {
       id: "acciones",
       header: "",
       enableSorting: false,
-      meta: { width: "w-[110px]", align: "right", className: "whitespace-nowrap" },
+      meta: { width: COL_W.fecha, align: "right", className: "whitespace-nowrap" },
       cell: ({ row }) => (
         <EnviarButton
           onClick={() => setSeleccion({

@@ -13,6 +13,7 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPageHelpers";
 import { ContenedorCell, type ContenedorInfo } from "@/features/embarques/components/ContenedorCell";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export type { ContenedorInfo };
 export interface DocsInfo { pendientes: number; total: number }
@@ -48,7 +49,7 @@ export function buildEmbarqueColumns({
       accessorFn: (e) => e.expediente,
       enableSorting: true,
       sortingFn: sortByNumber<EmbarqueRow>((e) => expedienteConsecutivo(e.expediente)),
-      meta: { width: "w-[130px]", className: "font-medium whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => {
         const e = row.original;
         const docInfo = docsMap[e.id];
@@ -76,13 +77,13 @@ export function buildEmbarqueColumns({
       id: "bl",
       header: "BL Master",
       // Oculto en tableta (<xl) — el detalle del embarque muestra el BL.
-      meta: { width: "w-[120px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.folio, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.bl_master || "-",
     },
     {
       id: "contenedor",
       header: "Contenedores",
-      meta: { width: "w-[170px]", className: "text-xs font-mono" },
+      meta: { width: COL_W.ruta, className: "text-xs font-mono" },
       cell: ({ row }) => (
         <ContenedorCell
           embarque={row.original}
@@ -94,13 +95,13 @@ export function buildEmbarqueColumns({
     // — Builder: clientColumn —
     clientColumn<EmbarqueRow>({
       accessor: (e) => e.cliente_nombre,
-      ...(({ meta: { width: "min-w-[200px]", className: "max-w-[240px] truncate" } }) as object),
+      ...(({ meta: { width: COL_W.texto, className: "max-w-[240px] truncate" } }) as object),
     }),
     {
       id: "modo",
       header: "Modo",
       // En tableta (<xl) se oculta para dejar más ancho a Cliente/Estado.
-      meta: { width: "w-[90px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.short, className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => (
         <span className="flex items-center gap-1.5">
           <ModoIcon modo={row.original.modo} size={14} />
@@ -111,7 +112,7 @@ export function buildEmbarqueColumns({
     {
       id: "origen",
       header: "Origen",
-      meta: { width: "w-[150px]", className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = shortName(getOrigen(row.original));
         return <span title={v} className="block truncate">{v}</span>;
@@ -120,7 +121,7 @@ export function buildEmbarqueColumns({
     {
       id: "destino",
       header: "Destino",
-      meta: { width: "w-[150px]", className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = shortName(getDestino(row.original));
         return <span title={v} className="block truncate">{v}</span>;
@@ -129,7 +130,7 @@ export function buildEmbarqueColumns({
     // — Builder: dateColumn ETD (oculto en <xl, mantenemos ETA como referencia principal) —
     {
       ...dateColumn<EmbarqueRow>({ id: "etd", header: "ETD", accessor: (e) => e.etd ?? null }),
-      meta: { width: "w-[100px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     // — Builder: dateColumn ETA —
     dateColumn<EmbarqueRow>({
