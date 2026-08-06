@@ -66,14 +66,15 @@ export function HallazgosTabla(props: Props) {
       cell: ({ row }) => {
         const h = row.original;
         return (
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="sm"
+            className="h-auto p-0 font-normal"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
-            className="text-primary hover:underline focus:outline-none focus:underline"
             title={`Abrir embarque ${h.expediente}`}
           >
             {h.expediente}
-          </button>
+          </Button>
         );
       } },
     { id: "regla", header: "Regla", meta: { width: COL_W.nombre, className: "text-xs text-muted-foreground" }, cell: ({ row }) => reglaLabel[row.original.regla] },
