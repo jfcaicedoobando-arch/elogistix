@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.445.1] - 2026-08-06
+- CI · Se corrigieron los 3 fallos del pipeline: mensajes amigables faltantes para los códigos de anticipos y pago en lote, permisos explícitos (REVOKE/GRANT) de las funciones nuevas de anticipos, conciliación y pago en lote, políticas e índices recreados de forma idempotente y allowlist de tabla estática en el dashboard de tesorería.
+
+
+
 ## [13.445.0] - 2026-08-06
 - CxP · Nuevo **Pago en lote a proveedor**: en "Compras → Por pagar" se seleccionan 2 o más facturas del mismo proveedor y la misma moneda y el botón "Pagar en lote" registra una sola salida de dinero con una sola referencia bancaria. El importe se reparte automáticamente FIFO (primero lo que vence antes) y cada renglón es editable. Valida que la cuenta bancaria sea de la misma moneda, que ningún importe exceda el saldo de su factura y genera un único movimiento bancario por el total.
 
