@@ -40,7 +40,7 @@ export function LandingPortal() {
               </p>
               <h3 className="text-lg font-semibold text-foreground">Mis embarques</h3>
             </div>
-            <span className="rounded-full bg-[hsl(160_84%_39%/0.12)] px-3 py-1 text-xs font-semibold text-[hsl(160_84%_30%)]">
+            <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
               3 activos
             </span>
           </div>

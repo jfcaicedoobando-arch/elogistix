@@ -8,18 +8,20 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip as RTo
 import { ArrowUpRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrencyCompact, formatCurrency } from "@/lib/formatters";
+import { CHART } from "@/lib/chartTokens";
 import { ROUTES } from "@/constants/routes";
 import type { CxpAgingTotals } from "@/features/cxp/services/cxpAging";
 
 type Bucket = { label: string; monto: number; tone: "success" | "info" | "warn" | "danger" | "critical" };
 
 const TONE_HEX: Record<Bucket["tone"], string> = {
-  success: "hsl(var(--muted-foreground) / 0.55)",
-  info: "hsl(199 89% 48%)",
-  warn: "hsl(38 92% 50%)",
-  danger: "hsl(var(--destructive))",
-  critical: "hsl(0 84% 45%)",
+  success: CHART.neutral,
+  info: CHART.info,
+  warn: CHART.warning,
+  danger: CHART.destructiveSoft,
+  critical: CHART.destructive,
 };
+
 
 export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgingTotals; moneda?: string }) {
   const data: Bucket[] = [

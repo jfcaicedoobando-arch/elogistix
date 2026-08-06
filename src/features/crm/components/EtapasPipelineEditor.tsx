@@ -28,7 +28,7 @@ interface RowState {
 
 function toState(e: CrmEtapaRow): RowState {
   return {
-    nombre: e.nombre, tipo: e.tipo as CrmEtapaTipo, color: e.color ?? "#888",
+    nombre: e.nombre, tipo: e.tipo as CrmEtapaTipo, color: e.color ?? COLOR_ETAPA_DEFAULT,
     probabilidad_default: e.probabilidad_default ?? 0,
     orden: e.orden, activa: e.activa,
     crea_tarea_seguimiento: e.crea_tarea_seguimiento ?? false,
