@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.444.0] - 2026-08-06
+- Conciliación bancaria · Ya se pueden eliminar los movimientos capturados a mano: se selecciona el movimiento en la tabla y en el panel derecho aparece "Eliminar movimiento manual" con confirmación. Sólo aplica a movimientos manuales y no conciliados (los importados del estado de cuenta siguen siendo inalterables). El borrado es lógico, así que queda rastro en la base.
+
 ## [13.443.1] - 2026-08-06
 - Anticipos a proveedor · El selector de cuenta bancaria ya no repite el nombre del banco cuando el alias de la cuenta ya lo incluye (antes: "BASE USD — BASE (USD)", ahora: "BASE USD (USD)").
 
