@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.444.3] - 2026-08-06
+- Tesorería · Los pagos a proveedor que salen de una cuenta en dólares ya se registran en dólares. Antes el cargo se convertía siempre a pesos (un pago de 23,650 USD entraba como 406,938.45), lo que inflaba las salidas y descuadraba el saldo de BBVA USD. Se corrigió el cálculo (`cargoEnMonedaCuenta`) y el movimiento ya afectado.
+
 ## [13.444.2] - 2026-08-06
+
 - Tesorería · Cuentas bancarias · El "Saldo actual" ya no resta los movimientos eliminados. La cuenta BBVA USD mostraba 29,433.94 USD cuando su saldo real es 38,773.54 USD, porque la vista de saldos (`v_saldos_cuentas_bancarias`) sumaba también dos movimientos borrados (un anticipo cancelado de 564.60 y un cargo manual de 8,775.00). Se agregó el filtro de borrados lógicos a la vista.
 
 ## [13.444.1] - 2026-08-06
