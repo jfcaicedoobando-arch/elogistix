@@ -9,6 +9,7 @@
  */
 import { useMemo, useState } from "react";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { useBitacora } from "@/features/auditoria/hooks/useBitacora";
 import { useCuentasBancarias } from "@/features/tesoreria";
 import { BitacoraTesoreriaFila } from "./BitacoraTesoreriaSection.fila";
@@ -81,9 +82,10 @@ export function BitacoraTesoreriaSection({
   return (
     <section className="space-y-3">
       <header className="flex flex-wrap items-start justify-between gap-2">
-        <div className="space-y-0.5">
-          <h3 className="text-sm font-semibold">Bitácora de tesorería</h3>
-          <p className="text-xs text-muted-foreground">
+        <SectionHeading
+          as="h3"
+          description={
+            <>
             Movimientos bancarios generados al registrar o eliminar pagos de esta factura.
           </p>
         </div>

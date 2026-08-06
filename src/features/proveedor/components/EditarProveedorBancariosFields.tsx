@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BANCOS_MEXICO } from "@/constants/bancosMexico";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import type { useEditarProveedorController } from "@/features/proveedor/hooks";
 
 type Controller = ReturnType<typeof useEditarProveedorController>;
@@ -15,7 +16,7 @@ export default function EditarProveedorBancariosFields({ c }: { c: Controller })
   const esExtranjero = c.form.origen_proveedor === "Extranjero";
   return (
     <div className="space-y-3 border-t border-border pt-4">
-      <h3 className="text-sm font-semibold">Datos bancarios</h3>
+      <SectionHeading as="h3">Datos bancarios</SectionHeading>
       {esExtranjero ? <FieldsInternacional c={c} /> : <FieldsNacional c={c} />}
     </div>
   );
