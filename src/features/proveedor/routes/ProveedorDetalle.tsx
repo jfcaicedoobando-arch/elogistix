@@ -144,6 +144,13 @@ export default function ProveedorDetalle() {
         />
       </div>
 
+      <ProveedorAnticiposCard
+        proveedorId={proveedor.id}
+        proveedorNombre={proveedor.nombre}
+        canEdit={canEdit}
+      />
+
+
       <Tabs defaultValue="operaciones">
         <TabsList>
           <TabsTrigger value="operaciones">Operaciones</TabsTrigger>
