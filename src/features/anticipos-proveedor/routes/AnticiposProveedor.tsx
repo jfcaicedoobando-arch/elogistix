@@ -63,6 +63,8 @@ export default function AnticiposProveedor() {
         }
       />
 
+      <AnticiposKpis anticipos={data} />
+
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
