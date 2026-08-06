@@ -6,7 +6,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatDateMx } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 
 interface Props {
   tc: string;
@@ -38,7 +38,7 @@ export function TcPagoField({ tc, setTc, tcDof, cargandoTcDof, aplicarTcDof }: P
       {tcDof && (
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-label text-muted-foreground">
-            DOF del {formatDateMx(tcDof.fecha)}: {tcDof.usdMxn}
+            DOF del {formatDate(tcDof.fecha)}: {tcDof.usdMxn}
             {tcDof.exacto ? "" : " (último publicado)"}
           </p>
           {!coincide && aplicarTcDof && (
