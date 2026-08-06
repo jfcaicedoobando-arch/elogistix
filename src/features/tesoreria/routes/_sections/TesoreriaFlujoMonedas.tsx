@@ -38,7 +38,6 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
               <DetailTableHead className="whitespace-nowrap">Moneda</DetailTableHead>
               <DetailTableHead className="whitespace-nowrap text-right">Por cobrar</DetailTableHead>
               <DetailTableHead className="whitespace-nowrap text-right">Por pagar</DetailTableHead>
-              <DetailTableHead className="whitespace-nowrap text-right">Neto</DetailTableHead>
             </DetailTableRow>
           </TableHeader>
           <TableBody>
