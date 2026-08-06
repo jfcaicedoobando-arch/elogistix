@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table, TableBody, TableCell, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { DetailTableHead, DetailTableRow, DetailTableEmptyRow } from "@/components/shared/DetailTable";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -124,23 +125,19 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-24 text-label uppercase text-muted-foreground">Desde día</TableHead>
-            <TableHead className="w-24 text-label uppercase text-muted-foreground">Hasta día</TableHead>
-            <TableHead className="w-32 text-label uppercase text-muted-foreground">Monto/día</TableHead>
-            <TableHead className="w-24 text-label uppercase text-muted-foreground">Moneda</TableHead>
-            <TableHead className="w-12" />
+            <DetailTableHead className="w-24">Desde día</DetailTableHead>
+            <DetailTableHead className="w-24">Hasta día</DetailTableHead>
+            <DetailTableHead className="w-32">Monto/día</DetailTableHead>
+            <DetailTableHead className="w-24">Moneda</DetailTableHead>
+            <DetailTableHead className="w-12" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
-                Sin tramos. Agrega uno para iniciar el tabulador.
-              </TableCell>
-            </TableRow>
+            <DetailTableEmptyRow colSpan={5} message="Sin tramos. Agrega uno para iniciar el tabulador." />
           )}
           {rows.map((r, idx) => (
-            <TableRow key={r._key} className="hover:bg-muted/50">
+            <DetailTableRow key={r._key}>
               <TableCell>
                 <Input
                   type="number" min={1} value={r.desde_dia}
@@ -186,7 +183,7 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
                   <Trash2 className="size-4 text-destructive" />
                 </Button>
               </TableCell>
-            </TableRow>
+            </DetailTableRow>
           ))}
         </TableBody>
       </Table>
