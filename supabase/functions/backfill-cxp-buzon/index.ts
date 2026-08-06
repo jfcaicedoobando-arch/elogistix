@@ -34,10 +34,15 @@ Deno.serve(
 
     try {
       const { userId, adminClient } = await authenticate(req, log);
-      const { isGlobalAdmin } = await checkAdminAccess(adminClient, userId);
-      if (!isGlobalAdmin) {
+      const { data: rol } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .in("role", ["admin", "super_admin", "admin_org", "contador"])
+        .maybeSingle();
+      if (!rol) {
         log.finish(403, "forbidden");
-        return errorResponse("Requiere rol administrador", 403, cors);
+        return errorResponse("Requiere rol administrador o contable", 403, cors);
       }
 
       const facturaId = await leerFacturaId(req);
