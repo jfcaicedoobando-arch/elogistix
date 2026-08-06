@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.431.1] - 2026-08-06
+- Se restauró la constante de versión de la app (`APP_VERSION`), que estaba vacía y rompía la compilación: era como quitarle la etiqueta al frasco que todos los demás módulos buscaban.
+
+
 ## [13.431.0] - 2026-08-05
 - Armonización visual global, olas 1 a 4 (que todo el ERP "se vea de la misma familia", como uniformar los uniformes de todas las sucursales):
 - Ola 1 — Portal de clientes y portal de agentes: las 11 pantallas ahora usan el mismo ritmo de espaciado y un único encabezado por página, igual que el ERP interno.
