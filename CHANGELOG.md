@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.439.0] - 2026-08-06
+- Tesorería · El modal "Registrar anticipo a proveedor" ahora permite escoger la cuenta bancaria de donde sale el dinero (filtrada por la moneda del anticipo, con preselección automática) y la exige salvo cuando el método es Efectivo, para que el anticipo genere movimiento conciliable.
+
 
 ## [13.438.5] - 2026-08-06
 - Build · Se restauró la constante `APP_VERSION`, que había quedado vacía y rompía la compilación.
