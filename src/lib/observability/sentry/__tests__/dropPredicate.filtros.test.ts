@@ -79,4 +79,18 @@ describe("shouldDropSentryEvent — reglas de negocio y red", () => {
     });
     expect(shouldDropSentryEvent(evt, { originalException: new Error("column does not exist") })).toBe(false);
   });
+
+  it("descarta validaciones de negocio re-envueltas como Error plano", () => {
+    const err = new Error('El contenedor "PRUE1234569" ya está registrado en este embarque.');
+    expect(shouldDropSentryEvent(baseEvent(), { originalException: err })).toBe(true);
+    const sat = new Error("Verifica el UUID en el SAT antes de aprobar.");
+    expect(shouldDropSentryEvent(baseEvent(), { originalException: sat })).toBe(true);
+  });
+
+  it("descarta timeouts y 5xx del gateway", () => {
+    const err = new Error("upstream request timeout");
+    expect(shouldDropSentryEvent(baseEvent(), { originalException: err })).toBe(true);
+    const http = Object.assign(new Error("HTTP Client Error with status code: 504"), { status: 504 });
+    expect(shouldDropSentryEvent(baseEvent(), { originalException: http })).toBe(true);
+  });
 });
