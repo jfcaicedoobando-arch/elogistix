@@ -694,6 +694,8 @@ export default tseslint.config(
       // Implementación misma del DataTable — consume las primitivas.
       "src/components/shared/DataTable.tsx",
       "src/components/shared/dataTable/**",
+      // Contrato visual para tablas de detalle: envuelve TableHead/TableRow/TableCell.
+      "src/components/shared/DetailTable.tsx",
       // Form-tables editables con render row complejo (inputs/textareas por celda).
       "src/features/cotizacion/components/SeccionMercanciaAerea.tsx",
       "src/features/cotizacion/components/SeccionMercanciaMaritimaLCL.tsx",
