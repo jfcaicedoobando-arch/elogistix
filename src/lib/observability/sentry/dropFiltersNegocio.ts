@@ -67,3 +67,64 @@ export function isEmptySerializedRejection(event: Sentry.ErrorEvent): boolean {
   if (!serialized) return false;
   return Object.values(serialized).every((v) => v === "" || v == null);
 }
+
+/** Extrae el mensaje más representativo del evento/excepción. */
+function mensajeDe(event: Sentry.ErrorEvent, exc: unknown): string {
+  const msg =
+    (exc as { message?: unknown } | undefined)?.message ??
+    event.exception?.values?.[0]?.value ??
+    event.message;
+  return typeof msg === "string" ? msg.toLowerCase() : "";
+}
+
+/**
+ * Validaciones de negocio que la UI ya explica en un toast pero que el código
+ * re-envuelve en `new Error(mensaje)` perdiendo el `pg_code`, así que el filtro
+ * por código no las alcanza. Ver JAVASCRIPT-REACT-4F/4N.
+ */
+const PATRONES_VALIDACION_NEGOCIO = [
+  "ya está registrado en este embarque",
+  "verifica el uuid en el sat",
+  "factura duplicada",
+  "no puedes aprobar o rechazar esta factura",
+  "el embarque asociado no existe",
+];
+
+/** Clases de error de dominio: validaciones controladas, no bugs. */
+const NOMBRES_ERROR_NEGOCIO = new Set([
+  "AprobacionFacturaError",
+  "CreditLimitError",
+  "ValidationError",
+]);
+
+export function isValidacionNegocioPorMensaje(
+  event: Sentry.ErrorEvent,
+  exc: unknown,
+): boolean {
+  const nombre = (exc as { name?: unknown } | undefined)?.name;
+  if (typeof nombre === "string" && NOMBRES_ERROR_NEGOCIO.has(nombre)) return true;
+  const tipo = event.exception?.values?.[0]?.type;
+  if (typeof tipo === "string" && NOMBRES_ERROR_NEGOCIO.has(tipo)) return true;
+  const msg = mensajeDe(event, exc);
+  return PATRONES_VALIDACION_NEGOCIO.some((p) => msg.includes(p));
+}
+
+/**
+ * Timeouts / 5xx del gateway (504 "upstream request timeout", 502, 503):
+ * infraestructura, no bugs de la app. La UI ya ofrece "Reintentar".
+ * Ver JAVASCRIPT-REACT-3B/39/4Q.
+ */
+const PATRONES_GATEWAY = [
+  "upstream request timeout",
+  "status code: 502",
+  "status code: 503",
+  "status code: 504",
+  "gateway timeout",
+];
+
+export function isGatewayTimeoutNoise(event: Sentry.ErrorEvent, exc: unknown): boolean {
+  const status = (exc as { status?: unknown } | undefined)?.status;
+  if (status === 502 || status === 503 || status === 504) return true;
+  const msg = mensajeDe(event, exc);
+  return PATRONES_GATEWAY.some((p) => msg.includes(p));
+}
