@@ -81,12 +81,27 @@ export async function insertPuerto(input: { code: string; name: string; country:
 }
 
 export async function setPuertoActivo(id: string, activo: boolean): Promise<void> {
-  await run(supabase.from("puertos").update({ activo }).eq("id", id));
+  // `.select("id")` permite detectar el caso "0 filas afectadas" (RLS sin permiso),
+  // que Postgres NO reporta como error y antes fallaba en silencio.
+  const filas = await unwrapOr(
+    supabase.from("puertos").update({ activo }).eq("id", id).select("id"),
+    [] as { id: string }[],
+  );
+  if (filas.length === 0) {
+    throw new Error("No tienes permisos para activar o desactivar puertos.");
+  }
 }
 
 export async function deletePuerto(id: string): Promise<void> {
-  await run(supabase.from("puertos").delete().eq("id", id));
+  const filas = await unwrapOr(
+    supabase.from("puertos").delete().eq("id", id).select("id"),
+    [] as { id: string }[],
+  );
+  if (filas.length === 0) {
+    throw new Error("No tienes permisos para eliminar puertos.");
+  }
 }
+
 
 // ─── Tipos de contenedor ─────────────────────────────────────────────────────
 
