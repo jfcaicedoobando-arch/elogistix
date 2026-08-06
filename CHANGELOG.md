@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.447.0] - 2026-08-06
+- CxP · El **tipo de cambio del pago a proveedor ahora se toma del DOF de la fecha de pago** (antes se heredaba de la factura). Si ese día no hubo publicación se usa la última disponible; el campo sigue siendo editable y hay un botón "Usar DOF" para volver al oficial.
+- CxP · La **diferencia cambiaria se sugiere automáticamente** al pagar en pesos una factura en USD/EUR (monto × diferencia entre el TC del pago y el de la factura).
+- CxP · El **pago en lote** registra el mismo TC del DOF de la fecha del pago y lo muestra en el resumen.
+
+
 ## [13.446.0] - 2026-08-06
 - Embarques · En el tab "Costos", cada archivo recibido ya capturado muestra un chip con el **folio interno de Libre Carga** (FP-XXXXXX) que lleva al detalle de la factura de proveedor. El folio del proveedor ahora se etiqueta como "Folio proveedor" para no confundirlo con el nuestro.
 
