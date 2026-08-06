@@ -3,7 +3,8 @@
  * filas de factura (expandibles) y renglón de subtotales.
  */
 import { Fragment } from "react";
-import { TableCell, TableRow } from "@/components/ui/table";
+import { TableCell } from "@/components/ui/table";
+import { DetailTableRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters";
 import { EstadoCuentaRowExpanded } from "./EstadoCuentaRowExpanded";
 import { EstadoCuentaFilaFactura } from "./EstadoCuentaFilaFactura";
@@ -27,11 +28,11 @@ export function EstadoCuentaGrupoMoneda({
   return (
     <Fragment>
       {mostrarEncabezado && (
-        <TableRow className="hover:bg-transparent">
+        <DetailTableRow hoverable={false}>
           <TableCell colSpan={11} className="bg-muted/60 py-1.5 text-xs font-semibold uppercase tracking-wide">
             Movimientos en {grupo.moneda} · {grupo.filas.length} factura(s)
           </TableCell>
-        </TableRow>
+        </DetailTableRow>
       )}
 
       {grupo.filas.map((fila) => (
@@ -43,16 +44,16 @@ export function EstadoCuentaGrupoMoneda({
             facturaHref={facturaHref}
           />
           {expandidas.has(fila.id) && (
-            <TableRow>
+            <DetailTableRow hoverable={false}>
               <TableCell colSpan={11} className="p-0">
                 <EstadoCuentaRowExpanded factura={fila} />
               </TableCell>
-            </TableRow>
+            </DetailTableRow>
           )}
         </Fragment>
       ))}
 
-      <TableRow className="border-t-2 bg-muted/30 hover:bg-muted/30">
+      <DetailTableRow hoverable={false} className="border-t-2 bg-muted/30">
         <TableCell colSpan={6} className="text-xs font-semibold uppercase tracking-wide">
           Subtotal {grupo.moneda}
         </TableCell>
@@ -66,7 +67,7 @@ export function EstadoCuentaGrupoMoneda({
           {formatCurrency(grupo.saldo, grupo.moneda)}
         </TableCell>
         <TableCell colSpan={2} />
-      </TableRow>
+      </DetailTableRow>
     </Fragment>
   );
 }

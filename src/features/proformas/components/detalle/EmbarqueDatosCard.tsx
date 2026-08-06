@@ -5,6 +5,7 @@
 import { Link } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   resumirContenedores,
   resolverUbicacion,
@@ -41,12 +42,11 @@ export function EmbarqueDatosCard({ embarque, embarqueId, expediente }: Props) {
           Embarque{expediente ? ` ${expediente}` : ""}
         </CardTitle>
         {embarqueId && (
-          <Link
-            to={`/embarques/${embarqueId}?tab=facturacion`}
-            className="text-xs text-primary hover:underline inline-flex items-center gap-1 shrink-0"
-          >
-            Ver embarque <ExternalLink className="h-3 w-3" />
-          </Link>
+          <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs shrink-0">
+            <Link to={`/embarques/${embarqueId}?tab=facturacion`} className="inline-flex items-center gap-1">
+              Ver embarque <ExternalLink className="h-3 w-3" />
+            </Link>
+          </Button>
         )}
       </CardHeader>
       <CardContent className="text-sm space-y-3">

@@ -7,7 +7,8 @@
  * - Filas colapsables con pagos y notas de crédito anidados.
  */
 import { useState } from "react";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell } from "@/components/ui/table";
+import { DetailTableRow } from "@/components/shared/DetailTable";
 import { Button } from "@/components/ui/button";
 import { Inbox } from "lucide-react";
 import { EstadoCuentaTableHead } from "./EstadoCuentaTableHead";
@@ -77,11 +78,11 @@ export function EstadoCuentaTable({
             <TableBody>
               {isLoading
                 ? Array.from({ length: 6 }).map((_, i) => (
-                    <TableRow key={`sk-${i}`}>
+                    <DetailTableRow key={`sk-${i}`} hoverable={false}>
                       <TableCell colSpan={11}>
                         <Skeleton className="h-6" />
                       </TableCell>
-                    </TableRow>
+                    </DetailTableRow>
                   ))
                 : grupos.map((g) => (
                     <EstadoCuentaGrupoMoneda
