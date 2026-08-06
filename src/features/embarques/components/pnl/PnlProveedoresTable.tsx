@@ -36,9 +36,9 @@ export function PnlProveedoresTable({ proveedores }: Props) {
             {proveedores.map((p) => (
               <TableRow key={`${p.proveedor_id ?? "na"}-${p.proveedor_nombre}`}>
                 <TableCell>{p.proveedor_nombre}</TableCell>
-                <TableCell className="text-right">{fmtPnl(p.presupuestado_mxn)}</TableCell>
-                <TableCell className="text-right">{fmtPnl(p.real_mxn)}</TableCell>
-                <TableCell className="text-right">{p.facturas_count}</TableCell>
+                <TableCell className="text-right tabular-nums">{fmtPnl(p.presupuestado_mxn)}</TableCell>
+                <TableCell className="text-right tabular-nums">{fmtPnl(p.real_mxn)}</TableCell>
+                <TableCell className="text-right tabular-nums">{p.facturas_count}</TableCell>
               </TableRow>
             ))}
           </TableBody>

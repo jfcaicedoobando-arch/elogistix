@@ -82,13 +82,13 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                       </TableCell>
                       <TableCell className="text-right">
                         {canEdit ? (
-                          <Input type="number" value={fila.costo_unitario || ""} onChange={e => onUpdate(globalIdx, "costo_unitario", e.target.value)} className="h-8 text-sm text-right w-28 ml-auto" min={0} step={0.01} />
-                        ) : <span className="text-sm">{formatCurrency(fila.costo_unitario, moneda)}</span>}
+                          <Input type="number" value={fila.costo_unitario || ""} onChange={e => onUpdate(globalIdx, "costo_unitario", e.target.value)} className="h-8 text-sm text-right tabular-nums w-28 ml-auto" min={0} step={0.01} />
+                        ) : <span className="text-sm tabular-nums">{formatCurrency(fila.costo_unitario, moneda)}</span>}
                       </TableCell>
-                      <TableCell className="text-right text-sm whitespace-nowrap">
+                      <TableCell className="text-right text-sm tabular-nums whitespace-nowrap">
                         {formatCurrency(fila.venta, moneda)}
                       </TableCell>
-                      <TableCell className={`text-right text-sm font-medium ${profit >= 0 ? "text-success" : "text-destructive"}`}>
+                      <TableCell className={`text-right text-sm tabular-nums font-medium ${profit >= 0 ? "text-success" : "text-destructive"}`}>
                         {formatCurrency(profit, moneda)}
                       </TableCell>
                       <TableCell className="text-right"><ProfitBadge porcentaje={pct} /></TableCell>
@@ -116,9 +116,9 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
             <TableFooter>
               <TableRow className="font-semibold">
                 <TableCell colSpan={2}>Totales</TableCell>
-                <TableCell className="text-right">{formatCurrency(totales.totalCosto, moneda)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(totales.totalVenta, moneda)}</TableCell>
-                <TableCell className={`text-right ${totales.profit >= 0 ? "text-success" : "text-destructive"}`}>
+                <TableCell className="text-right tabular-nums">{formatCurrency(totales.totalCosto, moneda)}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatCurrency(totales.totalVenta, moneda)}</TableCell>
+                <TableCell className={`text-right tabular-nums ${totales.profit >= 0 ? "text-success" : "text-destructive"}`}>
                   {formatCurrency(totales.profit, moneda)}
                 </TableCell>
                 <TableCell className="text-right"><ProfitBadge porcentaje={totales.porcentaje} /></TableCell>
