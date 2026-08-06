@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.443.0] - 2026-08-06
+- Puertos · El interruptor de activar/desactivar puertos (y el alta y borrado) ya funciona para administradores y personal operativo; antes sólo el super administrador tenía permiso y el cambio se revertía sin avisar. Además, si alguna vez el permiso falta, ahora aparece un mensaje claro en lugar de fallar en silencio.
+
+
 ## [13.442.0] - 2026-08-06
 - Rendimiento · Los badges de alerta del sidebar (embarques en demora, facturas vencidas, garantías atoradas y pendientes administrativos) ahora se guardan en caché 30 minutos en lugar de 5, y ya no se vuelven a consultar cada vez que el sidebar se remonta al navegar. Son contadores de granularidad diaria, así que la información sigue siendo igual de útil y se deja de golpear la base cientos de veces al día.
 
