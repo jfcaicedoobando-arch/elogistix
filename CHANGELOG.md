@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.430.1] - 2026-08-06
+- Se arreglaron 3 fallas del pipeline de CI (los "revisores automáticos" que verifican el código antes de publicar):
+- La consulta del documento del buzón vinculado a una factura de proveedor se movió a la capa de servicios y su llave de caché se registró en el catálogo central, en lugar de escribirla suelta (como guardar un expediente en el archivero en vez de dejarlo sobre el escritorio).
+- Las funciones de servidor `backfill-cxp-buzon` y `verificar-sat-lote` se registraron en la lista de cobertura de Sentry; ya usaban el monitoreo, sólo faltaba darlas de alta en el padrón.
+
 ## [13.429.0] - 2026-08-06
 - Nueva revisión masiva en backend (`verificar-sat-lote`): barre en el servidor todas las facturas de proveedor nacional con UUID fiscal y consulta su estatus en el SAT, una tras otra y con pausa entre consultas para que el SAT no nos bloquee. Es como mandar a un mensajero a la ventanilla con todo el fajo, en lugar de ir factura por factura.
 - Solo actualiza el estatus SAT y su fecha de verificación; no cambia el estado interno de la factura ni sus importes.

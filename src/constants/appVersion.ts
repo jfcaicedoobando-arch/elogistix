@@ -2,4 +2,4 @@
  * Versión de la aplicación.
  * Debe empatar con la última entrada de `CHANGELOG.md` (raíz del proyecto).
  */
-export const APP_VERSION = "13.430.0";
+export const APP_VERSION = "13.430.1";
