@@ -35,10 +35,10 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
         <Table>
           <TableHeader>
             <DetailTableRow hoverable={false}>
-              <DetailTableHead>Moneda</DetailTableHead>
-              <DetailTableHead className="text-right">Por cobrar</DetailTableHead>
-              <DetailTableHead className="text-right">Por pagar</DetailTableHead>
-              <DetailTableHead className="text-right">Neto</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap">Moneda</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap text-right">Por cobrar</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap text-right">Por pagar</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap text-right">Neto</DetailTableHead>
             </DetailTableRow>
           </TableHeader>
           <TableBody>
@@ -47,15 +47,15 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
               return (
                 <DetailTableRow key={r.moneda}>
                   <TableCell className="font-medium">{r.moneda}</TableCell>
-                  <TableCell className="text-right tabular-nums text-success">
+                  <TableCell className="whitespace-nowrap text-right tabular-nums text-success">
                     {formatCurrency(r.cobrar, r.moneda)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-warning">
+                  <TableCell className="whitespace-nowrap text-right tabular-nums text-warning">
                     {formatCurrency(r.pagar, r.moneda)}
                   </TableCell>
                   <TableCell
                     className={cn(
-                      "text-right font-semibold tabular-nums",
+                      "whitespace-nowrap text-right font-semibold tabular-nums",
                       neto >= 0 ? "text-success" : "text-destructive",
                     )}
                   >
