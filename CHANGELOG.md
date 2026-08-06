@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.426.1] - 2026-08-06
+- Continuación de la armonización visual: los últimos encabezados fuera del estándar (Tesorería, Flujo de caja, Categorías de presupuesto y la barra de progreso del wizard de cotización) ahora usan `SectionHeading`, con el mismo tamaño y espaciado que el resto del ERP.
+- Los estados vacíos hechos a mano en "Pagos programados" y "CxP por capturar" se cambiaron por el componente compartido `EmptyState`: mismo ícono en círculo, mismo tamaño de título y botón de acción alineado, como los letreros idénticos en todos los pasillos de una tienda.
+
 ## [13.426.0] - 2026-08-05
 - Armonización visual global (encabezados y tarjetas): los títulos de sección de toda la aplicación se unificaron en un solo componente (`SectionHeading`). Antes había 6 variantes distintas del mismo `h2` (unos en negritas grandes, otros en minúsculas grises), así que cambiar de módulo se sentía como cambiar de programa.
 - Tesorería, Dirección, Mi día (CRM), estado de cuenta, salud de plataforma, proformas, proveedores, embarques (Demoras/Garantías) y el portal de agente ya comparten el mismo tamaño, peso y espaciado de encabezado.
