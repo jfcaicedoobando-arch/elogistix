@@ -3,6 +3,7 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { FIELD_HEIGHT_CLASS, FIELD_STATE_RADIX_CLASS, FIELD_SURFACE_CLASS } from "./field.tokens";
 
 const Select = SelectPrimitive.Root;
 
