@@ -75,7 +75,7 @@ export function ProveedorSaludTab({ proveedorId }: { proveedorId: string }) {
           {data.mensual.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">Sin facturación en el período.</p>
           ) : (
-            <div style={{ width: "100%", height: 240 }}>
+            <div className="w-full h-60">
               <ResponsiveContainer>
                 <BarChart data={data.mensual}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

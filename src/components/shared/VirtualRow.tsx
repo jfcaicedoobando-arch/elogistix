@@ -29,6 +29,9 @@ interface VirtualRowProps<T> {
  * `id` no cambiaron NO se re-montan. Para que la memo sea efectiva los
  * callers deben memoizar `onRowClick` y `rowClassName` (se pasan por
  * referencia).
+ *
+ * Los estilos en línea son dinámicos por diseño (posición calculada por el
+ * virtualizer y plantilla de columnas): no se pueden expresar con clases.
  */
 function VirtualRowInner<T>({
   row, index, start, cellPad, gridTemplate,
@@ -45,17 +48,13 @@ function VirtualRowInner<T>({
       data-index={index}
       role="row"
       className={cn(
-        "grid border-b last:border-b-0",
+        "absolute top-0 left-0 w-full grid border-b last:border-b-0",
         zebra,
         hoverable && "hover:bg-accent/40",
         onRowClick && "cursor-pointer",
         rowClassName?.(item),
       )}
       style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
         transform: `translateY(${start}px)`,
         gridTemplateColumns: gridTemplate,
       }}

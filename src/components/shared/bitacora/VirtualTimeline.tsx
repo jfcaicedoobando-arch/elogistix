@@ -3,6 +3,11 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import type { EntradaBitacora } from "@/hooks/shared";
 import { FilaEntrada } from "./FilaEntrada";
 
+/**
+ * Línea de tiempo virtualizada de la bitácora. Los estilos en línea son
+ * dinámicos por diseño (alto total y desplazamiento calculados por el
+ * virtualizer): no se pueden expresar con clases de Tailwind.
+ */
 export function VirtualTimeline({
   actividades,
   mostrarUsuario,
@@ -42,14 +47,8 @@ export function VirtualTimeline({
               key={entrada.id}
               ref={virtualizer.measureElement}
               data-index={vi.index}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 24,
-                right: 0,
-                transform: `translateY(${vi.start}px)`,
-                paddingBottom: 20,
-              }}
+              className="absolute left-6 right-0 top-0 pb-5"
+              style={{ transform: `translateY(${vi.start}px)` }}
             >
               <FilaEntrada entrada={entrada} mostrarUsuario={mostrarUsuario} />
             </div>

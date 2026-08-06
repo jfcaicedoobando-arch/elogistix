@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
@@ -39,12 +40,11 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle>Cobranza — Aging</CardTitle>
-        <Link
-          to="/cartera"
-          className="text-xs text-primary hover:underline flex items-center gap-1"
-        >
-          Ver cartera <ArrowRight className="h-3 w-3" />
-        </Link>
+        <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs">
+            <Link to="/cartera" className="flex items-center gap-1">
+              Ver cartera <ArrowRight className="h-3 w-3" />
+            </Link>
+          </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (

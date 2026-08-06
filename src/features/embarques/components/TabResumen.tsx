@@ -11,6 +11,7 @@ import { EmbarquesRelacionadosCard } from "./tabResumen/EmbarquesRelacionadosCar
 import { ComisionEmbarqueCard } from "./tabResumen/ComisionEmbarqueCard";
 import { OrigenCostosSection } from "./OrigenCostosSection";
 import { SeccionContenedoresReadonly } from "./contenedores/SeccionContenedoresReadonly";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   embarque: EmbarqueRow;
@@ -88,13 +89,12 @@ function ParteCampo({ label, valor, embarqueId }: { label: string; valor?: strin
       ) : (
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground italic">Sin capturar</span>
-          <Link
-            to={`/embarques/${embarqueId}/editar`}
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-          >
-            <Pencil className="h-3 w-3" />
-            Capturar
-          </Link>
+          <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs font-medium">
+            <Link to={`/embarques/${embarqueId}/editar`} className="inline-flex items-center gap-1">
+              <Pencil className="h-3 w-3" />
+              Capturar
+            </Link>
+          </Button>
         </div>
       )}
     </div>

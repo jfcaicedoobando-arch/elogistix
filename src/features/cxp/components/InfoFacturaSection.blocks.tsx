@@ -4,6 +4,7 @@
  * v13.307.17
  */
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters/dates";
 import { formatCurrency } from "@/lib/formatters";
 import { Field, UuidFiscalField } from "./InfoFacturaSection.parts";
@@ -13,12 +14,9 @@ function EmbarqueValor({ f }: { f: FacturaCxP }) {
   if (!f.embarque_id) return null;
   if (f.embarque_expediente) {
     return (
-      <Link
-        to={`/embarques/${f.embarque_id}`}
-        className="text-primary hover:underline font-medium"
-      >
-        {f.embarque_expediente}
-      </Link>
+      <Button variant="link" size="sm" asChild className="h-auto p-0 font-medium">
+        <Link to={`/embarques/${f.embarque_id}`}>{f.embarque_expediente}</Link>
+      </Button>
     );
   }
   return <span className="text-muted-foreground italic text-xs">Sin expediente</span>;

@@ -51,12 +51,9 @@ export function EstadoCuentaFilaFactura({ fila, abierta, onToggle, facturaHref }
         {formatDate(fila.fecha_emision)}
       </TableCell>
       <TableCell>
-        <Link
-          to={facturaHref(fila.id)}
-          className="font-medium tabular-nums text-primary hover:underline"
-        >
-          {fila.numero}
-        </Link>
+        <Button variant="link" size="sm" asChild className="h-auto p-0 font-medium tabular-nums">
+          <Link to={facturaHref(fila.id)}>{fila.numero}</Link>
+        </Button>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 text-sm">

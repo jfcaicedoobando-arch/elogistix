@@ -161,7 +161,7 @@ export default function ComprasReportes() {
               Sin datos para graficar.
             </div>
           ) : (
-            <div style={{ width: "100%", height: 280 }}>
+            <div className="w-full h-[280px]">
               <ResponsiveContainer>
                 <BarChart data={evolucion}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />

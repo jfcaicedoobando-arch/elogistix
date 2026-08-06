@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, FileWarning } from "lucide-react";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
@@ -23,12 +24,11 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
             <FileWarning className="h-4 w-4 text-warning" />
             Hueco de facturación
           </CardTitle>
-          <Link
-            to="/facturacion"
-            className="text-xs text-primary hover:underline flex items-center gap-1"
-          >
-            Ver hueco <ArrowRight className="h-3 w-3" />
-          </Link>
+          <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs">
+            <Link to="/facturacion" className="flex items-center gap-1">
+              Ver hueco <ArrowRight className="h-3 w-3" />
+            </Link>
+          </Button>
         </CardHeader>
         <CardContent>
           {loading ? (
