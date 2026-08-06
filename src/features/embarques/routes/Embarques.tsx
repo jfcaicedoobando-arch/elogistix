@@ -47,7 +47,7 @@ export default function Embarques() {
     sortKey, sortDir, handleSortChange,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterAlerta,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
-    filtered, expedientesCount, contenedoresCount, totalPages, alertasResumen,
+    filtered, expedientesCount, contenedoresCount, totalPages, totalCount, alertasResumen,
   } = state;
 
 
