@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { DetailTableHead, DetailTableEmptyRow } from "@/components/shared/DetailTable";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters";
 import { Receipt } from "lucide-react";
 
