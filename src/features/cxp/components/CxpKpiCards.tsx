@@ -35,25 +35,43 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
     return { porPagarMxn, porPagarUsd, vencidasN, porVencer7d, programadoMxn, programadoUsd, programadoN };
   }, [data]);
   return (
+    // Ola 9: a 1280x720 las 5 tarjetas truncaban el importe ("MXN 80,234…") y
+    // la etiqueta con el conteo. Ahora el valor va en notación compacta con
+    // tooltip del importe exacto, y el conteo de facturas baja al sublabel.
     <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
-      <KpiCard label="Por pagar MXN" value={formatCurrency(kpis.por_pagar_mxn, "MXN")} sublabel={countLabel(porPagarMxn)} />
-      <KpiCard label="Por pagar USD" value={formatCurrency(kpis.por_pagar_usd, "USD")} sublabel={countLabel(porPagarUsd)} />
       <KpiCard
-        label={`Vencido · ${countLabel(vencidasN)}`}
-        value={formatCurrency(kpis.vencido_mxn, "MXN")}
-        sublabel={formatCurrency(kpis.vencido_usd, "USD")}
-        variant="destructive"
+        label="Por pagar MXN"
+        value={formatCurrencyCompact(kpis.por_pagar_mxn, "MXN")}
+        valueTooltip={formatCurrency(kpis.por_pagar_mxn, "MXN")}
+        sublabel={countLabel(porPagarMxn)}
       />
       <KpiCard
-        label={`Por vencer 5d · ${countLabel(porVencer7d)}`}
-        value={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
-        sublabel={formatCurrency(kpis.por_vencer_7d_usd, "USD")}
+        label="Por pagar USD"
+        value={formatCurrencyCompact(kpis.por_pagar_usd, "USD")}
+        valueTooltip={formatCurrency(kpis.por_pagar_usd, "USD")}
+        sublabel={countLabel(porPagarUsd)}
+      />
+      <KpiCard
+        label="Vencido"
+        value={formatCurrencyCompact(kpis.vencido_mxn, "MXN")}
+        valueTooltip={formatCurrency(kpis.vencido_mxn, "MXN")}
+        sublabel={`${formatCurrency(kpis.vencido_usd, "USD")} · ${countLabel(vencidasN)}`}
+        variant="destructive"
+      />
+      {/* El cálculo de `por_vencer_7d_*` usa una ventana de 7 días: la etiqueta
+          decía "5d" y no coincidía con el dato mostrado. */}
+      <KpiCard
+        label="Por vencer 7d"
+        value={formatCurrencyCompact(kpis.por_vencer_7d_mxn, "MXN")}
+        valueTooltip={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
+        sublabel={`${formatCurrency(kpis.por_vencer_7d_usd, "USD")} · ${countLabel(porVencer7d)}`}
         variant="warning"
       />
       <KpiCard
-        label={`Programado 7d · ${countLabel(programadoN)}`}
-        value={formatCurrency(programadoMxn, "MXN")}
-        sublabel={formatCurrency(programadoUsd, "USD")}
+        label="Programado 7d"
+        value={formatCurrencyCompact(programadoMxn, "MXN")}
+        valueTooltip={formatCurrency(programadoMxn, "MXN")}
+        sublabel={`${formatCurrency(programadoUsd, "USD")} · ${countLabel(programadoN)}`}
       />
     </div>
   );
