@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.436.0] - 2026-08-06
+- Modal "Nuevo Proveedor": ahora usa las mismas secciones y rejilla de 2 columnas que "Nuevo Cliente". Antes era una lista larga de campos en una sola columna que a 1280x720 no cabía en pantalla; es como pasar de una fila india a una tabla con dos asientos por lado.
+- Datos bancarios del proveedor (nacional): banco y CLABE quedan lado a lado en escritorio.
+- Modal "Nueva factura manual": se quitaron las tarjetas con borde y el fondo gris internos (ningún otro modal los usa) y se cambió a `FormDialogSection`. Los campos SAT (Uso CFDI, Forma y Método de pago) ya no se cortan y el modal se amplió a 3xl para que la tabla de conceptos respire.
+- Alturas de campos: se eliminaron los `h-9` a mano del formulario de factura manual; todos los controles vuelven al alto canónico de `field.tokens.ts`.
+
 ## [13.435.0] - 2026-08-06
 - Densidad de tablas estandarizada: dos presets únicos (`TABLE_DENSITY.listado` para páginas completas y `TABLE_DENSITY.embebida` para tablas dentro de cards, tabs y diálogos). Antes cada pantalla elegía su propio "tamaño de letra"; ahora es como usar dos tallas oficiales de camisa en vez de coser una distinta para cada quien. Se migraron 53 archivos y se eliminó el nivel `spacious` (no se usaba).
 - Hover y filas: un solo token `ROW_HOVER` compartido entre `DataTable` y `DetailTable`, así el resaltado al pasar el mouse se ve igual en todos los listados.
