@@ -1,50 +1,45 @@
-import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import type { EntradaBitacora } from "@/hooks/shared";
+import { useRef } from "react";
 import { FilaEntrada } from "./FilaEntrada";
+import { type BitacoraEntrada } from "@/types/bitacora";
 
-export function VirtualTimeline({
-  actividades,
-  mostrarUsuario,
-  maxHeight,
-}: {
-  actividades: EntradaBitacora[];
-  mostrarUsuario: boolean;
-  maxHeight: number;
-}) {
-  const parentRef = useRef<HTMLDivElement | null>(null);
+interface VirtualTimelineProps {
+  entradas: BitacoraEntrada[];
+  maxHeight?: number | string;
+  mostrarUsuario?: boolean;
+}
+
+export function VirtualTimeline({ entradas, maxHeight = 400, mostrarUsuario = false }: VirtualTimelineProps) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
   const virtualizer = useVirtualizer({
-    count: actividades.length,
+    count: entradas.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 110,
-    overscan: 8,
-    measureElement:
-      typeof window !== "undefined" && navigator.userAgent.indexOf("Firefox") === -1
-        ? (el) => el?.getBoundingClientRect().height ?? 110
-        : undefined,
+    estimateSize: () => 100,
+    overscan: 5,
   });
-  const items = virtualizer.getVirtualItems();
 
   return (
     <div
       ref={parentRef}
-      className="overflow-auto [scrollbar-width:thin] pr-2"
+      className="overflow-auto scrollbar-thin"
       style={{ maxHeight }}
     >
       <div
-        className="relative border-l-2 border-border ml-3 pl-6"
+        className="relative w-full"
         style={{ height: virtualizer.getTotalSize() }}
       >
-        {items.map((vi) => {
-          const entrada = actividades[vi.index];
+        <div className="absolute left-6 top-0 bottom-0 w-px bg-border" />
+        {virtualizer.getVirtualItems().map((vi) => {
+          const entrada = entradas[vi.index];
           return (
             <div
               key={entrada.id}
               ref={virtualizer.measureElement}
               data-index={vi.index}
               className="absolute top-0 left-6 right-0 pb-5"
-                right: 0,
-                paddingBottom: 20,
+              style={{
+                transform: `translateY(${vi.start}px)`,
               }}
             >
               <FilaEntrada entrada={entrada} mostrarUsuario={mostrarUsuario} />
