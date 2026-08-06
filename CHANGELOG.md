@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.429.0] - 2026-08-06
+- Nueva revisión masiva en backend (`verificar-sat-lote`): barre en el servidor todas las facturas de proveedor nacional con UUID fiscal y consulta su estatus en el SAT, una tras otra y con pausa entre consultas para que el SAT no nos bloquee. Es como mandar a un mensajero a la ventanilla con todo el fajo, en lugar de ir factura por factura.
+- Solo actualiza el estatus SAT y su fecha de verificación; no cambia el estado interno de la factura ni sus importes.
+- Devuelve un resumen (vigentes, canceladas, no encontradas, no verificables) con la lista de las canceladas para revisión manual.
+- La lógica de consulta al SAT se movió a archivos compartidos (`_shared/satConsulta.ts` y `_shared/satExpresion.ts`) para que la verificación individual y la masiva usen exactamente las mismas reglas.
+
+
+
 ## [13.428.0] - 2026-08-06
 - Validación masiva en el SAT: en "Compras › Por aprobar" ahora puedes seleccionar varias facturas y presionar "Validar en SAT" para consultar el estatus del CFDI de todas de un jalón (se procesan en fila, una tras otra, como en la ventanilla).
 - Solo se validan facturas nacionales con UUID fiscal; el botón indica cuántas de tu selección son validables.
