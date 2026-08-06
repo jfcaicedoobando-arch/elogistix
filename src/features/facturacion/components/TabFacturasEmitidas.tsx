@@ -187,8 +187,7 @@ export function TabFacturasEmitidas(p: Props) {
               pageSize: p.pageSize,
               onPageSizeChange: (s) => { p.setPageSize(s); p.setPage(0); },
               pageSizeOptions: [50, 100, 200, 500],
-              pageSizeLabels: { 500: "500" },
-              total: p.totalFacturas,
+              pageSizeLabels: { 500: "500" }, total: p.totalFacturas,
             }}
           />
         </CardContent>
