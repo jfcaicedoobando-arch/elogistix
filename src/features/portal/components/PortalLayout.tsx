@@ -11,6 +11,7 @@ import { usePortalBreadcrumbs } from "@/features/portal/hooks/usePortalBreadcrum
 import { getActiveSectionLabel } from "./layout/portalNav";
 import { ROUTES } from "@/constants/routes";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function PortalLayout() {
   const { signOut, user } = useAuth();
@@ -49,14 +50,16 @@ export default function PortalLayout() {
         <PortalBreadcrumbsBar breadcrumbs={breadcrumbs} />
       </div>
 
-      <main className="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6">
-        {cargandoVinculo ? (
-          <div className="p-2"><ListSkeleton rows={6} /></div>
-        ) : sinClienteVinculado ? (
-          <PortalSinCliente email={user?.email} onSignOut={handleSignOut} />
-        ) : (
-          <Outlet />
-        )}
+      <main className="flex-1 pb-24 md:pb-6">
+        <PageContainer noSpacing>
+          {cargandoVinculo ? (
+            <ListSkeleton rows={6} />
+          ) : sinClienteVinculado ? (
+            <PortalSinCliente email={user?.email} onSignOut={handleSignOut} />
+          ) : (
+            <Outlet />
+          )}
+        </PageContainer>
       </main>
 
       <footer className="hidden md:block border-t bg-card/40 mt-auto">

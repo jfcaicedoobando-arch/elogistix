@@ -16,6 +16,7 @@ import { PortalUserMenu } from "@/features/portal/components/layout/PortalUserMe
 import { PortalBreadcrumbsBar } from "@/features/portal/components/layout/PortalBreadcrumbsBar";
 import type { PortalCrumb } from "@/features/portal/components/layout/PortalBreadcrumbsBar";
 import { useBreadcrumbLabels } from "@/lib/contexts/BreadcrumbContext";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 const NAV = [
   { label: "Inicio", href: "/agente", icon: LayoutDashboard },
@@ -175,8 +176,10 @@ export default function AgenteLayout() {
         <PortalBreadcrumbsBar breadcrumbs={breadcrumbs} />
       </div>
 
-      <main className="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 py-6">
-        <Outlet />
+      <main className="flex-1">
+        <PageContainer noSpacing>
+          <Outlet />
+        </PageContainer>
       </main>
 
       <footer className="border-t bg-card/40 mt-auto">
