@@ -21,6 +21,7 @@ import { useProveedoresLite } from "@/features/proveedor/hooks";
 import { PageSkeleton } from "@/components/shared/skeletons";
 import EmptyState from "@/components/empty/EmptyState";
 import { buildAnticipoColumns } from "./_sections/buildAnticipoColumns";
+import { AnticiposKpis } from "./_sections/AnticiposKpis";
 
 export default function AnticiposProveedor() {
   const { canEditFinance } = usePermissions();
