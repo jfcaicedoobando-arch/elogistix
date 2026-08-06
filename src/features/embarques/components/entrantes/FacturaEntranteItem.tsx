@@ -108,6 +108,7 @@ export function FacturaEntranteItem({
           {tienePdf && <Badge variant="outline" size="sm">PDF</Badge>}
           {tieneXml && <Badge variant="outline" size="sm">XML</Badge>}
           {faltaXml && <Badge variant="warning" size="sm">Falta XML</Badge>}
+          <FolioInternoChip row={row} />
         </div>
         <MetaEntrante row={row} />
       </div>
