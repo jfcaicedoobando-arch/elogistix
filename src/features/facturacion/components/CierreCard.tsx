@@ -2,10 +2,11 @@
  * Tarjeta interna del bloque "Cierre [Mes]" en TabProyeccion.
  * Sin lógica de negocio: recibe tono, líneas a renderizar y un footer opcional.
  */
-import type { ElementType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { KpiCard } from "@/components/shared/KpiCard";
 import type { KpiVariant } from "@/components/shared/kpiCard.tokens";
+import type { LucideIcon } from "lucide-react";
 
 export interface CierreLinea {
   label: string;
@@ -16,7 +17,7 @@ export interface CierreLinea {
 
 interface Props {
   tone: "success" | "warning" | "info";
-  icon: ElementType;
+  icon: LucideIcon;
   titulo: string;
   embarques: number;
   lineas: CierreLinea[];

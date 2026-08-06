@@ -8,6 +8,7 @@
  */
 import { Activity, Target, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiStrip } from "@/components/shared/KpiStrip";
@@ -34,14 +35,7 @@ const v = (loading: boolean, n: number | undefined): string | number => (loading
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
 function TotalCard({ label, value, isLoading }: { label: string; value: number; isLoading: boolean }) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-muted-foreground">{label}</CardTitle>
-      </CardHeader>
-      <CardContent className="text-2xl font-bold tabular-nums">{isLoading ? "…" : fmt(value)}</CardContent>
-    </Card>
-  );
+  return <KpiCard label={label} value={isLoading ? "…" : fmt(value)} />;
 }
 
 function EmbudoCard() {

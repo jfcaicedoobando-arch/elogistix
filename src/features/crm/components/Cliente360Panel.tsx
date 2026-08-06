@@ -5,6 +5,7 @@
 import { useNavigate } from "react-router-dom";
 import { Briefcase, ClipboardList, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCliente360 } from "@/features/crm/hooks";
@@ -28,14 +29,8 @@ export default function Cliente360Panel({ clienteId }: Props) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Pipeline abierto</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold">{formatCurrencyCompact(d.totalAbierto, "MXN")}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Negocio ganado</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold">{formatCurrencyCompact(d.totalGanado, "MXN")}</CardContent>
-        </Card>
+        <KpiCard label="Pipeline abierto" value={formatCurrencyCompact(d.totalAbierto, "MXN")} />
+        <KpiCard label="Negocio ganado" value={formatCurrencyCompact(d.totalGanado, "MXN")} />
       </div>
 
       <Card>
