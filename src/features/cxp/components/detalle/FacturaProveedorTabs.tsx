@@ -15,6 +15,7 @@ import { DocumentosProveedorSection } from "@/features/cxp/components/detalle/Do
 import { BitacoraTesoreriaSection } from "@/features/cxp/components/BitacoraTesoreriaSection";
 import { ConciliacionTesoreriaSection } from "@/features/cxp/components/ConciliacionTesoreriaSection";
 import { AnticiposAplicadosSection } from "@/features/anticipos-proveedor/components/AnticiposAplicadosSection";
+import { AnticipoDisponibleAviso } from "@/features/anticipos-proveedor/components/AnticipoDisponibleAviso";
 import { PagosTable } from "@/features/cxp/components/DialogDetallePagosProveedor.sections";
 import { useConceptosCfdiFactura } from "@/features/cxp/hooks/useConceptosCfdiFactura";
 import { useNotasCreditoFactura } from "@/features/cxp/hooks/useNotasCreditoProveedor";
