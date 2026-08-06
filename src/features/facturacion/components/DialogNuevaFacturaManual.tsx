@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { SectionHeading } from "@/components/shared/SectionHeading";
+import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { CreditoExcesoConfirmDialog } from "./CreditoExcesoConfirmDialog";
 import { useFacturaManualForm } from "@/features/facturacion/hooks/useFacturaManualForm";
 import { FacturaManualDatosFiscales } from "./FacturaManualDatosFiscales";
@@ -20,18 +20,6 @@ import { formatCurrency } from "@/lib/formatters";
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-}
-
-interface SectionProps { title: string; children: React.ReactNode; action?: React.ReactNode }
-function Section({ title, children, action }: SectionProps) {
-  return (
-    <section className="rounded-lg border bg-card p-5 space-y-4">
-      <SectionHeading as="h3" variant="overline" actions={action}>
-        {title}
-      </SectionHeading>
-      {children}
-    </section>
-  );
 }
 
 export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
@@ -63,14 +51,14 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
       open={open} onOpenChange={onOpenChange} icon={FilePlus2}
       title="Nueva factura manual"
       description="Para anticipos, servicios extra o cobros que no provienen de un embarque cerrado. Lo normal es facturar desde una proforma aprobada."
-      size="xl" footer={footer}
+      size="3xl" footer={footer}
     >
-      <div className="-mx-6 -my-5 px-6 py-5 bg-muted/30 space-y-5">
-        <Section title="Información del Cliente">
+      <div className="space-y-5">
+        <FormDialogSection flat title="Información del cliente">
           <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">Cliente *</Label>
+            <Label>Cliente *</Label>
             <Select value={cliente?.id ?? ""} onValueChange={onClienteChange}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
               <SelectContent>
                 {clientes.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
@@ -88,21 +76,21 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
               </Alert>
             )}
           </div>
-        </Section>
+        </FormDialogSection>
 
-        <Section title="Datos fiscales">
+        <FormDialogSection flat title="Datos fiscales">
           <FacturaManualDatosFiscales
             value={fiscal} onChange={updateFiscal} diasReadonly={!!cliente}
             diasReadonlyReason={cliente ? "Los días de crédito se toman del perfil del cliente. Cámbialos en el detalle del cliente." : undefined}
           />
-        </Section>
+        </FormDialogSection>
 
         <FacturaManualConceptosTable
           conceptos={conceptos} moneda={fiscal.moneda} onChange={setConceptos}
         />
 
         <div className="grid gap-5 md:grid-cols-2">
-          <Section title="Notas internas">
+          <FormDialogSection flat title="Notas internas">
             <Textarea
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
@@ -110,7 +98,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
               placeholder="Añadir notas u observaciones (opcional)…"
               className="resize-none"
             />
-          </Section>
+          </FormDialogSection>
           <div className="rounded-lg bg-primary text-primary-foreground p-6 shadow-md flex flex-col justify-center gap-3">
             <div className="flex justify-between text-sm opacity-80">
               <span>Subtotal</span>

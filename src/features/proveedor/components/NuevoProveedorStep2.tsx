@@ -28,7 +28,7 @@ export function NuevoProveedorStep2({ c }: { c: Controller }) {
 
 function Step2Nacional({ c }: { c: Controller }) {
   return (
-    <>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div className="space-y-2">
         <Label>Banco</Label>
         <Select value={c.form.banco || undefined} onValueChange={(v) => c.setField("banco", v)}>
@@ -55,7 +55,7 @@ function Step2Nacional({ c }: { c: Controller }) {
           </p>
         )}
       </div>
-    </>
+    </div>
   );
 }
 

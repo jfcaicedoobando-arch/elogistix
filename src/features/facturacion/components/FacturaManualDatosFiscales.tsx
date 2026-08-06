@@ -43,25 +43,24 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
   });
   const requiereTc = value.moneda !== "MXN";
   const monedas: MonedaManual[] = ["MXN", "USD", "EUR"];
-  const labelCls = "text-xs font-medium text-muted-foreground";
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
       <div className="space-y-1.5">
-        <Label className={labelCls}>Días crédito</Label>
+        <Label>Días crédito</Label>
         <Input
           type="number" min={0} max={365} value={value.diasCredito}
           onChange={(e) => onChange({ diasCredito: Math.max(0, Number(e.target.value) || 0) })}
           readOnly={diasReadonly}
           disabled={diasReadonly}
           title={diasReadonly ? diasReadonlyReason : undefined}
-          className="h-9"
+          
         />
         {diasReadonly && diasReadonlyReason && (
           <p className="text-label text-muted-foreground">{diasReadonlyReason}</p>
         )}
       </div>
       <div className="space-y-1.5">
-        <Label className={labelCls}>Moneda</Label>
+        <Label>Moneda</Label>
         <div className="flex gap-1.5 flex-wrap">
           {monedas.map((m) => {
             const active = value.moneda === m;
@@ -71,7 +70,7 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
                 type="button"
                 onClick={() => onChange({ moneda: m })}
                 className={
-                  "h-9 px-3 rounded-md text-xs font-semibold border transition-colors " +
+                  "h-11 md:h-10 px-3 rounded-md text-xs font-semibold border transition-colors " +
                   (active
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-background text-muted-foreground border-border hover:bg-muted")
@@ -86,48 +85,48 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
       </div>
 
       <div className="space-y-1.5">
-        <Label className={labelCls}>Uso CFDI</Label>
+        <Label>Uso CFDI</Label>
         <Select value={value.usoCfdi} onValueChange={(v) => onChange({ usoCfdi: v })}>
-          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+          <SelectTrigger ><SelectValue /></SelectTrigger>
           <SelectContent>
             {USOS_CFDI_SAT.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className={labelCls}>Forma de pago</Label>
+        <Label>Forma de pago</Label>
         <Select value={value.formaPago} onValueChange={(v) => onChange({ formaPago: v })}>
-          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+          <SelectTrigger ><SelectValue /></SelectTrigger>
           <SelectContent>
             {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className={labelCls}>Método de pago</Label>
+        <Label>Método de pago</Label>
         <Select value={value.metodoPago} onValueChange={(v) => onChange({ metodoPago: v })}>
-          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+          <SelectTrigger ><SelectValue /></SelectTrigger>
           <SelectContent>
             {METODOS_PAGO_SAT.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className={labelCls}>Tipo de cambio</Label>
+        <Label>Tipo de cambio</Label>
         <div className="flex gap-1">
           <Input
             type="number" step="0.0001" min={0.0001}
             value={value.tipoCambio}
             onChange={(e) => onChange({ tipoCambio: Number(e.target.value) || 1 })}
             disabled={!requiereTc}
-            className="h-9 text-right"
+            className="text-right"
           />
           {requiereTc && (
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="shrink-0 px-2 h-9"
+              className="shrink-0 px-2"
               onClick={() => traerTc.mutate()}
               disabled={traerTc.isPending}
               title={`Traer TC DOF Banxico (${value.moneda}/MXN)`}
