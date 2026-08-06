@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.438.3] - 2026-08-06
+- Facturación · Limpieza de duplicados del respaldo histórico en ELIMP00007 y ELIMP00022: se marcaron como borradas (borrado lógico, reversible) 4 facturas copia (`726-DUP-1a539c8b`, `726-DUP-cabeceda`, `726-DUP-ce941c8a`, `755-DUP-fe48bee7`) junto con sus pagos, proformas y conceptos de venta duplicados. El respaldo cobró tres veces el mismo embarque, como sacarle tres copias al mismo recibo: los reportes de venta y cartera inflaban ~4,600 USD. Las facturas originales 726 y 755, sus pagos y sus conceptos quedaron intactos.
+
 ## [13.438.2] - 2026-08-06
 - Facturación · Bandeja "Embarques sin factura": ya no aparecen embarques legacy que sí están facturados (ELIMP00007, 00022, 00024, 00239, 00294). El respaldo histórico había dejado copias sueltas de los conceptos de venta en estado *pendiente*: como fotocopias del mismo cargo olvidadas en la bandeja de pendientes. Se marcaron como borradas (borrado lógico, reversible) las copias pendientes que tenían un gemelo ya facturado; no se tocaron conceptos facturados, proformas ni facturas.
 
