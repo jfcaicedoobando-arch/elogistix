@@ -1,5 +1,8 @@
 # Changelog
 
+
+## [13.438.5] - 2026-08-06
+- Build · Se restauró la constante `APP_VERSION`, que había quedado vacía y rompía la compilación.
 ## [13.438.4] - 2026-08-06
 - Facturación · Embarque legacy ELIMP00162: los 5 cargos en dólares que seguían "pendientes" (728 USD) se ligaron a la proforma PRO-2026-0001, porque son exactamente lo que ya cobró y pagó la factura 847. Además se marcó como borrada (borrado lógico, reversible) la factura legacy 848 (28,420 MXN, sin timbre ni pagos) y su proforma, ya que el mismo flete terrestre está timbrado en F953: era la misma cuenta cobrada dos veces, una a mano y otra por el sistema. La factura 847 y la timbrada F953 quedaron intactas.
 
