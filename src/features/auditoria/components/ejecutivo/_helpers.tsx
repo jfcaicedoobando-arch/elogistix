@@ -2,6 +2,7 @@
  * Helpers visuales internos compartidos por las tarjetas del resumen ejecutivo
  * de Auditoría. Antes vivían inline en AuditoriaEjecutivoTab.
  */
+import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatters";
 import { KpiCard } from "@/components/shared/KpiCard";
 import type { KpiVariant } from "@/components/shared/kpiCard.tokens";

@@ -42,7 +42,7 @@ export function pickerTriggerClass({ showError, disabled, empty }: PickerTrigger
 }
 
 /** Clases del texto de error debajo de un picker MX. */
-export const pickerErrorClass = "text-xs text-destructive";
+export const pickerErrorClass = FIELD_ERROR_CLASS;
 
 /**
  * Clases del contenedor externo (trigger + mensaje de error).

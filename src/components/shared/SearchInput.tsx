@@ -1,22 +1,42 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface SearchInputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  /** Clases extra para el `<input>` (ancho, alto compacto en toolbars densas). */
+  inputClassName?: string;
+  "aria-label"?: string;
 }
 
-export default function SearchInput({ value, onChange, placeholder = "Buscar...", className }: SearchInputProps) {
+/**
+ * Buscador estándar de listados y toolbars.
+ *
+ * v13.430.0 — antes forzaba `bg-muted/30 rounded-lg`, así que se veía distinto
+ * a cualquier otro campo del formulario. Ahora hereda la superficie y el anillo
+ * de foco canónicos de `Input`; solo agrega el icono de lupa.
+ */
+export default function SearchInput({
+  value,
+  onChange,
+  placeholder = "Buscar...",
+  className,
+  inputClassName,
+  "aria-label": ariaLabel,
+}: SearchInputProps) {
   return (
-    <div className={`relative ${className ?? ''}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className={cn("relative", className)}>
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
+        type="search"
         placeholder={placeholder}
+        aria-label={ariaLabel ?? placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-9 bg-muted/30 rounded-lg"
+        className={cn("pl-9", inputClassName)}
       />
     </div>
   );
