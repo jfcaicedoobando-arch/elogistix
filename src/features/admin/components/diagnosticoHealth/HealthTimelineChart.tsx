@@ -5,6 +5,8 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
+import { CHART } from "@/lib/chartTokens";
+
 
 export interface TimelinePoint {
   label: string;
