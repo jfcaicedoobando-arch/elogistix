@@ -81,7 +81,7 @@ export default function AgenteTarifas() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         icon={<FileSpreadsheet className="h-6 w-6 text-accent" />}
         title="Mis Tarifas Marítimas"

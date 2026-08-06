@@ -64,7 +64,7 @@ export default function PortalCotizaciones() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         icon={<ClipboardList className="h-6 w-6 text-accent" />}
         title="Mis Cotizaciones"

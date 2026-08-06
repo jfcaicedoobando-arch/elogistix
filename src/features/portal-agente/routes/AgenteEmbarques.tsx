@@ -78,7 +78,7 @@ export default function AgenteEmbarques() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         icon={<Ship className="h-6 w-6 text-accent" />}
         title="Mis Embarques"

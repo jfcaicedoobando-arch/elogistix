@@ -55,7 +55,7 @@ export default function PortalFacturaDetalle() {
   const vencida = estadoVisible === "Vencida";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <DetailHeader
         backTo={volver}
         backLabel="Volver a Facturas"
