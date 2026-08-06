@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.444.2] - 2026-08-06
+- Tesorería · Cuentas bancarias · El "Saldo actual" ya no resta los movimientos eliminados. La cuenta BBVA USD mostraba 29,433.94 USD cuando su saldo real es 38,773.54 USD, porque la vista de saldos (`v_saldos_cuentas_bancarias`) sumaba también dos movimientos borrados (un anticipo cancelado de 564.60 y un cargo manual de 8,775.00). Se agregó el filtro de borrados lógicos a la vista.
+
 ## [13.444.1] - 2026-08-06
 - Conciliación bancaria · Las tarjetas de resumen ya no cuentan los movimientos eliminados. Antes el dashboard mostraba "2 movimientos" (con montos pendientes) mientras la lista aparecía vacía, porque el conteo del servidor no excluía los borrados. Se agregó un test de regresión al guardrail de soft-delete.
 
