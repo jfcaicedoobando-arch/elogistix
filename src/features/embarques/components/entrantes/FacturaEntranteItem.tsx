@@ -27,6 +27,21 @@ interface Props {
   onEliminar: (row: FacturaEntranteRow) => void;
 }
 
+function FolioInternoChip({ row }: { row: FacturaEntranteRow }) {
+  const folio = row.proveedor_facturas?.folio_interno;
+  if (!row.proveedor_factura_id) return null;
+  return (
+    <Link
+      to={`/compras/facturas/${row.proveedor_factura_id}`}
+      className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-0.5 font-mono text-xs tabular-nums text-primary hover:bg-primary/10"
+      title="Ver la factura de proveedor en Libre Carga"
+    >
+      <LinkIcon className="h-3 w-3" />
+      {folio ?? "Ver factura"}
+    </Link>
+  );
+}
+
 function MetaEntrante({ row }: { row: FacturaEntranteRow }) {
   const total = row.total_detectado;
   return (
@@ -38,7 +53,7 @@ function MetaEntrante({ row }: { row: FacturaEntranteRow }) {
       </p>
       {(row.folio_serie || total != null) && (
         <p className="text-xs text-muted-foreground">
-          {row.folio_serie ? `Folio ${row.folio_serie}` : "Sin folio"}
+          {row.folio_serie ? `Folio proveedor ${row.folio_serie}` : "Sin folio del proveedor"}
           {total != null ? ` · ${formatCurrency(Number(total), row.moneda_detectada ?? "MXN")}` : ""}
         </p>
       )}
