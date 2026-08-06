@@ -3,6 +3,7 @@
  * Extraído de `EnviarProformaDialog` para respetar Power-of-10 #4 (≤200 líneas).
  */
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { notifyInfo } from "@/lib/ui/appFeedback";
 
 interface Props {
