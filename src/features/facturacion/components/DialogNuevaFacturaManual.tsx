@@ -51,7 +51,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
       open={open} onOpenChange={onOpenChange} icon={FilePlus2}
       title="Nueva factura manual"
       description="Para anticipos, servicios extra o cobros que no provienen de un embarque cerrado. Lo normal es facturar desde una proforma aprobada."
-      size="xl" footer={footer}
+      size="3xl" footer={footer}
     >
       <div className="space-y-5">
         <FormDialogSection flat title="Información del cliente">
