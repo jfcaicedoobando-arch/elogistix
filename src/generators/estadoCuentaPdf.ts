@@ -8,6 +8,8 @@
 import { fetchEstadoCuentaFacturas } from "@/features/facturacion/services";
 import { formatCurrency, formatDate, formatFechaHora } from "@/lib/formatters";
 import { escapeHtml as esc } from "@/lib/utils";
+import { COLORS } from "@/pdf/theme/tokens";
+
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 
 
