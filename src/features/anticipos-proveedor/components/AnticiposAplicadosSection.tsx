@@ -14,6 +14,11 @@ export function AnticiposAplicadosSection({ facturaId }: Props) {
   if (isLoading) return <ListSkeleton rows={2} />;
   if (aplicaciones.length === 0) return null;
 
+  const monedaTotal = aplicaciones[0].moneda_aplicada;
+  const total = aplicaciones
+    .filter((a) => a.moneda_aplicada === monedaTotal)
+    .reduce((acc, a) => acc + Number(a.monto_aplicado), 0);
+
   return (
     <Card>
       <CardHeader className="py-4">
