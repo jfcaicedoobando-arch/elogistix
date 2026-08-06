@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { EstadoAprobacionDot } from "./EstadoAprobacionDot";
 import { useAprobarFactura } from "@/features/cxp/hooks/useAprobarFactura";
 import { useState } from "react";
 import type { FacturaCxP } from "@/features/cxp/services";
@@ -49,14 +48,12 @@ export function StatusActionBar({
   return (
     <div className="px-6 py-3 border-b bg-accent/5 flex items-center justify-between gap-3 flex-wrap">
       <div className="flex items-center gap-3 min-w-0">
-        <EstadoAprobacionDot estado={f.estado_aprobacion} cancelada={cancelada} />
+        {/* El estado de aprobación ya se comunica en el stepper del encabezado;
+            aquí sólo se muestra el motivo cuando fue rechazada. */}
         {f.estado_aprobacion === "rechazada" && f.motivo_rechazo && (
-          <>
-            <span className="h-4 w-px bg-border" aria-hidden />
-            <span className="text-xs text-muted-foreground italic truncate max-w-md">
-              Motivo: {f.motivo_rechazo}
-            </span>
-          </>
+          <span className="text-xs text-muted-foreground italic truncate max-w-md">
+            Motivo del rechazo: {f.motivo_rechazo}
+          </span>
         )}
       </div>
 
