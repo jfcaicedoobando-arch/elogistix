@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.443.1] - 2026-08-06
+- Anticipos a proveedor · El selector de cuenta bancaria ya no repite el nombre del banco cuando el alias de la cuenta ya lo incluye (antes: "BASE USD — BASE (USD)", ahora: "BASE USD (USD)").
+
 ## [13.443.0] - 2026-08-06
 - Puertos · El interruptor de activar/desactivar puertos (y el alta y borrado) ya funciona para administradores y personal operativo; antes sólo el super administrador tenía permiso y el cambio se revertía sin avisar. Además, si alguna vez el permiso falta, ahora aparece un mensaje claro en lugar de fallar en silencio.
 
