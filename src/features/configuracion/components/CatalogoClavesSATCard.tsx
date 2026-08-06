@@ -71,12 +71,12 @@ export function CatalogoClavesSATCard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[28%]">Nombre</TableHead>
-                <TableHead className="w-[14%]">Clave SAT</TableHead>
-                <TableHead className="w-[14%]">Tipo IVA</TableHead>
-                <TableHead className="w-[14%]">Unidad SAT</TableHead>
-                <TableHead className="w-[10%]">Activo</TableHead>
-                <TableHead className="w-[12%] text-right">Acciones</TableHead>
+                <TableHead className="w-[28%] text-label uppercase text-muted-foreground">Nombre</TableHead>
+                <TableHead className="w-[14%] text-label uppercase text-muted-foreground">Clave SAT</TableHead>
+                <TableHead className="w-[14%] text-label uppercase text-muted-foreground">Tipo IVA</TableHead>
+                <TableHead className="w-[14%] text-label uppercase text-muted-foreground">Unidad SAT</TableHead>
+                <TableHead className="w-[10%] text-label uppercase text-muted-foreground">Activo</TableHead>
+                <TableHead className="w-[12%] text-right text-label uppercase text-muted-foreground">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -98,7 +98,7 @@ export function CatalogoClavesSATCard() {
                          onCancel={() => setEditingId(null)}
                          onSave={handleUpdate} />
               ) : (
-                <TableRow key={r.id}>
+                <TableRow key={r.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium">{r.patron}</TableCell>
                   <TableCell className="font-mono text-xs">{r.clave_sat}</TableCell>
                   <TableCell><Badge variant={TIPO_IVA_VARIANT[r.tipo_iva]}>{TIPO_IVA_LABEL[r.tipo_iva]}</Badge></TableCell>

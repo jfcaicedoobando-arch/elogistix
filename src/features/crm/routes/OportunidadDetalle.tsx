@@ -8,6 +8,7 @@ import { OportunidadDetalleContent } from "@/features/crm/components/oportunidad
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { useDocumentTitle } from "@/hooks/shared";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function OportunidadDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -20,12 +21,17 @@ export default function OportunidadDetalle() {
   }
   if (!op) {
     return (
-      <ErrorState
-        title="Oportunidad no encontrada"
-        description="La oportunidad que buscas no existe o fue eliminada."
-        className="m-6"
-      />
+      <PageContainer>
+        <ErrorState
+          title="Oportunidad no encontrada"
+          description="La oportunidad que buscas no existe o fue eliminada."
+        />
+      </PageContainer>
     );
   }
-  return <OportunidadDetalleContent op={op} etapas={etapas} />;
+  return (
+    <PageContainer>
+      <OportunidadDetalleContent op={op} etapas={etapas} />
+    </PageContainer>
+  );
 }
