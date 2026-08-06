@@ -2,7 +2,8 @@
  * Encabezado de la tabla de Estado de cuenta con orden por columna.
  * Anchos fijos para que ningún importe se parta en 1366 px.
  */
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OrdenEstadoCuenta, SortEstadoCuenta } from "../services/estadoCuentaAging";
@@ -35,17 +36,17 @@ export function EstadoCuentaTableHead({ sort, onSort }: Props) {
   return (
     <TableHeader>
       <TableRow>
-        <TableHead className="w-8" />
-        <TableHead className="w-[92px] whitespace-nowrap">{boton("fecha", "Fecha")}</TableHead>
-        <TableHead className="w-[86px]">Folio</TableHead>
-        <TableHead className="min-w-[110px]">Concepto</TableHead>
-        <TableHead className="w-[100px] whitespace-nowrap">{boton("vencimiento", "Vence")}</TableHead>
-        <TableHead className="w-[60px] text-right whitespace-nowrap">Días</TableHead>
-        <TableHead className="w-[112px] text-right whitespace-nowrap">Cargo</TableHead>
-        <TableHead className="w-[112px] text-right whitespace-nowrap">Abono</TableHead>
-        <TableHead className="w-[112px] text-right whitespace-nowrap">{boton("saldo", "Saldo", true)}</TableHead>
-        <TableHead className="hidden w-[112px] text-right whitespace-nowrap 2xl:table-cell">Acumulado</TableHead>
-        <TableHead className="w-[104px]">Estatus</TableHead>
+        <DetailTableHead className="w-8" />
+        <DetailTableHead className="w-[92px] whitespace-nowrap">{boton("fecha", "Fecha")}</DetailTableHead>
+        <DetailTableHead className="w-[86px]">Folio</DetailTableHead>
+        <DetailTableHead className="min-w-[110px]">Concepto</DetailTableHead>
+        <DetailTableHead className="w-[100px] whitespace-nowrap">{boton("vencimiento", "Vence")}</DetailTableHead>
+        <DetailTableHead className="w-[60px] text-right whitespace-nowrap">Días</DetailTableHead>
+        <DetailTableHead className="w-[112px] text-right whitespace-nowrap">Cargo</DetailTableHead>
+        <DetailTableHead className="w-[112px] text-right whitespace-nowrap">Abono</DetailTableHead>
+        <DetailTableHead className="w-[112px] text-right whitespace-nowrap">{boton("saldo", "Saldo", true)}</DetailTableHead>
+        <DetailTableHead className="hidden w-[112px] text-right whitespace-nowrap 2xl:table-cell">Acumulado</DetailTableHead>
+        <DetailTableHead className="w-[104px]">Estatus</DetailTableHead>
       </TableRow>
     </TableHeader>
   );
