@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props {
   title: string;
@@ -17,10 +18,7 @@ export function ClienteTabSection({ title, count, actions, children }: Props) {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between gap-2 py-3">
-        <CardTitle className="text-base font-semibold">
-          {title}
-          <span className="ml-2 text-sm font-normal text-muted-foreground">({count})</span>
-        </CardTitle>
+        <SectionHeading as="h3" count={count}>{title}</SectionHeading>
         {actions}
       </CardHeader>
       <CardContent className="p-0 border-t">{children}</CardContent>
