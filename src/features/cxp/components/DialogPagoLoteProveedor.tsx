@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
+import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { usePagoProveedorLote } from "@/features/cxp/hooks/usePagoProveedorLote";
 import { metodosFor, defaultMetodo, referenciaHint, type OrigenProveedor } from "./pagoProveedorHelpers";
 import { DialogPagoLoteRenglones } from "./DialogPagoLoteRenglones";
@@ -65,6 +66,10 @@ export function DialogPagoLoteProveedor(p: Props) {
     setRenglones(repartirFifo(p.facturas, saldoTotal).renglones);
   }, [p.open, p.facturas, p.proveedorOrigen, saldoTotal]);
 
+  // TC del pago = DOF de la fecha de pago (misma política que el pago individual).
+  const esExtranjera = p.moneda !== "MXN";
+  const { data: tcDof } = useTcDofPorFecha(p.open && esExtranjera ? fecha : null, p.open && esExtranjera);
+
   const totalNum = round2(Number(total) || 0);
   const cuentasMoneda = cuentas.filter((c) => c.moneda === p.moneda);
   const cuenta = cuentas.find((c) => c.id === cuentaId) ?? null;
@@ -98,6 +103,7 @@ export function DialogPagoLoteProveedor(p: Props) {
       metodo_pago: metodo,
       referencia,
       cuenta_bancaria_id: cuentaId || null,
+      tipo_cambio_usd: esExtranjera ? tcDof?.usdMxn ?? null : null,
       notas,
       renglones,
     });
@@ -144,6 +150,9 @@ export function DialogPagoLoteProveedor(p: Props) {
             />
             <p className="text-xs text-muted-foreground">
               Saldo seleccionado: {formatCurrency(saldoTotal, p.moneda)}
+              {esExtranjera && tcDof
+                ? ` · TC DOF ${tcDof.usdMxn} (${tcDof.fecha})`
+                : ""}
             </p>
           </div>
           <div className="space-y-1.5">

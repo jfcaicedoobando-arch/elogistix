@@ -15,6 +15,7 @@ import { useCuentasBancarias } from "@/features/tesoreria";
 import { saldoDisponiblePago } from "@/features/cxp/services/pagoProveedorValidaciones";
 import { usePagoProveedorDerivados } from "./usePagoProveedorForm.derivados";
 import { usePagoProveedorCampos } from "./usePagoProveedorForm.estado";
+import { usePagoTcDof } from "./usePagoProveedorForm.tcDof";
 import {
   montoOriginalEnMonedaFactura as calcMontoOriginal,
   montoEnMonedaDeFactura,
@@ -97,11 +98,21 @@ export function usePagoProveedorForm(
     [factura?.moneda, moneda, montoNum, tcNum],
   );
 
+  // v13.446.0: el TC del pago proviene del DOF de la fecha de pago (editable).
+  const {
+    tcDof, cargandoTcDof, setTcManual, setDiffManual, aplicarTcDof,
+  } = usePagoTcDof({
+    open, fecha, showTc, tc, setTc, diffMxn, setDiffMxn, esUsdPagadoEnMxn,
+    montoEnMonedaFactura, tcFactura: tcValido(factura?.tipo_cambio_usd), tcNum,
+    pagoEditarId,
+  });
+
   // Al editar, el importe del pago original vuelve al saldo disponible.
   const montoOriginalEnMonedaFactura = useMemo(
     () => calcMontoOriginal(pagoEditar, factura?.moneda),
     [pagoEditar, factura?.moneda],
   );
+
 
   const saldoDisponible = useMemo(
     () =>
@@ -147,15 +158,17 @@ export function usePagoProveedorForm(
 
   return {
     fecha, setFecha, monto, setMonto, moneda, setMoneda,
-    tc, setTc, metodo, setMetodo, referencia, setReferencia,
-    notas, setNotas, diffMxn, setDiffMxn,
+    tc, setTc: setTcManual, metodo, setMetodo, referencia, setReferencia,
+    notas, setNotas, diffMxn, setDiffMxn: setDiffManual,
     metodosDisponibles, montoNum, saldoRestante, saldoDisponible,
     esUsdPagadoEnMxn, showTc, excede,
     montoEnMonedaFactura, bloqueadoPorTc, tcNum,
     cuentas, cuentasDeMoneda, cuentaId, setCuentaId, requiereCuenta,
     cuentaSeleccionada, validacion, modo, montoOriginalEnMonedaFactura,
     impacto, cargandoSaldoProveedor,
+    tcDof, cargandoTcDof, aplicarTcDof,
   };
+
 }
 
 export type { PagoEditable };
