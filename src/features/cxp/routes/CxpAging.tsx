@@ -29,6 +29,7 @@ import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
 import { todayLocalISO } from "@/lib/date/today";
 
 import { KpiBucket } from "./_sections/AgingKpiBucket";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 
 function exportarCsv(rows: readonly CxpAgingRow[], moneda: string) {
@@ -176,7 +177,7 @@ export default function CxpAging() {
             emptyHint="No hay facturas de proveedor con saldo abierto."
             striped
             hoverable
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </CardContent>
       </Card>

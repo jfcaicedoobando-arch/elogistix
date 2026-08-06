@@ -11,6 +11,7 @@ import { useHistorialTcDof, useUpsertTcDofManual } from "@/features/catalogos/ho
 import type { TipoCambioDof } from "@/features/catalogos/services/tipoCambioDof";
 import { formatDate } from "@/lib/formatters/dates";
 import { formatNumber } from "@/lib/formatters";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 /** Formatea un TC con 4 decimales (convención Banxico/DOF). */
 function fmtTc(valor: number | null): string {
@@ -128,7 +129,7 @@ export default function TabTipoCambioDof() {
             isLoading={isLoading}
             emptyMessage="Aún no hay publicaciones registradas"
             rowKey={(t) => t.fecha}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </div>
         <p className="text-xs text-muted-foreground">{historial.length} publicaciones en el historial (últimos 90 días).</p>

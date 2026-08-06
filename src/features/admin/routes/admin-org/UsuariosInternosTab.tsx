@@ -25,6 +25,7 @@ import { UsuariosToolbar } from "./UsuariosToolbar";
 import { UsuariosInternosDialogs } from "./UsuariosInternosDialogs";
 import { useUsuariosInternosTargets } from "./usuariosInternosTargets";
 import { TODOS, filtrarUsuarios, hayFiltrosActivos } from "./usuariosInternosFiltros";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export function UsuariosInternosTab() {
   const targets = useUsuariosInternosTargets();
@@ -179,7 +180,7 @@ export function UsuariosInternosTab() {
               : "No hay usuarios registrados."
           }
           rowKey={(u) => u.user_id}
-          density="comfortable"
+          density={TABLE_DENSITY.listado}
           tableClassName="w-full"
           initialSort={{ key: "role", dir: "asc" }}
         />

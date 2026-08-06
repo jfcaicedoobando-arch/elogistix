@@ -17,6 +17,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useDeleteSeguro, useSegurosEmbarque } from "@/features/embarques/hooks/useSegurosEmbarque";
 import type { SeguroEmbarque } from "@/features/embarques/services/seguros";
 import { DialogSeguroForm } from "./DialogSeguroForm";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   embarqueId: string;
@@ -135,7 +136,7 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
             data={seguros}
             columns={columns}
             rowKey={(r) => r.id}
-            density="comfortable"
+            density={TABLE_DENSITY.listado}
             emptyState={
               <div className="p-6">
                 <EmptyState

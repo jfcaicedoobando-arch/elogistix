@@ -21,6 +21,7 @@ import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
 import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog";
 import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
 
@@ -167,7 +168,7 @@ export default function ComprasPorAprobar() {
               isLoading={isLoading}
               emptyMessage="No hay facturas que coincidan con la búsqueda"
               rowKey={(f) => f.id}
-              density="compact"
+              density={TABLE_DENSITY.embebida}
               initialSort={{ key: "vencimiento", dir: "asc" }}
               onRowClick={(fact) => navigate(`/compras/facturas/${fact.id}`)}
             />

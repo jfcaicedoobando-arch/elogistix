@@ -29,6 +29,7 @@ import { useUsuarios } from "@/features/admin/hooks/usuario";
 import { oportunidadesColumns, activosFiltros } from "./oportunidadesTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export default function Oportunidades() {
   useDocumentTitle('Oportunidades');
@@ -158,7 +159,7 @@ export default function Oportunidades() {
                 emptyMessage="No hay oportunidades"
                 getRowHref={(o) => `/crm/oportunidades/${o.id}`}
                 rowKey={(o) => o.id}
-                density="comfortable"
+                density={TABLE_DENSITY.listado}
               />
             </CardContent>
           </Card>

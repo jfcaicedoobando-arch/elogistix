@@ -23,6 +23,7 @@ import { ToneBadge } from "@/components/shared/ToneBadge";
 
 import { todayLocalISO } from "@/lib/date/today";
 import { AgingActionBar, AgingKpiRow } from "./AgingDrillDownDialog.parts";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   proveedor: CxpAgingRow | null;
@@ -145,7 +146,7 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
                 isLoading={isLoading}
                 rowKey={(f) => f.id}
                 emptyMessage="Este proveedor no tiene facturas con saldo en esta cubeta"
-                density="compact"
+                density={TABLE_DENSITY.embebida}
                 striped
                 hoverable
               />

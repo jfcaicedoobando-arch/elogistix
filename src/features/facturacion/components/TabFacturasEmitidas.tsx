@@ -22,6 +22,7 @@ import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
 import type { ChipItem } from "@/hooks/shared/useTableFilters";
 import type { Database } from "@/types/db";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = [
@@ -175,7 +176,7 @@ export function TabFacturasEmitidas(p: Props) {
               />
             }
             rowKey={(f) => f.id}
-            density="comfortable"
+            density={TABLE_DENSITY.listado}
             getRowHref={(f) => `/facturacion/${f.id}`}
             rowSelection={selection.rowSelection}
             onRowSelectionChange={selection.onRowSelectionChange}

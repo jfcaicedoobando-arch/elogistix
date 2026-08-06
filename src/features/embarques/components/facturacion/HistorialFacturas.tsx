@@ -8,6 +8,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import type { ProformaConFactura } from "@/features/proformas/services";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Factura {
   id: string;
@@ -91,7 +92,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
           columns={columns}
           data={facturas}
           rowKey={(f) => f.id}
-          density="compact"
+          density={TABLE_DENSITY.embebida}
           getRowHref={(f) => `/facturacion/${f.id}`}
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
           emptyIcon={Receipt}

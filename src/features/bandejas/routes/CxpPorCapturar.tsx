@@ -21,6 +21,7 @@ import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import EmptyState from "@/components/empty/EmptyState";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 // Mapeo entre ColumnDef.id de DataTable y los OrdenarPor del hook de filtros.
 const COL_TO_SORT: Record<string, OrdenarPor> = {
@@ -142,7 +143,7 @@ export default function CxpPorCapturar() {
               data={filters.filtradas}
               isLoading={isLoading}
               rowKey={(r) => r.embarque_id}
-              density="compact"
+              density={TABLE_DENSITY.embebida}
               sortMode="server"
               controlledSort={controlledSort}
               onSortChange={handleSortChange}

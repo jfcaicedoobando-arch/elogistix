@@ -29,6 +29,7 @@ import type { EstadoComision, ComisionDevengada } from "@/features/comisiones/se
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 
 const ESTADO_VALUES = ["todos", "Devengada", "Liquidada", "Cancelada"] as const;
@@ -173,7 +174,7 @@ export default function Comisiones() {
                 controlledSort={paged.controlledSort}
                 onSortChange={paged.setSort}
                 pagination={paged.pagination}
-                density="comfortable"
+                density={TABLE_DENSITY.listado}
               />
             </CardContent>
           </Card>

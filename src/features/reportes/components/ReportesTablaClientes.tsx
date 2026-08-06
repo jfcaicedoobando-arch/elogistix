@@ -5,6 +5,7 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { MARGIN_THRESHOLDS } from "@/constants/reportes";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
 
@@ -66,7 +67,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
               if (key && SORT_KEYS.includes(key as SortField)) onSort(key as SortField);
             }}
             emptyMessage="Sin datos en el periodo seleccionado"
-            density="compact"
+            density={TABLE_DENSITY.embebida}
             mobileCard={(c) => (
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">

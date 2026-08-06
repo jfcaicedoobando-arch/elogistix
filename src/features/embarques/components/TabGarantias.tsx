@@ -20,6 +20,7 @@ import { diffDias } from "./garantias/garantiasUtils";
 import { GarantiasKpiCards } from "./garantias/GarantiasKpiCards";
 import { useGarantiasColumns, type GarantiaRow } from "@/features/embarques/hooks/useGarantiasColumns";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   embarqueId: string;
@@ -98,7 +99,7 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
             columns={columns}
             data={rows}
             rowKey={(r) => r.id}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
             tableClassName="w-full"
             emptyState={
               <div className="p-6">

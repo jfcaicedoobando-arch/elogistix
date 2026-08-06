@@ -9,6 +9,7 @@ import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { FacturaProgramable, SemanaPagosProgramados } from "@/features/tesoreria/domain/pagosProgramados";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import EmptyState from "@/components/empty/EmptyState";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   semanas: SemanaPagosProgramados[];
@@ -44,7 +45,7 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
                 columns={columns}
                 data={s.facturas}
                 rowKey={(r) => r.id}
-                density="compact"
+                density={TABLE_DENSITY.embebida}
                 hoverable={false}
                 footer={() => (
                   <div className="flex flex-wrap gap-x-6 gap-y-1 py-3 px-4 bg-muted/30">
@@ -69,7 +70,7 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
           </SectionHeading>
           <Card>
             <CardContent className="p-0">
-              <DataTable columns={columns} data={sinFecha} rowKey={(r) => r.id} density="compact" hoverable={false} />
+              <DataTable columns={columns} data={sinFecha} rowKey={(r) => r.id} density={TABLE_DENSITY.embebida} hoverable={false} />
             </CardContent>
           </Card>
         </section>

@@ -31,6 +31,7 @@ import { ClienteMobileCard } from "@/features/cliente/components/ClienteMobileCa
 import EmptyState from "@/components/empty/EmptyState";
 import { useState, useMemo } from "react";
 import { useDocumentTitle } from "@/hooks/shared";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export default function Clientes() {
   useDocumentTitle("Clientes");
@@ -127,7 +128,7 @@ export default function Clientes() {
               }
               getRowHref={(c) => `/clientes/${c.id}`}
               rowKey={(c) => c.id}
-              density="comfortable"
+              density={TABLE_DENSITY.listado}
               mobileCard={(c) => <ClienteMobileCard c={c} />}
               pagination={{
                 page,

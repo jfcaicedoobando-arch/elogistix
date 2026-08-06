@@ -9,6 +9,7 @@ import type { Enums } from "@/types/db";
 import { proveedorColumns } from "./proveedorTableColumns";
 import EmptyState from "@/components/empty/EmptyState";
 import { Truck } from "lucide-react";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 
@@ -64,7 +65,7 @@ export function ProveedorTable({ tipo, search, origen, onSelect, onTotalChange, 
           }
           onRowClick={(p) => onSelect(p.id)}
           rowKey={(p) => p.id}
-          density="comfortable"
+          density={TABLE_DENSITY.listado}
           className="pb-24 sm:pb-0"
           mobileCard={(p) => (
             <div className="flex items-start justify-between gap-2">

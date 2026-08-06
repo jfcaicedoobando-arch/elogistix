@@ -10,6 +10,7 @@ import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { NavieraFormDialog } from "@/components/shared/NavieraFormDialog";
 import type { Naviera } from "@/features/catalogos/services";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export default function TabNavieras() {
   const { data: navieras = [], isLoading } = useAllNavieras();
@@ -90,7 +91,7 @@ export default function TabNavieras() {
             emptyMessage="No se encontraron navieras"
             rowKey={(n) => n.id}
             rowClassName={(n) => !n.activo ? "opacity-50" : ""}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </div>
         <p className="text-xs text-muted-foreground">{navieras.length} navieras en total · {navieras.filter(n => n.activo).length} activas</p>

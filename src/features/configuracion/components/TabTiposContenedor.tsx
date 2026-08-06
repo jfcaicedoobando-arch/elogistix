@@ -8,6 +8,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useAllTiposContenedor, useAdminTiposContenedor } from "@/features/catalogos/hooks";
 import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type TipoContenedor = { id: string; code: string; name: string; activo: boolean };
 
@@ -82,7 +83,7 @@ export default function TabTiposContenedor() {
             emptyMessage="No se encontraron tipos de contenedor"
             rowKey={(t) => t.id}
             rowClassName={(t) => !t.activo ? "opacity-50" : ""}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </div>
         <p className="text-xs text-muted-foreground">{tipos.length} tipos en total · {tipos.filter(t => t.activo).length} activos</p>

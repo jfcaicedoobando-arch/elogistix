@@ -6,6 +6,7 @@ import type { HallazgoAuditoria, ReglaAuditoria, SeveridadAuditoria } from "@/fe
 import { cn } from "@/lib/utils";
 import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 const reglaToTab: Record<ReglaAuditoria, string> = {
   docs_faltantes: "documentos",
@@ -100,7 +101,7 @@ export function HallazgoTabla({ hallazgos }: Props) {
         columns={cols}
         data={hallazgos}
         rowKey={(h) => `${h.embarque_id}-${h.regla}`}
-        density="compact"
+        density={TABLE_DENSITY.embebida}
       />
     </div>
   );

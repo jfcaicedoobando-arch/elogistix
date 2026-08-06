@@ -4,6 +4,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, toTitleCase, formatDate } from "@/lib/formatters";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export interface ProveedorOperacion {
   embarqueId: string;
@@ -65,7 +66,7 @@ export function ProveedorOperacionesTable({ operaciones }: Props) {
       data={pageItems}
       getRowHref={(o) => `/embarques/${o.embarqueId}`}
       rowKey={(o) => `${o.embarqueId}-${o.__idx}`}
-      density="compact"
+      density={TABLE_DENSITY.embebida}
       pagination={{
         page,
         totalPages,

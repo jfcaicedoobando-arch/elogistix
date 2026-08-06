@@ -16,6 +16,7 @@ import { nombreDesdeEmail } from "@/lib/formatters/text";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { esBorradorVacio } from "./esBorradorVacio";
 import { getEstadoUnificado } from "@/lib/domain/estadoUnificado";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   proformas: ProformaConFactura[];
@@ -159,7 +160,7 @@ export function HistorialProformas({
           columns={columns}
           data={proformas}
           rowKey={(p) => p.id}
-          density="compact"
+          density={TABLE_DENSITY.embebida}
           getRowHref={(p) => `/proformas/${p.id}`}
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
           emptyIcon={Receipt}

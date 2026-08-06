@@ -19,6 +19,7 @@ import { useEmbarquesPageController, calcularEstadoEmbarque } from "@/features/e
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
   const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
@@ -138,7 +139,7 @@ export default function Embarques() {
                 sortMode="server"
                 controlledSort={{ key: sortKey, dir: sortDir }}
                 onSortChange={handleSortChange}
-                density="comfortable"
+                density={TABLE_DENSITY.listado}
                 className="pb-24 sm:pb-0"
                 mobileCard={(e) => {
                   const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);

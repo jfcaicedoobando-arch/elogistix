@@ -20,6 +20,7 @@ import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
 import { buildSelectColumn } from "./hallazgosTablaSelectColumn";
 import { todayLocalISO } from "@/lib/date/today";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   visibles: HallazgoAuditoria[];
@@ -173,7 +174,7 @@ export function HallazgosTabla(props: Props) {
         columns={cols}
         data={visibles}
         rowKey={(h) => `${h.embarque_id}-${h.regla}-${start + visibles.indexOf(h)}`}
-        density="compact"
+        density={TABLE_DENSITY.embebida}
         rowClassName={(h) => getRevision(h)?.estado_revision === "revisado" ? "opacity-70" : ""}
         emptyMessage="Sin hallazgos que coincidan con los filtros."
       />

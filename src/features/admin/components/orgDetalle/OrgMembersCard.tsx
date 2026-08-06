@@ -23,6 +23,7 @@ import {
   ROLE_LABELS,
 } from "@/features/admin/domain/roles/roleCatalog";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface OrgMembersCardProps {
   members: MemberRow[];
@@ -113,7 +114,7 @@ export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onR
           isLoading={loading}
           emptyMessage="Sin miembros."
           rowKey={(m) => m.id}
-          density="comfortable"
+          density={TABLE_DENSITY.listado}
           tableClassName="w-full"
         />
       </CardContent>

@@ -10,6 +10,7 @@ import { AdminOrganizacionesFilters } from "@/features/admin/components/AdminOrg
 import { NuevaOrganizacionDialog } from "@/features/admin/components/NuevaOrganizacionDialog";
 import { buildAdminOrganizacionesColumns } from "@/features/admin/components/AdminOrganizacionesColumns";
 import { useDocumentTitle } from "@/hooks/shared";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export default function AdminOrganizaciones() {
   useDocumentTitle('Organizaciones');
@@ -47,7 +48,7 @@ export default function AdminOrganizaciones() {
           isLoading={data.isLoading}
           emptyMessage="No se encontraron organizaciones con los filtros aplicados."
           rowKey={(o) => o.id}
-          density="comfortable"
+          density={TABLE_DENSITY.listado}
           getRowHref={(o) => `/admin/organizaciones/${o.id}`}
         />
       </div>

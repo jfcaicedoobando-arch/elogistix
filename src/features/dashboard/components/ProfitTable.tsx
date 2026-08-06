@@ -8,6 +8,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import type { EmbarqueConProfit } from "@/features/dashboard/hooks";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   embarques: EmbarqueConProfit[];
@@ -92,7 +93,7 @@ export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: P
             getRowHref={(e) => `/embarques/${e.id}`}
             rowKey={(e) => e.id}
             skeletonRows={4}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </div>
       </CardContent>

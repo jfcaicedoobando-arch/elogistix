@@ -8,6 +8,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useAllPuertos, useAdminPuertos } from "@/features/catalogos/hooks";
 import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type Puerto = { id: string; code: string; name: string; country: string; activo: boolean };
 
@@ -88,7 +89,7 @@ export default function TabPuertos() {
             emptyMessage="No se encontraron puertos"
             rowKey={(p) => p.id}
             rowClassName={(p) => !p.activo ? "opacity-50" : ""}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </div>
         <p className="text-xs text-muted-foreground">{puertos.length} puertos en total · {puertos.filter(p => p.activo).length} activos</p>
