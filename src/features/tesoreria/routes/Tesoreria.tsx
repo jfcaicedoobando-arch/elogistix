@@ -1,11 +1,14 @@
-import { Card, CardContent } from "@/components/ui/card";
+/**
+ * Dashboard de Tesorería: saldo consolidado, cartera 30 días, curva de flujo
+ * proyectado y top de cartera vencida (CxC/CxP).
+ */
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
 import { Link } from "react-router-dom";
-import { Wallet, ArrowRight, FileText, TrendingUp } from "lucide-react";
+import { Wallet, ArrowRight, FileText, TrendingUp, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
-import { useResumenTesoreria } from "@/features/tesoreria/hooks";
+import { useMovimientosPendientes, useResumenTesoreria } from "@/features/tesoreria/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReporteTesoreriaDocument se carga dinámicamente en el handler.
@@ -15,57 +18,51 @@ import { ROUTES } from "@/constants/routes";
 import { todayLocalISO } from "@/lib/date/today";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
 import { formatFechaEs } from "@/lib/formatters/dates";
-import { SectionHeading } from "@/components/shared/SectionHeading";
-
-function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "warn" | "danger" | "success" }) {
-  const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
-  return (
-    <Card>
-      <CardContent density="tight">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={`text-lg font-semibold tabular-nums ${t}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
+import { TesoreriaKpis } from "./_sections/TesoreriaKpis";
+import { TesoreriaFlujoMonedas } from "./_sections/TesoreriaFlujoMonedas";
+import { TesoreriaFlujoChart } from "./_sections/TesoreriaFlujoChart";
+import { TesoreriaTopCartera } from "./_sections/TesoreriaTopCartera";
 
 export default function Tesoreria() {
   const { data, isLoading, isError, refetch } = useResumenTesoreria();
+  const pendientesQ = useMovimientosPendientes();
+  const pendientes = pendientesQ.data ?? 0;
+  const hoy = todayLocalISO();
 
   const handlePdf = async () => {
     if (!data) return;
-    const fecha = todayLocalISO();
     const { ReporteTesoreriaDocument } = await import("@/pdf/documents/ReporteTesoreriaDocument");
     await descargarPdf(
-      <ReporteTesoreriaDocument
-        fechaCorte={fecha}
-        resumen={data}
-      />,
-      await withOrgPrefix(`Reporte_Tesoreria_${fecha}.pdf`),
+      <ReporteTesoreriaDocument fechaCorte={hoy} resumen={data} />,
+      await withOrgPrefix(`Reporte_Tesoreria_${hoy}.pdf`),
     );
   };
-
 
   return (
     <PageContainer>
       <PageHeader
         title="Tesorería"
-        description="Saldo bancario, cartera y flujo esperado a 30 días"
+        description={`Saldo bancario, cartera y flujo esperado · saldos al ${formatFechaEs(hoy)}`}
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={handlePdf} disabled={!data}>
-              <FileText className="h-4 w-4 mr-2" /> Reporte PDF
+              <FileText className="mr-2 h-4 w-4" /> Reporte PDF
             </Button>
             <Button variant="outline" asChild>
-              <Link to={ROUTES.TESORERIA_CUENTAS}><Wallet className="h-4 w-4 mr-2" /> Cuentas</Link>
+              <Link to={ROUTES.TESORERIA_CUENTAS}><Wallet className="mr-2 h-4 w-4" /> Cuentas</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to={ROUTES.TESORERIA_FLUJO}><TrendingUp className="h-4 w-4 mr-2" /> Flujo 90 días</Link>
+              <Link to={ROUTES.TESORERIA_FLUJO}><TrendingUp className="mr-2 h-4 w-4" /> Flujo 90 días</Link>
             </Button>
             <Button asChild>
-              <Link to={ROUTES.TESORERIA_CONCILIACION}>Conciliación <ArrowRight className="h-4 w-4 ml-2" /></Link>
+              <Link to={ROUTES.TESORERIA_CONCILIACION}>
+                Conciliación
+                {pendientes > 0 ? (
+                  <Badge variant="warning" className="ml-2">{pendientes}</Badge>
+                ) : null}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
           </div>
         }
@@ -80,19 +77,19 @@ export default function Tesoreria() {
         errorTitle="No se pudo cargar el resumen de tesorería"
       >
         {data ? (
-        <>
-          <section>
-            <div className="flex items-center justify-between mb-2">
-              <SectionHeading as="h3" variant="overline">Saldos en bancos</SectionHeading>
-              {data.tipo_cambio_usd ? (
-                <Badge variant="info">
-                  TC DOF ${data.tipo_cambio_usd.toFixed(4)}
-                  {data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""}
-                </Badge>
-              ) : null}
+          <>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Badge variant={data.tipo_cambio_usd ? "info" : "secondary"}>
+                {data.tipo_cambio_usd
+                  ? `TC DOF $${data.tipo_cambio_usd.toFixed(4)}${
+                      data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""
+                    }`
+                  : "TC DOF no disponible"}
+              </Badge>
             </div>
+
             {data.saldo_bancos_incompleto && (
-              <Alert variant="warning" className="mb-2">
+              <Alert variant="warning">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   No hay tipo de cambio confiable: el saldo bancario total excluye{" "}
@@ -104,74 +101,64 @@ export default function Tesoreria() {
                 </AlertDescription>
               </Alert>
             )}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {data.cuentas.length === 0 ? (
-                <Card><CardContent density="compact" className="text-sm text-muted-foreground">Sin cuentas. <Link to={ROUTES.TESORERIA_CUENTAS} className="text-accent underline">Da de alta una</Link>.</CardContent></Card>
-              ) : data.cuentas.map((c) => (
-                <Card key={c.id}>
-                  <CardContent density="tight">
-                    <p className="text-xs text-muted-foreground">{c.banco} · {c.alias}</p>
-                    <p className="text-lg font-semibold tabular-nums">{formatCurrency(c.saldo, c.moneda)}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
 
-          <section>
-            <SectionHeading as="h3" variant="overline" className="mb-2">Flujo esperado 30 días</SectionHeading>
-            {/* Ola 9: 6 stats en grilla de 4 dejaban una fila coja con dos huecos.
-                Con 3 columnas quedan dos filas parejas y se lee por moneda:
-                fila 1 = MXN (cobrar / pagar / neto), fila 2 = USD. */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              <Stat label="Por cobrar MXN" value={formatCurrency(data.flujo.por_cobrar_mxn, "MXN")} tone="success" />
-              <Stat label="Por pagar MXN" value={formatCurrency(data.flujo.por_pagar_mxn, "MXN")} tone="warn" />
-              <Stat label="Flujo neto MXN" value={formatCurrency(data.flujo.flujo_neto_mxn, "MXN")} tone={data.flujo.flujo_neto_mxn >= 0 ? "success" : "danger"} />
-              <Stat label="Por cobrar USD" value={formatCurrency(data.flujo.por_cobrar_usd, "USD")} tone="success" />
-              <Stat label="Por pagar USD" value={formatCurrency(data.flujo.por_pagar_usd, "USD")} tone="warn" />
-              <Stat label="Flujo neto USD" value={formatCurrency(data.flujo.flujo_neto_usd, "USD")} tone={data.flujo.flujo_neto_usd >= 0 ? "success" : "danger"} />
-            </div>
-          </section>
+            {pendientes > 0 && (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="flex flex-wrap items-center gap-2">
+                  <span>
+                    Hay <strong>{pendientes}</strong> movimiento{pendientes === 1 ? "" : "s"} bancario
+                    {pendientes === 1 ? "" : "s"} sin conciliar.
+                  </span>
+                  <Link to={ROUTES.TESORERIA_CONCILIACION} className="text-accent hover:underline">
+                    Ir a conciliación
+                  </Link>
+                </AlertDescription>
+              </Alert>
+            )}
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card>
-              <CardContent density="compact">
-                <SectionHeading as="h3" className="mb-3">Top 5 deudores (vencidos)</SectionHeading>
-                {data.top_deudores.length === 0
-                  ? <p className="text-sm text-muted-foreground">Sin facturas vencidas 🎉</p>
-                  : (
-                    <ul className="space-y-1.5 text-sm">
-                      {data.top_deudores.map((d, i) => (
-                        <li key={i} className="flex justify-between border-b last:border-0 pb-1.5">
-                          <span className="truncate flex-1">{d.nombre}</span>
-                          <span className="tabular-nums text-destructive font-medium ml-2">{formatCurrency(d.saldo, d.moneda)}</span>
-                          <span className="text-xs text-muted-foreground ml-2 w-14 text-right">{d.dias}d</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent density="compact">
-                <SectionHeading as="h3" className="mb-3">Top 5 proveedores por pagar</SectionHeading>
-                {data.top_acreedores.length === 0
-                  ? <p className="text-sm text-muted-foreground">Sin facturas próximas a vencer.</p>
-                  : (
-                    <ul className="space-y-1.5 text-sm">
-                      {data.top_acreedores.map((d, i) => (
-                        <li key={i} className="flex justify-between border-b last:border-0 pb-1.5">
-                          <span className="truncate flex-1">{d.nombre}</span>
-                          <span className="tabular-nums text-warning font-medium ml-2">{formatCurrency(d.saldo, d.moneda)}</span>
-                          <span className="text-xs text-muted-foreground ml-2 w-14 text-right">{d.dias}d</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-              </CardContent>
-            </Card>
-          </div>
-        </>
+            <TesoreriaKpis data={data} />
+
+            {data.cuentas.length === 0 ? (
+              <Alert>
+                <AlertDescription>
+                  Aún no hay cuentas bancarias.{" "}
+                  <Link to={ROUTES.TESORERIA_CUENTAS} className="text-accent underline">
+                    Da de alta una
+                  </Link>{" "}
+                  para ver el saldo real.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
+            <div className="grid gap-4 xl:grid-cols-[1fr_26rem]">
+              <TesoreriaFlujoChart />
+              <TesoreriaFlujoMonedas flujo={data.flujo} />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <TesoreriaTopCartera
+                titulo="Top 5 deudores (vencidos)"
+                items={data.top_deudores}
+                vacio="Sin facturas vencidas."
+                tono="cobrar"
+                totalVencido={data.cartera_vencida_total_mxn}
+                countVencido={data.cartera_vencida_count}
+                verTodoLabel="Ver cobranza"
+                verTodoTo={ROUTES.CARTERA}
+              />
+              <TesoreriaTopCartera
+                titulo="Top 5 proveedores por pagar"
+                items={data.top_acreedores}
+                vacio="Sin facturas vencidas."
+                tono="pagar"
+                totalVencido={data.cxp_vencidas_total_mxn}
+                countVencido={data.cxp_vencidas_count}
+                verTodoLabel="Ver antigüedad CxP"
+                verTodoTo={ROUTES.COMPRAS_AGING}
+              />
+            </div>
+          </>
         ) : null}
       </AsyncBoundary>
     </PageContainer>

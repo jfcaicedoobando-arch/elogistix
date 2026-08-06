@@ -21,3 +21,4 @@ export {
 export { useResumenTesoreria } from "./useResumenTesoreria";
 export { useFlujoProyectado } from "./useFlujoProyectado";
 ;
+export * from "./useMovimientosPendientes";
