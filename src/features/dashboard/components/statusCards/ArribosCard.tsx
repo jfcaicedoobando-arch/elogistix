@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarDays, TrendingUp, Ship, CheckCircle2, Info } from "lucide-react";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { useIsMobile } from "@/hooks/shared/useIsMobile";
 import { ProfitTooltipContent, CoberturaTooltipContent } from "./ArribosCardTooltips";
 
@@ -107,7 +108,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
             <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-primary/80">
               <CalendarDays className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="text-sm font-semibold text-foreground">Arribos este mes</span>
+            <SectionHeading as="h3" className="inline-flex">Arribos este mes</SectionHeading>
           </div>
 
           <div className={`grid ${hideFinancials ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"} gap-3 sm:gap-6 flex-1`}>
