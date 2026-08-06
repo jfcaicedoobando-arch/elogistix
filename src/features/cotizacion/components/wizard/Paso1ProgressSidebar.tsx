@@ -3,6 +3,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { Check, Circle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
@@ -90,7 +91,7 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
     <aside className="hidden lg:block sticky top-4 self-start w-56 shrink-0">
       <div className="rounded-lg border bg-card p-4 space-y-3">
         <div className="space-y-1">
-          <h3 className="text-sm font-semibold">Progreso del Paso 1</h3>
+          <SectionHeading as="h3">Progreso del Paso 1</SectionHeading>
           <p className="text-xs text-muted-foreground">
             {completas} de {total} completas
           </p>

@@ -18,6 +18,7 @@ import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
+import EmptyState from "@/components/empty/EmptyState";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 
@@ -128,16 +129,12 @@ export default function CxpPorCapturar() {
       <Card>
         <CardContent className="p-0">
           {!isLoading && data.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-              <Inbox className="h-10 w-10 text-muted-foreground mb-3" />
-              <h3 className="text-base font-semibold">Sin embarques pendientes de captura</h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                Cuando operaciones presupueste costos en un embarque, aparecerá aquí para capturar las facturas del proveedor.
-              </p>
-              <Button asChild variant="outline" size="sm" className="mt-4">
-                <Link to="/embarques">Ver todos los embarques</Link>
-              </Button>
-            </div>
+            <EmptyState
+              icon={Inbox}
+              title="Sin embarques pendientes de captura"
+              description="Cuando operaciones presupueste costos en un embarque, aparecerá aquí para capturar las facturas del proveedor."
+              secondaryAction={{ label: "Ver todos los embarques", onClick: () => navigate("/embarques"), variant: "outline" }}
+            />
           ) : (
             <DataTable
               columns={columns}

@@ -8,6 +8,7 @@ import { DataTable, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { FacturaProgramable, SemanaPagosProgramados } from "@/features/tesoreria/domain/pagosProgramados";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import EmptyState from "@/components/empty/EmptyState";
 
 interface Props {
   semanas: SemanaPagosProgramados[];
@@ -19,12 +20,12 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
   if (semanas.length === 0 && sinFecha.length === 0) {
     return (
       <Card>
-        <CardContent className="py-12 flex flex-col items-center justify-center text-center">
-          <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium">Sin pagos para mostrar</h3>
-          <p className="text-sm text-muted-foreground">
-            Las facturas de proveedor con fecha de vencimiento o programada aparecerán aquí.
-          </p>
+        <CardContent className="p-0">
+          <EmptyState
+            icon={Inbox}
+            title="Sin pagos para mostrar"
+            description="Las facturas de proveedor con fecha de vencimiento o programada aparecerán aquí."
+          />
         </CardContent>
       </Card>
     );

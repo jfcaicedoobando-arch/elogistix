@@ -18,6 +18,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatFechaEs } from "@/lib/formatters/dates";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 const GraficoFlujoProyectado = lazy(() => import("@/features/tesoreria/components/GraficoFlujoProyectado"));
 const TablaFlujoSemanal = lazy(() => import("@/features/tesoreria/components/TablaFlujoSemanal"));
@@ -97,7 +98,7 @@ export default function TesoreriaFlujo() {
 
           <Card>
             <CardContent density="compact">
-              <h3 className="text-sm font-semibold mb-3">Flujo semanal (MXN)</h3>
+              <SectionHeading as="h3" className="mb-3">Flujo semanal (MXN)</SectionHeading>
               <Suspense fallback={<ChartSkeleton height={288} />}>
                 <GraficoFlujoProyectado semanas={data.semanas} />
               </Suspense>
