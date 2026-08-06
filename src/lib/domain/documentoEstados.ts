@@ -21,6 +21,8 @@ export interface EstadoDocumentoResumen {
   etiquetaTerminal: string | null;
   /** Matiz del paso actual (ej. "Parcialmente pagada", "Vencida"). */
   subEtiqueta?: string | null;
+  /** Tono del matiz: `warning` por defecto, `destructive` cuando hay atraso. */
+  subTono?: "warning" | "destructive";
 }
 
 const PASOS_EMITIDA: PasoDocumento[] = [
