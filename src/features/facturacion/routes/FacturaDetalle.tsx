@@ -17,6 +17,8 @@ import { useFacturaDetalleController } from "@/features/facturacion/hooks/useFac
 import { FacturaDetalleView } from "@/features/facturacion/components/detalle/FacturaDetalleView";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { getErrorMessage } from "@/lib/errors";
+import { esUuid } from "@/lib/esUuid";
+
 
 function FacturaNoEncontrada() {
   return (
