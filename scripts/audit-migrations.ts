@@ -79,8 +79,15 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    La migración correctiva `20260804020030` re-aplica los permisos
  *    (`REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO authenticated,
  *    service_role`); los archivos originales quedan como legacy auditados.
+ *  - `20260806224435` — post-FIX-H6-08/H4-08: `20260806181358` (anticipos a
+ *    proveedor), `20260806215835` (`conciliacion_resumen`), `20260806223611`
+ *    (pago en lote) y `20260806201559` (políticas de `puertos`) omitieron el
+ *    bloque REVOKE/GRANT y el `DROP POLICY IF EXISTS` / `IF NOT EXISTS` en el
+ *    mismo archivo. La migración correctiva `20260806224435` re-aplica los
+ *    permisos y re-crea políticas e índices de forma idempotente; los
+ *    archivos originales quedan como legacy auditados.
  */
-const BASELINE = "20260804020030";
+const BASELINE = "20260806224435";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
