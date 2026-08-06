@@ -84,11 +84,10 @@ export function BitacoraTesoreriaSection({
       <header className="flex flex-wrap items-start justify-between gap-2">
         <SectionHeading
           as="h3"
-          description={
-            <>
-            Movimientos bancarios generados al registrar o eliminar pagos de esta factura.
-          </p>
-        </div>
+          description="Movimientos bancarios generados al registrar o eliminar pagos de esta factura."
+        >
+          Bitácora de tesorería
+        </SectionHeading>
         <BitacoraTesoreriaExportButtons
           filas={filasExport}
           folio={folio ?? facturaId}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { EyeOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { Badge } from "@/components/ui/badge";
@@ -63,14 +64,17 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
   return (
     <Card>
       <CardContent className="p-4 space-y-3">
-        <div>
-          <p className="text-xs text-muted-foreground">{formatDate(movimiento.fecha)} · {esCargo ? "Cargo" : "Abono"}</p>
-          <p className="font-medium text-sm">{movimiento.concepto}</p>
-          {movimiento.referencia && <p className="text-xs text-muted-foreground">Ref: {movimiento.referencia}</p>}
-          <p className={`text-2xl font-bold tabular-nums mt-1 ${esCargo ? "text-destructive" : "text-success"}`}>
-            {esCargo ? "−" : "+"} {formatCurrency(monto, "MXN")}
-          </p>
-        </div>
+        <KpiCard
+          label={`${formatDate(movimiento.fecha)} · ${esCargo ? "Cargo" : "Abono"}`}
+          value={`${esCargo ? "−" : "+"} ${formatCurrency(monto, "MXN")}`}
+          variant={esCargo ? "destructive" : "success"}
+          sublabel={movimiento.concepto}
+          className="border-none shadow-none"
+        >
+          {movimiento.referencia && (
+            <p className="text-xs text-muted-foreground">Ref: {movimiento.referencia}</p>
+          )}
+        </KpiCard>
 
         {movimiento.estado_conciliacion === "Conciliado" ? (
           <>
