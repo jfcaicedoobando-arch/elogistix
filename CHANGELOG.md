@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.437.0] - 2026-08-06
+- Nueva guía interna del sistema de diseño en `docs/design-system.md`: tokens de color (incluidas escalas `kpi-*`, `state-*`, `mode-*`, `aging-*`), escala tipográfica por rol, layout de página, presets de densidad de tablas, tokens de formulario/modal y cuándo usar cada variante de `Button` y `Badge`. Es el "manual del uniforme": antes cada pantalla nueva adivinaba el estilo; ahora hay una sola referencia con checklist final.
+
 ## [13.436.0] - 2026-08-06
 - Modal "Nuevo Proveedor": ahora usa las mismas secciones y rejilla de 2 columnas que "Nuevo Cliente". Antes era una lista larga de campos en una sola columna que a 1280x720 no cabía en pantalla; es como pasar de una fila india a una tabla con dos asientos por lado.
 - Datos bancarios del proveedor (nacional): banco y CLABE quedan lado a lado en escritorio.
