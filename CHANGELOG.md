@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.445.0] - 2026-08-06
+- CxP · Nuevo **Pago en lote a proveedor**: en "Compras → Por pagar" se seleccionan 2 o más facturas del mismo proveedor y la misma moneda y el botón "Pagar en lote" registra una sola salida de dinero con una sola referencia bancaria. El importe se reparte automáticamente FIFO (primero lo que vence antes) y cada renglón es editable. Valida que la cuenta bancaria sea de la misma moneda, que ningún importe exceda el saldo de su factura y genera un único movimiento bancario por el total.
+
+
 ## [13.444.3] - 2026-08-06
 - Tesorería · Los pagos a proveedor que salen de una cuenta en dólares ya se registran en dólares. Antes el cargo se convertía siempre a pesos (un pago de 23,650 USD entraba como 406,938.45), lo que inflaba las salidas y descuadraba el saldo de BBVA USD. Se corrigió el cálculo (`cargoEnMonedaCuenta`) y el movimiento ya afectado.
 
