@@ -29,7 +29,7 @@ export function PnlProveedoresTable({ proveedores }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-{proveedores.length === 0 && (
+            {proveedores.length === 0 && (
               <DetailTableEmptyRow colSpan={4} message="Sin proveedores" />
             )}
             {proveedores.map((p) => (

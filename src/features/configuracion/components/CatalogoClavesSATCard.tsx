@@ -13,7 +13,8 @@ import { useCatalogoClavesSATController } from "@/features/configuracion/hooks/u
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead, DetailTableRow, DetailTableEmptyRow } from "@/components/shared/DetailTable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditRow } from "./CatalogoClavesSATCard.parts";
 import {
@@ -71,12 +72,12 @@ export function CatalogoClavesSATCard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[28%] text-label uppercase text-muted-foreground">Nombre</TableHead>
-                <TableHead className="w-[14%] text-label uppercase text-muted-foreground">Clave SAT</TableHead>
-                <TableHead className="w-[14%] text-label uppercase text-muted-foreground">Tipo IVA</TableHead>
-                <TableHead className="w-[14%] text-label uppercase text-muted-foreground">Unidad SAT</TableHead>
-                <TableHead className="w-[10%] text-label uppercase text-muted-foreground">Activo</TableHead>
-                <TableHead className="w-[12%] text-right text-label uppercase text-muted-foreground">Acciones</TableHead>
+                <DetailTableHead className="w-[28%]">Nombre</DetailTableHead>
+                <DetailTableHead className="w-[14%]">Clave SAT</DetailTableHead>
+                <DetailTableHead className="w-[14%]">Tipo IVA</DetailTableHead>
+                <DetailTableHead className="w-[14%]">Unidad SAT</DetailTableHead>
+                <DetailTableHead className="w-[10%]">Activo</DetailTableHead>
+                <DetailTableHead className="w-[12%] text-right">Acciones</DetailTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -89,16 +90,14 @@ export function CatalogoClavesSATCard() {
                 </TableRow>
               )}
               {!isLoading && rows.length === 0 && !showNew && (
-                <TableRow><TableCell colSpan={6} className="text-muted-foreground text-center py-4">
-                  Aún no hay productos. Da de alta al menos uno para poder capturar cotizaciones.
-                </TableCell></TableRow>
+                <DetailTableEmptyRow colSpan={6} message="Aún no hay productos. Da de alta al menos uno para poder capturar cotizaciones." />
               )}
               {rows.map((r) => editingId === r.id ? (
                 <EditRow key={r.id} draft={draft} setDraft={setDraft} busy={busy} valid={validDraft}
                          onCancel={() => setEditingId(null)}
                          onSave={handleUpdate} />
               ) : (
-                <TableRow key={r.id} className="hover:bg-muted/50">
+                <DetailTableRow key={r.id}>
                   <TableCell className="font-medium">{r.patron}</TableCell>
                   <TableCell className="font-mono text-xs">{r.clave_sat}</TableCell>
                   <TableCell><Badge variant={TIPO_IVA_VARIANT[r.tipo_iva]}>{TIPO_IVA_LABEL[r.tipo_iva]}</Badge></TableCell>
@@ -108,7 +107,7 @@ export function CatalogoClavesSATCard() {
                     <Button size="icon" variant="ghost" onClick={() => startEdit(r)} disabled={busy}><Pencil className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" onClick={() => deleteMut.mutate(r.id)} disabled={busy}><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
-                </TableRow>
+                </DetailTableRow>
               ))}
               {showNew && (
                 <EditRow draft={draft} setDraft={setDraft} busy={busy} valid={validDraft}

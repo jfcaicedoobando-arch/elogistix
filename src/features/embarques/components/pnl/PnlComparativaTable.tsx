@@ -3,7 +3,8 @@
  * Extraída de `TabPnl.tsx` en v13.56.2 (auditoría — paso 5).
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableFooter, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead, DetailTableRow, DetailTableEmptyRow } from "@/components/shared/DetailTable";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { fmtPnl, pctPnl, deltaPnl } from "@/lib/formatters/pnl";
 import type { PnlPorConcepto } from "@/features/embarques/services/pnlFinanciero";
@@ -28,25 +29,23 @@ export function PnlComparativaTable({ titulo, rows, invertirAlerta }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Concepto</TableHead>
-              <TableHead className="text-right">Presupuestado</TableHead>
-              <TableHead className="text-right">Real</TableHead>
-              <TableHead className="text-right">Δ MXN</TableHead>
-              <TableHead className="text-right">Δ %</TableHead>
+              <DetailTableHead>Concepto</DetailTableHead>
+              <DetailTableHead className="text-right">Presupuestado</DetailTableHead>
+              <DetailTableHead className="text-right">Real</DetailTableHead>
+              <DetailTableHead className="text-right">Δ MXN</DetailTableHead>
+              <DetailTableHead className="text-right">Δ %</DetailTableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">Sin datos</TableCell>
-              </TableRow>
+              <DetailTableEmptyRow colSpan={5} message="Sin datos" />
             )}
             {rows.map((r, idx) => {
               const d = deltaPnl(r.real_mxn, r.presupuestado_mxn);
               const isBad = invertirAlerta ? d.abs > 0 : d.abs < 0;
               const Icon = d.abs >= 0 ? TrendingUp : TrendingDown;
               return (
-                <TableRow key={`${r.concepto}-${idx}`}>
+                <DetailTableRow key={`${r.concepto}-${idx}`}>
                   <TableCell className="capitalize">{r.concepto}</TableCell>
                   <TableCell className="text-right tabular-nums">{fmtPnl(r.presupuestado_mxn)}</TableCell>
                   <TableCell className="text-right tabular-nums">{fmtPnl(r.real_mxn)}</TableCell>
@@ -59,7 +58,7 @@ export function PnlComparativaTable({ titulo, rows, invertirAlerta }: Props) {
                   <TableCell className={`text-right tabular-nums ${isBad ? "text-destructive" : "text-success"}`}>
                     {r.presupuestado_mxn > 0 ? pctPnl(d.pct) : "—"}
                   </TableCell>
-                </TableRow>
+                </DetailTableRow>
               );
             })}
           </TableBody>
