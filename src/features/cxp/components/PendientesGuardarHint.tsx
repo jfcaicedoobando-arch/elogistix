@@ -1,38 +1,14 @@
 /**
  * Lista corta de pendientes junto al botón "Guardar factura".
- *
- * v13.422.0 — Antes el botón se deshabilitaba sin explicar qué faltaba.
- * Deriva los pendientes de los valores que el formulario ya conoce; no
- * introduce reglas nuevas de validación.
+ * La derivación de pendientes vive en `pendientesDeCaptura.ts`.
  */
 import { AlertCircle } from "lucide-react";
-import type { FacturaFormValues } from "@/features/cxp/types";
+import {
+  pendientesDeCaptura,
+  type PendientesCapturaArgs,
+} from "@/features/cxp/components/pendientesDeCaptura";
 
-interface Props {
-  values: FacturaFormValues;
-  total: number;
-  /** El tope de vinculación excedido bloquea el guardado. */
-  topeExcedido?: boolean;
-  /** CFDI ya capturado previamente. */
-  cfdiDuplicado?: boolean;
-}
-
-export function pendientesDeCaptura({
-  values, total, topeExcedido, cfdiDuplicado,
-}: Props): string[] {
-  const faltan: string[] = [];
-  if (!values.provId) faltan.push("Falta el proveedor");
-  if (!values.folio.trim()) faltan.push("Falta el folio del proveedor");
-  if (total <= 0) faltan.push("Falta el importe de la factura");
-  if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
-    faltan.push("Falta el tipo de cambio");
-  }
-  if (topeExcedido) faltan.push("Lo vinculado excede el subtotal");
-  if (cfdiDuplicado) faltan.push("Este CFDI ya está capturado");
-  return faltan;
-}
-
-export function PendientesGuardarHint(props: Props) {
+export function PendientesGuardarHint(props: PendientesCapturaArgs) {
   const faltan = pendientesDeCaptura(props);
   if (faltan.length === 0) return null;
 
