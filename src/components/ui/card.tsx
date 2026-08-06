@@ -42,7 +42,7 @@ const CardHeader = ({ ref, className, ...props }: React.HTMLAttributes<HTMLDivEl
 CardHeader.displayName = "CardHeader";
 
 const CardTitle = ({ ref, className, ...props }: React.HTMLAttributes<HTMLHeadingElement> & { ref?: React.Ref<HTMLParagraphElement> }) => (
-    <h3 ref={ref} className={cn("text-lg font-semibold leading-tight tracking-tight", className)} {...props} />
+    <h3 ref={ref} className={cn("text-card-title tracking-tight", className)} {...props} />
   );
 CardTitle.displayName = "CardTitle";
 
