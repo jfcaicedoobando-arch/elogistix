@@ -64,4 +64,21 @@ describe("M6: soft-delete en tablas de dinero", () => {
     expect(cuerpo).toContain("deleted_at");
     expect(cuerpo).not.toMatch(/\.delete\(\)/);
   });
+
+  /**
+   * v13.444.1 — El borrado de movimientos manuales de conciliación es lógico:
+   * marca `deleted_at` en lugar de `.delete()`, y el listado ya filtra borrados.
+   * El conteo del dashboard vive en la función SQL `conciliacion_resumen`, que
+   * también filtra `deleted_at IS NULL` (migración 2026-08-06).
+   */
+  it("eliminarMovimientoManual es soft-delete", () => {
+    const src = readFileSync(
+      path.join(ROOT, "src/features/tesoreria/services/conciliacion.ts"),
+      "utf-8",
+    );
+    const fn = src.slice(src.indexOf("export async function eliminarMovimientoManual"));
+    const cuerpo = fn.slice(0, fn.indexOf("\n}"));
+    expect(cuerpo).toContain("deleted_at");
+    expect(cuerpo).not.toMatch(/\.delete\(\)/);
+  });
 });
