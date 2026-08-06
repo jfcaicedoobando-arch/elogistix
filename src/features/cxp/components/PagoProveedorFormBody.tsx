@@ -15,6 +15,7 @@ import { PagoSaldoRestante } from "./PagoProveedorBits";
 import { referenciaHint } from "./pagoProveedorHelpers";
 import { formatNumber } from "@/lib/formatters";
 import { PagoImpactoPreview } from "./PagoImpactoPreview";
+import { TcPagoField } from "./TcPagoField";
 import type {
   Moneda,
   PagoProveedorFormBodyProps as Props,
