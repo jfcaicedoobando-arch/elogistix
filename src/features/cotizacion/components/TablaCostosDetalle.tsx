@@ -101,7 +101,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                               placeholder="Notas (opcional)"
                               value={fila.notas || ""}
                               onChange={e => onUpdate(globalIdx, "notas", e.target.value)}
-                              className="text-xs h-8 min-h-[32px] resize-none focus:min-h-[60px] transition-all"
+                              className="text-xs h-8 resize-none focus:min-h-16 transition-all"
                             />
                           ) : (
                             <span className="text-xs text-muted-foreground italic">↳ {fila.notas}</span>

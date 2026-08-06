@@ -14,13 +14,13 @@ export function EliminarFacturaFinancialGrid({ factura }: { factura: FacturaCxP 
   const showMoneda = factura.moneda !== "MXN";
   return (
     <div className={cn("grid gap-3", showMoneda ? "grid-cols-3" : "grid-cols-2")}>
-      <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
+      <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-20">
         <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider">Total</span>
         <div className="text-sm font-bold text-foreground tabular-nums whitespace-nowrap">
           {formatMonto(factura.moneda, factura.total)}
         </div>
       </div>
-      <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
+      <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-20">
         <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider">Saldo pendiente</span>
         <div className={cn(
           "text-sm font-bold tabular-nums whitespace-nowrap",
@@ -30,7 +30,7 @@ export function EliminarFacturaFinancialGrid({ factura }: { factura: FacturaCxP 
         </div>
       </div>
       {showMoneda && (
-        <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
+        <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-20">
           <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider">Moneda / TC</span>
           <div className="leading-tight">
             <div className="text-sm font-bold text-foreground">{factura.moneda}</div>

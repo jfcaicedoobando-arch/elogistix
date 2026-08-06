@@ -99,7 +99,7 @@ function Columna({
       </div>
       <div
         ref={setNodeRef}
-        className={`flex-1 p-2 space-y-2 min-h-[200px] transition-colors ${isOver ? "bg-primary/5" : ""}`}
+        className={`flex-1 p-2 space-y-2 min-h-48 transition-colors ${isOver ? "bg-primary/5" : ""}`}
       >
         {ops.map((op) => (
           <OpCard key={op.id} op={op} onClick={() => onClickCard(op.id)} proxima={proximasMap.get(op.id)} />

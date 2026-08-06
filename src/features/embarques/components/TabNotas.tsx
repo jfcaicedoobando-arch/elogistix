@@ -76,7 +76,7 @@ export function TabNotas({ embarqueId, expediente }: Props) {
               placeholder="Escribe una nota..."
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
-              className="min-h-[60px]"
+              className="min-h-16"
             />
             <Button
               size="icon"
