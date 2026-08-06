@@ -79,6 +79,31 @@ export default function CxpPorPagar() {
   const selectedIds = useMemo(() => Object.keys(rowSelection), [rowSelection]);
   const hasSelection = selectedIds.length > 0;
 
+  // Pago en lote: sólo si la selección es del mismo proveedor y la misma moneda.
+  const seleccionadas = useMemo(
+    () => data.filter((r) => selectedIds.includes(r.factura_id)),
+    [data, selectedIds],
+  );
+  const lote = useMemo(() => {
+    if (seleccionadas.length < 2) return null;
+    const primera = seleccionadas[0];
+    const mismoProveedor = seleccionadas.every((r) => r.proveedor_id === primera.proveedor_id);
+    const mismaMoneda = seleccionadas.every((r) => r.moneda === primera.moneda);
+    if (!mismoProveedor || !mismaMoneda || !primera.proveedor_id) return null;
+    return {
+      proveedorId: primera.proveedor_id,
+      proveedorNombre: primera.proveedor_nombre ?? "",
+      proveedorOrigen: (primera.proveedor_origen ?? null) as OrigenProveedor,
+      moneda: primera.moneda,
+      facturas: seleccionadas.map((r) => ({
+        factura_id: r.factura_id,
+        folio_proveedor: r.folio_proveedor,
+        fecha_vencimiento: r.fecha_vencimiento,
+        saldo: Number(r.saldo ?? 0),
+      })),
+    };
+  }, [seleccionadas]);
+
   const handleProgramar = async () => {
     await programar(selectedIds, fechaProgramada);
     setIsDialogOpen(false);
@@ -92,13 +117,28 @@ export default function CxpPorPagar() {
         description="Facturas de proveedor vigentes con saldo. Programa y registra los pagos."
         actions={
           hasSelection && (
-            <Button onClick={() => setIsDialogOpen(true)} variant="default">
-              <CalendarCheck className="h-4 w-4 mr-2" />
-              Programar pago ({selectedIds.length})
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setIsDialogOpen(true)} variant="outline">
+                <CalendarCheck className="h-4 w-4 mr-2" />
+                Programar pago ({selectedIds.length})
+              </Button>
+              <Button
+                onClick={() => setLoteOpen(true)}
+                disabled={!lote}
+                title={
+                  lote
+                    ? undefined
+                    : "Selecciona 2 o más facturas del mismo proveedor y la misma moneda"
+                }
+              >
+                <Layers className="h-4 w-4 mr-2" />
+                Pagar en lote ({selectedIds.length})
+              </Button>
+            </div>
           )
         }
       />
+
 
 
 
