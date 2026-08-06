@@ -64,11 +64,11 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                       )}
                     </TableCell>
                     <TableCell>{concepto.unidad_medida || '—'}</TableCell>
-                    <TableCell className="text-right">{concepto.cantidad}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(concepto.precio_unitario, moneda)}</TableCell>
-                    {esMXN && <TableCell className="text-right">{formatCurrency(lineSubtotal, moneda)}</TableCell>}
-                    {esMXN && <TableCell className="text-right">{formatCurrency(lineIva, moneda)}</TableCell>}
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right tabular-nums">{concepto.cantidad}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrency(concepto.precio_unitario, moneda)}</TableCell>
+                    {esMXN && <TableCell className="text-right tabular-nums">{formatCurrency(lineSubtotal, moneda)}</TableCell>}
+                    {esMXN && <TableCell className="text-right tabular-nums">{formatCurrency(lineIva, moneda)}</TableCell>}
+                    <TableCell className="text-right tabular-nums font-medium">
                       {formatCurrency(lineTotal, moneda)}
                     </TableCell>
                   </TableRow>
