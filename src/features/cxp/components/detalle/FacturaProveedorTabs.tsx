@@ -61,6 +61,14 @@ export function FacturaProveedorTabs({
             onEliminarPago={onEliminarPago}
             onEditarPago={canEdit ? (p) => setPagoEditar(aPagoEditable(p)) : undefined}
           />
+          <AnticipoDisponibleAviso
+            proveedorId={f.proveedor_id}
+            facturaId={f.id}
+            folioFactura={f.folio_proveedor || f.folio_interno}
+            saldoFactura={f.saldo}
+            monedaFactura={f.moneda}
+            canEdit={canEdit}
+          />
           <AnticiposAplicadosSection facturaId={f.id} />
           <ConciliacionTesoreriaSection facturaId={f.id} monedaFactura={f.moneda} />
           <BitacoraTesoreriaSection
