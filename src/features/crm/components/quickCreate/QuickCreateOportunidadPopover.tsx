@@ -13,6 +13,7 @@ import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 interface Props {
   onCreated: (id: string) => void;
   onMore: () => void;
@@ -56,7 +57,7 @@ export default function QuickCreateOportunidadPopover({ onCreated, onMore, onClo
 
   return (
     <div className="space-y-3 w-80">
-      <div className="text-sm font-semibold">Nueva oportunidad</div>
+      <SectionHeading as="h3">Nueva oportunidad</SectionHeading>
       <div className="space-y-1">
         <Label className="text-xs">Nombre *</Label>
         <Input autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Importación China Q1" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />

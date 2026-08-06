@@ -9,6 +9,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/shared/NumericInput";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -39,20 +40,23 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-          Conceptos <span className="text-destructive">*</span>
-        </h3>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={add}
-          className="text-primary hover:text-primary hover:bg-primary/10"
-        >
-          <Plus className="h-4 w-4 mr-1" /> Agregar concepto
-        </Button>
-      </div>
+      <SectionHeading
+        as="h3"
+        variant="overline"
+        actions={
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={add}
+            className="text-primary hover:text-primary hover:bg-primary/10"
+          >
+            <Plus className="h-4 w-4 mr-1" /> Agregar concepto
+          </Button>
+        }
+      >
+        Conceptos <span className="text-destructive">*</span>
+      </SectionHeading>
       <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-12 gap-2 bg-muted/60 px-3 py-2 text-label font-semibold uppercase tracking-wider text-muted-foreground">
           <div className="col-span-4">Descripción</div>

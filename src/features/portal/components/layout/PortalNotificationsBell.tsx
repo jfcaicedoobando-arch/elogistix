@@ -5,6 +5,7 @@
  */
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCheck } from "lucide-react";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -50,7 +51,7 @@ export function PortalNotificationsBell() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[min(320px,calc(100vw-24px))] p-0">
         <div className="flex items-center justify-between px-3 py-2 border-b">
-          <span className="text-sm font-semibold">Notificaciones</span>
+          <SectionHeading as="h3">Notificaciones</SectionHeading>
           {noLeidas > 0 && (
             <Button
               variant="ghost"

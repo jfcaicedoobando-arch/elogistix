@@ -3,7 +3,10 @@
  * La prima se incluye automáticamente como costo real en el P&L.
  */
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { SectionHeading } from "@/components/shared/SectionHeading";
+import { KpiCard } from "@/components/shared/KpiCard";
+import { KpiStrip } from "@/components/shared/KpiStrip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -97,34 +100,33 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Shield className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Seguros de carga</h3>
-          {venceProntoCount > 0 && (
+        <SectionHeading
+          as="h3"
+          icon={<Shield className="h-5 w-5" />}
+          actions={venceProntoCount > 0 && (
             <Badge className="bg-warning/10 text-warning gap-1">
               <AlertTriangle className="h-3 w-3" /> {venceProntoCount} por vencer
             </Badge>
           )}
-        </div>
+        >
+          Seguros de carga
+        </SectionHeading>
         <Button onClick={() => { setEditing(null); setOpen(true); }} disabled={!canEdit}>
           <Plus className="h-4 w-4 mr-2" /> Nueva póliza
         </Button>
       </div>
 
       {Object.keys(totales).length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Prima total (suma de pólizas)</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-6">
-            {Object.entries(totales).map(([moneda, total]) => (
-              <div key={moneda}>
-                <div className="text-xs text-muted-foreground">{moneda}</div>
-                <div className="text-2xl font-bold tabular-nums">{formatCurrency(total, moneda)}</div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <KpiStrip desktopCols={Math.min(Math.max(Object.keys(totales).length, 2), 4) as 2 | 3 | 4}>
+          {Object.entries(totales).map(([moneda, total]) => (
+            <KpiCard
+              key={moneda}
+              label={`Prima total (${moneda})`}
+              value={formatCurrency(total, moneda)}
+              sublabel="Suma de pólizas"
+            />
+          ))}
+        </KpiStrip>
       )}
 
       <Card>

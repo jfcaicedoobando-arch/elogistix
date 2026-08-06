@@ -40,17 +40,23 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
   const [actOpen, setActOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
-  const firstOpenRender = useRef(true);
+  // Ola 9 (v13.430.0): antes se usaba un ref booleano "primer render" para
+  // ignorar el valor inicial de `openTrigger`. En StrictMode React monta,
+  // desmonta y vuelve a montar: el ref ya estaba en `false` en el segundo
+  // montaje, así que el menú "Nuevo" aparecía abierto solo, sin que nadie
+  // presionara nada. Ahora comparamos contra el último valor visto, que es
+  // idempotente ante remontajes.
+  const lastOpenTrigger = useRef(openTrigger);
   useEffect(() => {
-    if (firstOpenRender.current) { firstOpenRender.current = false; return; }
-    if (openTrigger === undefined) return;
+    if (openTrigger === undefined || openTrigger === lastOpenTrigger.current) return;
+    lastOpenTrigger.current = openTrigger;
     setMenuOpen(true);
   }, [openTrigger]);
 
-  const firstDialogRender = useRef(true);
+  const lastDialogTrigger = useRef(dialogTrigger?.n);
   useEffect(() => {
-    if (firstDialogRender.current) { firstDialogRender.current = false; return; }
-    if (!dialogTrigger) return;
+    if (!dialogTrigger || dialogTrigger.n === lastDialogTrigger.current) return;
+    lastDialogTrigger.current = dialogTrigger.n;
     setQuick(dialogTrigger.kind);
   }, [dialogTrigger]);
 

@@ -114,7 +114,7 @@ export default function NuevaCotizacion() {
   return (
     <>
       {banderaBorrador && draftDetectado && (
-        <div className="max-w-6xl mx-auto px-4 pt-4">
+        <div className="max-w-6xl mx-auto pt-4">
           <DraftRestoreBanner
             savedAt={draftDetectado.savedAt}
             onRestore={handleRestore}

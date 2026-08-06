@@ -44,7 +44,7 @@ export default function PortalPerfil() {
   const { email, cliente } = data;
 
   return (
-    <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
       <PageHeader
         icon={<UserIcon className="h-6 w-6 text-accent" />}
         title="Mi Perfil"

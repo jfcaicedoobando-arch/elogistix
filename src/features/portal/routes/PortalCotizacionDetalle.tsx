@@ -1,7 +1,8 @@
 import { useParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClipboardList } from "lucide-react";
+import EmptyState from "@/components/empty/EmptyState";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { usePortalCotizacion } from "@/features/portal/hooks";
 import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/SeccionMercanciaCotizacionDetalle";
@@ -49,12 +50,11 @@ export default function PortalCotizacionDetalle() {
 
   if (!cot) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Cotización no encontrada.</p>
-        <Button variant="link" onClick={volver}>
-          Volver a cotizaciones
-        </Button>
-      </div>
+      <EmptyState
+        icon={ClipboardList}
+        title="Cotización no encontrada"
+        primaryAction={{ label: "Volver a cotizaciones", onClick: volver, variant: "outline" }}
+      />
     );
   }
 

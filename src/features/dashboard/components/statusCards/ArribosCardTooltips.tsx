@@ -4,6 +4,7 @@
  */
 import { Fragment } from "react";
 import { formatCurrency } from "@/lib/formatters";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import type { ArribosEsteMes } from "./ArribosCard";
 
 export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
@@ -28,7 +29,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
   return (
     <div className="space-y-3">
       <div>
-        <div className="text-sm font-semibold leading-tight">Profit proyectado del mes</div>
+        <SectionHeading as="h3">Profit proyectado del mes</SectionHeading>
         <div className="text-2xs text-muted-foreground uppercase tracking-wide mt-0.5">
           Homologado a MXN
         </div>
@@ -107,7 +108,7 @@ export function CoberturaTooltipContent({
 }: CoberturaProps) {
   return (
     <div className="space-y-2">
-      <div className="text-sm font-semibold leading-tight">Cobertura de gastos fijos</div>
+      <SectionHeading as="h3">Cobertura de gastos fijos</SectionHeading>
       <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-xs">
         <span className="text-muted-foreground">Profit proyectado</span>
         <span className="tabular-nums font-medium text-right">{formatCurrency(profitMXN, "MXN")}</span>

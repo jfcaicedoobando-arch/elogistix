@@ -6,7 +6,11 @@
  * v13.389.3 — antes cada picker tenía su propio trigger: los de mes y
  * fecha-hora usaban `Button variant="outline"` (sin estados de error ni
  * deshabilitado), por lo que un formulario podía verse inconsistente.
+ *
+ * v13.430.0 — el trigger consume `field.tokens.ts`, así que el alto, el hover y
+ * el anillo de foco son idénticos a `Input`, `Textarea` y `SelectTrigger`.
  */
+import { FIELD_ERROR_CLASS, FIELD_HEIGHT_CLASS, FIELD_STATE_WITHIN_CLASS } from "./field.tokens";
 
 /** Placeholder canónico de los pickers de sólo fecha. */
 export const PLACEHOLDER_FECHA = "DD/MM/AAAA";
@@ -28,16 +32,17 @@ export interface PickerTriggerState {
 /** Clases del contenedor/trigger de un picker MX. */
 export function pickerTriggerClass({ showError, disabled, empty }: PickerTriggerState): string {
   return [
-    "inline-flex w-full items-center h-10 rounded-md border border-input bg-background px-2 gap-1 text-sm",
-    "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0",
-    showError ? "border-destructive focus-within:ring-destructive" : "",
-    disabled ? "opacity-50 cursor-not-allowed bg-muted" : "",
+    "inline-flex w-full items-center gap-1 rounded-md border border-input bg-background px-3 text-sm shadow-sm",
+    FIELD_HEIGHT_CLASS,
+    FIELD_STATE_WITHIN_CLASS,
+    showError ? "border-destructive focus-within:border-destructive focus-within:ring-destructive/40" : "",
+    disabled ? "cursor-not-allowed bg-muted opacity-50" : "",
     empty ? "text-muted-foreground" : "",
   ].filter(Boolean).join(" ");
 }
 
 /** Clases del texto de error debajo de un picker MX. */
-export const pickerErrorClass = "text-xs text-destructive";
+export const pickerErrorClass = FIELD_ERROR_CLASS;
 
 /**
  * Clases del contenedor externo (trigger + mensaje de error).

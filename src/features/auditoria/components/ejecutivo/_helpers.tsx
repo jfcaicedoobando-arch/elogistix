@@ -4,6 +4,14 @@
  */
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatters";
+import { KpiCard } from "@/components/shared/KpiCard";
+import type { KpiVariant } from "@/components/shared/kpiCard.tokens";
+
+const TONE_TO_VARIANT: Record<string, KpiVariant> = {
+  "text-destructive": "destructive",
+  "text-warning": "warning",
+  "text-primary": "default",
+};
 
 export function DrillKpi({
   label,
@@ -16,23 +24,14 @@ export function DrillKpi({
   tone: string;
   onClick?: () => void;
 }) {
-  const Comp = onClick ? "button" : "div";
   return (
-    <Comp
-      type={onClick ? "button" : undefined}
+    <KpiCard
+      label={label}
+      value={formatNumber(value)}
+      variant={TONE_TO_VARIANT[tone] ?? "default"}
       onClick={onClick}
-      className={cn(
-        "rounded-md border p-2 transition-colors",
-        onClick && "hover:bg-muted/40 cursor-pointer text-left",
-      )}
-    >
-      <div className={cn("text-2xl font-bold tabular-nums", tone)}>
-        {formatNumber(value)}
-      </div>
-      <div className="text-label text-muted-foreground uppercase tracking-wider">
-        {label}
-      </div>
-    </Comp>
+      className="shadow-none"
+    />
   );
 }
 

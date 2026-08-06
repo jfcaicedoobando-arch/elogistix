@@ -22,7 +22,9 @@ describe("pickerTriggerClass", () => {
     expect(cls).not.toMatch(/border-destructive/);
     expect(cls).not.toMatch(/cursor-not-allowed/);
     expect(cls).not.toMatch(/text-muted-foreground/);
-    expect(cls).toMatch(/inline-flex w-full items-center h-10/);
+    // v13.430.0 — el alto viene de FIELD_HEIGHT_CLASS (44px móvil / 40px ≥md).
+    expect(cls).toMatch(/inline-flex w-full items-center/);
+    expect(cls).toMatch(/h-11 md:h-10/);
   });
 
   it("showError=true agrega clases de error", () => {

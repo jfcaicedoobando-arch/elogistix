@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Settings } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface ConfigItem {
   id: string;
@@ -32,7 +33,7 @@ export function OrgConfigCard({ loading, totalItems, grouped }: OrgConfigCardPro
         )}
         {Object.entries(grouped).map(([categoria, items]) => (
           <div key={categoria} className="mb-4 space-y-2">
-            <h4 className="text-sm font-semibold capitalize text-muted-foreground">{categoria}</h4>
+            <SectionHeading as="h3" variant="overline" className="capitalize">{categoria}</SectionHeading>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {items.map((item) => (
                 <div key={item.id} className="p-3 rounded-lg border bg-muted/30">

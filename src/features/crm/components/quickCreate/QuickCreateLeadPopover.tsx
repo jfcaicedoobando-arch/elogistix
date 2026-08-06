@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 interface Props {
   onCreated: (id: string) => void;
   onMore: () => void;
@@ -49,7 +50,7 @@ export default function QuickCreateLeadPopover({ onCreated, onMore, onClose }: P
 
   return (
     <div className="space-y-3 w-72">
-      <div className="text-sm font-semibold">Nuevo lead</div>
+      <SectionHeading as="h3">Nuevo lead</SectionHeading>
       <div className="space-y-1">
         <Label className="text-xs">Empresa *</Label>
         <Input autoFocus value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Acme Logistics" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />

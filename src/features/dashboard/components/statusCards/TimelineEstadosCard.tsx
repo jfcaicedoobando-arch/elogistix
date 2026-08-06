@@ -22,7 +22,10 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
           className="overflow-x-auto -mx-1 px-1 [scrollbar-width:thin] [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] md:[mask-image:none]"
         >
           <div className="flex items-center justify-between gap-2 sm:gap-3 min-w-[480px] sm:min-w-[600px] relative">
-            <div className="absolute top-5 sm:top-6 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-info via-warning to-success opacity-30" />
+            {/* Armonización global: la línea arcoíris (info→warning→success) se
+                sustituye por un separador neutro; el color se reserva para
+                estados semánticos (alertas, vencidos). */}
+            <div className="absolute top-5 sm:top-6 left-[10%] right-[10%] h-px bg-border" />
 
             {ESTADOS_FILTRO.map((estado, idx) => {
               const cfg = getEstadoVisual(estado);
@@ -36,17 +39,17 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     onClick={() => navigate(`/embarques?estado=${encodeURIComponent(estado)}`)}
                     aria-label={`Ver embarques en estado ${estado} (${count})`}
                     title={`Ver embarques en estado ${estado} (${count})`}
-                    className={`
-                      relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full
-                      bg-gradient-to-br ${cfg.gradient}
-                      transition-all duration-300 ease-out
-                      hover:scale-110 hover:shadow-raised cursor-pointer
+                    className="
+                      relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full
+                      border border-border bg-card text-muted-foreground
+                      transition-colors
+                      hover:border-primary/40 hover:bg-primary/10 hover:text-primary cursor-pointer
                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                      ring-1 ring-border/20
-                    `}
+                    "
                   >
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" aria-hidden="true" />
+                    <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" aria-hidden="true" />
                   </button>
+
 
                   <div className="mt-1.5 sm:mt-2">
                     {isLoading ? (
@@ -54,7 +57,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     ) : (
                       <span
                         data-e2e-mask="dynamic-count"
-                        className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground"
+                        className="text-xl sm:text-2xl font-semibold tabular-nums tracking-tight text-foreground"
                       >
                         {count}
                       </span>

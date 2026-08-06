@@ -3,6 +3,7 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { FIELD_HEIGHT_CLASS, FIELD_STATE_RADIX_CLASS, FIELD_SURFACE_CLASS } from "./field.tokens";
 
 const Select = SelectPrimitive.Root;
 
@@ -14,7 +15,10 @@ const SelectTrigger = ({ ref, className, children, ...props }: React.ComponentPr
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-11 md:h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background transition-colors placeholder:text-muted-foreground hover:border-ring/40 focus:outline-none focus:ring-2 focus:ring-ring/40 focus:ring-offset-0 focus:border-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "flex items-center justify-between text-sm [&>span]:line-clamp-1",
+      FIELD_HEIGHT_CLASS,
+      FIELD_SURFACE_CLASS,
+      FIELD_STATE_RADIX_CLASS,
       className,
     )}
     {...props}

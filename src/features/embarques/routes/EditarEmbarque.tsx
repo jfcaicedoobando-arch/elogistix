@@ -22,6 +22,7 @@ const steps = [
 ];
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function EditarEmbarque() {
   const { id } = useParams();
@@ -74,10 +75,12 @@ export default function EditarEmbarque() {
 
   if (!embarque) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-muted-foreground">Embarque no encontrado</p>
-        <Button variant="outline" className="mt-4" onClick={volver}>Volver</Button>
-      </div>
+      <PageContainer>
+        <div className="flex flex-col items-center justify-center py-16">
+          <p className="text-muted-foreground">Embarque no encontrado</p>
+          <Button variant="outline" className="mt-4" onClick={volver}>Volver</Button>
+        </div>
+      </PageContainer>
     );
   }
 
@@ -86,7 +89,7 @@ export default function EditarEmbarque() {
   // el wizard para toparse con el error hasta el guardado final.
   if ((embarque.estado ?? "").toLowerCase() === "cerrado") {
     return (
-      <div className="max-w-xl mx-auto py-16">
+      <PageContainer className="max-w-xl">
         <Alert>
           <Lock className="h-4 w-4" />
           <AlertTitle>Embarque cerrado</AlertTitle>
@@ -101,7 +104,7 @@ export default function EditarEmbarque() {
             </Button>
           </AlertDescription>
         </Alert>
-      </div>
+      </PageContainer>
     );
   }
 

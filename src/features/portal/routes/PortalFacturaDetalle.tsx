@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { FileText, FileCode2, Ship, AlertTriangle, Receipt } from "lucide-react";
+import EmptyState from "@/components/empty/EmptyState";
 
 import { usePortalFactura } from "@/features/portal/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
@@ -41,12 +42,11 @@ export default function PortalFacturaDetalle() {
 
   if (!factura) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Factura no encontrada.</p>
-        <Button variant="link" onClick={volver}>
-          Volver a facturas
-        </Button>
-      </div>
+      <EmptyState
+        icon={Receipt}
+        title="Factura no encontrada"
+        primaryAction={{ label: "Volver a facturas", onClick: volver, variant: "outline" }}
+      />
     );
   }
 

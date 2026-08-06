@@ -124,10 +124,10 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-24">Desde día</TableHead>
-            <TableHead className="w-24">Hasta día</TableHead>
-            <TableHead className="w-32">Monto/día</TableHead>
-            <TableHead className="w-24">Moneda</TableHead>
+            <TableHead className="w-24 text-label uppercase text-muted-foreground">Desde día</TableHead>
+            <TableHead className="w-24 text-label uppercase text-muted-foreground">Hasta día</TableHead>
+            <TableHead className="w-32 text-label uppercase text-muted-foreground">Monto/día</TableHead>
+            <TableHead className="w-24 text-label uppercase text-muted-foreground">Moneda</TableHead>
             <TableHead className="w-12" />
           </TableRow>
         </TableHeader>
@@ -140,7 +140,7 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
             </TableRow>
           )}
           {rows.map((r, idx) => (
-            <TableRow key={r._key}>
+            <TableRow key={r._key} className="hover:bg-muted/50">
               <TableCell>
                 <Input
                   type="number" min={1} value={r.desde_dia}

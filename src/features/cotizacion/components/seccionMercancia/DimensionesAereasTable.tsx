@@ -17,21 +17,21 @@ export function DimensionesAereasTable({ dimensiones, totalPiezas, pesoTotal }: 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Piezas</TableHead>
-              <TableHead>Alto (cm)</TableHead>
-              <TableHead>Largo (cm)</TableHead>
-              <TableHead>Ancho (cm)</TableHead>
-              <TableHead>Peso vol. (kg)</TableHead>
+              <TableHead className="text-right">Piezas</TableHead>
+              <TableHead className="text-right">Alto (cm)</TableHead>
+              <TableHead className="text-right">Largo (cm)</TableHead>
+              <TableHead className="text-right">Ancho (cm)</TableHead>
+              <TableHead className="text-right">Peso vol. (kg)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {dimensiones.map((d, i) => (
               <TableRow key={i}>
-                <TableCell>{d.piezas}</TableCell>
-                <TableCell>{d.alto_cm}</TableCell>
-                <TableCell>{d.largo_cm}</TableCell>
-                <TableCell>{d.ancho_cm}</TableCell>
-                <TableCell>{d.peso_volumetrico_kg.toFixed(2)}</TableCell>
+                <TableCell className="text-right tabular-nums">{d.piezas}</TableCell>
+                <TableCell className="text-right tabular-nums">{d.alto_cm}</TableCell>
+                <TableCell className="text-right tabular-nums">{d.largo_cm}</TableCell>
+                <TableCell className="text-right tabular-nums">{d.ancho_cm}</TableCell>
+                <TableCell className="text-right tabular-nums">{d.peso_volumetrico_kg.toFixed(2)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

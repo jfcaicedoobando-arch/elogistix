@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
 import { getProfitToneClass } from "@/lib/ui/uiMappings";
 import { CierreCard } from "../CierreCard";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Kpis {
   facturados: number;
@@ -32,14 +33,18 @@ export function ProyeccionCierreSection({ k, mesLabel }: Props) {
   return (
     <Card>
       <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold tracking-widest uppercase text-muted-foreground">
-            Cierre {mesLabel}
-          </h3>
-          <Badge variant="outline" className="font-mono text-xs">
-            {k.facturados}/{k.totalExpedientes} facturados · {k.avancePct.toFixed(0)}%
-          </Badge>
-        </div>
+        <SectionHeading
+          as="h3"
+          variant="overline"
+          className="mb-4"
+          actions={
+            <Badge variant="outline" className="font-mono text-xs">
+              {k.facturados}/{k.totalExpedientes} facturados · {k.avancePct.toFixed(0)}%
+            </Badge>
+          }
+        >
+          Cierre {mesLabel}
+        </SectionHeading>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <CierreCard

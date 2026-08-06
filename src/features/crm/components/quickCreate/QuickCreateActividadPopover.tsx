@@ -13,6 +13,7 @@ import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useCrearActividad, useOportunidades, type CrmEntidadTipo } from "@/features/crm/hooks";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 interface Props {
   onCreated: () => void;
   onMore: () => void;
@@ -59,7 +60,7 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
 
   return (
     <div className="space-y-3 w-80">
-      <div className="text-sm font-semibold">Nueva actividad</div>
+      <SectionHeading as="h3">Nueva actividad</SectionHeading>
       <div className="space-y-1">
         <Label className="text-xs">Asunto *</Label>
         <Input autoFocus value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />

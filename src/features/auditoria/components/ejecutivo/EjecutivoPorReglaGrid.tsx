@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { reglaShortLabel } from "@/features/auditoria/constants/auditoriaConfig";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
 
@@ -15,13 +16,12 @@ export function EjecutivoPorReglaGrid({ porRegla }: Props) {
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(Object.keys(porRegla) as ReglaAuditoria[]).map((r) => (
-            <div
+            <KpiCard
               key={r}
-              className="rounded-md border p-3 hover:bg-muted/30 transition-colors"
-            >
-              <div className="text-2xl font-bold tabular-nums">{porRegla[r]}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">{reglaShortLabel(r)}</div>
-            </div>
+              label={reglaShortLabel(r)}
+              value={porRegla[r]}
+              className="shadow-none"
+            />
           ))}
         </div>
       </CardContent>

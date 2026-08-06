@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BANCOS_MEXICO } from "@/constants/bancosMexico";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import type { useNuevoProveedorController } from "@/features/proveedor/hooks";
 
 type Controller = ReturnType<typeof useNuevoProveedorController>;
@@ -17,12 +18,9 @@ export function NuevoProveedorStep2({ c }: { c: Controller }) {
   const esExtranjero = c.form.origen_proveedor === "Extranjero";
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-sm font-semibold">Datos bancarios</h3>
-        <p className="text-xs text-muted-foreground">
-          Opcional. Puedes capturarlos después desde la edición del proveedor.
-        </p>
-      </div>
+      <SectionHeading as="h3" description="Opcional. Puedes capturarlos después desde la edición del proveedor.">
+        Datos bancarios
+      </SectionHeading>
       {esExtranjero ? <Step2Internacional c={c} /> : <Step2Nacional c={c} />}
     </div>
   );

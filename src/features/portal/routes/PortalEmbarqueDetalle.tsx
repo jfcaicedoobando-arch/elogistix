@@ -1,9 +1,9 @@
 import { useParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Ship } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import EmptyState from "@/components/empty/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { DetailHeader } from "@/components/shared/DetailHeader";
@@ -45,11 +45,11 @@ export default function PortalEmbarqueDetalle() {
 
   if (!embarque) {
     return (
-      <div className="text-center py-20">
-        <Ship className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-        <p className="text-muted-foreground font-medium">Embarque no encontrado</p>
-        <Button variant="outline" className="mt-4" onClick={volver}>Volver</Button>
-      </div>
+      <EmptyState
+        icon={Ship}
+        title="Embarque no encontrado"
+        primaryAction={{ label: "Volver", onClick: volver, variant: "outline" }}
+      />
     );
   }
 

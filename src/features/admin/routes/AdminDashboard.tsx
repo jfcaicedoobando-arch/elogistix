@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { Building2, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
@@ -38,32 +39,15 @@ export default function AdminDashboard() {
       />
 
       <div className="grid gap-4 md:grid-cols-2">
-        {cards.map((card) => {
-          const inner = (
-            <Card className="transition-all group-hover:shadow-raised group-hover:-translate-y-0.5 group-hover:border-primary/40">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                <card.icon className={`h-4 w-4 ${card.tone}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold tabular-nums">{isLoading ? "—" : card.value}</div>
-                {card.navigable && (
-                  <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Ver detalle <ArrowRight className="h-3 w-3" />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-          return card.navigable && card.to ? (
-            <button key={card.title} onClick={() => navigate(card.to!)}
-              className="text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
-              aria-label={`Ver ${card.title}`}
-            >{inner}</button>
-          ) : (
-            <div key={card.title} className="group">{inner}</div>
-          );
-        })}
+        {cards.map((card) => (
+          <KpiCard
+            key={card.title}
+            label={card.title}
+            value={isLoading ? "—" : card.value}
+            icon={card.icon}
+            to={card.navigable && card.to ? card.to : undefined}
+          />
+        ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
