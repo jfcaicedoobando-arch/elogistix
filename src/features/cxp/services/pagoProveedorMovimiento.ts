@@ -24,7 +24,10 @@ export interface MovimientoPagoInput {
   userId: string | null;
 }
 
-/** Cargo expresado en MXN (las cuentas se conciliaron históricamente en MXN). */
+/**
+ * Cargo expresado en MXN. Se conserva sólo para la bitácora (`cargo_mxn`),
+ * NUNCA para el movimiento bancario: ver `cargoEnMonedaCuenta`.
+ */
 export function cargoEnMxn(
   monto: number,
   moneda: string,
@@ -33,6 +36,35 @@ export function cargoEnMxn(
   if (moneda === "MXN") return monto;
   if (tipoCambioUsd && tipoCambioUsd > 0) return monto * tipoCambioUsd;
   return monto;
+}
+
+/**
+ * v13.444.2 — El movimiento bancario SIEMPRE se registra en la moneda de la
+ * cuenta. Antes se convertía todo a MXN, así que un pago de 23,650 USD desde
+ * una cuenta en USD entraba como 406,938.45 y descuadraba el saldo.
+ * Sólo se convierte cuando pago y cuenta difieren de verdad.
+ */
+export function cargoEnMonedaCuenta(
+  monto: number,
+  monedaPago: string,
+  monedaCuenta: string | null,
+  tipoCambioUsd: number | null,
+): number {
+  if (!monedaCuenta || monedaCuenta === monedaPago) return monto;
+  const tc = tipoCambioUsd && tipoCambioUsd > 0 ? tipoCambioUsd : null;
+  if (!tc) return monto;
+  if (monedaPago === "USD" && monedaCuenta === "MXN") return monto * tc;
+  if (monedaPago === "MXN" && monedaCuenta === "USD") return monto / tc;
+  return monto;
+}
+
+async function monedaDeCuenta(cuentaId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("cuentas_bancarias")
+    .select("moneda")
+    .eq("id", cuentaId)
+    .maybeSingle();
+  return data?.moneda ?? null;
 }
 
 async function describirFactura(facturaId: string): Promise<string> {
@@ -47,6 +79,7 @@ async function describirFactura(facturaId: string): Promise<string> {
   const nombre = prov?.nombre ?? "proveedor";
   return `Pago prov. ${folio} — ${nombre}`;
 }
+
 
 /**
  * Inserta el movimiento bancario conciliado del pago. No lanza: el pago ya
