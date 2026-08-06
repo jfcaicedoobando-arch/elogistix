@@ -5,6 +5,7 @@ export * from "./pagoProveedorActualizar";
 export * from "./conciliacionTesoreria";
 export * from "./parseCfdi";
 export * from "./cfdiStorage";
+export * from "./copiarArchivosEntrante";
 export * from "./conceptosCostoVinculables";
 export * from "./conceptosCfdiFactura";
 export * from "./crearAjustesFacturaProveedor";
