@@ -160,8 +160,9 @@ export function RegistrarAnticipoFields({
                 <SelectContent>
                   {cuentasDeMoneda.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.alias} — {c.banco} ({c.moneda})
+                      {etiquetaCuenta(c)}
                     </SelectItem>
+
                   ))}
                 </SelectContent>
               </Select>
