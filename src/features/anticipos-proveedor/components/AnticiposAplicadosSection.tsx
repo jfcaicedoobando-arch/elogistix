@@ -49,6 +49,15 @@ export function AnticiposAplicadosSection({ facturaId }: Props) {
                 </tr>
               ))}
             </tbody>
+            <tfoot className="bg-muted/40 font-medium">
+              <tr>
+                <td className="px-4 py-3">Total aplicado</td>
+                <td className="text-right px-4 py-3 whitespace-nowrap tabular-nums">
+                  {formatCurrency(total, monedaTotal)}
+                </td>
+                <td className="text-center px-4 py-3">{monedaTotal}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </CardContent>
