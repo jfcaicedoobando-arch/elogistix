@@ -97,11 +97,21 @@ export function usePagoProveedorForm(
     [factura?.moneda, moneda, montoNum, tcNum],
   );
 
+  // v13.446.0: el TC del pago proviene del DOF de la fecha de pago (editable).
+  const {
+    tcDof, cargandoTcDof, setTcManual, setDiffManual, aplicarTcDof,
+  } = usePagoTcDof({
+    open, fecha, showTc, tc, setTc, diffMxn, setDiffMxn, esUsdPagadoEnMxn,
+    montoEnMonedaFactura, tcFactura: tcValido(factura?.tipo_cambio_usd), tcNum,
+    pagoEditarId,
+  });
+
   // Al editar, el importe del pago original vuelve al saldo disponible.
   const montoOriginalEnMonedaFactura = useMemo(
     () => calcMontoOriginal(pagoEditar, factura?.moneda),
     [pagoEditar, factura?.moneda],
   );
+
 
   const saldoDisponible = useMemo(
     () =>
