@@ -17,6 +17,7 @@ export {
   useDesconciliar,
   useIgnorarMovimiento,
   useRegistrarMovimientoManual,
+  useEliminarMovimientoManual,
 } from "./useTesoreriaMovimientos";
 export { useResumenTesoreria } from "./useResumenTesoreria";
 export { useFlujoProyectado } from "./useFlujoProyectado";
