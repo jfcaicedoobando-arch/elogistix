@@ -4,7 +4,8 @@
  * acciones disponibles según el estado y el rol.
  */
 import { useRef } from "react";
-import { FileCode2, FileText, Trash2, Upload } from "lucide-react";
+import { Link } from "react-router-dom";
+import { FileCode2, FileText, Link2 as LinkIcon, Trash2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters/dates";
