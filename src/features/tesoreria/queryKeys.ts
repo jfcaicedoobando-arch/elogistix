@@ -11,6 +11,9 @@ export const tesoreria = {
 
   movimientos: (cuentaId: string | null, filtros?: unknown) =>
     ["tesoreria", "movimientos", cuentaId, filtros ?? null] as const,
+  /** Conteo de movimientos sin conciliar de toda la organización. */
+  movimientosPendientes: (organizationId: string | null) =>
+    ["tesoreria", "movimientos-pendientes", organizationId ?? "none"] as const,
   resumen: (organizationId?: string | null) =>
     ["tesoreria", "resumen", organizationId] as const,
   flujoProyectado: (dias = 90) =>
