@@ -54,7 +54,27 @@ export default {
         // Ola 8 · Auditoría UI 1080p — reemplaza los ~129 usos de `text-[11px]`
         // en chips, footers de tabla y etiquetas densas.
         label: ["0.6875rem", { lineHeight: "1rem" }],
+        // ─────────────────────────────────────────────────────────────────────
+        // Ola 10 · Contrato tipográfico único del ERP.
+        // Un solo escalón por rol, con peso y line-height fijos, para que
+        // cualquier pantalla se vea como diseñada por el mismo equipo:
+        //   text-display    → H1, título de página (PageHeader / DetailHeader)
+        //   text-section    → H2, título de bloque de contenido (SectionHeading)
+        //   text-subsection → H3, título anidado dentro de una sección
+        //   text-card-title → título de tarjeta (CardTitle)
+        //   text-table-head → encabezado de columna de tabla (TableHead)
+        //   text-body       → texto de cuerpo por defecto
+        //   text-body-sm    → texto de cuerpo denso (celdas, listas compactas)
+        //   text-label      → micro-copy, chips y badges
+        // ─────────────────────────────────────────────────────────────────────
+        section: ["1rem", { lineHeight: "1.4", fontWeight: "600" }],
+        subsection: ["0.875rem", { lineHeight: "1.35", fontWeight: "600" }],
+        "card-title": ["1rem", { lineHeight: "1.4", fontWeight: "600" }],
+        "table-head": ["0.6875rem", { lineHeight: "1rem", fontWeight: "600" }],
+        body: ["0.875rem", { lineHeight: "1.5" }],
+        "body-sm": ["0.8125rem", { lineHeight: "1.25rem" }],
       },
+
 
       colors: {
         border: "hsl(var(--border))",
