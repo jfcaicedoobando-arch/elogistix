@@ -3,6 +3,7 @@ import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { Circle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { FIELD_FOCUS_RING_COMPACT_CLASS } from "./field.tokens";
 
 const RadioGroup = ({ ref, className, ...props }: React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> & { ref?: React.Ref<React.ElementRef<typeof RadioGroupPrimitive.Root>> }) => {
   return <RadioGroupPrimitive.Root className={cn("grid gap-2", className)} {...props} ref={ref} />;
@@ -14,7 +15,8 @@ const RadioGroupItem = ({ ref, className, ...props }: React.ComponentPropsWithou
     <RadioGroupPrimitive.Item
       ref={ref}
       className={cn(
-        "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "aspect-square h-4 w-4 rounded-full border border-primary text-primary",
+        FIELD_FOCUS_RING_COMPACT_CLASS,
         className,
       )}
       {...props}
