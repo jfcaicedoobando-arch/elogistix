@@ -27,6 +27,12 @@ import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
   factura: FacturaCxP;
+  /**
+   * `tabla` (por omisión) muestra el badge primario + chips secundarios.
+   * `detalle` muestra sólo el badge primario: en la página de detalle esa
+   * información ya vive en el stepper, la cinta de KPIs y las pestañas.
+   */
+  variant?: "tabla" | "detalle";
 }
 
 
@@ -67,7 +73,11 @@ function tooltipDetails(f: FacturaCxP): string[] {
   return lines;
 }
 
-export function EstadoFacturaCxPCell({ factura: f }: Props) {
+export function EstadoFacturaCxPCell({ factura: f, variant = "tabla" }: Props) {
+  if (variant === "detalle") {
+    return <StatusBadge domain="factura_cxp" status={f.estatus} />;
+  }
+
   const chips: Array<{ key: string; label: string; tone: ChipTone }> = [];
 
   if (f.flags.parcial) {

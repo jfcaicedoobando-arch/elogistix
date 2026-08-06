@@ -56,7 +56,14 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
       })}
       </ol>
       {resumen.subEtiqueta ? (
-        <span className="rounded-full border border-warning/40 bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">
+        <span
+          className={cn(
+            "rounded-full border px-2.5 py-1 text-xs font-medium",
+            resumen.subTono === "destructive"
+              ? "border-destructive/40 bg-destructive/10 text-destructive"
+              : "border-warning/40 bg-warning/10 text-warning",
+          )}
+        >
           {resumen.subEtiqueta}
         </span>
       ) : null}

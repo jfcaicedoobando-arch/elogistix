@@ -23,6 +23,8 @@ export function FacturaProveedorHeader({ factura: f, actions }: Props) {
   const resumen = resumenFacturaRecibida({
     estado: f.estado,
     estadoAprobacion: f.estado_aprobacion,
+    estatus: f.estatus,
+    diasVencido: f.saldo > 0.01 ? f.dias_vencido : 0,
   });
 
   return (
@@ -31,7 +33,7 @@ export function FacturaProveedorHeader({ factura: f, actions }: Props) {
       backLabel="Volver a Facturas de proveedor"
       icon={<ReceiptText className="h-6 w-6 shrink-0 text-accent" />}
       title={<span className="font-mono tabular-nums">{f.folio_interno}</span>}
-      badge={<EstadoFacturaCxPCell factura={f} />}
+      badge={<EstadoFacturaCxPCell factura={f} variant="detalle" />}
       subtitle={
         <span className="flex flex-wrap items-center gap-x-2">
           <span>{f.proveedor_nombre}</span>
