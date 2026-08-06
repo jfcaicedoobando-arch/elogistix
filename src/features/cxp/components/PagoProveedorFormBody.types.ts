@@ -44,4 +44,9 @@ export interface PagoProveedorFormBodyProps {
   /** Vista previa del impacto del pago (factura, proveedor y banco). */
   impacto: ImpactoPago | null;
   cargandoSaldoProveedor?: boolean;
+  /** TC DOF vigente en la fecha de pago (fuente oficial del TC del pago). */
+  tcDof?: { usdMxn: number; fecha: string; exacto: boolean } | null;
+  cargandoTcDof?: boolean;
+  aplicarTcDof?: () => void;
 }
+
