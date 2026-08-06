@@ -13,6 +13,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
+import { useVerificarSatLote } from "@/features/cxp/hooks/useVerificarSatLote";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
@@ -31,6 +32,12 @@ export default function ComprasPorAprobar() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { aprobar, isRunning, progreso } = useAprobarFacturasLote();
+  const {
+    verificar: verificarSat,
+    isRunning: satRunning,
+    progreso: satProgreso,
+  } = useVerificarSatLote();
+
 
   const { data: rows = [], isLoading, isError, refetch } = useFacturasCxP({
     aprobacion,
@@ -56,6 +63,16 @@ export default function ComprasPorAprobar() {
   const seleccionadas = useMemo(() => rows.filter((r) => selected.has(r.id)), [rows, selected]);
   const totalSelMxn = sumaMxn(seleccionadas);
   const totalSelUsd = sumaUsd(seleccionadas);
+
+  // Solo los CFDI nacionales con UUID se pueden consultar en el SAT.
+  const validablesSat = useMemo(
+    () =>
+      seleccionadas
+        .filter((f) => f.proveedor_origen !== "Extranjero" && !!f.uuid_fiscal)
+        .map((f) => f.id),
+    [seleccionadas],
+  );
+
 
   const handleAprobarLote = async () => {
     await aprobar(Array.from(selected));
@@ -130,6 +147,10 @@ export default function ComprasPorAprobar() {
               isRunning={isRunning}
               progreso={progreso}
               onOpenConfirm={() => setConfirmOpen(true)}
+              validablesCount={validablesSat.length}
+              satRunning={satRunning}
+              satProgreso={satProgreso}
+              onValidarSat={() => void verificarSat(validablesSat)}
             />
           )}
         </CardContent>

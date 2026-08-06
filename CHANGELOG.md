@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.428.0] - 2026-08-06
+- Validación masiva en el SAT: en "Compras › Por aprobar" ahora puedes seleccionar varias facturas y presionar "Validar en SAT" para consultar el estatus del CFDI de todas de un jalón (se procesan en fila, una tras otra, como en la ventanilla).
+- Solo se validan facturas nacionales con UUID fiscal; el botón indica cuántas de tu selección son validables.
+- Al terminar aparece un resumen: cuántas quedaron vigentes, canceladas, no encontradas o no verificables, para que revises las marcadas antes de aprobarlas.
+
 ## [13.427.0] - 2026-08-06
 - Facturas de proveedor capturadas desde el buzón ya se llevan sus archivos: al capturar, el PDF y el XML se copian del buzón al expediente de la factura, así que la pestaña "Documentos" ya no aparece vacía.
 - Backfill en backend: se repararon las facturas históricas (incluida FP-000066) copiando 3 PDFs, 1 XML y reconstruyendo 14 conceptos informativos desde el XML. Es como pasar en limpio los expedientes que se archivaron sin sus anexos.
