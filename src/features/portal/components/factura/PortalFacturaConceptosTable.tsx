@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead, DetailTableEmptyRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters";
 import { Receipt } from "lucide-react";
 
@@ -83,10 +84,10 @@ export default function PortalFacturaConceptosTable({ snapshot, moneda, pdfDispo
           <Table className="min-w-[560px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Concepto</TableHead>
-                <TableHead className="text-right w-20">Cant.</TableHead>
-                <TableHead className="text-right w-32">P. Unitario</TableHead>
-                <TableHead className="text-right w-32">Importe</TableHead>
+                <DetailTableHead>Concepto</DetailTableHead>
+                <DetailTableHead className="text-right w-20">Cant.</DetailTableHead>
+                <DetailTableHead className="text-right w-32">P. Unitario</DetailTableHead>
+                <DetailTableHead className="text-right w-32">Importe</DetailTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

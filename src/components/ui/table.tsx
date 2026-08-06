@@ -37,7 +37,7 @@ const TableHead = ({ ref, className, ...props }: React.ThHTMLAttributes<HTMLTabl
     <th
       ref={ref}
       className={cn(
-        "h-9 px-3 text-left align-middle text-label font-semibold uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pr-0",
+        "h-9 px-3 text-left align-middle text-table-head uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pr-0",
         className,
       )}
       {...props}
