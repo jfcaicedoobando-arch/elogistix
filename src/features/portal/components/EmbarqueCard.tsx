@@ -40,7 +40,7 @@ function etaProximityClass(eta: string | null | undefined): string {
     const days = differenceInCalendarDays(parseDateOnlyLocal(eta), new Date());
     if (days < 0) return "text-muted-foreground";
     if (days < 3) return "text-destructive font-semibold";
-    if (days < 7) return "text-[hsl(var(--warning))] font-semibold";
+    if (days < 7) return "text-warning font-semibold";
     return "text-muted-foreground";
   } catch {
     return "text-muted-foreground";

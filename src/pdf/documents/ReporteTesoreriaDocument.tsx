@@ -4,6 +4,7 @@ import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { ResumenTesoreria, ResumenCuenta, TopItem } from "@/features/tesoreria/services";
+import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   fechaCorte: string;
@@ -31,7 +32,7 @@ export function ReporteTesoreriaDocument({ fechaCorte, resumen, emisor }: Props)
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Resumen de Tesorería</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: "#475569" }}>Corte: {formatDate(fechaCorte)}</Text>
+            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>Corte: {formatDate(fechaCorte)}</Text>
           </View>
         </View>
 

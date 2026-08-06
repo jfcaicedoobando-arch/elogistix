@@ -5,6 +5,8 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
+import { CHART } from "@/lib/chartTokens";
+
 
 export interface TimelinePoint {
   label: string;
@@ -46,7 +48,7 @@ export default function HealthTimelineChart({ loading, data }: Props) {
               />
               <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Total" />
               <Line type="monotone" dataKey="errors" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} name="Errores" />
-              <Line type="monotone" dataKey="warns" stroke="hsl(38 92% 50%)" strokeWidth={2} dot={false} name="Avisos" />
+              <Line type="monotone" dataKey="warns" stroke={CHART.warning} strokeWidth={2} dot={false} name="Avisos" />
             </LineChart>
           </ResponsiveContainer>
         )}

@@ -7,6 +7,7 @@ import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { ResumenVsReal, FilaVsReal } from "@/features/presupuesto/services";
+import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   resumen: ResumenVsReal;
@@ -28,7 +29,7 @@ export function ReportePresupuestoDocument({ resumen, emisor }: Props) {
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Presupuesto vs Real</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: "#475569" }}>Periodo: {resumen.periodo}</Text>
+            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>Periodo: {resumen.periodo}</Text>
           </View>
         </View>
 

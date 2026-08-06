@@ -3,19 +3,8 @@ import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { formatCurrency } from "@/lib/formatters";
+import { CHART_SERIES as CHART_COLORS } from "@/lib/chartTokens";
 
-const CHART_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--primary) / 0.85)",
-  "hsl(var(--primary) / 0.7)",
-  "hsl(var(--primary) / 0.6)",
-  "hsl(var(--primary) / 0.5)",
-  "hsl(var(--primary) / 0.45)",
-  "hsl(var(--primary) / 0.4)",
-  "hsl(var(--primary) / 0.35)",
-  "hsl(var(--primary) / 0.3)",
-  "hsl(var(--primary) / 0.25)",
-];
 
 interface Props {
   data: { name: string; profit: number }[];

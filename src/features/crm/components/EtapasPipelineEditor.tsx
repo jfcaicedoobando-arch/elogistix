@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { COLOR_ETAPA_DEFAULT } from "@/lib/chartTokens";
+
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -28,7 +30,7 @@ interface RowState {
 
 function toState(e: CrmEtapaRow): RowState {
   return {
-    nombre: e.nombre, tipo: e.tipo as CrmEtapaTipo, color: e.color ?? "#888",
+    nombre: e.nombre, tipo: e.tipo as CrmEtapaTipo, color: e.color ?? COLOR_ETAPA_DEFAULT,
     probabilidad_default: e.probabilidad_default ?? 0,
     orden: e.orden, activa: e.activa,
     crea_tarea_seguimiento: e.crea_tarea_seguimiento ?? false,

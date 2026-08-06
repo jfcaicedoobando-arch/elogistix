@@ -784,11 +784,13 @@ export default tseslint.config(
     },
   },
 
-  // Lote B (retícula espacial 8/16/24): prohíbe padding/margin/gap arbitrarios
-  // en px dentro de literales de className. Usa la escala de Tailwind
-  // (p-2/p-3/p-4/p-6, gap-2/gap-4/gap-6, mt-1/mt-2/mt-4, etc.) en vez de
-  // valores "mágicos" como `p-[13px]`. Ámbito acotado a features/components
-  // para no bloquear CI por casos legítimos en primitivas `ui/` o `pdf/`.
+  // Lote B (retícula espacial 8/16/24): prohíbe padding/margin/gap/space
+  // arbitrarios (px o rem) dentro de literales de className. Usa la escala de
+  // Tailwind (p-2/p-3/p-4/p-6, gap-2/gap-4/gap-6, mt-1/mt-2/mt-4, etc.) en vez
+  // de valores "mágicos" como `p-[13px]`. También prohíbe colores crudos
+  // (`bg-[#0B1B3A]`, `text-[hsl(160 84% 39%)]`): deben venir de tokens
+  // semánticos del tema. Ámbito acotado a features/components para no bloquear
+  // CI por casos legítimos en primitivas `ui/` o `pdf/`.
   {
     name: "spacing-grid/no-arbitrary-px",
     files: ["src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
@@ -798,24 +800,37 @@ export default tseslint.config(
       "**/*columns.{ts,tsx}",
       "**/*Columns.{ts,tsx}",
       "**/__tests__/**",
+      // Página interna de QA de marca: simula lienzos fijos de la identidad.
+      "src/features/marketing/routes/LogoPreview.tsx",
     ],
     rules: {
       "no-restricted-syntax": ["error",
         {
           selector:
-            "Literal[value=/(^|\\s)(p|px|py|gap|mt|mb)-\\[[0-9]+px\\](\\s|$)/]",
+            "Literal[value=/(^|\\s)(p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml|gap|gap-x|gap-y|space-x|space-y)-\\[[0-9.]+(px|rem)\\](\\s|$)/]",
           message:
-            "No uses paddings/gaps/márgenes arbitrarios en px (p-[..px], px-[..px], py-[..px], gap-[..px], mt-[..px], mb-[..px]). Usa la escala de espaciado de Tailwind (p-2, p-4, gap-4, mt-2, etc.) redondeando al múltiplo de 8/16/24 más cercano.",
+            "No uses paddings/gaps/márgenes arbitrarios (p-[..px], gap-[..px], mt-[..rem], space-y-[..px]). Usa la escala de espaciado de Tailwind (p-2, p-4, gap-4, mt-2, etc.) redondeando al múltiplo de 8/16/24 más cercano.",
         },
         {
           selector:
-            "TemplateElement[value.raw=/(^|\\s)(p|px|py|gap|mt|mb)-\\[[0-9]+px\\](\\s|$)/]",
+            "TemplateElement[value.raw=/(^|\\s)(p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml|gap|gap-x|gap-y|space-x|space-y)-\\[[0-9.]+(px|rem)\\](\\s|$)/]",
           message:
-            "No uses paddings/gaps/márgenes arbitrarios en px dentro de template literals (p-[..px], px-[..px], py-[..px], gap-[..px], mt-[..px], mb-[..px]). Usa la escala de espaciado de Tailwind.",
+            "No uses paddings/gaps/márgenes arbitrarios en px/rem dentro de template literals. Usa la escala de espaciado de Tailwind.",
+        },
+        {
+          selector: "Literal[value=/-\\[(#[0-9a-fA-F]{3,8}|hsl\\(|rgba?\\()/]",
+          message:
+            "No uses colores crudos en clases arbitrarias (bg-[#0B1B3A], text-[hsl(...)]). Usa tokens semánticos del tema (bg-primary, text-success, border-border) o, para gráficas, `CHART` de @/lib/chartTokens.",
+        },
+        {
+          selector: "TemplateElement[value.raw=/-\\[(#[0-9a-fA-F]{3,8}|hsl\\(|rgba?\\()/]",
+          message:
+            "No uses colores crudos en clases arbitrarias dentro de template literals. Usa tokens semánticos del tema.",
         },
       ],
     },
   },
+
 
   // Bloque 2.3 (arquitectura): prohibir imports profundos cross-feature.
   ...crossFeatureOverrides,

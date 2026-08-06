@@ -2,6 +2,7 @@ import { View, Text } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/types";
 import { Fragment } from "react";
 import { styles } from "../theme/styles";
+import { COLORS } from "@/pdf/theme/tokens";
 
 export interface PdfColumn<T> {
   key: string;
@@ -64,7 +65,7 @@ export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
             </View>
             {subrow ? (
               <View style={rowStyle} wrap>
-                <Text style={[styles.td, styles.cellDesc, { fontStyle: "italic", color: "#64748B" }]} wrap>
+                <Text style={[styles.td, styles.cellDesc, { fontStyle: "italic", color: COLORS.subtle }]} wrap>
                   ↳ {subrow}
                 </Text>
               </View>

@@ -5,6 +5,7 @@ import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { FacturaCobranza } from "@/features/facturacion/services";
 import type { FacturaCxP } from "@/features/cxp/services";
+import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   fechaCorte: string; // YYYY-MM-DD
@@ -68,7 +69,7 @@ export function ReporteCarteraDocument({ fechaCorte, cxc, cxp, emisor }: Props) 
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Cartera CxC + CxP</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: "#475569" }}>Corte: {formatDate(fechaCorte)}</Text>
+            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>Corte: {formatDate(fechaCorte)}</Text>
           </View>
         </View>
 

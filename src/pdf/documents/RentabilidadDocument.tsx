@@ -3,6 +3,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
+import { COLORS } from "@/pdf/theme/tokens";
 
 export interface RentabilidadClienteRow {
   cliente_nombre: string;
@@ -46,7 +47,7 @@ export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clien
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Rentabilidad por cliente</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: "#475569" }}>
+            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>
               Período: {fechaDesde} → {fechaHasta}
               {modo && modo !== "all" ? `   ·   Modo: ${modo}` : ""}
             </Text>
