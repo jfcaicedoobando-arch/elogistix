@@ -21,7 +21,7 @@ export interface SectionHeadingProps {
   children: ReactNode;
   /** Nivel semántico. Default `h2`. */
   as?: "h2" | "h3";
-  variant?: "section" | "overline";
+  variant?: "section" | "subsection" | "overline";
   /** Icono opcional a la izquierda (hereda el color muted). */
   icon?: ReactNode;
   /** Contador en gris junto al título (se oculta si es 0). */
