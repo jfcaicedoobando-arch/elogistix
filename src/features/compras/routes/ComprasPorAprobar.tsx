@@ -13,6 +13,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
+import { useVerificarSatLote } from "@/features/cxp/hooks/useVerificarSatLote";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
