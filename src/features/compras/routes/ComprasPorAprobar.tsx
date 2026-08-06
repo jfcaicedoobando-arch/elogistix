@@ -31,6 +31,12 @@ export default function ComprasPorAprobar() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { aprobar, isRunning, progreso } = useAprobarFacturasLote();
+  const {
+    verificar: verificarSat,
+    isRunning: satRunning,
+    progreso: satProgreso,
+  } = useVerificarSatLote();
+
 
   const { data: rows = [], isLoading, isError, refetch } = useFacturasCxP({
     aprobacion,
