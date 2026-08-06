@@ -115,16 +115,17 @@ export async function generarEstadoCuentaPdf(
     <meta charset="utf-8" />
     <title>Estado de cuenta — ${esc(cliente.nombre)}</title>
     <style>
-      body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: #1B2B4B; padding: 24px; font-size: 12px; }
+      body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: ${COLORS.ink}; padding: 24px; font-size: 12px; }
       h1 { margin: 0 0 4px; font-size: 18px; }
-      .meta { color: #475569; font-size: 11px; margin-bottom: 16px; }
+      .meta { color: ${COLORS.muted}; font-size: 11px; margin-bottom: 16px; }
       table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-      th, td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-      th { background: #F8FAFC; font-weight: 600; }
+      th, td { padding: 6px 8px; border-bottom: 1px solid ${COLORS.border}; text-align: left; }
+      th { background: ${COLORS.zebra}; font-weight: 600; }
       .aging { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
       .agg { width: 280px; }
-      .tot td { border-top: 2px solid #1B2B4B; }
-      .footer { margin-top: 24px; font-size: 10px; color: #64748b; text-align: center; }
+      .tot td { border-top: 2px solid ${COLORS.ink}; }
+      .footer { margin-top: 24px; font-size: 10px; color: ${COLORS.subtle}; text-align: center; }
+
       @media print { body { padding: 0; } }
     </style>
   </head><body>
