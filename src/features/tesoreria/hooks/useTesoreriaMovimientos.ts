@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   listarMovimientos, importarMovimientos, conciliarConPago, desconciliarMovimiento,
   ignorarMovimiento, sugerirCandidatos, fetchConciliacionResumen, registrarMovimientoManual,
+  eliminarMovimientoManual,
   type FiltrosMovimientos, type MovimientoBBVA, type MovimientoManualPayload,
 } from "@/features/tesoreria/services";
 import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
@@ -103,5 +104,16 @@ export function useRegistrarMovimientoManual() {
     successTitle: "Movimiento registrado",
     errorTitle: "Error al registrar movimiento",
     errorMethod: "REGISTRAR_MOVIMIENTO_MANUAL",
+  });
+}
+
+/** v13.444.0 — Borrado de movimiento manual (soft-delete). */
+export function useEliminarMovimientoManual() {
+  return useMutationWithFeedback({
+    mutationFn: (movId: string) => eliminarMovimientoManual(movId),
+    invalidate: queryKeys.tesoreria.all,
+    successTitle: "Movimiento eliminado",
+    errorTitle: "Error al eliminar movimiento",
+    errorMethod: "ELIMINAR_MOVIMIENTO_MANUAL",
   });
 }
