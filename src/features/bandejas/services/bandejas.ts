@@ -15,7 +15,9 @@ export interface CxpPorCapturarRow {
 
 export interface CxpPorPagarRow {
   factura_id: string;
+  proveedor_id: string | null;
   proveedor_nombre: string | null;
+  proveedor_origen: string | null;
   folio_proveedor: string | null;
   embarque_id: string | null;
   expediente: string | null;

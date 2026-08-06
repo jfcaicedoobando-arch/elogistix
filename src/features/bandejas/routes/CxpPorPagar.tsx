@@ -7,8 +7,11 @@
  */
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Inbox, CalendarCheck } from "lucide-react";
+import { Inbox, CalendarCheck, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DialogPagoLoteProveedor } from "@/features/cxp/components/DialogPagoLoteProveedor";
+import type { OrigenProveedor } from "@/features/cxp/components/pagoProveedorHelpers";
+
 import { ProgramarPagoDialog } from "./_sections/ProgramarPagoDialog";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar } from "@/features/bandejas/domain/aggregates";
@@ -36,6 +39,8 @@ export default function CxpPorPagar() {
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
   const [rowSelection, setRowSelection] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loteOpen, setLoteOpen] = useState(false);
+
   const [fechaProgramada, setFechaProgramada] = useState(todayLocalISO());
   const { programar, isRunning, progreso } = useProgramarPagoLote();
 
@@ -76,6 +81,31 @@ export default function CxpPorPagar() {
   const selectedIds = useMemo(() => Object.keys(rowSelection), [rowSelection]);
   const hasSelection = selectedIds.length > 0;
 
+  // Pago en lote: sólo si la selección es del mismo proveedor y la misma moneda.
+  const seleccionadas = useMemo(
+    () => data.filter((r) => selectedIds.includes(r.factura_id)),
+    [data, selectedIds],
+  );
+  const lote = useMemo(() => {
+    if (seleccionadas.length < 2) return null;
+    const primera = seleccionadas[0];
+    const mismoProveedor = seleccionadas.every((r) => r.proveedor_id === primera.proveedor_id);
+    const mismaMoneda = seleccionadas.every((r) => r.moneda === primera.moneda);
+    if (!mismoProveedor || !mismaMoneda || !primera.proveedor_id) return null;
+    return {
+      proveedorId: primera.proveedor_id,
+      proveedorNombre: primera.proveedor_nombre ?? "",
+      proveedorOrigen: (primera.proveedor_origen ?? null) as OrigenProveedor,
+      moneda: primera.moneda,
+      facturas: seleccionadas.map((r) => ({
+        factura_id: r.factura_id,
+        folio_proveedor: r.folio_proveedor,
+        fecha_vencimiento: r.fecha_vencimiento,
+        saldo: Number(r.saldo ?? 0),
+      })),
+    };
+  }, [seleccionadas]);
+
   const handleProgramar = async () => {
     await programar(selectedIds, fechaProgramada);
     setIsDialogOpen(false);
@@ -89,13 +119,28 @@ export default function CxpPorPagar() {
         description="Facturas de proveedor vigentes con saldo. Programa y registra los pagos."
         actions={
           hasSelection && (
-            <Button onClick={() => setIsDialogOpen(true)} variant="default">
-              <CalendarCheck className="h-4 w-4 mr-2" />
-              Programar pago ({selectedIds.length})
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setIsDialogOpen(true)} variant="outline">
+                <CalendarCheck className="h-4 w-4 mr-2" />
+                Programar pago ({selectedIds.length})
+              </Button>
+              <Button
+                onClick={() => setLoteOpen(true)}
+                disabled={!lote}
+                title={
+                  lote
+                    ? undefined
+                    : "Selecciona 2 o más facturas del mismo proveedor y la misma moneda"
+                }
+              >
+                <Layers className="h-4 w-4 mr-2" />
+                Pagar en lote ({selectedIds.length})
+              </Button>
+            </div>
           )
         }
       />
+
 
 
 
@@ -162,7 +207,21 @@ export default function CxpPorPagar() {
         progreso={progreso}
         onConfirmar={handleProgramar}
       />
+
+      {lote && (
+        <DialogPagoLoteProveedor
+          open={loteOpen}
+          onOpenChange={setLoteOpen}
+          proveedorId={lote.proveedorId}
+          proveedorNombre={lote.proveedorNombre}
+          proveedorOrigen={lote.proveedorOrigen}
+          moneda={lote.moneda}
+          facturas={lote.facturas}
+          onDone={() => setRowSelection({})}
+        />
+      )}
       </CargaGuard>
+
     </PageContainer>
   );
 }

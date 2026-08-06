@@ -491,6 +491,7 @@ export type Database = {
           organization_id: string
           pago_factura_id: string | null
           pago_proveedor_id: string | null
+          pago_proveedor_lote_id: string | null
           referencia: string
           saldo: number | null
         }
@@ -514,6 +515,7 @@ export type Database = {
           organization_id?: string
           pago_factura_id?: string | null
           pago_proveedor_id?: string | null
+          pago_proveedor_lote_id?: string | null
           referencia?: string
           saldo?: number | null
         }
@@ -537,6 +539,7 @@ export type Database = {
           organization_id?: string
           pago_factura_id?: string | null
           pago_proveedor_id?: string | null
+          pago_proveedor_lote_id?: string | null
           referencia?: string
           saldo?: number | null
         }
@@ -560,6 +563,13 @@ export type Database = {
             columns: ["pago_proveedor_id"]
             isOneToOne: false
             referencedRelation: "pagos_proveedor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bbva_movimientos_pago_proveedor_lote_id_fkey"
+            columns: ["pago_proveedor_lote_id"]
+            isOneToOne: false
+            referencedRelation: "pagos_proveedor_lote"
             referencedColumns: ["id"]
           },
         ]
@@ -5266,6 +5276,7 @@ export type Database = {
           es_anticipo_aplicado: boolean
           fecha_pago: string
           id: string
+          lote_id: string | null
           metodo_pago: string
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
@@ -5289,6 +5300,7 @@ export type Database = {
           es_anticipo_aplicado?: boolean
           fecha_pago?: string
           id?: string
+          lote_id?: string | null
           metodo_pago?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
@@ -5312,6 +5324,7 @@ export type Database = {
           es_anticipo_aplicado?: boolean
           fecha_pago?: string
           id?: string
+          lote_id?: string | null
           metodo_pago?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
@@ -5330,6 +5343,13 @@ export type Database = {
             columns: ["cuenta_bancaria_id"]
             isOneToOne: false
             referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_proveedor_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "pagos_proveedor_lote"
             referencedColumns: ["id"]
           },
           {
@@ -5352,6 +5372,78 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_proveedor_facturas_saldo"
             referencedColumns: ["proveedor_factura_id"]
+          },
+        ]
+      }
+      pagos_proveedor_lote: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cuenta_bancaria_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          fecha_pago: string
+          id: string
+          metodo_pago: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto_total: number
+          notas: string
+          organization_id: string
+          proveedor_id: string
+          referencia: string
+          tipo_cambio_usd: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cuenta_bancaria_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_pago?: string
+          id?: string
+          metodo_pago?: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto_total: number
+          notas?: string
+          organization_id: string
+          proveedor_id: string
+          referencia?: string
+          tipo_cambio_usd?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cuenta_bancaria_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_pago?: string
+          id?: string
+          metodo_pago?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto_total?: number
+          notas?: string
+          organization_id?: string
+          proveedor_id?: string
+          referencia?: string
+          tipo_cambio_usd?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_proveedor_lote_cuenta_bancaria_id_fkey"
+            columns: ["cuenta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_proveedor_lote_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -8009,7 +8101,9 @@ export type Database = {
           folio_proveedor: string
           moneda: string
           pagado: number
+          proveedor_id: string
           proveedor_nombre: string
+          proveedor_origen: string
           saldo: number
           tipo_cambio_usd: number
           total: number
@@ -8803,6 +8897,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      registrar_pago_proveedor_lote: {
+        Args: { p_payload: Json }
+        Returns: string
       }
       reportes_resumen: {
         Args: {
