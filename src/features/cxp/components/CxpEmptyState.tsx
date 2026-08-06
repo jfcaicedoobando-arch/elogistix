@@ -2,8 +2,7 @@
  * Vista vacía de la bandeja CxP.
  * Extraído de `Cxp.tsx` (v13.317.9) — sólo presentación.
  */
-import { Inbox, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Inbox } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 
 interface Props {

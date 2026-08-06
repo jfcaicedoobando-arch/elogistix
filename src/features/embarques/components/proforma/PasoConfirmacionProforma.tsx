@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { CheckCircle2 } from "lucide-react";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
@@ -28,7 +29,7 @@ export function PasoConfirmacionProforma({
 
       <div className="border rounded-md overflow-hidden">
         <div className="bg-muted/50 px-3 py-2 border-b">
-          <h4 className="text-sm font-semibold">Conceptos incluidos ({conceptosSeleccionados.length})</h4>
+          <SectionHeading as="h3" count={conceptosSeleccionados.length}>Conceptos incluidos</SectionHeading>
         </div>
         <DataTable<ConceptoVenta>
           columns={defineColumns<ConceptoVenta>([
@@ -57,7 +58,7 @@ export function PasoConfirmacionProforma({
 
 
       <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
-        <h4 className="font-semibold text-sm mb-2">Totales finales</h4>
+        <SectionHeading as="h3" className="mb-2">Totales finales</SectionHeading>
         {totales.subtotal_usd > 0 && (
           <div className="space-y-1 text-sm">
             <div className="flex justify-between"><span>Subtotal USD:</span><span>{formatCurrency(totales.subtotal_usd, "USD")}</span></div>

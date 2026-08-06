@@ -117,7 +117,7 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
       </div>
 
       {Object.keys(totales).length > 0 && (
-        <KpiStrip desktopCols={Math.min(Object.keys(totales).length, 4) as 2 | 3 | 4}>
+        <KpiStrip desktopCols={Math.min(Math.max(Object.keys(totales).length, 2), 4) as 2 | 3 | 4}>
           {Object.entries(totales).map(([moneda, total]) => (
             <KpiCard
               key={moneda}
