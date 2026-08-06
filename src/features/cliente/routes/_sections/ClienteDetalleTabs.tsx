@@ -12,6 +12,7 @@ import { ClienteInformacionCard } from "@/features/cliente/components/detalle/Cl
 import { ClienteCreditoCard } from "@/features/cliente/components/detalle/ClienteCreditoCard";
 import type { EmbarqueCliente, CotizacionCliente } from "@/features/cliente/components/clienteColumns";
 import type { ContactoCliente } from "@/features/cliente/types/cliente";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 /** Sólo los campos del cliente que consumen las pestañas (evita acoplarse a la fila completa). */
 interface ClienteTabsData {
@@ -98,7 +99,7 @@ export function ClienteDetalleTabs({
             emptyMessage="Sin embarques registrados. Los embarques se generan al confirmar una cotización."
             getRowHref={(e) => `/embarques/${e.id}`}
             rowKey={(e) => e.id}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </ClienteTabSection>
       </TabsContent>
@@ -124,7 +125,7 @@ export function ClienteDetalleTabs({
             emptyMessage="Sin cotizaciones registradas para este cliente."
             getRowHref={(c) => `/cotizaciones/${c.id}`}
             rowKey={(c) => c.id}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </ClienteTabSection>
       </TabsContent>

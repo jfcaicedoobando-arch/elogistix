@@ -8,6 +8,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 // Exenta de no-restricted-imports vía eslint.config.js allowlist: render row custom para sub-tabla de embarques relacionados.
 import { TableRow, TableCell } from "@/components/ui/table";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type RelacionadoRow = ReturnType<typeof useEmbarquesRelacionados>["data"] extends (infer U)[] | undefined ? U : never;
 
@@ -66,7 +67,7 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
 
           data={ordenados}
           rowKey={(r) => r.id}
-          density="compact"
+          density={TABLE_DENSITY.embebida}
           rowClassName={(r) => r.id === embarqueId ? 'bg-accent/10 font-medium' : ''}
           getRowHref={(r) => r.id !== embarqueId ? `/embarques/${r.id}` : null}
           footer={

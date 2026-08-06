@@ -9,6 +9,7 @@ import { Save, Pencil } from "lucide-react";
 import { usePlanes, useUpdatePlan, type Plan } from "@/features/admin/hooks";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export default function TabPlanes() {
   const { data: planes = [], isLoading } = usePlanes();
@@ -168,7 +169,7 @@ export default function TabPlanes() {
           isLoading={isLoading}
           emptyMessage="No hay planes configurados"
           rowKey={(p) => p.id}
-          density="comfortable"
+          density={TABLE_DENSITY.listado}
         />
       </CardContent>
     </Card>

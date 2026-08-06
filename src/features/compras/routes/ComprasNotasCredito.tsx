@@ -26,6 +26,7 @@ import { buildNotasCreditoColumns } from "./_sections/notasCreditoColumns";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 type EstadoFiltro = "todos" | NotaCreditoRow["estado"];
@@ -162,7 +163,7 @@ export default function ComprasNotasCredito() {
             emptyHint="Ajusta el rango de fechas o los filtros para ver resultados."
             emptyIcon={ReceiptText}
             rowKey={(r) => r.id}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </CardContent>
       </Card>

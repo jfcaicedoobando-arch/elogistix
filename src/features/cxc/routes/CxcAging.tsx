@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { todayLocalISO } from "@/lib/date/today";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 function KpiBucket({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "warn" | "danger" }) {
   const toneCls =
@@ -164,7 +165,7 @@ export default function CxcAging() {
             emptyHint="No hay facturas con saldo abierto."
             striped
             hoverable
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </CardContent>
       </Card>

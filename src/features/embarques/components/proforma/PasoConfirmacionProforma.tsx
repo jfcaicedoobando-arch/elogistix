@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
@@ -50,7 +51,7 @@ export function PasoConfirmacionProforma({
           ]) as ColumnDef<ConceptoVenta, unknown>[]}
           data={conceptosSeleccionados}
           rowKey={(c) => c.id}
-          density="compact"
+          density={TABLE_DENSITY.embebida}
         />
 
       </div>

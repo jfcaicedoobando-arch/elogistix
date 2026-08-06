@@ -33,6 +33,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { queryKeys } from "@/lib/query";
 import { baseActividadColumns, actividadActionColumn } from "./actividadesColumns";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 
 type ActividadesFilters = { tipo: string; estado: string; responsable: string } & Record<string, string>;
@@ -157,7 +158,7 @@ export default function Actividades() {
             isLoading={list.isLoading}
             emptyMessage="Sin actividades"
             rowKey={(a) => a.id}
-            density="comfortable"
+            density={TABLE_DENSITY.listado}
             sortMode="server"
             controlledSort={list.controlledSort}
             onSortChange={(key, dir) => list.setSort(key, dir)}

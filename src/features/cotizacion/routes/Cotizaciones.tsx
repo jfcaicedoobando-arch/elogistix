@@ -23,6 +23,7 @@ import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotiz
 import { EstadoSelect, ClienteSelect } from "@/features/cotizacion/components/CotizacionesFilterSelects";
 import { CotizacionesPageActions } from "@/features/cotizacion/components/CotizacionesPageActions";
 import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -147,7 +148,7 @@ export default function Cotizaciones() {
             getRowHref={(r) => `/cotizaciones/${r.id}`}
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
             rowKey={(r) => r.id}
-            density="comfortable"
+            density={TABLE_DENSITY.listado}
             className="pb-24 sm:pb-0"
             mobileCard={(r) => (
               <div className="flex items-start justify-between gap-2">
@@ -170,6 +171,7 @@ export default function Cotizaciones() {
               onPageSizeChange: (s: number) => { c.setPageSize(s); c.setPage(0); },
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" },
+              total: c.filtered.length,
             }}
           />
         </CardContent>

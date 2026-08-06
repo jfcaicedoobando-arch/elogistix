@@ -15,6 +15,7 @@ import { Clock } from "lucide-react";
 import { useTabDemorasController } from "@/features/embarques/hooks/useTabDemorasController";
 import { buildDemorasColumns } from "./_sections/tabDemorasColumns";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   embarqueId: string;
@@ -50,7 +51,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
             columns={columns}
             data={rows}
             rowKey={(r) => r.id}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
             tableClassName="w-full"
             emptyState={
               <div className="p-6">

@@ -9,6 +9,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { formatCurrency } from "@/lib/formatters";
 import { EstadoConceptoBadge, type EstadoConcepto } from "./estadoConceptoBadge";
 import type { Tables } from "@/types/db";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
@@ -83,7 +84,7 @@ export function GrupoConceptosContenedor({
         ]) as ColumnDef<ConceptoVenta, unknown>[]}
         data={conceptos}
         rowKey={(c) => c.id}
-        density="compact"
+        density={TABLE_DENSITY.embebida}
       />
     </div>
   );

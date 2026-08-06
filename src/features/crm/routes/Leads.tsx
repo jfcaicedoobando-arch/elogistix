@@ -31,6 +31,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { queryKeys } from "@/lib/query";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface LeadsFilters extends Record<string, string> {
   estado: string;
@@ -136,7 +137,7 @@ export default function Leads() {
             emptyMessage={list.search ? "No se encontraron leads" : "No hay leads registrados"}
             getRowHref={(l) => `/crm/leads/${l.id}`}
             rowKey={(l) => l.id}
-            density="comfortable"
+            density={TABLE_DENSITY.listado}
             sortMode="server"
             controlledSort={list.controlledSort}
             onSortChange={(key, dir) => list.setSort(key, dir)}

@@ -12,6 +12,7 @@ import { toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/features/facturacion/hooks";
 import { ProyeccionCierreSection } from "./proyeccion/ProyeccionCierreSection";
 import { proyeccionColumns } from "./proyeccionColumns";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export function TabProyeccion() {
   const c = useTabProyeccionController();
@@ -143,7 +144,7 @@ export function TabProyeccion() {
               data={c.grupos}
               isLoading={c.isLoading}
               rowKey={(g) => g.expediente}
-              density="comfortable"
+              density={TABLE_DENSITY.listado}
               emptyMessage="Sin resultados con los filtros aplicados"
               onRowClick={(g) => {
                 if (g.embarqueIds[0]) navigate(`/embarques/${g.embarqueIds[0]}`);

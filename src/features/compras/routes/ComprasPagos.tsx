@@ -29,6 +29,7 @@ import { buildPagosColumns } from "./_sections/pagosColumns";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 
@@ -166,7 +167,7 @@ export default function ComprasPagos() {
             emptyHint="Ajusta el rango de fechas o los filtros para ver resultados."
             emptyIcon={Landmark}
             rowKey={(r) => r.id}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
           />
         </CardContent>
       </Card>

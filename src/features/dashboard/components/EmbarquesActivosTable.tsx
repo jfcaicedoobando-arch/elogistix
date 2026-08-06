@@ -11,6 +11,7 @@ import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/features/dashbo
 
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Ship } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   embarques: EmbarqueMesSiguiente[];
@@ -183,7 +184,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
           emptyMessage={`Sin embarques con ETA en ${nombreMesCap}`}
           getRowHref={(e) => `/embarques/${e.id}`}
           rowKey={(e) => e.id}
-          density="compact"
+          density={TABLE_DENSITY.embebida}
         />
       </CardContent>
     </Card>

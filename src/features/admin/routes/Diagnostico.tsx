@@ -15,6 +15,7 @@ import AlertasSistemaPanel from "@/features/admin/components/AlertasSistemaPanel
 import { diagnosticoColumns } from "@/features/admin/components/DiagnosticoColumns";
 import { useDebounce, useDocumentTitle } from "@/hooks/shared";
 import { formatNumber } from "@/lib/formatters";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 const DIAGNOSTICO_PAGE_SIZE = 50;
 
@@ -100,7 +101,7 @@ export default function Diagnostico() {
             columns={diagnosticoColumns}
             data={rows}
             isLoading={isLoading}
-            density="compact"
+            density={TABLE_DENSITY.embebida}
             emptyMessage="Sin registros para los filtros aplicados."
             rowKey={(r) => r.id}
             estimateRowHeight={56}

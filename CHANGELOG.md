@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.435.0] - 2026-08-06
+- Densidad de tablas estandarizada: dos presets únicos (`TABLE_DENSITY.listado` para páginas completas y `TABLE_DENSITY.embebida` para tablas dentro de cards, tabs y diálogos). Antes cada pantalla elegía su propio "tamaño de letra"; ahora es como usar dos tallas oficiales de camisa en vez de coser una distinta para cada quien. Se migraron 53 archivos y se eliminó el nivel `spacious` (no se usaba).
+- Hover y filas: un solo token `ROW_HOVER` compartido entre `DataTable` y `DetailTable`, así el resaltado al pasar el mouse se ve igual en todos los listados.
+- Paginación unificada: `PaginationControls` ahora muestra el rango con total ("1–20 de 134") y botones de primera/última página. Se conectó el total real en Clientes, Proveedores, Embarques, Cotizaciones, CxP, Proformas, Facturas emitidas y en los hooks compartidos de listados (CRM, Cartera, Portal, etc.). Se eliminó la paginación a mano del módulo de Auditoría.
+- Estados vacíos: Tarifas y Embarques ahora usan el componente compartido `EmptyState` en lugar de su propia versión, así el ícono, los textos y los botones quedan alineados con el resto de la app.
+- Guardrails: nueva prueba de arquitectura (`table-patterns.test.ts`) que falla el CI si alguien vuelve a escribir `density="compact"` a mano o reimplementa botones de Anterior/Siguiente en un listado paginado.
+
 ## [13.434.0] - 2026-08-06
 - Auditoría de tokens: se eliminaron los colores "a mano" que quedaban. Es como cambiar los botes de pintura sueltos por la paleta oficial: si mañana cambia el color de la marca, cambia en un solo lugar.
 - Gráficas: nuevo módulo `src/lib/chartTokens.ts` (`CHART`, `CHART_SERIES`) que apunta a las variables del tema; migradas la antigüedad de saldos de compras, la línea de salud del sistema y el top de reportes (antes tenían `hsl(...)` fijos que no respetaban modo oscuro).

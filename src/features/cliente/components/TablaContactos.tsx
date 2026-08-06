@@ -7,6 +7,7 @@ import type { Tables, Enums } from "@/types/db";
 import { toTitleCase, correctSpanishPlace } from "@/lib/formatters";
 import EmptyState from "@/components/empty/EmptyState";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
 
@@ -67,7 +68,7 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
         columns={columns}
         data={contactos}
         rowKey={(c) => c.id}
-        density="compact"
+        density={TABLE_DENSITY.embebida}
         emptyState={
           <div className="p-6">
             <EmptyState

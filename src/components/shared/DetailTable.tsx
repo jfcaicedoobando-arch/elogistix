@@ -6,8 +6,7 @@
  * Estandariza:
  *  - Encabezado: mayúsculas suaves + `text-muted-foreground` (mismo look
  *    que `DataTable`).
- *  - Fila: hover `hover:bg-muted/50` consistente (independiente del hover
- *    por defecto de `ui/table.tsx`).
+ *  - Fila: hover `ROW_HOVER` (mismo tinte que `DataTable` y `ui/table.tsx`).
  *  - Densidad: `compact` | `comfortable` (mismo mapeo que `DataTable`).
  *  - Estado vacío: mensaje centrado, muted, alto consistente.
  *
@@ -17,9 +16,12 @@
  */
 import type React from "react";
 import { TableHead, TableRow, TableCell } from "@/components/ui/table";
+import { ROW_HOVER, ROW_HOVER_NONE } from "@/components/shared/dataTable/tableTokens";
+import type { TableDensity } from "@/components/shared/dataTable/types";
 import { cn } from "@/lib/utils";
 
-export type DetailTableDensity = "compact" | "comfortable";
+/** Misma escala que `DataTable` — ver `tableTokens.ts`. */
+export type DetailTableDensity = TableDensity;
 
 
 /** Alto mínimo del renglón de estado vacío por densidad. */
@@ -50,7 +52,7 @@ interface DetailTableRowProps extends React.HTMLAttributes<HTMLTableRowElement> 
 export function DetailTableRow({ className, hoverable = true, ...props }: DetailTableRowProps) {
   return (
     <TableRow
-      className={cn(hoverable ? "hover:bg-muted/50" : "hover:bg-transparent", className)}
+      className={cn(hoverable ? ROW_HOVER : ROW_HOVER_NONE, className)}
       {...props}
     />
   );

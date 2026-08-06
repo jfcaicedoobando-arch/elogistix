@@ -36,6 +36,7 @@ const FN_OPTIONS: { value: FnFilter; label: string }[] = [
 ];
 
 import { formatFechaHora } from "@/lib/formatters";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 const dtf = {
   format(d: Date): string {
     return formatFechaHora(d.toISOString(), {
@@ -165,7 +166,7 @@ export default function Idempotencia() {
             isLoading={isLoading}
             rowKey={(r) => r.key}
             emptyMessage="Sin claves de idempotencia recientes"
-            density="comfortable"
+            density={TABLE_DENSITY.listado}
           />
         </CardContent>
       </Card>

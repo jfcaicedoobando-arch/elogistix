@@ -15,7 +15,8 @@ import { MarcarRevisadosBulkDialog } from "@/features/auditoria/components/Marca
 import { HallazgosBulkBar } from "@/features/auditoria/components/HallazgosBulkBar";
 import { HallazgosFiltros } from "./HallazgosFiltros";
 import { HallazgosTabla } from "./HallazgosTabla";
-import { HallazgosPagination } from "./HallazgosPagination";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { PAGE_SIZE_OPTIONS } from "./hallazgosTablaConfig";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
 interface Props {
@@ -135,14 +136,15 @@ export function HallazgosTablaPaginada({
         }}
       />
 
-      <HallazgosPagination
-        pageSize={state.pageSize}
-        currentPage={state.currentPage}
+      {/* Paginación estándar del ERP (base 0); el estado local es base 1. */}
+      <PaginationControls
+        page={state.currentPage - 1}
         totalPages={state.totalPages}
-        start={state.start}
-        total={state.filtrados.length}
+        onPageChange={(p) => state.setPage(p + 1)}
+        pageSize={state.pageSize}
         onPageSizeChange={state.setPageSize}
-        onPageChange={state.setPage}
+        pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
+        total={state.filtrados.length}
       />
     </div>
   );

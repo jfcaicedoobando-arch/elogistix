@@ -12,6 +12,7 @@ import type {
   PortalClienteUserRow,
 } from "@/features/admin/services/usuario/portales";
 import { usePortalUsuarioColumns } from "./portalUsuariosColumns";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   tipo: "cliente" | "agente";
@@ -69,7 +70,7 @@ export function PortalUsuariosTab({ tipo }: Props) {
               : "Aún no hay agentes con acceso al Portal Agente."
           }
           rowKey={(u) => u.id}
-          density="comfortable"
+          density={TABLE_DENSITY.listado}
           tableClassName="w-full"
         />
       </div>

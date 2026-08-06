@@ -19,6 +19,7 @@ import { useEmbarquesPageController, calcularEstadoEmbarque } from "@/features/e
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
   const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
@@ -46,7 +47,7 @@ export default function Embarques() {
     sortKey, sortDir, handleSortChange,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterAlerta,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
-    filtered, expedientesCount, contenedoresCount, totalPages, alertasResumen,
+    filtered, expedientesCount, contenedoresCount, totalPages, totalCount, alertasResumen,
   } = state;
 
 
@@ -138,7 +139,7 @@ export default function Embarques() {
                 sortMode="server"
                 controlledSort={{ key: sortKey, dir: sortDir }}
                 onSortChange={handleSortChange}
-                density="comfortable"
+                density={TABLE_DENSITY.listado}
                 className="pb-24 sm:pb-0"
                 mobileCard={(e) => {
                   const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
@@ -169,6 +170,7 @@ export default function Embarques() {
                   onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
                   pageSizeOptions: [50, 100, 200, 500],
                   pageSizeLabels: { 500: "500" },
+                  total: totalCount,
                 }}
               />
             </CardContent>

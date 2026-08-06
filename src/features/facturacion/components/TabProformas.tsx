@@ -14,6 +14,7 @@ import { useMemo } from "react";
 import { todayLocalISO } from "@/lib/date/today";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import EmptyState from "@/components/empty/EmptyState";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 
 export function TabProformas({ isInRange, estadoInicial }: {
@@ -148,7 +149,7 @@ export function TabProformas({ isInRange, estadoInicial }: {
               ) : undefined
             }
             rowKey={(p) => p.id}
-            density="comfortable"
+            density={TABLE_DENSITY.listado}
             getRowHref={(p) => `/proformas/${p.id}`}
             pagination={{
               page: c.page,
@@ -158,6 +159,7 @@ export function TabProformas({ isInRange, estadoInicial }: {
               onPageSizeChange: (s) => { c.setPageSize(s); c.setPage(0); },
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" },
+              total: c.filtered.length,
             }}
           />
         </CardContent>

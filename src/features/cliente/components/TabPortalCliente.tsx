@@ -13,6 +13,7 @@ import type { ClientUserEnriched } from "@/features/cliente/services/usuarios";
 import PortalInviteDialog from "./PortalInviteDialog";
 import { useState } from "react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
   clienteId: string;
@@ -155,7 +156,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
               data={clientUsers}
               rowKey={(cu) => cu.id}
               emptyMessage="No hay usuarios con acceso al portal para este cliente."
-              density="compact"
+              density={TABLE_DENSITY.embebida}
             />
           )}
         </CardContent>

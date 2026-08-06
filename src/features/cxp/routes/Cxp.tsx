@@ -32,6 +32,7 @@ import { withOrgPrefix } from "@/lib/filenames";
 import { todayLocalISO } from "@/lib/date/today";
 import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
 import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export default function Cxp() {
   useDocumentTitle("Facturas de proveedor");
@@ -143,7 +144,7 @@ export default function Cxp() {
                 onRetry={() => refetch()}
                 emptyMessage="No hay facturas que coincidan con los filtros"
                 rowKey={(f) => f.id}
-                density="compact"
+                density={TABLE_DENSITY.embebida}
                 initialSort={{ key: "folio_interno", dir: "desc" }}
                 onRowClick={abrirDetalle}
                 stickyHeader
@@ -157,6 +158,7 @@ export default function Cxp() {
                   totalPages,
                   onPageChange: f.setPage,
                   pageSize: f.pageSize,
+                  total: data.length,
                 }}
               />
             </TooltipProvider>

@@ -15,6 +15,7 @@ import { Navigate } from "react-router-dom";
 import { usePapelera, type SoftTable, type TrashRow } from "@/features/admin/hooks";
 import { TABLAS, GRUPOS } from "./papelera/tablas";
 import { buildPapeleraColumns } from "./papelera/columns";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export default function Papelera() {
   useDocumentTitle('Papelera');
@@ -93,7 +94,7 @@ export default function Papelera() {
             isLoading={isLoading}
             rowKey={(r) => r.id}
             emptyMessage="La papelera está vacía"
-            density="comfortable"
+            density={TABLE_DENSITY.listado}
           />
         </CardContent>
       </Card>

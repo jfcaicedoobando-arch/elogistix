@@ -13,6 +13,7 @@ import {
 } from "@/features/proformas/components/detalle/conceptoColumns";
 import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import type { ConceptoVentaRow } from "@/features/proformas/services";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type Totales = ReturnType<typeof calcularTotalesProforma>;
 
@@ -72,7 +73,7 @@ export function ProformaConceptosCard({ conceptos, totales, emptyMessage }: Prop
           columns={columns}
           data={conceptos}
           rowKey={(c) => c.id}
-          density="compact"
+          density={TABLE_DENSITY.embebida}
           emptyMessage={emptyMessage}
         />
         {(hasUsd || hasMxn) && (

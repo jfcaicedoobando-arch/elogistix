@@ -12,6 +12,7 @@ import { EstadoConceptoBadge, type EstadoConcepto } from "./estadoConceptoBadge"
 import { agruparPorContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
@@ -176,7 +177,7 @@ export function ResumenConceptosVenta({
                 ]) as ColumnDef<ConceptoVenta, unknown>[]}
                 data={conceptos}
                 rowKey={(c) => c.id}
-                density="compact"
+                density={TABLE_DENSITY.embebida}
               />
             )}
 
