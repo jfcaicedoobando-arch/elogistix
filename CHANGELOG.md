@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.442.0] - 2026-08-06
+- Rendimiento · Los badges de alerta del sidebar (embarques en demora, facturas vencidas, garantías atoradas y pendientes administrativos) ahora se guardan en caché 30 minutos en lugar de 5, y ya no se vuelven a consultar cada vez que el sidebar se remonta al navegar. Son contadores de granularidad diaria, así que la información sigue siendo igual de útil y se deja de golpear la base cientos de veces al día.
+
+
+
 ## [13.441.0] - 2026-08-06
 - Rendimiento · Se optimizaron las 211 reglas de acceso (RLS) que verificaban el rol del usuario **una vez por cada fila** leída: ahora la verificación se hace una sola vez por consulta y se reutiliza. Los permisos no cambiaron en absoluto (mismos roles, mismas condiciones, mismas 274 políticas); el objetivo es bajar el consumo de CPU del servidor y acelerar las pantallas más pesadas (bitácora de actividad, auditoría, conceptos de costo).
 
