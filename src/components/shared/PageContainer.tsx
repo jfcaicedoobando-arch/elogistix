@@ -34,9 +34,11 @@ export function PageContainer({
     <div
       {...rest}
       className={cn(
-        "mx-auto w-full p-4 sm:p-6",
+        // Ola 9: en pantallas de ≤800px de alto (1280x720, laptops 768p) se
+        // compactan padding y ritmo vertical para ganar filas visibles.
+        "mx-auto w-full p-4 sm:p-6 short:sm:p-4",
         width === "wide" ? "max-w-[1720px]" : "max-w-screen-2xl",
-        !noSpacing && "space-y-6",
+        !noSpacing && "space-y-6 short:space-y-4",
         className,
       )}
     >
