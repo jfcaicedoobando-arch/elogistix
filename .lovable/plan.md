@@ -28,13 +28,21 @@ En el flujo de captura (`useCapturaEntranteWiring`), después de cerrar el docum
 ### 2. Respaldo en la vista de Documentos (arregla 066 y las históricas)
 En `DocumentosProveedorSection`: cuando `archivo_xml_url`/`archivo_pdf_url` estén vacíos, buscar el documento del buzón vinculado a la factura y ofrecer ver/descargar desde `cxp-inbox`, con la etiqueta "Documento del buzón". Así ninguna factura ya capturada queda huérfana visualmente.
 
-### 3. Recuperación de las facturas ya capturadas
-Un botón "Recuperar del buzón" en la pestaña Documentos que, para una factura con documento vinculado y campos vacíos, haga la copia descrita en el punto 1 y deje la factura normalizada. Es explícito y por factura, sin migraciones masivas de archivos.
+### 3. Backfill en backend (sin botones en la UI)
+Función de servidor (edge function con llave de servicio) `backfill-cxp-buzon`, ejecutada una vez por mí, que recorre todos los documentos del buzón capturados y vinculados a una factura viva y:
+
+- **Archivos:** si la factura no tiene `archivo_pdf_url` / `archivo_xml_url`, descarga el objeto de `cxp-inbox`, lo sube a `facturas/{organization_id}/cfdi/{facturaId}/...` y escribe la ruta en la factura.
+- **Conceptos:** si la factura no tiene renglones en `proveedor_facturas_conceptos` y existe XML, parsea el CFDI y los inserta con la misma normalización que usa la captura manual (cantidad, precio unitario, importe, clave SAT).
+- Idempotente: se puede volver a correr; sólo toca lo que está vacío. Registra un resumen por factura en `app_logs`.
+
+Alcance real medido hoy sobre 46 documentos capturados: 3 facturas sin PDF, 1 sin XML y 2 sin conceptos (066 entre ellas).
 
 ### 4. Nota técnica
-No es necesario tocar la función SQL de captura: copiar rutas del bucket equivocado dejaría enlaces roto. La copia real de objetos se hace desde el cliente, que ya tiene permisos para ambos buckets.
+No se toca la función SQL de captura: copiar rutas del bucket equivocado dejaría enlaces rotos. La copia real de objetos y el parseo del XML se hacen en la función de servidor y en el flujo de captura del cliente.
 
 ## Verificación
-- Capturar una factura nueva desde el buzón y confirmar que la pestaña Documentos muestra XML y PDF.
-- Abrir la factura 066, usar "Recuperar del buzón" y confirmar que ambos archivos abren.
+- Correr el backfill y confirmar por consulta que ya no quedan facturas capturadas sin archivos ni sin conceptos.
+- Abrir la factura 066 y comprobar que XML, PDF y conceptos aparecen.
+- Capturar una factura nueva desde el buzón y confirmar que hereda archivos sin intervención.
 - Actualizar `CHANGELOG.md` y subir `APP_VERSION`.
+
