@@ -196,3 +196,29 @@ export async function ignorarMovimiento(movId: string, motivo: string) {
       .is("deleted_at", null),
   );
 }
+
+/**
+ * v13.444.0 — Borrado (soft-delete) de un movimiento capturado a mano.
+ * Reglas: sólo movimientos manuales (`hash_dedupe` con prefijo `manual-`) y que
+ * NO estén conciliados. Los importados del estado de cuenta son append-only.
+ */
+export function esMovimientoManual(mov: Pick<MovimientoBBVA, "hash_dedupe">): boolean {
+  return (mov.hash_dedupe ?? "").startsWith("manual-");
+}
+
+export async function eliminarMovimientoManual(movId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("bbva_movimientos")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", movId)
+    .is("deleted_at", null)
+    .neq("estado_conciliacion", "Conciliado")
+    .like("hash_dedupe", "manual-%")
+    .select("id");
+  if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error(
+      "No se pudo eliminar el movimiento: sólo se pueden borrar movimientos capturados a mano que no estén conciliados, y necesitas permiso de tesorería.",
+    );
+  }
+}
