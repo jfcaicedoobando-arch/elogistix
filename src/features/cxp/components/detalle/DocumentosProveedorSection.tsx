@@ -62,6 +62,9 @@ export function DocumentosProveedorSection({ factura: f, canEdit = false }: Prop
           onUpload={handleUpload} onRemove={handleRemove}
         />
       </div>
+      {entrante && (
+        <AdjuntosDelBuzon entrante={entrante} faltaPdf={faltaPdf} faltaXml={faltaXml} />
+      )}
       <p className="text-xs text-muted-foreground">
         El XML es la fuente fiscal del documento; el PDF es la representación
         impresa que envía el proveedor.
