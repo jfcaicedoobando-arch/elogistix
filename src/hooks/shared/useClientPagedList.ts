@@ -134,8 +134,9 @@ export function useClientPagedList<
       pageSize: f.pageSize,
       onPageSizeChange: f.setPageSize,
       pageSizeOptions: [10, 20, 50, 100],
+      total: filteredCount,
     }),
-    [f.page, f.pageSize, f.setPage, f.setPageSize, totalPages],
+    [f.page, f.pageSize, f.setPage, f.setPageSize, totalPages, filteredCount],
   );
 
   return {

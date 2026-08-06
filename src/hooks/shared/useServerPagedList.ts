@@ -148,8 +148,9 @@ export function useServerPagedList<
       pageSize: filtersState.pageSize,
       onPageSizeChange: filtersState.setPageSize,
       pageSizeOptions: [10, 20, 50, 100],
+      total: count,
     }),
-    [filtersState.page, filtersState.pageSize, filtersState.setPage, filtersState.setPageSize, totalPages],
+    [filtersState.page, filtersState.pageSize, filtersState.setPage, filtersState.setPageSize, totalPages, count],
   );
 
   return {

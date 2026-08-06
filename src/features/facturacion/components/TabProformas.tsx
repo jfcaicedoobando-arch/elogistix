@@ -159,6 +159,7 @@ export function TabProformas({ isInRange, estadoInicial }: {
               onPageSizeChange: (s) => { c.setPageSize(s); c.setPage(0); },
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" },
+              total: c.filtered.length,
             }}
           />
         </CardContent>

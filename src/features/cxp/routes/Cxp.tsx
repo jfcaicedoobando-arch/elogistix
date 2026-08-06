@@ -158,6 +158,7 @@ export default function Cxp() {
                   totalPages,
                   onPageChange: f.setPage,
                   pageSize: f.pageSize,
+                  total: data.length,
                 }}
               />
             </TooltipProvider>

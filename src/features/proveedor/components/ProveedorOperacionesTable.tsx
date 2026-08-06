@@ -74,6 +74,7 @@ export function ProveedorOperacionesTable({ operaciones }: Props) {
         pageSize,
         onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
         pageSizeOptions: PAGE_SIZE_OPTIONS,
+        total: opsConId.length,
       }}
       emptyState={
         <div className="p-6">

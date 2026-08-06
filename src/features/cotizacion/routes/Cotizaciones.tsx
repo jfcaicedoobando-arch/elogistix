@@ -171,6 +171,7 @@ export default function Cotizaciones() {
               onPageSizeChange: (s: number) => { c.setPageSize(s); c.setPage(0); },
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" },
+              total: c.filtered.length,
             }}
           />
         </CardContent>

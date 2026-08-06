@@ -138,6 +138,7 @@ export default function Clientes() {
                 onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
                 pageSizeOptions: [50, 100, 200, 500],
                 pageSizeLabels: { 500: "500" },
+                total: totalCount,
               }}
             />
           )}
