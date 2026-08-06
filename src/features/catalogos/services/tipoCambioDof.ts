@@ -28,6 +28,38 @@ export async function fetchHistorialTcDof(limite = 60): Promise<TipoCambioDof[]>
   return (rows ?? []) as TipoCambioDof[];
 }
 
+/** TC DOF vigente en una fecha (`exacto: false` = último publicado antes de ella). */
+export interface TcDofVigente {
+  usdMxn: number;
+  eurMxn: number | null;
+  /** Fecha de publicación DOF usada (ISO `YYYY-MM-DD`). */
+  fecha: string;
+  exacto: boolean;
+}
+
+/**
+ * TC DOF vigente para una fecha dada. Si ese día no se publicó (fin de semana,
+ * día inhábil), devuelve el último publicado antes de esa fecha.
+ */
+export async function fetchTcDofPorFecha(fecha: string): Promise<TcDofVigente | null> {
+  const query = supabase
+    .from("tipos_cambio_dof")
+    .select(COLUMNAS)
+    .lte("fecha", fecha)
+    .order("fecha", { ascending: false })
+    .limit(1);
+  const rows = await unwrapOr(query, []);
+  const fila = (rows ?? [])[0] as TipoCambioDof | undefined;
+  if (!fila || !(Number(fila.usd_mxn) > 0)) return null;
+  return {
+    usdMxn: Number(fila.usd_mxn),
+    eurMxn: fila.eur_mxn == null ? null : Number(fila.eur_mxn),
+    fecha: fila.fecha,
+    exacto: fila.fecha === fecha,
+  };
+}
+
+
 /** Alta/corrección manual de un día (requiere rol administrativo o contador). */
 export async function upsertTcDofManual(input: {
   fecha: string;
