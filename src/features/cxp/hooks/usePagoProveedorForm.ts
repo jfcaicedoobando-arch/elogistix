@@ -157,15 +157,17 @@ export function usePagoProveedorForm(
 
   return {
     fecha, setFecha, monto, setMonto, moneda, setMoneda,
-    tc, setTc, metodo, setMetodo, referencia, setReferencia,
-    notas, setNotas, diffMxn, setDiffMxn,
+    tc, setTc: setTcManual, metodo, setMetodo, referencia, setReferencia,
+    notas, setNotas, diffMxn, setDiffMxn: setDiffManual,
     metodosDisponibles, montoNum, saldoRestante, saldoDisponible,
     esUsdPagadoEnMxn, showTc, excede,
     montoEnMonedaFactura, bloqueadoPorTc, tcNum,
     cuentas, cuentasDeMoneda, cuentaId, setCuentaId, requiereCuenta,
     cuentaSeleccionada, validacion, modo, montoOriginalEnMonedaFactura,
     impacto, cargandoSaldoProveedor,
+    tcDof, cargandoTcDof, aplicarTcDof,
   };
+
 }
 
 export type { PagoEditable };
