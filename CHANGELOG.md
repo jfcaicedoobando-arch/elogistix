@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.447.1] - 2026-08-06
+- CxP · El modal de **pago a proveedor ya no se ve recortado**: se amplió el ancho (de `lg` a `2xl`), las 4 tarjetas del encabezado (Total, Pagado, Saldo, Moneda) muestran los importes completos y el tipo de cambio se lee en una segunda línea ("TC 17.32"). En pantallas de poca altura el encabezado se compacta para dejar más espacio al formulario.
+
+
 ## [13.447.0] - 2026-08-06
 - CxP · El **tipo de cambio del pago a proveedor ahora se toma del DOF de la fecha de pago** (antes se heredaba de la factura). Si ese día no hubo publicación se usa la última disponible; el campo sigue siendo editable y hay un botón "Usar DOF" para volver al oficial.
 - CxP · La **diferencia cambiaria se sugiere automáticamente** al pagar en pesos una factura en USD/EUR (monto × diferencia entre el TC del pago y el de la factura).

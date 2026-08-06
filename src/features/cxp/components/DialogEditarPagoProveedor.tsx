@@ -82,7 +82,7 @@ export function DialogEditarPagoProveedor({ open, onOpenChange, factura, pago }:
       icon={Pencil}
       title="Editar pago a proveedor"
       description="Ajusta el pago registrado. Se validan montos, fechas, tipo de cambio y saldo antes de guardar."
-      size="lg"
+      size="2xl"
       footer={footer}
     >
       {factura && <PagoFacturaHeaderInfo factura={factura} />}
