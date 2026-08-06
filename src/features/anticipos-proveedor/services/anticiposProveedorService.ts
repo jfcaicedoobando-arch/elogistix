@@ -73,3 +73,22 @@ export async function fetchAplicacionesPorFactura(
     [],
   );
 }
+
+/** Anticipos con saldo a favor de un proveedor (disponible o aplicado parcial). */
+export async function fetchAnticiposDisponibles(
+  proveedorId: string,
+): Promise<AnticipoConProveedor[]> {
+  if (!proveedorId) return [];
+  const query = supabase
+    .from("anticipos_proveedor")
+    .select(ANTICIPO_SELECT)
+    .eq("proveedor_id", proveedorId)
+    .in("estado", ["disponible", "aplicado_parcial"])
+    .gt("saldo_disponible", 0)
+    .is("deleted_at", null)
+    .order("fecha_anticipo", { ascending: true });
+
+  // SAFE-CAST: misma join embebida que `fetchAnticiposProveedor`.
+  const rows = (await unwrapOr(query, [])) as unknown as AnticipoRow[];
+  return rows.map((r) => ({ ...r, proveedor_nombre: r.proveedores?.nombre ?? null }));
+}
