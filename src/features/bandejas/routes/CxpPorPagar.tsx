@@ -39,6 +39,8 @@ export default function CxpPorPagar() {
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
   const [rowSelection, setRowSelection] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loteOpen, setLoteOpen] = useState(false);
+
   const [fechaProgramada, setFechaProgramada] = useState(todayLocalISO());
   const { programar, isRunning, progreso } = useProgramarPagoLote();
 
