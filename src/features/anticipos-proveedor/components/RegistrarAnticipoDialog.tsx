@@ -1,5 +1,5 @@
 /** Dialog "Registrar anticipo" (QW6). FormDialogShell + RHF + Zod. */
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { useForm, Controller, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +16,7 @@ import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { ProveedorCombobox } from "@/features/cxp/components/ProveedorCombobox";
 import { useRegistrarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import { todayLocalISO } from "@/lib/date/today";
+import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 
 const METODOS_PAGO = ["Transferencia", "Efectivo", "Cheque", "Tarjeta", "Otro"];
 
@@ -29,6 +30,8 @@ const schema = z.object({
   // insertaba NULL explícito (que anula el default) y el 100% de los anticipos
   // creados por UI eran inaplicables. Ahora es requerido, default 'Transferencia'.
   metodoPago: z.enum(["Transferencia", "Efectivo", "Cheque", "Tarjeta", "Otro"]),
+  // Sin cuenta bancaria el anticipo no genera movimiento conciliable en tesorería.
+  cuentaBancariaId: z.string().optional(),
   referencia: z.string().optional(),
   notas: z.string().optional(),
 });
@@ -43,15 +46,40 @@ interface Props {
 export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
   const registrar = useRegistrarAnticipo();
   const [proveedorNombre, setProveedorNombre] = useState("");
-  const { control, register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { data: cuentas = [] } = useCuentasBancarias(true);
+  const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       proveedorId: "", monto: 0, moneda: "MXN",
       fechaAnticipo: todayLocalISO(),
       metodoPago: "Transferencia",
+      cuentaBancariaId: "",
       referencia: "", notas: "",
     },
   });
+
+  const moneda = watch("moneda");
+  const metodoPago = watch("metodoPago");
+  const cuentaBancariaId = watch("cuentaBancariaId");
+  const requiereCuenta = metodoPago !== "Efectivo";
+
+  const cuentasDeMoneda = useMemo(
+    () => cuentas.filter((c) => c.moneda === moneda),
+    [cuentas, moneda],
+  );
+
+  // Preselección: primera cuenta de la moneda del anticipo. Si la cuenta
+  // elegida deja de coincidir con la moneda, se limpia.
+  useEffect(() => {
+    if (!open) return;
+    if (cuentaBancariaId && !cuentasDeMoneda.some((c) => c.id === cuentaBancariaId)) {
+      setValue("cuentaBancariaId", "", { shouldValidate: true, shouldDirty: true });
+      return;
+    }
+    if (!cuentaBancariaId && cuentasDeMoneda.length > 0) {
+      setValue("cuentaBancariaId", cuentasDeMoneda[0].id, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [open, cuentaBancariaId, cuentasDeMoneda, setValue]);
 
   const handleOpenChange = (o: boolean) => {
     if (!o) { reset(); setProveedorNombre(""); }
@@ -70,12 +98,21 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
   };
 
   const onSubmit = handleSubmit(async (values) => {
+    if (values.metodoPago !== "Efectivo" && !values.cuentaBancariaId) {
+      notifyError(undefined, {
+        title: "Falta la cuenta bancaria",
+        description: "Selecciona la cuenta de donde sale el dinero para poder conciliar el anticipo.",
+        method: "ANTICIPO_REGISTRAR_SIN_CUENTA",
+      });
+      return;
+    }
     await registrar.mutateAsync({
       proveedorId: values.proveedorId,
       monto: values.monto,
       moneda: values.moneda,
       fechaAnticipo: values.fechaAnticipo,
       metodoPago: values.metodoPago,
+      cuentaBancariaId: values.cuentaBancariaId || null,
       referencia: values.referencia || undefined,
       notas: values.notas || undefined,
     });
@@ -168,6 +205,39 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
             )}
           />
           {errors.metodoPago && <p className="text-xs text-destructive">{errors.metodoPago.message}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ant-cuenta">
+            Cuenta bancaria {requiereCuenta && <span className="text-destructive">*</span>}
+          </Label>
+          <Controller
+            control={control}
+            name="cuentaBancariaId"
+            render={({ field }) => (
+              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <SelectTrigger id="ant-cuenta">
+                  <SelectValue placeholder="Selecciona la cuenta de donde sale el dinero" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cuentasDeMoneda.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.alias} — {c.banco} ({c.moneda})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {cuentasDeMoneda.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              No hay cuentas activas en {moneda}. Créala en Tesorería → Cuentas.
+            </p>
+          )}
+          {requiereCuenta && !cuentaBancariaId && cuentasDeMoneda.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Se registrará el movimiento bancario conciliado en esta cuenta.
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="ant-ref">Referencia</Label>
