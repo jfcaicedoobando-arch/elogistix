@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
@@ -6,6 +6,7 @@ import { signUpWithEmail } from "@/features/auth/services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/shared";
@@ -97,6 +98,7 @@ export function SignupForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = form;
@@ -162,7 +164,19 @@ export function SignupForm() {
         />
       </div>
       <label className="flex items-start gap-2 text-xs text-muted-foreground">
-        <input type="checkbox" className="mt-0.5" {...register("acceptTerms")} />
+        <Controller
+          control={control}
+          name="acceptTerms"
+          render={({ field }) => (
+            <Checkbox
+              className="mt-0.5"
+              checked={field.value}
+              onCheckedChange={(checked) => field.onChange(checked === true)}
+              onBlur={field.onBlur}
+              ref={field.ref}
+            />
+          )}
+        />
         <span>
           Acepto los{" "}
           <a href="/legal/terminos" target="_blank" className="text-accent hover:underline">
