@@ -4,7 +4,6 @@
  * (Auditoría Paso 6: separar lógica de presentación).
  */
 import { useState } from "react";
-import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/features/tesoreria/hooks";
 import type { Database } from "@/integrations/supabase/types";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
@@ -58,11 +57,11 @@ export function useTesoreriaCuentasController() {
         saldo_inicial: Number(form.saldoInicial) || 0,
         activa: true,
       });
-      notifySuccess(undefined, { title: "Cuenta creada" });
+      // El toast de éxito lo emite `useCrearCuenta` (evita doble toast).
       reset();
       setOpen(false);
     } catch (e) {
-      notifyError(undefined, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_2" });
+      // El toast de error lo emite `useCrearCuenta`; aquí sólo reportamos.
       reportCaughtError(e, { feature: "tesoreria", op: "crear_cuenta" });
     }
   };
