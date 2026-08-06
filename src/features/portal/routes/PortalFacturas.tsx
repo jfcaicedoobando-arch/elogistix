@@ -46,7 +46,7 @@ export default function PortalFacturas() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         icon={<Receipt className="h-6 w-6 text-accent" />}
         title="Mis Facturas"

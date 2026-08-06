@@ -6,7 +6,8 @@ import { render, screen } from "@testing-library/react";
 import { fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { OrigenDocumentoPicker } from "../OrigenDocumentoPicker";
-import { pendientesDeCaptura, PendientesGuardarHint } from "../PendientesGuardarHint";
+import { pendientesDeCaptura } from "../pendientesDeCaptura";
+import { PendientesGuardarHint } from "../PendientesGuardarHint";
 import type { FacturaFormValues } from "@/features/cxp/types";
 
 const values: FacturaFormValues = {

@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/shared";
@@ -160,11 +161,10 @@ export function DemoAccessDialog({ open, onOpenChange }: Props) {
             </p>
           </div>
           <label className="flex items-start gap-2 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
+            <Checkbox
               className="mt-0.5"
               checked={aceptaContacto}
-              onChange={(e) => setAceptaContacto(e.target.checked)}
+              onCheckedChange={(checked) => setAceptaContacto(checked === true)}
             />
             <span>
               Autorizo a Libre Carga a contactarme por email o WhatsApp para dar seguimiento a mi

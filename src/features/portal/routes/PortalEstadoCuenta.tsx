@@ -13,7 +13,7 @@ export default function PortalEstadoCuenta() {
   if (isLoading) return <PageSkeleton />;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         icon={<Wallet className="h-6 w-6 text-accent" />}
         title="Estado de cuenta"

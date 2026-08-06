@@ -37,7 +37,7 @@ export default function AgentePerfil() {
   };
 
   return (
-    <div className="space-y-4 max-w-xl">
+    <div className="max-w-xl space-y-6">
       <PageHeader
         icon={<UserIcon className="h-6 w-6 text-accent" />}
         title="Mi Perfil"

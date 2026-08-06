@@ -50,7 +50,7 @@ export default function PortalDashboard() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           <PortalWelcomeCard clienteName={clienteName} orgName={orgName} />

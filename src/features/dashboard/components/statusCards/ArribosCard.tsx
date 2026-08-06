@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
+import { KpiCard } from "@/components/shared/KpiCard";
+import { KpiStrip } from "@/components/shared/KpiStrip";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarDays, TrendingUp, Ship, CheckCircle2, Info } from "lucide-react";
-import { formatCurrencyCompact } from "@/lib/formatters";
+import { CalendarDays, TrendingUp, Ship, CheckCircle2 } from "lucide-react";
+import { formatCurrencyCompact, formatCurrency } from "@/lib/formatters";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { useIsMobile } from "@/hooks/shared/useIsMobile";
 import { ProfitTooltipContent, CoberturaTooltipContent } from "./ArribosCardTooltips";
@@ -99,9 +100,10 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
   const sinGastos = gastos <= 0;
   const perdida = arribosEsteMes.profitMXN < 0;
   const { bar: barColor, text: pctTextColor } = getBarStyles(perdida, pctReal);
+  const profitPositivoFlag = arribosEsteMes.profitMXN >= 0;
 
   return (
-    <Card>
+    <div className="rounded-lg border bg-card">
       <CardContent className="p-4">
         <div className="flex flex-col xl:flex-row xl:items-center gap-4">
           <div className="flex items-center gap-2 shrink-0">
@@ -111,54 +113,45 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
             <SectionHeading as="h3" className="inline-flex">Arribos este mes</SectionHeading>
           </div>
 
-          <div className={`grid ${hideFinancials ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"} gap-3 sm:gap-6 flex-1`}>
-            <div className="text-center">
-              {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
-                <span className="text-xl font-bold text-foreground tabular-nums">{arribosEsteMes.total}</span>
-              )}
-              <p className="text-2xs text-muted-foreground font-medium">Total</p>
-            </div>
-
-            <div className="text-center">
-              {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
-                <div className="flex items-center gap-1 justify-center">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                  <span className="text-xl font-bold text-success tabular-nums">{arribosEsteMes.yaLlegaron}</span>
-                </div>
-              )}
-              <p className="text-2xs text-muted-foreground font-medium">Ya llegaron</p>
-            </div>
-
-            <div className="text-center">
-              {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
-                <div className="flex items-center gap-1 justify-center">
-                  <Ship className="h-3.5 w-3.5 text-warning" />
-                  <span className="text-xl font-bold text-warning tabular-nums">{arribosEsteMes.enCamino}</span>
-                </div>
-              )}
-              <p className="text-2xs text-muted-foreground font-medium">En camino</p>
-            </div>
-
-            {!hideFinancials && (
-              <div className="text-center">
-                {isLoading ? <Skeleton className="h-6 w-20 mx-auto" /> : (
+          <div className="flex-1 min-w-0">
+            <KpiStrip desktopCols={hideFinancials ? 3 : 4} className="gap-3">
+              <KpiCard label="Total" value={arribosEsteMes.total} loading={isLoading} />
+              <KpiCard
+                label="Ya llegaron"
+                value={arribosEsteMes.yaLlegaron}
+                icon={CheckCircle2}
+                variant="success"
+                loading={isLoading}
+              />
+              <KpiCard
+                label="En camino"
+                value={arribosEsteMes.enCamino}
+                icon={Ship}
+                variant="warning"
+                loading={isLoading}
+              />
+              {!hideFinancials && (
+                isLoading ? (
+                  <KpiCard label="Profit MXN proyectado" value="" loading />
+                ) : (
                   <InfoHint
                     widthClass="w-[min(320px,calc(100vw-2rem))]"
                     trigger={
-                      <button type="button" className="flex items-center gap-1 justify-center w-full cursor-help">
-                        <TrendingUp className={`h-3.5 w-3.5 ${arribosEsteMes.profitMXN >= 0 ? "text-success" : "text-destructive"}`} />
-                        <span className={`text-base sm:text-xl font-bold tabular-nums whitespace-nowrap ${arribosEsteMes.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
-                          {formatCurrencyCompact(arribosEsteMes.profitMXN, "MXN")}
-                        </span>
-                        <Info className="h-3 w-3 text-muted-foreground/70" />
-                      </button>
+                      <div className="cursor-help">
+                        <KpiCard
+                          label="Profit MXN proyectado"
+                          value={formatCurrencyCompact(arribosEsteMes.profitMXN, "MXN")}
+                          valueTooltip={formatCurrency(arribosEsteMes.profitMXN, "MXN")}
+                          icon={TrendingUp}
+                          variant={profitPositivoFlag ? "success" : "destructive"}
+                        />
+                      </div>
                     }
                     content={<ProfitTooltipContent data={arribosEsteMes} />}
                   />
-                )}
-                <p className="text-2xs text-muted-foreground font-medium">Profit MXN proyectado</p>
-              </div>
-            )}
+                )
+              )}
+            </KpiStrip>
           </div>
 
           <div className="flex flex-col gap-0.5 xl:w-48 shrink-0">
@@ -187,6 +180,6 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
           </div>
         </div>
       </CardContent>
-    </Card>
+    </div>
   );
 }

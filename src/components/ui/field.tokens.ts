@@ -46,3 +46,13 @@ export const FIELD_STATE_WITHIN_CLASS =
 
 /** Mensaje de validación inline debajo de un control. */
 export const FIELD_ERROR_CLASS = "text-xs text-destructive";
+
+/**
+ * Anillo de foco para controles compactos (checkbox, radio, switch): usan
+ * `ring-offset-2` en vez de `ring-offset-0` porque su caja es pequeña y el
+ * anillo pegado al borde se recorta visualmente.
+ */
+export const FIELD_FOCUS_RING_COMPACT_CLASS =
+  "ring-offset-background focus-visible:outline-none focus-visible:ring-2 " +
+  "focus-visible:ring-ring focus-visible:ring-offset-2 " +
+  "disabled:cursor-not-allowed disabled:opacity-50";
