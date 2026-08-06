@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { CreditoExcesoConfirmDialog } from "./CreditoExcesoConfirmDialog";
 import { useFacturaManualForm } from "@/features/facturacion/hooks/useFacturaManualForm";
 import { FacturaManualDatosFiscales } from "./FacturaManualDatosFiscales";
@@ -25,10 +26,9 @@ interface SectionProps { title: string; children: React.ReactNode; action?: Reac
 function Section({ title, children, action }: SectionProps) {
   return (
     <section className="rounded-lg border bg-card p-5 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">{title}</h3>
-        {action}
-      </div>
+      <SectionHeading as="h3" variant="overline" actions={action}>
+        {title}
+      </SectionHeading>
       {children}
     </section>
   );
