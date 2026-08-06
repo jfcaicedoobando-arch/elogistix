@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.431.0] - 2026-08-05
+- Armonización visual global, olas 1 a 4 (que todo el ERP "se vea de la misma familia", como uniformar los uniformes de todas las sucursales):
+- Ola 1 — Portal de clientes y portal de agentes: las 11 pantallas ahora usan el mismo ritmo de espaciado y un único encabezado por página, igual que el ERP interno.
+- Ola 2 — La tarjeta "Arribos este mes" del Inicio dejó de usar números sueltos y ahora usa las tarjetas de indicador compartidas (con importe compacto y el monto exacto al pasar el cursor). Los totales que viven dentro de formularios y diálogos se dejaron como totales, sólo alineando tipografía.
+- Ola 3 — Casillas, radios, interruptores y el buscador de comandos ahora toman su borde y su aro de foco del mismo archivo de tokens que los inputs; se reemplazaron las casillas nativas de "Acepto los términos" y del acceso demo por la casilla del sistema (misma validación).
+- Ola 4 — Verificación visual en FullHD de 10 pantallas clave: sin errores de consola y un solo título por página.
+- Se separó el cálculo de pendientes de captura de facturas de proveedor a su propio archivo para dejar el lint del CI en cero advertencias.
+
 ## [13.430.1] - 2026-08-06
 - Se arreglaron 3 fallas del pipeline de CI (los "revisores automáticos" que verifican el código antes de publicar):
 - La consulta del documento del buzón vinculado a una factura de proveedor se movió a la capa de servicios y su llave de caché se registró en el catálogo central, en lugar de escribirla suelta (como guardar un expediente en el archivero en vez de dejarlo sobre el escritorio).
