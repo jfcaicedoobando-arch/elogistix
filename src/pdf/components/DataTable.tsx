@@ -2,6 +2,7 @@ import { View, Text } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/types";
 import { Fragment } from "react";
 import { styles } from "../theme/styles";
+import { COLORS } from "@/pdf/theme/tokens";
 
 export interface PdfColumn<T> {
   key: string;

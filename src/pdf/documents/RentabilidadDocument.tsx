@@ -3,6 +3,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
+import { COLORS } from "@/pdf/theme/tokens";
 
 export interface RentabilidadClienteRow {
   cliente_nombre: string;

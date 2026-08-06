@@ -4,6 +4,7 @@ import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { ResumenTesoreria, ResumenCuenta, TopItem } from "@/features/tesoreria/services";
+import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   fechaCorte: string;

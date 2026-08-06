@@ -19,6 +19,7 @@ import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { SnapshotEjecutivo } from "@/features/dashboardEjecutivo/services";
 import type { TopItem } from "@/features/tesoreria/services";
 import type { AlertaEjecutiva } from "@/features/dashboardEjecutivo/services";
+import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   snapshot: SnapshotEjecutivo;

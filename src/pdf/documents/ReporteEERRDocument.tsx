@@ -4,6 +4,7 @@ import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { EstadoResultados, ModoColumna, FilaER } from "@/features/profit/domain/estadoResultados";
+import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   periodo: string; // YYYY-MM

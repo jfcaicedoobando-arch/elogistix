@@ -5,6 +5,7 @@ import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { FacturaCobranza } from "@/features/facturacion/services";
 import type { FacturaCxP } from "@/features/cxp/services";
+import { COLORS } from "@/pdf/theme/tokens";
 
 interface Props {
   fechaCorte: string; // YYYY-MM-DD

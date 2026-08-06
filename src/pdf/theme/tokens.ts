@@ -10,6 +10,8 @@ export const COLORS = {
   ink: "#1A1A2E",
   muted: "#475569",
   mutedLight: "#94A3B8",
+  /** Gris intermedio para notas al pie y textos secundarios. */
+  subtle: "#64748B",
   border: "#E5E7EB",
   borderStrong: "#CBD5E1",
   zebra: "#F8FAFC",
