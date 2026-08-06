@@ -15,6 +15,7 @@ import { useCuentasBancarias } from "@/features/tesoreria";
 import { saldoDisponiblePago } from "@/features/cxp/services/pagoProveedorValidaciones";
 import { usePagoProveedorDerivados } from "./usePagoProveedorForm.derivados";
 import { usePagoProveedorCampos } from "./usePagoProveedorForm.estado";
+import { usePagoTcDof } from "./usePagoProveedorForm.tcDof";
 import {
   montoOriginalEnMonedaFactura as calcMontoOriginal,
   montoEnMonedaDeFactura,
