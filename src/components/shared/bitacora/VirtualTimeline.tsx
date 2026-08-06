@@ -1,46 +1,54 @@
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import type { EntradaBitacora } from "@/hooks/shared";
 import { FilaEntrada } from "./FilaEntrada";
-import { type BitacoraEntrada } from "@/types/bitacora";
 
-interface VirtualTimelineProps {
-  entradas: BitacoraEntrada[];
-  maxHeight?: number | string;
-  mostrarUsuario?: boolean;
-}
-
-export function VirtualTimeline({ entradas, maxHeight = 400, mostrarUsuario = false }: VirtualTimelineProps) {
-  const parentRef = useRef<HTMLDivElement>(null);
-
+/**
+ * Línea de tiempo virtualizada de la bitácora. Los estilos en línea son
+ * dinámicos por diseño (alto total y desplazamiento calculados por el
+ * virtualizer): no se pueden expresar con clases de Tailwind.
+ */
+export function VirtualTimeline({
+  actividades,
+  mostrarUsuario,
+  maxHeight,
+}: {
+  actividades: EntradaBitacora[];
+  mostrarUsuario: boolean;
+  maxHeight: number;
+}) {
+  const parentRef = useRef<HTMLDivElement | null>(null);
   const virtualizer = useVirtualizer({
-    count: entradas.length,
+    count: actividades.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 100,
-    overscan: 5,
+    estimateSize: () => 110,
+    overscan: 8,
+    measureElement:
+      typeof window !== "undefined" && navigator.userAgent.indexOf("Firefox") === -1
+        ? (el) => el?.getBoundingClientRect().height ?? 110
+        : undefined,
   });
+  const items = virtualizer.getVirtualItems();
 
   return (
     <div
       ref={parentRef}
-      className="overflow-auto scrollbar-thin"
+      className="overflow-auto [scrollbar-width:thin] pr-2"
       style={{ maxHeight }}
     >
       <div
-        className="relative w-full"
+        className="relative border-l-2 border-border ml-3 pl-6"
         style={{ height: virtualizer.getTotalSize() }}
       >
-        <div className="absolute left-6 top-0 bottom-0 w-px bg-border" />
-        {virtualizer.getVirtualItems().map((vi) => {
-          const entrada = entradas[vi.index];
+        {items.map((vi) => {
+          const entrada = actividades[vi.index];
           return (
             <div
               key={entrada.id}
               ref={virtualizer.measureElement}
               data-index={vi.index}
-              className="absolute top-0 left-6 right-0 pb-5"
-              style={{
-                transform: `translateY(${vi.start}px)`,
-              }}
+              className="absolute left-6 right-0 top-0 pb-5"
+              style={{ transform: `translateY(${vi.start}px)` }}
             >
               <FilaEntrada entrada={entrada} mostrarUsuario={mostrarUsuario} />
             </div>
