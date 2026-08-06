@@ -36,9 +36,11 @@ export interface SectionHeadingProps {
 }
 
 const VARIANT_CLASSES = {
-  section: "text-base font-semibold",
+  section: "text-section",
+  subsection: "text-subsection",
   overline: "text-overline",
 } as const;
+
 
 export function SectionHeading({
   children,
