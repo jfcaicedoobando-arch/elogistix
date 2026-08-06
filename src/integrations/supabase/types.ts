@@ -8101,7 +8101,9 @@ export type Database = {
           folio_proveedor: string
           moneda: string
           pagado: number
+          proveedor_id: string
           proveedor_nombre: string
+          proveedor_origen: string
           saldo: number
           tipo_cambio_usd: number
           total: number
