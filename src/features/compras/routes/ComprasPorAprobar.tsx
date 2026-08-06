@@ -130,6 +130,10 @@ export default function ComprasPorAprobar() {
               isRunning={isRunning}
               progreso={progreso}
               onOpenConfirm={() => setConfirmOpen(true)}
+              validablesCount={validablesSat.length}
+              satRunning={satRunning}
+              satProgreso={satProgreso}
+              onValidarSat={() => void verificarSat(validablesSat)}
             />
           )}
         </CardContent>
