@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.444.1] - 2026-08-06
+- Conciliación bancaria · Las tarjetas de resumen ya no cuentan los movimientos eliminados. Antes el dashboard mostraba "2 movimientos" (con montos pendientes) mientras la lista aparecía vacía, porque el conteo del servidor no excluía los borrados. Se agregó un test de regresión al guardrail de soft-delete.
+
 ## [13.444.0] - 2026-08-06
 - Conciliación bancaria · Ya se pueden eliminar los movimientos capturados a mano: se selecciona el movimiento en la tabla y en el panel derecho aparece "Eliminar movimiento manual" con confirmación. Sólo aplica a movimientos manuales y no conciliados (los importados del estado de cuenta siguen siendo inalterables). El borrado es lógico, así que queda rastro en la base.
 
