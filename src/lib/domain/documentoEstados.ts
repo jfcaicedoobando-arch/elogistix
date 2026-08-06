@@ -56,11 +56,16 @@ const INDICE_EMITIDA: Record<string, number> = {
 export interface EstadoRecibidaInput {
   estado: string | null | undefined;
   estadoAprobacion?: string | null;
+  /** Estatus derivado de la lista (Vencida, Parcial, Por vencer…), si se conoce. */
+  estatus?: string | null;
+  /** Días de atraso, para matizar el paso actual con el dato exacto. */
+  diasVencido?: number | null;
 }
 
 /** Matices que se muestran junto al paso actual, no son pasos propios. */
 const SUB_ETIQUETAS: Record<string, string> = {
   "Parcialmente pagada": "Parcialmente pagada",
+  Parcial: "Parcialmente pagada",
   Vencida: "Vencida",
 };
 
@@ -73,6 +78,7 @@ function resumen(
   indiceActual: number,
   etiquetaTerminal: string | null,
   subEtiqueta: string | null = null,
+  subTono: "warning" | "destructive" = "warning",
 ): EstadoDocumentoResumen {
   return {
     pasos,
@@ -80,6 +86,7 @@ function resumen(
     terminal: !!etiquetaTerminal,
     etiquetaTerminal,
     subEtiqueta: etiquetaTerminal ? null : subEtiqueta,
+    subTono,
   };
 }
 
@@ -90,15 +97,32 @@ export function resumenFacturaEmitida(estado: string | null | undefined): Estado
   return resumen(PASOS_EMITIDA, indice ?? 0, terminal, subEtiquetaDe(key));
 }
 
+/** Matiz del paso actual de una factura recibida, priorizando el atraso real. */
+function matizRecibida(input: EstadoRecibidaInput): {
+  sub: string | null;
+  tono: "warning" | "destructive";
+} {
+  const dias = input.diasVencido ?? 0;
+  const vencida = input.estatus === "Vencida" || input.estado === "Vencida" || dias > 0;
+  if (vencida) {
+    return {
+      sub: dias > 0 ? `Vencida · ${dias} d` : "Vencida",
+      tono: "destructive",
+    };
+  }
+  const sub = subEtiquetaDe(input.estatus ?? "") ?? subEtiquetaDe(input.estado ?? "");
+  return { sub, tono: "warning" };
+}
+
 export function resumenFacturaRecibida(input: EstadoRecibidaInput): EstadoDocumentoResumen {
   const estado = input.estado ?? "";
-  const sub = subEtiquetaDe(estado);
+  const { sub, tono } = matizRecibida(input);
   if (estado === "Cancelada") return resumen(PASOS_RECIBIDA, -1, "Cancelada");
   if (estado === "Pagada") return resumen(PASOS_RECIBIDA, 3, null);
   if (input.estadoAprobacion === "rechazada") return resumen(PASOS_RECIBIDA, -1, "Rechazada");
-  if (input.estadoAprobacion === "aprobada") return resumen(PASOS_RECIBIDA, 2, null, sub);
+  if (input.estadoAprobacion === "aprobada") return resumen(PASOS_RECIBIDA, 2, null, sub, tono);
   if (estado === "Borrador") return resumen(PASOS_RECIBIDA, 0, null);
-  return resumen(PASOS_RECIBIDA, 1, null, sub);
+  return resumen(PASOS_RECIBIDA, 1, null, sub, tono);
 }
 
 export function resumenDocumento(
