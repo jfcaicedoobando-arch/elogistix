@@ -89,14 +89,18 @@ async function describirFactura(facturaId: string): Promise<string> {
 export async function crearMovimientoBancarioPago(
   input: MovimientoPagoInput,
 ): Promise<boolean> {
-  const concepto = await describirFactura(input.facturaId);
+  const [concepto, monedaCuenta] = await Promise.all([
+    describirFactura(input.facturaId),
+    monedaDeCuenta(input.cuentaBancariaId),
+  ]);
   const payload: TablesInsert<"bbva_movimientos"> = {
     organization_id: input.organizationId,
     cuenta_bancaria_id: input.cuentaBancariaId,
     fecha: input.fechaPago,
     concepto,
     referencia: input.referencia ?? "",
-    cargo: cargoEnMxn(input.monto, input.moneda, input.tipoCambioUsd),
+    cargo: cargoEnMonedaCuenta(input.monto, input.moneda, monedaCuenta, input.tipoCambioUsd),
+
     abono: 0,
     hash_dedupe: `pago-${input.pagoId}`,
     estado_conciliacion: "Conciliado",
