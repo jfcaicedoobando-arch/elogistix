@@ -57,6 +57,9 @@ const CRITICAL = [
   // 13.315.0 — Recordatorios de cobro y estado de cuenta CxC
   "supabase/functions/cxc-recordatorio-enviar/index.ts",
   "supabase/functions/cxc-estado-cuenta-enviar/index.ts",
+  // 13.430.1 — Mantenimiento CxP y verificación SAT en lote
+  "supabase/functions/backfill-cxp-buzon/index.ts",
+  "supabase/functions/verificar-sat-lote/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {

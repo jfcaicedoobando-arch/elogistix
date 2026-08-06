@@ -28,6 +28,9 @@ export const cxp = {
   facturasEntrantesPendientes: ["cxp", "facturas-entrantes", "pendientes"] as const,
   facturasEntrantesEstado: (estado: string) =>
     ["cxp", "facturas-entrantes", "estado", estado] as const,
+  /** v13.430.1 — Documento del buzón vinculado a una factura de proveedor. */
+  facturasEntrantesDeFactura: (facturaId?: string | null) =>
+    ["cxp", "facturas-entrantes", "de-factura", facturaId ?? null] as const,
   facturasVinculablesEntrante: (embarqueId?: string | null) =>
     ["cxp", "facturas-vinculables-entrante", embarqueId ?? null] as const,
   /** v13.368.0 — UUID fiscales del buzón que ya existen como factura viva. */
