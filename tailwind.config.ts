@@ -42,7 +42,10 @@ export default {
       },
       fontSize: {
         // Tipografía fluida (Fase 6) — clamp(min, preferida, max).
-        display: ["clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem)", { lineHeight: "1.15", fontWeight: "700" }],
+        // Ola 9 · Armonización global: el título de página bajó de 36px a 28px máx.
+        // A 1280x720 el h1 de 36px + descripción consumía ~120px y sólo dejaban ver
+        // 4 filas de tabla; 28px alinea la densidad con ERPs tipo Odoo/QuickBooks.
+        display: ["clamp(1.375rem, 1.15rem + 0.9vw, 1.75rem)", { lineHeight: "1.2", fontWeight: "700" }],
         kpi: ["clamp(1.125rem, 0.95rem + 0.8vw, 1.5rem)", { lineHeight: "1.2", fontWeight: "600" }],
         // Ola 7 · Lote A — escalones extra-pequeños para chips, badges y footnotes.
         // Reemplazan los ~25 usos de `text-[10px]` y aislados `text-[9px]` en `src/features/**`.
