@@ -7,8 +7,11 @@
  */
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Inbox, CalendarCheck } from "lucide-react";
+import { Inbox, CalendarCheck, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DialogPagoLoteProveedor } from "@/features/cxp/components/DialogPagoLoteProveedor";
+import type { OrigenProveedor } from "@/features/cxp/components/pagoProveedorHelpers";
+
 import { ProgramarPagoDialog } from "./_sections/ProgramarPagoDialog";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar } from "@/features/bandejas/domain/aggregates";
