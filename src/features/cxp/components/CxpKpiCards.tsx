@@ -10,6 +10,11 @@ function countLabel(count: number): string {
   return `${count} ${count === 1 ? "factura" : "facturas"}`;
 }
 
+/** Versión corta para sublabels que ya llevan un importe (evita truncado). */
+function countLabelCorto(count: number): string {
+  return `${count} fact.`;
+}
+
 export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] }) {
   const {
     porPagarMxn, porPagarUsd, vencidasN, porVencer7d,
@@ -55,7 +60,7 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
         label="Vencido"
         value={formatCurrencyCompact(kpis.vencido_mxn, "MXN")}
         valueTooltip={formatCurrency(kpis.vencido_mxn, "MXN")}
-        sublabel={`${formatCurrency(kpis.vencido_usd, "USD")} · ${countLabel(vencidasN)}`}
+        sublabel={`${formatCurrency(kpis.vencido_usd, "USD")} · ${countLabelCorto(vencidasN)}`}
         variant="destructive"
       />
       {/* El cálculo de `por_vencer_7d_*` usa una ventana de 7 días: la etiqueta
@@ -64,14 +69,14 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
         label="Por vencer 7d"
         value={formatCurrencyCompact(kpis.por_vencer_7d_mxn, "MXN")}
         valueTooltip={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
-        sublabel={`${formatCurrency(kpis.por_vencer_7d_usd, "USD")} · ${countLabel(porVencer7d)}`}
+        sublabel={`${formatCurrency(kpis.por_vencer_7d_usd, "USD")} · ${countLabelCorto(porVencer7d)}`}
         variant="warning"
       />
       <KpiCard
         label="Programado 7d"
         value={formatCurrencyCompact(programadoMxn, "MXN")}
         valueTooltip={formatCurrency(programadoMxn, "MXN")}
-        sublabel={`${formatCurrency(programadoUsd, "USD")} · ${countLabel(programadoN)}`}
+        sublabel={`${formatCurrency(programadoUsd, "USD")} · ${countLabelCorto(programadoN)}`}
       />
     </div>
   );
