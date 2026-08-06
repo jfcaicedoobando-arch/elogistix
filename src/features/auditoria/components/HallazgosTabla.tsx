@@ -114,7 +114,7 @@ export function HallazgosTabla(props: Props) {
             <UserCheck className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate max-w-[110px]">{responsable.responsable_email}</span>
             {vencida && <AlertTriangle className="h-3 w-3 text-destructive shrink-0" aria-label="Vencido" />}
-          </button>
+          </Button>
         );
       } },
     { id: "rev", header: "Revisión", meta: { width: COL_W.monto },
