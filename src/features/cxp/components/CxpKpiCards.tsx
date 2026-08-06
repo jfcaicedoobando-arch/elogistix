@@ -3,7 +3,7 @@
  */
 import { useMemo } from "react";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import type { FacturaCxP, KPIsCxP } from "@/features/cxp/services";
 
 function countLabel(count: number): string {
