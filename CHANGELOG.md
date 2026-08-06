@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.448.0] - 2026-08-06
+- Detalle de factura de proveedor: el encabezado ahora muestra un solo badge de estado; el atraso, NC, SAT y programación de pago dejan de duplicarse en chips y quedan en la cinta de KPIs y en sus pestañas.
+- El stepper del ciclo de vida refleja el atraso real ("Vencida · N d" en tono destructivo) en vez de marcar "Vigente" en verde.
+- Se retira el chip "Aprobada" de la barra de acciones porque el stepper ya lo comunica.
+
 ## [13.447.1] - 2026-08-06
 - CxP · El modal de **pago a proveedor ya no se ve recortado**: se amplió el ancho (de `lg` a `2xl`), las 4 tarjetas del encabezado (Total, Pagado, Saldo, Moneda) muestran los importes completos y el tipo de cambio se lee en una segunda línea ("TC 17.32"). En pantallas de poca altura el encabezado se compacta para dejar más espacio al formulario.
 
