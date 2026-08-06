@@ -76,7 +76,7 @@ export default function Ayuda() {
           {!search && (
             <Card>
               <CardContent className="p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                <p className="text-overline font-semibold mb-2">
                   Ir a una sección
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -104,7 +104,7 @@ export default function Ayuda() {
             modulosFiltrados.map((modulo) => (
               <Card key={modulo.id} id={modulo.id} className="scroll-mt-20">
                 <CardHeader>
-                  <CardTitle className="flex items-start justify-between gap-3 text-base">
+                  <CardTitle className="flex items-start justify-between gap-3">
                     <div className="flex flex-col gap-1 min-w-0">
                       <span>{modulo.titulo}</span>
                       {modulo.audiencia && modulo.audiencia.length > 0 && (
@@ -139,7 +139,7 @@ export default function Ayuda() {
         <TabsContent value="glosario">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Glosario de términos del forwarder</CardTitle>
+              <CardTitle>Glosario de términos del forwarder</CardTitle>
               <p className="text-sm text-muted-foreground">
                 {glosarioFiltrado.length} término{glosarioFiltrado.length === 1 ? "" : "s"}
               </p>
@@ -164,7 +164,7 @@ export default function Ayuda() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">¿No encuentras lo que buscas?</CardTitle>
+          <CardTitle>¿No encuentras lo que buscas?</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>

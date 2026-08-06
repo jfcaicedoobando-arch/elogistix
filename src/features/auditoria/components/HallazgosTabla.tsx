@@ -66,14 +66,15 @@ export function HallazgosTabla(props: Props) {
       cell: ({ row }) => {
         const h = row.original;
         return (
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="sm"
+            className="h-auto p-0 font-normal"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
-            className="text-primary hover:underline focus:outline-none focus:underline"
             title={`Abrir embarque ${h.expediente}`}
           >
             {h.expediente}
-          </button>
+          </Button>
         );
       } },
     { id: "regla", header: "Regla", meta: { width: COL_W.nombre, className: "text-xs text-muted-foreground" }, cell: ({ row }) => reglaLabel[row.original.regla] },
@@ -98,13 +99,14 @@ export function HallazgosTabla(props: Props) {
           );
         }
         return (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onAsignarResponsable(h); }}
+          <Button
+            variant="link"
+            size="sm"
             className={cn(
-              "flex items-center gap-1 hover:underline focus:outline-none focus:underline text-left",
+              "h-auto p-0 flex items-center gap-1 text-left justify-start",
               responsable.responsable_id === currentUserId ? "text-primary font-medium" : "text-foreground",
             )}
+            onClick={(e) => { e.stopPropagation(); onAsignarResponsable(h); }}
             title={`Asignado por ${responsable.asignado_por_email || "—"}${
               responsable.asignado_at ? ` el ${format(new Date(responsable.asignado_at), "dd/MM/yyyy HH:mm")}` : ""
             }${responsable.fecha_limite ? `\nFecha límite: ${format(new Date(`${responsable.fecha_limite}T00:00:00`), "dd/MM/yyyy")}` : ""}`}
@@ -112,7 +114,7 @@ export function HallazgosTabla(props: Props) {
             <UserCheck className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate max-w-[110px]">{responsable.responsable_email}</span>
             {vencida && <AlertTriangle className="h-3 w-3 text-destructive shrink-0" aria-label="Vencido" />}
-          </button>
+          </Button>
         );
       } },
     { id: "rev", header: "Revisión", meta: { width: COL_W.monto },

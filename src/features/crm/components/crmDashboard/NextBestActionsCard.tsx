@@ -20,7 +20,7 @@ export function NextBestActionsCard({ items, isLoading }: Props) {
   return (
     <Card className="border-primary/30">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" /> Qué hacer ahora
         </CardTitle>
       </CardHeader>

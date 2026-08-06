@@ -61,7 +61,7 @@ export default function TrackingPublico() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Ruta</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle>Ruta</CardTitle></CardHeader>
             <CardContent className="text-sm space-y-1">
               <p><strong>Origen:</strong> {getOrigen(e)}</p>
               <p><strong>Destino:</strong> {getDestino(e)}</p>
@@ -70,7 +70,7 @@ export default function TrackingPublico() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Detalles</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle>Detalles</CardTitle></CardHeader>
             <CardContent className="text-sm space-y-1">
               <p><strong>Modo:</strong> {e.modo}</p>
               <p><strong>Tipo:</strong> {e.tipo}</p>

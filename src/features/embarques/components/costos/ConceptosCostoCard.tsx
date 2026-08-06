@@ -94,7 +94,7 @@ export function ConceptosCostoCard({
   return (
     <Card ref={registerRef(costoFocus ?? "")} data-focus={costoFocus ?? undefined}>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-sm">Costos directos del embarque</CardTitle>
+        <CardTitle>Costos directos del embarque</CardTitle>
         {costoFocus && (
           <div className="flex items-center gap-2 text-xs">
             <Badge variant="outline" className="border-primary text-primary">

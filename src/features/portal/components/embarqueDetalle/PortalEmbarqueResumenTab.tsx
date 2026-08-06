@@ -57,7 +57,7 @@ export function PortalEmbarqueResumenTab({ embarque }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Datos de Ruta</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle>Datos de Ruta</CardTitle></CardHeader>
         <CardContent>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Origen</dt>
@@ -84,7 +84,7 @@ export function PortalEmbarqueResumenTab({ embarque }: Props) {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Datos Generales</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle>Datos Generales</CardTitle></CardHeader>
         <CardContent>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Modo</dt>

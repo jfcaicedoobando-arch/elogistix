@@ -53,7 +53,7 @@ export function FacturaTimbradoCard(props: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <FileCheck2 className="h-4 w-4 text-success" /> Timbrado fiscal
           <AmbienteBadge ambiente={ambiente} size="md" />
         </CardTitle>

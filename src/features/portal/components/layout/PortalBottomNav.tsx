@@ -21,7 +21,7 @@ export function PortalBottomNav() {
             <li key={item.href} className="flex">
               <Link
                 to={item.href}
-                className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 text-label font-medium transition-colors w-full min-h-[56px] ${
+                className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 text-label font-medium transition-colors w-full min-h-14 ${
                   isActive
                     ? "text-accent"
                     : "text-muted-foreground hover:text-foreground"

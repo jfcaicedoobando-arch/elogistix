@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter,
+  Table, TableBody, TableCell, TableHeader, TableRow, TableFooter,
 } from "@/components/ui/table";
+import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { ProfitBadge } from "@/components/shared/ProfitBadge";
@@ -56,12 +57,12 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="whitespace-nowrap">Concepto</TableHead>
-                <TableHead className="whitespace-nowrap">Proveedor</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Costo Unit.</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Venta</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Profit</TableHead>
-                <TableHead className="text-right whitespace-nowrap">% Profit</TableHead>
+                <DetailTableHead className="whitespace-nowrap">Concepto</DetailTableHead>
+                <DetailTableHead className="whitespace-nowrap">Proveedor</DetailTableHead>
+                <DetailTableHead className="text-right whitespace-nowrap">Costo Unit.</DetailTableHead>
+                <DetailTableHead className="text-right whitespace-nowrap">Venta</DetailTableHead>
+                <DetailTableHead className="text-right whitespace-nowrap">Profit</DetailTableHead>
+                <DetailTableHead className="text-right whitespace-nowrap">% Profit</DetailTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -73,7 +74,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
 
                 return (
                   <React.Fragment key={idx}>
-                    <TableRow>
+                    <DetailTableRow>
                       <TableCell className="font-medium text-sm">{fila.concepto}</TableCell>
                       <TableCell>
                         {canEdit ? (
@@ -92,7 +93,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                         {formatCurrency(profit, moneda)}
                       </TableCell>
                       <TableCell className="text-right"><ProfitBadge porcentaje={pct} /></TableCell>
-                    </TableRow>
+                    </DetailTableRow>
                     {(canEdit || fila.notas) && (
                       <TableRow>
                         <TableCell colSpan={6} className="pt-0 pb-2 border-t-0">
@@ -101,7 +102,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                               placeholder="Notas (opcional)"
                               value={fila.notas || ""}
                               onChange={e => onUpdate(globalIdx, "notas", e.target.value)}
-                              className="text-xs h-8 min-h-[32px] resize-none focus:min-h-[60px] transition-all"
+                              className="text-xs h-8 resize-none focus:min-h-16 transition-all"
                             />
                           ) : (
                             <span className="text-xs text-muted-foreground italic">↳ {fila.notas}</span>

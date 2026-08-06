@@ -3,7 +3,8 @@
  * Extraído de `FacturaConceptosTable` para respetar el límite Power-of-10
  * de 200 líneas por archivo.
  */
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { Link } from "react-router-dom";
@@ -77,12 +78,12 @@ export function ConceptosDesktopTable({ conceptos, moneda, mostrarEmbarque, infe
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Concepto</TableHead>
-            {mostrarEmbarque && <TableHead className="w-32">Embarque</TableHead>}
-            <TableHead className="text-right w-20">Cant.</TableHead>
-            <TableHead className="text-right w-32">P. Unitario</TableHead>
-            <TableHead className="text-center w-24">IVA</TableHead>
-            <TableHead className="text-right w-32">Importe</TableHead>
+            <DetailTableHead>Concepto</DetailTableHead>
+            {mostrarEmbarque && <DetailTableHead className="w-32">Embarque</DetailTableHead>}
+            <DetailTableHead className="text-right w-20">Cant.</DetailTableHead>
+            <DetailTableHead className="text-right w-32">P. Unitario</DetailTableHead>
+            <DetailTableHead className="text-center w-24">IVA</DetailTableHead>
+            <DetailTableHead className="text-right w-32">Importe</DetailTableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

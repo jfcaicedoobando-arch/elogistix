@@ -86,7 +86,7 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4" />Exportadores / Importadores</CardTitle>
+        <CardTitle className="flex items-center gap-2"><Users className="h-4 w-4" />Exportadores / Importadores</CardTitle>
         {canEdit && <Button size="sm" onClick={onAdd}><Plus className="h-4 w-4 mr-1" />Agregar Contacto</Button>}
       </CardHeader>
       <CardContent className="p-0">{renderBody()}</CardContent>

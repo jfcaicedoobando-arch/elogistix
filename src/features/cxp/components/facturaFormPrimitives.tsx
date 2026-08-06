@@ -21,7 +21,7 @@ interface FormSectionProps {
 export function FormSection({ title, icon, children }: FormSectionProps) {
   return (
     <section className="space-y-3">
-      <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <h3 className="flex items-center gap-2 text-overline font-semibold">
         {icon ? <span className="text-primary/70">{icon}</span> : null}
         {title}
       </h3>

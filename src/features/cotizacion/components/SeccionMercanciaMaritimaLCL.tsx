@@ -4,8 +4,9 @@ import { NumericInput } from "@/components/shared/NumericInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table, TableBody, TableCell, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import { Plus, Trash2, Ruler } from "lucide-react";
 import type { DimensionLCL } from "@/features/cotizacion/hooks";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
@@ -65,17 +66,17 @@ export default function SeccionMercanciaMaritimaLCL({ msdsFile, setMsdsFile }: P
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-20">Piezas</TableHead>
-                  <TableHead className="w-24">Alto (cm)</TableHead>
-                  <TableHead className="w-24">Largo (cm)</TableHead>
-                  <TableHead className="w-24">Ancho (cm)</TableHead>
-                  <TableHead className="w-28">Volumen m³</TableHead>
-                  <TableHead className="w-12"></TableHead>
+                  <DetailTableHead className="w-20">Piezas</DetailTableHead>
+                  <DetailTableHead className="w-24">Alto (cm)</DetailTableHead>
+                  <DetailTableHead className="w-24">Largo (cm)</DetailTableHead>
+                  <DetailTableHead className="w-24">Ancho (cm)</DetailTableHead>
+                  <DetailTableHead className="w-28">Volumen m³</DetailTableHead>
+                  <DetailTableHead className="w-12"></DetailTableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {dimensiones.map((dim, i) => (
-                  <TableRow key={i}>
+                  <DetailTableRow key={i}>
                     <TableCell>
                       <NumericInput value={dim.piezas} onChange={n => actualizarDimension(i, 'piezas', n)} aria-label="Piezas" />
                     </TableCell>
@@ -96,7 +97,7 @@ export default function SeccionMercanciaMaritimaLCL({ msdsFile, setMsdsFile }: P
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </TableCell>
-                  </TableRow>
+                  </DetailTableRow>
                 ))}
               </TableBody>
             </Table>

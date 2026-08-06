@@ -20,7 +20,7 @@ export default function HealthTopErrorsChart({ loading, data }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Top 5 funciones con errores</CardTitle>
+        <CardTitle className="font-medium">Top 5 funciones con errores</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (

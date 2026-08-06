@@ -132,7 +132,7 @@ export default function PortalCotizacionDetalle() {
       {cot.notas && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Notas</CardTitle>
+            <CardTitle>Notas</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm whitespace-pre-wrap">{cot.notas}</p>

@@ -21,7 +21,7 @@ export function OrgConfigCard({ loading, totalItems, grouped }: OrgConfigCardPro
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
+        <CardTitle className="flex items-center gap-2">
           <Settings className="h-5 w-5" /> Configuración
         </CardTitle>
         <CardDescription>Parámetros de configuración de esta organización</CardDescription>

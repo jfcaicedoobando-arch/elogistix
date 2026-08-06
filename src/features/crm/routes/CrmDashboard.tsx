@@ -55,7 +55,7 @@ function EmbudoCard() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Embudo de oportunidades</CardTitle>
+        <CardTitle>Embudo de oportunidades</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -92,7 +92,7 @@ function ForecastMesCard() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Forecast por mes</CardTitle>
+        <CardTitle>Forecast por mes</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (

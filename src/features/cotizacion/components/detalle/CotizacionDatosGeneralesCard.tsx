@@ -79,7 +79,7 @@ export function CotizacionDatosGeneralesCard({ cotizacion }: Props) {
   const rows = buildRows(cotizacion);
   return (
     <Card>
-      <CardHeader><CardTitle className="text-lg">Datos Generales</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Datos Generales</CardTitle></CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm [&>div]:min-w-0 [&>div>p]:truncate">
           {rows.map((r) => (

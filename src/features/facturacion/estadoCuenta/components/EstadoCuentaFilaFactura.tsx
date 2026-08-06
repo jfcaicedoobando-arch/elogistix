@@ -2,7 +2,8 @@
  * Fila de factura del Estado de cuenta (una línea del statement).
  */
 import { Link } from "react-router-dom";
-import { TableCell, TableRow } from "@/components/ui/table";
+import { TableCell } from "@/components/ui/table";
+import { DetailTableRow } from "@/components/shared/DetailTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, FileText } from "lucide-react";
@@ -33,7 +34,7 @@ export function EstadoCuentaFilaFactura({ fila, abierta, onToggle, facturaHref }
   const vencida = fila.estatus_cobranza === "Vencida";
 
   return (
-    <TableRow className={cn(vencida && "bg-destructive/5")}>
+    <DetailTableRow className={cn(vencida && "bg-destructive/5")}>
       <TableCell className="px-1">
         <Button
           variant="ghost"
@@ -93,6 +94,6 @@ export function EstadoCuentaFilaFactura({ fila, abierta, onToggle, facturaHref }
       <TableCell>
         <Badge variant={BADGE[fila.estatus_cobranza]}>{fila.estatus_cobranza}</Badge>
       </TableCell>
-    </TableRow>
+    </DetailTableRow>
   );
 }

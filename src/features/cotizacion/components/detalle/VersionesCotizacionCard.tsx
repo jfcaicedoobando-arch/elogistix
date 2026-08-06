@@ -22,7 +22,7 @@ export function VersionesCotizacionCard({ cotizacionId }: Props) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <History className="h-4 w-4" /> Historial de versiones
           </CardTitle>
         </CardHeader>
@@ -40,7 +40,7 @@ export function VersionesCotizacionCard({ cotizacionId }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <History className="h-4 w-4" /> Historial de versiones
           <Badge variant="outline" className="ml-1 text-2xs">
             {versiones.length}

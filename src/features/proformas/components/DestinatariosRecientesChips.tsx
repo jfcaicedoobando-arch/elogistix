@@ -3,6 +3,7 @@
  * Extraído de `EnviarProformaDialog` para respetar Power-of-10 #4 (≤200 líneas).
  */
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { notifyInfo } from "@/lib/ui/appFeedback";
 
 interface Props {
@@ -57,13 +58,14 @@ export function DestinatariosRecientesChips({
         </div>
       )}
       {ocultos.length > 0 && (
-        <button
-          type="button"
+        <Button
+          variant="link"
+          size="sm"
           onClick={() => onRestaurarVarios(ocultos)}
-          className="mt-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
+          className="mt-1 h-auto p-0 text-xs text-muted-foreground underline-offset-2"
         >
           Restaurar ocultos ({ocultos.length})
-        </button>
+        </Button>
       )}
     </>
   );

@@ -84,7 +84,7 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
       <Card ref={registerRef("facturas-entrantes")} data-focus="facturas-entrantes">
         <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
           <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <CardTitle className="flex items-center gap-2">
               <Inbox className="h-4 w-4 text-muted-foreground" />
               Facturas de proveedor recibidas
             </CardTitle>

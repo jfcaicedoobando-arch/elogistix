@@ -44,7 +44,7 @@ export function PortalProximosArribosCard({ items }: Props) {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-accent" />
             Próximos Arribos
           </CardTitle>

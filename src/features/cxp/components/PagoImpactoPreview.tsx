@@ -59,7 +59,7 @@ export function PagoImpactoPreview({ impacto, proveedorNombre, cargandoProveedor
   return (
     <div className="rounded-lg border bg-accent/5 px-4 py-3">
       <div className="flex items-center justify-between gap-2 mb-1">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-overline font-semibold">
           Vista previa del impacto
         </p>
         <span

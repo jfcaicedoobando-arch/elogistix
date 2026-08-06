@@ -31,7 +31,7 @@ export function CerrandoSemanaCard({ items }: { items: DealItem[] }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Target className="h-4 w-4 text-primary" /> Cerrando esta semana
         </CardTitle>
       </CardHeader>
@@ -67,7 +67,7 @@ export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-destructive" /> Leads sin contactar (&gt; 7 días)
         </CardTitle>
       </CardHeader>

@@ -82,7 +82,7 @@ function RuntimeCard({ sentryInfo }: { sentryInfo: ReturnType<typeof useSentryIn
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
+        <CardTitle className="font-medium flex items-center gap-2">
           <StatusTitle status={sentryInfo.status} />
         </CardTitle>
       </CardHeader>
@@ -114,7 +114,7 @@ function UsuarioCard() {
   const { user, effectiveRole } = useAuth();
   return (
     <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Usuario actual</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle className="font-medium">Usuario actual</CardTitle></CardHeader>
       <CardContent>
         <Row label="Email" value={user?.email ?? "—"} />
         <Row label="User ID" value={user?.id ?? "—"} />
@@ -128,7 +128,7 @@ function OrganizacionCard() {
   const { organization, organizationId } = useOrganization();
   return (
     <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Organización activa</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle className="font-medium">Organización activa</CardTitle></CardHeader>
       <CardContent>
         <Row label="Nombre" value={organization?.nombre ?? "—"} />
         <Row label="Org ID" value={organizationId ?? "—"} />
@@ -141,7 +141,7 @@ function OrganizacionCard() {
 function PipelineCard({ active }: { active: boolean }) {
   return (
     <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Probar el pipeline</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle className="font-medium">Probar el pipeline</CardTitle></CardHeader>
       <CardContent className="flex flex-col sm:flex-row gap-2">
         <Button onClick={handleTestError} variant="destructive" disabled={!active}>
           <Send className="h-4 w-4 mr-2" />Enviar error de prueba

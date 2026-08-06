@@ -15,7 +15,7 @@ export default function LeaderboardVendedores() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Trophy className="h-4 w-4" /> Leaderboard del mes
         </CardTitle>
       </CardHeader>

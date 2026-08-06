@@ -48,7 +48,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-sm flex items-center gap-2"><Activity className="h-4 w-4" /> Actividades</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="flex items-center gap-2"><Activity className="h-4 w-4" /> Actividades</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-[140px,1fr,auto] gap-2">
           <Select value={tipo} onValueChange={(v) => setTipo(v as CrmActividadTipo)}>

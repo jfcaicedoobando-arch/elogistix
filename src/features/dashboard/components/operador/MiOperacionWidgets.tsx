@@ -30,7 +30,7 @@ export function WidgetCard({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Icon className={`h-4 w-4 ${iconClass}`} />
           {title}
           {!isLoading && count > 0 && (

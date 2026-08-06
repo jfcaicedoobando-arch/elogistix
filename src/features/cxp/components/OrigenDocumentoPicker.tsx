@@ -53,7 +53,7 @@ export function OrigenDocumentoPicker({ mode, onModeChange }: Props) {
     <section className="space-y-2" aria-labelledby="origen-documento-titulo">
       <h3
         id="origen-documento-titulo"
-        className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+        className="text-overline font-semibold"
       >
         ¿Cómo vas a capturar esta factura?
       </h3>

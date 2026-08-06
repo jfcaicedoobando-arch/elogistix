@@ -24,7 +24,7 @@ export function TopProveedoresCard({ isLoading, rows }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Building2 className="h-4 w-4 text-accent" /> Top 10 proveedores por gasto
         </CardTitle>
       </CardHeader>

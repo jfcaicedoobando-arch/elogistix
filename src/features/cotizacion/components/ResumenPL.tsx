@@ -58,7 +58,7 @@ export default function ResumenPL({
       <Card>
         <CollapsibleTrigger className="w-full">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" />
               Resumen P&L
               <div className="ml-auto flex items-center gap-2">

@@ -88,7 +88,7 @@ export function ResumenConceptosVenta({
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Receipt className="h-4 w-4" /> Conceptos de Venta
           {multiContenedor && (
             <Badge variant="outline" className="ml-1 text-2xs">

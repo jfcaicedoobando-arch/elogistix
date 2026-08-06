@@ -109,7 +109,7 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Receipt className="h-4 w-4 text-muted-foreground" /> Desglose de conceptos
           </CardTitle>
         </CardHeader>
@@ -130,7 +130,7 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Receipt className="h-4 w-4 text-muted-foreground" /> Desglose de conceptos
         </CardTitle>
       </CardHeader>

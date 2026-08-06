@@ -44,7 +44,7 @@ export function EjecutivoScoreCard({
   return (
     <Card className="md:col-span-2">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Activity className="h-4 w-4" />
           Salud operativa
         </CardTitle>

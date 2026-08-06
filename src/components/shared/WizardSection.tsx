@@ -45,7 +45,7 @@ export function WizardSection({
     <Card className={className}>
       <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-3">
         <div className="space-y-1">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             {title}
             {complete && (
               <span

@@ -23,7 +23,7 @@ export function DocumentoRailCard({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base font-semibold">
+        <CardTitle className="flex items-center gap-2">
           <History className="h-4 w-4 text-muted-foreground" />
           {title}
           {typeof count === "number" && count > 0 ? (

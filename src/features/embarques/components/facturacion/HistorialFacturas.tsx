@@ -2,6 +2,7 @@ import { ChevronRight, Receipt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -40,13 +41,13 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
         const num = proformas.find(p => p.id === f.proforma_id)?.numero;
         if (!num) return <span className="text-muted-foreground">—</span>;
         return (
-          <button
-            type="button"
-            className="font-mono text-info hover:underline"
+          <Button
+            variant="link"
+            className="h-auto p-0 font-mono text-info"
             onClick={(e) => { e.stopPropagation(); navigate(`/proformas/${f.proforma_id}`); }}
           >
             {num}
-          </button>
+          </Button>
         );
       },
     },
@@ -75,7 +76,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-sm">Facturas del Embarque</CardTitle>
+        <CardTitle>Facturas del Embarque</CardTitle>
         {facturas.length > 0 && (
           <span className="text-xs text-muted-foreground tabular-nums">
             {facturas.length} factura{facturas.length === 1 ? "" : "s"}

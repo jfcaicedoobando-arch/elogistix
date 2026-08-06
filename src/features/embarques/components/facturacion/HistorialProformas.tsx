@@ -146,7 +146,7 @@ export function HistorialProformas({
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-sm">Proformas Generadas</CardTitle>
+        <CardTitle>Proformas Generadas</CardTitle>
         {proformas.length > 0 && (
           <span className="text-xs text-muted-foreground">
             {proformas.length} proforma{proformas.length === 1 ? "" : "s"}

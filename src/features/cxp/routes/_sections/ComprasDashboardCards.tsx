@@ -21,7 +21,7 @@ export function TopProveedoresCard({ rows }: { rows: ProveedorSaldoRow[] }) {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2 flex-row items-start justify-between gap-2 space-y-0">
-        <CardTitle className="text-sm">Top proveedores con saldo</CardTitle>
+        <CardTitle>Top proveedores con saldo</CardTitle>
         <Link
           to={ROUTES.COMPRAS_AGING}
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
@@ -73,7 +73,7 @@ export function UltimasFacturasCard({ rows }: { rows: FacturaCapturadaRow[] }) {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2 flex-row items-start justify-between gap-2 space-y-0">
-        <CardTitle className="text-sm">Últimas facturas capturadas</CardTitle>
+        <CardTitle>Últimas facturas capturadas</CardTitle>
         <Link
           to={ROUTES.COMPRAS_FACTURAS}
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"

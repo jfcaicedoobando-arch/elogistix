@@ -74,7 +74,7 @@ export function NotasSection({ value, onChange }: NotasProps) {
   const [open, setOpen] = useState(false);
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors">
+      <CollapsibleTrigger className="flex items-center gap-2 text-overline font-semibold hover:text-foreground transition-colors">
         <FileText className="h-3.5 w-3.5 text-primary/70" />
         Notas (opcional)
         <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />

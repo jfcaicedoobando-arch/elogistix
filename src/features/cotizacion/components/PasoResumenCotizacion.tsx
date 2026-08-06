@@ -38,7 +38,7 @@ export default function PasoResumenCotizacion({
         {tieneCostosUSD && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">P&L USD</CardTitle>
+              <CardTitle>P&L USD</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -62,7 +62,7 @@ export default function PasoResumenCotizacion({
         {tieneCostosMXN && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">P&L MXN</CardTitle>
+              <CardTitle>P&L MXN</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -88,7 +88,7 @@ export default function PasoResumenCotizacion({
       {/* Datos de operación */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Datos de la Operación</CardTitle>
+          <CardTitle>Datos de la Operación</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">

@@ -31,7 +31,7 @@ interface CostosCardProps {
 export function CostosCard(p: CostosCardProps) {
   return (
     <Card>
-      <CardHeader><CardTitle className="text-sm">Costos directos del embarque</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Costos directos del embarque</CardTitle></CardHeader>
       <CardContent>
         <div className="space-y-3">
           <div className={`grid ${p.cols} gap-2 text-xs font-medium text-muted-foreground`}>
@@ -90,7 +90,7 @@ interface VentasCardProps {
 export function VentasCard(p: VentasCardProps) {
   return (
     <Card>
-      <CardHeader><CardTitle className="text-sm">Conceptos de Venta</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Conceptos de Venta</CardTitle></CardHeader>
       <CardContent>
         <div className="space-y-3">
           <div className={`grid ${p.cols} gap-2 text-xs font-medium text-muted-foreground`}>

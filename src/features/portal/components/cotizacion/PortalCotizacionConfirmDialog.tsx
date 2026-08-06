@@ -48,7 +48,7 @@ export default function PortalCotizacionConfirmDialog({
           placeholder={isAceptar ? "Escribe un comentario…" : "Describe el motivo…"}
           value={comentario}
           onChange={(e) => onCommentChange(e.target.value)}
-          className="min-h-[80px]"
+          className="min-h-20"
           disabled={isPending}
         />
       </div>

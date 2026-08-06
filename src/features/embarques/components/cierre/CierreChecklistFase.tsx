@@ -31,7 +31,7 @@ export function CierreChecklistFase({
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h3 className="text-overline font-semibold">
           {grupo.fase.numero}. {grupo.fase.titulo}
         </h3>
         <Badge variant={completa && !informativo ? "secondary" : "outline"} className="text-2xs">

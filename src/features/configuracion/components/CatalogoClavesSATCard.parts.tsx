@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TableCell, TableRow } from "@/components/ui/table";
+import { TableCell } from "@/components/ui/table";
+import { DetailTableRow } from "@/components/shared/DetailTable";
 import { UNIDADES_SAT, type Draft, type TipoIva } from "./CatalogoClavesSATCard.constants";
 
 interface EditRowProps {
@@ -23,7 +24,7 @@ interface EditRowProps {
 export function EditRow({ draft, setDraft, onCancel, onSave, busy, valid }: EditRowProps) {
   const p = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch });
   return (
-    <TableRow className="bg-muted/30">
+    <DetailTableRow className="bg-muted/30" hoverable={false}>
       <TableCell><Input value={draft.patron} onChange={(e) => p({ patron: e.target.value })} placeholder="Flete Marítimo" /></TableCell>
       <TableCell><Input value={draft.clave_sat} onChange={(e) => p({ clave_sat: e.target.value })} placeholder="78101800" /></TableCell>
       <TableCell>
@@ -51,6 +52,6 @@ export function EditRow({ draft, setDraft, onCancel, onSave, busy, valid }: Edit
         <Button size="icon" variant="ghost" onClick={onCancel} disabled={busy}><X className="h-4 w-4" /></Button>
         <Button size="icon" onClick={onSave} disabled={busy || !valid}><Check className="h-4 w-4" /></Button>
       </TableCell>
-    </TableRow>
+    </DetailTableRow>
   );
 }

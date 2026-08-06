@@ -7,7 +7,7 @@ type Evento = TrackingPublicoData["eventos"][number];
 export function TrackingPublicoTimeline({ eventos }: { eventos: Evento[] }) {
   return (
     <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-sm">Línea de tiempo</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle>Línea de tiempo</CardTitle></CardHeader>
       <CardContent>
         {eventos.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">No hay eventos registrados aún.</p>

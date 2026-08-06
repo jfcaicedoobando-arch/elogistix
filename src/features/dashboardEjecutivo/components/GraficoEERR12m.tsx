@@ -14,7 +14,7 @@ export function GraficoEERR12m({ data }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">EERR últimos 12 meses</CardTitle>
+        <CardTitle>EERR últimos 12 meses</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-64">

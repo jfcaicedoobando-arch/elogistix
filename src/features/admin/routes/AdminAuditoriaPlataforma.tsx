@@ -37,7 +37,7 @@ export default function AdminAuditoriaPlataforma() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Módulo en construcción</CardTitle>
+          <CardTitle>Módulo en construcción</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>

@@ -42,7 +42,7 @@ export function ComisionEmbarqueCard({ embarqueId }: { embarqueId: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Percent className="h-4 w-4 text-muted-foreground" />
           Comisión de venta
         </CardTitle>

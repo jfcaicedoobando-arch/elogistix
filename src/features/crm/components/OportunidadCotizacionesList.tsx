@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { ClipboardList, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useOportunidadCotizaciones } from "@/features/crm/hooks";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -21,7 +22,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <ClipboardList className="h-4 w-4" /> Cotizaciones vinculadas ({data.length})
         </CardTitle>
       </CardHeader>
@@ -68,13 +69,14 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
                     <td className="text-right">{formatCurrencyCompact(Number(c.subtotal ?? 0), c.moneda)}</td>
                     <td className="text-center">
                       {c.embarque_id ? (
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 inline-flex items-center gap-1"
                           onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${c.embarque_id}`); }}
                         >
                           <Ship className="h-3 w-3" /> Ver
-                        </button>
+                        </Button>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}

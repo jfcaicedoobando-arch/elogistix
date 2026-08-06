@@ -39,7 +39,7 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4" /> Comentarios internos ({comentarios.length})
         </CardTitle>
       </CardHeader>

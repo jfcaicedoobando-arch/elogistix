@@ -117,7 +117,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+        <CardTitle className="flex items-center gap-2 flex-wrap">
           <CalendarDays className="h-4 w-4 text-primary shrink-0" />
           <span>Embarques activos — próximo mes ({nombreMesCap})</span>
         </CardTitle>

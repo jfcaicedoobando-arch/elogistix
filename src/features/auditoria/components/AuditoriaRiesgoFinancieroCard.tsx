@@ -2,8 +2,8 @@
  * Tarjeta ejecutiva de fuga financiera. Suma MXN de los hallazgos
  * financieros pendientes y los desglosa por regla.
  */
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingDown } from "lucide-react";
+import { KpiCard } from "@/components/shared/KpiCard";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
 import { formatCurrency } from "@/lib/formatters/numbers";
 
@@ -28,39 +28,33 @@ export function AuditoriaRiesgoFinancieroCard({ total, porRegla }: Props) {
     .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0));
 
   return (
-    <Card className="border-warning/30 bg-warning/5">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <TrendingDown className="h-4 w-4 text-warning" />
-          Riesgo financiero pendiente
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="text-3xl font-bold tabular-nums text-warning">
-          {fmt(total)}
+    <KpiCard
+      label="Riesgo financiero pendiente"
+      value={fmt(total)}
+      icon={TrendingDown}
+      variant="warning"
+    >
+      {items.length === 0 ? (
+        <p className="text-xs text-muted-foreground mt-2">
+          Sin fugas financieras detectadas en los embarques actuales.
+        </p>
+      ) : (
+        <div className="space-y-1 text-xs mt-2">
+          {items.map(([regla, monto]) => (
+            <div
+              key={regla}
+              className="flex items-center justify-between border-t pt-1 first:border-t-0 first:pt-0"
+            >
+              <span className="text-muted-foreground">
+                {reglaLabel[regla as ReglaAuditoria] ?? regla}
+              </span>
+              <span className="font-semibold tabular-nums">
+                {fmt(monto ?? 0)}
+              </span>
+            </div>
+          ))}
         </div>
-        {items.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
-            Sin fugas financieras detectadas en los embarques actuales.
-          </p>
-        ) : (
-          <div className="space-y-1 text-xs">
-            {items.map(([regla, monto]) => (
-              <div
-                key={regla}
-                className="flex items-center justify-between border-t pt-1 first:border-t-0 first:pt-0"
-              >
-                <span className="text-muted-foreground">
-                  {reglaLabel[regla as ReglaAuditoria] ?? regla}
-                </span>
-                <span className="font-semibold tabular-nums">
-                  {fmt(monto ?? 0)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </KpiCard>
   );
 }

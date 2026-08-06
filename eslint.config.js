@@ -694,6 +694,8 @@ export default tseslint.config(
       // Implementación misma del DataTable — consume las primitivas.
       "src/components/shared/DataTable.tsx",
       "src/components/shared/dataTable/**",
+      // Contrato visual para tablas de detalle: envuelve TableHead/TableRow/TableCell.
+      "src/components/shared/DetailTable.tsx",
       // Form-tables editables con render row complejo (inputs/textareas por celda).
       "src/features/cotizacion/components/SeccionMercanciaAerea.tsx",
       "src/features/cotizacion/components/SeccionMercanciaMaritimaLCL.tsx",
@@ -778,6 +780,39 @@ export default tseslint.config(
       "no-restricted-syntax": ["error",
         ...NO_RESTRICTED_SYNTAX_BASE,
         ...QUERY_KEY_AND_IVA_RULES,
+      ],
+    },
+  },
+
+  // Lote B (retícula espacial 8/16/24): prohíbe padding/margin/gap arbitrarios
+  // en px dentro de literales de className. Usa la escala de Tailwind
+  // (p-2/p-3/p-4/p-6, gap-2/gap-4/gap-6, mt-1/mt-2/mt-4, etc.) en vez de
+  // valores "mágicos" como `p-[13px]`. Ámbito acotado a features/components
+  // para no bloquear CI por casos legítimos en primitivas `ui/` o `pdf/`.
+  {
+    name: "spacing-grid/no-arbitrary-px",
+    files: ["src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
+    ignores: [
+      "src/components/ui/**",
+      "src/components/shared/dataTable/columnWidths.ts",
+      "**/*columns.{ts,tsx}",
+      "**/*Columns.{ts,tsx}",
+      "**/__tests__/**",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error",
+        {
+          selector:
+            "Literal[value=/(^|\\s)(p|px|py|gap|mt|mb)-\\[[0-9]+px\\](\\s|$)/]",
+          message:
+            "No uses paddings/gaps/márgenes arbitrarios en px (p-[..px], px-[..px], py-[..px], gap-[..px], mt-[..px], mb-[..px]). Usa la escala de espaciado de Tailwind (p-2, p-4, gap-4, mt-2, etc.) redondeando al múltiplo de 8/16/24 más cercano.",
+        },
+        {
+          selector:
+            "TemplateElement[value.raw=/(^|\\s)(p|px|py|gap|mt|mb)-\\[[0-9]+px\\](\\s|$)/]",
+          message:
+            "No uses paddings/gaps/márgenes arbitrarios en px dentro de template literals (p-[..px], px-[..px], py-[..px], gap-[..px], mt-[..px], mb-[..px]). Usa la escala de espaciado de Tailwind.",
+        },
       ],
     },
   },

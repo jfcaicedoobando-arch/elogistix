@@ -65,7 +65,7 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
   return (
     <Card className="lg:col-span-2">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-muted-foreground" /> Top {Math.min(data.length, 10)} por Profit
         </CardTitle>
       </CardHeader>

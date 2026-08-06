@@ -86,7 +86,7 @@ export function AgregarConceptoInline({
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[380px] p-4 space-y-3">
         <div className="space-y-1.5">
-          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <Label className="text-overline font-semibold">
             Producto / servicio
           </Label>
           <ProductoServicioSelect
@@ -98,7 +98,7 @@ export function AgregarConceptoInline({
 
         {!monedaFija && (
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <Label className="text-overline font-semibold">
               Moneda
             </Label>
             <div className="inline-flex rounded-md border p-0.5">

@@ -77,7 +77,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <FileMinus className="h-4 w-4 text-muted-foreground" /> Notas de crédito
           <span className="text-xs text-muted-foreground font-normal">({notas.length})</span>
         </CardTitle>

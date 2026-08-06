@@ -42,7 +42,7 @@ export function MarcarLlegadaForm({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Anchor className="h-4 w-4 text-primary" /> Marcar Llegada real
         </CardTitle>
       </CardHeader>

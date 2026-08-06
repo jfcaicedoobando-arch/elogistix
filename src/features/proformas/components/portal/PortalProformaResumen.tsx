@@ -24,7 +24,7 @@ export function PortalProformaResumen({ proforma, conceptos }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Detalle de la proforma</CardTitle>
+        <CardTitle>Detalle de la proforma</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">

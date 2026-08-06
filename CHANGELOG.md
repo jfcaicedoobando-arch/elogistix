@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.432.0] - 2026-08-06
+- Ola 10 — Armonización visual global (720p primero). Es como fijar un solo "manual de estilo" para todas las sucursales, en vez de que cada una decida su letra y sus márgenes:
+- Contrato tipográfico: se agregaron tamaños fijos al tema (`text-section`, `text-subsection`, `text-card-title`, `text-table-head`, `text-body`, `text-body-sm`) y se quitaron ~140 excepciones sueltas en títulos de tarjetas y encabezados; un solo `h1` por pantalla.
+- Retícula 8/16/24 px: se sustituyeron paddings/márgenes/gaps con píxeles arbitrarios por la escala de Tailwind y se agregó una regla de lint para evitar recaídas.
+- Tablas de detalle: nuevo contrato compartido `DetailTable` (encabezado, hover, densidad y estado vacío iguales que las listas) aplicado en 13 tablas de conceptos, estados de cuenta, P&L, dimensiones y catálogos.
+- Indicadores: las tarjetas de auditoría (riesgo financiero y operadores) ahora usan las tarjetas KPI compartidas; el buscador global y el encabezado del menú lateral quedaron alineados en alto y resalte.
+- Botones: peso, radio, sombra, transición de 150 ms y aro de foco unificados; nuevo estado `loading` con spinner integrado. Se corrigió que ese estado rompía los botones que actúan como enlace (`asChild`).
+
 ## [13.431.1] - 2026-08-06
 - Se restauró la constante de versión de la app (`APP_VERSION`), que estaba vacía y rompía la compilación: era como quitarle la etiqueta al frasco que todos los demás módulos buscaban.
 

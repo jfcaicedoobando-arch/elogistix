@@ -4,6 +4,7 @@
  */
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -147,13 +148,9 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
               </TooltipContent>
             </Tooltip>
           </div>
-          <button
-            type="button"
-            onClick={exportCsv}
-            className="text-sm underline text-primary"
-          >
+          <Button variant="link" size="sm" className="h-auto p-0" onClick={exportCsv}>
             Exportar CSV
-          </button>
+          </Button>
         </div>
 
         <DataTable<FilaReconciliacion3C>

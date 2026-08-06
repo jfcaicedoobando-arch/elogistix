@@ -53,7 +53,7 @@ export default function AdminDashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Actividad por organización</CardTitle>
+            <CardTitle>Actividad por organización</CardTitle>
             <CardDescription>Embarques y cotizaciones acumulados</CardDescription>
           </CardHeader>
           <CardContent>
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Últimas organizaciones</CardTitle>
+            <CardTitle>Últimas organizaciones</CardTitle>
             <CardDescription>Creadas recientemente</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">

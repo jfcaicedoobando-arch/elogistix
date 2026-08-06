@@ -20,7 +20,7 @@ export function HistorialEnviosCard({ envios }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Mail className="h-4 w-4" /> Historial de envíos por correo
         </CardTitle>
       </CardHeader>

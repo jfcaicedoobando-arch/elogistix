@@ -28,7 +28,7 @@ export function ActividadesHoyCard({ items }: { items: Actividad[] }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-primary" /> Mis actividades de hoy
         </CardTitle>
       </CardHeader>

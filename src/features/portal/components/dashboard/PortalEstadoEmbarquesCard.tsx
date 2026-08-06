@@ -15,7 +15,7 @@ export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-accent" />
           Estado de Embarques
         </CardTitle>

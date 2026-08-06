@@ -22,7 +22,7 @@ export default function PortalFacturaResumenCard({ factura }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Datos de la factura</CardTitle>
+        <CardTitle>Datos de la factura</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">

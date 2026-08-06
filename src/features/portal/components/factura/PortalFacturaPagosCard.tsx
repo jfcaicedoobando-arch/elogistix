@@ -30,7 +30,7 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
-        <CardTitle className="text-lg">Pagos y notas de crédito</CardTitle>
+        <CardTitle>Pagos y notas de crédito</CardTitle>
         {hayMovimientos && (
           <Badge variant={liquidada ? "default" : "secondary"} className="gap-1">
             {liquidada ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}

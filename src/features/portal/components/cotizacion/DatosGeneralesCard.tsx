@@ -28,7 +28,7 @@ export default function DatosGeneralesCard({ cot }: { cot: CotDatos }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Datos Generales</CardTitle>
+        <CardTitle>Datos Generales</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">

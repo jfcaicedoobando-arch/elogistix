@@ -33,7 +33,7 @@ export function ProspectoBanner({ empresa, contacto, email, telefono }: Prospect
 export function ComentarioClienteCard({ texto }: { texto: string }) {
   return (
     <Card className="border-info/50">
-      <CardHeader><CardTitle className="text-lg">Comentario del Cliente</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Comentario del Cliente</CardTitle></CardHeader>
       <CardContent>
         <p className="text-sm whitespace-pre-wrap italic">"{texto}"</p>
       </CardContent>
@@ -44,7 +44,7 @@ export function ComentarioClienteCard({ texto }: { texto: string }) {
 export function NotasCard({ texto }: { texto: string }) {
   return (
     <Card>
-      <CardHeader><CardTitle className="text-lg">Notas</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Notas</CardTitle></CardHeader>
       <CardContent>
         <p className="text-sm whitespace-pre-wrap">{texto}</p>
       </CardContent>

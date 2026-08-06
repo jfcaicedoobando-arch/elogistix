@@ -79,7 +79,7 @@ export function FacturaReceptorCard({ clienteId, clienteNombre, rfcFactura }: Pr
     <Card>
       <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-3">
         <div className="min-w-0">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <User className="h-4 w-4 text-muted-foreground" /> Receptor
           </CardTitle>
           <Link

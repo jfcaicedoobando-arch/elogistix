@@ -37,7 +37,7 @@ export function EmbarqueDatosCard({ embarque, embarqueId, expediente }: Props) {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-base font-semibold truncate">
+        <CardTitle className="truncate">
           Embarque{expediente ? ` ${expediente}` : ""}
         </CardTitle>
         {embarqueId && (

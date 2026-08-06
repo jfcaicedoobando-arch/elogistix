@@ -53,7 +53,7 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
 
   return (
     <section className="space-y-3">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <h4 className="text-overline font-semibold">
         Credenciales
       </h4>
 

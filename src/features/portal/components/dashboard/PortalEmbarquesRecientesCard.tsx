@@ -39,7 +39,7 @@ export function PortalEmbarquesRecientesCard({ embarques, className }: Props) {
     <Card className={className}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Ship className="h-4 w-4 text-accent" />
             Embarques Recientes
           </CardTitle>

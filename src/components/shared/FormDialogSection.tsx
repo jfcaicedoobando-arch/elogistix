@@ -23,7 +23,7 @@ export function FormDialogSection({ title, description, flat, cols = 2, children
       {(title || description) && (
         <header className="space-y-0.5">
           {title && (
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <h3 className="text-overline font-semibold">
               {title}
             </h3>
           )}

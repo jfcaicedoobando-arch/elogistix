@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularSubtotal, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/features/catalogos/hooks";
@@ -34,13 +35,13 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Unidad</TableHead>
-                <TableHead className="text-right">Cantidad</TableHead>
-                <TableHead className="text-right">{esMXN ? "P. Unitario" : "Precio Unitario"}</TableHead>
-                {esMXN && <TableHead className="text-right">Subtotal</TableHead>}
-                {esMXN && <TableHead className="text-right">{ivaLabel}</TableHead>}
-                <TableHead className="text-right">Total</TableHead>
+                <DetailTableHead>Descripción</DetailTableHead>
+                <DetailTableHead>Unidad</DetailTableHead>
+                <DetailTableHead className="text-right">Cantidad</DetailTableHead>
+                <DetailTableHead className="text-right">{esMXN ? "P. Unitario" : "Precio Unitario"}</DetailTableHead>
+                {esMXN && <DetailTableHead className="text-right">Subtotal</DetailTableHead>}
+                {esMXN && <DetailTableHead className="text-right">{ivaLabel}</DetailTableHead>}
+                <DetailTableHead className="text-right">Total</DetailTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -56,7 +57,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                   : totalGuardado;
 
                 return (
-                  <TableRow key={concepto.descripcion ?? `concepto-${indice}`}>
+                  <DetailTableRow key={concepto.descripcion ?? `concepto-${indice}`}>
                     <TableCell>
                       {concepto.descripcion ?? "—"}
                       {concepto.notas && (
@@ -71,7 +72,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                     <TableCell className="text-right tabular-nums font-medium">
                       {formatCurrency(lineTotal, moneda)}
                     </TableCell>
-                  </TableRow>
+                  </DetailTableRow>
                 );
               })}
             </TableBody>

@@ -48,7 +48,7 @@ export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <CalendarClock className="h-4 w-4 text-primary" /> Actualizar ETA
         </CardTitle>
       </CardHeader>

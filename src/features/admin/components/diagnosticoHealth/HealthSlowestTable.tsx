@@ -27,7 +27,7 @@ export default function HealthSlowestTable({ loading, data }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Top 5 más lentas (p95)</CardTitle>
+        <CardTitle className="font-medium">Top 5 más lentas (p95)</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (

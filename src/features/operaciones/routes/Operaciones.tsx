@@ -89,7 +89,7 @@ export default function Operaciones() {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
               <Ship className="h-4 w-4 text-muted-foreground" />
               Tendencia de cargas
             </CardTitle>
