@@ -28,7 +28,7 @@ export function ReportePresupuestoDocument({ resumen, emisor }: Props) {
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Presupuesto vs Real</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: "#475569" }}>Periodo: {resumen.periodo}</Text>
+            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>Periodo: {resumen.periodo}</Text>
           </View>
         </View>
 

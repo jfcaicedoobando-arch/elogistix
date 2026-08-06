@@ -68,7 +68,7 @@ export function ReporteCarteraDocument({ fechaCorte, cxc, cxp, emisor }: Props) 
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Cartera CxC + CxP</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: "#475569" }}>Corte: {formatDate(fechaCorte)}</Text>
+            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>Corte: {formatDate(fechaCorte)}</Text>
           </View>
         </View>
 

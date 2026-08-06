@@ -54,7 +54,7 @@ export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Estado de Resultados</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: "#475569" }}>
+            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>
               Periodo: {periodo} · Fuente: {fuente === "facturas" ? "Devengada (facturas)" : "Operativa (ETA)"}
             </Text>
           </View>
@@ -93,7 +93,7 @@ export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
         <Text style={[styles.h3, { marginTop: 12 }]}>Costos</Text>
         <DataTable columns={cols} rows={costos} />
 
-        <View style={{ marginTop: 12, padding: 8, backgroundColor: "#F8FAFC", borderRadius: 4 }}>
+        <View style={{ marginTop: 12, padding: 8, backgroundColor: COLORS.zebra, borderRadius: 4 }}>
           <Text style={{ fontSize: 11, fontWeight: 700 }}>
             Utilidad por modo: Marítimo {formatCurrency(utilidadModos[0], "MXN")} ·
             Aéreo {formatCurrency(utilidadModos[1], "MXN")} ·

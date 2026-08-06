@@ -43,12 +43,12 @@ export function BitacoraTesoreriaDocument({
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Bitácora de tesorería</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, color: "#475569" }}>
+            <Text style={{ marginTop: 4, fontSize: 10, color: COLORS.muted }}>
               Factura {folio}
               {proveedor ? ` · ${proveedor}` : ""}
             </Text>
             {filtrosAplicados ? (
-              <Text style={{ marginTop: 2, fontSize: 9, color: "#64748B" }}>
+              <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.subtle }}>
                 {filtrosAplicados}
               </Text>
             ) : null}
@@ -63,7 +63,7 @@ export function BitacoraTesoreriaDocument({
           <DataTable columns={cols} rows={filas} />
         )}
 
-        <Text style={[styles.paragraph, { marginTop: 10, fontSize: 9, color: "#64748B" }]}>
+        <Text style={[styles.paragraph, { marginTop: 10, fontSize: 9, color: COLORS.subtle }]}>
           {filas.length} movimiento{filas.length === 1 ? "" : "s"} incluido
           {filas.length === 1 ? "" : "s"} en este reporte.
         </Text>

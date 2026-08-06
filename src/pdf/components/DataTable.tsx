@@ -64,7 +64,7 @@ export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
             </View>
             {subrow ? (
               <View style={rowStyle} wrap>
-                <Text style={[styles.td, styles.cellDesc, { fontStyle: "italic", color: "#64748B" }]} wrap>
+                <Text style={[styles.td, styles.cellDesc, { fontStyle: "italic", color: COLORS.subtle }]} wrap>
                   ↳ {subrow}
                 </Text>
               </View>
