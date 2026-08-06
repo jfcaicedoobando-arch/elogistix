@@ -19,7 +19,7 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <FileWarning className="h-4 w-4 text-warning" />
             Hueco de facturación
           </CardTitle>

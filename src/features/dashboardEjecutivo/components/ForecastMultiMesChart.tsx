@@ -25,7 +25,7 @@ export function ForecastMultiMesChart({ historico, mesesAdelante = 3 }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Forecast de ingresos</CardTitle>
+        <CardTitle >Forecast de ingresos</CardTitle>
         <p className="text-xs text-muted-foreground">
           Meses reales + proyección {mesesAdelante} meses (promedio móvil 3m, banda ±15%).
         </p>

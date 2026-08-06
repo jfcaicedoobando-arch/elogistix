@@ -42,7 +42,7 @@ export function TabConciliacion({ embarqueId }: Props) {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Reconciliación 3 columnas (Cotizado · Refrescado · Real)</CardTitle>
+          <CardTitle >Reconciliación 3 columnas (Cotizado · Refrescado · Real)</CardTitle>
         </CardHeader>
         <CardContent>
           <ReconciliacionTresColumnas embarqueId={embarqueId} />

@@ -55,7 +55,7 @@ export default function PortalPerfil() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2">
             <UserIcon className="h-4 w-4 text-accent" /> Datos personales
           </CardTitle>
         </CardHeader>
@@ -72,7 +72,7 @@ export default function PortalPerfil() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-accent" /> Empresa vinculada
           </CardTitle>
           {cliente && (

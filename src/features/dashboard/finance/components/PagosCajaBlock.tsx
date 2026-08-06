@@ -35,7 +35,7 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base">Pagos & Caja</CardTitle>
+        <CardTitle >Pagos & Caja</CardTitle>
         <Link
           to="/tesoreria"
           className="text-xs text-primary hover:underline flex items-center gap-1"

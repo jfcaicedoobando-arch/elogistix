@@ -46,7 +46,7 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">Datos de Ruta {modo && `— ${modo}`}</CardTitle>
+          <CardTitle >Datos de Ruta {modo && `— ${modo}`}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {hasErrors && <ValidationAlert severity="error" errors={errors} />}
@@ -62,7 +62,7 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
       {modo === 'Marítimo' && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
+            <CardTitle >
               Contenedores ({contenedores.length})
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">

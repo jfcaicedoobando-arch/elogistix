@@ -77,7 +77,7 @@ export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: P
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-success" />
           Profit MXN — Arribos este mes
         </CardTitle>

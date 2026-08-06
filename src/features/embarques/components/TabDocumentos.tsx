@@ -50,7 +50,7 @@ export function TabDocumentos({
       <Card ref={registerRef("faltantes")} data-focus="faltantes">
         <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-base font-semibold">Documentos del embarque</CardTitle>
+            <CardTitle >Documentos del embarque</CardTitle>
             {filtrarFaltantes && (
               <>
                 <Badge variant="outline" className="border-primary text-primary">

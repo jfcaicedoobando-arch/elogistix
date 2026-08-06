@@ -57,7 +57,7 @@ export function TrackingNuevoEventoForm({
     return (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">¿Qué quieres registrar?</CardTitle>
+          <CardTitle >¿Qué quieres registrar?</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <button

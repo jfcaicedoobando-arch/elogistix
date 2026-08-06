@@ -46,7 +46,7 @@ export function ProveedorDatosGeneralesCard({
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Datos generales</CardTitle>
+        <CardTitle >Datos generales</CardTitle>
       </CardHeader>
       <CardContent>
         <DescriptionList items={items} columns={2} />

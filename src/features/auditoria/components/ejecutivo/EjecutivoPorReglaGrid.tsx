@@ -11,7 +11,7 @@ export function EjecutivoPorReglaGrid({ porRegla }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Pendientes por regla de auditoría</CardTitle>
+        <CardTitle >Pendientes por regla de auditoría</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

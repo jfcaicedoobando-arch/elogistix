@@ -99,7 +99,7 @@ export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onR
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2 text-lg">
+        <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" /> Miembros ({members.length})
         </CardTitle>
         <Button size="sm" className="gap-1" onClick={onAddClick}>

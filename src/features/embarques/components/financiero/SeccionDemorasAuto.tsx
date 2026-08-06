@@ -33,7 +33,7 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
     <Card>
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Calculator className="size-4" /> Demoras automáticas
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-1">

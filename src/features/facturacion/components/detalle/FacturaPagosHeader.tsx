@@ -15,7 +15,7 @@ export function FacturaPagosHeader({ hayPagos, liquidada }: Props) {
   return (
     <CardHeader className="flex-row items-center justify-between gap-2">
       <div className="flex items-center gap-2">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-muted-foreground" /> Historial de pagos
         </CardTitle>
         {hayPagos && (

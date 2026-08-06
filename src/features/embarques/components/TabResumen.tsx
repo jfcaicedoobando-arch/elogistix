@@ -43,7 +43,7 @@ export function TabResumen({ embarque }: Props) {
       </div>
 
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-sm">Partes</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle >Partes</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
           <ParteCampo label="Shipper" valor={embarque.shipper} embarqueId={embarque.id} />
           <ParteCampo label="Consignatario" valor={embarque.consignatario} embarqueId={embarque.id} />

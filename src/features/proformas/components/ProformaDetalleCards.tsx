@@ -24,7 +24,7 @@ export function NotasCard({ notas }: { notas: string | null | undefined }) {
   if (!texto) return null;
   return (
     <Card>
-      <CardHeader className="pb-2"><CardTitle className="text-lg">Notas</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle >Notas</CardTitle></CardHeader>
       <CardContent>
         <p className="text-sm whitespace-pre-line break-words">{texto}</p>
       </CardContent>
@@ -41,7 +41,7 @@ function FacturaAsociadaItem({ factura, showHeader }: { factura: FacturaAsociada
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
+        <CardTitle className="flex items-center gap-2 flex-wrap">
           {showHeader && <span>Factura asociada</span>}
           <span className="font-mono">{numero}</span>
           <StatusBadge domain="factura" status={factura.estado} />

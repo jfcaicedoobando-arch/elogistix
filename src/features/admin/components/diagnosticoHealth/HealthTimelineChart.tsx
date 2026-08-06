@@ -22,7 +22,7 @@ export default function HealthTimelineChart({ loading, data }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Línea de tiempo de eventos</CardTitle>
+        <CardTitle className="font-medium">Línea de tiempo de eventos</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (

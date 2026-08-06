@@ -20,7 +20,7 @@ export function EjecutivoDistribucionRow({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
             Pendientes por etapa del embarque
           </CardTitle>
@@ -44,7 +44,7 @@ export function EjecutivoDistribucionRow({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Top 5 clientes con pendientes</CardTitle>
+          <CardTitle >Top 5 clientes con pendientes</CardTitle>
         </CardHeader>
         <CardContent>
           {topClientes.length === 0 ? (

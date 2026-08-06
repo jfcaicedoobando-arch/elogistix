@@ -35,7 +35,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Briefcase className="h-4 w-4" /> Oportunidades ({d.oportunidades.length})
           </CardTitle>
         </CardHeader>
@@ -74,7 +74,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><ClipboardList className="h-4 w-4" /> Última cotización</CardTitle>
+            <CardTitle className="flex items-center gap-2"><ClipboardList className="h-4 w-4" /> Última cotización</CardTitle>
           </CardHeader>
           <CardContent>
             {d.ultimaCotizacion ? (
@@ -92,7 +92,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><Ship className="h-4 w-4" /> Último embarque</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Ship className="h-4 w-4" /> Último embarque</CardTitle>
           </CardHeader>
           <CardContent>
             {d.ultimoEmbarque ? (

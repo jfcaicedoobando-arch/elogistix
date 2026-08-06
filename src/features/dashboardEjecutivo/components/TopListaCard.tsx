@@ -19,7 +19,7 @@ export function TopListaCard({ title, items, emptyText = "Sin registros." }: Pro
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">{title}</CardTitle>
+        <CardTitle >{title}</CardTitle>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (

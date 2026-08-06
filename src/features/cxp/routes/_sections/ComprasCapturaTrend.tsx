@@ -36,7 +36,7 @@ export function ComprasCapturaTrend({ rows }: { rows: CapturaTrendRow[] }) {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2 space-y-0">
-        <CardTitle className="text-sm">Captura últimos 14 días</CardTitle>
+        <CardTitle >Captura últimos 14 días</CardTitle>
         <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
           {total} facturas · promedio {promedio}/día
         </p>

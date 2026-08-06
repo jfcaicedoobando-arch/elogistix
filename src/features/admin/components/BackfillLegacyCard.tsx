@@ -35,7 +35,7 @@ export function BackfillLegacyCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Database className="h-4 w-4" />
           Backfill de datos legacy
         </CardTitle>

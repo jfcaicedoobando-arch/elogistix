@@ -50,7 +50,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">Desglose por Cliente</CardTitle>
+        <CardTitle >Desglose por Cliente</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="max-h-[400px] overflow-auto">

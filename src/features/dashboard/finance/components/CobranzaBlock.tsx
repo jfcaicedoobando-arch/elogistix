@@ -38,7 +38,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base">Cobranza — Aging</CardTitle>
+        <CardTitle >Cobranza — Aging</CardTitle>
         <Link
           to="/cartera"
           className="text-xs text-primary hover:underline flex items-center gap-1"

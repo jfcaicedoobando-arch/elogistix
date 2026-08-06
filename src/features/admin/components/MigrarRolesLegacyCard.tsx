@@ -48,7 +48,7 @@ export function MigrarRolesLegacyCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4" />
           Migración de roles legacy
         </CardTitle>

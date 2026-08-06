@@ -24,7 +24,7 @@ export function CierreHistorialCard({ log }: { log: CierreLogEntry[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle className="flex items-center gap-2">
           <History className="h-4 w-4" /> Historial de cierres
         </CardTitle>
       </CardHeader>

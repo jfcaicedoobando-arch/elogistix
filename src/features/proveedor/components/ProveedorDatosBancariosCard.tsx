@@ -129,7 +129,7 @@ export function ProveedorDatosBancariosCard(props: Props) {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex flex-wrap items-center gap-2">
+        <CardTitle className="flex flex-wrap items-center gap-2">
           {esInternacional ? (
             <Globe className="h-4 w-4 text-muted-foreground" />
           ) : (

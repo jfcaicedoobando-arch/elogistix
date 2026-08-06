@@ -136,7 +136,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
     <div className="space-y-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Globe className="h-4 w-4" /> Acceso al Portal de Cliente
             {!isLoading && countBadge}
           </CardTitle>

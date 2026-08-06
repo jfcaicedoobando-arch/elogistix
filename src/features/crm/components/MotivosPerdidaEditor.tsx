@@ -37,7 +37,7 @@ export default function MotivosPerdidaEditor() {
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Motivos de pérdida</CardTitle></CardHeader>
+      <CardHeader><CardTitle >Motivos de pérdida</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <div className="flex gap-2">
           <Input placeholder="Nuevo motivo..." value={nuevo} onChange={(e) => setNuevo(e.target.value)} />

@@ -90,7 +90,7 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           P&amp;L por contenedor
           <Badge variant="outline" className="font-mono">{moneda}</Badge>
         </CardTitle>

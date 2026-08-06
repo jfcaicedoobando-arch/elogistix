@@ -147,13 +147,9 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
               </TooltipContent>
             </Tooltip>
           </div>
-          <button
-            type="button"
-            onClick={exportCsv}
-            className="text-sm underline text-primary"
-          >
+          <Button variant="link" size="sm" className="h-auto p-0" onClick={exportCsv}>
             Exportar CSV
-          </button>
+          </Button>
         </div>
 
         <DataTable<FilaReconciliacion3C>

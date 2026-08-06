@@ -115,7 +115,7 @@ export function TabTracking({ embarqueId, embarque }: Props) {
       {embarque && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Avance del embarque</CardTitle>
+            <CardTitle >Avance del embarque</CardTitle>
           </CardHeader>
           <CardContent>
             <FasesEmbarqueStepper
@@ -169,7 +169,7 @@ export function TabTracking({ embarqueId, embarque }: Props) {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Línea de tiempo</CardTitle>
+          <CardTitle >Línea de tiempo</CardTitle>
         </CardHeader>
         <CardContent>
           <TrackingEventTimeline eventos={eventos} isLoading={isLoading} />

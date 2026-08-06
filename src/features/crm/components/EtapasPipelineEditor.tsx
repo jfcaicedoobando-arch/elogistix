@@ -82,7 +82,7 @@ export default function EtapasPipelineEditor() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Etapas del pipeline</CardTitle>
+        <CardTitle >Etapas del pipeline</CardTitle>
         <p className="text-xs text-muted-foreground">
           Configura nombre, tipo, probabilidad, color y orden. Activa "Crear tarea" para auto-generar
           una tarea de seguimiento al mover una oportunidad a esta etapa.

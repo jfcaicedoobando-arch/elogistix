@@ -71,7 +71,7 @@ export function AuditoriaOperadoresCard({ mttrHoras, ranking, rankingRevisores }
 
       <Card className="md:col-span-2">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Productividad de operadores
           </CardTitle>

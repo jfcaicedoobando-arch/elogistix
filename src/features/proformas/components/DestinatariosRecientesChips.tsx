@@ -57,10 +57,11 @@ export function DestinatariosRecientesChips({
         </div>
       )}
       {ocultos.length > 0 && (
-        <button
-          type="button"
+        <Button
+          variant="link"
+          size="sm"
           onClick={() => onRestaurarVarios(ocultos)}
-          className="mt-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
+          className="mt-1 h-auto p-0 text-xs text-muted-foreground underline-offset-2"
         >
           Restaurar ocultos ({ocultos.length})
         </button>

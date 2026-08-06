@@ -19,7 +19,7 @@ export function MiniFlujoCard({ flujo }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Flujo proyectado 4 semanas</CardTitle>
+        <CardTitle >Flujo proyectado 4 semanas</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-48">

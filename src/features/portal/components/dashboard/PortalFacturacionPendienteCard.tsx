@@ -23,7 +23,7 @@ export function PortalFacturacionPendienteCard({ montos, total, vencidas, classN
     >
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Receipt className="h-4 w-4 text-warning" />
             Facturación Pendiente
           </CardTitle>

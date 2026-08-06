@@ -22,7 +22,7 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <Target className="h-4 w-4 text-primary" /> Oportunidades generadas
           <Badge variant="outline" className="ml-auto">{data.length}</Badge>
         </CardTitle>
@@ -63,7 +63,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2">
           <ExternalLink className="h-4 w-4 text-primary" /> Origen y conversiones
         </CardTitle>
       </CardHeader>

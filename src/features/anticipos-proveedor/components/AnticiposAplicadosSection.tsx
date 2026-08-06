@@ -17,7 +17,7 @@ export function AnticiposAplicadosSection({ facturaId }: Props) {
   return (
     <Card>
       <CardHeader className="py-4">
-        <CardTitle className="text-sm font-semibold">Anticipos aplicados</CardTitle>
+        <CardTitle >Anticipos aplicados</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">

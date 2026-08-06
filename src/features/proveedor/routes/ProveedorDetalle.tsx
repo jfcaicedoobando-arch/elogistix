@@ -151,7 +151,7 @@ export default function ProveedorDetalle() {
         <TabsContent value="operaciones" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">
+              <CardTitle >
                 Historial de operaciones
                 <span className="ml-2 font-normal text-muted-foreground tabular-nums">
                   {operaciones.length}

@@ -30,7 +30,7 @@ export function ContactoRapidoCard({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Contacto rápido</CardTitle>
+        <CardTitle >Contacto rápido</CardTitle>
       </CardHeader>
       <CardContent>
         {contacto ? (

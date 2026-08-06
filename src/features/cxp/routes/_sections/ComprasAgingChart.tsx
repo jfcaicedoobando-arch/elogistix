@@ -37,7 +37,7 @@ export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgi
     <Card className="h-full">
       <CardHeader className="pb-2 flex-row items-start justify-between gap-2 space-y-0">
         <div className="min-w-0">
-          <CardTitle className="text-sm">Antigüedad de saldos · {moneda}</CardTitle>
+          <CardTitle >Antigüedad de saldos · {moneda}</CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
             {formatCurrencyCompact(vencido, moneda)} vencido de {formatCurrencyCompact(total, moneda)} · {pctVencido}%
           </p>

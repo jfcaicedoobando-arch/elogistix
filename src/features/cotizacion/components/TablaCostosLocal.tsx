@@ -35,7 +35,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">{icon} {title}</CardTitle>
+          <CardTitle className="flex items-center gap-2">{icon} {title}</CardTitle>
           <Button variant="outline" size="sm" onClick={() => onAdd(moneda)}>
             <Plus className="h-4 w-4 mr-1" /> Agregar
           </Button>

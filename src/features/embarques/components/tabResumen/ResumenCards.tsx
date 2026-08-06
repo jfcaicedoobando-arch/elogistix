@@ -14,7 +14,7 @@ const PLACEHOLDER = "—";
 export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
   return (
     <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-sm">Datos generales</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle >Datos generales</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
         <DetailRow label="Tipo" value={embarque.tipo} />
         <DetailRow
@@ -107,7 +107,7 @@ export function RutaTransporteCard({ embarque }: { embarque: EmbarqueRow }) {
 
   return (
     <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-sm">Ruta y transporte</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle >Ruta y transporte</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
         {embarque.modo === 'Marítimo' && <RutaMaritimo e={embarque} />}
         {embarque.modo === 'Aéreo' && <RutaAereo e={embarque} />}
