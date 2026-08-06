@@ -207,7 +207,21 @@ export default function CxpPorPagar() {
         progreso={progreso}
         onConfirmar={handleProgramar}
       />
+
+      {lote && (
+        <DialogPagoLoteProveedor
+          open={loteOpen}
+          onOpenChange={setLoteOpen}
+          proveedorId={lote.proveedorId}
+          proveedorNombre={lote.proveedorNombre}
+          proveedorOrigen={lote.proveedorOrigen}
+          moneda={lote.moneda}
+          facturas={lote.facturas}
+          onDone={() => setRowSelection({})}
+        />
+      )}
       </CargaGuard>
+
     </PageContainer>
   );
 }
