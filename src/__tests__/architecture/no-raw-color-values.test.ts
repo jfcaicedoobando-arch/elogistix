@@ -37,7 +37,6 @@ describe("architecture — sin valores de color crudos", () => {
     for (const f of walk(join(ROOT, "src"), {
       excludeDirs: ["__tests__", "node_modules"],
       excludeFileRe: /\.(test|spec)\.tsx?$/,
-      includeFileRe: /\.tsx?$/,
     })) {
       const rel = relPath(ROOT, f);
       if (ALLOWLIST.includes(rel)) continue;
@@ -51,10 +50,11 @@ describe("architecture — sin valores de color crudos", () => {
 
     expect(
       violations,
-      `Valores de color crudos detectados fuera de la allowlist.\n` +
-        `Usa tokens: clases semánticas de Tailwind, `CHART` de @/lib/chartTokens\n` +
-        `para gráficas, o `COLORS` de @/pdf/theme/tokens para PDFs.\n\n` +
+      "Valores de color crudos detectados fuera de la allowlist.\n" +
+        "Usa tokens: clases semánticas de Tailwind, CHART de @/lib/chartTokens\n" +
+        "para gráficas, o COLORS de @/pdf/theme/tokens para PDFs.\n\n" +
         violations.map((v) => `  ${v.file}:${v.line} → ${v.match}`).join("\n"),
     ).toEqual([]);
+
   });
 });
