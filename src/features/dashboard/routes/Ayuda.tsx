@@ -76,7 +76,7 @@ export default function Ayuda() {
           {!search && (
             <Card>
               <CardContent className="p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                <p className="text-overline font-semibold mb-2">
                   Ir a una sección
                 </p>
                 <div className="flex flex-wrap gap-2">

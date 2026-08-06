@@ -50,7 +50,7 @@ export function TotalesChipDesglose({
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 space-y-1.5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-overline font-semibold">
           Desglose
         </p>
         <Renglon label="Subtotal" value={formatCurrency(subtotal, moneda)} />
