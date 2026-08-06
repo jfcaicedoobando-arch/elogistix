@@ -108,7 +108,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
       icon={ArrowUpFromLine}
       title="Registrar pago a proveedor"
       description={factura ? `Aplica un pago contra el saldo pendiente de la factura seleccionada.` : undefined}
-      size="lg"
+      size="2xl"
       footer={footer}
     >
       {factura && <PagoFacturaHeaderInfo factura={factura} />}

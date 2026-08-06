@@ -13,7 +13,7 @@ export function PagoFacturaHeaderInfo({ factura }: { factura: FacturaCxP }) {
   const conSaldo = factura.saldo > 0.01;
   const vencida = factura.dias_vencido > 0;
   return (
-    <div className="space-y-3 -mt-1">
+    <div className="space-y-2.5 short:space-y-2 -mt-1">
       <div className="flex items-center gap-3 flex-wrap">
         <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono font-semibold uppercase tracking-wider border">
           {factura.folio_interno}
@@ -22,7 +22,7 @@ export function PagoFacturaHeaderInfo({ factura }: { factura: FacturaCxP }) {
           Folio prov. <span className="font-mono">{factura.folio_proveedor}</span> · {factura.proveedor_nombre}
         </span>
       </div>
-      <div className="flex items-center gap-3 flex-wrap px-3 py-2 rounded-md bg-accent/5 border">
+      <div className="flex items-center gap-3 flex-wrap px-3 py-2 short:py-1.5 rounded-md bg-accent/5 border">
         <EstadoAprobacionDot estado={factura.estado_aprobacion} cancelada={factura.estado === "Cancelada"} />
         {vencida && (
           <>
@@ -33,7 +33,7 @@ export function PagoFacturaHeaderInfo({ factura }: { factura: FacturaCxP }) {
           </>
         )}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 short:gap-2">
         <Kpi label="Total" value={formatCurrency(factura.total, factura.moneda)} />
         <Kpi label="Pagado" value={formatCurrency(factura.pagado, factura.moneda)} tone="success" />
         <Kpi
@@ -44,7 +44,12 @@ export function PagoFacturaHeaderInfo({ factura }: { factura: FacturaCxP }) {
         />
         <Kpi
           label="Moneda"
-          value={factura.moneda + (factura.tipo_cambio_usd > 0 && factura.moneda !== "MXN" ? ` · TC ${factura.tipo_cambio_usd.toFixed(2)}` : "")}
+          value={factura.moneda}
+          hint={
+            factura.tipo_cambio_usd > 0 && factura.moneda !== "MXN"
+              ? `TC ${factura.tipo_cambio_usd.toFixed(2)}`
+              : undefined
+          }
         />
       </div>
     </div>
