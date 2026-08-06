@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.427.0] - 2026-08-06
+- Facturas de proveedor capturadas desde el buzón ya se llevan sus archivos: al capturar, el PDF y el XML se copian del buzón al expediente de la factura, así que la pestaña "Documentos" ya no aparece vacía.
+- Backfill en backend: se repararon las facturas históricas (incluida FP-000066) copiando 3 PDFs, 1 XML y reconstruyendo 14 conceptos informativos desde el XML. Es como pasar en limpio los expedientes que se archivaron sin sus anexos.
+- Respaldo visual: si una factura antigua aún no tiene adjuntos propios, el detalle ofrece abrir el PDF/XML del documento del buzón que la originó.
+
 ## [13.426.1] - 2026-08-06
 - Continuación de la armonización visual: los últimos encabezados fuera del estándar (Tesorería, Flujo de caja, Categorías de presupuesto y la barra de progreso del wizard de cotización) ahora usan `SectionHeading`, con el mismo tamaño y espaciado que el resto del ERP.
 - Los estados vacíos hechos a mano en "Pagos programados" y "CxP por capturar" se cambiaron por el componente compartido `EmptyState`: mismo ícono en círculo, mismo tamaño de título y botón de acción alineado, como los letreros idénticos en todos los pasillos de una tienda.
