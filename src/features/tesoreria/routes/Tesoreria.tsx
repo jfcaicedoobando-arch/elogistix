@@ -120,12 +120,15 @@ export default function Tesoreria() {
 
           <section>
             <SectionHeading as="h3" variant="overline" className="mb-2">Flujo esperado 30 días</SectionHeading>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {/* Ola 9: 6 stats en grilla de 4 dejaban una fila coja con dos huecos.
+                Con 3 columnas quedan dos filas parejas y se lee por moneda:
+                fila 1 = MXN (cobrar / pagar / neto), fila 2 = USD. */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               <Stat label="Por cobrar MXN" value={formatCurrency(data.flujo.por_cobrar_mxn, "MXN")} tone="success" />
-              <Stat label="Por cobrar USD" value={formatCurrency(data.flujo.por_cobrar_usd, "USD")} tone="success" />
               <Stat label="Por pagar MXN" value={formatCurrency(data.flujo.por_pagar_mxn, "MXN")} tone="warn" />
-              <Stat label="Por pagar USD" value={formatCurrency(data.flujo.por_pagar_usd, "USD")} tone="warn" />
               <Stat label="Flujo neto MXN" value={formatCurrency(data.flujo.flujo_neto_mxn, "MXN")} tone={data.flujo.flujo_neto_mxn >= 0 ? "success" : "danger"} />
+              <Stat label="Por cobrar USD" value={formatCurrency(data.flujo.por_cobrar_usd, "USD")} tone="success" />
+              <Stat label="Por pagar USD" value={formatCurrency(data.flujo.por_pagar_usd, "USD")} tone="warn" />
               <Stat label="Flujo neto USD" value={formatCurrency(data.flujo.flujo_neto_usd, "USD")} tone={data.flujo.flujo_neto_usd >= 0 ? "success" : "danger"} />
             </div>
           </section>
