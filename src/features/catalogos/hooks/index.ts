@@ -5,4 +5,5 @@ export * from './useOperadoresDistintos';
 export * from './usePuertos';
 export * from './useTasaIVA';
 export * from './useTcInicial';
+export * from './useTcDofPorFecha';
 export * from './useTiposContenedor';
