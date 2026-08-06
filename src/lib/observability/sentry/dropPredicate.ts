@@ -9,6 +9,8 @@ import {
   isBusinessRuleViolation,
   isNetworkConnectivityNoise,
   isEmptySerializedRejection,
+  isValidacionNegocioPorMensaje,
+  isGatewayTimeoutNoise,
 } from "./dropFiltersNegocio";
 
 
@@ -157,6 +159,8 @@ const NOISE_FILTERS: ReadonlyArray<(event: Sentry.ErrorEvent, exc: unknown) => b
   isCloudflareTunnelNoise,
   isBusinessRuleViolation,
   isNetworkConnectivityNoise,
+  isValidacionNegocioPorMensaje,
+  isGatewayTimeoutNoise,
   (event) => isEmptySerializedRejection(event),
 ];
 
