@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.446.0] - 2026-08-06
+- Embarques · En el tab "Costos", cada archivo recibido ya capturado muestra un chip con el **folio interno de Libre Carga** (FP-XXXXXX) que lleva al detalle de la factura de proveedor. El folio del proveedor ahora se etiqueta como "Folio proveedor" para no confundirlo con el nuestro.
+
+
 ## [13.445.1] - 2026-08-06
 - CI · Se corrigieron los 3 fallos del pipeline: mensajes amigables faltantes para los códigos de anticipos y pago en lote, permisos explícitos (REVOKE/GRANT) de las funciones nuevas de anticipos, conciliación y pago en lote, políticas e índices recreados de forma idempotente y allowlist de tabla estática en el dashboard de tesorería.
 
