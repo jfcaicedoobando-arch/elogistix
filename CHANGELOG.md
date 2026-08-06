@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.438.1] - 2026-08-06
+- Profit · Dashboard: se corrigió el error que impedía cargar la tendencia de 12 meses (`function upper(moneda) does not exist`, Sentry JAVASCRIPT-REACT-4P). La moneda se guarda como catálogo y el reporte la trataba como texto libre: como pedirle a la báscula que lea un código de barras; ahora se convierte antes de comparar.
+- Observabilidad · Sentry deja de crear incidencias por validaciones ya explicadas al usuario (contenedor duplicado, UUID no verificado en el SAT, factura duplicada) y por timeouts/5xx del gateway (504). Antes el buzón de errores se llenaba de avisos normales, como una alarma que suena cada vez que alguien toca la puerta (JAVASCRIPT-REACT-4F/4N/3B/39/4Q).
+
+
 ## [13.438.0] - 2026-08-06
 - Tesorería · Dashboard rediseñado: arriba 4 KPIs (saldo total en bancos convertido a MXN, por cobrar y por pagar a 30 días con vencidas, y flujo neto), la curva de flujo proyectado embebida, el detalle por moneda en una tabla compacta y el top de cartera con días vencidos coloreados por antigüedad y enlaces a cobranza/CxP. Antes era un tablero de 10 tarjetas planas: como una vitrina sin orden; ahora lo importante va al frente y el detalle queda a la mano.
 - Tesorería · El botón de Conciliación muestra un badge con los movimientos bancarios sin conciliar y un aviso arriba con acceso directo.
