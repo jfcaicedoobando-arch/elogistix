@@ -71,11 +71,11 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
     {
       id: "certificado", header: "Certificado",
       cell: ({ row }) => row.original.certificado_url ? (
-        <a href={row.original.certificado_url} target="_blank" rel="noreferrer"
-          className="inline-flex items-center gap-1 text-primary hover:underline"
-          onClick={(e) => e.stopPropagation()}>
-          <ExternalLink className="h-3 w-3" /> Ver
-        </a>
+        <Button variant="link" size="sm" asChild className="h-auto p-0" onClick={(e) => e.stopPropagation()}>
+          <a href={row.original.certificado_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
+            <ExternalLink className="h-3 w-3" /> Ver
+          </a>
+        </Button>
       ) : <span className="text-muted-foreground">—</span>,
     },
     {

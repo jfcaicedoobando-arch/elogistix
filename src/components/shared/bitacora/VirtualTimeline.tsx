@@ -42,12 +42,8 @@ export function VirtualTimeline({
               key={entrada.id}
               ref={virtualizer.measureElement}
               data-index={vi.index}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 24,
+              className="absolute top-0 left-6 right-0 pb-5"
                 right: 0,
-                transform: `translateY(${vi.start}px)`,
                 paddingBottom: 20,
               }}
             >
