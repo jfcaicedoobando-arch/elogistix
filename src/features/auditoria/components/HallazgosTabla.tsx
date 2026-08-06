@@ -99,13 +99,14 @@ export function HallazgosTabla(props: Props) {
           );
         }
         return (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onAsignarResponsable(h); }}
+          <Button
+            variant="link"
+            size="sm"
             className={cn(
-              "flex items-center gap-1 hover:underline focus:outline-none focus:underline text-left",
+              "h-auto p-0 flex items-center gap-1 text-left justify-start",
               responsable.responsable_id === currentUserId ? "text-primary font-medium" : "text-foreground",
             )}
+            onClick={(e) => { e.stopPropagation(); onAsignarResponsable(h); }}
             title={`Asignado por ${responsable.asignado_por_email || "—"}${
               responsable.asignado_at ? ` el ${format(new Date(responsable.asignado_at), "dd/MM/yyyy HH:mm")}` : ""
             }${responsable.fecha_limite ? `\nFecha límite: ${format(new Date(`${responsable.fecha_limite}T00:00:00`), "dd/MM/yyyy")}` : ""}`}
