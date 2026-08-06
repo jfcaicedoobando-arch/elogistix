@@ -73,7 +73,7 @@ export function StepDatosGenerales({
 
   return (
     <Card>
-      <CardHeader className="pb-3"><CardTitle >Datos Generales</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle>Datos Generales</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         {hasErrors && <ValidationAlert severity="error" errors={errorsRecord} />}
         {faltaCotizacion && (

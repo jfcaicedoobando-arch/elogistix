@@ -37,7 +37,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle >Demoras por contenedor</CardTitle>
+          <CardTitle>Demoras por contenedor</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
             Captura la fecha real de descarga y devolución de cada contenedor para calcular las
             demoras con el tabulador de la naviera. Si dejas un campo vacío, usamos las fechas del

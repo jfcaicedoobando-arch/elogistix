@@ -36,7 +36,7 @@ export function CierreChecklistCard({ isLoading, checks, embarqueId, expediente,
   return (
     <Card>
       <CardHeader>
-        <CardTitle >
+        <CardTitle>
           {informativo ? "Checklist de cierre (informativo)" : "Checklist de cierre"}
         </CardTitle>
       </CardHeader>

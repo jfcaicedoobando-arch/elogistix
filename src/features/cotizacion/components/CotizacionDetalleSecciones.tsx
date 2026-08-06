@@ -36,7 +36,7 @@ export function CotizacionDetalleEmbarques({ embarques, cotizacionEstado }: Prop
 
   return (
     <Card>
-      <CardHeader><CardTitle >Embarques Generados</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Embarques Generados</CardTitle></CardHeader>
       <CardContent>
         {embarques.length === 0 ? (
           <p className="text-sm text-muted-foreground">

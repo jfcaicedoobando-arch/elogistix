@@ -44,7 +44,7 @@ export function EjecutivoDistribucionRow({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle >Top 5 clientes con pendientes</CardTitle>
+          <CardTitle>Top 5 clientes con pendientes</CardTitle>
         </CardHeader>
         <CardContent>
           {topClientes.length === 0 ? (

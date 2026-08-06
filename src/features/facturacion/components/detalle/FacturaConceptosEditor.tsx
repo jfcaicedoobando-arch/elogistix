@@ -40,7 +40,7 @@ export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conc
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle >Editar conceptos del borrador</CardTitle>
+        <CardTitle>Editar conceptos del borrador</CardTitle>
         <Button
           type="button" size="sm" variant="outline"
           onClick={() => { setShowNew(true); setDraft(EMPTY); }}

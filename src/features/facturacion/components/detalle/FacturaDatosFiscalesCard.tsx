@@ -58,7 +58,7 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle >Configuración de timbrado</CardTitle>
+        <CardTitle>Configuración de timbrado</CardTitle>
         <AutoSaveIndicator estado={estado} ultimoGuardado={ultimoGuardado} />
       </CardHeader>
       <CardContent className="space-y-4">

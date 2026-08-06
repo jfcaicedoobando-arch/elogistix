@@ -31,7 +31,7 @@ export function FacturaResumenCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle >Datos generales</CardTitle>
+        <CardTitle>Datos generales</CardTitle>
         {mostrarRecordatorio && (
           <Button variant="outline" size="sm" onClick={onEnviarRecordatorio}>
             <Mail className="h-4 w-4 mr-1.5" />

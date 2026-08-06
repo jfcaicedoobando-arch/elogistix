@@ -56,7 +56,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-3 pb-3">
         <div>
-          <CardTitle >
+          <CardTitle>
             Contenedores ({lista.length})
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-1">

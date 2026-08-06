@@ -29,7 +29,7 @@ function ForecastPanel() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle >Por mes</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle>Por mes</CardTitle></CardHeader>
           <CardContent>
             <table className="w-full text-sm">
               <thead><tr className="text-xs text-muted-foreground border-b">
@@ -51,7 +51,7 @@ function ForecastPanel() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle >Por vendedor</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle>Por vendedor</CardTitle></CardHeader>
           <CardContent>
             <table className="w-full text-sm">
               <thead><tr className="text-xs text-muted-foreground border-b">
@@ -83,7 +83,7 @@ function EmbudoYPerdidas() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <Card>
-        <CardHeader className="pb-2"><CardTitle >Embudo</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle>Embudo</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? "…" : r.embudo.map((e) => (
             <div key={e.etapa} className="flex justify-between py-1 text-sm border-b last:border-0">
@@ -94,7 +94,7 @@ function EmbudoYPerdidas() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-2"><CardTitle >Conversión por fuente</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle>Conversión por fuente</CardTitle></CardHeader>
         <CardContent>
           <table className="w-full text-sm">
             <thead><tr className="text-xs text-muted-foreground border-b">
@@ -115,7 +115,7 @@ function EmbudoYPerdidas() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-2"><CardTitle >Motivos de pérdida</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle>Motivos de pérdida</CardTitle></CardHeader>
         <CardContent>
           {r.motivosPerdida.map((m) => (
             <div key={m.motivo} className="flex justify-between py-1 text-sm border-b last:border-0">
@@ -143,7 +143,7 @@ export default function Analitica() {
       <EmbudoYPerdidas />
       {canEdit && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle >Vendedores</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle>Vendedores</CardTitle></CardHeader>
           <CardContent><LeaderboardVendedores /></CardContent>
         </Card>
       )}

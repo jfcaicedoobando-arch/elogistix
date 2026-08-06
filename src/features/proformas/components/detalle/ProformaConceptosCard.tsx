@@ -61,7 +61,7 @@ export function ProformaConceptosCard({ conceptos, totales, emptyMessage }: Prop
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle >
+        <CardTitle>
           Conceptos {conceptos.length > 0 && (
             <span className="text-muted-foreground font-normal">({conceptos.length})</span>
           )}

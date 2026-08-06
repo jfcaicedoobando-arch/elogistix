@@ -24,7 +24,7 @@ export function AlertasPanel({ alertas }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle >Alertas</CardTitle>
+        <CardTitle>Alertas</CardTitle>
       </CardHeader>
       <CardContent>
         {alertas.length === 0 ? (

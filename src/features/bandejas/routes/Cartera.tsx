@@ -65,11 +65,11 @@ export default function Cartera() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle >Facturas en foco</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle>Facturas en foco</CardTitle></CardHeader>
           <CardContent className="text-2xl font-semibold">{scoped.length}</CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle >Saldo total</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle>Saldo total</CardTitle></CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold tabular-nums">{formatNativos(saldosNativos)}</div>
             {requiereEquivalente(saldosNativos) && (
@@ -84,7 +84,7 @@ export default function Cartera() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle >Vencido ({vencidasCount})</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle>Vencido ({vencidasCount})</CardTitle></CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-destructive tabular-nums">{formatNativos(vencidoNativo)}</div>
             {requiereEquivalente(vencidoNativo) && (

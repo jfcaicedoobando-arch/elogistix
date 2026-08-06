@@ -35,7 +35,7 @@ export function PortalProformaAcciones({ submitting, onResponder, error }: Props
   return (
     <Card>
       <CardHeader>
-        <CardTitle >Tu respuesta</CardTitle>
+        <CardTitle>Tu respuesta</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {modo === "idle" && (

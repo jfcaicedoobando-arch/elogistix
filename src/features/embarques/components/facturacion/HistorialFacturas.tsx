@@ -75,7 +75,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle >Facturas del Embarque</CardTitle>
+        <CardTitle>Facturas del Embarque</CardTitle>
         {facturas.length > 0 && (
           <span className="text-xs text-muted-foreground tabular-nums">
             {facturas.length} factura{facturas.length === 1 ? "" : "s"}

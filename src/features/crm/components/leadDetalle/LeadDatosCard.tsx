@@ -36,7 +36,7 @@ export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onS
   return (
     <Card>
       <CardHeader>
-        <CardTitle >Datos del lead</CardTitle>
+        <CardTitle>Datos del lead</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

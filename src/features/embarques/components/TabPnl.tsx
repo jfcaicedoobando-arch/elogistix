@@ -100,7 +100,7 @@ export function TabPnl({ embarqueId }: Props) {
         <Card className="border-warning/40 bg-warning/5">
           <CardHeader className="pb-2 flex flex-row items-center gap-2">
             <AlertCircle className="h-4 w-4 text-warning" />
-            <CardTitle >Alertas financieras</CardTitle>
+            <CardTitle>Alertas financieras</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             {alertaSobrecosto && <Badge variant="destructive">Sobrecosto {pctPnl(dCosto.pct)}</Badge>}
@@ -121,7 +121,7 @@ export function TabPnl({ embarqueId }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle >Pendiente de cobro a cliente</CardTitle>
+            <CardTitle>Pendiente de cobro a cliente</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-xl font-semibold">{fmtPnl(data.venta.pdte_cobro_mxn)}</div>
@@ -129,7 +129,7 @@ export function TabPnl({ embarqueId }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle >Pendiente de pago a proveedores</CardTitle>
+            <CardTitle>Pendiente de pago a proveedores</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-xl font-semibold">{fmtPnl(data.costo.pdte_pago_mxn)}</div>

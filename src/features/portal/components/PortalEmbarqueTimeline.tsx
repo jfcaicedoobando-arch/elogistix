@@ -33,7 +33,7 @@ export function PortalEmbarqueTimeline({ eventos: eventosCrudos }: Props) {
   const eventos = filtrarEventosVisiblesCliente(eventosCrudos);
   return (
     <Card>
-      <CardHeader className="pb-3"><CardTitle >Línea de Tiempo</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle>Línea de Tiempo</CardTitle></CardHeader>
       <CardContent>
         {eventos.length === 0 ? (
           <EmptyStateInline icon={Clock} message="No hay eventos registrados aún." className="py-12" />

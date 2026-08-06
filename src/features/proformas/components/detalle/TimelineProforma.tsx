@@ -118,7 +118,7 @@ export function TimelineProforma({ fechaEmision, operador, timeline, envios, bar
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle >Historial</CardTitle>
+        <CardTitle>Historial</CardTitle>
       </CardHeader>
       <CardContent>{lista}</CardContent>
     </Card>

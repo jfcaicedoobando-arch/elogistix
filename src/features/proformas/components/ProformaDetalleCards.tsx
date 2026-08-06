@@ -24,7 +24,7 @@ export function NotasCard({ notas }: { notas: string | null | undefined }) {
   if (!texto) return null;
   return (
     <Card>
-      <CardHeader className="pb-2"><CardTitle >Notas</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle>Notas</CardTitle></CardHeader>
       <CardContent>
         <p className="text-sm whitespace-pre-line break-words">{texto}</p>
       </CardContent>

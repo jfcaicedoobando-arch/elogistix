@@ -168,7 +168,7 @@ export default function Bitacora() {
       {/* Timeline */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle >Actividad</CardTitle>
+          <CardTitle>Actividad</CardTitle>
         </CardHeader>
         <CardContent>{renderActividad()}</CardContent>
       </Card>

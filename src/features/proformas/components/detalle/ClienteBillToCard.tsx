@@ -24,7 +24,7 @@ export function ClienteBillToCard({ cliente, clienteNombreFallback, clienteId }:
   return (
     <Card className="h-full">
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle >Facturar a</CardTitle>
+        <CardTitle>Facturar a</CardTitle>
         {clienteId && (
           <Link
             to={`/clientes/${clienteId}`}

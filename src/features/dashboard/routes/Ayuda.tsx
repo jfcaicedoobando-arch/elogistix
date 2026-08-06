@@ -139,7 +139,7 @@ export default function Ayuda() {
         <TabsContent value="glosario">
           <Card>
             <CardHeader>
-              <CardTitle >Glosario de términos del forwarder</CardTitle>
+              <CardTitle>Glosario de términos del forwarder</CardTitle>
               <p className="text-sm text-muted-foreground">
                 {glosarioFiltrado.length} término{glosarioFiltrado.length === 1 ? "" : "s"}
               </p>
@@ -164,7 +164,7 @@ export default function Ayuda() {
 
       <Card>
         <CardHeader>
-          <CardTitle >¿No encuentras lo que buscas?</CardTitle>
+          <CardTitle>¿No encuentras lo que buscas?</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>

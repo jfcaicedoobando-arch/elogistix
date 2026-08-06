@@ -55,7 +55,7 @@ export default function SeccionConceptosVentaCotizacion({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle >Conceptos en USD</CardTitle>
+            <CardTitle>Conceptos en USD</CardTitle>
             {agregarConceptoPrefill ? (
               <AgregarConceptoInline
                 monedaFija="USD"
@@ -109,7 +109,7 @@ export default function SeccionConceptosVentaCotizacion({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle >Conceptos en MXN + IVA</CardTitle>
+            <CardTitle>Conceptos en MXN + IVA</CardTitle>
             {agregarConceptoPrefill ? (
               <AgregarConceptoInline
                 monedaFija="MXN"
