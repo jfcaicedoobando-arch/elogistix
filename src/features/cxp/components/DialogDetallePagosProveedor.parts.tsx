@@ -4,8 +4,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 export type KpiTone = "default" | "success" | "warn";
 
-export function Kpi({ label, value, tone = "default", emphasis = false }: {
+export function Kpi({ label, value, tone = "default", emphasis = false, hint }: {
   label: string; value: string; tone?: KpiTone; emphasis?: boolean;
+  /** Línea secundaria opcional (p. ej. "TC 17.55") para no romper el valor. */
+  hint?: string;
 }) {
   const valueCls =
     tone === "success" ? "text-success"
@@ -13,16 +15,27 @@ export function Kpi({ label, value, tone = "default", emphasis = false }: {
     : "text-foreground";
   return (
     <div className={cn(
-      "rounded-lg border bg-card p-4 transition-all",
+      "min-w-0 rounded-lg border bg-card p-3 short:p-2.5 transition-all",
       emphasis && "ring-2 ring-accent/30 border-accent/30",
     )}>
-      <p className="text-2xs font-bold uppercase tracking-tight text-muted-foreground mb-1">
+      <p className="text-2xs font-bold uppercase tracking-tight text-muted-foreground mb-1 truncate">
         {label}
       </p>
-      <p className={cn("text-lg font-semibold tabular-nums", valueCls)}>{value}</p>
+      <p
+        className={cn("text-base font-semibold tabular-nums truncate", valueCls)}
+        title={value}
+      >
+        {value}
+      </p>
+      {hint && (
+        <p className="text-2xs text-muted-foreground tabular-nums truncate" title={hint}>
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
+
 
 export function HeaderWithTooltip({ label, hint }: { label: string; hint: string }) {
   return (
