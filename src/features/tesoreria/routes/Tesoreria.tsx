@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { formatFechaEs } from "@/lib/formatters/dates";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "warn" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
@@ -82,7 +83,7 @@ export default function Tesoreria() {
         <>
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-muted-foreground">Saldos en bancos</h3>
+              <SectionHeading as="h3" variant="overline">Saldos en bancos</SectionHeading>
               {data.tipo_cambio_usd ? (
                 <Badge variant="info">
                   TC DOF ${data.tipo_cambio_usd.toFixed(4)}
@@ -118,7 +119,7 @@ export default function Tesoreria() {
           </section>
 
           <section>
-            <h3 className="text-sm font-semibold mb-2 text-muted-foreground">Flujo esperado 30 días</h3>
+            <SectionHeading as="h3" variant="overline" className="mb-2">Flujo esperado 30 días</SectionHeading>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <Stat label="Por cobrar MXN" value={formatCurrency(data.flujo.por_cobrar_mxn, "MXN")} tone="success" />
               <Stat label="Por cobrar USD" value={formatCurrency(data.flujo.por_cobrar_usd, "USD")} tone="success" />
@@ -132,7 +133,7 @@ export default function Tesoreria() {
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardContent density="compact">
-                <h3 className="text-sm font-semibold mb-3">Top 5 deudores (vencidos)</h3>
+                <SectionHeading as="h3" className="mb-3">Top 5 deudores (vencidos)</SectionHeading>
                 {data.top_deudores.length === 0
                   ? <p className="text-sm text-muted-foreground">Sin facturas vencidas 🎉</p>
                   : (
@@ -150,7 +151,7 @@ export default function Tesoreria() {
             </Card>
             <Card>
               <CardContent density="compact">
-                <h3 className="text-sm font-semibold mb-3">Top 5 proveedores por pagar</h3>
+                <SectionHeading as="h3" className="mb-3">Top 5 proveedores por pagar</SectionHeading>
                 {data.top_acreedores.length === 0
                   ? <p className="text-sm text-muted-foreground">Sin facturas próximas a vencer.</p>
                   : (

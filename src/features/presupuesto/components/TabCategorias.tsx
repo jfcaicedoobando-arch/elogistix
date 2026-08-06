@@ -16,6 +16,7 @@ import {
 import { seedCategoriasDefault } from "@/features/presupuesto/services";
 import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import { DialogCategoria } from "./DialogCategoria";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 export function TabCategorias() {
@@ -56,7 +57,7 @@ export function TabCategorias() {
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-semibold">Categorías de gasto de administración</h3>
+        <SectionHeading as="h3">Categorías de gasto de administración</SectionHeading>
         <div className="flex gap-2">
           {sinDatos && (
             <Button variant="outline" size="sm" onClick={handleSeed}>
