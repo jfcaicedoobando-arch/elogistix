@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { FIELD_HEIGHT_CLASS, FIELD_STATE_CLASS, FIELD_SURFACE_CLASS } from "./field.tokens";
 
 const setNativeInputValue = (el: HTMLInputElement, value: string) => {
   const proto = Object.getPrototypeOf(el) as HTMLInputElement;
