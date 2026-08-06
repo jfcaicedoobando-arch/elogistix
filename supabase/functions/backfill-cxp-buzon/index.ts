@@ -7,7 +7,7 @@
  */
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
-import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
+import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { ejecutarBackfill } from "./backfill.ts";
