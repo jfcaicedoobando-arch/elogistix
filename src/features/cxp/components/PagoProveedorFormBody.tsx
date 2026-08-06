@@ -104,12 +104,15 @@ export function PagoProveedorFormBody(p: Props) {
             </Select>
           </div>
           {p.showTc && (
-            <div className="space-y-1">
-              <Label>Tipo de cambio</Label>
-              <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                value={p.tc} onChange={(e) => p.setTc(e.target.value)} />
-            </div>
+            <TcPagoField
+              tc={p.tc}
+              setTc={p.setTc}
+              tcDof={p.tcDof}
+              cargandoTcDof={p.cargandoTcDof}
+              aplicarTcDof={p.aplicarTcDof}
+            />
           )}
+
         </div>
 
         {p.validacion.error && p.monto !== "" && (
