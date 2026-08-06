@@ -19,7 +19,8 @@
  * `invalidateSidebarAlerts(queryClient)`.
  */
 import { useQuery, type QueryClient } from '@tanstack/react-query';
-import { queryKeys, staleTimes } from '@/lib/query';
+import { queryKeys } from '@/lib/query';
+import { staleTimes } from '@/lib/query/staleTimes';
 import { fetchSidebarAlertCounts } from '@/features/reportes/services';
 import { fetchAdminPendientesCount } from '@/features/embarques/services/cierre';
 
