@@ -34,7 +34,8 @@ function FacturaNoEncontrada() {
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
-  const controller = useFacturaDetalleController(id);
+  const idValido = esUuid(id);
+  const controller = useFacturaDetalleController(idValido ? id : undefined);
   const { canEdit, factura, isLoading, error, refetch, flags } = controller;
   useRegisterBreadcrumbLabel(id, factura?.numero);
   const dialogs = useFacturaDetalleDialogs();
@@ -42,6 +43,11 @@ export default function FacturaDetalle() {
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => dialogs.setTimbrarOpen(true));
   const sustituyeA = (factura as { sustituye_a?: string | null } | null | undefined)?.sustituye_a ?? null;
   const { href: volverHref, label: volverLabel } = useVolverAFacturaOriginal(id, sustituyeA);
+
+  // Segmento de URL que no es un UUID (p. ej. `/facturacion/estado-cuenta`):
+  // evitamos el 400 de la base y el esqueleto infinito.
+  if (!idValido) return <FacturaNoEncontrada />;
+
 
   if (isLoading) {
     return (
