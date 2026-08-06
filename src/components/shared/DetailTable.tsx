@@ -21,11 +21,6 @@ import { cn } from "@/lib/utils";
 
 export type DetailTableDensity = "compact" | "comfortable";
 
-/** Padding de celda por densidad — mismo mapeo que `dataTable/types.ts`. */
-export const DETAIL_TABLE_CELL_PADDING: Record<DetailTableDensity, string> = {
-  compact: "py-1 text-xs",
-  comfortable: "py-2",
-};
 
 /** Alto mínimo del renglón de estado vacío por densidad. */
 const DETAIL_TABLE_EMPTY_MIN_H: Record<DetailTableDensity, string> = {
