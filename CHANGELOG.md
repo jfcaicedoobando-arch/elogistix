@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.433.0] - 2026-08-06
+- Ola 11 — Cierre de la armonización visual. Como el repaso final de una casa: los mismos zócalos y manijas en todos los cuartos.
+- Estado de cuenta del cliente: las filas de carga, encabezados de grupo, filas expandidas y subtotales ahora usan el contrato compartido `DetailTable` (mismo hover, densidad y bordes que el resto de las tablas).
+- Enlaces: se reemplazaron los "enlaces disfrazados de texto" por `Button variant="link"` en 9 tarjetas y bloques (cliente, embarque, pagos, cobranza, cierre, seguros, resumen); las acciones de contacto (correo/teléfono) recibieron aro de foco visible.
+- Estilos en línea: se convirtieron a clases de Tailwind los valores fijos (altos de gráficas y posicionamiento) y se conservaron sólo los 38 casos realmente dinámicos (barras de progreso, virtualización, colores por etapa).
+- Rutas de detalle: si el identificador de la URL no es un UUID (p. ej. `/facturacion/estado-cuenta`), ahora se muestra "no encontrada" de inmediato en vez de un esqueleto infinito.
+
 ## [13.432.0] - 2026-08-06
 - Ola 10 — Armonización visual global (720p primero). Es como fijar un solo "manual de estilo" para todas las sucursales, en vez de que cada una decida su letra y sus márgenes:
 - Contrato tipográfico: se agregaron tamaños fijos al tema (`text-section`, `text-subsection`, `text-card-title`, `text-table-head`, `text-body`, `text-body-sm`) y se quitaron ~140 excepciones sueltas en títulos de tarjetas y encabezados; un solo `h1` por pantalla.
