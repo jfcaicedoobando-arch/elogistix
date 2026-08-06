@@ -46,17 +46,17 @@ export function PnlComparativaTable({ titulo, rows, invertirAlerta }: Props) {
               const isBad = invertirAlerta ? d.abs > 0 : d.abs < 0;
               const Icon = d.abs >= 0 ? TrendingUp : TrendingDown;
               return (
-                <TableRow key={`${r.concepto}-${idx}`} className={idx % 2 ? "bg-muted/30" : ""}>
+                <TableRow key={`${r.concepto}-${idx}`}>
                   <TableCell className="capitalize">{r.concepto}</TableCell>
-                  <TableCell className="text-right">{fmtPnl(r.presupuestado_mxn)}</TableCell>
-                  <TableCell className="text-right">{fmtPnl(r.real_mxn)}</TableCell>
-                  <TableCell className={`text-right ${isBad ? "text-destructive" : "text-success"}`}>
+                  <TableCell className="text-right tabular-nums">{fmtPnl(r.presupuestado_mxn)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{fmtPnl(r.real_mxn)}</TableCell>
+                  <TableCell className={`text-right tabular-nums ${isBad ? "text-destructive" : "text-success"}`}>
                     <span className="inline-flex items-center gap-1 justify-end">
                       <Icon className="h-3 w-3" />
                       {fmtPnl(d.abs)}
                     </span>
                   </TableCell>
-                  <TableCell className={`text-right ${isBad ? "text-destructive" : "text-success"}`}>
+                  <TableCell className={`text-right tabular-nums ${isBad ? "text-destructive" : "text-success"}`}>
                     {r.presupuestado_mxn > 0 ? pctPnl(d.pct) : "—"}
                   </TableCell>
                 </TableRow>
@@ -67,12 +67,12 @@ export function PnlComparativaTable({ titulo, rows, invertirAlerta }: Props) {
             <TableFooter>
               <TableRow className="font-semibold border-t-2">
                 <TableCell>Total</TableCell>
-                <TableCell className="text-right">{fmtPnl(totPresup)}</TableCell>
-                <TableCell className="text-right">{fmtPnl(totReal)}</TableCell>
-                <TableCell className={`text-right ${(invertirAlerta ? totDesv > 0 : totDesv < 0) ? "text-destructive" : "text-success"}`}>
+                <TableCell className="text-right tabular-nums">{fmtPnl(totPresup)}</TableCell>
+                <TableCell className="text-right tabular-nums">{fmtPnl(totReal)}</TableCell>
+                <TableCell className={`text-right tabular-nums ${(invertirAlerta ? totDesv > 0 : totDesv < 0) ? "text-destructive" : "text-success"}`}>
                   {fmtPnl(totDesv)}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {totPresup > 0 ? pctPnl((totDesv / totPresup) * 100) : "—"}
                 </TableCell>
               </TableRow>
