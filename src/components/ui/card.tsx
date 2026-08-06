@@ -13,7 +13,7 @@
  * 2. **Densidad de `<CardContent>`**: en lugar de pasar
  *    `className="p-3"` o `className="p-4"` ad-hoc, usa la prop `density`:
  *    - `density="default"` → `p-6 pt-0` (el de siempre, recomendado).
- *    - `density={TABLE_DENSITY.embebida}` → `p-4` (tarjetas medianas tipo CxP toolbar).
+ *    - `density="compact"` → `p-4` (tarjetas medianas tipo CxP toolbar).
  *    - `density="tight"`   → `p-3` (KPI compactos, tesorería/comisiones).
  *    - `density="flush"`   → `p-0` (cuando el hijo es una tabla full-bleed
  *      que ya gestiona su propio padding — patrón aprobado en facturación,
@@ -21,12 +21,11 @@
  *
  *    `pt-0` se omite en compact/tight/flush porque allí el header suele
  *    estar ausente. Si combinas `<CardHeader>` + `<CardContent
- *    density={TABLE_DENSITY.embebida}>` y necesitas `pt-0`, pásalo explícito.
+ *    density="compact">` y necesitas `pt-0`, pásalo explícito.
  */
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 const Card = ({ ref, className, ...props }: React.HTMLAttributes<HTMLDivElement> & { ref?: React.Ref<HTMLDivElement> }) => (
   <div

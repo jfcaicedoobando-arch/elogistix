@@ -9,12 +9,11 @@
  *    dashboard o drilldown, donde el espacio vertical es escaso. Filas de
  *    32 px, texto xs.
  *
- * Nunca pasar el string literal (`density={TABLE_DENSITY.embebida}`) en features: usar
+ * Nunca pasar el string literal en features (density="compact"): usar
  * estas constantes para que un cambio de escala se aplique en un solo lugar.
  * La prueba de arquitectura `table-density-tokens.test.ts` lo verifica.
  */
 import type { TableDensity } from "./types";
-import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export const TABLE_DENSITY = {
   /** Listados de página completa. */
