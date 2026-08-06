@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.441.0] - 2026-08-06
+- Rendimiento · Se optimizaron las 211 reglas de acceso (RLS) que verificaban el rol del usuario **una vez por cada fila** leída: ahora la verificación se hace una sola vez por consulta y se reutiliza. Los permisos no cambiaron en absoluto (mismos roles, mismas condiciones, mismas 274 políticas); el objetivo es bajar el consumo de CPU del servidor y acelerar las pantallas más pesadas (bitácora de actividad, auditoría, conceptos de costo).
+
+
+
 ## [13.440.0] - 2026-08-06
 - Compras · Flujo completo de **anticipos a proveedor** (pagar antes de recibir la factura): al registrar el anticipo se genera automáticamente el cargo bancario conciliado en la cuenta elegida, para que el saldo de tesorería baje de inmediato y el movimiento sea rastreable; al cancelarlo, ese movimiento se da de baja y el dinero regresa.
 - Compras · El modal de anticipo pide el tipo de cambio cuando la moneda no es MXN (precargado con el DOF, editable) y muestra el equivalente en pesos del saldo a favor.
