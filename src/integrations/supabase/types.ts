@@ -473,6 +473,7 @@ export type Database = {
       bbva_movimientos: {
         Row: {
           abono: number
+          anticipo_proveedor_id: string | null
           cargo: number
           concepto: string
           conciliado_at: string | null
@@ -495,6 +496,7 @@ export type Database = {
         }
         Insert: {
           abono?: number
+          anticipo_proveedor_id?: string | null
           cargo?: number
           concepto?: string
           conciliado_at?: string | null
@@ -517,6 +519,7 @@ export type Database = {
         }
         Update: {
           abono?: number
+          anticipo_proveedor_id?: string | null
           cargo?: number
           concepto?: string
           conciliado_at?: string | null
@@ -538,6 +541,13 @@ export type Database = {
           saldo?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bbva_movimientos_anticipo_proveedor_id_fkey"
+            columns: ["anticipo_proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "anticipos_proveedor"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bbva_movimientos_cuenta_bancaria_id_fkey"
             columns: ["cuenta_bancaria_id"]

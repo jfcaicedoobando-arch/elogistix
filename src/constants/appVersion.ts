@@ -1,4 +1,4 @@
 /**
  * Versión de la aplicación. Mantener sincronizada con CHANGELOG.md.
  */
-export const APP_VERSION = "13.439.0";
+export const APP_VERSION = "13.440.0";

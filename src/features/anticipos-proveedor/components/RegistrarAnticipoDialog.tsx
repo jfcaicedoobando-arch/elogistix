@@ -1,72 +1,75 @@
 /** Dialog "Registrar anticipo" (QW6). FormDialogShell + RHF + Zod. */
 import { useEffect, useMemo, useState } from "react";
-import { z } from "zod";
-import { useForm, Controller, type FieldErrors } from "react-hook-form";
+import { useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Loader2, HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { ProveedorCombobox } from "@/features/cxp/components/ProveedorCombobox";
 import { useRegistrarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import { todayLocalISO } from "@/lib/date/today";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
-
-const METODOS_PAGO = ["Transferencia", "Efectivo", "Cheque", "Tarjeta", "Otro"];
-
-const schema = z.object({
-  proveedorId: z.string().uuid({ message: "Selecciona un proveedor" }),
-  monto: z.coerce.number().positive({ message: "El monto debe ser mayor a cero" }),
-  moneda: z.enum(["MXN", "USD", "EUR"]),
-  fechaAnticipo: z.string().min(1, "La fecha es requerida"),
-  // B-060 (v13.320.32): `metodo_pago` es NOT NULL DEFAULT 'Transferencia' en
-  // `pagos_proveedor`. Sin capturarlo aquí, la RPC `aplicar_anticipo_a_factura`
-  // insertaba NULL explícito (que anula el default) y el 100% de los anticipos
-  // creados por UI eran inaplicables. Ahora es requerido, default 'Transferencia'.
-  metodoPago: z.enum(["Transferencia", "Efectivo", "Cheque", "Tarjeta", "Otro"]),
-  // Sin cuenta bancaria el anticipo no genera movimiento conciliable en tesorería.
-  cuentaBancariaId: z.string().optional(),
-  referencia: z.string().optional(),
-  notas: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
+import { useTcInicial } from "@/features/catalogos/hooks";
+import { RegistrarAnticipoFields } from "./RegistrarAnticipoFields";
+import { registrarAnticipoSchema, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  /** Preselecciona (y fija) el proveedor, p.ej. al abrirlo desde su detalle. */
+  proveedorIdInicial?: string;
+  proveedorNombreInicial?: string;
 }
 
-export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
+export function RegistrarAnticipoDialog({
+  open, onOpenChange, proveedorIdInicial, proveedorNombreInicial,
+}: Props) {
   const registrar = useRegistrarAnticipo();
-  const [proveedorNombre, setProveedorNombre] = useState("");
+  const [proveedorNombre, setProveedorNombre] = useState(proveedorNombreInicial ?? "");
   const { data: cuentas = [] } = useCuentasBancarias(true);
-  const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      proveedorId: "", monto: 0, moneda: "MXN",
-      fechaAnticipo: todayLocalISO(),
-      metodoPago: "Transferencia",
-      cuentaBancariaId: "",
-      referencia: "", notas: "",
-    },
-  });
+  const { data: tc } = useTcInicial();
+
+  const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } =
+    useForm<RegistrarAnticipoFormValues>({
+      resolver: zodResolver(registrarAnticipoSchema),
+      defaultValues: {
+        proveedorId: proveedorIdInicial ?? "", monto: 0, moneda: "MXN",
+        fechaAnticipo: todayLocalISO(),
+        metodoPago: "Transferencia",
+        cuentaBancariaId: "",
+        tipoCambioUsd: undefined,
+        referencia: "", notas: "",
+      },
+    });
 
   const moneda = watch("moneda");
+  const monto = watch("monto");
   const metodoPago = watch("metodoPago");
   const cuentaBancariaId = watch("cuentaBancariaId");
+  const tipoCambioUsd = watch("tipoCambioUsd");
   const requiereCuenta = metodoPago !== "Efectivo";
 
   const cuentasDeMoneda = useMemo(
     () => cuentas.filter((c) => c.moneda === moneda),
     [cuentas, moneda],
   );
+
+  // Al abrir con proveedor fijo, sincroniza el valor del formulario.
+  useEffect(() => {
+    if (open && proveedorIdInicial) {
+      setValue("proveedorId", proveedorIdInicial, { shouldValidate: true, shouldDirty: true });
+      setProveedorNombre(proveedorNombreInicial ?? "");
+    }
+  }, [open, proveedorIdInicial, proveedorNombreInicial, setValue]);
+
+  // Precarga el TC del DOF cuando la moneda deja de ser MXN.
+  useEffect(() => {
+    if (!open || moneda === "MXN" || !tc) return;
+    const sugerido = moneda === "EUR" ? tc.eurMxn : tc.usdMxn;
+    if (sugerido && !(Number(tipoCambioUsd) > 0)) {
+      setValue("tipoCambioUsd", sugerido, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [open, moneda, tc, tipoCambioUsd, setValue]);
 
   // Preselección: primera cuenta de la moneda del anticipo. Si la cuenta
   // elegida deja de coincidir con la moneda, se limpia.
@@ -82,13 +85,13 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
   }, [open, cuentaBancariaId, cuentasDeMoneda, setValue]);
 
   const handleOpenChange = (o: boolean) => {
-    if (!o) { reset(); setProveedorNombre(""); }
+    if (!o) { reset(); setProveedorNombre(proveedorNombreInicial ?? ""); }
     onOpenChange(o);
   };
 
   // B-061: sin handler de inválidos, la promesa de handleSubmit rechazaba
   // en silencio (pageerror con el JSON crudo de zod y cero feedback visible).
-  const onInvalid = (errs: FieldErrors<FormValues>) => {
+  const onInvalid = (errs: FieldErrors<RegistrarAnticipoFormValues>) => {
     const first = Object.values(errs)[0];
     notifyError(undefined, {
       title: "Revisa el formulario",
@@ -98,19 +101,12 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
   };
 
   const onSubmit = handleSubmit(async (values) => {
-    if (values.metodoPago !== "Efectivo" && !values.cuentaBancariaId) {
-      notifyError(undefined, {
-        title: "Falta la cuenta bancaria",
-        description: "Selecciona la cuenta de donde sale el dinero para poder conciliar el anticipo.",
-        method: "ANTICIPO_REGISTRAR_SIN_CUENTA",
-      });
-      return;
-    }
     await registrar.mutateAsync({
       proveedorId: values.proveedorId,
       monto: values.monto,
       moneda: values.moneda,
       fechaAnticipo: values.fechaAnticipo,
+      tipoCambioUsd: values.moneda === "MXN" ? null : Number(values.tipoCambioUsd),
       metodoPago: values.metodoPago,
       cuentaBancariaId: values.cuentaBancariaId || null,
       referencia: values.referencia || undefined,
@@ -118,6 +114,20 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
     });
     handleOpenChange(false);
   }, onInvalid);
+
+  const equivalenteMxn = useMemo(() => {
+    const m = Number(monto);
+    if (!(m > 0)) return null;
+    if (moneda === "MXN") return m;
+    const t = Number(tipoCambioUsd);
+    return t > 0 ? m * t : null;
+  }, [monto, moneda, tipoCambioUsd]);
+
+  const tcHint = tc
+    ? tc.fuente === "DOF"
+      ? `Sugerido por el DOF${tc.fecha ? ` del ${tc.fecha}` : ""}. Puedes editarlo.`
+      : "Sugerido por el servicio de tipos de cambio. Puedes editarlo."
+    : undefined;
 
   const footer = (
     <>
@@ -135,118 +145,24 @@ export function RegistrarAnticipoDialog({ open, onOpenChange }: Props) {
       onOpenChange={handleOpenChange}
       icon={HandCoins}
       title="Registrar anticipo a proveedor"
-      description="El anticipo queda disponible para aplicarse a facturas abiertas del mismo proveedor."
+      description="El anticipo genera el cargo en la cuenta bancaria y queda disponible para aplicarse a facturas del mismo proveedor."
       size="lg"
       footer={footer}
     >
-      <FormDialogSection title="Datos del anticipo">
-        <div className="space-y-1.5">
-          <Label>Proveedor</Label>
-          <Controller
-            control={control}
-            name="proveedorId"
-            render={({ field }) => (
-              <ProveedorCombobox
-                value={field.value}
-                onChange={(id, nombre) => { field.onChange(id); setProveedorNombre(nombre); }}
-                className="w-full"
-              />
-            )}
-          />
-          {errors.proveedorId && <p className="text-xs text-destructive">{errors.proveedorId.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="ant-fecha">Fecha</Label>
-          <Controller
-            control={control}
-            name="fechaAnticipo"
-            render={({ field }) => (
-              <DatePickerMx value={field.value ?? ""} onChange={field.onChange} className="w-full" />
-            )}
-          />
-          {errors.fechaAnticipo && <p className="text-xs text-destructive">{errors.fechaAnticipo.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="ant-monto">Monto</Label>
-          <Input id="ant-monto" type="number" step="0.01" min="0" {...register("monto")} />
-          {errors.monto && <p className="text-xs text-destructive">{errors.monto.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label>Moneda</Label>
-          <Controller
-            control={control}
-            name="moneda"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MXN">MXN</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Método de pago</Label>
-          <Controller
-            control={control}
-            name="metodoPago"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {METODOS_PAGO.map((m) => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {errors.metodoPago && <p className="text-xs text-destructive">{errors.metodoPago.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="ant-cuenta">
-            Cuenta bancaria {requiereCuenta && <span className="text-destructive">*</span>}
-          </Label>
-          <Controller
-            control={control}
-            name="cuentaBancariaId"
-            render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                <SelectTrigger id="ant-cuenta">
-                  <SelectValue placeholder="Selecciona la cuenta de donde sale el dinero" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cuentasDeMoneda.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.alias} — {c.banco} ({c.moneda})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {cuentasDeMoneda.length === 0 && (
-            <p className="text-xs text-muted-foreground">
-              No hay cuentas activas en {moneda}. Créala en Tesorería → Cuentas.
-            </p>
-          )}
-          {requiereCuenta && !cuentaBancariaId && cuentasDeMoneda.length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Se registrará el movimiento bancario conciliado en esta cuenta.
-            </p>
-          )}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="ant-ref">Referencia</Label>
-          <Input id="ant-ref" placeholder="Folio de transferencia, cheque, etc." {...register("referencia")} />
-        </div>
-      </FormDialogSection>
-      <FormDialogSection title="Notas" cols={1}>
-        <Textarea rows={3} placeholder={`Notas del anticipo${proveedorNombre ? ` para ${proveedorNombre}` : ""}…`} {...register("notas")} />
-      </FormDialogSection>
+      <RegistrarAnticipoFields
+        control={control}
+        register={register}
+        errors={errors}
+        moneda={moneda}
+        requiereCuenta={requiereCuenta}
+        cuentaBancariaId={cuentaBancariaId}
+        cuentasDeMoneda={cuentasDeMoneda}
+        proveedorNombre={proveedorNombre}
+        onProveedorNombre={setProveedorNombre}
+        bloquearProveedor={Boolean(proveedorIdInicial)}
+        tcHint={tcHint}
+        equivalenteMxn={equivalenteMxn}
+      />
     </FormDialogShell>
   );
 }

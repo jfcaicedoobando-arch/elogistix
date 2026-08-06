@@ -25,6 +25,7 @@ import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancari
 import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneralesCard";
 import { ProveedorResumenCards } from "../components/ProveedorResumenCards";
 import { ProveedorSaludTab } from "../components/ProveedorSaludTab";
+import { ProveedorAnticiposCard } from "@/features/anticipos-proveedor/components/ProveedorAnticiposCard";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -142,6 +143,13 @@ export default function ProveedorDetalle() {
           onCapturar={canEdit ? () => setEditOpen(true) : undefined}
         />
       </div>
+
+      <ProveedorAnticiposCard
+        proveedorId={proveedor.id}
+        proveedorNombre={proveedor.nombre}
+        canEdit={canEdit}
+      />
+
 
       <Tabs defaultValue="operaciones">
         <TabsList>

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.440.0] - 2026-08-06
+- Compras · Flujo completo de **anticipos a proveedor** (pagar antes de recibir la factura): al registrar el anticipo se genera automáticamente el cargo bancario conciliado en la cuenta elegida, para que el saldo de tesorería baje de inmediato y el movimiento sea rastreable; al cancelarlo, ese movimiento se da de baja y el dinero regresa.
+- Compras · El modal de anticipo pide el tipo de cambio cuando la moneda no es MXN (precargado con el DOF, editable) y muestra el equivalente en pesos del saldo a favor.
+- Compras · El detalle del proveedor muestra la tarjeta "Saldo a favor (anticipos)" con el total por moneda y acceso directo a registrar uno nuevo.
+- Compras · El detalle de la factura de proveedor avisa cuando el proveedor tiene saldo a favor y permite aplicarlo sin salir de la factura; la sección "Anticipos aplicados" ahora muestra el total.
+- Compras · La bandeja de anticipos gana indicadores: anticipos por aplicar, saldo a favor disponible, total anticipado y aplicado a facturas.
+- Documentación · Nueva guía `docs/flujo-anticipos-proveedor.md` con el flujo paso a paso para contabilidad.
+
 ## [13.439.0] - 2026-08-06
 - Tesorería · El modal "Registrar anticipo a proveedor" ahora permite escoger la cuenta bancaria de donde sale el dinero (filtrada por la moneda del anticipo, con preselección automática) y la exige salvo cuando el método es Efectivo, para que el anticipo genere movimiento conciliable.
 
