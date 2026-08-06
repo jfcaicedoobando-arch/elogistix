@@ -68,9 +68,17 @@ const Button = ({
   children,
   ...props
 }: ButtonProps & { ref?: React.Ref<HTMLButtonElement> }) => {
-  const Comp = asChild ? Slot : "button";
+  // `asChild` delega el markup al hijo (p. ej. <Link>): Slot exige UN solo
+  // elemento hijo, por lo que no inyectamos el spinner en ese caso.
+  if (asChild) {
+    return (
+      <Slot className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props}>
+        {children}
+      </Slot>
+    );
+  }
   return (
-    <Comp
+    <button
       className={cn(buttonVariants({ variant, size, className }))}
       ref={ref}
       disabled={disabled || loading}
@@ -79,7 +87,7 @@ const Button = ({
     >
       {loading ? <Loader2 className="animate-spin" aria-hidden /> : null}
       {children}
-    </Comp>
+    </button>
   );
 };
 Button.displayName = "Button";
