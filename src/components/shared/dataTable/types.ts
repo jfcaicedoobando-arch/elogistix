@@ -1,5 +1,5 @@
 export type ColumnAlign = "left" | "right" | "center";
-export type TableDensity = "compact" | "comfortable" | "spacious";
+export type TableDensity = "compact" | "comfortable";
 export type SortDir = "asc" | "desc";
 
 export interface DataTablePagination {
@@ -10,12 +10,13 @@ export interface DataTablePagination {
   onPageSizeChange?: (size: number) => void;
   pageSizeOptions?: number[];
   pageSizeLabels?: Record<number, string>;
+  /** Total de registros (server-side). Habilita el rango "1–20 de 134". */
+  total?: number;
 }
 
 export const DENSITY_CELL: Record<TableDensity, string> = {
   compact: "py-1 text-xs",
   comfortable: "py-2",
-  spacious: "py-3",
 };
 
 /**
@@ -26,7 +27,6 @@ export const DENSITY_CELL: Record<TableDensity, string> = {
 export const DENSITY_ROW_MIN_H: Record<TableDensity, string> = {
   compact: "h-8",       // 32px
   comfortable: "h-10",  // 40px
-  spacious: "h-12",     // 48px
 };
 
 export const ALIGN_CLASS: Record<ColumnAlign, string> = {
