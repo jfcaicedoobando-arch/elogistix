@@ -128,4 +128,32 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   // ── Conciliación de tesorería · CxP ────────────────────────────────────
   LC_CONCILIACION_SIN_ALCANCE:
     "Indica un proveedor o una factura para conciliar la tesorería.",
+  // ── Anticipos a proveedor ──────────────────────────────────────────────
+  LC_ANTICIPO_CUENTA_REQUERIDA:
+    "Selecciona la cuenta bancaria de la que sale el anticipo.",
+  LC_ANTICIPO_CUENTA_INVALIDA: "La cuenta bancaria del anticipo no existe.",
+  LC_ANTICIPO_CUENTA_OTRA_ORG:
+    "La cuenta bancaria pertenece a otra organización.",
+  LC_ANTICIPO_CUENTA_DIVISA:
+    "La moneda de la cuenta no coincide con la del anticipo.",
+  LC_MOVIMIENTO_ANTICIPO_INEXISTENTE:
+    "No se encontró el movimiento bancario del anticipo.",
+
+  // ── Pago en lote a proveedor ───────────────────────────────────────────
+  LC_LOTE_MINIMO_FACTURAS: "Selecciona al menos dos facturas para pagar en lote.",
+  LC_LOTE_MONTO_INVALIDO:
+    "El importe del lote debe ser mayor a cero y cubrir los renglones capturados.",
+  LC_LOTE_FACTURA_INVALIDA:
+    "Una de las facturas del lote no existe o ya no está por pagar.",
+  LC_LOTE_PROVEEDOR_NO_EXISTE: "El proveedor del lote no existe.",
+  LC_LOTE_PROVEEDOR_OTRA_ORG: "El proveedor pertenece a otra organización.",
+  LC_LOTE_SIN_ROL: "No tienes permisos para registrar pagos en lote.",
+  LC_LOTE_CUENTA_REQUERIDA:
+    "Selecciona la cuenta bancaria de la que sale el pago en lote.",
+  LC_LOTE_CUENTA_INVALIDA: "La cuenta bancaria del lote no existe.",
+  LC_LOTE_CUENTA_OTRA_ORG: "La cuenta bancaria pertenece a otra organización.",
+  LC_LOTE_CUENTA_DIVISA:
+    "La moneda de la cuenta no coincide con la del pago en lote.",
+  LC_MOVIMIENTO_LOTE_INEXISTENTE:
+    "No se encontró el movimiento bancario del pago en lote.",
 };
