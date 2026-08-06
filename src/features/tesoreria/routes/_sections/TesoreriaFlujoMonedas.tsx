@@ -45,21 +45,24 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
               const neto = r.cobrar - r.pagar;
               return (
                 <DetailTableRow key={r.moneda}>
-                  <TableCell className="font-medium">{r.moneda}</TableCell>
+                  <TableCell className="font-medium">
+                    {r.moneda}
+                    <span
+                      className={cn(
+                        "block text-xs font-normal tabular-nums",
+                        neto >= 0 ? "text-success" : "text-destructive",
+                      )}
+                    >
+                      Neto {formatCurrency(neto, r.moneda)}
+                    </span>
+                  </TableCell>
                   <TableCell className="whitespace-nowrap text-right tabular-nums text-success">
                     {formatCurrency(r.cobrar, r.moneda)}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-right tabular-nums text-warning">
                     {formatCurrency(r.pagar, r.moneda)}
                   </TableCell>
-                  <TableCell
-                    className={cn(
-                      "whitespace-nowrap text-right font-semibold tabular-nums",
-                      neto >= 0 ? "text-success" : "text-destructive",
-                    )}
-                  >
-                    {formatCurrency(neto, r.moneda)}
-                  </TableCell>
+
                 </DetailTableRow>
               );
             })}
