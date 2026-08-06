@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.434.0] - 2026-08-06
+- Auditoría de tokens: se eliminaron los colores "a mano" que quedaban. Es como cambiar los botes de pintura sueltos por la paleta oficial: si mañana cambia el color de la marca, cambia en un solo lugar.
+- Gráficas: nuevo módulo `src/lib/chartTokens.ts` (`CHART`, `CHART_SERIES`) que apunta a las variables del tema; migradas la antigüedad de saldos de compras, la línea de salud del sistema y el top de reportes (antes tenían `hsl(...)` fijos que no respetaban modo oscuro).
+- Landing y portal: los fondos, insignias y avisos de ETA ahora usan tokens (`bg-success/10`, `text-warning`, `bg-info/15`) en vez de valores crudos.
+- Documentos PDF e impresión: los grises y fondos sueltos de 9 reportes y del estado de cuenta imprimible ahora vienen de `COLORS` (se agregó el token `subtle`).
+- Guardrails: nueva prueba de arquitectura que falla el CI si aparece un hex/rgb/hsl crudo, y la regla de lint de retícula ahora cubre todo el espaciado (pt/pr/pb/pl, m*, gap-x/y, space-x/y, en px y rem) además de prohibir clases arbitrarias de color.
+
 ## [13.433.0] - 2026-08-06
 - Ola 11 — Cierre de la armonización visual. Como el repaso final de una casa: los mismos zócalos y manijas en todos los cuartos.
 - Estado de cuenta del cliente: las filas de carga, encabezados de grupo, filas expandidas y subtotales ahora usan el contrato compartido `DetailTable` (mismo hover, densidad y bordes que el resto de las tablas).
