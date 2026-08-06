@@ -75,7 +75,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
                           onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${c.embarque_id}`); }}
                         >
                           <Ship className="h-3 w-3" /> Ver
-                        </button>
+                        </Button>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}

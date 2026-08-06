@@ -64,7 +64,7 @@ export function DestinatariosRecientesChips({
           className="mt-1 h-auto p-0 text-xs text-muted-foreground underline-offset-2"
         >
           Restaurar ocultos ({ocultos.length})
-        </button>
+        </Button>
       )}
     </>
   );
