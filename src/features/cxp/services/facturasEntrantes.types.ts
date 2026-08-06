@@ -32,6 +32,12 @@ export interface FacturaEntranteRow {
   created_at: string;
   embarques?: { expediente: string | null } | null;
   proveedores?: { nombre: string | null; origen_proveedor?: string | null } | null;
+  /** v13.446.0 — Factura de proveedor en la que se capturó este documento. */
+  proveedor_facturas?: {
+    folio_interno: string | null;
+    estado: string | null;
+    total: number | null;
+  } | null;
 }
 
 export const SELECT_COLS_ENTRANTES =
@@ -39,7 +45,8 @@ export const SELECT_COLS_ENTRANTES =
   " xml_path, xml_nombre, uuid_fiscal, rfc_emisor, folio_serie, fecha_emision," +
   " proveedor_id, proveedor_factura_id, folio_detectado, total_detectado, moneda_detectada," +
   " rechazo_motivo, subido_por, capturado_por, created_at," +
-  " embarques:embarque_id(expediente), proveedores:proveedor_id(nombre, origen_proveedor)";
+  " embarques:embarque_id(expediente), proveedores:proveedor_id(nombre, origen_proveedor)," +
+  " proveedor_facturas:proveedor_factura_id(folio_interno, estado, total)";
 
 export interface SubirFacturaEntranteInput {
   /** PDF de la factura (opcional si el proveedor sólo mandó el XML). */
