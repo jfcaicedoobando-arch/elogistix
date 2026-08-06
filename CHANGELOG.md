@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.438.0] - 2026-08-06
+- Tesorería · Dashboard rediseñado: arriba 4 KPIs (saldo total en bancos convertido a MXN, por cobrar y por pagar a 30 días con vencidas, y flujo neto), la curva de flujo proyectado embebida, el detalle por moneda en una tabla compacta y el top de cartera con días vencidos coloreados por antigüedad y enlaces a cobranza/CxP. Antes era un tablero de 10 tarjetas planas: como una vitrina sin orden; ahora lo importante va al frente y el detalle queda a la mano.
+- Tesorería · El botón de Conciliación muestra un badge con los movimientos bancarios sin conciliar y un aviso arriba con acceso directo.
+
 ## [13.437.1] - 2026-08-06
 - Tesorería · Nueva cuenta bancaria: se quitó el toast duplicado. El aviso se anunciaba dos veces (uno en el formulario y otro en la mutación), como dos meseros trayendo el mismo plato; ahora sólo lo emite la mutación. Igual para el mensaje de error.
 
