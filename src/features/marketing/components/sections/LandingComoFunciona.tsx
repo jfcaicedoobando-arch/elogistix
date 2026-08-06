@@ -23,7 +23,7 @@ export function LandingComoFunciona() {
         <div className="relative mt-16 grid gap-10 md:grid-cols-3">
           <div
             aria-hidden="true"
-            className="absolute left-[16.66%] right-[16.66%] top-9 hidden h-px bg-gradient-to-r from-transparent via-border to-transparent md:block"
+            className="absolute left-[16.66%] right-[16.66%] top-[2.25rem] hidden h-px bg-gradient-to-r from-transparent via-border to-transparent md:block"
           />
           {PASOS.map((p) => (
             <div key={p.n} className="relative flex flex-col items-center text-center">
