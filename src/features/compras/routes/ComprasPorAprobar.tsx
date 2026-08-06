@@ -57,6 +57,16 @@ export default function ComprasPorAprobar() {
   const totalSelMxn = sumaMxn(seleccionadas);
   const totalSelUsd = sumaUsd(seleccionadas);
 
+  // Solo los CFDI nacionales con UUID se pueden consultar en el SAT.
+  const validablesSat = useMemo(
+    () =>
+      seleccionadas
+        .filter((f) => f.proveedor_origen !== "Extranjero" && !!f.uuid_fiscal)
+        .map((f) => f.id),
+    [seleccionadas],
+  );
+
+
   const handleAprobarLote = async () => {
     await aprobar(Array.from(selected));
     setSelected(new Set());
