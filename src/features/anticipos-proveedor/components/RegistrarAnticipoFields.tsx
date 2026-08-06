@@ -44,18 +44,21 @@ export function RegistrarAnticipoFields({
       <FormDialogSection title="Datos del anticipo">
         <div className="space-y-1.5">
           <Label>Proveedor</Label>
-          <Controller
-            control={control}
-            name="proveedorId"
-            render={({ field }) => (
-              <ProveedorCombobox
-                value={field.value}
-                onChange={(id, nombre) => { field.onChange(id); onProveedorNombre(nombre); }}
-                className="w-full"
-                disabled={bloquearProveedor}
-              />
-            )}
-          />
+          {bloquearProveedor ? (
+            <Input value={proveedorNombre} readOnly aria-label="Proveedor" />
+          ) : (
+            <Controller
+              control={control}
+              name="proveedorId"
+              render={({ field }) => (
+                <ProveedorCombobox
+                  value={field.value}
+                  onChange={(id, nombre) => { field.onChange(id); onProveedorNombre(nombre); }}
+                  className="w-full"
+                />
+              )}
+            />
+          )}
           {errors.proveedorId && <p className="text-xs text-destructive">{errors.proveedorId.message}</p>}
         </div>
         <div className="space-y-1.5">
