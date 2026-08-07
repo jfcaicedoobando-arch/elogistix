@@ -17,6 +17,7 @@
  */
 import currency from "currency.js";
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Database } from "@/integrations/supabase/types";
 import type { VinculoLinea } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
 
@@ -103,6 +104,14 @@ export async function crearAjustesFacturaProveedor(
     .from("proveedor_facturas_conceptos")
     .insert(rows);
   if (errLink) throw errLink;
+
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "crear_ajustes_factura_proveedor",
+    entidadId: input.facturaId,
+    entidadNombre: input.folio,
+    detalles: { ajustesCreados: rows.length },
+  });
 
   return { ajustesCreados: rows.length };
 }
