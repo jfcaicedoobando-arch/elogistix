@@ -8,7 +8,7 @@ import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { ProveedorDuplicadoError, findProveedorByRfcEnOrg } from "./duplicadoRfc";
-import { registrarActividad } from "@/services/bitacora/registrar";
+import { bitacoraProveedor } from "./proveedoresBitacora";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type CategoriaProveedor = Enums<"categoria_proveedor">;
@@ -144,12 +144,9 @@ export async function insertProveedor(prov: TablesInsert<"proveedores">): Promis
     }
     throw error;
   }
-  await registrarActividad({
-    modulo: "proveedores",
-    accion: "crear",
-    entidadId: data.id,
-    entidadNombre: data.nombre,
-    detalles: { rfc: data.rfc, tipo: data.tipo, origen: data.origen_proveedor },
+  await bitacoraProveedor("crear", data.id, data.nombre, {
+    rfc: data.rfc,
+    tipo: data.tipo,
   });
   return data;
 }
@@ -174,12 +171,8 @@ export async function updateProveedor(
   if (!data || data.length === 0) {
     throw new Error("No se guardaron los cambios del proveedor: no tienes permiso o el proveedor ya no existe.");
   }
-  await registrarActividad({
-    modulo: "proveedores",
-    accion: "editar",
-    entidadId: id,
-    entidadNombre: typeof payload.nombre === "string" ? payload.nombre : "",
-    detalles: { campos: Object.keys(payload) },
+  await bitacoraProveedor("editar", id, typeof payload.nombre === "string" ? payload.nombre : "", {
+    campos: Object.keys(payload),
   });
 }
 
@@ -192,10 +185,5 @@ export async function deleteProveedor(id: string, userId: string | null = null):
       .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
       .eq("id", id),
   );
-  await registrarActividad({
-    modulo: "proveedores",
-    accion: "eliminar",
-    entidadId: id,
-    detalles: { deleted_by: userId },
-  });
+  await bitacoraProveedor("eliminar", id, "", { deleted_by: userId });
 }
