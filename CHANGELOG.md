@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.456.0] - 2026-08-07
+- **Bitácora al 100%:** se cerraron los últimos huecos detectados en la auditoría. Ahora también se registran:
+  - Costeo: agentes, rutas, tarifas y recargos, condiciones de naviera, demoras de venta y aprobación de tarifa por el agente.
+  - Cotizaciones: creación y edición directa, plantillas, catálogo de productos, actualización de costos y conversión a embarque.
+  - CRM: automatizaciones de etapa, cotización desde oportunidad y vinculación/sincronización cotización↔oportunidad.
+  - Configuración: catálogo de claves SAT y credenciales de facturación (sin guardar nunca la llave, sólo el ambiente).
+  - Comisiones: generación y pago de liquidaciones, configuración de vendedora y reasignación de vendedora en embarque.
+  - CxP y facturación: conceptos CFDI, ajustes, captura de factura subida, movimientos bancarios de pago, conciliación con tesorería, conceptos de factura emitida, datos fiscales del cliente, recálculo de totales y borrado de borradores.
+  - Embarques: edición y eliminación por RPC, carga masiva/reemplazo de contenedores, exclusión de comisión, documentos subidos, eventos y recálculo de demoras.
+- **Consistencia:** los dos lugares que escribían directo en la tabla de bitácora (conversión a prospecto y paso 1 del wizard) ahora usan el helper único.
+- **Rendimiento de la bitácora:** el registro ya no consulta al servidor de sesión en cada acción (usa la sesión en caché), la pantalla de bitácora no recarga al volver al navegador y mantiene datos frescos 1 minuto. Índices verificados: `organization_id + created_at`, `modulo`, `accion + created_at`, `usuario_id`, `entidad_id`.
+
 ## [13.455.1] - 2026-08-07
 - **Fix bitácora de facturas:** el disparador de cambios de estado (timbrar / cancelar / sustituir) usaba un campo de folio inexistente (`folio_completo`) y hacía fallar la operación completa. Ahora arma el folio con `serie` + `numero`. Test `supabase/tests/guard_estado_factura.sql` desbloqueado.
 
