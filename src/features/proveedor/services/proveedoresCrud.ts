@@ -143,6 +143,13 @@ export async function insertProveedor(prov: TablesInsert<"proveedores">): Promis
     }
     throw error;
   }
+  await registrarActividad({
+    modulo: "proveedores",
+    accion: "crear",
+    entidadId: data.id,
+    entidadNombre: data.nombre,
+    detalles: { rfc: data.rfc, tipo: data.tipo, origen: data.origen_proveedor },
+  });
   return data;
 }
 
@@ -166,6 +173,13 @@ export async function updateProveedor(
   if (!data || data.length === 0) {
     throw new Error("No se guardaron los cambios del proveedor: no tienes permiso o el proveedor ya no existe.");
   }
+  await registrarActividad({
+    modulo: "proveedores",
+    accion: "editar",
+    entidadId: id,
+    entidadNombre: typeof payload.nombre === "string" ? payload.nombre : "",
+    detalles: { campos: Object.keys(payload) },
+  });
 }
 
 export async function deleteProveedor(id: string, userId: string | null = null): Promise<void> {
@@ -177,4 +191,10 @@ export async function deleteProveedor(id: string, userId: string | null = null):
       .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
       .eq("id", id),
   );
+  await registrarActividad({
+    modulo: "proveedores",
+    accion: "eliminar",
+    entidadId: id,
+    detalles: { deleted_by: userId },
+  });
 }
