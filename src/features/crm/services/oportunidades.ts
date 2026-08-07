@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { orIlike } from "@/lib/search/ilike";
 import { unwrap, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
 export type { CrmOportunidadRow, Moneda, OportunidadInput } from "@/features/crm/types/oportunidades";
 import type { CrmOportunidadRow, OportunidadInput } from "@/features/crm/types/oportunidades";
