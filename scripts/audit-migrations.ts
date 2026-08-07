@@ -93,8 +93,17 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    de `has_role` / `has_any_role`; las policies ya quedaron creadas en BD
  *    con los predicados correctos y el archivo original queda como legacy
  *    auditado.
+ *  - `20260807212604` — post-FIX-H6-10: las migraciones de bitácora
+ *    (`20260807211258` cierre/reapertura de embarque, `20260807211728`
+ *    archivado de versiones, `20260807212033` cambios de rol y
+ *    `20260807212343` estado de facturas) recrearon funciones
+ *    SECURITY DEFINER sin el bloque REVOKE/GRANT en el mismo archivo. Las
+ *    migraciones correctivas `20260807212527` y `20260807212604` re-aplican
+ *    los permisos (`REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE … TO
+ *    authenticated, service_role` / `service_role` para las de trigger); los
+ *    archivos originales quedan como legacy auditados.
  */
-const BASELINE = "20260807172302";
+const BASELINE = "20260807212604";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
