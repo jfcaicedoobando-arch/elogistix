@@ -63,6 +63,11 @@ async function updateConfigItems(
   );
   const firstError = results.find((r) => r.error);
   if (firstError?.error) throw firstError.error;
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: table === "configuracion_global" ? "editar_configuracion_global" : "editar_configuracion",
+    detalles: { claves: items.map((i) => `${i.categoria}.${i.clave}`) },
+  });
 }
 
 export async function updateConfiguracionByCategoriaClave(
