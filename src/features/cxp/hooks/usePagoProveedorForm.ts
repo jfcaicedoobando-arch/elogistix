@@ -6,7 +6,7 @@
  * v13.395.0: soporta modo edición (`pagoEditar`) con las mismas validaciones,
  * devolviendo al saldo el importe del pago original.
  */
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { metodosFor } from "@/features/cxp/components/pagoProveedorHelpers";
 import { todayLocalISO } from "@/lib/date/today";
