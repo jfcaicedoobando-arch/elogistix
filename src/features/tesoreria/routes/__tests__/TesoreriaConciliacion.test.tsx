@@ -22,6 +22,7 @@ const mockUseConciliarPago = vi.fn();
 
 vi.mock("@/features/tesoreria/hooks", () => ({
   useCuentasBancarias: () => mockUseCuentasBancarias(),
+  useSaldosCuentas: () => ({ data: [], isLoading: false }),
   useMovimientos: () => mockUseMovimientos(),
   useImportarMovimientos: () => mockUseImportarMovimientos(),
   useConciliarPago: () => mockUseConciliarPago(),
