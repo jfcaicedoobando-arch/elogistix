@@ -103,7 +103,7 @@ export function usePagoLoteState(a: Args) {
     fecha, setFecha, total, metodo, setMetodo, referencia, setReferencia,
     cuentaId, setCuentaId, notas, setNotas, renglones,
     saldoTotal, tcDof, cuentasMoneda, requiereCuenta,
-    error, sinAsignar, recalcular, setMonto, submit,
+    error, sinAsignar, totalRepartido, recalcular, setMonto, submit,
     guardando: registrar.isPending,
   };
 }
