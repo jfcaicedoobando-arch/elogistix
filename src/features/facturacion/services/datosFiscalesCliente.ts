@@ -44,7 +44,8 @@ export async function actualizarDatosTimbradoFactura(
     modulo: "facturacion",
     accion: "actualizar_datos_timbrado_factura",
     entidadId: facturaId,
-    detalles: patch as Record<string, unknown>,
+    detalles: { ...patch },
+
   });
 }
 

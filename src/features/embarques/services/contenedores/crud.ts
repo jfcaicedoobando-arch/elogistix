@@ -45,7 +45,7 @@ export async function listarPorEmbarque(
   );
 }
 
-export async function crearMuchos(
+async function insertarContenedores(
   embarqueId: string,
   borradores: ContenedorBorrador[],
 ): Promise<EmbarqueContenedor[]> {
@@ -65,12 +65,21 @@ export async function crearMuchos(
     .insert(rows)
     .select();
   if (error) throw traducirErrorContenedorDuplicado(error);
-  const resultado = (data ?? []) as EmbarqueContenedor[];
-  await registrarBitacoraEmbarque({
-    accion: "crear_contenedores",
-    entidadId: embarqueId,
-    detalles: { total: resultado.length },
-  });
+  return (data ?? []) as EmbarqueContenedor[];
+}
+
+export async function crearMuchos(
+  embarqueId: string,
+  borradores: ContenedorBorrador[],
+): Promise<EmbarqueContenedor[]> {
+  const resultado = await insertarContenedores(embarqueId, borradores);
+  if (resultado.length > 0) {
+    await registrarBitacoraEmbarque({
+      accion: "crear_contenedores",
+      entidadId: embarqueId,
+      detalles: { total: resultado.length },
+    });
+  }
   return resultado;
 }
 
@@ -91,7 +100,7 @@ export async function reemplazarTodos(
       .eq("embarque_id", embarqueId)
       .is("deleted_at", null),
   );
-  const resultado = await crearMuchos(embarqueId, borradores);
+  const resultado = await insertarContenedores(embarqueId, borradores);
   await registrarBitacoraEmbarque({
     accion: "reemplazar_contenedores",
     entidadId: embarqueId,
