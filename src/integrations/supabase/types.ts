@@ -8922,6 +8922,18 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      registrar_bitacora: {
+        Args: {
+          p_accion: string
+          p_detalles?: Json
+          p_entidad_id?: string
+          p_entidad_nombre?: string
+          p_modulo: string
+          p_organization_id?: string
+          p_usuario_id?: string
+        }
+        Returns: undefined
+      }
       registrar_pago_proveedor_lote: {
         Args: { p_payload: Json }
         Returns: string
