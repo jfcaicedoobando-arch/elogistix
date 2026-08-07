@@ -30,13 +30,11 @@ async function contextoFactura(
 ): Promise<{ organizationId: string | null; concepto: string }> {
   const { data } = await supabase
     .from("facturas")
-    .select("organization_id, numero_factura, clientes(nombre_comercial)")
+    .select("organization_id, numero, cliente_nombre")
     .eq("id", facturaId)
     .maybeSingle();
-  // SAFE-CAST: embed 1-1 validado por el FK facturas.cliente_id.
-  const cli = (data as { clientes?: { nombre_comercial?: string | null } | null } | null)?.clientes;
-  const folio = data?.numero_factura ?? "s/folio";
-  const nombre = cli?.nombre_comercial ?? "cliente";
+  const folio = data?.numero ?? "s/folio";
+  const nombre = data?.cliente_nombre || "cliente";
   return {
     organizationId: data?.organization_id ?? null,
     concepto: `Cobro factura ${folio} — ${nombre}`,
