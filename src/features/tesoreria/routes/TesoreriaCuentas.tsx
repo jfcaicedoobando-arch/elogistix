@@ -108,7 +108,19 @@ export default function TesoreriaCuentas() {
                   <p className="text-sm pt-2">Saldo inicial: <span className="tabular-nums font-medium">{formatCurrency(Number(c.saldo_inicial), c.moneda)}</span></p>
                 )}
                 {!c.activa && <p className="text-xs text-muted-foreground italic">Cuenta inactiva</p>}
+                <div className="pt-2">
+                  <Button
+                    variant="link" size="sm" className="h-auto p-0 text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`${ROUTES.TESORERIA_ESTADO_CUENTA}?cuenta=${c.id}`);
+                    }}
+                  >
+                    Ver estado de cuenta
+                  </Button>
+                </div>
               </CardContent>
+
             </Card>
           );})}
         </div>

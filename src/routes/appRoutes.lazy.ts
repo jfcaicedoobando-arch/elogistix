@@ -61,6 +61,8 @@ export const CxcAging = lazy(() => import("@/features/cxc/routes/CxcAging"));
 export const Tesoreria = lazy(() => import("@/features/tesoreria/routes/Tesoreria"));
 export const TesoreriaCuentas = lazy(() => import("@/features/tesoreria/routes/TesoreriaCuentas"));
 export const TesoreriaConciliacion = lazy(() => import("@/features/tesoreria/routes/TesoreriaConciliacion"));
+export const TesoreriaEstadoCuenta = lazy(() => import("@/features/tesoreria/routes/TesoreriaEstadoCuenta"));
+
 export const TesoreriaFlujo = lazy(() => import("@/features/tesoreria/routes/TesoreriaFlujo"));
 export const TesoreriaPagosProgramados = lazy(() => import("@/features/tesoreria/routes/TesoreriaPagosProgramados"));
 export const Comisiones = lazy(() => import("@/features/comisiones/routes/Comisiones"));

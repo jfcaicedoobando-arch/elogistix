@@ -8265,6 +8265,10 @@ export type Database = {
         Args: { p_cliente_ids: string[]; p_desde?: string; p_hasta?: string }
         Returns: Json
       }
+      estado_cuenta_bancario: {
+        Args: { p_cuenta_bancaria_id: string; p_desde: string; p_hasta: string }
+        Returns: Json
+      }
       expirar_cotizaciones_job: { Args: never; Returns: Json }
       facturacion_por_emitir: {
         Args: never
