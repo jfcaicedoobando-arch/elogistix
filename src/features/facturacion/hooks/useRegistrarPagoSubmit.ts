@@ -25,6 +25,8 @@ interface SubmitArgs {
   formaPago: string;
   referencia: string;
   notas: string;
+  /** Cuenta donde entró el dinero; `null` = no registrar movimiento bancario. */
+  cuentaBancariaId?: string | null;
   esPpdTimbrada: boolean;
 }
 
@@ -65,6 +67,7 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
         forma_pago: args.formaPago,
         referencia: args.referencia,
         notas: args.notas,
+        cuenta_bancaria_id: args.cuentaBancariaId ?? null,
       });
       registrarActividad.mutate({
         accion: "crear",
