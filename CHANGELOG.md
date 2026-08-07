@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.450.1] - 2026-08-07
+- Tesorería · Estado de cuenta: la tabla ahora usa el componente estándar de tablas (encabezados y columnas alineados correctamente en Full HD).
+- Tesorería · Estado de cuenta: el **saldo inicial** del periodo ahora incluye el saldo de apertura de la cuenta, por lo que el saldo final coincide con el saldo mostrado en Cuentas bancarias.
+
 ## [13.450.0] - 2026-08-07
 - Tesorería · Nuevo **Estado de cuenta bancario** (`/tesoreria/estado-cuenta`): extracto tipo banco con saldo inicial del periodo, movimientos en orden cronológico con **saldo corrido** línea por línea, entradas/salidas y saldo final.
 - Filtros por rango de fechas (atajos Mes / Trimestre / Año), búsqueda por concepto o referencia y tipo de movimiento (entradas / salidas).
