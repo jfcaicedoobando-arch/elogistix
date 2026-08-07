@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.454.1] - 2026-08-07
+- **Seguridad y CI:** se re-aplicaron los permisos de ejecución de las funciones internas de cierre/reapertura de embarque, archivado de versiones de cotización y los registros automáticos de bitácora (quedan bloqueadas para el público).
+
 ## [13.454.0] - 2026-08-07
 - **Bitácora unificada:** los nombres de módulo se corrigen automáticamente (antes convivían "Cotizaciones" y "cotizaciones", o "facturas"/"proformas" por separado), así el filtro por módulo ya no pierde movimientos. También se corrigió el historial existente.
 - **Nuevos eventos registrados:** cambios de rol de usuarios, timbrado / cancelación / sustitución de facturas, cambios de estado y eliminación de cotizaciones, alta y baja de documentos del expediente, oportunidades de CRM (crear, editar, mover etapa, eliminar) y cambios de configuración.
