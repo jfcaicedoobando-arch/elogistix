@@ -26,7 +26,7 @@ const CASOS: Array<{ file: string; tabla: string; minOcurrencias: number }> = [
     minOcurrencias: 1,
   },
   {
-    file: "src/features/tesoreria/services/conciliacionManual.ts",
+    file: "src/features/tesoreria/services/conciliacion.ts",
     tabla: "bbva_movimientos",
     minOcurrencias: 4,
   },
@@ -73,7 +73,7 @@ describe("M6: soft-delete en tablas de dinero", () => {
    */
   it("eliminarMovimientoManual es soft-delete", () => {
     const src = readFileSync(
-      path.join(ROOT, "src/features/tesoreria/services/conciliacion.ts"),
+      path.join(ROOT, "src/features/tesoreria/services/conciliacionManual.ts"),
       "utf-8",
     );
     const fn = src.slice(src.indexOf("export async function eliminarMovimientoManual"));
