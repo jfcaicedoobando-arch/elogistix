@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.450.3] - 2026-08-07
+- Seguridad: la consulta del **estado de cuenta bancario** solo puede ejecutarse con sesión iniciada (permisos explícitos en la base de datos).
+- Se actualizó la prueba de Conciliación bancaria para la nueva tarjeta de "Saldo actual".
+
 ## [13.450.2] - 2026-08-07
 - Calidad interna: se dividieron el diálogo de **pago en lote** y el formulario de **pago a proveedor** en piezas más pequeñas (misma funcionalidad, código más simple y mantenible).
 - El PDF del estado de cuenta ya no depende de módulos internos de Tesorería y la tabla usa el token estándar de densidad.
