@@ -3,7 +3,7 @@
  * cuenta, así que el movimiento no afectará el saldo actual (v13.451.0).
  */
 import { Info } from "lucide-react";
-import { avisoFechaPreviaCorte } from "@/features/tesoreria/domain/corteSaldo";
+import { avisoFechaPreviaCorte } from "@/lib/domain/corteSaldo";
 
 interface Props {
   fecha: string | null | undefined;

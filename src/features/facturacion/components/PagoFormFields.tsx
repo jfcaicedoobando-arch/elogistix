@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCuenta";
-import { AvisoFechaPreviaCorte } from "@/features/tesoreria/components/AvisoFechaPreviaCorte";
+import { AvisoFechaPreviaCorte } from "@/components/shared/AvisoFechaPreviaCorte";
 
 export interface PagoFormValues {
   fecha: string;
