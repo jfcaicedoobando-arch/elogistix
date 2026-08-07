@@ -26,7 +26,7 @@ const CASOS: Array<{ file: string; tabla: string; minOcurrencias: number }> = [
     minOcurrencias: 1,
   },
   {
-    file: "src/features/tesoreria/services/conciliacion.ts",
+    file: "src/features/tesoreria/services/conciliacionManual.ts",
     tabla: "bbva_movimientos",
     minOcurrencias: 4,
   },
