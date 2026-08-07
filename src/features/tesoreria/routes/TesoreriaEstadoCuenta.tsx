@@ -94,16 +94,20 @@ export default function TesoreriaEstadoCuenta() {
                 {formatCurrency(totales.salidas, moneda)}
               </span>
             </div>
-            <VirtualDataTable
+            <DataTable
               columns={columns}
               data={visibles}
               rowKey={(m) => m.id}
+              density="compact"
+              striped
+              stickyHeader
+              tableClassName="w-full"
               isLoading={isLoading}
               isError={isError}
               onRetry={() => void refetch()}
               emptyMessage="No hay movimientos en el periodo seleccionado."
-              maxHeight={620}
             />
+
           </div>
         </>
       )}
