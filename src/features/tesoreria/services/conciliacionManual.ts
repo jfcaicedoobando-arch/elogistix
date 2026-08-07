@@ -34,6 +34,19 @@ export async function registrarMovimientoManual(
       importado_por: input.userId,
     }),
   );
+  await registrarActividad({
+    modulo: "tesoreria",
+    accion: "crear_movimiento_manual",
+    entidadNombre: input.concepto,
+    detalles: {
+      cuenta_bancaria_id: input.cuentaBancariaId,
+      fecha: input.fecha,
+      referencia: input.referencia ?? "",
+      cargo: input.cargo,
+      abono: input.abono,
+      hash_dedupe: hashDedupe,
+    },
+  });
 }
 
 /**
