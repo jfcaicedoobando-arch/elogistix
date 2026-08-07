@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { fromDb } from "@/lib/supabase/cast";
 import { unwrapOr } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ConfigItem {
   id: string;
@@ -63,6 +64,11 @@ async function updateConfigItems(
   );
   const firstError = results.find((r) => r.error);
   if (firstError?.error) throw firstError.error;
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: table === "configuracion_global" ? "editar_configuracion_global" : "editar_configuracion",
+    detalles: { claves: items.map((i) => `${i.categoria}.${i.clave}`) },
+  });
 }
 
 export async function updateConfiguracionByCategoriaClave(

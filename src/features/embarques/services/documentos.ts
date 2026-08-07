@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from '@/services/storage/index';
 import { buildEmbarqueDocOrgPath } from '@/services/storage/orgPath';
+import { registrarActividad } from '@/services/bitacora/registrar';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
 
@@ -68,6 +69,13 @@ export async function deleteDocumentoEmbarque(docId: string, archivoPath?: strin
     throw new Error('No se pudo eliminar el adjunto (sin permisos o el documento ya no existe).');
   }
 
+  await registrarActividad({
+    modulo: 'documentos',
+    accion: 'desadjuntar_documento',
+    entidadId: docId,
+    detalles: { archivo: archivoPath ?? null },
+  });
+
   // Limpieza best-effort del blob en storage: si falla no bloqueamos la UI.
   if (archivoPath) {
     try {
@@ -93,6 +101,12 @@ export async function createDocumentoEmbarqueRow(params: {
       notas: params.notas ?? null,
     });
   if (error) throw error;
+  await registrarActividad({
+    modulo: 'documentos',
+    accion: 'agregar_documento_checklist',
+    entidadId: params.embarqueId,
+    entidadNombre: params.nombre,
+  });
 }
 
 /**
@@ -116,4 +130,9 @@ export async function setDocumentoEstadoNoAplica(
   if (!updated || updated.length === 0) {
     throw new Error('No se pudo actualizar el documento (verifica que no tenga archivo adjunto).');
   }
+  await registrarActividad({
+    modulo: 'documentos',
+    accion: noAplica ? 'marcar_no_aplica' : 'revertir_a_pendiente',
+    entidadId: docId,
+  });
 }

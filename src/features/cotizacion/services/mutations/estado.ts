@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
 /**
@@ -47,6 +48,12 @@ export async function updateEstadoCotizacion(
     .update(update)
     .eq("id", id);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "cambiar_estado",
+    entidadId: id,
+    detalles: { estado_nuevo: estado, embarque_id: embarqueId ?? null },
+  });
   // R7-FIX5: la notificación al portal del cliente la crea el trigger
   // `notificar_cotizacion_enviada` en la BD (SECURITY DEFINER e idempotente).
   // Antes se insertaba desde aquí y RLS la bloqueaba para varios roles.
