@@ -13,6 +13,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import { tcValido } from "@/lib/financial/tcValido";
 import { useCuentasBancarias } from "@/features/tesoreria";
 import { saldoDisponiblePago } from "@/features/cxp/services/pagoProveedorValidaciones";
+import { facturaSaldoInput } from "./usePagoProveedorForm.saldoInput";
 import { usePagoProveedorDerivados } from "./usePagoProveedorForm.derivados";
 import { usePagoProveedorCampos } from "./usePagoProveedorForm.estado";
 import { usePagoTcDof } from "./usePagoProveedorForm.tcDof";
@@ -100,23 +101,21 @@ export function usePagoProveedorForm(
   );
 
 
+  const facturaParaSaldo = useMemo(
+    () => (factura ? facturaSaldoInput(factura) : null),
+    [factura],
+  );
+
   const saldoDisponible = useMemo(
     () =>
       saldoDisponiblePago({
-        factura: factura
-          ? {
-              moneda: factura.moneda, saldo: factura.saldo, total: factura.total,
-              subtotal: factura.subtotal, iva: factura.iva, ieps: factura.ieps,
-              retenciones: factura.retenciones, fecha_emision: factura.fecha_emision,
-              estado_aprobacion: factura.estado_aprobacion,
-            }
-          : null,
+        factura: facturaParaSaldo,
         fecha, hoy: today, montoTexto: monto, monto: montoNum, montoEnMonedaFactura,
         moneda, tcNum, bloqueadoPorTc: false, requiereCuenta, cuenta: null,
         diffMxnTexto: diffMxn, esUsdPagadoEnMxn, modo, montoOriginalEnMonedaFactura,
       }),
     [
-      factura, fecha, today, monto, montoNum, montoEnMonedaFactura, moneda, tcNum,
+      facturaParaSaldo, fecha, today, monto, montoNum, montoEnMonedaFactura, moneda, tcNum,
       requiereCuenta, diffMxn, esUsdPagadoEnMxn, modo, montoOriginalEnMonedaFactura,
     ],
   );

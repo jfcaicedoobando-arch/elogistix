@@ -75,3 +75,30 @@ export function usePrefillMontoPago(args: {
     pagoEditarId, setMonto,
   ]);
 }
+
+/** Argumentos del cálculo de saldo disponible (moneda de la factura). */
+export interface SaldoPagoArgs {
+  factura: {
+    moneda: string;
+    saldo: number;
+    total: number;
+    subtotal: number;
+    iva: number;
+    ieps: number | null;
+    retenciones: number | null;
+    fecha_emision: string;
+    estado_aprobacion: string | null;
+  } | null;
+  fecha: string;
+  hoy: string;
+  montoTexto: string;
+  monto: number;
+  montoEnMonedaFactura: number;
+  moneda: string;
+  tcNum: number | null;
+  requiereCuenta: boolean;
+  diffMxnTexto: string;
+  esUsdPagadoEnMxn: boolean;
+  modo: "crear" | "editar";
+  montoOriginalEnMonedaFactura: number;
+}
