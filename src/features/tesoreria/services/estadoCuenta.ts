@@ -59,12 +59,16 @@ export async function fetchEstadoCuentaBancario(
     alias: String(raw.alias ?? ""),
     banco: String(raw.banco ?? ""),
     moneda: String(raw.moneda ?? "MXN"),
-    desde,
+    // La RPC recorta `desde` al corte del saldo inicial cuando el periodo
+    // pedido empieza antes del arranque de la cuenta.
+    desde: str(raw.desde) ?? desde,
     hasta,
     saldo_inicial: num(raw.saldo_inicial),
     total_entradas: num(raw.total_entradas),
     total_salidas: num(raw.total_salidas),
     saldo_final: num(raw.saldo_final),
+    fecha_saldo_inicial: str(raw.fecha_saldo_inicial),
+    movimientos_previos_corte: num(raw.movimientos_previos_corte),
     movimientos: movs.map((m) => mapMovimiento(m as Record<string, unknown>)),
   };
 }
