@@ -92,6 +92,11 @@ export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): 
       p_expected_updated_at: input.expectedUpdatedAt ?? null,
     }),
   );
+  await registrarBitacoraEmbarque({
+    accion: "editar_embarque",
+    entidadId: input.id,
+    entidadNombre: embarqueSinCreador.expediente ?? undefined,
+  });
 }
 // RPCs de estado (avanzar / reabrir) viven en `embarqueEstadoRpc.ts` desde
 // v13.336.3 (límite Power-of-10 de 200 líneas). Se re-exportan aquí.
@@ -150,6 +155,10 @@ export async function eliminarEmbarqueRpc(embarqueId: string): Promise<void> {
     if (bloqueado) throw bloqueado;
     throw err;
   }
+  await registrarBitacoraEmbarque({
+    accion: "eliminar_embarque",
+    entidadId: embarqueId,
+  });
 }
 
 // Mutaciones directas (update de columnas + inserción de notas) viven en

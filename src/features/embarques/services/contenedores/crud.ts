@@ -65,7 +65,13 @@ export async function crearMuchos(
     .insert(rows)
     .select();
   if (error) throw traducirErrorContenedorDuplicado(error);
-  return (data ?? []) as EmbarqueContenedor[];
+  const resultado = (data ?? []) as EmbarqueContenedor[];
+  await registrarBitacoraEmbarque({
+    accion: "crear_contenedores",
+    entidadId: embarqueId,
+    detalles: { total: resultado.length },
+  });
+  return resultado;
 }
 
 /**
@@ -85,7 +91,13 @@ export async function reemplazarTodos(
       .eq("embarque_id", embarqueId)
       .is("deleted_at", null),
   );
-  return crearMuchos(embarqueId, borradores);
+  const resultado = await crearMuchos(embarqueId, borradores);
+  await registrarBitacoraEmbarque({
+    accion: "reemplazar_contenedores",
+    entidadId: embarqueId,
+    detalles: { total: resultado.length },
+  });
+  return resultado;
 }
 
 /**

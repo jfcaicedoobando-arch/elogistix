@@ -5,6 +5,7 @@
  * cliente sin depender del round-trip.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import { run, unwrapOr } from "@/lib/supabase/response";
 import { resolverTasa, type TipoIvaConcepto } from "./conceptosFacturaShared";
 import { roundMoney, subtotalLinea, calcularIVA } from "@/lib/financial/financialUtils";
@@ -56,4 +57,10 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
       })
       .eq("id", facturaId),
   );
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "recalcular_totales_factura",
+    entidadId: facturaId,
+    detalles: { subtotal: subtotalR, iva: ivaR, retIsr: retIsrR, retIva: retIvaR, total: totalR },
+  });
 }

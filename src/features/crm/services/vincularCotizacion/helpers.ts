@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { fetchEtapasPipelineActivas } from "@/features/crm/services/etapas";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface AuthLite { id?: string; email?: string }
 
@@ -56,4 +57,10 @@ export async function setCotizacionOportunidad(cotizacionId: string, oportunidad
     .update({ oportunidad_id: oportunidadId })
     .eq("id", cotizacionId);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "crm",
+    accion: "vincular_cotizacion_oportunidad",
+    entidadId: oportunidadId,
+    detalles: { cotizacion_id: cotizacionId },
+  });
 }

@@ -3,6 +3,7 @@
  * Capa de I/O extraída de `hooks/crm/automatizacionesEtapaActions.ts`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import { crearNotificacionSilencioso } from "./notificaciones";
 
 function isoDaysFromNow(d: number): string {
@@ -69,7 +70,7 @@ export async function notifyVendedorMovido(ctx: AutomationCtx): Promise<void> {
 
 export async function crearTareaGanada(ctx: AutomationCtx): Promise<void> {
   if (ctx.etapa.tipo !== "ganada" || !ctx.responsableId) return;
-  await supabase.from("crm_actividades").insert({
+  const { error } = await supabase.from("crm_actividades").insert({
     tipo: "tarea",
     asunto: "Generar cotización en firme",
     descripcion: `Oportunidad ganada: ${ctx.op.nombre}`,
@@ -80,11 +81,19 @@ export async function crearTareaGanada(ctx: AutomationCtx): Promise<void> {
     responsable_email: ctx.responsableEmail,
     created_by: ctx.userId,
   });
+  if (!error) {
+    await registrarActividad({
+      modulo: "crm",
+      accion: "crear_tarea_cotizacion_en_firme",
+      entidadId: ctx.op.id,
+      entidadNombre: ctx.op.nombre,
+    });
+  }
 }
 
 export async function cancelarActividadesPerdida(ctx: AutomationCtx): Promise<void> {
   if (ctx.etapa.tipo !== "perdida") return;
-  await supabase
+  const { error } = await supabase
     .from("crm_actividades")
     .update({
       fecha_completada: new Date().toISOString(),
@@ -93,11 +102,19 @@ export async function cancelarActividadesPerdida(ctx: AutomationCtx): Promise<vo
     .eq("entidad_tipo", "oportunidad")
     .eq("entidad_id", ctx.op.id)
     .is("fecha_completada", null);
+  if (!error) {
+    await registrarActividad({
+      modulo: "crm",
+      accion: "cancelar_actividades_oportunidad_perdida",
+      entidadId: ctx.op.id,
+      entidadNombre: ctx.op.nombre,
+    });
+  }
 }
 
 export async function crearTareaSeguimiento(ctx: AutomationCtx): Promise<void> {
   if (ctx.etapa.tipo !== "abierta" || !ctx.etapa.crea_tarea_seguimiento || !ctx.responsableId) return;
-  await supabase.from("crm_actividades").insert({
+  const { error } = await supabase.from("crm_actividades").insert({
     tipo: "tarea",
     asunto: `Seguimiento: ${ctx.etapa.nombre}`,
     descripcion: `Seguimiento programado tras pasar a "${ctx.etapa.nombre}".`,
@@ -108,6 +125,14 @@ export async function crearTareaSeguimiento(ctx: AutomationCtx): Promise<void> {
     responsable_email: ctx.responsableEmail,
     created_by: ctx.userId,
   });
+  if (!error) {
+    await registrarActividad({
+      modulo: "crm",
+      accion: "crear_tarea_seguimiento_etapa",
+      entidadId: ctx.op.id,
+      entidadNombre: ctx.op.nombre,
+    });
+  }
 }
 
 

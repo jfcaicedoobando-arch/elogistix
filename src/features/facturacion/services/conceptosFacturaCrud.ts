@@ -10,6 +10,7 @@
  * El recálculo agregado a `facturas` vive en `./recalcularTotalesFactura`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Database } from "@/integrations/supabase/types";
 import { run, unwrapOr } from "@/lib/supabase/response";
 import { resolverTasa, type TipoIvaConcepto } from "./conceptosFacturaShared";
@@ -104,6 +105,13 @@ export async function agregarConceptoFactura(params: {
     }),
   );
   await recalcularTotalesFactura(params.facturaId);
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "agregar_concepto_factura",
+    entidadId: params.facturaId,
+    entidadNombre: linea.descripcion,
+    detalles: { total: linea.total },
+  });
 }
 
 export async function actualizarConceptoFactura(params: {
@@ -116,6 +124,13 @@ export async function actualizarConceptoFactura(params: {
     supabase.from("conceptos_factura").update(linea).eq("id", params.conceptoId),
   );
   await recalcularTotalesFactura(params.facturaId);
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "actualizar_concepto_factura",
+    entidadId: params.facturaId,
+    entidadNombre: linea.descripcion,
+    detalles: { conceptoId: params.conceptoId, total: linea.total },
+  });
 }
 
 export async function eliminarConceptoFactura(params: {
@@ -130,6 +145,12 @@ export async function eliminarConceptoFactura(params: {
   });
   if (error) throw error;
   await recalcularTotalesFactura(params.facturaId);
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "eliminar_concepto_factura",
+    entidadId: params.facturaId,
+    detalles: { conceptoId: params.conceptoId },
+  });
 }
 
 export async function fetchConceptosFactura(facturaId: string): Promise<ConceptoFacturaRow[]> {

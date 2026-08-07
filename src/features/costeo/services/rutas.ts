@@ -108,19 +108,11 @@ export async function insertCosteoRuta(
 }
 
 export async function deleteCosteoRuta(id: string): Promise<void> {
-  const { data: existente } = await supabase
-    .from("costeo_rutas")
-    .select("puerto_origen_id, puerto_destino_id")
-    .eq("id", id)
-    .maybeSingle();
   const { error } = await supabase.from("costeo_rutas").delete().eq("id", id);
   if (error) throw error;
   await registrarActividad({
     modulo: "costeo",
     accion: "eliminar_ruta_costeo",
     entidadId: id,
-    entidadNombre: existente
-      ? await nombreRuta(existente.puerto_origen_id, existente.puerto_destino_id)
-      : undefined,
   });
 }

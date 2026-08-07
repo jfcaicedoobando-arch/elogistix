@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 type CotizacionInsert = Database["public"]["Tables"]["cotizaciones"]["Insert"];
 
@@ -37,6 +38,13 @@ export async function insertCotizacionDesdeOportunidad(
     .select("id")
     .single();
   if (error) throw error;
+  await registrarActividad({
+    modulo: "crm",
+    accion: "crear_cotizacion_desde_oportunidad",
+    entidadId: input.oportunidad.id,
+    entidadNombre: input.folio,
+    detalles: { cotizacion_id: data.id },
+  });
   return { id: data.id };
 }
 
@@ -50,4 +58,10 @@ export async function actualizarEtapaOportunidad(
     .update({ etapa_id: etapaId, probabilidad })
     .eq("id", oportunidadId);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "crm",
+    accion: "actualizar_etapa_oportunidad_desde_cotizacion",
+    entidadId: oportunidadId,
+    detalles: { etapa_id: etapaId, probabilidad },
+  });
 }

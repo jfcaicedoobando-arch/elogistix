@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoTarifa } from "@/features/costeo/types";
 import { run, unwrap } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface TarifaRecargoInput {
   concepto: string;
@@ -60,6 +61,11 @@ function sanitizeTarifaDates<T extends { vigente_desde: string; vigente_hasta: s
   };
 }
 
+/** Etiqueta legible de una tarifa para bitácora (sin joins extra). */
+function nombreTarifa(input: Pick<TarifaInput, "ruta_id" | "vigente_desde" | "vigente_hasta">): string {
+  return `Ruta ${input.ruta_id} (${input.vigente_desde} → ${input.vigente_hasta})`;
+}
+
 export async function insertTarifaConRecargos(
   organizationId: string,
   input: TarifaInput,
@@ -83,6 +89,12 @@ export async function insertTarifaConRecargos(
   if (rows.length > 0) {
     await run(supabase.from("costeo_tarifa_recargos").insert(rows));
   }
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "crear_tarifa",
+    entidadId: data.id,
+    entidadNombre: nombreTarifa(input),
+  });
   return data as CosteoTarifa;
 }
 
@@ -106,12 +118,28 @@ export async function updateTarifaConRecargos(
   if (rows.length > 0) {
     await run(supabase.from("costeo_tarifa_recargos").insert(rows));
   }
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "editar_tarifa",
+    entidadId: id,
+    entidadNombre: nombreTarifa(input),
+  });
 }
 
 export async function marcarTarifaReemplazada(id: string): Promise<void> {
   await run(supabase.from("costeo_tarifas").update({ estado: "reemplazada" }).eq("id", id));
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "reemplazar_tarifa",
+    entidadId: id,
+  });
 }
 
 export async function deleteTarifa(id: string): Promise<void> {
   await run(supabase.from("costeo_tarifas").delete().eq("id", id));
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "eliminar_tarifa",
+    entidadId: id,
+  });
 }

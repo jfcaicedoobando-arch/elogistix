@@ -6,6 +6,7 @@
  * y reporta las incidencias (pagos sin movimiento o con importe distinto).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface FacturaConciliada {
   facturaId: string;
@@ -123,5 +124,16 @@ export async function conciliarTesoreriaProveedor(
     p_factura_id: input.facturaId ?? undefined,
   });
   if (error) throw error;
-  return mapReporteConciliacion(data);
+  const reporte = mapReporteConciliacion(data);
+  await registrarActividad({
+    modulo: "tesoreria",
+    accion: "conciliar_tesoreria_proveedor",
+    entidadId: input.proveedorId ?? input.facturaId ?? null,
+    detalles: {
+      facturasRevisadas: reporte.facturasRevisadas,
+      facturasActualizadas: reporte.facturasActualizadas,
+      incidencias: reporte.incidencias.length,
+    },
+  });
+  return reporte;
 }
