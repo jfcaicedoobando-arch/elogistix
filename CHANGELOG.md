@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.452.2] - 2026-08-07
+- **Calidad interna (CI):** la pantalla de Cuentas bancarias se dividió en piezas más chicas (tarjeta de cuenta y campos del formulario) para cumplir el límite de 200 líneas por archivo; sin cambios visibles para el usuario.
+
 ## [13.452.1] - 2026-08-07
 - **Calidad interna (CI):** el aviso de "fecha anterior al arranque de la cuenta" ahora es un componente compartido, así lo pueden usar tanto pagos a proveedor como cobros de factura sin romper las reglas de arquitectura.
 - Se simplificó el formulario de pago a proveedor separando el selector de cuenta bancaria (misma pantalla, menos complejidad).
