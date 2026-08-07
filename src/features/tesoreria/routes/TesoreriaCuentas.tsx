@@ -13,7 +13,7 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PageContainer } from "@/components/shared/PageContainer";
 import {
   useTesoreriaCuentasController,
@@ -110,7 +110,7 @@ export default function TesoreriaCuentas() {
                 )}
                 <p className="text-label text-muted-foreground">
                   Saldo inicial {formatCurrency(Number(c.saldo_inicial), c.moneda)} al{" "}
-                  {formatDateMx(c.fecha_saldo_inicial)}
+                  {formatDate(c.fecha_saldo_inicial)}
                 </p>
                 {!c.activa && <p className="text-xs text-muted-foreground italic">Cuenta inactiva</p>}
                 <div className="pt-2">
