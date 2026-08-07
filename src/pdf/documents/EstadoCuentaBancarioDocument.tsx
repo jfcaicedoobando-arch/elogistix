@@ -7,7 +7,16 @@ import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import { COLORS } from "@/pdf/theme/tokens";
-import type { FilaEstadoCuentaExport } from "@/features/tesoreria/services/estadoCuentaExport";
+/** Fila ya formateada (contrato local del PDF, sin depender del feature). */
+export interface FilaEstadoCuentaExport {
+  fecha: string;
+  concepto: string;
+  referencia: string;
+  salida: string;
+  entrada: string;
+  saldo: string;
+  estado: string;
+}
 
 interface ResumenPdf {
   periodo: string;
