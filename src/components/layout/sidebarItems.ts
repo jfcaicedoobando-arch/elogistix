@@ -39,6 +39,8 @@ import {
   ArrowRightLeft,
   CalendarCheck,
   Wallet,
+  FileText,
+
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
