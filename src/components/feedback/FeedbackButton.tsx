@@ -1,5 +1,4 @@
 import { MessageSquarePlus } from "lucide-react";
-import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/contexts/AuthContext";
