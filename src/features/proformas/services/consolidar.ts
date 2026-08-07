@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { ProformaRow } from "./types";
 import { fromDb } from "@/lib/supabase/cast";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ConsolidarProformasParams {
   organizationId: string;
@@ -44,5 +45,17 @@ export async function consolidarProformas(params: ConsolidarProformasParams): Pr
   });
   if (error) throw error;
   if (!data) throw new Error("La consolidación no devolvió la proforma resultante");
-  return fromDb<ProformaRow>(data);
+  const proforma = fromDb<ProformaRow>(data);
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "Consolidó proformas",
+    entidadId: proforma.id,
+    entidadNombre: proforma.numero,
+    detalles: {
+      proformaIds: params.proformaIds,
+      expediente: params.expediente,
+      cliente: params.clienteNombre,
+    },
+  });
+  return proforma;
 }

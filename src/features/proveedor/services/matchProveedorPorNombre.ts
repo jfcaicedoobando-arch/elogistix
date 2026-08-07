@@ -6,6 +6,7 @@
  * única. Si hay ambigüedad no se vincula nada: preferimos que el operador elija.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ProveedorMatch {
   id: string;
@@ -134,4 +135,12 @@ export async function registrarAliasProveedor(input: {
   });
   // 23505 = ya existe ese alias: es el estado deseado, no un error de negocio.
   if (error && error.code !== "23505") throw error;
+  if (!error) {
+    await registrarActividad({
+      modulo: "proveedores",
+      accion: "Creó alias de proveedor",
+      entidadId: input.proveedorId,
+      entidadNombre: input.nombreDocumento,
+    });
+  }
 }

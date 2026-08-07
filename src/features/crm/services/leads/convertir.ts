@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { type CrmLeadRow } from "@/features/crm/domain/leads/constants";
 import { type AuthLite } from "@/features/crm/domain/leads/leadPayload";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ResolveClienteParams {
   lead: CrmLeadRow;
@@ -102,6 +103,14 @@ export async function convertirLead(
     })
     .eq("id", params.lead.id);
   if (errLead) throw errLead;
+
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Convirtió lead a oportunidad",
+    entidadId: params.lead.id,
+    entidadNombre: params.lead.empresa,
+    detalles: { oportunidadId: opNueva.id, clienteId },
+  });
 
   return { clienteId, oportunidadId: opNueva.id };
 }

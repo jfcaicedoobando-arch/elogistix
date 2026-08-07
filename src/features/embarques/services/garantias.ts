@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { EstadoGarantia, GarantiaContenedor } from "../types/garantia";
 import { mapApiError } from "./garantiasErrors";
+import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
 const GARANTIA_COLS =
   "id, embarque_id, embarque_contenedor_id, naviera_id, monto_deposito_usd, tiene_carta_garantia, estado, fecha_deposito, fecha_liberacion, fecha_limite_devolucion, referencia_deposito, notas";
@@ -46,6 +47,11 @@ export async function updateGarantia(input: UpdateGarantiaInput): Promise<void> 
     p_notas: input.notas ?? null,
   });
   if (error) throw mapApiError(error);
+  await registrarBitacoraEmbarque({
+    accion: "Actualizó garantía de contenedor",
+    entidadId: input.id,
+    detalles: { estado: input.estado, montoDepositoUsd: input.monto_deposito_usd, fechaDeposito: input.fecha_deposito, fechaLiberacion: input.fecha_liberacion },
+  });
 }
 
 /**
@@ -61,6 +67,12 @@ export async function refrescarGarantiasDesdeTarifa(embarqueId: string): Promise
   ) => Promise<{ data: unknown; error: { message?: string } | null }>;
   const { data, error } = await rpc("refrescar_garantia_desde_tarifa", { p_embarque_id: embarqueId });
   if (error) throw mapApiError(error);
-  return typeof data === "number" ? data : Number(data ?? 0);
+  const filasActualizadas = typeof data === "number" ? data : Number(data ?? 0);
+  await registrarBitacoraEmbarque({
+    accion: "Refrescó garantías desde tarifa",
+    entidadId: embarqueId,
+    detalles: { filasActualizadas },
+  });
+  return filasActualizadas;
 }
 

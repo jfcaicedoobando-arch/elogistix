@@ -8,6 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
 import { getErrorMessage } from "@/lib/errors";
+import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
 
 export interface AvanzarEstadoEmbarqueInput {
@@ -32,6 +33,11 @@ export async function avanzarEstadoEmbarqueRpc(
       p_request_id: input.requestId,
     }),
   );
+  await registrarBitacoraEmbarque({
+    accion: "Avanzó estado de embarque",
+    entidadId: input.embarqueId,
+    detalles: { nuevoEstado: input.nuevoEstado, tipoEvento: input.tipoEvento, descripcionEvento: input.descripcionEvento },
+  });
 }
 
 export interface ReabrirEmbarqueInput {

@@ -4,6 +4,7 @@
  * (descargar ZIP, marcar como enviada).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface FacturaParaZip {
   id: string;
@@ -29,4 +30,10 @@ export async function marcarFacturasComoEnviadas(ids: string[]): Promise<void> {
     .update({ enviada_cliente_at: new Date().toISOString() })
     .in("id", ids);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "Envió facturas por correo",
+    entidadNombre: `${ids.length} factura(s)`,
+    detalles: { facturaIds: ids },
+  });
 }

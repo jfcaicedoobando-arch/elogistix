@@ -9,6 +9,7 @@ import {
   parseOrThrow,
 } from "@/lib/validation/mutationSchemas";
 import { toEmbarqueBloqueadoError } from "./embarqueBloqueadoError";
+import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 export { EmbarqueBloqueadoError, type MotivosBloqueoEmbarque } from "./embarqueBloqueadoError";
 
 // Schemas para validar los payloads de retorno de las RPCs.
@@ -45,7 +46,14 @@ export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ 
     }),
   );
   rpcIdSchema.parse(data); // valida en runtime; lanza ZodError si shape inválido
-  return fromDb<{ id: string }>(data);
+  const resultado = fromDb<{ id: string }>(data);
+  await registrarBitacoraEmbarque({
+    accion: "Creó embarque",
+    entidadId: resultado.id,
+    entidadNombre: input.embarque.expediente ?? undefined,
+    detalles: { modo: input.embarque.modo, tipo: input.embarque.tipo },
+  });
+  return resultado;
 }
 
 export interface ActualizarEmbarqueRpcInput {
@@ -114,7 +122,14 @@ export async function duplicarEmbarqueRpc(
     }),
   );
   rpcIdExpedienteArraySchema.parse(data); // valida shape; lanza ZodError si inválido
-  return fromDb<{ id: string; expediente: string }[]>(data);
+  const resultado = fromDb<{ id: string; expediente: string }[]>(data);
+  await registrarBitacoraEmbarque({
+    accion: "Duplicó embarque",
+    entidadId: embarqueOrigenId,
+    entidadNombre: resultado.map((r) => r.expediente).join(", "),
+    detalles: { embarqueOrigenId, copias: copias.length, expedientesNuevos: resultado.map((r) => r.expediente) },
+  });
+  return resultado;
 }
 
 export async function eliminarEmbarqueRpc(embarqueId: string): Promise<void> {

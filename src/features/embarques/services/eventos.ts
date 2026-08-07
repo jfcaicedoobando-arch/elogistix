@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Enums } from '@/integrations/supabase/types';
+import { registrarBitacoraEmbarque } from './bitacoraEmbarques';
 
 export interface EventoEmbarqueRow {
   id: string;
@@ -44,4 +45,9 @@ export async function insertEventoEmbarque(input: {
     },
   ]);
   if (error) throw error;
+  await registrarBitacoraEmbarque({
+    accion: "Registró evento de tracking en embarque",
+    entidadId: input.embarqueId,
+    detalles: { tipo: input.tipo, ubicacion: input.ubicacion, fecha: input.fecha },
+  });
 }

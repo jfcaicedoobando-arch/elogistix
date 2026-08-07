@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
+import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
 export type MonedaSeguro = "MXN" | "USD" | "EUR";
 
@@ -71,7 +72,13 @@ export async function createSeguroEmbarque(input: SeguroEmbarqueInput): Promise<
       .single(),
   );
   // SAFE-CAST: COLUMNS lista explícita mapea 1:1 a SeguroEmbarque.
-  return data as unknown as SeguroEmbarque;
+  const seguro = data as unknown as SeguroEmbarque;
+  await registrarBitacoraEmbarque({
+    accion: "Creó seguro de embarque",
+    entidadId: input.embarque_id,
+    detalles: { seguroId: seguro.id, aseguradora: input.aseguradora, numeroPoliza: input.numero_poliza, sumaAseguradaUsd: input.suma_asegurada },
+  });
+  return seguro;
 }
 
 export async function updateSeguroEmbarque(
@@ -79,6 +86,11 @@ export async function updateSeguroEmbarque(
   patch: Partial<SeguroEmbarqueInput>,
 ): Promise<void> {
   await run(supabase.from("seguros_embarque").update(patch).eq("id", id));
+  await registrarBitacoraEmbarque({
+    accion: "Actualizó seguro de embarque",
+    entidadId: patch.embarque_id,
+    detalles: { seguroId: id, cambios: patch },
+  });
 }
 
 export async function deleteSeguroEmbarque(id: string): Promise<void> {
@@ -88,4 +100,8 @@ export async function deleteSeguroEmbarque(id: string): Promise<void> {
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", id),
   );
+  await registrarBitacoraEmbarque({
+    accion: "Eliminó seguro de embarque",
+    detalles: { seguroId: id },
+  });
 }

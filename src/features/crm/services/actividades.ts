@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ilikePattern } from "@/lib/search/ilike";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Database } from "@/integrations/supabase/types";
 
 export type CrmActividadRow = Database["public"]["Tables"]["crm_actividades"]["Row"];
@@ -67,7 +68,7 @@ export async function crearActividad(
   input: CrearActividadInput,
   user: { id?: string; email?: string } | null,
 ): Promise<{ id: string }> {
-  return unwrap(
+  const creada = (await unwrap(
     supabase
       .from("crm_actividades")
       .insert({
@@ -80,7 +81,15 @@ export async function crearActividad(
       })
       .select("id")
       .single(),
-  ) as Promise<{ id: string }>;
+  )) as { id: string };
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Creó actividad",
+    entidadId: creada.id,
+    entidadNombre: input.asunto,
+    detalles: { tipo: input.tipo, entidad_tipo: input.entidad_tipo, entidad_id: input.entidad_id },
+  });
+  return creada;
 }
 
 export async function completarActividad(input: { id: string; resultado?: string }): Promise<void> {
@@ -90,6 +99,7 @@ export async function completarActividad(input: { id: string; resultado?: string
       .update({ fecha_completada: new Date().toISOString(), resultado: input.resultado ?? "" })
       .eq("id", input.id),
   );
+  await registrarActividad({ modulo: "crm", accion: "Completó actividad", entidadId: input.id });
 }
 
 export async function posponerActividad(input: {
@@ -105,6 +115,7 @@ export async function posponerActividad(input: {
       .update({ fecha_programada: base.toISOString() })
       .eq("id", input.id),
   );
+  await registrarActividad({ modulo: "crm", accion: "Pospuso actividad", entidadId: input.id, detalles: { dias: input.dias } });
 }
 
 
@@ -115,6 +126,7 @@ export async function actualizarActividadNotas(input: { id: string; resultado: s
       .update({ resultado: input.resultado })
       .eq("id", input.id),
   );
+  await registrarActividad({ modulo: "crm", accion: "Actualizó notas de actividad", entidadId: input.id });
 }
 
 

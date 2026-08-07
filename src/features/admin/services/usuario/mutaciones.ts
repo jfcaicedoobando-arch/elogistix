@@ -6,6 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/appRole";
 import { fetchUsuariosOrganizacion, type UserRow } from "./listado";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface CreateUserParams {
   email: string;
@@ -56,6 +57,11 @@ export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown
   });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "Eliminó usuario",
+    entidadId: userId,
+  });
   return data;
 }
 
@@ -125,6 +131,14 @@ export async function createUserViaEdgeFunction(
     );
   }
 
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "Creó usuario",
+    entidadId: nuevoId,
+    entidadNombre: emailNormalizado,
+    detalles: { role: params.role, orgId: params.orgId ?? null },
+  });
+
   return body;
 }
 
@@ -139,6 +153,12 @@ export async function quitarDeOrganizacion(
     .eq("user_id", userId)
     .eq("organization_id", organizationId);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "Quitó usuario de organización",
+    entidadId: userId,
+    detalles: { organizationId },
+  });
 }
 
 /** U-03: dispara el correo de restablecimiento de contraseña para el usuario. */
@@ -155,4 +175,9 @@ export async function enviarResetPassword(userId: string): Promise<void> {
   if (res.error) throw new Error(res.error.message || "Error al enviar el correo");
   const body = res.data as { error?: string };
   if (body?.error) throw new Error(body.error);
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "Envió correo de restablecimiento de contraseña",
+    entidadId: userId,
+  });
 }

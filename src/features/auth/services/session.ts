@@ -3,6 +3,7 @@
  * los contexts/hooks no toquen el cliente Supabase directamente.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Session, AuthChangeEvent, Subscription } from "@supabase/supabase-js";
 import type { AppRole } from "@/types/appRole";
 
@@ -22,7 +23,17 @@ export async function getCurrentSession(): Promise<Session | null> {
   return data.session ?? null;
 }
 
-export { signOutCurrentSession } from "@/lib/auth/signOut";
+import { signOutCurrentSession as signOutSesionBase } from "@/lib/auth/signOut";
+
+/**
+ * Cierra la sesión actual. Registra la bitácora ANTES de invocar
+ * `supabase.auth.signOut()` para que exista un usuario autenticado
+ * al momento de escribir el registro.
+ */
+export async function signOutCurrentSession(): Promise<void> {
+  await registrarActividad({ modulo: "auth", accion: "Cerró sesión" });
+  await signOutSesionBase();
+}
 
 export interface CachedOrganization {
   id: string;

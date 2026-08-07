@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { unwrapOr, run } from "@/lib/supabase/response";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -171,7 +172,19 @@ export async function fetchExchangeRates(fecha?: string): Promise<ExchangeRates>
 
 
 
-/** Q-13: edición de código/nombre de una naviera desde el catálogo admin. */
+/**
+ * Q-13: edición de código/nombre de una naviera desde el catálogo admin.
+ * NOTA: alta/activación/baja de navieras, puertos y tipos de contenedor ya
+ * se registran en bitácora desde `createCatalogHooks` (hook compartido); no
+ * se duplica aquí. `updateNaviera` no pasa por ese hook, así que se registra.
+ */
 export async function updateNaviera(id: string, input: { code: string; name: string }): Promise<void> {
   await run(supabase.from("navieras").update(input).eq("id", id));
+  await registrarActividad({
+    modulo: "catalogos",
+    accion: "editar_navieras",
+    entidadId: id,
+    entidadNombre: input.name,
+    detalles: { code: input.code },
+  });
 }
