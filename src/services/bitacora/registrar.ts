@@ -9,7 +9,7 @@
  * migrarán los callers en olas subsecuentes.
  *
  * - Fire-and-forget: nunca lanza — la operación de negocio manda.
- * - Toma `auth.getUser` internamente para no repetirlo en cada caller.
+ * - Toma la sesión (`auth.getSession`) internamente para no repetirlo en cada caller.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
