@@ -71,14 +71,16 @@ export async function insertPlantilla(input: InsertPlantillaInput): Promise<Coti
     .select()
     .single();
   if (error) throw error;
+  // SAFE-CAST: mismo motivo que `fetchPlantillas`.
+  const plantilla = data as unknown as CotizacionPlantilla;
   await registrarActividad({
     modulo: "cotizaciones",
     accion: "crear_plantilla_cotizacion",
-    entidadId: (data as unknown as CotizacionPlantilla).id,
+    entidadId: plantilla.id,
     entidadNombre: input.nombre.trim(),
   });
-  // SAFE-CAST: mismo motivo que `fetchPlantillas`.
-  return data as unknown as CotizacionPlantilla;
+  return plantilla;
+
 }
 
 export async function aplicarPlantillaRpc(plantillaId: string): Promise<PlantillaPayload> {
