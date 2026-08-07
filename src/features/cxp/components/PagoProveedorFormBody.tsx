@@ -16,7 +16,7 @@ import { referenciaHint } from "./pagoProveedorHelpers";
 import { formatNumber } from "@/lib/formatters";
 import { PagoImpactoPreview } from "./PagoImpactoPreview";
 import { TcPagoField } from "./TcPagoField";
-import { AvisoFechaPreviaCorte } from "@/components/shared/AvisoFechaPreviaCorte";
+import { PagoProveedorCuentaField } from "./PagoProveedorCuentaField";
 import type {
   Moneda,
   PagoProveedorFormBodyProps as Props,
