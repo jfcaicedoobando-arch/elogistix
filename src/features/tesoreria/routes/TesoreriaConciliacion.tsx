@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import {
   type MovimientoManualInput,
 } from "@/features/tesoreria/domain/movimientoManual";
-import { useCuentasBancarias, useMovimientos, useImportarMovimientos, useConciliarPago, useConciliacionResumen, useRegistrarMovimientoManual } from "@/features/tesoreria/hooks";
+import { useCuentasBancarias, useMovimientos, useImportarMovimientos, useConciliarPago, useConciliacionResumen, useRegistrarMovimientoManual, useSaldosCuentas } from "@/features/tesoreria/hooks";
 import { useAutoConciliarExactos } from "@/features/tesoreria/hooks/useAutoConciliarExactos";
 import { ResumenConciliacionCards } from "@/features/tesoreria/components/ResumenConciliacionCards";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
@@ -43,6 +43,7 @@ export default function TesoreriaConciliacion() {
 
   const { data: movs = [], isLoading, isError: movsError, refetch: refetchMovs } = useMovimientos(cuentaId ? { cuenta_bancaria_id: cuentaId, estado } : null);
   const { data: resumen, isLoading: resumenLoading } = useConciliacionResumen(cuentaId || null);
+  const { data: saldos = [] } = useSaldosCuentas();
   const importar = useImportarMovimientos();
   const conciliarPago = useConciliarPago();
   const registrarManual = useRegistrarMovimientoManual();
@@ -126,6 +127,7 @@ export default function TesoreriaConciliacion() {
         <ResumenConciliacionCards
           resumen={resumen}
           moneda={cuentaActual?.moneda ?? "MXN"}
+          saldo={saldos.find((s) => s.id === cuentaId)?.saldo}
           isLoading={resumenLoading}
         />
         <div className="grid lg:grid-cols-3 gap-4">

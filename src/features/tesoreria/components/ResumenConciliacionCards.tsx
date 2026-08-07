@@ -11,11 +11,18 @@ interface Props {
   resumen?: ConciliacionResumen;
   moneda: string;
   isLoading: boolean;
+  /** Saldo actual de la cuenta (saldo inicial + abonos - cargos). */
+  saldo?: number;
 }
 
-export function ResumenConciliacionCards({ resumen, moneda, isLoading }: Props) {
+export function ResumenConciliacionCards({ resumen, moneda, isLoading, saldo }: Props) {
   const items: Array<{ label: string; valor: string; tone?: string }> = resumen
     ? [
+        {
+          label: "Saldo actual",
+          valor: saldo === undefined ? "—" : formatCurrency(saldo, moneda),
+          tone: saldo !== undefined && saldo < 0 ? "text-destructive" : undefined,
+        },
         { label: "Movimientos", valor: String(resumen.total_movimientos) },
         { label: "Pendientes", valor: String(resumen.pendientes), tone: "text-warning" },
         { label: "Conciliados", valor: String(resumen.conciliados), tone: "text-success" },
@@ -27,9 +34,9 @@ export function ResumenConciliacionCards({ resumen, moneda, isLoading }: Props) 
 
   return (
     <Card>
-      <CardContent density="compact" className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <CardContent density="compact" className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         {isLoading || !resumen
-          ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
+          ? Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
           : items.map((it) => (
               <div key={it.label}>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">{it.label}</p>
