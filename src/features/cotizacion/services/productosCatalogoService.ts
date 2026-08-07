@@ -6,6 +6,7 @@
  */
 import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ProductoCatalogo {
   id: string;
@@ -66,6 +67,12 @@ export async function crearProductoCatalogo(
     .select("id, patron, clave_sat, tipo_iva, tasa_iva_default, clave_unidad_sat, nombre_unidad")
     .single();
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "crear_producto_catalogo",
+    entidadId: data.id,
+    entidadNombre: data.patron,
+  });
   return {
     id: data.id,
     nombre: data.patron,

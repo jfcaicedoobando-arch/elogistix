@@ -18,8 +18,12 @@ export function useBitacora(filtros: FiltrosBitacora = {}) {
     queryKey: queryKeys.bitacora.list(filtros as Record<string, unknown>),
     queryFn: () => fetchBitacora(filtros),
     placeholderData: (prev) => prev,
+    // La bitácora es histórica: no necesita refetch al recuperar el foco.
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }
+
 
 
 export function useRegistrarActividad() {

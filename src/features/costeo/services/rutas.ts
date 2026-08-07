@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoRuta } from "@/features/costeo/types";
 import { todayLocalISO } from "@/lib/date/today";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 interface RawTarifaAggregate {
   estado: string;
@@ -74,6 +75,15 @@ function isUniqueViolation(error: unknown): boolean {
   return /costeo_rutas.*puerto/i.test(msg) || /duplicate key/i.test(msg);
 }
 
+async function nombreRuta(puertoOrigenId: string, puertoDestinoId: string): Promise<string> {
+  const { data } = await supabase
+    .from("puertos")
+    .select("id, name")
+    .in("id", [puertoOrigenId, puertoDestinoId]);
+  const porId = new Map((data ?? []).map((p: { id: string; name: string }) => [p.id, p.name]));
+  return `${porId.get(puertoOrigenId) ?? puertoOrigenId} → ${porId.get(puertoDestinoId) ?? puertoDestinoId}`;
+}
+
 export async function insertCosteoRuta(
   organizationId: string,
   input: CosteoRutaInput,
@@ -87,10 +97,22 @@ export async function insertCosteoRuta(
     if (isUniqueViolation(error)) throw new CosteoRutaDuplicadaError();
     throw error;
   }
-  return data as CosteoRuta;
+  const ruta = data as CosteoRuta;
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "crear_ruta_costeo",
+    entidadId: ruta.id,
+    entidadNombre: await nombreRuta(input.puerto_origen_id, input.puerto_destino_id),
+  });
+  return ruta;
 }
 
 export async function deleteCosteoRuta(id: string): Promise<void> {
   const { error } = await supabase.from("costeo_rutas").delete().eq("id", id);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "eliminar_ruta_costeo",
+    entidadId: id,
+  });
 }

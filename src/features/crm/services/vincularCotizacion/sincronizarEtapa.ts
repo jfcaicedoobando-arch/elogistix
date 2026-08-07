@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { fetchEtapasPipelineActivas } from "@/features/crm/services/etapas";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 /**
  * Mapea el estado de una cotización a la etapa CRM correspondiente y la aplica
@@ -55,4 +56,10 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
     .update(patch)
     .eq("id", input.oportunidadId);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "crm",
+    accion: "sincronizar_etapa_por_estado_cotizacion",
+    entidadId: input.oportunidadId,
+    detalles: { estado_cotizacion: input.estadoCotizacion, etapa_id: etapa.id },
+  });
 }

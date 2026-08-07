@@ -3,6 +3,7 @@ import type { TablesInsert } from "@/integrations/supabase/types";
 import type { CreateCotizacionInput } from "@/features/cotizacion/types";
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
 import { cotizacionUpdateSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type { CotizacionInsert } from "./payloadBuilders";
 
 type CotizacionUpdate = Partial<CotizacionInsert>;
@@ -24,4 +25,10 @@ export async function updateCotizacion(
   if (data.moneda) updatePayload.moneda = data.moneda as TablesInsert<"cotizaciones">["moneda"];
   const { error } = await supabase.from("cotizaciones").update(updatePayload).eq("id", id);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "editar_cotizacion",
+    entidadId: id,
+    detalles: { campos: Object.keys(data) },
+  });
 }

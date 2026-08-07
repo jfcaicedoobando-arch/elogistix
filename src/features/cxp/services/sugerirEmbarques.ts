@@ -9,6 +9,7 @@
  * Además expone `buscarEmbarquesPorTexto` para el modo manual del UI.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 /**
  * Estados de embarque que NO pueden recibir costos nuevos desde una factura
@@ -132,6 +133,13 @@ export async function crearConceptoCostoYVincular(
       monto: input.monto,
     });
   if (errLink) throw errLink;
+
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "vincular_embarque_sugerido",
+    entidadId: input.facturaId,
+    detalles: { embarqueId: input.embarqueId, conceptoId: cc.id, monto: input.monto },
+  });
 
   return { conceptoId: cc.id };
 }

@@ -11,6 +11,7 @@
  *  - El umbral 99% absorbe diferencias menores por redondeo / IVA proveedor.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import { esEstadoNoVinculable } from "./sugerirEmbarques";
 
 export interface ConceptoCostoAbierto {
@@ -104,5 +105,11 @@ export async function vincularFacturaAConceptos(
     .from("proveedor_facturas_conceptos")
     .insert(inserts);
   if (errIns) throw errIns;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "vincular_factura_conceptos_costo",
+    entidadId: input.facturaId,
+    detalles: { total: inserts.length },
+  });
   return { insertadas: inserts.length };
 }

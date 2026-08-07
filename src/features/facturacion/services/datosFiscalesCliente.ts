@@ -4,6 +4,7 @@
  * actualización pre-timbrado del componente `DialogTimbrarFactura`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import { unwrap, run } from "@/lib/supabase/response";
 
 export interface ClienteFiscalRow {
@@ -39,6 +40,13 @@ export async function actualizarDatosTimbradoFactura(
   patch: DatosTimbradoPatch,
 ): Promise<void> {
   await run(supabase.from("facturas").update(patch).eq("id", facturaId));
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "actualizar_datos_timbrado_factura",
+    entidadId: facturaId,
+    detalles: { ...patch },
+
+  });
 }
 
 /**
@@ -76,6 +84,12 @@ export async function guardarDefaultsTimbradoCliente(
   patch: { uso_cfdi_default?: string; forma_pago_default?: string; metodo_pago_default?: string },
 ): Promise<void> {
   await run(supabase.from("clientes").update(patch).eq("id", clienteId));
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "guardar_defaults_timbrado_cliente",
+    entidadId: clienteId,
+    detalles: patch as Record<string, unknown>,
+  });
 }
 
 export async function guardarDefaultsCcCliente(
@@ -85,6 +99,12 @@ export async function guardarDefaultsCcCliente(
   await run(
     supabase.from("clientes").update({ email_cc_default: ccEmails }).eq("id", clienteId),
   );
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "guardar_defaults_cc_cliente",
+    entidadId: clienteId,
+    detalles: { ccEmails },
+  });
 }
 
 /**
@@ -101,4 +121,10 @@ export async function guardarDefaultsDestinatariosCliente(
       .update({ email_destinatarios_default: emails })
       .eq("id", clienteId),
   );
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "guardar_defaults_destinatarios_cliente",
+    entidadId: clienteId,
+    detalles: { emails },
+  });
 }

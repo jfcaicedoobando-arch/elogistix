@@ -7,6 +7,7 @@ import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase
 import { unwrapOr, run } from "@/lib/supabase/response";
 import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type VendedoraConfigRow = Tables<"vendedora_config">;
 
@@ -52,6 +53,9 @@ export async function fetchVendedorasConfig(): Promise<VendedoraConfig[]> {
   }));
 }
 
+// Decisión: la config de % de comisión de la vendedora es un dato de
+// usuarios/roles, no un movimiento financiero en sí, así que se audita en el
+// módulo `usuarios`.
 export async function upsertVendedoraConfig(
   config: TablesInsert<"vendedora_config">,
 ): Promise<void> {
@@ -60,6 +64,12 @@ export async function upsertVendedoraConfig(
       .from("vendedora_config")
       .upsert(config, { onConflict: "organization_id,user_id" }),
   );
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "configurar_vendedora",
+    entidadId: config.user_id,
+    detalles: { porcentaje_default: config.porcentaje_default, activa: config.activa },
+  });
 }
 
 export async function updateVendedoraConfig(
@@ -67,6 +77,12 @@ export async function updateVendedoraConfig(
   changes: TablesUpdate<"vendedora_config">,
 ): Promise<void> {
   await run(supabase.from("vendedora_config").update(changes).eq("id", id));
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "actualizar_configuracion_vendedora",
+    entidadId: id,
+    detalles: { ...changes },
+  });
 }
 
 /** Usuarios de la org con rol vendedor o admin (candidatos a vendedora). */
@@ -123,6 +139,8 @@ export async function fetchEmbarquesSinVendedora(): Promise<EmbarqueSinVendedora
     }));
 }
 
+// Decisión: reasignar la vendedora de un embarque es una mutación del
+// embarque en sí, así que se audita en el módulo `embarques`.
 export async function asignarVendedoraEmbarque(
   embarqueId: string,
   vendedoraId: string,
@@ -130,4 +148,10 @@ export async function asignarVendedoraEmbarque(
   await run(
     supabase.from("embarques").update({ vendedora_id: vendedoraId }).eq("id", embarqueId),
   );
+  await registrarActividad({
+    modulo: "embarques",
+    accion: "asignar_vendedora_embarque",
+    entidadId: embarqueId,
+    detalles: { vendedora_id: vendedoraId },
+  });
 }

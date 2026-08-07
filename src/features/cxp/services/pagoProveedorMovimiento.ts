@@ -9,6 +9,7 @@
  * y el pago compartan `organization_id`; siempre usamos la org de la factura.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
 export interface MovimientoPagoInput {
@@ -110,6 +111,15 @@ export async function crearMovimientoBancarioPago(
     importado_por: input.userId,
   };
   const { error } = await supabase.from("bbva_movimientos").insert(payload);
+  if (!error) {
+    await registrarActividad({
+      modulo: "tesoreria",
+      accion: "crear_movimiento_bancario_pago",
+      entidadId: input.pagoId,
+      entidadNombre: concepto,
+      detalles: { cuentaBancariaId: input.cuentaBancariaId, monto: payload.cargo },
+    });
+  }
   return !error;
 }
 
@@ -123,4 +133,9 @@ export async function eliminarMovimientoBancarioPago(
     .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
     .eq("pago_proveedor_id", pagoId)
     .is("deleted_at", null);
+  await registrarActividad({
+    modulo: "tesoreria",
+    accion: "eliminar_movimiento_bancario_pago",
+    entidadId: pagoId,
+  });
 }

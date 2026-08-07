@@ -16,6 +16,7 @@ import {
   isCachedClaim,
 } from '@/features/embarques/services/idempotencyClaimSchema';
 import { sha256Hex, hexToUuid } from '@/features/embarques/services/documentos/idempotencyHash';
+import { registrarActividad } from '@/services/bitacora/registrar';
 
 type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
 
@@ -87,6 +88,13 @@ export async function uploadDocumentoEmbarque(
   await supabase.rpc('idempotency_store', {
     _key: requestId,
     _response: { path, fileName: file.name } as never,
+  });
+  await registrarActividad({
+    modulo: 'documentos',
+    accion: 'subir_documento_embarque',
+    entidadId: docId,
+    entidadNombre: file.name,
+    detalles: { embarqueId },
   });
   return { path, fileName: file.name, cached: false };
 }

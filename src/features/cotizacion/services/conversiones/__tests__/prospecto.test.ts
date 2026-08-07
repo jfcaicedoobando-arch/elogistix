@@ -5,10 +5,14 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
+const { registrarActividadMock } = vi.hoisted(() => ({ registrarActividadMock: vi.fn(async () => undefined) }));
+vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: registrarActividadMock }));
+
 import { convertirProspectoACliente } from "@/features/cotizacion/services/conversiones/prospecto";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  registrarActividadMock.mockClear();
 });
 
 const baseInput = {
@@ -53,8 +57,9 @@ describe("convertirProspectoACliente", () => {
       error: null,
     });
     await convertirProspectoACliente({ ...baseInput, clienteData: { ...baseInput.clienteData, nombre: "Beta" } });
-    const bitacora = mock.tableCalls.find((c) => c.table === "bitacora_actividad");
-    expect(bitacora?.ops).toContain("insert");
+    expect(registrarActividadMock).toHaveBeenCalledWith(
+      expect.objectContaining({ modulo: "cotizaciones", accion: "convertir_prospecto_a_cliente" }),
+    );
   });
 
   it("omite bitácora cuando user es null", async () => {
@@ -63,8 +68,7 @@ describe("convertirProspectoACliente", () => {
       error: null,
     });
     await convertirProspectoACliente({ ...baseInput, user: null });
-    const bitacora = mock.tableCalls.find((c) => c.table === "bitacora_actividad");
-    expect(bitacora).toBeUndefined();
+    expect(registrarActividadMock).not.toHaveBeenCalled();
   });
 
   it("propaga error cuando la inserción de cliente falla", async () => {

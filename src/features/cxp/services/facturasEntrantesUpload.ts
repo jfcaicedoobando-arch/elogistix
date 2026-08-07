@@ -3,6 +3,7 @@
  * (PDF + XML del mismo CFDI). Extraído de `facturasEntrantes.ts`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import {
   rutaArchivoEntrante,
   validarParejaEntrante,
@@ -136,6 +137,12 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
     if (duplicado) throw new Error(duplicado);
     throw error;
   }
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "subir_factura_entrante",
+    entidadId: data.id,
+    entidadNombre: archivoPrincipal.name,
+  });
   return data.id;
 }
 
@@ -169,4 +176,10 @@ export async function adjuntarXmlFacturaEntrante(params: {
     const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
     throw duplicado ? new Error(duplicado) : error;
   }
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "adjuntar_xml_factura_entrante",
+    entidadId: params.id,
+    entidadNombre: subido.nombre,
+  });
 }

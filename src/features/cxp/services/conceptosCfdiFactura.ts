@@ -8,6 +8,7 @@
  * distintas con `concepto_costo_id` poblado.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type { CfdiConceptoParsed } from "./parseCfdi.types";
 import {
   normalizarClaveSat,
@@ -44,6 +45,12 @@ export async function insertarConceptosCfdi(
 
   const { error } = await supabase.from("proveedor_facturas_conceptos").insert(rows);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "insertar_conceptos_cfdi",
+    entidadId: facturaId,
+    detalles: { total: rows.length },
+  });
   return rows.length;
 }
 

@@ -2,6 +2,7 @@
  * Propaga la conversión de prospecto → cliente al pipeline CRM.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 /**
  * Llamado tras `convertirProspectoACliente`. Propaga el cliente al CRM:
@@ -39,4 +40,12 @@ export async function propagarConversionProspectoCRM(input: {
       .eq("id", op.lead_id);
     if (errLead) throw errLead;
   }
+
+  await registrarActividad({
+    modulo: "crm",
+    accion: "propagar_conversion_prospecto",
+    entidadId: input.oportunidadId,
+    entidadNombre: input.clienteNombre,
+    detalles: { cliente_id: input.clienteId },
+  });
 }
