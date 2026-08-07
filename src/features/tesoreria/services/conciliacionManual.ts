@@ -75,4 +75,9 @@ export async function eliminarMovimientoManual(movId: string): Promise<void> {
       "No se pudo eliminar el movimiento: sólo se pueden borrar movimientos capturados a mano que no estén conciliados, y necesitas permiso de tesorería.",
     );
   }
+  await registrarActividad({
+    modulo: "tesoreria",
+    accion: "eliminar_movimiento_manual",
+    entidadId: movId,
+  });
 }
