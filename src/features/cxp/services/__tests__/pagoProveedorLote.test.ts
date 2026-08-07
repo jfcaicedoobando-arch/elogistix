@@ -20,7 +20,7 @@ describe("repartirFifo", () => {
     expect(sobrante).toBe(200);
   });
 
-  it("redondea a 2 decimales", () => {
+  it("round2 redondea importes de lote a 2 decimales", () => {
     expect(round2(100.005)).toBe(100.01);
   });
 });

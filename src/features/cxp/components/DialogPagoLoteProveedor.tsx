@@ -14,7 +14,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { useCuentasBancarias } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
+import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { usePagoProveedorLote } from "@/features/cxp/hooks/usePagoProveedorLote";
 import { metodosFor, defaultMetodo, referenciaHint, type OrigenProveedor } from "./pagoProveedorHelpers";
