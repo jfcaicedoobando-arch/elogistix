@@ -19,6 +19,9 @@ export function FeedbackButton({ variant = "ghost", className }: Props) {
   if (!user) return null;
 
   const handleClick = async () => {
+    // Import dinámico: `@sentry/react` + `@sentry/feedback` (~73 KB gz) no
+    // deben entrar al bundle inicial (Layout es parte del entry chunk).
+    const Sentry = await import("@sentry/react");
     const feedback = Sentry.getFeedback();
     if (!feedback) {
       notifyError(undefined, { title: "Reporte no disponible",
