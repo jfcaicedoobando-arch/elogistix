@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from '@/services/storage/index';
 import { buildEmbarqueDocOrgPath } from '@/services/storage/orgPath';
+import { registrarActividad } from '@/services/bitacora/registrar';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
 
