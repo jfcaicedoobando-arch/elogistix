@@ -18,6 +18,7 @@ import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { usePagoProveedorLote } from "@/features/cxp/hooks/usePagoProveedorLote";
 import { metodosFor, defaultMetodo, referenciaHint, type OrigenProveedor } from "./pagoProveedorHelpers";
+import { DialogPagoLoteDatos } from "./DialogPagoLoteDatos";
 import { DialogPagoLoteRenglones } from "./DialogPagoLoteRenglones";
 import { formatCurrency } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
@@ -133,63 +134,24 @@ export function DialogPagoLoteProveedor(p: Props) {
       size="xl"
       footer={footer}
     >
-      <FormDialogSection title="Datos de la transferencia">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Fecha del pago</Label>
-            <DatePickerMx value={fecha} onChange={(v) => setFecha(v ?? "")} className="w-full" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="lote-total">Importe total ({p.moneda})</Label>
-            <Input
-              id="lote-total"
-              inputMode="decimal"
-              value={total}
-              placeholder="0.00"
-              onChange={(e) => recalcular(round2(Number(e.target.value) || 0))}
-            />
-            <p className="text-xs text-muted-foreground">
-              Saldo seleccionado: {formatCurrency(saldoTotal, p.moneda)}
-              {esExtranjera && tcDof
-                ? ` · TC DOF ${tcDof.usdMxn} (${tcDof.fecha})`
-                : ""}
-            </p>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Método de pago</Label>
-            <Select value={metodo} onValueChange={setMetodo}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {metodosFor(p.proveedorOrigen).map((m) => (
-                  <SelectItem key={m} value={m}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Cuenta bancaria {requiereCuenta ? "" : "(opcional)"}</Label>
-            <Select value={cuentaId} onValueChange={setCuentaId}>
-              <SelectTrigger><SelectValue placeholder={`Cuentas en ${p.moneda}`} /></SelectTrigger>
-              <SelectContent>
-                {cuentasMoneda.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.alias?.includes(c.banco) ? c.alias : `${c.alias ?? c.banco} — ${c.banco}`} ({c.moneda})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="lote-ref">Referencia bancaria</Label>
-            <Input
-              id="lote-ref"
-              value={referencia}
-              placeholder={referenciaHint(metodo)}
-              onChange={(e) => setReferencia(e.target.value)}
-            />
-          </div>
-        </div>
-      </FormDialogSection>
+      <DialogPagoLoteDatos
+        moneda={p.moneda}
+        proveedorOrigen={p.proveedorOrigen}
+        fecha={fecha}
+        onFecha={setFecha}
+        total={total}
+        onTotal={recalcular}
+        saldoTotal={saldoTotal}
+        tcDof={esExtranjera ? tcDof ?? null : null}
+        metodo={metodo}
+        onMetodo={setMetodo}
+        cuentaId={cuentaId}
+        onCuentaId={setCuentaId}
+        cuentasMoneda={cuentasMoneda}
+        requiereCuenta={requiereCuenta}
+        referencia={referencia}
+        onReferencia={setReferencia}
+      />
 
       <FormDialogSection
         title="Reparto entre facturas"
