@@ -54,8 +54,13 @@ export interface RegistrarActividadInput {
  */
 export async function registrarActividad(input: RegistrarActividadInput): Promise<void> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Perf: `getSession()` lee la sesión ya cacheada en memoria/localStorage.
+    // `getUser()` hacía un round-trip a /auth/v1/user en CADA registro, lo que
+    // duplicaba la latencia de toda mutación del ERP.
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return;
+
     const { error } = await supabase.from("bitacora_actividad").insert({
       usuario_id: user.id,
       usuario_email: user.email ?? "",
