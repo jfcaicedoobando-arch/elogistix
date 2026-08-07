@@ -26,17 +26,32 @@ export function EstadoCuentaResumen({ estado, isLoading }: Props) {
     : [];
 
   return (
-    <Card>
-      <CardContent density="compact" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {isLoading || !estado
-          ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
-          : items.map((it) => (
-              <div key={it.label}>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{it.label}</p>
-                <p className={`mt-1 text-lg font-semibold tabular-nums ${it.tone ?? ""}`}>{it.valor}</p>
-              </div>
-            ))}
-      </CardContent>
-    </Card>
+    <div className="space-y-2">
+      <Card>
+        <CardContent density="compact" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {isLoading || !estado
+            ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
+            : items.map((it) => (
+                <div key={it.label}>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{it.label}</p>
+                  <p className={`mt-1 text-lg font-semibold tabular-nums ${it.tone ?? ""}`}>{it.valor}</p>
+                </div>
+              ))}
+        </CardContent>
+      </Card>
+      {estado?.fecha_saldo_inicial && (
+        <p className="text-xs text-muted-foreground">
+          Arranque de la cuenta: saldo inicial al {formatDate(estado.fecha_saldo_inicial)}.
+          {estado.movimientos_previos_corte > 0 && (
+            <>
+              {" "}
+              {estado.movimientos_previos_corte} movimiento
+              {estado.movimientos_previos_corte === 1 ? "" : "s"} con fecha anterior al arranque
+              {estado.movimientos_previos_corte === 1 ? " no afecta" : " no afectan"} el saldo.
+            </>
+          )}
+        </p>
+      )}
+    </div>
   );
 }
