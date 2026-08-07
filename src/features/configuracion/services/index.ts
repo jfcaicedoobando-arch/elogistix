@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { fromDb } from "@/lib/supabase/cast";
 import { unwrapOr } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ConfigItem {
   id: string;
