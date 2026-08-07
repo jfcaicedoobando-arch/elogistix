@@ -69,6 +69,13 @@ export async function deleteDocumentoEmbarque(docId: string, archivoPath?: strin
     throw new Error('No se pudo eliminar el adjunto (sin permisos o el documento ya no existe).');
   }
 
+  await registrarActividad({
+    modulo: 'documentos',
+    accion: 'desadjuntar_documento',
+    entidadId: docId,
+    detalles: { archivo: archivoPath ?? null },
+  });
+
   // Limpieza best-effort del blob en storage: si falla no bloqueamos la UI.
   if (archivoPath) {
     try {
