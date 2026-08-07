@@ -108,6 +108,10 @@ export default function TesoreriaCuentas() {
                 ) : (
                   <p className="text-sm pt-2">Saldo inicial: <span className="tabular-nums font-medium">{formatCurrency(Number(c.saldo_inicial), c.moneda)}</span></p>
                 )}
+                <p className="text-label text-muted-foreground">
+                  Saldo inicial {formatCurrency(Number(c.saldo_inicial), c.moneda)} al{" "}
+                  {formatDateMx(c.fecha_saldo_inicial)}
+                </p>
                 {!c.activa && <p className="text-xs text-muted-foreground italic">Cuenta inactiva</p>}
                 <div className="pt-2">
                   <Button
