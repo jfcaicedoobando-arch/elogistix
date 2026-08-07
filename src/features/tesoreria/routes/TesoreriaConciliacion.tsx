@@ -100,7 +100,15 @@ export default function TesoreriaConciliacion() {
       <PageHeader
         title="Conciliación bancaria"
         description="Importa el estado de cuenta y empareja con CxC/CxP"
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <Link to={`${ROUTES.TESORERIA_ESTADO_CUENTA}${cuentaId ? `?cuenta=${cuentaId}` : ""}`}>
+              <Landmark className="h-4 w-4" aria-hidden /> Ver estado de cuenta
+            </Link>
+          </Button>
+        }
       />
+
 
       <ConciliacionToolbar
         cuentas={cuentas}
