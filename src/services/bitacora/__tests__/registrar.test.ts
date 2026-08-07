@@ -5,10 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 vi.mock("@/integrations/supabase/client", () => {
   const insert = vi.fn().mockResolvedValue({ error: null });
   const from = vi.fn().mockReturnValue({ insert });
-  const getUser = vi.fn().mockResolvedValue({
-    data: { user: { id: "u-1", email: "a@b.com" } },
-  });
-  return { supabase: { from, auth: { getUser } } };
+  const session = { data: { session: { user: { id: "u-1", email: "a@b.com" } } } };
+  const getSession = vi.fn().mockResolvedValue(session);
+  return { supabase: { from, auth: { getSession } } };
 });
 
 describe("registrarActividad", () => {
