@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Inbox, CalendarCheck, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DialogPagoLoteProveedor, type OrigenProveedor } from "@/features/cxp";
+import { DialogPagoLoteProveedor } from "@/features/cxp";
 
 import { ProgramarPagoDialog } from "./_sections/ProgramarPagoDialog";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
@@ -25,13 +25,16 @@ import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarCol
 import { useProgramarPagoLote } from "@/features/cxp/hooks/useProgramarPagoLote";
 import { todayLocalISO } from "@/lib/date/today";
 import { CxpPorPagarFiltersBar } from "@/features/bandejas/components/CxpPorPagarFiltersBar";
+import {
+  CXP_FILTERS_DEFAULTS,
+  CXP_SORTERS,
+  cxpFilterPredicate,
+  cxpSearchAccessor,
+  derivarLote,
+  type CxpFilters,
+} from "./_sections/cxpPorPagarList";
 
 
-interface Filters extends Record<string, string> {
-  moneda: string;
-  vencidas: string;
-}
-const DEFAULTS: Filters = { moneda: "todas", vencidas: "todas" };
 
 export default function CxpPorPagar() {
   const { data = [], isLoading, isError, refetch } = useCxpPorPagar();
@@ -48,31 +51,16 @@ export default function CxpPorPagar() {
     [data],
   );
 
-  const paged = useClientPagedList<CxpRow, Filters>({
+  const paged = useClientPagedList<CxpRow, CxpFilters>({
     data,
     isLoading,
-    defaultFilters: DEFAULTS,
+    defaultFilters: CXP_FILTERS_DEFAULTS,
     filterLabels: { moneda: "Moneda", vencidas: "Vencidas" },
     defaultSort: { key: "dias", dir: "asc" },
-    searchAccessor: (r) =>
-      `${r.proveedor_nombre ?? ""} ${r.folio_proveedor ?? ""} ${r.expediente ?? ""}`,
-    filterPredicate: (r, ff) => {
-      if (ff.moneda !== "todas" && r.moneda !== ff.moneda) return false;
-      const dias = r.dias_para_vencer ?? 0;
-      if (ff.vencidas === "si" && dias >= 0) return false;
-      if (ff.vencidas === "no" && dias < 0) return false;
-      return true;
-    },
+    searchAccessor: cxpSearchAccessor,
+    filterPredicate: cxpFilterPredicate,
     dateAccessor: (r) => r.fecha_vencimiento,
-    sorters: {
-      proveedor: (a, b) => (a.proveedor_nombre ?? "").localeCompare(b.proveedor_nombre ?? ""),
-      folio: (a, b) => (a.folio_proveedor ?? "").localeCompare(b.folio_proveedor ?? ""),
-      vencimiento: (a, b) => (a.fecha_vencimiento ?? "").localeCompare(b.fecha_vencimiento ?? ""),
-      dias: (a, b) => (a.dias_para_vencer ?? 0) - (b.dias_para_vencer ?? 0),
-      total: (a, b) => Number(a.total) - Number(b.total),
-      pagado: (a, b) => Number(a.pagado) - Number(b.pagado),
-      saldo: (a, b) => Number(a.saldo) - Number(b.saldo),
-    },
+    sorters: CXP_SORTERS,
   });
 
   const columns = useMemo(() => buildCxpPorPagarColumns(), []);
@@ -85,25 +73,7 @@ export default function CxpPorPagar() {
     () => data.filter((r) => selectedIds.includes(r.factura_id)),
     [data, selectedIds],
   );
-  const lote = useMemo(() => {
-    if (seleccionadas.length < 2) return null;
-    const primera = seleccionadas[0];
-    const mismoProveedor = seleccionadas.every((r) => r.proveedor_id === primera.proveedor_id);
-    const mismaMoneda = seleccionadas.every((r) => r.moneda === primera.moneda);
-    if (!mismoProveedor || !mismaMoneda || !primera.proveedor_id) return null;
-    return {
-      proveedorId: primera.proveedor_id,
-      proveedorNombre: primera.proveedor_nombre ?? "",
-      proveedorOrigen: (primera.proveedor_origen ?? null) as OrigenProveedor,
-      moneda: primera.moneda,
-      facturas: seleccionadas.map((r) => ({
-        factura_id: r.factura_id,
-        folio_proveedor: r.folio_proveedor,
-        fecha_vencimiento: r.fecha_vencimiento,
-        saldo: Number(r.saldo ?? 0),
-      })),
-    };
-  }, [seleccionadas]);
+  const lote = useMemo(() => derivarLote(seleccionadas), [seleccionadas]);
 
   const handleProgramar = async () => {
     await programar(selectedIds, fechaProgramada);

@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.450.4] - 2026-08-07
+- Mensajes en español para los errores del estado de cuenta bancario (cuenta inexistente, rango de fechas inválido, sin permisos).
+- Calidad interna: se dividieron la bandeja de CxP por pagar y el servicio de conciliación en piezas más pequeñas.
+
 ## [13.450.3] - 2026-08-07
 - Seguridad: la consulta del **estado de cuenta bancario** solo puede ejecutarse con sesión iniciada (permisos explícitos en la base de datos).
 - Se actualizó la prueba de Conciliación bancaria para la nueva tarjeta de "Saldo actual".
