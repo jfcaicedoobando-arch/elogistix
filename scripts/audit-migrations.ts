@@ -86,8 +86,14 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    mismo archivo. La migración correctiva `20260806224435` re-aplica los
  *    permisos y re-crea políticas e índices de forma idempotente; los
  *    archivos originales quedan como legacy auditados.
+ *  - `20260807172000` — post-FIX-H6-09/H4-09: `20260807145542` (optimización
+ *    RLS con `has_any_role`) recreó `public.has_role` sin el bloque
+ *    REVOKE/GRANT y creó 24 policies sin `DROP POLICY IF EXISTS` del mismo
+ *    nombre. La migración correctiva `20260807172000` re-aplica permisos y
+ *    re-crea las policies de forma idempotente; el archivo original queda
+ *    como legacy auditado.
  */
-const BASELINE = "20260806224435";
+const BASELINE = "20260807172000";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
