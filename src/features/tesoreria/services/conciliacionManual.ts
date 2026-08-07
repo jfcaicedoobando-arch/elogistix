@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 /** Q-15.7: alta manual de un movimiento bancario. */
 export interface MovimientoManualPayload {
