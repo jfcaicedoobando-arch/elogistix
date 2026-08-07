@@ -172,6 +172,18 @@ export default function TesoreriaCuentas() {
             <Label>Saldo inicial</Label>
             <Input type="number" step="0.01" value={form.saldoInicial} onChange={(e) => setField("saldoInicial", Number(e.target.value))} />
           </div>
+          <div>
+            <Label>Saldo inicial al día *</Label>
+            <DatePickerMx
+              value={form.fechaSaldoInicial}
+              onChange={(v) => setField("fechaSaldoInicial", v)}
+              className="w-full"
+            />
+          </div>
+          <p className="col-span-2 text-xs text-muted-foreground">
+            Los movimientos con fecha anterior a este día se guardan como historial, pero no
+            afectan el saldo: ya vienen incluidos en el saldo inicial.
+          </p>
         </div>
       </FormDialogShell>
 
