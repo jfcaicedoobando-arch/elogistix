@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.451.0] - 2026-08-07
+- **Saldo inicial con fecha de corte** en cuentas bancarias: los movimientos anteriores al arranque se ven en el historial pero ya no bajan (ni suben) el saldo actual, porque ya venían incluidos en el saldo inicial.
+- Al **registrar un cobro** de factura ahora puedes elegir la cuenta donde entró el dinero: se genera el depósito conciliado y el saldo del banco sube.
+- Aviso claro cuando la fecha del pago o cobro es anterior al arranque de la cuenta.
+- El estado de cuenta muestra la fecha de arranque y cuántos movimientos quedaron fuera del saldo.
+
 ## [13.450.4] - 2026-08-07
 - Mensajes en español para los errores del estado de cuenta bancario (cuenta inexistente, rango de fechas inválido, sin permisos).
 - Calidad interna: se dividieron la bandeja de CxP por pagar y el servicio de conciliación en piezas más pequeñas.
