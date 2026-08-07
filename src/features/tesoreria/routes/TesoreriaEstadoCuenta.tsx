@@ -10,7 +10,7 @@ import { Landmark } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useEstadoCuenta } from "@/features/tesoreria/hooks/useEstadoCuenta";
 import {
