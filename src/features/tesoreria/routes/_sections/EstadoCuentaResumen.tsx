@@ -3,7 +3,7 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { EstadoCuentaBancario } from "@/features/tesoreria/domain/estadoCuenta";
 
 interface Props {
