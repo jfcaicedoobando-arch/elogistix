@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.456.2] - 2026-08-07
+- **Fix (Compras):** el ítem "Anticipos" (`/compras/anticipos`) ya aparece en el sidebar para los roles contador y tesorero; la ruta ya tenía permiso, sólo faltaba en el menú.
+
 ## [13.456.1] - 2026-08-07
 - **Perf:** `FeedbackButton` ahora carga `@sentry/react` con import dinámico; el widget de feedback (~73 KB gz) sale del bundle inicial. Entry chunk: 352 KB → 327 KB (budget 350 KB), CI de bundle-size en verde.
 
