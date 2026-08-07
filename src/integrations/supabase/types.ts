@@ -3118,6 +3118,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          fecha_saldo_inicial: string
           id: string
           moneda: Database["public"]["Enums"]["moneda"]
           notas: string
@@ -3134,6 +3135,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          fecha_saldo_inicial?: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           notas?: string
@@ -3150,6 +3152,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          fecha_saldo_inicial?: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           notas?: string
@@ -5143,6 +5146,7 @@ export type Database = {
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           created_at: string
           created_by: string | null
+          cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
           diferencia_cambiaria_mxn: number
@@ -5179,6 +5183,7 @@ export type Database = {
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           created_at?: string
           created_by?: string | null
+          cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
@@ -5215,6 +5220,7 @@ export type Database = {
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           created_at?: string
           created_by?: string | null
+          cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
@@ -5248,6 +5254,13 @@ export type Database = {
           uuid_rep?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "pagos_factura_cuenta_bancaria_id_fkey"
+            columns: ["cuenta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pagos_factura_embarque_id_fkey"
             columns: ["embarque_id"]

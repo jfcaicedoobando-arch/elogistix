@@ -34,6 +34,10 @@ export interface EstadoCuentaBancario {
   total_entradas: number;
   total_salidas: number;
   saldo_final: number;
+  /** Fecha de corte del saldo inicial de la cuenta (arranque en el sistema). */
+  fecha_saldo_inicial: string | null;
+  /** Movimientos con fecha anterior al corte: existen pero no afectan el saldo. */
+  movimientos_previos_corte: number;
   movimientos: MovimientoEstadoCuenta[];
 }
 

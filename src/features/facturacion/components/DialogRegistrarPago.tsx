@@ -16,6 +16,7 @@ import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoF
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarPagoSubmit } from "@/features/facturacion/hooks/useRegistrarPagoSubmit";
 import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
+import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
 import { factorEntreMonedas } from "@/lib/financial/convertir";
@@ -53,6 +54,7 @@ const today = () => todayLocalISO();
 
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: rates } = useExchangeRates();
+  const { data: cuentas = [] } = useCuentasBancarias();
   const { data: pagosPrevios = [] } = usePagosFactura(factura?.id);
   const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(factura?.id);
   const { submit, isPending, timbrandoRep } = useRegistrarPagoSubmit(() => onOpenChange(false));
@@ -65,7 +67,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
 
   const [values, setValues] = useState<PagoFormValues>({
     fecha: today(), monto: "", moneda: "MXN",
-    formaPago: "03", referencia: "", notas: "",
+    formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
   });
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
         fecha: today(),
         monto: saldo > 0 ? saldo.toFixed(2) : "",
         moneda: factura.moneda,
-        formaPago: "03", referencia: "", notas: "",
+        formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
       });
     }
   }, [open, factura, saldo]);
@@ -102,6 +104,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     formaPago: values.formaPago,
     referencia: values.referencia,
     notas: values.notas,
+    cuentaBancariaId: values.cuentaBancariaId || null,
     esPpdTimbrada,
   });
 
@@ -131,7 +134,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       size="md"
       footer={footer}
     >
-      <PagoFormFields values={values} onChange={handleChange} />
+      <PagoFormFields values={values} onChange={handleChange} cuentas={cuentas} />
       <NotasPago
         esPpdTimbrada={esPpdTimbrada}
         monedaPago={values.moneda}

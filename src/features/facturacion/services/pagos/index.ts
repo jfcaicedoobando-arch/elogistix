@@ -2,6 +2,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import {
+  crearMovimientoBancarioCobro,
+  eliminarMovimientoBancarioCobro,
+} from "@/features/facturacion/services/cobroFacturaMovimiento";
 
 
 export type PagoFactura = Tables<"pagos_factura">;
@@ -22,6 +26,12 @@ export interface RegistrarPagoInput {
    * de emisión). El UI calcula y manda el valor; default 0.
    */
   diferencia_cambiaria_mxn?: number;
+  /**
+   * Cuenta donde entró el dinero. Cuando se envía, se registra el abono
+   * bancario conciliado (el saldo del banco sube). Opcional: sin cuenta el
+   * cobro sólo entra al banco al importar/conciliar el estado de cuenta.
+   */
+  cuenta_bancaria_id?: string | null;
 }
 
 export async function listarPagosFactura(facturaId: string): Promise<PagoFactura[]> {
@@ -61,12 +71,27 @@ export async function registrarPagoFactura(
         referencia: input.referencia ?? "",
         notas: input.notas ?? "",
         diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? 0,
+        cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
         created_by,
       })
       .select("id")
       .single(),
   );
   const pagoId = (data as { id?: string } | null)?.id ?? null;
+  // El abono bancario sólo se crea si el usuario indicó la cuenta destino.
+  if (pagoId && input.cuenta_bancaria_id) {
+    await crearMovimientoBancarioCobro({
+      pagoId,
+      facturaId: input.factura_id,
+      cuentaBancariaId: input.cuenta_bancaria_id,
+      fechaPago: input.fecha_pago,
+      monto: input.monto,
+      moneda: input.moneda as "MXN" | "USD" | "EUR",
+      tipoCambioUsd: input.tipo_cambio > 0 ? input.tipo_cambio : null,
+      referencia: input.referencia,
+      userId: created_by,
+    });
+  }
   // P2-6 (R5): los pagos de cliente no aparecían en la bitácora/actividad
   // (sólo los de proveedor), así que la línea de tiempo quedaba incompleta.
   await registrarActividad({
@@ -140,6 +165,7 @@ export async function eliminarPagoFactura(id: string): Promise<void> {
     }
     throw err;
   }
+  await eliminarMovimientoBancarioCobro(id, userData.user?.id ?? null);
   await registrarActividad({
     modulo: "facturacion",
     accion: "eliminar_pago",

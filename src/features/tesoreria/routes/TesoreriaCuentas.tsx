@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
 import {
@@ -12,7 +13,7 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PageContainer } from "@/components/shared/PageContainer";
 import {
   useTesoreriaCuentasController,
@@ -107,6 +108,10 @@ export default function TesoreriaCuentas() {
                 ) : (
                   <p className="text-sm pt-2">Saldo inicial: <span className="tabular-nums font-medium">{formatCurrency(Number(c.saldo_inicial), c.moneda)}</span></p>
                 )}
+                <p className="text-label text-muted-foreground">
+                  Saldo inicial {formatCurrency(Number(c.saldo_inicial), c.moneda)} al{" "}
+                  {formatDate(c.fecha_saldo_inicial)}
+                </p>
                 {!c.activa && <p className="text-xs text-muted-foreground italic">Cuenta inactiva</p>}
                 <div className="pt-2">
                   <Button
@@ -172,6 +177,18 @@ export default function TesoreriaCuentas() {
             <Label>Saldo inicial</Label>
             <Input type="number" step="0.01" value={form.saldoInicial} onChange={(e) => setField("saldoInicial", Number(e.target.value))} />
           </div>
+          <div>
+            <Label>Saldo inicial al día *</Label>
+            <DatePickerMx
+              value={form.fechaSaldoInicial}
+              onChange={(v) => setField("fechaSaldoInicial", v)}
+              className="w-full"
+            />
+          </div>
+          <p className="col-span-2 text-xs text-muted-foreground">
+            Los movimientos con fecha anterior a este día se guardan como historial, pero no
+            afectan el saldo: ya vienen incluidos en el saldo inicial.
+          </p>
         </div>
       </FormDialogShell>
 

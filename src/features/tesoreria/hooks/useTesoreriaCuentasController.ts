@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/features/tesoreria/hooks";
 import type { Database } from "@/integrations/supabase/types";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
+import { todayLocalISO } from "@/lib/date/today";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 export type Moneda = Database["public"]["Enums"]["moneda"];
@@ -18,6 +19,8 @@ const INITIAL_FORM = {
   clabe: "",
   moneda: "MXN" as Moneda,
   saldoInicial: 0,
+  /** Fecha a la que corresponde el saldo inicial (corte de arranque). */
+  fechaSaldoInicial: todayLocalISO(),
 };
 
 export function useTesoreriaCuentasController() {
@@ -55,6 +58,7 @@ export function useTesoreriaCuentasController() {
         clabe: form.clabe,
         moneda: form.moneda,
         saldo_inicial: Number(form.saldoInicial) || 0,
+        fecha_saldo_inicial: form.fechaSaldoInicial || todayLocalISO(),
         activa: true,
       });
       // El toast de éxito lo emite `useCrearCuenta` (evita doble toast).

@@ -16,6 +16,7 @@ import { referenciaHint } from "./pagoProveedorHelpers";
 import { formatNumber } from "@/lib/formatters";
 import { PagoImpactoPreview } from "./PagoImpactoPreview";
 import { TcPagoField } from "./TcPagoField";
+import { AvisoFechaPreviaCorte } from "@/features/tesoreria/components/AvisoFechaPreviaCorte";
 import type {
   Moneda,
   PagoProveedorFormBodyProps as Props,
@@ -77,6 +78,11 @@ export function PagoProveedorFormBody(p: Props) {
               Se registrará el movimiento bancario conciliado en esta cuenta.
             </p>
           )}
+          <AvisoFechaPreviaCorte
+            fecha={p.fecha}
+            corte={p.cuentas.find((c) => c.id === p.cuentaId)?.fecha_saldo_inicial}
+            aliasCuenta={p.cuentas.find((c) => c.id === p.cuentaId)?.alias}
+          />
         </div>
       </FormSection>
 
