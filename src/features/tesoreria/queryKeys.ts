@@ -8,6 +8,10 @@ export const tesoreria = {
   /** FIX C3c: resumen de conciliación agregado en el servidor. */
   conciliacionResumen: (cuentaId: string | null) =>
     ["tesoreria", "conciliacion-resumen", cuentaId ?? "none"] as const,
+  /** Estado de cuenta bancario por cuenta y periodo. */
+  estadoCuenta: (cuentaId: string | null, desde: string, hasta: string) =>
+    ["tesoreria", "estado-cuenta", cuentaId ?? "none", desde, hasta] as const,
+
 
   movimientos: (cuentaId: string | null, filtros?: unknown) =>
     ["tesoreria", "movimientos", cuentaId, filtros ?? null] as const,
