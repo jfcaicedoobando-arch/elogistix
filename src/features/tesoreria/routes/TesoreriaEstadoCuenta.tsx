@@ -10,6 +10,7 @@ import { Landmark } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { DataTable } from "@/components/shared/DataTable";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useEstadoCuenta } from "@/features/tesoreria/hooks/useEstadoCuenta";
@@ -98,7 +99,7 @@ export default function TesoreriaEstadoCuenta() {
               columns={columns}
               data={visibles}
               rowKey={(m) => m.id}
-              density="compact"
+              density={TABLE_DENSITY.listado}
               striped
               stickyHeader
               tableClassName="w-full"

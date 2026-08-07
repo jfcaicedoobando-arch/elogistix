@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.450.2] - 2026-08-07
+- Calidad interna: se dividieron el diálogo de **pago en lote** y el formulario de **pago a proveedor** en piezas más pequeñas (misma funcionalidad, código más simple y mantenible).
+- El PDF del estado de cuenta ya no depende de módulos internos de Tesorería y la tabla usa el token estándar de densidad.
+
 ## [13.450.1] - 2026-08-07
 - Tesorería · Estado de cuenta: la tabla ahora usa el componente estándar de tablas (encabezados y columnas alineados correctamente en Full HD).
 - Tesorería · Estado de cuenta: el **saldo inicial** del periodo ahora incluye el saldo de apertura de la cuenta, por lo que el saldo final coincide con el saldo mostrado en Cuentas bancarias.
