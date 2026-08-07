@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 /** Q-15.7: alta manual de un movimiento bancario. */
 export interface MovimientoManualPayload {
@@ -33,6 +34,19 @@ export async function registrarMovimientoManual(
       importado_por: input.userId,
     }),
   );
+  await registrarActividad({
+    modulo: "tesoreria",
+    accion: "crear_movimiento_manual",
+    entidadNombre: input.concepto,
+    detalles: {
+      cuenta_bancaria_id: input.cuentaBancariaId,
+      fecha: input.fecha,
+      referencia: input.referencia ?? "",
+      cargo: input.cargo,
+      abono: input.abono,
+      hash_dedupe: hashDedupe,
+    },
+  });
 }
 
 /**
@@ -61,4 +75,9 @@ export async function eliminarMovimientoManual(movId: string): Promise<void> {
       "No se pudo eliminar el movimiento: sólo se pueden borrar movimientos capturados a mano que no estén conciliados, y necesitas permiso de tesorería.",
     );
   }
+  await registrarActividad({
+    modulo: "tesoreria",
+    accion: "eliminar_movimiento_manual",
+    entidadId: movId,
+  });
 }

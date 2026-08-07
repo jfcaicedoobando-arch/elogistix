@@ -16,6 +16,7 @@ const hooks = createCatalogHooks<Puerto, { code: string; name: string; country: 
   insert: insertPuerto,
   setActivo: setPuertoActivo,
   remove: deletePuerto,
+  catalogo: "puertos",
   labels: {
     agregarSuccess: "Puerto agregado",
     agregarError: "Error al agregar puerto",

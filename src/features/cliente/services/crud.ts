@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 import {
   clienteInsertSchema,
@@ -161,9 +162,17 @@ export {
 export async function createCliente(cliente: TablesInsert<"clientes">) {
   parseOrThrow(clienteInsertSchema, cliente, "Cliente");
   const payload = { ...cliente, nombre: normalizarRazonSocial(cliente.nombre) };
-  return unwrap(
+  const creado = (await unwrap(
     supabase.from("clientes").insert(payload).select().single(),
-  );
+  )) as Cliente;
+  await registrarActividad({
+    modulo: "clientes",
+    accion: "crear",
+    entidadId: creado.id,
+    entidadNombre: creado.nombre,
+    detalles: { rfc: creado.rfc, dias_credito: creado.dias_credito },
+  });
+  return creado;
 }
 
 export async function updateCliente(
@@ -175,8 +184,16 @@ export async function updateCliente(
     updates.nombre === undefined
       ? updates
       : { ...updates, nombre: normalizarRazonSocial(updates.nombre) };
-  return unwrap(
+  const actualizado = (await unwrap(
     supabase.from("clientes").update(payload).eq("id", id).select().single(),
-  );
+  )) as Cliente;
+  await registrarActividad({
+    modulo: "clientes",
+    accion: "editar",
+    entidadId: id,
+    entidadNombre: actualizado.nombre,
+    detalles: { campos: Object.keys(payload) },
+  });
+  return actualizado;
 }
 

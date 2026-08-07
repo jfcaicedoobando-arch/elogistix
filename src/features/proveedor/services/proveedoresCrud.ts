@@ -8,6 +8,7 @@ import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { ProveedorDuplicadoError, findProveedorByRfcEnOrg } from "./duplicadoRfc";
+import { bitacoraProveedor } from "./proveedoresBitacora";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type CategoriaProveedor = Enums<"categoria_proveedor">;
@@ -143,6 +144,10 @@ export async function insertProveedor(prov: TablesInsert<"proveedores">): Promis
     }
     throw error;
   }
+  await bitacoraProveedor("crear", data.id, data.nombre, {
+    rfc: data.rfc,
+    tipo: data.tipo,
+  });
   return data;
 }
 
@@ -166,6 +171,9 @@ export async function updateProveedor(
   if (!data || data.length === 0) {
     throw new Error("No se guardaron los cambios del proveedor: no tienes permiso o el proveedor ya no existe.");
   }
+  await bitacoraProveedor("editar", id, typeof payload.nombre === "string" ? payload.nombre : "", {
+    campos: Object.keys(payload),
+  });
 }
 
 export async function deleteProveedor(id: string, userId: string | null = null): Promise<void> {
@@ -177,4 +185,5 @@ export async function deleteProveedor(id: string, userId: string | null = null):
       .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
       .eq("id", id),
   );
+  await bitacoraProveedor("eliminar", id, "", { deleted_by: userId });
 }
