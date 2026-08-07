@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.450.0] - 2026-08-07
+- Tesorería · Nuevo **Estado de cuenta bancario** (`/tesoreria/estado-cuenta`): extracto tipo banco con saldo inicial del periodo, movimientos en orden cronológico con **saldo corrido** línea por línea, entradas/salidas y saldo final.
+- Filtros por rango de fechas (atajos Mes / Trimestre / Año), búsqueda por concepto o referencia y tipo de movimiento (entradas / salidas).
+- Exportación a **CSV** y **PDF** (horizontal, con encabezado repetido y resumen del periodo).
+- Accesos directos desde Cuentas bancarias ("Ver estado de cuenta") y desde Conciliación bancaria, además del menú lateral de Tesorería.
+- Backend: nueva función `estado_cuenta_bancario` que calcula saldo inicial y corrido en la base de datos, ignorando movimientos eliminados y respetando la organización del usuario.
+
+
 ## [13.449.0] - 2026-08-06
 - Tesorería · Conciliación bancaria: el resumen ahora incluye la tarjeta **Saldo actual** de la cuenta seleccionada (saldo inicial + abonos - cargos, en su moneda), en rojo si es negativo.
 
