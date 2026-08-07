@@ -8,6 +8,7 @@ import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { ProveedorDuplicadoError, findProveedorByRfcEnOrg } from "./duplicadoRfc";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type CategoriaProveedor = Enums<"categoria_proveedor">;
