@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.452.1] - 2026-08-07
+- **Calidad interna (CI):** el aviso de "fecha anterior al arranque de la cuenta" ahora es un componente compartido, así lo pueden usar tanto pagos a proveedor como cobros de factura sin romper las reglas de arquitectura.
+- Se simplificó el formulario de pago a proveedor separando el selector de cuenta bancaria (misma pantalla, menos complejidad).
+- **Seguridad:** se re-aplicaron los permisos de ejecución de las funciones internas de roles (`has_role` / `has_any_role`) que faltaban en el cambio anterior.
+
 ## [13.452.0] - 2026-08-07
 - **Base de datos más rápida:** los permisos por rol ahora se revisan de una sola vez (antes se consultaban hasta 5 veces por cada fila), lo que baja el consumo de CPU en los listados de embarques, costos, ventas, facturas y proformas.
 - Se limpiaron índices duplicados y se agregaron índices faltantes para acelerar filtros y borrados.
