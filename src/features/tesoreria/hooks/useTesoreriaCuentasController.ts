@@ -58,6 +58,7 @@ export function useTesoreriaCuentasController() {
         clabe: form.clabe,
         moneda: form.moneda,
         saldo_inicial: Number(form.saldoInicial) || 0,
+        fecha_saldo_inicial: form.fechaSaldoInicial || todayLocalISO(),
         activa: true,
       });
       // El toast de éxito lo emite `useCrearCuenta` (evita doble toast).
