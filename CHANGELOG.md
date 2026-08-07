@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.449.0] - 2026-08-06
+- Tesorería · Conciliación bancaria: el resumen ahora incluye la tarjeta **Saldo actual** de la cuenta seleccionada (saldo inicial + abonos - cargos, en su moneda), en rojo si es negativo.
+
 ## [13.448.0] - 2026-08-06
 - Detalle de factura de proveedor: el encabezado ahora muestra un solo badge de estado; el atraso, NC, SAT y programación de pago dejan de duplicarse en chips y quedan en la cinta de KPIs y en sus pestañas.
 - El stepper del ciclo de vida refleja el atraso real ("Vencida · N d" en tono destructivo) en vez de marcar "Vigente" en verde.
