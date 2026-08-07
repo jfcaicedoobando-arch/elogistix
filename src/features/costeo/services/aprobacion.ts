@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 async function callAprobar(_tarifa_id: string, _estado: string, _motivo: string | null) {
   await run(
@@ -14,6 +15,11 @@ async function callAprobar(_tarifa_id: string, _estado: string, _motivo: string 
 
 export async function aprobarTarifa(tarifaId: string): Promise<void> {
   await callAprobar(tarifaId, "vigente", null);
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "aprobar_tarifa",
+    entidadId: tarifaId,
+  });
 }
 
 export async function rechazarTarifa(tarifaId: string, motivo: string): Promise<void> {
@@ -22,8 +28,19 @@ export async function rechazarTarifa(tarifaId: string, motivo: string): Promise<
     throw new Error("El motivo de rechazo debe tener al menos 5 caracteres.");
   }
   await callAprobar(tarifaId, "rechazada", trimmed);
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "rechazar_tarifa",
+    entidadId: tarifaId,
+    detalles: { motivo: trimmed },
+  });
 }
 
 export async function reactivarTarifa(tarifaId: string): Promise<void> {
   await callAprobar(tarifaId, "borrador", null);
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "reactivar_tarifa",
+    entidadId: tarifaId,
+  });
 }

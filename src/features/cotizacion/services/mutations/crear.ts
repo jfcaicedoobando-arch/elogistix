@@ -5,6 +5,7 @@ import { cotizacionRowDbSchema } from "../readSchemas";
 
 import { cotizacionDraftInputSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { buildCotizacionInsertPayload } from "./payloadBuilders";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 /**
  * v13.303.0 (FIX-05): folio atómico vía RPC `siguiente_folio_cotizacion()`.
@@ -41,5 +42,12 @@ export async function crearCotizacion(input: CreateCotizacionInput): Promise<Cot
     .select()
     .single();
   if (error) throw error;
-  return fromDbChecked<CotizacionRow>(data, cotizacionRowDbSchema);
+  const cotizacion = fromDbChecked<CotizacionRow>(data, cotizacionRowDbSchema);
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "crear_cotizacion",
+    entidadId: cotizacion.id,
+    entidadNombre: cotizacion.folio,
+  });
+  return cotizacion;
 }

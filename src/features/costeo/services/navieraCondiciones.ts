@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type {
   CosteoNavieraCondicion,
   DemorasTramo,
@@ -60,11 +61,27 @@ export async function upsertCondicionNaviera(
   const builder = id
     ? supabase.from("costeo_navieras_condiciones").update(payload).eq("id", id).select("*").single()
     : supabase.from("costeo_navieras_condiciones").insert(payload).select("*").single();
-  return unwrap(builder) as Promise<CosteoNavieraCondicion>;
+  const condicion = (await unwrap(builder)) as CosteoNavieraCondicion;
+  const naviera = await unwrapOr(
+    supabase.from("navieras").select("name").eq("id", input.naviera_id).single(),
+    { name: input.naviera_id },
+  );
+  await registrarActividad({
+    modulo: "costeo",
+    accion: id ? "editar_condicion_naviera" : "crear_condicion_naviera",
+    entidadId: condicion.id,
+    entidadNombre: (naviera as { name: string }).name,
+  });
+  return condicion;
 }
 
 export async function deleteCondicionNaviera(id: string): Promise<void> {
   await run(supabase.from("costeo_navieras_condiciones").delete().eq("id", id));
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "eliminar_condicion_naviera",
+    entidadId: id,
+  });
 }
 
 export async function fetchDemorasTramos(
@@ -99,7 +116,15 @@ export async function replaceDemorasTramos(
       .eq("naviera_condicion_id", navieraCondicionId)
       .eq("tipo_contenedor_id", tipoContenedorId),
   );
-  if (tramos.length === 0) return;
+  if (tramos.length === 0) {
+    await registrarActividad({
+      modulo: "costeo",
+      accion: "editar_tabulador_demoras_naviera",
+      entidadId: navieraCondicionId,
+      entidadNombre: `Tabulador ${tipoContenedorId} (vacío)`,
+    });
+    return;
+  }
   // M7: la org viaja explícita; el trigger de BD la re-deriva de la condición padre.
   const padre = await unwrap(
     supabase
@@ -118,6 +143,12 @@ export async function replaceDemorasTramos(
     moneda: t.moneda,
   }));
   await run(supabase.from("costeo_naviera_demoras_tarifa").insert(rows));
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "editar_tabulador_demoras_naviera",
+    entidadId: navieraCondicionId,
+    entidadNombre: `Tabulador ${tipoContenedorId} (${rows.length} tramos)`,
+  });
 }
 
 export interface TipoContenedorOpcion {

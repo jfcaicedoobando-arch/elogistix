@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoAgente } from "@/features/costeo/types";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export async function fetchCosteoAgentes(organizationId: string): Promise<CosteoAgente[]> {
   return unwrapOr(
@@ -31,7 +32,7 @@ export async function insertCosteoAgente(
   organizationId: string,
   input: CosteoAgenteInput,
 ): Promise<CosteoAgente> {
-  return unwrap(
+  const agente = (await unwrap(
     supabase
       .from("costeo_agentes")
       .insert({
@@ -47,20 +48,39 @@ export async function insertCosteoAgente(
       })
       .select("*")
       .single(),
-  ) as Promise<CosteoAgente>;
+  )) as CosteoAgente;
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "crear_agente_costeo",
+    entidadId: agente.id,
+    entidadNombre: agente.nombre,
+  });
+  return agente;
 }
 
 export async function updateCosteoAgente(
   id: string,
   patch: Partial<CosteoAgenteInput>,
 ): Promise<CosteoAgente> {
-  return unwrap(
+  const agente = (await unwrap(
     supabase.from("costeo_agentes").update(patch).eq("id", id).select("*").single(),
-  ) as Promise<CosteoAgente>;
+  )) as CosteoAgente;
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "editar_agente_costeo",
+    entidadId: agente.id,
+    entidadNombre: agente.nombre,
+  });
+  return agente;
 }
 
 export async function deleteCosteoAgente(id: string): Promise<void> {
   await run(supabase.from("costeo_agentes").delete().eq("id", id));
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "eliminar_agente_costeo",
+    entidadId: id,
+  });
 }
 
 /** Lite fetcher de proveedores por tipo, usado en selects del módulo Costeo. */

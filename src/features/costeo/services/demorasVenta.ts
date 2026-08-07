@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface DemoraVentaTarifa {
   id: string;
@@ -27,8 +28,19 @@ export async function fetchDemorasVenta(): Promise<DemoraVentaTarifa[]> {
 
 export async function crearDemoraVenta(input: DemoraVentaTarifaInput): Promise<void> {
   await run(supabase.from("costeo_demoras_venta_tarifa").insert(input));
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "crear_demora_venta",
+    entidadNombre: `Tramo ${input.desde_dia}-${input.hasta_dia ?? "∞"} días`,
+    detalles: { tipo_contenedor_id: input.tipo_contenedor_id, monto_por_dia_usd: input.monto_por_dia_usd },
+  });
 }
 
 export async function eliminarDemoraVenta(id: string): Promise<void> {
   await run(supabase.from("costeo_demoras_venta_tarifa").delete().eq("id", id));
+  await registrarActividad({
+    modulo: "costeo",
+    accion: "eliminar_demora_venta",
+    entidadId: id,
+  });
 }

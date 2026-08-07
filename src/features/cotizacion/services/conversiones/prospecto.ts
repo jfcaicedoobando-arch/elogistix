@@ -2,7 +2,7 @@
  * Cotizaciones — Conversión: Prospecto → Cliente.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { toDbJson } from "@/lib/supabase/cast";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ProspectoAClienteInput {
   cotizacionId: string;
@@ -50,14 +50,12 @@ export async function convertirProspectoACliente(input: ProspectoAClienteInput) 
   if (errorUpdate) throw errorUpdate;
 
   if (user) {
-    await supabase.from("bitacora_actividad").insert({
-      usuario_id: user.id,
-      usuario_email: user.email ?? "",
-      accion: "Convertir prospecto a cliente",
+    await registrarActividad({
       modulo: "cotizaciones",
-      entidad_id: cotizacionId,
-      entidad_nombre: clienteCreado.nombre,
-      detalles: toDbJson({ cliente_id: clienteCreado.id }),
+      accion: "convertir_prospecto_a_cliente",
+      entidadId: cotizacionId,
+      entidadNombre: clienteCreado.nombre,
+      detalles: { cliente_id: clienteCreado.id },
     });
   }
 

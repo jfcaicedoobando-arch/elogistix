@@ -5,7 +5,7 @@
  * helper `handlePaso1Crm` no las haga directamente.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { toDbJson } from "@/lib/supabase/cast";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface AuthUserLite {
   id: string;
@@ -39,24 +39,15 @@ export interface BloqueoSinTarifaPayload {
  * Best-effort: si falla, no rompe el flujo de validación.
  */
 export async function registrarBloqueoSinTarifa(payload: BloqueoSinTarifaPayload): Promise<void> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await supabase.from("bitacora_actividad").insert({
-      usuario_id: user.id,
-      usuario_email: user.email ?? "",
-      accion: "cotizacion_bloqueada_sin_tarifa",
-      modulo: "cotizaciones",
-      entidad_id: null,
-      entidad_nombre: payload.entidadNombre,
-      detalles: toDbJson({
-        origen: payload.origen,
-        destino: payload.destino,
-        tipo_contenedor: payload.tipoContenedor,
-      }),
-    });
-  } catch {
-    // Best-effort.
-  }
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "cotizacion_bloqueada_sin_tarifa",
+    entidadNombre: payload.entidadNombre,
+    detalles: {
+      origen: payload.origen,
+      destino: payload.destino,
+      tipo_contenedor: payload.tipoContenedor,
+    },
+  });
 }
 

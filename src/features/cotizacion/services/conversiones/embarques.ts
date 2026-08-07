@@ -5,6 +5,7 @@
  * Helpers extraídos a `embarquesHelpers.ts` (12.33.0).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import { revalidarTarifa } from "@/features/cotizacion/services/revalidacion";
 import {
   RevalidacionRequeridaError,
@@ -114,6 +115,13 @@ export async function crearEmbarqueBorradorConDecision(input: CrearBorradorInput
   const { data, error } = await rpc;
   if (error) throw await mapCrearEmbarqueError(error, cotizacionId);
   if (!data) throw new Error("La función no devolvió un embarque");
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "convertir_a_embarque",
+    entidadId: cotizacionId,
+    entidadNombre: data as string,
+    detalles: { decision },
+  });
   return data as string;
 }
 

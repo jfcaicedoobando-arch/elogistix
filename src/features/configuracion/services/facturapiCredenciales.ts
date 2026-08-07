@@ -8,6 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { run, unwrap } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type FacturapiAmbiente = "sandbox" | "live";
 
@@ -65,6 +66,13 @@ export async function upsertFacturapiCredenciales(
         { onConflict: "organization_id" },
       ),
   );
+  // SEGURIDAD: jamás registrar la api key/token; sólo el ambiente configurado.
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "configurar_credenciales_facturapi",
+    entidadId: orgId,
+    detalles: { ambiente: input.ambiente },
+  });
 }
 
 
@@ -86,6 +94,13 @@ export async function setFacturapiApiKey(
       p_api_key: apiKey,
     } as never),
   );
+  // SEGURIDAD: jamás registrar la api key/token; sólo el ambiente afectado.
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "configurar_credenciales_facturapi",
+    entidadId: orgId,
+    detalles: { ambiente },
+  });
 }
 
 export async function clearFacturapiApiKey(
@@ -99,6 +114,13 @@ export async function clearFacturapiApiKey(
       p_ambiente: ambiente,
     } as never),
   );
+  // SEGURIDAD: jamás registrar la api key/token; sólo el ambiente afectado.
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "borrar_api_key_facturapi",
+    entidadId: orgId,
+    detalles: { ambiente },
+  });
 }
 
 export interface ProbarConexionResult {

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CostoCotizacion } from "@/features/cotizacion/types";
 import { fromDbChecked } from "@/lib/supabase/cast";
 import { costosCotizacionDbSchema } from "./readSchemas";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export async function fetchCotizacionCostos(
   cotizacionId: string,
@@ -42,6 +43,12 @@ export async function upsertCotizacionCostos(
     p_request_id: requestId,
   });
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "actualizar_costos",
+    entidadId: cotizacionId,
+    detalles: { total_conceptos: costos.length },
+  });
   // Re-leemos para devolver los registros canónicos (con id/timestamps/totales calculados).
   return fetchCotizacionCostos(cotizacionId);
 }

@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type LiquidacionRow = Tables<"liquidaciones_comision">;
 
@@ -29,6 +30,9 @@ export interface GenerarLiquidacionParams {
   organization_id: string;
 }
 
+// Decisión: la generación/pago de liquidaciones de comisión se registra bajo
+// el módulo `facturacion` (más cercano a movimientos financieros hacia
+// vendedoras); la config de vendedora vive en `usuarios`/`embarques`.
 export async function generarLiquidacion(p: GenerarLiquidacionParams): Promise<string> {
   const data = await unwrap(
     supabase.rpc("generar_liquidacion_comision", {
@@ -37,7 +41,14 @@ export async function generarLiquidacion(p: GenerarLiquidacionParams): Promise<s
       p_organization_id: p.organization_id,
     }),
   );
-  return data as string;
+  const id = data as string;
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "generar_liquidacion_comision",
+    entidadId: id,
+    detalles: { vendedora_id: p.vendedora_id, periodo: p.periodo },
+  });
+  return id;
 }
 
 export interface RegistrarPagoLiquidacionParams {
@@ -56,5 +67,10 @@ export async function registrarPagoLiquidacion(p: RegistrarPagoLiquidacionParams
     notas: p.notas ?? null,
   };
   await run(supabase.from("liquidaciones_comision").update(changes).eq("id", p.id));
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "registrar_pago_liquidacion_comision",
+    entidadId: p.id,
+    detalles: { fecha_pago: p.fecha_pago, metodo_pago: p.metodo_pago },
+  });
 }
-

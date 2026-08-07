@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type PlantillaVisibilidad = "yo" | "org";
 
@@ -70,6 +71,12 @@ export async function insertPlantilla(input: InsertPlantillaInput): Promise<Coti
     .select()
     .single();
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "crear_plantilla_cotizacion",
+    entidadId: (data as unknown as CotizacionPlantilla).id,
+    entidadNombre: input.nombre.trim(),
+  });
   // SAFE-CAST: mismo motivo que `fetchPlantillas`.
   return data as unknown as CotizacionPlantilla;
 }
@@ -89,6 +96,11 @@ export async function softDeletePlantilla(id: string): Promise<void> {
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "eliminar_plantilla_cotizacion",
+    entidadId: id,
+  });
 }
 
 export interface UpdatePlantillaMetaPatch {
@@ -104,4 +116,10 @@ export async function updatePlantillaMeta(id: string, patch: UpdatePlantillaMeta
     .update(patch)
     .eq("id", id);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "editar_plantilla_cotizacion",
+    entidadId: id,
+    detalles: { campos: Object.keys(patch) },
+  });
 }

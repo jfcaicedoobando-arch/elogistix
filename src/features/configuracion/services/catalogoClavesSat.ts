@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface CatalogoClaveRow {
   id: string;
@@ -45,6 +46,12 @@ export async function insertCatalogoClaveSat(
       .from("catalogo_claves_sat")
       .insert({ organization_id: organizationId, ...payload }),
   );
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "crear_clave_catalogo_sat",
+    entidadNombre: payload.patron,
+    detalles: { clave_sat: payload.clave_sat, tipo_iva: payload.tipo_iva },
+  });
 }
 
 export async function updateCatalogoClaveSat(
@@ -52,8 +59,20 @@ export async function updateCatalogoClaveSat(
   payload: CatalogoClavePayload,
 ): Promise<void> {
   await run(supabase.from("catalogo_claves_sat").update(payload).eq("id", id));
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "actualizar_clave_catalogo_sat",
+    entidadId: id,
+    entidadNombre: payload.patron,
+    detalles: { clave_sat: payload.clave_sat, tipo_iva: payload.tipo_iva },
+  });
 }
 
 export async function deleteCatalogoClaveSat(id: string): Promise<void> {
   await run(supabase.from("catalogo_claves_sat").delete().eq("id", id));
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "eliminar_clave_catalogo_sat",
+    entidadId: id,
+  });
 }
