@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.454.0] - 2026-08-07
+- **Bitácora unificada:** los nombres de módulo se corrigen automáticamente (antes convivían "Cotizaciones" y "cotizaciones", o "facturas"/"proformas" por separado), así el filtro por módulo ya no pierde movimientos. También se corrigió el historial existente.
+- **Nuevos eventos registrados:** cambios de rol de usuarios, timbrado / cancelación / sustitución de facturas, cambios de estado y eliminación de cotizaciones, alta y baja de documentos del expediente, oportunidades de CRM (crear, editar, mover etapa, eliminar) y cambios de configuración.
+- Cada movimiento sigue guardándose dentro de la organización del usuario que lo realizó (aislamiento multiempresa intacto).
+
+
 ## [13.452.2] - 2026-08-07
 - **Calidad interna (CI):** la pantalla de Cuentas bancarias se dividió en piezas más chicas (tarjeta de cuenta y campos del formulario) para cumplir el límite de 200 líneas por archivo; sin cambios visibles para el usuario.
 
