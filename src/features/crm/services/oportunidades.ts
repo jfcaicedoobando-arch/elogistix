@@ -48,9 +48,16 @@ export async function crearOportunidad(
   user: { id?: string; email?: string } | null,
 ): Promise<{ id: string }> {
   const payload = buildOportunidadInsertPayload(input, user);
-  return unwrap(
+  const creada = (await unwrap(
     supabase.from("crm_oportunidades").insert(payload).select("id").single(),
-  ) as Promise<{ id: string }>;
+  )) as { id: string };
+  await registrarActividad({
+    modulo: "crm",
+    accion: "crear_oportunidad",
+    entidadId: creada.id,
+    entidadNombre: input.nombre ?? "",
+  });
+  return creada;
 }
 
 export async function actualizarOportunidad(input: {
@@ -58,6 +65,12 @@ export async function actualizarOportunidad(input: {
   patch: Partial<OportunidadInput & { motivo_perdida_id?: string | null; fecha_cierre_real?: string | null }>;
 }): Promise<void> {
   await run(supabase.from("crm_oportunidades").update(input.patch).eq("id", input.id));
+  await registrarActividad({
+    modulo: "crm",
+    accion: "editar_oportunidad",
+    entidadId: input.id,
+    detalles: { campos: Object.keys(input.patch) },
+  });
 }
 
 export async function moverEtapaOportunidad(input: {
@@ -78,6 +91,12 @@ export async function moverEtapaOportunidad(input: {
   if (input.fecha_cierre_real) patch.fecha_cierre_real = input.fecha_cierre_real;
   if (typeof input.valor_real === "number") patch.valor_real = input.valor_real;
   await run(supabase.from("crm_oportunidades").update(patch).eq("id", input.id));
+  await registrarActividad({
+    modulo: "crm",
+    accion: "mover_etapa_oportunidad",
+    entidadId: input.id,
+    detalles: { etapa_id: input.etapa_id, valor_real: input.valor_real ?? null },
+  });
 }
 
 export async function eliminarOportunidad(id: string, userId: string | null): Promise<void> {
@@ -87,4 +106,9 @@ export async function eliminarOportunidad(id: string, userId: string | null): Pr
       .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
       .eq("id", id),
   );
+  await registrarActividad({
+    modulo: "crm",
+    accion: "eliminar_oportunidad",
+    entidadId: id,
+  });
 }
