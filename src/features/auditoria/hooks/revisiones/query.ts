@@ -36,6 +36,10 @@ export function useAuditoriaRevisiones() {
   return useQuery({
     queryKey: AUDITORIA_REVISIONES_KEY,
     queryFn: buildRevisionesMap,
-    staleTime: 60_000,
+    // Perf (asesor BD 2026-08-07): este listado era la consulta #1 en tiempo
+    // total (9 300 llamadas). Las revisiones cambian sólo cuando el usuario
+    // marca un hallazgo, y esas mutaciones invalidan la key explícitamente.
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 }

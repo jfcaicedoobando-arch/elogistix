@@ -49,9 +49,12 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
     organizationId,
   } = filtros;
 
+  // Perf (asesor BD 2026-08-07): `count: "exact"` obligaba a contar TODA la
+  // tabla en cada página (máx 3.8 s). `"estimated"` devuelve el conteo exacto
+  // mientras la tabla es chica y cae al estimado del planner cuando crece.
   let query = supabase
     .from("bitacora_actividad")
-    .select(BITACORA_COLUMNS, { count: "exact" })
+    .select(BITACORA_COLUMNS, { count: "estimated" })
     .order("created_at", { ascending: false })
     .range(pagina * limite, (pagina + 1) * limite - 1);
 

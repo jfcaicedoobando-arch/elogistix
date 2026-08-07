@@ -8501,6 +8501,13 @@ export type Database = {
       get_tracking_public: { Args: { p_token: string }; Returns: Json }
       get_user_context: { Args: never; Returns: Json }
       get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_org_role: {
         Args: {
           _org_id: string
@@ -8986,6 +8993,10 @@ export type Database = {
       revertir_proforma_al_cancelar_sustitucion: {
         Args: { p_factura_id: string }
         Returns: string[]
+      }
+      roles_jerarquia: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: Database["public"]["Enums"]["app_role"][]
       }
       run_auditoria_backfill_legacy: { Args: never; Returns: Json }
       saldo_factura: { Args: { p_factura_id: string }; Returns: number }
