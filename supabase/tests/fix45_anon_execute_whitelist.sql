@@ -35,6 +35,9 @@ BEGIN
       -- auth.uid() es NULL, por lo que anon no obtiene datos; sólo evita 42501
       -- al evaluar las policies desde sesiones anónimas o expiradas.
       'has_role',
+      -- v13.452.0: has_any_role reemplaza cadenas de 5 llamadas a has_role en
+      -- las policies calientes (perf RLS). Misma semántica: false con uid NULL.
+      'has_any_role',
       'current_agente_id',
       'current_agente_org'
     );
