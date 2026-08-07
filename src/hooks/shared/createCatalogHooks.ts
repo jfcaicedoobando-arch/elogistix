@@ -12,6 +12,7 @@
  */
 import { useQuery, type QueryKey } from "@tanstack/react-query";
 import { useMutationWithFeedback } from "@/hooks/shared";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 const HALF_HOUR = 30 * 60 * 1000;
 const ONE_MINUTE = 60 * 1000;
@@ -24,6 +25,11 @@ export interface CatalogHooksConfig<TRow, TInsert> {
   insert: (input: TInsert) => Promise<unknown>;
   setActivo: (id: string, activo: boolean) => Promise<unknown>;
   remove: (id: string) => Promise<unknown>;
+  /**
+   * v13.453.0 — Nombre del catálogo (ej. `navieras`) para registrar cada
+   * alta/baja/activación en la bitácora del sistema (módulo `catalogos`).
+   */
+  catalogo?: string;
   /** Textos de toast; el hook admin los usa para success/error. */
   labels: {
     agregarSuccess: string;
