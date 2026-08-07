@@ -11,6 +11,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { run, unwrap } from "@/lib/supabase/response";
+import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
 /** Override del embarque tal cual está guardado (sin resolver la herencia). */
 export type SinComisionOverride = boolean | null;
@@ -48,4 +49,9 @@ export async function setSinComisionEmbarque(
   await run(
     supabase.from("embarques").update({ sin_comision: valor }).eq("id", embarqueId),
   );
+  await registrarBitacoraEmbarque({
+    accion: "actualizar_sin_comision",
+    entidadId: embarqueId,
+    detalles: { valor },
+  });
 }

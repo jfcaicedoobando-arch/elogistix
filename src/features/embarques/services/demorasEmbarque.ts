@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 import type { DemoraDesglose } from "../types/demoraDesglose";
 import { mapDemorasPayload, type RpcDemorasPayload } from "./demorasEmbarqueMapper";
 
@@ -6,7 +7,13 @@ export async function calcularDemorasEmbarque(embarqueId: string): Promise<Demor
   const { data, error } = await supabase.rpc("calcular_demoras_embarque", { p_embarque_id: embarqueId });
   if (error) throw error;
   // SAFE-CAST: RPC `calcular_demoras_embarque` no está en supabase/types.ts; el mapper normaliza el JSONB.
-  return mapDemorasPayload((data ?? {}) as unknown as RpcDemorasPayload, embarqueId);
+  const desglose = mapDemorasPayload((data ?? {}) as unknown as RpcDemorasPayload, embarqueId);
+  await registrarBitacoraEmbarque({
+    accion: "recalcular_demoras",
+    entidadId: embarqueId,
+    detalles: { diasExcedidos: desglose.dias_excedidos, sinEventos: desglose.sin_eventos },
+  });
+  return desglose;
 }
 
 export async function eliminarDemorasAuto(embarqueId: string): Promise<void> {
@@ -16,4 +23,8 @@ export async function eliminarDemorasAuto(embarqueId: string): Promise<void> {
   ]);
   if (c.error) throw c.error;
   if (v.error) throw v.error;
+  await registrarBitacoraEmbarque({
+    accion: "eliminar_demoras_auto",
+    entidadId: embarqueId,
+  });
 }
