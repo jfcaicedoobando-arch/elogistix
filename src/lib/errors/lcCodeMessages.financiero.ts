@@ -156,4 +156,13 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "La moneda de la cuenta no coincide con la del pago en lote.",
   LC_MOVIMIENTO_LOTE_INEXISTENTE:
     "No se encontró el movimiento bancario del pago en lote.",
+
+  // ── Estado de cuenta bancario ──────────────────────────────────────────
+  LC_CUENTA_NO_ENCONTRADA: "La cuenta bancaria no existe o fue eliminada.",
+  LC_ESTADO_CUENTA_PARAMS:
+    "Faltan datos para generar el estado de cuenta (cuenta y rango de fechas).",
+  LC_ESTADO_CUENTA_RANGO:
+    "El rango de fechas del estado de cuenta es inválido: la fecha inicial debe ser anterior a la final.",
+  LC_ESTADO_CUENTA_SIN_ACCESO:
+    "No tienes permisos para consultar el estado de cuenta de esta cuenta bancaria.",
 };
