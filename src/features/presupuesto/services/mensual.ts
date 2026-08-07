@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type PresupuestoMensualRow = Tables<"presupuesto_mensual">;
 
@@ -49,4 +50,10 @@ export async function upsertCeldaPresupuesto(p: UpsertCeldaParams): Promise<void
       { onConflict: "organization_id,categoria_id,periodo" },
     );
   if (error) throw error;
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "Actualizó presupuesto mensual",
+    entidadId: p.categoria_id,
+    detalles: { periodo: p.periodo, monto_mxn: p.monto_mxn },
+  });
 }

@@ -4,11 +4,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import { type LeadInput } from "@/features/crm/domain/leads/constants";
 import { buildLeadInsertPayload, type AuthLite } from "@/features/crm/domain/leads/leadPayload";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export async function bulkUpdateLeads(ids: string[], patch: Partial<LeadInput>): Promise<number> {
   if (ids.length === 0) return 0;
   const { error } = await supabase.from("crm_leads").update(patch).in("id", ids);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Actualizó leads en lote",
+    detalles: { cantidad: ids.length, campos: Object.keys(patch) },
+  });
   return ids.length;
 }
 
@@ -19,6 +25,11 @@ export async function bulkSoftDeleteLeads(ids: string[], userId: string | null):
     .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
     .in("id", ids);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Eliminó leads en lote",
+    detalles: { cantidad: ids.length },
+  });
   return ids.length;
 }
 
@@ -34,5 +45,10 @@ export async function bulkCreateLeads(inputs: LeadInput[], user: AuthLite | null
     if (error) throw error;
     inserted += count ?? chunk.length;
   }
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Importó leads en lote",
+    detalles: { cantidad: inserted },
+  });
   return inserted;
 }

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TASA_IVA, subtotalLinea, sumarMontos } from "@/lib/financial/financialUtils";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
 import { hoyMx } from "@/lib/date/mx";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ConceptoManualInput {
   descripcion: string;
@@ -161,8 +162,22 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
   if (errConc) {
     // rollback manual: borrar factura huérfana
     await supabase.from("facturas").delete().eq("id", facturaId);
+    await registrarActividad({
+      modulo: "facturacion",
+      accion: "Eliminó factura borrador",
+      entidadId: facturaId,
+      entidadNombre: numeroProvisional,
+      detalles: { motivo: "Rollback por error al crear conceptos" },
+    });
     throw new Error(`Error al crear conceptos: ${errConc.message}`);
   }
 
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "Creó factura manual borrador",
+    entidadId: facturaId,
+    entidadNombre: numeroProvisional,
+    detalles: { cliente: input.clienteNombre, total, moneda: input.moneda },
+  });
   return facturaId;
 }

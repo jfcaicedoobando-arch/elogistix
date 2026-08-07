@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaComentario } from "@/features/auditoria/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export async function fetchComentariosByRevision(
   revisionId: string,
@@ -25,5 +26,11 @@ export async function insertComentario(input: {
     .select()
     .single();
   if (error) throw error;
+  await registrarActividad({
+    modulo: "auditoria",
+    accion: "Comentó revisión de hallazgo",
+    entidadId: input.revision_id,
+    detalles: { autor_email: input.autor_email },
+  });
   return data as AuditoriaComentario;
 }

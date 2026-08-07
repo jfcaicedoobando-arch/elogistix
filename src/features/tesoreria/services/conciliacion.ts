@@ -12,6 +12,12 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
 import { unwrapOr, run } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import {
+  bitacoraImportarMovimientos,
+  bitacoraConciliarMovimiento,
+  bitacoraDesconciliarMovimiento,
+  bitacoraIgnorarMovimiento,
+} from "./conciliacionBitacora";
 
 export type MovimientoBBVA = Tables<"bbva_movimientos">;
 
@@ -75,7 +81,9 @@ export async function importarMovimientos(
     [] as { id: string }[],
   );
   const nuevos = data.length;
-  return { total: movimientos.length, nuevos, duplicados: movimientos.length - nuevos };
+  const duplicados = movimientos.length - nuevos;
+  await bitacoraImportarMovimientos(cuentaBancariaId, movimientos.length, nuevos, duplicados);
+  return { total: movimientos.length, nuevos, duplicados };
 }
 
 export interface FiltrosMovimientos {
@@ -141,6 +149,7 @@ export async function conciliarConPago(
     }, { pgCode: error.code ?? "unknown", movId, pagoId });
     mapConciliacionError(error);
   }
+  await bitacoraConciliarMovimiento(movId, tipo, pagoId);
 }
 
 
@@ -158,6 +167,7 @@ export async function desconciliarMovimiento(movId: string) {
       .eq("id", movId)
       .is("deleted_at", null),
   );
+  await bitacoraDesconciliarMovimiento(movId);
 }
 
 export async function ignorarMovimiento(movId: string, motivo: string) {
@@ -168,6 +178,7 @@ export async function ignorarMovimiento(movId: string, motivo: string) {
       .eq("id", movId)
       .is("deleted_at", null),
   );
+  await bitacoraIgnorarMovimiento(movId, motivo);
 }
 
 export {

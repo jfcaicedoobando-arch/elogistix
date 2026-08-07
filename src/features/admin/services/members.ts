@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { AppRole } from "@/types/appRole";
 import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export { fetchAvailableUsers };
 ;
@@ -82,10 +83,21 @@ export async function fetchOrgMembers(orgId: string): Promise<OrgMemberRow[]> {
 
 export async function updateOrgMemberRole(memberId: string, role: AppRole): Promise<void> {
   await run(supabase.from("organization_members").update({ role }).eq("id", memberId));
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "Cambió rol de usuario",
+    entidadId: memberId,
+    detalles: { role },
+  });
 }
 
 export async function removeOrgMember(memberId: string): Promise<void> {
   await run(supabase.from("organization_members").delete().eq("id", memberId));
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "Eliminó miembro de organización",
+    entidadId: memberId,
+  });
 }
 
 /**
@@ -111,4 +123,10 @@ export async function createOrgMember(input: CreateOrgMemberInput): Promise<void
     },
   });
   if (error) throw error;
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "Creó usuario",
+    entidadNombre: input.email,
+    detalles: { role: input.role, organizationId: input.organizationId },
+  });
 }

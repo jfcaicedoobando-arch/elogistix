@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type CategoriaPresupuesto = Tables<"presupuesto_categorias">;
 
@@ -24,22 +25,44 @@ export async function fetchCategorias(
   return unwrapOr(q, []) as Promise<CategoriaPresupuesto[]>;
 }
 
-export async function crearCategoria(payload: TablesInsert<"presupuesto_categorias">) {
-  return unwrap(
+export async function crearCategoria(
+  payload: TablesInsert<"presupuesto_categorias">,
+): Promise<CategoriaPresupuesto> {
+  const categoria = (await unwrap(
     supabase.from("presupuesto_categorias").insert(payload).select().single(),
-  );
+  )) as CategoriaPresupuesto;
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "Creó categoría de presupuesto",
+    entidadId: categoria.id,
+    entidadNombre: categoria.nombre,
+  });
+  return categoria;
 }
 
 export async function actualizarCategoria(
   id: string, patch: TablesUpdate<"presupuesto_categorias">,
-) {
-  return unwrap(
+): Promise<CategoriaPresupuesto> {
+  const categoria = (await unwrap(
     supabase.from("presupuesto_categorias").update(patch).eq("id", id).select().single(),
-  );
+  )) as CategoriaPresupuesto;
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "Actualizó categoría de presupuesto",
+    entidadId: id,
+    entidadNombre: categoria.nombre,
+    detalles: { campos: Object.keys(patch) },
+  });
+  return categoria;
 }
 
-export async function eliminarCategoria(id: string) {
+export async function eliminarCategoria(id: string): Promise<void> {
   await run(supabase.from("presupuesto_categorias").delete().eq("id", id));
+  await registrarActividad({
+    modulo: "configuracion",
+    accion: "Eliminó categoría de presupuesto",
+    entidadId: id,
+  });
 }
 
 export async function seedCategoriasDefault(organizationId: string): Promise<void> {

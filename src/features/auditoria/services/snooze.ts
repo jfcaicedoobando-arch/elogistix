@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface SnoozeRevisionInput {
   organization_id: string;
@@ -35,6 +36,17 @@ export async function snoozeRevision(
     .select()
     .single();
   if (error) throw error;
+  await registrarActividad({
+    modulo: "auditoria",
+    accion: "Pospuso hallazgo de auditoría",
+    entidadId: (data as AuditoriaRevision).id,
+    detalles: {
+      embarque_id: input.embarque_id,
+      regla: input.regla,
+      snoozed_until: input.snoozed_until,
+      snooze_motivo: input.snooze_motivo,
+    },
+  });
   return data as AuditoriaRevision;
 }
 
@@ -46,4 +58,9 @@ export async function clearSnoozeRevision(
     .update({ snoozed_until: null, snooze_motivo: null })
     .eq("id", revisionId);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "auditoria",
+    accion: "Quitó snooze de hallazgo",
+    entidadId: revisionId,
+  });
 }

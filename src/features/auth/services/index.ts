@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
 import type { PostLoginRole } from "@/lib/domain/auth";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export { resolveLandingRoute } from "@/lib/domain/auth";
 export type { PostLoginRole } from "@/lib/domain/auth";
@@ -90,4 +91,5 @@ export async function requestPasswordReset(email: string, redirectTo: string): P
 export async function updateUserPassword(password: string): Promise<void> {
   const { error } = await supabase.auth.updateUser({ password });
   if (error) throw new Error(error.message);
+  await registrarActividad({ modulo: "auth", accion: "Cambió su contraseña" });
 }

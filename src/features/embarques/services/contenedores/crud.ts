@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr, run } from "@/lib/supabase/response";
+import { registrarBitacoraEmbarque } from "../bitacoraEmbarques";
 import type {
   ContenedorBorrador,
   EmbarqueContenedor,
@@ -112,5 +113,11 @@ export async function sincronizarContenedores(
     p_contenedores: payload as never,
   });
   if (error) throw traducirErrorContenedorDuplicado(error);
-  return ((data ?? []) as unknown) as EmbarqueContenedor[];
+  const resultado = ((data ?? []) as unknown) as EmbarqueContenedor[];
+  await registrarBitacoraEmbarque({
+    accion: "Sincronizó contenedores de embarque",
+    entidadId: embarqueId,
+    detalles: { total: resultado.length },
+  });
+  return resultado;
 }

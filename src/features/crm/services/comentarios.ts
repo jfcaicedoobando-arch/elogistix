@@ -4,6 +4,7 @@
  * trigger en BD (`crm_notify_comentario_oportunidad`).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ComentarioRow {
   id: string;
@@ -45,4 +46,9 @@ export async function crearComentarioOportunidad(input: {
     texto: limpio,
   });
   if (error) throw error;
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Comentó oportunidad",
+    entidadId: input.oportunidadId,
+  });
 }

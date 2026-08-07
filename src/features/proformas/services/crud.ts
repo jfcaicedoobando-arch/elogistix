@@ -4,6 +4,7 @@ import { fromDb } from "@/lib/supabase/cast";
 import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import { logger } from "@/lib/observability/logger";
 import type { ProformaRow } from "./types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface CrearProformaParams {
   organizationId: string;
@@ -65,7 +66,20 @@ export async function crearProforma(params: CrearProformaParams): Promise<Profor
     // Reportar a Sentry aquí sería circular; nos limitamos a warning local.
     logger.warn("[crearProforma] Sentry.metrics falló:", err);
   }
-  return fromDb<ProformaRow>(data);
+  const proforma = fromDb<ProformaRow>(data);
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "Creó proforma",
+    entidadId: proforma.id,
+    entidadNombre: proforma.numero,
+    detalles: {
+      expediente: params.expediente,
+      cliente: params.clienteNombre,
+      total_usd: params.totales.total_usd,
+      total_mxn: params.totales.total_mxn,
+    },
+  });
+  return proforma;
 }
 
 export interface EliminarProformaParams {
@@ -74,6 +88,12 @@ export interface EliminarProformaParams {
 }
 
 export async function eliminarProforma(params: EliminarProformaParams): Promise<void> {
+  const { data: proformaPrevia } = await supabase
+    .from("proformas")
+    .select("numero")
+    .eq("id", params.proformaId)
+    .maybeSingle();
+
   const { error: errUpd } = await supabase
     .from("conceptos_venta")
     .update({ estado_facturacion: "pendiente", proforma_id: null })
@@ -90,6 +110,13 @@ export async function eliminarProforma(params: EliminarProformaParams): Promise<
 
   // B-3: NO actualizar embarques.tiene_proforma desde el cliente.
   // El trigger DB `trg_sync_embarque_tiene_proforma` lo maneja automáticamente al eliminar la proforma.
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "Eliminó proforma",
+    entidadId: params.proformaId,
+    entidadNombre: proformaPrevia?.numero ?? null,
+    detalles: { embarque_id: params.embarqueId },
+  });
 }
 
 export async function aprobarProformas(proformaIds: string[]): Promise<void> {
@@ -112,5 +139,11 @@ export async function aprobarProformas(proformaIds: string[]): Promise<void> {
         "Verifica que tengas permisos suficientes (rol Admin / Admin Org / Contador / Operador).",
     );
   }
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "Aprobó proforma(s)",
+    entidadNombre: `${updated} proforma(s)`,
+    detalles: { proformaIds },
+  });
 }
 

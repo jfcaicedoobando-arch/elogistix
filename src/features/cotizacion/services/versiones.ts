@@ -7,6 +7,7 @@
  * `cotizacion_versiones` aún no están reflejadas en los tipos generados.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface CotizacionVersionRow {
   id: string;
@@ -29,7 +30,14 @@ export async function duplicarCotizacionRpc(cotizacionId: string): Promise<strin
   );
   if (error) throw new Error(error.message);
   // SAFE-CAST: la RPC devuelve el uuid de la nueva cotización.
-  return data as unknown as string;
+  const nuevaId = data as unknown as string;
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "Duplicó cotización (nueva versión)",
+    entidadId: nuevaId,
+    detalles: { cotizacion_origen_id: cotizacionId },
+  });
+  return nuevaId;
 }
 
 export async function fetchVersiones(cotizacionId: string): Promise<CotizacionVersionRow[]> {

@@ -1,5 +1,18 @@
 # Changelog
 
+## [13.455.0] - 2026-08-07
+- **Bitácora completa:** ahora queda registro de prácticamente toda acción de usuario dentro de la organización. Se cerraron los huecos en:
+  - Embarques: creación, duplicado, avance y cambio de estado, ETA, fecha de llegada real, notas, tipo de cambio, contenedores, garantías, eventos de tracking, seguros y ligas públicas.
+  - Facturación: notas de crédito (creación y cambio de estado), envío de facturas por correo, movimientos bancarios de cobro y eliminación de borradores.
+  - Proformas: creación, aprobación, consolidación, asignación de conceptos y eliminación.
+  - Cuentas por pagar: captura y rechazo de facturas del buzón, y programación de pagos.
+  - Tesorería: importación de movimientos, conciliar / desconciliar / ignorar y ejecución de pagos programados.
+  - Catálogos (navieras, puertos, contenedores, tipo de cambio manual), presupuesto, módulo de auditoría y CRM (actividades, etapas, comentarios, importación y conversión de leads, plantillas).
+  - Usuarios y organizaciones: alta y baja de usuarios, cambios de rol, quitar de organización, reset de contraseña y alta/edición de organizaciones.
+  - Clientes: contactos y accesos al portal. Proveedores: alias nuevos.
+  - Autenticación: cierre de sesión y cambio de contraseña (sin datos sensibles).
+- Todo se guarda dentro de la organización del usuario (aislamiento multiempresa intacto).
+
 ## [13.454.1] - 2026-08-07
 - **Seguridad y CI:** se re-aplicaron los permisos de ejecución de las funciones internas de cierre/reapertura de embarque, archivado de versiones de cotización y los registros automáticos de bitácora (quedan bloqueadas para el público).
 

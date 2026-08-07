@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface OrgRow {
   id: string;
@@ -44,6 +45,13 @@ export async function createOrganization(input: {
     p_owner_user_id: input.ownerUserId,
   });
   if (error) throw error;
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "Creó organización",
+    entidadId: data as string,
+    entidadNombre: input.nombre,
+    detalles: { rfc: input.rfc },
+  });
   return data as string;
 }
 
@@ -58,8 +66,20 @@ export async function updateAdminOrganization(
   payload: { nombre: string; rfc: string; plan: string },
 ): Promise<void> {
   await run(supabase.from("organizations").update(payload).eq("id", id));
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: "Editó organización",
+    entidadId: id,
+    entidadNombre: payload.nombre,
+    detalles: { rfc: payload.rfc, plan: payload.plan },
+  });
 }
 
 export async function establecerOrganizacionActiva(id: string, activo: boolean): Promise<void> {
   await run(supabase.from("organizations").update({ activo }).eq("id", id));
+  await registrarActividad({
+    modulo: "usuarios",
+    accion: activo ? "Activó organización" : "Desactivó organización",
+    entidadId: id,
+  });
 }

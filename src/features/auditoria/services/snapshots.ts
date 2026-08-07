@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaSnapshot } from "@/features/auditoria/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface FetchSnapshotsOpts {
   dias?: number;
@@ -46,4 +47,9 @@ export async function capturarSnapshotAuditoria(organizationId: string): Promise
     p_organization_id: organizationId,
   });
   if (error) throw error;
+  await registrarActividad({
+    modulo: "auditoria",
+    accion: "Capturó snapshot de auditoría",
+    entidadId: organizationId,
+  });
 }

@@ -11,6 +11,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { cargoEnMonedaCuenta } from "@/features/cxp/services/pagoProveedorMovimiento";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface MovimientoCobroInput {
   pagoId: string;
@@ -88,6 +89,19 @@ export async function crearMovimientoBancarioCobro(
     importado_por: input.userId,
   };
   const { error } = await supabase.from("bbva_movimientos").insert(payload);
+  if (!error) {
+    await registrarActividad({
+      modulo: "facturacion",
+      accion: "Registró movimiento bancario de cobro",
+      entidadId: input.facturaId,
+      detalles: {
+        pago_id: input.pagoId,
+        monto: input.monto,
+        moneda: input.moneda,
+        cuenta_bancaria_id: input.cuentaBancariaId,
+      },
+    });
+  }
   return !error;
 }
 
@@ -102,4 +116,9 @@ export async function eliminarMovimientoBancarioCobro(
     .eq("pago_factura_id", pagoId)
     .eq("hash_dedupe", `cobro-${pagoId}`)
     .is("deleted_at", null);
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "Eliminó movimiento bancario de cobro",
+    detalles: { pago_id: pagoId },
+  });
 }

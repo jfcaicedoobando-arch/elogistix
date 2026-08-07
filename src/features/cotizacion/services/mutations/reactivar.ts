@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 /**
  * Reactiva una cotización que fue marcada automáticamente como
@@ -32,6 +33,13 @@ export async function reactivarCotizacion(id: string): Promise<string> {
     })
     .eq("id", id);
   if (error) throw error;
+
+  await registrarActividad({
+    modulo: "cotizaciones",
+    accion: "Reactivó cotización",
+    entidadId: id,
+    detalles: { estado_anterior: r.estado, estado_nuevo: nuevoEstado },
+  });
 
   return nuevoEstado;
 }

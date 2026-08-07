@@ -2,6 +2,7 @@
  * Servicios relacionados al contenedor del embarque.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
 export async function actualizarContenedorEmbarque(
   embarqueId: string,
@@ -12,4 +13,9 @@ export async function actualizarContenedorEmbarque(
     .update({ contenedor })
     .eq("id", embarqueId);
   if (error) throw error;
+  await registrarBitacoraEmbarque({
+    accion: "Actualizó contenedor de embarque",
+    entidadId: embarqueId,
+    detalles: { contenedor },
+  });
 }

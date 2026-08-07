@@ -5,6 +5,7 @@ import { useAuthSession } from "./auth/useAuthSession";
 import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
 import { signOutCurrentSession } from "@/lib/auth/signOut";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import { fromDb } from "@/lib/supabase/cast";
 import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { syncSentryUser } from "@/lib/observability/sentry/user";
@@ -99,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const userId = user?.id;
   const signOut = useCallback(async () => {
     clearLoginAudit(userId);
+    await registrarActividad({ modulo: "auth", accion: "Cerró sesión" });
     await signOutCurrentSession();
     resetProfile();
   }, [userId, clearLoginAudit, resetProfile]);

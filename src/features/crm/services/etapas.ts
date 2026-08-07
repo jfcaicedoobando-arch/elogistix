@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Database } from "@/integrations/supabase/types";
 
 export type CrmEtapaRow = Database["public"]["Tables"]["crm_etapas_pipeline"]["Row"];
@@ -45,6 +46,12 @@ export type EtapaPatch = Partial<
 
 export async function actualizarEtapa(input: { id: string; patch: EtapaPatch }): Promise<void> {
   await run(supabase.from("crm_etapas_pipeline").update(input.patch).eq("id", input.id));
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Editó etapa de pipeline",
+    entidadId: input.id,
+    detalles: { campos: Object.keys(input.patch) },
+  });
 }
 
 export interface MotivoPerdidaRow {
@@ -64,8 +71,15 @@ export async function actualizarMotivoPerdida(input: {
   patch: { nombre?: string; activa?: boolean };
 }): Promise<void> {
   await run(supabase.from("crm_motivos_perdida").update(input.patch).eq("id", input.id));
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Editó motivo de pérdida",
+    entidadId: input.id,
+    detalles: { campos: Object.keys(input.patch) },
+  });
 }
 
 export async function crearMotivoPerdida(nombre: string): Promise<void> {
   await run(supabase.from("crm_motivos_perdida").insert({ nombre, activa: true }));
+  await registrarActividad({ modulo: "crm", accion: "Creó motivo de pérdida", entidadNombre: nombre });
 }

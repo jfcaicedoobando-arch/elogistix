@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr, run } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface TipoCambioDof {
   fecha: string;
@@ -73,4 +74,11 @@ export async function upsertTcDofManual(input: {
       _eur: input.eurMxn ?? undefined,
     }),
   );
+  await registrarActividad({
+    modulo: "catalogos",
+    accion: "Capturó tipo de cambio DOF manual",
+    entidadId: input.fecha,
+    entidadNombre: input.fecha,
+    detalles: { usdMxn: input.usdMxn, eurMxn: input.eurMxn ?? null },
+  });
 }

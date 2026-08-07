@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { notaSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { run } from "@/lib/supabase/response";
+import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
 
@@ -17,6 +18,11 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
       .update({ estado: estado as EmbarqueInsert['estado'] })
       .eq('id', embarqueId),
   );
+  await registrarBitacoraEmbarque({
+    accion: "Actualizó estado de embarque",
+    entidadId: embarqueId,
+    detalles: { estadoNuevo: estado },
+  });
 }
 
 /**
@@ -68,6 +74,11 @@ export async function actualizarFechaLlegadaRealEmbarque(
   const patch: Partial<EmbarqueInsert> = { fecha_llegada_real: fechaIso };
   if (debeAvanzar) patch.estado = 'Arribo' as EmbarqueInsert['estado'];
   await run(supabase.from('embarques').update(patch).eq('id', embarqueId));
+  await registrarBitacoraEmbarque({
+    accion: "Actualizó fecha de llegada real de embarque",
+    entidadId: embarqueId,
+    detalles: { fechaLlegadaReal: fechaIso, estadoAnterior: current?.estado, avanzoAArribo: debeAvanzar },
+  });
 }
 
 
@@ -80,6 +91,11 @@ export async function actualizarEtaEmbarque(
   nuevaEta: string,
 ): Promise<void> {
   await run(supabase.from('embarques').update({ eta: nuevaEta }).eq('id', embarqueId));
+  await registrarBitacoraEmbarque({
+    accion: "Actualizó ETA de embarque",
+    entidadId: embarqueId,
+    detalles: { etaNueva: nuevaEta },
+  });
 }
 
 export async function insertarNotaEmbarque(
@@ -96,6 +112,11 @@ export async function insertarNotaEmbarque(
       usuario,
     }),
   );
+  await registrarBitacoraEmbarque({
+    accion: "Agregó nota a embarque",
+    entidadId: embarqueId,
+    detalles: { usuario },
+  });
 }
 
 /**
@@ -116,4 +137,9 @@ export async function actualizarTipoCambioUsdEmbarque(
       .update({ tipo_cambio_usd: tipoCambioUsd })
       .eq('id', embarqueId),
   );
+  await registrarBitacoraEmbarque({
+    accion: "Actualizó tipo de cambio USD de embarque",
+    entidadId: embarqueId,
+    detalles: { tipoCambioUsd },
+  });
 }

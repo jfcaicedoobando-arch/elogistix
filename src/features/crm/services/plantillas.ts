@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { run, unwrapOr } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type PlantillaCanal = "email" | "whatsapp";
 
@@ -50,6 +51,7 @@ export async function crearPlantilla(input: PlantillaInput): Promise<void> {
       activa: input.activa ?? true,
     }),
   );
+  await registrarActividad({ modulo: "crm", accion: "Creó plantilla de mensaje", entidadNombre: input.nombre });
 }
 
 export async function actualizarPlantilla(input: {
@@ -59,6 +61,12 @@ export async function actualizarPlantilla(input: {
   await run(
     supabase.from("crm_plantillas_mensaje").update(input.patch).eq("id", input.id),
   );
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Editó plantilla de mensaje",
+    entidadId: input.id,
+    detalles: { campos: Object.keys(input.patch) },
+  });
 }
 
 export async function eliminarPlantilla(id: string): Promise<void> {
@@ -68,4 +76,5 @@ export async function eliminarPlantilla(id: string): Promise<void> {
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", id),
   );
+  await registrarActividad({ modulo: "crm", accion: "Eliminó plantilla de mensaje", entidadId: id });
 }

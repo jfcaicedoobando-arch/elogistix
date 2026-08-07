@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type ContactoCliente = Tables<"contactos_cliente">;
 
@@ -21,9 +22,17 @@ export async function fetchContactosCliente(clienteId: string) {
 export async function createContacto(
   contacto: TablesInsert<"contactos_cliente">,
 ) {
-  return unwrap(
+  const creado = await unwrap(
     supabase.from("contactos_cliente").insert(contacto).select().single(),
   );
+  await registrarActividad({
+    modulo: "clientes",
+    accion: "Creó contacto de cliente",
+    entidadId: (creado as { id?: string })?.id ?? null,
+    entidadNombre: contacto.nombre ?? "",
+    detalles: { clienteId: contacto.cliente_id },
+  });
+  return creado;
 }
 
 export async function updateContacto(
@@ -31,6 +40,12 @@ export async function updateContacto(
   updates: Partial<ContactoCliente>,
 ) {
   await run(supabase.from("contactos_cliente").update(updates).eq("id", id));
+  await registrarActividad({
+    modulo: "clientes",
+    accion: "Editó contacto de cliente",
+    entidadId: id,
+    detalles: { campos: Object.keys(updates) },
+  });
 }
 
 export async function deleteContacto(id: string) {
@@ -38,4 +53,9 @@ export async function deleteContacto(id: string) {
   await run(
     supabase.rpc("soft_delete_record", { _table: "contactos_cliente", _id: id }),
   );
+  await registrarActividad({
+    modulo: "clientes",
+    accion: "Eliminó contacto de cliente",
+    entidadId: id,
+  });
 }

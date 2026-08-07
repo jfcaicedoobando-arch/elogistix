@@ -4,6 +4,7 @@
  * la factura de proveedor vía RPC `ejecutar_pago_programado` (SECURITY DEFINER).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface EjecutarPagoProgramadoInput {
   facturaId: string;
@@ -12,6 +13,9 @@ export interface EjecutarPagoProgramadoInput {
   monto: number;
   metodoPago?: string;
   referencia?: string;
+  /** Datos sólo para bitácora — no viajan a la RPC. */
+  moneda?: string;
+  proveedorNombre?: string | null;
 }
 
 export interface EjecutarPagoProgramadoResultado {
@@ -34,6 +38,22 @@ export async function ejecutarPagoProgramado(
   if (error) throw error;
   // SAFE-CAST: la RPC devuelve `Json` en los tipos generados; el shape real lo
   // fija el contrato de `ejecutar_pago_programado` (ver mem://principles/safe-cast).
-  return data as unknown as EjecutarPagoProgramadoResultado;
-
+  const resultado = data as unknown as EjecutarPagoProgramadoResultado;
+  if (!resultado) return resultado;
+  await registrarActividad({
+    modulo: "tesoreria",
+    accion: "Ejecutó pago programado",
+    entidadId: resultado.pago_id,
+    entidadNombre: input.proveedorNombre ?? undefined,
+    detalles: {
+      factura_id: input.facturaId,
+      monto: input.monto,
+      moneda: input.moneda ?? null,
+      cuenta_bancaria_id: input.cuentaBancariaId,
+      proveedor_nombre: input.proveedorNombre ?? null,
+      metodo_pago: input.metodoPago ?? "Transferencia",
+      saldo_cuenta_restante: resultado.saldo_cuenta_restante,
+    },
+  });
+  return resultado;
 }

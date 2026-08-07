@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 /** Ventana por defecto para listar revisiones (días). Cubre snooze máx (30d) +
  *  ventana de auditoría reciente. Configurable vía `desdeIso`. */
@@ -62,6 +63,16 @@ export async function upsertAuditoriaRevision(
       .select()
       .single(),
   );
+  await registrarActividad({
+    modulo: "auditoria",
+    accion: "Cerró revisión de hallazgo",
+    entidadId: (data as AuditoriaRevision).id,
+    detalles: {
+      embarque_id: input.embarque_id,
+      regla: input.regla,
+      accion_tomada: input.accion_tomada,
+    },
+  });
   return data as AuditoriaRevision;
 }
 
@@ -113,9 +124,25 @@ export async function asignarResponsableHallazgo(
       .select()
       .single(),
   );
+  await registrarActividad({
+    modulo: "auditoria",
+    accion: "Asignó responsable de hallazgo",
+    entidadId: (data as AuditoriaRevision).id,
+    detalles: {
+      embarque_id: input.embarque_id,
+      regla: input.regla,
+      responsable_email: input.responsable_email,
+      fecha_limite: input.fecha_limite,
+    },
+  });
   return data as AuditoriaRevision;
 }
 
 export async function deleteAuditoriaRevision(id: string): Promise<void> {
   await run(supabase.from("auditoria_revisiones").delete().eq("id", id));
+  await registrarActividad({
+    modulo: "auditoria",
+    accion: "Eliminó revisión de hallazgo",
+    entidadId: id,
+  });
 }

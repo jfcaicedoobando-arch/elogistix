@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { registrarBitacoraEmbarque } from "../bitacoraEmbarques";
 
 type TrackingLinkRow = Tables<"tracking_links">;
 
@@ -67,5 +68,10 @@ export async function createTrackingLink(params: {
     .select()
     .single();
   if (error) throw error;
+  await registrarBitacoraEmbarque({
+    accion: "Creó liga de tracking público de embarque",
+    entidadId: params.embarqueId,
+    detalles: { trackingLinkId: data.id, expiraEn: params.expiresAt ?? null },
+  });
   return data;
 }

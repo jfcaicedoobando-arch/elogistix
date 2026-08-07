@@ -64,6 +64,8 @@ export default function TesoreriaPagosProgramados() {
       monto: form.monto,
       metodoPago: form.metodoPago,
       referencia: form.referencia,
+      moneda: facturaPago.moneda,
+      proveedorNombre: facturaPago.proveedor_nombre,
     });
     setFacturaPago(null);
   };

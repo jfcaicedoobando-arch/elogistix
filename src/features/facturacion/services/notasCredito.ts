@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { getCurrentUser } from "@/features/auth/services";
 import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type NotaCredito = Tables<"factura_notas_credito">;
 export type EstadoNotaCredito = NotaCredito["estado"];
@@ -112,9 +113,22 @@ export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<No
     created_by: user.id,
     estado: "Borrador",
   };
-  return unwrap(
+  const nota = await unwrap(
     supabase.from("factura_notas_credito").insert(payload).select("*").single(),
   );
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "Creó nota de crédito",
+    entidadId: nota.id,
+    entidadNombre: nota.folio,
+    detalles: {
+      factura_id: input.factura_id,
+      motivo: input.motivo,
+      monto: input.monto,
+      moneda: input.moneda,
+    },
+  });
+  return nota;
 }
 
 
@@ -144,4 +158,10 @@ export async function cambiarEstadoNotaCredito(
     patch.aprobada_at = new Date().toISOString();
   }
   await run(supabase.from("factura_notas_credito").update(patch).eq("id", id));
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: `Cambió estado de nota de crédito a ${estadoNuevo}`,
+    entidadId: id,
+    detalles: { estado_anterior: estadoActual, estado_nuevo: estadoNuevo },
+  });
 }

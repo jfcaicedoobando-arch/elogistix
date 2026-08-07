@@ -2,6 +2,7 @@
  * Servicio de usuarios de cliente (portal): listado enriquecido, invitación y revocación.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ClientUserEnriched {
   id: string;
@@ -41,10 +42,21 @@ export async function inviteClientUser(
     body: { action: "invite-client", ...params },
   });
   if (error) throw error;
+  await registrarActividad({
+    modulo: "clientes",
+    accion: "Invitó usuario del portal de cliente",
+    entidadId: params.cliente_id,
+    entidadNombre: params.email,
+  });
   return (data ?? { is_new: false }) as InviteClientUserResult;
 }
 
 export async function revokeClientUser(id: string): Promise<void> {
   const { error } = await supabase.from("client_users").delete().eq("id", id);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "clientes",
+    accion: "Revocó usuario del portal de cliente",
+    entidadId: id,
+  });
 }
