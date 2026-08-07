@@ -13,7 +13,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import { tcValido } from "@/lib/financial/tcValido";
 import { useCuentasBancarias } from "@/features/tesoreria";
 import { saldoDisponiblePago } from "@/features/cxp/services/pagoProveedorValidaciones";
-import { facturaSaldoInput } from "./usePagoProveedorForm.saldoInput";
+import { banderasMonedaPago, facturaSaldoInput } from "./usePagoProveedorForm.saldoInput";
 import { usePagoProveedorDerivados } from "./usePagoProveedorForm.derivados";
 import { usePagoProveedorCampos } from "./usePagoProveedorForm.estado";
 import { usePagoTcDof } from "./usePagoProveedorForm.tcDof";
@@ -56,11 +56,10 @@ export function usePagoProveedorForm(
     [factura?.proveedor_origen],
   );
 
-  const montoNum = Number(monto) || 0;
   const tcNum = tcValido(tc);
-  const monedaFacturaExtranjera = !!factura && factura.moneda !== "MXN";
-  const esUsdPagadoEnMxn = monedaFacturaExtranjera && moneda === "MXN";
-  const showTc = moneda !== "MXN" || esUsdPagadoEnMxn;
+  const { montoNum, esUsdPagadoEnMxn, showTc, bloqueadoPorTc } = banderasMonedaPago({
+    factura, moneda, monto, tcNum,
+  });
 
   // Cuando se cambia la moneda de pago a MXN sobre factura extranjera y hay TC,
   // recalcular el prefill del monto para saldar exactamente en MXN.
@@ -125,7 +124,6 @@ export function usePagoProveedorForm(
     [saldoDisponible, montoEnMonedaFactura],
   );
 
-  const bloqueadoPorTc = esUsdPagadoEnMxn && !tcNum;
   const excede = factura ? montoEnMonedaFactura > saldoDisponible + 0.01 : false;
 
   // R6-N2: validación coherente de montos, IVA y totales antes de guardar
