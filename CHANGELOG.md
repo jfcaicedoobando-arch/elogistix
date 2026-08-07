@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.452.0] - 2026-08-07
+- **Base de datos más rápida:** los permisos por rol ahora se revisan de una sola vez (antes se consultaban hasta 5 veces por cada fila), lo que baja el consumo de CPU en los listados de embarques, costos, ventas, facturas y proformas.
+- Se limpiaron índices duplicados y se agregaron índices faltantes para acelerar filtros y borrados.
+- La bitácora y el listado de revisiones de auditoría cargan más rápido (menos consultas repetidas).
+- **Seguridad:** la vista de saldos bancarios ahora respeta los permisos del usuario que consulta (`security_invoker`).
+
+
 ## [13.451.0] - 2026-08-07
 - **Saldo inicial con fecha de corte** en cuentas bancarias: los movimientos anteriores al arranque se ven en el historial pero ya no bajan (ni suben) el saldo actual, porque ya venían incluidos en el saldo inicial.
 - Al **registrar un cobro** de factura ahora puedes elegir la cuenta donde entró el dinero: se genera el depósito conciliado y el saldo del banco sube.
