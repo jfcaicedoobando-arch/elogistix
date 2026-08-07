@@ -130,4 +130,9 @@ export async function setDocumentoEstadoNoAplica(
   if (!updated || updated.length === 0) {
     throw new Error('No se pudo actualizar el documento (verifica que no tenga archivo adjunto).');
   }
+  await registrarActividad({
+    modulo: 'documentos',
+    accion: noAplica ? 'marcar_no_aplica' : 'revertir_a_pendiente',
+    entidadId: docId,
+  });
 }
