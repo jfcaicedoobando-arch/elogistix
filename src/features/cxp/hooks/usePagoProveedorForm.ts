@@ -17,6 +17,10 @@ import { usePagoProveedorDerivados } from "./usePagoProveedorForm.derivados";
 import { usePagoProveedorCampos } from "./usePagoProveedorForm.estado";
 import { usePagoTcDof } from "./usePagoProveedorForm.tcDof";
 import {
+  useCuentaPagoSeleccionada,
+  usePrefillMontoPago,
+} from "./usePagoProveedorForm.cuentas";
+import {
   montoOriginalEnMonedaFactura as calcMontoOriginal,
   montoEnMonedaDeFactura,
   type PagoEditable,
@@ -40,20 +44,9 @@ export function usePagoProveedorForm(
   const { data: cuentas = [] } = useCuentasBancarias(true);
 
 
-  const cuentasDeMoneda = useMemo(
-    () => cuentas.filter((c) => c.moneda === moneda),
-    [cuentas, moneda],
-  );
-
-  // Preselección: primera cuenta de la moneda del pago; si no hay, la primera activa.
-  useEffect(() => {
-    if (!open || cuentaId || cuentas.length === 0 || pagoEditarId) return;
-    setCuentaId((cuentasDeMoneda[0] ?? cuentas[0]).id);
-  }, [open, cuentaId, cuentas, cuentasDeMoneda, pagoEditarId, setCuentaId]);
-
-  useEffect(() => {
-    if (!open) setCuentaId("");
-  }, [open, setCuentaId]);
+  const { cuentasDeMoneda, cuentaSeleccionada } = useCuentaPagoSeleccionada({
+    cuentas, moneda, open, cuentaId, setCuentaId, pagoEditarId,
+  });
 
   const requiereCuenta = metodo !== "Efectivo";
 
@@ -74,17 +67,10 @@ export function usePagoProveedorForm(
   const facturaId = factura?.id;
   const facturaSaldo = factura?.saldo;
   const facturaMoneda = factura?.moneda;
-  useEffect(() => {
-    if (!open || facturaId == null || facturaSaldo == null || pagoEditarId) return;
-    if (esUsdPagadoEnMxn && tcNum) {
-      setMonto((facturaSaldo * tcNum).toFixed(2));
-    } else if (!esUsdPagadoEnMxn && moneda === facturaMoneda) {
-      setMonto(facturaSaldo.toFixed(2));
-    }
-  }, [
-    esUsdPagadoEnMxn, moneda, facturaId, facturaSaldo, facturaMoneda, tcNum, open,
-    pagoEditarId, setMonto,
-  ]);
+  usePrefillMontoPago({
+    open, facturaId, facturaSaldo, facturaMoneda, moneda,
+    esUsdPagadoEnMxn, tcNum, pagoEditarId, setMonto,
+  });
 
   // Monto expresado en la moneda de la factura (para validar contra saldo).
   const montoEnMonedaFactura = useMemo(
@@ -142,11 +128,6 @@ export function usePagoProveedorForm(
 
   const bloqueadoPorTc = esUsdPagadoEnMxn && !tcNum;
   const excede = factura ? montoEnMonedaFactura > saldoDisponible + 0.01 : false;
-
-  const cuentaSeleccionada = useMemo(
-    () => cuentas.find((c) => c.id === cuentaId) ?? null,
-    [cuentas, cuentaId],
-  );
 
   // R6-N2: validación coherente de montos, IVA y totales antes de guardar
   // (aplica igual al registrar y al editar).
