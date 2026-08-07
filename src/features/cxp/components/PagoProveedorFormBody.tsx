@@ -52,38 +52,14 @@ export function PagoProveedorFormBody(p: Props) {
             </Select>
           </div>
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="cuenta-bancaria">
-            Cuenta bancaria{p.requiereCuenta ? " *" : " (opcional)"}
-          </Label>
-          <Select value={p.cuentaId} onValueChange={p.setCuentaId}>
-            <SelectTrigger id="cuenta-bancaria">
-              <SelectValue placeholder="Selecciona la cuenta de donde sale el pago" />
-            </SelectTrigger>
-            <SelectContent>
-              {p.cuentas.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.banco} · {c.alias ?? "Cuenta"} ({c.moneda})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {p.requiereCuenta && !p.cuentaId && (
-            <p className="text-xs text-destructive">
-              Selecciona la cuenta bancaria de donde sale el pago.
-            </p>
-          )}
-          {p.cuentaId && (
-            <p className="text-label text-muted-foreground">
-              Se registrará el movimiento bancario conciliado en esta cuenta.
-            </p>
-          )}
-          <AvisoFechaPreviaCorte
-            fecha={p.fecha}
-            corte={p.cuentas.find((c) => c.id === p.cuentaId)?.fecha_saldo_inicial}
-            aliasCuenta={p.cuentas.find((c) => c.id === p.cuentaId)?.alias}
-          />
-        </div>
+        <PagoProveedorCuentaField
+          cuentas={p.cuentas}
+          cuentaId={p.cuentaId}
+          setCuentaId={p.setCuentaId}
+          requiereCuenta={p.requiereCuenta}
+          fecha={p.fecha}
+        />
+
       </FormSection>
 
 
