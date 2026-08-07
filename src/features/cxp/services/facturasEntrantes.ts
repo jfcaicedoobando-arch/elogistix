@@ -128,13 +128,21 @@ export async function eliminarFacturaEntrante(
   await supabase.storage.from(BUCKET_CXP_INBOX).remove(paths);
 }
 
+/**
+ * Nombre legible del documento del buzón para la bitácora. Nunca lanza: el
+ * registro es accesorio y no debe tumbar la captura/rechazo de la factura.
+ */
 async function folioDocumentoEntrante(documentoId: string): Promise<string | null> {
-  const { data } = await supabase
-    .from("embarque_facturas_entrantes")
-    .select("folio_detectado, nombre_archivo")
-    .eq("id", documentoId)
-    .maybeSingle();
-  return data?.folio_detectado ?? data?.nombre_archivo ?? null;
+  try {
+    const { data } = await supabase
+      .from("embarque_facturas_entrantes")
+      .select("folio_detectado, nombre_archivo")
+      .eq("id", documentoId)
+      .maybeSingle();
+    return data?.folio_detectado ?? data?.nombre_archivo ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function rechazarFacturaEntrante(documentoId: string, motivo: string) {
