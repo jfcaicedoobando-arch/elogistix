@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.455.1] - 2026-08-07
+- **Fix bitácora de facturas:** el disparador de cambios de estado (timbrar / cancelar / sustituir) usaba un campo de folio inexistente (`folio_completo`) y hacía fallar la operación completa. Ahora arma el folio con `serie` + `numero`. Test `supabase/tests/guard_estado_factura.sql` desbloqueado.
+
 ## [13.455.0] - 2026-08-07
 - **Bitácora completa:** ahora queda registro de prácticamente toda acción de usuario dentro de la organización. Se cerraron los huecos en:
   - Embarques: creación, duplicado, avance y cambio de estado, ETA, fecha de llegada real, notas, tipo de cambio, contenedores, garantías, eventos de tracking, seguros y ligas públicas.
