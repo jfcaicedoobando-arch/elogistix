@@ -20,6 +20,7 @@ const hooks = createCatalogHooks<TipoContenedor, { code: string; name: string }>
   insert: insertTipoContenedor,
   setActivo: setTipoContenedorActivo,
   remove: deleteTipoContenedor,
+  catalogo: "tipos_contenedor",
   labels: {
     agregarSuccess: "Tipo de contenedor agregado",
     agregarError: "Error al agregar tipo",

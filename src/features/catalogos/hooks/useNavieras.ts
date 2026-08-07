@@ -16,6 +16,7 @@ const hooks = createCatalogHooks<Naviera, { code: string; name: string }>({
   insert: insertNaviera,
   setActivo: setNavieraActivo,
   remove: deleteNaviera,
+  catalogo: "navieras",
   labels: {
     agregarSuccess: "Naviera agregada",
     agregarError: "Error al agregar naviera",
