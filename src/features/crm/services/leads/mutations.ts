@@ -16,7 +16,7 @@ export async function createLead(input: LeadInput, user: AuthLite | null): Promi
     modulo: "crm",
     accion: "crear_lead",
     entidadId: creado.id,
-    entidadNombre: input.empresa ?? input.nombre_contacto ?? "",
+    entidadNombre: input.empresa ?? input.contacto ?? "",
     detalles: { fuente: input.fuente, estado: input.estado },
   });
   return creado;
