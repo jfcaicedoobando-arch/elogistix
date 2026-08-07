@@ -101,6 +101,12 @@ export async function createDocumentoEmbarqueRow(params: {
       notas: params.notas ?? null,
     });
   if (error) throw error;
+  await registrarActividad({
+    modulo: 'documentos',
+    accion: 'agregar_documento_checklist',
+    entidadId: params.embarqueId,
+    entidadNombre: params.nombre,
+  });
 }
 
 /**
