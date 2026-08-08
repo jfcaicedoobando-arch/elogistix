@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.460.0] - 2026-08-08
+- Tesorería → Pagos: al hacer clic en un pago se abre un panel de detalle con el movimiento bancario conciliado y las facturas a las que se aplicó (con saldo por factura y enlaces a factura/embarque).
+- Los pagos que forman parte de un pago en lote se marcan en la tabla y abren el detalle completo del lote.
+- Conciliación bancaria: los movimientos conciliados tienen el botón "Ver detalle del pago".
+- Nueva función de base de datos `pago_detalle` (multitenant) que unifica cobros, pagos, lotes y anticipos.
+
 ## [13.459.0] - 2026-08-08
 - Nueva pantalla **Tesorería › Pagos** (libro maestro): lista transversal de cobros de clientes, pagos a proveedores y anticipos, con KPIs en MXN, pestañas Todos/Recibidos/Realizados, filtros por periodo (mes/trimestre/año), cuenta bancaria, moneda, método SAT, conciliación y complemento de pago, más búsqueda por contraparte/folio/referencia.
 - Drill-down desde cada pago a la factura de cliente o de proveedor y al estado de cuenta bancario del movimiento conciliado.

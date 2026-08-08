@@ -19,6 +19,8 @@ import {
   type FiltrosLibroPagos, type RangoPagos, type VistaLibroPagos,
 } from "@/features/tesoreria/domain/libroPagos";
 import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCuenta";
+import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
+import { refPagoDeLibro, type RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { libroPagosColumns } from "./_sections/libroPagosColumns";
 import { LibroPagosToolbar } from "./_sections/LibroPagosToolbar";
 import { LibroPagosKpis } from "./_sections/LibroPagosKpis";
@@ -28,6 +30,7 @@ export default function TesoreriaPagos() {
   const { data: cuentasRaw = [] } = useCuentasBancarias();
   const [rango, setRango] = useState<RangoPagos>(() => rangoMesPagos());
   const [filtros, setFiltros] = useState<FiltrosLibroPagos>(FILTROS_LIBRO_PAGOS_INICIALES);
+  const [pagoAbierto, setPagoAbierto] = useState<RefPago | null>(null);
 
   const { data: libro, isLoading, isError, refetch } = useLibroPagos(rango.desde, rango.hasta);
   const pagos = libro?.pagos ?? [];
@@ -91,9 +94,16 @@ export default function TesoreriaPagos() {
           isLoading={isLoading}
           isError={isError}
           onRetry={() => void refetch()}
+          onRowClick={(p) => setPagoAbierto(refPagoDeLibro(p))}
+          getRowAriaLabel={(p) => `Ver detalle del pago de ${p.contraparte ?? "la contraparte"}`}
           emptyMessage="No hay pagos registrados con estos filtros."
         />
       </div>
+
+      <DetallePagoSheet
+        ref_pago={pagoAbierto}
+        onOpenChange={(open) => { if (!open) setPagoAbierto(null); }}
+      />
     </PageContainer>
   );
 }

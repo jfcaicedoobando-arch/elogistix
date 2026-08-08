@@ -14,6 +14,9 @@ export const tesoreria = {
   /** Libro maestro de pagos (cobros + pagos + anticipos) por periodo. */
   libroPagos: (desde: string, hasta: string) =>
     ["tesoreria", "libro-pagos", desde, hasta] as const,
+  /** Detalle de un pago: movimiento bancario conciliado + facturas aplicadas. */
+  pagoDetalle: (tipo: string | null, id: string | null) =>
+    ["tesoreria", "pago-detalle", tipo ?? "none", id ?? "none"] as const,
 
 
 

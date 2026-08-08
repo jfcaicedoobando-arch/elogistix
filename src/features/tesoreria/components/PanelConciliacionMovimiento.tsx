@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { EyeOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
+import { refPagoDeMovimiento } from "@/features/tesoreria/domain/pagoDetalle";
 interface Props {
   movimiento: MovimientoBBVA | null;
   onClose: () => void;
@@ -27,6 +29,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
   const eliminar = useEliminarMovimientoManual();
   const [openIgnorar, setOpenIgnorar] = useState(false);
   const [openEliminar, setOpenEliminar] = useState(false);
+  const [verPago, setVerPago] = useState(false);
   const [motivo, setMotivo] = useState("");
 
   if (!movimiento) {
@@ -37,6 +40,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
     );
   }
 
+  const refPago = refPagoDeMovimiento(movimiento);
   const esCargo = Number(movimiento.cargo) > 0;
   const monto = esCargo ? Number(movimiento.cargo) : Number(movimiento.abono);
 
@@ -89,6 +93,16 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
         {movimiento.estado_conciliacion === "Conciliado" ? (
           <>
             <Badge className="bg-success/10 text-success border-success/20">Conciliado</Badge>
+            {refPago ? (
+              <Button variant="outline" size="sm" onClick={() => setVerPago(true)} className="w-full">
+                <Eye className="h-4 w-4 mr-2" />
+                Ver detalle del pago
+              </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Este movimiento está conciliado, pero no guarda el pago con el que se amarró.
+              </p>
+            )}
             <Button variant="outline" size="sm" onClick={onDesconciliar} className="w-full">
               Desconciliar
             </Button>
@@ -149,6 +163,11 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
           </Button>
         )}
       </CardContent>
+
+      <DetallePagoSheet
+        ref_pago={verPago ? refPago : null}
+        onOpenChange={(open) => { if (!open) setVerPago(false); }}
+      />
 
       <FormDialogShell
         open={openIgnorar}

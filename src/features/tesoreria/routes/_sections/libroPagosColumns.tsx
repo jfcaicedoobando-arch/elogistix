@@ -86,15 +86,24 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       cell: ({ row }) => {
         const ruta = rutaDocumento(row.original);
         const folio = row.original.documento_folio ?? (row.original.tipo === "anticipo" ? "Sin factura" : "—");
-        if (!ruta) return <span className="text-xs text-muted-foreground">{folio}</span>;
+        const enLote = row.original.tipo === "pago" && !!row.original.lote_id;
         return (
-          <Link
-            to={ruta}
-            className="text-xs font-medium text-primary hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {folio}
-          </Link>
+          <div className="space-y-0.5">
+            {ruta ? (
+              <Link
+                to={ruta}
+                className="text-xs font-medium text-primary hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {folio}
+              </Link>
+            ) : (
+              <span className="text-xs text-muted-foreground">{folio}</span>
+            )}
+            {enLote ? (
+              <span className="block text-2xs text-muted-foreground">Parte de un pago en lote</span>
+            ) : null}
+          </div>
         );
       },
     },
