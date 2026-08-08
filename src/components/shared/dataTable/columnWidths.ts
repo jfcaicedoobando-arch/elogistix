@@ -36,4 +36,3 @@ export const COL_W = {
   acciones: "w-[56px]",
 } as const;
 
-export type ColWidthToken = keyof typeof COL_W;

@@ -156,16 +156,6 @@ export function carteraACsv(
   return toCsv([...ENCABEZADOS_CARTERA], [...filasDetalle, ...filasTotales]);
 }
 
-/** Resumen formateado para encabezar el PDF. */
-export function resumenCarteraPdf(total: TotalesCartera) {
-  return {
-    conteo: String(total.conteo),
-    mxnHistorico: formatCurrency(total.mxnHistorico, "MXN"),
-    mxnCorte: formatCurrency(total.mxnCorte, "MXN"),
-    diferencia: formatCurrency(total.diferencia, "MXN"),
-  };
-}
-
 /** Nombre de archivo: `cartera-antiguedad-<corte>.<ext>`. */
 export function nombreArchivoCartera(fechaCorte: string, ext: "csv" | "pdf"): string {
   return `cartera-antiguedad-${fechaCorte}.${ext}`;
