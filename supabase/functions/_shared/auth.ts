@@ -166,3 +166,26 @@ export async function authorizeOrgRole(
     .maybeSingle();
   return !!globalRole;
 }
+
+/**
+ * v13.458.0 — Autoriza a un usuario del portal de clientes sobre un CFDI.
+ * Los clientes no son miembros de la organización (no tienen fila en
+ * `organization_members`), su vínculo vive en `client_users`. Se exige que el
+ * usuario esté ligado al mismo `cliente_id` del documento y a su organización.
+ */
+export async function authorizePortalCliente(
+  adminClient: SupabaseClient,
+  userId: string,
+  clienteId: string | null,
+  organizationId: string,
+): Promise<boolean> {
+  if (!clienteId) return false;
+  const { data } = await adminClient
+    .from("client_users")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("cliente_id", clienteId)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  return !!data;
+}
