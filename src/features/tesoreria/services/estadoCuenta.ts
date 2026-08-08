@@ -9,10 +9,7 @@ import type {
   MovimientoEstadoCuenta,
 } from "@/features/tesoreria/domain/estadoCuenta";
 
-export type {
-  EstadoCuentaBancario,
-  MovimientoEstadoCuenta,
-} from "@/features/tesoreria/domain/estadoCuenta";
+export type { EstadoCuentaBancario } from "@/features/tesoreria/domain/estadoCuenta";
 
 function num(v: unknown): number {
   const n = Number(v);
