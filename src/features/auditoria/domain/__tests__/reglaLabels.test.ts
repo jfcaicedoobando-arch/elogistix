@@ -14,7 +14,7 @@ describe("reglaLabels", () => {
 
   it("reglaShortLabel devuelve la etiqueta correcta", () => {
     expect(reglaShortLabel("docs_faltantes")).toBe("Documentos faltantes");
-    expect(reglaShortLabel("margen_negativo")).toBe("Margen negativo");
+    expect(reglaShortLabel("margen_negativo")).toBe("Margen estimado negativo");
     expect(reglaShortLabel("proforma_vencida")).toBe("Proforma vencida");
   });
 
