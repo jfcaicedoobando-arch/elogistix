@@ -2,6 +2,11 @@
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
 
+-- NOTA (13.464.1): la variante con parámetro se renombró a
+-- public._auditoria_embarques_org_base(uuid). El nombre público
+-- public.auditoria_embarques_org(uuid) ahora es un wrapper que agrega la regla
+-- 'costos_repetidos' (ver supabase/schema/auditoria/costos_repetidos.sql).
+
 -- === Overload 1/2 ===
 CREATE OR REPLACE FUNCTION public.auditoria_embarques_org()
  RETURNS jsonb

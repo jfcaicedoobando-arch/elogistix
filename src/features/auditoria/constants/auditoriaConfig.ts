@@ -2,7 +2,7 @@
 import {
   Clock, FileWarning, FileX, FileX2, Receipt, FileCheck, FileSpreadsheet, FileClock,
   Scale, Stamp, Ban, Banknote, HandCoins, AlertOctagon, Container, CalendarClock,
-  TrendingDown, type LucideIcon,
+  TrendingDown, Copy, type LucideIcon,
 } from "lucide-react";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
 
@@ -71,6 +71,13 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
     label: "Costos sin venta facturable",
     description: "Embarques cerrados o entregados con costos cargados pero sin venta.",
     icon: FileX2,
+  },
+  costos_repetidos: {
+    shortLabel: "Costos repetidos",
+    label: "Costos idénticos repetidos (posible duplicado)",
+    description:
+      "Embarques con costos idénticos (mismo concepto, importe y moneda) repetidos cuando el número de copias NO coincide con el número de contenedores. Los prorrateos legítimos por contenedor no se marcan.",
+    icon: Copy,
   },
   proforma_vencida: {
     shortLabel: "Proforma vencida",
@@ -184,6 +191,7 @@ export const REGLAS_ORDEN: ReglaAuditoria[] = [
   "proforma_borrador_abandonada",
   "venta_sin_costo",
   "costo_sin_venta",
+  "costos_repetidos",
   "embarque_huerfano",
   "docs_faltantes",
   "fechas",
