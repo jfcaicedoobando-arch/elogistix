@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.457.1] - 2026-08-08
+- **Fix:** se eliminó la versión anterior (duplicada) de `registrar_anticipo_proveedor`; el guardia de integridad ya no reporta sobrecarga ambigua.
+
+
+
 ## [13.457.0] - 2026-08-07
 - **Anticipos ligados a embarque:** el anticipo a proveedor ahora se puede amarrar a un expediente.
   - Nueva columna `embarque_id` en `anticipos_proveedor`, RPC `vincular_anticipo_embarque` y `registrar_anticipo_proveedor` con parámetro de embarque.
