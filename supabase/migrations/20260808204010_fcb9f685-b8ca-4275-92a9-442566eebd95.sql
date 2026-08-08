@@ -1,10 +1,3 @@
--- Fuente canónica de public._crear_embarque_replicar_conceptos
--- Helper privado (Bloque 3.2 · god-function split) usado por
--- crear_embarque_borrador_core para replicar cotizacion_costos y
--- conceptos_venta en el embarque recién creado. Sin lógica de negocio
--- propia — extracción pura de dos bucles idénticos al original.
--- Regenerada desde DB. Ver supabase/schema/README.md.
-
 CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(
   p_cotizacion_id uuid,
   p_embarque_id uuid,
@@ -64,8 +57,6 @@ BEGIN
         v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0), 2);
         v_pu    := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
 
-        -- Si el JSON viene con drift, preservar el total cobrado
-        -- y recalcular el unitario para satisfacer conceptos_venta_total_calc.
         IF ABS(v_total - ROUND(v_cant::numeric * v_pu, 2)) > 0.01 THEN
           v_pu := ROUND(v_total / v_cant::numeric, 6);
         END IF;
