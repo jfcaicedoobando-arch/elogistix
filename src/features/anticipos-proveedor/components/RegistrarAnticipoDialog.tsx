@@ -39,6 +39,8 @@ export function RegistrarAnticipoDialog({
         cuentaBancariaId: "",
         tipoCambioUsd: undefined,
         referencia: "", notas: "",
+        embarqueId: null, embarqueExpediente: null,
+
       },
     });
 
