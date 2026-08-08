@@ -17,7 +17,7 @@ import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
 import type { AppRole } from "@/types/appRole";
 import {
-  Dashboard, Operaciones, Reportes, CierreMensual, Bitacora, Ayuda,
+  Dashboard, Operaciones, Reportes, ReportesCartera, CierreMensual, Bitacora, Ayuda,
   Papelera, Idempotencia, Auditoria, SentryDiagnostico,
   Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
   Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, CotizacionPlantillas, PdfPreviewCotizacion,
