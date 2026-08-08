@@ -26,7 +26,11 @@ interface Props {
   saldoFactura: number;
   monedaFactura: string;
   anticipos: AnticipoProveedorRow[];
+  /** Embarque de la factura, para avisar si no coincide con el del anticipo. */
+  facturaEmbarqueId?: string | null;
+  facturaExpediente?: string | null;
 }
+
 
 export function AplicarAnticipoDesdeFacturaDialog({
   open, onOpenChange, facturaId, folioFactura, saldoFactura, monedaFactura, anticipos,
