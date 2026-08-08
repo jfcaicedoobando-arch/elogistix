@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.465.0] - 2026-08-08
+- Super admin sin organización: el administrador de la plataforma ya **no** aterriza automáticamente en el primer tenant alfabético (antes caía en "Chino Cochino"). Ahora arranca en modo **Plataforma · Libre Carga** sin organización activa.
+- Nuevo selector de contexto en el sidebar con la opción "Plataforma · Libre Carga" y la lista de organizaciones cliente.
+- Banner persistente cuando el super admin entra a un tenant, con botón **Salir del tenant** que limpia la preferencia guardada y la caché.
+- Los módulos operativos muestran un estado vacío con selector de organización si el super admin no ha elegido un cliente, en lugar de mostrar datos ajenos.
+
+
+
 ## [13.464.5] - 2026-08-08
 - Seguridad (H6): las migraciones nuevas de `eliminar_organizacion_vacia` y `_crear_embarque_replicar_conceptos` ahora incluyen `REVOKE ALL ... FROM PUBLIC/anon` y `GRANT EXECUTE` explícito; el helper interno de replicación de conceptos queda restringido a `service_role`. La auditoría `audit:migrations` pasa limpia.
 
