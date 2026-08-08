@@ -52,7 +52,9 @@ function EstadoCell({ value }: { value: string }) {
   return <ToneBadge tone="neutral">{value}</ToneBadge>;
 }
 
-export function buildAnticipoColumns({ canEditFinance, onAplicar, onCancelar }: Options) {
+export function buildAnticipoColumns({
+  canEditFinance, onAplicar, onCancelar, onVincularEmbarque,
+}: Options) {
   return [
     {
       header: "Fecha",
@@ -60,6 +62,12 @@ export function buildAnticipoColumns({ canEditFinance, onAplicar, onCancelar }: 
       cell: (info: CellCtx) => formatDate(info.getValue() as string),
     },
     { header: "Proveedor", accessorKey: "proveedor_nombre" },
+    {
+      header: "Embarque",
+      accessorKey: "embarque_expediente",
+      cell: (info: CellCtx) => <EmbarqueCell row={info.row.original} />,
+    },
+
     {
       header: "Monto",
       accessorKey: "monto",
