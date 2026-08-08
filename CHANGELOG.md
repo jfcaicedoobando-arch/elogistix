@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.464.0] - 2026-08-08
+- Auditoría operativa — fix de márgenes negativos falsos: se limpiaron (borrado lógico, reversible) los conceptos de costo y venta duplicados dentro de un mismo embarque, que inflaban el costo y disparaban hallazgos de "margen negativo" inexistentes (caso reportado: expediente ELIMP00007, que ahora muestra utilidad positiva). No se tocó ningún concepto vinculado a factura de proveedor, proforma o factura de cliente.
+- Blindaje en base de datos: la función que replica los conceptos de la cotización al crear el embarque ahora es idempotente — si el embarque ya tiene conceptos vivos no los vuelve a copiar, evitando duplicados por reintentos o dobles clics.
+- Etiquetas más claras: las reglas de margen de la auditoría se muestran como "Margen estimado negativo/bajo" y su descripción aclara que se calculan con el presupuesto del embarque (conceptos), no con las facturas reales del P&L.
+- Quedan 12 grupos de costos repetidos en 5 embarques (189, 195, 149, 272, 219, 193) donde cada copia está amarrada a una factura de proveedor real; requieren revisión manual y se dejaron intactos.
+
 ## [13.463.3] - 2026-08-08
 - CI verde: se dividieron los 4 archivos que rebasaban el límite de 200 líneas (Power of 10). Nuevos módulos: `AgingMonedaFechaBar` compartido por las vistas de antigüedad de CxC y CxP, exportadores CSV propios (`cxcAgingExport`, `cxpAgingExport`), `libroPagosRangos` (rangos mes/trimestre/año del libro de pagos) y `DetallePagoAplicaciones` (bloque "Aplicado a" del detalle de pago).
 - Sin cambios de comportamiento: misma UI, mismos cálculos.
