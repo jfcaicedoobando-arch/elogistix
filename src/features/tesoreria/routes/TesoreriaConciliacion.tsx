@@ -21,7 +21,9 @@ import type { MovimientoBBVA } from "@/features/tesoreria/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
-import { movimientoColumns } from "./_sections/movimientoColumns";
+import { crearMovimientoColumns } from "./_sections/movimientoColumns";
+import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
+import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { MovimientoManualDialog } from "./_sections/MovimientoManualDialog";
 import { ConciliacionToolbar } from "./_sections/ConciliacionToolbar";
 
@@ -39,6 +41,7 @@ export default function TesoreriaConciliacion() {
   };
   const [estado, setEstado] = useState<"Pendiente" | "Conciliado" | "Ignorado" | "todos">("Pendiente");
   const [sel, setSel] = useState<MovimientoBBVA | null>(null);
+  const [refPago, setRefPago] = useState<RefPago | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualForm, setManualForm] = useState<Partial<MovimientoManualInput>>({
     tipo: "cargo",
@@ -51,7 +54,7 @@ export default function TesoreriaConciliacion() {
   const conciliarPago = useConciliarPago();
   const registrarManual = useRegistrarMovimientoManual();
   const fileRef = useRef<HTMLInputElement>(null);
-  const columns = useMemo(() => movimientoColumns, []);
+  const columns = useMemo(() => crearMovimientoColumns(setRefPago), []);
   const { isAutoConciliando, handleConciliarExactos } = useAutoConciliarExactos(movs, conciliarPago.mutateAsync);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
