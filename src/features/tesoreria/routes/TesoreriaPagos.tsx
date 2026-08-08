@@ -18,7 +18,7 @@ import {
   monedasDisponibles, rangoMesPagos, totalesLibroPagos,
   type FiltrosLibroPagos, type RangoPagos, type VistaLibroPagos,
 } from "@/features/tesoreria/domain/libroPagos";
-import { etiquetaCuenta } from "@/features/tesoreria/domain/cuentasBancarias";
+import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCuenta";
 import { libroPagosColumns } from "./_sections/libroPagosColumns";
 import { LibroPagosToolbar } from "./_sections/LibroPagosToolbar";
 import { LibroPagosKpis } from "./_sections/LibroPagosKpis";
