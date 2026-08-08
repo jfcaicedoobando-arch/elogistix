@@ -132,3 +132,20 @@ export function resumenAplicaciones(aplicaciones: AplicacionPago[]): string {
   if (aplicaciones.length === 1) return aplicaciones[0].folio ?? "1 factura";
   return `${aplicaciones.length} facturas`;
 }
+
+/** Fila del libro de pagos: lo mínimo para pedir su detalle. */
+export interface FilaLibroRef {
+  tipo: "cobro" | "pago" | "anticipo";
+  id: string;
+  lote_id: string | null;
+}
+
+/**
+ * Traduce una fila del libro maestro a la referencia del detalle.
+ * Un pago que pertenece a un lote se abre como lote, para que el panel
+ * muestre todas las facturas que cubrió esa transferencia.
+ */
+export function refPagoDeLibro(fila: FilaLibroRef): RefPago {
+  if (fila.tipo === "pago" && fila.lote_id) return { tipo: "lote", id: fila.lote_id };
+  return { tipo: fila.tipo, id: fila.id };
+}
