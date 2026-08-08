@@ -107,6 +107,8 @@ export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.fre
   "/tesoreria": TESORERIA_READ_ROLES,
   "/tesoreria/cuentas": TESORERIA_READ_ROLES,
   "/tesoreria/conciliacion": TESORERIA_READ_ROLES,
+  "/tesoreria/estado-cuenta": TESORERIA_READ_ROLES,
+  "/tesoreria/pagos": TESORERIA_READ_ROLES,
   "/tesoreria/flujo": TESORERIA_READ_ROLES,
   "/tesoreria/pagos-programados": TESORERIA_READ_ROLES,
   "/comisiones": COMISIONES_ROLES,
