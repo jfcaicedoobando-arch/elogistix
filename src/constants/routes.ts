@@ -67,6 +67,7 @@ export const ROUTES = {
   TESORERIA_CUENTAS: "/tesoreria/cuentas",
   TESORERIA_CONCILIACION: "/tesoreria/conciliacion",
   TESORERIA_ESTADO_CUENTA: "/tesoreria/estado-cuenta",
+  TESORERIA_PAGOS: "/tesoreria/pagos",
 
   TESORERIA_FLUJO: "/tesoreria/flujo",
 

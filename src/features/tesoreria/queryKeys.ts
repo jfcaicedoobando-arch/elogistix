@@ -11,6 +11,10 @@ export const tesoreria = {
   /** Estado de cuenta bancario por cuenta y periodo. */
   estadoCuenta: (cuentaId: string | null, desde: string, hasta: string) =>
     ["tesoreria", "estado-cuenta", cuentaId ?? "none", desde, hasta] as const,
+  /** Libro maestro de pagos (cobros + pagos + anticipos) por periodo. */
+  libroPagos: (desde: string, hasta: string) =>
+    ["tesoreria", "libro-pagos", desde, hasta] as const,
+
 
 
   movimientos: (cuentaId: string | null, filtros?: unknown) =>
