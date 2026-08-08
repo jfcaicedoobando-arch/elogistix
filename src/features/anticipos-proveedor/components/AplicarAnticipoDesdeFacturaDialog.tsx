@@ -67,6 +67,17 @@ export function AplicarAnticipoDesdeFacturaDialog({
 
   const montoNum = Number(monto);
   const monedaDifiere = Boolean(anticipo) && anticipo!.moneda !== monedaFactura;
+  const desajuste = useMemo(
+    () =>
+      evaluarDesajusteEmbarque({
+        anticipoEmbarqueId: anticipo?.embarque_id ?? null,
+        anticipoExpediente: anticipo?.embarque_expediente ?? null,
+        facturaEmbarqueId: facturaEmbarqueId ?? null,
+        facturaExpediente: facturaExpediente ?? null,
+      }),
+    [anticipo, facturaEmbarqueId, facturaExpediente],
+  );
+
 
   const onSubmit = async () => {
     if (!anticipo) return;
