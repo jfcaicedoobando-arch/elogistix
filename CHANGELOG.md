@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.459.0] - 2026-08-08
+- Nueva pantalla **Tesorería › Pagos** (libro maestro): lista transversal de cobros de clientes, pagos a proveedores y anticipos, con KPIs en MXN, pestañas Todos/Recibidos/Realizados, filtros por periodo (mes/trimestre/año), cuenta bancaria, moneda, método SAT, conciliación y complemento de pago, más búsqueda por contraparte/folio/referencia.
+- Drill-down desde cada pago a la factura de cliente o de proveedor y al estado de cuenta bancario del movimiento conciliado.
+- Exportación del libro de pagos a CSV y PDF (`LibroPagosDocument`).
+- Backend: RPC `libro_pagos(p_desde, p_hasta)` (SECURITY DEFINER, aislada por organización) que unifica `pagos_factura`, `pagos_proveedor` y `anticipos_proveedor` con equivalente en MXN al tipo de cambio guardado en cada pago.
+
 ## [13.458.2] - 2026-08-08
 - Project monitoring (g8/g9): verificado que `embarque_docs_faltantes` y `has_org_role` SÍ tienen `GRANT EXECUTE` a `authenticated` y `service_role`; los "permission denied for function" provienen de peticiones con sesión expirada (rol `anon`), es decir el bloqueo es correcto. Se traduce ese error a "Tu sesión expiró…" en `pgErrorCodes.ts` en lugar de mostrar el texto técnico.
 
