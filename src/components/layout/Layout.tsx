@@ -12,6 +12,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 import { NotificacionesPopover } from "@/components/layout/NotificacionesPopover";
 import { useIsMobile } from "@/hooks/shared/useIsMobile";
+import { TenantContextBanner } from "@/components/layout/TenantContextBanner";
+import { SeleccionaOrganizacion } from "@/components/layout/SeleccionaOrganizacion";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
+
 
 export function Layout() {
   const location = useLocation();
@@ -26,6 +30,8 @@ export function Layout() {
   }, []);
 
   const isMobile = useIsMobile();
+  const { requiereSeleccionOrg } = useOrganization();
+
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
@@ -59,15 +65,17 @@ export function Layout() {
               <ThemeToggle />
             </div>
           </header>
+          <TenantContextBanner />
           <main className="flex-1 overflow-auto">
             <PageContainer noSpacing>
               <ErrorBoundary resetKey={location.pathname}>
                 <Suspense fallback={<RouteLoadingFallback />}>
-                  <Outlet />
+                  {requiereSeleccionOrg ? <SeleccionaOrganizacion /> : <Outlet />}
                 </Suspense>
               </ErrorBoundary>
             </PageContainer>
           </main>
+
 
         </div>
       </div>

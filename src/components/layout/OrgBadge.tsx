@@ -11,7 +11,7 @@ import { useOrganization } from "@/lib/contexts/OrganizationContext";
 function OrgBadgeBase({ collapsed }: { collapsed?: boolean }) {
   const { organization, isSuperAdmin, organizations } = useOrganization();
 
-  if (isSuperAdmin && organizations.length > 1) return null;
+  if (isSuperAdmin && organizations.length > 0) return null;
   if (!organization) return null;
 
   if (collapsed) {

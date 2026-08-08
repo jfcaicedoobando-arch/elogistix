@@ -19,7 +19,11 @@ interface OrganizationContextType {
   organization: Organization | null;
   organizations: Organization[];
   setActiveOrganization: (id: string) => void;
+  /** Sale del tenant activo (sólo super admin) y limpia la preferencia guardada. */
+  clearActiveOrganization: () => void;
   isSuperAdmin: boolean;
+  /** true cuando es super admin y no ha elegido ninguna organización todavía. */
+  requiereSeleccionOrg: boolean;
   loading: boolean;
 }
 
@@ -28,9 +32,12 @@ const OrganizationContext = createContext<OrganizationContextType>({
   organization: null,
   organizations: [],
   setActiveOrganization: () => {},
+  clearActiveOrganization: () => {},
   isSuperAdmin: false,
+  requiereSeleccionOrg: false,
   loading: true,
 });
+
 
 export const useOrganization = () => useContext(OrganizationContext);
 
@@ -53,17 +60,15 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setSuperAdminOrgs(orgList);
       const stored = safeLocalStorage.getItem(STORAGE_KEYS.superAdminActiveOrg);
-      // R7-FIX4: sin preferencia guardada, aterrizar en la organización propia
-      // del super-admin (la de su membresía) antes que en la primera alfabética.
-      const propia = cachedOrgId && orgList.find(o => o.id === cachedOrgId) ? cachedOrgId : null;
-      const activeId = stored && orgList.find(o => o.id === stored)
-        ? stored
-        : propia ?? orgList[0]?.id ?? null;
+      // El super admin es administrador de la plataforma, NO miembro de un
+      // tenant: nunca se le auto-asigna una organización. Sólo se restaura la
+      // preferencia que él eligió explícitamente (y que sigue activa).
+      const activeId = stored && orgList.find(o => o.id === stored) ? stored : null;
       setSuperAdminActiveId(activeId);
       setLoadingSA(false);
     })();
     return () => { cancelled = true; };
-  }, [user, isSuperAdmin, cachedOrgId]);
+  }, [user, isSuperAdmin]);
 
   const setActiveOrganization = useCallback((id: string) => {
     if (isSuperAdmin) {
@@ -74,6 +79,12 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     }
   }, [isSuperAdmin, queryClient]);
 
+  const clearActiveOrganization = useCallback(() => {
+    if (!isSuperAdmin) return;
+    setSuperAdminActiveId(null);
+    safeLocalStorage.removeItem(STORAGE_KEYS.superAdminActiveOrg);
+    queryClient.clear();
+  }, [isSuperAdmin, queryClient]);
 
   const value = useMemo<OrganizationContextType>(() => {
     if (isSuperAdmin) {
@@ -83,7 +94,9 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         organization: active,
         organizations: superAdminOrgs,
         setActiveOrganization,
+        clearActiveOrganization,
         isSuperAdmin: true,
+        requiereSeleccionOrg: !superAdminActiveId,
         loading: authLoading || loadingSA,
       };
     }
@@ -101,10 +114,13 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       organization: orgFromCache,
       organizations: orgFromCache ? [orgFromCache] : [],
       setActiveOrganization,
+      clearActiveOrganization,
       isSuperAdmin: false,
+      requiereSeleccionOrg: false,
       loading: authLoading,
     };
-  }, [isSuperAdmin, superAdminOrgs, superAdminActiveId, cachedOrgId, cachedOrg, authLoading, loadingSA, setActiveOrganization]);
+  }, [isSuperAdmin, superAdminOrgs, superAdminActiveId, cachedOrgId, cachedOrg, authLoading, loadingSA, setActiveOrganization, clearActiveOrganization]);
+
 
   // Refresca el tag de Sentry cuando cambia la organización efectiva (super-admin
   // impersonando otro tenant o usuario regular cargando su org). Sin esto, los
