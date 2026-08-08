@@ -19,7 +19,11 @@ interface OrganizationContextType {
   organization: Organization | null;
   organizations: Organization[];
   setActiveOrganization: (id: string) => void;
+  /** Sale del tenant activo (sólo super admin) y limpia la preferencia guardada. */
+  clearActiveOrganization: () => void;
   isSuperAdmin: boolean;
+  /** true cuando es super admin y no ha elegido ninguna organización todavía. */
+  requiereSeleccionOrg: boolean;
   loading: boolean;
 }
 
@@ -28,9 +32,12 @@ const OrganizationContext = createContext<OrganizationContextType>({
   organization: null,
   organizations: [],
   setActiveOrganization: () => {},
+  clearActiveOrganization: () => {},
   isSuperAdmin: false,
+  requiereSeleccionOrg: false,
   loading: true,
 });
+
 
 export const useOrganization = () => useContext(OrganizationContext);
 
