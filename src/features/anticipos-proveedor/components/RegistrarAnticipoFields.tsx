@@ -159,6 +159,18 @@ export function RegistrarAnticipoFields({
           <Input id="ant-ref" placeholder="Folio de transferencia, cheque, etc." {...register("referencia")} />
         </div>
       </FormDialogSection>
+      <FormDialogSection title="Vinculación con embarque (opcional)" cols={1}>
+        <EmbarqueAnticipoPicker
+          value={embarqueId ?? null}
+          expediente={embarqueExpediente ?? null}
+          onChange={onEmbarqueChange}
+        />
+        <p className="text-xs text-muted-foreground">
+          Sirve para saber de qué expediente es el dinero adelantado y amarrarlo después con la
+          factura del proveedor. Puedes dejarlo vacío y ligarlo más tarde.
+        </p>
+      </FormDialogSection>
+
       {equivalenteMxn !== null && (
         <FormDialogSection title="Resumen" cols={1}>
           <p className="text-sm text-muted-foreground">
