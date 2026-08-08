@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.registrar_anticipo_proveedor(uuid, numeric, moneda, date, numeric, text, text, uuid, text);
