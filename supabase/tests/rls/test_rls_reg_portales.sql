@@ -34,6 +34,7 @@ DECLARE
   user_ag uuid := gen_random_uuid();     -- usuario del portal agente (org A)
   cli_a uuid := gen_random_uuid();
   emb_a uuid := gen_random_uuid();
+  emb_rep uuid := gen_random_uuid();   -- embarque limpio para TEST 9 (guardia de idempotencia)
   cont_1 uuid := gen_random_uuid();
   cont_2 uuid := gen_random_uuid();
   cont_3 uuid := gen_random_uuid();
@@ -82,7 +83,8 @@ BEGIN
   VALUES (cli_a, 'Cli PORT A', 'XAXX010101000', 'a@test.local', org_a);
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
-  VALUES (emb_a, 'ELPRT0001', cli_a, 'Cli PORT A', org_a, 'Marítimo', 'Importación');
+  VALUES (emb_a, 'ELPRT0001', cli_a, 'Cli PORT A', org_a, 'Marítimo', 'Importación'),
+         (emb_rep, 'ELPRT0002', cli_a, 'Cli PORT A', org_a, 'Marítimo', 'Importación');
 
   INSERT INTO public.puertos(id, code, name, country, activo) VALUES
     (puerto_o, 'RP-O-' || substr(puerto_o::text, 1, 8), 'Port Origen', 'CN', true),
@@ -273,16 +275,16 @@ BEGIN
   INSERT INTO public.embarque_contenedores(
     id, embarque_id, numero_contenedor, tipo_contenedor, organization_id
   ) VALUES
-    (cont_1, emb_a, 'CONT0000001', '40 HC Port', org_a),
-    (cont_2, emb_a, 'CONT0000002', '40 HC Port', org_a),
-    (cont_3, emb_a, 'CONT0000003', '40 HC Port', org_a);
+    (cont_1, emb_rep, 'CONT0000001', '40 HC Port', org_a),
+    (cont_2, emb_rep, 'CONT0000002', '40 HC Port', org_a),
+    (cont_3, emb_rep, 'CONT0000003', '40 HC Port', org_a);
 
   PERFORM public._crear_embarque_replicar_conceptos(
-    cot_a, emb_a, org_a, ARRAY[cont_1, cont_2, cont_3], '[]'::jsonb
+    cot_a, emb_rep, org_a, ARRAY[cont_1, cont_2, cont_3], '[]'::jsonb
   );
 
   SELECT COALESCE(SUM(monto), 0) INTO v_total
-    FROM public.conceptos_costo WHERE embarque_id = emb_a AND concepto = 'Flete';
+    FROM public.conceptos_costo WHERE embarque_id = emb_rep AND concepto = 'Flete';
   PERFORM pg_temp.assert(v_total = 3000,
     format('Los costos replicados suman %s, esperaba 3000 (se prorratea, no se multiplica por contenedor)', v_total));
 

@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.464.2] - 2026-08-08
+- Test de regresión RLS `test_rls_reg_portales`: el bloque que verifica que los costos se prorratean (no se multiplican por contenedor) ahora usa un embarque limpio, para no chocar con el nuevo guardia de idempotencia que evita re-sembrar conceptos en un embarque que ya los tiene.
+
 ## [13.464.1] - 2026-08-08
 - Costos repetidos: se revisaron uno por uno los 12 grupos de los expedientes 149, 189, 193, 195, 219 y 272. No eran duplicados: son costos prorrateados por contenedor que se guardaron sin contenedor asignado. Ahora cada copia tiene su contenedor, por lo que ya no se ven repetidas (0 grupos idénticos en toda la app).
 - Se corrigieron 3 facturas de proveedor cuyo importe asignado venía del presupuesto y no de la factura real: FP-000023 (505 USD), FP-000026 (715 USD) y FP-000027 (20,902 USD) ya cuadran al centavo con su subtotal.
