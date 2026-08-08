@@ -17,7 +17,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
-import { DatePickerMx } from "@/components/shared/DatePickerMx";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 import { buildCxcAgingColumns } from "@/features/cxc/components/cxcAgingColumns";
 import { CxcAgingDrillDownDialog } from "@/features/cxc/components/CxcAgingDrillDownDialog";
@@ -141,10 +141,14 @@ export default function CxcAging() {
           ))}
         </div>
         <div className="w-[200px]">
+          <label className="text-xs text-muted-foreground mb-1 block" htmlFor="aging-cxc-corte">
+            Fecha de corte
+          </label>
           <DatePickerMx
-            label="Fecha de corte"
+            id="aging-cxc-corte"
+            title="Fecha de corte"
             value={fecha}
-            onChange={(v) => setFecha(v || todayLocalISO())}
+            onChange={(v: string) => setFecha(v || todayLocalISO())}
           />
         </div>
       </div>
