@@ -3,12 +3,11 @@
  * Muestra tipo, contraparte, documento, método, monto original y su
  * equivalente en pesos, más el estado de conciliación y del complemento.
  */
-import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import {
-  TIPO_PAGO_LABELS, esEntrada, rutaDocumento, rutaMovimiento,
+  TIPO_PAGO_LABELS, esEntrada,
   type PagoLibro,
 } from "@/features/tesoreria/domain/libroPagos";
 
@@ -84,22 +83,11 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       header: "Documento",
       accessorFn: (p) => p.documento_folio ?? "",
       cell: ({ row }) => {
-        const ruta = rutaDocumento(row.original);
         const folio = row.original.documento_folio ?? (row.original.tipo === "anticipo" ? "Sin factura" : "—");
         const enLote = row.original.tipo === "pago" && !!row.original.lote_id;
         return (
           <div className="space-y-0.5">
-            {ruta ? (
-              <Link
-                to={ruta}
-                className="text-xs font-medium text-primary hover:underline"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {folio}
-              </Link>
-            ) : (
-              <span className="text-xs text-muted-foreground">{folio}</span>
-            )}
+            <span className="block text-xs font-medium">{folio}</span>
             {enLote ? (
               <span className="block text-2xs text-muted-foreground">Parte de un pago en lote</span>
             ) : null}
@@ -161,20 +149,12 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       header: "Conciliación",
       accessorFn: (p) => (p.conciliado ? "Conciliado" : "Pendiente"),
       meta: { width: "w-32" },
-      cell: ({ row }) => {
-        const ruta = rutaMovimiento(row.original);
-        const badge = row.original.conciliado ? (
+      cell: ({ row }) =>
+        row.original.conciliado ? (
           <Badge variant="outline" className="bg-success/10 text-success border-success/20">Conciliado</Badge>
         ) : (
           <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">Pendiente</Badge>
-        );
-        if (!ruta) return badge;
-        return (
-          <Link to={ruta} onClick={(e) => e.stopPropagation()} title="Ver en el estado de cuenta">
-            {badge}
-          </Link>
-        );
-      },
+        ),
     },
     {
       id: "rep",

@@ -18,11 +18,9 @@ import type {
 
 export type {
   EstadoFase,
-  FaseId,
   FaseIconoId,
   FaseEmbarque,
   EmbarqueFasesInput,
-  EmbarqueEstadoTemporalInput,
 } from "./embarqueFasesTipos";
 export { esEmbarqueArribado, esEtaVencida } from "./embarqueEstadoTemporal";
 

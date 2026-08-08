@@ -17,9 +17,3 @@ export {
   findProveedorByRfcEnOrg,
 } from "./duplicadoRfc";
 export { fetchProveedorOperaciones } from "./operaciones";
-export {
-  normalizarNombreProveedor,
-  buscarProveedorPorNombreEnOrg,
-  registrarAliasProveedor,
-} from "./matchProveedorPorNombre";
-export type { ProveedorMatch, MatchOrigen } from "./matchProveedorPorNombre";

@@ -170,4 +170,18 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "El rango de fechas del estado de cuenta es inválido: la fecha inicial debe ser anterior a la final.",
   LC_ESTADO_CUENTA_SIN_ACCESO:
     "No tienes permisos para consultar el estado de cuenta de esta cuenta bancaria.",
+  // ── Libro de pagos y detalle del pago ──────────────────────────────────
+  LC_LIBRO_PAGOS_PARAMS:
+    "Faltan datos para consultar el libro de pagos (rango de fechas).",
+  LC_LIBRO_PAGOS_RANGO:
+    "El rango de fechas del libro de pagos es inválido: la fecha inicial debe ser anterior a la final.",
+  LC_LIBRO_PAGOS_SIN_ORG:
+    "Tu usuario no tiene una organización activa para consultar el libro de pagos.",
+  LC_PAGO_DETALLE_PARAMS:
+    "Faltan datos para abrir el detalle del pago (tipo e identificador).",
+  LC_PAGO_DETALLE_TIPO: "El tipo de pago solicitado no es válido.",
+  LC_PAGO_DETALLE_NO_ENCONTRADO: "El pago no existe o fue eliminado.",
+  LC_PAGO_DETALLE_SIN_ORG:
+    "Tu usuario no tiene una organización activa para consultar el detalle del pago.",
+  LC_PAGO_DETALLE_SIN_ACCESO: "No tienes permisos para ver el detalle de este pago.",
 };

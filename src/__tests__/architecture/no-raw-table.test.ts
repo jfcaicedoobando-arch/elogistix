@@ -54,6 +54,8 @@ const ALLOWLIST: readonly string[] = [
   // Catálogos con toggles inline por fila.
   "src/features/configuracion/components/CatalogoClavesSATCard.tsx",
   "src/features/configuracion/components/CatalogoClavesSATCard.parts.tsx",
+  // Detalle del pago: tabla read-only con colspans y pie de totales aplicados.
+  "src/features/tesoreria/components/DetallePagoSheet.parts.tsx",
   // Tabla estática de 2 renglones (flujo por moneda) en dashboard de tesorería.
   "src/features/tesoreria/routes/_sections/TesoreriaFlujoMonedas.tsx",
 ];

@@ -22,7 +22,6 @@ export const TABLE_DENSITY = {
   embebida: "compact",
 } as const satisfies Record<string, TableDensity>;
 
-export type TableDensityPreset = (typeof TABLE_DENSITY)[keyof typeof TABLE_DENSITY];
 
 /**
  * Hover de fila. Fuente única: el mismo tinte de `ui/table.tsx` para que

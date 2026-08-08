@@ -144,26 +144,41 @@ function coincideRep(pago: PagoLibro, rep: FiltroRep): boolean {
   return estado !== "timbrado" && estado !== "cancelado";
 }
 
+function coincideCuenta(pago: PagoLibro, f: FiltrosLibroPagos): boolean {
+  if (f.cuentaId !== "todas" && pago.cuenta_bancaria_id !== f.cuentaId) return false;
+  if (f.moneda !== "todas" && pago.moneda !== f.moneda) return false;
+  if (f.metodo !== "todos" && (pago.metodo_pago ?? "") !== f.metodo) return false;
+  return true;
+}
+
+function coincideConciliacion(pago: PagoLibro, f: FiltrosLibroPagos): boolean {
+  if (f.conciliacion === "conciliados") return pago.conciliado;
+  if (f.conciliacion === "pendientes") return !pago.conciliado;
+  return true;
+}
+
+function coincideTexto(pago: PagoLibro, q: string): boolean {
+  if (!q) return true;
+  const campo = normalizarTextoPago(
+    `${pago.contraparte ?? ""} ${pago.documento_folio ?? ""} ${pago.referencia ?? ""} ${pago.notas ?? ""}`,
+  );
+  return campo.includes(q);
+}
+
 /** Filtra los pagos ya traídos del servidor. */
 export function filtrarPagos(
   pagos: readonly PagoLibro[],
   f: FiltrosLibroPagos,
 ): PagoLibro[] {
   const q = normalizarTextoPago(f.texto);
-  return pagos.filter((p) => {
-    if (!coincideVista(p, f.vista)) return false;
-    if (f.cuentaId !== "todas" && p.cuenta_bancaria_id !== f.cuentaId) return false;
-    if (f.moneda !== "todas" && p.moneda !== f.moneda) return false;
-    if (f.metodo !== "todos" && (p.metodo_pago ?? "") !== f.metodo) return false;
-    if (f.conciliacion === "conciliados" && !p.conciliado) return false;
-    if (f.conciliacion === "pendientes" && p.conciliado) return false;
-    if (!coincideRep(p, f.rep)) return false;
-    if (!q) return true;
-    const campo = normalizarTextoPago(
-      `${p.contraparte ?? ""} ${p.documento_folio ?? ""} ${p.referencia ?? ""} ${p.notas ?? ""}`,
-    );
-    return campo.includes(q);
-  });
+  return pagos.filter(
+    (p) =>
+      coincideVista(p, f.vista) &&
+      coincideCuenta(p, f) &&
+      coincideConciliacion(p, f) &&
+      coincideRep(p, f.rep) &&
+      coincideTexto(p, q),
+  );
 }
 
 export interface TotalesLibroPagos {
@@ -203,18 +218,4 @@ export function monedasDisponibles(pagos: readonly PagoLibro[]): string[] {
   const set = new Set<string>();
   for (const p of pagos) set.add(p.moneda);
   return [...set].sort((a, b) => a.localeCompare(b, "es-MX"));
-}
-
-/** Ruta del documento (factura de cliente o de proveedor) que liquidó el pago. */
-export function rutaDocumento(pago: PagoLibro): string | null {
-  if (!pago.documento_id) return null;
-  return pago.tipo === "cobro"
-    ? `/facturacion/${pago.documento_id}`
-    : `/compras/facturas/${pago.documento_id}`;
-}
-
-/** Ruta al estado de cuenta bancario donde vive el movimiento conciliado. */
-export function rutaMovimiento(pago: PagoLibro): string | null {
-  if (!pago.conciliado || !pago.cuenta_bancaria_id) return null;
-  return `/tesoreria/estado-cuenta?cuenta=${pago.cuenta_bancaria_id}`;
 }

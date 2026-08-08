@@ -14,16 +14,10 @@
  * este archivo re-exporta todo para no romper consumidores existentes.
  */
 
-export type {
-  SeedNaviera, SeedPuertoRef, SeedAgente, SeedRuta, SeedTarifa, SeedProductoServicio,
-} from "./seedDemoData.catalogos";
 export {
   SEED_NAVIERAS, SEED_AGENTES, SEED_RUTAS, SEED_TARIFAS, SEED_PRODUCTOS_SERVICIOS,
 } from "./seedDemoData.catalogos";
 
-export type {
-  SeedCuentaBancaria, SeedTipoCambio, SeedCliente, SeedProveedor,
-} from "./seedDemoData.entidades";
 export {
   SEED_CUENTAS_BANCARIAS, SEED_TIPO_CAMBIO, SEED_CLIENTE, SEED_PROVEEDOR,
 } from "./seedDemoData.entidades";
