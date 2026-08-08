@@ -215,3 +215,8 @@ $function$;
 REVOKE ALL ON FUNCTION public.vincular_anticipo_embarque(uuid, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.vincular_anticipo_embarque(uuid, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.vincular_anticipo_embarque(uuid, uuid) TO service_role;
+
+-- Hardening H6: la firma nueva (con embarque_id) debe quedar cerrada a PUBLIC/anon.
+REVOKE ALL ON FUNCTION public.registrar_anticipo_proveedor(uuid, numeric, moneda, date, numeric, text, text, uuid, text, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.registrar_anticipo_proveedor(uuid, numeric, moneda, date, numeric, text, text, uuid, text, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.registrar_anticipo_proveedor(uuid, numeric, moneda, date, numeric, text, text, uuid, text, uuid) TO service_role;
