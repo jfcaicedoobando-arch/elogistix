@@ -49,7 +49,15 @@ export function RegistrarAnticipoDialog({
   const metodoPago = watch("metodoPago");
   const cuentaBancariaId = watch("cuentaBancariaId");
   const tipoCambioUsd = watch("tipoCambioUsd");
+  const embarqueId = watch("embarqueId");
+  const embarqueExpediente = watch("embarqueExpediente");
   const requiereCuenta = metodoPago !== "Efectivo";
+
+  const handleEmbarqueChange = (id: string | null, exp: string | null) => {
+    setValue("embarqueId", id, { shouldValidate: true, shouldDirty: true });
+    setValue("embarqueExpediente", exp, { shouldValidate: true, shouldDirty: true });
+  };
+
 
   const cuentasDeMoneda = useMemo(
     () => cuentas.filter((c) => c.moneda === moneda),
