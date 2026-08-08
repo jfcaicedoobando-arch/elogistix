@@ -101,6 +101,7 @@ export const appRoutes = (
     <Route path="/tesoreria/cuentas" element={guarded(TESORERIA_READ_ROLES, <TesoreriaCuentas />)} />
     <Route path="/tesoreria/conciliacion" element={guarded(TESORERIA_READ_ROLES, <TesoreriaConciliacion />)} />
     <Route path="/tesoreria/estado-cuenta" element={guarded(TESORERIA_READ_ROLES, <TesoreriaEstadoCuenta />)} />
+    <Route path="/tesoreria/pagos" element={guarded(TESORERIA_READ_ROLES, <TesoreriaPagos />)} />
 
     <Route path="/tesoreria/flujo" element={guarded(TESORERIA_READ_ROLES, <TesoreriaFlujo />)} />
     <Route path="/tesoreria/pagos-programados" element={guarded(TESORERIA_READ_ROLES, <TesoreriaPagosProgramados />)} />
