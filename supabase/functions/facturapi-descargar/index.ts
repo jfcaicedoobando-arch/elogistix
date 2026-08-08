@@ -197,7 +197,13 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 
-  const resolved = await resolveFacturapiKey(supabase, target.data.organizationId);
+  // La llave se resuelve con cliente SERVICE_ROLE (sin el JWT del usuario):
+  // RLS de `facturapi_credenciales` sólo permite leer a admin/contador de la
+  // org, así que el cliente user-scoped devolvía "org sin FacturApi" (412)
+  // para clientes del portal y roles operativos. La autorización del
+  // documento ya se validó arriba.
+  const adminClient = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+  const resolved = await resolveFacturapiKey(adminClient, target.data.organizationId);
   if (!resolved.ok) {
     return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   }
