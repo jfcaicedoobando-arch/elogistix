@@ -13,8 +13,8 @@ interface Props {
 }
 
 const reglaLabel: Partial<Record<ReglaAuditoria, string>> = {
-  margen_negativo: "Margen negativo",
-  margen_bajo: "Margen bajo",
+  margen_negativo: "Margen estimado negativo",
+  margen_bajo: "Margen estimado bajo",
   proforma_vencida: "Proformas vencidas",
 };
 
