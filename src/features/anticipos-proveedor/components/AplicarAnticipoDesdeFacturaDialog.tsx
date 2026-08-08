@@ -3,7 +3,9 @@
  * La factura es fija: sólo se elige el anticipo con saldo a favor y el monto.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, ArrowRightLeft } from "lucide-react";
+import { Loader2, ArrowRightLeft, AlertTriangle } from "lucide-react";
+import { evaluarDesajusteEmbarque } from "@/features/anticipos-proveedor/domain/avisoEmbarqueAnticipo";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
