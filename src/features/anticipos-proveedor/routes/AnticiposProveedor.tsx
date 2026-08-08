@@ -153,6 +153,13 @@ export default function AnticiposProveedor() {
         onOpenChange={(o) => !o && setAnticipoParaCancelar(null)}
         anticipo={anticipoParaCancelar}
       />
+
+      <VincularEmbarqueAnticipoDialog
+        open={!!anticipoParaVincular}
+        onOpenChange={(o) => !o && setAnticipoParaVincular(null)}
+        anticipo={anticipoParaVincular}
+      />
+
     </PageContainer>
   );
 }
