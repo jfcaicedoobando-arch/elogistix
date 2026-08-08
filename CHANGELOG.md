@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.458.2] - 2026-08-08
+- Project monitoring (g8/g9): verificado que `embarque_docs_faltantes` y `has_org_role` SÍ tienen `GRANT EXECUTE` a `authenticated` y `service_role`; los "permission denied for function" provienen de peticiones con sesión expirada (rol `anon`), es decir el bloqueo es correcto. Se traduce ese error a "Tu sesión expiró…" en `pgErrorCodes.ts` en lugar de mostrar el texto técnico.
+
 ## [13.458.1] - 2026-08-08
 - Fix (Sentry JAVASCRIPT-REACT-4V): descargar/enviar CFDI ya no falla con "Esta organización no tiene FacturApi configurado". `facturapi-descargar` y `facturapi-enviar-email` resuelven la llave con cliente service_role (RLS de `facturapi_credenciales` sólo la exponía a admin/contador, bloqueando clientes del portal y roles operativos).
 
