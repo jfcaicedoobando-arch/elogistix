@@ -29,5 +29,4 @@ export const FASES_CIERRE: readonly FaseCierre[] = [
   { id: "otros", numero: 7, titulo: "Otros" },
 ] as const;
 
-export const getFaseCierre = (id: FaseCierreId): FaseCierre =>
-  FASES_CIERRE.find((f) => f.id === id) ?? FASES_CIERRE[FASES_CIERRE.length - 1];
+

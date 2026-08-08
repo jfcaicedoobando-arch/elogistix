@@ -187,7 +187,6 @@ export {
   existeFacturaDuplicada,
   buscarFacturaDuplicadaFolio,
 
-  buscarFacturaPorUuidFiscal,
   buscarFacturaPorUuidFiscalResultado,
   type BusquedaUuidFiscal,
   type FacturaExistentePorUuid,

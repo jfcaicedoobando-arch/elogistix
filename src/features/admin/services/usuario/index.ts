@@ -25,5 +25,4 @@ export {
   quitarDeOrganizacion,
   enviarResetPassword,
   type CreateUserParams,
-  type CreateUserResponse,
 } from "./mutaciones";

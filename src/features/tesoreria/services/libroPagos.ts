@@ -6,7 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { LibroPagos, PagoLibro, TipoPago } from "@/features/tesoreria/domain/libroPagos";
 
-export type { LibroPagos, PagoLibro } from "@/features/tesoreria/domain/libroPagos";
+export type { LibroPagos } from "@/features/tesoreria/domain/libroPagos";
 
 function num(v: unknown): number {
   const n = Number(v);
