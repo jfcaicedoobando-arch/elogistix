@@ -33,7 +33,7 @@ export default function TesoreriaPagos() {
   const [pagoAbierto, setPagoAbierto] = useState<RefPago | null>(null);
 
   const { data: libro, isLoading, isError, refetch } = useLibroPagos(rango.desde, rango.hasta);
-  const pagos = libro?.pagos ?? [];
+  const pagos = useMemo(() => libro?.pagos ?? [], [libro]);
 
   const cuentas = useMemo(
     () => cuentasRaw.map((c) => ({ id: c.id, alias: etiquetaCuenta(c), moneda: c.moneda })),
