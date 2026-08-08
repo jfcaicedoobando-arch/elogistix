@@ -20,3 +20,13 @@
 - `PanelConciliacionMovimiento.tsx`: nueva prop `moneda` (default `"MXN"`) usada en el KPI y en el diálogo de ignorar; la pasa la página.
 - Tests: caso en `_sections/__tests__` verificando que una cuenta USD renderiza `USD ...` en Cargo/Abono.
 - `CHANGELOG.md` + bump de `APP_VERSION` (patch).
+
+## Además: limpiar dos residuos que rompen el build
+
+Quedaron dos declaraciones sin uso de la limpieza anterior que hoy impiden compilar:
+
+- `ESTADO_CUENTA_COLSPAN` en `src/features/facturacion/estadoCuenta/components/EstadoCuentaFilaFactura.tsx`.
+- el import de `formatCurrency` en `src/features/reportes/cartera/services/carteraExport.ts`.
+
+Se eliminan ambas (sin cambios de comportamiento).
+
