@@ -8708,6 +8708,7 @@ export type Database = {
           operador: string
         }[]
       }
+      pago_detalle: { Args: { p_id: string; p_tipo: string }; Returns: Json }
       pnl_financiero_embarque: { Args: { _embarque_id: string }; Returns: Json }
       portal_obtener_proforma_por_token: {
         Args: { p_token: string }
