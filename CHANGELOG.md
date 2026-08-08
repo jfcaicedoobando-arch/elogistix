@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.464.5] - 2026-08-08
+- Seguridad (H6): las migraciones nuevas de `eliminar_organizacion_vacia` y `_crear_embarque_replicar_conceptos` ahora incluyen `REVOKE ALL ... FROM PUBLIC/anon` y `GRANT EXECUTE` explícito; el helper interno de replicación de conceptos queda restringido a `service_role`. La auditoría `audit:migrations` pasa limpia.
+
 ## [13.464.4] - 2026-08-08
 - Costos de cotización a embarque: cuando un concepto aplica por contenedor, el importe total ahora se **reparte** entre los contenedores (el ajuste de centavos va al último) en lugar de copiarse completo en cada uno, que triplicaba el costo del expediente con 3 contenedores.
 - Seguridad (FIX-45): la función de eliminar organización vacía ya no es ejecutable por visitantes sin sesión; solo usuarios autenticados (con validación de super-admin dentro del RPC).
