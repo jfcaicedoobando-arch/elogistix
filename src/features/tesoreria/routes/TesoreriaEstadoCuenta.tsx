@@ -19,6 +19,8 @@ import {
   type RangoFechas, type TipoMovimientoEstadoCuenta,
 } from "@/features/tesoreria/domain/estadoCuenta";
 import { formatCurrency } from "@/lib/formatters";
+import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
+import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { estadoCuentaColumns } from "./_sections/estadoCuentaColumns";
 import { EstadoCuentaToolbar } from "./_sections/EstadoCuentaToolbar";
 import { EstadoCuentaResumen } from "./_sections/EstadoCuentaResumen";
@@ -31,6 +33,7 @@ export default function TesoreriaEstadoCuenta() {
   const [rango, setRango] = useState<RangoFechas>(() => rangoMes());
   const [texto, setTexto] = useState("");
   const [tipo, setTipo] = useState<TipoMovimientoEstadoCuenta>("todos");
+  const [refPago, setRefPago] = useState<RefPago | null>(null);
 
   const setCuentaId = (id: string) => {
     setCuentaIdState(id);
@@ -46,7 +49,7 @@ export default function TesoreriaEstadoCuenta() {
   );
 
   const moneda = estado?.moneda ?? cuentas.find((c) => c.id === cuentaId)?.moneda ?? "MXN";
-  const columns = useMemo(() => estadoCuentaColumns(moneda), [moneda]);
+  const columns = useMemo(() => estadoCuentaColumns(moneda, setRefPago), [moneda]);
   const visibles = useMemo(
     () => filtrarMovimientos(estado?.movimientos ?? [], { texto, tipo }),
     [estado, texto, tipo],
@@ -112,6 +115,13 @@ export default function TesoreriaEstadoCuenta() {
           </div>
         </>
       )}
+
+      {refPago ? (
+        <DetallePagoSheet
+          ref_pago={refPago}
+          onOpenChange={(open) => { if (!open) setRefPago(null); }}
+        />
+      ) : null}
     </PageContainer>
   );
 }

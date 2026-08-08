@@ -20,6 +20,7 @@ import { useCallback, useMemo, type RefObject } from "react";
 import { useVirtualizer, type Virtualizer } from "@tanstack/react-virtual";
 import type { ColumnDef, Row, Table } from "@tanstack/react-table";
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
+import { FLEX_COL, gridTemplateFromWidths } from "@/components/shared/dataTable/gridTemplate";
 
 const isFirefox =
   typeof navigator !== "undefined" && navigator.userAgent.indexOf("Firefox") !== -1;
@@ -76,10 +77,12 @@ export function useVirtualTableState<T>({
   // referencia inestable de `leafColumns` dentro del memo.
   const leafColumns = table.getAllLeafColumns();
   const widthsKey = leafColumns
-    .map((c) => c.columnDef.meta?.width ?? "minmax(0,1fr)")
+    .map((c) => c.columnDef.meta?.width ?? FLEX_COL)
     .join("\u0001");
+  // `meta.width` viene en clases Tailwind (`w-[104px]`, `w-24`), que no son
+  // longitudes CSS: hay que traducirlas o el grid se apila en una columna.
   const gridTemplate = useMemo(
-    () => widthsKey.split("\u0001").join(" "),
+    () => gridTemplateFromWidths(widthsKey.split("\u0001")),
     [widthsKey],
   );
 
