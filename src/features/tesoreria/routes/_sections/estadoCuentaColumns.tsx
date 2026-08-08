@@ -97,7 +97,7 @@ export function estadoCuentaColumns(
       id: "acciones",
       header: "Pago",
       enableSorting: false,
-      meta: { width: "w-24", align: "right" },
+      meta: { width: "w-[104px]", align: "right" },
       cell: ({ row }) => <BotonVerPago movimiento={row.original} onVerPago={onVerPago} />,
     },
   ]) as ColumnDef<MovimientoEstadoCuenta, unknown>[];
