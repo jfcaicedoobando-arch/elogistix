@@ -83,3 +83,8 @@ export async function establecerOrganizacionActiva(id: string, activo: boolean):
     entidadId: id,
   });
 }
+
+export async function deleteOrganization(id: string): Promise<void> {
+  const { error } = await supabase.rpc("eliminar_organizacion_vacia", { p_org_id: id });
+  if (error) throw error;
+}

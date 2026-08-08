@@ -8,12 +8,15 @@ import {
   fetchAdminOrganization,
   establecerOrganizacionActiva,
   updateAdminOrganization,
+  deleteOrganization,
 } from "@/features/admin/services";
+import { useNavigate } from "react-router-dom";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useAdminOrgInfo(id: string | undefined) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [editing, setEditing] = useState(false);
   const [editNombre, setEditNombre] = useState("");
@@ -62,6 +65,18 @@ export function useAdminOrgInfo(id: string | undefined) {
     },
   });
 
+  const deleteOrg = useMutation({
+    mutationFn: () => deleteOrganization(id!),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.organizations });
+      notifySuccess(undefined, { title: "Organización eliminada" });
+      navigate("/admin/organizaciones");
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: "No se pudo eliminar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    },
+  });
+
   const cancelEditing = () => {
     setEditing(false);
     if (org) {
@@ -80,7 +95,7 @@ export function useAdminOrgInfo(id: string | undefined) {
     editNombre, setEditNombre,
     editRfc, setEditRfc,
     editPlan, setEditPlan,
-    updateOrg, toggleActivo,
+    updateOrg, toggleActivo, deleteOrg,
     cancelEditing, saveEditing,
   };
 }

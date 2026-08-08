@@ -8196,6 +8196,10 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: undefined
       }
+      eliminar_organizacion_vacia: {
+        Args: { p_org_id: string }
+        Returns: undefined
+      }
       email_queue_dispatch: { Args: never; Returns: undefined }
       embarque_admin_pendientes_resumen: {
         Args: { p_embarque_id: string }

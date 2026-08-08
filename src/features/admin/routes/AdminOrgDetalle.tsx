@@ -1,7 +1,9 @@
 import { useParams } from "react-router-dom";
+import { useState } from "react";
 import { Users, Ship, UserCheck, ClipboardList } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import CrearMiembroOrgDialog from "@/features/admin/components/CrearMiembroOrgDialog";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { OrgHeader } from "@/features/admin/components/orgDetalle/OrgHeader";
 import { OrgInfoCard } from "@/features/admin/components/orgDetalle/OrgInfoCard";
 import { OrgMembersCard } from "@/features/admin/components/orgDetalle/OrgMembersCard";
@@ -14,6 +16,7 @@ import { useDocumentTitle } from "@/hooks/shared";
 
 export default function AdminOrgDetalle() {
   const { id } = useParams<{ id: string }>();
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const {
     org, planes,
@@ -22,7 +25,7 @@ export default function AdminOrgDetalle() {
     editRfc, setEditRfc,
     editPlan, setEditPlan,
     addMemberOpen, setAddMemberOpen,
-    updateOrg, toggleActivo,
+    updateOrg, toggleActivo, deleteOrg,
     memberCount, embarqueCount, clienteCount, cotizacionCount,
     members, loadingMembers,
     configItems, loadingConfig, grouped,
@@ -43,7 +46,9 @@ export default function AdminOrgDetalle() {
         plan={org.plan}
         activo={isActive}
         toggleActivoPending={toggleActivo.isPending}
+        deletePending={deleteOrg.isPending}
         onToggleActivo={(next) => toggleActivo.mutate(next)}
+        onDelete={() => setDeleteOpen(true)}
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -80,12 +85,23 @@ export default function AdminOrgDetalle() {
       />
 
       {id && (
-        <CrearMiembroOrgDialog
-          open={addMemberOpen}
-          onOpenChange={setAddMemberOpen}
-          organizationId={id}
-          onCreated={invalidateMembers}
-        />
+        <>
+          <CrearMiembroOrgDialog
+            open={addMemberOpen}
+            onOpenChange={setAddMemberOpen}
+            organizationId={id}
+            onCreated={invalidateMembers}
+          />
+          <DoubleConfirmDeleteDialog
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            entityName="organización"
+            description={`¿Eliminar la organización "${org.nombre}"? Solo se pueden eliminar organizaciones completamente vacías (sin embarques, clientes, proveedores, facturas ni pagos). Si tiene datos, deberás desactivarla en su lugar.`}
+            finalDescription="Esta acción borra la organización, su configuración y sus miembros. No se puede deshacer."
+            onConfirm={() => deleteOrg.mutate()}
+            isPending={deleteOrg.isPending}
+          />
+        </>
       )}
     </PageContainer>
   );

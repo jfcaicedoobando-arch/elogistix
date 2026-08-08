@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Building2, CheckCircle2, XCircle } from "lucide-react";
+import { Building2, CheckCircle2, Trash2, XCircle } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";
 
@@ -10,10 +11,12 @@ interface OrgHeaderProps {
   plan: string | null;
   activo: boolean;
   toggleActivoPending: boolean;
+  deletePending: boolean;
   onToggleActivo: (next: boolean) => void;
+  onDelete: () => void;
 }
 
-export function OrgHeader({ nombre, rfc, plan, activo, toggleActivoPending, onToggleActivo }: OrgHeaderProps) {
+export function OrgHeader({ nombre, rfc, plan, activo, toggleActivoPending, deletePending, onToggleActivo, onDelete }: OrgHeaderProps) {
   const volver = useVolver("/admin/organizaciones");
   return (
     <DetailHeader
@@ -34,6 +37,17 @@ export function OrgHeader({ nombre, rfc, plan, activo, toggleActivoPending, onTo
             {activo ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
             {activo ? "Activo" : "Inactivo"}
           </Badge>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={onDelete}
+            disabled={deletePending}
+            aria-label="Eliminar organización"
+            className="gap-1"
+          >
+            <Trash2 className="h-4 w-4" />
+            Eliminar
+          </Button>
         </div>
       }
     />
