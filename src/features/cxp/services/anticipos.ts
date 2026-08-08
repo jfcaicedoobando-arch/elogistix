@@ -25,6 +25,8 @@ export interface RegistrarAnticipoInput {
   referencia?: string;
   cuentaBancariaId?: string | null;
   notas?: string;
+  /** Embarque (expediente) al que corresponde el anticipo. Opcional. */
+  embarqueId?: string | null;
 }
 
 export async function registrarAnticipo(input: RegistrarAnticipoInput): Promise<Anticipo> {
@@ -42,11 +44,32 @@ export async function registrarAnticipo(input: RegistrarAnticipoInput): Promise<
     p_referencia: input.referencia ?? undefined,
     p_cuenta_bancaria_id: input.cuentaBancariaId ?? undefined,
     p_notas: input.notas ?? undefined,
+    p_embarque_id: input.embarqueId ?? undefined,
   });
   if (error) throw mapApiError(error);
   // SAFE-CAST: la RPC retorna el row completo tipado en el server.
   return data as unknown as Anticipo;
 }
+
+/**
+ * Vincula (o desvincula, pasando `null`) el embarque de un anticipo existente.
+ * Roles permitidos en el servidor: admin/admin_org/super_admin/contador/tesorero.
+ */
+export async function vincularAnticipoEmbarque(
+  anticipoId: string,
+  embarqueId: string | null,
+): Promise<Anticipo> {
+  assertUuid(anticipoId, "INVALID_ID");
+  if (embarqueId) assertUuid(embarqueId, "INVALID_ID");
+  const { data, error } = await supabase.rpc("vincular_anticipo_embarque", {
+    p_id: anticipoId,
+    p_embarque_id: embarqueId ?? undefined,
+  });
+  if (error) throw mapApiError(error);
+  // SAFE-CAST: RPC devuelve fila de anticipos_proveedor (validado por schema DB).
+  return data as unknown as Anticipo;
+}
+
 
 export async function aplicarAnticipo(
   anticipoId: string,
