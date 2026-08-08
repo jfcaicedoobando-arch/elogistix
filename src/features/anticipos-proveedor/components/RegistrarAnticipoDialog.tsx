@@ -121,6 +121,8 @@ export function RegistrarAnticipoDialog({
       cuentaBancariaId: values.cuentaBancariaId || null,
       referencia: values.referencia || undefined,
       notas: values.notas || undefined,
+      embarqueId: values.embarqueId ?? null,
+
     });
     handleOpenChange(false);
   }, onInvalid);
