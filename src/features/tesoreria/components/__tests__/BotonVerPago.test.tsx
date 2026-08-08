@@ -3,8 +3,7 @@
  * y guarda el pago con el que quedó amarrado.
  */
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BotonVerPago } from "../BotonVerPago";
 
@@ -37,7 +36,7 @@ describe("BotonVerPago", () => {
       estado_conciliacion: "Conciliado",
       pago_factura_id: "pf-1",
     });
-    await userEvent.click(screen.getByRole("button", { name: /ver pago/i }));
+    fireEvent.click(screen.getByRole("button", { name: /ver pago/i }));
     expect(onVerPago).toHaveBeenCalledWith({ tipo: "cobro", id: "pf-1" });
   });
 
@@ -47,7 +46,7 @@ describe("BotonVerPago", () => {
       pago_proveedor_id: "pp-1",
       pago_proveedor_lote_id: "lote-1",
     });
-    await userEvent.click(screen.getByRole("button", { name: /ver pago/i }));
+    fireEvent.click(screen.getByRole("button", { name: /ver pago/i }));
     expect(onVerPago).toHaveBeenCalledWith({ tipo: "lote", id: "lote-1" });
   });
 });
