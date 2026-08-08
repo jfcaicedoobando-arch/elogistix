@@ -7208,6 +7208,10 @@ export type Database = {
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
       _assert_writer_cotizacion: { Args: { p_org: string }; Returns: undefined }
+      _audit_costos_repetidos: {
+        Args: { p_organization_id: string }
+        Returns: Json
+      }
       _audit_embarques_agregar: {
         Args: { p_hallazgos: Json; p_umbrales: Json }
         Returns: Json
@@ -7223,6 +7227,10 @@ export type Database = {
           dias_prof_venc: number
           margen_min_pct: number
         }[]
+      }
+      _auditoria_embarques_org_base: {
+        Args: { p_organization_id: string }
+        Returns: Json
       }
       _calcular_demoras_montos_contenedor: {
         Args: {
