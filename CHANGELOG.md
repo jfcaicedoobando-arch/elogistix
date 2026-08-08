@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.458.1] - 2026-08-08
+- Fix (Sentry JAVASCRIPT-REACT-4V): descargar/enviar CFDI ya no falla con "Esta organización no tiene FacturApi configurado". `facturapi-descargar` y `facturapi-enviar-email` resuelven la llave con cliente service_role (RLS de `facturapi_credenciales` sólo la exponía a admin/contador, bloqueando clientes del portal y roles operativos).
+
 ## [13.458.0] - 2026-08-08
 - Fix (portal cliente): descargar PDF/XML de una factura timbrada ya no falla con "Object not found". Las facturas timbradas guardan URLs de FacturApi, no rutas de almacenamiento; el portal ahora usa el proxy autenticado `facturapi-descargar` igual que la vista admin.
 - `facturapi-descargar` autoriza a usuarios del portal vía `client_users` (cliente + organización del CFDI), además de los roles fiscales de la organización.
