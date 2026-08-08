@@ -38,6 +38,13 @@ export function translatePostgresError(
   const table = extractTable(raw);
   const tableLabel = humanizeTable(table);
 
+  // "permission denied for function X": ocurre cuando la petición llega sin
+  // sesión válida (JWT expirado → rol `anon`), no por falta de rol de negocio.
+  // El GRANT correcto (authenticated + service_role) ya existe en la BD.
+  if (/permission denied for function/i.test(raw)) {
+    return "Tu sesión expiró o no está activa. Vuelve a iniciar sesión e intenta de nuevo.";
+  }
+
   // 42501: permission denied (incluye RLS con USING que falla silenciosamente)
   if (code === "42501" || /permission denied for table/i.test(raw)) {
     return `No tienes permisos para realizar esta acción sobre ${tableLabel}. Contacta a un administrador si crees que deberías tener acceso.`;
