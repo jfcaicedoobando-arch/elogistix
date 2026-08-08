@@ -9,23 +9,17 @@
  * Sin red ni React.
  */
 
-export type BucketAging = "por_vencer" | "d1_30" | "d31_60" | "d61_90" | "mas_90";
+import {
+  bucketDeDias,
+  CUBETAS_AGING,
+  CUBETA_LABELS_LARGAS,
+  type CubetaAging,
+} from "@/lib/aging/buckets";
 
-export const BUCKETS_AGING: readonly BucketAging[] = [
-  "por_vencer",
-  "d1_30",
-  "d31_60",
-  "d61_90",
-  "mas_90",
-] as const;
-
-export const BUCKET_AGING_LABELS: Record<BucketAging, string> = {
-  por_vencer: "Por vencer",
-  d1_30: "1–30 días",
-  d31_60: "31–60 días",
-  d61_90: "61–90 días",
-  mas_90: "Más de 90 días",
-};
+/** Cubetas y etiquetas compartidas con `/cobranza/aging` y `/compras/aging`. */
+export { bucketDeDias, CUBETAS_AGING as BUCKETS_AGING };
+export type BucketAging = CubetaAging;
+export const BUCKET_AGING_LABELS = CUBETA_LABELS_LARGAS;
 
 /** TC DOF usado para revaluar al corte. */
 export interface TcCorte {
@@ -85,15 +79,6 @@ export function diasVencidoAlCorte(
   const corte = Date.parse(`${fechaCorte}T00:00:00Z`);
   if (Number.isNaN(venc) || Number.isNaN(corte)) return 0;
   return Math.round((corte - venc) / 86_400_000);
-}
-
-/** Cubeta de antigüedad a partir de los días vencidos. */
-export function bucketDeDias(dias: number): BucketAging {
-  if (dias <= 0) return "por_vencer";
-  if (dias <= 30) return "d1_30";
-  if (dias <= 60) return "d31_60";
-  if (dias <= 90) return "d61_90";
-  return "mas_90";
 }
 
 /** TC del corte aplicable a una moneda (1 para MXN, null si no hay dato). */
