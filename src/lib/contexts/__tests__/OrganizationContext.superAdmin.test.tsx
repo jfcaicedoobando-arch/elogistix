@@ -21,7 +21,7 @@ vi.mock("@/features/admin/services/organization", () => ({
   listActiveOrganizations: vi.fn(async () => orgs),
 }));
 
-const getItem = vi.fn<[string], string | null>(() => null);
+const getItem = vi.fn((_key: string): string | null => null);
 const setItem = vi.fn();
 const removeItem = vi.fn();
 vi.mock("@/lib/browserStorage", () => ({
