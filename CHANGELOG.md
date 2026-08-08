@@ -1,6 +1,15 @@
 # Changelog
 
+## [13.457.0] - 2026-08-07
+- **Anticipos ligados a embarque:** el anticipo a proveedor ahora se puede amarrar a un expediente.
+  - Nueva columna `embarque_id` en `anticipos_proveedor`, RPC `vincular_anticipo_embarque` y `registrar_anticipo_proveedor` con parámetro de embarque.
+  - Buscador de embarque (opcional) en el modal "Registrar anticipo" y acción "Vincular embarque" en la bandeja para ligar o corregir después.
+  - Columna "Embarque" en la bandeja de anticipos, con liga al detalle del embarque.
+  - Aviso amarillo no bloqueante al aplicar un anticipo a una factura de otro expediente.
+  - Nueva tarjeta "Anticipos a proveedores de este embarque" en la pestaña Costos del embarque.
+
 ## [13.456.2] - 2026-08-07
+
 - **Fix (Compras):** el ítem "Anticipos" (`/compras/anticipos`) ya aparece en el sidebar para los roles contador y tesorero; la ruta ya tenía permiso, sólo faltaba en el menú.
 
 ## [13.456.1] - 2026-08-07

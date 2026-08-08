@@ -17,11 +17,16 @@ interface Props {
   saldoFactura: number;
   monedaFactura: string;
   canEdit: boolean;
+  /** Embarque de la factura, para avisar si no coincide con el del anticipo. */
+  facturaEmbarqueId?: string | null;
+  facturaExpediente?: string | null;
 }
 
 export function AnticipoDisponibleAviso({
   proveedorId, facturaId, folioFactura, saldoFactura, monedaFactura, canEdit,
+  facturaEmbarqueId, facturaExpediente,
 }: Props) {
+
   const [open, setOpen] = useState(false);
   const { data: anticipos, porMoneda } = useAnticiposDisponibles(proveedorId);
 
@@ -57,7 +62,10 @@ export function AnticipoDisponibleAviso({
         saldoFactura={saldoFactura}
         monedaFactura={monedaFactura}
         anticipos={anticipos}
+        facturaEmbarqueId={facturaEmbarqueId}
+        facturaExpediente={facturaExpediente}
       />
+
     </>
   );
 }

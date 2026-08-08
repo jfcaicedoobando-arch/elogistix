@@ -16,6 +16,8 @@ import { useAnticiposProveedor, type AnticipoProveedorRow } from "../hooks/useAn
 import { RegistrarAnticipoDialog } from "../components/RegistrarAnticipoDialog";
 import { AplicarAnticipoDialog } from "../components/AplicarAnticipoDialog";
 import { CancelarAnticipoDialog } from "../components/CancelarAnticipoDialog";
+import { VincularEmbarqueAnticipoDialog } from "../components/VincularEmbarqueAnticipoDialog";
+
 import { usePermissions } from "@/hooks/shared";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
 import { PageSkeleton } from "@/components/shared/skeletons";
@@ -31,6 +33,7 @@ export default function AnticiposProveedor() {
   const [openRegistrar, setOpenRegistrar] = useState(false);
   const [anticipoParaAplicar, setAnticipoParaAplicar] = useState<AnticipoProveedorRow | null>(null);
   const [anticipoParaCancelar, setAnticipoParaCancelar] = useState<AnticipoProveedorRow | null>(null);
+  const [anticipoParaVincular, setAnticipoParaVincular] = useState<AnticipoProveedorRow | null>(null);
 
   const { data, isLoading, isError, refetch } = useAnticiposProveedor({
     estado: estado === "todos" ? null : estado,
@@ -45,9 +48,11 @@ export default function AnticiposProveedor() {
         canEditFinance,
         onAplicar: setAnticipoParaAplicar,
         onCancelar: setAnticipoParaCancelar,
+        onVincularEmbarque: setAnticipoParaVincular,
       }),
     [canEditFinance],
   );
+
 
   if (isLoading) return <PageSkeleton />;
 
@@ -150,6 +155,13 @@ export default function AnticiposProveedor() {
         onOpenChange={(o) => !o && setAnticipoParaCancelar(null)}
         anticipo={anticipoParaCancelar}
       />
+
+      <VincularEmbarqueAnticipoDialog
+        open={!!anticipoParaVincular}
+        onOpenChange={(o) => !o && setAnticipoParaVincular(null)}
+        anticipo={anticipoParaVincular}
+      />
+
     </PageContainer>
   );
 }

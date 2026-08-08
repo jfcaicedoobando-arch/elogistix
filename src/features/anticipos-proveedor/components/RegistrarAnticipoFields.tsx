@@ -9,7 +9,9 @@ import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { ProveedorCombobox } from "@/features/cxp/components/ProveedorCombobox";
 import { formatCurrency } from "@/lib/formatters";
 import { METODOS_PAGO, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
+import { EmbarqueAnticipoPicker } from "./EmbarqueAnticipoPicker";
 import { etiquetaCuenta, type CuentaOption } from "../domain/etiquetaCuenta";
+
 
 interface Props {
   control: Control<RegistrarAnticipoFormValues>;
@@ -26,13 +28,18 @@ interface Props {
   tcHint?: string;
   /** Equivalente en pesos del monto capturado (null si no aplica). */
   equivalenteMxn: number | null;
+  /** Embarque ligado al anticipo (opcional). */
+  embarqueId?: string | null;
+  embarqueExpediente?: string | null;
+  onEmbarqueChange: (embarqueId: string | null, expediente: string | null) => void;
 }
 
 export function RegistrarAnticipoFields({
   control, register, errors, moneda, requiereCuenta, cuentaBancariaId,
   cuentasDeMoneda, proveedorNombre, onProveedorNombre, bloquearProveedor,
-  tcHint, equivalenteMxn,
+  tcHint, equivalenteMxn, embarqueId, embarqueExpediente, onEmbarqueChange,
 }: Props) {
+
   return (
     <>
       <FormDialogSection title="Datos del anticipo">
@@ -157,6 +164,18 @@ export function RegistrarAnticipoFields({
           <Input id="ant-ref" placeholder="Folio de transferencia, cheque, etc." {...register("referencia")} />
         </div>
       </FormDialogSection>
+      <FormDialogSection title="Vinculación con embarque (opcional)" cols={1}>
+        <EmbarqueAnticipoPicker
+          value={embarqueId ?? null}
+          expediente={embarqueExpediente ?? null}
+          onChange={onEmbarqueChange}
+        />
+        <p className="text-xs text-muted-foreground">
+          Sirve para saber de qué expediente es el dinero adelantado y amarrarlo después con la
+          factura del proveedor. Puedes dejarlo vacío y ligarlo más tarde.
+        </p>
+      </FormDialogSection>
+
       {equivalenteMxn !== null && (
         <FormDialogSection title="Resumen" cols={1}>
           <p className="text-sm text-muted-foreground">

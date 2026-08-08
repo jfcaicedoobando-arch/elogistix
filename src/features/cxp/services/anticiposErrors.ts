@@ -30,6 +30,10 @@ const ERROR_RULES: readonly RuleMatch[] = [
   { code: "LC_ANTICIPO_PROVEEDOR_NO_EXISTE", message: "El proveedor no existe.", matches: (r) => r.includes("lc_anticipo_proveedor_no_existe") },
   { code: "LC_ANTICIPO_PROVEEDOR_OTRA_ORG", message: "El proveedor pertenece a otra organización.", matches: (r) => r.includes("lc_anticipo_proveedor_otra_org") },
   { code: "LC_ANTICIPO_MOTIVO_REQUERIDO", message: "Indica un motivo de cancelación de al menos 3 caracteres.", matches: (r) => r.includes("lc_anticipo_motivo_requerido") },
+  { code: "LC_ANTICIPO_EMBARQUE_INVALIDO", message: "El embarque no existe o pertenece a otra organización.", matches: (r) => r.includes("lc_anticipo_embarque_invalido") },
+  { code: "LC_ANTICIPO_CANCELADO", message: "No se puede vincular un anticipo cancelado.", matches: (r) => r.includes("lc_anticipo_cancelado") },
+  { code: "LC_ANTICIPO_OTRA_ORG", message: "El anticipo pertenece a otra organización.", matches: (r) => r.includes("lc_anticipo_otra_org") },
+
   { code: "LC_PAGO_TC_REQUERIDO", message: "Falta el tipo de cambio para convertir el anticipo a la moneda de la factura.", matches: (r) => r.includes("lc_pago_tc_requerido") },
   { code: "LC_PAGO_CRUCE_NO_SOPORTADO", message: "Cruce de monedas no soportado (EUR). Usa un anticipo en la misma moneda que la factura.", matches: (r) => r.includes("lc_pago_cruce_no_soportado") },
 ];

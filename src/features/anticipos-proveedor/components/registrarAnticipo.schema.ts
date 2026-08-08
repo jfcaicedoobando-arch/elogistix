@@ -21,7 +21,12 @@ export const registrarAnticipoSchema = z
     tipoCambioUsd: z.coerce.number().optional(),
     referencia: z.string().optional(),
     notas: z.string().optional(),
+    // Vínculo opcional con el embarque (expediente) al que corresponde el
+    // dinero adelantado. Permite amarrarlo después con la factura del proveedor.
+    embarqueId: z.string().uuid().nullable().optional(),
+    embarqueExpediente: z.string().nullable().optional(),
   })
+
   .superRefine((v, ctx) => {
     if (v.moneda !== "MXN" && !(Number(v.tipoCambioUsd) > 0)) {
       ctx.addIssue({

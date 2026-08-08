@@ -69,7 +69,10 @@ export function FacturaProveedorTabs({
             saldoFactura={f.saldo}
             monedaFactura={f.moneda}
             canEdit={canEdit}
+            facturaEmbarqueId={f.embarque_id}
+            facturaExpediente={f.embarque_expediente}
           />
+
           <AnticiposAplicadosSection facturaId={f.id} />
           <ConciliacionTesoreriaSection facturaId={f.id} monedaFactura={f.moneda} />
           <BitacoraTesoreriaSection

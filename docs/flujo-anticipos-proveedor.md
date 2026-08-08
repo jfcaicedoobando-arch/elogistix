@@ -43,9 +43,23 @@ Tesorería → *Estado de cuenta*: el movimiento del anticipo ya aparece como **
 y ligado al anticipo. Si el anticipo se cancela, ese movimiento se da de baja y el saldo
 del banco regresa.
 
+## 6. Vincular el anticipo con un embarque (opcional)
+
+Operaciones necesita saber de qué expediente salió el dinero adelantado:
+
+- Al **registrar** el anticipo hay un buscador de embarque (opcional).
+- Después se puede ligar o corregir con la acción **Vincular embarque** en la bandeja
+  de *Anticipos a proveedores*.
+- El expediente aparece como columna en la bandeja y como tarjeta
+  **"Anticipos a proveedores de este embarque"** en la pestaña *Costos* del embarque.
+- Si se aplica el anticipo a una factura de otro expediente, sale un **aviso amarillo**
+  que no bloquea: hay casos legítimos (anticipo general, expediente corregido después).
+
 ## Reglas y validaciones
 
-- Roles que pueden registrar, aplicar y cancelar: administrador, contador y tesorero.
+- Roles que pueden registrar, aplicar, vincular y cancelar: administrador, contador y tesorero.
 - La moneda del anticipo debe coincidir con la moneda de la cuenta bancaria.
 - No se puede cancelar un anticipo que ya tenga aplicaciones vivas: primero se reversan.
 - El monto a aplicar nunca puede exceder el saldo a favor ni el saldo de la factura.
+- No se puede vincular un embarque a un anticipo cancelado ni a un embarque de otra organización.
+

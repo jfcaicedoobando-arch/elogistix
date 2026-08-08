@@ -6,8 +6,10 @@ import {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
+  vincularAnticipoEmbarque,
   type RegistrarAnticipoInput,
 } from "@/features/anticipos-proveedor/services/anticiposProveedorService";
+
 
 export function useRegistrarAnticipo() {
   return useMutationWithFeedback({
@@ -51,3 +53,19 @@ export function useCancelarAnticipo() {
     errorMethod: "ANTICIPOS_PROVEEDOR_CANCELAR",
   });
 }
+
+interface VincularEmbarqueVars {
+  id: string;
+  embarqueId: string | null;
+}
+
+export function useVincularAnticipoEmbarque() {
+  return useMutationWithFeedback({
+    mutationFn: (v: VincularEmbarqueVars) => vincularAnticipoEmbarque(v.id, v.embarqueId),
+    invalidate: [anticiposProveedorKeys.all],
+    successTitle: "Embarque actualizado",
+    errorTitle: "No se pudo vincular el embarque",
+    errorMethod: "ANTICIPOS_PROVEEDOR_VINCULAR_EMBARQUE",
+  });
+}
+

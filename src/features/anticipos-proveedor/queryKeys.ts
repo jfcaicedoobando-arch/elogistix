@@ -6,4 +6,6 @@ export const anticiposProveedorKeys = {
     ["anticipos-proveedor", "disponibles", proveedorId ?? null] as const,
   aplicacionesPorFactura: (facturaId?: string | null) =>
     ["anticipos-proveedor", "aplicaciones-factura", facturaId ?? null] as const,
+  porEmbarque: (embarqueId?: string | null) =>
+    ["anticipos-proveedor", "por-embarque", embarqueId ?? null] as const,
 } as const;

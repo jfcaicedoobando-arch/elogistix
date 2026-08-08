@@ -3,7 +3,9 @@
  * La factura es fija: sólo se elige el anticipo con saldo a favor y el monto.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, ArrowRightLeft } from "lucide-react";
+import { Loader2, ArrowRightLeft, AlertTriangle } from "lucide-react";
+import { evaluarDesajusteEmbarque } from "@/features/anticipos-proveedor/domain/avisoEmbarqueAnticipo";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,11 +28,17 @@ interface Props {
   saldoFactura: number;
   monedaFactura: string;
   anticipos: AnticipoProveedorRow[];
+  /** Embarque de la factura, para avisar si no coincide con el del anticipo. */
+  facturaEmbarqueId?: string | null;
+  facturaExpediente?: string | null;
 }
+
 
 export function AplicarAnticipoDesdeFacturaDialog({
   open, onOpenChange, facturaId, folioFactura, saldoFactura, monedaFactura, anticipos,
+  facturaEmbarqueId, facturaExpediente,
 }: Props) {
+
   const aplicar = useAplicarAnticipo();
   const [anticipoId, setAnticipoId] = useState("");
   const [monto, setMonto] = useState("0");
@@ -61,6 +69,17 @@ export function AplicarAnticipoDesdeFacturaDialog({
 
   const montoNum = Number(monto);
   const monedaDifiere = Boolean(anticipo) && anticipo!.moneda !== monedaFactura;
+  const desajuste = useMemo(
+    () =>
+      evaluarDesajusteEmbarque({
+        anticipoEmbarqueId: anticipo?.embarque_id ?? null,
+        anticipoExpediente: anticipo?.embarque_expediente ?? null,
+        facturaEmbarqueId: facturaEmbarqueId ?? null,
+        facturaExpediente: facturaExpediente ?? null,
+      }),
+    [anticipo, facturaEmbarqueId, facturaExpediente],
+  );
+
 
   const onSubmit = async () => {
     if (!anticipo) return;
@@ -142,7 +161,14 @@ export function AplicarAnticipoDesdeFacturaDialog({
             servidor al aplicar.
           </p>
         )}
+        {desajuste.hayDesajuste && (
+          <div className="md:col-span-2 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+            <p className="text-xs text-foreground">{desajuste.mensaje}</p>
+          </div>
+        )}
       </FormDialogSection>
+
     </FormDialogShell>
   );
 }

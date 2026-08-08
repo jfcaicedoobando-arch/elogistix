@@ -6,6 +6,8 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useReconciliacionEmbarque } from "@/features/embarques/hooks/useReconciliacionEmbarque";
 
 import { ConceptosCostoCard } from "./costos/ConceptosCostoCard";
+import { AnticiposEmbarqueCard } from "./costos/AnticiposEmbarqueCard";
+
 import type { ConceptoCostoRow } from "@/features/embarques/hooks";
 
 interface Props {
@@ -71,6 +73,9 @@ export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, ma
         renderContenedor={renderContenedor}
         irACargarCostos={irACargarCostos}
       />
+
+      <AnticiposEmbarqueCard embarqueId={embarqueId} />
     </div>
+
   );
 }
