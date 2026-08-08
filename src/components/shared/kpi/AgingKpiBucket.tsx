@@ -26,6 +26,3 @@ export function AgingKpiBucket({ label, value, moneda, tone = "default" }: Props
     />
   );
 }
-
-/** Alias histórico usado por CxP. */
-export { AgingKpiBucket as KpiBucket };
