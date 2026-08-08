@@ -5,6 +5,7 @@
 - Estado de cuenta (`/tesoreria/estado-cuenta`): mismo botón **Ver pago** por renglón, para auditar el extracto sin salir de la pantalla.
 - Los movimientos conciliados que no guardan el pago con el que se amarraron muestran un ícono con la aclaración, en lugar de un botón que no lleva a nada.
 - El panel lateral de conciliación conserva su botón "Ver detalle del pago" como camino alternativo.
+- Fix de tablas virtualizadas: los anchos de columna se traducían mal y las columnas se apilaban una debajo de otra (se veía como una lista, no como tabla). Ahora la tabla de conciliación se ve alineada en columnas.
 
 ## [13.462.0] - 2026-08-09
 - Antigüedad CxC (`/cobranza/aging`): **fix importante** — antes sumaba MXN, USD y EUR en un mismo total. Ahora hay un selector de moneda y cada moneda se reporta por separado (igual que CxP).
