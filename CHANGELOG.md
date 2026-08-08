@@ -1,6 +1,8 @@
 # Changelog
 
-## [13.464.2] - 2026-08-08
+## [13.464.3] - 2026-08-08
+- Nuevo botón **Eliminar organización** en `/admin/organizaciones/:id`: solo visible para super-admin y solo permite borrar organizaciones vacías (sin embarques, clientes, proveedores, cotizaciones, proformas, facturas, pagos, cuentas bancarias ni CRM). Si la org tiene datos, el RPC devuelve un error claro y se recomienda desactivarla en su lugar. Eliminación protegida por doble confirmación con la palabra "ELIMINAR".
+
 - Test de regresión RLS `test_rls_reg_portales`: el bloque que verifica que los costos se prorratean (no se multiplican por contenedor) ahora usa un embarque limpio, para no chocar con el nuevo guardia de idempotencia que evita re-sembrar conceptos en un embarque que ya los tiene.
 
 ## [13.464.1] - 2026-08-08
