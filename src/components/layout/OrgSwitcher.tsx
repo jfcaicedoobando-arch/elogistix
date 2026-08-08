@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { Building2, ChevronDown } from "lucide-react";
+import { Building2, ChevronDown, ShieldCheck } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
