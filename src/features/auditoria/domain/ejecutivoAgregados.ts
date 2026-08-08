@@ -43,7 +43,7 @@ export function emptyPorRegla(): Record<ReglaAuditoria, number> {
   return {
     docs_faltantes: 0, docs_pendientes_avanzado: 0, fechas: 0,
     ventas_sin_facturar: 0, margen_negativo: 0, margen_bajo: 0,
-    venta_sin_costo: 0, costo_sin_venta: 0, proforma_vencida: 0,
+    venta_sin_costo: 0, costo_sin_venta: 0, costos_repetidos: 0, proforma_vencida: 0,
     proforma_borrador_abandonada: 0, proforma_inconsistente: 0,
     embarque_huerfano: 0,
     factura_sin_timbrar: 0, rep_pendiente: 0,

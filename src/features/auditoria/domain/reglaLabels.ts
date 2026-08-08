@@ -14,6 +14,7 @@ export const REGLA_SHORT_LABELS: Record<ReglaAuditoria, string> = {
   margen_bajo: "Margen estimado bajo",
   venta_sin_costo: "Venta sin costo",
   costo_sin_venta: "Costo sin venta",
+  costos_repetidos: "Costos repetidos",
   proforma_vencida: "Proforma vencida",
   proforma_borrador_abandonada: "Borrador abandonado",
   proforma_inconsistente: "Proforma inconsistente",

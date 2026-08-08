@@ -12,6 +12,7 @@ export type ReglaAuditoria =
   | "margen_bajo"
   | "venta_sin_costo"
   | "costo_sin_venta"
+  | "costos_repetidos"
   | "proforma_vencida"
   | "proforma_borrador_abandonada"
   | "proforma_inconsistente"

@@ -16,6 +16,7 @@ export const reglaAuditoriaFiltroSchema = z.enum([
   "margen_bajo",
   "venta_sin_costo",
   "costo_sin_venta",
+  "costos_repetidos",
   "proforma_vencida",
   "embarque_huerfano",
   "todas",

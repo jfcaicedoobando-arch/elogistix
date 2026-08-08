@@ -17,6 +17,7 @@ const reglaToTab: Record<ReglaAuditoria, string> = {
   margen_bajo: "financiero",
   venta_sin_costo: "financiero",
   costo_sin_venta: "financiero",
+  costos_repetidos: "financiero",
   proforma_vencida: "facturacion",
   proforma_borrador_abandonada: "facturacion",
   proforma_inconsistente: "facturacion",
