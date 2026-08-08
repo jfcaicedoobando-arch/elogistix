@@ -62,6 +62,7 @@ export const Tesoreria = lazy(() => import("@/features/tesoreria/routes/Tesoreri
 export const TesoreriaCuentas = lazy(() => import("@/features/tesoreria/routes/TesoreriaCuentas"));
 export const TesoreriaConciliacion = lazy(() => import("@/features/tesoreria/routes/TesoreriaConciliacion"));
 export const TesoreriaEstadoCuenta = lazy(() => import("@/features/tesoreria/routes/TesoreriaEstadoCuenta"));
+export const TesoreriaPagos = lazy(() => import("@/features/tesoreria/routes/TesoreriaPagos"));
 
 export const TesoreriaFlujo = lazy(() => import("@/features/tesoreria/routes/TesoreriaFlujo"));
 export const TesoreriaPagosProgramados = lazy(() => import("@/features/tesoreria/routes/TesoreriaPagosProgramados"));
