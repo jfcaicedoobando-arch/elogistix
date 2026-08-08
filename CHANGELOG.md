@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.464.4] - 2026-08-08
+- Costos de cotización a embarque: cuando un concepto aplica por contenedor, el importe total ahora se **reparte** entre los contenedores (el ajuste de centavos va al último) en lugar de copiarse completo en cada uno, que triplicaba el costo del expediente con 3 contenedores.
+- Seguridad (FIX-45): la función de eliminar organización vacía ya no es ejecutable por visitantes sin sesión; solo usuarios autenticados (con validación de super-admin dentro del RPC).
+
 ## [13.464.3] - 2026-08-08
 - Nuevo botón **Eliminar organización** en `/admin/organizaciones/:id`: solo visible para super-admin y solo permite borrar organizaciones vacías (sin embarques, clientes, proveedores, cotizaciones, proformas, facturas, pagos, cuentas bancarias ni CRM). Si la org tiene datos, el RPC devuelve un error claro y se recomienda desactivarla en su lugar. Eliminación protegida por doble confirmación con la palabra "ELIMINAR".
 
