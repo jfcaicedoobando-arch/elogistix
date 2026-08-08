@@ -30,6 +30,8 @@ export function Layout() {
   }, []);
 
   const isMobile = useIsMobile();
+  const { requiereSeleccionOrg } = useOrganization();
+
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
