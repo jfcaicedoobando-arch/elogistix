@@ -180,6 +180,7 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          embarque_id: string | null
           estado: string
           fecha_anticipo: string
           id: string
@@ -201,6 +202,7 @@ export type Database = {
           cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          embarque_id?: string | null
           estado?: string
           fecha_anticipo?: string
           id?: string
@@ -222,6 +224,7 @@ export type Database = {
           cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          embarque_id?: string | null
           estado?: string
           fecha_anticipo?: string
           id?: string
@@ -243,6 +246,13 @@ export type Database = {
             columns: ["cuenta_bancaria_id"]
             isOneToOne: false
             referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anticipos_proveedor_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
             referencedColumns: ["id"]
           },
           {
@@ -7608,6 +7618,7 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          embarque_id: string | null
           estado: string
           fecha_anticipo: string
           id: string
@@ -8882,46 +8893,90 @@ export type Database = {
         Args: { p_embarque_id: string }
         Returns: number
       }
-      registrar_anticipo_proveedor: {
-        Args: {
-          p_cuenta_bancaria_id?: string
-          p_fecha_anticipo?: string
-          p_metodo_pago?: string
-          p_moneda: Database["public"]["Enums"]["moneda"]
-          p_monto: number
-          p_notas?: string
-          p_proveedor_id: string
-          p_referencia?: string
-          p_tipo_cambio_usd?: number
-        }
-        Returns: {
-          created_at: string
-          created_by: string | null
-          cuenta_bancaria_id: string | null
-          deleted_at: string | null
-          deleted_by: string | null
-          estado: string
-          fecha_anticipo: string
-          id: string
-          metodo_pago: string | null
-          moneda: Database["public"]["Enums"]["moneda"]
-          monto: number
-          motivo_cancelacion: string | null
-          notas: string | null
-          organization_id: string
-          proveedor_id: string
-          referencia: string | null
-          saldo_disponible: number
-          tipo_cambio_usd: number | null
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "anticipos_proveedor"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      registrar_anticipo_proveedor:
+        | {
+            Args: {
+              p_cuenta_bancaria_id?: string
+              p_fecha_anticipo?: string
+              p_metodo_pago?: string
+              p_moneda: Database["public"]["Enums"]["moneda"]
+              p_monto: number
+              p_notas?: string
+              p_proveedor_id: string
+              p_referencia?: string
+              p_tipo_cambio_usd?: number
+            }
+            Returns: {
+              created_at: string
+              created_by: string | null
+              cuenta_bancaria_id: string | null
+              deleted_at: string | null
+              deleted_by: string | null
+              embarque_id: string | null
+              estado: string
+              fecha_anticipo: string
+              id: string
+              metodo_pago: string | null
+              moneda: Database["public"]["Enums"]["moneda"]
+              monto: number
+              motivo_cancelacion: string | null
+              notas: string | null
+              organization_id: string
+              proveedor_id: string
+              referencia: string | null
+              saldo_disponible: number
+              tipo_cambio_usd: number | null
+              updated_at: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "anticipos_proveedor"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_cuenta_bancaria_id?: string
+              p_embarque_id?: string
+              p_fecha_anticipo?: string
+              p_metodo_pago?: string
+              p_moneda: Database["public"]["Enums"]["moneda"]
+              p_monto: number
+              p_notas?: string
+              p_proveedor_id: string
+              p_referencia?: string
+              p_tipo_cambio_usd?: number
+            }
+            Returns: {
+              created_at: string
+              created_by: string | null
+              cuenta_bancaria_id: string | null
+              deleted_at: string | null
+              deleted_by: string | null
+              embarque_id: string | null
+              estado: string
+              fecha_anticipo: string
+              id: string
+              metodo_pago: string | null
+              moneda: Database["public"]["Enums"]["moneda"]
+              monto: number
+              motivo_cancelacion: string | null
+              notas: string | null
+              organization_id: string
+              proveedor_id: string
+              referencia: string | null
+              saldo_disponible: number
+              tipo_cambio_usd: number | null
+              updated_at: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "anticipos_proveedor"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       registrar_bitacora: {
         Args: {
           p_accion: string
@@ -9167,6 +9222,37 @@ export type Database = {
       validar_cierre_embarque: {
         Args: { p_embarque_id: string }
         Returns: Json
+      }
+      vincular_anticipo_embarque: {
+        Args: { p_embarque_id?: string; p_id: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          cuenta_bancaria_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          embarque_id: string | null
+          estado: string
+          fecha_anticipo: string
+          id: string
+          metodo_pago: string | null
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          motivo_cancelacion: string | null
+          notas: string | null
+          organization_id: string
+          proveedor_id: string
+          referencia: string | null
+          saldo_disponible: number
+          tipo_cambio_usd: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "anticipos_proveedor"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
