@@ -11,9 +11,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  rangoAnioPagos, rangoMesPagos, rangoTrimestrePagos,
-  type FiltroConciliacion, type FiltroRep, type FiltrosLibroPagos, type RangoPagos,
+  type FiltroConciliacion, type FiltroRep, type FiltrosLibroPagos,
 } from "@/features/tesoreria/domain/libroPagos";
+import {
+  rangoAnioPagos, rangoMesPagos, rangoTrimestrePagos, type RangoPagos,
+} from "@/features/tesoreria/domain/libroPagosRangos";
 
 interface CuentaOption {
   id: string;

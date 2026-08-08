@@ -12,7 +12,8 @@ import {
   nombreArchivoLibroPagos,
   resumenLibroPagos,
 } from "@/features/tesoreria/services/libroPagosExport";
-import type { PagoLibro, RangoPagos, TotalesLibroPagos } from "@/features/tesoreria/domain/libroPagos";
+import type { PagoLibro, TotalesLibroPagos } from "@/features/tesoreria/domain/libroPagos";
+import type { RangoPagos } from "@/features/tesoreria/domain/libroPagosRangos";
 
 interface Props {
   pagos: PagoLibro[];
