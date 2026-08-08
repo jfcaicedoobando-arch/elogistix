@@ -62,7 +62,10 @@ export function AnticipoDisponibleAviso({
         saldoFactura={saldoFactura}
         monedaFactura={monedaFactura}
         anticipos={anticipos}
+        facturaEmbarqueId={facturaEmbarqueId}
+        facturaExpediente={facturaExpediente}
       />
+
     </>
   );
 }
