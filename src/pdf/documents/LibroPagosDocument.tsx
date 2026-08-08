@@ -18,6 +18,8 @@ export interface FilaLibroPagosExport {
   referencia: string;
   cuenta: string;
   monto: string;
+  tipoCambio: string;
+  fuenteTc: string;
   montoMxn: string;
   estado: string;
 }
@@ -49,6 +51,7 @@ const cols: PdfColumn<FilaLibroPagosExport>[] = [
   { key: "referencia", title: "Referencia", cellStyle: styles.cellDesc, render: (r) => r.referencia },
   { key: "cuenta", title: "Cuenta", cellStyle: styles.cellDesc, render: (r) => r.cuenta },
   { key: "monto", title: "Monto", cellStyle: styles.cellNumWide, render: (r) => r.monto },
+  { key: "tipoCambio", title: "TC", cellStyle: COL_TIPO, render: (r) => r.tipoCambio },
   { key: "montoMxn", title: "Equiv. MXN", cellStyle: styles.cellNumWide, render: (r) => r.montoMxn },
   { key: "estado", title: "Conciliación", cellStyle: COL_ESTADO, render: (r) => r.estado },
 ];
@@ -65,6 +68,9 @@ export function LibroPagosDocument({ resumen, filas, emisor }: Props) {
             </Text>
             <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.subtle }}>
               Periodo {resumen.periodo}
+            </Text>
+            <Text style={{ marginTop: 2, fontSize: 9, color: COLORS.subtle }}>
+              Importes en MXN valuados al tipo de cambio de cada pago
             </Text>
           </View>
         </View>
@@ -83,6 +89,13 @@ export function LibroPagosDocument({ resumen, filas, emisor }: Props) {
         ) : (
           <DataTable columns={cols} rows={filas} />
         )}
+
+        <View style={{ flexDirection: "row", gap: 16, marginTop: 10 }}>
+          <Text style={{ fontSize: 9 }}>Total cobrado (MXN): {resumen.cobrado}</Text>
+          <Text style={{ fontSize: 9 }}>Total pagado (MXN): {resumen.pagado}</Text>
+          <Text style={{ fontSize: 9 }}>Neto (MXN): {resumen.neto}</Text>
+          <Text style={{ fontSize: 9 }}>Pagos incluidos: {resumen.conteo}</Text>
+        </View>
 
         <Footer />
       </Page>
