@@ -1,26 +1,7 @@
 /**
- * `KpiBucket` — cubeta de aging CxP.
+ * `KpiBucket` de CxP.
  *
- * v13.426.0 — Armonización visual global: dejó de reimplementar `Card` y ahora
- * compone la tarjeta KPI canónica (`@/components/shared/KpiCard`).
+ * v13.462.0 — La implementación se movió a `@/components/shared/kpi/AgingKpiBucket`
+ * para compartirla con el aging de CxC. Este archivo sólo reexporta.
  */
-import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
-
-interface Props {
-  label: string;
-  value: number;
-  moneda: string;
-  tone?: "default" | "warn" | "danger";
-}
-
-export function KpiBucket({ label, value, moneda, tone = "default" }: Props) {
-  return (
-    <KpiCard
-      label={label}
-      value={formatCurrencyCompact(value, moneda)}
-      valueTooltip={formatCurrency(value, moneda)}
-      variant={tone === "danger" ? "destructive" : tone === "warn" ? "warning" : "default"}
-    />
-  );
-}
+export { AgingKpiBucket as KpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
