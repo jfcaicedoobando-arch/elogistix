@@ -180,7 +180,12 @@ export default function TesoreriaConciliacion() {
         isPending={registrarManual.isPending}
       />
 
-      <DetallePagoSheet ref_pago={refPago} onOpenChange={(open) => { if (!open) setRefPago(null); }} />
+      {refPago ? (
+        <DetallePagoSheet
+          ref_pago={refPago}
+          onOpenChange={(open) => { if (!open) setRefPago(null); }}
+        />
+      ) : null}
     </PageContainer>
   );
 }

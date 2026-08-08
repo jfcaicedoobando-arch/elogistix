@@ -116,7 +116,12 @@ export default function TesoreriaEstadoCuenta() {
         </>
       )}
 
-      <DetallePagoSheet ref_pago={refPago} onOpenChange={(open) => { if (!open) setRefPago(null); }} />
+      {refPago ? (
+        <DetallePagoSheet
+          ref_pago={refPago}
+          onOpenChange={(open) => { if (!open) setRefPago(null); }}
+        />
+      ) : null}
     </PageContainer>
   );
 }
