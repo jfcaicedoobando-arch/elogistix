@@ -17,7 +17,8 @@ import {
 } from "@/lib/aging/buckets";
 
 /** Cubetas y etiquetas compartidas con `/cobranza/aging` y `/compras/aging`. */
-export { bucketDeDias, CUBETAS_AGING as BUCKETS_AGING };
+export { bucketDeDias };
+export const BUCKETS_AGING = CUBETAS_AGING;
 export type BucketAging = CubetaAging;
 export const BUCKET_AGING_LABELS = CUBETA_LABELS_LARGAS;
 
