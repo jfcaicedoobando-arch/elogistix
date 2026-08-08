@@ -10,7 +10,7 @@ import { CardSkeleton } from "@/components/shared/skeletons";
 import { Button } from "@/components/ui/button";
 import { usePagoDetalle } from "@/features/tesoreria/hooks/usePagoDetalle";
 import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
-import { mensajeError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import {
   BloqueAplicaciones,
   BloqueMovimiento,
@@ -41,7 +41,7 @@ export function DetallePagoSheet({ ref_pago, onOpenChange }: Props) {
 
           {isError ? (
             <div className="space-y-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
-              <p>{mensajeError(error)}</p>
+              <p>{getErrorMessage(error)}</p>
               <Button size="sm" variant="outline" onClick={() => void refetch()}>
                 Reintentar
               </Button>
