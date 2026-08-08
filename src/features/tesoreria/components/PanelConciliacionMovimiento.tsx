@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { EyeOff, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { Button } from "@/components/ui/button";
-import { CardSkeleton } from "@/components/shared/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +15,9 @@ import type { MovimientoBBVA } from "@/features/tesoreria/services";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
 import { refPagoDeMovimiento } from "@/features/tesoreria/domain/pagoDetalle";
+import {
+  EstadoConciliado, EstadoIgnorado, ListaCandidatos,
+} from "@/features/tesoreria/components/PanelConciliacionEstados";
 interface Props {
   movimiento: MovimientoBBVA | null;
   onClose: () => void;
@@ -91,64 +93,21 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
         </KpiCard>
 
         {movimiento.estado_conciliacion === "Conciliado" ? (
-          <>
-            <Badge className="bg-success/10 text-success border-success/20">Conciliado</Badge>
-            {refPago ? (
-              <Button variant="outline" size="sm" onClick={() => setVerPago(true)} className="w-full">
-                <Eye className="h-4 w-4 mr-2" />
-                Ver detalle del pago
-              </Button>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Este movimiento está conciliado, pero no guarda el pago con el que se amarró.
-              </p>
-            )}
-            <Button variant="outline" size="sm" onClick={onDesconciliar} className="w-full">
-              Desconciliar
-            </Button>
-          </>
+          <EstadoConciliado
+            tienePago={!!refPago}
+            onVerPago={() => setVerPago(true)}
+            onDesconciliar={onDesconciliar}
+          />
         ) : movimiento.estado_conciliacion === "Ignorado" ? (
-          <>
-            <Badge variant="outline">Ignorado</Badge>
-            {movimiento.motivo_ignorar && <p className="text-xs text-muted-foreground">Motivo: {movimiento.motivo_ignorar}</p>}
-            <Button variant="outline" size="sm" onClick={onDesconciliar} className="w-full">
-              Reactivar (volver a Pendiente)
-            </Button>
-          </>
+          <EstadoIgnorado motivo={movimiento.motivo_ignorar} onReactivar={onDesconciliar} />
         ) : (
-          <>
-            <div>
-              <h4 className="text-xs font-semibold mb-2 text-muted-foreground">Candidatos (±$1, ±5 días)</h4>
-              {isLoading ? <CardSkeleton lines={2} showHeader={false} /> : candidatos.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Sin candidatos. Crea el pago manualmente desde CxC/CxP o ignora este movimiento.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {candidatos.map((c) => (
-                    <li key={`${c.tipo}-${c.pago_id}`} className="border rounded p-2 text-xs space-y-1">
-                      <div className="flex justify-between">
-                        <span className="font-medium">{c.contraparte}</span>
-                        <Badge variant="outline" className="text-2xs">{c.tipo.toUpperCase()}</Badge>
-                      </div>
-                      <div className="text-muted-foreground">{formatDate(c.fecha)} · Ref {c.referencia || "—"}</div>
-                      <div className="flex justify-between items-center">
-                        <span className="tabular-nums font-medium">{formatCurrency(c.monto, c.moneda)}</span>
-                        <Button size="sm" onClick={() => onConciliar(c.tipo, c.pago_id)} disabled={conciliar.isPending}>
-                          Conciliar
-                        </Button>
-                      </div>
-                      <div className="text-2xs text-muted-foreground">
-                        Δ monto {c.delta_monto.toFixed(2)} · Δ días {c.delta_dias}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <Button variant="outline" size="sm" onClick={() => setOpenIgnorar(true)} className="w-full">
-              Ignorar (comisión, traspaso, etc.)
-            </Button>
-          </>
+          <ListaCandidatos
+            candidatos={candidatos}
+            isLoading={isLoading}
+            isPending={conciliar.isPending}
+            onConciliar={onConciliar}
+            onIgnorar={() => setOpenIgnorar(true)}
+          />
         )}
 
         {esMovimientoManual(movimiento) && movimiento.estado_conciliacion !== "Conciliado" && (

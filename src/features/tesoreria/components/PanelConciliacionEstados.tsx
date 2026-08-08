@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import type { CandidatoConciliacion } from "@/features/tesoreria/services";
+import type { Candidato } from "@/features/tesoreria/services/sugerirCandidatos";
 
 export function EstadoConciliado({
   tienePago,
@@ -60,7 +60,7 @@ export function EstadoIgnorado({
 }
 
 interface ListaCandidatosProps {
-  candidatos: readonly CandidatoConciliacion[];
+  candidatos: readonly Candidato[];
   isLoading: boolean;
   isPending: boolean;
   onConciliar: (tipo: "cxc" | "cxp", pagoId: string) => void;
