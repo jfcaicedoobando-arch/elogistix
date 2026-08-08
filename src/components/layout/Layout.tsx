@@ -59,15 +59,17 @@ export function Layout() {
               <ThemeToggle />
             </div>
           </header>
+          <TenantContextBanner />
           <main className="flex-1 overflow-auto">
             <PageContainer noSpacing>
               <ErrorBoundary resetKey={location.pathname}>
                 <Suspense fallback={<RouteLoadingFallback />}>
-                  <Outlet />
+                  {requiereSeleccionOrg ? <SeleccionaOrganizacion /> : <Outlet />}
                 </Suspense>
               </ErrorBoundary>
             </PageContainer>
           </main>
+
 
         </div>
       </div>
