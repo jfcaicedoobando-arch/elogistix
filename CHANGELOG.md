@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.457.2] - 2026-08-08
+- **Seguridad:** se revocó el permiso de ejecución a visitantes anónimos en `registrar_anticipo_proveedor` (sólo `authenticated` y `service_role`). La prueba FIX-45 vuelve a pasar.
+
+
+
 ## [13.457.1] - 2026-08-08
 - **Fix:** se eliminó la versión anterior (duplicada) de `registrar_anticipo_proveedor`; el guardia de integridad ya no reporta sobrecarga ambigua.
 
