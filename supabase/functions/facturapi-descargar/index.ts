@@ -18,7 +18,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
-import { authorizeOrgRole, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
+import { authorizeOrgRole, authorizePortalCliente, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
 import { extractFacturapiMessage } from "../_shared/facturapiClient.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { buildFilename, type CfdiTipoDoc } from "../_shared/facturaFilename.ts";
@@ -38,6 +38,7 @@ interface ResolvedTarget {
   organizationId: string;
   tipoDoc: CfdiTipoDoc;
   folioSerie: string;
+  clienteId: string | null;
   cliente: string | null;
   fecha: string | null;
 }
@@ -60,14 +61,16 @@ async function resolveFromNc(
   const folio = (nc.folio as string | null) ?? "";
   // Cliente/fecha se heredan de la factura padre si no vienen en la NC.
   let cliente: string | null = null;
+  let clienteId: string | null = null;
   let fecha: string | null = (nc.fecha_emision as string | null) ?? null;
   const facturaIdPadre = nc.factura_id as string | null;
   if (facturaIdPadre) {
     const { data: padre } = await supabase
       .from("facturas")
-      .select("cliente_nombre, fecha_emision")
+      .select("cliente_id, cliente_nombre, fecha_emision")
       .eq("id", facturaIdPadre).maybeSingle();
     cliente = (padre?.cliente_nombre as string | null) ?? null;
+    clienteId = (padre?.cliente_id as string | null) ?? null;
     if (!fecha) fecha = (padre?.fecha_emision as string | null) ?? null;
   }
   return {
@@ -77,6 +80,7 @@ async function resolveFromNc(
       organizationId: nc.organization_id as string,
       tipoDoc: "NotaCredito",
       folioSerie: `${serie}${folio}`,
+      clienteId,
       cliente,
       fecha,
     },
@@ -97,13 +101,15 @@ async function resolveFromPago(
   const serie = (pago.serie_rep as string | null) ?? "";
   // Cliente se hereda de la factura padre; fecha usa fecha_pago del REP.
   let cliente: string | null = null;
+  let clienteId: string | null = null;
   const facturaIdPadre = pago.factura_id as string | null;
   if (facturaIdPadre) {
     const { data: padre } = await supabase
       .from("facturas")
-      .select("cliente_nombre")
+      .select("cliente_id, cliente_nombre")
       .eq("id", facturaIdPadre).maybeSingle();
     cliente = (padre?.cliente_nombre as string | null) ?? null;
+    clienteId = (padre?.cliente_id as string | null) ?? null;
   }
   return {
     ok: true,
@@ -123,7 +129,7 @@ async function resolveFromFactura(
 ): Promise<Resolved> {
   const { data: factura, error } = await supabase
     .from("facturas")
-    .select("facturapi_id, folio_fiscal, serie, organization_id, cliente_nombre, fecha_emision, numero")
+    .select("facturapi_id, folio_fiscal, serie, organization_id, cliente_id, cliente_nombre, fecha_emision, numero")
     .eq("id", id).maybeSingle();
   if (error || !factura) return { ok: false, status: 404, body: { error: "factura_not_found" } };
   const fId = factura.facturapi_id as string | null;
@@ -139,6 +145,7 @@ async function resolveFromFactura(
       organizationId: factura.organization_id as string,
       tipoDoc: "Factura",
       folioSerie,
+      clienteId: (factura.cliente_id as string | null) ?? null,
       cliente: (factura.cliente_nombre as string | null) ?? null,
       fecha: (factura.fecha_emision as string | null) ?? null,
     },
@@ -182,7 +189,11 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
 
   const target = await resolveTarget(supabase, body);
   if (!target.ok) return jsonResponse(target.body, target.status);
-  if (!(await authorizeOrgRole(supabase, userData.user.id, target.data.organizationId, ROLES_CONSULTA_FISCAL))) {
+  const autorizado =
+    (await authorizeOrgRole(supabase, userData.user.id, target.data.organizationId, ROLES_CONSULTA_FISCAL)) ||
+    // El cliente del portal ve sus propios CFDI (no es miembro de la org).
+    (await authorizePortalCliente(supabase, userData.user.id, target.data.clienteId, target.data.organizationId));
+  if (!autorizado) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 

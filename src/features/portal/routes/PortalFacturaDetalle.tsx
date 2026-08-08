@@ -12,12 +12,11 @@ import { formatCurrency } from "@/lib/formatters";
 import { ROUTES } from "@/constants/routes";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { resolverEstadoFacturaCliente } from "@/lib/domain/estadosFactura";
-import { openFacturaInNewTab } from "@/services/storage";
+import { useDescargarCfdi } from "@/features/facturacion/hooks/useDescargarCfdi";
 import PortalFacturaResumenCard from "@/features/portal/components/factura/PortalFacturaResumenCard";
 import PortalFacturaConceptosTable from "@/features/portal/components/factura/PortalFacturaConceptosTable";
 import PortalFacturaPagosCard from "@/features/portal/components/factura/PortalFacturaPagosCard";
 
-import { notifyError } from "@/lib/ui/appFeedback";
 import { useDocumentTitle } from "@/hooks/shared";
 import { useVolver } from "@/hooks/shared/useVolver";
 export default function PortalFacturaDetalle() {
@@ -27,14 +26,11 @@ export default function PortalFacturaDetalle() {
   useRegisterBreadcrumbLabel(id, factura?.numero);
   useDocumentTitle(factura ? `Factura · ${factura.numero}` : "Factura");
 
-  const handleDownload = async (stored: string, kind: "PDF" | "XML") => {
-    try {
-      await openFacturaInNewTab(stored);
-    } catch (err) {
-      notifyError(undefined, { title: `No se pudo abrir el ${kind}`,
-        description: (err as Error).message, error: err, method: "PAGES_PORTAL_PORTALFACTURADETALLE_1" });
-    }
-  };
+  // v13.458.0 — Las facturas timbradas guardan URLs de FacturApi (no del
+  // almacenamiento propio); se descargan por el proxy autenticado igual que
+  // en la vista admin. Antes se intentaba firmar un objeto inexistente y
+  // fallaba con "Object not found".
+  const descargar = useDescargarCfdi(factura?.id);
 
   if (isLoading) {
     return <DetailSkeleton />;
@@ -89,7 +85,7 @@ export default function PortalFacturaDetalle() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleDownload(factura.factura_pdf_url!, "PDF")}
+            onClick={() => void descargar(factura.factura_pdf_url, "pdf")}
             className="col-span-1 sm:flex-initial"
           >
             <FileText className="h-4 w-4 mr-1.5 text-destructive" /> Descargar PDF
@@ -99,7 +95,7 @@ export default function PortalFacturaDetalle() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleDownload(factura.factura_xml_url!, "XML")}
+            onClick={() => void descargar(factura.factura_xml_url, "xml")}
             className="col-span-1 sm:flex-initial"
           >
             <FileCode2 className="h-4 w-4 mr-1.5 text-info" /> Descargar XML
