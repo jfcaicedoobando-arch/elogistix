@@ -148,7 +148,14 @@ export function AplicarAnticipoDesdeFacturaDialog({
             servidor al aplicar.
           </p>
         )}
+        {desajuste.hayDesajuste && (
+          <div className="md:col-span-2 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+            <p className="text-xs text-foreground">{desajuste.mensaje}</p>
+          </div>
+        )}
       </FormDialogSection>
+
     </FormDialogShell>
   );
 }
