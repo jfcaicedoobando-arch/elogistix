@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import {
-  TIPO_PAGO_LABELS, esEntrada, rutaDocumento, rutaMovimiento,
+  TIPO_PAGO_LABELS, esEntrada,
   type PagoLibro,
 } from "@/features/tesoreria/domain/libroPagos";
 
@@ -149,20 +149,12 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       header: "Conciliación",
       accessorFn: (p) => (p.conciliado ? "Conciliado" : "Pendiente"),
       meta: { width: "w-32" },
-      cell: ({ row }) => {
-        const ruta = rutaMovimiento(row.original);
-        const badge = row.original.conciliado ? (
+      cell: ({ row }) =>
+        row.original.conciliado ? (
           <Badge variant="outline" className="bg-success/10 text-success border-success/20">Conciliado</Badge>
         ) : (
           <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">Pendiente</Badge>
-        );
-        if (!ruta) return badge;
-        return (
-          <Link to={ruta} onClick={(e) => e.stopPropagation()} title="Ver en el estado de cuenta">
-            {badge}
-          </Link>
-        );
-      },
+        ),
     },
     {
       id: "rep",
