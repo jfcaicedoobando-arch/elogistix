@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.463.1] - 2026-08-10
+- Limpieza de código muerto detectada por CI (knip): se quitaron 30+ exportaciones y alias sin uso en aging, tesorería, embarques, catálogos de tokens y servicios de proveedor/usuario.
+- Se renombró un título de prueba duplicado en el test de aging de CxP para dejar la auditoría de tests en cero violaciones.
+
 ## [13.463.0] - 2026-08-08
 - Conciliación bancaria (`/tesoreria/conciliacion`): cada movimiento conciliado tiene ahora un botón **Ver pago** en su propio renglón que abre de inmediato el detalle del pago con las facturas a las que se aplicó (antes había que seleccionar el renglón y usar el panel de la derecha).
 - Estado de cuenta (`/tesoreria/estado-cuenta`): mismo botón **Ver pago** por renglón, para auditar el extracto sin salir de la pantalla.
