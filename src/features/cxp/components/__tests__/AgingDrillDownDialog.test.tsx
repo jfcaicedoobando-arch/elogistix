@@ -4,7 +4,7 @@
 import { describe, it, expect } from "vitest";
 import { bucketDeDias } from "../agingBuckets";
 
-describe("bucketDeDias", () => {
+describe("bucketDeDias — reexport de CxP (agingBuckets)", () => {
   it("clasifica días vigentes (≤0) como vigente", () => {
     expect(bucketDeDias(0)).toBe("vigente");
     expect(bucketDeDias(-5)).toBe("vigente");
