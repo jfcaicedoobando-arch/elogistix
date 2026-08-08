@@ -2,7 +2,8 @@
  * Definición de columnas de la tabla /anticipos-proveedor.
  * Extraído de `AnticiposProveedor.tsx` (v13.317.9).
  */
-import { MoreHorizontal, Ban, Link2 } from "lucide-react";
+import { MoreHorizontal, Ban, Link2, Ship } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,7 +25,24 @@ interface Options {
   canEditFinance: boolean;
   onAplicar: (row: AnticipoProveedorRow) => void;
   onCancelar: (row: AnticipoProveedorRow) => void;
+  onVincularEmbarque: (row: AnticipoProveedorRow) => void;
 }
+
+function EmbarqueCell({ row }: { row: AnticipoProveedorRow }) {
+  if (!row.embarque_id) {
+    return <span className="text-xs italic text-muted-foreground">Sin embarque</span>;
+  }
+  return (
+    <Link
+      to={`/embarques/${row.embarque_id}`}
+      onClick={(e) => e.stopPropagation()}
+      className="font-mono text-sm text-accent hover:underline"
+    >
+      {row.embarque_expediente ?? row.embarque_id.slice(0, 8)}
+    </Link>
+  );
+}
+
 
 function EstadoCell({ value }: { value: string }) {
   if (value === "disponible") return <ToneBadge tone="success">Disponible</ToneBadge>;
