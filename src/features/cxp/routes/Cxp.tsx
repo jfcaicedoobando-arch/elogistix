@@ -1,15 +1,14 @@
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileText, Download, Loader2 } from "lucide-react";
+import { Plus, FileText, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/shared/DataTable";
 import { ColumnVisibilityMenu } from "@/components/shared/ColumnVisibilityMenu";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { CxpRouteDialogs } from "@/features/cxp/routes/_sections/CxpRouteDialogs";
-import { usePermissions, useColumnVisibility, usePdfExport, useDocumentTitle } from "@/hooks/shared";
+import { usePermissions, useColumnVisibility, useDocumentTitle } from "@/hooks/shared";
 import {
   useFacturasCxP,
   useEliminarFacturaProveedor,
@@ -22,14 +21,8 @@ import { CxpKpiCards } from "@/features/cxp/components/CxpKpiCards";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CXP_COL_DEFAULTS, CXP_COL_OPTIONS } from "@/features/cxp/routes/_config/cxpColumnConfig";
 
-// P18: `useCobranza({})` sale del cuerpo — se resuelve on-demand con queryClient.fetchQuery.
-import { fetchCobranza } from "@/features/facturacion/services";
-import { queryKeys } from "@/lib/query";
-import { descargarPdf } from "@/pdf/render/descargarPdf";
-// P12: ReporteCarteraDocument se carga dinámicamente en el handler.
 import type { FacturaCxP } from "@/features/cxp/services";
-import { withOrgPrefix } from "@/lib/filenames";
-import { todayLocalISO } from "@/lib/date/today";
+import { ROUTES } from "@/constants/routes";
 import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
 import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -38,7 +31,6 @@ export default function Cxp() {
   useDocumentTitle("Facturas de proveedor");
   const { canCapturarFacturaProveedor } = usePermissions();
   const f = useCxpPageState();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const abrirDetalle = useCallback(
     (fact: FacturaCxP) => navigate(`/compras/facturas/${fact.id}`),
@@ -47,26 +39,8 @@ export default function Cxp() {
 
   const { data = [], isLoading, isError, refetch, kpis } = useFacturasCxP(f.queryArgs);
   const eliminar = useEliminarFacturaProveedor();
-  const { isExporting: exportandoPdf, run: runPdfExport } = usePdfExport({ successTitle: "Reporte PDF descargado", method: "CXP_EXPORT_PDF" });
 
   useCxpDeepLinks({ data, isLoading, onOpenDetalle: abrirDetalle });
-
-  const handlePdf = () => runPdfExport(async () => {
-    const fecha = todayLocalISO();
-    // P18: Se pide la cartera CxC solo al presionar el botón (fetchQuery cachea con la misma queryKey).
-    const cobranzaKey = queryKeys.facturas.cobranza({});
-    const cxc = await queryClient.fetchQuery({
-      queryKey: cobranzaKey,
-      queryFn: () => fetchCobranza({}),
-      staleTime: 30_000,
-    });
-    // P12: import dinámico del Document — solo entra al bundle si el usuario descarga.
-    const { ReporteCarteraDocument } = await import("@/pdf/documents/ReporteCarteraDocument");
-    await descargarPdf(
-      <ReporteCarteraDocument fechaCorte={fecha} cxc={cxc} cxp={data} />,
-      await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),
-    );
-  });
 
   const columns = useMemo(() => buildCxPColumns(), []);
   const colVis = useColumnVisibility("cxp-facturas-columns", CXP_COL_DEFAULTS);
@@ -87,12 +61,8 @@ export default function Cxp() {
             <Button variant="outline" onClick={() => exportarCxpCsv(data)} disabled={data.length === 0}>
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
-            <Button variant="outline" onClick={handlePdf} disabled={exportandoPdf}>
-              {exportandoPdf ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4 mr-2" />
-              )} {exportandoPdf ? "Generando…" : "Reporte PDF"}
+            <Button variant="outline" onClick={() => navigate(ROUTES.REPORTES_CARTERA)}>
+              <FileText className="h-4 w-4 mr-2" /> Cartera y antigüedad
             </Button>
             {canCapturarFacturaProveedor && (
               <Button onClick={() => f.setOpenNueva(true)}>

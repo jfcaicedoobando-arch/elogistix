@@ -18,6 +18,8 @@ export interface FilaLibroPagosExport {
   referencia: string;
   cuenta: string;
   monto: string;
+  tipoCambio: string;
+  fuenteTc: string;
   montoMxn: string;
   estado: string;
 }
@@ -31,9 +33,24 @@ export const ENCABEZADOS_LIBRO_PAGOS = [
   "Referencia",
   "Cuenta",
   "Monto",
+  "Tipo de cambio",
+  "Fuente del TC",
   "Equivalente MXN",
   "Conciliación",
 ] as const;
+
+function esMxn(moneda: string): boolean {
+  return (moneda || "MXN").toUpperCase() === "MXN";
+}
+
+/**
+ * Fuente del tipo de cambio del pago. Se conserva el TC con el que tesorería
+ * registró el pago (así el reporte cuadra con lo asentado y con el banco).
+ */
+export function fuenteTcPago(p: Pick<PagoLibro, "moneda" | "tipo_cambio">): string {
+  if (esMxn(p.moneda)) return "Moneda nacional";
+  return p.tipo_cambio > 0 ? "TC registrado del pago (DOF de la fecha de pago)" : "Sin TC registrado";
+}
 
 export function filasLibroPagosExport(
   pagos: readonly PagoLibro[],
@@ -47,6 +64,8 @@ export function filasLibroPagosExport(
     referencia: p.referencia ?? "—",
     cuenta: p.cuenta_alias ?? "—",
     monto: formatCurrency(p.monto, p.moneda),
+    tipoCambio: esMxn(p.moneda) ? "1.0000" : (p.tipo_cambio || 0).toFixed(4),
+    fuenteTc: fuenteTcPago(p),
     montoMxn: formatCurrency(p.monto_mxn, "MXN"),
     estado: p.conciliado ? "Conciliado" : "Pendiente",
   }));
@@ -57,7 +76,7 @@ export function libroPagosACsv(filas: readonly FilaLibroPagosExport[]): string {
     [...ENCABEZADOS_LIBRO_PAGOS],
     filas.map((f) => [
       f.fecha, f.tipo, f.contraparte, f.documento, f.metodo,
-      f.referencia, f.cuenta, f.monto, f.montoMxn, f.estado,
+      f.referencia, f.cuenta, f.monto, f.tipoCambio, f.fuenteTc, f.montoMxn, f.estado,
     ]),
   );
 }

@@ -82,6 +82,7 @@ export const SIDEBAR_ANALISIS_ITEMS: SidebarItem[] = [
   { title: "Profit", url: "/profit", icon: TrendingUp },
   { title: "Cierre mensual", url: "/reportes/cierre-mensual", icon: Calendar },
   { title: "Rentabilidad", url: "/reportes/rentabilidad", icon: BarChart3 },
+  { title: "Cartera y antigüedad", url: "/reportes/cartera", icon: LayoutList },
 ];
 
 export const SIDEBAR_CRM_ITEMS: SidebarItem[] = [
