@@ -20,9 +20,11 @@ import {
 interface Props {
   movimiento: MovimientoBBVA | null;
   onClose: () => void;
+  /** Moneda de la cuenta bancaria del movimiento (presentación). */
+  moneda?: string;
 }
 
-export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
+export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN" }: Props) {
   const { data: candidatos = [], isLoading } = useSugerirCandidatos(movimiento);
   const conciliar = useConciliarPago();
   const ignorar = useIgnorarMovimiento();
@@ -81,7 +83,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
       <CardContent className="p-4 space-y-3">
         <KpiCard
           label={`${formatDate(movimiento.fecha)} · ${esCargo ? "Cargo" : "Abono"}`}
-          value={`${esCargo ? "−" : "+"} ${formatCurrency(monto, "MXN")}`}
+          value={`${esCargo ? "−" : "+"} ${formatCurrency(monto, moneda)}`}
           variant={esCargo ? "destructive" : "success"}
           sublabel={movimiento.concepto}
           className="border-none shadow-none"
@@ -166,7 +168,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
         <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 text-sm space-y-1">
           <p className="font-medium">{movimiento.concepto}</p>
           <p className="text-muted-foreground">
-            {formatDate(movimiento.fecha)} · {esCargo ? "Cargo" : "Abono"} de {formatCurrency(monto, "MXN")}
+            {formatDate(movimiento.fecha)} · {esCargo ? "Cargo" : "Abono"} de {formatCurrency(monto, moneda)}
           </p>
         </div>
       </FormDialogShell>

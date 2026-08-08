@@ -3,7 +3,7 @@
  * Convierte las facturas de CxC y CxP al modelo del dominio y arma las filas
  * ya formateadas que consumen el CSV contable y el documento PDF.
  */
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 import { toCsv } from "@/lib/csv/serializeCsv";
 import type { FacturaCobranza } from "@/features/facturacion/services";
 import type { FacturaCxP } from "@/features/cxp/services";

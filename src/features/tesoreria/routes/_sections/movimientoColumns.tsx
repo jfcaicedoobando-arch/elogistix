@@ -21,6 +21,7 @@ const ESTADO_COLOR: Record<string, string> = {
  */
 export function crearMovimientoColumns(
   onVerPago: (ref: RefPago) => void,
+  moneda: string = "MXN",
 ): ColumnDef<MovimientoBBVA, unknown>[] {
   return defineColumns<MovimientoBBVA>([
   {
@@ -48,7 +49,7 @@ export function crearMovimientoColumns(
     meta: { align: "right" },
     cell: ({ row }) => (
       <span className="tabular-nums text-destructive">
-        {Number(row.original.cargo) > 0 ? formatCurrency(Number(row.original.cargo), "MXN") : ""}
+        {Number(row.original.cargo) > 0 ? formatCurrency(Number(row.original.cargo), moneda) : ""}
       </span>
     ),
   },
@@ -59,7 +60,7 @@ export function crearMovimientoColumns(
     meta: { align: "right" },
     cell: ({ row }) => (
       <span className="tabular-nums text-success">
-        {Number(row.original.abono) > 0 ? formatCurrency(Number(row.original.abono), "MXN") : ""}
+        {Number(row.original.abono) > 0 ? formatCurrency(Number(row.original.abono), moneda) : ""}
       </span>
     ),
   },
