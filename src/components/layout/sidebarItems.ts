@@ -72,6 +72,7 @@ export const SIDEBAR_DINERO_ITEMS: SidebarItem[] = [
   { title: "Pagos programados", url: "/tesoreria/pagos-programados", icon: CalendarCheck },
   { title: "Conciliación bancaria", url: "/tesoreria/conciliacion", icon: GitCompare },
   { title: "Cuentas bancarias", url: "/tesoreria/cuentas", icon: Wallet },
+  { title: "Pagos", url: "/tesoreria/pagos", icon: Receipt },
   { title: "Estado de cuenta", url: "/tesoreria/estado-cuenta", icon: FileText },
 
   { title: "Flujo proyectado", url: "/tesoreria/flujo", icon: TrendingUp },
