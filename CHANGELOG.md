@@ -1,5 +1,14 @@
 # Changelog
 
+## Auditoría — plan "Hotfix R9" descartado - 2026-08-08
+Se verificó punto por punto el archivo `plan_lovable_r9.md` (auditado contra `13.454.1`) y **no se aplicó ningún cambio**: sus hallazgos ya estaban resueltos o no se reproducen en `13.457.3`.
+- P0-A: `_bitacora_facturas_estado` ya no usa `folio_completo` (corregido en `13.455.1`).
+- P0-B: la FK `conceptos_venta.proforma_id → proformas.id` existe; `facturas.archivo_pdf_url` no existe ni se consulta (la columna real es `factura_pdf_url`).
+- P0-C: 0 embarques en Borrador con expediente nulo; el portal no muestra borradores.
+- Cobros CxC por GUI, folios por organización y aging por moneda (CxP/CxC) ya implementados; no hay enlaces a `/cobros`.
+- Verificación en vivo (1920×1080, sesión real): `/cartera`, `/cotizaciones`, `/profit/dashboard`, `/tesoreria` y `/facturacion` renderizan sin skeleton persistente ni errores de consola; el modal "Nueva factura manual" no se cierra al capturar; las etiquetas "Vence hoy" son literales y correctas; `/agente/tarifas` redirige a `/inicio` por rol (comportamiento esperado, no 404).
+
+
 ## [13.457.3] - 2026-08-08
 - **CI:** se corrigieron las 4 fallas del pipeline: mensajes amigables para `LC_ANTICIPO_CANCELADO`, `LC_ANTICIPO_OTRA_ORG` y `LC_ANTICIPO_EMBARQUE_INVALIDO`; la columna Embarque de anticipos ya no usa `<Link>` inline; se extrajo `RegistrarAnticipoPagoFields` para bajar la complejidad del formulario; y la migración del anticipo con embarque ya incluye REVOKE/GRANT (H6).
 
