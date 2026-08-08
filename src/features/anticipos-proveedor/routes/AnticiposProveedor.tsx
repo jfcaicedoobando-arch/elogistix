@@ -31,6 +31,7 @@ export default function AnticiposProveedor() {
   const [openRegistrar, setOpenRegistrar] = useState(false);
   const [anticipoParaAplicar, setAnticipoParaAplicar] = useState<AnticipoProveedorRow | null>(null);
   const [anticipoParaCancelar, setAnticipoParaCancelar] = useState<AnticipoProveedorRow | null>(null);
+  const [anticipoParaVincular, setAnticipoParaVincular] = useState<AnticipoProveedorRow | null>(null);
 
   const { data, isLoading, isError, refetch } = useAnticiposProveedor({
     estado: estado === "todos" ? null : estado,
@@ -45,9 +46,11 @@ export default function AnticiposProveedor() {
         canEditFinance,
         onAplicar: setAnticipoParaAplicar,
         onCancelar: setAnticipoParaCancelar,
+        onVincularEmbarque: setAnticipoParaVincular,
       }),
     [canEditFinance],
   );
+
 
   if (isLoading) return <PageSkeleton />;
 
