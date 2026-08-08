@@ -179,6 +179,8 @@ export default function TesoreriaConciliacion() {
         onGuardar={handleGuardarManual}
         isPending={registrarManual.isPending}
       />
+
+      <DetallePagoSheet ref_pago={refPago} onOpenChange={(open) => { if (!open) setRefPago(null); }} />
     </PageContainer>
   );
 }
