@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.463.0] - 2026-08-08
+- Conciliación bancaria (`/tesoreria/conciliacion`): cada movimiento conciliado tiene ahora un botón **Ver pago** en su propio renglón que abre de inmediato el detalle del pago con las facturas a las que se aplicó (antes había que seleccionar el renglón y usar el panel de la derecha).
+- Estado de cuenta (`/tesoreria/estado-cuenta`): mismo botón **Ver pago** por renglón, para auditar el extracto sin salir de la pantalla.
+- Los movimientos conciliados que no guardan el pago con el que se amarraron muestran un ícono con la aclaración, en lugar de un botón que no lleva a nada.
+- El panel lateral de conciliación conserva su botón "Ver detalle del pago" como camino alternativo.
+
 ## [13.462.0] - 2026-08-09
 - Antigüedad CxC (`/cobranza/aging`): **fix importante** — antes sumaba MXN, USD y EUR en un mismo total. Ahora hay un selector de moneda y cada moneda se reporta por separado (igual que CxP).
 - Antigüedad CxC y CxP: nuevo selector de **fecha de corte** para calcular la antigüedad a cualquier día, no sólo a hoy.
