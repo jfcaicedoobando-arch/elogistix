@@ -76,7 +76,13 @@ export function LibroPagosDocument({ resumen, filas, emisor }: Props) {
           <Text style={{ fontSize: 9, color: COLORS.muted }}>Pagos: {resumen.conteo}</Text>
         </View>
 
-        <DataTable columns={cols} rows={filas} />
+        {filas.length === 0 ? (
+          <Text style={styles.paragraph}>
+            No hay pagos registrados en el periodo seleccionado.
+          </Text>
+        ) : (
+          <DataTable columns={cols} rows={filas} />
+        )}
 
         <Footer />
       </Page>
