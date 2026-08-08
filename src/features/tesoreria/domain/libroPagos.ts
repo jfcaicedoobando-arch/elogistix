@@ -219,17 +219,3 @@ export function monedasDisponibles(pagos: readonly PagoLibro[]): string[] {
   for (const p of pagos) set.add(p.moneda);
   return [...set].sort((a, b) => a.localeCompare(b, "es-MX"));
 }
-
-/** Ruta del documento (factura de cliente o de proveedor) que liquidó el pago. */
-export function rutaDocumento(pago: PagoLibro): string | null {
-  if (!pago.documento_id) return null;
-  return pago.tipo === "cobro"
-    ? `/facturacion/${pago.documento_id}`
-    : `/compras/facturas/${pago.documento_id}`;
-}
-
-/** Ruta al estado de cuenta bancario donde vive el movimiento conciliado. */
-export function rutaMovimiento(pago: PagoLibro): string | null {
-  if (!pago.conciliado || !pago.cuenta_bancaria_id) return null;
-  return `/tesoreria/estado-cuenta?cuenta=${pago.cuenta_bancaria_id}`;
-}
