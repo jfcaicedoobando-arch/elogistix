@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.462.0] - 2026-08-09
+- Antigüedad CxC (`/cobranza/aging`): **fix importante** — antes sumaba MXN, USD y EUR en un mismo total. Ahora hay un selector de moneda y cada moneda se reporta por separado (igual que CxP).
+- Antigüedad CxC y CxP: nuevo selector de **fecha de corte** para calcular la antigüedad a cualquier día, no sólo a hoy.
+- Antigüedad CxC: al hacer clic en un cliente se abre el detalle con sus facturas con saldo, chips por cubeta y exportación a CSV (espejo del drill-down de proveedores).
+- Las tres vistas de antigüedad (CxC, CxP y Reportes › Cartera) comparten ahora una sola definición de cubetas, etiquetas (Vigente, 1-30, 31-60, 61-90, +90 días), colores y tarjetas KPI.
+- Exportaciones CSV de antigüedad unificadas: incluyen columna de moneda, fecha de corte en el nombre del archivo y confirmación al descargar.
+- Ambas pantallas de antigüedad enlazan al reporte contable unificado de cartera.
+
 ## [13.461.0] - 2026-08-08
 - Nuevo reporte **Reportes › Cartera y antigüedad** (`/reportes/cartera`): saldos por cobrar y por pagar con cubetas de antigüedad (por vencer, 1-30, 31-60, 61-90, +90) calculadas contra una fecha de corte seleccionable.
 - Cada factura muestra su saldo en moneda original y dos valuaciones en pesos: MXN histórico (TC de la factura) y MXN al corte (TC DOF de la fecha de corte), más la diferencia cambiaria.
