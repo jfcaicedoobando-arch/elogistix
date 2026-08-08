@@ -3,6 +3,8 @@
  * Extraído de `TesoreriaConciliacion.tsx` (v13.317.9).
  */
 import { Badge } from "@/components/ui/badge";
+import { BotonVerPago } from "@/features/tesoreria/components/BotonVerPago";
+import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
@@ -13,7 +15,14 @@ const ESTADO_COLOR: Record<string, string> = {
   Ignorado: "bg-muted text-muted-foreground border-border",
 };
 
-export const movimientoColumns: ColumnDef<MovimientoBBVA, unknown>[] = defineColumns<MovimientoBBVA>([
+/**
+ * Factory de columnas: recibe el callback que abre el detalle del pago para
+ * permitir el drill-down directo desde el renglón (v13.463.0).
+ */
+export function crearMovimientoColumns(
+  onVerPago: (ref: RefPago) => void,
+): ColumnDef<MovimientoBBVA, unknown>[] {
+  return defineColumns<MovimientoBBVA>([
   {
     id: "fecha",
     header: "Fecha",
@@ -65,4 +74,12 @@ export const movimientoColumns: ColumnDef<MovimientoBBVA, unknown>[] = defineCol
       </Badge>
     ),
   },
-]) as ColumnDef<MovimientoBBVA, unknown>[];
+    {
+      id: "acciones",
+      header: "Pago",
+      enableSorting: false,
+      meta: { width: "w-24", align: "right" },
+      cell: ({ row }) => <BotonVerPago movimiento={row.original} onVerPago={onVerPago} />,
+    },
+  ]) as ColumnDef<MovimientoBBVA, unknown>[];
+}
