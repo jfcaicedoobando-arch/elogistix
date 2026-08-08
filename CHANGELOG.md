@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.457.3] - 2026-08-08
+- **CI:** se corrigieron las 4 fallas del pipeline: mensajes amigables para `LC_ANTICIPO_CANCELADO`, `LC_ANTICIPO_OTRA_ORG` y `LC_ANTICIPO_EMBARQUE_INVALIDO`; la columna Embarque de anticipos ya no usa `<Link>` inline; se extrajo `RegistrarAnticipoPagoFields` para bajar la complejidad del formulario; y la migración del anticipo con embarque ya incluye REVOKE/GRANT (H6).
+
+
 ## [13.457.2] - 2026-08-08
 - **Seguridad:** se revocó el permiso de ejecución a visitantes anónimos en `registrar_anticipo_proveedor` (sólo `authenticated` y `service_role`). La prueba FIX-45 vuelve a pasar.
 
