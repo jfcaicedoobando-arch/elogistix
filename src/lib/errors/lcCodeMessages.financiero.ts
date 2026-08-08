@@ -96,6 +96,11 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "El anticipo tiene aplicaciones registradas. Reversa las aplicaciones antes de continuar.",
   LC_ANTICIPO_FACTURA_INVALIDA: "La factura vinculada al anticipo no es válida.",
   LC_ANTICIPO_ORG_MISMATCH: "El anticipo pertenece a otra organización.",
+  LC_ANTICIPO_OTRA_ORG: "El anticipo pertenece a otra organización.",
+  LC_ANTICIPO_CANCELADO:
+    "El anticipo está cancelado, ya no se puede usar ni modificar.",
+  LC_ANTICIPO_EMBARQUE_INVALIDO:
+    "El embarque que quieres ligar al anticipo no existe o es de otra organización.",
   LC_ANTICIPO_PROVEEDOR_MISMATCH:
     "El proveedor del anticipo no coincide con el de la factura.",
   LC_ANTICIPO_PROVEEDOR_NO_EXISTE: "El proveedor del anticipo no existe.",
