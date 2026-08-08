@@ -64,7 +64,7 @@ export function buildCxpAgingColumns(): ColumnDef<CxpAgingRow, unknown>[] {
     },
     {
       id: "mas_90",
-      header: ">90 días",
+      header: "+90 días",
       accessorKey: "mas_90",
       cell: ({ row }) => <Money value={row.original.mas_90} moneda={row.original.moneda} danger={row.original.mas_90 > 0} />,
       enableSorting: true, meta: { align: "right" },

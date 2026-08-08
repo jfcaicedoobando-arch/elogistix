@@ -2,10 +2,12 @@
  * Página de Antigüedad de Saldos (aging) de CxC.
  * Ruta: `/cobranza/aging`. Tabla por cliente + 5 KPIs por cubeta.
  *
- * v13.313.1 (QW9 Tanda 3) — Nuevo reporte A/R con cubetas estándar.
+ * v13.462.0 — Armonización de las tres vistas de antigüedad:
+ * selector de moneda (MXN/USD/EUR no se mezclan), fecha de corte, drill-down
+ * por cliente, KPIs y cubetas compartidas con CxP y el reporte contable.
  */
 import { useMemo, useState } from "react";
-import { LayoutList, Download } from "lucide-react";
+import { LayoutList, Download, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,44 +17,35 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 import { buildCxcAgingColumns } from "@/features/cxc/components/cxcAgingColumns";
+import { CxcAgingDrillDownDialog } from "@/features/cxc/components/CxcAgingDrillDownDialog";
 import { useCxcAging } from "@/features/cxc/hooks/useCxcAging";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import type { CxcAgingRow } from "@/features/cxc/services/cxcAging";
-import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { todayLocalISO } from "@/lib/date/today";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
-import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
+import {
+  CUBETAS_AGING, CUBETA_LABELS_LARGAS, CUBETA_TONO_KPI, type CubetaAging,
+} from "@/lib/aging/buckets";
+import { AgingKpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { Link } from "react-router-dom";
 
-function KpiBucket({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "warn" | "danger" }) {
-  const toneCls =
-    tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning-foreground" : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn("text-xl font-semibold tabular-nums mt-1", toneCls)}>
-          {formatCurrency(value, "MXN")}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function exportarCsv(rows: readonly CxcAgingRow[]) {
-  const headers = ["Cliente", "Facturas", "Vigente", "1-30", "31-60", "61-90", ">90", "Total"];
+function exportarCsv(rows: readonly CxcAgingRow[], moneda: string, fecha: string) {
+  const headers = ["Cliente", "Moneda", "Facturas", "Vigente", "1-30", "31-60", "61-90", "+90", "Total"];
   const lines = (rows ?? []).map((r) =>
     [
       `"${r.cliente_nombre.replace(/"/g, '""')}"`,
+      r.moneda,
       r.num_facturas, r.vigente, r.d_1_30, r.d_31_60, r.d_61_90, r.mas_90, r.saldo_total,
     ].join(","),
   );
   downloadCsvWithFeedback({
-    filename: `aging-cxc-${todayLocalISO()}.csv`,
+    filename: `aging-cxc-${moneda}-${fecha}.csv`,
     csv: [headers.join(","), ...lines].join("\n"),
     rowCount: rows?.length ?? 0,
     emptyWarning: { description: "No hay saldos de clientes para exportar con los filtros actuales." },
@@ -63,12 +56,16 @@ interface Filters extends Record<string, string> { cubeta: string }
 const DEFAULTS: Filters = { cubeta: "todas" };
 
 export default function CxcAging() {
-  const { data = [], isLoading, totales, isError, refetch } = useCxcAging();
-  const columns = useMemo(() => buildCxcAgingColumns(), []);
-  const [drilldown] = useState<{ cli: CxcAgingRow; cubeta: CubetaAging | "todas" } | null>(null);
+  const [fecha, setFecha] = useState<string>(() => todayLocalISO());
+  const aging = useCxcAging(fecha);
+  const {
+    rowsFiltradas, isLoading, totales, isError, refetch, monedas, monedaActiva, setMoneda,
+  } = aging;
+  const columns = useMemo(() => buildCxcAgingColumns(monedaActiva), [monedaActiva]);
+  const [drilldown, setDrilldown] = useState<{ cli: CxcAgingRow; cubeta: CubetaAging | "todas" } | null>(null);
 
   const paged = useClientPagedList<CxcAgingRow, Filters>({
-    data,
+    data: rowsFiltradas,
     isLoading,
     defaultFilters: DEFAULTS,
     filterLabels: { cubeta: "Con saldo en" },
@@ -96,18 +93,65 @@ export default function CxcAging() {
     },
   });
 
+  const monedasVisibles = monedas.length > 0 ? monedas : ["MXN"];
+
   return (
     <PageContainer>
       <PageHeader
         icon={<LayoutList className="h-6 w-6 text-accent" />}
         title="Antigüedad de Saldos"
-        description="Saldos por cliente agrupados por días de vencimiento (MXN)."
+        description={`Saldos por cliente agrupados por días de vencimiento (${monedaActiva}).`}
         actions={
-          <Button variant="outline" size="sm" onClick={() => exportarCsv(data)} disabled={data.length === 0}>
-            <Download className="h-4 w-4 mr-2" /> Exportar CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/reportes/cartera">
+                <FileSpreadsheet className="h-4 w-4 mr-2" /> Reporte contable
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportarCsv(rowsFiltradas, monedaActiva, fecha)}
+              disabled={rowsFiltradas.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" /> Exportar CSV
+            </Button>
+          </div>
         }
       />
+
+      <div className="flex items-end justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-muted-foreground mr-1">Moneda:</span>
+          {monedasVisibles.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMoneda(m)}
+              aria-pressed={monedaActiva === m}
+              className={cn(
+                "text-xs font-medium px-2.5 py-1 rounded-full border transition-colors",
+                monedaActiva === m
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background hover:bg-muted text-muted-foreground border-border",
+              )}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+        <div className="w-[200px]">
+          <label className="text-xs text-muted-foreground mb-1 block" htmlFor="aging-cxc-corte">
+            Fecha de corte
+          </label>
+          <DatePickerMx
+            id="aging-cxc-corte"
+            title="Fecha de corte"
+            value={fecha}
+            onChange={(v: string) => setFecha(v || todayLocalISO())}
+          />
+        </div>
+      </div>
 
       <CargaGuard
         isLoading={isLoading}
@@ -117,11 +161,15 @@ export default function CxcAging() {
         errorDescription="Ocurrió un error al obtener los saldos de clientes. Intenta de nuevo."
       >
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        <KpiBucket label="Vigente" value={totales.vigente} />
-        <KpiBucket label="1-30 días" value={totales.d_1_30} tone={totales.d_1_30 > 0 ? "warn" : "default"} />
-        <KpiBucket label="31-60 días" value={totales.d_31_60} tone={totales.d_31_60 > 0 ? "warn" : "default"} />
-        <KpiBucket label="61-90 días" value={totales.d_61_90} tone={totales.d_61_90 > 0 ? "danger" : "default"} />
-        <KpiBucket label=">90 días" value={totales.mas_90} tone={totales.mas_90 > 0 ? "danger" : "default"} />
+        {CUBETAS_AGING.map((b) => (
+          <AgingKpiBucket
+            key={b}
+            label={CUBETA_LABELS_LARGAS[b]}
+            value={totales[b]}
+            moneda={monedaActiva}
+            tone={totales[b] > 0 ? CUBETA_TONO_KPI[b] : "default"}
+          />
+        ))}
       </div>
 
       <UnifiedFiltersBar
@@ -139,7 +187,7 @@ export default function CxcAging() {
               <SelectItem value="1_30">1-30 días</SelectItem>
               <SelectItem value="31_60">31-60 días</SelectItem>
               <SelectItem value="61_90">61-90 días</SelectItem>
-              <SelectItem value="mas_90">&gt;90 días</SelectItem>
+              <SelectItem value="mas_90">+90 días</SelectItem>
             </SelectContent>
           </Select>
         }
@@ -154,13 +202,13 @@ export default function CxcAging() {
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
-            rowKey={(r) => r.cliente_id}
+            rowKey={(r) => `${r.cliente_id}-${r.moneda}`}
             sortMode="server"
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
             pagination={paged.pagination}
-            getRowHref={(r) => `/cartera?cliente=${r.cliente_id}`}
-            getRowAriaLabel={(r) => `Ver cartera de ${r.cliente_nombre}`}
+            onRowClick={(r) => setDrilldown({ cli: r, cubeta: "todas" })}
+            getRowAriaLabel={(r) => `Ver facturas con saldo de ${r.cliente_nombre}`}
             emptyMessage="Sin saldos pendientes"
             emptyHint="No hay facturas con saldo abierto."
             striped
@@ -169,9 +217,14 @@ export default function CxcAging() {
           />
         </CardContent>
       </Card>
-
-      {drilldown && null}
       </CargaGuard>
+
+      <CxcAgingDrillDownDialog
+        open={!!drilldown}
+        onOpenChange={(o) => !o && setDrilldown(null)}
+        cliente={drilldown?.cli ?? null}
+        cubetaInicial={drilldown?.cubeta ?? "todas"}
+      />
     </PageContainer>
   );
 }

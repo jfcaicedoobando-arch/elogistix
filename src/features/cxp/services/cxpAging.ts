@@ -91,19 +91,8 @@ export function calcularTotalesPorMoneda(rows: CxpAgingRow[]): Record<string, Cx
   return map;
 }
 
-/** Devuelve las monedas que aparecen en las filas, ordenadas con MXN/USD/EUR primero. */
-export function monedasPresentes(rows: CxpAgingRow[]): string[] {
-  const set = new Set<string>();
-  for (const r of rows) set.add(r.moneda);
-  const preferidas = ["MXN", "USD", "EUR"];
-  const arr = Array.from(set);
-  arr.sort((a, b) => {
-    const ia = preferidas.indexOf(a);
-    const ib = preferidas.indexOf(b);
-    if (ia !== -1 && ib !== -1) return ia - ib;
-    if (ia !== -1) return -1;
-    if (ib !== -1) return 1;
-    return a.localeCompare(b);
-  });
-  return arr;
-}
+/**
+ * Monedas presentes en las filas (MXN/USD/EUR primero).
+ * v13.462.0 — delega en el helper compartido `@/lib/aging/buckets`.
+ */
+export { monedasPresentes } from "@/lib/aging/buckets";
