@@ -16,6 +16,8 @@ import { useAnticiposProveedor, type AnticipoProveedorRow } from "../hooks/useAn
 import { RegistrarAnticipoDialog } from "../components/RegistrarAnticipoDialog";
 import { AplicarAnticipoDialog } from "../components/AplicarAnticipoDialog";
 import { CancelarAnticipoDialog } from "../components/CancelarAnticipoDialog";
+import { VincularEmbarqueAnticipoDialog } from "../components/VincularEmbarqueAnticipoDialog";
+
 import { usePermissions } from "@/hooks/shared";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
 import { PageSkeleton } from "@/components/shared/skeletons";
