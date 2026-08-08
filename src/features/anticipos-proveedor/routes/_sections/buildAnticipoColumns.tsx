@@ -3,7 +3,7 @@
  * Extraído de `AnticiposProveedor.tsx` (v13.317.9).
  */
 import { MoreHorizontal, Ban, Link2, Ship } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,17 +29,21 @@ interface Options {
 }
 
 function EmbarqueCell({ row }: { row: AnticipoProveedorRow }) {
+  const navigate = useNavigate();
   if (!row.embarque_id) {
     return <span className="text-xs italic text-muted-foreground">Sin embarque</span>;
   }
   return (
-    <Link
-      to={`/embarques/${row.embarque_id}`}
-      onClick={(e) => e.stopPropagation()}
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        navigate(`/embarques/${row.embarque_id}`);
+      }}
       className="font-mono text-sm text-accent hover:underline"
     >
       {row.embarque_expediente ?? row.embarque_id.slice(0, 8)}
-    </Link>
+    </button>
   );
 }
 
