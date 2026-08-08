@@ -28,13 +28,18 @@ interface Props {
   tcHint?: string;
   /** Equivalente en pesos del monto capturado (null si no aplica). */
   equivalenteMxn: number | null;
+  /** Embarque ligado al anticipo (opcional). */
+  embarqueId?: string | null;
+  embarqueExpediente?: string | null;
+  onEmbarqueChange: (embarqueId: string | null, expediente: string | null) => void;
 }
 
 export function RegistrarAnticipoFields({
   control, register, errors, moneda, requiereCuenta, cuentaBancariaId,
   cuentasDeMoneda, proveedorNombre, onProveedorNombre, bloquearProveedor,
-  tcHint, equivalenteMxn,
+  tcHint, equivalenteMxn, embarqueId, embarqueExpediente, onEmbarqueChange,
 }: Props) {
+
   return (
     <>
       <FormDialogSection title="Datos del anticipo">
