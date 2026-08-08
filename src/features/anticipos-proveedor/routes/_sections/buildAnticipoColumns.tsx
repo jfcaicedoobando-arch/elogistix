@@ -114,12 +114,19 @@ export function buildAnticipoColumns({
                 <Link2 className="mr-2 h-4 w-4" /> Aplicar
               </DropdownMenuItem>
               <DropdownMenuItem
+                disabled={row.estado === "cancelado" || !canEditFinance}
+                onClick={() => onVincularEmbarque(row)}
+              >
+                <Ship className="mr-2 h-4 w-4" /> Vincular embarque
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 className="text-destructive"
                 disabled={!canCancel || !canEditFinance}
                 onClick={() => onCancelar(row)}
               >
                 <Ban className="mr-2 h-4 w-4" /> Cancelar
               </DropdownMenuItem>
+
             </DropdownMenuContent>
           </DropdownMenu>
         );
