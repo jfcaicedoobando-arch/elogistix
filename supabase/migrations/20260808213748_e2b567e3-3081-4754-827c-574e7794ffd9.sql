@@ -53,3 +53,7 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.eliminar_organizacion_vacia(uuid) TO authenticated;
+-- H6: la función SECURITY DEFINER no debe ser ejecutable por PUBLIC/anon
+REVOKE ALL ON FUNCTION public.eliminar_organizacion_vacia(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.eliminar_organizacion_vacia(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.eliminar_organizacion_vacia(uuid) TO service_role;
