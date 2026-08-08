@@ -73,6 +73,9 @@ export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, ma
         renderContenedor={renderContenedor}
         irACargarCostos={irACargarCostos}
       />
+
+      <AnticiposEmbarqueCard embarqueId={embarqueId} />
     </div>
+
   );
 }
