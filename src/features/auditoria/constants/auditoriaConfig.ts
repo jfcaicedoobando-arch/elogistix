@@ -47,15 +47,17 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
     icon: Receipt,
   },
   margen_negativo: {
-    shortLabel: "Margen negativo",
-    label: "Embarques con margen negativo",
-    description: "Embarques cuya utilidad en MXN es menor a cero (pérdida).",
+    shortLabel: "Margen estimado negativo",
+    label: "Embarques con margen estimado negativo",
+    description:
+      "Utilidad ESTIMADA en MXN menor a cero, calculada con los conceptos de venta y costo del embarque (presupuesto). Puede diferir del P&L real facturado.",
     icon: TrendingDown,
   },
   margen_bajo: {
-    shortLabel: "Margen bajo",
-    label: "Embarques con margen bajo",
-    description: "Margen positivo pero por debajo del mínimo configurado para la organización.",
+    shortLabel: "Margen estimado bajo",
+    label: "Embarques con margen estimado bajo",
+    description:
+      "Margen ESTIMADO positivo pero por debajo del mínimo configurado. Se calcula con conceptos de venta y costo, no con facturas reales.",
     icon: Scale,
   },
   venta_sin_costo: {
