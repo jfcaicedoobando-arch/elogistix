@@ -1,8 +1,9 @@
 /**
  * Servicio del feature Anticipos a Proveedor (QW6 — UI).
  * Reutiliza los wrappers de RPC ya probados en `@/features/cxp/services/anticipos`
- * (nada de INSERT directo: las 3 RPCs fijan estado/seguridad en el servidor).
- * Añade únicamente las lecturas que la UI necesita (bandeja + detalle de factura).
+ * (nada de INSERT directo: las RPCs fijan estado/seguridad en el servidor).
+ * Añade únicamente las lecturas que la UI necesita (bandeja + detalle de factura
+ * + anticipos ligados a un embarque).
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
@@ -10,6 +11,7 @@ import {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
+  vincularAnticipoEmbarque,
   type Anticipo,
   type AnticipoAplicacion,
   type RegistrarAnticipoInput,
@@ -19,23 +21,36 @@ export {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
-  
+  vincularAnticipoEmbarque,
 };
-export type { Anticipo, AnticipoAplicacion, RegistrarAnticipoInput,  };
+export type { Anticipo, AnticipoAplicacion, RegistrarAnticipoInput };
 
-/** Fila de la bandeja de anticipos, con el nombre de proveedor ya resuelto. */
-export type AnticipoConProveedor = Anticipo & { proveedor_nombre: string | null };
+/** Fila de la bandeja de anticipos, con proveedor y expediente ya resueltos. */
+export type AnticipoConProveedor = Anticipo & {
+  proveedor_nombre: string | null;
+  embarque_expediente: string | null;
+};
 
 export interface AnticiposFiltro {
   estado?: string | null;
   proveedorId?: string | null;
+  embarqueId?: string | null;
 }
 
 const ANTICIPO_SELECT =
-  "*, proveedores:proveedor_id ( nombre )" as const;
+  "*, proveedores:proveedor_id ( nombre ), embarques:embarque_id ( expediente )" as const;
 
 interface AnticipoRow extends Anticipo {
   proveedores: { nombre: string | null } | null;
+  embarques: { expediente: string | null } | null;
+}
+
+function mapRow(r: AnticipoRow): AnticipoConProveedor {
+  return {
+    ...r,
+    proveedor_nombre: r.proveedores?.nombre ?? null,
+    embarque_expediente: r.embarques?.expediente ?? null,
+  };
 }
 
 export async function fetchAnticiposProveedor(
@@ -49,13 +64,14 @@ export async function fetchAnticiposProveedor(
 
   if (filtros.estado) query = query.eq("estado", filtros.estado);
   if (filtros.proveedorId) query = query.eq("proveedor_id", filtros.proveedorId);
+  if (filtros.embarqueId) query = query.eq("embarque_id", filtros.embarqueId);
 
-  // SAFE-CAST: unwrapOr devuelve el shape crudo de Supabase con la relación
-  // embebida `proveedores(nombre)`; el tipo generado no incluye esa join,
-  // así que degradamos el cast — el mapper de la siguiente línea consume
-  // exactamente esa forma.
+  // SAFE-CAST: unwrapOr devuelve el shape crudo de Supabase con las relaciones
+  // embebidas `proveedores(nombre)` y `embarques(expediente)`; el tipo generado
+  // no incluye esas joins, así que degradamos el cast — el mapper de la
+  // siguiente línea consume exactamente esa forma.
   const rows = (await unwrapOr(query, [])) as unknown as AnticipoRow[];
-  return rows.map((r) => ({ ...r, proveedor_nombre: r.proveedores?.nombre ?? null }));
+  return rows.map(mapRow);
 }
 
 /** Anticipos aplicados a una factura de proveedor (sección "Anticipos aplicados" en el detalle). */
@@ -88,7 +104,24 @@ export async function fetchAnticiposDisponibles(
     .is("deleted_at", null)
     .order("fecha_anticipo", { ascending: true });
 
-  // SAFE-CAST: misma join embebida que `fetchAnticiposProveedor`.
+  // SAFE-CAST: mismas joins embebidas que `fetchAnticiposProveedor`.
   const rows = (await unwrapOr(query, [])) as unknown as AnticipoRow[];
-  return rows.map((r) => ({ ...r, proveedor_nombre: r.proveedores?.nombre ?? null }));
+  return rows.map(mapRow);
+}
+
+/** Anticipos ligados a un embarque (tarjeta en la pestaña Costos del embarque). */
+export async function fetchAnticiposPorEmbarque(
+  embarqueId: string,
+): Promise<AnticipoConProveedor[]> {
+  if (!embarqueId) return [];
+  const query = supabase
+    .from("anticipos_proveedor")
+    .select(ANTICIPO_SELECT)
+    .eq("embarque_id", embarqueId)
+    .is("deleted_at", null)
+    .order("fecha_anticipo", { ascending: false });
+
+  // SAFE-CAST: mismas joins embebidas que `fetchAnticiposProveedor`.
+  const rows = (await unwrapOr(query, [])) as unknown as AnticipoRow[];
+  return rows.map(mapRow);
 }
