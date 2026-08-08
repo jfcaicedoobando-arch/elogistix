@@ -6,8 +6,10 @@ import {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
+  vincularAnticipoEmbarque,
   type RegistrarAnticipoInput,
 } from "@/features/anticipos-proveedor/services/anticiposProveedorService";
+
 
 export function useRegistrarAnticipo() {
   return useMutationWithFeedback({
