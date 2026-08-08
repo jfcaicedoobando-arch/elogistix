@@ -70,7 +70,7 @@ export function buildCxcAgingColumns(moneda = "MXN"): ColumnDef<CxcAgingRow, unk
     },
     {
       id: "mas_90",
-      header: ">90 días",
+      header: "+90 días",
       accessorKey: "mas_90",
       cell: ({ row }) => <Money moneda={moneda} value={row.original.mas_90} danger={row.original.mas_90 > 0} />,
       enableSorting: true,
@@ -82,7 +82,7 @@ export function buildCxcAgingColumns(moneda = "MXN"): ColumnDef<CxcAgingRow, unk
       accessorKey: "saldo_total",
       cell: ({ row }) => (
         <span className="tabular-nums font-semibold">
-          {formatCurrency(row.original.saldo_total, "MXN")}
+          {formatCurrency(row.original.saldo_total, moneda)}
         </span>
       ),
       enableSorting: true,
