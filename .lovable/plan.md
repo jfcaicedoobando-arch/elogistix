@@ -1,36 +1,47 @@
-# Transacciones revertidas: diagnóstico y seguimiento
+# Verificación del archivo "Hotfix R9" antes de cambiar nada
 
-## Qué encontré
+El archivo se auditó contra la versión `13.454.1`. Hoy vamos en `13.457.2`, y **la mayoría de sus hallazgos ya no aplican**. Verifiqué uno por uno contra la base de datos real y el código actual (sólo lecturas, sin cambios).
 
-El contador de 363,659,795 "transacciones revertidas" **no es un síntoma de error**. La etiqueta "desde el último reinicio" es engañosa: los contadores de la base nunca se han reiniciado (`stats_reset` vacío) y las estadísticas de consultas acumulan **desde el 22/04/2026**, no desde el arranque de hoy.
+## Resultado de la verificación
 
-Evidencia recolectada (sólo lecturas):
+### P0 (los "3 bloqueantes"): ninguno se reproduce
 
-- La consulta con más llamadas es la que el API de datos ejecuta **antes de cada petición** (`set_config(... 'request.jwt.claims' ...)`), con 363,159,675 llamadas — coincide 1:1 con el número de reversiones.
-- El API de datos abre una transacción por petición y, cuando la petición es **sólo de lectura, la cierra con un rollback** en lugar de un commit. Es su comportamiento normal.
-- Proporción coherente: 13.1 M commits (escrituras) vs 363 M rollbacks (lecturas) en ~108 días ≈ 39 lecturas/segundo promedio.
-- Medición en vivo de 20 segundos: **+0 reversiones**, +59 commits. El contador no está creciendo ahora mismo.
-- Salud actual: memoria 46%, disco 17%, conexiones 14/60, 0 reinicios. Sin presión.
+| Hallazgo | Realidad verificada |
+| --- | --- |
+| P0-A: `_bitacora_facturas_estado` usa `NEW.folio_completo` | Falso hoy. La función ya no contiene ninguna referencia a `folio_completo` (0 coincidencias en su definición). Se corrigió en `13.455.1`. |
+| P0-B1: falta la FK `conceptos_venta.proforma_id → proformas.id` | Falso. La FK existe (`conceptos_venta_proforma_id_fkey`), por eso el embed `proformas(...)` de `fetchSources.ts` funciona. |
+| P0-B2: consulta legacy usa `facturas.archivo_pdf_url` | Falso. Ese nombre de columna no existe en `facturas` (la real es `factura_pdf_url`) y **ningún archivo del frontend la consulta**; las coincidencias son de otra tabla (`proveedor_notas_credito`) y de migraciones viejas. |
+| P0-C: borradores con expediente NULL visibles en portal | No reproducible: hay **0 embarques en Borrador con expediente nulo**. El portal filtra por estados visibles y no incluye Borrador. |
 
-Analogía: es como el odómetro de un coche. Marca 363 mil km desde que salió de la fábrica, no desde que lo encendiste esta mañana — y girar el volante no rompe nada.
+### P1/P2: mezcla de "ya resuelto" y "no verificable desde el código"
 
-## Conclusión
+Ya implementado (contradice el archivo):
+- **Cobros CxC por GUI**: existe `DialogRegistrarPago`, `FacturaPagosSection`, `usePagosFactura` y 102 pagos registrados en la base. La ruta `/cobros` no existe **pero tampoco hay ningún enlace a ella**, así que no hay 404 que arreglar.
+- **Folios por organización**: `folio_secuencias` ya opera con `organization_id` en el UPSERT; **0 folios de cotización compartidos entre dos organizaciones** hoy.
+- **Aging CxP y CxC por moneda**: `cxp_aging_proveedores` devuelve una fila por (proveedor, moneda) y `cobranza.ts` trae `moneda` + `tipo_cambio`. No hay suma de USD como MXN en esos servicios.
+- **Eventos de tracking**: existe `TrackingNuevoEventoForm.tsx`.
+- **Alta de cliente sin CSF**: el controlador ya soporta modo `manual` (CSF opcional).
+- **"Enviar proforma" vs "Duplicar"**: los handlers son distintos y correctos en `NuevaCotizacion.tsx`.
+- **Inputs numéricos del wizard (peso/volumen/piezas)**: usan `register()` de RHF con string crudo, no `Number()` en `onChange`; no hay el patrón que el archivo culpa.
 
-No hay bug que arreglar ni riesgo de integridad. **No propongo cambios de código por esta métrica.**
+Conclusión: la fuente no es confiable — parece describir un estado del proyecto de varias semanas atrás y, en varios puntos, inventa causas técnicas (columna inexistente, FK ausente) que la base contradice.
 
-Sí hay un tema secundario real, distinto: el volumen de lecturas repetidas. Las consultas más caras acumuladas son `sidebar_alert_counts()` (11,475 llamadas, 295 s totales) y el listado de `auditoria_revisiones` (6,965 llamadas, 255 s). Eso sí se puede bajar.
+## Qué propongo hacer
 
-## Plan propuesto (opcional, bajo impacto)
+**No aplicar el plan R9.** En su lugar, un ciclo corto y honesto:
 
-1. **Dejar el contador de reversiones fuera del tablero de alarmas.** Documentar en `docs/sentry-runbook.md` (sección de salud de base) que reversiones altas = lecturas del API, y que la señal a vigilar es memoria, conexiones, deadlocks y consultas lentas.
-2. **Reducir la repetición de lecturas caras:**
-   - Revisar `useSidebarAlerts.ts`: hoy tiene `staleTime` de 30 min, pero 11,475 llamadas indican refetch por remontaje/foco. Añadir `refetchOnWindowFocus: false` y `gcTime` alineado.
-   - Revisar el hook del listado de auditoría para que use el `staleTime` estándar del proyecto y paginación en servidor (ya existe el patrón).
-3. **Vigilar deadlocks (8 acumulados).** Volver a medir en unos días; si crecen, ahí sí investigo la contención (probablemente disparadores de facturas/conceptos).
-4. Registrar el hallazgo en `CHANGELOG.md` con bump de `APP_VERSION` sólo si se aplican los ajustes del punto 2.
+1. **Cerrar el archivo como obsoleto**: dejar constancia en `CHANGELOG.md` de que R9 se auditó y se descartó, con el detalle de lo verificado (sin bump de versión, no hay cambio funcional).
+2. **Reproducir por GUI sólo los 6 puntos que el código no puede confirmar ni negar** (son de comportamiento en vivo, no de schema), con Playwright y sesión real:
+   - Cartera CxC: etiqueta "Vence hoy 0 d" / posible off-by-one de días.
+   - Cotizaciones Vencidas ausentes de la lista "Todos" y de la búsqueda.
+   - Skeleton persistente en `/profit/dashboard` y en el chart de flujo de caja de `/tesoreria`.
+   - Portal del agente: botones "Nueva tarifa" / "Duplicar" / "Crear condiciones" (¿RLS o handler vacío?).
+   - Modal "Nueva factura manual" que se cierra y pierde captura.
+   - Filas de costo en MXN "congeladas" tras restaurar borrador en el wizard de cotización.
+3. **Reportar hallazgos reales** de ese paso 2 y sólo entonces proponer un plan de corrección con migración/frontend según lo que realmente falle.
 
-## Detalles técnicos
+## Detalles técnicos de la verificación
 
-- Fuente de los contadores: `pg_stat_database` (sin reset) y `extensions.pg_stat_statements` (reset 2026-04-22).
-- El statement de 363 M llamadas es el pre-request de PostgREST; promedio 0.020 ms, total 7,328 s en 108 días (≈0.08% de un núcleo). No es un consumidor de CPU relevante.
-- No se requieren migraciones ni cambios en RLS para este hallazgo.
+- Consultas de lectura a `pg_proc`, `pg_constraint`, `information_schema.columns`, `cotizaciones`, `pagos_factura`, `embarques`.
+- Búsquedas en código: `archivo_pdf_url`, embeds `proformas(...)`, rutas `/cobros`, `folio_secuencias`, `cxpAging.ts`, `cobranza.ts`, `BloqueMercancia.tsx`, `useNuevoClienteController.ts`, `NuevaCotizacion.tsx`.
+- Ningún archivo del proyecto fue modificado durante la verificación.
