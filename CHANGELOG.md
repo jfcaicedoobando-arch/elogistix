@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.463.3] - 2026-08-08
+- CI verde: se dividieron los 4 archivos que rebasaban el límite de 200 líneas (Power of 10). Nuevos módulos: `AgingMonedaFechaBar` compartido por las vistas de antigüedad de CxC y CxP, exportadores CSV propios (`cxcAgingExport`, `cxpAgingExport`), `libroPagosRangos` (rangos mes/trimestre/año del libro de pagos) y `DetallePagoAplicaciones` (bloque "Aplicado a" del detalle de pago).
+- Sin cambios de comportamiento: misma UI, mismos cálculos.
+
 ## [13.463.2] - 2026-08-08
 - Conciliación bancaria: los importes de Cargo y Abono (y el panel de detalle del movimiento) ya se etiquetan con la moneda real de la cuenta seleccionada; antes siempre decían "MXN" aunque la cuenta fuera USD. Sólo cambia la etiqueta: los montos y los cálculos no se tocan.
 
