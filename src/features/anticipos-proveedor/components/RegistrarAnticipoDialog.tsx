@@ -172,7 +172,11 @@ export function RegistrarAnticipoDialog({
         bloquearProveedor={Boolean(proveedorIdInicial)}
         tcHint={tcHint}
         equivalenteMxn={equivalenteMxn}
+        embarqueId={embarqueId ?? null}
+        embarqueExpediente={embarqueExpediente ?? null}
+        onEmbarqueChange={handleEmbarqueChange}
       />
+
     </FormDialogShell>
   );
 }
