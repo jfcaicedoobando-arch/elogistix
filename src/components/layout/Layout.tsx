@@ -12,6 +12,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 import { NotificacionesPopover } from "@/components/layout/NotificacionesPopover";
 import { useIsMobile } from "@/hooks/shared/useIsMobile";
+import { TenantContextBanner } from "@/components/layout/TenantContextBanner";
+import { SeleccionaOrganizacion } from "@/components/layout/SeleccionaOrganizacion";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
+
 
 export function Layout() {
   const location = useLocation();
