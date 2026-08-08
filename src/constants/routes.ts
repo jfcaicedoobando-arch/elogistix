@@ -92,6 +92,7 @@ export const ROUTES = {
   REPORTES: "/reportes",
   REPORTES_RENTABILIDAD: "/reportes/rentabilidad",
   REPORTES_CIERRE_MENSUAL: "/reportes/cierre-mensual",
+  REPORTES_CARTERA: "/reportes/cartera",
 
   // CRM
   CRM: "/crm",

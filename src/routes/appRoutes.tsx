@@ -133,6 +133,7 @@ export const appRoutes = (
     <Route path="/dev/pdf-preview/cotizacion/:id" element={guarded(COTIZACIONES_ROLES, <PdfPreviewCotizacion />)} />
     <Route path="/reportes/rentabilidad" element={guarded(REPORTES_ROLES, <Reportes />)} />
     <Route path="/reportes/cierre-mensual" element={guarded(REPORTES_ROLES, <CierreMensual />)} />
+    <Route path="/reportes/cartera" element={guarded(REPORTES_ROLES, <ReportesCartera />)} />
     <Route path="/reportes" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/ayuda" element={<Ayuda />} />
