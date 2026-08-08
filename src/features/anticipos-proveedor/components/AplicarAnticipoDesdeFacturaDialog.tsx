@@ -34,7 +34,9 @@ interface Props {
 
 export function AplicarAnticipoDesdeFacturaDialog({
   open, onOpenChange, facturaId, folioFactura, saldoFactura, monedaFactura, anticipos,
+  facturaEmbarqueId, facturaExpediente,
 }: Props) {
+
   const aplicar = useAplicarAnticipo();
   const [anticipoId, setAnticipoId] = useState("");
   const [monto, setMonto] = useState("0");
