@@ -23,12 +23,11 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 
-import { cn } from "@/lib/utils";
 import { AgingDrillDownDialog } from "@/features/cxp/components/AgingDrillDownDialog";
 import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
 import { todayLocalISO } from "@/lib/date/today";
-import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { exportarCxpAgingCsv } from "@/features/cxp/services/cxpAgingExport";
+import { AgingMonedaFechaBar } from "@/components/shared/aging/AgingMonedaFechaBar";
 import { Link } from "react-router-dom";
 import { FileSpreadsheet } from "lucide-react";
 import {
@@ -38,23 +37,6 @@ import {
 import { AgingKpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
-
-function exportarCsv(rows: readonly CxpAgingRow[], moneda: string, fecha: string) {
-  const headers = ["Proveedor", "Moneda", "Facturas", "Vigente", "1-30", "31-60", "61-90", "+90", "Total"];
-  const lines = rows.map((r) =>
-    [
-      `"${r.proveedor_nombre.replace(/"/g, '""')}"`,
-      r.moneda,
-      r.num_facturas, r.vigente, r.d_1_30, r.d_31_60, r.d_61_90, r.mas_90, r.saldo_total,
-    ].join(","),
-  );
-  downloadCsvWithFeedback({
-    filename: `aging-cxp-${moneda}-${fecha}.csv`,
-    csv: [headers.join(","), ...lines].join("\n"),
-    rowCount: rows?.length ?? 0,
-    emptyWarning: { description: "No hay saldos de proveedores para exportar con los filtros actuales." },
-  });
-}
 
 interface Filters extends Record<string, string> { cubeta: string }
 const DEFAULTS: Filters = { cubeta: "todas" };
@@ -95,8 +77,6 @@ export default function CxpAging() {
     },
   });
 
-  const monedasVisibles = monedas.length > 0 ? monedas : ["MXN"];
-
   return (
     <PageContainer>
       <PageHeader
@@ -113,7 +93,7 @@ export default function CxpAging() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => exportarCsv(rowsFiltradas, monedaActiva, fecha)}
+              onClick={() => exportarCxpAgingCsv(rowsFiltradas, monedaActiva, fecha)}
               disabled={rowsFiltradas.length === 0}
             >
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
@@ -122,39 +102,14 @@ export default function CxpAging() {
         }
       />
 
-      {/* v13.315.9 (QW3) — selector de moneda: MXN, USD, EUR no se mezclan. */}
-      <div className="flex items-end justify-between gap-3 flex-wrap">
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-xs text-muted-foreground mr-1">Moneda:</span>
-        {monedasVisibles.map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => setMoneda(m)}
-            className={cn(
-              "text-xs font-medium px-2.5 py-1 rounded-full border transition-colors",
-              monedaActiva === m
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background hover:bg-muted text-muted-foreground border-border",
-            )}
-            aria-pressed={monedaActiva === m}
-          >
-            {m}
-          </button>
-        ))}
-      </div>
-        <div className="w-[200px]">
-          <label className="text-xs text-muted-foreground mb-1 block" htmlFor="aging-cxp-corte">
-            Fecha de corte
-          </label>
-          <DatePickerMx
-            id="aging-cxp-corte"
-            title="Fecha de corte"
-            value={fecha}
-            onChange={(v: string) => setFecha(v || todayLocalISO())}
-          />
-        </div>
-      </div>
+      <AgingMonedaFechaBar
+        monedas={monedas}
+        monedaActiva={monedaActiva}
+        onMonedaChange={setMoneda}
+        fecha={fecha}
+        onFechaChange={setFecha}
+        idFecha="aging-cxp-corte"
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {CUBETAS_AGING.map((b) => (

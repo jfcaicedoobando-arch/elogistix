@@ -12,10 +12,10 @@ import { usePagoDetalle } from "@/features/tesoreria/hooks/usePagoDetalle";
 import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { getErrorMessage } from "@/lib/errors";
 import {
-  BloqueAplicaciones,
   BloqueMovimiento,
   BloquePago,
 } from "./DetallePagoSheet.parts";
+import { BloqueAplicaciones } from "./DetallePagoAplicaciones";
 
 interface Props {
   /** Pago a mostrar; `null` cierra el panel. */
