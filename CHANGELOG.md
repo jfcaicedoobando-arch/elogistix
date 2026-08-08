@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.464.1] - 2026-08-08
+- Costos repetidos: se revisaron uno por uno los 12 grupos de los expedientes 149, 189, 193, 195, 219 y 272. No eran duplicados: son costos prorrateados por contenedor que se guardaron sin contenedor asignado. Ahora cada copia tiene su contenedor, por lo que ya no se ven repetidas (0 grupos idénticos en toda la app).
+- Se corrigieron 3 facturas de proveedor cuyo importe asignado venía del presupuesto y no de la factura real: FP-000023 (505 USD), FP-000026 (715 USD) y FP-000027 (20,902 USD) ya cuadran al centavo con su subtotal.
+- Nueva regla de auditoría "Costos repetidos": marca en alto los embarques con costos idénticos cuyo número de copias no coincide con el número de contenedores, para detectar duplicados reales sin falsos positivos por prorrateo.
+
 ## [13.464.0] - 2026-08-08
 - Auditoría operativa — fix de márgenes negativos falsos: se limpiaron (borrado lógico, reversible) los conceptos de costo y venta duplicados dentro de un mismo embarque, que inflaban el costo y disparaban hallazgos de "margen negativo" inexistentes (caso reportado: expediente ELIMP00007, que ahora muestra utilidad positiva). No se tocó ningún concepto vinculado a factura de proveedor, proforma o factura de cliente.
 - Blindaje en base de datos: la función que replica los conceptos de la cotización al crear el embarque ahora es idempotente — si el embarque ya tiene conceptos vivos no los vuelve a copiar, evitando duplicados por reintentos o dobles clics.
