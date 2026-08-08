@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.458.0] - 2026-08-08
+- Fix (portal cliente): descargar PDF/XML de una factura timbrada ya no falla con "Object not found". Las facturas timbradas guardan URLs de FacturApi, no rutas de almacenamiento; el portal ahora usa el proxy autenticado `facturapi-descargar` igual que la vista admin.
+- `facturapi-descargar` autoriza a usuarios del portal vía `client_users` (cliente + organización del CFDI), además de los roles fiscales de la organización.
+
 ## Auditoría — plan "Hotfix R9" descartado - 2026-08-08
 Se verificó punto por punto el archivo `plan_lovable_r9.md` (auditado contra `13.454.1`) y **no se aplicó ningún cambio**: sus hallazgos ya estaban resueltos o no se reproducen en `13.457.3`.
 - P0-A: `_bitacora_facturas_estado` ya no usa `folio_completo` (corregido en `13.455.1`).
