@@ -54,6 +54,8 @@ export function DetallePagoSheet({ ref_pago, onOpenChange }: Props) {
               <BloqueMovimiento
                 movimiento={data.movimiento}
                 cuentaId={data.movimiento?.cuenta_bancaria_id ?? data.pago.cuenta_bancaria_id}
+                monedaCuentaPago={data.pago.moneda}
+                cuentaBancariaPagoId={data.pago.cuenta_bancaria_id}
               />
               <BloqueAplicaciones aplicaciones={data.aplicaciones} />
             </>
