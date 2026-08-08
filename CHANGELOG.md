@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.461.0] - 2026-08-08
+- Nuevo reporte **Reportes › Cartera y antigüedad** (`/reportes/cartera`): saldos por cobrar y por pagar con cubetas de antigüedad (por vencer, 1-30, 31-60, 61-90, +90) calculadas contra una fecha de corte seleccionable.
+- Cada factura muestra su saldo en moneda original y dos valuaciones en pesos: MXN histórico (TC de la factura) y MXN al corte (TC DOF de la fecha de corte), más la diferencia cambiaria.
+- Exportación contable del reporte a CSV (con filas de totales por cubeta) y a PDF horizontal.
+- Libro de pagos (Tesorería › Pagos): las exportaciones CSV y PDF ahora incluyen columnas de **Tipo de cambio** y **Fuente del TC**, y el PDF cierra con los totales en MXN (cobrado, pagado, neto y número de pagos).
+- El botón "Reporte PDF" de Cuentas por pagar ahora lleva al reporte unificado de cartera.
+
+
 ## [13.460.0] - 2026-08-08
 - Tesorería → Pagos: al hacer clic en un pago se abre un panel de detalle con el movimiento bancario conciliado y las facturas a las que se aplicó (con saldo por factura y enlaces a factura/embarque).
 - Los pagos que forman parte de un pago en lote se marcan en la tabla y abren el detalle completo del lote.
