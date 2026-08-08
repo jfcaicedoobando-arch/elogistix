@@ -25,6 +25,17 @@ DECLARE
   v_total numeric;
   v_pu    numeric;
 BEGIN
+  -- Idempotencia: si el embarque ya tiene conceptos vivos, no re-sembrar.
+  IF EXISTS (
+    SELECT 1 FROM public.conceptos_costo
+    WHERE embarque_id = p_embarque_id AND deleted_at IS NULL
+  ) OR EXISTS (
+    SELECT 1 FROM public.conceptos_venta
+    WHERE embarque_id = p_embarque_id AND deleted_at IS NULL
+  ) THEN
+    RETURN;
+  END IF;
+
   FOR v_costo IN
     SELECT * FROM public.cotizacion_costos
     WHERE cotizacion_id = p_cotizacion_id AND deleted_at IS NULL
