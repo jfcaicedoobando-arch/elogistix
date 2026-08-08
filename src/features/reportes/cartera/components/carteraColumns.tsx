@@ -12,10 +12,10 @@ import {
 } from "@/features/reportes/cartera/domain/agingCartera";
 
 const CLASE_BUCKET: Record<FilaCartera["bucket"], string> = {
-  por_vencer: "bg-muted text-muted-foreground border-border",
-  d1_30: "bg-warning/10 text-warning border-warning/20",
-  d31_60: "bg-warning/10 text-warning border-warning/20",
-  d61_90: "bg-destructive/10 text-destructive border-destructive/20",
+  vigente: "bg-muted text-muted-foreground border-border",
+  d_1_30: "bg-warning/10 text-warning border-warning/20",
+  d_31_60: "bg-warning/10 text-warning border-warning/20",
+  d_61_90: "bg-destructive/10 text-destructive border-destructive/20",
   mas_90: "bg-destructive/10 text-destructive border-destructive/20",
 };
 

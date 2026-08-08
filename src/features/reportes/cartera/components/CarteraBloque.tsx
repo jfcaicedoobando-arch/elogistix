@@ -46,7 +46,7 @@ export function CarteraBloque({
               <p
                 className={cn(
                   "mt-1 text-lg font-semibold tabular-nums",
-                  b.bucket === "mas_90" || b.bucket === "d61_90"
+                  b.bucket === "mas_90" || b.bucket === "d_61_90"
                     ? "text-destructive"
                     : "text-foreground",
                 )}

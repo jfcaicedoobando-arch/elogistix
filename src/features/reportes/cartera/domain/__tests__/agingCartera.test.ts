@@ -33,12 +33,12 @@ describe("agingCartera", () => {
   });
 
   it("asigna la cubeta correcta", () => {
-    expect(bucketDeDias(-5)).toBe("por_vencer");
-    expect(bucketDeDias(0)).toBe("por_vencer");
-    expect(bucketDeDias(1)).toBe("d1_30");
-    expect(bucketDeDias(30)).toBe("d1_30");
-    expect(bucketDeDias(31)).toBe("d31_60");
-    expect(bucketDeDias(90)).toBe("d61_90");
+    expect(bucketDeDias(-5)).toBe("vigente");
+    expect(bucketDeDias(0)).toBe("vigente");
+    expect(bucketDeDias(1)).toBe("d_1_30");
+    expect(bucketDeDias(30)).toBe("d_1_30");
+    expect(bucketDeDias(31)).toBe("d_31_60");
+    expect(bucketDeDias(90)).toBe("d_61_90");
     expect(bucketDeDias(91)).toBe("mas_90");
   });
 
@@ -75,7 +75,7 @@ describe("agingCartera", () => {
     );
     expect(filas.map((f) => f.id)).toEqual(["vieja", "nueva"]);
     expect(filas[0].bucket).toBe("mas_90");
-    expect(filas[1].bucket).toBe("por_vencer");
+    expect(filas[1].bucket).toBe("vigente");
   });
 
   it("totaliza por cubeta y en gran total", () => {
@@ -89,7 +89,7 @@ describe("agingCartera", () => {
     );
     const buckets = totalesPorBucket(filas);
     expect(buckets).toHaveLength(5);
-    expect(buckets.find((b) => b.bucket === "d1_30")?.conteo).toBe(1);
+    expect(buckets.find((b) => b.bucket === "d_1_30")?.conteo).toBe(1);
     expect(buckets.find((b) => b.bucket === "mas_90")?.mxnCorte).toBe(2000);
 
     const total = totalCartera(filas);
