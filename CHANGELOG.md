@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.463.2] - 2026-08-08
+- Conciliación bancaria: los importes de Cargo y Abono (y el panel de detalle del movimiento) ya se etiquetan con la moneda real de la cuenta seleccionada; antes siempre decían "MXN" aunque la cuenta fuera USD. Sólo cambia la etiqueta: los montos y los cálculos no se tocan.
+
 ## [13.463.1] - 2026-08-10
 - Limpieza de código muerto detectada por CI (knip): se quitaron 30+ exportaciones y alias sin uso en aging, tesorería, embarques, catálogos de tokens y servicios de proveedor/usuario.
 - Se renombró un título de prueba duplicado en el test de aging de CxP para dejar la auditoría de tests en cero violaciones.

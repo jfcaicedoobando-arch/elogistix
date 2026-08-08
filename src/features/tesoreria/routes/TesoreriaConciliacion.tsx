@@ -54,7 +54,8 @@ export default function TesoreriaConciliacion() {
   const conciliarPago = useConciliarPago();
   const registrarManual = useRegistrarMovimientoManual();
   const fileRef = useRef<HTMLInputElement>(null);
-  const columns = useMemo(() => crearMovimientoColumns(setRefPago), []);
+  const monedaCuenta = cuentas.find((c) => c.id === cuentaId)?.moneda ?? "MXN";
+  const columns = useMemo(() => crearMovimientoColumns(setRefPago, monedaCuenta), [monedaCuenta]);
   const { isAutoConciliando, handleConciliarExactos } = useAutoConciliarExactos(movs, conciliarPago.mutateAsync);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,7 +165,7 @@ export default function TesoreriaConciliacion() {
             />
           </div>
           <div className="lg:col-span-1">
-            <PanelConciliacionMovimiento movimiento={sel} onClose={() => setSel(null)} />
+            <PanelConciliacionMovimiento movimiento={sel} onClose={() => setSel(null)} moneda={monedaCuenta} />
           </div>
         </div>
         </>

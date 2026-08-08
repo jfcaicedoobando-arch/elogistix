@@ -12,8 +12,6 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { EstatusCobranza } from "../services/estadoCuenta";
 import type { FilaEstadoCuenta } from "../services/estadoCuentaAging";
 
-const ESTADO_CUENTA_COLSPAN = 11;
-
 const BADGE: Record<EstatusCobranza, "outline" | "warning" | "destructive" | "secondary"> = {
   Vigente: "outline",
   "Por vencer": "warning",
