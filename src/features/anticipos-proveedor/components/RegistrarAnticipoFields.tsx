@@ -9,7 +9,9 @@ import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { ProveedorCombobox } from "@/features/cxp/components/ProveedorCombobox";
 import { formatCurrency } from "@/lib/formatters";
 import { METODOS_PAGO, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
+import { EmbarqueAnticipoPicker } from "./EmbarqueAnticipoPicker";
 import { etiquetaCuenta, type CuentaOption } from "../domain/etiquetaCuenta";
+
 
 interface Props {
   control: Control<RegistrarAnticipoFormValues>;
