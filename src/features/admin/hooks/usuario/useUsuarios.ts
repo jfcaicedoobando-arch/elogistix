@@ -17,12 +17,15 @@ export type { UserRow };
 
 /**
  * Organización a la que se acota el listado (U-01).
- * `null` ⇒ super_admin viendo todas las organizaciones.
+ *
+ * A2/C1: el super admin también queda acotado al tenant elegido en el
+ * `OrgSwitcher`. Sólo devuelve `null` cuando no hay tenant activo (la consola
+ * de plataforma bloquea los módulos operativos en ese estado), para no listar
+ * usuarios de todas las organizaciones por accidente.
  */
 export function useUsuariosOrgScope(): string | null {
-  const { effectiveRole } = useAuth();
   const { organizationId } = useOrgActiva();
-  return effectiveRole === "super_admin" ? null : organizationId ?? null;
+  return organizationId ?? null;
 }
 
 export function useUsuarios(opciones?: { enabled?: boolean }) {
