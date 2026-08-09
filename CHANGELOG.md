@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.473.1] - 2026-08-09
+- CI — `deploy-gate.yml`: corrige advertencias de shellcheck (SC2006) por uso de backticks en mensajes de `GITHUB_STEP_SUMMARY`; se reemplazan por comillas simples.
+
 ## [13.473.0] - 2026-08-09
 - Ola 6 (integridad transaccional) — Cinco RPCs atómicas nuevas: `reactivar_cotizacion_rpc` (A3), `convertir_prospecto_a_cliente_rpc` (M3, idempotente), `convertir_lead_rpc` (M4, cliente + oportunidad en una transacción), `actualizar_tarifa_con_recargos_rpc` (M7) y `eliminar_proforma_rpc` (M15, bloquea proformas facturadas y libera conceptos). Los servicios del frontend dejan de hacer varias escrituras sueltas que podían quedar a medias.
 - Ola 6 (tests) — Nuevo test SQL `supabase/tests/ola6_transaccional.sql` en CI (reactivación, idempotencia de conversiones y guard de proforma facturada) y suites de servicio migradas a mocks de RPC.
