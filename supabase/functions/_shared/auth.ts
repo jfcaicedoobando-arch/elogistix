@@ -127,12 +127,15 @@ export const ROLES_CONSULTA_FISCAL: readonly string[] = [
 
 /**
  * FIX C2 (S5-02) + A13 (Ola 4) — Membresía + rol efectivo. Semántica:
- *   1) super_admin/admin global (`user_roles`) → acceso cross-org.
+ *   1) `super_admin` global (`user_roles`) → acceso cross-org (rol de plataforma).
  *   2) Miembro de la org cuyo `organization_members.role` (rol efectivo)
  *      está en `rolesPermitidos`.
- *   3) Miembro SIN rol de organización: se respalda en el rol global.
+ *   3) Miembro SIN rol de organización: se respalda en el rol global
+ *      (incluye `admin` global).
  * Si la membresía tiene rol, éste manda: una democión a nivel organización
- * revoca el acceso aunque el rol global heredado siga siendo permisivo.
+ * revoca el acceso aunque el rol global heredado (incluido `admin`) siga
+ * siendo permisivo. `super_admin` en `organization_members` se ignora: es un
+ * rol de plataforma y no puede otorgarse desde una organización.
  */
 export async function authorizeOrgRole(
   adminClient: SupabaseClient,
@@ -144,7 +147,7 @@ export async function authorizeOrgRole(
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .in("role", ["super_admin", "admin"])
+    .eq("role", "super_admin")
     .maybeSingle();
   if (superRole) return true;
 
@@ -165,7 +168,7 @@ export async function authorizeOrgRole(
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .in("role", rolesPermitidos as string[])
+    .in("role", ["admin", ...rolesPermitidos] as string[])
     .maybeSingle();
   return !!globalRole;
 }
