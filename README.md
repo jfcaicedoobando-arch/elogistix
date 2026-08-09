@@ -98,3 +98,30 @@ Detalle completo y reglas de capa en [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 Este proyecto se desarrolla principalmente en [Lovable](https://lovable.dev). Los cambios hechos en el editor se commitean automáticamente al repo, y los pushes externos se reflejan en Lovable.
 
 Para publicar: en Lovable → **Share → Publish**. Para conectar dominio propio: **Project → Settings → Domains → Connect Domain**.
+
+---
+
+## Despliegue y CI/CD
+
+Es importante separar tres cosas que suelen confundirse:
+
+1. **Frontend (lo que ven los usuarios)**: se publica **desde Lovable** con `Share → Publish → Update`. No hay comando de GitHub que lo publique; el botón es el único punto de publicación.
+2. **Backend (base de datos, RLS, edge functions)**: se despliega **automáticamente** cuando Lovable detecta cambios en el código. Si una migración llega rota a `main`, puede romper producción sin avisar.
+3. **`deploy-gate.yml` en GitHub**: no despliega nada. Es una **guardia de calidad** que corre después de cada merge a `main` y revisa que las migraciones, RLS, drift y la suite de RLS estén sanos. Piensa en él como el "seguro de viaje" que revisa el equipaje antes de que el avión despegue.
+
+### Recomendación
+
+- No eliminar el deploy gate. El proyecto ya tiene tests de RLS, migraciones auditadas y radar de drift; el gate asegura que esas protecciones signifiquen algo en producción.
+- Para que sea efectivo, conviene configurarlo como **required status check** en GitHub:
+  - `Settings → Branches → main → Require status checks to pass before merging`
+  - Agregar `deploy-gate` (o los jobs individuales: `Gate — auditoría de migraciones`, `Gate — suite de RLS`, `Gate — radar de drift`).
+- El deploy gate tampoco sustituye la revisión humana de un PR; solo valida reglas automáticas que ya están en el repo.
+
+### Workflows principales
+
+- `ci.yml`: lint, typecheck, tests, knip, bundle stats y seguridad en cada PR/push a `main`.
+- `rls-tests.yml`: corre la suite de RLS de Supabase en cada cambio de base de datos.
+- `deploy-gate.yml`: post-merge, verifica que `main` esté sano para producción.
+- `e2e.yml`: pruebas end-to-end en staging (cuando se dispara).
+- `post-deploy-smoke.yml`: verificaciones rápidas después de publicar.
+
