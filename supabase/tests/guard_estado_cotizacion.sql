@@ -14,8 +14,8 @@ BEGIN
   RETURNING id INTO v_org;
 
   -- `clientes` no tiene `razon_social`; el nombre fiscal vive en `nombre`.
-  INSERT INTO public.clientes (organization_id, nombre, rfc)
-  VALUES (v_org, 'CLIENTE GUARD COT', 'XAXX010101000')
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org, 'CLIENTE GUARD COT', 'XAXX010101000', 'guard-cot@test.local')
   RETURNING id INTO v_cli;
 
   INSERT INTO public.cotizaciones (organization_id, cliente_id, estado)
