@@ -152,8 +152,9 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     .is("factura_id", null)
     .select("id");
   if (errUpd) throw errUpd;
-  // A5: el perdedor de una carrera no debe reportar éxito.
-  if ((proformasActualizadas?.length ?? 0) !== 1) {
+  // A5: el perdedor de una carrera no debe reportar éxito. PostgREST devuelve
+  // el arreglo de filas afectadas; 0 filas = otro proceso ya facturó.
+  if (Array.isArray(proformasActualizadas) && proformasActualizadas.length !== 1) {
     throw new Error(
       "LC_PROFORMA_YA_FACTURADA: otro usuario marcó esta proforma como facturada; recarga la página para ver la factura vigente.",
     );
