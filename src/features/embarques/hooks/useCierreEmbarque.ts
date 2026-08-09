@@ -10,6 +10,7 @@ import {
   type CierreValidacion,
 } from "@/features/embarques/services/cierre";
 import { queryKeys } from "@/lib/query";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 const KEYS = {
   validacion: queryKeys.embarques.cierreValidacion,
