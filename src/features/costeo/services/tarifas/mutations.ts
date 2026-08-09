@@ -104,20 +104,21 @@ export async function updateTarifaConRecargos(
 ): Promise<void> {
   const { recargos, ...rest } = input;
   const tarifa = sanitizeTarifaDates(rest);
-  const padre = await unwrap(
-    supabase.from("costeo_tarifas").select("organization_id").eq("id", id).single(),
-  );
-  await run(
-    supabase.from("costeo_tarifas").update({ ...tarifa, moneda: "USD" }).eq("id", id),
-  );
-
-  // Sincronizar recargos: borrar todos los existentes y reinsertar los nuevos.
-  await run(supabase.from("costeo_tarifa_recargos").delete().eq("tarifa_id", id));
-
-  const rows = buildRecargoRows(id, padre.organization_id, recargos);
-  if (rows.length > 0) {
-    await run(supabase.from("costeo_tarifa_recargos").insert(rows));
-  }
+  // Ola 6 · M7: update de la tarifa + reemplazo de recargos en UNA transacción.
+  // Antes, si el insert de recargos fallaba, la tarifa quedaba sin recargos.
+  const { error } = await supabase.rpc("actualizar_tarifa_con_recargos_rpc", {
+    p_id: id,
+    p_tarifa: tarifa,
+    p_recargos: recargos
+      .filter((r) => r.concepto.trim() && Number(r.monto) > 0)
+      .map((r) => ({
+        concepto: r.concepto.trim(),
+        lado: r.lado ?? "origen",
+        monto: Number(r.monto) || 0,
+        incluido_en_total: r.incluido_en_total ?? true,
+      })),
+  });
+  if (error) throw error;
   await registrarActividad({
     modulo: "costeo",
     accion: "editar_tarifa",

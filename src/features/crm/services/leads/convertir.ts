@@ -68,49 +68,30 @@ export interface ConvertirLeadParams {
 
 export async function convertirLead(
   params: ConvertirLeadParams,
-  user: AuthLite | null,
+  _user: AuthLite | null,
 ): Promise<{ clienteId: string | null; oportunidadId: string }> {
-  const { clienteId, clienteNombre } = await resolveClienteForConversion(params);
-  const etapa = await fetchPrimeraEtapaAbierta();
-
-  const { data: opNueva, error: errOp } = await supabase
-    .from("crm_oportunidades")
-    .insert({
-      nombre: params.nombreOportunidad,
-      lead_id: params.lead.id,
-      cliente_id: clienteId,
-      cliente_nombre: clienteNombre,
-      etapa_id: etapa.id,
-      probabilidad: etapa.probabilidad_default ?? 0,
-      monto_estimado: params.montoEstimado,
-      moneda: params.moneda,
-      fecha_estimada_cierre: params.fechaEstimadaCierre ?? null,
-      vendedor_id: params.lead.vendedor_id ?? user?.id ?? null,
-      vendedor_email: params.lead.vendedor_email ?? user?.email ?? "",
-      modo: params.lead.interes_modo ?? "",
-      created_by: user?.id ?? null,
-    })
-    .select("id")
-    .single();
-  if (errOp) throw errOp;
-
-  const { error: errLead } = await supabase
-    .from("crm_leads")
-    .update({
-      estado: "Convertido",
-      cliente_convertido_id: clienteId,
-      oportunidad_convertida_id: opNueva.id,
-    })
-    .eq("id", params.lead.id);
-  if (errLead) throw errLead;
+  // Ola 6 · M4: cliente + oportunidad + marcado del lead en UNA transacción
+  // idempotente. Antes, un fallo intermedio dejaba cliente/oportunidad huérfanos.
+  const { data, error } = await supabase.rpc("convertir_lead_rpc", {
+    p_lead_id: params.lead.id,
+    p_crear_cliente: params.crearCliente,
+    p_cliente_id: params.clienteIdExistente ?? null,
+    p_nombre_oportunidad: params.nombreOportunidad,
+    p_monto_estimado: params.montoEstimado,
+    p_moneda: params.moneda,
+    p_fecha_estimada_cierre: params.fechaEstimadaCierre ?? null,
+  });
+  if (error) throw error;
+  const payload = (data ?? {}) as { cliente_id?: string | null; oportunidad_id?: string };
+  if (!payload.oportunidad_id) throw new Error("No se pudo convertir el lead");
 
   await registrarActividad({
     modulo: "crm",
     accion: "Convirtió lead a oportunidad",
     entidadId: params.lead.id,
     entidadNombre: params.lead.empresa,
-    detalles: { oportunidadId: opNueva.id, clienteId },
+    detalles: { oportunidadId: payload.oportunidad_id, clienteId: payload.cliente_id ?? null },
   });
 
-  return { clienteId, oportunidadId: opNueva.id };
+  return { clienteId: payload.cliente_id ?? null, oportunidadId: payload.oportunidad_id };
 }
