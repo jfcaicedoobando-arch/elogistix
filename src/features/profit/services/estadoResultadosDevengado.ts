@@ -67,7 +67,7 @@ async function loadEmbarquesPorExpedientes(exps: string[]): Promise<Map<string, 
   return map;
 }
 
-const fallbackTC = (tc: number | null) => (tc && tc > 0 ? tc : 1);
+const fallbackTC = (tc: number | null, respaldo: number) => (tc && tc > 0 ? tc : respaldo);
 
 /**
  * Ola 5 · A22 — Antes las filas sin embarque usaban `tipo_cambio_eur = 1`, lo
@@ -133,7 +133,7 @@ function ingresosDeFacturas(
     out.embarques.push({
       id,
       modo: emb?.modo ?? "Marítimo",
-      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(f.tipo_cambio)) ?? tc.usd,
+      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(f.tipo_cambio), tc.usd),
       tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
     });
     out.ventas.push({ embarque_id: id, descripcion: "Facturación", total: Number(f.total), moneda: String(f.moneda) });
@@ -169,7 +169,7 @@ function costosDeProveedorFacturas(
     out.embarques.push({
       id,
       modo: emb?.modo ?? "Marítimo",
-      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(pf.tipo_cambio_usd)) ?? tc.usd,
+      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(pf.tipo_cambio_usd), tc.usd),
       tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
     });
     out.costos.push({
