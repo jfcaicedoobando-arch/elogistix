@@ -39,6 +39,7 @@ const baseInput: TarifaInput = {
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
 });
 
 describe("costeo/services/tarifas", () => {
@@ -133,6 +134,60 @@ describe("costeo/services/tarifas", () => {
       expect(rows).toHaveLength(2);
       expect(rows[0]).toMatchObject({ tarifa_id: "t4", moneda: "USD", lado: "origen", incluido_en_total: true });
     });
+
+    it("filtra recargos con concepto vacío o monto <= 0", async () => {
+      mock.setTableResult("costeo_tarifas", { data: { id: "t5" }, error: null });
+      mock.setTableResult("costeo_tarifa_recargos", { data: null, error: null });
+      await insertTarifaConRecargos(ORG, {
+        ...baseInput,
+        recargos: [
+          { concepto: "   ", monto: 100 },
+          { concepto: "BAF", monto: 0 },
+          { concepto: "OK", monto: 50 },
+        ],
+      });
+      const rows = mock.getMutationPayload("costeo_tarifa_recargos", "insert") as Array<Record<string, unknown>>;
+      expect(rows).toHaveLength(1);
+      expect(rows[0].concepto).toBe("OK");
+    });
+
+    it("no llama a insert de recargos si la lista queda vacía", async () => {
+      mock.setTableResult("costeo_tarifas", { data: { id: "t6" }, error: null });
+      await insertTarifaConRecargos(ORG, { ...baseInput, recargos: [] });
+      const recargoCalls = mock.tableCalls.filter((c) => c.table === "costeo_tarifa_recargos");
+      expect(recargoCalls).toHaveLength(0);
+    });
+
+    it("propaga el error del insert padre", async () => {
+      mock.setTableResult("costeo_tarifas", { data: null, error: { message: "fk" } });
+      await expect(insertTarifaConRecargos(ORG, baseInput)).rejects.toThrow();
+    });
+  });
+
+  describe("updateTarifaConRecargos", () => {
+    it("Ola 6 · M7: usa la RPC atómica con tarifa + recargos filtrados", async () => {
+      mock.setRpcResult("actualizar_tarifa_con_recargos_rpc", { data: null, error: null });
+
+      await updateTarifaConRecargos("t7", {
+        ...baseInput,
+        recargos: [...baseInput.recargos, { concepto: "  ", monto: 0 }],
+      });
+
+      const call = mock.rpcCalls.find((c) => c.fn === "actualizar_tarifa_con_recargos_rpc");
+      expect(call).toBeDefined();
+      const args = call!.args as { p_id: string; p_tarifa: Record<string, unknown>; p_recargos: unknown[] };
+      expect(args.p_id).toBe("t7");
+      expect(args.p_tarifa.flete_base).toBe(2500);
+      // El recargo vacío/monto 0 no viaja a la RPC.
+      expect(args.p_recargos).toHaveLength(2);
+      expect(args.p_recargos[0]).toMatchObject({ concepto: "BAF", lado: "origen", incluido_en_total: true });
+    });
+
+    it("propaga el error de la RPC", async () => {
+      mock.setRpcResult("actualizar_tarifa_con_recargos_rpc", { data: null, error: { message: "boom" } });
+      await expect(updateTarifaConRecargos("t8", baseInput)).rejects.toBeTruthy();
+    });
+  });
 
     it("filtra recargos con concepto vacío o monto <= 0", async () => {
       mock.setTableResult("costeo_tarifas", { data: { id: "t5" }, error: null });

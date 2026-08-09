@@ -74,19 +74,26 @@ describe("services/proforma/crud", () => {
     ).rejects.toThrow(/No se pudo crear/);
   });
 
-  it("eliminarProforma actualiza conceptos y borra fila", async () => {
-    mock.setTableResult("conceptos_venta", { data: null, error: null });
-    mock.setTableResult("proformas", { data: null, error: null });
+  it("Ola 6 · M15: eliminarProforma usa la RPC atómica", async () => {
+    mock.setRpcResult("eliminar_proforma_rpc", {
+      data: { numero: "PF-1", embarque_id: "e1", eliminada: true },
+      error: null,
+    });
     await expect(
       eliminarProforma({ proformaId: "pf1", embarqueId: "e1" }),
     ).resolves.toBeUndefined();
+    const call = mock.rpcCalls.find((c) => c.fn === "eliminar_proforma_rpc");
+    expect(call?.args).toMatchObject({ p_proforma_id: "pf1" });
   });
 
-  it("eliminarProforma propaga error de update conceptos", async () => {
-    mock.setTableResult("conceptos_venta", { data: null, error: { message: "x" } });
+  it("eliminarProforma propaga el error de la RPC (p. ej. proforma facturada)", async () => {
+    mock.setRpcResult("eliminar_proforma_rpc", {
+      data: null,
+      error: { message: "LC_PROFORMA_FACTURADA" },
+    });
     await expect(
       eliminarProforma({ proformaId: "pf1", embarqueId: "e1" }),
-    ).rejects.toThrow();
+    ).rejects.toBeTruthy();
   });
 
   it("aprobarProformas rechaza con array vacío", async () => {
