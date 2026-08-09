@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.468.0] - 2026-08-09
+- Cierre de la **Ola 1** (A2 · una sola fuente de organización activa):
+  - Nuevo hook `useOrgActiva()`: todas las rutas de escritura toman la organización del `OrganizationContext` (el tenant elegido en el `OrgSwitcher`), no de `useAuth()`, que devolvía `null` para el administrador de plataforma y generaba registros huérfanos o errores de "organización no resuelta". Migrados 13 consumidores (usuarios, auditoría, CxP, cotizaciones, facturación, anticipos, catálogos SAT).
+  - El listado de usuarios ya no muestra todas las organizaciones cuando entra un super admin: queda acotado al tenant activo.
+  - Tests: `useOrgActiva.test.tsx` y `orgActivaFuenteUnica.test.ts` (regresión estática que impide volver a leer `useAuth().organizationId`).
+- **Ola 2** (dinero mal contado sin error visible):
+  - C3 · CxP: el saldo de la factura de proveedor ahora suma `monto_en_moneda_factura` (lo pagado convertido a la moneda de la factura). Antes una factura de USD 1,000 pagada con MXN 8,500 quedaba "Pagada" con ~17× de error, bloqueaba los pagos restantes y subestimaba KPIs de tesorería. Aplicado en el listado/detalle de CxP y en pagos programados.
+  - C4 · CxC: el diálogo de cobro sólo ofrece cuentas bancarias en la misma moneda del cobro (y limpia la selección al cambiar de moneda). El abono bancario dejó de usar el ratio pago→factura como si fuera tipo de cambio MXN/USD; si la moneda de la cuenta difiere y no hay TC oficial, no se registra el movimiento en lugar de descuadrar el saldo.
+  - C5 · El proceso diario de cotizaciones ya no hace rollback completo: se permite `Vencida → Archivada` y el paso de archivado está aislado con su propio manejo de errores (se registra en `app_logs`). Antes, con una sola cotización vencida >90 días, dejaban de vencerse todas las demás en silencio.
+  - A3 · El botón "Reactivar" de cotizaciones funciona: el guard permite salir de `Vencida`/`Archivada` hacia `Borrador`, `Solicitada`, `Enviada` o `Aceptada`.
+  - Tests: `sumarPagosEnMonedaFactura.test.ts`, `cobroFacturaMovimiento.moneda.test.ts` y la suite SQL `guard_estado_cotizacion.sql` (registrada en CI).
+
 ## [13.467.2] - 2026-08-09
 - Mensajes amigables para los códigos `LC_ORG_AJENA`, `LC_ORG_REQUERIDA` y `LC_SIN_ORG` (faltaban en el catálogo y rompían el test de cobertura de errores).
 
