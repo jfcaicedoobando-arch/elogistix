@@ -90,6 +90,14 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     return;
   }
 
+  // A5 (v13.469.0): validar importes ANTES de subir archivos, para no dejar
+  // PDF/XML huérfanos en storage cuando la proforma viene en ceros.
+  if (Number(proforma.total_usd) <= 0 && Number(proforma.total_mxn) <= 0) {
+    throw new Error(
+      "LC_PROFORMA_TOTAL_CERO: la proforma no tiene importes mayores a cero; corrige los conceptos antes de marcarla como facturada.",
+    );
+  }
+
   const basePath = `${proforma.organization_id}/${proforma.id}`;
   const pdfUrl = await uploadFacturaFile(params.pdfFile, `${basePath}/factura.pdf`, "application/pdf", "PDF");
   const xmlUrl = await uploadFacturaFile(params.xmlFile, `${basePath}/factura.xml`, "application/xml", "XML");
@@ -114,19 +122,23 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
 
   const facturasACrear = construirFacturasAEmitir(proforma, baseFactura);
 
-  let primeraFacturaId: string | null = null;
-  let segundaFacturaId: string | null = null;
-  if (facturasACrear.length > 0) {
-    const { data: facturasCreadas, error: errFact } = await supabase
-      .from("facturas")
-      .insert(facturasACrear)
-      .select("id");
-    if (errFact) throw new Error(`Error al crear factura: ${errFact.message}`);
-    primeraFacturaId = facturasCreadas?.[0]?.id ?? null;
-    segundaFacturaId = facturasCreadas?.[1]?.id ?? null;
+  // A5 (v13.469.0): nunca marcar "facturada" sin factura. Si los totales son 0
+  // no hay nada que cobrar y la venta quedaría fuera de cartera para siempre.
+  if (facturasACrear.length === 0) {
+    throw new Error(
+      "LC_PROFORMA_TOTAL_CERO: la proforma no tiene importes mayores a cero; corrige los conceptos antes de marcarla como facturada.",
+    );
   }
 
-  const { error: errUpd } = await supabase
+  const { data: facturasCreadas, error: errFact } = await supabase
+    .from("facturas")
+    .insert(facturasACrear)
+    .select("id");
+  if (errFact) throw new Error(`Error al crear factura: ${errFact.message}`);
+  const primeraFacturaId = facturasCreadas?.[0]?.id ?? null;
+  const segundaFacturaId = facturasCreadas?.[1]?.id ?? null;
+
+  const { data: proformasActualizadas, error: errUpd } = await supabase
     .from("proformas")
     .update({
       estado_proforma: "facturada",
@@ -137,6 +149,14 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     })
     // Guard de idempotencia a nivel DB: sólo escribir si sigue sin factura_id.
     .eq("id", params.proformaId)
-    .is("factura_id", null);
+    .is("factura_id", null)
+    .select("id");
   if (errUpd) throw errUpd;
+  // A5: el perdedor de una carrera no debe reportar éxito. PostgREST devuelve
+  // el arreglo de filas afectadas; 0 filas = otro proceso ya facturó.
+  if (Array.isArray(proformasActualizadas) && proformasActualizadas.length !== 1) {
+    throw new Error(
+      "LC_PROFORMA_YA_FACTURADA: otro usuario marcó esta proforma como facturada; recarga la página para ver la factura vigente.",
+    );
+  }
 }

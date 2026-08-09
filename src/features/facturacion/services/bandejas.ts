@@ -93,6 +93,8 @@ export async function fetchPagosRepPendientes(orgId: string): Promise<FilaRepPen
     )
     .eq("organization_id", orgId)
     .in("estado_rep", ["Pendiente", "Error"])
+    // A6: los pagos eliminados no deben aparecer en la bandeja de REP.
+    .is("deleted_at", null)
     .order("fecha_pago", { ascending: false })
     .limit(500);
   if (error) throw error;
@@ -163,7 +165,8 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .from("pagos_factura")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId)
-      .in("estado_rep", ["Pendiente", "Error"]),
+      .in("estado_rep", ["Pendiente", "Error"])
+      .is("deleted_at", null),
   ]);
   // "Por enviar" es una aproximación: (timbradas) − (envíos exitosos).
   // Es exacto sólo si cada factura tiene ≤1 envío exitoso, lo cual es la

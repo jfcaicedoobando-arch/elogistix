@@ -68,19 +68,25 @@ describe("cierre service", () => {
   });
 
   describe("reabrirEmbarque", () => {
-    it("envía id y motivo a la RPC", async () => {
+    it("usa la RPC canónica con email, motivo y request_id", async () => {
       mockedRpc.mockResolvedValue({ data: { ok: true }, error: null });
       const motivo = "Corrección de costos por reclamo del cliente principal";
-      await reabrirEmbarque("emb-3", motivo);
-      expect(mockedRpc).toHaveBeenCalledWith("reabrir_embarque_con_motivo", {
-        p_embarque_id: "emb-3",
-        p_motivo: motivo,
-      });
+      await reabrirEmbarque("emb-3", motivo, "ops@elogistix.mx");
+      expect(mockedRpc).toHaveBeenCalledWith(
+        "reabrir_embarque",
+        expect.objectContaining({
+          p_embarque_id: "emb-3",
+          p_motivo: motivo,
+          p_usuario_email: "ops@elogistix.mx",
+        }),
+      );
+      const args = mockedRpc.mock.calls.at(-1)?.[1] as { p_request_id?: string };
+      expect(typeof args?.p_request_id).toBe("string");
     });
 
     it("propaga error de motivo corto", async () => {
       mockedRpc.mockResolvedValue({ data: null, error: { message: "Motivo de reapertura requerido (mínimo 20 caracteres)" } });
-      await expect(reabrirEmbarque("emb-3", "corto")).rejects.toThrow(/Motivo/);
+      await expect(reabrirEmbarque("emb-3", "corto", "ops@elogistix.mx")).rejects.toThrow(/Motivo/);
     });
   });
 

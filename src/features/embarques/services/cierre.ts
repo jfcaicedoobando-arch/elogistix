@@ -56,14 +56,21 @@ export async function cerrarEmbarque(embarqueId: string): Promise<void> {
 }
 
 /**
- * v13.337.0 — la RPC `reabrir_embarque` se unificó a una sola firma
- * (id + email + motivo + request_id) para eliminar la ambigüedad de overloads
- * en PostgREST. Este flujo (tab Cierre) usa la variante corta renombrada.
+ * A4 (v13.469.0) — se eliminó `reabrir_embarque_con_motivo`, que sólo saltaba
+ * el candado de cierre y quedaba bloqueada por `trg_embarque_transicion_valida`.
+ * Ahora el tab Cierre usa la RPC canónica `reabrir_embarque`, la misma que el
+ * flujo de administración (mismo destino, roles e idempotencia).
  */
-export async function reabrirEmbarque(embarqueId: string, motivo: string): Promise<void> {
-  const { error } = await supabase.rpc("reabrir_embarque_con_motivo" as never, {
+export async function reabrirEmbarque(
+  embarqueId: string,
+  motivo: string,
+  usuarioEmail: string,
+): Promise<void> {
+  const { error } = await supabase.rpc("reabrir_embarque" as never, {
     p_embarque_id: embarqueId,
+    p_usuario_email: usuarioEmail,
     p_motivo: motivo,
+    p_request_id: crypto.randomUUID(),
   } as never);
   if (error) throw new Error(error.message);
 }

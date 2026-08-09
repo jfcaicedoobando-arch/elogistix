@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.469.0] - 2026-08-09
+- **Ola 3** (consolidación de flujos críticos):
+  - A4 · Reapertura de embarques: se elimina el RPC duplicado `reabrir_embarque_con_motivo` (no desactivaba el bypass de transición, así que fallaba en silencio) y todo el flujo usa el canónico `reabrir_embarque` con motivo, correo del usuario y clave de idempotencia.
+  - A5 · Proformas: se rechaza marcar como facturada una proforma con totales en cero (`LC_PROFORMA_TOTAL_CERO`) antes de subir PDF/XML, y quien pierde una carrera de dos pestañas ya recibe error (`LC_PROFORMA_YA_FACTURADA`) en lugar de un "éxito" falso.
+  - A6 · Pagos eliminados (borrado lógico) dejan de aparecer y de sumar en: detalle de factura, bandeja de REP (listado y contadores) y portal de clientes.
+  - A8 · Cobranza: los correos de estado de cuenta y de recordatorio ya no consultan una columna `saldo` inexistente (error 500); usan los cálculos oficiales de cartera con soporte multimoneda.
+  - A9 · Seguridad del provisioning E2E: además del secreto compartido, el correo a provisionar debe estar en una allowlist de cuentas de prueba (`E2E_PROVISION_EMAIL_ALLOWLIST`, o dominios de prueba por defecto). Antes, con el secreto filtrado se podía cambiar la contraseña de cualquier usuario real y darle rol admin.
+- Tests nuevos: `e2eProvisionAllowlist.test.ts` (6), `facturarCarrera.test.ts` (2) y actualización de `facturar.test.ts` y `cierre.test.ts`.
+
+
 ## [13.468.0] - 2026-08-09
 - Cierre de la **Ola 1** (A2 · una sola fuente de organización activa):
   - Nuevo hook `useOrgActiva()`: todas las rutas de escritura toman la organización del `OrganizationContext` (el tenant elegido en el `OrgSwitcher`), no de `useAuth()`, que devolvía `null` para el administrador de plataforma y generaba registros huérfanos o errores de "organización no resuelta". Migrados 13 consumidores (usuarios, auditoría, CxP, cotizaciones, facturación, anticipos, catálogos SAT).

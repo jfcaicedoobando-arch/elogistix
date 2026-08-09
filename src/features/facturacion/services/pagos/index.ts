@@ -40,6 +40,8 @@ export async function listarPagosFactura(facturaId: string): Promise<PagoFactura
       .from("pagos_factura")
       .select("*")
       .eq("factura_id", facturaId)
+      // A6: los pagos eliminados (borrado lógico) no deben listarse ni sumar.
+      .is("deleted_at", null)
       .order("fecha_pago", { ascending: false })
       .limit(500),
     [],
