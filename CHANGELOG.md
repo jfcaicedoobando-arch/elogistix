@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.469.4] - 2026-08-09
+- Documentación del despliegue y el deploy gate: se agrega sección "Despliegue y CI/CD" en `README.md` para distinguir la publicación manual en Lovable, el deploy automático del backend y el rol del workflow `deploy-gate.yml`. Se aclara en el summary del gate que su veredicto no publica automáticamente en Lovable.
+
 ## [13.469.3] - 2026-08-09
 - `marcarProformaFacturada` excedía el límite de complejidad de ESLint (17/16). Se extrajeron `assertImportes`, `insertarFacturas` y `persistirFacturacion`; misma lógica y mismos guards de idempotencia.
 

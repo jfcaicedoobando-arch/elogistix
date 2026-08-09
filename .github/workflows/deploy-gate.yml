@@ -267,10 +267,17 @@ jobs:
               echo "## 🚫 PROMOCIÓN BLOQUEADA"
               echo ""
               echo "No publiques este commit en producción hasta que los gates estén en verde."
+              echo ""
+              echo "Nota: este veredicto no publica automáticamente en Lovable. El frontend sigue requiriendo `Share → Publish → Update` en el editor de Lovable."
             } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          echo "## ✅ PROMOCIÓN AUTORIZADA" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## ✅ PROMOCIÓN AUTORIZADA"
+            echo ""
+            echo "Nota: este veredicto no publica automáticamente en Lovable. El frontend sigue requiriendo `Share → Publish → Update` en el editor de Lovable."
+          } >> "$GITHUB_STEP_SUMMARY"
+
 
       - name: Abrir/actualizar issue de bloqueo
         if: failure()
