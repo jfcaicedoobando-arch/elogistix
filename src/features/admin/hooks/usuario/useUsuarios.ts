@@ -10,7 +10,6 @@ import {
 } from '@/features/admin/services/usuario';
 import type { AppRole } from "@/types/appRole";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 export type { UserRow };
