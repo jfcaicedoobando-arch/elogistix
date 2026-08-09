@@ -45,6 +45,7 @@ import {
   CRM_ROLES, BITACORA_ROLES, PROVEEDORES_ROLES,
   DASHBOARD_DIRECCION_ROLES, CARTERA_ROLES, COMPRAS_POR_CAPTURAR_ROLES, COMPRAS_POR_PAGAR_ROLES,
   SENTRY_ROLES, PAPELERA_ROLES, IDEMPOTENCIA_ROLES, AUDITORIA_ROLES, USUARIOS_ROLES, CONFIGURACION_ROLES,
+  INICIO_ROLES, OPERACIONES_ROLES,
 } from "@/lib/access/roleRouteMatrix";
 
 export const appRoutes = (
@@ -55,9 +56,9 @@ export const appRoutes = (
       </ProtectedRoute>
     }
   >
-    <Route path="/inicio" element={<Dashboard />} />
+    <Route path="/inicio" element={guarded(INICIO_ROLES, <Dashboard />)} />
     <Route path="/dashboard" element={guarded(DASHBOARD_DIRECCION_ROLES, <DireccionDashboard />)} />
-    <Route path="/operaciones" element={<Operaciones />} />
+    <Route path="/operaciones" element={guarded(OPERACIONES_ROLES, <Operaciones />)} />
     <Route path="/embarques" element={guarded(EMBARQUES_ROLES, <Embarques />)} />
     <Route path="/embarques/nuevo" element={guarded(EMBARQUES_ROLES, <NuevoEmbarque />)} />
     <Route path="/embarques/:id" element={guarded(EMBARQUES_ROLES, <EmbarqueDetalle />)} />
