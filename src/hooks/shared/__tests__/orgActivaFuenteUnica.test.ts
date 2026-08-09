@@ -13,6 +13,8 @@ const PERMITIDOS = new Set<string>([
   "src/lib/contexts/OrganizationContext.tsx",
   // Observabilidad: etiqueta el org de la sesión, no escribe datos de negocio.
   "src/lib/observability/hooks/useSyncSentryErrorContext.ts",
+  // El propio helper documenta el antipatrón en su comentario.
+  "src/hooks/shared/useOrgActiva.ts",
 ]);
 
 function archivosFuente(dir: string, out: string[] = []): string[] {

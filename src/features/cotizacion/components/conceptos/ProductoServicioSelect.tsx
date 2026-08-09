@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { useProductosCatalogo, type ProductoCatalogo } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import type { AppRole } from "@/types/appRole";
 
 /**
@@ -83,7 +84,8 @@ function PieAcciones({
 }
 
 export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecciona producto", disabled, onConceptoLibre }: Props) {
-  const { organizationId, role } = useAuth();
+  const { role } = useAuth();
+  const { organizationId } = useOrgActiva();
   const puedeCrearConcepto = !role || !ROLES_SIN_ALTA_CATALOGO.includes(role);
   const { productos, isLoading, porNombre } = useProductosCatalogo(organizationId);
   const [open, setOpen] = useState(false);
