@@ -5,6 +5,12 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
+// Ola 5 · A22: el servicio consulta el TC DOF como respaldo de filas sin embarque.
+vi.mock("@/features/catalogos/services", () => ({
+  fetchExchangeRates: vi.fn(async () => ({ usdMxn: 18, eurMxn: 21, esFallback: false })),
+  EXCHANGE_RATES_FALLBACK: { usdMxn: 17.25, eurMxn: 18.5, esFallback: true },
+}));
+
 vi.mock("@/features/profit/domain/estadoResultados", () => ({
   buildEstadoResultados: vi.fn((emb, v, c) => ({ emb, v, c }))
 }));
@@ -67,8 +73,30 @@ describe("estadoResultadosDevengado service", () => {
     
     expect(res.emb.length).toBe(4); 
     expect(res.emb.every((e: any) => e.modo === "Marítimo")).toBe(true);
-    expect(res.emb[0].tipo_cambio_usd).toBe(1);
+    // Sin TC propio → respaldo DOF (18), nunca 1.
+    expect(res.emb[0].tipo_cambio_usd).toBe(18);
     expect(res.emb[1].tipo_cambio_usd).toBe(20);
+  });
+
+  it("Ola 5 · A22: usa el TC EUR del DOF como respaldo (no 1) en filas sin embarque", async () => {
+    mock.setTableResult("facturas", {
+      data: [{ id: "f1", expediente: null, total: 1000, moneda: "EUR", tipo_cambio: null }],
+      error: null,
+    });
+    mock.setTableResult("factura_notas_credito", {
+      data: [{ factura_id: "f1", monto: 100, moneda: "EUR", updated_at: "2024-01-05" }],
+      error: null,
+    });
+    mock.setTableResult("proveedor_facturas", {
+      data: [{ id: "pf1", embarque_id: null, total: 500, moneda: "EUR", tipo_cambio_usd: null }],
+      error: null,
+    });
+    mock.setTableResult("embarques", { data: [], error: null });
+
+    const res: any = await fetchEstadoResultadosDevengado({ organizationId: null, year: 2024, month: 1 });
+
+    expect(res.emb.every((e: any) => e.tipo_cambio_eur === 21)).toBe(true);
+    expect(res.emb.some((e: any) => e.tipo_cambio_eur === 1)).toBe(false);
   });
 
   it("maneja errores de supabase", async () => {

@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.471.0] - 2026-08-09
+- Ola 4 (cierre) — Guards de componente reales: `/inicio`, `/operaciones` y el alias legacy `/proveedores/:id` ahora se envuelven en `guarded(...)`; antes eran accesibles por URL directa a cualquier usuario autenticado aunque el sidebar los ocultara. Nuevo test `appRoutesGuards.test.ts` que exige `guarded(...)` en toda ruta no libre (excepto redirecciones puras) y presencia en `ROLE_ROUTE_MATRIX`.
+- Ola 4 (cierre) — `authorizeOrgRole`: el rol global `admin` ya no hace bypass de una democión a nivel organización (sólo `super_admin`, rol de plataforma, mantiene acceso cross-org); `super_admin` en `organization_members` se ignora. 5 pruebas Deno nuevas en `auth_test.ts` y test `AuthContext.rolPlataforma.test.tsx`.
+- Ola 5 (finanzas · A21) — Fuente única de tipos de cambio de respaldo: se exporta `EXCHANGE_RATES_FALLBACK` y el agregador del dashboard ejecutivo deja de codificar 17.25/18.5 por su cuenta.
+- Ola 5 (finanzas · A22) — EERR devengado: las filas sin embarque vinculado ya no valúan EUR a 1 MXN ni USD a 1 MXN; se usa el TC del DOF (`fetchExchangeRates`) como respaldo para facturas, notas de crédito y facturas de proveedor. Cubierto con test dedicado.
+
 ## [13.470.0] - 2026-08-09
 - Ola 4 (seguridad) — Rol efectivo por organización (A13): nuevas funciones `public.rol_efectivo()` y `public.has_any_role_efectivo()`; las 18 políticas de escritura que usaban `has_any_role` ahora exigen también que el rol dentro de la organización activa permita la operación, así una democión a nivel organización revoca la escritura de inmediato.
 - Ola 4 — `authorizeOrgRole` (edge functions) ya no cae al rol global cuando la membresía tiene rol propio: el rol de la organización manda.

@@ -11,6 +11,8 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
   LC_NO_AUTORIZADO: "No tienes permisos para realizar esta acción.",
   LC_ROL_LEGACY_BLOQUEADO:
     "Ese rol ya no se usa. Asigna uno del catálogo actual (por ejemplo, admin_org o coordinador_logistico).",
+  LC_ROL_PLATAFORMA_NO_PERMITIDO:
+    "El rol de super administrador es de plataforma: no puede asignarse dentro de una organización.",
   LC_FORBIDDEN_FACTURA_PROVEEDOR_DELETE:
     "No tienes permisos para eliminar facturas de proveedor.",
   LC_ORG_FORBIDDEN: "Este recurso pertenece a otra organización.",
