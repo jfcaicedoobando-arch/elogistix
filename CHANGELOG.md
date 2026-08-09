@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.473.2] - 2026-08-09
+- Ola 6 (fix) — `convertir_lead_rpc`: al crear el cliente desde un prospecto ahora se envían RFC, dirección, estado y CP como texto vacío. Antes fallaba con violación de NOT NULL en `clientes.rfc` en entornos sin valores por omisión (CI).
+
 ## [13.473.1] - 2026-08-09
 - CI — `deploy-gate.yml`: corrige advertencias de shellcheck (SC2006) por uso de backticks en mensajes de `GITHUB_STEP_SUMMARY`; se reemplazan por comillas simples.
 
