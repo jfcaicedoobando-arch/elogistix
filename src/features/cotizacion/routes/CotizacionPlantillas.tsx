@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   useCotizacionPlantillas,
   useEliminarPlantilla,
@@ -25,12 +24,13 @@ import {
 import { EditarPlantillaDialog } from "@/features/cotizacion/components/plantillas/EditarPlantillaDialog";
 import { PlantillasTabla } from "@/features/cotizacion/components/plantillas/PlantillasTabla";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 type FiltroVis = "todos" | PlantillaVisibilidad;
 
 export default function CotizacionPlantillas() {
   const navigate = useNavigate();
-  const { organizationId } = useAuth();
+  const { organizationId } = useOrgActiva();
   const { data: plantillas = [], isLoading } = useCotizacionPlantillas(organizationId);
   const eliminar = useEliminarPlantilla();
 

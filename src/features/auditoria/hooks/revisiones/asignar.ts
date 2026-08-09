@@ -10,6 +10,7 @@ import { resolveAuthUser } from "./query";
 import { queryKeys } from "@/lib/query";
 
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 /**
  * Asigna o reasigna un responsable (operador/encargado) a un hallazgo.
  * Si el responsable es el propio usuario y `tomar=true`, registra
@@ -17,7 +18,8 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
  */
 export function useAsignarResponsable() {
   const queryClient = useQueryClient();
-  const { user, organizationId } = useAuth();
+  const { user } = useAuth();
+  const { organizationId } = useOrgActiva();
 
   return useMutation({
     mutationFn: async (params: {

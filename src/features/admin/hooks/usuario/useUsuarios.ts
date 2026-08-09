@@ -11,6 +11,7 @@ import {
 import type { AppRole } from "@/types/appRole";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 export type { UserRow };
 
@@ -19,7 +20,8 @@ export type { UserRow };
  * `null` ⇒ super_admin viendo todas las organizaciones.
  */
 export function useUsuariosOrgScope(): string | null {
-  const { effectiveRole, organizationId } = useAuth();
+  const { effectiveRole } = useAuth();
+  const { organizationId } = useOrgActiva();
   return effectiveRole === "super_admin" ? null : organizationId ?? null;
 }
 

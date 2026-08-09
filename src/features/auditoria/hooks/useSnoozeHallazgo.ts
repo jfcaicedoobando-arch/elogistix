@@ -18,9 +18,11 @@ import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 import { useMutationWithFeedback } from "@/hooks/shared";
 import { todayLocalISO } from "@/lib/date/today";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 export function useSnoozeHallazgo() {
-  const { user, organizationId } = useAuth();
+  const { user } = useAuth();
+  const { organizationId } = useOrgActiva();
 
   return useMutationWithFeedback({
     mutationFn: async (params: {

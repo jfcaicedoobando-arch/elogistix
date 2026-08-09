@@ -13,6 +13,7 @@ import { queryKeys } from "@/lib/query";
 import { logger } from "@/lib/observability/logger";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 const CHUNK = 5;
 
@@ -29,7 +30,8 @@ export interface MarcarRevisadosBulkResult {
 
 export function useMarcarRevisadosBulk() {
   const queryClient = useQueryClient();
-  const { user, organizationId } = useAuth();
+  const { user } = useAuth();
+  const { organizationId } = useOrgActiva();
 
   return useMutation<MarcarRevisadosBulkResult, Error, MarcarRevisadosBulkInput>({
     mutationFn: async ({ hallazgos, accionTomada }) => {
