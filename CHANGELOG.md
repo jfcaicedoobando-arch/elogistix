@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.467.0] - 2026-08-09
+- Pruebas automatizadas anti-fuga entre organizaciones en reportes:
+  - Nueva suite RLS `test_rls_reportes_multi_tenant.sql` (registrada en la matriz de CI): valida aging CxC/CxP y libro de pagos con dos tenants y cuatro roles (admin_org, contador, customer_service y super_admin sin membresía). Verifica que nadie vea otra organización, que el administrador de plataforma sin organización activa reciba `LC_ORG_REQUERIDA` y que con organización elegida sólo vea ese tenant.
+  - Nuevos tests de contrato en frontend: `reportesOrgScope.test.ts` (la organización activa siempre viaja como `p_org`) y `useLibroPagos.orgScope.test.tsx` (el hook toma la organización del contexto y no reutiliza caché al cambiar de tenant).
+
 ## [13.466.0] - 2026-08-09
 - Seguridad (Ola 1 · C1/C2/A1): los reportes de antigüedad de CxC/CxP y el libro de pagos de tesorería ahora exigen organización explícita para el administrador de plataforma; ya no mezclan datos de todos los clientes.
 - `libro_pagos` acepta el parámetro de organización activa y valida que nadie consulte una organización ajena.
