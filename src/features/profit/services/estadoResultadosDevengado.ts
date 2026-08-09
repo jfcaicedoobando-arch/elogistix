@@ -12,6 +12,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
+import { fetchExchangeRates, EXCHANGE_RATES_FALLBACK } from "@/features/catalogos/services";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 import {
@@ -68,6 +69,21 @@ async function loadEmbarquesPorExpedientes(exps: string[]): Promise<Map<string, 
 
 const fallbackTC = (tc: number | null) => (tc && tc > 0 ? tc : 1);
 
+/**
+ * Ola 5 · A22 — Antes las filas sin embarque usaban `tipo_cambio_eur = 1`, lo
+ * que valuaba 1 EUR = 1 MXN y subestimaba ingresos/costos en euros. Ahora se
+ * usa el TC EUR del DOF (con fallback operativo compartido) como respaldo.
+ */
+type TcFallback = { usd: number; eur: number };
+
+async function tcFallbackDof(): Promise<TcFallback> {
+  const rates = await fetchExchangeRates().catch(() => EXCHANGE_RATES_FALLBACK);
+  return {
+    usd: rates.usdMxn > 0 ? rates.usdMxn : EXCHANGE_RATES_FALLBACK.usdMxn,
+    eur: rates.eurMxn > 0 ? rates.eurMxn : EXCHANGE_RATES_FALLBACK.eurMxn,
+  };
+}
+
 async function fetchFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<FacturaRow[]> {
   let q = supabase
     .from("facturas")
@@ -109,6 +125,7 @@ function ingresosDeFacturas(
   facturas: FacturaRow[],
   embPorExp: Map<string, EmbarqueER>,
   out: { embarques: EmbarqueER[]; ventas: ConceptoVentaER[] },
+  tc: TcFallback,
 ): void {
   for (const f of facturas) {
     const emb = f.expediente ? embPorExp.get(f.expediente) : undefined;
@@ -116,17 +133,21 @@ function ingresosDeFacturas(
     out.embarques.push({
       id,
       modo: emb?.modo ?? "Marítimo",
-      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(f.tipo_cambio)),
-      tipo_cambio_eur: emb?.tipo_cambio_eur ?? 1,
+      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(f.tipo_cambio)) ?? tc.usd,
+      tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
     });
     out.ventas.push({ embarque_id: id, descripcion: "Facturación", total: Number(f.total), moneda: String(f.moneda) });
   }
 }
 
-function ingresosDeNotas(ncs: NotaCreditoRow[], out: { embarques: EmbarqueER[]; ventas: ConceptoVentaER[] }): void {
+function ingresosDeNotas(
+  ncs: NotaCreditoRow[],
+  out: { embarques: EmbarqueER[]; ventas: ConceptoVentaER[] },
+  tc: TcFallback,
+): void {
   for (const nc of ncs) {
     const id = `nc-${nc.factura_id}`;
-    out.embarques.push({ id, modo: "Marítimo", tipo_cambio_usd: 1, tipo_cambio_eur: 1 });
+    out.embarques.push({ id, modo: "Marítimo", tipo_cambio_usd: tc.usd, tipo_cambio_eur: tc.eur });
     out.ventas.push({
       embarque_id: id,
       descripcion: "Notas de crédito",
@@ -140,6 +161,7 @@ function costosDeProveedorFacturas(
   pfacts: ProveedorFacturaRow[],
   embPorId: EmbarqueER[],
   out: { embarques: EmbarqueER[]; costos: ConceptoCostoER[] },
+  tc: TcFallback,
 ): void {
   for (const pf of pfacts) {
     const emb = pf.embarque_id ? embPorId.find((e) => e.id === pf.embarque_id) : undefined;
@@ -147,8 +169,8 @@ function costosDeProveedorFacturas(
     out.embarques.push({
       id,
       modo: emb?.modo ?? "Marítimo",
-      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(pf.tipo_cambio_usd)),
-      tipo_cambio_eur: emb?.tipo_cambio_eur ?? 1,
+      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(pf.tipo_cambio_usd)) ?? tc.usd,
+      tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
     });
     out.costos.push({
       embarque_id: id,
@@ -162,10 +184,11 @@ function costosDeProveedorFacturas(
 export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoResultados> {
   const { desde, hasta } = rangoMes(p.year, p.month);
 
-  const [facturas, ncs, pfacts] = await Promise.all([
+  const [facturas, ncs, pfacts, tc] = await Promise.all([
     fetchFacturasMes(p.organizationId, desde, hasta),
     fetchNotasCreditoMes(p.organizationId, desde, hasta),
     fetchProveedorFacturasMes(p.organizationId, desde, hasta),
+    tcFallbackDof(),
   ]);
 
   const exps = Array.from(new Set(facturas.map((f) => f.expediente).filter(Boolean) as string[]));
@@ -176,11 +199,11 @@ export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoR
   ]);
 
   const ventasBucket = { embarques: [] as EmbarqueER[], ventas: [] as ConceptoVentaER[] };
-  ingresosDeFacturas(facturas, embPorExp, ventasBucket);
-  ingresosDeNotas(ncs, ventasBucket);
+  ingresosDeFacturas(facturas, embPorExp, ventasBucket, tc);
+  ingresosDeNotas(ncs, ventasBucket, tc);
 
   const costosBucket = { embarques: [] as EmbarqueER[], costos: [] as ConceptoCostoER[] };
-  costosDeProveedorFacturas(pfacts, embPorId, costosBucket);
+  costosDeProveedorFacturas(pfacts, embPorId, costosBucket, tc);
 
   return buildEstadoResultados(
     [...ventasBucket.embarques, ...costosBucket.embarques],

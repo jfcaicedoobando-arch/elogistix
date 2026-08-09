@@ -12,7 +12,7 @@ import {
   fetchFlujoProyectado,
 } from "@/features/tesoreria/services";
 import { fetchPresupuestoVsReal } from "@/features/presupuesto/services";
-import { fetchExchangeRates } from "@/features/catalogos/services";
+import { fetchExchangeRates, EXCHANGE_RATES_FALLBACK } from "@/features/catalogos/services";
 import type { CobranzaRow, CxpRow } from "@/features/tesoreria/domain";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";
 import type { SnapshotEjecutivo, PuntoEERR } from "./types";
@@ -115,7 +115,7 @@ export async function fetchDashboardEjecutivo(
     fetchEerr({ organizationId, year, month }),
     fetchEerr({ organizationId, year: prevY, month: prevM }),
     fetchPresupuestoVsReal(periodo, organizationId),
-    fetchExchangeRates().catch(() => ({ usdMxn: 17.25, eurMxn: 18.5 })),
+    fetchExchangeRates().catch(() => EXCHANGE_RATES_FALLBACK),
     fetchTendencia12m(meses, fuente),
   ]);
   const tipoCambioUsd = tipoCambio.usdMxn;

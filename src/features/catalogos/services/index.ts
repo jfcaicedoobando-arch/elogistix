@@ -126,7 +126,12 @@ export async function deleteTipoContenedor(id: string): Promise<void> {
 
 // ─── Tipo de cambio (edge function) ──────────────────────────────────────────
 
-const EXCHANGE_RATES_FALLBACK: ExchangeRates = { usdMxn: 17.25, eurMxn: 18.5, esFallback: true };
+/**
+ * Fallback operativo (NO fiscal) cuando la edge `exchange-rates` no responde.
+ * Fuente única: cualquier consumidor debe importar esta constante en vez de
+ * volver a codificar 17.25/18.5 (Ola 5 · A21).
+ */
+export const EXCHANGE_RATES_FALLBACK: ExchangeRates = { usdMxn: 17.25, eurMxn: 18.5, esFallback: true };
 
 /**
  * @param fecha ISO `YYYY-MM-DD` opcional. Si se provee y es anterior a hoy,
