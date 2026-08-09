@@ -90,3 +90,19 @@ describe("agruparPorExpediente [agrupar.ts unit]", () => {
     expect(out[0].expediente).toBe("—");
   });
 });
+
+// Ola 5 · M5 — el flag `sinTc` se propaga al expediente completo.
+describe("agruparPorExpediente — sin TC", () => {
+  it("marca el grupo cuando al menos un embarque no tiene TC", () => {
+    const [g] = agruparPorExpediente([
+      { ...base, embarque_id: "e1", contenedor: "C1" },
+      { ...base, embarque_id: "e2", contenedor: "C2", sin_tc: true },
+    ]);
+    expect(g.sinTc).toBe(true);
+  });
+
+  it("no marca el grupo si todos los embarques tienen TC", () => {
+    const [g] = agruparPorExpediente([{ ...base }]);
+    expect(g.sinTc).toBe(false);
+  });
+});
