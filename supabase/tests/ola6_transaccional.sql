@@ -71,8 +71,9 @@ BEGIN
   ----------------------------------------------------------------------------
   -- M4: convertir_lead_rpc (atómico e idempotente)
   ----------------------------------------------------------------------------
-  INSERT INTO public.crm_etapas_pipeline (organization_id, nombre, tipo, orden, activa, probabilidad_default)
-  VALUES (v_org, 'Prospección OLA6', 'abierta', 1, true, 20)
+  INSERT INTO public.crm_etapas_pipeline (
+    organization_id, nombre, tipo, orden, activa, probabilidad_default, color, dias_seguimiento, crea_tarea_seguimiento
+  ) VALUES (v_org, 'Prospección OLA6', 'abierta'::public.crm_etapa_tipo, 1, true, 20, '#2563EB', 3, false)
   RETURNING id INTO v_etapa;
 
   INSERT INTO public.crm_leads (organization_id, empresa, estado)
@@ -97,8 +98,8 @@ BEGIN
   ----------------------------------------------------------------------------
   -- M15: eliminar_proforma_rpc bloquea proformas facturadas
   ----------------------------------------------------------------------------
-  INSERT INTO public.embarques (organization_id, cliente_id, expediente, estado, modo, tipo)
-  VALUES (v_org, v_cli, 'EXP-OLA6', 'Documentación'::public.estado_embarque,
+  INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
+  VALUES (v_org, v_cli, 'EXP-OLA6',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb;
 
