@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/hooks/shared";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { useBuscarEmbarquesPorTexto } from "@/features/cxp/hooks";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 interface Props {
   /** Embarque seleccionado (id) o null. */
@@ -22,7 +22,7 @@ interface Props {
 }
 
 export function EmbarqueAnticipoPicker({ value, expediente, onChange }: Props) {
-  const { organizationId } = useAuth();
+  const { organizationId } = useOrgActiva();
   const [term, setTerm] = useState("");
   const debounced = useDebounce(term, 300);
   const search = useBuscarEmbarquesPorTexto(debounced, organizationId, term.trim().length >= 2);

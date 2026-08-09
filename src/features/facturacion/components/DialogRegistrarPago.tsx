@@ -91,7 +91,13 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const esPpdTimbrada = factura.metodoPago === "PPD" && !!factura.uuidFiscal;
 
   const handleChange = <K extends keyof PagoFormValues>(k: K, v: PagoFormValues[K]) =>
-    setValues((s) => ({ ...s, [k]: v }));
+    setValues((s) => ({
+      ...s,
+      [k]: v,
+      // C4: al cambiar la moneda del cobro, la cuenta elegida deja de ser
+      // válida (el banco sólo acepta abonos en su propia moneda).
+      ...(k === "moneda" ? { cuentaBancariaId: "" } : null),
+    }));
 
   const handleGuardar = () => submit({
     facturaId: factura.id,

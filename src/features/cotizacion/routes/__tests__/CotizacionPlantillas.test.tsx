@@ -11,6 +11,10 @@ import CotizacionPlantillas from "@/features/cotizacion/routes/CotizacionPlantil
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
+vi.mock("@/lib/contexts/OrganizationContext", () => ({
+  useOrganization: () => ({ organizationId: "org-1" }),
+}));
+
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ organizationId: "org-1" }),
 }));

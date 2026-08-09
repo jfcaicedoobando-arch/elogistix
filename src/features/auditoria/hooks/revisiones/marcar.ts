@@ -10,9 +10,11 @@ import { resolveAuthUser } from "./query";
 import { queryKeys } from "@/lib/query";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 export function useMarcarRevisado() {
   const queryClient = useQueryClient();
-  const { user, organizationId } = useAuth();
+  const { user } = useAuth();
+  const { organizationId } = useOrgActiva();
 
   return useMutation({
     mutationFn: async (params: {

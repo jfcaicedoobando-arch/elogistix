@@ -8,10 +8,10 @@
  */
 import { useCallback } from "react";
 import { useCapturarFacturaEntrante } from "./useFacturasEntrantes";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { copiarArchivosEntranteAFactura } from "@/features/cxp/services/copiarArchivosEntrante";
 import { notifyBestEffortFallo } from "./useNuevaFacturaProveedorForm.bestEffort";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 interface Args {
   entrante: EntranteParaCaptura | null | undefined;
@@ -26,7 +26,7 @@ export function useCapturaEntranteWiring({
   // El submit del formulario ya notifica "Factura de proveedor capturada":
   // aquí silenciamos el toast del buzón para no mostrarlo doble.
   const capturar = useCapturarFacturaEntrante({ silencioso: true });
-  const { organizationId } = useAuth();
+  const { organizationId } = useOrgActiva();
 
 
   const embarqueInicial: EmbarqueSeleccionado | null =

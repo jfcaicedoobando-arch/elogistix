@@ -18,13 +18,15 @@ import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/Draf
 import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard/CotizacionSuccessDialog";
 import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
 import { PlantillaSelectorPaso1 } from "@/features/cotizacion/components/wizard/PlantillaSelectorPaso1";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 
 
 export default function NuevaCotizacion() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, organizationId } = useAuth();
+  const { user } = useAuth();
+  const { organizationId } = useOrgActiva();
   const { data: clientes = [] } = useClientesForSelect();
   const userId = user?.id ?? "";
 

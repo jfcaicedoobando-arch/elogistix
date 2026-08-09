@@ -4,7 +4,6 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import {
   fetchCatalogoClavesSat,
@@ -13,9 +12,10 @@ import {
   deleteCatalogoClaveSat,
 } from "@/features/configuracion/services/catalogoClavesSat";
 import { tasaFromTipo, type Draft, type Row } from "@/features/configuracion/components/CatalogoClavesSATCard.constants";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 export function useCatalogoClavesSATController() {
-  const { organizationId } = useAuth();
+  const { organizationId } = useOrgActiva();
   const qc = useQueryClient();
 
   const { data: rows = [], isLoading } = useQuery<Row[]>({

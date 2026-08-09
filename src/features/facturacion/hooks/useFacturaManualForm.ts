@@ -6,7 +6,6 @@
  * v13.313.0
  */
 import { useMemo, useState } from "react";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFacturaManual";
 import { useClientesFiscalOpts, type ClienteFiscalOpt } from "@/features/facturacion/hooks/useClientesFiscalOpts";
@@ -16,6 +15,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { DatosFiscalesValue } from "@/features/facturacion/components/FacturaManualDatosFiscales";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 /**
  * Serie oficial por moneda. La numeración fiscal es responsabilidad del sistema
@@ -56,7 +56,7 @@ function useFaltantesTimbrar(
 }
 
 export function useFacturaManualForm(open: boolean, onClose?: () => void) {
-  const { organizationId } = useAuth();
+  const { organizationId } = useOrgActiva();
   const tasaIva = useTasaIVA();
   const crear = useCrearFacturaManual();
   const validarLimite = useValidarLimiteCredito();

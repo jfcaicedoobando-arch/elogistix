@@ -6,6 +6,7 @@ export * from '@/features/search/hooks/useGlobalSearch';
 export * from './useDebounce';
 export * from './useListPageState';
 export * from './useOrgFilter';
+export * from './useOrgActiva';
 export * from './usePermissions';
 export * from './useTabsParam';
 export * from './useToast';

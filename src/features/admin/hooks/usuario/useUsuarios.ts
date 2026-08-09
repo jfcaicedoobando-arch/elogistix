@@ -10,17 +10,21 @@ import {
 } from '@/features/admin/services/usuario';
 import type { AppRole } from "@/types/appRole";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 export type { UserRow };
 
 /**
  * Organización a la que se acota el listado (U-01).
- * `null` ⇒ super_admin viendo todas las organizaciones.
+ *
+ * A2/C1: el super admin también queda acotado al tenant elegido en el
+ * `OrgSwitcher`. Sólo devuelve `null` cuando no hay tenant activo (la consola
+ * de plataforma bloquea los módulos operativos en ese estado), para no listar
+ * usuarios de todas las organizaciones por accidente.
  */
 export function useUsuariosOrgScope(): string | null {
-  const { effectiveRole, organizationId } = useAuth();
-  return effectiveRole === "super_admin" ? null : organizationId ?? null;
+  const { organizationId } = useOrgActiva();
+  return organizationId ?? null;
 }
 
 export function useUsuarios(opciones?: { enabled?: boolean }) {

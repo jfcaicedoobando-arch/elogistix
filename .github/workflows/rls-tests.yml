@@ -430,6 +430,9 @@ jobs:
       - name: Guard de estados - guard_estado_factura
         run: $PSQL -f supabase/tests/guard_estado_factura.sql
 
+      - name: Guard de estados - guard_estado_cotizacion (C5 + A3)
+        run: $PSQL -f supabase/tests/guard_estado_cotizacion.sql
+
   types-drift:
     name: Drift types.ts (esquema <-> tipos TS)
     runs-on: ubuntu-24.04

@@ -7,7 +7,6 @@
  */
 import { FileCode2, FileText, Paperclip } from "lucide-react";
 import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   useAdjuntarArchivoCfdiFactura,
   useQuitarArchivoCfdiFactura,
@@ -16,6 +15,7 @@ import { useEntranteDeFactura } from "@/features/cxp/hooks/useEntranteDeFactura"
 import { AdjuntoRow } from "@/features/cxp/components/InfoFacturaSection.parts";
 import { AdjuntosDelBuzon } from "./AdjuntosDelBuzon";
 import type { FacturaCxP, TipoAdjuntoCfdi } from "@/features/cxp/services";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 interface Props {
   factura: FacturaCxP;
@@ -23,7 +23,7 @@ interface Props {
 }
 
 export function DocumentosProveedorSection({ factura: f, canEdit = false }: Props) {
-  const { organizationId } = useAuth();
+  const { organizationId } = useOrgActiva();
   const adjuntar = useAdjuntarArchivoCfdiFactura();
   const quitar = useQuitarArchivoCfdiFactura();
   const puedeEditarAdjuntos = canEdit && f.estado !== "Cancelada";

@@ -38,7 +38,11 @@ interface Props {
 const SIN_CUENTA = "sin-cuenta";
 
 export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
-  const cuentaSel = cuentas.find((c) => c.id === values.cuentaBancariaId) ?? null;
+  // C4: sólo cuentas en la MISMA moneda del cobro. Antes se listaban todas y un
+  // cobro en USD podía abonarse a una cuenta MXN con la cifra en dólares.
+  const cuentasCompatibles = cuentas.filter((c) => c.moneda === values.moneda);
+  const cuentaSel = cuentasCompatibles.find((c) => c.id === values.cuentaBancariaId) ?? null;
+  const seleccionInvalida = Boolean(values.cuentaBancariaId) && !cuentaSel;
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1">
@@ -84,13 +88,23 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
           <SelectTrigger id="cobro-cuenta"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value={SIN_CUENTA}>No registrar en banco todavía</SelectItem>
-            {cuentas.map((c) => (
+            {cuentasCompatibles.map((c) => (
               <SelectItem key={c.id} value={c.id}>{etiquetaCuenta(c)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
+        {cuentasCompatibles.length === 0 && (
+          <p className="text-label text-muted-foreground">
+            No hay cuentas bancarias en {values.moneda}. Registra el cobro y concílialo después.
+          </p>
+        )}
+        {seleccionInvalida && (
+          <p className="text-label text-destructive">
+            La cuenta elegida no es en {values.moneda}. Selecciona otra cuenta.
+          </p>
+        )}
         <p className="text-label text-muted-foreground">
-          {values.cuentaBancariaId
+          {cuentaSel
             ? "Se registrará el depósito conciliado en esa cuenta y el saldo subirá."
             : "El cobro entrará al banco cuando concilies el estado de cuenta."}
         </p>

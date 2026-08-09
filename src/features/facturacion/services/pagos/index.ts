@@ -87,7 +87,10 @@ export async function registrarPagoFactura(
       fechaPago: input.fecha_pago,
       monto: input.monto,
       moneda: input.moneda as "MXN" | "USD" | "EUR",
-      tipoCambioUsd: input.tipo_cambio > 0 ? input.tipo_cambio : null,
+      // C4: `tipo_cambio` aquí es el ratio pago→factura, NO el TC MXN/USD del
+      // DOF. Pasarlo al movimiento bancario descuadraba el saldo; el abono se
+      // registra sólo si la cuenta es de la misma moneda que el cobro.
+      tipoCambioUsd: null,
       referencia: input.referencia,
       userId: created_by,
     });
