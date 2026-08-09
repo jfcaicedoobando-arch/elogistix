@@ -9,6 +9,7 @@ import {
   type CxcAgingTotals,
 } from "@/features/cxc/services/cxcAging";
 import { queryKeys } from "@/lib/query";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 
 export interface UseCxcAgingResult {
   data: CxcAgingRow[] | undefined;
@@ -29,9 +30,10 @@ export interface UseCxcAgingResult {
  * Devuelve las filas ya filtradas por la moneda activa.
  */
 export function useCxcAging(fecha?: string): UseCxcAgingResult {
+  const { organizationId } = useOrgFilter();
   const q = useQuery({
-    queryKey: queryKeys.cxc.aging(fecha),
-    queryFn: () => fetchCxcAging(fecha),
+    queryKey: [...queryKeys.cxc.aging(fecha), organizationId],
+    queryFn: () => fetchCxcAging(fecha, organizationId),
     staleTime: 60_000,
   });
 

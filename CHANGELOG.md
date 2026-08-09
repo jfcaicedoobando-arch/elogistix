@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.466.0] - 2026-08-09
+- Seguridad (Ola 1 · C1/C2/A1): los reportes de antigüedad de CxC/CxP y el libro de pagos de tesorería ahora exigen organización explícita para el administrador de plataforma; ya no mezclan datos de todos los clientes.
+- `libro_pagos` acepta el parámetro de organización activa y valida que nadie consulte una organización ajena.
+- Helpers de autorización en base de datos endurecidos para fallar cerrado cuando no hay organización resuelta.
+- `ProtectedRoute` fail-closed: sin rol resuelto ya no se concede acceso a rutas con roles permitidos.
+
 ## [13.465.0] - 2026-08-08
 - Super admin sin organización: el administrador de la plataforma ya **no** aterriza automáticamente en el primer tenant alfabético (antes caía en "Chino Cochino"). Ahora arranca en modo **Plataforma · Libre Carga** sin organización activa.
 - Nuevo selector de contexto en el sidebar con la opción "Plataforma · Libre Carga" y la lista de organizaciones cliente.

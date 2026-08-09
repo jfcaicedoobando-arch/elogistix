@@ -27,8 +27,9 @@ export function ProtectedRoute({ children, allowedRoles, inline = false }: Prote
     !loading &&
     Boolean(user) &&
     Boolean(allowedRoles) &&
-    Boolean(effectiveRole) &&
-    !anyRoleSatisfies(allowedRoles as AppRole[], effectiveRole as AppRole);
+    // A1 (fail-closed): sin rol resuelto NO se concede acceso.
+    (!effectiveRole ||
+      !anyRoleSatisfies(allowedRoles as AppRole[], effectiveRole as AppRole));
 
   // Aviso al usuario por qué fue redirigido, en lugar de un silencio total.
   useEffect(() => {

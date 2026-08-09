@@ -8596,7 +8596,10 @@ export type Database = {
         Args: { p_proforma_id: string }
         Returns: number
       }
-      libro_pagos: { Args: { p_desde: string; p_hasta: string }; Returns: Json }
+      libro_pagos: {
+        Args: { p_desde: string; p_hasta: string; p_org?: string }
+        Returns: Json
+      }
       limpiar_cancellation_status_verificado: {
         Args: { p_factura_id: string; p_remote_cancellation_status: string }
         Returns: Json
