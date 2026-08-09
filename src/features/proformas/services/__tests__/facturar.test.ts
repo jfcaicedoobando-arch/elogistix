@@ -59,21 +59,25 @@ describe("marcarProformaFacturada", () => {
     expect(mock.tableCalls.some((c) => c.table === "proformas" && c.ops.includes("update"))).toBe(true);
   });
 
-  it("no crea facturas si ambos totales son 0, pero igual marca facturada", async () => {
+  // A5 (v13.469.0): antes quedaba "facturada" con factura_id NULL y la venta
+  // nunca entraba a cartera. Ahora se rechaza de tajo.
+  it("rechaza marcar facturada si ambos totales son 0 y no toca nada", async () => {
     mock.setTableResult("proformas", {
       data: proformaRow({ total_usd: 0, total_mxn: 0 }),
       error: null,
     });
-    await marcarProformaFacturada({
-      proformaId: "prof-1",
-      folioFacturaExterna: "F-0",
-      fechaFacturacion: "2026-05-01",
-    });
+    await expect(
+      marcarProformaFacturada({
+        proformaId: "prof-1",
+        folioFacturaExterna: "F-0",
+        fechaFacturacion: "2026-05-01",
+      }),
+    ).rejects.toThrow("LC_PROFORMA_TOTAL_CERO");
     const insertedFacturas = mock.tableCalls.filter(
       (c) => c.table === "facturas" && c.ops.includes("insert"),
     );
     expect(insertedFacturas.length).toBe(0);
-    expect(mock.tableCalls.some((c) => c.table === "proformas" && c.ops.includes("update"))).toBe(true);
+    expect(mock.tableCalls.some((c) => c.table === "proformas" && c.ops.includes("update"))).toBe(false);
   });
 
   it("propaga error al leer la proforma", async () => {
