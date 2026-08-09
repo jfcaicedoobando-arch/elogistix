@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.469.1] - 2026-08-09
+- Pruebas SQL en CI:
+  - `test_rls_reportes_multi_tenant.sql`: el helper contaba con `SELECT count(*) FROM (SELECT rpc(...))`, y Postgres descartaba la llamada a la RPC (columna escalar sin usar), así que "la llamada NO fue rechazada" era un falso rojo. Ahora se fuerza la evaluación con un CTE `MATERIALIZED`.
+  - `guard_estado_cotizacion.sql`: el fixture insertaba `clientes.razon_social` (columna inexistente) y omitía campos obligatorios; se corrigió a `nombre`/`rfc`/`email` y `cotizaciones.folio/modo/tipo`.
+
 ## [13.469.0] - 2026-08-09
 - **Ola 3** (consolidación de flujos críticos):
   - A4 · Reapertura de embarques: se elimina el RPC duplicado `reabrir_embarque_con_motivo` (no desactivaba el bypass de transición, así que fallaba en silencio) y todo el flujo usa el canónico `reabrir_embarque` con motivo, correo del usuario y clave de idempotencia.

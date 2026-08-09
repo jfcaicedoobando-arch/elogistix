@@ -13,12 +13,14 @@ BEGIN
   VALUES ('TEST GUARD COT', 'TGC000000XX0', 'basico', true)
   RETURNING id INTO v_org;
 
-  INSERT INTO public.clientes (organization_id, nombre, razon_social)
-  VALUES (v_org, 'CLIENTE GUARD COT', 'CLIENTE GUARD COT')
+  -- `clientes` no tiene `razon_social`; el nombre fiscal vive en `nombre`.
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org, 'CLIENTE GUARD COT', 'XAXX010101000', 'guard-cot@test.local')
   RETURNING id INTO v_cli;
 
-  INSERT INTO public.cotizaciones (organization_id, cliente_id, estado)
-  VALUES (v_org, v_cli, 'Borrador'::public.estado_cotizacion)
+  INSERT INTO public.cotizaciones (organization_id, cliente_id, estado, folio, modo, tipo)
+  VALUES (v_org, v_cli, 'Borrador'::public.estado_cotizacion, 'COT-GUARD-0001',
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_cot;
 
   -- Borrador → Vencida (ya permitido)

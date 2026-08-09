@@ -17,6 +17,20 @@ BEGIN;
 
 \i supabase/tests/rls/_helpers.sql
 
+-- OJO: `SELECT count(*) FROM (SELECT rpc(...)) _t` NO ejecuta la RPC — el
+-- planner descarta la columna escalar no usada y el test daba falso rojo/verde.
+-- Se envuelve en un CTE MATERIALIZED para forzar la evaluación real.
+CREATE OR REPLACE FUNCTION pg_temp.contar_sql(_sql text)
+RETURNS int LANGUAGE plpgsql AS $$
+DECLARE
+  v_count int;
+BEGIN
+  EXECUTE 'WITH _q AS MATERIALIZED (' || _sql || ') SELECT count(*) FROM _q'
+    INTO v_count;
+  RETURN v_count;
+END;
+$$;
+
 -- Espera que el SQL falle (42501 / P0001) con un texto contenido en el mensaje.
 CREATE OR REPLACE FUNCTION pg_temp.assert_falla_con(_sql text, _needle text, _msg text)
 RETURNS void LANGUAGE plpgsql AS $$
@@ -24,7 +38,7 @@ DECLARE
   v_msg text;
 BEGIN
   BEGIN
-    EXECUTE 'SELECT count(*) FROM (' || _sql || ') _t';
+    PERFORM pg_temp.contar_sql(_sql);
   EXCEPTION
     WHEN insufficient_privilege OR raise_exception THEN
       GET STACKED DIAGNOSTICS v_msg = MESSAGE_TEXT;
@@ -44,7 +58,7 @@ DECLARE
   v_count int;
 BEGIN
   BEGIN
-    EXECUTE 'SELECT count(*) FROM (' || _sql || ') _t' INTO v_count;
+    v_count := pg_temp.contar_sql(_sql);
   EXCEPTION
     WHEN insufficient_privilege OR raise_exception THEN
       RETURN;
