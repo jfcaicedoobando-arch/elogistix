@@ -91,7 +91,7 @@ export const appRoutes = (
     <Route path="/cxp/por-capturar" element={<RedirectPreserveSearch to="/compras/por-capturar" />} />
     <Route path="/cxp/por-pagar" element={<RedirectPreserveSearch to="/compras/por-pagar" />} />
     <Route path="/proveedores" element={<RedirectPreserveSearch to="/compras/proveedores" />} />
-    <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
+    <Route path="/proveedores/:id" element={guarded(PROVEEDORES_ROLES, <ProveedorDetalle />)} />
 
     {/* v13.145.10 — bandeja eliminada; se redirige a /proformas con filtro Aceptada. */}
     <Route path="/facturacion/por-emitir" element={<Navigate to="/proformas?estado=aceptada" replace />} />
