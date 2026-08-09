@@ -74,6 +74,19 @@ DECLARE
   v_ajenas int;
 BEGIN
   -- ── Seed de dos tenants ──────────────────────────────────────────────────
+  -- En CI los FK contra auth.users se eliminan (_ci_post_migrate). Contra una
+  -- base real sí existen, así que sembramos usuarios mínimos si se permite.
+  -- Todo corre dentro de la transacción y termina en ROLLBACK.
+  BEGIN
+    INSERT INTO auth.users(id, email) VALUES
+      (u_a, 'rep-a@test.local'), (u_cont, 'rep-cont@test.local'),
+      (u_view, 'rep-cs@test.local'), (u_b, 'rep-b@test.local'),
+      (u_sa, 'rep-sa@test.local')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN
+    NULL;  -- CI sin GoTrue: los FK ya no existen, no hace falta sembrar.
+  END;
+
   INSERT INTO public.organizations(id, nombre) VALUES
     (org_a, 'RLS REP A'), (org_b, 'RLS REP B');
 
