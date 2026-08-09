@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.472.0] - 2026-08-09
+- Ola 5 (finanzas · M8) — El sugeridor de conciliación ya no cruza monedas: resuelve la moneda de la cuenta bancaria del movimiento y sólo ofrece pagos/cobros en esa misma moneda (antes un pago de 1,000 USD se sugería para un cargo de 1,000 MXN). Nuevo test `sugerirCandidatos.moneda.test.ts`.
+- Ola 5 (finanzas · A6/B9) — El contador de movimientos pendientes de tesorería excluye movimientos borrados (soft delete).
+- Ola 5 (finanzas · A7) — Presupuesto vs Real: los gastos en moneda extranjera sin tipo de cambio capturado se excluyen del real en vez de contarse 1:1, y se reportan en la vista con un aviso (`gastos_sin_tc_count`).
+- Ola 5 (finanzas · M5) — Proyección de facturación: cuando el embarque no trae TC, la fila se marca "Sin TC" (badge en la tabla) y ya no se asume 1 USD = 1 MXN.
+- Ola 5 (finanzas · A10) — Dashboard ejecutivo: si el TC del DOF no está disponible, el tablero muestra un aviso "Tipo de cambio no disponible" con el TC de respaldo usado y se reporta a Sentry.
+
 ## [13.471.1] - 2026-08-09
 - CI — Auditoría de migraciones (H4): la migración de Ola 4 creaba las políticas `Agente escribe own tarifas` y `Agente borra solo tarifas no aprobadas` sin `DROP POLICY IF EXISTS` previo; se agregó para hacerla reejecutable.
 
