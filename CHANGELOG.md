@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.467.2] - 2026-08-09
+- Mensajes amigables para los códigos `LC_ORG_AJENA`, `LC_ORG_REQUERIDA` y `LC_SIN_ORG` (faltaban en el catálogo y rompían el test de cobertura de errores).
+
 ## [13.467.1] - 2026-08-09
 - Fix: `saldo_factura_bruto` devolvía 0 cuando la ejecutaba un proceso interno sin usuario autenticado (endurecimiento de la Ola 1), lo que hacía que el guard `LC_NC_EXCEDE_SALDO` rechazara notas de crédito legítimas creadas por triggers/procesos del backend y rompía la suite `test_rls_financiero_critico`. El filtro por organización ahora sólo aplica cuando existe `auth.uid()`; para usuarios reales el aislamiento multi-tenant no cambia.
 
