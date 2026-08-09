@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.470.0] - 2026-08-09
+- Ola 4 (seguridad) — Rol efectivo por organización (A13): nuevas funciones `public.rol_efectivo()` y `public.has_any_role_efectivo()`; las 18 políticas de escritura que usaban `has_any_role` ahora exigen también que el rol dentro de la organización activa permita la operación, así una democión a nivel organización revoca la escritura de inmediato.
+- Ola 4 — `authorizeOrgRole` (edge functions) ya no cae al rol global cuando la membresía tiene rol propio: el rol de la organización manda.
+- Ola 4 — `AuthContext` ignora `super_admin` proveniente de `organization_members` (M1): es un rol de plataforma y no puede otorgarse desde una organización.
+- Ola 4 — Matriz de rutas fail-closed (M11): lo que no está en `ROLE_ROUTE_MATRIX` se deniega (sólo `/` y `/ayuda` son libres), se agregan guards explícitos para `/inicio` y `/operaciones` (roles internos), alias legacy (`/cxp`, `/proveedores`, `/reportes`, `/sistema/bitacora`) y `/admin/*` reservado a `super_admin`. Nuevo test `roleRouteMatrix.failClosed.test.ts`.
+
+
+
 ## [13.469.5] - 2026-08-09
 - Fix test intermitente de `DraftRestoreBanner`: se congela el reloj con `withFrozenClock("2026-08-09T12:00:00Z")` para que el cálculo relativo no dependa de la hora real del runner ni de su zona horaria. Antes, en CI ejecutándose cerca de medianoche en `America/Mexico_City`, un draft de 3 h atrás caía en el día anterior y mostraba "ayer" en lugar de "hace 3 h".
 
