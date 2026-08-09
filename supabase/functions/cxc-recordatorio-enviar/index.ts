@@ -60,13 +60,22 @@ async function loadFactura(
   adminClient: SupabaseClient,
   facturaId: string,
 ): Promise<{ factura: FacturaRecordatorio | null; error: string | null }> {
+  // A8 (v13.469.0): `facturas` no tiene columna `saldo`; se calcula con la RPC
+  // `saldo_factura` (pagos aplicados y notas de crédito vigentes).
   const { data, error } = await adminClient
     .from('facturas')
-    .select('id, organization_id, cliente_id, numero, serie, folio, cliente_nombre, total, saldo, moneda, fecha_vencimiento')
+    .select('id, organization_id, cliente_id, numero, serie, folio, cliente_nombre, total, moneda, fecha_vencimiento')
     .eq('id', facturaId)
     .maybeSingle();
   if (error) return { factura: null, error: `Error al leer factura: ${error.message}` };
-  return { factura: data as FacturaRecordatorio | null, error: null };
+  if (!data) return { factura: null, error: null };
+
+  const { data: saldo, error: errSaldo } = await adminClient.rpc('saldo_factura', {
+    p_factura_id: facturaId,
+  });
+  if (errSaldo) return { factura: null, error: `Error al calcular el saldo: ${errSaldo.message}` };
+
+  return { factura: { ...(data as Omit<FacturaRecordatorio, 'saldo'>), saldo: Number(saldo ?? 0) }, error: null };
 }
 
 async function authorizeOrg(
