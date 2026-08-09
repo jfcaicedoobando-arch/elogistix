@@ -39,6 +39,7 @@ const baseInput: TarifaInput = {
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
 });
 
 describe("costeo/services/tarifas", () => {
@@ -164,31 +165,27 @@ describe("costeo/services/tarifas", () => {
   });
 
   describe("updateTarifaConRecargos", () => {
-    it("hace update + delete recargos previos + reinsert", async () => {
-      // M7: updateTarifaConRecargos lee la org del padre antes de reinsertar recargos.
-      mock.setTableResult("costeo_tarifas", { data: { organization_id: ORG }, error: null });
-      mock.setTableResult("costeo_tarifa_recargos", { data: null, error: null });
+    it("Ola 6 · M7: usa la RPC atómica con tarifa + recargos filtrados", async () => {
+      mock.setRpcResult("actualizar_tarifa_con_recargos_rpc", { data: null, error: null });
 
-      await updateTarifaConRecargos("t7", baseInput);
+      await updateTarifaConRecargos("t7", {
+        ...baseInput,
+        recargos: [...baseInput.recargos, { concepto: "  ", monto: 0 }],
+      });
 
-      const tarifaOps = mock.tableCalls
-        .filter((c) => c.table === "costeo_tarifas")
-        .flatMap((c) => c.ops);
-      expect(tarifaOps).toContain("update");
-
-      const recargoOps = mock.tableCalls.filter((c) => c.table === "costeo_tarifa_recargos");
-      // Esperamos al menos una llamada de delete y una de insert.
-      const allOps = recargoOps.flatMap((c) => c.ops);
-      expect(allOps).toContain("delete");
-      expect(allOps).toContain("insert");
+      const call = mock.rpcCalls.find((c) => c.fn === "actualizar_tarifa_con_recargos_rpc");
+      expect(call).toBeDefined();
+      const args = call!.args as { p_id: string; p_tarifa: Record<string, unknown>; p_recargos: unknown[] };
+      expect(args.p_id).toBe("t7");
+      expect(args.p_tarifa.flete_base).toBe(2500);
+      // El recargo vacío/monto 0 no viaja a la RPC.
+      expect(args.p_recargos).toHaveLength(2);
+      expect(args.p_recargos[0]).toMatchObject({ concepto: "BAF", lado: "origen", incluido_en_total: true });
     });
 
-    it("forza moneda=USD en el update", async () => {
-      mock.setTableResult("costeo_tarifas", { data: { organization_id: ORG }, error: null });
-      mock.setTableResult("costeo_tarifa_recargos", { data: null, error: null });
-      await updateTarifaConRecargos("t8", baseInput);
-      const payload = mock.getMutationPayload("costeo_tarifas", "update") as Record<string, unknown>;
-      expect(payload.moneda).toBe("USD");
+    it("propaga el error de la RPC", async () => {
+      mock.setRpcResult("actualizar_tarifa_con_recargos_rpc", { data: null, error: { message: "boom" } });
+      await expect(updateTarifaConRecargos("t8", baseInput)).rejects.toBeTruthy();
     });
   });
 

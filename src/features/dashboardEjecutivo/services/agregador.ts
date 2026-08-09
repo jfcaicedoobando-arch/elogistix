@@ -5,6 +5,7 @@
  */
 import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estadoResultadosDevengado";
 import { fetchEstadoResultadosMes } from "@/features/profit/services/estadoResultados";
+import { logger } from "@/lib/observability/logger";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchSaldosCuentas,
@@ -124,9 +125,11 @@ export async function fetchDashboardEjecutivo(
   // Sentry para detectar caídas prolongadas de la fuente DOF.
   const tcEsFallback = tipoCambio.esFallback === true;
   if (tcEsFallback) {
-    void import("@sentry/react").then((Sentry) => {
-      Sentry.captureMessage("dashboard_ejecutivo.tc_no_disponible", "warning");
-    }).catch(() => undefined);
+    logger.warn(
+      "dashboardEjecutivo",
+      "TC del DOF no disponible: se usó el tipo de cambio de respaldo",
+      { periodo, tipoCambioUsd },
+    );
   }
   // A1/A2 fix (v13.300.49): tesorería y flujo reciben el TC para
   // convertir a MXN los saldos y flujos en USD.

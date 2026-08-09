@@ -1,5 +1,9 @@
 /**
  * Cotizaciones — Conversión: Prospecto → Cliente.
+ *
+ * Ola 6 · M3: alta del cliente + actualización de la cotización en una sola
+ * transacción idempotente (`convertir_prospecto_a_cliente_rpc`). Antes, si el
+ * update fallaba, quedaba un cliente duplicado huérfano.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -20,44 +24,39 @@ export interface ProspectoAClienteInput {
   user: { id: string; email?: string | null } | null;
 }
 
-export async function convertirProspectoACliente(input: ProspectoAClienteInput) {
-  const { cotizacionId, clienteData, user } = input;
-  const { data: clienteCreado, error: errorCliente } = await supabase
-    .from("clientes")
-    .insert({
-      nombre: clienteData.nombre,
-      contacto: clienteData.contacto,
-      email: clienteData.email,
-      telefono: clienteData.telefono,
-      rfc: clienteData.rfc || "",
-      direccion: clienteData.direccion || "",
-      ciudad: clienteData.ciudad || "",
-      estado: clienteData.estado || "",
-      cp: clienteData.cp || "",
-    })
-    .select()
-    .single();
-  if (errorCliente) throw errorCliente;
+export interface ProspectoAClienteResult {
+  id: string;
+  nombre: string;
+  creado: boolean;
+}
 
-  const { error: errorUpdate } = await supabase
-    .from("cotizaciones")
-    .update({
-      cliente_id: clienteCreado.id,
-      cliente_nombre: clienteCreado.nombre,
-      es_prospecto: false,
-    })
-    .eq("id", cotizacionId);
-  if (errorUpdate) throw errorUpdate;
+export async function convertirProspectoACliente(
+  input: ProspectoAClienteInput,
+): Promise<ProspectoAClienteResult> {
+  const { cotizacionId, clienteData, user } = input;
+  const { data, error } = await supabase.rpc("convertir_prospecto_a_cliente_rpc", {
+    p_cotizacion_id: cotizacionId,
+    p_cliente: clienteData,
+  });
+  if (error) throw error;
+
+  const payload = (data ?? {}) as { cliente_id?: string; nombre?: string; creado?: boolean };
+  if (!payload.cliente_id) throw new Error("No se pudo convertir el prospecto a cliente");
+  const resultado: ProspectoAClienteResult = {
+    id: payload.cliente_id,
+    nombre: payload.nombre ?? clienteData.nombre,
+    creado: payload.creado === true,
+  };
 
   if (user) {
     await registrarActividad({
       modulo: "cotizaciones",
       accion: "convertir_prospecto_a_cliente",
       entidadId: cotizacionId,
-      entidadNombre: clienteCreado.nombre,
-      detalles: { cliente_id: clienteCreado.id },
+      entidadNombre: resultado.nombre,
+      detalles: { cliente_id: resultado.id, cliente_creado: resultado.creado },
     });
   }
 
-  return clienteCreado;
+  return resultado;
 }
