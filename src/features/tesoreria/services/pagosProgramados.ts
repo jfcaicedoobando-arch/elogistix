@@ -9,6 +9,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
 import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
+import { sumarPagosEnMonedaFactura, type PagoCxpParcial } from "@/features/cxp/services/proveedorFacturas.helpers";
 
 export interface FacturaProgramableRow extends FacturaProgramable {
   estado: string;
