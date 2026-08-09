@@ -88,33 +88,22 @@ export interface EliminarProformaParams {
 }
 
 export async function eliminarProforma(params: EliminarProformaParams): Promise<void> {
-  const { data: proformaPrevia } = await supabase
-    .from("proformas")
-    .select("numero")
-    .eq("id", params.proformaId)
-    .maybeSingle();
-
-  const { error: errUpd } = await supabase
-    .from("conceptos_venta")
-    .update({ estado_facturacion: "pendiente", proforma_id: null })
-    .eq("proforma_id", params.proformaId);
-  if (errUpd) throw errUpd;
-
-  // v13.290.0 (Papelera Fase 3): soft-delete vía RPC para que la proforma
-  // sea recuperable desde `/admin/papelera`.
-  const { error: errDel } = await supabase.rpc("soft_delete_record", {
-    _table: "proformas",
-    _id: params.proformaId,
+  // Ola 6 · M15: RPC atómica que valida que la proforma NO esté facturada,
+  // libera sus conceptos y hace el soft-delete en una sola transacción.
+  const { data, error } = await supabase.rpc("eliminar_proforma_rpc", {
+    p_proforma_id: params.proformaId,
   });
-  if (errDel) throw errDel;
+  if (error) throw error;
+  const payload = (data ?? {}) as { numero?: string | null; eliminada?: boolean };
+  if (payload.eliminada === false) return;
 
   // B-3: NO actualizar embarques.tiene_proforma desde el cliente.
-  // El trigger DB `trg_sync_embarque_tiene_proforma` lo maneja automáticamente al eliminar la proforma.
+  // El trigger DB `trg_sync_embarque_tiene_proforma` lo maneja automáticamente.
   await registrarActividad({
     modulo: "facturacion",
     accion: "Eliminó proforma",
     entidadId: params.proformaId,
-    entidadNombre: proformaPrevia?.numero ?? null,
+    entidadNombre: payload.numero ?? null,
     detalles: { embarque_id: params.embarqueId },
   });
 }
