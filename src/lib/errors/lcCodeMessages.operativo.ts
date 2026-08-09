@@ -87,6 +87,8 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
   LC_PROFORMA_TC_REQUERIDO:
     "Captura el tipo de cambio antes de convertir la proforma.",
   LC_PROFORMA_YA_FACTURADA: "La proforma ya fue facturada.",
+  LC_PROFORMA_TOTAL_CERO:
+    "La proforma está en ceros: revisa los conceptos antes de marcarla como facturada.",
   LC_PROFORMA_FACTURADA_NO_ELIMINABLE:
     "No puedes eliminar una proforma que ya fue facturada.",
   LC_PROFORMA_MONEDA_NO_SOPORTADA:
