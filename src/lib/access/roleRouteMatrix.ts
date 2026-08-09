@@ -78,13 +78,35 @@ export const AUDITORIA_ROLES: AppRole[] = ["admin", "admin_org", "super_admin", 
 export const USUARIOS_ROLES: AppRole[] = ["admin", "admin_org", "super_admin"];
 export const CONFIGURACION_ROLES: AppRole[] = ["admin", "admin_org", "contador", "super_admin"];
 
+/**
+ * M11 — `/inicio` y `/operaciones` ya no son de acceso libre. Se listan con
+ * todos los roles internos (los portales `cliente` y `agente_carga` viven en
+ * `/portal` y `/agente` y quedan fuera).
+ */
+export const ROLES_INTERNOS: AppRole[] = [
+  "admin", "admin_org", "super_admin", "operador", "coordinador_logistico",
+  "customer_service", "viewer", "contador", "tesorero", "auxiliar_contable",
+  "ejecutivo_cobranza", "ejecutivo_pricing", "vendedor",
+  "gerente_operaciones", "gerente_comercial", "gerente_visor",
+];
+export const INICIO_ROLES: AppRole[] = [...ROLES_INTERNOS];
+export const OPERACIONES_ROLES: AppRole[] = [...EMBARQUES_ROLES];
 
 /**
- * Mapa `ruta base → roles permitidos`. Rutas no listadas aquí (`/inicio`,
- * `/operaciones`, `/ayuda`, redirects, etc.) son accesibles para cualquier
- * usuario autenticado.
+ * Rutas sin restricción de rol (fail-closed: lo que no está en la matriz ni
+ * en esta lista se deniega). Sólo utilidades sin datos de negocio.
+ */
+export const RUTAS_LIBRES: readonly string[] = Object.freeze([
+  "/ayuda",
+]);
+
+/**
+ * Mapa `ruta base → roles permitidos`. Toda ruta con datos de negocio debe
+ * estar listada aquí; `hasRouteAccess` deniega lo no listado (M11).
  */
 export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.freeze({
+  "/inicio": INICIO_ROLES,
+  "/operaciones": OPERACIONES_ROLES,
   "/dashboard": DASHBOARD_DIRECCION_ROLES,
   "/embarques": EMBARQUES_ROLES,
   "/facturacion": FACTURACION_ROLES,
