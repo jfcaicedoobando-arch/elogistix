@@ -53,10 +53,15 @@ function mapPago(row: Record<string, unknown>): PagoLibro {
   };
 }
 
-export async function fetchLibroPagos(desde: string, hasta: string): Promise<LibroPagos> {
+export async function fetchLibroPagos(
+  desde: string,
+  hasta: string,
+  organizationId?: string | null,
+): Promise<LibroPagos> {
   const { data, error } = await supabase.rpc("libro_pagos", {
     p_desde: desde,
     p_hasta: hasta,
+    p_org: organizationId ?? undefined,
   });
   if (error) throw error;
   // SAFE-CAST: jsonb con el shape declarado en la migración `libro_pagos`.

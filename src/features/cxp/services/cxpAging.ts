@@ -34,9 +34,13 @@ const EMPTY_TOTALS: CxpAgingTotals = {
   vigente: 0, d_1_30: 0, d_31_60: 0, d_61_90: 0, mas_90: 0, total: 0,
 };
 
-export async function fetchCxpAging(fecha?: string): Promise<CxpAgingRow[]> {
+export async function fetchCxpAging(
+  fecha?: string,
+  organizationId?: string | null,
+): Promise<CxpAgingRow[]> {
   const { data, error } = await supabase.rpc("cxp_aging_proveedores", {
     p_fecha: fecha ?? todayLocalISO(),
+    p_org: organizationId ?? undefined,
   });
   if (error) throw error;
   return (data ?? []).map((r) => ({

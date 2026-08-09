@@ -9,6 +9,7 @@ import {
   type CxpAgingTotals,
 } from "@/features/cxp/services/cxpAging";
 import { queryKeys } from "@/lib/query";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 
 export interface UseCxpAgingResult {
   data: CxpAgingRow[] | undefined;
@@ -29,9 +30,10 @@ export interface UseCxpAgingResult {
  * moneda con saldo — típicamente MXN) y expone totales por moneda para KPIs.
  */
 export function useCxpAging(fecha?: string): UseCxpAgingResult {
+  const { organizationId } = useOrgFilter();
   const q = useQuery({
-    queryKey: queryKeys.cxp.aging(fecha),
-    queryFn: () => fetchCxpAging(fecha),
+    queryKey: [...queryKeys.cxp.aging(fecha), organizationId],
+    queryFn: () => fetchCxpAging(fecha, organizationId),
     staleTime: 60_000,
   });
 
