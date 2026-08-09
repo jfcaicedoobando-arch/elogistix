@@ -38,8 +38,12 @@ export function buildFilasProyeccion(
   facturadosSet: Set<string>,
 ): FilaProyeccion[] {
   return embarques.map<FilaProyeccion>((e) => {
-    const tcUsd = Number(e.tipo_cambio_usd ?? 1);
-    const tcEur = Number(e.tipo_cambio_eur ?? 1);
+    // Ola 5 · M5: sin TC capturado NO se asume 1 MXN = 1 USD/EUR. Se marca la
+    // fila como `sin_tc` y las conversiones usan 0 para no inventar pesos.
+    const tcUsdRaw = Number(e.tipo_cambio_usd ?? 0);
+    const tcEurRaw = Number(e.tipo_cambio_eur ?? 0);
+    const tcUsd = tcUsdRaw > 0 ? tcUsdRaw : 0;
+    const tcEur = tcEurRaw > 0 ? tcEurRaw : 0;
     const v = ventasMap.get(e.id) ?? [];
     const c = costosMap.get(e.id) ?? [];
     return {
@@ -51,6 +55,7 @@ export function buildFilasProyeccion(
       contenedor: e.contenedor,
       tipo_cambio_usd: tcUsd,
       tipo_cambio_eur: tcEur,
+      sin_tc: tcUsd === 0,
       tiene_proforma: !!e.tiene_proforma,
       tiene_factura_pdf: !!e.expediente && facturadosSet.has(e.expediente),
       venta_mxn: sumarConceptosEnMxn(v, tcUsd, tcEur),

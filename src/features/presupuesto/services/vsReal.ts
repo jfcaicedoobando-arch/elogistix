@@ -28,6 +28,12 @@ export interface ResumenVsReal {
   categorias_en_exceso: number;
   /** Fase J: top 5 categorías con mayor exceso absoluto (variacion_mxn desc). */
   top_exceso: FilaVsReal[];
+  /**
+   * Ola 5 · A7 — gastos en moneda extranjera SIN tipo de cambio capturado.
+   * No se convierten 1:1 a pesos (eso inflaba/desinflaba el real): se excluyen
+   * del comparativo y se reportan aquí para que la UI lo advierta.
+   */
+  gastos_sin_tc_count: number;
 }
 
 function ultimoDia(periodo: string): string {
@@ -54,15 +60,32 @@ function mapPresupuestoPorCategoria(rows: PresupRow[], periodo: string): Map<str
   return out;
 }
 
-function agregarGastosCxP(rows: CxpRow[]): Map<string, number> {
-  const out = new Map<string, number>();
+interface GastosAgregados {
+  porCategoria: Map<string, number>;
+  /** Gastos en moneda extranjera sin TC capturado (excluidos del real). */
+  sinTc: number;
+}
+
+export function agregarGastosCxP(rows: CxpRow[]): GastosAgregados {
+  const porCategoria = new Map<string, number>();
+  let sinTc = 0;
   for (const g of rows) {
     if (!g.categoria_presupuesto_id) continue;
     const monto = Number(g.total);
-    const mxn = g.moneda === "MXN" || !g.tipo_cambio_usd ? monto : monto * Number(g.tipo_cambio_usd);
-    out.set(g.categoria_presupuesto_id, (out.get(g.categoria_presupuesto_id) ?? 0) + mxn);
+    const esMxn = (g.moneda ?? "MXN").toUpperCase() === "MXN";
+    const tc = Number(g.tipo_cambio_usd ?? 0);
+    if (!esMxn && !(tc > 0)) {
+      // Ola 5 · A7: sin TC no se puede valuar; excluir en vez de asumir 1:1.
+      sinTc += 1;
+      continue;
+    }
+    const mxn = esMxn ? monto : monto * tc;
+    porCategoria.set(
+      g.categoria_presupuesto_id,
+      (porCategoria.get(g.categoria_presupuesto_id) ?? 0) + mxn,
+    );
   }
-  return out;
+  return { porCategoria, sinTc };
 }
 
 function aplicarLiquidacionesComisiones(
@@ -157,7 +180,7 @@ export async function fetchPresupuestoVsReal(
   if (liquidaciones.error) throw liquidaciones.error;
 
   const presupPorCat = mapPresupuestoPorCategoria(presupuestoAnio, periodo);
-  const realPorCat = agregarGastosCxP(gastosCxP.data ?? []);
+  const { porCategoria: realPorCat, sinTc: gastosSinTc } = agregarGastosCxP(gastosCxP.data ?? []);
   aplicarLiquidacionesComisiones(realPorCat, cats, liquidaciones.data ?? []);
 
   const catIds = new Set(cats.map((c) => c.id));
@@ -188,6 +211,7 @@ export async function fetchPresupuestoVsReal(
     variacion_neta_mxn: total_real - total_presupuesto,
     categorias_en_exceso: excedidas.length,
     top_exceso,
+    gastos_sin_tc_count: gastosSinTc,
   };
 }
 

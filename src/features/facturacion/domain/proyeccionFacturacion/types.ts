@@ -12,6 +12,8 @@ export interface FilaProyeccion {
   contenedor: string | null;
   tipo_cambio_usd: number;
   tipo_cambio_eur: number;
+  /** Ola 5 · M5: el embarque no tiene tipo de cambio USD capturado. */
+  sin_tc: boolean;
   tiene_proforma: boolean;
   /** ¿Existe al menos una factura con factura_pdf_url para este embarque? */
   tiene_factura_pdf: boolean;
