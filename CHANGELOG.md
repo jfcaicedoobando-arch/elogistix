@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.467.1] - 2026-08-09
+- Fix: `saldo_factura_bruto` devolvía 0 cuando la ejecutaba un proceso interno sin usuario autenticado (endurecimiento de la Ola 1), lo que hacía que el guard `LC_NC_EXCEDE_SALDO` rechazara notas de crédito legítimas creadas por triggers/procesos del backend y rompía la suite `test_rls_financiero_critico`. El filtro por organización ahora sólo aplica cuando existe `auth.uid()`; para usuarios reales el aislamiento multi-tenant no cambia.
+
 ## [13.467.0] - 2026-08-09
 - Pruebas automatizadas anti-fuga entre organizaciones en reportes:
   - Nueva suite RLS `test_rls_reportes_multi_tenant.sql` (registrada en la matriz de CI): valida aging CxC/CxP y libro de pagos con dos tenants y cuatro roles (admin_org, contador, customer_service y super_admin sin membresía). Verifica que nadie vea otra organización, que el administrador de plataforma sin organización activa reciba `LC_ORG_REQUERIDA` y que con organización elegida sólo vea ese tenant.
