@@ -59,7 +59,9 @@ describe("fetchPresupuestoVsReal — bordes", () => {
     expect(fletes.real_mxn).toBe(2000);
   });
 
-  it("USD con tipo_cambio_usd=null usa monto sin convertir (no multiplica por 0)", async () => {
+  // Ola 5 · A7: sin TC no se puede valuar en pesos; el gasto se excluye del real
+  // y se reporta en `gastos_sin_tc_count` en vez de asumir 1 USD = 1 MXN.
+  it("USD con tipo_cambio_usd=null se excluye del real y se cuenta como sin TC", async () => {
     mock.setTableResult("proveedor_facturas", {
       data: [{ categoria_presupuesto_id: "cat-fletes", total: 100, moneda: "USD", tipo_cambio_usd: null, fecha_emision: "2026-06-10" }],
       error: null,
@@ -67,8 +69,9 @@ describe("fetchPresupuestoVsReal — bordes", () => {
     mock.setTableResult("liquidaciones_comision", { data: [], error: null });
 
     const res = await fetchPresupuestoVsReal("2026-06");
-    const fletes = res.filas.find((f) => f.categoria_id === "cat-fletes")!;
-    expect(fletes.real_mxn).toBe(100);
+    const fletes = res.filas.find((f) => f.categoria_id === "cat-fletes");
+    expect(fletes?.real_mxn ?? 0).toBe(0);
+    expect(res.gastos_sin_tc_count).toBe(1);
   });
 
   it("liquidaciones se mapean a la categoría 'Comisiones' por nombre", async () => {
