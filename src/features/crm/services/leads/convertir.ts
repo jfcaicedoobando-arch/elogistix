@@ -72,7 +72,9 @@ export async function convertirLead(
 ): Promise<{ clienteId: string | null; oportunidadId: string }> {
   // Ola 6 · M4: cliente + oportunidad + marcado del lead en UNA transacción
   // idempotente. Antes, un fallo intermedio dejaba cliente/oportunidad huérfanos.
-  const { data, error } = await supabase.rpc("convertir_lead_rpc", {
+  // SAFE-CAST: la RPC acepta NULL en p_cliente_id / p_fecha_estimada_cierre, pero los
+  // tipos generados por Supabase los exponen como requeridos; el cast sólo cierra ese gap.
+  const rpcArgs = {
     p_lead_id: params.lead.id,
     p_crear_cliente: params.crearCliente,
     p_cliente_id: params.clienteIdExistente ?? null,
@@ -80,7 +82,9 @@ export async function convertirLead(
     p_monto_estimado: params.montoEstimado,
     p_moneda: params.moneda,
     p_fecha_estimada_cierre: params.fechaEstimadaCierre ?? null,
-  });
+  } as unknown as Parameters<typeof supabase.rpc<"convertir_lead_rpc">>[1];
+  const { data, error } = await supabase.rpc("convertir_lead_rpc", rpcArgs);
+
   if (error) throw error;
   const payload = (data ?? {}) as { cliente_id?: string | null; oportunidad_id?: string };
   if (!payload.oportunidad_id) throw new Error("No se pudo convertir el lead");
