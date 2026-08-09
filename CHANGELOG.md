@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.469.3] - 2026-08-09
+- `marcarProformaFacturada` excedía el límite de complejidad de ESLint (17/16). Se extrajeron `assertImportes`, `insertarFacturas` y `persistirFacturacion`; misma lógica y mismos guards de idempotencia.
+
 ## [13.469.2] - 2026-08-09
 - `guard_estado_cotizacion.sql`: la cotización de prueba se creaba sin conceptos de venta, así que el trigger `_cotizaciones_bloquear_envio_sin_importes` bloqueaba (correctamente) el paso a 'Enviada'. El fixture ahora incluye un concepto de 1 x 1000 USD. No se modificó ninguna regla de negocio.
 
