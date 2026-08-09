@@ -67,4 +67,11 @@ export interface SnapshotEjecutivo {
   topDeudores: TopItem[];
   topAcreedores: TopItem[];
   alertas: AlertaEjecutiva[];
+  /** TC USD/MXN usado para valuar saldos y flujos del periodo. */
+  tipoCambioUsd: number;
+  /**
+   * Ola 5 · A10 — `true` cuando el TC proviene del fallback operativo porque
+   * la fuente DOF no respondió. La UI debe advertir "TC no disponible".
+   */
+  tcEsFallback: boolean;
 }
