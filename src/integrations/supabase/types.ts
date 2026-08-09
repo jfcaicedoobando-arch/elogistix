@@ -8550,6 +8550,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_any_role_efectivo: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_org_role: {
         Args: {
           _org_id: string
@@ -9051,6 +9058,10 @@ export type Database = {
       revertir_proforma_al_cancelar_sustitucion: {
         Args: { p_factura_id: string }
         Returns: string[]
+      }
+      rol_efectivo: {
+        Args: { _org: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
       }
       roles_jerarquia: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
