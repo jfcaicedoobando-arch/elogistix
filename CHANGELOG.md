@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.469.5] - 2026-08-09
+- Fix test intermitente de `DraftRestoreBanner`: se congela el reloj con `withFrozenClock("2026-08-09T12:00:00Z")` para que el cálculo relativo no dependa de la hora real del runner ni de su zona horaria. Antes, en CI ejecutándose cerca de medianoche en `America/Mexico_City`, un draft de 3 h atrás caía en el día anterior y mostraba "ayer" en lugar de "hace 3 h".
+
 ## [13.469.4] - 2026-08-09
 - Documentación del despliegue y el deploy gate: se agrega sección "Despliegue y CI/CD" en `README.md` para distinguir la publicación manual en Lovable, el deploy automático del backend y el rol del workflow `deploy-gate.yml`. Se aclara en el summary del gate que su veredicto no publica automáticamente en Lovable.
 
