@@ -12,7 +12,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
-import { fetchExchangeRates, EXCHANGE_RATES_FALLBACK } from "@/features/catalogos/services";
+import { fallbackTC, tcFallbackDof, type TcFallback } from "./estadoResultadosTc";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 import {
@@ -65,23 +65,6 @@ async function loadEmbarquesPorExpedientes(exps: string[]): Promise<Map<string, 
     if (e.expediente) map.set(e.expediente, e);
   }
   return map;
-}
-
-const fallbackTC = (tc: number | null, respaldo: number) => (tc && tc > 0 ? tc : respaldo);
-
-/**
- * Ola 5 · A22 — Antes las filas sin embarque usaban `tipo_cambio_eur = 1`, lo
- * que valuaba 1 EUR = 1 MXN y subestimaba ingresos/costos en euros. Ahora se
- * usa el TC EUR del DOF (con fallback operativo compartido) como respaldo.
- */
-type TcFallback = { usd: number; eur: number };
-
-async function tcFallbackDof(): Promise<TcFallback> {
-  const rates = await fetchExchangeRates().catch(() => EXCHANGE_RATES_FALLBACK);
-  return {
-    usd: rates.usdMxn > 0 ? rates.usdMxn : EXCHANGE_RATES_FALLBACK.usdMxn,
-    eur: rates.eurMxn > 0 ? rates.eurMxn : EXCHANGE_RATES_FALLBACK.eurMxn,
-  };
 }
 
 async function fetchFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<FacturaRow[]> {
