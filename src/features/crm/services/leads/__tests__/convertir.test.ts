@@ -40,6 +40,8 @@ const user = { id: "usr-1", email: "v@x.com" };
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+  mock.resetResults();
 });
 
 describe("resolveClienteForConversion", () => {
@@ -123,69 +125,43 @@ describe("fetchPrimeraEtapaAbierta", () => {
 });
 
 describe("convertirLead", () => {
-  it("cliente nuevo + etapa abierta + oportunidad → devuelve ids", async () => {
-    mock.setTableResult("clientes", { data: { id: "cli-new", nombre: "Beta SA" }, error: null });
-    mock.setTableResult("crm_etapas_pipeline", { data: { id: "et-1", probabilidad_default: 30 }, error: null });
-    mock.setTableResult("crm_oportunidades", { data: { id: "op-1" }, error: null });
-    mock.setTableResult("crm_leads", { data: null, error: null });
+  it("Ola 6 · M4: delega en la RPC atómica y devuelve los ids", async () => {
+    mock.setRpcResult("convertir_lead_rpc", {
+      data: { cliente_id: "cli-new", oportunidad_id: "op-1", creado: true },
+      error: null,
+    });
 
     const r = await convertirLead(baseParams, user);
     expect(r).toEqual({ clienteId: "cli-new", oportunidadId: "op-1" });
-    
-    const opPayload = mock.getMutationPayload("crm_oportunidades", "insert") as any;
-    expect(opPayload.probabilidad).toBe(30);
-    expect(opPayload.vendedor_id).toBe("usr-1");
+
+    const call = mock.rpcCalls.find((c) => c.fn === "convertir_lead_rpc");
+    expect(call?.args).toMatchObject({
+      p_lead_id: "lead-1",
+      p_crear_cliente: true,
+      p_cliente_id: null,
+      p_nombre_oportunidad: "Embarque Q1",
+      p_monto_estimado: 15000,
+      p_moneda: "USD",
+      p_fecha_estimada_cierre: "2026-12-31",
+    });
   });
 
-  it("usa fallbacks para probabilidad, cierre, vendedor, modo y created_by", async () => {
-    mock.setTableResult("clientes", { data: { id: "c1", nombre: "N" }, error: null });
-    mock.setTableResult("crm_etapas_pipeline", { data: { id: "e1", probabilidad_default: null }, error: null });
-    mock.setTableResult("crm_oportunidades", { data: { id: "op1" }, error: null });
-    mock.setTableResult("crm_leads", { data: null, error: null });
-
-    await convertirLead({
-      lead: { id: "l1", empresa: "B" } as any,
-      crearCliente: true,
-      nombreOportunidad: "Op",
-      montoEstimado: 100,
-      moneda: "MXN",
-    }, null);
-
-    const opPayload = mock.getMutationPayload("crm_oportunidades", "insert") as any;
-    expect(opPayload.probabilidad).toBe(0);
-    expect(opPayload.fecha_estimada_cierre).toBeNull();
-    expect(opPayload.vendedor_id).toBeNull();
-    expect(opPayload.vendedor_email).toBe("");
-    expect(opPayload.modo).toBe("");
-    expect(opPayload.created_by).toBeNull();
+  it("es idempotente: lead ya convertido devuelve los ids existentes", async () => {
+    mock.setRpcResult("convertir_lead_rpc", {
+      data: { cliente_id: null, oportunidad_id: "op-prev", creado: false },
+      error: null,
+    });
+    const r = await convertirLead(baseParams, user);
+    expect(r).toEqual({ clienteId: null, oportunidadId: "op-prev" });
   });
 
-  it("usa user id/email si el lead no los tiene", async () => {
-    mock.setTableResult("clientes", { data: { id: "c1", nombre: "N" }, error: null });
-    mock.setTableResult("crm_etapas_pipeline", { data: { id: "e1" }, error: null });
-    mock.setTableResult("crm_oportunidades", { data: { id: "op1" }, error: null });
-    mock.setTableResult("crm_leads", { data: null, error: null });
-
-    await convertirLead({
-      lead: { id: "l1", empresa: "B" } as any,
-      crearCliente: true,
-      nombreOportunidad: "Op",
-      montoEstimado: 100,
-      moneda: "MXN",
-    }, { id: "u2", email: "u2@x.com" });
-
-    const opPayload = mock.getMutationPayload("crm_oportunidades", "insert") as any;
-    expect(opPayload.vendedor_id).toBe("u2");
-    expect(opPayload.vendedor_email).toBe("u2@x.com");
-    expect(opPayload.created_by).toBe("u2");
+  it("propaga el error de la RPC", async () => {
+    mock.setRpcResult("convertir_lead_rpc", { data: null, error: { message: "lead update fail" } });
+    await expect(convertirLead(baseParams, user)).rejects.toBeTruthy();
   });
 
-  it("propaga error al actualizar lead", async () => {
-    mock.setTableResult("clientes", { data: { id: "c", nombre: "X" }, error: null });
-    mock.setTableResult("crm_etapas_pipeline", { data: { id: "e" }, error: null });
-    mock.setTableResult("crm_oportunidades", { data: { id: "o" }, error: null });
-    mock.setTableResult("crm_leads", { data: null, error: { message: "lead update fail" } });
-    
-    await expect(convertirLead(baseParams, user)).rejects.toThrow("lead update fail");
+  it("lanza si la RPC no devuelve oportunidad", async () => {
+    mock.setRpcResult("convertir_lead_rpc", { data: {}, error: null });
+    await expect(convertirLead(baseParams, user)).rejects.toThrow(/No se pudo convertir el lead/);
   });
 });
