@@ -90,6 +90,14 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     return;
   }
 
+  // A5 (v13.469.0): validar importes ANTES de subir archivos, para no dejar
+  // PDF/XML huérfanos en storage cuando la proforma viene en ceros.
+  if (Number(proforma.total_usd) <= 0 && Number(proforma.total_mxn) <= 0) {
+    throw new Error(
+      "LC_PROFORMA_TOTAL_CERO: la proforma no tiene importes mayores a cero; corrige los conceptos antes de marcarla como facturada.",
+    );
+  }
+
   const basePath = `${proforma.organization_id}/${proforma.id}`;
   const pdfUrl = await uploadFacturaFile(params.pdfFile, `${basePath}/factura.pdf`, "application/pdf", "PDF");
   const xmlUrl = await uploadFacturaFile(params.xmlFile, `${basePath}/factura.xml`, "application/xml", "XML");
