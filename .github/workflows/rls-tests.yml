@@ -239,6 +239,8 @@ jobs:
           - policy_linter
           - soft_delete_rpcs
           - storage_objects
+          - reportes_multi_tenant
+
 
     services:
       postgres:
