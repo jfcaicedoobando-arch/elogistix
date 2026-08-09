@@ -97,8 +97,12 @@ export const OPERACIONES_ROLES: AppRole[] = [...EMBARQUES_ROLES];
  * en esta lista se deniega). Sólo utilidades sin datos de negocio.
  */
 export const RUTAS_LIBRES: readonly string[] = Object.freeze([
+  "/",
   "/ayuda",
 ]);
+
+/** Prefijos reservados a la consola de plataforma (dueño Libre Carga). */
+export const PREFIJOS_PLATAFORMA: readonly string[] = Object.freeze(["/admin"]);
 
 /**
  * Mapa `ruta base → roles permitidos`. Toda ruta con datos de negocio debe
