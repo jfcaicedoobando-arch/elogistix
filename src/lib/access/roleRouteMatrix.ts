@@ -159,6 +159,14 @@ export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.fre
   "/auditoria": AUDITORIA_ROLES,
   "/usuarios": USUARIOS_ROLES,
   "/configuracion": CONFIGURACION_ROLES,
+  // Alias legacy que sólo redirigen a su ruta nueva; heredan los mismos roles.
+  "/cxp": COMPRAS_HUB_ROLES,
+  "/cxp/por-capturar": COMPRAS_POR_CAPTURAR_ROLES,
+  "/cxp/por-pagar": COMPRAS_POR_PAGAR_ROLES,
+  "/proveedores": PROVEEDORES_ROLES,
+  "/rentabilidad": REPORTES_ROLES,
+  "/reportes": REPORTES_ROLES,
+  "/sistema/bitacora": BITACORA_ROLES,
 });
 
 /** Quita querystring de una URL de sidebar (ej. `/proformas?estado=aceptada`). */
@@ -167,13 +175,13 @@ function basePath(url: string): string {
 }
 
 /**
- * ¿El rol tiene acceso a la ruta? Rutas no listadas en la matriz son de
- * acceso libre para cualquier usuario autenticado.
+ * ¿El rol tiene acceso a la ruta? Fail-closed (M11): si la ruta no está en la
+ * matriz y no es una ruta libre, se deniega el acceso.
  */
 export function hasRouteAccess(role: AppRole | null | undefined, url: string): boolean {
   const path = basePath(url);
   const allowed = ROLE_ROUTE_MATRIX[path];
-  if (!allowed) return true;
+  if (!allowed) return RUTAS_LIBRES.includes(path);
   if (!role) return false;
   return allowed.includes(role);
 }
