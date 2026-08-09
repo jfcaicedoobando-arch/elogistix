@@ -73,6 +73,8 @@ export async function fetchPortalPagosFactura(facturaId: string) {
       .from("pagos_factura")
       .select(PORTAL_PAGO_FACTURA_COLUMNS)
       .eq("factura_id", facturaId)
+      // A6: el cliente no debe ver pagos que fueron eliminados internamente.
+      .is("deleted_at", null)
       .order("fecha_pago", { ascending: false })
       .limit(PORTAL_RELATED_MAX),
     [],
