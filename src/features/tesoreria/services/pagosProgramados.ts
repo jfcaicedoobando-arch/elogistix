@@ -25,14 +25,14 @@ interface RowCruda {
   total: number;
   estado: string;
   estado_aprobacion: string;
-  pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
+  pagos_proveedor: Array<PagoCxpParcial> | null;
 }
 
 export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]> {
   const rows = (await unwrapOr(
     supabase
       .from("proveedor_facturas")
-      .select("id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion, pagos_proveedor(monto, deleted_at)")
+      .select("id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion, pagos_proveedor(monto, monto_en_moneda_factura, deleted_at)")
       .is("deleted_at", null)
       .neq("estado", "Cancelada")
       .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
@@ -45,7 +45,7 @@ export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]>
 
   return rows
     .map((r) => {
-      const pagado = (r.pagos_proveedor ?? []).filter((p) => !p.deleted_at).reduce((s, p) => s + Number(p.monto), 0);
+      const pagado = sumarPagosEnMonedaFactura(r.pagos_proveedor);
       const saldo = Math.max(0, Number(r.total) - pagado);
       return {
         id: r.id,

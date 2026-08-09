@@ -19,12 +19,30 @@ export const PROVEEDOR_FACTURAS_SELECT = `
   uuid_verificado, uuid_verificado_fecha, uuid_estatus_sat,
   fecha_programada_pago,
   fecha_cancelacion, motivo_cancelacion, cancelada_por,
-  pagos_proveedor(monto, deleted_at),
+  pagos_proveedor(monto, monto_en_moneda_factura, deleted_at),
   proveedor_notas_credito(monto, estado, deleted_at),
   proveedores(origen_proveedor),
   embarques(expediente),
   presupuesto_categorias!categoria_presupuesto_id(nombre)
 ` as const;
+
+/** Fila mínima de pago usada para saldar una factura de proveedor. */
+export type PagoCxpParcial = {
+  monto: number;
+  monto_en_moneda_factura: number | null;
+  deleted_at: string | null;
+};
+
+/**
+ * C3: un pago puede estar en otra moneda que la factura (USD facturada, pagada
+ * en MXN). El trigger de BD calcula `monto_en_moneda_factura`; sumar `monto`
+ * crudo infla lo pagado ~17× y marca facturas como liquidadas antes de tiempo.
+ */
+export function sumarPagosEnMonedaFactura(pagos: PagoCxpParcial[] | null): number {
+  return (pagos ?? [])
+    .filter((p) => !p.deleted_at)
+    .reduce((s, p) => s + Number(p.monto_en_moneda_factura ?? p.monto), 0);
+}
 
 export type Joined = Pick<
   ProveedorFacturaRow,
@@ -37,7 +55,7 @@ export type Joined = Pick<
   | "fecha_programada_pago"
   | "fecha_cancelacion" | "motivo_cancelacion" | "cancelada_por"
 > & {
-  pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
+  pagos_proveedor: Array<PagoCxpParcial> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
   proveedores: { origen_proveedor: "Nacional" | "Extranjero" | null } | null;
   embarques: { expediente: string } | null;
@@ -111,9 +129,7 @@ function computeFlags(
 }
 
 export function mapJoinedRow(f: Joined): FacturaCxP {
-  const pagado = (f.pagos_proveedor ?? [])
-    .filter(p => !p.deleted_at)
-    .reduce((s, p) => s + Number(p.monto), 0);
+  const pagado = sumarPagosEnMonedaFactura(f.pagos_proveedor);
   const nc = (f.proveedor_notas_credito ?? [])
     .filter(n => !n.deleted_at && n.estado === "Aplicada")
     .reduce((s, n) => s + Number(n.monto), 0);
