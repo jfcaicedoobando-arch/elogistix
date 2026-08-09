@@ -3,9 +3,12 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { withFrozenClock } from "@/test/helpers/withFrozenClock";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
 
 describe("DraftRestoreBanner", () => {
+  withFrozenClock("2026-08-09T12:00:00Z");
+
   it("muestra 'hace un momento' cuando el draft es reciente", () => {
     render(
       <DraftRestoreBanner
