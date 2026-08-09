@@ -8,7 +8,10 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const rpc = vi.fn(async () => ({ data: [], error: null }));
+// SAFE-CAST: mock genérico del cliente Supabase para inspeccionar parámetros.
+const rpc = vi.fn<(...args: unknown[]) => Promise<{ data: unknown; error: unknown }>>(
+  async () => ({ data: [], error: null }),
+);
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { rpc: (...args: unknown[]) => rpc(...(args as [])) },
 }));
