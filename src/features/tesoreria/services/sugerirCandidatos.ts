@@ -1,6 +1,11 @@
 /**
  * Matching de candidatos para conciliación bancaria.
  * Tolerancia: monto ±$1, fecha ±5 días contra CxC/CxP pendientes.
+ *
+ * Ola 5 · M8 — el sugeridor NUNCA cruza monedas: los movimientos no traen
+ * moneda propia (la hereda de la cuenta bancaria), así que se resuelve la
+ * moneda de la cuenta y sólo se ofrecen pagos en esa misma moneda. Antes un
+ * pago de 1,000 USD podía sugerirse para un cargo de 1,000 MXN.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { MovimientoBBVA } from "./conciliacion";
@@ -18,10 +23,25 @@ export interface Candidato {
   delta_monto: number;
 }
 
-export async function sugerirCandidatos(mov: MovimientoBBVA): Promise<Candidato[]> {
+/** Moneda de la cuenta bancaria del movimiento (default MXN si no se resuelve). */
+export async function monedaDeCuenta(cuentaBancariaId: string | null): Promise<string> {
+  if (!cuentaBancariaId) return "MXN";
+  const { data } = await supabase
+    .from("cuentas_bancarias")
+    .select("moneda")
+    .eq("id", cuentaBancariaId)
+    .maybeSingle();
+  return (data?.moneda ?? "MXN").toString().toUpperCase();
+}
+
+export async function sugerirCandidatos(
+  mov: MovimientoBBVA,
+  monedaCuenta?: string,
+): Promise<Candidato[]> {
   const monto = Number(mov.cargo) > 0 ? Number(mov.cargo) : Number(mov.abono);
   if (monto <= 0) return [];
   const esCargo = Number(mov.cargo) > 0;
+  const moneda = (monedaCuenta ?? (await monedaDeCuenta(mov.cuenta_bancaria_id))).toUpperCase();
 
   const { desde: desdeIso, hasta: hastaIso } = rangoFechasIso(mov.fecha, TOLERANCIA_DIAS);
   const min = monto - TOLERANCIA_MONTO_MXN;
@@ -38,6 +58,7 @@ export async function sugerirCandidatos(mov: MovimientoBBVA): Promise<Candidato[
       .lte("fecha_pago", hastaIso)
       .gte("monto", min)
       .lte("monto", max)
+      .eq("moneda", moneda)
       .is("deleted_at", null)
       .limit(20);
     for (const p of data ?? []) {
@@ -63,6 +84,7 @@ export async function sugerirCandidatos(mov: MovimientoBBVA): Promise<Candidato[
       .lte("fecha_pago", hastaIso)
       .gte("monto", min)
       .lte("monto", max)
+      .eq("moneda", moneda)
       .is("deleted_at", null)
       .limit(20);
     for (const p of data ?? []) {
