@@ -165,7 +165,8 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .from("pagos_factura")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId)
-      .in("estado_rep", ["Pendiente", "Error"]),
+      .in("estado_rep", ["Pendiente", "Error"])
+      .is("deleted_at", null),
   ]);
   // "Por enviar" es una aproximación: (timbradas) − (envíos exitosos).
   // Es exacto sólo si cada factura tiene ≤1 envío exitoso, lo cual es la
