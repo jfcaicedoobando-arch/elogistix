@@ -8320,6 +8320,24 @@ export type Database = {
           total: number
         }[]
       }
+      facturas_cartera_cliente: {
+        Args: { p_cliente_id: string; p_desde?: string; p_hasta?: string }
+        Returns: {
+          cliente_id: string
+          cliente_nombre: string
+          estado: string
+          fecha_emision: string
+          fecha_vencimiento: string
+          folio: string
+          id: string
+          moneda: string
+          numero: string
+          organization_id: string
+          saldo: number
+          serie: string
+          total: number
+        }[]
+      }
       facturas_listado: {
         Args: {
           p_estado?: string
@@ -8848,10 +8866,6 @@ export type Database = {
           p_request_id?: string
           p_usuario_email: string
         }
-        Returns: Json
-      }
-      reabrir_embarque_con_motivo: {
-        Args: { p_embarque_id: string; p_motivo: string }
         Returns: Json
       }
       read_email_batch: {
