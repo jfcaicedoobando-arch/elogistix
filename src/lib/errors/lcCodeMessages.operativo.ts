@@ -15,6 +15,11 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "No tienes permisos para eliminar facturas de proveedor.",
   LC_ORG_FORBIDDEN: "Este recurso pertenece a otra organización.",
   LC_ORG_NO_RESUELTA: "No fue posible resolver la organización activa. Vuelve a iniciar sesión.",
+  LC_ORG_AJENA: "No tienes acceso a la información de esa organización.",
+  LC_ORG_REQUERIDA:
+    "Selecciona una organización en el menú superior para ver este reporte.",
+  LC_SIN_ORG:
+    "Tu usuario no tiene una organización asignada. Contacta al administrador.",
   LC_TENANT_MISMATCH: "El recurso no pertenece a tu organización.",
   LC_DELETE_PROHIBIDO: "Este registro no puede eliminarse desde la aplicación.",
 
