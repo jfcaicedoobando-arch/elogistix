@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.473.0] - 2026-08-09
+- Ola 6 (integridad transaccional) — Cinco RPCs atómicas nuevas: `reactivar_cotizacion_rpc` (A3), `convertir_prospecto_a_cliente_rpc` (M3, idempotente), `convertir_lead_rpc` (M4, cliente + oportunidad en una transacción), `actualizar_tarifa_con_recargos_rpc` (M7) y `eliminar_proforma_rpc` (M15, bloquea proformas facturadas y libera conceptos). Los servicios del frontend dejan de hacer varias escrituras sueltas que podían quedar a medias.
+- Ola 6 (tests) — Nuevo test SQL `supabase/tests/ola6_transaccional.sql` en CI (reactivación, idempotencia de conversiones y guard de proforma facturada) y suites de servicio migradas a mocks de RPC.
+- Arquitectura — `vsReal.ts` dividido con `vsRealDomain.ts` (límite de 200 líneas) y `agregador.ts` del dashboard ejecutivo ahora usa el `logger` central en vez de importar Sentry directo.
+
+
 ## [13.472.0] - 2026-08-09
 - Ola 5 (finanzas · M8) — El sugeridor de conciliación ya no cruza monedas: resuelve la moneda de la cuenta bancaria del movimiento y sólo ofrece pagos/cobros en esa misma moneda (antes un pago de 1,000 USD se sugería para un cargo de 1,000 MXN). Nuevo test `sugerirCandidatos.moneda.test.ts`.
 - Ola 5 (finanzas · A6/B9) — El contador de movimientos pendientes de tesorería excluye movimientos borrados (soft delete).
