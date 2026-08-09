@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
-import { Download } from "lucide-react";
+import { Download, AlertTriangle } from "lucide-react";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks/useDashboardEjecutivo";
 import { BandaKPIs } from "@/features/dashboardEjecutivo/components/BandaKPIs";
@@ -22,6 +22,7 @@ import { descargarBlob } from "@/lib/downloadBlob";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
@@ -95,6 +96,17 @@ export default function ProfitDashboardEjecutivo() {
           onRetry={() => { void refetch(); }}
           retrying={isFetching}
         />
+      )}
+
+      {data?.tcEsFallback && (
+        <Alert variant="warning">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Tipo de cambio no disponible</AlertTitle>
+          <AlertDescription>
+            No se pudo consultar el TC del DOF; los saldos en dólares se valuaron con el tipo de
+            cambio de respaldo ({data.tipoCambioUsd.toFixed(4)} MXN/USD). Úsalo sólo como referencia.
+          </AlertDescription>
+        </Alert>
       )}
 
       {data && (
