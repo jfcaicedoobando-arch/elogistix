@@ -7336,6 +7336,10 @@ export type Database = {
         Args: { p_motivo?: string; p_proforma_id: string; p_respuesta: string }
         Returns: Json
       }
+      actualizar_tarifa_con_recargos_rpc: {
+        Args: { p_id: string; p_recargos: Json; p_tarifa: Json }
+        Returns: undefined
+      }
       agente_aprobar_tarifa: {
         Args: { _estado: string; _motivo?: string; _tarifa_id: string }
         Returns: undefined
@@ -7810,6 +7814,18 @@ export type Database = {
         }
         Returns: number
       }
+      convertir_lead_rpc: {
+        Args: {
+          p_cliente_id: string
+          p_crear_cliente: boolean
+          p_fecha_estimada_cierre: string
+          p_lead_id: string
+          p_moneda: string
+          p_monto_estimado: number
+          p_nombre_oportunidad: string
+        }
+        Returns: Json
+      }
       convertir_monto_pago_a_factura: {
         Args: {
           p_moneda_fact: Database["public"]["Enums"]["moneda"]
@@ -7901,6 +7917,10 @@ export type Database = {
       convertir_proformas_a_factura_check_embarque_vivo: {
         Args: { p_proforma_ids: string[] }
         Returns: undefined
+      }
+      convertir_prospecto_a_cliente_rpc: {
+        Args: { p_cliente: Json; p_cotizacion_id: string }
+        Returns: Json
       }
       costeo_tarifa_estado_actual: {
         Args: { p_estado: string; p_vigente_hasta: string }
@@ -8200,6 +8220,7 @@ export type Database = {
         Args: { p_org_id: string }
         Returns: undefined
       }
+      eliminar_proforma_rpc: { Args: { p_proforma_id: string }; Returns: Json }
       email_queue_dispatch: { Args: never; Returns: undefined }
       embarque_admin_pendientes_resumen: {
         Args: { p_embarque_id: string }
@@ -8876,6 +8897,7 @@ export type Database = {
         }
         Returns: Json
       }
+      reactivar_cotizacion_rpc: { Args: { p_id: string }; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
