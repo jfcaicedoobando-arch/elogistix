@@ -13,6 +13,7 @@ import type { GrupoProyeccion } from "@/features/facturacion/domain/proyeccionFa
 
 const grupo = (over: Partial<GrupoProyeccion> = {}): GrupoProyeccion => ({
   expediente: "LCM-0001",
+  sinTc: false,
   cliente_nombre: "ACME, S.A. de C.V.",
   operador: "Ana",
   eta: "2026-07-15",

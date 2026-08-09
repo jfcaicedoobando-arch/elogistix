@@ -53,6 +53,7 @@ describe("sumarConceptosEnUsd", () => {
 
 const fila = (over: Partial<FilaProyeccion>): FilaProyeccion => ({
   embarque_id: "e1",
+  sin_tc: false,
   expediente: "EXP-001",
   cliente_nombre: "Acme",
   operador: "Op1",

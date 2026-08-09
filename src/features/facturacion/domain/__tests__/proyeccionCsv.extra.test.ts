@@ -10,6 +10,7 @@ import type { GrupoProyeccion } from "@/features/facturacion/domain/proyeccionFa
 function makeGrupo(overrides: Partial<GrupoProyeccion> = {}): GrupoProyeccion {
   return {
     expediente: "EXP-100",
+    sinTc: false,
     cliente_nombre: "Cliente Test",
     operador: "Operador X",
     eta: "2024-08-20",

@@ -14,6 +14,7 @@ import type { FilaProyeccion } from "../types";
 
 const base: FilaProyeccion = {
   embarque_id: "e1",
+  sin_tc: false,
   expediente: "EXP-100",
   cliente_nombre: "ACME",
   operador: "JDOE",
