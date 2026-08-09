@@ -183,9 +183,9 @@ describe("costeo/services/tarifas", () => {
       expect(args.p_recargos[0]).toMatchObject({ concepto: "BAF", lado: "origen", incluido_en_total: true });
     });
 
-    it("propaga el error de la RPC", async () => {
+    it("updateTarifaConRecargos propaga el error de actualizar_tarifa_con_recargos_rpc", async () => {
       mock.setRpcResult("actualizar_tarifa_con_recargos_rpc", { data: null, error: { message: "boom" } });
-      await expect(updateTarifaConRecargos("t8", baseInput)).rejects.toBeTruthy();
+      await expect(updateTarifaConRecargos("t8", baseInput)).rejects.toThrow(/boom/);
     });
   });
 

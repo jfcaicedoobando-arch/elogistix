@@ -155,9 +155,9 @@ describe("convertirLead", () => {
     expect(r).toEqual({ clienteId: null, oportunidadId: "op-prev" });
   });
 
-  it("propaga el error de la RPC", async () => {
+  it("convertirLead propaga el error de convertir_lead_rpc", async () => {
     mock.setRpcResult("convertir_lead_rpc", { data: null, error: { message: "lead update fail" } });
-    await expect(convertirLead(baseParams, user)).rejects.toBeTruthy();
+    await expect(convertirLead(baseParams, user)).rejects.toThrow(/lead update fail/);
   });
 
   it("lanza si la RPC no devuelve oportunidad", async () => {

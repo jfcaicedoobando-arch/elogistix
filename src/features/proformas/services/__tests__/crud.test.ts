@@ -93,7 +93,7 @@ describe("services/proforma/crud", () => {
     });
     await expect(
       eliminarProforma({ proformaId: "pf1", embarqueId: "e1" }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/LC_PROFORMA_FACTURADA/);
   });
 
   it("aprobarProformas rechaza con array vacío", async () => {

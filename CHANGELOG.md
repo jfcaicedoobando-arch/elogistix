@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.473.3] - 2026-08-09
+- CI (`audit:tests`) — se reemplazan 3 aserciones débiles `rejects.toBeTruthy()` por `rejects.toThrow(/mensaje/)` (tarifas, convertir lead, eliminar proforma) y se renombran títulos duplicados de tests para reflejar la RPC que validan.
+
 ## [13.473.2] - 2026-08-09
 - Ola 6 (fix) — `convertir_lead_rpc`: al crear el cliente desde un prospecto ahora se envían RFC, dirección, estado y CP como texto vacío. Antes fallaba con violación de NOT NULL en `clientes.rfc` en entornos sin valores por omisión (CI).
 
