@@ -93,6 +93,8 @@ export async function fetchPagosRepPendientes(orgId: string): Promise<FilaRepPen
     )
     .eq("organization_id", orgId)
     .in("estado_rep", ["Pendiente", "Error"])
+    // A6: los pagos eliminados no deben aparecer en la bandeja de REP.
+    .is("deleted_at", null)
     .order("fecha_pago", { ascending: false })
     .limit(500);
   if (error) throw error;
