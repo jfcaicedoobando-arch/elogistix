@@ -79,15 +79,14 @@ async function loadFacturasVivas(
   desde: string | null | undefined,
   hasta: string | null | undefined,
 ): Promise<FacturaCliente[]> {
-  const estadosExcluidos = ['Borrador', 'Cancelada', 'Sustituida'];
-  let q = adminClient
-    .from('facturas')
-    .select('total, saldo, moneda, fecha_vencimiento, estado')
-    .eq('cliente_id', clienteId)
-    .not('estado', 'in', `(${estadosExcluidos.join(',')})`);
-  if (desde) q = q.gte('fecha_emision', desde);
-  if (hasta) q = q.lte('fecha_emision', hasta);
-  const { data, error } = await q;
+  // A8 (v13.469.0): `facturas` no tiene columna `saldo` (se calcula con pagos y
+  // notas de crédito vigentes). La RPC devuelve el saldo real y ya excluye
+  // Borrador / Cancelada / Sustituida.
+  const { data, error } = await adminClient.rpc('facturas_cartera_cliente', {
+    p_cliente_id: clienteId,
+    p_desde: desde ?? null,
+    p_hasta: hasta ?? null,
+  });
   if (error) throw new Error(`Error al leer facturas: ${error.message}`);
   return (data ?? []) as FacturaCliente[];
 }
