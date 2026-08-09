@@ -50,11 +50,13 @@ export function emailPermitido(
 
   const allowlist = parseAllowlist(allowlistRaw);
   if (allowlist.length > 0) {
-    return allowlist.some((entry) =>
-      entry.includes("@")
-        ? entry === target
-        : entry.replace(/^@/, "") === dominio
-    );
+    return allowlist.some((entry) => {
+      // "@dominio.com" o "dominio.com" = regla de dominio;
+      // "persona@dominio.com" = regla de email exacto.
+      if (entry.startsWith("@")) return entry.slice(1) === dominio;
+      if (!entry.includes("@")) return entry === dominio;
+      return entry === target;
+    });
   }
 
   return DOMINIOS_E2E_POR_DEFECTO.includes(dominio);
