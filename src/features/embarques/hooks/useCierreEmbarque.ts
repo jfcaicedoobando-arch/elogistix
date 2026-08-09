@@ -57,8 +57,10 @@ export function useCerrarEmbarque(embarqueId: string) {
 
 export function useReabrirEmbarque(embarqueId: string) {
   const qc = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
-    mutationFn: (motivo: string) => reabrirEmbarque(embarqueId, motivo),
+    mutationFn: (motivo: string) =>
+      reabrirEmbarque(embarqueId, motivo, user?.email ?? ""),
     onSuccess: () => {
       invalidarTodo(qc, embarqueId);
       notifySuccess(undefined, { title: "Embarque reabierto" });
