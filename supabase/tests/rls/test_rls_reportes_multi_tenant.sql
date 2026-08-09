@@ -61,7 +61,7 @@ DECLARE
   org_b  uuid := gen_random_uuid();
   u_a    uuid := gen_random_uuid();  -- admin_org de org_a
   u_cont uuid := gen_random_uuid();  -- contador de org_a
-  u_view uuid := gen_random_uuid();  -- viewer de org_a
+  u_view uuid := gen_random_uuid();  -- customer_service de org_a
   u_b    uuid := gen_random_uuid();  -- admin_org de org_b
   u_sa   uuid := gen_random_uuid();  -- super_admin sin membresía
   cli_a  uuid := gen_random_uuid();
@@ -80,11 +80,11 @@ BEGIN
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
     (org_a, u_a, 'admin_org'),
     (org_a, u_cont, 'contador'),
-    (org_a, u_view, 'viewer'),
+    (org_a, u_view, 'customer_service'),
     (org_b, u_b, 'admin_org');
 
   INSERT INTO public.user_roles(user_id, role) VALUES
-    (u_a, 'admin_org'), (u_cont, 'contador'), (u_view, 'viewer'),
+    (u_a, 'admin_org'), (u_cont, 'contador'), (u_view, 'customer_service'),
     (u_b, 'admin_org'), (u_sa, 'super_admin');
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
@@ -153,7 +153,7 @@ BEGIN
   PERFORM pg_temp.as_user(u_view);
   PERFORM pg_temp.assert_rows(
     format('SELECT * FROM public.cxp_aging_proveedores(%L::uuid, CURRENT_DATE)', org_b),
-    0, 'cxp_aging_proveedores(org_b) desde viewer de org_a'
+    0, 'cxp_aging_proveedores(org_b) desde customer_service de org_a'
   );
 
   -- El contador de org_a sí ve su propia cartera (no es un falso verde).
