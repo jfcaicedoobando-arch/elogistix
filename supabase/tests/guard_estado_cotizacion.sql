@@ -18,8 +18,8 @@ BEGIN
   VALUES (v_org, 'CLIENTE GUARD COT', 'XAXX010101000', 'guard-cot@test.local')
   RETURNING id INTO v_cli;
 
-  INSERT INTO public.cotizaciones (organization_id, cliente_id, estado)
-  VALUES (v_org, v_cli, 'Borrador'::public.estado_cotizacion)
+  INSERT INTO public.cotizaciones (organization_id, cliente_id, estado, folio)
+  VALUES (v_org, v_cli, 'Borrador'::public.estado_cotizacion, 'COT-GUARD-0001')
   RETURNING id INTO v_cot;
 
   -- Borrador → Vencida (ya permitido)
