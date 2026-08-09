@@ -84,10 +84,23 @@ async function guard(
     return json({ error: "unauthorized" }, 401);
   }
 
+  let payload: ProvisionPayload;
   try {
-    const payload = (await req.json()) as ProvisionPayload;
-    return { payload };
+    payload = (await req.json()) as ProvisionPayload;
   } catch {
     return json({ error: "invalid_json" }, 400);
   }
+
+  // A9: el secreto compartido no basta. El email objetivo debe estar en la
+  // allowlist de cuentas de prueba; así nadie puede resetear la contraseña de
+  // una cuenta real (ni darle rol admin) desde esta función.
+  const rechazado = primerEmailNoPermitido(
+    [payload.admin?.email, payload.portal?.email],
+    Deno.env.get("E2E_PROVISION_EMAIL_ALLOWLIST"),
+  );
+  if (rechazado) {
+    return json({ error: "email_not_allowed", email: rechazado }, 403);
+  }
+
+  return { payload };
 }
