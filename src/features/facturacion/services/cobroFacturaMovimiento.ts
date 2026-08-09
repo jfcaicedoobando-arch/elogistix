@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { cargoEnMonedaCuenta } from "@/features/cxp/services/pagoProveedorMovimiento";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { logger } from "@/lib/observability/logger";
 
 export interface MovimientoCobroInput {
   pagoId: string;
@@ -72,6 +73,14 @@ export async function crearMovimientoBancarioCobro(
     monedaDeCuenta(input.cuentaBancariaId),
   ]);
   if (!ctx.organizationId) return false;
+  // C4: sin TC oficial no inventamos conversión. Si la cuenta es de otra
+  // moneda, no se abona nada (mejor un movimiento faltante que un saldo falso).
+  if (monedaCuenta && monedaCuenta !== input.moneda && !(input.tipoCambioUsd && input.tipoCambioUsd > 0)) {
+    logger.warn("Cobro no abonado al banco: moneda de la cuenta distinta y sin TC oficial", {
+      pagoId: input.pagoId, monedaPago: input.moneda, monedaCuenta,
+    });
+    return false;
+  }
 
   const payload: TablesInsert<"bbva_movimientos"> = {
     organization_id: ctx.organizationId,
