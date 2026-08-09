@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.469.2] - 2026-08-09
+- `guard_estado_cotizacion.sql`: la cotización de prueba se creaba sin conceptos de venta, así que el trigger `_cotizaciones_bloquear_envio_sin_importes` bloqueaba (correctamente) el paso a 'Enviada'. El fixture ahora incluye un concepto de 1 x 1000 USD. No se modificó ninguna regla de negocio.
+
 ## [13.469.1] - 2026-08-09
 - Pruebas SQL en CI:
   - `test_rls_reportes_multi_tenant.sql`: el helper contaba con `SELECT count(*) FROM (SELECT rpc(...))`, y Postgres descartaba la llamada a la RPC (columna escalar sin usar), así que "la llamada NO fue rechazada" era un falso rojo. Ahora se fuerza la evaluación con un CTE `MATERIALIZED`.

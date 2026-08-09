@@ -18,9 +18,12 @@ BEGIN
   VALUES (v_org, 'CLIENTE GUARD COT', 'XAXX010101000', 'guard-cot@test.local')
   RETURNING id INTO v_cli;
 
-  INSERT INTO public.cotizaciones (organization_id, cliente_id, estado, folio, modo, tipo)
+  -- Con importes: el trigger `_cotizaciones_bloquear_envio_sin_importes`
+  -- impide pasar a 'Enviada' una cotización sin total de venta.
+  INSERT INTO public.cotizaciones (organization_id, cliente_id, estado, folio, modo, tipo, conceptos_venta)
   VALUES (v_org, v_cli, 'Borrador'::public.estado_cotizacion, 'COT-GUARD-0001',
-          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
+          '[{"descripcion":"FLETE GUARD","cantidad":1,"precio_unitario":1000,"moneda":"USD","aplica_iva":false}]'::jsonb)
   RETURNING id INTO v_cot;
 
   -- Borrador → Vencida (ya permitido)
