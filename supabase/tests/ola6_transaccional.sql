@@ -14,6 +14,16 @@ DECLARE
   v_op2 uuid;
   v_emb uuid;
   v_pf uuid;
+  v_tarifa uuid;
+  v_agente uuid;
+  v_ruta uuid;
+  v_prov uuid;
+  v_naviera uuid;
+  v_tipo uuid;
+  v_p1 uuid;
+  v_p2 uuid;
+  v_n integer;
+  v_flete numeric;
 BEGIN
   INSERT INTO public.organizations (nombre, rfc, plan, activo)
   VALUES ('TEST OLA6', 'TO6000000XX0', 'basico', true)
@@ -132,7 +142,74 @@ BEGIN
     RAISE EXCEPTION 'OLA6 M15 FAIL: la eliminación no es idempotente';
   END IF;
 
+  ----------------------------------------------------------------------------
+  -- M7: actualizar_tarifa_con_recargos_rpc (una sola transacción)
+  ----------------------------------------------------------------------------
+  SELECT id INTO v_naviera FROM public.navieras ORDER BY code LIMIT 1;
+  SELECT id INTO v_tipo FROM public.tipos_contenedor ORDER BY code LIMIT 1;
+  SELECT id INTO v_p1 FROM public.puertos ORDER BY code LIMIT 1;
+  SELECT id INTO v_p2 FROM public.puertos ORDER BY code DESC LIMIT 1;
+
+  INSERT INTO public.proveedores (organization_id, nombre)
+  VALUES (v_org, 'PROV OLA6') RETURNING id INTO v_prov;
+
+  INSERT INTO public.costeo_agentes (organization_id, proveedor_id, nombre, pais)
+  VALUES (v_org, v_prov, 'AGENTE OLA6', 'CN') RETURNING id INTO v_agente;
+
+  INSERT INTO public.costeo_rutas (organization_id, puerto_origen_id, puerto_destino_id)
+  VALUES (v_org, v_p1, v_p2) RETURNING id INTO v_ruta;
+
+  INSERT INTO public.costeo_tarifas (
+    organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
+    flete_base, vigente_desde, vigente_hasta
+  ) VALUES (
+    v_org, v_agente, v_naviera, v_ruta, v_tipo,
+    2000, CURRENT_DATE, CURRENT_DATE + 30
+  ) RETURNING id INTO v_tarifa;
+
+  INSERT INTO public.costeo_tarifa_recargos (
+    tarifa_id, organization_id, concepto, lado, monto, moneda, incluido_en_total
+  ) VALUES (v_tarifa, v_org, 'VIEJO', 'origen', 111, 'USD', true);
+
+  PERFORM public.actualizar_tarifa_con_recargos_rpc(
+    v_tarifa,
+    jsonb_build_object('flete_base', 2500, 'notas', 'ola6'),
+    jsonb_build_array(
+      jsonb_build_object('concepto', 'BAF', 'lado', 'origen', 'monto', 100, 'incluido_en_total', true),
+      jsonb_build_object('concepto', 'THC', 'lado', 'destino', 'monto', 50, 'incluido_en_total', false),
+      jsonb_build_object('concepto', '  ', 'lado', 'origen', 'monto', 80),
+      jsonb_build_object('concepto', 'CERO', 'lado', 'origen', 'monto', 0)
+    )
+  );
+
+  SELECT flete_base INTO v_flete FROM public.costeo_tarifas WHERE id = v_tarifa;
+  IF v_flete <> 2500 THEN
+    RAISE EXCEPTION 'OLA6 M7 FAIL: flete_base no se actualizó (%)', v_flete;
+  END IF;
+
+  SELECT count(*) INTO v_n FROM public.costeo_tarifa_recargos WHERE tarifa_id = v_tarifa;
+  IF v_n <> 2 THEN
+    RAISE EXCEPTION 'OLA6 M7 FAIL: se esperaban 2 recargos válidos, hay %', v_n;
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.costeo_tarifa_recargos WHERE tarifa_id = v_tarifa AND concepto = 'VIEJO') THEN
+    RAISE EXCEPTION 'OLA6 M7 FAIL: el recargo anterior no fue reemplazado';
+  END IF;
+
+  -- Tarifa inexistente: la RPC debe rechazar, no crear nada.
+  BEGIN
+    PERFORM public.actualizar_tarifa_con_recargos_rpc(
+      gen_random_uuid(), '{}'::jsonb, '[]'::jsonb);
+    RAISE EXCEPTION 'OLA6 M7 FAIL: se permitió actualizar una tarifa inexistente';
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM NOT LIKE '%LC_TARIFA_NO_ENCONTRADA%' THEN RAISE; END IF;
+  END;
+
   -- Limpieza
+  DELETE FROM public.costeo_tarifa_recargos WHERE organization_id = v_org;
+  DELETE FROM public.costeo_tarifas WHERE organization_id = v_org;
+  DELETE FROM public.costeo_rutas WHERE organization_id = v_org;
+  DELETE FROM public.costeo_agentes WHERE organization_id = v_org;
+  DELETE FROM public.proveedores WHERE organization_id = v_org;
   DELETE FROM public.proformas WHERE organization_id = v_org;
   DELETE FROM public.embarques WHERE organization_id = v_org;
   DELETE FROM public.crm_oportunidades WHERE organization_id = v_org;
@@ -142,5 +219,5 @@ BEGIN
   DELETE FROM public.clientes WHERE organization_id = v_org;
   DELETE FROM public.organizations WHERE id = v_org;
 
-  RAISE NOTICE 'OK ola6_transaccional (A3, M3, M4, M15)';
+  RAISE NOTICE 'OK ola6_transaccional (A3, M3, M4, M7, M15)';
 END$$;
