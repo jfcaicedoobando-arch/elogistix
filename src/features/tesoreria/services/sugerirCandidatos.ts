@@ -23,15 +23,23 @@ export interface Candidato {
   delta_monto: number;
 }
 
+/** Monedas soportadas por el enum `moneda` de la base. */
+export type MonedaSoportada = "MXN" | "USD" | "EUR";
+
+function normalizaMoneda(v: unknown): MonedaSoportada {
+  const m = String(v ?? "MXN").toUpperCase();
+  return m === "USD" || m === "EUR" ? m : "MXN";
+}
+
 /** Moneda de la cuenta bancaria del movimiento (default MXN si no se resuelve). */
-export async function monedaDeCuenta(cuentaBancariaId: string | null): Promise<string> {
+export async function monedaDeCuenta(cuentaBancariaId: string | null): Promise<MonedaSoportada> {
   if (!cuentaBancariaId) return "MXN";
   const { data } = await supabase
     .from("cuentas_bancarias")
     .select("moneda")
     .eq("id", cuentaBancariaId)
     .maybeSingle();
-  return (data?.moneda ?? "MXN").toString().toUpperCase();
+  return normalizaMoneda(data?.moneda);
 }
 
 export async function sugerirCandidatos(
@@ -41,7 +49,9 @@ export async function sugerirCandidatos(
   const monto = Number(mov.cargo) > 0 ? Number(mov.cargo) : Number(mov.abono);
   if (monto <= 0) return [];
   const esCargo = Number(mov.cargo) > 0;
-  const moneda = (monedaCuenta ?? (await monedaDeCuenta(mov.cuenta_bancaria_id))).toUpperCase();
+  const moneda: MonedaSoportada = monedaCuenta
+    ? normalizaMoneda(monedaCuenta)
+    : await monedaDeCuenta(mov.cuenta_bancaria_id);
 
   const { desde: desdeIso, hasta: hastaIso } = rangoFechasIso(mov.fecha, TOLERANCIA_DIAS);
   const min = monto - TOLERANCIA_MONTO_MXN;
