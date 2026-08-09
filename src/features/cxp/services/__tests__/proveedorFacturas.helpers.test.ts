@@ -120,8 +120,8 @@ describe("mapJoinedRow", () => {
   it("suma pagos vivos e ignora pagos eliminados", () => {
     const row = baseJoined({
       pagos_proveedor: [
-        { monto: 50, deleted_at: null },
-        { monto: 999, deleted_at: "2026-06-10" }, // ignorado
+        { monto: 50, monto_en_moneda_factura: null, deleted_at: null },
+        { monto: 999, monto_en_moneda_factura: null, deleted_at: "2026-06-10" }, // ignorado
       ],
     });
     const out = mapJoinedRow(row);
@@ -145,7 +145,7 @@ describe("mapJoinedRow", () => {
   it("saldo nunca es negativo aunque pagos+NC excedan total", () => {
     const row = baseJoined({
       total: 100,
-      pagos_proveedor: [{ monto: 200, deleted_at: null }],
+      pagos_proveedor: [{ monto: 200, monto_en_moneda_factura: null, deleted_at: null }],
     });
     const out = mapJoinedRow(row);
     expect(out.saldo).toBe(0);
@@ -155,7 +155,7 @@ describe("mapJoinedRow", () => {
     const row = baseJoined({
       fecha_vencimiento: "2026-01-01",
       total: 100,
-      pagos_proveedor: [{ monto: 100, deleted_at: null }],
+      pagos_proveedor: [{ monto: 100, monto_en_moneda_factura: null, deleted_at: null }],
     });
     const out = mapJoinedRow(row);
     expect(out.dias_vencido).toBe(0);
