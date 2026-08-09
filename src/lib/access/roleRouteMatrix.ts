@@ -184,6 +184,9 @@ function basePath(url: string): string {
  */
 export function hasRouteAccess(role: AppRole | null | undefined, url: string): boolean {
   const path = basePath(url);
+  if (PREFIJOS_PLATAFORMA.some((p) => path === p || path.startsWith(`${p}/`))) {
+    return role === "super_admin";
+  }
   const allowed = ROLE_ROUTE_MATRIX[path];
   if (!allowed) return RUTAS_LIBRES.includes(path);
   if (!role) return false;
