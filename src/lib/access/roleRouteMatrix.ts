@@ -90,7 +90,7 @@ export const ROLES_INTERNOS: AppRole[] = [
   "gerente_operaciones", "gerente_comercial", "gerente_visor",
 ];
 export const INICIO_ROLES: AppRole[] = [...ROLES_INTERNOS];
-export const OPERACIONES_ROLES: AppRole[] = [...EMBARQUES_ROLES];
+export const OPERACIONES_ROLES: AppRole[] = [...ROLES_INTERNOS];
 
 /**
  * Rutas sin restricción de rol (fail-closed: lo que no está en la matriz ni
