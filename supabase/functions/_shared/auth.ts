@@ -126,14 +126,13 @@ export const ROLES_CONSULTA_FISCAL: readonly string[] = [
 ];
 
 /**
- * FIX C2 (S5-02) — Membresía + rol. Antes las functions `facturapi-*` sólo
- * verificaban membresía (`authorizeOrgMembership`), así que un `viewer`
- * podía timbrar/cancelar CFDI. Semántica:
+ * FIX C2 (S5-02) + A13 (Ola 4) — Membresía + rol efectivo. Semántica:
  *   1) super_admin/admin global (`user_roles`) → acceso cross-org.
  *   2) Miembro de la org cuyo `organization_members.role` (rol efectivo)
  *      está en `rolesPermitidos`.
- *   3) Respaldo: miembro sin rol de org pero con rol global permitido
- *      (fallback `orgRole ?? role` del frontend).
+ *   3) Miembro SIN rol de organización: se respalda en el rol global.
+ * Si la membresía tiene rol, éste manda: una democión a nivel organización
+ * revoca el acceso aunque el rol global heredado siga siendo permisivo.
  */
 export async function authorizeOrgRole(
   adminClient: SupabaseClient,
@@ -156,7 +155,8 @@ export async function authorizeOrgRole(
     .eq("organization_id", organizationId)
     .maybeSingle();
   if (!member) return false;
-  if (member.role && rolesPermitidos.includes(member.role)) return true;
+  // El rol de la organización es la fuente de verdad cuando existe.
+  if (member.role) return rolesPermitidos.includes(member.role);
 
   const { data: globalRole } = await adminClient
     .from("user_roles")

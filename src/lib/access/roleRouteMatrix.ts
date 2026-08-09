@@ -78,13 +78,39 @@ export const AUDITORIA_ROLES: AppRole[] = ["admin", "admin_org", "super_admin", 
 export const USUARIOS_ROLES: AppRole[] = ["admin", "admin_org", "super_admin"];
 export const CONFIGURACION_ROLES: AppRole[] = ["admin", "admin_org", "contador", "super_admin"];
 
+/**
+ * M11 — `/inicio` y `/operaciones` ya no son de acceso libre. Se listan con
+ * todos los roles internos (los portales `cliente` y `agente_carga` viven en
+ * `/portal` y `/agente` y quedan fuera).
+ */
+export const ROLES_INTERNOS: AppRole[] = [
+  "admin", "admin_org", "super_admin", "operador", "coordinador_logistico",
+  "customer_service", "viewer", "contador", "tesorero", "auxiliar_contable",
+  "ejecutivo_cobranza", "ejecutivo_pricing", "vendedor",
+  "gerente_operaciones", "gerente_comercial", "gerente_visor",
+];
+export const INICIO_ROLES: AppRole[] = [...ROLES_INTERNOS];
+export const OPERACIONES_ROLES: AppRole[] = [...ROLES_INTERNOS];
 
 /**
- * Mapa `ruta base → roles permitidos`. Rutas no listadas aquí (`/inicio`,
- * `/operaciones`, `/ayuda`, redirects, etc.) son accesibles para cualquier
- * usuario autenticado.
+ * Rutas sin restricción de rol (fail-closed: lo que no está en la matriz ni
+ * en esta lista se deniega). Sólo utilidades sin datos de negocio.
+ */
+export const RUTAS_LIBRES: readonly string[] = Object.freeze([
+  "/",
+  "/ayuda",
+]);
+
+/** Prefijos reservados a la consola de plataforma (dueño Libre Carga). */
+export const PREFIJOS_PLATAFORMA: readonly string[] = Object.freeze(["/admin"]);
+
+/**
+ * Mapa `ruta base → roles permitidos`. Toda ruta con datos de negocio debe
+ * estar listada aquí; `hasRouteAccess` deniega lo no listado (M11).
  */
 export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.freeze({
+  "/inicio": INICIO_ROLES,
+  "/operaciones": OPERACIONES_ROLES,
   "/dashboard": DASHBOARD_DIRECCION_ROLES,
   "/embarques": EMBARQUES_ROLES,
   "/facturacion": FACTURACION_ROLES,
@@ -137,6 +163,14 @@ export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.fre
   "/auditoria": AUDITORIA_ROLES,
   "/usuarios": USUARIOS_ROLES,
   "/configuracion": CONFIGURACION_ROLES,
+  // Alias legacy que sólo redirigen a su ruta nueva; heredan los mismos roles.
+  "/cxp": COMPRAS_HUB_ROLES,
+  "/cxp/por-capturar": COMPRAS_POR_CAPTURAR_ROLES,
+  "/cxp/por-pagar": COMPRAS_POR_PAGAR_ROLES,
+  "/proveedores": PROVEEDORES_ROLES,
+  "/rentabilidad": REPORTES_ROLES,
+  "/reportes": REPORTES_ROLES,
+  "/sistema/bitacora": BITACORA_ROLES,
 });
 
 /** Quita querystring de una URL de sidebar (ej. `/proformas?estado=aceptada`). */
@@ -145,13 +179,16 @@ function basePath(url: string): string {
 }
 
 /**
- * ¿El rol tiene acceso a la ruta? Rutas no listadas en la matriz son de
- * acceso libre para cualquier usuario autenticado.
+ * ¿El rol tiene acceso a la ruta? Fail-closed (M11): si la ruta no está en la
+ * matriz y no es una ruta libre, se deniega el acceso.
  */
 export function hasRouteAccess(role: AppRole | null | undefined, url: string): boolean {
   const path = basePath(url);
+  if (PREFIJOS_PLATAFORMA.some((p) => path === p || path.startsWith(`${p}/`))) {
+    return role === "super_admin";
+  }
   const allowed = ROLE_ROUTE_MATRIX[path];
-  if (!allowed) return true;
+  if (!allowed) return RUTAS_LIBRES.includes(path);
   if (!role) return false;
   return allowed.includes(role);
 }

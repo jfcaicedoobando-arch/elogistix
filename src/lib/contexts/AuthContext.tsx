@@ -55,9 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // durante la ventana en que `user != null` pero `role == null`.
   const loading = sessionLoading || (!!user && profileLoading);
 
-  // effectiveRole: orgRole para usuarios regulares, rol global para super_admin
+  // effectiveRole: orgRole para usuarios regulares, rol global para super_admin.
+  // M1 — `super_admin` es un rol de plataforma: nunca puede otorgarse desde
+  // `organization_members`, así que se ignora si aparece como orgRole.
+  const orgRoleSeguro: AppRole | null =
+    profile.orgRole === "super_admin" ? null : profile.orgRole ?? null;
   const effectiveRole: AppRole | null =
-    profile.role === "super_admin" ? profile.role : profile.orgRole ?? profile.role;
+    profile.role === "super_admin" ? profile.role : orgRoleSeguro ?? profile.role;
 
   // Preload de rutas frecuentes en idle tras login → mejora TTI percibido al navegar
   useEffect(() => {
