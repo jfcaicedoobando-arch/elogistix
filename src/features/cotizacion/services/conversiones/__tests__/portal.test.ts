@@ -24,7 +24,7 @@ describe("portalResponderCotizacion", () => {
     });
   });
 
-  it("propaga error cuando la RPC falla", async () => {
+  it("propaga error cuando portal_responder_cotizacion falla", async () => {
     mock.setRpcResult("portal_responder_cotizacion", {
       data: null,
       error: new Error("rpc-failed"),

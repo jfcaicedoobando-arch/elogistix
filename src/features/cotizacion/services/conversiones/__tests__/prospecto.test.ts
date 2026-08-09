@@ -78,7 +78,7 @@ describe("convertirProspectoACliente", () => {
     expect(registrarActividadMock).not.toHaveBeenCalled();
   });
 
-  it("propaga error cuando la RPC falla", async () => {
+  it("propaga error cuando convertir_prospecto_a_cliente_rpc falla", async () => {
     mock.setRpcResult("convertir_prospecto_a_cliente_rpc", { data: null, error: new Error("dup-rfc") });
     await expect(convertirProspectoACliente(baseInput)).rejects.toThrow("dup-rfc");
   });
