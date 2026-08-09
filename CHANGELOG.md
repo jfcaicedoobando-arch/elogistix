@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.471.1] - 2026-08-09
+- CI — Auditoría de migraciones (H4): la migración de Ola 4 creaba las políticas `Agente escribe own tarifas` y `Agente borra solo tarifas no aprobadas` sin `DROP POLICY IF EXISTS` previo; se agregó para hacerla reejecutable.
+
 ## [13.471.0] - 2026-08-09
 - Ola 4 (cierre) — Guards de componente reales: `/inicio`, `/operaciones` y el alias legacy `/proveedores/:id` ahora se envuelven en `guarded(...)`; antes eran accesibles por URL directa a cualquier usuario autenticado aunque el sidebar los ocultara. Nuevo test `appRoutesGuards.test.ts` que exige `guarded(...)` en toda ruta no libre (excepto redirecciones puras) y presencia en `ROLE_ROUTE_MATRIX`.
 - Ola 4 (cierre) — `authorizeOrgRole`: el rol global `admin` ya no hace bypass de una democión a nivel organización (sólo `super_admin`, rol de plataforma, mantiene acceso cross-org); `super_admin` en `organization_members` se ignora. 5 pruebas Deno nuevas en `auth_test.ts` y test `AuthContext.rolPlataforma.test.tsx`.

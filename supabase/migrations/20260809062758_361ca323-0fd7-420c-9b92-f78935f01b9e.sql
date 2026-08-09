@@ -88,6 +88,8 @@ CREATE TRIGGER trg_bloquear_rol_plataforma_om
 -- Ola 4 · M2: WITH CHECK no aplica a DELETE — política de borrado explícita.
 DROP POLICY IF EXISTS "Agente CRUD own tarifas" ON public.costeo_tarifas;
 
+DROP POLICY IF EXISTS "Agente escribe own tarifas" ON public.costeo_tarifas;
+
 CREATE POLICY "Agente escribe own tarifas"
   ON public.costeo_tarifas
   FOR ALL TO authenticated
@@ -102,6 +104,8 @@ CREATE POLICY "Agente escribe own tarifas"
     AND organization_id = current_agente_org()
     AND estado_aprobacion IN ('borrador','rechazada')
   );
+
+DROP POLICY IF EXISTS "Agente borra solo tarifas no aprobadas" ON public.costeo_tarifas;
 
 CREATE POLICY "Agente borra solo tarifas no aprobadas"
   ON public.costeo_tarifas
