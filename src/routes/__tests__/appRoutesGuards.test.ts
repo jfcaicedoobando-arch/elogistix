@@ -27,10 +27,14 @@ describe("appRoutes · guards explícitos por ruta", () => {
     expect(todas.length).toBeGreaterThan(30);
   });
 
+  /** Redirecciones puras: no renderizan datos, sólo navegan. */
+  const esRedirect = (element: string) =>
+    element.includes("RedirectPreserveSearch") || element.includes("<Navigate");
+
   it("toda ruta no libre está envuelta en guarded(...)", () => {
     const sinGuard = todas
       .filter(({ path }) => !RUTAS_LIBRES.includes(path) && !RUTAS_DEV_EXENTAS.includes(path))
-      .filter(({ element }) => !element.includes("guarded("))
+      .filter(({ element }) => !esRedirect(element) && !element.includes("guarded("))
       .map(({ path }) => path);
     expect(sinGuard).toEqual([]);
   });
