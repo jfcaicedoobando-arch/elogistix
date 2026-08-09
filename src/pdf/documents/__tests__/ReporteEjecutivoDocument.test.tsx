@@ -31,6 +31,8 @@ const mockSnapshot = {
   topDeudores: [],
   topAcreedores: [],
   alertas: [],
+  tipoCambioUsd: 18.5,
+  tcEsFallback: false,
 } satisfies SnapshotEjecutivo;
 
 // `cleanup()` ya lo ejecuta `src/test/setup.ts` globalmente — sin override local

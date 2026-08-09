@@ -141,7 +141,7 @@ export async function fetchDashboardEjecutivo(
     }),
   ]);
 
-  const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto };
+  const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto, tipoCambioUsd, tcEsFallback };
   const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total, eerrPrev);
   const alertas = calcularAlertas({ flujo, tesoreria, presupuesto });
 
@@ -152,7 +152,5 @@ export async function fetchDashboardEjecutivo(
     topDeudores: tesoreria.top_deudores,
     topAcreedores: tesoreria.top_acreedores,
     alertas,
-    tipoCambioUsd,
-    tcEsFallback,
   };
 }
