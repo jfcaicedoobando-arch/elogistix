@@ -25,6 +25,8 @@ export interface FilaProyeccion {
 
 /** Grupo consolidado por expediente. */
 export interface GrupoProyeccion {
+  /** Ola 5 · M5: algún embarque del expediente no tiene TC USD capturado. */
+  sinTc: boolean;
   expediente: string;
   cliente_nombre: string;
   operador: string;

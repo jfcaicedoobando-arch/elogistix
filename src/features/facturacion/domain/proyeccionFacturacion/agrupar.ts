@@ -19,6 +19,7 @@ function initGrupo(f: FilaProyeccion): GrupoProyeccion {
     margenPct: f.venta_mxn > 0 ? (profitMxn / f.venta_mxn) * 100 : 0,
     estado: f.tiene_proforma && f.tiene_factura_pdf ? "Facturado" : "Pendiente",
     embarqueIds: [f.embarque_id],
+    sinTc: f.sin_tc,
   };
 }
 
@@ -37,6 +38,8 @@ function mergeFila(prev: GrupoProyeccion, f: FilaProyeccion): void {
   prev.embarqueIds.push(f.embarque_id);
   if (f.eta && (!prev.eta || f.eta < prev.eta)) prev.eta = f.eta;
   if (!(f.tiene_proforma && f.tiene_factura_pdf)) prev.estado = "Pendiente";
+  // Ola 5 · M5: basta un embarque sin TC para marcar el expediente completo.
+  if (f.sin_tc) prev.sinTc = true;
 }
 
 /** Agrupa filas planas por expediente y consolida totales/estado. */
