@@ -11,6 +11,7 @@ import type { GrupoProyeccion } from "../types";
 
 const grupo = (over: Partial<GrupoProyeccion> = {}): GrupoProyeccion => ({
   expediente: "EXP-1",
+  sinTc: false,
   cliente_nombre: "ACME",
   operador: "JD",
   eta: "2026-06-30",

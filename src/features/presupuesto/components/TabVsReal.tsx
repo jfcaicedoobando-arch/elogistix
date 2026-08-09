@@ -126,6 +126,14 @@ export function TabVsReal() {
         <CardSkeleton lines={8} />
       ) : (
         <>
+          {data.gastos_sin_tc_count > 0 && (
+            <Card className="border-warning/50">
+              <CardContent className="p-3 text-sm text-warning">
+                {data.gastos_sin_tc_count} gasto(s) en moneda extranjera no tienen tipo de cambio
+                capturado y quedaron fuera del real. Captura su TC para que se reflejen aquí.
+              </CardContent>
+            </Card>
+          )}
           {sinPresupuestoGlobal && (
             <Card className="border-dashed">
               <CardContent className="p-3 text-sm text-muted-foreground">

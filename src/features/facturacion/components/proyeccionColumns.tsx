@@ -19,7 +19,21 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     enableSorting: true,
     sortingFn: sortByString<GrupoProyeccion>((g) => g.expediente),
     meta: { width: COL_W.folio, sticky: true, className: "font-mono font-medium whitespace-nowrap" },
-    cell: ({ row }) => row.original.expediente,
+    cell: ({ row }) => (
+      <span className="inline-flex items-center gap-1.5">
+        {row.original.expediente}
+        {row.original.sinTc && (
+          <Badge
+            variant="outline"
+            className="border-warning/40 text-warning font-normal"
+            title="El embarque no tiene tipo de cambio USD capturado: los importes en dólares no se valúan en pesos."
+          >
+            Sin TC
+          </Badge>
+        )}
+      </span>
+    ),
+
   },
   {
     id: "cliente",

@@ -119,6 +119,15 @@ export async function fetchDashboardEjecutivo(
     fetchTendencia12m(meses, fuente),
   ]);
   const tipoCambioUsd = tipoCambio.usdMxn;
+  // Ola 5 · A10: si el TC vino del fallback operativo (17.25/18.5), el tablero
+  // no debe presentarlo como cifra oficial: se marca el snapshot y se avisa a
+  // Sentry para detectar caídas prolongadas de la fuente DOF.
+  const tcEsFallback = tipoCambio.esFallback === true;
+  if (tcEsFallback) {
+    void import("@sentry/react").then((Sentry) => {
+      Sentry.captureMessage("dashboard_ejecutivo.tc_no_disponible", "warning");
+    }).catch(() => undefined);
+  }
   // A1/A2 fix (v13.300.49): tesorería y flujo reciben el TC para
   // convertir a MXN los saldos y flujos en USD.
   // P4: reutilizamos `cuentas` (ya fetched arriba) en vez de re-fetch dentro
@@ -132,7 +141,7 @@ export async function fetchDashboardEjecutivo(
     }),
   ]);
 
-  const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto };
+  const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto, tipoCambioUsd, tcEsFallback };
   const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total, eerrPrev);
   const alertas = calcularAlertas({ flujo, tesoreria, presupuesto });
 

@@ -60,13 +60,16 @@ describe("buildFilasProyeccion", () => {
     expect(filas[0].tiene_factura_pdf).toBe(true);
   });
 
-  it("usa TC=1 como fallback si vienen null", () => {
+  // Ola 5 · M5: sin TC no se asume 1:1; la fila se marca `sin_tc` y el TC queda
+  // en 0 para que la conversión a MXN no invente cifras.
+  it("marca sin_tc y TC=0 cuando el embarque no trae tipo de cambio", () => {
     const filas = buildFilasProyeccion(
       [emb({ tipo_cambio_usd: null, tipo_cambio_eur: null })],
       new Map(), new Map(), new Set(),
     );
-    expect(filas[0].tipo_cambio_usd).toBe(1);
-    expect(filas[0].tipo_cambio_eur).toBe(1);
+    expect(filas[0].tipo_cambio_usd).toBe(0);
+    expect(filas[0].tipo_cambio_eur).toBe(0);
+    expect(filas[0].sin_tc).toBe(true);
   });
 
   it("expediente '' cuando viene null", () => {
