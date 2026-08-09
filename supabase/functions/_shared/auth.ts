@@ -155,8 +155,11 @@ export async function authorizeOrgRole(
     .eq("organization_id", organizationId)
     .maybeSingle();
   if (!member) return false;
+  // M1 — `super_admin` es rol de plataforma: si aparece en `organization_members`
+  // (dato legacy o mal asignado) se ignora y se cae al rol global.
+  const rolOrg = member.role === "super_admin" ? null : member.role;
   // El rol de la organización es la fuente de verdad cuando existe.
-  if (member.role) return rolesPermitidos.includes(member.role);
+  if (rolOrg) return rolesPermitidos.includes(rolOrg);
 
   const { data: globalRole } = await adminClient
     .from("user_roles")
