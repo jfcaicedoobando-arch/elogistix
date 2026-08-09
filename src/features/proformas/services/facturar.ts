@@ -69,6 +69,54 @@ function construirFacturasAEmitir(
   return out;
 }
 
+const ERR_TOTAL_CERO =
+  "LC_PROFORMA_TOTAL_CERO: la proforma no tiene importes mayores a cero; corrige los conceptos antes de marcarla como facturada.";
+
+/** Valida que la proforma tenga importes antes de subir archivos a storage. */
+function assertImportes(proforma: { total_usd: number | null; total_mxn: number | null }): void {
+  if (Number(proforma.total_usd) <= 0 && Number(proforma.total_mxn) <= 0) {
+    throw new Error(ERR_TOTAL_CERO);
+  }
+}
+
+/** Inserta las facturas y devuelve los IDs (primaria y secundaria). */
+async function insertarFacturas(
+  facturasACrear: FacturaAEmitir[],
+): Promise<{ primera: string | null; segunda: string | null }> {
+  if (facturasACrear.length === 0) throw new Error(ERR_TOTAL_CERO);
+  const { data, error } = await supabase.from("facturas").insert(facturasACrear).select("id");
+  if (error) throw new Error(`Error al crear factura: ${error.message}`);
+  return { primera: data?.[0]?.id ?? null, segunda: data?.[1]?.id ?? null };
+}
+
+/**
+ * Marca la proforma como facturada con guard de idempotencia en BD.
+ * A5: el perdedor de una carrera no debe reportar éxito (0 filas afectadas).
+ */
+async function persistirFacturacion(
+  params: MarcarFacturadaParams,
+  ids: { primera: string | null; segunda: string | null },
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("proformas")
+    .update({
+      estado_proforma: "facturada",
+      folio_factura_externa: params.folioFacturaExterna,
+      fecha_facturacion: params.fechaFacturacion,
+      factura_id: ids.primera,
+      factura_secundaria_id: ids.segunda,
+    })
+    .eq("id", params.proformaId)
+    .is("factura_id", null)
+    .select("id");
+  if (error) throw error;
+  if (Array.isArray(data) && data.length !== 1) {
+    throw new Error(
+      "LC_PROFORMA_YA_FACTURADA: otro usuario marcó esta proforma como facturada; recarga la página para ver la factura vigente.",
+    );
+  }
+}
+
 /**
  * B-2: Marca una proforma como facturada de forma idempotente.
  * - Si la proforma ya tiene `factura_id`, no hace nada (retorno temprano).
@@ -84,26 +132,14 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     .single();
   if (errProf) throw errProf;
 
-
   // Idempotencia: si ya fue facturada, salir sin tocar nada.
-  if (proforma.factura_id) {
-    return;
-  }
+  if (proforma.factura_id) return;
 
-  // A5 (v13.469.0): validar importes ANTES de subir archivos, para no dejar
-  // PDF/XML huérfanos en storage cuando la proforma viene en ceros.
-  if (Number(proforma.total_usd) <= 0 && Number(proforma.total_mxn) <= 0) {
-    throw new Error(
-      "LC_PROFORMA_TOTAL_CERO: la proforma no tiene importes mayores a cero; corrige los conceptos antes de marcarla como facturada.",
-    );
-  }
+  assertImportes(proforma);
 
   const basePath = `${proforma.organization_id}/${proforma.id}`;
   const pdfUrl = await uploadFacturaFile(params.pdfFile, `${basePath}/factura.pdf`, "application/pdf", "PDF");
   const xmlUrl = await uploadFacturaFile(params.xmlFile, `${basePath}/factura.xml`, "application/xml", "XML");
-
-  const dias = proforma.dias_credito ?? 0;
-  const fechaVencimiento = addDays(params.fechaFacturacion, dias);
 
   const baseFactura = {
     numero: params.folioFacturaExterna,
@@ -113,50 +149,13 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     cliente_nombre: proforma.cliente_nombre,
     expediente: proforma.expediente,
     fecha_emision: params.fechaFacturacion,
-    fecha_vencimiento: fechaVencimiento,
+    fecha_vencimiento: addDays(params.fechaFacturacion, proforma.dias_credito ?? 0),
     estado: "Emitida" as const,
     factura_pdf_url: pdfUrl,
     factura_xml_url: xmlUrl,
     organization_id: proforma.organization_id,
   };
 
-  const facturasACrear = construirFacturasAEmitir(proforma, baseFactura);
-
-  // A5 (v13.469.0): nunca marcar "facturada" sin factura. Si los totales son 0
-  // no hay nada que cobrar y la venta quedaría fuera de cartera para siempre.
-  if (facturasACrear.length === 0) {
-    throw new Error(
-      "LC_PROFORMA_TOTAL_CERO: la proforma no tiene importes mayores a cero; corrige los conceptos antes de marcarla como facturada.",
-    );
-  }
-
-  const { data: facturasCreadas, error: errFact } = await supabase
-    .from("facturas")
-    .insert(facturasACrear)
-    .select("id");
-  if (errFact) throw new Error(`Error al crear factura: ${errFact.message}`);
-  const primeraFacturaId = facturasCreadas?.[0]?.id ?? null;
-  const segundaFacturaId = facturasCreadas?.[1]?.id ?? null;
-
-  const { data: proformasActualizadas, error: errUpd } = await supabase
-    .from("proformas")
-    .update({
-      estado_proforma: "facturada",
-      folio_factura_externa: params.folioFacturaExterna,
-      fecha_facturacion: params.fechaFacturacion,
-      factura_id: primeraFacturaId,
-      factura_secundaria_id: segundaFacturaId,
-    })
-    // Guard de idempotencia a nivel DB: sólo escribir si sigue sin factura_id.
-    .eq("id", params.proformaId)
-    .is("factura_id", null)
-    .select("id");
-  if (errUpd) throw errUpd;
-  // A5: el perdedor de una carrera no debe reportar éxito. PostgREST devuelve
-  // el arreglo de filas afectadas; 0 filas = otro proceso ya facturó.
-  if (Array.isArray(proformasActualizadas) && proformasActualizadas.length !== 1) {
-    throw new Error(
-      "LC_PROFORMA_YA_FACTURADA: otro usuario marcó esta proforma como facturada; recarga la página para ver la factura vigente.",
-    );
-  }
+  const ids = await insertarFacturas(construirFacturasAEmitir(proforma, baseFactura));
+  await persistirFacturacion(params, ids);
 }
