@@ -23,6 +23,10 @@ import {
   EMAIL_RE,
   computeInitialPrecarga,
 } from "@/hooks/emails/envioDocumentoInit";
+import {
+  computeDestinatarios,
+  computeCcEmails,
+} from "@/hooks/emails/envioDocumentoDerivados";
 export type Contacto = ContactoClienteEmail;
 export { EMAIL_RE } from "@/hooks/emails/envioDocumentoInit";
 const EMPTY_CONTACTOS: readonly Contacto[] = Object.freeze([]);
@@ -152,34 +156,16 @@ export function useEnvioDocumentoForm(
   const quitarManual = (e: string) =>
     setEmailsManualesAgregados((arr) => arr.filter((x) => x !== e));
 
-  const destinatarios = useMemo(() => {
-    const fromContactos = contactos
-      .filter((c) => seleccionados[c.id])
-      .map((c) => ({ email: c.email, nombre: c.contacto || c.nombre, contacto_id: c.id }));
-    const fromManual = emailsManualesAgregados.map((e) => ({ email: e }));
-    const seen = new Set<string>();
-    return [...fromContactos, ...fromManual].filter((d) => {
-      const k = d.email.toLowerCase();
-      if (seen.has(k)) return false;
-      seen.add(k);
-      return true;
-    });
-  }, [contactos, seleccionados, emailsManualesAgregados]);
+  const destinatarios = useMemo(
+    () => computeDestinatarios(contactos, seleccionados, emailsManualesAgregados),
+    [contactos, seleccionados, emailsManualesAgregados],
+  );
 
-  const ccEmails = useMemo(() => {
-    const base = user?.email ? [user.email] : [];
-    const extra = ccManual.split(/[,;\s]+/).map((e) => e.trim()).filter((e) => EMAIL_RE.test(e));
-    const recipientSet = new Set(destinatarios.map((d) => d.email.toLowerCase()));
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const e of [...base, ...extra]) {
-      const k = e.toLowerCase();
-      if (seen.has(k) || recipientSet.has(k)) continue;
-      seen.add(k);
-      out.push(e);
-    }
-    return out;
-  }, [user?.email, ccManual, destinatarios]);
+  const ccEmails = useMemo(
+    () => computeCcEmails(user?.email, ccManual, destinatarios),
+    [user?.email, ccManual, destinatarios],
+  );
+
 
   return {
     contactos,

@@ -65,7 +65,8 @@ describe("buildFilasProyeccion", () => {
   it("marca sin_tc y TC=0 cuando el embarque no trae tipo de cambio", () => {
     const filas = buildFilasProyeccion(
       [emb({ tipo_cambio_usd: null, tipo_cambio_eur: null })],
-      new Map(), new Map(), new Set(),
+      indexarPorEmbarque([{ embarque_id: "e1", total: 100, moneda: "USD" }], "total"),
+      new Map(), new Set(),
     );
     expect(filas[0].tipo_cambio_usd).toBe(0);
     expect(filas[0].tipo_cambio_eur).toBe(0);

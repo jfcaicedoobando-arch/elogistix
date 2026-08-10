@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.480.2] - 2026-08-10
+- Tests: se sincronizaron pruebas que quedaron desfasadas tras las migraciones: `registrarPagoFactura` ahora devuelve `{ pagoId, movimientoBancario }`, el hook `useRegistrarPagoSubmit` desestructura ese objeto (mock de `notifyWarning` agregado) y el caso `sin_tc` de la proyección requiere conceptos en USD.
+- Fix: se agregó el mensaje amigable de `LC_ORG_SCOPE_PENDIENTE`.
+- Refactor (Power of 10): `useEnvioDocumentoForm.ts` bajó de 208 líneas moviendo el cálculo de destinatarios y CC a `src/hooks/emails/envioDocumentoDerivados.ts`.
+- Verificación: suite completa en verde (970 archivos, 6543 pruebas).
+
 ## [13.480.1] - 2026-08-10
 - Ops (P3): nueva nota `docs/ops/purga-env-git.md` con el procedimiento para dejar de rastrear y purgar `.env` del historial de Git, la verificación posterior y el criterio de rotación de llaves. Se documentó que hoy el archivo sólo contiene valores públicos (URL, llave publicable, DSN de Sentry), por lo que no hay credenciales privadas expuestas.
 - Verificación (RG1c/RG3a): las membresías no tienen filas con rol `super_admin` ni con el rol antiguo `viewer`, así que las migraciones de datos propuestas afectarían 0 registros y no se ejecutan.

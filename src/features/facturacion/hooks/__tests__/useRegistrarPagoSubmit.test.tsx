@@ -3,6 +3,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 
 const notifySuccess = vi.fn();
 const notifyError = vi.fn();
+const notifyWarning = vi.fn();
 const emitirRep = vi.fn();
 const mutateAsync = vi.fn();
 const registrarActividadMutate = vi.fn();
@@ -10,6 +11,7 @@ const registrarActividadMutate = vi.fn();
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: (...a: unknown[]) => notifySuccess(...a),
   notifyError: (...a: unknown[]) => notifyError(...a),
+  notifyWarning: (...a: unknown[]) => notifyWarning(...a),
 }));
 vi.mock("@/features/facturacion/services/repFacturapi", () => ({
   emitirRep: (...a: unknown[]) => emitirRep(...a),
@@ -44,6 +46,7 @@ const baseArgs = {
 beforeEach(() => {
   notifySuccess.mockReset();
   notifyError.mockReset();
+  notifyWarning.mockReset();
   emitirRep.mockReset();
   mutateAsync.mockReset();
   registrarActividadMutate.mockReset();
@@ -51,7 +54,7 @@ beforeEach(() => {
 
 describe("useRegistrarPagoSubmit", () => {
   it("happy path PUE: registra pago, registra actividad y llama onSuccess sin timbrar REP", async () => {
-    mutateAsync.mockResolvedValue("pago-1");
+    mutateAsync.mockResolvedValue({ pagoId: "pago-1", movimientoBancario: "no_aplica" });
     const onSuccess = vi.fn();
     const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess));
 
@@ -77,7 +80,7 @@ describe("useRegistrarPagoSubmit", () => {
   });
 
   it("PPD timbrada: emite REP exitosamente y muestra dos toasts de éxito", async () => {
-    mutateAsync.mockResolvedValue("pago-2");
+    mutateAsync.mockResolvedValue({ pagoId: "pago-2", movimientoBancario: "no_aplica" });
     emitirRep.mockResolvedValue(undefined);
     const onSuccess = vi.fn();
     const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess));
@@ -94,7 +97,7 @@ describe("useRegistrarPagoSubmit", () => {
   });
 
   it("PPD timbrada: si emitirRep falla, notifica error de REP pero sigue llamando onSuccess", async () => {
-    mutateAsync.mockResolvedValue("pago-3");
+    mutateAsync.mockResolvedValue({ pagoId: "pago-3", movimientoBancario: "no_aplica" });
     emitirRep.mockRejectedValue(new Error("SAT down"));
     const onSuccess = vi.fn();
     const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess));
@@ -112,7 +115,7 @@ describe("useRegistrarPagoSubmit", () => {
   });
 
   it("PPD timbrada sin pagoId: no intenta timbrar REP", async () => {
-    mutateAsync.mockResolvedValue(null);
+    mutateAsync.mockResolvedValue({ pagoId: null, movimientoBancario: "no_aplica" });
     const onSuccess = vi.fn();
     const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess));
 
@@ -143,7 +146,7 @@ describe("useRegistrarPagoSubmit", () => {
   });
 
   it("expone timbrandoRep=true mientras emitirRep está en vuelo", async () => {
-    mutateAsync.mockResolvedValue("pago-4");
+    mutateAsync.mockResolvedValue({ pagoId: "pago-4", movimientoBancario: "no_aplica" });
     let resolveRep: () => void = () => {};
     emitirRep.mockImplementation(() => new Promise<void>((r) => { resolveRep = r; }));
     const { result } = renderHook(() => useRegistrarPagoSubmit(vi.fn()));
