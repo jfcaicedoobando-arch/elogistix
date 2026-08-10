@@ -33,11 +33,14 @@ export async function cancelarNotaCreditoFacturapi(
   notaCreditoId: string,
   motivo: MotivoCancelacionSat,
   sustituyeUuid?: string,
-): Promise<void> {
-  const { data, error } = await supabase.functions.invoke<{ ok?: boolean; error?: string; message?: string }>(
+): Promise<{ pending: boolean; message?: string }> {
+  const { data, error } = await supabase.functions.invoke<{ ok?: boolean; pending?: boolean; error?: string; message?: string }>(
     "facturapi-cancelar-nota-credito",
     { body: { nota_credito_id: notaCreditoId, motivo, sustituye_uuid: sustituyeUuid } },
   );
   if (error) throw new Error(error.message);
   if (data?.error) throw new Error(data.message ?? data.error);
+  // Ola 4 · N4: la cancelación puede quedar pendiente de aceptación del
+  // receptor; el hook lo comunica en el toast.
+  return { pending: data?.pending ?? false, message: data?.message };
 }

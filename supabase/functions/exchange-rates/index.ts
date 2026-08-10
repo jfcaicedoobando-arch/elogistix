@@ -66,7 +66,7 @@ const cacheHistorico = new Map<string, { rates: Rates; expiresAt: number }>();
  * Extrae la fecha objetivo: query string (`?fecha=YYYY-MM-DD`) y como fallback
  * el body JSON `{ fecha }` (para `supabase.functions.invoke`).
  */
-export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string }> {
+export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string; fechaIso: string }> {
   const hoy = new Date();
   // FIX-12 · `toISOString()` da el día en UTC — a las 19:00 CDMX ya es "mañana".
   const hoyIso = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City" }).format(hoy);
@@ -79,11 +79,31 @@ export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy:
     } catch { /* body no era JSON o vacío */ }
   }
   if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw) || raw >= hoyIso) {
-    return { fecha: hoy, esHoy: true, key: "hoy" };
+    // N14 (Ola 4): fechaIso es SIEMPRE el día civil MX — única llave válida
+    // para tipos_cambio_dof y coherente con el corte de la Publicación DOF.
+    return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso };
   }
   const d = new Date(raw + "T12:00:00Z");
-  if (Number.isNaN(d.getTime())) return { fecha: hoy, esHoy: true, key: "hoy" };
-  return { fecha: d, esHoy: false, key: raw };
+  if (Number.isNaN(d.getTime())) return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso };
+  return { fecha: d, esHoy: false, key: raw, fechaIso: raw };
+}
+
+/**
+ * N14 (Ola 4): milisegundos hasta la próxima medianoche en America/Mexico_City.
+ * Tope del caché de "hoy": el TC del día no puede sobrevivir al cambio de día
+ * MX (el TTL fijo de 12 h servía el TC de ayer hasta media mañana siguiente).
+ */
+export function msHastaMedianocheMx(now: Date): number {
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Mexico_City",
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(now);
+  const valor = (type: string) => Number(partes.find((p) => p.type === type)?.value ?? "0");
+  const h = valor("hour") % 24;
+  return ((23 - h) * 3600 + (59 - valor("minute")) * 60 + (60 - valor("second"))) * 1000;
 }
 
 /**
@@ -124,7 +144,7 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
   if (preflight) return preflight;
 
   const log = createLogger(req, "exchange-rates");
-  const { fecha, esHoy, key } = await resolverFecha(req);
+  const { fecha, esHoy, key, fechaIso } = await resolverFecha(req);
 
   // Caché: "hoy" con TTL corto; históricas con TTL largo (son inmutables).
   if (esHoy && cacheHoyRef && cacheHoyRef.expiresAt > Date.now()) {
@@ -140,12 +160,21 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
   }
 
   const guardarCache = (rates: Rates) => {
-    if (esHoy) cacheHoyRef = { rates, expiresAt: Date.now() + CACHE_TTL_MS };
+    if (esHoy) {
+      // N14 (Ola 4): (1) no cachear durante la ventana de desfase UTC
+      // (18:00–23:59 CST), cuando el día UTC ya es mañana; (2) el TTL nunca
+      // cruza la medianoche MX.
+      if (formatFechaBanxico(new Date()) !== fechaIso) return;
+      const ttl = Math.min(CACHE_TTL_MS, msHastaMedianocheMx(new Date()));
+      cacheHoyRef = { rates, expiresAt: Date.now() + ttl };
+    }
     else cacheHistorico.set(key, { rates, expiresAt: Date.now() + CACHE_TTL_HISTORICO_MS });
   };
 
   // 1) Tabla interna alimentada por el cron `tc-dof-diario`.
-  const deTabla = await leerTcDeTabla(formatFechaBanxico(fecha));
+  // N14 (Ola 4): llave MX — antes formatFechaBanxico(fecha) (UTC) consultaba
+  // la tabla con la fecha de "mañana" entre 18:00 y 23:59 CST.
+  const deTabla = await leerTcDeTabla(fechaIso);
   if (deTabla) {
     guardarCache(deTabla);
     log.finish(200, "rates_ok_tabla", { payload: deTabla });

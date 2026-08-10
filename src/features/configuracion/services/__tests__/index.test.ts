@@ -35,20 +35,37 @@ describe("configuracion service", () => {
     await expect(fetchConfiguracionByOrg("org1")).rejects.toThrow();
   });
 
-  it("fetchConfiguracion devuelve [] cuando data es null", async () => {
+  it("fetchConfiguracion filtra por organization_id y devuelve [] cuando data es null", async () => {
     mock.setTableResult("configuracion", { data: null, error: null });
-    const res = await fetchConfiguracion();
+    const res = await fetchConfiguracion("org1");
     expect(res).toEqual([]);
+    const call = mock.tableCalls.find((c) => c.table === "configuracion");
+    expect(call?.opArgs).toContainEqual(["organization_id", "org1"]);
+  });
+
+  it("fetchConfiguracion falla cerrado sin organizationId (Ola 4 · N11)", async () => {
+    await expect(fetchConfiguracion("")).rejects.toThrow(/organizationId/);
+    expect(mock.tableCalls.find((c) => c.table === "configuracion")).toBeUndefined();
   });
 
   it("updateConfiguracionByCategoriaClave hace update por item", async () => {
     mock.setTableResult("configuracion", { data: null, error: null });
-    await updateConfiguracionByCategoriaClave([
+    await updateConfiguracionByCategoriaClave("org1", [
       { categoria: "empresa", clave: "nombre", valor: "X" },
       { categoria: "empresa", clave: "rfc", valor: "Y" },
     ]);
     const calls = mock.tableCalls.filter((c) => c.table === "configuracion");
     expect(calls.length).toBe(2);
     expect(calls[0].ops).toContain("update");
+    expect(calls[0].opArgs).toContainEqual(["organization_id", "org1"]);
+  });
+
+  it("updateConfiguracionByCategoriaClave exige organizationId (Ola 4 · N11)", async () => {
+    await expect(
+      updateConfiguracionByCategoriaClave("", [
+        { categoria: "empresa", clave: "nombre", valor: "X" },
+      ]),
+    ).rejects.toThrow(/organizationId/);
+    expect(mock.tableCalls.filter((c) => c.table === "configuracion")).toHaveLength(0);
   });
 });

@@ -69,6 +69,18 @@ export function formatFechaBanxico(d: Date): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+/**
+ * N14 (Ola 4): día civil en America/Mexico_City. La fecha fiscal mexicana
+ * (Art. 20 CFF) es la del horario local: entre 18:00 y 23:59 CST el día UTC
+ * ya es "mañana" y cualquier corte/llave calculado en UTC queda desfasado.
+ * Usar SIEMPRE esta función como corte de `extraerPublicacionDof` y como
+ * llave de `tipos_cambio_dof`; `formatFechaBanxico` (UTC) queda sólo para
+ * acotar rangos de consulta a la API SIE, donde ±1 día es inocuo.
+ */
+export function isoDiaMexico(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City" }).format(d);
+}
+
 /** Rango `{inicio, fin}` de los últimos `dias` días para la consulta SIE. */
 export function rangoUltimosDias(
   hoy: Date,
@@ -105,7 +117,8 @@ export async function fetchUsdDof(
 ): Promise<{ tc: number | null; fechaAplicada?: string }> {
   const { inicio, fin } = rangoUltimosDias(fechaObjetivo);
   const json = await pedirSerie(SERIE_USD, `${inicio}/${fin}`, token, signal);
-  return extraerPublicacionDof(json, formatFechaBanxico(fechaObjetivo));
+  // N14 (Ola 4): el corte es el día civil MX, no el UTC (ver isoDiaMexico).
+  return extraerPublicacionDof(json, isoDiaMexico(fechaObjetivo));
 }
 
 /**
@@ -125,7 +138,8 @@ export async function fetchEurBanxico(
   try {
     const { inicio, fin } = rangoUltimosDias(fechaObjetivo);
     const json = await pedirSerie(SERIE_EUR, `${inicio}/${fin}`, token, signal);
-    return extraerPublicacionDof(json, formatFechaBanxico(fechaObjetivo)).tc;
+    // N14 (Ola 4): el corte es el día civil MX, no el UTC (ver isoDiaMexico).
+    return extraerPublicacionDof(json, isoDiaMexico(fechaObjetivo)).tc;
   } catch {
     return null;
   }

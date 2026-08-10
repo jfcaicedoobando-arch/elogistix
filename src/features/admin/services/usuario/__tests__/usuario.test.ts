@@ -87,20 +87,17 @@ describe("services/usuario", () => {
     expect(r).toEqual({ ok: true });
   });
 
-  it("createUserViaEdgeFunction crea usuario sin orgId", async () => {
-    mock.invoke.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
-    const r = await createUserViaEdgeFunction({
-      email: "a@b.com",
-      password: "xx",
-      role: "admin",
-    });
-    expect(r.user?.id).toBe("u1");
+  it("createUserViaEdgeFunction rechaza el alta sin orgId (Ola 4 · N13)", async () => {
+    await expect(
+      createUserViaEdgeFunction({ email: "a@b.com", password: "xx", role: "admin" }),
+    ).rejects.toThrow(/organización/i);
+    expect(mock.invoke).not.toHaveBeenCalled();
   });
 
   it("createUserViaEdgeFunction manda organization_id a la edge function (Q-05)", async () => {
     mock.invoke.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
     mock.setTableResult("organization_members", {
-      data: { user_id: "u1", role: "tesorero" },
+      data: [{ user_id: "u1", role: "tesorero", created_at: "2026-01-01", organization_id: "org1", organizations: null }],
       error: null,
     });
     await createUserViaEdgeFunction({
@@ -127,8 +124,19 @@ describe("services/usuario", () => {
   it("createUserViaEdgeFunction lanza si body trae error", async () => {
     mock.invoke.mockResolvedValue({ data: { error: "bad" }, error: null });
     await expect(
-      createUserViaEdgeFunction({ email: "a", password: "x", role: "admin" }),
+      createUserViaEdgeFunction({ email: "a", password: "x", role: "admin", orgId: "org1" }),
     ).rejects.toThrow();
+  });
+
+  it("createUserViaEdgeFunction aborta si el directorio de auth no cargó (Ola 4 · N13)", async () => {
+    mock.setTableResult("organization_members", {
+      data: [{ user_id: "u9", role: "viewer", created_at: null, organization_id: "org1", organizations: null }],
+      error: null,
+    });
+    mock.invoke.mockResolvedValue({ data: null, error: new Error("edge down") });
+    await expect(
+      createUserViaEdgeFunction({ email: "nuevo@b.com", password: "xx", role: "viewer", orgId: "org1" }),
+    ).rejects.toThrow(/directorio/i);
   });
 
   it("deleteUserViaEdgeFunctionAuth lanza con error body", async () => {

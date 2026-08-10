@@ -77,6 +77,15 @@ async function handleFacturaEvent(
     delete patch.estado;
   }
 
+  // Ola 4 · N3: un evento `valid` tardío (re-notificación de FacturAPI) no
+  // debe regresar a "Emitida" una factura que ya avanzó en su ciclo de vida
+  // (Pagada, Vencida, Parcialmente pagada, Cancelada, Sustituida).
+  const ESTADOS_HASTA_EMISION = new Set(["Borrador", "Por timbrar", "Emitida"]);
+  if (patch.estado === "Emitida" && (!factura.estado || !ESTADOS_HASTA_EMISION.has(factura.estado))) {
+    delete patch.estado;
+  }
+  if (Object.keys(patch).length === 0) return jsonResponse({ ok: true, ignored: "estado_ya_avanzado" });
+
   const { error: updErr } = await supabase
     .from("facturas")
     .update(patch)
@@ -121,10 +130,40 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   let event: FacturapiWebhookEvent;
   try { event = JSON.parse(rawBody); } catch { return jsonResponse({ error: "invalid_json" }, 400); }
 
-  // FIX-22 · Dedupe: FacturAPI reintenta hasta 10× ante 5xx. `computeEventKey`
-  // usa `event.id` y cae a `sha256:<hash del body>` cuando falta, para que
-  // ningún evento — legacy o moderno — se procese dos veces.
+  // FIX-22 + Ola 4 · N2 · Dedupe: `computeEventKey` usa `event.id` y cae a
+  // `sha256:<hash del body>` cuando falta. Antes la fila se insertaba ANTES
+  // de procesar: si el handler devolvía 500, los reintentos de FacturAPI
+  // chocaban con el unique y el evento se perdía para siempre.
+  // Nuevo orden: (1) chequeo de dedupe, (2) procesar, (3) registrar dedupe
+  // SÓLO si el procesamiento fue 2xx.
   const eventKey = await computeEventKey(rawBody, event);
+  const { data: eventoPrevio } = await supabase
+    .from("facturapi_webhook_eventos")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("event_id", eventKey)
+    .maybeSingle();
+  if (eventoPrevio) {
+    // Fase 7 · Alerta suave: FacturAPI reintenta ante 5xx, así que algunos
+    // duplicados son esperados. Los enviamos como `info` para dashboard;
+    // si el volumen sube anormalmente, indica que estamos devolviendo 5xx.
+    await captureEdgeMessage("facturapi_webhook_duplicate", "info", {
+      fn: "facturapi-webhook",
+      organization_id: orgId,
+      extra: { event_id: eventKey, event_type: event.type },
+    });
+    return jsonResponse({ ok: true, ignored: "duplicate_event", event_id: eventKey });
+  }
+
+  const receipt = mapEventToReceiptPatch(event);
+  const result = receipt
+    ? await handleReceiptEvent(supabase, orgId, event, receipt)
+    : await handleFacturaEvent(supabase, orgId, event);
+
+  // Ola 4 · N2: si el procesamiento falló (5xx) NO registramos dedupe —
+  // el reintento de FacturAPI (hasta 10×) volverá a ejecutar el handler.
+  if (!result.ok) return result;
+
   const { error: dupErr } = await supabase
     .from("facturapi_webhook_eventos")
     .insert({
@@ -133,22 +172,15 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
       event_type: event.type,
       payload: event as unknown as Record<string, unknown>,
     });
-  if (dupErr) {
-    if ((dupErr as { code?: string }).code === "23505") {
-      // Fase 7 · Alerta suave: FacturAPI reintenta ante 5xx, así que algunos
-      // duplicados son esperados. Los enviamos como `info` para dashboard;
-      // si el volumen sube anormalmente, indica que estamos devolviendo 5xx.
-      await captureEdgeMessage("facturapi_webhook_duplicate", "info", {
-        fn: "facturapi-webhook",
-        organization_id: orgId,
-        extra: { event_id: eventKey, event_type: event.type },
-      });
-      return jsonResponse({ ok: true, ignored: "duplicate_event", event_id: eventKey });
-    }
-    return jsonResponse({ error: "dedupe_insert_failed", detail: dupErr.message }, 500);
+  if (dupErr && (dupErr as { code?: string }).code !== "23505") {
+    // El evento YA se procesó: devolver 5xx provocaría un reintento y
+    // reproceso innecesario. Sólo alertamos (23505 = carrera con una
+    // entrega concurrente del mismo evento; patches idempotentes).
+    await captureEdgeMessage("facturapi_webhook_dedupe_insert_failed", "warning", {
+      fn: "facturapi-webhook",
+      organization_id: orgId,
+      extra: { event_id: eventKey, event_type: event.type, detail: dupErr.message },
+    });
   }
-
-  const receipt = mapEventToReceiptPatch(event);
-  if (receipt) return handleReceiptEvent(supabase, orgId, event, receipt);
-  return handleFacturaEvent(supabase, orgId, event);
+  return result;
 }));

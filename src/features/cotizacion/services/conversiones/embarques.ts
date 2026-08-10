@@ -1,8 +1,14 @@
 /**
  * Cotizaciones — Conversión: Cotización → 1 embarque con N contenedores hijos.
  * Modelo 1↔N (v12.10): cotización con N contenedores genera UN embarque + N hijos.
- * Costos "Contenedor" se replican por hijo; "BL" se insertan una vez (general).
- * Helpers extraídos a `embarquesHelpers.ts` (12.33.0).
+ *
+ * Ola 4 · N17: se eliminó el wrapper duplicado `crearEmbarqueBorradorConDecision`
+ * (sin callers) que invocaba la RPC de 4 args con parámetros inexistentes
+ * (`p_tarifa_aplicada`/`p_delta` → PGRST202; la firma real es
+ * `p_tarifa_id_aplicada`/`p_delta_jsonb`). El flujo con decisión de
+ * revalidación vive únicamente en
+ * `@/features/cotizacion/services/revalidacion` (`crearEmbarqueBorradorConDecision`),
+ * que usa los nombres correctos.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -30,41 +36,6 @@ async function assertTarifaSinCambios(cotizacionId: string): Promise<ResultadoRe
   return r;
 }
 
-
-// FIX-07 (v13.303.12) — `convertirCotizacionAEmbarques` (6 awaits sin
-// transacción desde el cliente) se eliminó junto con sus helpers
-// `insertarCostosEmbarque`/`insertarVentasEmbarque`. Toda conversión pasa
-// por `crearEmbarqueBorradorDesdeCotizacion` → RPC transaccional
-// `crear_embarque_borrador_desde_cotizacion(uuid)`.
-
-
-/**
- * Crea un embarque borrador desde una cotización aceptada usando la RPC
- * `crear_embarque_borrador_desde_cotizacion`. Idempotente (devuelve el embarque
- * existente si la cotización ya tiene uno vinculado).
- *
- * @deprecated Fase S.4: usar `crearEmbarqueBorradorConDecision` para pasar
- *   la decisión de revalidación explícitamente. Este wrapper delega asumiendo
- *   `decision='sin_cambios'` y la BD sigue bloqueando si la tarifa cambió.
- */
-export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string): Promise<string> {
-  return crearEmbarqueBorradorConDecision({ cotizacionId, decision: "sin_cambios" });
-}
-
-export type DecisionRevalidacion =
-  | "sin_cambios"
-  | "refrescada"
-  | "mantenida_por_operaciones"
-  | "sustituida"
-  | "reaprobada_ventas";
-
-export interface CrearBorradorInput {
-  cotizacionId: string;
-  decision: DecisionRevalidacion;
-  tarifaAplicada?: string | null;
-  delta?: Record<string, unknown> | null;
-}
-
 const RPC_ERROR_MAP: ReadonlyArray<[RegExp, string]> = [
   [/LC_COT_ELIMINADA/, "Esta cotización fue eliminada y no puede convertirse en embarque."],
   [/LC_COT_ESTADO_INVALIDO/, "Solo se pueden convertir cotizaciones en estado Aceptada o En operación."],
@@ -84,14 +55,15 @@ async function mapCrearEmbarqueError(error: { message?: string }, cotizacionId: 
 }
 
 /**
- * Fase S.4 — API estricta para conversión cotización→embarque.
- * Exige `decision` explícita para que la observabilidad y la bitácora reciban
- * la razón por la que la tarifa se mantiene/refresca/sustituye/reaprueba.
- * - `sin_cambios` → RPC 1-arg (BD refuerza que la tarifa realmente no cambió).
- * - otras → RPC 4-arg que registra la decisión en `embarques.tarifa_decision`.
+ * Crea un embarque borrador desde una cotización aceptada usando la RPC 1-arg
+ * `crear_embarque_borrador_desde_cotizacion(uuid)` (idempotente: devuelve el
+ * embarque existente si la cotización ya tiene uno vinculado). Asume
+ * `decision='sin_cambios'` y la BD lo refuerza. Para conversiones con
+ * decisión de revalidación (refrescada / mantenida / sustituida / reaprobada)
+ * usar `crearEmbarqueBorradorConDecision` de
+ * `@/features/cotizacion/services/revalidacion`.
  */
-export async function crearEmbarqueBorradorConDecision(input: CrearBorradorInput): Promise<string> {
-  const { cotizacionId, decision } = input;
+export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string): Promise<string> {
   const { data: cot, error: errCot } = await supabase
     .from("cotizaciones")
     .select("tipo_documento")
@@ -101,18 +73,10 @@ export async function crearEmbarqueBorradorConDecision(input: CrearBorradorInput
   if (cot?.tipo_documento === "informativa") {
     throw new Error("Las cotizaciones informativas (tarifarios) no pueden convertirse a embarques");
   }
-  if (decision === "sin_cambios") {
-    await assertTarifaSinCambios(cotizacionId);
-  }
-  const rpc = decision === "sin_cambios"
-    ? supabase.rpc("crear_embarque_borrador_desde_cotizacion", { p_cotizacion_id: cotizacionId })
-    : supabase.rpc("crear_embarque_borrador_desde_cotizacion", {
-        p_cotizacion_id: cotizacionId,
-        p_decision: decision,
-        p_tarifa_aplicada: input.tarifaAplicada ?? null,
-        p_delta: input.delta ?? null,
-      } as never);
-  const { data, error } = await rpc;
+  await assertTarifaSinCambios(cotizacionId);
+  const { data, error } = await supabase.rpc("crear_embarque_borrador_desde_cotizacion", {
+    p_cotizacion_id: cotizacionId,
+  });
   if (error) throw await mapCrearEmbarqueError(error, cotizacionId);
   if (!data) throw new Error("La función no devolvió un embarque");
   await registrarActividad({
@@ -120,10 +84,7 @@ export async function crearEmbarqueBorradorConDecision(input: CrearBorradorInput
     accion: "convertir_a_embarque",
     entidadId: cotizacionId,
     entidadNombre: data as string,
-    detalles: { decision },
+    detalles: { decision: "sin_cambios" },
   });
   return data as string;
 }
-
-
-

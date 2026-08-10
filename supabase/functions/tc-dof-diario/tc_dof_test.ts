@@ -3,7 +3,7 @@
  */
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { checkCronSecret, fechasObjetivo, normalizarDias } from "./index.ts";
-import { extraerPublicacionDof, formatFechaBanxico } from "../_shared/banxicoDof.ts";
+import { extraerPublicacionDof, formatFechaBanxico, isoDiaMexico } from "../_shared/banxicoDof.ts";
 
 Deno.test("checkCronSecret exige coincidencia exacta", () => {
   assertEquals(checkCronSecret("abc", "abc"), true);
@@ -50,4 +50,11 @@ Deno.test("extraerPublicacionDof ignora N/E y datos vacíos", () => {
   };
   assertEquals(extraerPublicacionDof(data, "2026-07-29").tc, 17.1);
   assertEquals(extraerPublicacionDof({ bmx: { series: [{ datos: [] }] } }, "2026-07-29").tc, null);
+});
+
+Deno.test("isoDiaMexico: fechasObjetivo se etiquetan con el día civil MX", () => {
+  // 2026-07-08 04:00 UTC = 2026-07-07 22:00 CST: el cron nocturno registra
+  // el TC del 07 con fecha "2026-07-07", no con la fecha UTC del 08.
+  const fechas = fechasObjetivo(new Date("2026-07-08T04:00:00Z"), 2).map(isoDiaMexico);
+  assertEquals(fechas, ["2026-07-07", "2026-07-06"]);
 });

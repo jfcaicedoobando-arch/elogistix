@@ -7,13 +7,22 @@ import {
   type ConfigItem,
 } from "@/features/configuracion/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 export type { ConfigItem };
 
 export function useConfiguracion() {
+  // Ola 4 · N11: la configuración es org-scope. La org efectiva es la fuente
+  // única A2: la propia org para usuarios normales; el tenant elegido en el
+  // OrgSwitcher para super_admin. Nunca useAuth().organizationId (null para
+  // super_admin).
+  const { organizationId } = useOrgActiva();
   return useQuery<ConfigItem[]>({
-    queryKey: queryKeys.configuracion.all,
-    queryFn: fetchConfiguracion,
+    queryKey: organizationId
+      ? queryKeys.configuracionOrg.byOrg(organizationId)
+      : ["noop"],
+    enabled: !!organizationId,
+    queryFn: () => fetchConfiguracion(organizationId as string),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -30,10 +39,20 @@ export function useConfigValue<T>(categoria: string, clave: string, fallback: T)
 
 export function useUpdateConfiguracion() {
   const queryClient = useQueryClient();
+  const { organizationId } = useOrgActiva();
 
   return useMutation({
-    mutationFn: updateConfiguracionByCategoriaClave,
+    mutationFn: (items: { categoria: string; clave: string; valor: unknown }[]) => {
+      // Ola 4 · N11 (fail-closed): sin org activa NO se guarda nada — antes
+      // este guardado pisaba la clave en todas las organizaciones.
+      if (!organizationId) {
+        throw new Error("Selecciona una organización antes de guardar la configuración.");
+      }
+      return updateConfiguracionByCategoriaClave(organizationId, items);
+    },
     onSuccess: () => {
+      // ['configuracion'] es prefijo de ['configuracion','org',<id>]: cubre la
+      // key nueva y las de useConfiguracionByOrg (impersonación).
       queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
       notifySuccess(undefined, { title: "Configuración guardada" });
     },

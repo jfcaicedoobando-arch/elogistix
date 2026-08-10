@@ -6,7 +6,10 @@ import {
   formatFechaBanxico,
   rangoUltimosDias,
   FALLBACK,
+  resolverFecha,
+  msHastaMedianocheMx,
 } from "./index.ts";
+import { isoDiaMexico } from "../_shared/banxicoDof.ts";
 
 // ── FALLBACK ─────────────────────────────────────────────────
 
@@ -199,4 +202,27 @@ Deno.test("rangoUltimosDias: rango de 10 días termina en hoy", () => {
   const { inicio, fin } = rangoUltimosDias(hoy, 10);
   assertEquals(fin, "2026-07-07");
   assertEquals(inicio, "2026-06-27");
+});
+
+// ── N14 (Ola 4): día civil MX vs UTC ─────────────────────────
+
+Deno.test("isoDiaMexico: 18:00–23:59 CST sigue siendo 'hoy' aunque UTC ya sea mañana", () => {
+  // 2026-07-08 02:00 UTC = 2026-07-07 20:00 en CDMX (UTC-6 en verano)
+  assertEquals(isoDiaMexico(new Date("2026-07-08T02:00:00Z")), "2026-07-07");
+  // Ya en la madrugada MX, ambas fechas coinciden
+  assertEquals(isoDiaMexico(new Date("2026-07-08T12:00:00Z")), "2026-07-08");
+});
+
+Deno.test("msHastaMedianocheMx: nunca cruza la medianoche MX", () => {
+  // 2026-07-08 05:30 UTC = 2026-07-07 23:30 CST → faltan 30 min
+  assertEquals(msHastaMedianocheMx(new Date("2026-07-08T05:30:00Z")), 30 * 60 * 1000);
+  // Mediodía MX → menos de 12 h (el TTL fijo debe quedar acotado)
+  const ttl = msHastaMedianocheMx(new Date("2026-07-08T18:00:00Z"));
+  assertEquals(ttl > 0 && ttl <= 12 * 60 * 60 * 1000, true);
+});
+
+Deno.test("resolverFecha: fechaIso es el día civil MX y se propaga", async () => {
+  const r = await resolverFecha(new Request("https://example.com/"));
+  assertEquals(r.esHoy, true);
+  assertEquals(r.fechaIso, isoDiaMexico(new Date()));
 });

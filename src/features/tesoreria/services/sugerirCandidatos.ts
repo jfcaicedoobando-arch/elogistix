@@ -42,6 +42,31 @@ export async function monedaDeCuenta(cuentaBancariaId: string | null): Promise<M
   return normalizaMoneda(data?.moneda);
 }
 
+/**
+ * N15 (Ola 4): pagos que YA están ligados a un movimiento bancario vivo.
+ * Sin este filtro, dos movimientos del mismo monto recibían el mismo "match
+ * único" y la auto-conciliación masiva intentaba ligar ambos al mismo pago.
+ * La unicidad real la garantiza el índice uq_bbva_movimientos_pago_*; esto
+ * evita ofrecer candidatos imposibles (y toasts de error en la auto-masiva).
+ */
+async function pagosYaVinculados(pagoIds: string[], tipo: "cxc" | "cxp"): Promise<Set<string>> {
+  if (pagoIds.length === 0) return new Set();
+  const columna = tipo === "cxc" ? "pago_factura_id" : "pago_proveedor_id";
+  const { data } = await supabase
+    .from("bbva_movimientos")
+    .select("pago_factura_id, pago_proveedor_id")
+    .in(columna, pagoIds)
+    .is("deleted_at", null)
+    .limit(500);
+  const set = new Set<string>();
+  // SAFE-CAST: supabase-js tipa ambas columnas como string | null.
+  for (const row of (data ?? []) as Array<Record<string, string | null>>) {
+    const id = row[columna];
+    if (id) set.add(id);
+  }
+  return set;
+}
+
 export async function sugerirCandidatos(
   mov: MovimientoBBVA,
   monedaCuenta?: string,
@@ -71,7 +96,10 @@ export async function sugerirCandidatos(
       .eq("moneda", moneda)
       .is("deleted_at", null)
       .limit(20);
+    // N15 (Ola 4): no ofrecer pagos ya conciliados con otro movimiento vivo.
+    const vinculadosCxp = await pagosYaVinculados((data ?? []).map((p) => p.id), "cxp");
     for (const p of data ?? []) {
+      if (vinculadosCxp.has(p.id)) continue;
       const pf = (p as { proveedor_facturas?: { proveedor_nombre?: string } | null }).proveedor_facturas;
       candidatos.push({
         tipo: "cxp",
@@ -97,7 +125,10 @@ export async function sugerirCandidatos(
       .eq("moneda", moneda)
       .is("deleted_at", null)
       .limit(20);
+    // N15 (Ola 4): no ofrecer pagos ya conciliados con otro movimiento vivo.
+    const vinculadosCxc = await pagosYaVinculados((data ?? []).map((p) => p.id), "cxc");
     for (const p of data ?? []) {
+      if (vinculadosCxc.has(p.id)) continue;
       const f = (p as { facturas?: { cliente_nombre?: string } | null }).facturas;
       candidatos.push({
         tipo: "cxc",
