@@ -21,15 +21,40 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
     {
       id: "selection",
       header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Seleccionar todas"
-        />
+        <div
+          className="flex h-9 w-full cursor-pointer items-center justify-center"
+          data-no-row-nav
+          onClick={(e) => {
+            e.stopPropagation();
+            if (esClickEnCheckbox(e.target)) return;
+            table.toggleAllPageRowsSelected(!table.getIsAllPageRowsSelected());
+          }}
+          role="presentation"
+        >
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected()
+                ? true
+                : table.getIsSomePageRowsSelected()
+                  ? "indeterminate"
+                  : false
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Seleccionar todas"
+          />
+        </div>
       ),
       cell: ({ row }) => (
-        <span
-          onClick={(e) => e.stopPropagation()}
+        // v13.490.0 — El área completa de la celda selecciona: un clic apenas
+        // fuera del checkbox ya no navega al detalle ni pierde la selección.
+        <div
+          className="flex h-9 w-full cursor-pointer items-center justify-center"
+          data-no-row-nav
+          onClick={(e) => {
+            e.stopPropagation();
+            if (esClickEnCheckbox(e.target)) return;
+            row.toggleSelected(!row.getIsSelected());
+          }}
           role="presentation"
         >
           <Checkbox
@@ -37,11 +62,11 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             aria-label={`Seleccionar factura ${row.original.numero ?? ""}`}
           />
-        </span>
+        </div>
       ),
       enableSorting: false,
       enableHiding: false,
-      meta: { width: COL_W.micro },
+      meta: { width: COL_W.micro, className: "p-0" },
     },
     {
       id: "numero",
@@ -49,8 +74,18 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
       accessorFn: (r) => r.numero ?? "",
       enableSorting: true,
       meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
-      cell: ({ row }) => row.original.numero ?? "—",
+      cell: ({ row }) => (
+        <Link
+          to={`/facturacion/${row.original.factura_id}`}
+          data-no-row-nav
+          className="underline-offset-2 hover:underline focus-visible:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {row.original.numero ?? "—"}
+        </Link>
+      ),
     },
+
 
     {
       id: "cliente",
