@@ -1,52 +1,61 @@
 /**
  * Bandeja "REP pendientes": pagos aplicados a facturas PPD cuyo REP no se
  * ha timbrado. Estados unificados vía `<BandejaShell />`.
+ * v13.491.0 — timbrado desde la propia bandeja: botón por renglón y selección
+ * múltiple para timbrar varios REP en una sola pasada.
  */
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReceiptText } from "lucide-react";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
-import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/shared/DataTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
+import { useRowSelection } from "@/components/shared/dataTable/useRowSelection";
+import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelectionColumn";
 import { usePagosRepPendientes, type FilaRepPendiente } from "@/features/facturacion/hooks/useBandejas";
+import { useTimbrarRepsLote } from "@/features/facturacion/hooks/useTimbrarRepsLote";
 import { BandejaShell } from "./BandejaShell";
-import { COL_W } from "@/components/shared/dataTable/columnWidths";
-
-function badgeTone(estado: string): "outline" | "destructive" {
-  return estado === "Error" ? "destructive" : "outline";
-}
-
-const columns = defineColumns<FilaRepPendiente>([
-  {
-    id: "factura",
-    header: "Factura",
-    accessorFn: (r) => r.factura_numero,
-    enableSorting: true,
-    meta: { width: COL_W.monto, className: "font-mono whitespace-nowrap", sticky: true },
-    cell: ({ row }) => row.original.factura_numero,
-  },
-  clientColumn<FilaRepPendiente>({ accessor: (r) => r.cliente_nombre }),
-  { ...dateColumn<FilaRepPendiente>({ id: "fecha_pago", header: "Fecha pago", accessor: (r) => r.fecha_pago }),
-    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
-  { ...moneyColumn<FilaRepPendiente>({ id: "monto", header: "Monto",
-      accessor: (r) => r.monto, currencyAccessor: (r) => r.moneda }),
-    meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },
-  {
-    id: "estado",
-    header: "Estado REP",
-    accessorFn: (r) => r.estado_rep,
-    enableSorting: true,
-    meta: { width: COL_W.folio },
-    cell: ({ row }) => <Badge variant={badgeTone(row.original.estado_rep)}>{row.original.estado_rep}</Badge>,
-  },
-]);
+import { BandejaRepAcciones } from "./BandejaRepAcciones";
+import { buildRepPendientesColumns } from "./bandejaRepColumns";
 
 interface Filters extends Record<string, string> { estado: string }
 const DEFAULTS: Filters = { estado: "todos" };
 
 export function BandejaRepPendientes() {
   const { data, isLoading, isError, refetch } = usePagosRepPendientes();
+  const selection = useRowSelection();
+  const { timbrar, enProceso, progreso } = useTimbrarRepsLote();
+  const [pagoEnProceso, setPagoEnProceso] = useState<string | null>(null);
+
+  const timbrarUno = async (pagoId: string) => {
+    setPagoEnProceso(pagoId);
+    try {
+      await timbrar([pagoId]);
+    } finally {
+      setPagoEnProceso(null);
+    }
+  };
+
+  const timbrarSeleccion = async () => {
+    const ids = [...selection.selectedIds];
+    if (ids.length === 0) return;
+    await timbrar(ids);
+    selection.clear();
+  };
+
+  const columns = useMemo(
+    () => [
+      buildSelectionColumn<FilaRepPendiente>(),
+      ...buildRepPendientesColumns({
+        onTimbrar: (id) => void timbrarUno(id),
+        pagoEnProceso,
+        bloqueado: enProceso,
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pagoEnProceso, enProceso],
+  );
+
   const paged = useClientPagedList<FilaRepPendiente, Filters>({
     data,
     isLoading,
@@ -89,6 +98,13 @@ export function BandejaRepPendientes() {
       }
       counter={<>Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} complementos pendientes</>}
     >
+      <BandejaRepAcciones
+        seleccionados={selection.selectedCount}
+        enProceso={enProceso}
+        progreso={progreso}
+        onTimbrar={() => void timbrarSeleccion()}
+        onLimpiar={selection.clear}
+      />
       <Card>
         <CardContent className="p-0">
           <DataTable
@@ -101,6 +117,8 @@ export function BandejaRepPendientes() {
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.factura_id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.factura_numero}`}
+            rowSelection={selection.rowSelection}
+            onRowSelectionChange={selection.onRowSelectionChange}
             sortMode="server"
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
