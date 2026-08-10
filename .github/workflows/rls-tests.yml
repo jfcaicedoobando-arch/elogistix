@@ -716,20 +716,28 @@ jobs:
       - name: Compare against committed baseline
         run: |
           set -uo pipefail
+          # Bootstrap: la baseline sólo puede generarse con el pg_dump de la
+          # imagen Postgres pinneada (15.8). Mientras no exista el archivo
+          # committeado, este job avisa y publica el snapshot como artifact en
+          # vez de reprobar el pipeline: no hay nada contra qué comparar todavía.
           if [ ! -f "$BASELINE" ]; then
-            echo "::error::Falta $BASELINE. Genérala una vez con: bun run db:baseline:update"
+            echo "::warning::Falta $BASELINE — sembrala con el artifact 'schema-snapshot-actual' de este run (o 'bun run db:baseline:update' con Docker local)."
             {
-              echo "## ❌ Baseline de esquema ausente"
+              echo "## ⚠️ Baseline de esquema ausente (bootstrap)"
               echo ""
-              echo "Este repo aún no tiene \`$BASELINE\`. Generala en local con:"
+              echo "Este repo aún no tiene \`$BASELINE\`, así que no hay comparación posible."
+              echo "Para activar el guard, sembrala una vez:"
+              echo ""
+              echo "1. Descargá el artifact \`schema-snapshot-actual\` de este run."
+              echo "2. Committealo como \`$BASELINE\`."
+              echo ""
+              echo "Con Docker local el equivalente es:"
               echo ""
               echo '```sh'
               echo 'bun run db:baseline:update'
               echo '```'
-              echo ""
-              echo "O descargá el artifact \`schema-snapshot-actual\` de este run y committealo en esa ruta."
             } >> "$GITHUB_STEP_SUMMARY"
-            exit 1
+            exit 0
           fi
           if diff -u "$BASELINE" /tmp/schema.actual.sql > /tmp/schema.diff; then
             echo "✓ El estado final del esquema coincide con la baseline"
