@@ -138,6 +138,15 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "Este registro ya cambió de estado. Recarga la página para ver la información actualizada.",
   LC_MOTIVO_REQUERIDO:
     "Indica el motivo para poder continuar.",
+  LC_ENTRANTE_RETIRO_FORBIDDEN:
+    "Solo quien subió el archivo o un administrador puede retirarlo del buzón.",
+  LC_ENTRANTE_RETIRO_CAPTURADA:
+    "Este documento ya se capturó como factura de proveedor: cancela primero la factura para poder retirarlo.",
+  LC_ENTRANTE_REACTIVAR_FORBIDDEN:
+    "No tienes permiso para devolver documentos al buzón de por capturar.",
+  LC_ENTRANTE_REACTIVAR_ESTADO:
+    "Solo un documento rechazado y sin factura vinculada puede volver a 'Por capturar'.",
+
   LC_COTIZACION_SIN_IMPORTES:
     "La cotización no tiene importes de venta capturados. Agrega al menos un concepto con precio antes de continuar.",
   // ── Ola 6: RPC transaccionales (CRM, cotizaciones, tarifas, proformas) ──

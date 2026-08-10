@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { EntrantesConfirmDialogs } from "@/features/embarques/components/entrantes/EntrantesConfirmDialogs";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
@@ -22,13 +22,16 @@ import {
   chipsArchivosEntrante,
   faltaXmlFiscal,
   puedeEliminarEntrante,
+  puedeReactivarEntrante,
   resumirEntrantes,
 } from "@/lib/domain/facturasEntrantes";
 import {
   useAdjuntarXmlFacturaEntrante,
   useEliminarFacturaEntrante,
   useFacturasEntrantes,
+  useReactivarFacturaEntrante,
 } from "@/features/cxp/hooks/useFacturasEntrantes";
+
 import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 import { SubirFacturaEntranteDialog } from "@/features/embarques/components/SubirFacturaEntranteDialog";
 import { FacturaEntranteItem } from "@/features/embarques/components/entrantes/FacturaEntranteItem";
@@ -47,9 +50,12 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   // v13.347.0 — deep-link desde el checklist de cierre (?tab=costos&focus=facturas-entrantes).
   const { registerRef } = useFocusSection();
   const eliminar = useEliminarFacturaEntrante();
+  const reactivar = useReactivarFacturaEntrante();
   const adjuntarXml = useAdjuntarXmlFacturaEntrante();
   const [subirOpen, setSubirOpen] = useState(false);
   const [aEliminar, setAEliminar] = useState<FacturaEntranteRow | null>(null);
+  const [aReactivar, setAReactivar] = useState<FacturaEntranteRow | null>(null);
+
 
   const filas = data ?? [];
   const resumen = resumirEntrantes(filas);
@@ -132,9 +138,14 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
                 isAdmin,
               })}
               puedeAdjuntarXml={Boolean(puedeAdjuntar && row.estado === "por_capturar")}
+              puedeReactivar={canEdit && puedeReactivarEntrante({
+                estado: row.estado,
+                proveedorFacturaId: row.proveedor_factura_id,
+              })}
               onVer={(path, nombre) => void abrirArchivo(path, nombre)}
               onAdjuntarXml={(fila, xml) => void onAdjuntarXml(fila, xml)}
               onEliminar={setAEliminar}
+              onReactivar={setAReactivar}
             />
           ))}
         </CardContent>
@@ -149,14 +160,12 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
         />
       )}
 
-      <ConfirmActionDialog
-        open={Boolean(aEliminar)}
-        onOpenChange={(v) => { if (!v) setAEliminar(null); }}
-        title="Retirar archivo del buzón"
-        description="El archivo dejará de estar disponible para contabilidad. Esta acción no se puede deshacer."
-        confirmLabel="Retirar"
-        variant="destructive"
-        onConfirm={async () => {
+      <EntrantesConfirmDialogs
+        aEliminar={aEliminar}
+        aReactivar={aReactivar}
+        onCerrarEliminar={() => setAEliminar(null)}
+        onCerrarReactivar={() => setAReactivar(null)}
+        onConfirmarEliminar={async () => {
           if (!aEliminar) return;
           await eliminar.mutateAsync({
             id: aEliminar.id,
@@ -165,7 +174,13 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
           });
           setAEliminar(null);
         }}
+        onConfirmarReactivar={async () => {
+          if (!aReactivar) return;
+          await reactivar.mutateAsync({ id: aReactivar.id, nombre: aReactivar.nombre_archivo });
+          setAReactivar(null);
+        }}
       />
     </>
   );
+
 }

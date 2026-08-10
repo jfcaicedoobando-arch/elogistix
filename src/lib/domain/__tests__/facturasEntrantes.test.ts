@@ -5,6 +5,8 @@ import {
   normalizarEstadoEntrante,
   puedeEliminarEntrante,
   puedeProcesarEntrante,
+  puedeReactivarEntrante,
+
   resumirEntrantes,
   rutaArchivoEntrante,
   validarArchivoEntrante,
@@ -29,13 +31,26 @@ describe("facturasEntrantes · dominio", () => {
     expect(puedeProcesarEntrante("capturada")).toBe(false);
   });
 
-  it("permite eliminar al autor o al admin mientras esté pendiente", () => {
+  it("permite eliminar al autor o al admin mientras no esté capturado", () => {
     const base = { estado: "por_capturar", subidoPor: "u1", userId: "u1", isAdmin: false };
     expect(puedeEliminarEntrante(base)).toBe(true);
     expect(puedeEliminarEntrante({ ...base, userId: "u2" })).toBe(false);
     expect(puedeEliminarEntrante({ ...base, userId: "u2", isAdmin: true })).toBe(true);
     expect(puedeEliminarEntrante({ ...base, estado: "capturada", isAdmin: true })).toBe(false);
   });
+
+  it("permite retirar documentos rechazados a cualquiera con acceso", () => {
+    const base = { estado: "rechazada", subidoPor: "u1", userId: "u2", isAdmin: false };
+    expect(puedeEliminarEntrante(base)).toBe(true);
+  });
+
+  it("sólo reactiva documentos rechazados sin factura vinculada", () => {
+    expect(puedeReactivarEntrante({ estado: "rechazada", proveedorFacturaId: null })).toBe(true);
+    expect(puedeReactivarEntrante({ estado: "rechazada", proveedorFacturaId: "f1" })).toBe(false);
+    expect(puedeReactivarEntrante({ estado: "por_capturar", proveedorFacturaId: null })).toBe(false);
+    expect(puedeReactivarEntrante({ estado: "capturada", proveedorFacturaId: null })).toBe(false);
+  });
+
 
   it("calcula días en espera sin negativos", () => {
     const ahora = new Date("2026-01-10T12:00:00Z");

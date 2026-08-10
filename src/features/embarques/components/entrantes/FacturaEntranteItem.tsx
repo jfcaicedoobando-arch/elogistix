@@ -5,7 +5,7 @@
  */
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { FileCode2, FileText, Link2 as LinkIcon, Trash2, Upload } from "lucide-react";
+import { FileCode2, FileText, Link2 as LinkIcon, RotateCcw, Trash2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters/dates";
@@ -23,10 +23,14 @@ interface Props {
   row: FacturaEntranteRow;
   puedeEliminar: boolean;
   puedeAdjuntarXml: boolean;
+  /** v13.494.0 — Documento rechazado que puede volver a "Por capturar". */
+  puedeReactivar?: boolean;
   onVer: (path: string, nombre: string) => void;
   onAdjuntarXml: (row: FacturaEntranteRow, xml: File) => void;
   onEliminar: (row: FacturaEntranteRow) => void;
+  onReactivar?: (row: FacturaEntranteRow) => void;
 }
+
 
 function FolioInternoChip({ row }: { row: FacturaEntranteRow }) {
   const folio = row.proveedor_facturas?.folio_interno;
@@ -87,8 +91,10 @@ function AdjuntarXmlButton({ onSelect }: { onSelect: (xml: File) => void }) {
 }
 
 export function FacturaEntranteItem({
-  row, puedeEliminar, puedeAdjuntarXml, onVer, onAdjuntarXml, onEliminar,
+  row, puedeEliminar, puedeAdjuntarXml, puedeReactivar = false,
+  onVer, onAdjuntarXml, onEliminar, onReactivar,
 }: Props) {
+
   const chips = chipsArchivosEntrante(row);
   const tieneXml = chips.includes("xml");
   const tienePdf = chips.includes("pdf");
@@ -130,11 +136,17 @@ export function FacturaEntranteItem({
         {!tieneXml && puedeAdjuntarXml && (
           <AdjuntarXmlButton onSelect={(xml) => onAdjuntarXml(row, xml)} />
         )}
+        {puedeReactivar && onReactivar && (
+          <Button size="sm" variant="secondary" onClick={() => onReactivar(row)}>
+            <RotateCcw className="mr-2 h-4 w-4" /> Devolver a por capturar
+          </Button>
+        )}
         {puedeEliminar && (
           <Button size="sm" variant="ghost" onClick={() => onEliminar(row)} aria-label="Retirar del buzón">
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         )}
+
       </div>
     </div>
   );

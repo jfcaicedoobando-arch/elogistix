@@ -9049,6 +9049,10 @@ export type Database = {
         Returns: Json
       }
       reactivar_cotizacion_rpc: { Args: { p_id: string }; Returns: string }
+      reactivar_factura_entrante: {
+        Args: { p_documento_id: string }
+        Returns: undefined
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -9223,6 +9227,10 @@ export type Database = {
       }
       restore_record: {
         Args: { _id: string; _table: string }
+        Returns: undefined
+      }
+      retirar_factura_entrante: {
+        Args: { p_documento_id: string }
         Returns: undefined
       }
       revalidar_tarifa_cotizacion: {

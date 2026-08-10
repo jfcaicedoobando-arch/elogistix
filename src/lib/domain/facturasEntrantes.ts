@@ -47,8 +47,10 @@ export function puedeProcesarEntrante(estado: string | null | undefined): boolea
 }
 
 /**
- * El operador puede retirar su archivo mientras nadie lo haya capturado.
- * Los administradores pueden retirar cualquiera que siga pendiente.
+ * v13.494.0 — El operador puede retirar su archivo mientras nadie lo haya
+ * capturado, y cualquiera con permiso puede retirar los documentos rechazados
+ * (ya no sirven y sólo estorban en el buzón). Los administradores pueden
+ * retirar cualquiera que no esté capturado.
  */
 export function puedeEliminarEntrante(params: {
   estado: string | null | undefined;
@@ -56,10 +58,26 @@ export function puedeEliminarEntrante(params: {
   userId: string | null | undefined;
   isAdmin: boolean;
 }): boolean {
-  if (!puedeProcesarEntrante(params.estado)) return false;
+  const estado = normalizarEstadoEntrante(params.estado);
+  if (estado === "capturada") return false;
   if (params.isAdmin) return true;
+  if (estado === "rechazada") return true;
   return Boolean(params.userId) && params.subidoPor === params.userId;
 }
+
+/**
+ * v13.494.0 — Un documento rechazado por error de captura (proveedor
+ * equivocado, por ejemplo) puede devolverse a "Por capturar" sin volver a
+ * subir el archivo. Nunca si ya tiene factura de proveedor vinculada.
+ */
+export function puedeReactivarEntrante(params: {
+  estado: string | null | undefined;
+  proveedorFacturaId: string | null | undefined;
+}): boolean {
+  return normalizarEstadoEntrante(params.estado) === "rechazada"
+    && !params.proveedorFacturaId;
+}
+
 
 /** Días naturales que lleva esperando captura (0 si se subió hoy). */
 export function diasEnEspera(createdAt: string, ahora: Date = new Date()): number {
@@ -89,80 +107,25 @@ export function resumirEntrantes(
   return resumen;
 }
 
-/** Extensiones aceptadas en el buzón (PDF y, opcionalmente, el XML del CFDI). */
-export const EXTENSIONES_ENTRANTES = [".pdf", ".xml"] as const;
-export const TAMANO_MAX_ENTRANTE_MB = 15;
+import type { TipoArchivoEntrante } from "@/lib/domain/facturasEntrantesArchivos";
 
-export function validarArchivoEntrante(file: { name: string; size: number }): string | null {
-  const nombre = file.name.toLowerCase();
-  const extensionOk = EXTENSIONES_ENTRANTES.some((ext) => nombre.endsWith(ext));
-  if (!extensionOk) return "Sólo se aceptan archivos PDF o XML.";
-  if (file.size > TAMANO_MAX_ENTRANTE_MB * 1024 * 1024) {
-    return `El archivo supera el límite de ${TAMANO_MAX_ENTRANTE_MB} MB.`;
-  }
-  return null;
-}
+// v13.494.0 — Validación y emparejado de archivos vive en
+// `facturasEntrantesArchivos.ts`; se re-exporta para no romper importadores.
 
-/** Ruta canónica en el bucket privado: {org}/{embarque}/{hash}-{archivo}. */
-export function rutaArchivoEntrante(params: {
-  organizationId: string;
-  embarqueId: string;
-  hash: string;
-  nombreArchivo: string;
-}): string {
-  const limpio = params.nombreArchivo.replace(/[^\w.-]+/g, "_").slice(-80);
-  return `${params.organizationId}/${params.embarqueId}/${params.hash.slice(0, 16)}-${limpio}`;
-}
+export {
+  EXTENSIONES_ENTRANTES,
+  TAMANO_MAX_ENTRANTE_MB,
+  emparejarArchivosEntrantes,
+  rutaArchivoEntrante,
+  tipoArchivoEntrante,
+  validarArchivoEntrante,
+  validarParejaEntrante,
+} from "@/lib/domain/facturasEntrantesArchivos";
+export type {
+  ParejaArchivosEntrantes,
+  TipoArchivoEntrante,
+} from "@/lib/domain/facturasEntrantesArchivos";
 
-// ─── v13.360.0 — Documento = PDF + XML del mismo CFDI ───────────────────────
-
-export type TipoArchivoEntrante = "pdf" | "xml";
-
-/** Clasifica un archivo por extensión/MIME; `null` si no es PDF ni XML. */
-export function tipoArchivoEntrante(file: { name: string; type?: string }): TipoArchivoEntrante | null {
-  const nombre = file.name.toLowerCase();
-  if (nombre.endsWith(".pdf") || file.type === "application/pdf") return "pdf";
-  if (nombre.endsWith(".xml") || file.type === "text/xml" || file.type === "application/xml") return "xml";
-  return null;
-}
-
-export interface ParejaArchivosEntrantes<T extends { name: string; type?: string }> {
-  pdf: T | null;
-  xml: T | null;
-  ignorados: T[];
-}
-
-/**
- * Acomoda una selección múltiple (arrastrar y soltar) en las dos ranuras del
- * documento. Si llegan varios del mismo tipo, se conserva el primero.
- */
-export function emparejarArchivosEntrantes<T extends { name: string; type?: string }>(
-  archivos: readonly T[],
-  previo: { pdf: T | null; xml: T | null } = { pdf: null, xml: null },
-): ParejaArchivosEntrantes<T> {
-  const resultado: ParejaArchivosEntrantes<T> = { pdf: previo.pdf, xml: previo.xml, ignorados: [] };
-  for (const archivo of archivos) {
-    const tipo = tipoArchivoEntrante(archivo);
-    if (tipo === "pdf" && !resultado.pdf) resultado.pdf = archivo;
-    else if (tipo === "xml" && !resultado.xml) resultado.xml = archivo;
-    else resultado.ignorados.push(archivo);
-  }
-  return resultado;
-}
-
-/** Un documento del buzón siempre debe traer al menos un archivo. */
-export function validarParejaEntrante(pareja: {
-  pdf: { name: string; size: number } | null;
-  xml: { name: string; size: number } | null;
-}): string | null {
-  if (!pareja.pdf && !pareja.xml) return "Adjunta el PDF de la factura (y el XML si el proveedor es mexicano).";
-  for (const archivo of [pareja.pdf, pareja.xml]) {
-    if (!archivo) continue;
-    const invalido = validarArchivoEntrante(archivo);
-    if (invalido) return invalido;
-  }
-  return null;
-}
 
 /**
  * Proveedor nacional sin XML = expediente fiscal incompleto (no es deducible).
