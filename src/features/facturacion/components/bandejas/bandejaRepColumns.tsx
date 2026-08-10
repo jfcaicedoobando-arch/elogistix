@@ -54,7 +54,7 @@ export function buildRepPendientesColumns(o: Opts) {
       id: "acciones",
       header: "",
       enableSorting: false,
-      meta: { width: COL_W.acciones, align: "right" },
+      meta: { width: "w-[150px]", align: "right" },
       cell: ({ row }) => {
         const enProceso = o.pagoEnProceso === row.original.id;
         return (
