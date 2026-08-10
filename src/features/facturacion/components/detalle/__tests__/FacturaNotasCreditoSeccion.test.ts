@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseConceptosSugeridos } from "../FacturaNotasCreditoSeccion";
+import { parseConceptosSugeridos } from "../facturaNotasCreditoConceptos";
 
 describe("parseConceptosSugeridos (Ola 4 · N19)", () => {
   it("propaga tipo_iva del snapshot al concepto de la NC", () => {
