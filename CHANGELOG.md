@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.481.0] - 2026-08-10
+- Tests (Ola 4 ALTAS): nueva batería de regresión para los 17 hallazgos. SQL: `supabase/tests/ola4_altas.sql` (tenancy de RPCs N6/N12), `ola4_altas_finanzas.sql` (profit sin fan-out N7, EERR N8, `dias_vencido` con signo N9, Borrador fuera del dashboard N10) y `ola4_altas_indices.sql` (índices únicos con `deleted_at IS NULL`, N15/N16); los tres quedaron registrados en el job `rls-guards`.
+- Tests (Deno): idempotencia del claim de notas de crédito (N1), orden dedupe-tras-éxito del webhook (N2/N3) y persistencia de estados de cancelación SAT (N4/N5).
+- Tests (Vitest): configuración cross-tenant (N11), candidatos de conciliación ya vinculados (N15), guard de proforma (N16), alta fail-closed de usuarios (N13), parámetros de conversión (N17) y agregador multimoneda (N8).
+- Infra: `vitest` y `@vitest/coverage-v8` bajaron a 3.2.4 para alinearse con `vite@5` (v4 rompía el arranque con `ERR_PACKAGE_PATH_NOT_EXPORTED`).
+
 ## [13.480.3] - 2026-08-10
 - CI (post-deploy-smoke): los 4 jobs fallaban con exit code 3 (curl "URL malformada") porque los secrets `SUPABASE_URL`/`SUPABASE_ANON_KEY` no están configurados. Se agregó el job `config`, que resuelve ambos valores desde los secrets y, si faltan, cae a los valores publicables de `.env`; si tampoco existen, falla con un mensaje explícito.
 - CI: `actions/github-script` subió de v7.1.0 a v8.0.0 para eliminar el aviso de deprecación de Node.js 20.

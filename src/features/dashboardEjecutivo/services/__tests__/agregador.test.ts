@@ -139,4 +139,22 @@ describe("dashboardEjecutivo/agregador", () => {
     expect(snap.eerr12m).toHaveLength(12);
     expect(typeof snap.generadoEn).toBe("string");
   });
+
+  it("tolera la columna excluidos_sin_tc del RPC sin romper la tendencia 12m (Ola 4 · N8)", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        { mes: 3, ingresos_mxn: 1000, costos_mxn: 400, excluidos_sin_tc: 2 },
+      ],
+      error: null,
+    });
+    const snap = await fetchDashboardEjecutivo({
+      organizationId: "org-1",
+      periodo: "2025-03",
+      cobranza: [],
+      cxp: [],
+      fuente: "facturas",
+    });
+    const marzo = snap.eerr12m.find((p) => p.periodo === "2025-03");
+    expect(marzo).toEqual({ periodo: "2025-03", ingresos: 1000, costos: 400, utilidad: 600 });
+  });
 });

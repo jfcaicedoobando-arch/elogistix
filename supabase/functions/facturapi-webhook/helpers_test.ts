@@ -1,4 +1,4 @@
-import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assert, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { computeEventKey, computeSignature, mapEventToFacturaPatch, mapEventToReceiptPatch, safeEqual } from "./helpers.ts";
 
 Deno.test("computeEventKey: usa event.id cuando existe", async () => {
@@ -169,4 +169,31 @@ Deno.test("invoice.canceled marca preserva_sustituida=true", () => {
     data: { object: { id: "fa_22" } },
   });
   assertEquals(r!.preserva_sustituida, true);
+});
+
+// ── Ola 4 · N2/N3: invariantes estructurales del orden de dedupe en index.ts ──
+// El dedupe (`facturapi_webhook_eventos`) debe insertarse SÓLO después de
+// procesar el evento con éxito; si el handler falla (5xx) no se registra,
+// para que los reintentos de FacturAPI puedan reprocesar el evento.
+const webhookIndexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+
+Deno.test("index.ts: el insert de dedupe ocurre DESPUÉS de procesar el evento, no antes", () => {
+  const idxProcesar = webhookIndexSource.indexOf("await handleReceiptEvent(supabase, orgId, event, receipt)");
+  const idxDedupeCheck = webhookIndexSource.indexOf('.eq("event_id", eventKey)');
+  const idxDedupeInsert = webhookIndexSource.indexOf('.insert({\n      organization_id: orgId,\n      event_id: eventKey,');
+  assert(idxDedupeCheck >= 0 && idxProcesar >= 0 && idxDedupeInsert >= 0, "deben existir las tres etapas");
+  // El chequeo de duplicado va antes de procesar; el insert va después.
+  assert(idxDedupeCheck < idxProcesar, "el chequeo de dedupe debe ser previo al procesamiento");
+  assert(idxProcesar < idxDedupeInsert, "el insert de dedupe debe ser posterior al procesamiento");
+});
+
+Deno.test("index.ts: si el procesamiento falla (result.ok=false) se retorna ANTES de insertar el dedupe", () => {
+  assertStringIncludes(webhookIndexSource, "if (!result.ok) return result;");
+  const idxGuard = webhookIndexSource.indexOf("if (!result.ok) return result;");
+  const idxInsert = webhookIndexSource.indexOf('.insert({\n      organization_id: orgId,\n      event_id: eventKey,');
+  assert(idxGuard >= 0 && idxInsert >= 0 && idxGuard < idxInsert);
+});
+
+Deno.test("index.ts: 'Emitida' es el único estado usado para invoice.status_updated valid (nunca 'Timbrada')", () => {
+  assert(!webhookIndexSource.includes('"Timbrada"'), "index.ts no debe usar el literal 'Timbrada'");
 });

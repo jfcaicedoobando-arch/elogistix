@@ -144,6 +144,20 @@ describe("conciliacion service", () => {
         code: "LC_MOVIMIENTO_YA_VINCULADO",
       });
     });
+
+    it("mapea 23505 con status 409 (forma real de PostgREST) preservando el código de dominio", async () => {
+      mock.setTableResult("bbva_movimientos", {
+        data: null,
+        error: {
+          code: "23505",
+          status: 409,
+          message: 'duplicate key value violates unique constraint "uq_bbva_movimientos_pago_proveedor"',
+        },
+      });
+      await expect(conciliarConPago("m1", "cxp", "p9", "u1")).rejects.toMatchObject({
+        code: "LC_MOVIMIENTO_YA_VINCULADO",
+        name: "MovimientoVinculoError",
+      });
+    });
   });
 });
-

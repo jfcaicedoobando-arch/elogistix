@@ -16,9 +16,13 @@ vi.mock("@sentry/react", () => mocks);
 
 import { reportCaughtError } from "../reportCaughtError";
 
+// El reporte usa `import()` dinámico: bajo carga (varios workers) puede
+// tardar más de un macrotask, así que esperamos hasta ver la llamada.
 async function flush() {
-  for (let i = 0; i < 6; i++) await Promise.resolve();
-  await new Promise((r) => setTimeout(r, 0));
+  for (let i = 0; i < 200 && mocks.captureException.mock.calls.length === 0; i++) {
+    await new Promise((r) => setTimeout(r, 5));
+  }
+  await Promise.resolve();
 }
 
 beforeEach(() => {
@@ -36,7 +40,8 @@ describe("reportCaughtError", () => {
     });
     reportCaughtError(new Error("boom"), { feature: "facturacion", op: "x" });
     await flush();
-    const call = mocks.captureException.mock.calls[0];
+    const calls = mocks.captureException.mock.calls;
+    const call = calls[calls.length - 1];
     expect(call[1].tags).toMatchObject({
       feature: "facturacion",
       op: "x",
@@ -57,7 +62,8 @@ describe("reportCaughtError", () => {
     };
     reportCaughtError(pgError, { feature: "facturapi", op: "set_key" });
     await flush();
-    const call = mocks.captureException.mock.calls[0];
+    const calls = mocks.captureException.mock.calls;
+    const call = calls[calls.length - 1];
     expect(call[1].tags.error_kind).toBe("db_error");
     expect(call[1].tags.pg_code).toBe("42703");
     expect(call[1].extra.pg_hint).toBe("use usuario_id");
@@ -71,7 +77,8 @@ describe("reportCaughtError", () => {
       { payload: { ambiente: "sandbox", api_key: "sk_live_secret" } },
     );
     await flush();
-    const call = mocks.captureException.mock.calls[0];
+    const calls = mocks.captureException.mock.calls;
+    const call = calls[calls.length - 1];
     expect(call[1].extra.payload).toEqual({
       ambiente: "sandbox",
       api_key: "[REDACTED]",
@@ -90,7 +97,8 @@ describe("reportCaughtError", () => {
     const pgError = { code: "22007", message: 'invalid input syntax for type date: ""' };
     reportCaughtError(pgError, { feature: "costeo", op: "insert_tarifa" });
     await flush();
-    const call = mocks.captureException.mock.calls[0];
+    const calls = mocks.captureException.mock.calls;
+    const call = calls[calls.length - 1];
     expect(call[0]).toBeInstanceOf(Error);
     expect((call[0] as Error).message).toBe('invalid input syntax for type date: ""');
     expect(call[1].extra.original).toBe(pgError);

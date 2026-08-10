@@ -36,7 +36,14 @@ afterEach(() => {
 
 async function flushImport() {
   // Esperar a que microtasks + macrotask drenen (dynamic import + .then chain).
-  await new Promise<void>((r) => setTimeout(r, 0));
+  // El SDK se carga con `import()` dinámico: bajo carga puede tardar más de un
+  // macrotask, así que esperamos hasta ver la primera interacción con Sentry.
+  const visto = () =>
+    sentryMocks.setUser.mock.calls.length > 0 ||
+    sentryMocks.getCurrentScope.mock.calls.length > 0;
+  for (let i = 0; i < 200 && !visto(); i++) {
+    await new Promise<void>((r) => setTimeout(r, 5));
+  }
   for (let i = 0; i < 4; i++) await Promise.resolve();
 }
 

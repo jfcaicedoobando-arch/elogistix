@@ -14,8 +14,8 @@ export type { ConfigItem };
 export function useConfiguracion() {
   // Ola 4 · N11: la configuración es org-scope. La org efectiva es la fuente
   // única A2: la propia org para usuarios normales; el tenant elegido en el
-  // OrgSwitcher para super_admin. Nunca useAuth().organizationId (null para
-  // super_admin).
+  // OrgSwitcher para super_admin. Nunca se lee la org del contexto de auth
+  // (es null para super_admin).
   const { organizationId } = useOrgActiva();
   return useQuery<ConfigItem[]>({
     queryKey: organizationId

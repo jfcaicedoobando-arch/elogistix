@@ -24,6 +24,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   // ── Facturas de proveedor (CxP) ────────────────────────────────────────
   LC_FACTURA_PROVEEDOR_NOT_FOUND: "La factura de proveedor no existe.",
   LC_FACTURA_PROV_NO_ENCONTRADA: "La factura de proveedor no existe o fue eliminada.",
+  LC_EMBARQUE_AJENO:
+    "El expediente indicado no pertenece a esta organización o fue eliminado.",
   LC_FACTURA_PROVEEDOR_NO_ENCONTRADA: "La factura de proveedor no existe o fue eliminada.",
   LC_CXP_FACTURA_NO_EXISTE: "La factura de proveedor no existe.",
   LC_CXP_EMBARQUE_NO_EXISTE: "El embarque vinculado no existe.",
