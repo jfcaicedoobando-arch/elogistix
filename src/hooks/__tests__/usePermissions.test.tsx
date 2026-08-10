@@ -69,6 +69,9 @@ describe("usePermissions", () => {
     expect(result.current.canCapturarFacturaProveedor).toBe(true);
     expect(result.current.canRegistrarCobro).toBe(true);
     expect(result.current.canPagarProveedor).toBe(false);
+    // v13.489.0 — captura movimientos bancarios, pero no sube al buzón del embarque.
+    expect(result.current.canCapturarMovimientoBancario).toBe(true);
+    expect(result.current.canSubirFacturaEntranteEmbarque).toBe(false);
   });
 
   it("auxiliar_contable → sólo captura factura de proveedor", () => {
@@ -78,6 +81,8 @@ describe("usePermissions", () => {
     expect(result.current.canEmitirFactura).toBe(false);
     expect(result.current.canPagarProveedor).toBe(false);
     expect(result.current.canRegistrarCobro).toBe(false);
+    expect(result.current.canCapturarMovimientoBancario).toBe(true);
+    expect(result.current.canSubirFacturaEntranteEmbarque).toBe(false);
   });
 
   it("tesorero → sólo paga proveedores", () => {
@@ -105,6 +110,8 @@ describe("usePermissions", () => {
     expect(result.current.canCapturarFacturaProveedor).toBe(false);
     expect(result.current.canPagarProveedor).toBe(false);
     expect(result.current.canRegistrarCobro).toBe(false);
+    expect(result.current.canSubirFacturaEntranteEmbarque).toBe(true);
+    expect(result.current.canCapturarMovimientoBancario).toBe(false);
   });
 
 });

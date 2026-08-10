@@ -188,18 +188,34 @@ export const CONCILIAR_TESORERIA: readonly AppRole[] = [
 ];
 
 /**
- * v13.487.1 — Espejo UI de la política RLS de INSERT/UPDATE en
- * `bbva_movimientos` ("Tesoreria write/update bbva_movimientos"): sólo el
- * tesorero y los administradores del tenant capturan o editan movimientos
- * bancarios (manuales o importados). El contador y los demás roles de finanzas
- * conservan sólo lectura, así que la UI no debe ofrecerles la acción: antes
- * lanzaba la petición y la base respondía 42501.
+ * v13.489.0 — Espejo UI de la política RLS de INSERT/UPDATE en
+ * `bbva_movimientos` ("Tesoreria write/update bbva_movimientos"): tesorero,
+ * contador y auxiliar contable capturan, editan e importan movimientos
+ * bancarios de su organización, además de los administradores del tenant.
  */
 export const CAPTURAR_MOVIMIENTO_BANCARIO: readonly AppRole[] = [
   "super_admin",
   "admin_org",
   "admin",
   "tesorero",
+  "contador",
+  "auxiliar_contable",
+];
+
+/**
+ * v13.489.0 — Segregación de funciones en el buzón de facturas de proveedor del
+ * embarque (tab Costos): operaciones entrega los PDF/XML del agente y
+ * contabilidad los captura después en CxP. Espejo de la política RLS
+ * "Operaciones sube facturas entrantes" de `embarque_facturas_entrantes`, que
+ * ya no acepta a contador ni a auxiliar contable.
+ */
+export const SUBIR_FACTURA_ENTRANTE_EMBARQUE: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "operador",
+  "coordinador_logistico",
+  "gerente_operaciones",
 ];
 
 export const hasRole = (list: readonly AppRole[], role: AppRole | null | undefined) =>
