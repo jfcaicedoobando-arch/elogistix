@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.492.0] - 2026-08-10
+- Embarques en **Borrador** ya no se leen como confirmados (caso ELIMP00323): la línea de tiempo de fases marcaba "Confirmado" como completada de forma fija y completaba "En Tránsito" en cuanto el ETD vencía, aunque el embarque nunca se hubiera confirmado. Ahora `calcularFasesEmbarque` respeta el estado guardado: en borrador la fase se etiqueta **"Por confirmar"** y queda como fase actual, y ni En Tránsito ni Arribo se completan por fechas.
+- Nueva `AlertaBorrador` (extraída de `EmbarqueDetalleTabs`): el aviso amarillo advierte explícitamente cuando el **ETD ya venció** y el embarque sigue sin confirmar.
+- `DOMAIN_STATUSES.embarque` incluye `Borrador`, para que su badge y filtros no dependan del mapeo de facturación.
+
+
+
 ## [13.491.1] - 2026-08-10
 - Aprobación de facturas de proveedor (`LC_SOD_VIOLATION`): el botón "Aprobar factura" se mostraba habilitado a quien capturó la factura y el bloqueo por **segregación de funciones** aparecía como error rojo hasta después del clic. Ahora la regla se evalúa antes: nuevo `motivoBloqueoAprobacion`/`puedeAprobarEstaFactura` en `features/cxp/permissions.ts` (espejo de la RPC: `admin`, `admin_org` y `super_admin` exentos) más el hook `useSodAprobacion`. En el detalle, "Aprobar factura" queda deshabilitado con tooltip explicativo (rechazar sigue permitido); en la bandeja "Por aprobar" las facturas propias no son seleccionables para el lote (`ComprasPorAprobar.selectionCol` con `bloqueados` y la lógica movida al hook `ComprasPorAprobar.useColumnas`). El mensaje de error, si igual llega a ocurrir, ahora dice a quién pedirle la aprobación.
 - `created_by` se agregó al lector de facturas de proveedor (`FacturaCxP`) para poder aplicar la regla en el cliente.
