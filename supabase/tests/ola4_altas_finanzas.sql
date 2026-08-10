@@ -32,7 +32,7 @@ BEGIN
 
   -- N7: un embarque con 2 ventas y 3 costos → no debe haber fan-out.
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, eta, tipo_cambio_usd)
-  VALUES (v_emb, v_org, v_cli, 'ELN7A001', 'Marítimo'::public.modo_transporte,
+  VALUES (v_emb, v_org, v_cli, 'ELNSA001', 'Marítimo'::public.modo_transporte,
           'Importación'::public.tipo_operacion, CURRENT_DATE, 18.0)
   ON CONFLICT (id) DO NOTHING;
 
@@ -45,7 +45,7 @@ BEGIN
 
   -- N8: embarque del año actual con venta en USD y SIN tipo_cambio_usd (<=1).
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, eta, tipo_cambio_usd)
-  VALUES ('c4444444-4444-4444-4444-444444444444', v_org, v_cli, 'ELN8A001',
+  VALUES ('c4444444-4444-4444-4444-444444444444', v_org, v_cli, 'ELNSB001',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
           make_date(EXTRACT(year FROM CURRENT_DATE)::int, 1, 15), 0)
   ON CONFLICT (id) DO NOTHING;
@@ -55,10 +55,10 @@ BEGIN
   -- N9: factura NO vencida (vence en 10 días).
   INSERT INTO public.facturas (
     id, organization_id, cliente_id, cliente_nombre, numero, expediente,
-    moneda, total, estado, fecha_emision, fecha_vencimiento
+    moneda, subtotal, iva, total, estado, fecha_emision, fecha_vencimiento
   ) VALUES (
     'c6666666-6666-6666-6666-666666666666', v_org, v_cli, 'Cliente Ola4 N7', 'OLA4-N9-01',
-    'OLA4N9001', 'MXN'::public.moneda, 1000, 'Emitida'::public.estado_factura,
+    'ELNSC001', 'MXN'::public.moneda, 1000, 0, 1000, 'Emitida'::public.estado_factura,
     CURRENT_DATE - 5, CURRENT_DATE + 10
   ) ON CONFLICT (id) DO NOTHING;
 

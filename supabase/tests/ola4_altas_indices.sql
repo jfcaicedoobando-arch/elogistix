@@ -54,11 +54,11 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.facturas (
     id, organization_id, cliente_id, cliente_nombre, numero, expediente,
-    moneda, total, estado, fecha_emision, fecha_vencimiento
+    moneda, subtotal, iva, total, estado, fecha_emision, fecha_vencimiento
   ) VALUES (
     'd4444444-4444-4444-4444-444444444444', v_org,
     'd3333333-3333-3333-3333-333333333333', 'Cliente Ola4 Indices', 'OLA4-IDX-01',
-    'ELIDX001', 'MXN'::public.moneda, 1000, 'Emitida'::public.estado_factura,
+    'ELIDX001', 'MXN'::public.moneda, 1000, 0, 1000, 'Emitida'::public.estado_factura,
     CURRENT_DATE - 1, CURRENT_DATE + 20
   ) ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.pagos_factura (
