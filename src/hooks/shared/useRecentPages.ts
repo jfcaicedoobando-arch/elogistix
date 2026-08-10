@@ -6,14 +6,16 @@
  * (`SIDEBAR_URL_TITLE_MAP`), así detalles como `/facturacion/:id` o rutas
  * del portal jamás contaminan la lista.
  *
- * Persiste en `localStorage["nav:recent:v1"]` con parseo defensivo.
+ * Persiste vía el wrapper `browserStorage` (clave `STORAGE_KEYS.navRecents`)
+ * con parseo defensivo.
  * Se debe montar UNA sola vez a nivel `Layout`.
  */
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { SIDEBAR_URL_TITLE_MAP } from "@/components/layout/sidebarItems";
+import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
-const STORAGE_KEY = "nav:recent:v1";
+const STORAGE_KEY = STORAGE_KEYS.navRecents;
 const MAX_RECENTS = 8;
 
 export interface RecentPage {
@@ -22,9 +24,8 @@ export interface RecentPage {
 }
 
 function readInitial(): RecentPage[] {
-  if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = safeLocalStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -65,13 +66,7 @@ export function useRecentPages(): UseRecentPagesApi {
     setRecents((prev) => {
       const filtered = prev.filter((r) => r.url !== canonicalUrl);
       const next = [{ url: canonicalUrl, title }, ...filtered].slice(0, MAX_RECENTS);
-      try {
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        }
-      } catch {
-        // ignorar
-      }
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
   }, [location.pathname, location.search]);

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { parseInputNumero } from "../utils/parseInputNumero";
+import { limpiarSeparadoresMiles } from "@/lib/format/parseMonto";
 
 /**
  * R-01 — edición local de campos numéricos en el wizard.
@@ -11,7 +12,7 @@ import { parseInputNumero } from "../utils/parseInputNumero";
  */
 /** Importes: los separadores de miles se descartan antes de parsear. */
 function parseImporte(raw: string): number {
-  return parseInputNumero(raw.replace(/,/g, ""));
+  return parseInputNumero(limpiarSeparadoresMiles(raw));
 }
 
 export interface NumericFieldBinding {

@@ -23,6 +23,9 @@ export const STORAGE_KEYS = {
   // dashboardEjecutivoPeriodo removida en v13.300.31: el periodo ahora vive en URL (?mes=).
   tarifasViewMode: "lc-tarifas-view-mode",
   cxpPreviaAmpliada: "lc-cxp-previa-ampliada",
+  navRecents: "nav:recent:v1",
+  sidebarCollapsed: "sidebar:collapsed:v1",
+  marketingAttribution: "lc-marketing-attribution",
 } as const;
 
 export const loginLoggedKey = (userId: string): string =>

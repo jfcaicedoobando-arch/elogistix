@@ -10,9 +10,7 @@
  * (XML CFDI, PDF parseado con IA, formularios) a números fiscales.
  */
 import { roundMoney } from "@/lib/financial/financialUtils";
-
-/** Separadores de miles y espacios duros que traen los PDF/XML de proveedores. */
-const LIMPIEZA_RE = /[\s\u00a0\u202f$]/g;
+import { limpiarSeparadoresMiles } from "@/lib/format/parseMonto";
 
 /**
  * Convierte un valor crudo a número finito. Acepta strings con separador de
@@ -22,7 +20,7 @@ const LIMPIEZA_RE = /[\s\u00a0\u202f$]/g;
 export function parseNumeroFiscal(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value !== "string") return null;
-  const limpio = value.replace(LIMPIEZA_RE, "").replace(/,(?=\d{3}\b)/g, "");
+  const limpio = limpiarSeparadoresMiles(value);
   if (limpio === "") return null;
   const n = Number(limpio);
   return Number.isFinite(n) ? n : null;

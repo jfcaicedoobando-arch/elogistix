@@ -29,6 +29,11 @@ export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[
       cell: ({ row }) => row.original.cliente_nombre ? toTitleCase(row.original.cliente_nombre) : "—",
     },
     {
+      id: "vendedora", header: "Vendedora",
+      meta: { width: COL_W.nombre, className: "max-w-[180px] truncate hidden lg:table-cell", headerClassName: "hidden lg:table-cell" },
+      cell: ({ row }) => row.original.vendedora_nombre ?? "—",
+    },
+    {
       id: "factura", header: "Factura",
       meta: { width: COL_W.fecha, className: "font-mono text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.factura_numero ?? "—",

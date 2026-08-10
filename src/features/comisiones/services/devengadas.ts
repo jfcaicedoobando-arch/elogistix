@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { ymMx } from "@/lib/date/mx";
+import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
 
 export type ComisionDevengadaRow = Tables<"comisiones_devengadas">;
 export type EstadoComision = ComisionDevengadaRow["estado"];
@@ -39,6 +40,26 @@ type Joined = ComisionDevengadaRow & {
   facturas: { numero: string; cliente_nombre: string; expediente: string | null } | null;
 };
 
+/**
+ * B4 (Ola 7): los nombres/correos de las vendedoras no viven en una tabla
+ * (se resuelven vía edge function `user-management`). Se resuelven en un solo
+ * viaje y de forma best-effort: si falla, la columna muestra "—".
+ */
+async function buildNombreVendedoraMap(ids: string[]): Promise<Record<string, string>> {
+  const unicos = [...new Set(ids)];
+  if (unicos.length === 0) return {};
+  try {
+    const users = await fetchAvailableUsers();
+    const map: Record<string, string> = {};
+    for (const u of users) {
+      if (unicos.includes(u.id)) map[u.id] = u.email;
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 export async function fetchComisionesDevengadas(
   filtros: FetchComisionesFiltros = {},
 ): Promise<ComisionDevengada[]> {
@@ -65,14 +86,19 @@ export async function fetchComisionesDevengadas(
   if (error) throw error;
 
   // SAFE-CAST: `Joined` modela el shape del embed; Supabase devuelve unknown.
-  const rows = ((data as unknown as Joined[] | null) ?? []).map((r): ComisionDevengada => ({
+  const crudas = (data as unknown as Joined[] | null) ?? [];
+  const nombres = await buildNombreVendedoraMap(
+    crudas.map((r) => r.vendedora_id).filter((id): id is string => !!id),
+  );
+
+  const rows = crudas.map((r): ComisionDevengada => ({
     id: r.id,
     organization_id: r.organization_id,
     pago_factura_id: r.pago_factura_id,
     embarque_id: r.embarque_id,
     factura_id: r.factura_id,
     vendedora_id: r.vendedora_id,
-    vendedora_nombre: null,
+    vendedora_nombre: r.vendedora_id ? (nombres[r.vendedora_id] ?? null) : null,
     factura_numero: r.facturas?.numero ?? null,
     cliente_nombre: r.facturas?.cliente_nombre ?? null,
     expediente: r.facturas?.expediente ?? null,
@@ -87,7 +113,9 @@ export async function fetchComisionesDevengadas(
   }));
 
   if (filtros.periodo) {
-    return rows.filter((r) => r.created_at.slice(0, 7) === filtros.periodo);
+    // A11: el periodo se compara en zona CDMX; `.slice(0,7)` usaba el mes UTC
+    // y entre 18:00–23:59 CDMX clasificaba la comisión en el mes equivocado.
+    return rows.filter((r) => ymMx(new Date(r.created_at)) === filtros.periodo);
   }
   return rows;
 }
@@ -102,7 +130,7 @@ export function calcularKPIsComisiones(items: ComisionDevengada[]): KPIsComision
   const mesActual = ymMx();
   let dev = 0, pend = 0, liq = 0;
   for (const it of items) {
-    const mes = it.created_at.slice(0, 7);
+    const mes = ymMx(new Date(it.created_at));
     if (mes === mesActual && it.estado !== "Cancelada") dev += it.comision_mxn;
     if (it.estado === "Devengada") pend += it.comision_mxn;
     if (it.estado === "Liquidada" && mes === mesActual) liq += it.comision_mxn;

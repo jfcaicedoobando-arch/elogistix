@@ -37,9 +37,8 @@ const KEYS: (keyof Attribution)[] = [
 ];
 
 export function getAttribution(): Attribution {
-  if (typeof window === "undefined") return EMPTY_ATTRIBUTION;
   try {
-    const raw = window.sessionStorage.getItem(ATTRIBUTION_STORAGE_KEY);
+    const raw = safeSessionStorage.getItem(ATTRIBUTION_STORAGE_KEY);
     if (!raw) return EMPTY_ATTRIBUTION;
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return EMPTY_ATTRIBUTION;

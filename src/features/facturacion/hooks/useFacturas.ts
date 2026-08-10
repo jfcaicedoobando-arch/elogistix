@@ -8,6 +8,7 @@ import {
   marcarCostoPagado,
 } from "@/features/facturacion/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { invalidateSidebarAlerts } from "@/hooks/layout/useSidebarAlerts";
 
 ;
 
@@ -60,7 +61,14 @@ export function useMarcarCostoPagado() {
   return useMutation({
     mutationFn: marcarCostoPagado,
     onSuccess: () => {
+      // M13 (Ola 7): el costo aparece también en la bandeja de facturación, en
+      // el expediente del embarque y en los badges del sidebar. Invalidar sólo
+      // `gastosPendientes` dejaba esas pantallas mostrando el costo como
+      // pendiente hasta un refresh manual.
       queryClient.invalidateQueries({ queryKey: queryKeys.facturas.gastosPendientes });
+      queryClient.invalidateQueries({ queryKey: queryKeys.facturas.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      invalidateSidebarAlerts(queryClient);
       notifySuccess(undefined, { title: "Costo marcado como pagado" });
     },
     onError: (error: Error) => {
