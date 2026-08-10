@@ -107,8 +107,11 @@ export function resumirEntrantes(
   return resumen;
 }
 
+import type { TipoArchivoEntrante } from "@/lib/domain/facturasEntrantesArchivos";
+
 // v13.494.0 — Validación y emparejado de archivos vive en
 // `facturasEntrantesArchivos.ts`; se re-exporta para no romper importadores.
+
 export {
   EXTENSIONES_ENTRANTES,
   TAMANO_MAX_ENTRANTE_MB,
