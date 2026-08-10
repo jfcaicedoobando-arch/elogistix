@@ -7,8 +7,10 @@
  */
 import { LC_CODE_MESSAGES_OPERATIVO } from "./lcCodeMessages.operativo";
 import { LC_CODE_MESSAGES_FINANCIERO } from "./lcCodeMessages.financiero";
+import { LC_CODE_MESSAGES_COBRANZA } from "./lcCodeMessages.cobranza";
 
 export const LC_CODE_MESSAGES: Record<string, string> = {
   ...LC_CODE_MESSAGES_OPERATIVO,
   ...LC_CODE_MESSAGES_FINANCIERO,
+  ...LC_CODE_MESSAGES_COBRANZA,
 };
