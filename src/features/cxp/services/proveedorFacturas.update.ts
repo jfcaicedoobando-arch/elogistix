@@ -2,12 +2,7 @@
  * Edición de una factura de proveedor existente.
  * Permite corregir folio/fechas/importes/categoría/notas sin borrar y recapturar.
  *
- * Reglas:
- * - El proveedor y el CFDI fiscal NO son editables (rompen trazabilidad).
- * - El nuevo total no puede ser menor a lo ya pagado en `pagos_proveedor`.
- * - Si cambian campos sensibles y la factura estaba `aprobada`, se regresa a
- *   `pendiente` y se limpia `aprobada_por`/`aprobada_at`.
- * - Revalida duplicado (proveedor + folio + emisión) excluyendo el propio id.
+ * Reglas de negocio y validaciones viven en `proveedorFacturas.update.reglas.ts`.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -15,31 +10,19 @@ import {
   existeFacturaDuplicada,
   type ProveedorFacturaRow,
 } from "./proveedorFacturas";
+import {
+  SaldoNegativoError,
+  calcularTotal,
+  detectarCambioSensible,
+  validarTotalNoMenorAPagado,
+} from "./proveedorFacturas.update.reglas";
+import type {
+  ActualizarFacturaPayload,
+  FacturaParaEdicion,
+} from "./proveedorFacturas.update.types";
 
-export interface ActualizarFacturaPayload {
-  folio_proveedor: string;
-  fecha_emision: string;
-  fecha_vencimiento: string;
-  dias_credito: number;
-  moneda: ProveedorFacturaRow["moneda"];
-  tipo_cambio_usd: number;
-  subtotal: number;
-  iva: number;
-  ieps: number;
-  retenciones: number;
-  categoria_presupuesto_id: string;
-  notas: string;
-}
-
-/** Subconjunto de columnas necesario para precargar el form de edición. */
-export type FacturaParaEdicion = Pick<
-  ProveedorFacturaRow,
-  | "id" | "proveedor_id" | "proveedor_nombre" | "folio_proveedor"
-  | "fecha_emision" | "fecha_vencimiento" | "dias_credito"
-  | "moneda" | "tipo_cambio_usd"
-  | "subtotal" | "iva" | "ieps" | "retenciones" | "total"
-  | "categoria_presupuesto_id" | "notas" | "estado_aprobacion"
->;
+export { SaldoNegativoError };
+export type { ActualizarFacturaPayload, FacturaParaEdicion };
 
 const FACTURA_EDIT_SELECT = `
   id, proveedor_id, proveedor_nombre, folio_proveedor,
@@ -60,74 +43,6 @@ export async function fetchFacturaParaEdicion(id: string): Promise<FacturaParaEd
   // SAFE-CAST: select acotado al subset declarado en FacturaParaEdicion.
   return (data as FacturaParaEdicion | null) ?? null;
 }
-
-
-export class SaldoNegativoError extends Error {
-  code = "SALDO_NEGATIVO" as const;
-  totalPagado: number;
-  constructor(totalPagado: number) {
-    super("El nuevo total no puede ser menor a lo ya pagado");
-    this.totalPagado = totalPagado;
-  }
-}
-
-/** Campos cuyo cambio fuerza re-aprobación si la factura estaba aprobada. */
-const CAMPOS_SENSIBLES: Array<keyof ActualizarFacturaPayload> = [
-  "folio_proveedor", "fecha_emision",
-  "moneda", "tipo_cambio_usd",
-  "subtotal", "iva", "ieps", "retenciones",
-];
-
-function detectarCambioSensible(
-  actual: Pick<ProveedorFacturaRow, "folio_proveedor" | "fecha_emision" | "moneda" | "tipo_cambio_usd" | "subtotal" | "iva" | "ieps" | "retenciones">,
-  payload: ActualizarFacturaPayload,
-): boolean {
-  return CAMPOS_SENSIBLES.some((k) => {
-    // SAFE-CAST: lectura indexada por key tipada de objetos planos.
-    const a = (actual as unknown as Record<string, unknown>)[k];
-    // SAFE-CAST: lectura indexada por key tipada de objetos planos.
-    const b = (payload as unknown as Record<string, unknown>)[k];
-    if (typeof a === "number" || typeof b === "number") return Number(a) !== Number(b);
-    return a !== b;
-  });
-}
-
-/** Total = Subtotal + IVA + IEPS − Retenciones. */
-function calcularTotal(payload: ActualizarFacturaPayload): number {
-  return (
-    (Number(payload.subtotal) || 0) +
-    (Number(payload.iva) || 0) +
-    (Number(payload.ieps) || 0) -
-    (Number(payload.retenciones) || 0)
-  );
-}
-
-/**
- * Ola 9 · A6: ignora pagos borrados (soft-delete) y descuenta las notas de
- * crédito aplicadas; si no, el "total pagado" se infla y bloquea ediciones
- * legítimas. Tolerancia de 1 centavo por redondeos.
- */
-async function validarTotalNoMenorAPagado(id: string, nuevoTotal: number): Promise<void> {
-  const { data: pagos, error: errPagos } = await supabase
-    .from("pagos_proveedor")
-    .select("monto")
-    .eq("proveedor_factura_id", id)
-    .is("deleted_at", null);
-  if (errPagos) throw errPagos;
-  const { data: notas, error: errNotas } = await supabase
-    .from("proveedor_notas_credito")
-    .select("monto")
-    .eq("proveedor_factura_id", id)
-    .in("estado", ["Aplicada"])
-    .is("deleted_at", null);
-  if (errNotas) throw errNotas;
-  const totalNotas = (notas ?? []).reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
-  const totalPagado =
-    (pagos ?? []).reduce((acc, p) => acc + (Number(p.monto) || 0), 0) + totalNotas;
-  if (nuevoTotal + 0.01 < totalPagado) throw new SaldoNegativoError(totalPagado);
-}
-
-
 
 export async function actualizarFacturaProveedor(
   id: string,
@@ -154,7 +69,6 @@ export async function actualizarFacturaProveedor(
   // 3) Validar que el nuevo total no quede por debajo de lo ya pagado.
   const nuevoTotal = calcularTotal(payload);
   await validarTotalNoMenorAPagado(id, nuevoTotal);
-
 
   // 4) ¿Hubo cambio sensible? → re-aprobación si estaba aprobada.
   const forzarReaprobacion =
