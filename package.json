@@ -124,7 +124,7 @@
     "zod": "^4"
   },
   "devDependencies": {
-    "@babel/core": "7.29.0",
+    "@babel/core": "8.0.1",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.0",
     "@react-pdf/types": "^2.11.1",
