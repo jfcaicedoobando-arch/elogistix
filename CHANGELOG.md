@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.489.4] - 2026-08-10
+- CI (job *Prepare RLS database snapshot*): el loop de `Apply migrations` abortaba el pipeline con exit 3 en `20260812090000` (Ola 4 N41/N44/N45), que no aplica en base limpia por el cambio de firma de `cartera_pendiente()`. Ahora el loop lleva `MIGRACIONES_EXENTAS` (`20260729035825`, `20260812090000`) — mismas exenciones que `DRIFT_CORTE` — y sólo emite *warning*; cualquier otra migración que falle sigue rompiendo el build.
+- El estado final de esos fixes lo garantizan las migraciones de reaplicación `20260810203738` (cartera) y `20260810203939` (dashboards).
+
+
+
 ## [13.489.3] - 2026-08-10
 - CI `audit:tests`: títulos duplicados entre los tests de pago en lote a proveedor y cobro en lote a cliente renombrados (`repartirFifo (CxP · pago proveedor en lote)`, `acepta un reparto válido de pago a proveedor`).
 - CI `audit:migrations` (H6): `20260810195819` recreó `assert_movimiento_pago_consistente()` sin el bloque de permisos; migración correctiva FIX-H6-12 re-aplica `REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO authenticated, service_role`, y el baseline del auditor sube a `20260810204343`.
