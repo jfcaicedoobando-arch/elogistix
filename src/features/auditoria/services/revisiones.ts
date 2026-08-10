@@ -158,7 +158,7 @@ export async function asignarResponsableHallazgo(
   await registrarActividad({
     modulo: "auditoria",
     accion: "Asignó responsable de hallazgo",
-    entidadId: (data as AuditoriaRevision).id,
+    entidadId: (data as AuditoriaRevision | null)?.id,
     detalles: {
       embarque_id: input.embarque_id,
       regla: input.regla,
