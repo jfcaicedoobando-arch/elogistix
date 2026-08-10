@@ -7403,6 +7403,10 @@ export type Database = {
         Returns: undefined
       }
       _cxp_anchor_fase_o: { Args: never; Returns: undefined }
+      _cxp_desvincular_por_rechazo: {
+        Args: { p_id: string; p_motivo: string }
+        Returns: Json
+      }
       _cxp_validar_aprobacion: {
         Args: { p_factura_id: string }
         Returns: undefined
