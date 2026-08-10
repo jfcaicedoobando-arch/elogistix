@@ -166,8 +166,13 @@ jobs:
   rpc-smoke:
     name: RPC smoke (dinero, como authenticated)
     runs-on: ubuntu-24.04
+    needs: config
     timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
+      ANON_KEY: ${{ needs.config.outputs.anon_key }}
     steps:
+
       - name: Login demo (reutiliza demo-access)
         run: |
           set -euo pipefail
