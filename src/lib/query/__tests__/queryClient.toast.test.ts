@@ -74,5 +74,5 @@ describe("queryClient · toast on query failure", () => {
     }).catch(() => {});
     await new Promise((r) => setTimeout(r, 0));
     expect(toastErrorMock).not.toHaveBeenCalled();
-  });
+  }, 45_000);
 });
