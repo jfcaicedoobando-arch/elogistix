@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.478.7] - 2026-08-10
+- Fix: `actualizar_tarifa_con_recargos_rpc` ya no borra la vigencia, el tránsito ni las notas al guardar una actualización parcial de la tarifa (antes anulaba `vigente_desde`/`vigente_hasta`, campos obligatorios).
+
 ## [13.478.6] - 2026-08-10
 - Tests: `ola6_transaccional.sql` siembra los catálogos globales (naviera, tipo de contenedor y puertos) antes de crear la tarifa, evitando `naviera_id` nulo en una base limpia de CI.
 
