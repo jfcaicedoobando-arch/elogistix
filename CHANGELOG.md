@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.486.1] - 2026-08-10
+- CI (Lint): `bun run lint` fallaba con `ERR_PACKAGE_PATH_NOT_EXPORTED` al resolver `zod-validation-error/v4` (ESLint 10 + `eslint-plugin-react-hooks` con zod 4, pero el paquete resuelto era 3.5.4 que no expone el subpath). Se fija `zod-validation-error@^4.0.2` como dependencia de desarrollo y en `overrides`/`resolutions`.
+- Lint (errores restantes): `HallazgosTabla.tsx` — celda "Responsable" extraída a `HallazgoResponsableCell.tsx` (complejidad 17 → dentro del límite); `parseConceptosSugeridos` movido de `FacturaNotasCreditoSeccion.tsx` a `facturaNotasCreditoConceptos.ts` (regla `react-refresh/only-export-components`); eliminados los `any` de `client-error-log/index.ts` y del test `facturapi-cancelar/index_n38_test.ts`.
+- Robustez: `asignarResponsableHallazgo` ya no rompe si el `insert` no devuelve fila al registrar la bitácora.
+
+## [13.486.0] - 2026-08-10
+- Ola 4 (Medias/Bajas, N18–N53): cierre completo de hallazgos con migraciones (N30, N31, N36, N37, N41, N44, N45, N48, N52, N53) y sus tests SQL/vitest/Deno.
+
+
 ## [13.485.1] - 2026-08-10
 - Tests: estabilizados dos tests intermitentes que sólo fallaban con la suite completa bajo carga (`fiscalBreadcrumbs.test.ts` y `exchangeRates.sentry.test.ts`): ahora esperan el `dynamic import` de Sentry con `vi.waitFor` en lugar de un número fijo de microtareas.
 - Arquitectura (Power of 10): `src/features/tesoreria/domain/import/bbva.ts` (271 líneas) dividido — las primitivas de parseo (encabezados, `parseFecha`, `parseMonto`, `sha1`) se movieron a `bbva.parsers.ts`. Sin cambios de comportamiento.
