@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.489.2] - 2026-08-10
+- CI: `deploy-gate.yml` seguía con `DRIFT_BASELINE: 20260729040000`, por lo que volvía a marcar como *drift NUEVO* la migración histórica `20260812090000`. Se movió a `20260812090001` para quedar sincronizado con `DRIFT_CORTE` de `rls-tests.yml`.
+
+
+
 ## [13.489.1] - 2026-08-10
 - CI (drift radar): la migración `20260812090000` (Ola 4 · N41/N44/N45) abortaba siempre porque cambiaba los nombres de las columnas de salida de `cartera_pendiente()` con `CREATE OR REPLACE` (`cannot change return type of existing function`), por lo que los tres fixes nunca llegaron a la base.
 - `cartera_pendiente()`: se reaplica N44 conservando la firma vigente (`factura_id`…`ultimo_contacto`, `estado`); las notas de crédito ahora se convierten a la moneda de la factura antes de restarse del saldo.
