@@ -186,7 +186,7 @@ export function calcularPulso(
     if (r.eta) {
       // Ola 4 · N21: comparar por DÍA. `hoy` es un instante, así que un ETA de
       // hoy quedaba fuera de "arribos 7d" y cualquier ETA de hoy contaba como
-      // demora desde la medianoche. La demora exige > 7 días de retraso.
+      // demora desde la medianoche (comparación instante vs. medianoche).
       const etaDia = r.eta.slice(0, 10);
       const hoyDia = hoy.toISOString().slice(0, 10);
       const en7dDia = en7d.toISOString().slice(0, 10);
@@ -194,7 +194,7 @@ export function calcularPulso(
       const diasRetraso = Math.floor(
         (Date.parse(`${hoyDia}T00:00:00Z`) - Date.parse(`${etaDia}T00:00:00Z`)) / 86_400_000,
       );
-      if (est === "En Aduana" && diasRetraso > 7) demoras += 1;
+      if (est === "En Aduana" && diasRetraso > 0) demoras += 1;
     }
   }
   const cfdi = facturas.filter((f) => f.uuid_fiscal && f.timbrado_en && f.timbrado_en.slice(0, 7) === mesActual).length;
