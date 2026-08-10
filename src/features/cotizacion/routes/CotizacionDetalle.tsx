@@ -14,6 +14,7 @@ import { FileX } from "lucide-react";
 import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
 import { useHistorialEnviosCotizacion } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
 import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
+import { usePdfExport } from "@/hooks/shared/usePdfExport";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
 const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generators/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {
@@ -35,6 +36,10 @@ export default function CotizacionDetalle() {
     handleCambiarEstado, abrirDialogConvertir, handleConvertir,
     convertirProspecto, navigate,
   } = useCotizacionDetalleState(id);
+
+  // M14 (Ola 7): sin este guard, dos clics rápidos generaban dos PDF y
+  // cualquier error del generador se perdía en consola sin avisar al usuario.
+  const { isExporting, run } = usePdfExport({ method: "EXPORTAR_PDF_COTIZACION" });
 
   const [enviarOpen, setEnviarOpen] = useState(false);
   const { data: envios = [] } = useHistorialEnviosCotizacion(cotizacion?.id);
@@ -74,7 +79,8 @@ export default function CotizacionDetalle() {
               cotizacion={cotizacion}
               nombreDestinatario={nombreDestinatario}
               onBack={() => navigate("/cotizaciones")}
-              onExportarPdf={() => handleExportarPdf(cotizacion, tasaIva)}
+              onExportarPdf={() => void run(() => handleExportarPdf(cotizacion, tasaIva))}
+              exportandoPdf={isExporting}
               onEnviarEmail={canEdit ? () => setEnviarOpen(true) : undefined}
               yaEnviada={envios.length > 0}
             />
