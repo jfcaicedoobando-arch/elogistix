@@ -78,6 +78,41 @@ export async function deleteUserViaEdgeFunctionAuth(userId: string): Promise<unk
 }
 
 /**
+ * Ola 4 · N13: la validación de duplicados ya NO es fail-open. Sin org no hay
+ * universo contra el cual comparar (el listado es fail-closed desde Ola 3 · P2)
+ * y con el directorio de auth caído los correos son placeholders
+ * UNRESOLVED_EMAIL: en ambos casos se aborta el alta en lugar de invitar a
+ * ciegas.
+ */
+async function validarAltaUsuario(orgId: string | undefined, emailNormalizado: string): Promise<void> {
+  if (!orgId) {
+    throw new Error("No se pudo resolver la organización destino del alta. Reintenta o selecciona una organización.");
+  }
+  const existentes = await fetchUsuariosOrganizacion(orgId);
+  if (fallóDirectorioUsuarios()) {
+    throw new Error("No se pudo verificar el directorio de usuarios; reintenta en unos segundos.");
+  }
+  if (existentes.some((u) => u.email.toLowerCase() === emailNormalizado)) {
+    throw new Error(`Ya existe un usuario con el correo ${emailNormalizado} en esta organización.`);
+  }
+}
+
+/** Re-verifica que la edge function sí insertó la membresía del nuevo usuario. */
+async function verificarMembresia(nuevoId: string, orgId?: string): Promise<void> {
+  let verify = supabase
+    .from("organization_members")
+    .select("user_id, role")
+    .eq("user_id", nuevoId);
+  if (orgId) verify = verify.eq("organization_id", orgId);
+  const { data: membresia, error: verifyError } = await verify.maybeSingle();
+  if (verifyError || !membresia) {
+    throw new Error(
+      "No se pudo completar el alta: el usuario no quedó asignado a la organización. Reintenta o contacta soporte.",
+    );
+  }
+}
+
+/**
  * Alta de usuario (Q-05, v13.339.0).
  *
  * - La organización destino se manda SIEMPRE a la edge function
@@ -89,22 +124,7 @@ export async function createUserViaEdgeFunction(
   params: CreateUserParams,
 ): Promise<CreateUserResponse> {
   const emailNormalizado = params.email.trim().toLowerCase();
-
-  // Ola 4 · N13: la validación de duplicados ya NO es fail-open. Sin org no
-  // hay universo contra el cual comparar (el listado es fail-closed desde
-  // Ola 3 · P2) y con el directorio de auth caído los correos son
-  // placeholders UNRESOLVED_EMAIL: en ambos casos se aborta el alta en lugar
-  // de invitar a ciegas.
-  if (!params.orgId) {
-    throw new Error("No se pudo resolver la organización destino del alta. Reintenta o selecciona una organización.");
-  }
-  const existentes = await fetchUsuariosOrganizacion(params.orgId);
-  if (fallóDirectorioUsuarios()) {
-    throw new Error("No se pudo verificar el directorio de usuarios; reintenta en unos segundos.");
-  }
-  if (existentes.some((u) => u.email.toLowerCase() === emailNormalizado)) {
-    throw new Error(`Ya existe un usuario con el correo ${emailNormalizado} en esta organización.`);
-  }
+  await validarAltaUsuario(params.orgId, emailNormalizado);
 
   const token = await getAuthToken();
   const res = await supabase.functions.invoke("user-management", {
@@ -127,18 +147,7 @@ export async function createUserViaEdgeFunction(
     throw new Error("No se pudo completar el alta: el servicio de identidad no devolvió el usuario.");
   }
 
-  let verify = supabase
-    .from("organization_members")
-    .select("user_id, role")
-    .eq("user_id", nuevoId);
-  if (params.orgId) verify = verify.eq("organization_id", params.orgId);
-  const { data: membresia, error: verifyError } = await verify.maybeSingle();
-
-  if (verifyError || !membresia) {
-    throw new Error(
-      "No se pudo completar el alta: el usuario no quedó asignado a la organización. Reintenta o contacta soporte.",
-    );
-  }
+  await verificarMembresia(nuevoId, params.orgId);
 
   await registrarActividad({
     modulo: "usuarios",

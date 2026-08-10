@@ -31,8 +31,7 @@ function wrapper(qc: QueryClient) {
 
 describe("useEliminarProforma", () => {
   let qc: QueryClient;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let invalidate: any;
+  let invalidate: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
