@@ -21,3 +21,20 @@ export async function fetchAvailableUsers(): Promise<UserOption[]> {
   if (error) throw error;
   return Array.isArray(data) ? (data as UserOption[]) : [];
 }
+
+/**
+ * Ola 4 · N27: variante sin los usuarios que YA tienen membresía, para el
+ * selector de "Nueva organización" (un usuario sólo puede pertenecer a una
+ * org — organization_members_user_id_unique). La RLS permite la lectura
+ * completa porque este diálogo sólo lo abre super_admin ("Super admins
+ * manage members"); la RPC provision_organization valida de todas formas.
+ */
+export async function fetchAvailableUsersSinMembresia(): Promise<UserOption[]> {
+  const [users, { data: miembros, error }] = await Promise.all([
+    fetchAvailableUsers(),
+    supabase.from("organization_members").select("user_id"),
+  ]);
+  if (error) throw error;
+  const asignados = new Set((miembros ?? []).map((m) => m.user_id as string));
+  return users.filter((u) => !asignados.has(u.id));
+}

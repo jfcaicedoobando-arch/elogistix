@@ -28,9 +28,13 @@ interface ConceptoSnapshot {
   precio?: number;
   importe?: number;
   total?: number;
+  /** Ola 4 · N19: régimen de IVA del concepto en el snapshot de emisión. */
+  tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
 }
 
-function parseConceptosSugeridos(snapshot: unknown): ConceptoNotaCredito[] {
+// Ola 4 · N19: exportado para test — propaga tipo_iva del snapshot a la NC
+// para que timbre el mismo régimen de IVA que el CFDI relacionado.
+export function parseConceptosSugeridos(snapshot: unknown): ConceptoNotaCredito[] {
   if (typeof snapshot !== "object" || snapshot === null) return [];
   const list = (snapshot as { conceptos?: unknown }).conceptos;
   if (!Array.isArray(list)) return [];
@@ -42,6 +46,8 @@ function parseConceptosSugeridos(snapshot: unknown): ConceptoNotaCredito[] {
     clave_unidad: "E48",
     unidad: "Unidad de servicio",
     tasa_iva: TASA_IVA,
+    // Ola 4 · N19: propagar el régimen de IVA del concepto original.
+    tipo_iva: c.tipo_iva ?? null,
   })).filter((c) => c.descripcion);
 }
 

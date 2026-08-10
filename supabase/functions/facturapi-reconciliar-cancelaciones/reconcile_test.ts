@@ -83,6 +83,25 @@ Deno.test("resolveNextAction: remoto vacío + status=canceled sigue siendo accep
   assertEquals(r.outcome, "accepted");
 });
 
+Deno.test("resolveNextAction: status=canceled repara aunque cs coincida en ambos lados (Ola 4 · N18)", () => {
+  const r = resolveNextAction(
+    { status: "canceled", cancellation_status: "accepted" },
+    { ...baseFactura, cancellation_status: "accepted" },
+    "2026-01-01T00:00:00Z",
+  );
+  assertEquals(r.outcome, "accepted");
+  assertEquals(r.patch.estado, "Cancelada");
+});
+
+Deno.test("resolveNextAction: status=canceled con cs='none' en ambos lados también repara (Ola 4 · N18)", () => {
+  const r = resolveNextAction(
+    { status: "canceled", cancellation_status: "none" },
+    { ...baseFactura, cancellation_status: "none" },
+    "2026-01-01T00:00:00Z",
+  );
+  assertEquals(r.outcome, "accepted");
+});
+
 Deno.test("agruparPorOrg: agrupa por organization_id", () => {
   const map = agruparPorOrg([
     baseFactura,

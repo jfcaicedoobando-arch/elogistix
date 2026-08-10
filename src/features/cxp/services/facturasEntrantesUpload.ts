@@ -19,6 +19,10 @@ import {
   mensajeDuplicadoEntrante,
   type SubirFacturaEntranteInput,
 } from "@/features/cxp/services/facturasEntrantes.types";
+import {
+  validarNoDuplicadoEnBuzon,
+  limpiarArchivosHuerfanos,
+} from "@/features/cxp/services/facturasEntrantesDedupe";
 
 async function calcularHash(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -85,26 +89,6 @@ function filaEntranteAInsertar(params: {
   };
 }
 
-/**
- * v13.414.0 — Evita gemelos en el buzón: si ya hay un documento vivo con el
- * mismo archivo (mismo hash) en la organización, no se crea otro renglón.
- */
-async function validarNoDuplicadoEnBuzon(hash: string, organizationId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from("embarque_facturas_entrantes")
-    .select("estado")
-    .eq("organization_id", organizationId)
-    .eq("archivo_hash", hash)
-    .is("deleted_at", null)
-    .limit(1);
-  if (error || !data || data.length === 0) return;
-  throw new Error(
-    data[0].estado === "capturada"
-      ? "Este archivo ya fue capturado como factura de proveedor. Búscala en Compras › Facturas."
-      : "Este archivo ya está en el buzón esperando captura. Abre el documento existente en vez de subirlo otra vez.",
-  );
-}
-
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
   const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
   if (invalido) throw new Error(invalido);
@@ -116,10 +100,17 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   const hashPrincipal = await calcularHash(archivoPrincipal);
   await validarNoDuplicadoEnBuzon(hashPrincipal, input.organizationId);
 
+  // N36 (Ola 4): el XML acompañante también se deduplica (antes nunca se
+  // validaba su hash y podía acompañar varios documentos).
+  const hashXmlAcompanante = input.pdf && input.xml ? await calcularHash(input.xml) : null;
+  if (hashXmlAcompanante) {
+    await validarNoDuplicadoEnBuzon(hashXmlAcompanante, input.organizationId, "xml_hash");
+  }
+
   const principal = await subirArchivo(archivoPrincipal, input, hashPrincipal);
-  const xmlSubido = input.pdf && input.xml ? await subirArchivo(input.xml, input) : null;
-
-
+  const xmlSubido = input.pdf && input.xml
+    ? await subirArchivo(input.xml, input, hashXmlAcompanante ?? undefined)
+    : null;
 
   const { data: userData } = await supabase.auth.getUser();
   const { data, error } = await supabase
@@ -133,6 +124,8 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
     .select("id")
     .single();
   if (error) {
+    // N36 (Ola 4): cleanup — evita huérfanos en cxp-inbox si el insert falla.
+    await limpiarArchivosHuerfanos([principal.path, ...(xmlSubido ? [xmlSubido.path] : [])]);
     const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
     if (duplicado) throw new Error(duplicado);
     throw error;
@@ -154,10 +147,14 @@ export async function adjuntarXmlFacturaEntrante(params: {
   embarqueId: string;
   organizationId: string;
 }): Promise<void> {
+  // N36 (Ola 4): deduplicar el XML ANTES de subirlo (mismo hash vivo en otro
+  // documento del buzón → rechazar con mensaje claro).
+  const hashXml = await calcularHash(params.xml);
+  await validarNoDuplicadoEnBuzon(hashXml, params.organizationId, "xml_hash");
   const subido = await subirArchivo(params.xml, {
     embarqueId: params.embarqueId,
     organizationId: params.organizationId,
-  });
+  }, hashXml);
   const { error } = await supabase
     .from("embarque_facturas_entrantes")
     .update({
@@ -173,6 +170,8 @@ export async function adjuntarXmlFacturaEntrante(params: {
     })
     .eq("id", params.id);
   if (error) {
+    // N36 (Ola 4): cleanup del objeto subido si el update falla.
+    await limpiarArchivosHuerfanos([subido.path]);
     const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
     throw duplicado ? new Error(duplicado) : error;
   }

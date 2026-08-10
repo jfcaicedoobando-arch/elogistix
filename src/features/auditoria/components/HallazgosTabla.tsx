@@ -89,6 +89,19 @@ export function HallazgosTabla(props: Props) {
         const revision = getRevision(h);
         const responsable = revision?.responsable_id ? revision : null;
         const vencida = isVencida(revision?.fecha_limite ?? null) && revision?.estado_revision !== "revisado";
+        // Ola 4 · N29: un hallazgo revisado no se reasigna desde la tabla —
+        // reasignarlo lo reabría (ver servicio). Se muestra como texto plano.
+        if (revision?.estado_revision === "revisado") {
+          return (
+            <span
+              className="text-xs text-muted-foreground flex items-center gap-1"
+              title="Hallazgo revisado: la asignación está cerrada"
+            >
+              <UserCheck className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate max-w-[110px]">{responsable?.responsable_email ?? "—"}</span>
+            </span>
+          );
+        }
         if (!responsable) {
           return (
             <Button size="sm" variant="ghost"

@@ -7768,7 +7768,7 @@ export type Database = {
         Returns: Json
       }
       complete_onboarding: {
-        Args: { _direccion: string; _moneda: string; _rfc: string }
+        Args: { _direccion: string; _moneda: string; _organization_id: string; _rfc: string }
         Returns: Json
       }
       conciliacion_resumen: {

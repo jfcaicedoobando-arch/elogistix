@@ -48,6 +48,29 @@ describe("moverEtapaOportunidad", () => {
     await expect(moverEtapaOportunidad({ id: "op-1", etapa_id: "e-2", probabilidad: 75 })).resolves.toBeUndefined();
     expect(mock.tableCalls[0]?.ops).toContain("update");
   });
+
+  it("escribe nulls explícitos para limpiar el cierre real (Ola 4 · N49)", async () => {
+    mock.setTableResult("crm_oportunidades", { data: {}, error: null });
+    await moverEtapaOportunidad({
+      id: "op-1", etapa_id: "e-abierta",
+      fecha_cierre_real: null, valor_real: null, motivo_perdida_id: null,
+    });
+    const call = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
+    const updateArgs = call?.opArgs[call.ops.indexOf("update")]?.[0] as Record<string, unknown>;
+    expect(updateArgs).toMatchObject({
+      fecha_cierre_real: null, valor_real: null, motivo_perdida_id: null,
+    });
+  });
+
+  it("no toca el cierre real cuando no se pide (comportamiento previo)", async () => {
+    mock.setTableResult("crm_oportunidades", { data: {}, error: null });
+    await moverEtapaOportunidad({ id: "op-1", etapa_id: "e-2", probabilidad: 75 });
+    const call = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
+    const updateArgs = call?.opArgs[call.ops.indexOf("update")]?.[0] as Record<string, unknown>;
+    expect(updateArgs).not.toHaveProperty("fecha_cierre_real");
+    expect(updateArgs).not.toHaveProperty("valor_real");
+    expect(updateArgs).not.toHaveProperty("motivo_perdida_id");
+  });
 });
 
 describe("eliminarOportunidad", () => {

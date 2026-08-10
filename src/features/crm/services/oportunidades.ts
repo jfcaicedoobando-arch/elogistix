@@ -80,16 +80,23 @@ export async function moverEtapaOportunidad(input: {
   // B-034: cierre real cuando la etapa destino es "ganada" (kanban DnD).
   fecha_cierre_real?: string | null;
   valor_real?: number | null;
+  // Ola 4 · N49: limpieza al salir de "perdida".
+  motivo_perdida_id?: string | null;
 }): Promise<void> {
   const patch: {
     etapa_id: string;
     probabilidad?: number;
-    fecha_cierre_real?: string;
-    valor_real?: number;
+    fecha_cierre_real?: string | null;
+    valor_real?: number | null;
+    motivo_perdida_id?: string | null;
   } = { etapa_id: input.etapa_id };
   if (typeof input.probabilidad === "number") patch.probabilidad = input.probabilidad;
-  if (input.fecha_cierre_real) patch.fecha_cierre_real = input.fecha_cierre_real;
-  if (typeof input.valor_real === "number") patch.valor_real = input.valor_real;
+  // Ola 4 · N49: `null` explícito SÍ se escribe — al salir de "ganada" el
+  // cierre real se limpia (antes el guard truthy lo ignoraba y quedaba una
+  // oportunidad abierta con fecha/valor de cierre).
+  if (input.fecha_cierre_real !== undefined) patch.fecha_cierre_real = input.fecha_cierre_real;
+  if (input.valor_real !== undefined) patch.valor_real = input.valor_real;
+  if (input.motivo_perdida_id !== undefined) patch.motivo_perdida_id = input.motivo_perdida_id;
   await run(supabase.from("crm_oportunidades").update(patch).eq("id", input.id));
   await registrarActividad({
     modulo: "crm",

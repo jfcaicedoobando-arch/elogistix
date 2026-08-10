@@ -2,10 +2,21 @@
  * Storage de CFDI para CxP — sube XML/PDF y actualiza URLs en proveedor_facturas
  * y proveedor_notas_credito.
  * v13.307.5: agrega adjuntar/quitar por tipo desde el detalle (post-creación).
+ * N50 (Ola 4): valida el contenido real del archivo y prefija el path con el
+ * slot (xml-/pdf-) para que XML y PDF nunca compartan path.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { sanitizeFileName } from "@/lib/storage";
 import { extractFacturaPath } from "@/services/storage/facturas";
+export { subirArchivosNcProveedor } from "@/features/cxp/services/cfdiStorageNc";
+export { resolverOrganizationId } from "@/features/cxp/services/cfdiOrg";
+export type { TipoAdjuntoCfdi } from "@/features/cxp/services/cfdiValidation";
+import { resolverOrganizationId } from "@/features/cxp/services/cfdiOrg";
+import {
+  contentTypeFor,
+  pathCfdi,
+  validarContenidoCfdi,
+  type TipoAdjuntoCfdi,
+} from "@/features/cxp/services/cfdiValidation";
 
 interface SubirArchivosParams {
   facturaId: string;
@@ -13,15 +24,6 @@ interface SubirArchivosParams {
   xmlFile: File | null;
   pdfFile: File | null;
 }
-
-interface SubirArchivosNcParams {
-  ncId: string;
-  organizationId: string | null | undefined;
-  xmlFile: File | null;
-  pdfFile: File | null;
-}
-
-export type TipoAdjuntoCfdi = "XML" | "PDF";
 
 interface AdjuntarArchivoParams {
   facturaId: string;
@@ -36,92 +38,48 @@ interface QuitarArchivoParams {
   tipo: TipoAdjuntoCfdi;
 }
 
-function contentTypeFor(tipo: TipoAdjuntoCfdi): string {
-  return tipo === "XML" ? "application/xml" : "application/pdf";
-}
-
-/**
- * v13.322.14 — El primer segmento de la ruta DEBE ser el organization_id real
- * para satisfacer la RLS del bucket `facturas`. Antes se usaba el literal
- * `"org"` cuando venía indefinido, lo que siempre provocaba
- * "new row violates row-level security policy". Ahora se resuelve vía RPC.
- */
-async function resolverOrganizationId(
-  organizationId: string | null | undefined,
-): Promise<string> {
-  if (organizationId) return organizationId;
-  const { data, error } = await supabase.rpc("current_user_org_id");
-  if (error) throw error;
-  if (!data) {
-    throw new Error(
-      "No se pudo determinar la organización del usuario para subir el archivo.",
-    );
-  }
-  return data;
-}
-
 export async function subirArchivosCfdiFactura(params: SubirArchivosParams): Promise<void> {
   // 13.114.14: el primer segmento DEBE ser el organization_id para satisfacer
   // la política RLS del bucket `facturas` (`foldername(name)[1] = org_id`).
   const base = `${await resolverOrganizationId(params.organizationId)}/cfdi/${params.facturaId}`;
   const update: { archivo_xml_url?: string | null; archivo_pdf_url?: string | null } = {};
+  const subidos: string[] = [];
 
-  if (params.xmlFile) {
-    const xmlPath = `${base}/${sanitizeFileName(params.xmlFile.name)}`;
-    const xmlUp = await supabase.storage.from("facturas").upload(xmlPath, params.xmlFile, {
-      contentType: "application/xml", upsert: true,
-    });
-    if (xmlUp.error) throw xmlUp.error;
-    update.archivo_xml_url = xmlPath;
+  try {
+    if (params.xmlFile) {
+      await validarContenidoCfdi("XML", params.xmlFile);
+      const xmlPath = pathCfdi(base, "XML", params.xmlFile.name);
+      const xmlUp = await supabase.storage.from("facturas").upload(xmlPath, params.xmlFile, {
+        contentType: "application/xml", upsert: true,
+      });
+      if (xmlUp.error) throw xmlUp.error;
+      subidos.push(xmlPath);
+      update.archivo_xml_url = xmlPath;
+    }
+
+    if (params.pdfFile) {
+      await validarContenidoCfdi("PDF", params.pdfFile);
+      const pdfPath = pathCfdi(base, "PDF", params.pdfFile.name);
+      const pdfUp = await supabase.storage.from("facturas").upload(pdfPath, params.pdfFile, {
+        contentType: "application/pdf", upsert: true,
+      });
+      if (pdfUp.error) throw pdfUp.error;
+      subidos.push(pdfPath);
+      update.archivo_pdf_url = pdfPath;
+    }
+
+    if (Object.keys(update).length === 0) return;
+
+    const { error } = await supabase.from("proveedor_facturas").update(update).eq("id", params.facturaId);
+    if (error) throw error;
+  } catch (e) {
+    // N50 (Ola 4): cleanup — archivos subidos sin renglón que los referencie
+    // quedaban huérfanos si fallaba el segundo upload o el UPDATE.
+    if (subidos.length > 0) {
+      await supabase.storage.from("facturas").remove(subidos).catch(() => undefined);
+    }
+    throw e;
   }
-
-  if (params.pdfFile) {
-    const pdfPath = `${base}/${sanitizeFileName(params.pdfFile.name)}`;
-    const pdfUp = await supabase.storage.from("facturas").upload(pdfPath, params.pdfFile, {
-      contentType: "application/pdf", upsert: true,
-    });
-    if (pdfUp.error) throw pdfUp.error;
-    update.archivo_pdf_url = pdfPath;
-  }
-
-  if (Object.keys(update).length === 0) return;
-
-  const { error } = await supabase.from("proveedor_facturas").update(update).eq("id", params.facturaId);
-  if (error) throw error;
-}
-
-export async function subirArchivosNcProveedor(params: SubirArchivosNcParams): Promise<void> {
-  const base = `${await resolverOrganizationId(params.organizationId)}/nc/${params.ncId}`;
-  const update: {
-    archivo_xml_url?: string | null;
-    archivo_pdf_url?: string | null;
-  } = {};
-
-  if (params.xmlFile) {
-    const xmlPath = `${base}/${sanitizeFileName(params.xmlFile.name)}`;
-    const xmlUp = await supabase.storage.from("facturas").upload(xmlPath, params.xmlFile, {
-      contentType: "application/xml", upsert: true,
-    });
-    if (xmlUp.error) throw xmlUp.error;
-    update.archivo_xml_url = xmlPath;
-  }
-
-  if (params.pdfFile) {
-    const pdfPath = `${base}/${sanitizeFileName(params.pdfFile.name)}`;
-    const pdfUp = await supabase.storage.from("facturas").upload(pdfPath, params.pdfFile, {
-      contentType: "application/pdf", upsert: true,
-    });
-    if (pdfUp.error) throw pdfUp.error;
-    update.archivo_pdf_url = pdfPath;
-  }
-
-  if (Object.keys(update).length === 0) return;
-
-  const { error } = await supabase
-    .from("proveedor_notas_credito")
-    .update(update)
-    .eq("id", params.ncId);
-  if (error) throw error;
 }
 
 /**
@@ -131,8 +89,11 @@ export async function subirArchivosNcProveedor(params: SubirArchivosNcParams): P
  * el archivo existente sin colisionar.
  */
 export async function adjuntarArchivoCfdiFactura(params: AdjuntarArchivoParams): Promise<string> {
+  // N50 (Ola 4): validar tipo real por slot antes de subir.
+  await validarContenidoCfdi(params.tipo, params.file);
   const base = `${await resolverOrganizationId(params.organizationId)}/cfdi/${params.facturaId}`;
-  const path = `${base}/${sanitizeFileName(params.file.name)}`;
+  // N50 (Ola 4): prefijo de slot en el path — XML y PDF nunca se pisan.
+  const path = pathCfdi(base, params.tipo, params.file.name);
   const up = await supabase.storage.from("facturas").upload(path, params.file, {
     contentType: contentTypeFor(params.tipo),
     upsert: true,
@@ -146,9 +107,11 @@ export async function adjuntarArchivoCfdiFactura(params: AdjuntarArchivoParams):
     .from("proveedor_facturas")
     .update(patch)
     .eq("id", params.facturaId);
-  if (error) throw error;
-
-
+  if (error) {
+    // N50 (Ola 4): cleanup del objeto recién subido si el UPDATE falla.
+    await supabase.storage.from("facturas").remove([path]).catch(() => undefined);
+    throw error;
+  }
 
   return path;
 }

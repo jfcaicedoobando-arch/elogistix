@@ -66,6 +66,9 @@ export function calcularHero(params: CalcularHeroParams): HeroKpis {
   };
 }
 
+/** Ola 4 · N21: días libres antes de marcar demora en aduana (canon operaciones_stats.v_dias_libres). */
+const DIAS_LIBRES_DEMORA = 7;
+
 export function calcularPulso(
   activos: EmbarqueEstadoRow[], facturas: FacturaRow[], hoy: Date, mesActual: string,
 ): PulsoKpis {
@@ -86,7 +89,9 @@ export function calcularPulso(
       const diasRetraso = Math.floor(
         (Date.parse(`${hoyDia}T00:00:00Z`) - Date.parse(`${etaDia}T00:00:00Z`)) / 86_400_000,
       );
-      if (est === "En Aduana" && diasRetraso > 0) demoras += 1;
+      // Ola 4 · N21: sólo demora tras los días libres del canon (>7), no
+      // cualquier ETA pasada (antes marcaba demora desde el día siguiente).
+      if (est === "En Aduana" && diasRetraso > DIAS_LIBRES_DEMORA) demoras += 1;
     }
   }
   const cfdi = facturas.filter((f) => f.uuid_fiscal && f.timbrado_en && f.timbrado_en.slice(0, 7) === mesActual).length;

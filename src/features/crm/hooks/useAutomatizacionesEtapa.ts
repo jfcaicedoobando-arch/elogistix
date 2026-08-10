@@ -17,6 +17,7 @@ export function useMoverEtapaConAutomatizacion() {
     mutationFn: async (params: {
       id: string; etapa_id: string; probabilidad?: number;
       fecha_cierre_real?: string | null; valor_real?: number | null;
+      motivo_perdida_id?: string | null; // Ola 4 · N49
     }) => {
       await moverEtapaOportunidad(params);
       try {

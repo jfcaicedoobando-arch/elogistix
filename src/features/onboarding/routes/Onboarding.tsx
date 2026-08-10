@@ -18,7 +18,7 @@ import { ROUTES } from "@/constants/routes";
 import { validateOnboarding } from "@/features/onboarding/lib/onboardingValidation";
 
 export default function Onboarding() {
-  const { user, organization, loading, refreshProfile } = useAuth();
+  const { user, organization, organizationId, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -45,9 +45,14 @@ export default function Onboarding() {
       setError(v.message);
       return;
     }
+    // Ola 4 · N30: sin org activa no hay onboarding que guardar.
+    if (!organizationId) {
+      setError("No pudimos determinar tu organización. Recarga la página e inténtalo de nuevo.");
+      return;
+    }
     setSubmitting(true);
     try {
-      await completeOnboarding({ rfc: v.rfc, direccion: v.direccion, moneda: v.moneda });
+      await completeOnboarding({ organizationId, rfc: v.rfc, direccion: v.direccion, moneda: v.moneda });
       await refreshProfile();
       toast({
         title: opts.skipFiscal ? "¡Bienvenido!" : "¡Listo!",

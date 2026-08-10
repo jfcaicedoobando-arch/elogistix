@@ -280,9 +280,12 @@ describe("calcularHero", () => {
 describe("calcularPulso", () => {
   const hoy = new Date(Date.UTC(2026, 1, 1));
 
-  it("cuenta arribos en 7 días y demoras en aduana", () => {
+  it("cuenta arribos en 7 días y demoras en aduana (Ola 4 · N21: demora sólo >7 días)", () => {
     const activos: EmbarqueEstadoRow[] = [
-      { estado: "En Aduana", eta: "2026-01-25" }, // eta < hoy, demora
+      // hoy = 2026-02-01. 2026-01-24 => 8 días de retraso: SÍ demora.
+      { estado: "En Aduana", eta: "2026-01-24" },
+      // 2026-01-25 => 7 días de retraso exactos: NO demora (límite inclusive).
+      { estado: "En Aduana", eta: "2026-01-25" },
       { estado: "En Tránsito", eta: "2026-02-03" }, // dentro de 7 días
       { estado: "En Tránsito", eta: "2026-03-01" }, // fuera de rango
       { estado: null, eta: null }, // sin estado, sin eta
@@ -296,13 +299,21 @@ describe("calcularPulso", () => {
       factura({ estado: "Cancelada", acuse_cancelacion_status: "aceptado" }),
     ];
     const out = calcularPulso(activos, facturas, hoy, "2026-01");
-    expect(out.embarques_activos).toBe(4);
+    expect(out.embarques_activos).toBe(5);
     expect(out.arribos_7d).toBe(1);
     expect(out.demoras).toBe(1);
     expect(out.cfdi_timbrados_mes).toBe(3);
     expect(out.acuses_pendientes).toBe(1);
     expect(out.documentos_vencidos).toBeNull();
     expect(out.embarques_por_estado.find((e) => e.estado === "Sin estado")).toBeDefined();
+  });
+
+  it("un arribo con ETA hoy SÍ cuenta en arribos_7d (Ola 4 · N21)", () => {
+    const activos: EmbarqueEstadoRow[] = [
+      { estado: "En Tránsito", eta: "2026-02-01" }, // ETA = hoy
+    ];
+    const out = calcularPulso(activos, [], new Date(Date.UTC(2026, 1, 1, 18, 30)), "2026-02");
+    expect(out.arribos_7d).toBe(1);
   });
 
   it("ordena embarques_por_estado descendente por total", () => {

@@ -93,7 +93,10 @@ export interface AsignarResponsableInput {
 
 /**
  * Asigna (o reasigna) un responsable a un hallazgo. Si la revisión no existe
- * la crea con estado=pendiente; si ya existe sólo actualiza la asignación.
+ * la crea con estado=pendiente; si ya existe sólo actualiza la asignación
+ * (Ola 4 · N29: un hallazgo `revisado` NUNCA se reabre por reasignación —
+ * antes el upsert siempre pisaba estado_revision con `pendiente` y dejaba
+ * revisado_por/revisado_por_email huérfanos).
  */
 export async function asignarResponsableHallazgo(
   input: AsignarResponsableInput,
@@ -101,11 +104,7 @@ export async function asignarResponsableHallazgo(
   if (!input.organization_id) {
     throw new Error("organization_id requerido para asignar responsable");
   }
-  const payload = {
-    organization_id: input.organization_id,
-    embarque_id: input.embarque_id,
-    regla: input.regla,
-    detalle_hash: input.detalle_hash,
+  const asignacion = {
     detalle: input.detalle,
     responsable_id: input.responsable_id,
     responsable_email: input.responsable_email,
@@ -113,17 +112,49 @@ export async function asignarResponsableHallazgo(
     asignado_por_email: input.asignado_por_email,
     asignado_at: new Date().toISOString(),
     fecha_limite: input.fecha_limite,
-    estado_revision: input.estado_revision ?? "pendiente",
   };
-  const data = await unwrap(
+  const existente = (await unwrapOr(
     supabase
       .from("auditoria_revisiones")
-      .upsert(payload, {
-        onConflict: "organization_id,embarque_id,regla,detalle_hash",
-      })
-      .select()
-      .single(),
-  );
+      .select("id, estado_revision")
+      .eq("organization_id", input.organization_id)
+      .eq("embarque_id", input.embarque_id)
+      .eq("regla", input.regla)
+      .eq("detalle_hash", input.detalle_hash)
+      .maybeSingle(),
+    null,
+  )) as { id: string; estado_revision: string | null } | null;
+
+  const data = existente
+    ? await unwrap(
+        supabase
+          .from("auditoria_revisiones")
+          // Ola 4 · N29: estado_revision sólo se toca si la revisión NO está
+          // revisada (permite pendiente → en_progreso al "tomar" el hallazgo,
+          // sin reabrir jamás un revisado).
+          .update(
+            existente.estado_revision === "revisado"
+              ? asignacion
+              : { ...asignacion, estado_revision: input.estado_revision ?? "pendiente" },
+          )
+          .eq("id", existente.id)
+          .select()
+          .single(),
+      )
+    : await unwrap(
+        supabase
+          .from("auditoria_revisiones")
+          .insert({
+            organization_id: input.organization_id,
+            embarque_id: input.embarque_id,
+            regla: input.regla,
+            detalle_hash: input.detalle_hash,
+            ...asignacion,
+            estado_revision: input.estado_revision ?? "pendiente",
+          })
+          .select()
+          .single(),
+      );
   await registrarActividad({
     modulo: "auditoria",
     accion: "Asignó responsable de hallazgo",
