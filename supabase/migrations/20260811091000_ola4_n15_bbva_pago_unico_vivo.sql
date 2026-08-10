@@ -10,10 +10,10 @@
 DROP INDEX IF EXISTS public.uq_bbva_movimientos_pago_factura;
 DROP INDEX IF EXISTS public.uq_bbva_movimientos_pago_proveedor;
 
-CREATE UNIQUE INDEX uq_bbva_movimientos_pago_factura
+CREATE UNIQUE INDEX IF NOT EXISTS uq_bbva_movimientos_pago_factura
   ON public.bbva_movimientos (pago_factura_id)
   WHERE pago_factura_id IS NOT NULL AND deleted_at IS NULL;
 
-CREATE UNIQUE INDEX uq_bbva_movimientos_pago_proveedor
+CREATE UNIQUE INDEX IF NOT EXISTS uq_bbva_movimientos_pago_proveedor
   ON public.bbva_movimientos (pago_proveedor_id)
   WHERE pago_proveedor_id IS NOT NULL AND deleted_at IS NULL;

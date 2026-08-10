@@ -41,3 +41,7 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' AS $function$
   LEFT JOIN costos c ON c.embarque_id = b.id
   GROUP BY b.cliente_id, b.cliente_nombre;
 $function$;
+
+-- H6: permisos explícitos (idempotente).
+REVOKE ALL ON FUNCTION public.profit_por_cliente(date, date, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.profit_por_cliente(date, date, text) TO authenticated, service_role;

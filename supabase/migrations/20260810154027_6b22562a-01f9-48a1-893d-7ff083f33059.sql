@@ -199,3 +199,9 @@ BEGIN
   RETURN v_row;
 END;
 $function$;
+
+-- H6: permisos explícitos (idempotente).
+REVOKE ALL ON FUNCTION public.aplicar_anticipo_a_factura(uuid, uuid, numeric, date) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.aplicar_anticipo_a_factura(uuid, uuid, numeric, date) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.cancelar_anticipo_proveedor(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.cancelar_anticipo_proveedor(uuid, text) TO authenticated, service_role;

@@ -23,47 +23,47 @@ ALTER TABLE public.cobranza_seguimiento ENABLE ROW LEVEL SECURITY;
 CREATE INDEX IF NOT EXISTS idx_cobranza_seg_factura ON public.cobranza_seguimiento(factura_id);
 CREATE INDEX IF NOT EXISTS idx_cobranza_seg_org_fecha ON public.cobranza_seguimiento(organization_id, fecha DESC);
 
+DROP POLICY IF EXISTS "cobranza_seg_select_org" ON public.cobranza_seguimiento;
+CREATE POLICY "cobranza_seg_select_org" ON public.cobranza_seguimiento FOR SELECT TO authenticated USING (
+  organization_id = public.current_user_org_id() AND (
+    public.has_role(auth.uid(), 'contador'::app_role)
+    OR public.has_role(auth.uid(), 'tesorero'::app_role)
+    OR public.has_role(auth.uid(), 'ejecutivo_cobranza'::app_role)
+    OR public.has_role(auth.uid(), 'admin_org'::app_role)
+    OR public.has_role(auth.uid(), 'super_admin'::app_role)
+    OR public.has_role(auth.uid(), 'gerente_operaciones'::app_role)
+    OR public.has_role(auth.uid(), 'gerente_visor'::app_role)
+  )
+);
+
+DROP POLICY IF EXISTS "cobranza_seg_insert_org" ON public.cobranza_seguimiento;
+CREATE POLICY "cobranza_seg_insert_org" ON public.cobranza_seguimiento FOR INSERT TO authenticated WITH CHECK (
+  organization_id = public.current_user_org_id() AND (
+    public.has_role(auth.uid(), 'contador'::app_role)
+    OR public.has_role(auth.uid(), 'ejecutivo_cobranza'::app_role)
+    OR public.has_role(auth.uid(), 'admin_org'::app_role)
+    OR public.has_role(auth.uid(), 'super_admin'::app_role)
+  )
+);
+
+DROP POLICY IF EXISTS "cobranza_seg_update_org" ON public.cobranza_seguimiento;
+CREATE POLICY "cobranza_seg_update_org" ON public.cobranza_seguimiento FOR UPDATE TO authenticated USING (
+  organization_id = public.current_user_org_id()
+  AND (usuario_id = auth.uid()
+    OR public.has_role(auth.uid(), 'admin_org'::app_role)
+    OR public.has_role(auth.uid(), 'super_admin'::app_role))
+);
+
+DROP POLICY IF EXISTS "cobranza_seg_delete_org" ON public.cobranza_seguimiento;
+CREATE POLICY "cobranza_seg_delete_org" ON public.cobranza_seguimiento FOR DELETE TO authenticated USING (
+  organization_id = public.current_user_org_id()
+  AND (usuario_id = auth.uid()
+    OR public.has_role(auth.uid(), 'admin_org'::app_role)
+    OR public.has_role(auth.uid(), 'super_admin'::app_role))
+);
+
 DO $drift$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='cobranza_seguimiento' AND policyname='cobranza_seg_select_org') THEN
-    CREATE POLICY "cobranza_seg_select_org" ON public.cobranza_seguimiento FOR SELECT TO authenticated USING (
-      organization_id = public.current_user_org_id() AND (
-        public.has_role(auth.uid(), 'contador'::app_role)
-        OR public.has_role(auth.uid(), 'tesorero'::app_role)
-        OR public.has_role(auth.uid(), 'ejecutivo_cobranza'::app_role)
-        OR public.has_role(auth.uid(), 'admin_org'::app_role)
-        OR public.has_role(auth.uid(), 'super_admin'::app_role)
-        OR public.has_role(auth.uid(), 'gerente_operaciones'::app_role)
-        OR public.has_role(auth.uid(), 'gerente_visor'::app_role)
-      )
-    );
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='cobranza_seguimiento' AND policyname='cobranza_seg_insert_org') THEN
-    CREATE POLICY "cobranza_seg_insert_org" ON public.cobranza_seguimiento FOR INSERT TO authenticated WITH CHECK (
-      organization_id = public.current_user_org_id() AND (
-        public.has_role(auth.uid(), 'contador'::app_role)
-        OR public.has_role(auth.uid(), 'ejecutivo_cobranza'::app_role)
-        OR public.has_role(auth.uid(), 'admin_org'::app_role)
-        OR public.has_role(auth.uid(), 'super_admin'::app_role)
-      )
-    );
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='cobranza_seguimiento' AND policyname='cobranza_seg_update_org') THEN
-    CREATE POLICY "cobranza_seg_update_org" ON public.cobranza_seguimiento FOR UPDATE TO authenticated USING (
-      organization_id = public.current_user_org_id()
-      AND (usuario_id = auth.uid()
-        OR public.has_role(auth.uid(), 'admin_org'::app_role)
-        OR public.has_role(auth.uid(), 'super_admin'::app_role))
-    );
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='cobranza_seguimiento' AND policyname='cobranza_seg_delete_org') THEN
-    CREATE POLICY "cobranza_seg_delete_org" ON public.cobranza_seguimiento FOR DELETE TO authenticated USING (
-      organization_id = public.current_user_org_id()
-      AND (usuario_id = auth.uid()
-        OR public.has_role(auth.uid(), 'admin_org'::app_role)
-        OR public.has_role(auth.uid(), 'super_admin'::app_role))
-    );
-  END IF;
   IF NOT EXISTS (
     SELECT 1 FROM pg_trigger WHERE tgname='trg_cobranza_seg_updated_at'
       AND tgrelid = 'public.cobranza_seguimiento'::regclass

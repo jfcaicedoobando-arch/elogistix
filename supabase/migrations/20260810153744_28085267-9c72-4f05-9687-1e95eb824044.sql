@@ -126,3 +126,7 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
   ORDER BY GREATEST(0,(CURRENT_DATE-b.fecha_vencimiento)) DESC, b.fecha_vencimiento ASC
   LIMIT 500;
 $function$;
+
+-- H6: permisos explícitos (idempotente).
+REVOKE ALL ON FUNCTION public.crear_ajustes_factura_proveedor_rpc(uuid, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.crear_ajustes_factura_proveedor_rpc(uuid, jsonb) TO authenticated, service_role;

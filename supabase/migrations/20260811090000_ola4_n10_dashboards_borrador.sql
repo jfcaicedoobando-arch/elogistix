@@ -682,3 +682,11 @@ END;
 $function$
 
 ;
+
+-- H6: permisos explícitos (idempotente).
+REVOKE ALL ON FUNCTION public.dashboard_summary() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.dashboard_summary() TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.dashboard_details() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.dashboard_details() TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.operaciones_stats() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.operaciones_stats() TO authenticated, service_role;

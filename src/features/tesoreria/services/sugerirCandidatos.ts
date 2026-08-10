@@ -66,83 +66,105 @@ async function pagosYaVinculados(pagoIds: string[], tipo: "cxc" | "cxp"): Promis
   }
   return set;
 }
+interface Ventana {
+  desdeIso: string;
+  hastaIso: string;
+  min: number;
+  max: number;
+  moneda: MonedaSoportada;
+  monto: number;
+  fechaMov: string;
+}
+
+/** Cargo bancario → pago a proveedor (egreso). */
+async function candidatosCxp(v: Ventana): Promise<Candidato[]> {
+  const { data } = await supabase
+    .from("pagos_proveedor")
+    .select("id, fecha_pago, monto, moneda, referencia, proveedor_facturas(proveedor_nombre)")
+    .gte("fecha_pago", v.desdeIso)
+    .lte("fecha_pago", v.hastaIso)
+    .gte("monto", v.min)
+    .lte("monto", v.max)
+    .eq("moneda", v.moneda)
+    .is("deleted_at", null)
+    .limit(20);
+  // N15 (Ola 4): no ofrecer pagos ya conciliados con otro movimiento vivo.
+  const vinculados = await pagosYaVinculados((data ?? []).map((p) => p.id), "cxp");
+  const out: Candidato[] = [];
+  for (const p of data ?? []) {
+    if (vinculados.has(p.id)) continue;
+    const pf = (p as { proveedor_facturas?: { proveedor_nombre?: string } | null }).proveedor_facturas;
+    out.push({
+      tipo: "cxp",
+      pago_id: p.id,
+      fecha: p.fecha_pago,
+      referencia: p.referencia ?? "",
+      monto: Number(p.monto),
+      moneda: p.moneda,
+      contraparte: pf?.proveedor_nombre ?? "—",
+      delta_dias: deltaDiasIso(p.fecha_pago, v.fechaMov),
+      delta_monto: Math.abs(Number(p.monto) - v.monto),
+    });
+  }
+  return out;
+}
+
+/** Abono bancario → pago de cliente (ingreso). */
+async function candidatosCxc(v: Ventana): Promise<Candidato[]> {
+  const { data } = await supabase
+    .from("pagos_factura")
+    .select("id, fecha_pago, monto, moneda, referencia, facturas(cliente_nombre)")
+    .gte("fecha_pago", v.desdeIso)
+    .lte("fecha_pago", v.hastaIso)
+    .gte("monto", v.min)
+    .lte("monto", v.max)
+    .eq("moneda", v.moneda)
+    .is("deleted_at", null)
+    .limit(20);
+  // N15 (Ola 4): no ofrecer pagos ya conciliados con otro movimiento vivo.
+  const vinculados = await pagosYaVinculados((data ?? []).map((p) => p.id), "cxc");
+  const out: Candidato[] = [];
+  for (const p of data ?? []) {
+    if (vinculados.has(p.id)) continue;
+    const fac = (p as { facturas?: { cliente_nombre?: string } | null }).facturas;
+    out.push({
+      tipo: "cxc",
+      pago_id: p.id,
+      fecha: p.fecha_pago,
+      referencia: p.referencia ?? "",
+      monto: Number(p.monto),
+      moneda: p.moneda,
+      contraparte: fac?.cliente_nombre ?? "—",
+      delta_dias: deltaDiasIso(p.fecha_pago, v.fechaMov),
+      delta_monto: Math.abs(Number(p.monto) - v.monto),
+    });
+  }
+  return out;
+}
 
 export async function sugerirCandidatos(
   mov: MovimientoBBVA,
   monedaCuenta?: string,
 ): Promise<Candidato[]> {
-  const monto = Number(mov.cargo) > 0 ? Number(mov.cargo) : Number(mov.abono);
+  const cargo = Number(mov.cargo);
+  const monto = cargo > 0 ? cargo : Number(mov.abono);
   if (monto <= 0) return [];
-  const esCargo = Number(mov.cargo) > 0;
   const moneda: MonedaSoportada = monedaCuenta
     ? normalizaMoneda(monedaCuenta)
     : await monedaDeCuenta(mov.cuenta_bancaria_id);
 
   const { desde: desdeIso, hasta: hastaIso } = rangoFechasIso(mov.fecha, TOLERANCIA_DIAS);
-  const min = monto - TOLERANCIA_MONTO_MXN;
-  const max = monto + TOLERANCIA_MONTO_MXN;
+  const ventana: Ventana = {
+    desdeIso,
+    hastaIso,
+    min: monto - TOLERANCIA_MONTO_MXN,
+    max: monto + TOLERANCIA_MONTO_MXN,
+    moneda,
+    monto,
+    fechaMov: mov.fecha,
+  };
 
-  const candidatos: Candidato[] = [];
-
-  // Cargo bancario → pago a proveedor (egreso)
-  if (esCargo) {
-    const { data } = await supabase
-      .from("pagos_proveedor")
-      .select("id, fecha_pago, monto, moneda, referencia, proveedor_facturas(proveedor_nombre)")
-      .gte("fecha_pago", desdeIso)
-      .lte("fecha_pago", hastaIso)
-      .gte("monto", min)
-      .lte("monto", max)
-      .eq("moneda", moneda)
-      .is("deleted_at", null)
-      .limit(20);
-    // N15 (Ola 4): no ofrecer pagos ya conciliados con otro movimiento vivo.
-    const vinculadosCxp = await pagosYaVinculados((data ?? []).map((p) => p.id), "cxp");
-    for (const p of data ?? []) {
-      if (vinculadosCxp.has(p.id)) continue;
-      const pf = (p as { proveedor_facturas?: { proveedor_nombre?: string } | null }).proveedor_facturas;
-      candidatos.push({
-        tipo: "cxp",
-        pago_id: p.id,
-        fecha: p.fecha_pago,
-        referencia: p.referencia,
-        monto: Number(p.monto),
-        moneda: p.moneda,
-        contraparte: pf?.proveedor_nombre ?? "—",
-        delta_dias: deltaDiasIso(p.fecha_pago, mov.fecha),
-        delta_monto: Math.abs(Number(p.monto) - monto),
-      });
-    }
-  } else {
-    // Abono bancario → pago de cliente (ingreso)
-    const { data } = await supabase
-      .from("pagos_factura")
-      .select("id, fecha_pago, monto, moneda, referencia, facturas(cliente_nombre)")
-      .gte("fecha_pago", desdeIso)
-      .lte("fecha_pago", hastaIso)
-      .gte("monto", min)
-      .lte("monto", max)
-      .eq("moneda", moneda)
-      .is("deleted_at", null)
-      .limit(20);
-    // N15 (Ola 4): no ofrecer pagos ya conciliados con otro movimiento vivo.
-    const vinculadosCxc = await pagosYaVinculados((data ?? []).map((p) => p.id), "cxc");
-    for (const p of data ?? []) {
-      if (vinculadosCxc.has(p.id)) continue;
-      const f = (p as { facturas?: { cliente_nombre?: string } | null }).facturas;
-      candidatos.push({
-        tipo: "cxc",
-        pago_id: p.id,
-        fecha: p.fecha_pago,
-        referencia: p.referencia ?? "",
-        monto: Number(p.monto),
-        moneda: p.moneda,
-        contraparte: f?.cliente_nombre ?? "—",
-        delta_dias: deltaDiasIso(p.fecha_pago, mov.fecha),
-        delta_monto: Math.abs(Number(p.monto) - monto),
-      });
-    }
-  }
+  const candidatos = cargo > 0 ? await candidatosCxp(ventana) : await candidatosCxc(ventana);
   candidatos.sort((a, b) => (a.delta_monto - b.delta_monto) || (a.delta_dias - b.delta_dias));
   return candidatos;
 }

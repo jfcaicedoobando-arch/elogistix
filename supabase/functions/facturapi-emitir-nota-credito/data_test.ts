@@ -48,8 +48,7 @@ function makeFakeSupabase(row: { id: string; facturapi_id: string | null }): Sup
     from() {
       return this;
     },
-    // deno-lint-ignore no-explicit-any
-  } as any;
+  } as unknown as SupabaseLike;
   return {
     from: () => builder,
   } as unknown as SupabaseLike;
@@ -110,8 +109,7 @@ Deno.test("preloadNcContext: rechaza con ya_timbrada si facturapi_id ya está to
       }
       throw new Error(`tabla inesperada: ${table}`);
     },
-    // deno-lint-ignore no-explicit-any
-  } as any;
+  } as unknown as SupabaseLike;
 
   const result = await preloadNcContext(supabase, "nc-4");
   assert(!result.ok);

@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.481.4] - 2026-08-10
+- CI (auditoría de migraciones): se agregaron los bloques `REVOKE/GRANT` faltantes (H6) a las migraciones de la Ola 4, `IF NOT EXISTS` en índices únicos (H4) y las políticas de `cobranza_seguimiento` se reescribieron con `DROP POLICY IF EXISTS` fuera del bloque `DO` (H4/H8). Auditor en verde.
+- CI (ESLint): se bajó la complejidad de `createUserViaEdgeFunction`, `sugerirCandidatos` y la edge function `facturapi-cancelar-nota-credito` (nuevos módulos `contexto.ts` y `terminales.ts`), y se eliminaron los `any` en `facturapi-emitir-nota-credito/data_test.ts`.
+
 ## [13.481.3] - 2026-08-10
 - Tests (Ola 4): el expediente del fixture (`OLA4B001`) no cumplía el formato `^EL[A-Z]{3}[0-9]+$`; se cambió a `ELOLB001`.
 
