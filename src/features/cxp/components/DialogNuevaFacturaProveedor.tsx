@@ -152,20 +152,7 @@ function DialogNuevaFacturaProveedorForm({
         </div>
       </FormDialogShell>
 
-
-      {ctl.askCrearProv && (
-        <CrearProveedorDesdeCfdiDialog
-          open={!!ctl.askCrearProv}
-          onOpenChange={(o) => { if (!o) ctl.setAskCrearProv(null); }}
-          rfc={ctl.askCrearProv.rfc}
-          nombre={ctl.askCrearProv.nombre}
-          organizationId={ctl.organizationId}
-          onCreated={(id, nombre) => {
-            ctl.handleProveedor(id, nombre);
-            ctl.setAskCrearProv(null);
-          }}
-        />
-      )}
     </>
   );
 }
+
