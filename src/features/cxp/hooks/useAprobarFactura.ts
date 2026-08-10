@@ -25,6 +25,14 @@ export function useAprobarFactura() {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pendientesAprobacionCount });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.factura(vars.id) });
+      // v13.493.0 — al rechazar, la factura suelta el embarque y sus conceptos de
+      // costo vuelven a quedar pendientes de factura: refrescar el expediente.
+      if (!vars.aprobar) {
+        qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
+        qc.invalidateQueries({ queryKey: ["conceptos_costo"] });
+        qc.invalidateQueries({ queryKey: ["embarque_facturas_entrantes"] });
+      }
+
       // Aprobar/rechazar impacta egresos del mes en el Dashboard Ejecutivo. v13.300.33.
       invalidateProfitDependencies(qc);
 
