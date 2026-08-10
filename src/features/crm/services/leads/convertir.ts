@@ -32,7 +32,7 @@ export async function convertirLead(
     p_monto_estimado: params.montoEstimado,
     p_moneda: params.moneda,
     p_fecha_estimada_cierre: params.fechaEstimadaCierre ?? null,
-  } as unknown as Parameters<typeof supabase.rpc<"convertir_lead_rpc">>[1];
+  } as unknown as Parameters<typeof supabase.rpc<"convertir_lead_rpc">>[1]; // SAFE-CAST: ver nota arriba (NULLs vs tipos generados)
   const { data, error } = await supabase.rpc("convertir_lead_rpc", rpcArgs);
 
   if (error) throw error;
