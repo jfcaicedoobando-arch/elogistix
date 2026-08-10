@@ -19,7 +19,6 @@ import { ExplicarHallazgoButton } from "./ExplicarHallazgoButton";
 import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
 import { HallazgoResponsableCell } from "./HallazgoResponsableCell";
 import { buildSelectColumn } from "./hallazgosTablaSelectColumn";
-import { todayLocalISO } from "@/lib/date/today";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
@@ -82,7 +81,7 @@ export function HallazgosTabla(props: Props) {
       cell: ({ row }) => (
         <HallazgoResponsableCell
           hallazgo={row.original}
-          revision={getRevision(row.original)}
+          revision={getRevision(row.original) ?? undefined}
           currentUserId={currentUserId}
           onAsignarResponsable={onAsignarResponsable}
         />
