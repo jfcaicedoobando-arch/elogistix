@@ -187,5 +187,20 @@ export const CONCILIAR_TESORERIA: readonly AppRole[] = [
   "auxiliar_contable",
 ];
 
+/**
+ * v13.487.1 — Espejo UI de la política RLS de INSERT/UPDATE en
+ * `bbva_movimientos` ("Tesoreria write/update bbva_movimientos"): sólo el
+ * tesorero y los administradores del tenant capturan o editan movimientos
+ * bancarios (manuales o importados). El contador y los demás roles de finanzas
+ * conservan sólo lectura, así que la UI no debe ofrecerles la acción: antes
+ * lanzaba la petición y la base respondía 42501.
+ */
+export const CAPTURAR_MOVIMIENTO_BANCARIO: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "tesorero",
+];
+
 export const hasRole = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
