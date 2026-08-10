@@ -90,23 +90,30 @@ export function DataTableBody<T>({
     <TableBody>
       {rows.map((row) => {
         const item = row.original;
-        const href = getRowHref?.(item) ?? null;
+        const seleccionable = selectionMode && row.getCanSelect();
+        const href = seleccionable ? null : (getRowHref?.(item) ?? null);
         const navigable = !!href;
-        const clickable = navigable || !!onRowClick;
+        const clickable = navigable || !!onRowClick || seleccionable;
         return (
           <TableRow
             key={row.id}
             className={cn(
               clickable && "cursor-pointer",
-              navigable && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+              (navigable || seleccionable) && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
               !striped && "even:bg-transparent",
               !hoverable && "hover:bg-transparent",
               rowClassName?.(item),
             )}
             role={navigable ? "link" : undefined}
-            tabIndex={navigable ? 0 : undefined}
+            tabIndex={navigable || seleccionable ? 0 : undefined}
+            aria-selected={seleccionable ? row.getIsSelected() : undefined}
             aria-label={navigable ? getRowAriaLabel?.(item) : undefined}
             onClick={(e) => {
+              if (seleccionable) {
+                if (isInteractiveDescendant(e.target)) return;
+                row.toggleSelected(!row.getIsSelected());
+                return;
+              }
               if (navigable && href) {
                 handleRowClick(e, { href, navigate });
                 if (e.defaultPrevented) return;
@@ -114,6 +121,14 @@ export function DataTableBody<T>({
               if (onRowClick && !isInteractiveDescendant(e.target)) onRowClick(item);
             }}
             onKeyDown={(e) => {
+              if (seleccionable) {
+                if (isInteractiveDescendant(e.target)) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  row.toggleSelected(!row.getIsSelected());
+                }
+                return;
+              }
               if (navigable && href) handleRowKeyDown(e, { href, navigate });
             }}
             onAuxClick={(e) => {
@@ -124,6 +139,7 @@ export function DataTableBody<T>({
             }}
             onMouseEnter={onRowMouseEnter ? () => onRowMouseEnter(item) : undefined}
           >
+
             {row.getVisibleCells().map((cell) => {
               const meta = cell.column.columnDef.meta ?? {};
               const align: ColumnAlign = meta.align ?? "left";
