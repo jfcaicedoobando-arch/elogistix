@@ -24,6 +24,7 @@ import {
 } from "@/features/cxp/hooks";
 import { useFacturaProveedor } from "@/features/cxp/hooks/useFacturaProveedor";
 import { useCerrarFacturaProveedorSinPago } from "@/features/cxp/hooks/useCerrarFacturaSinPago";
+import { useSodAprobacion } from "@/features/cxp/hooks/useSodAprobacion";
 import { useCancelarFacturaProveedor } from "@/features/cxp/hooks/useCancelarFacturaProveedor";
 import { computeFacturaFlags } from "@/features/cxp/components/DialogDetallePagosProveedor.flags";
 import { StatusActionBar } from "@/features/cxp/components/DialogDetallePagosProveedor.actionbar";
@@ -39,6 +40,7 @@ export default function FacturaProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { canEdit, canAprobarFacturaProveedor } = usePermissions();
+  const { motivoBloqueo } = useSodAprobacion();
 
   const facturaQ = useFacturaProveedor(id);
   const f = facturaQ.data ?? null;
