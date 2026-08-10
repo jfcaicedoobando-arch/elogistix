@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { ShieldAlert, LogOut, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/shared/Seo";
-import { signOut } from "@/lib/auth/signOut";
+import { signOutCurrentSession } from "@/lib/auth/signOut";
 
 export default function SinAcceso() {
   return (
@@ -37,7 +37,7 @@ export default function SinAcceso() {
               <LifeBuoy className="mr-2 h-4 w-4" aria-hidden /> Ver ayuda
             </Link>
           </Button>
-          <Button onClick={() => void signOut()}>
+          <Button onClick={() => void signOutCurrentSession()}>
             <LogOut className="mr-2 h-4 w-4" aria-hidden /> Cerrar sesión
           </Button>
         </div>
