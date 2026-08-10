@@ -30,7 +30,7 @@ export function Layout() {
   }, []);
 
   const isMobile = useIsMobile();
-  const { requiereSeleccionOrg } = useOrganization();
+  const { requiereSeleccionOrg, loading } = useOrganization();
 
 
   return (
