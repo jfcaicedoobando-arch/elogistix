@@ -7,6 +7,9 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { updateOwnPassword } from "@/lib/auth/changePassword";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { validarPassword, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
+import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
+
 
 
 interface Props {
@@ -89,14 +92,16 @@ export function CambiarPasswordDialog({
   }, [open]);
 
   const handleSubmit = async () => {
-    if (nueva.length < 8) {
+    const errorLongitud = validarPassword(nueva);
+    if (errorLongitud) {
       notifyError(undefined, {
-        title: "Contraseña muy corta",
-        description: "Mínimo 8 caracteres.",
+        title: "Contraseña inválida",
+        description: errorLongitud,
         method: `${method}_LEN`,
       });
       return;
     }
+
     if (nueva !== confirma) {
       notifyError(undefined, {
         title: "No coinciden",
@@ -129,7 +134,7 @@ export function CambiarPasswordDialog({
       onOpenChange={onOpenChange}
       icon={KeyRound}
       title="Cambiar contraseña"
-      description="Ingresa tu nueva contraseña (mínimo 8 caracteres)."
+      description={`Ingresa tu nueva contraseña (mínimo ${PASSWORD_MIN} caracteres).`}
       size="md"
       footer={
         <>
@@ -152,9 +157,11 @@ export function CambiarPasswordDialog({
             value={nueva}
             onChange={(e) => setNueva(e.target.value)}
             autoComplete="new-password"
-            maxLength={72}
+            maxLength={PASSWORD_MAX}
           />
+          <PasswordStrengthMeter password={nueva} />
         </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="cambiar-pass-confirma">Confirmar contraseña</Label>
           <Input

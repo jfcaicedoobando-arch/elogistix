@@ -13,6 +13,9 @@ import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { getFirstFieldError } from "./SignupForm.helpers";
+import { passwordSchema, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
+import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
+
 
 /**
  * v13.312.19 — Ola 1 · PR-6 paso 2: migrado de 10 `useState` a RHF+zod.
@@ -28,8 +31,9 @@ const signupSchema = z
       .max(120, "El nombre de la empresa debe tener entre 2 y 120 caracteres."),
     phone: z.string().optional(),
     email: z.string().email("Correo inválido."),
-    password: z.string().min(6, "Mínimo 6 caracteres."),
-    password2: z.string().min(6, "Mínimo 6 caracteres."),
+    password: passwordSchema,
+    password2: passwordSchema,
+
     acceptTerms: z.literal(true, {
       message: "Debes aceptar los términos para continuar.",
     }),
@@ -148,11 +152,14 @@ export function SignupForm() {
         <Input
           id="signup-password"
           type="password"
-          placeholder="Mínimo 6 caracteres"
+          placeholder={`Mínimo ${PASSWORD_MIN} caracteres`}
           autoComplete="new-password"
+          maxLength={PASSWORD_MAX}
           {...register("password")}
         />
+        <PasswordStrengthMeter password={form.watch("password")} />
       </div>
+
       <div className="space-y-2">
         <Label htmlFor="signup-password2">Confirmar contraseña</Label>
         <Input

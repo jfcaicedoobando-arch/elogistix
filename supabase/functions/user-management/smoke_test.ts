@@ -15,11 +15,15 @@ import { load } from "https://deno.land/std@0.224.0/dotenv/mod.ts";
 await load({ export: true, envPath: ".env", examplePath: null });
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
-const SUPABASE_URL =
-  Deno.env.get("VITE_SUPABASE_URL") ?? "https://eorqadkulqtneqjbsblk.supabase.co";
-const SUPABASE_ANON_KEY =
-  Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY") ??
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcnFhZGt1bHF0bmVxamJzYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzM5MzEsImV4cCI6MjA4NzgwOTkzMX0.bNeS84nv01bheza5wL5l8N-2A2OONn0fKKkZQ8ADZRc";
+// Ola 8 · B1: sin credenciales incrustadas; el smoke test exige el entorno.
+function requireEnv(name: string): string {
+  const v = Deno.env.get(name);
+  if (!v) throw new Error(`Falta la variable de entorno ${name} para correr el smoke test`);
+  return v;
+}
+
+const SUPABASE_URL = requireEnv("VITE_SUPABASE_URL");
+const SUPABASE_ANON_KEY = requireEnv("VITE_SUPABASE_PUBLISHABLE_KEY");
 
 const DEMO_EMAIL = Deno.env.get("DEMO_USER_EMAIL");
 const DEMO_PASSWORD = Deno.env.get("DEMO_USER_PASSWORD");

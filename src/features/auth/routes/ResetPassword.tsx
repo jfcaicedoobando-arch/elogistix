@@ -14,14 +14,18 @@ import { BrandLockup } from "@/components/layout/BrandLockup";
 import { BRAND } from "@/components/shared/utils/brand";
 import { Seo } from "@/components/shared/Seo";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
+import { passwordSchema, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
+import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
+
 
 /**
  * v13.312.19 — Ola 1 · PR-6 paso 2: migrado de 8 `useState` a RHF+zod.
  */
 const resetSchema = z
   .object({
-    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
-    password2: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+    password: passwordSchema,
+    password2: passwordSchema,
+
   })
   .refine((v) => v.password === v.password2, {
     path: ["password2"],
@@ -40,6 +44,8 @@ export default function ResetPassword() {
 
   const {
     register,
+    watch,
+
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ResetValues>({
@@ -128,8 +134,9 @@ export default function ResetPassword() {
                   <Input
                     id="new-password"
                     type={showPwd ? "text" : "password"}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder={`Mínimo ${PASSWORD_MIN} caracteres`}
                     autoComplete="new-password"
+                    maxLength={PASSWORD_MAX}
                     className="pr-10"
                     {...register("password")}
                   />
@@ -142,7 +149,9 @@ export default function ResetPassword() {
                     {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <PasswordStrengthMeter password={watch("password")} />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="new-password-2">Confirmar contraseña</Label>
                 <Input

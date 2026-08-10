@@ -1,10 +1,12 @@
-import { useMemo } from "react";
 import { Dice5, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { evaluarFuerza, generarPassword } from "@/lib/passwords/generator";
+import { generarPassword } from "@/lib/passwords/generator";
+// Ola 8 · B2: política y medidor compartidos con registro/reset/cambio propio.
+import { PASSWORD_MIN, PASSWORD_MAX, PASSWORD_SUGERIDA } from "@/lib/passwords/policy";
+import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
 
 interface CredencialesProps {
   /** U-04: en alta por invitación no se pide contraseña. */
@@ -21,14 +23,6 @@ interface CredencialesProps {
   onPasswordBlur: () => void;
 }
 
-const BAR_COLOR: Record<number, string> = {
-  0: "bg-muted",
-  1: "bg-destructive",
-  2: "bg-warning",
-  3: "bg-info",
-  4: "bg-success",
-};
-
 export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
   const {
     ocultarPassword = false,
@@ -44,10 +38,8 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
     onPasswordBlur,
   } = props;
 
-  const fuerza = useMemo(() => evaluarFuerza(password), [password]);
-
   const handleGenerar = () => {
-    const pw = generarPassword(14);
+    const pw = generarPassword(PASSWORD_SUGERIDA);
     onPasswordChange(pw);
   };
 
@@ -89,9 +81,9 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
             onChange={(e) => onPasswordChange(e.target.value)}
             onBlur={onPasswordBlur}
             required
-            minLength={8}
-            maxLength={64}
-            placeholder="Mínimo 8 caracteres"
+            minLength={PASSWORD_MIN}
+            maxLength={PASSWORD_MAX}
+            placeholder={`Mínimo ${PASSWORD_MIN} caracteres`}
             className="pr-20"
             aria-invalid={!!passwordError}
           />
@@ -126,30 +118,13 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
           </div>
         </div>
 
-        {/* Medidor de fuerza */}
-        {password && (
-          <div className="flex items-center gap-2 pt-0.5">
-            <div className="flex flex-1 gap-1">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className={`h-1 flex-1 rounded-full transition-colors ${
-                    i <= fuerza.score ? BAR_COLOR[fuerza.score] : "bg-muted"
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground w-16 text-right">
-              {fuerza.label}
-            </span>
-          </div>
-        )}
+        <PasswordStrengthMeter password={password} mostrarHint={false} />
 
         {passwordError ? (
           <p className="text-xs text-destructive">{passwordError}</p>
         ) : (
           <p className="text-xs text-muted-foreground">
-            Mínimo 8 caracteres. El usuario podrá cambiarla después.
+            Mínimo {PASSWORD_MIN} caracteres. El usuario podrá cambiarla después.
           </p>
         )}
       </div>

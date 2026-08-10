@@ -7,9 +7,18 @@ import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 import { VALID_ROLES, ASSIGNABLE_BY_ORG_ADMIN } from "./types.ts";
 
+/**
+ * Ola 8 · B2 — Debe coincidir con `PASSWORD_MIN` de `src/lib/passwords/policy.ts`.
+ * Deno no puede importar de `src/`, así que el valor se duplica aquí y el test
+ * `passwordPolicyParidad.test.ts` verifica que ambos números no se separen.
+ */
+const PASSWORD_MIN = 10;
+
+
+
 export function validateCreatePayload(body: { email?: string; password?: string }): string | null {
   if (!body.email || !body.password) return "Email y contraseña son requeridos";
-  if (body.password.length < 6) return "La contraseña debe tener al menos 6 caracteres";
+  if (body.password.length < PASSWORD_MIN) return `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres`;
   return null;
 }
 

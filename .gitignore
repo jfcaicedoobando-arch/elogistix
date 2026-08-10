@@ -35,3 +35,8 @@ reports/junit.xml
 
 # ci:fast local logs
 .ci-fast-logs/
+
+# Ola 8 · M16: variables de entorno fuera del repositorio
+.env
+.env.*
+!.env.example
