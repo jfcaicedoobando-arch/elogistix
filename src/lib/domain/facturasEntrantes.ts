@@ -47,8 +47,10 @@ export function puedeProcesarEntrante(estado: string | null | undefined): boolea
 }
 
 /**
- * El operador puede retirar su archivo mientras nadie lo haya capturado.
- * Los administradores pueden retirar cualquiera que siga pendiente.
+ * v13.494.0 — El operador puede retirar su archivo mientras nadie lo haya
+ * capturado, y cualquiera con permiso puede retirar los documentos rechazados
+ * (ya no sirven y sólo estorban en el buzón). Los administradores pueden
+ * retirar cualquiera que no esté capturado.
  */
 export function puedeEliminarEntrante(params: {
   estado: string | null | undefined;
@@ -56,10 +58,26 @@ export function puedeEliminarEntrante(params: {
   userId: string | null | undefined;
   isAdmin: boolean;
 }): boolean {
-  if (!puedeProcesarEntrante(params.estado)) return false;
+  const estado = normalizarEstadoEntrante(params.estado);
+  if (estado === "capturada") return false;
   if (params.isAdmin) return true;
+  if (estado === "rechazada") return true;
   return Boolean(params.userId) && params.subidoPor === params.userId;
 }
+
+/**
+ * v13.494.0 — Un documento rechazado por error de captura (proveedor
+ * equivocado, por ejemplo) puede devolverse a "Por capturar" sin volver a
+ * subir el archivo. Nunca si ya tiene factura de proveedor vinculada.
+ */
+export function puedeReactivarEntrante(params: {
+  estado: string | null | undefined;
+  proveedorFacturaId: string | null | undefined;
+}): boolean {
+  return normalizarEstadoEntrante(params.estado) === "rechazada"
+    && !params.proveedorFacturaId;
+}
+
 
 /** Días naturales que lleva esperando captura (0 si se subió hoy). */
 export function diasEnEspera(createdAt: string, ahora: Date = new Date()): number {
