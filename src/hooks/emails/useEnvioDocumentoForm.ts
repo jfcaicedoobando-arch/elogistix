@@ -107,7 +107,9 @@ export function useEnvioDocumentoForm(
 
   useEffect(() => {
     if (!open || precargadoRef.current) return;
-    precargadoRef.current = true;
+    // Sólo se considera precargado cuando ya llegaron los contactos; así la
+    // primera pasada con la query vacía no bloquea la precarga real.
+    if (contactos.length > 0) precargadoRef.current = true;
     setAsunto(buildAsuntoInicialRef.current());
     setMensaje("");
     setEmailManual("");
