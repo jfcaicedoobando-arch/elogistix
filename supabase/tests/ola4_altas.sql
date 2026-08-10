@@ -53,7 +53,7 @@ BEGIN
 
   -- Embarque de la org B (ajeno) para el caso N6.
   INSERT INTO public.embarques (id, organization_id, expediente, cliente_id, modo, tipo)
-  VALUES ('b7777777-7777-7777-7777-777777777777', v_org_b, 'OLA4B001',
+  VALUES ('b7777777-7777-7777-7777-777777777777', v_org_b, 'ELOLB001',
           'b9999999-9999-9999-9999-999999999999',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   ON CONFLICT (id) DO NOTHING;
