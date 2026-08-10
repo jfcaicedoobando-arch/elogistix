@@ -18,7 +18,10 @@ export interface FilaHueco {
   diasDesdeEta: number;
   ventaMxn: number;
   ventaUsd: number;
+  /** Ola 9 · M5: el embarque no tiene TC capturado; las conversiones valen 0. */
+  sin_tc: boolean;
 }
+
 
 export function diasDesde(fechaIso: string, hoy: Date): number {
   const d = new Date(fechaIso + "T00:00:00");
