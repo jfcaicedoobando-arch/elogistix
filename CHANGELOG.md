@@ -1,6 +1,14 @@
 # Changelog
 
+## [13.494.0] - 2026-08-10
+- **Ahora sí se pueden retirar archivos del buzón de facturas de proveedor recibidas**: los documentos en estado `rechazada` ya se pueden eliminar (antes sólo los `por_capturar`), y para los rechazados cualquier usuario con acceso al embarque puede retirarlos, no sólo quien los subió.
+- **Nueva acción "Devolver a por capturar"**: si una factura se rechazó por error, el documento regresa a la bandeja de Compras con el motivo de rechazo borrado. Sólo aplica a documentos `rechazada` sin factura de proveedor vinculada.
+- Nuevas funciones de base de datos `public.retirar_factura_entrante(uuid)` y `public.reactivar_factura_entrante(uuid)` con validación de organización, permisos y estado (la RLS de `embarque_facturas_entrantes` sólo permitía cambios en `por_capturar`).
+- Mensajes amigables nuevos: `LC_ENTRANTE_RETIRO_CAPTURADA`, `LC_ENTRANTE_NO_REACTIVABLE` y `LC_ENTRANTE_SIN_PERMISO`.
+- Refactor Power of 10: `src/lib/domain/facturasEntrantes.ts` se dividió en `facturasEntrantesArchivos.ts` y los diálogos del tab se extrajeron a `entrantes/EntrantesConfirmDialogs.tsx`.
+
 ## [13.493.0] - 2026-08-10
+
 - **Rechazar factura de proveedor ahora rompe el vínculo con el embarque**: nueva función `public._cxp_desvincular_por_rechazo(uuid, text)` invocada desde `aprobar_factura_proveedor` cuando `p_aprobar = false`. Revierte los conceptos `ajuste_factura_proveedor`, borra los renglones de `proveedor_facturas_conceptos` (los costos vuelven a **pendientes de factura**), pone `embarque_id = NULL`, marca el archivo de `embarque_facturas_entrantes` como `rechazada` con el motivo y cancela la factura (`estado = 'Cancelada'`, motivo de cancelación = motivo del rechazo).
 - Si la factura tiene pagos vivos o está `Pagada`, el rechazo se bloquea con `LC_CXP_RECHAZO_CON_PAGOS` (mensaje amigable nuevo en `lcCodeMessages.financiero.ts` y regla en `aprobacionFactura.ts`). La bitácora registra vínculos eliminados, ajustes revertidos y el embarque liberado.
 - UI: el diálogo de rechazo advierte las consecuencias antes de confirmar, el toast lo refleja y `useAprobarFactura` invalida embarques, `conceptos_costo` y facturas entrantes al rechazar.
