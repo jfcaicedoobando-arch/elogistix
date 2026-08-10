@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { FileEdit } from "lucide-react";
+import { AlertaBorrador } from "@/features/embarques/components/_sections/AlertaBorrador";
+
 import { TabResumen } from "@/features/embarques/components/TabResumen";
 import { TabDocumentos } from "@/features/embarques/components/TabDocumentos";
 import { TabFacturasEntrantes } from "@/features/embarques/components/TabFacturasEntrantes";
@@ -64,15 +64,8 @@ export function EmbarqueDetalleTabs({
         </TabsList>
       </div>
 
-      {estadoVisual === "Borrador" && (
-        <Alert variant="warning">
-          <FileEdit className="h-4 w-4" />
-          <AlertTitle>Embarque en borrador</AlertTitle>
-          <AlertDescription>
-            Este embarque fue generado desde la cotización. Complétalo y cambia su estado a Confirmado para continuar con la operación.
-          </AlertDescription>
-        </Alert>
-      )}
+      {estadoVisual === "Borrador" && <AlertaBorrador etd={embarque.etd ?? null} />}
+
 
       <TabsContent value="resumen" className="space-y-6">
         <TabResumen embarque={embarque} />
