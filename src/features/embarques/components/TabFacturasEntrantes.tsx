@@ -50,9 +50,12 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   // v13.347.0 — deep-link desde el checklist de cierre (?tab=costos&focus=facturas-entrantes).
   const { registerRef } = useFocusSection();
   const eliminar = useEliminarFacturaEntrante();
+  const reactivar = useReactivarFacturaEntrante();
   const adjuntarXml = useAdjuntarXmlFacturaEntrante();
   const [subirOpen, setSubirOpen] = useState(false);
   const [aEliminar, setAEliminar] = useState<FacturaEntranteRow | null>(null);
+  const [aReactivar, setAReactivar] = useState<FacturaEntranteRow | null>(null);
+
 
   const filas = data ?? [];
   const resumen = resumirEntrantes(filas);
