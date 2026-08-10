@@ -13,13 +13,10 @@ import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
-import { useSodAprobacion } from "@/features/cxp/hooks/useSodAprobacion";
-import { SOD_MOTIVO_CAPTURA_PROPIA } from "@/features/cxp/permissions";
 import { useVerificarSatLote } from "@/features/cxp/hooks/useVerificarSatLote";
-import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
-import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
+import { useColumnasPorAprobar } from "./ComprasPorAprobar.useColumnas";
 import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog";
 import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
@@ -29,7 +26,6 @@ type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
 
 export default function ComprasPorAprobar() {
   const { canAprobarFacturaProveedor } = usePermissions();
-  const { idsBloqueados } = useSodAprobacion();
   const navigate = useNavigate();
   const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("pendiente");
   const [search, setSearch] = useState("");
