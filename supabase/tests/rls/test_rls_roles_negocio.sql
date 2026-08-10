@@ -125,6 +125,37 @@ BEGIN
     'contador_a NO debe poder INSERT facturas en org_b'
   );
 
+  -- v13.489.0 — El contador SÍ captura movimientos bancarios de su org…
+  INSERT INTO public.bbva_movimientos(
+    id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
+    cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en
+  ) VALUES
+    (gen_random_uuid(), org_a, cuenta_a, CURRENT_DATE, 'Dep manual contador', 'REF-CTA',
+      0, 500, 'hash-rol-contador', 'Pendiente', '', now());
+  SELECT count(*) INTO visible FROM public.bbva_movimientos WHERE referencia = 'REF-CTA';
+  PERFORM pg_temp.assert(visible = 1, 'contador_a debe poder capturar movimiento bancario de su org');
+
+  -- …pero NO puede capturarlo en otra org
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.bbva_movimientos(id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia, cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en) VALUES (%L, %L, %L, CURRENT_DATE, %L, %L, 0, 1, %L, %L, %L, now())',
+      gen_random_uuid(), org_b, cuenta_b, 'HACK', 'REF-HACK', 'hash-rol-hack', 'Pendiente', ''
+    ),
+    'contador_a NO debe poder capturar movimiento bancario en org_b'
+  );
+
+  -- v13.489.0 — Segregación de funciones: el buzón de facturas entrantes del
+  -- embarque lo alimenta operaciones, no contabilidad.
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.embarque_facturas_entrantes(id, organization_id, embarque_id, subido_por, estado, archivo_path, archivo_hash, nombre_archivo) VALUES (%L, %L, %L, %L, %L, %L, %L, %L)',
+      gen_random_uuid(), org_a, emb_a, contador_a, 'por_capturar', 'org/a/f.pdf', 'hash-entrante-cta', 'f.pdf'
+    ),
+    'contador_a NO debe poder subir facturas al buzón del embarque'
+  );
+
+
+
   -- ════════════════════════════════════════════════════════════════════════
   -- TESORERO (org_a) — cuentas bancarias / bbva
   -- ════════════════════════════════════════════════════════════════════════
@@ -153,7 +184,7 @@ BEGIN
   PERFORM pg_temp.assert(visible = 2, format('super_admin debe ver ambos embarques, vio %s', visible));
 
   PERFORM pg_temp.as_postgres();
-  RAISE NOTICE '✓ test_rls_roles_negocio: 13 aserciones OK';
+  RAISE NOTICE '✓ test_rls_roles_negocio: 16 aserciones OK';
 END;
 $$;
 

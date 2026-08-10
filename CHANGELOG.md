@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.489.0] - 2026-08-10
+- Conciliación bancaria: los roles contables (**contador** y **auxiliar contable**) ya pueden capturar, editar e importar movimientos bancarios de su organización (antes la base respondía 42501). Políticas `Tesoreria write/update bbva_movimientos` ampliadas y `CAPTURAR_MOVIMIENTO_BANCARIO` actualizada.
+- Segregación de funciones: los roles contables ya **no** pueden subir facturas de proveedor recibidas en el tab *Costos* del embarque; queda reservado a operaciones y administradores (política `Operaciones sube facturas entrantes` y nueva capacidad `SUBIR_FACTURA_ENTRANTE_EMBARQUE`). Contabilidad sigue consultando los archivos, adjuntando XML y capturando la factura en CxP.
+- Tests: `TabFacturasEntrantes.permisos.test.tsx` y casos nuevos en `usePermissions.test.tsx`.
+
+
 ## [13.488.0] - 2026-08-10
 - Nuevo flujo **Cobro en lote de cliente** (pago múltiple CxC): en **Cartera** se seleccionan varias facturas del mismo cliente y misma moneda y se captura un solo depósito; el importe se reparte FIFO por vencimiento (editable renglón por renglón) y se registra de forma atómica (N pagos + 1 movimiento bancario) vía RPC `registrar_pago_cliente_lote`.
 - Base de datos: tabla `pagos_factura_lote` con RLS y tenancy, `lote_id` en `pagos_factura`, `pago_factura_lote_id` en `bbva_movimientos` y ajuste de `assert_movimiento_pago_consistente()`.

@@ -42,7 +42,7 @@ interface Props {
 export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   const { organizationId } = useOrgFilter();
   const { user } = useAuth();
-  const { isAdmin, canEditOperations, canCapturarFacturaProveedor } = usePermissions();
+  const { isAdmin, canSubirFacturaEntranteEmbarque } = usePermissions();
   const { data, isLoading } = useFacturasEntrantes(embarqueId);
   // v13.347.0 — deep-link desde el checklist de cierre (?tab=costos&focus=facturas-entrantes).
   const { registerRef } = useFocusSection();
@@ -57,7 +57,10 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
     esNacional: (row.proveedores?.origen_proveedor ?? "Nacional") === "Nacional",
     tieneXml: chipsArchivosEntrante(row).includes("xml"),
   })).length;
-  const puedeSubir = canEdit && (canEditOperations || canCapturarFacturaProveedor) && Boolean(organizationId);
+  // v13.489.0 — Segregación de funciones: operaciones entrega los archivos del
+  // agente; contabilidad sólo los consulta y captura la factura desde CxP.
+  const puedeSubir = canEdit && canSubirFacturaEntranteEmbarque && Boolean(organizationId);
+  const puedeAdjuntar = canEdit && Boolean(organizationId);
 
   const abrirArchivo = async (path: string, nombre: string) => {
     try {
@@ -105,6 +108,11 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
               <Upload className="mr-2 h-4 w-4" /> Subir factura
             </Button>
           )}
+          {!puedeSubir && canEdit && (
+            <p className="max-w-[14rem] text-right text-xs text-muted-foreground">
+              La entrega de archivos la hace operaciones; tú capturas la factura en Cuentas por pagar.
+            </p>
+          )}
         </CardHeader>
         <CardContent className="space-y-2">
           {isLoading && <Skeleton className="h-24 w-full" />}
@@ -123,7 +131,7 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
                 userId: user?.id ?? null,
                 isAdmin,
               })}
-              puedeAdjuntarXml={Boolean(puedeSubir && row.estado === "por_capturar")}
+              puedeAdjuntarXml={Boolean(puedeAdjuntar && row.estado === "por_capturar")}
               onVer={(path, nombre) => void abrirArchivo(path, nombre)}
               onAdjuntarXml={(fila, xml) => void onAdjuntarXml(fila, xml)}
               onEliminar={setAEliminar}
