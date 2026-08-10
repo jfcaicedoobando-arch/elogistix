@@ -29,6 +29,7 @@ const v = (embarqueId: string, desc: string, monto: number, montoOriginal: numbe
 describe("crearAjustesFacturaProveedor", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
     mock.resetResults();
   });
 
@@ -41,38 +42,40 @@ describe("crearAjustesFacturaProveedor", () => {
   });
 
   it("crea ajuste negativo cuando factura < devengado (descuento FP-000039)", async () => {
-    mock.setTableResult("proveedor_facturas_conceptos", { data: [], error: null });
-    mock.setTableResult("conceptos_costo", { data: [{ id: "cc-adj-1" }], error: null });
+    mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
+      data: { ajustes_creados: 1, folio: "FP-000039" }, error: null,
+    });
     const r = await crearAjustesFacturaProveedor({
       ...baseInput,
       vinculos: { c1: v("e1", "Flete Marítimo", 18639.60, 19150.00) },
     });
     expect(r.ajustesCreados).toBe(1);
-    const cc = mock.getMutationPayload("conceptos_costo", "insert") as Record<string, unknown>[];
-    expect(cc[0]).toMatchObject({
-      embarque_id: "e1",
-      moneda: "USD",
-      origen: "ajuste_factura_proveedor",
-      concepto: "Ajuste factura FP-000039: Flete Marítimo",
-    });
-    expect(cc[0].monto).toBeCloseTo(-510.4, 2);
+    // P1: los ajustes se crean dentro de la RPC atómica.
+    const call = mock.rpcCalls.find((c) => c.fn === "crear_ajustes_factura_proveedor_rpc");
+    const args = call?.args as { p_factura_id: string; p_ajustes: Array<Record<string, unknown>> };
+    expect(args.p_factura_id).toBe("f1");
+    expect(args.p_ajustes[0]).toMatchObject({ embarque_id: "e1", descripcion: "Flete Marítimo" });
+    expect(Number(args.p_ajustes[0].monto)).toBeCloseTo(-510.4, 2);
   });
 
   it("crea ajuste positivo cuando factura > devengado", async () => {
-    mock.setTableResult("proveedor_facturas_conceptos", { data: [], error: null });
-    mock.setTableResult("conceptos_costo", { data: [{ id: "cc-adj-2" }], error: null });
+    mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
+      data: { ajustes_creados: 1, folio: "FP-000039" }, error: null,
+    });
     const r = await crearAjustesFacturaProveedor({
       ...baseInput,
       vinculos: { c1: v("e1", "Flete", 21000, 20000) },
     });
     expect(r.ajustesCreados).toBe(1);
-    const cc = mock.getMutationPayload("conceptos_costo", "insert") as Record<string, unknown>[];
-    expect(cc[0].monto).toBeCloseTo(1000, 2);
+    const call = mock.rpcCalls.find((c) => c.fn === "crear_ajustes_factura_proveedor_rpc");
+    const args = call?.args as { p_ajustes: Array<Record<string, unknown>> };
+    expect(Number(args.p_ajustes[0].monto)).toBeCloseTo(1000, 2);
   });
 
   it("crea múltiples ajustes agrupados por vínculo", async () => {
-    mock.setTableResult("proveedor_facturas_conceptos", { data: [], error: null });
-    mock.setTableResult("conceptos_costo", { data: [{ id: "a1" }, { id: "a2" }], error: null });
+    mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
+      data: { ajustes_creados: 2, folio: "FP-000039" }, error: null,
+    });
     const r = await crearAjustesFacturaProveedor({
       ...baseInput,
       vinculos: {
