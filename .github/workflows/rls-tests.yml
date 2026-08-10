@@ -221,6 +221,8 @@ jobs:
           - financiero_critico
           - crm_operacional
           - operaciones
+          - org_scope
+
           - tarifas_y_costeo
           - reg_costeo
           - reg_portales
