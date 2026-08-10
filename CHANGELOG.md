@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.480.1] - 2026-08-10
+- Ops (P3): nueva nota `docs/ops/purga-env-git.md` con el procedimiento para dejar de rastrear y purgar `.env` del historial de Git, la verificación posterior y el criterio de rotación de llaves. Se documentó que hoy el archivo sólo contiene valores públicos (URL, llave publicable, DSN de Sentry), por lo que no hay credenciales privadas expuestas.
+- Verificación (RG1c/RG3a): las membresías no tienen filas con rol `super_admin` ni con el rol antiguo `viewer`, así que las migraciones de datos propuestas afectarían 0 registros y no se ejecutan.
+
+
 ## [13.480.0] - 2026-08-10
 - Fix (RG8): los archivos canónicos de `supabase/schema/` usan `IS DISTINCT FROM` al comparar la organización del usuario, para no reintroducir el hueco cross-org si se regenera el esquema.
 - Fix (RG10): una proforma con folio de factura externa suelto (sin factura real) ya puede eliminarse; sólo bloquea una factura viva o el estado "facturada".
