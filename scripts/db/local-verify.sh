@@ -11,9 +11,12 @@
 #   bun run db:verify -- --keep             # deja el contenedor arriba al terminar
 #   bun run db:verify -- --port 55433       # otro puerto local
 #   bun run db:verify -- --no-behavioral    # omite supabase/tests/*.sql
+#   bun run db:verify -- --only-schema      # sólo migraciones + guardias (sin suites)
+#   bun run db:verify -- --snapshot supabase/schema/baseline.sql
 #
-# Requisitos: docker + psql en PATH.
+# Requisitos: docker + psql (+ pg_dump para --snapshot) en PATH.
 # Salida: logs en .db-verify-logs/<timestamp>/ y resumen al final.
+
 
 set -uo pipefail
 
