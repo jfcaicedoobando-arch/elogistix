@@ -27,15 +27,15 @@ Deno.test("validateCreatePayload: rechaza sin password", () => {
   assertEquals(validateCreatePayload({ email: "a@b.com" }), "Email y contraseña son requeridos");
 });
 
-Deno.test("validateCreatePayload: rechaza password corta (<6)", () => {
+Deno.test("validateCreatePayload: rechaza password corta (<10)", () => {
   assertEquals(
-    validateCreatePayload({ email: "a@b.com", password: "12345" }),
-    "La contraseña debe tener al menos 6 caracteres",
+    validateCreatePayload({ email: "a@b.com", password: "123456789" }),
+    "La contraseña debe tener al menos 10 caracteres",
   );
 });
 
 Deno.test("validateCreatePayload: acepta payload válido", () => {
-  assertEquals(validateCreatePayload({ email: "a@b.com", password: "secret123" }), null);
+  assertEquals(validateCreatePayload({ email: "a@b.com", password: "secret1234" }), null);
 });
 
 Deno.test("resolveRedirectTo: usa fallback para origen no permitido", () => {
