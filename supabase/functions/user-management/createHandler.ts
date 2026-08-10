@@ -9,7 +9,7 @@ import { VALID_ROLES, ASSIGNABLE_BY_ORG_ADMIN } from "./types.ts";
 
 export function validateCreatePayload(body: { email?: string; password?: string }): string | null {
   if (!body.email || !body.password) return "Email y contraseña son requeridos";
-  if (body.password.length < 6) return "La contraseña debe tener al menos 6 caracteres";
+  if (body.password.length < PASSWORD_MIN) return `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres`;
   return null;
 }
 
