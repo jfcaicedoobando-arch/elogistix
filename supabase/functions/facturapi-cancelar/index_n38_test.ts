@@ -45,8 +45,7 @@ Deno.test("resolveSustitutaSnapshot: ok:false cuando la sustituta no tiene uuid_
         },
       };
     },
-    // deno-lint-ignore no-explicit-any
-  } as any;
+  } as unknown as Parameters<typeof resolveSustitutaSnapshot>[0];
   const res = await resolveSustitutaSnapshot(fakeSupabase, "f1");
   assertEquals(res.ok, false);
 });
@@ -67,8 +66,7 @@ Deno.test("resolveSustitutaSnapshot: ok:true devuelve organizationId de la susti
         },
       };
     },
-    // deno-lint-ignore no-explicit-any
-  } as any;
+  } as unknown as Parameters<typeof resolveSustitutaSnapshot>[0];
   const res = await resolveSustitutaSnapshot(fakeSupabase, "f-sustituta");
   assert(res.ok);
   if (res.ok) {

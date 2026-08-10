@@ -2,7 +2,7 @@
  * Tabla pura de hallazgos de auditoría — render solamente.
  */
 import { format } from "date-fns";
-import { CheckCircle2, ExternalLink, UserPlus, UserCheck, AlertTriangle } from "lucide-react";
+import { CheckCircle2, ExternalLink } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
 } from "./hallazgosTablaConfig";
 import { ExplicarHallazgoButton } from "./ExplicarHallazgoButton";
 import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
+import { HallazgoResponsableCell } from "./HallazgoResponsableCell";
 import { buildSelectColumn } from "./hallazgosTablaSelectColumn";
 import { todayLocalISO } from "@/lib/date/today";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
@@ -34,12 +35,6 @@ interface Props {
   selectablesEnPagina: string[];
   onToggleSelected: (id: string) => void;
   onToggleAllVisible: () => void;
-}
-
-function isVencida(fechaLimite: string | null): boolean {
-  if (!fechaLimite) return false;
-  const today = todayLocalISO();
-  return fechaLimite < today;
 }
 
 export function HallazgosTabla(props: Props) {

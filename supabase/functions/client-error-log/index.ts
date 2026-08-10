@@ -38,8 +38,9 @@ interface ClientErrorPayload {
  */
 export const MAX_BODY_BYTES = 64 * 1024;
 
-// deno-lint-ignore no-explicit-any
-type RpcClient = { rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: any; error: any }> };
+type RpcClient = {
+  rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
+};
 
 export function getClientIp(req: Request): string {
   const xff = req.headers.get("x-forwarded-for");
