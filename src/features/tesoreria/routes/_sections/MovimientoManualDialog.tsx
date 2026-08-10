@@ -6,6 +6,7 @@ import { Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,6 +31,7 @@ export function MovimientoManualDialog({
 }: Props) {
   const erroresManual = validarMovimientoManual(manualForm);
   const manualEsValido = Object.keys(erroresManual).length === 0;
+  const monedaCuenta = cuentas.find((c) => c.id === manualForm.cuentaBancariaId)?.moneda;
 
   return (
     <FormDialogShell
@@ -116,7 +118,7 @@ export function MovimientoManualDialog({
           <MoneyInput
             id="mov-importe"
             value={manualForm.monto ?? null}
-            onChange={(n) => setManualField("monto", n)}
+            onChange={(n: number) => setManualField("monto", n)}
             currency={monedaCuenta}
             aria-invalid={!!erroresManual.monto}
             aria-describedby={erroresManual.monto ? "mov-importe-error" : undefined}
