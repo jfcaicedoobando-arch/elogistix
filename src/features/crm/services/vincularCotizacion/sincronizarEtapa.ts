@@ -37,11 +37,11 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
     case "Aceptada":
     case "En operación":
       etapa = findByTipo("ganada");
-      fechaCierreReal = new Date().toISOString().split("T")[0];
+      fechaCierreReal = hoyMx();
       break;
     case "Rechazada":
       etapa = findByTipo("perdida");
-      fechaCierreReal = new Date().toISOString().split("T")[0];
+      fechaCierreReal = hoyMx();
       break;
     default:
       return;

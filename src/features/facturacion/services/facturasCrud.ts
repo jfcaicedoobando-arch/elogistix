@@ -104,7 +104,7 @@ export async function marcarCostoPagado(input: { id: string; referenciaPago?: st
       .from("conceptos_costo")
       .update({
         estado_liquidacion: "Pagado",
-        fecha_pago: new Date().toISOString().split("T")[0],
+        fecha_pago: hoyMx(),
         referencia_pago: input.referenciaPago || null,
       })
       .eq("id", input.id),
