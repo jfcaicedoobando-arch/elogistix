@@ -84,53 +84,14 @@ export function HallazgosTabla(props: Props) {
         return <HallazgoDetalleCell hallazgo={row.original} />;
       } },
     { id: "resp", header: "Responsable", meta: { width: COL_W.ruta, className: "text-xs" },
-      cell: ({ row }) => {
-        const h = row.original;
-        const revision = getRevision(h);
-        const responsable = revision?.responsable_id ? revision : null;
-        const vencida = isVencida(revision?.fecha_limite ?? null) && revision?.estado_revision !== "revisado";
-        // Ola 4 · N29: un hallazgo revisado no se reasigna desde la tabla —
-        // reasignarlo lo reabría (ver servicio). Se muestra como texto plano.
-        if (revision?.estado_revision === "revisado") {
-          return (
-            <span
-              className="text-xs text-muted-foreground flex items-center gap-1"
-              title="Hallazgo revisado: la asignación está cerrada"
-            >
-              <UserCheck className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate max-w-[110px]">{responsable?.responsable_email ?? "—"}</span>
-            </span>
-          );
-        }
-        if (!responsable) {
-          return (
-            <Button size="sm" variant="ghost"
-              className="h-7 text-label gap-1 text-muted-foreground hover:text-foreground"
-              onClick={(e) => { e.stopPropagation(); onAsignarResponsable(h); }}
-            >
-              <UserPlus className="h-3.5 w-3.5" /> Asignar
-            </Button>
-          );
-        }
-        return (
-          <Button
-            variant="link"
-            size="sm"
-            className={cn(
-              "h-auto p-0 flex items-center gap-1 text-left justify-start",
-              responsable.responsable_id === currentUserId ? "text-primary font-medium" : "text-foreground",
-            )}
-            onClick={(e) => { e.stopPropagation(); onAsignarResponsable(h); }}
-            title={`Asignado por ${responsable.asignado_por_email || "—"}${
-              responsable.asignado_at ? ` el ${format(new Date(responsable.asignado_at), "dd/MM/yyyy HH:mm")}` : ""
-            }${responsable.fecha_limite ? `\nFecha límite: ${format(new Date(`${responsable.fecha_limite}T00:00:00`), "dd/MM/yyyy")}` : ""}`}
-          >
-            <UserCheck className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate max-w-[110px]">{responsable.responsable_email}</span>
-            {vencida && <AlertTriangle className="h-3 w-3 text-destructive shrink-0" aria-label="Vencido" />}
-          </Button>
-        );
-      } },
+      cell: ({ row }) => (
+        <HallazgoResponsableCell
+          hallazgo={row.original}
+          revision={getRevision(row.original)}
+          currentUserId={currentUserId}
+          onAsignarResponsable={onAsignarResponsable}
+        />
+      ) },
     { id: "rev", header: "Revisión", meta: { width: COL_W.monto },
       cell: ({ row }) => {
         const h = row.original;
