@@ -8,39 +8,27 @@
  * v13.313.1: agregado diálogo de recordatorio de cobranza.
  */
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Inbox, Layers } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
 import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
-import { type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
-import { requiereEquivalente } from "@/features/bandejas/domain/carteraFx";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
 import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { CarteraMobileList } from "./_sections/CarteraMobileList";
+import { CarteraKpis } from "./_sections/CarteraKpis";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 import { DialogCobroLoteCliente } from "@/features/facturacion/components/DialogCobroLoteCliente";
 import { derivarLoteCobro } from "./_sections/carteraLote";
 
-/** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
-function formatNativos(b: SaldosPorMonedaCartera): string {
-  const parts: string[] = [];
-  if (b.MXN > 0) parts.push(formatCurrency(b.MXN, "MXN"));
-  if (b.USD > 0) parts.push(formatCurrency(b.USD, "USD"));
-  for (const [cod, monto] of Object.entries(b.otras)) {
-    if (monto > 0) parts.push(formatCurrency(monto, cod));
-  }
-  return parts.length > 0 ? parts.join(" · ") : formatCurrency(0, "MXN");
-}
 
 export default function Cartera() {
   const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
