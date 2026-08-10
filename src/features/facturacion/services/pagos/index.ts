@@ -53,10 +53,21 @@ export async function listarPagosFactura(facturaId: string): Promise<PagoFactura
  * timbrado del REP en facturas PPD). Devuelve `null` si Supabase no regresa
  * la fila (no debería suceder en producción, pero los tests con mocks viejos
  * pueden devolver `data: null`).
+ *
+ * RG15 (Ola 3): además del id, reporta qué pasó con el abono bancario; antes
+ * el fallo cross-moneda se tragaba en silencio (`logger.warn` y nada más).
  */
+export interface RegistrarPagoResult {
+  pagoId: string | null;
+  /** "creado" = abono en bbva_movimientos; "fallido" = se pidió cuenta pero no
+   *  se generó (moneda distinta sin TC, o error de inserción);
+   *  "no_aplica" = el usuario no indicó cuenta destino. */
+  movimientoBancario: "creado" | "fallido" | "no_aplica";
+}
+
 export async function registrarPagoFactura(
   input: RegistrarPagoInput,
-): Promise<string | null> {
+): Promise<RegistrarPagoResult> {
   const { data: userData } = await supabase.auth.getUser();
   const created_by = userData.user?.id ?? null;
   const data = await unwrap(
@@ -81,8 +92,9 @@ export async function registrarPagoFactura(
   );
   const pagoId = (data as { id?: string } | null)?.id ?? null;
   // El abono bancario sólo se crea si el usuario indicó la cuenta destino.
+  let movimientoBancario: RegistrarPagoResult["movimientoBancario"] = "no_aplica";
   if (pagoId && input.cuenta_bancaria_id) {
-    await crearMovimientoBancarioCobro({
+    const ok = await crearMovimientoBancarioCobro({
       pagoId,
       facturaId: input.factura_id,
       cuentaBancariaId: input.cuenta_bancaria_id,
@@ -96,6 +108,7 @@ export async function registrarPagoFactura(
       referencia: input.referencia,
       userId: created_by,
     });
+    movimientoBancario = ok ? "creado" : "fallido";
   }
   // P2-6 (R5): los pagos de cliente no aparecían en la bitácora/actividad
   // (sólo los de proveedor), así que la línea de tiempo quedaba incompleta.
@@ -112,7 +125,7 @@ export async function registrarPagoFactura(
       referencia: input.referencia ?? null,
     },
   });
-  return pagoId;
+  return { pagoId, movimientoBancario };
 }
 
 /**

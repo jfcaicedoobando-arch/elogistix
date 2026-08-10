@@ -4,7 +4,7 @@
  * del componente por debajo del límite del linter.
  */
 import { useState } from "react";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyError, notifyWarning } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
 import { emitirRep } from "@/features/facturacion/services/repFacturapi";
@@ -57,7 +57,7 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
 
   const submit = async (args: SubmitArgs) => {
     try {
-      const pagoId = await registrar.mutateAsync({
+      const { pagoId, movimientoBancario } = await registrar.mutateAsync({
         factura_id: args.facturaId,
         fecha_pago: args.fecha,
         monto: args.monto,
@@ -76,6 +76,16 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
         entidad_nombre: `Pago ${formatCurrency(args.monto, args.moneda)} factura ${args.facturaNumero}`,
       });
       notifySuccess(undefined, { title: "Pago registrado" });
+      // RG15: el pago quedó, pero el abono al banco no se generó (cuenta de
+      // otra moneda sin TC oficial, o fallo de inserción). Antes pasaba
+      // desapercibido y el saldo del banco nunca subía.
+      if (movimientoBancario === "fallido") {
+        notifyWarning(undefined, {
+          title: "Pago registrado, pero no se generó el movimiento bancario",
+          description:
+            "La cuenta destino es de otra moneda y no hay tipo de cambio oficial, o el abono falló. Registra el movimiento manualmente en Tesorería.",
+        });
+      }
       if (args.esPpdTimbrada && pagoId) await intentarTimbrarRep(pagoId);
       onSuccess();
     } catch (err) {
