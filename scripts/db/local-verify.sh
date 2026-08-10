@@ -11,9 +11,12 @@
 #   bun run db:verify -- --keep             # deja el contenedor arriba al terminar
 #   bun run db:verify -- --port 55433       # otro puerto local
 #   bun run db:verify -- --no-behavioral    # omite supabase/tests/*.sql
+#   bun run db:verify -- --only-schema      # sólo migraciones + guardias (sin suites)
+#   bun run db:verify -- --snapshot supabase/schema/baseline.sql
 #
-# Requisitos: docker + psql en PATH.
+# Requisitos: docker + psql (+ pg_dump para --snapshot) en PATH.
 # Salida: logs en .db-verify-logs/<timestamp>/ y resumen al final.
+
 
 set -uo pipefail
 
@@ -29,7 +32,10 @@ REUSE=0
 KEEP=0
 RUN_ALL=0
 RUN_BEHAVIORAL=1
+ONLY_SCHEMA=0
+SNAPSHOT_OUT=""
 SUITES_ARG=""
+
 
 # Suite mínima: cubre aislamiento multi-tenant, dinero, roles y anon.
 SUITES_MIN=(isolation financiero cross_tenant_mutations roles_no_admin anon_deny_all policy_linter)
@@ -42,6 +48,10 @@ while [ $# -gt 0 ]; do
     --reuse)          REUSE=1 ;;
     --keep)           KEEP=1 ;;
     --no-behavioral)  RUN_BEHAVIORAL=0 ;;
+    --only-schema)    ONLY_SCHEMA=1; RUN_BEHAVIORAL=0 ;;
+    --snapshot)       SNAPSHOT_OUT="${2:-}"; shift ;;
+    --snapshot=*)     SNAPSHOT_OUT="${1#--snapshot=}" ;;
+
     --port)           PORT="${2:-}"; shift ;;
     --port=*)         PORT="${1#--port=}" ;;
     -h|--help)        sed -n '2,20p' "$0"; exit 0 ;;
@@ -149,8 +159,28 @@ if [ "$REUSE" != "1" ]; then
   fi
 fi
 
+# ---------- 2b) Snapshot del esquema (baseline golden) ----------
+if [ -n "$SNAPSHOT_OUT" ]; then
+  step "Generando snapshot de esquema → $SNAPSHOT_OUT"
+  mkdir -p "$(dirname "$SNAPSHOT_OUT")"
+  if bash scripts/db/schema-snapshot.sh "$SNAPSHOT_OUT" "$CONTAINER" 2> "$LOGDIR/snapshot.log"; then
+    ok "snapshot ($(wc -l < "$SNAPSHOT_OUT") líneas)"
+  else
+    fail "no se pudo generar el snapshot — ver $LOGDIR/snapshot.log"
+    cat "$LOGDIR/snapshot.log" >&2
+    exit 1
+  fi
+fi
+
+if [ "$ONLY_SCHEMA" = "1" ]; then
+  printf '\n'
+  ok "Sólo esquema: migraciones + guardias en verde. Logs: $LOGDIR"
+  exit 0
+fi
+
 # ---------- 3) Suites SQL/RLS ----------
 declare -a SUITES=()
+
 if [ -n "$SUITES_ARG" ]; then
   IFS=',' read -r -a SUITES <<< "$SUITES_ARG"
 elif [ "$RUN_ALL" = "1" ]; then
