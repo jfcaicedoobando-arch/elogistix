@@ -76,7 +76,8 @@ const ERROR_RULES: readonly RuleMatch[] = [
   // quien capturó la factura para evitar auto-aprobación.
   {
     code: "LC_SOD_VIOLATION",
-    message: "No puedes aprobar o rechazar esta factura: quien la captura o el tesorero no pueden aprobarla (segregación de funciones).",
+    message:
+      "No puedes aprobar esta factura porque tú la capturaste (o tu rol es de tesorería). Pídele la aprobación a un administrador de la organización o a otra persona de contabilidad. Sí puedes rechazarla.",
     matches: (raw) => raw.includes("lc_sod_violation"),
   },
   {
