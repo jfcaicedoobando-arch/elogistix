@@ -91,45 +91,15 @@ export default function Cartera() {
           )
         }
       />
+      <CarteraKpis
+        totalFacturas={scoped.length}
+        saldosNativos={saldosNativos}
+        vencidasCount={vencidasCount}
+        vencidoNativo={vencidoNativo}
+        eqTotal={eqTotal}
+        eqVencido={eqVencido}
+      />
 
-
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle>Facturas en foco</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold">{scoped.length}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle>Saldo total</CardTitle></CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold tabular-nums">{formatNativos(saldosNativos)}</div>
-            {requiereEquivalente(saldosNativos) && (
-              <div
-                className="text-xs text-muted-foreground mt-1"
-                title={eqTotal.facturasSinTc > 0 ? `${eqTotal.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
-              >
-                ≈ {formatCurrency(eqTotal.totalMxn, "MXN")} equivalente
-                {eqTotal.facturasSinTc > 0 && <span className="ml-1">({eqTotal.facturasSinTc} sin TC)</span>}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle>Vencido ({vencidasCount})</CardTitle></CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold text-destructive tabular-nums">{formatNativos(vencidoNativo)}</div>
-            {requiereEquivalente(vencidoNativo) && (
-              <div
-                className="text-xs text-muted-foreground mt-1"
-                title={eqVencido.facturasSinTc > 0 ? `${eqVencido.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
-              >
-                ≈ {formatCurrency(eqVencido.totalMxn, "MXN")} equivalente
-                {eqVencido.facturasSinTc > 0 && <span className="ml-1">({eqVencido.facturasSinTc} sin TC)</span>}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       <UnifiedFiltersBar
         search={paged.search}
