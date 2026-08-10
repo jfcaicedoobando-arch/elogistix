@@ -50,7 +50,7 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_ELIMINADA: la cotización % está eliminada', p_cotizacion_id USING ERRCODE = 'P0001';
   END IF;
 
-  IF NOT v_is_super AND v_cot.organization_id <> v_caller_org THEN
+  IF NOT v_is_super AND v_cot.organization_id IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: la cotización pertenece a otra organización' USING ERRCODE = '42501';
   END IF;
 

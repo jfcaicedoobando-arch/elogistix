@@ -79,7 +79,7 @@ BEGIN
 
   v_org := v_first.organization_id;
 
-  IF NOT public.has_role(auth.uid(), 'super_admin'::app_role) AND v_org <> v_caller_org THEN
+  IF NOT public.has_role(auth.uid(), 'super_admin'::app_role) AND v_org IS DISTINCT FROM v_caller_org THEN
     RAISE EXCEPTION 'No puedes convertir proformas de otra organización';
   END IF;
 
