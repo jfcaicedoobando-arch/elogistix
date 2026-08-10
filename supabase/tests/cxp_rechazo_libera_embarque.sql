@@ -57,8 +57,8 @@ BEGIN
   VALUES (v_org, v_pf, v_cc, 'Cargos en Destino', 1, 1000);
 
   INSERT INTO public.embarque_facturas_entrantes
-    (organization_id, embarque_id, proveedor_factura_id, estado)
-  VALUES (v_org, v_emb, v_pf, 'capturada');
+    (organization_id, embarque_id, proveedor_factura_id, estado, archivo_path)
+  VALUES (v_org, v_emb, v_pf, 'capturada', 'test/rechazo.xml');
 
   ----------------------------------------------------------------------------
   -- Caso 1: rechazo libera todo
