@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.477.0] - 2026-08-10
+- Ola 10 (A11) — La vigencia de una cotización nueva se calcula con la fecha de México: dar de alta después de las 18:00 ya no la vencía un día tarde.
+- Ola 10 (M9) — Estado de cuenta por correo: las facturas "Parcialmente pagada" con saldo vencido ya cuentan como vencido, y los totales se agrupan por moneda en lugar de reportar sólo la divisa de la primera factura.
+- Ola 10 (M16) — Pendiente de higiene documentado: `.env` sigue en el índice de git aunque ya está en `.gitignore`; requiere `git rm --cached .env` fuera del agente.
+
 ## [13.476.0] - 2026-08-10
 - Ola 9 (M5) — Bandeja de huecos de facturación: sin tipo de cambio capturado ya no se asume 1 USD = 1 MXN; la fila se marca `sin_tc` y las conversiones quedan en 0.
 - Ola 9 (A6) — Edición de facturas de proveedor: el "total pagado" ignora pagos borrados y descuenta notas de crédito aplicadas, dejando de bloquear ediciones legítimas.
