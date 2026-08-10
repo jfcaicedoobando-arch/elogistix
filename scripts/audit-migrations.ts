@@ -114,8 +114,14 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `20260810204343` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon`
  *    + `GRANT EXECUTE … TO authenticated, service_role`); el archivo original
  *    queda como legacy auditado.
+ *  - `20260810235028` — post-FIX-H6-13: `20260810233441` (rechazo de factura
+ *    de proveedor libera el costo) recreó `_cxp_desvincular_por_rechazo` sin
+ *    `GRANT EXECUTE … TO service_role` y `aprobar_factura_proveedor` sin
+ *    `REVOKE ALL … FROM PUBLIC`. La migración correctiva `20260810235028`
+ *    re-aplica ambos bloques; los archivos originales quedan como legacy
+ *    auditados.
  */
-const BASELINE = "20260810204343";
+const BASELINE = "20260810235028";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;

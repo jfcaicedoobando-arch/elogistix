@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.494.1] - 2026-08-10
+- Fix CI (`audit:migrations`, regla H6): nueva migración correctiva que re-aplica los permisos de `public._cxp_desvincular_por_rechazo` (faltaba `GRANT EXECUTE ... TO service_role`) y de `public.aprobar_factura_proveedor` (faltaba `REVOKE ALL ... FROM PUBLIC`).
+- Baseline del auditor de migraciones bumpeado a `20260810235028` con la nota FIX-H6-13.
+
 ## [13.494.0] - 2026-08-10
 - **Ahora sí se pueden retirar archivos del buzón de facturas de proveedor recibidas**: los documentos en estado `rechazada` ya se pueden eliminar (antes sólo los `por_capturar`), y para los rechazados cualquier usuario con acceso al embarque puede retirarlos, no sólo quien los subió.
 - **Nueva acción "Devolver a por capturar"**: si una factura se rechazó por error, el documento regresa a la bandeja de Compras con el motivo de rechazo borrado. Sólo aplica a documentos `rechazada` sin factura de proveedor vinculada.
