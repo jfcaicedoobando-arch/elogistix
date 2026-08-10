@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.487.3] - 2026-08-10
+- Limpieza (knip `lint:unused:strict` en verde): eliminados re-exports muertos `resolverOrganizationId` (`cxp/services/cfdiStorage.ts`), `agregarGastosCxP` y `CxpRow` (`presupuesto/services/vsReal.ts`) y `Organization` (`lib/contexts/OrganizationContext.tsx`); los consumidores ya importaban de los módulos de origen.
+- `knip.json`: `zod-validation-error` pasa a `ignoreDependencies` (existe sólo como pin en `overrides`/`resolutions`, no se importa en código).
+
+
+
 ## [13.487.2] - 2026-08-10
 - Datos (corrección puntual): 5 facturas migradas del sistema anterior de Sergio Iñiguez (folios 658 · ELIMP00076, 659 · ELIMP00078, 768 · ELIMP00107, 785 · ELIMP00100, 788 · ELIMP00101) pasaron de `Vencida` a `Pagada`. Sin pagos asociados por decisión operativa (se cobraron fuera de la app); se agregó nota `[Legacy] Cobrada en sistema anterior; pago no registrado en la app.` Montos, moneda, fechas y cliente sin cambios. Sin migración de esquema.
 
