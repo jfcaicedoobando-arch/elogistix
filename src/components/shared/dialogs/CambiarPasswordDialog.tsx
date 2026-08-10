@@ -92,14 +92,16 @@ export function CambiarPasswordDialog({
   }, [open]);
 
   const handleSubmit = async () => {
-    if (nueva.length < 8) {
+    const errorLongitud = validarPassword(nueva);
+    if (errorLongitud) {
       notifyError(undefined, {
-        title: "Contraseña muy corta",
-        description: "Mínimo 8 caracteres.",
+        title: "Contraseña inválida",
+        description: errorLongitud,
         method: `${method}_LEN`,
       });
       return;
     }
+
     if (nueva !== confirma) {
       notifyError(undefined, {
         title: "No coinciden",
