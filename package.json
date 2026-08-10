@@ -49,7 +49,6 @@
     "db:verify:all": "bash scripts/db/local-verify.sh --all",
     "db:baseline:update": "bash scripts/db/local-verify.sh --only-schema --snapshot supabase/schema/baseline.sql",
     "db:baseline:check": "bash scripts/db/local-verify.sh --only-schema --snapshot /tmp/schema.actual.sql && diff -u supabase/schema/baseline.sql /tmp/schema.actual.sql",
-
     "audit:all": "bun run audit:arch && bun run audit:casts && bun run audit:tests && bun run audit:rpc-sync && bun run audit:schema && bun run audit:rpc-columns && bun run audit:migrations && bun run audit:sonner && bun run audit:report",
     "e2e:provision": "tsx scripts/e2e/provision-users.ts",
     "e2e:check": "tsx scripts/e2e/check-env.ts",
@@ -158,6 +157,13 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.65.0",
     "vite": "^5.4.21",
-    "vitest": "3.2.4"
+    "vitest": "3.2.4",
+    "zod-validation-error": "^4.0.2"
+  },
+  "overrides": {
+    "zod-validation-error": "^4.0.2"
+  },
+  "resolutions": {
+    "zod-validation-error": "^4.0.2"
   }
 }
