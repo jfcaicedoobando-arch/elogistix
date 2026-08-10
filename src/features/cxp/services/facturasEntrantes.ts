@@ -116,17 +116,23 @@ export async function urlPreviaFacturaEntrante(path: string): Promise<string> {
   return crearUrlPdf(data);
 }
 
+/**
+ * v13.494.0 — El retiro pasa por la RPC `retirar_factura_entrante`: la RLS de
+ * la tabla sólo permite editar documentos `por_capturar`, y también hay que
+ * poder retirar los rechazados. La RPC valida rol, organización y que el
+ * documento no esté capturado.
+ */
 export async function eliminarFacturaEntrante(
   row: Pick<FacturaEntranteRow, "id" | "archivo_path" | "xml_path">,
 ) {
-  const { error } = await supabase
-    .from("embarque_facturas_entrantes")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", row.id);
+  const { error } = await supabase.rpc("retirar_factura_entrante", {
+    p_documento_id: row.id,
+  });
   if (error) throw error;
   const paths = [row.archivo_path, row.xml_path].filter((p): p is string => Boolean(p));
   await supabase.storage.from(BUCKET_CXP_INBOX).remove(paths);
 }
+
 
 /**
  * Nombre legible del documento del buzón para la bitácora. Nunca lanza: el
