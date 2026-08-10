@@ -22,13 +22,16 @@ import {
   chipsArchivosEntrante,
   faltaXmlFiscal,
   puedeEliminarEntrante,
+  puedeReactivarEntrante,
   resumirEntrantes,
 } from "@/lib/domain/facturasEntrantes";
 import {
   useAdjuntarXmlFacturaEntrante,
   useEliminarFacturaEntrante,
   useFacturasEntrantes,
+  useReactivarFacturaEntrante,
 } from "@/features/cxp/hooks/useFacturasEntrantes";
+
 import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 import { SubirFacturaEntranteDialog } from "@/features/embarques/components/SubirFacturaEntranteDialog";
 import { FacturaEntranteItem } from "@/features/embarques/components/entrantes/FacturaEntranteItem";
