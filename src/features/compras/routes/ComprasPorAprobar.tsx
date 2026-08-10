@@ -54,22 +54,7 @@ export default function ComprasPorAprobar() {
   const { data: rechazadas = [] } = useFacturasCxP({ aprobacion: "rechazada" });
 
   const seleccionEnLote = canAprobarFacturaProveedor && aprobacion === "pendiente";
-
-  // SoD: quien capturó la factura no puede aprobarla (espejo de la RPC).
-  const bloqueadosSod = useMemo(() => idsBloqueados(rows), [rows, idsBloqueados]);
-
-  const columns = useMemo(() => {
-    const base = buildCxPColumns();
-    if (!seleccionEnLote) return base;
-    return [
-      buildSelectionColumn({
-        rows, selected, setSelected,
-        bloqueados: bloqueadosSod,
-        motivoBloqueo: SOD_MOTIVO_CAPTURA_PROPIA,
-      }),
-      ...base,
-    ];
-  }, [rows, selected, seleccionEnLote, bloqueadosSod]);
+  const { columns } = useColumnasPorAprobar({ rows, selected, setSelected, seleccionEnLote });
 
   const currentTotalMxn = useMemo(() => sumaMxn(rows), [rows]);
   const currentTotalUsd = useMemo(() => sumaUsd(rows), [rows]);
