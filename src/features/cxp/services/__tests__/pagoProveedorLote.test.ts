@@ -6,7 +6,7 @@ const F = [
   { factura_id: "a", folio_proveedor: "A", fecha_vencimiento: "2026-08-01", saldo: 300 },
 ];
 
-describe("repartirFifo", () => {
+describe("repartirFifo (CxP · pago proveedor en lote)", () => {
   it("liquida primero la factura que vence antes", () => {
     const { renglones, sobrante } = repartirFifo(F, 400);
     expect(renglones[0]).toEqual({ factura_id: "a", monto: 300 });
@@ -28,7 +28,7 @@ describe("repartirFifo", () => {
 describe("validarLote", () => {
   const opts = { requiereCuenta: true, cuentaId: "c1", monedaCuenta: "USD", moneda: "USD" };
 
-  it("acepta un reparto válido", () => {
+  it("acepta un reparto válido de pago a proveedor", () => {
     const { renglones } = repartirFifo(F, 400);
     expect(validarLote(F, renglones, 400, opts).error).toBeNull();
   });
