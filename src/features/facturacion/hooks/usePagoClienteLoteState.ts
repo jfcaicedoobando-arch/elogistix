@@ -93,9 +93,7 @@ export function usePagoClienteLoteState(a: Args) {
       tipo_cambio_usd: tcDof?.usdMxn ?? null,
       notas,
       renglones,
-      facturasConRep: a.facturas
-        .filter((f) => f.es_ppd_timbrada && aplicadas.includes(f.factura_id))
-        .map((f) => f.factura_id),
+      facturasConRep: await obtenerFacturasConRep(aplicadas),
     });
     a.onOpenChange(false);
     a.onDone();
