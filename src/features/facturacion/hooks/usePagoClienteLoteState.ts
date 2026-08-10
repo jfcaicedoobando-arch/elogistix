@@ -54,6 +54,25 @@ export function usePagoClienteLoteState(a: Args) {
     setRenglones(repartirFifo(a.facturas, saldoTotal).renglones);
   }, [a.open, a.facturas, saldoTotal]);
 
+  // Aviso previo: cuáles de las facturas candidatas exigirán REP (PPD timbradas).
+  const [idsConRep, setIdsConRep] = useState<string[]>([]);
+  useEffect(() => {
+    if (!a.open) return;
+    let vivo = true;
+    const ids = a.facturas.map((f) => f.factura_id);
+    obtenerFacturasConRep(ids)
+      .then((res) => {
+        if (vivo) setIdsConRep(res);
+      })
+      .catch(() => {
+        if (vivo) setIdsConRep([]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [a.open, a.facturas]);
+
+
   const esExtranjera = a.moneda !== "MXN";
   const pedirTc = a.open && esExtranjera;
   const { data: tcDofRaw } = useTcDofPorFecha(pedirTc ? fecha : null, pedirTc);
