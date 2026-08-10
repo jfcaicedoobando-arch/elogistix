@@ -2,13 +2,12 @@
  * Cálculos puros del Dashboard Dirección — sin I/O, sin React, testeables.
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
-import { inicioMesUtc, mxnFactura, toMxn, ym } from "./mxn";
+import { inicioMesUtc, toMxn, ym } from "./mxn";
 import type {
-  ConceptoCostoRow, ConceptoVentaRow, EmbarqueEstadoRow, EmbarqueRow, FacturaRow, PagoRow,
+  ConceptoCostoRow, ConceptoVentaRow, EmbarqueRow,
 } from "./loaders";
-import type {
-  BucketAntiguedad, HeroKpis, MargenMes, MargenModo, PulsoKpis, TopCliente,
-} from "./tipos";
+import type { MargenMes, MargenModo, TopCliente } from "./tipos";
+
 
 const HORIZONTE_MESES = 6;
 

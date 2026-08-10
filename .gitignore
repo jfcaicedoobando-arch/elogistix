@@ -40,3 +40,4 @@ reports/junit.xml
 .env
 .env.*
 !.env.example
+.db-verify-logs/
