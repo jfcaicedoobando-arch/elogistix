@@ -4,6 +4,7 @@
  * `ComprasPorAprobar.tsx` para respetar el límite de 200 líneas.
  */
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { FacturaCxP } from "@/features/cxp/services";
 
