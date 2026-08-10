@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.489.8] - 2026-08-10
+- Test `lcCodeCoverage` en rojo: los 11 códigos `LC_COBRO_LOTE_*` / `LC_MOVIMIENTO_LOTE_COBRO_INEXISTENTE` del cobro en lote de cliente no tenían mensaje amigable. Se agregó el catálogo `lcCodeMessages.cobranza.ts` (archivo nuevo para no pasar de 200 líneas) y se integró al índice.
+
 ## [13.489.7] - 2026-08-10
 - CI (guard `gen:types`): `src/integrations/supabase/types.ts` estaba STALE porque la migración `20260810133000` (onboarding con organización explícita) nunca se aplicó a la base en vivo — seguía existiendo `complete_onboarding(text,text,text)`. Se reaplicó la definición con firma `(uuid,text,text,text)` y los tipos ya coinciden con el esquema de migraciones.
 - Manifest de release regenerado para 13.489.7.
