@@ -3,6 +3,7 @@
  * Extraída v13.450.2 para mantener el diálogo bajo el límite de complejidad.
  */
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -56,12 +57,11 @@ export function DialogPagoLoteDatos(p: Props) {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="lote-total">Importe total ({p.moneda})</Label>
-          <Input
+          <MoneyInput
             id="lote-total"
-            inputMode="decimal"
-            value={p.total}
-            placeholder="0.00"
-            onChange={(e) => p.onTotal(round2(Number(e.target.value) || 0))}
+            value={p.total === "" ? null : Number(p.total)}
+            currency={p.moneda}
+            onChange={(n: number) => p.onTotal(round2(n))}
           />
           <p className="text-xs text-muted-foreground">
             Saldo seleccionado: {formatCurrency(p.saldoTotal, p.moneda)}

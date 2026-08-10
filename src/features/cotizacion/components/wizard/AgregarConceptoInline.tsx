@@ -10,6 +10,7 @@
  * total con IVA con base en la tasa configurada.
  */
 import { useState } from "react";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,13 +139,10 @@ export function AgregarConceptoInline({
             <Label htmlFor="aci-precio" className="text-xs">
               Precio unitario {variante === "costo" ? "(costo)" : ""}
             </Label>
-            <Input
+            <MoneyInput
               id="aci-precio"
-              type="number"
-              min={0}
-              step="0.01"
               value={precio}
-              onChange={(e) => setPrecio(Number(e.target.value) || 0)}
+              onChange={(n: number) => setPrecio(n)}
             />
           </div>
         </div>

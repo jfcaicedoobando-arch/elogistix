@@ -4,6 +4,7 @@
  * (≤200 líneas por archivo).
  */
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
@@ -26,13 +27,13 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
     <div className="grid grid-cols-3 gap-3">
       <div>
         <Label htmlFor="tarifa-flete">Flete base USD *</Label>
-        <Input
+        <MoneyInput
           id="tarifa-flete"
-          type="number" min={0} step="0.01" value={form.flete_base === 0 ? "" : form.flete_base} placeholder="0.00"
+          value={form.flete_base}
+          currency="USD"
           aria-invalid={errores?.flete_base || undefined}
-          className={`${invalidCls(errores?.flete_base) ?? ""} ${noSpinnerCls}`}
-          onFocus={(e) => e.currentTarget.select()}
-          onChange={(e) => setForm({ ...form, flete_base: Number(e.target.value) || 0 })}
+          className={invalidCls(errores?.flete_base) ?? undefined}
+          onChange={(n: number) => setForm({ ...form, flete_base: n })}
         />
       </div>
       <div>

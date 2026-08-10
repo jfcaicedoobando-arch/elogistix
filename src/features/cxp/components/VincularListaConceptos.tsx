@@ -3,7 +3,7 @@
  * usado por `VincularEmbarqueSection`.
  */
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { formatCurrency } from "@/lib/formatters";
 import { lineaExcedeOriginal } from "@/features/cxp/utils/topeVinculacion";
 import type { ConceptoCostoAbierto } from "@/features/cxp/hooks";
@@ -59,16 +59,12 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
                   {checked && (
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs text-muted-foreground">{it.moneda}</span>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        inputMode="decimal"
+                      <MoneyInput
                         value={sel.monto}
-                        onChange={(e) => onChangeMonto(it.id, Number(e.target.value) || 0)}
+                        onChange={(n: number) => onChangeMonto(it.id, n)}
                         aria-invalid={excede || undefined}
-                        className={`w-28 h-8 text-right tabular-nums ${
-                          excede ? "border-destructive text-destructive" : ""
-                        }`}
+                        aria-label={`Importe aplicado al concepto ${it.concepto}`}
+                        className={`w-28 h-8 ${excede ? "border-destructive text-destructive" : ""}`}
                       />
                     </div>
                   )}

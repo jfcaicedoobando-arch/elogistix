@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
@@ -96,13 +97,11 @@ export function NuevaTarifaDemoraDialog({
         </div>
         <div>
           <Label htmlFor="dem-monto">Monto por día (USD)</Label>
-          <Input
+          <MoneyInput
             id="dem-monto"
-            type="number"
-            step="0.01"
-            min={0}
             value={form.monto_por_dia_usd}
-            onChange={(e) => setForm({ ...form, monto_por_dia_usd: Number(e.target.value) })}
+            currency="USD"
+            onChange={(n: number) => setForm({ ...form, monto_por_dia_usd: n })}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">

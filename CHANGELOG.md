@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.487.0] - 2026-08-10
+- UX/dinero: nuevo campo estándar `MoneyInput` (`src/components/shared/MoneyInput.tsx` + helpers puros en `utils/moneyInputFormat.ts`): formato en vivo con separador de miles, cursor estable, acepta coma decimal, recorta a 2 decimales, se puede vaciar (adiós al "0" pegajoso) y sufijo opcional de moneda.
+- Migrados a `MoneyInput`: Tesorería (importe de movimiento manual, monto de pago programado, saldo inicial de cuenta), CxP (importe total y renglones de pago en lote, vincular conceptos), Costeo (flete base, recargos, monto por día de demoras), CRM (monto estimado y valor real) y Cotización (precio unitario del concepto inline).
+- Accesibilidad/teclado en los modales de Tesorería: `Label` asociados con `htmlFor`/`id`, `aria-invalid`/`aria-describedby` en el importe y Enter guarda/ejecuta sólo cuando el formulario es válido y no está en curso.
+- Tests: `moneyInputFormat.test.ts` (15), `MoneyInput.test.tsx` (8) y pruebas de teclado para `MovimientoManualDialog` y `EjecutarPagoDialog` (8).
+
 ## [13.486.2] - 2026-08-10
 - Suite completa en verde (980 archivos / 6609 tests vitest). Correcciones: mensajes faltantes `LC_ONBOARDING_ORG_AJENA`, `LC_ONBOARDING_ORG_REQUERIDA` y `LC_OWNER_YA_ASIGNADO`; `Onboarding.tsx` ahora usa `useOrgActiva()` en lugar de `useAuth().organizationId` (regla A2).
 - Tests: `cfdiStorage.test.ts` alineado con la validación de extensión (PDF con `.pdf`) y aserción `rejects.toThrow(/boom/i)`; `TabLiquidaciones.test.tsx` mockea `useGenerarLiquidacion`/`useRegistrarPagoLiquidacion`; `OrganizationContext.superAdmin.test.tsx` con `waitFor` de 15s (intermitente bajo carga).

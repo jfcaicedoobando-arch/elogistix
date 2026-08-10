@@ -2,7 +2,7 @@
  * Tabla de reparto del pago en lote (v13.445.0).
  * Se extrae del diálogo para respetar el límite de 200 líneas por componente.
  */
-import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { toTitleCase } from "@/lib/formatters";
 import type { FacturaLoteCandidata, RenglonLote } from "@/features/cxp/services/pagoProveedorLote";
@@ -45,13 +45,10 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
                   {formatCurrency(f.saldo, moneda)}
                 </td>
                 <td className="px-3 py-2 text-right">
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    className="h-8 w-32 text-right tabular-nums"
-                    value={monto === 0 ? "" : String(monto)}
-                    placeholder="0.00"
-                    onChange={(e) => onMontoChange(f.factura_id, Number(e.target.value) || 0)}
+                  <MoneyInput
+                    className="h-8 w-32"
+                    value={monto}
+                    onChange={(n: number) => onMontoChange(f.factura_id, n)}
                     aria-label={`Importe aplicado a la factura ${f.folio_proveedor ?? ""}`}
                   />
                 </td>

@@ -3,6 +3,8 @@
  * Extraído de `TesoreriaCuentas` (límite Power-of-10 de 200 líneas).
  */
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/shared/MoneyInput";
+
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import {
@@ -48,9 +50,16 @@ export function NuevaCuentaFormFields({ form, setField }: NuevaCuentaFormFieldsP
         </Select>
       </div>
       <div>
-        <Label>Saldo inicial</Label>
-        <Input type="number" step="0.01" value={form.saldoInicial} onChange={(e) => setField("saldoInicial", Number(e.target.value))} />
+        <Label htmlFor="cuenta-saldo-inicial">Saldo inicial</Label>
+        <MoneyInput
+          id="cuenta-saldo-inicial"
+          value={form.saldoInicial}
+          onChange={(n) => setField("saldoInicial", n)}
+          currency={form.moneda}
+          allowNegative
+        />
       </div>
+
       <div>
         <Label>Saldo inicial al día *</Label>
         <DatePickerMx
