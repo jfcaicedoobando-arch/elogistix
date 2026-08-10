@@ -9,7 +9,9 @@
     "./src/main.tsx",
     "./src/lib/sentry.ts"
   ],
-  "scripts": {
+    "db:release-manifest:update": "tsx scripts/db/release-manifest.ts",
+    "db:release-manifest:check": "tsx scripts/db/release-manifest.ts --check",
+
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
