@@ -7,12 +7,14 @@
 import { Layers, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { formatCurrency } from "@/lib/formatters";
 import { usePagoClienteLoteState } from "@/features/facturacion/hooks/usePagoClienteLoteState";
 import { DialogCobroLoteDatos } from "./DialogCobroLoteDatos";
 import { DialogCobroLoteRenglones } from "./DialogCobroLoteRenglones";
+import { DialogCobroLoteResumen } from "./DialogCobroLoteResumen";
 import type { FacturaCobroCandidata } from "@/features/facturacion/services/pagoClienteLote";
 
 interface Props {
@@ -54,7 +56,26 @@ export function DialogCobroLoteCliente(p: Props) {
       icon={Layers}
       title="Cobro en lote de cliente"
       description={`Un solo depósito de ${p.clienteNombre} repartido entre ${p.facturas.length} facturas en ${p.moneda}.`}
-      size="xl"
+      size="3xl"
+      bodyClassName="py-4 space-y-4"
+      headerAside={
+        <div className="leading-tight">
+          <p className="text-overline text-muted-foreground">Saldo seleccionado</p>
+          <p className="text-sm font-semibold tabular-nums">
+            {formatCurrency(s.saldoTotal, p.moneda)}
+          </p>
+        </div>
+      }
+      stickyBottom={
+        <DialogCobroLoteResumen
+          facturas={p.facturas}
+          renglones={s.renglones}
+          moneda={p.moneda}
+          totalRepartido={s.totalRepartido}
+          sinAsignar={s.sinAsignar}
+          error={s.error}
+        />
+      }
       footer={footer}
     >
       <DialogCobroLoteDatos
@@ -75,6 +96,7 @@ export function DialogCobroLoteCliente(p: Props) {
       />
 
       <FormDialogSection
+        flat
         title="Reparto entre facturas"
         description="Se aplica primero lo que vence antes. Puedes ajustar cada importe."
       >
@@ -84,19 +106,19 @@ export function DialogCobroLoteCliente(p: Props) {
           moneda={p.moneda}
           onMontoChange={s.setMonto}
         />
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-          <span className="text-muted-foreground">
-            Repartido: <strong className="tabular-nums">{formatCurrency(s.totalRepartido, p.moneda)}</strong>
-          </span>
-          <span className={s.sinAsignar > 0.009 ? "text-warning" : "text-muted-foreground"}>
-            Sin asignar: <strong className="tabular-nums">{formatCurrency(s.sinAsignar, p.moneda)}</strong>
-          </span>
-        </div>
-        {s.error && <p className="mt-2 text-xs text-destructive">{s.error}</p>}
       </FormDialogSection>
 
-      <FormDialogSection title="Notas">
-        <Textarea value={s.notas} onChange={(e) => s.setNotas(e.target.value)} rows={2} />
+      <FormDialogSection flat>
+        <div className="space-y-1.5">
+          <Label htmlFor="cobro-lote-notas">Notas</Label>
+          <Textarea
+            id="cobro-lote-notas"
+            value={s.notas}
+            onChange={(e) => s.setNotas(e.target.value)}
+            rows={2}
+            placeholder="Observaciones del depósito (opcional)"
+          />
+        </div>
       </FormDialogSection>
     </FormDialogShell>
   );
