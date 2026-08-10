@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.484.0] - 2026-08-10
+- CI (DB · baseline de esquema): nuevo job bloqueante `schema-baseline` en `rls-tests.yml`. Restaura el dump ya migrado del job `rls`, genera un snapshot normalizado del esquema `public` con `scripts/db/schema-snapshot.sh` y lo compara contra `supabase/schema/baseline.sql`; si difiere, falla con el diff en el resumen del run y sube los artifacts `schema-snapshot-actual` y `schema-baseline-diff`. Cierra el único hueco que quedaba: hasta ahora CI validaba que las migraciones *aplicaran* y que la base *funcionara*, pero no que el estado final fuera el esperado (índice borrado, `CHECK` relajado, `GRANT` abierto, trigger eliminado o cuerpo de RPC cambiado pasaban en verde). El snapshot cubre tablas/columnas, tipos, índices, constraints, triggers, cuerpos de funciones/RPCs, políticas RLS y GRANTs.
+- CI: `schema-baseline` se agrega a `needs` y al veredicto de `rls-tests-result`, por lo que el required check existente ya lo cubre.
+- DevEx: `bun run db:baseline:update` (regenera la baseline, obligatorio en todo PR que cambie el esquema) y `bun run db:baseline:check` (verifica sin tocar el archivo). `db:verify` acepta `--only-schema` y `--snapshot <ruta>`. `pg_dump` se ejecuta dentro del contenedor de la imagen Postgres pinneada (15.8) para que CI y local produzcan byte a byte lo mismo.
+- Docs: `docs/ops/baseline-esquema.md` — flujo, primera generación y falsos positivos frecuentes.
+
+
 ## [13.483.0] - 2026-08-10
 - DevEx (DB): nuevo CLI `bun run db:verify` (`scripts/db/local-verify.sh`) que levanta un Postgres 15.8 efímero en Docker (misma imagen pinneada que CI), aplica las migraciones en base limpia con las extensiones no disponibles neutralizadas, corre bootstrap/drift/post-migrate, la verificación de cobertura RLS y la guardia de integridad, y luego ejecuta una suite mínima de RLS (`isolation`, `financiero`, `cross_tenant_mutations`, `roles_no_admin`, `anon_deny_all`, `policy_linter`) más las suites conductuales de `supabase/tests/*.sql`. Flags: `--all`, `--suites a,b`, `--reuse`, `--keep`, `--port`, `--no-behavioral`. Logs por paso en `.db-verify-logs/<timestamp>/` (ignorado por git) y resumen final con las suites fallidas.
 - Fix (typecheck): `dashboard/direccion/services/calculos.ts` limpia los imports que quedaron sin uso tras extraer `calculosCartera.ts`.
