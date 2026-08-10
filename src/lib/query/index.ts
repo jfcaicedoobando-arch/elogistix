@@ -35,6 +35,7 @@ import {
   cxp, proveedorFacturas, proveedorNotasCredito, pagosProveedor,
   proveedorSalud, conceptosCosto,
 } from "@/features/cxp/queryKeys";
+import { compras } from "@/features/compras/queryKeys";
 import { bandejas } from "@/features/bandejas/queryKeys";
 import { tesoreria } from "@/features/tesoreria/queryKeys";
 import { comisiones } from "@/features/comisiones/queryKeys";
@@ -89,6 +90,7 @@ export const queryKeys = {
   pagosProveedor,
   proveedorSalud,
   conceptosCosto,
+  compras,
   bandejas,
   tesoreria,
   comisiones,

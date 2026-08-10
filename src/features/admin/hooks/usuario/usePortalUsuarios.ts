@@ -13,7 +13,7 @@ export function useUsuariosPortalCliente(opciones?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.usuariosPortalCliente.scope(orgScope),
     queryFn: () => fetchUsuariosPortalCliente(orgScope),
-    enabled: opciones?.enabled ?? true,
+    enabled: (opciones?.enabled ?? true) && !!orgScope,
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
   });
@@ -24,7 +24,7 @@ export function useUsuariosPortalAgente(opciones?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.usuariosPortalAgente.scope(orgScope),
     queryFn: () => fetchUsuariosPortalAgente(orgScope),
-    enabled: opciones?.enabled ?? true,
+    enabled: (opciones?.enabled ?? true) && !!orgScope,
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
   });
