@@ -26,42 +26,48 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'contador') ON CONFLICT DO NOTHING;
-  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 
   INSERT INTO public.clientes (id, organization_id, nombre)
-  VALUES (v_cli, v_org, 'Cliente Ola4 N7') ON CONFLICT (id) DO NOTHING;
+  VALUES (v_cli, v_org, 'Cliente Ola4 N7'),
+         ('c7777777-7777-7777-7777-777777777777', v_org, 'Cliente Ola4 N8')
+  ON CONFLICT (id) DO NOTHING;
 
   -- N7: un embarque con 2 ventas y 3 costos → no debe haber fan-out.
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, eta, tipo_cambio_usd)
-  VALUES (v_emb, v_org, v_cli, 'OLA4N7001', 'Marítimo'::public.modo_transporte,
+  VALUES (v_emb, v_org, v_cli, 'ELNSA001', 'Marítimo'::public.modo_transporte,
           'Importación'::public.tipo_operacion, CURRENT_DATE, 18.0)
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.conceptos_venta (embarque_id, organization_id, concepto, total, moneda)
-  VALUES (v_emb, v_org, 'Venta 1', 100, 'USD'), (v_emb, v_org, 'Venta 2', 200, 'USD');
+  INSERT INTO public.conceptos_venta (embarque_id, organization_id, descripcion, precio_unitario, total, moneda)
+  VALUES (v_emb, v_org, 'Venta 1', 100, 100, 'USD'), (v_emb, v_org, 'Venta 2', 200, 200, 'USD');
 
   INSERT INTO public.conceptos_costo (embarque_id, organization_id, concepto, monto, moneda)
   VALUES (v_emb, v_org, 'Costo 1', 10, 'USD'), (v_emb, v_org, 'Costo 2', 20, 'USD'),
          (v_emb, v_org, 'Costo 3', 30, 'USD');
 
-  -- N8: embarque del año actual con venta en USD y SIN tipo_cambio_usd (<=1).
+  -- N8: embarque del año actual con venta en USD y con tipo_cambio_usd = 1 (equivale a "sin TC").
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, eta, tipo_cambio_usd)
-  VALUES ('c4444444-4444-4444-4444-444444444444', v_org, v_cli, 'OLA4N8001',
+  VALUES ('c4444444-4444-4444-4444-444444444444', v_org,
+          'c7777777-7777-7777-7777-777777777777', 'ELNSB001',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
-          make_date(EXTRACT(year FROM CURRENT_DATE)::int, 1, 15), 0)
+          make_date(EXTRACT(year FROM CURRENT_DATE)::int, 1, 15), 1)
   ON CONFLICT (id) DO NOTHING;
-  INSERT INTO public.conceptos_venta (embarque_id, organization_id, concepto, total, moneda)
-  VALUES ('c4444444-4444-4444-4444-444444444444', v_org, 'Venta sin TC', 500, 'USD');
+  INSERT INTO public.conceptos_venta (embarque_id, organization_id, descripcion, precio_unitario, total, moneda)
+  VALUES ('c4444444-4444-4444-4444-444444444444', v_org, 'Venta sin TC', 500, 500, 'USD');
 
   -- N9: factura NO vencida (vence en 10 días).
   INSERT INTO public.facturas (
     id, organization_id, cliente_id, cliente_nombre, numero, expediente,
-    moneda, total, estado, fecha_emision, fecha_vencimiento
+    moneda, subtotal, iva, total, estado, fecha_emision, fecha_vencimiento
   ) VALUES (
     'c6666666-6666-6666-6666-666666666666', v_org, v_cli, 'Cliente Ola4 N7', 'OLA4-N9-01',
-    'OLA4N9001', 'MXN'::public.moneda, 1000, 'Emitida'::public.estado_factura,
+    'ELNSC001', 'MXN'::public.moneda, 1000, 0, 1000, 'Emitida'::public.estado_factura,
     CURRENT_DATE - 5, CURRENT_DATE + 10
   ) ON CONFLICT (id) DO NOTHING;
+
+  -- La sesión se fija AL FINAL: sembrar embarques con claims de 'contador'
+  -- dispara el guard "requiere cotización Aceptada" (tarifa-first).
+  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 END
 $fixture$ LANGUAGE plpgsql;
 
@@ -130,14 +136,33 @@ $n9$ LANGUAGE plpgsql;
 DO $n10$
 DECLARE
   v_resumen jsonb; v_total_activos int; v_confirmado int;
+  v_org_n10 uuid := 'ca111111-1111-1111-1111-111111111111';
+  v_uid_n10 uuid := 'ca555555-5555-5555-5555-555555555555';
+  v_cli_n10 uuid := 'ca222222-2222-2222-2222-222222222222';
 BEGIN
+  -- Org aislada para N10: así totalActivos sólo refleja el Borrador.
+  -- La siembra corre SIN claims para no disparar el guard tarifa-first.
+  PERFORM set_config('request.jwt.claims', '', true);
+
+  INSERT INTO public.organizations (id, nombre) VALUES (v_org_n10, 'Test Org Ola4 N10')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO auth.users (id, email) VALUES (v_uid_n10, 'ola4-n10@test.mx')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.organization_members (organization_id, user_id, role)
+  VALUES (v_org_n10, v_uid_n10, 'contador') ON CONFLICT DO NOTHING;
+  INSERT INTO public.clientes (id, organization_id, nombre)
+  VALUES (v_cli_n10, v_org_n10, 'Cliente Ola4 N10') ON CONFLICT (id) DO NOTHING;
+
   INSERT INTO public.embarques (
-    id, organization_id, expediente, modo, tipo, estado, etd, eta
+    id, organization_id, cliente_id, expediente, modo, tipo, estado, etd, eta
   ) VALUES (
-    'c1212121-1212-1212-1212-121212121212', 'c1111111-1111-1111-1111-111111111111',
-    'OLA4N10001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
+    'c1212121-1212-1212-1212-121212121212', v_org_n10, v_cli_n10,
+    'ELNSD001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
     'Borrador'::public.estado_embarque, CURRENT_DATE + 10, CURRENT_DATE + 20
   );
+
+  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid_n10)::text, true);
+
 
   v_resumen := public.dashboard_summary();
   v_total_activos := (v_resumen->>'totalActivos')::int;

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { MockInstance } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -31,7 +32,7 @@ function wrapper(qc: QueryClient) {
 
 describe("useEliminarProforma", () => {
   let qc: QueryClient;
-  let invalidate: ReturnType<typeof vi.spyOn>;
+  let invalidate: MockInstance<QueryClient["invalidateQueries"]>;
 
   beforeEach(() => {
     vi.clearAllMocks();
