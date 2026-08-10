@@ -120,7 +120,11 @@ jobs:
 
   exchange-rates-smoke:
     runs-on: ubuntu-24.04
+    needs: config
     timeout-minutes: 3
+    env:
+      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
+      ANON_KEY: ${{ needs.config.outputs.anon_key }}
     steps:
       - name: Ping exchange-rates
         run: |
@@ -137,8 +141,13 @@ jobs:
 
   tracking-public-smoke:
     runs-on: ubuntu-24.04
+    needs: config
     timeout-minutes: 3
+    env:
+      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
+      ANON_KEY: ${{ needs.config.outputs.anon_key }}
     steps:
+
       - name: Ping tracking-public (token inexistente debe responder 404/410)
         run: |
           set -euo pipefail
