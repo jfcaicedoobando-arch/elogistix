@@ -44,6 +44,8 @@ export default function ResetPassword() {
 
   const {
     register,
+    watch,
+
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ResetValues>({
