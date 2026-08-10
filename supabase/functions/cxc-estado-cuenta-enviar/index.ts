@@ -36,17 +36,6 @@ function corsJson(body: unknown, status: number, req: Request) {
   });
 }
 
-function formatCurrency(value: number, moneda: string): string {
-  return `${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${moneda}`;
-}
-
-function diasEntre(isoVencimiento: string | null, isoHoy: string | null): number | null {
-  if (!isoVencimiento) return null;
-  const venc = new Date(isoVencimiento);
-  const hoy = isoHoy ? new Date(isoHoy) : new Date();
-  if (Number.isNaN(venc.getTime()) || Number.isNaN(hoy.getTime())) return null;
-  return Math.floor((hoy.getTime() - venc.getTime()) / (1000 * 60 * 60 * 24));
-}
 
 async function loadCliente(
   adminClient: SupabaseClient,
