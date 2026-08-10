@@ -121,6 +121,8 @@ const CROSS_FEATURE_ALLOWLIST = [
   "src/features/cliente/routes/_sections/ClienteDetalleTabs.tsx",
   "src/features/cliente/services/financials.ts",
   "src/features/compras/routes/ComprasPorAprobar.tsx",
+  // Split de ComprasPorAprobar.tsx (límite 200 líneas): hereda su excepción.
+  "src/features/compras/routes/ComprasPorAprobar.useColumnas.ts",
   "src/features/cotizacion/components/TarifaVinculadaPanel.tsx",
   "src/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion.tsx",
   "src/features/cotizacion/components/seccionRuta/OrigenDestinoBlock.tsx",
