@@ -4,6 +4,7 @@
  * se hace por row-click accesible desde `Cartera.tsx` (getRowHref).
  * v13.313.1: agregada columna de acción "Recordatorio".
  */
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +16,13 @@ import type { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas"
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export type CarteraRow = NonNullable<ReturnType<typeof useCarteraPendiente>["data"]>[number];
+
+/** Evita el doble toggle cuando el clic ya cayó sobre el propio checkbox. */
+function esClickEnCheckbox(target: EventTarget | null): boolean {
+  return target instanceof Element && !!target.closest('[role="checkbox"]');
+}
+
+
 
 export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void): ColumnDef<CarteraRow, unknown>[] {
   return defineColumns<CarteraRow>([
