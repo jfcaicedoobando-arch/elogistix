@@ -90,7 +90,6 @@ DECLARE
     'embarques|trg_sync_cotizacion_embarque_link',
     'embarques|update_embarques_updated_at',
     'eventos_embarque|trg_bloquear_cierre',
-    'factura_notas_credito|trg_check_factura_saldo_para_nc',
     'factura_notas_credito|trg_nc_no_delete',
     'factura_notas_credito|trg_nc_no_excede_saldo',
     'factura_notas_credito|trg_recalcular_estado_factura_nc',
