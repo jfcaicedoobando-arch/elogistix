@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { ProveedorFacturaRow } from "./proveedorFacturas";
 import type { ActualizarFacturaPayload } from "./proveedorFacturas.update.types";
+import { sumarPagosEnMonedaFactura } from "./proveedorFacturas.helpers";
 
 export class SaldoNegativoError extends Error {
   code = "SALDO_NEGATIVO" as const;
