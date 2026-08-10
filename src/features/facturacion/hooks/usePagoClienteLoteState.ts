@@ -8,6 +8,7 @@ import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { usePagoClienteLote } from "@/features/facturacion/hooks/usePagoClienteLote";
 import { todayLocalISO } from "@/lib/date/today";
 import {
+  obtenerFacturasConRep,
   repartirFifo,
   round2,
   validarCobroLote,
