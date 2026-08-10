@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.489.9] - 2026-08-10
+- UI del modal "Cobro en lote de cliente": los totales (Repartido / Sin asignar) se dibujaban **encima** de la tabla de facturas porque la sección usaba el grid de 2 columnas; ahora las secciones de reparto y notas son `flat` a todo el ancho. El modal pasa a `3xl`, "Datos del depósito" usa 3 columnas con etiquetas cortas, el saldo seleccionado va como chip en el header y el resumen vivo (con el error de validación y el conteo de facturas liquidadas) se fija en la banda `stickyBottom`. La tabla de reparto gana scroll horizontal, anchos por columna, zebra, campo de captura más cómodo y badges "Liquidada"/"Parcial". Verificado en 1280 × 720.
+
 ## [13.489.8] - 2026-08-10
 - Test `lcCodeCoverage` en rojo: los 11 códigos `LC_COBRO_LOTE_*` / `LC_MOVIMIENTO_LOTE_COBRO_INEXISTENTE` del cobro en lote de cliente no tenían mensaje amigable. Se agregó el catálogo `lcCodeMessages.cobranza.ts` (archivo nuevo para no pasar de 200 líneas) y se integró al índice.
 
