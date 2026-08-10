@@ -5,7 +5,7 @@ arquitectónica (bloques 13.56.1 → 13.56.7). Sólo entries con valor real.
 
 | ID | Archivo | Descripción | Bloqueo |
 |---|---|---|---|
-| _(sin pendientes)_ | — | AUDIT-17.1 cerrado en v13.141.0 (notificación por email a operadores cuando un cliente responde una cotización desde el portal). | — |
+| AUDIT-M16 | `.env` | El archivo sigue en el índice de git aunque ya está en `.gitignore`. Requiere `git rm --cached .env` (operación de git fuera del agente) y, recomendado, rotar las llaves publicables. Riesgo: higiene de repo, no fuga de credenciales. | Operación manual de git |
 
 ## Convención
 
