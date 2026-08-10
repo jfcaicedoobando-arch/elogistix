@@ -45,6 +45,10 @@ while [ $# -gt 0 ]; do
     --reuse)          REUSE=1 ;;
     --keep)           KEEP=1 ;;
     --no-behavioral)  RUN_BEHAVIORAL=0 ;;
+    --only-schema)    ONLY_SCHEMA=1; RUN_BEHAVIORAL=0 ;;
+    --snapshot)       SNAPSHOT_OUT="${2:-}"; shift ;;
+    --snapshot=*)     SNAPSHOT_OUT="${1#--snapshot=}" ;;
+
     --port)           PORT="${2:-}"; shift ;;
     --port=*)         PORT="${1#--port=}" ;;
     -h|--help)        sed -n '2,20p' "$0"; exit 0 ;;
