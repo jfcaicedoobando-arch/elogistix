@@ -5,6 +5,8 @@ import {
   normalizarEstadoEntrante,
   puedeEliminarEntrante,
   puedeProcesarEntrante,
+  puedeReactivarEntrante,
+
   resumirEntrantes,
   rutaArchivoEntrante,
   validarArchivoEntrante,
