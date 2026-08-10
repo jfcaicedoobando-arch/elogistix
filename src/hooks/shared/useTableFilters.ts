@@ -67,15 +67,17 @@ export function useTableFilters<TFilters extends Record<string, string>>({
   // siempre a la primera página, igual que ya hacen `setSearch`/`setFilter`.
   const setDateFrom = useCallback(
     (v: string) => {
+      if (base.page !== 0) base.setPage(0);
       setDateFromRaw(v || null);
     },
-    [setDateFromRaw],
+    [setDateFromRaw, base],
   );
   const setDateTo = useCallback(
     (v: string) => {
+      if (base.page !== 0) base.setPage(0);
       setDateToRaw(v || null);
     },
-    [setDateToRaw],
+    [setDateToRaw, base],
   );
 
   const isInRange = useCallback(
