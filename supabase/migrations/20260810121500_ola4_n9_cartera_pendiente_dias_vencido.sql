@@ -1,3 +1,80 @@
+-- [drift] Prelude defensivo: en bases reconstruidas desde cero la migración
+-- legacy que crea public.cobranza_seguimiento (20260617052908) no aplica, por
+-- lo que esta función quedaría sin su tabla de apoyo. Se garantiza aquí de
+-- forma idempotente (no cambia nada en bases existentes).
+CREATE TABLE IF NOT EXISTS public.cobranza_seguimiento (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
+  factura_id uuid NOT NULL REFERENCES public.facturas(id) ON DELETE CASCADE,
+  tipo text NOT NULL CHECK (tipo IN ('recordatorio_email','llamada','promesa_pago','nota','visita')),
+  fecha date NOT NULL DEFAULT CURRENT_DATE,
+  comentario text,
+  monto_promesa numeric(14,2),
+  fecha_promesa date,
+  usuario_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.cobranza_seguimiento TO authenticated;
+GRANT ALL ON public.cobranza_seguimiento TO service_role;
+ALTER TABLE public.cobranza_seguimiento ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX IF NOT EXISTS idx_cobranza_seg_factura ON public.cobranza_seguimiento(factura_id);
+CREATE INDEX IF NOT EXISTS idx_cobranza_seg_org_fecha ON public.cobranza_seguimiento(organization_id, fecha DESC);
+
+DO $drift$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='cobranza_seguimiento' AND policyname='cobranza_seg_select_org') THEN
+    CREATE POLICY "cobranza_seg_select_org" ON public.cobranza_seguimiento FOR SELECT TO authenticated USING (
+      organization_id = public.current_user_org_id() AND (
+        public.has_role(auth.uid(), 'contador'::app_role)
+        OR public.has_role(auth.uid(), 'tesorero'::app_role)
+        OR public.has_role(auth.uid(), 'ejecutivo_cobranza'::app_role)
+        OR public.has_role(auth.uid(), 'admin_org'::app_role)
+        OR public.has_role(auth.uid(), 'super_admin'::app_role)
+        OR public.has_role(auth.uid(), 'gerente_operaciones'::app_role)
+        OR public.has_role(auth.uid(), 'gerente_visor'::app_role)
+      )
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='cobranza_seguimiento' AND policyname='cobranza_seg_insert_org') THEN
+    CREATE POLICY "cobranza_seg_insert_org" ON public.cobranza_seguimiento FOR INSERT TO authenticated WITH CHECK (
+      organization_id = public.current_user_org_id() AND (
+        public.has_role(auth.uid(), 'contador'::app_role)
+        OR public.has_role(auth.uid(), 'ejecutivo_cobranza'::app_role)
+        OR public.has_role(auth.uid(), 'admin_org'::app_role)
+        OR public.has_role(auth.uid(), 'super_admin'::app_role)
+      )
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='cobranza_seguimiento' AND policyname='cobranza_seg_update_org') THEN
+    CREATE POLICY "cobranza_seg_update_org" ON public.cobranza_seguimiento FOR UPDATE TO authenticated USING (
+      organization_id = public.current_user_org_id()
+      AND (usuario_id = auth.uid()
+        OR public.has_role(auth.uid(), 'admin_org'::app_role)
+        OR public.has_role(auth.uid(), 'super_admin'::app_role))
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='cobranza_seguimiento' AND policyname='cobranza_seg_delete_org') THEN
+    CREATE POLICY "cobranza_seg_delete_org" ON public.cobranza_seguimiento FOR DELETE TO authenticated USING (
+      organization_id = public.current_user_org_id()
+      AND (usuario_id = auth.uid()
+        OR public.has_role(auth.uid(), 'admin_org'::app_role)
+        OR public.has_role(auth.uid(), 'super_admin'::app_role))
+    );
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname='trg_cobranza_seg_updated_at'
+      AND tgrelid = 'public.cobranza_seguimiento'::regclass
+  ) THEN
+    CREATE TRIGGER trg_cobranza_seg_updated_at
+      BEFORE UPDATE ON public.cobranza_seguimiento
+      FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+  END IF;
+END
+$drift$;
+
 -- Ola 4 · N9: cartera_pendiente con dias_vencido con signo.
 --
 -- N9 (ALTA): la columna dias_vencido venía truncada con GREATEST(0,…);
