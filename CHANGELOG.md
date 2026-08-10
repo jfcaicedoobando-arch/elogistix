@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.478.3] - 2026-08-10
+- Fix: la restricción `clientes_rfc_formato` ahora acepta RFC vacío, permitiendo convertir prospectos a clientes cuando aún no se captura el RFC (el formato se sigue validando cuando hay valor).
+
 ## [13.478.2] - 2026-08-10
 - Fix migración `org_scope`: el bloque que reescribe funciones ahora excluye agregados/ventana y lenguajes internos (`prokind='f'` + `sql/plpgsql`), evitando el error "array_agg is an aggregate function" al aplicar en una base limpia.
 
