@@ -97,10 +97,11 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
             onClick={(e) => e.stopPropagation()}
           >
             {row.original.numero ?? "—"}
-
-        </Link>
-      ),
+          </Link>
+        );
+      },
     },
+
 
 
     {
