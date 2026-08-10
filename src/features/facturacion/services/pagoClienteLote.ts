@@ -117,6 +117,23 @@ export function validarCobroLote(
   return { error: null, totalRepartido };
 }
 
+/**
+ * De las facturas seleccionadas, devuelve las PPD ya timbradas: cada pago que
+ * se les aplique requiere su propio REP.
+ */
+export async function obtenerFacturasConRep(ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("facturas")
+    .select("id, metodo_pago, uuid_fiscal")
+    .in("id", ids);
+  if (error) throw error;
+  return (data ?? [])
+    .filter((f) => f.metodo_pago === "PPD" && !!f.uuid_fiscal)
+    .map((f) => f.id);
+}
+
+
 /** Registra el lote de forma atómica (N pagos + 1 movimiento bancario). */
 export async function registrarPagoClienteLote(
   input: RegistrarCobroLoteInput,
