@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.485.0] - 2026-08-10
+- CI (Release compatibility): nuevo workflow `.github/workflows/release-compatibility.yml` que verifica que `APP_VERSION` coincida con el set de migraciones esperado. Si un PR modifica migraciones y no incrementa `APP_VERSION`, falla. Si no existe manifest para la versión actual o si el set de migraciones difiere del manifest, falla. Usa `scripts/db/release-manifest.ts`.
+- DevEx: `bun run db:release-manifest:update` (regenera `supabase/releases/migration-manifest.json`) y `bun run db:release-manifest:check` (verifica sin tocar el archivo).
+- Docs: `docs/ops/release-manifest.md` y `supabase/releases/README.md` — flujo, reglas de la pipeline y primera generación.
+
+
 ## [13.484.0] - 2026-08-10
 - CI (DB · baseline de esquema): nuevo job bloqueante `schema-baseline` en `rls-tests.yml`. Restaura el dump ya migrado del job `rls`, genera un snapshot normalizado del esquema `public` con `scripts/db/schema-snapshot.sh` y lo compara contra `supabase/schema/baseline.sql`; si difiere, falla con el diff en el resumen del run y sube los artifacts `schema-snapshot-actual` y `schema-baseline-diff`. Cierra el único hueco que quedaba: hasta ahora CI validaba que las migraciones *aplicaran* y que la base *funcionara*, pero no que el estado final fuera el esperado (índice borrado, `CHECK` relajado, `GRANT` abierto, trigger eliminado o cuerpo de RPC cambiado pasaban en verde). El snapshot cubre tablas/columnas, tipos, índices, constraints, triggers, cuerpos de funciones/RPCs, políticas RLS y GRANTs.
 - CI: `schema-baseline` se agrega a `needs` y al veredicto de `rls-tests-result`, por lo que el required check existente ya lo cubre.
