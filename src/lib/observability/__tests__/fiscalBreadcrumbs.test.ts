@@ -10,8 +10,7 @@ describe("addFiscalBreadcrumb", () => {
 
   it("adds breadcrumb with category=fiscal, level=info and op as message", async () => {
     addFiscalBreadcrumb("facturapi-request", { facturaId: "f1" });
-    for (let k = 0; k < 5; k++) await new Promise((r) => setTimeout(r, 0));
-    expect(addBreadcrumb).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(addBreadcrumb).toHaveBeenCalledTimes(1));
     expect(addBreadcrumb).toHaveBeenCalledWith({
       category: "fiscal",
       message: "facturapi-request",
@@ -22,13 +21,14 @@ describe("addFiscalBreadcrumb", () => {
 
   it("defaults data to empty object when omitted", async () => {
     addFiscalBreadcrumb("descargar-cfdi");
-    for (let k = 0; k < 5; k++) await new Promise((r) => setTimeout(r, 0));
-    expect(addBreadcrumb).toHaveBeenCalledWith(expect.objectContaining({ data: {} }));
+    await vi.waitFor(() =>
+      expect(addBreadcrumb).toHaveBeenCalledWith(expect.objectContaining({ data: {} })),
+    );
   });
 
   it("swallows sentry errors silently", async () => {
     addBreadcrumb.mockImplementationOnce(() => { throw new Error("sentry down"); });
     expect(() => addFiscalBreadcrumb("abrir-emitir-factura")).not.toThrow();
-    for (let k = 0; k < 5; k++) await new Promise((r) => setTimeout(r, 0));
+    await vi.waitFor(() => expect(addBreadcrumb).toHaveBeenCalled());
   });
 });

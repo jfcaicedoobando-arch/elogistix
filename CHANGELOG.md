@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.485.1] - 2026-08-10
+- Tests: estabilizados dos tests intermitentes que sólo fallaban con la suite completa bajo carga (`fiscalBreadcrumbs.test.ts` y `exchangeRates.sentry.test.ts`): ahora esperan el `dynamic import` de Sentry con `vi.waitFor` en lugar de un número fijo de microtareas.
+- Arquitectura (Power of 10): `src/features/tesoreria/domain/import/bbva.ts` (271 líneas) dividido — las primitivas de parseo (encabezados, `parseFecha`, `parseMonto`, `sha1`) se movieron a `bbva.parsers.ts`. Sin cambios de comportamiento.
+
 ## [13.485.0] - 2026-08-10
 - CI (Release compatibility): nuevo workflow `.github/workflows/release-compatibility.yml` que verifica que `APP_VERSION` coincida con el set de migraciones esperado. Si un PR modifica migraciones y no incrementa `APP_VERSION`, falla. Si no existe manifest para la versión actual o si el set de migraciones difiere del manifest, falla. Usa `scripts/db/release-manifest.ts`.
 - DevEx: `bun run db:release-manifest:update` (regenera `supabase/releases/migration-manifest.json`) y `bun run db:release-manifest:check` (verifica sin tocar el archivo).
