@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { FileEdit } from "lucide-react";
+import { AlertaBorrador } from "@/features/embarques/components/_sections/AlertaBorrador";
+
 import { TabResumen } from "@/features/embarques/components/TabResumen";
 import { TabDocumentos } from "@/features/embarques/components/TabDocumentos";
 import { TabFacturasEntrantes } from "@/features/embarques/components/TabFacturasEntrantes";

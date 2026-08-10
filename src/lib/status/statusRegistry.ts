@@ -74,7 +74,9 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
     "Cancelada",
   ],
   embarque: [
+    "Borrador",
     "Confirmado",
+
     "En Tránsito",
     "Arribo",
     "En Aduana",
