@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.492.2] - 2026-08-10
+- Lint en verde (`--max-warnings 0`): se bajó la complejidad ciclomática de `DataTableBody` extrayendo `DataTableRow` + `rowHandlers.ts`, de `StatusActionBar` (nuevos `AprobarRechazarBotones` y `BotonRegistrarPago`) y de `calcularFasesEmbarque` (helper `calcularCompletadas`).
+- `etdVencido` se movió a `src/features/embarques/domain/etdVencido.ts` para que `AlertaBorrador` sólo exporte componentes; `BandejaRepPendientes` usa `useCallback` en lugar de silenciar `react-hooks/exhaustive-deps` (habilita de nuevo el React Compiler).
+- `ComprasPorAprobar.useColumnas.ts` se agregó a la allowlist cross-feature (hereda la excepción de `ComprasPorAprobar.tsx`).
+
 ## [13.492.1] - 2026-08-10
 - Captura de factura de proveedor: cuando el emisor del CFDI/PDF no existe en el catálogo, el modal ya **no** abre un mini-formulario para crearlo (creaba altas incompletas con tipo/país/moneda por defecto). Ahora muestra el aviso `ProveedorNoEncontradoAlert` con el nombre y RFC/Tax ID detectados y un botón que abre **Proveedores** en pestaña nueva con el alta prellenada (`/compras/proveedores?nuevo=1&rfc=&nombre=`); la captura en curso no se pierde y el proveedor sigue siendo obligatorio para guardar.
 - `NuevoProveedorDialog`/`useNuevoProveedorController` aceptan `prefill` (nombre y RFC) y la pantalla de Proveedores lee esos parámetros de la URL y los limpia al cerrar. Se eliminó `CrearProveedorDesdeCfdiDialog`.
