@@ -136,11 +136,17 @@ export function FacturaEntranteItem({
         {!tieneXml && puedeAdjuntarXml && (
           <AdjuntarXmlButton onSelect={(xml) => onAdjuntarXml(row, xml)} />
         )}
+        {puedeReactivar && onReactivar && (
+          <Button size="sm" variant="secondary" onClick={() => onReactivar(row)}>
+            <RotateCcw className="mr-2 h-4 w-4" /> Devolver a por capturar
+          </Button>
+        )}
         {puedeEliminar && (
           <Button size="sm" variant="ghost" onClick={() => onEliminar(row)} aria-label="Retirar del buzón">
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         )}
+
       </div>
     </div>
   );
