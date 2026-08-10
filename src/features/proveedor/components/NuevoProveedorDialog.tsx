@@ -16,10 +16,12 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (data: TablesInsert<"proveedores">) => void;
+  /** Prellenado opcional (datos detectados en una factura de proveedor). */
+  prefill?: { nombre?: string; rfc?: string };
 }
 
-export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Props) {
-  const c = useNuevoProveedorController(onSave, () => onOpenChange(false));
+export default function NuevoProveedorDialog({ open, onOpenChange, onSave, prefill }: Props) {
+  const c = useNuevoProveedorController(onSave, () => onOpenChange(false), prefill);
 
   const origen = c.form.origen_proveedor;
   const headerAside = origen ? (
