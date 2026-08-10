@@ -84,9 +84,10 @@ BEGIN
       SELECT p.oid, p.proname
       FROM pg_proc p
       JOIN pg_namespace n ON n.oid = p.pronamespace
+      JOIN pg_language l ON l.oid = p.prolang
       WHERE n.nspname = 'public'
         AND p.prokind = 'f'          -- excluye agregados/ventana/procedimientos
-        AND p.prolang <> 'c'::regtype::oid
+        AND l.lanname IN ('sql', 'plpgsql')
         AND p.prosrc ~ v_pat
     ) cand
   LOOP
