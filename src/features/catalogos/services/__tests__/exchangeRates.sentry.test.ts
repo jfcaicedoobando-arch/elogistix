@@ -40,6 +40,7 @@ describe("fetchExchangeRates — captureException", () => {
 
     await expect(fetchExchangeRates()).rejects.toBe(edgeErr);
     await flush();
+    await vi.waitFor(() => expect(mocks.captureException).toHaveBeenCalled());
 
     expect(mocks.captureException).toHaveBeenCalledWith(
       edgeErr,
@@ -60,6 +61,7 @@ describe("fetchExchangeRates — captureException", () => {
 
     expect(res).toEqual({ usdMxn: 17.25, eurMxn: 18.5, esFallback: true });
     expect(mocks.captureException).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(mocks.addBreadcrumb).toHaveBeenCalled());
     expect(mocks.addBreadcrumb).toHaveBeenCalledWith(
       expect.objectContaining({
         category: "exchange_rates",
