@@ -5,6 +5,7 @@
 import { Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,11 +58,22 @@ export function EjecutarPagoDialog({
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-3">
+      <div
+        className="grid grid-cols-2 gap-3"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey && puedeEjecutar && !isPending) {
+            const t = e.target as HTMLElement;
+            if (t.tagName === "INPUT") {
+              e.preventDefault();
+              onEjecutar();
+            }
+          }
+        }}
+      >
         <div className="col-span-2">
-          <Label>Cuenta bancaria *</Label>
+          <Label htmlFor="pago-cuenta">Cuenta bancaria *</Label>
           <Select value={form.cuentaBancariaId} onValueChange={(v) => setField("cuentaBancariaId", v)}>
-            <SelectTrigger><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
+            <SelectTrigger id="pago-cuenta"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
             <SelectContent>
               {cuentasCompatibles.length === 0
                 ? <SelectItem value="__sin" disabled>Sin cuentas en {facturaPago?.moneda}</SelectItem>
@@ -73,20 +85,23 @@ export function EjecutarPagoDialog({
           </Select>
         </div>
         <div>
-          <Label>Fecha *</Label>
+          <Label htmlFor="pago-fecha">Fecha *</Label>
           <DatePickerMx value={form.fecha} onChange={(v) => setField("fecha", v)} className="w-full" />
         </div>
         <div>
-          <Label>Monto *</Label>
-          <Input
-            type="number" step="0.01" value={form.monto}
-            onChange={(e) => setField("monto", Number(e.target.value))}
+          <Label htmlFor="pago-monto">Monto *</Label>
+          <MoneyInput
+            id="pago-monto"
+            value={form.monto}
+            onChange={(n: number) => setField("monto", n)}
+            currency={facturaPago?.moneda}
+            aria-invalid={form.monto <= 0}
           />
         </div>
         <div>
-          <Label>Método de pago</Label>
+          <Label htmlFor="pago-metodo">Método de pago</Label>
           <Select value={form.metodoPago} onValueChange={(v) => setField("metodoPago", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger id="pago-metodo"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Transferencia">Transferencia</SelectItem>
               <SelectItem value="Cheque">Cheque</SelectItem>
@@ -95,8 +110,8 @@ export function EjecutarPagoDialog({
           </Select>
         </div>
         <div>
-          <Label>Referencia</Label>
-          <Input value={form.referencia} onChange={(e) => setField("referencia", e.target.value)} />
+          <Label htmlFor="pago-referencia">Referencia</Label>
+          <Input id="pago-referencia" value={form.referencia} onChange={(e) => setField("referencia", e.target.value)} />
         </div>
       </div>
     </FormDialogShell>
