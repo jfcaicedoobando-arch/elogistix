@@ -29,7 +29,10 @@ REUSE=0
 KEEP=0
 RUN_ALL=0
 RUN_BEHAVIORAL=1
+ONLY_SCHEMA=0
+SNAPSHOT_OUT=""
 SUITES_ARG=""
+
 
 # Suite mínima: cubre aislamiento multi-tenant, dinero, roles y anon.
 SUITES_MIN=(isolation financiero cross_tenant_mutations roles_no_admin anon_deny_all policy_linter)
