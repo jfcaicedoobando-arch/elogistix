@@ -36,7 +36,7 @@ BEGIN
           'Importación'::public.tipo_operacion, CURRENT_DATE, 18.0)
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.conceptos_venta (embarque_id, organization_id, concepto, total, moneda)
+  INSERT INTO public.conceptos_venta (embarque_id, organization_id, descripcion, total, moneda)
   VALUES (v_emb, v_org, 'Venta 1', 100, 'USD'), (v_emb, v_org, 'Venta 2', 200, 'USD');
 
   INSERT INTO public.conceptos_costo (embarque_id, organization_id, concepto, monto, moneda)
@@ -49,7 +49,7 @@ BEGIN
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
           make_date(EXTRACT(year FROM CURRENT_DATE)::int, 1, 15), 0)
   ON CONFLICT (id) DO NOTHING;
-  INSERT INTO public.conceptos_venta (embarque_id, organization_id, concepto, total, moneda)
+  INSERT INTO public.conceptos_venta (embarque_id, organization_id, descripcion, total, moneda)
   VALUES ('c4444444-4444-4444-4444-444444444444', v_org, 'Venta sin TC', 500, 'USD');
 
   -- N9: factura NO vencida (vence en 10 días).
