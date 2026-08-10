@@ -4,6 +4,11 @@ import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { wrapEdgeHandler } from '../_shared/sentry.ts';
 import { authenticate } from '../_shared/auth.ts';
 import { DESTINATARIO_NO_PERMITIDO, emailPerteneceACliente } from '../_shared/destinatarioCliente.ts';
+import {
+  calcularTotalesPorMoneda,
+  formatPorMoneda,
+  MONEDA_ESTADO_CUENTA_DEFAULT,
+} from './totales.ts';
 
 
 const BodySchema = z.object({
