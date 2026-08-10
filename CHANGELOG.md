@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.481.6] - 2026-08-10
+- CI (TypeScript): `useEliminarProforma.test.tsx` tipa el espía de `invalidateQueries` con `MockInstance<QueryClient["invalidateQueries"]>` (el genérico de la firma no encajaba en `ReturnType<typeof vi.spyOn>`).
+- CI (Arquitectura · Power of 10): `src/features/admin/services/usuario/mutaciones.ts` (202 líneas) se dividió en `mutaciones.alta.ts` (alta/invitación + validaciones) y `mutaciones.auth.ts` (helpers de sesión); el barrel y los callers no cambian. Auditoría de archivos > 200 líneas en verde.
+
 ## [13.481.5] - 2026-08-10
 - Tests (Ola 4): la suite SQL completa se ejecutó en una base limpia (817 migraciones) y se corrigieron los fixtures inconsistentes: `ola4_altas.sql` captura `WHEN OTHERS` porque los guards de tenant lanzan `ERRCODE 42501`; `ola4_altas_finanzas.sql` fija los claims al final de la siembra (el guard tarifa-first bloqueaba el alta), usa expedientes con formato `EL[A-Z]{3}[0-9]+`, `precio_unitario` en `conceptos_venta`, `tipo_cambio_usd = 1` (la columna exige > 0), cliente propio para N8 y una organización aislada para N10; `ola4_altas_indices.sql` siembra factura y pago reales para satisfacer el trigger `assert_movimiento_pago_consistente`.
 - Tests (tipos): `useEliminarProforma.test.tsx` tipa el espía de `invalidateQueries` con `MockInstance<QueryClient["invalidateQueries"]>`.
