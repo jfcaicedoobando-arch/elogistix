@@ -6,14 +6,18 @@
  */
 import { assert, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
-const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+const src = (await Promise.all(
+  ["./index.ts", "./contexto.ts", "./terminales.ts"].map((p) =>
+    Deno.readTextFile(new URL(p, import.meta.url))
+  ),
+)).join("\n");
 
 Deno.test("N4: substitution usa el facturapi_id (ObjectId) de la NC sustituta, no el UUID SAT", () => {
   assertStringIncludes(src, "sustituyeFacturapiId");
   assertStringIncludes(src, "cancelPayload.substitution = sustituyeFacturapiId");
   // La resolución busca por uuid_fiscal y toma facturapi_id, nunca al revés.
-  assertStringIncludes(src, '.eq("uuid_fiscal", body.sustituye_uuid!)');
-  assertStringIncludes(src, "sustituyeFacturapiId = sustituta.facturapi_id");
+  assertStringIncludes(src, '.eq("uuid_fiscal", uuidFiscal)');
+  assertStringIncludes(src, "return { ok: true, nc, sustituyeFacturapiId: sustituta.facturapiId };");
 });
 
 Deno.test("N4: se persiste cancellation_status en todas las ramas (rechazada/pendiente/aceptada)", () => {
