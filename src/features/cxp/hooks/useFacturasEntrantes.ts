@@ -111,6 +111,28 @@ export function useEliminarFacturaEntrante() {
   });
 }
 
+/** v13.494.0 — Devuelve un documento rechazado a la bandeja de por capturar. */
+export function useReactivarFacturaEntrante() {
+  const invalidar = useInvalidarEntrantes();
+  return useMutation({
+    mutationFn: ({ id, nombre }: { id: string; nombre?: string | null }) =>
+      reactivarFacturaEntrante(id, nombre),
+    onSuccess: () => {
+      invalidar();
+      notifySuccess(undefined, {
+        title: "Documento devuelto a 'Por capturar'",
+        description: "Contabilidad volverá a verlo en su bandeja.",
+      });
+    },
+    onError: (error) => notifyError(undefined, {
+      title: "No se pudo devolver el documento",
+      error,
+      method: "REACTIVAR_FACTURA_ENTRANTE",
+    }),
+  });
+}
+
+
 export function useRechazarFacturaEntrante() {
   const invalidar = useInvalidarEntrantes();
   return useMutation({
