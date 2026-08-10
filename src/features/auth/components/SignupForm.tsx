@@ -152,11 +152,14 @@ export function SignupForm() {
         <Input
           id="signup-password"
           type="password"
-          placeholder="Mínimo 6 caracteres"
+          placeholder={`Mínimo ${PASSWORD_MIN} caracteres`}
           autoComplete="new-password"
+          maxLength={PASSWORD_MAX}
           {...register("password")}
         />
+        <PasswordStrengthMeter password={form.watch("password")} />
       </div>
+
       <div className="space-y-2">
         <Label htmlFor="signup-password2">Confirmar contraseña</Label>
         <Input
