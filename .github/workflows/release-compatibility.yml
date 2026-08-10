@@ -1,0 +1,104 @@
+name: release-compatibility
+
+# Verifica que APP_VERSION sea compatible con el set de migraciones del release:
+# 1) Si cambian migraciones, APP_VERSION debe subir.
+# 2) El manifest de migraciones debe existir para APP_VERSION.
+# 3) El manifest debe coincidir exactamente con supabase/migrations/.
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "src/constants/appVersion.ts"
+      - "supabase/releases/**"
+      - ".github/workflows/release-compatibility.yml"
+      - "scripts/db/release-manifest.ts"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "src/constants/appVersion.ts"
+      - "supabase/releases/**"
+      - ".github/workflows/release-compatibility.yml"
+      - "scripts/db/release-manifest.ts"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-compatibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-compatibility:
+    name: Release migration compatibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+          # Necesitamos fetch del base SHA para comparar APP_VERSION y detectar
+          # cambios en migraciones.
+          persist-credentials: true
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Determine base SHA
+        id: base
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "sha=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ github.event.before }}" ]; then
+            echo "sha=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=HEAD~1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch base version
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "${{ steps.base.outputs.sha }}"
+
+      - name: Read APP_VERSION values
+        id: versions
+        run: |
+          set -euo pipefail
+          current_version=$(grep -oE 'APP_VERSION = "[^"]+"' src/constants/appVersion.ts | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
+          base_version=$(git show "${{ steps.base.outputs.sha }}:src/constants/appVersion.ts" 2>/dev/null | grep -oE 'APP_VERSION = "[^"]+"' | head -1 | sed 's/.*"\([^"]*\)".*/\1/' || echo "unknown")
+          echo "current=$current_version" >> "$GITHUB_OUTPUT"
+          echo "base=$base_version" >> "$GITHUB_OUTPUT"
+          echo "current=$current_version"
+          echo "base=$base_version"
+
+      - name: Detect migration changes
+        id: diff
+        run: |
+          set -euo pipefail
+          if git diff --name-only FETCH_HEAD HEAD | grep -qE '^supabase/migrations/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Require version bump when migrations change
+        if: github.event_name == 'pull_request' && steps.diff.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.versions.outputs.current }}" = "${{ steps.versions.outputs.base }}" ]; then
+            echo "ERROR: Se modificaron migraciones pero APP_VERSION no se incrementó."
+            echo "  Versión actual: ${{ steps.versions.outputs.current }}"
+            echo "  Versión base: ${{ steps.versions.outputs.base }}"
+            echo "  Incrementa APP_VERSION en src/constants/appVersion.ts y regenera el manifest:"
+            echo "    bun run db:release-manifest:update"
+            exit 1
+          fi
+
+      - name: Verify migration manifest
+        run: |
+          set -euo pipefail
+          bun run db:release-manifest:check
