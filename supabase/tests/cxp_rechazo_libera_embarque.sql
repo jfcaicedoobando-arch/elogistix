@@ -30,8 +30,14 @@ BEGIN
   VALUES (v_org, v_emb, 'Cargos en Destino', 1000, 'USD'::public.moneda, 'manual')
   RETURNING id INTO v_cc;
 
-  INSERT INTO public.presupuesto_categorias (organization_id, nombre, orden, activa)
-  VALUES (v_org, 'Costo directo', 1, true) RETURNING id INTO v_cat;
+  -- La organización ya nace con categorías de presupuesto por defecto.
+  SELECT id INTO v_cat FROM public.presupuesto_categorias
+   WHERE organization_id = v_org ORDER BY orden LIMIT 1;
+  IF v_cat IS NULL THEN
+    INSERT INTO public.presupuesto_categorias (organization_id, nombre, orden, activa)
+    VALUES (v_org, 'Costo directo TEST', 1, true) RETURNING id INTO v_cat;
+  END IF;
+
 
   INSERT INTO public.proveedores (organization_id, nombre, categoria, tipo)
   VALUES (v_org, 'PROVEEDOR RECHAZO', 'Logistico'::public.categoria_proveedor,
