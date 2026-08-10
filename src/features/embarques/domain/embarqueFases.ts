@@ -105,11 +105,12 @@ export function calcularFasesEmbarque(
     },
     {
       id: "confirmado",
-      label: "Confirmado",
+      label: esBorrador ? "Por confirmar" : "Confirmado",
       iconoId: "confirmado",
       fecha: embarque.fecha_creacion,
-      estado: "completada",
+      estado: esBorrador ? "pendiente" : "completada",
     },
+
     {
       id: "en_transito",
       label: "En Tránsito",
