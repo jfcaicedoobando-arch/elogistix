@@ -80,7 +80,16 @@ const ERROR_RULES: readonly RuleMatch[] = [
       "No puedes aprobar esta factura porque tú la capturaste (o tu rol es de tesorería). Pídele la aprobación a un administrador de la organización o a otra persona de contabilidad. Sí puedes rechazarla.",
     matches: (raw) => raw.includes("lc_sod_violation"),
   },
+  // v13.493.0 — el rechazo cancela la factura y libera el embarque, por eso no
+  // se permite si ya hay pagos aplicados.
   {
+    code: "LC_CXP_RECHAZO_CON_PAGOS",
+    message:
+      "Esta factura ya tiene pagos aplicados. Anula o reversa los pagos antes de rechazarla.",
+    matches: (raw) => raw.includes("lc_cxp_rechazo_con_pagos"),
+  },
+  {
+
     code: "LC_CXP_UUID_NO_VERIFICADO",
     message: "Verifica el UUID en el SAT antes de aprobar. Si es un proveedor internacional, quita el UUID fiscal desde el detalle de la factura.",
     matches: (raw) => raw.includes("lc_cxp_uuid_no_verificado"),
