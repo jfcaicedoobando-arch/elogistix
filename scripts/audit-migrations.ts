@@ -102,8 +102,14 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    los permisos (`REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE … TO
  *    authenticated, service_role` / `service_role` para las de trigger); los
  *    archivos originales quedan como legacy auditados.
+ *  - `20260810053328` — post-FIX-H6-11: `20260810052424` (Ola 3 de
+ *    regresiones) recreó `convertir_prospecto_a_cliente_rpc` (SECURITY
+ *    DEFINER) sin el bloque REVOKE/GRANT en el mismo archivo. La migración
+ *    correctiva `20260810053328` re-aplica los permisos (`REVOKE ALL … FROM
+ *    PUBLIC, anon` + `GRANT EXECUTE … TO authenticated, service_role`); el
+ *    archivo original queda como legacy auditado.
  */
-const BASELINE = "20260807212604";
+const BASELINE = "20260810053328";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
