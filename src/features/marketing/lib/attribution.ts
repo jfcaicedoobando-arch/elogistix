@@ -4,6 +4,8 @@
  * `../hooks/useUtmParams` y utiliza estas funciones/constantes.
  */
 
+import { safeSessionStorage } from "@/lib/browserStorage";
+
 export const ATTRIBUTION_STORAGE_KEY = "librecarga_attribution_v1";
 
 export interface Attribution {
