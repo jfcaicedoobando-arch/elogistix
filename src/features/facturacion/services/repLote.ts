@@ -6,6 +6,7 @@
  */
 import { emitirRep } from "@/features/facturacion/services/repFacturapi";
 import { getErrorMessage } from "@/lib/errors";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 export interface RepLoteFallo {
   pagoId: string;
@@ -44,6 +45,7 @@ export async function timbrarRepsSecuencial(
       await emitirRep(pagoId);
       res.ok += 1;
     } catch (err) {
+      reportCaughtError(err, { feature: "facturacion", op: "rep_lote.timbrar" }, { pagoId });
       res.fallos.push({ pagoId, mensaje: getErrorMessage(err) });
     }
     hechos += 1;
