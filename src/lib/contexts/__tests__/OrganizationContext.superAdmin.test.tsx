@@ -17,8 +17,10 @@ vi.mock("@/lib/contexts/AuthContext", () => ({
     loading: false,
   }),
 }));
+const setSuperAdminOrg = vi.fn(async (_id: string | null) => undefined);
 vi.mock("@/features/admin/services/organization", () => ({
   listActiveOrganizations: vi.fn(async () => orgs),
+  setSuperAdminOrg: (id: string | null) => setSuperAdminOrg(id),
 }));
 
 const getItem = vi.fn((_key: string): string | null => null);
@@ -45,6 +47,7 @@ describe("OrganizationContext · super admin sin organización", () => {
     getItem.mockReturnValue(null);
     setItem.mockReset();
     removeItem.mockReset();
+    setSuperAdminOrg.mockClear();
   });
 
   it("no auto-selecciona ninguna organización", async () => {
@@ -69,5 +72,23 @@ describe("OrganizationContext · super admin sin organización", () => {
     act(() => result.current.clearActiveOrganization());
     await waitFor(() => expect(result.current.organizationId).toBeNull());
     expect(removeItem).toHaveBeenCalledWith("sa_active_org");
+    await waitFor(() => expect(setSuperAdminOrg).toHaveBeenCalledWith(null));
+  });
+
+  // Sin esta sincronización las RPC de agregación (`dashboard_summary`, ...)
+  // resolvían la organización en el servidor con `org_scope()` y el super admin
+  // veía los datos de otro tenant que quedó fijado antes.
+  it("persiste el tenant elegido en el servidor", async () => {
+    const { result } = renderHook(() => useOrganization(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    act(() => result.current.setActiveOrganization("org-b"));
+    await waitFor(() => expect(setSuperAdminOrg).toHaveBeenCalledWith("org-b"));
+  });
+
+  it("sincroniza la preferencia restaurada antes de terminar la carga", async () => {
+    getItem.mockReturnValue("org-a");
+    const { result } = renderHook(() => useOrganization(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(setSuperAdminOrg).toHaveBeenCalledWith("org-a");
   });
 });
