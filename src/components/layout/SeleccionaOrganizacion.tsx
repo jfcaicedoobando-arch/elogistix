@@ -11,7 +11,12 @@ import { ROUTES } from "@/constants/routes";
  * elegido una organización. Evita mostrar datos de un cliente al azar.
  */
 function SeleccionaOrganizacionBase() {
-  const { organizations, setActiveOrganization } = useOrganization();
+  const {
+    organizations,
+    setActiveOrganization,
+    errorOrganizaciones,
+    reintentarCargaOrganizaciones,
+  } = useOrganization();
 
   return (
     <Card className="mx-auto mt-10 max-w-lg">
