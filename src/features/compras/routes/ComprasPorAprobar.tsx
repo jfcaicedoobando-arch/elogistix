@@ -13,6 +13,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
+import { useSodAprobacion } from "@/features/cxp/hooks/useSodAprobacion";
+import { SOD_MOTIVO_CAPTURA_PROPIA } from "@/features/cxp/permissions";
 import { useVerificarSatLote } from "@/features/cxp/hooks/useVerificarSatLote";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { KpiCard } from "@/components/shared/KpiCard";
