@@ -18,7 +18,7 @@ import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
 import {
   fetchEurBanxico,
   fetchUsdDof,
-  formatFechaBanxico,
+  isoDiaMexico,
 } from "../_shared/banxicoDof.ts";
 
 initSentryEdge("tc-dof-diario");
@@ -74,7 +74,9 @@ export async function construirRegistro(
   ]);
   if (usd.tc == null) return null;
   return {
-    fecha: formatFechaBanxico(fecha),
+    // N14 (Ola 4): la fila se registra con el día civil MX; antes el UTC
+    // escribía el TC de hoy con la fecha de "mañana" entre 18:00 y 23:59 CST.
+    fecha: isoDiaMexico(fecha),
     usd_mxn: usd.tc,
     eur_mxn: eur,
     fuente: "banxico_sie",
@@ -131,7 +133,7 @@ Deno.serve(async (req) => {
     for (let i = 0; i < fechas.length; i++) {
       const reg = await construirRegistro(token, fechas[i], i === 0, ctrl.signal);
       if (reg) registros.push(reg);
-      else omitidos.push(formatFechaBanxico(fechas[i]));
+      else omitidos.push(isoDiaMexico(fechas[i]));
     }
 
     if (registros.length > 0) {

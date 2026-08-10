@@ -10,9 +10,9 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
-import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { buildNcPayload, validateNcContext } from "./helpers.ts";
-import { preloadNcContext, buildNcContextFromRows } from "./data.ts";
+import { preloadNcContext, buildNcContextFromRows, claimNotaCredito } from "./data.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -34,11 +34,28 @@ async function createNcInvoice(
   facturapi: { invoices: { create: (p: unknown) => Promise<unknown> } },
   payload: unknown,
   meta: { organizationId: string; userId: string; userEmail: string | undefined; notaCreditoId: string },
+  releaseClaim: () => Promise<void>,
 ): Promise<{ ok: true; invoice: FapiInvoice } | { ok: false; body: unknown; status: number }> {
   try {
-    const invoice = await facturapi.invoices.create(payload) as FapiInvoice;
+    // Ola 4 · N1: timeout defensivo (patrón FIX-04/32 de facturapi-emitir):
+    // si FacturAPI cuelga, liberamos el claim y devolvemos 504.
+    const invoice = await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
     return { ok: true, invoice };
   } catch (err) {
+    // Ola 4 · N1: liberar el claim para que el usuario pueda reintentar.
+    await releaseClaim();
+    if (err instanceof FacturapiTimeoutError) {
+      await registrarBitacoraEdge(supabase, {
+        organizationId: meta.organizationId,
+        usuarioId: meta.userId,
+        usuarioEmail: meta.userEmail,
+        modulo: "facturacion",
+        accion: "facturapi_nc_emitir_timeout",
+        entidadId: meta.notaCreditoId,
+        detalles: { op: err.op, timeout_ms: err.timeoutMs },
+      });
+      return { ok: false, body: { error: "facturapi_timeout", message: err.message, timeout_ms: err.timeoutMs }, status: 504 };
+    }
     const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
       organizationId: meta.organizationId,
@@ -86,12 +103,20 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   const issues = validateNcContext(ctx);
   if (issues.length > 0) return jsonResponse({ error: "validation_failed", issues }, 422);
 
+  // Ola 4 · N1: claim atómico ANTES de timbrar (patrón facturapi-emitir).
+  // Se toma DESPUÉS de validar para no tener que liberarlo en el 422.
+  // El tag viaja como external_id a FacturAPI para recuperar el CFDI si la
+  // edge muere tras timbrar y antes de persistir.
+  const claim = await claimNotaCredito(supabase, body.nota_credito_id);
+  if (!claim.ok) return jsonResponse(claim.body, claim.status);
+  ctx.external_id = claim.claimTag;
+
   const created = await createNcInvoice(supabase, resolved.data.client, buildNcPayload(ctx), {
     organizationId: nc.organization_id,
     userId: userData.user.id,
     userEmail: userData.user.email,
     notaCreditoId: body.nota_credito_id,
-  });
+  }, claim.release);
   if (!created.ok) return jsonResponse(created.body, created.status);
 
   const persisted = await persistTimbradoNc({
@@ -102,6 +127,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     apiKey: resolved.data.apiKey,
     ambiente: resolved.data.ambiente,
     notaCreditoId: body.nota_credito_id,
+    claimTag: claim.claimTag,
     userId: userData.user.id,
     userEmail: userData.user.email,
   });
@@ -117,12 +143,13 @@ interface PersistNcArgs {
   apiKey: string;
   ambiente: string;
   notaCreditoId: string;
+  claimTag: string;
   userId: string;
   userEmail: string | undefined;
 }
 
 async function persistTimbradoNc(args: PersistNcArgs): Promise<{ ok: true; body: unknown } | { ok: false; body: unknown; status: number }> {
-  const { supabase, invoice, ctx, nc, apiKey, ambiente, notaCreditoId, userId, userEmail } = args;
+  const { supabase, invoice, ctx, nc, apiKey, ambiente, notaCreditoId, claimTag, userId, userEmail } = args;
   const facturapiId = invoice.id;
   const uuid = invoice.uuid;
   const folio = invoice.folio_number ?? invoice.folio ?? 0;
@@ -144,11 +171,12 @@ async function persistTimbradoNc(args: PersistNcArgs): Promise<{ ok: true; body:
   // con `<serie><folio>` (mismo formato que facturas, sin separador).
   const folioFinal = `${serieTimbrada}${folio}`;
 
-  const { error: updErr } = await supabase
+  const { error: updErr, data: updRow } = await supabase
     .from("factura_notas_credito")
     .update({
       folio: folioFinal,
       facturapi_id: facturapiId,
+      facturapi_claim_at: null,
       uuid_fiscal: uuid,
       folio_fiscal: folio,
       serie: serieTimbrada,
@@ -160,8 +188,14 @@ async function persistTimbradoNc(args: PersistNcArgs): Promise<{ ok: true; body:
       timbrado_en: new Date().toISOString(),
       timbrado_por: userId,
     })
-    .eq("id", notaCreditoId);
+    .eq("id", notaCreditoId)
+    // Ola 4 · N1: persistir sólo si seguimos poseyendo el claim — evita
+    // pisar el facturapi_id de otro timbrado concurrente.
+    .eq("facturapi_id", claimTag)
+    .select("id")
+    .maybeSingle();
   if (updErr) return { ok: false, body: { error: "db_update_failed", detail: updErr.message }, status: 500 };
+  if (!updRow) return { ok: false, body: { error: "claim_perdido", message: "El claim de timbrado se perdió; verifica el estado en Facturapi.", facturapi_id: facturapiId, uuid }, status: 409 };
 
   await registrarBitacoraEdge(supabase, {
     organizationId: nc.organization_id,

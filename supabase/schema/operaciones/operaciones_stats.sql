@@ -43,7 +43,10 @@ BEGIN
       e.aeropuerto_origen, e.aeropuerto_destino,
       e.ciudad_origen, e.ciudad_destino,
       CASE
-        WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Cerrado') THEN e.estado::text
+        -- Ola 4 · N10 (guard B-033): preservar Borrador para que no se
+        -- cuente como Confirmado por derivación ETD/ETA.
+        WHEN e.estado = 'Borrador' THEN 'Borrador'
+        WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
         WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
              AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
           CASE
@@ -55,7 +58,8 @@ BEGIN
         ELSE e.estado::text
       END AS estado_real
     FROM embarques e
-    WHERE (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+    WHERE e.deleted_at IS NULL                -- FIX C5
+      AND (e.organization_id = public.org_scope())
   ),
   profit AS (
     SELECT p.embarque_id, p.venta_usd, p.costo_usd
@@ -80,17 +84,20 @@ BEGIN
         WHEN b.estado_real IN ('Arribo','En Aduana') AND b.eta IS NOT NULL
         THEN GREATEST(v_hoy - b.eta, 0) ELSE 0
       END AS dias_en_puerto,
+      -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
       CASE
-        WHEN b.estado_real NOT IN ('EIR','Cerrado','Cancelado') THEN true ELSE false
+        WHEN b.estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado') THEN true ELSE false
       END AS es_activo,
+      -- Mapeo a llaves de UI
       CASE
         WHEN b.estado_real = 'Confirmado' THEN 'Confirmado'
         WHEN b.estado_real = 'En Tránsito' THEN 'En Tránsito'
         WHEN b.estado_real = 'Arribo' THEN 'Llegada'
         WHEN b.estado_real IN ('En Aduana','Entregado') THEN 'En Proceso'
-        WHEN b.estado_real IN ('EIR','Cerrado') THEN 'Cerrado'
+        WHEN b.estado_real IN ('EIR','Por liquidar','Cerrado') THEN 'Cerrado'
         ELSE NULL
       END AS estado_ui,
+      -- origen/destino con prioridad Port > Airport > City
       COALESCE(NULLIF(b.puerto_origen, ''), NULLIF(b.aeropuerto_origen, ''), NULLIF(b.ciudad_origen, ''), '') AS origen_txt,
       COALESCE(NULLIF(b.puerto_destino, ''), NULLIF(b.aeropuerto_destino, ''), NULLIF(b.ciudad_destino, ''), '') AS destino_txt
     FROM base b
@@ -123,7 +130,7 @@ BEGIN
       count(*) FILTER (WHERE es_activo AND estado_real = 'En Tránsito') AS trans,
       count(*) FILTER (WHERE es_activo AND estado_real = 'Arribo') AS llegada,
       count(*) FILTER (WHERE es_activo AND estado_real IN ('En Aduana','Entregado')) AS proceso,
-      count(*) FILTER (WHERE estado_real IN ('EIR','Cerrado')) AS cerrado
+      count(*) FILTER (WHERE estado_real IN ('EIR','Por liquidar','Cerrado')) AS cerrado
     FROM enriched
     GROUP BY operador_norm
   ),
@@ -162,9 +169,9 @@ BEGIN
         count(*) FILTER (WHERE estado_real = 'En Tránsito') AS trans,
         count(*) FILTER (WHERE estado_real = 'Arribo') AS llegada,
         count(*) FILTER (WHERE estado_real IN ('En Aduana','Entregado')) AS proceso,
-        count(*) FILTER (WHERE estado_real IN ('EIR','Cerrado')) AS cerrado
+        count(*) FILTER (WHERE estado_real IN ('EIR','Por liquidar','Cerrado')) AS cerrado
       FROM enriched
-      WHERE es_activo OR estado_real IN ('EIR','Cerrado')
+      WHERE es_activo OR estado_real IN ('EIR','Por liquidar','Cerrado')
       GROUP BY operador_norm, cliente_nombre
     ) sub
     GROUP BY operador_norm
@@ -183,7 +190,7 @@ BEGIN
         count(*) FILTER (
           WHERE COALESCE(
             e.fecha_llegada_real,
-            CASE WHEN e.estado_real IN ('Entregado','EIR','Cerrado') THEN e.eta END
+            CASE WHEN e.estado_real IN ('Entregado','EIR','Por liquidar','Cerrado') THEN e.eta END
           ) BETWEEN m.inicio AND m.fin
         ) AS llegados
       FROM enriched e CROSS JOIN meses m
@@ -191,6 +198,7 @@ BEGIN
     ) sub
     GROUP BY operador_norm
   ),
+  -- NUEVO: detalle de embarques por (operador, estado_ui), con tope por estado
   embarques_ranked AS (
     SELECT
       operador_norm, estado_ui, id, expediente, cliente_nombre,
@@ -306,7 +314,7 @@ BEGIN
         count(*) FILTER (
           WHERE COALESCE(
             e.fecha_llegada_real,
-            CASE WHEN e.estado_real IN ('Entregado','EIR','Cerrado') THEN e.eta END
+            CASE WHEN e.estado_real IN ('Entregado','EIR','Por liquidar','Cerrado') THEN e.eta END
           ) BETWEEN m.inicio AND m.fin
         ) AS llegadas
       FROM meses m LEFT JOIN enriched e ON true

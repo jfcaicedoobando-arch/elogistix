@@ -5,7 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/appRole";
-import { fetchUsuariosOrganizacion, type UserRow } from "./listado";
+import { fallóDirectorioUsuarios, fetchUsuariosOrganizacion } from "./listado";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface CreateUserParams {
@@ -90,9 +90,18 @@ export async function createUserViaEdgeFunction(
 ): Promise<CreateUserResponse> {
   const emailNormalizado = params.email.trim().toLowerCase();
 
-  const existentes = await fetchUsuariosOrganizacion(params.orgId ?? null).catch(
-    () => [] as UserRow[],
-  );
+  // Ola 4 · N13: la validación de duplicados ya NO es fail-open. Sin org no
+  // hay universo contra el cual comparar (el listado es fail-closed desde
+  // Ola 3 · P2) y con el directorio de auth caído los correos son
+  // placeholders UNRESOLVED_EMAIL: en ambos casos se aborta el alta en lugar
+  // de invitar a ciegas.
+  if (!params.orgId) {
+    throw new Error("No se pudo resolver la organización destino del alta. Reintenta o selecciona una organización.");
+  }
+  const existentes = await fetchUsuariosOrganizacion(params.orgId);
+  if (fallóDirectorioUsuarios()) {
+    throw new Error("No se pudo verificar el directorio de usuarios; reintenta en unos segundos.");
+  }
   if (existentes.some((u) => u.email.toLowerCase() === emailNormalizado)) {
     throw new Error(`Ya existe un usuario con el correo ${emailNormalizado} en esta organización.`);
   }

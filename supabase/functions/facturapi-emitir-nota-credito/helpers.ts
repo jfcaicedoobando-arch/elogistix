@@ -38,6 +38,12 @@ export interface NotaCreditoContext {
   conceptos: ConceptoNC[];
   /** v13.208.0 — Expediente y BLs del embarque para propagar al CFDI y al PDF. */
   referencias?: ReferenciasEmbarque | null;
+  /**
+   * Ola 4 · N1 — tag de correlación enviado como `external_id` a FacturAPI.
+   * Coincide con el claim `PENDING:<uuid>` de la fila (patrón FIX-04.1 de
+   * facturapi-emitir) para recuperar el CFDI si perdemos la respuesta.
+   */
+  external_id?: string | null;
 }
 
 export interface FacturapiNcPayload {
@@ -47,6 +53,8 @@ export interface FacturapiNcPayload {
   payment_form: string;
   currency: string;
   exchange?: number;
+  /** Ola 4 · N1 — tag de correlación PENDING:<uuid>. */
+  external_id?: string;
   related: string[];
   relationship: "01";
   /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
@@ -136,6 +144,8 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
   if (ctx.serie) payload.serie = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
+  // Ola 4 · N1 — tag de correlación para recuperar CFDIs "huérfanos".
+  if (ctx.external_id) payload.external_id = ctx.external_id;
   // v13.208.0 — bloque "Referencias del embarque" al pie del PDF.
   const pdfSection = buildPdfCustomSection(ctx.referencias);
   if (pdfSection) payload.pdf_custom_section = pdfSection;

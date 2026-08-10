@@ -114,7 +114,7 @@ describe("usuario · ciclo de vida (U-03/U-04)", () => {
   });
 
   it("createUserViaEdgeFunction usa la acción invite cuando no hay contraseña", async () => {
-    mock.setTableResult("organization_members", { data: { user_id: "u9", role: "contador" }, error: null });
+    mock.setTableResult("organization_members", { data: [{ user_id: "u9", role: "contador", created_at: "2026-01-01", organization_id: "org-1", organizations: null }], error: null });
     mock.invoke.mockResolvedValue({ data: { user: { id: "u9" } }, error: null });
     await createUserViaEdgeFunction({ email: "Nuevo@X.com", role: "contador", orgId: "org-1" });
     const body = mock.invoke.mock.calls.at(-1)?.[1]?.body as { action: string; email: string };

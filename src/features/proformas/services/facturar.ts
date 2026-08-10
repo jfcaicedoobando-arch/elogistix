@@ -85,7 +85,18 @@ async function insertarFacturas(
 ): Promise<{ primera: string | null; segunda: string | null }> {
   if (facturasACrear.length === 0) throw new Error(ERR_TOTAL_CERO);
   const { data, error } = await supabase.from("facturas").insert(facturasACrear).select("id");
-  if (error) throw new Error(`Error al crear factura: ${error.message}`);
+  if (error) {
+    // N16 (Ola 4): el índice único parcial uq_facturas_proforma_moneda_viva
+    // resuelve la carrera del doble clic en el INSERT (atómico multi-fila):
+    // el perdedor recibe 23505 y NINGUNA de sus facturas queda insertada
+    // (antes quedaban huérfanas en estado "Emitida" y cobrables en CxC).
+    if (error.code === "23505") {
+      throw new Error(
+        "LC_PROFORMA_YA_FACTURADA: otro usuario marcó esta proforma como facturada; recarga la página para ver la factura vigente.",
+      );
+    }
+    throw new Error(`Error al crear factura: ${error.message}`);
+  }
   return { primera: data?.[0]?.id ?? null, segunda: data?.[1]?.id ?? null };
 }
 

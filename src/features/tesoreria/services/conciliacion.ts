@@ -119,7 +119,7 @@ export async function listarMovimientos(f: FiltrosMovimientos): Promise<Movimien
 export { sugerirCandidatos,  } from "./sugerirCandidatos";
 
 export { MovimientoVinculoError } from "./conciliacionErrors";
-import { mapConciliacionError } from "./conciliacionErrors";
+import { mapConciliacionError, MovimientoVinculoError } from "./conciliacionErrors";
 
 
 export async function conciliarConPago(
@@ -128,6 +128,24 @@ export async function conciliarConPago(
   pagoId: string,
   userId: string | null,
 ) {
+  // N15 (Ola 4): guard 409 previo — un pago sólo puede conciliarse con UN
+  // movimiento vivo. El índice único parcial uq_bbva_movimientos_pago_* sigue
+  // siendo la última línea de defensa ante una carrera de dos usuarios (su
+  // 23505 ya se traduce en mapConciliacionError).
+  const columnaPago = tipo === "cxc" ? "pago_factura_id" : "pago_proveedor_id";
+  const { data: enUso } = await supabase
+    .from("bbva_movimientos")
+    .select("id")
+    .eq(columnaPago, pagoId)
+    .neq("id", movId)
+    .is("deleted_at", null)
+    .limit(1);
+  if (enUso && enUso.length > 0) {
+    throw new MovimientoVinculoError(
+      "LC_MOVIMIENTO_YA_VINCULADO",
+      "Este pago ya fue conciliado con otro movimiento bancario. Desconcilia ese movimiento antes de reasignar el pago.",
+    );
+  }
   const patch = tipo === "cxc"
     ? { pago_factura_id: pagoId, pago_proveedor_id: null }
     : { pago_proveedor_id: pagoId, pago_factura_id: null };

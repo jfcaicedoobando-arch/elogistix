@@ -51,7 +51,9 @@ Deno.test("mapEventToFacturaPatch: status_updated valid", () => {
     type: "invoice.status_updated",
     data: { object: { id: "fa_2", status: "valid", uuid: "U-2" } },
   });
-  assertEquals(r!.patch.estado, "Timbrada");
+  // Ola 4 · N3: el enum estado_factura no tiene 'Timbrada'; el valor válido
+  // es 'Emitida' (igual que el timbrado local).
+  assertEquals(r!.patch.estado, "Emitida");
 });
 
 Deno.test("mapEventToFacturaPatch: delivered_to_customer", () => {

@@ -141,6 +141,41 @@ export function buildNcContextFromRows(
   };
 }
 
+/**
+ * Ola 4 · N1 — claim atómico de timbrado, mismo patrón que `claimFactura`
+ * de facturapi-emitir/emitir.ts: reclama la fila poniendo
+ * `facturapi_id = PENDING:<uuid>` SÓLO si sigue NULL. Dos requests
+ * concurrentes ya no pasan ambos el check-then-act: el segundo UPDATE no
+ * matchea ninguna fila y devuelve 409.
+ */
+export type NcClaimResult =
+  | { ok: true; claimTag: string; claimAt: string; release: () => Promise<void> }
+  | { ok: false; status: number; body: unknown };
+
+export async function claimNotaCredito(supabase: SupabaseLike, notaCreditoId: string): Promise<NcClaimResult> {
+  const claimTag = `PENDING:${crypto.randomUUID()}`;
+  const claimAt = new Date().toISOString();
+  const { data: claimed, error: claimErr } = await supabase
+    .from("factura_notas_credito")
+    .update({ facturapi_id: claimTag, facturapi_claim_at: claimAt })
+    .eq("id", notaCreditoId)
+    .is("facturapi_id", null)
+    .select("id")
+    .maybeSingle();
+  if (claimErr) return { ok: false, status: 500, body: { error: "claim_failed", detail: claimErr.message } };
+  if (!claimed) {
+    return { ok: false, status: 409, body: { error: "ya_timbrada", message: "Otro proceso ya está timbrando esta nota de crédito." } };
+  }
+  const release = async () => {
+    await supabase
+      .from("factura_notas_credito")
+      .update({ facturapi_id: null, facturapi_claim_at: null })
+      .eq("id", notaCreditoId)
+      .eq("facturapi_id", claimTag);
+  };
+  return { ok: true, claimTag, claimAt, release };
+}
+
 export type PreloadResult =
   | { ok: true; nc: NcRow; factura: FacturaRow; cliente: ClienteRow; email: string | null; referencias: ReferenciasEmbarque }
   | { ok: false; status: number; body: unknown };

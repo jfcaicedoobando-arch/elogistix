@@ -4227,7 +4227,10 @@ export type Database = {
           aprobada_at: string | null
           aprobada_por: string | null
           cancelacion_motivo: string | null
+          cancelacion_solicitada_en: string | null
+          cancelacion_vence_en: string | null
           cancelado_en: string | null
+          cancellation_status: string
           conceptos: Json
           created_at: string
           created_by: string | null
@@ -4236,6 +4239,7 @@ export type Database = {
           descripcion: string
           estado: Database["public"]["Enums"]["estado_nota_credito"]
           factura_id: string
+          facturapi_claim_at: string | null
           facturapi_id: string | null
           fecha_emision: string
           folio: string
@@ -4262,7 +4266,10 @@ export type Database = {
           aprobada_at?: string | null
           aprobada_por?: string | null
           cancelacion_motivo?: string | null
+          cancelacion_solicitada_en?: string | null
+          cancelacion_vence_en?: string | null
           cancelado_en?: string | null
+          cancellation_status?: string
           conceptos?: Json
           created_at?: string
           created_by?: string | null
@@ -4271,6 +4278,7 @@ export type Database = {
           descripcion?: string
           estado?: Database["public"]["Enums"]["estado_nota_credito"]
           factura_id: string
+          facturapi_claim_at?: string | null
           facturapi_id?: string | null
           fecha_emision?: string
           folio: string
@@ -4297,7 +4305,10 @@ export type Database = {
           aprobada_at?: string | null
           aprobada_por?: string | null
           cancelacion_motivo?: string | null
+          cancelacion_solicitada_en?: string | null
+          cancelacion_vence_en?: string | null
           cancelado_en?: string | null
+          cancellation_status?: string
           conceptos?: Json
           created_at?: string
           created_by?: string | null
@@ -4306,6 +4317,7 @@ export type Database = {
           descripcion?: string
           estado?: Database["public"]["Enums"]["estado_nota_credito"]
           factura_id?: string
+          facturapi_claim_at?: string | null
           facturapi_id?: string | null
           fecha_emision?: string
           folio?: string
@@ -5175,6 +5187,7 @@ export type Database = {
           organization_id: string
           referencia: string
           rep_cancelado_en: string | null
+          rep_cancellation_status: string
           rep_error: string | null
           rep_motivo_cancel: string | null
           rep_pdf_url: string | null
@@ -5212,6 +5225,7 @@ export type Database = {
           organization_id?: string
           referencia?: string
           rep_cancelado_en?: string | null
+          rep_cancellation_status?: string
           rep_error?: string | null
           rep_motivo_cancel?: string | null
           rep_pdf_url?: string | null
@@ -5249,6 +5263,7 @@ export type Database = {
           organization_id?: string
           referencia?: string
           rep_cancelado_en?: string | null
+          rep_cancellation_status?: string
           rep_error?: string | null
           rep_motivo_cancel?: string | null
           rep_pdf_url?: string | null
@@ -8226,6 +8241,7 @@ export type Database = {
         Args: { p_fuente?: string; p_year: number }
         Returns: {
           costos_mxn: number
+          excluidos_sin_tc: number
           ingresos_mxn: number
           mes: number
         }[]

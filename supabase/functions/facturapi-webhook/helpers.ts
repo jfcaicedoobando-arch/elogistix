@@ -75,7 +75,11 @@ function mapInvoiceStatusUpdated(ctx: EventCtx): MappedUpdate | null {
     patch.cancelado_en = new Date().toISOString();
     patch.cancellation_status = "accepted";
   } else if (ctx.status === "valid") {
-    patch.estado = "Timbrada";
+    // Ola 4 · N3: el enum estado_factura NO tiene 'Timbrada' — el UPDATE
+    // fallaba con 22P02 en cada evento de timbrado (y con N2 el evento se
+    // perdía para siempre). El valor correcto es 'Emitida', igual que el
+    // timbrado local en facturapi-emitir/emitir.ts.
+    patch.estado = "Emitida";
   }
   if (Object.keys(patch).length === 0) return null;
   return {
