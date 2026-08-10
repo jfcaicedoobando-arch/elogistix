@@ -109,7 +109,7 @@ export default function FacturaProveedorDetalle() {
                   factura={f}
                   canEdit={canEdit}
                   puedeAprobar={canAprobarFacturaProveedor}
-                  flags={flags}
+                  motivoBloqueoAprobacion={motivoBloqueo(f.created_by)}
                   onPagar={() => setPagarOpen(true)}
                   onEditar={() => setEditarOpen(true)}
                   onEliminar={() => setEliminarOpen(true)}
