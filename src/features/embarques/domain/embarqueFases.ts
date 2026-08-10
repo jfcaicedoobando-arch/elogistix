@@ -83,17 +83,7 @@ export function calcularFasesEmbarque(
   // completadas: antes la fase "Confirmado" venía tachada de fábrica y el ETD
   // vencido tachaba "En Tránsito", haciendo ver un borrador como confirmado.
   const esBorrador = embarque.estado === "Borrador";
-  const cotizacionCompletada = !!embarque.cotizacion_id;
-  const transitoCompletada = ESTADOS_POST_TRANSITO.has(estadoVisual)
-    || (!esBorrador && !!embarque.etd && new Date(embarque.etd) <= startOfToday());
-  const arriboCompletada = !esBorrador
-    && (!!embarque.fecha_llegada_real || ESTADOS_POST_ARRIBO.has(estadoVisual));
-
-  const aduanaCompletada = ESTADOS_POST_ADUANA.has(estadoVisual);
-  const entregadoCompletada = ESTADOS_POST_ENTREGADO.has(estadoVisual);
-  const eirCompletada = ESTADOS_POST_EIR.has(estadoVisual);
-  const porLiquidarCompletada = ESTADOS_POST_POR_LIQUIDAR.has(estadoVisual);
-  const cerradoCompletada = estadoVisual === "Cerrado";
+  const done = calcularCompletadas(embarque, estadoVisual, esBorrador);
 
   const fases: FaseEmbarque[] = [
     {
@@ -101,14 +91,14 @@ export function calcularFasesEmbarque(
       label: "Propuesta",
       iconoId: "propuesta",
       fecha: cotizacionCreatedAt ?? null,
-      estado: cotizacionCompletada ? "completada" : "pendiente",
+      estado: est(done.cotizacion),
     },
     {
       id: "confirmado",
       label: esBorrador ? "Por confirmar" : "Confirmado",
       iconoId: "confirmado",
       fecha: embarque.fecha_creacion,
-      estado: esBorrador ? "pendiente" : "completada",
+      estado: est(!esBorrador),
     },
 
     {
@@ -116,49 +106,49 @@ export function calcularFasesEmbarque(
       label: "En Tránsito",
       iconoId: iconoTransito(embarque.modo),
       fecha: embarque.etd,
-      estado: transitoCompletada ? "completada" : "pendiente",
+      estado: est(done.transito),
     },
     {
       id: "arribo",
       label: "Arribo",
       iconoId: "arribo",
       fecha: embarque.fecha_llegada_real ?? embarque.eta,
-      estado: arriboCompletada ? "completada" : "pendiente",
+      estado: est(done.arribo),
     },
     {
       id: "en_aduana",
       label: "En Aduana",
       iconoId: "aduana",
       fecha: null,
-      estado: aduanaCompletada ? "completada" : "pendiente",
+      estado: est(done.aduana),
     },
     {
       id: "entregado",
       label: "Entregado",
       iconoId: "entregado",
       fecha: null,
-      estado: entregadoCompletada ? "completada" : "pendiente",
+      estado: est(done.entregado),
     },
     {
       id: "eir",
       label: "EIR",
       iconoId: "eir",
       fecha: null,
-      estado: eirCompletada ? "completada" : "pendiente",
+      estado: est(done.eir),
     },
     {
       id: "por_liquidar",
       label: "Por liquidar",
       iconoId: "por_liquidar",
       fecha: null,
-      estado: porLiquidarCompletada ? "completada" : "pendiente",
+      estado: est(done.porLiquidar),
     },
     {
       id: "cerrado",
       label: "Cerrado",
       iconoId: "cerrado",
-      fecha: cerradoCompletada ? embarque.updated_at : null,
-      estado: cerradoCompletada ? "completada" : "pendiente",
+      fecha: done.cerrado ? embarque.updated_at : null,
+      estado: est(done.cerrado),
     },
   ];
 
@@ -192,4 +182,32 @@ function startOfToday(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+/** Traduce el flag de completitud al estado de la fase. */
+function est(completada: boolean): "completada" | "pendiente" {
+  return completada ? "completada" : "pendiente";
+}
+
+/**
+ * Calcula qué fases están completadas. Un embarque en Borrador nunca marca
+ * tránsito/arribo por fechas vencidas (v13.492.0).
+ */
+function calcularCompletadas(
+  embarque: EmbarqueFasesInput,
+  estadoVisual: string,
+  esBorrador: boolean,
+) {
+  const etdPasado = !!embarque.etd && new Date(embarque.etd) <= startOfToday();
+  return {
+    cotizacion: !!embarque.cotizacion_id,
+    transito: ESTADOS_POST_TRANSITO.has(estadoVisual) || (!esBorrador && etdPasado),
+    arribo: !esBorrador
+      && (!!embarque.fecha_llegada_real || ESTADOS_POST_ARRIBO.has(estadoVisual)),
+    aduana: ESTADOS_POST_ADUANA.has(estadoVisual),
+    entregado: ESTADOS_POST_ENTREGADO.has(estadoVisual),
+    eir: ESTADOS_POST_EIR.has(estadoVisual),
+    porLiquidar: ESTADOS_POST_POR_LIQUIDAR.has(estadoVisual),
+    cerrado: estadoVisual === "Cerrado",
+  };
 }
