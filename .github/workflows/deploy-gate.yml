@@ -32,10 +32,12 @@ env:
   # DEBE aplicar en una base limpia.
   #
   # DEBE mantenerse sincronizado con `DRIFT_CORTE` en `rls-tests.yml`:
-  # 20260729040000 deja fuera a 20260729035825 (FIX C5), que parchea por texto
-  # definiciones vigentes y no puede aplicar sobre una base reconstruida. Su
-  # estado final lo garantiza, sin anclas, la migración FIX C5-b posterior.
-  DRIFT_BASELINE: "20260729040000"
+  # 20260812090001 deja fuera a 20260729035825 (FIX C5, parcha por texto) y a
+  # 20260812090000 (Ola 4 N41/N44/N45, intentaba cambiar la firma de
+  # `cartera_pendiente()` con CREATE OR REPLACE). El estado final de ambas lo
+  # garantizan, sin anclas, migraciones de reaplicación posteriores.
+  DRIFT_BASELINE: "20260812090001"
+
 
 
 jobs:
