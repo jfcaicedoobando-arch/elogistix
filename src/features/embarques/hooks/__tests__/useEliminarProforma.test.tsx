@@ -31,7 +31,7 @@ function wrapper(qc: QueryClient) {
 
 describe("useEliminarProforma", () => {
   let qc: QueryClient;
-  let invalidate: ReturnType<typeof vi.spyOn>;
+  let invalidate: ReturnType<typeof vi.spyOn<QueryClient, "invalidateQueries">>;
 
   beforeEach(() => {
     vi.clearAllMocks();
