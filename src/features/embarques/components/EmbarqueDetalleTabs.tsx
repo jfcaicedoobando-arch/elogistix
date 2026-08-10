@@ -64,15 +64,8 @@ export function EmbarqueDetalleTabs({
         </TabsList>
       </div>
 
-      {estadoVisual === "Borrador" && (
-        <Alert variant="warning">
-          <FileEdit className="h-4 w-4" />
-          <AlertTitle>Embarque en borrador</AlertTitle>
-          <AlertDescription>
-            Este embarque fue generado desde la cotización. Complétalo y cambia su estado a Confirmado para continuar con la operación.
-          </AlertDescription>
-        </Alert>
-      )}
+      {estadoVisual === "Borrador" && <AlertaBorrador etd={embarque.etd ?? null} />}
+
 
       <TabsContent value="resumen" className="space-y-6">
         <TabResumen embarque={embarque} />
