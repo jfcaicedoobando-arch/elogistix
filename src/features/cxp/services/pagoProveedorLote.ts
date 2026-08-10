@@ -33,10 +33,14 @@ export interface RegistrarPagoLoteInput {
   renglones: RenglonLote[];
 }
 
-/** Redondeo contable a 2 decimales (evita centavos fantasma en el reparto). */
+/**
+ * Redondeo contable a 2 decimales (evita centavos fantasma en el reparto).
+ * Ola 9 · B3: delega en `roundMoney` (fuente única de redondeo financiero).
+ */
 export function round2(n: number): number {
-  return Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+  return roundMoney(Number.isFinite(n) ? n : 0);
 }
+
 
 /**
  * Reparte `total` entre las facturas ordenadas por vencimiento (FIFO).
