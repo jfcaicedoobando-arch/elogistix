@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.481.5] - 2026-08-10
+- Tests (Ola 4): la suite SQL completa se ejecutó en una base limpia (817 migraciones) y se corrigieron los fixtures inconsistentes: `ola4_altas.sql` captura `WHEN OTHERS` porque los guards de tenant lanzan `ERRCODE 42501`; `ola4_altas_finanzas.sql` fija los claims al final de la siembra (el guard tarifa-first bloqueaba el alta), usa expedientes con formato `EL[A-Z]{3}[0-9]+`, `precio_unitario` en `conceptos_venta`, `tipo_cambio_usd = 1` (la columna exige > 0), cliente propio para N8 y una organización aislada para N10; `ola4_altas_indices.sql` siembra factura y pago reales para satisfacer el trigger `assert_movimiento_pago_consistente`.
+- Tests (tipos): `useEliminarProforma.test.tsx` tipa el espía de `invalidateQueries` con `MockInstance<QueryClient["invalidateQueries"]>`.
+- Resultado: 12 tests SQL conductuales + 26 tests RLS en verde, sin fallos.
+
+
+
 ## [13.481.4] - 2026-08-10
 - CI (auditoría de migraciones): se agregaron los bloques `REVOKE/GRANT` faltantes (H6) a las migraciones de la Ola 4, `IF NOT EXISTS` en índices únicos (H4) y las políticas de `cobranza_seguimiento` se reescribieron con `DROP POLICY IF EXISTS` fuera del bloque `DO` (H4/H8). Auditor en verde.
 - CI (ESLint): se bajó la complejidad de `createUserViaEdgeFunction`, `sugerirCandidatos` y la edge function `facturapi-cancelar-nota-credito` (nuevos módulos `contexto.ts` y `terminales.ts`), y se eliminaron los `any` en `facturapi-emitir-nota-credito/data_test.ts`.
