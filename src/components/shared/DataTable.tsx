@@ -104,6 +104,11 @@ function DataTableInner<T>(rawProps: DataTableProps<T>) {
 
 
 
+  // v13.490.0 — Modo selección: si hay filas marcadas, el clic en la fila
+  // alterna la selección en lugar de navegar al detalle (evita perder el
+  // trabajo por un clic fuera del checkbox).
+  const selectionMode = Object.values(rowSelection ?? {}).some(Boolean);
+
   const table = useTableInstance<T>({
     data,
     columns,
@@ -152,6 +157,7 @@ function DataTableInner<T>(rawProps: DataTableProps<T>) {
           onRowMouseEnter={onRowMouseEnter}
           getRowHref={getRowHref}
           getRowAriaLabel={getRowAriaLabel}
+          selectionMode={selectionMode}
           renderedFooter={renderedFooter}
           showFooter={showFooter}
         />
