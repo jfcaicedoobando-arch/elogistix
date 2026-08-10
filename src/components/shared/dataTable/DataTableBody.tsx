@@ -46,13 +46,21 @@ interface Props<T> {
   getRowHref?: (item: T) => string | null;
   /** aria-label opcional para filas navegables. */
   getRowAriaLabel?: (item: T) => string;
+  /**
+   * Modo selección (v13.490.0): cuando hay al menos una fila seleccionada, el
+   * clic en cualquier parte de la fila marca/desmarca en lugar de navegar. Así
+   * un clic mal apuntado (fuera del checkbox) no destruye la selección.
+   */
+  selectionMode?: boolean;
 }
 
 export function DataTableBody<T>({
   table, isLoading, skeletonRows, density, striped, hoverable, bordered,
   emptyMessage, emptyHint, emptyIcon, emptyState,
   rowClassName, onRowClick, onRowMouseEnter, getRowHref, getRowAriaLabel,
+  selectionMode = false,
 }: Props<T>) {
+
   const navigate = useSafeNavigate();
   const cellPad = DENSITY_CELL[density];
   const borderCell = bordered ? "border-r last:border-r-0" : "";
