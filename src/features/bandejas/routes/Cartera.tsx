@@ -44,8 +44,6 @@ function formatNativos(b: SaldosPorMonedaCartera): string {
 
 export default function Cartera() {
   const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
-export default function Cartera() {
-  const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [loteOpen, setLoteOpen] = useState(false);
   const {
