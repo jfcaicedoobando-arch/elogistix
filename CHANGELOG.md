@@ -6,6 +6,8 @@
 - Nuevas funciones de base de datos `public.retirar_factura_entrante(uuid)` y `public.reactivar_factura_entrante(uuid)` con validación de organización, permisos y estado (la RLS de `embarque_facturas_entrantes` sólo permitía cambios en `por_capturar`).
 - Mensajes amigables nuevos: `LC_ENTRANTE_RETIRO_CAPTURADA`, `LC_ENTRANTE_NO_REACTIVABLE` y `LC_ENTRANTE_SIN_PERMISO`.
 - Refactor Power of 10: `src/lib/domain/facturasEntrantes.ts` se dividió en `facturasEntrantesArchivos.ts` y los diálogos del tab se extrajeron a `entrantes/EntrantesConfirmDialogs.tsx`.
+- Fix CI: en `supabase/tests/cxp_rechazo_libera_embarque.sql` la factura del caso "rechazo con pagos" ahora se crea con `estado_aprobacion = 'aprobada'`, porque el trigger `tg_pagos_proveedor_requiere_aprobacion` impide registrar pagos sobre facturas pendientes.
+
 
 ## [13.493.0] - 2026-08-10
 

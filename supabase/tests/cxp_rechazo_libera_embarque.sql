@@ -91,17 +91,20 @@ BEGIN
   ----------------------------------------------------------------------------
   -- Caso 2: con pagos vivos se bloquea
   ----------------------------------------------------------------------------
+  -- La factura debe estar aprobada: el trigger tg_pagos_proveedor_requiere_aprobacion
+  -- impide registrar pagos sobre facturas pendientes de aprobación.
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id,
     folio_interno, embarque_id, subtotal, total, moneda, estado, estado_aprobacion
   ) VALUES (
     v_org, v_prov, 'A-9902', v_cat, 'FP-999902', v_emb, 500, 500,
-    'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'pendiente'
+    'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada'
   ) RETURNING id INTO v_pf;
 
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, fecha_pago, monto, moneda)
   VALUES (v_org, v_pf, current_date, 500, 'USD'::public.moneda);
+
 
   BEGIN
     PERFORM public._cxp_desvincular_por_rechazo(v_pf, 'Intento con pagos');
