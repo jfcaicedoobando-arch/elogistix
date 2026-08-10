@@ -2,6 +2,7 @@
 
 ## [13.489.5] - 2026-08-10
 - Power of 10: `src/lib/access/permissionMatrix.ts` había crecido a 223 líneas (rompía `architecture-baseline` y `audit-report`). Se dividió en `permissionMatrix.finanzas.ts` (facturación, pagos, cobros, cuentas bancarias, conciliación, movimientos bancarios) y `permissionMatrix.operaciones.ts` (cotización, embarques, handoff, proformas, facturas entrantes); el archivo original queda con los grupos de roles y re-exporta todo, así que ningún import existente cambia.
+- CI: regenerado `supabase/releases/migration-manifest.json` para la versión 13.489.5 (833 migraciones), que faltaba y hacía fallar `db:release-manifest:check`.
 
 
 
