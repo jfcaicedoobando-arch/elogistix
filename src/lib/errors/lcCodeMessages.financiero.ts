@@ -43,6 +43,9 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_CXP_UUID_NO_VERIFICADO:
     "El UUID del CFDI aún no ha sido verificado con el SAT. Intenta más tarde.",
   LC_CXP_NO_EXISTE: "La factura de proveedor no existe o fue eliminada.",
+  LC_CXP_RECHAZO_CON_PAGOS:
+    "Esta factura ya tiene pagos aplicados. Anula o reversa los pagos antes de rechazarla.",
+
   LC_CXP_TOTAL_NEGATIVO: "El total de la factura de proveedor no puede ser negativo.",
   LC_CXP_TOTAL_MENOR_PAGADO:
     "El total no puede quedar por debajo de lo ya pagado. Cancela o ajusta los pagos primero.",
