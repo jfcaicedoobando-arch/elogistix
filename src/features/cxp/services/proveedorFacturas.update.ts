@@ -125,6 +125,9 @@ async function validarTotalNoMenorAPagado(id: string, nuevoTotal: number): Promi
   const totalPagado =
     (pagos ?? []).reduce((acc, p) => acc + (Number(p.monto) || 0), 0) + totalNotas;
   if (nuevoTotal + 0.01 < totalPagado) throw new SaldoNegativoError(totalPagado);
+}
+
+
 
 export async function actualizarFacturaProveedor(
   id: string,
