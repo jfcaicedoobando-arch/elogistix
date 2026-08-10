@@ -4,7 +4,7 @@ import { syncSentryActiveOrg } from "@/lib/observability/sentry/user";
 import { useSuperAdminOrgs } from "@/lib/contexts/organization/useSuperAdminOrgs";
 import type { Organization } from "@/lib/contexts/organization/types";
 
-export type { Organization };
+
 
 interface OrganizationContextType {
   organizationId: string | null;
