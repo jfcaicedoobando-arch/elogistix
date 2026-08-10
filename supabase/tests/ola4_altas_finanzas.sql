@@ -28,7 +28,9 @@ BEGIN
   VALUES (v_org, v_uid, 'contador') ON CONFLICT DO NOTHING;
 
   INSERT INTO public.clientes (id, organization_id, nombre)
-  VALUES (v_cli, v_org, 'Cliente Ola4 N7') ON CONFLICT (id) DO NOTHING;
+  VALUES (v_cli, v_org, 'Cliente Ola4 N7'),
+         ('c7777777-7777-7777-7777-777777777777', v_org, 'Cliente Ola4 N8')
+  ON CONFLICT (id) DO NOTHING;
 
   -- N7: un embarque con 2 ventas y 3 costos → no debe haber fan-out.
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, eta, tipo_cambio_usd)
@@ -45,7 +47,8 @@ BEGIN
 
   -- N8: embarque del año actual con venta en USD y con tipo_cambio_usd = 1 (equivale a "sin TC").
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, eta, tipo_cambio_usd)
-  VALUES ('c4444444-4444-4444-4444-444444444444', v_org, v_cli, 'ELNSB001',
+  VALUES ('c4444444-4444-4444-4444-444444444444', v_org,
+          'c7777777-7777-7777-7777-777777777777', 'ELNSB001',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
           make_date(EXTRACT(year FROM CURRENT_DATE)::int, 1, 15), 1)
   ON CONFLICT (id) DO NOTHING;
