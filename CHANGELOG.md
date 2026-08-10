@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.478.5] - 2026-08-10
+- Tests: el test `ola6_transaccional.sql` ahora crea el proveedor con `categoria = 'Logistico'` y `tipo = 'Naviera'`, cumpliendo `proveedores_categoria_check`.
+
+
 ## [13.478.4] - 2026-08-10
 - Tests: el test `ola6_transaccional.sql` ahora usa un expediente con formato válido (`ELOLA6001`) en lugar de `EXP-OLA6`, que violaba `embarques_expediente_formato_valido`.
 
