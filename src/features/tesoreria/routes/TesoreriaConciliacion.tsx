@@ -175,7 +175,7 @@ export default function TesoreriaConciliacion() {
       )}
 
       <MovimientoManualDialog
-        open={manualOpen && canCapturarMovimientoBancario}
+        open={manualOpen}
         onOpenChange={setManualOpen}
         cuentas={cuentas}
         manualForm={manualForm}
