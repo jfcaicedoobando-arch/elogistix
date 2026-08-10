@@ -20,7 +20,6 @@ import { type LucideIcon } from "lucide-react";
 import type { Table } from "@tanstack/react-table";
 import { useSafeNavigate } from "./useSafeNavigate";
 import { TableBody } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 import { DENSITY_CELL, type TableDensity } from "./types";
 import { DataTableBodySkeleton } from "./DataTableBodySkeleton";
 import { DataTableBodyEmpty } from "./DataTableBodyEmpty";
