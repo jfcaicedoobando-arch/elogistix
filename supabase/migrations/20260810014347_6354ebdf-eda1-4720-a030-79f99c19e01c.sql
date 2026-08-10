@@ -80,11 +80,16 @@ DECLARE
   v_count int := 0;
 BEGIN
   FOR r IN
-    SELECT p.oid, p.proname
-    FROM pg_proc p
-    JOIN pg_namespace n ON n.oid = p.pronamespace
-    WHERE n.nspname = 'public'
-      AND pg_get_functiondef(p.oid) ~ v_pat
+    SELECT oid, proname FROM (
+      SELECT p.oid, p.proname
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      JOIN pg_language l ON l.oid = p.prolang
+      WHERE n.nspname = 'public'
+        AND p.prokind = 'f'          -- excluye agregados/ventana/procedimientos
+        AND l.lanname IN ('sql', 'plpgsql')
+        AND p.prosrc ~ v_pat
+    ) cand
   LOOP
     v_def := pg_get_functiondef(r.oid);
     v_new := regexp_replace(v_def, v_pat, 'public.org_scope()', 'g');
