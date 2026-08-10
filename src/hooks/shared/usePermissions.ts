@@ -39,6 +39,7 @@ export function usePermissions() {
 
   const canAdminTenant = has(TENANT_ADMINS, roleStr);
   const canAdminCuentasBancarias = has(ADMIN_CUENTAS_BANCARIAS, roleStr);
+  const canCapturarMovimientoBancario = has(CAPTURAR_MOVIMIENTO_BANCARIO, roleStr);
 
   const canEditOperations = has(OPERATIONS, roleStr);
   const canEditFinance = has(FINANCE, roleStr);
