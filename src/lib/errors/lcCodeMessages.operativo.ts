@@ -20,6 +20,7 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
   LC_ORG_AJENA: "No tienes acceso a la información de esa organización.",
   LC_ORG_REQUERIDA:
     "Selecciona una organización en el menú superior para ver este reporte.",
+  LC_ORG_INEXISTENTE: "La organización seleccionada ya no existe.",
   LC_SIN_ORG:
     "Tu usuario no tiene una organización asignada. Contacta al administrador.",
   LC_TENANT_MISMATCH: "El recurso no pertenece a tu organización.",

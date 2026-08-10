@@ -92,6 +92,43 @@ function detectarCambioSensible(
   });
 }
 
+/** Total = Subtotal + IVA + IEPS − Retenciones. */
+function calcularTotal(payload: ActualizarFacturaPayload): number {
+  return (
+    (Number(payload.subtotal) || 0) +
+    (Number(payload.iva) || 0) +
+    (Number(payload.ieps) || 0) -
+    (Number(payload.retenciones) || 0)
+  );
+}
+
+/**
+ * Ola 9 · A6: ignora pagos borrados (soft-delete) y descuenta las notas de
+ * crédito aplicadas; si no, el "total pagado" se infla y bloquea ediciones
+ * legítimas. Tolerancia de 1 centavo por redondeos.
+ */
+async function validarTotalNoMenorAPagado(id: string, nuevoTotal: number): Promise<void> {
+  const { data: pagos, error: errPagos } = await supabase
+    .from("pagos_proveedor")
+    .select("monto")
+    .eq("proveedor_factura_id", id)
+    .is("deleted_at", null);
+  if (errPagos) throw errPagos;
+  const { data: notas, error: errNotas } = await supabase
+    .from("proveedor_notas_credito")
+    .select("monto")
+    .eq("proveedor_factura_id", id)
+    .in("estado", ["Aplicada"])
+    .is("deleted_at", null);
+  if (errNotas) throw errNotas;
+  const totalNotas = (notas ?? []).reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
+  const totalPagado =
+    (pagos ?? []).reduce((acc, p) => acc + (Number(p.monto) || 0), 0) + totalNotas;
+  if (nuevoTotal + 0.01 < totalPagado) throw new SaldoNegativoError(totalPagado);
+}
+
+
+
 export async function actualizarFacturaProveedor(
   id: string,
   payload: ActualizarFacturaPayload,
@@ -115,34 +152,9 @@ export async function actualizarFacturaProveedor(
   }
 
   // 3) Validar que el nuevo total no quede por debajo de lo ya pagado.
-  //    Total = Subtotal + IVA + IEPS − Retenciones.
-  const nuevoTotal =
-    (Number(payload.subtotal) || 0) +
-    (Number(payload.iva) || 0) +
-    (Number(payload.ieps) || 0) -
-    (Number(payload.retenciones) || 0);
-  // Ola 9 · A6: ignorar pagos borrados (soft-delete) y descontar las notas de
-  // crédito ya aplicadas/timbradas; si no, el "total pagado" se infla y bloquea
-  // ediciones legítimas de la factura.
-  const { data: pagos, error: errPagos } = await supabase
-    .from("pagos_proveedor")
-    .select("monto")
-    .eq("proveedor_factura_id", id)
-    .is("deleted_at", null);
-  if (errPagos) throw errPagos;
-  const { data: notas, error: errNotas } = await supabase
-    .from("proveedor_notas_credito")
-    .select("monto")
-    .eq("proveedor_factura_id", id)
-    .in("estado", ["Aplicada"])
-    .is("deleted_at", null);
-  if (errNotas) throw errNotas;
-  const totalNotas = (notas ?? []).reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
-  const totalPagado =
-    (pagos ?? []).reduce((acc, p) => acc + (Number(p.monto) || 0), 0) + totalNotas;
+  const nuevoTotal = calcularTotal(payload);
+  await validarTotalNoMenorAPagado(id, nuevoTotal);
 
-  // Tolerancia de 1 centavo por redondeos.
-  if (nuevoTotal + 0.01 < totalPagado) throw new SaldoNegativoError(totalPagado);
 
   // 4) ¿Hubo cambio sensible? → re-aprobación si estaba aprobada.
   const forzarReaprobacion =

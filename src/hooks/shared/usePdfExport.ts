@@ -36,7 +36,7 @@ export function usePdfExport(options: Options = {}) {
 
       }
     },
-    [isExporting, successTitle, errorTitle, method],
+    [successTitle, errorTitle, method],
   );
 
   return { isExporting, run };

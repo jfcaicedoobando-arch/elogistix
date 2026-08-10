@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.478.8] - 2026-08-10
+- Fix CI: agregado el mensaje amigable para `LC_ORG_INEXISTENTE` (organización seleccionada ya no existe).
+- Fix CI: los tests Deno de `user-management` ahora esperan el mínimo de 10 caracteres de contraseña (política vigente).
+- Lint: `usePdfExport` ya no declara `isExporting` como dependencia innecesaria y `actualizarFacturaProveedor` extrae `calcularTotal` y `validarTotalNoMenorAPagado` para bajar su complejidad.
+
 ## [13.478.7] - 2026-08-10
 - Fix: `actualizar_tarifa_con_recargos_rpc` ya no borra la vigencia, el tránsito ni las notas al guardar una actualización parcial de la tarifa (antes anulaba `vigente_desde`/`vigente_hasta`, campos obligatorios).
 
