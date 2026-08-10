@@ -163,7 +163,7 @@ fi
 if [ -n "$SNAPSHOT_OUT" ]; then
   step "Generando snapshot de esquema → $SNAPSHOT_OUT"
   mkdir -p "$(dirname "$SNAPSHOT_OUT")"
-  if bash scripts/db/schema-snapshot.sh "$SNAPSHOT_OUT" 2> "$LOGDIR/snapshot.log"; then
+  if bash scripts/db/schema-snapshot.sh "$SNAPSHOT_OUT" "$CONTAINER" 2> "$LOGDIR/snapshot.log"; then
     ok "snapshot ($(wc -l < "$SNAPSHOT_OUT") líneas)"
   else
     fail "no se pudo generar el snapshot — ver $LOGDIR/snapshot.log"
