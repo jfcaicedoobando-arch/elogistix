@@ -24,15 +24,53 @@ concurrency:
   group: post-deploy-smoke
   cancel-in-progress: false
 
-env:
-  # Ola 8 · B1: sin valores incrustados; se leen de los secrets del repositorio.
-  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-  ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-
 jobs:
+  # v13.480.3 — Los 4 jobs fallaban con exit code 3 (curl: "URL malformada")
+  # porque los secrets SUPABASE_URL / SUPABASE_ANON_KEY no están configurados en
+  # el repo. Ambos valores son PUBLICABLES (anon), así que este job los resuelve
+  # desde los secrets y, si faltan, cae al `.env` versionado. Si tampoco existen,
+  # falla con un mensaje claro en vez de un críptico exit 3.
+  config:
+    name: Resolver credenciales públicas
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    outputs:
+      supabase_url: ${{ steps.resolve.outputs.supabase_url }}
+      anon_key: ${{ steps.resolve.outputs.anon_key }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Resolver SUPABASE_URL y ANON_KEY
+        id: resolve
+        env:
+          SECRET_URL: ${{ secrets.SUPABASE_URL }}
+          SECRET_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          URL="${SECRET_URL:-}"
+          KEY="${SECRET_KEY:-}"
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::warning::Secrets SUPABASE_URL/SUPABASE_ANON_KEY ausentes; usando los valores publicables de .env"
+            if [ -f .env ]; then
+              [ -n "$URL" ] || URL=$(grep -E '^VITE_SUPABASE_URL=' .env | head -n1 | cut -d= -f2- | tr -d '"'"'"'[:space:]')
+              [ -n "$KEY" ] || KEY=$(grep -E '^VITE_SUPABASE_PUBLISHABLE_KEY=' .env | head -n1 | cut -d= -f2- | tr -d '"'"'"'[:space:]')
+            fi
+          fi
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::No hay SUPABASE_URL/ANON_KEY disponibles (ni secrets ni .env). Configura los secrets del repositorio."
+            exit 1
+          fi
+          echo "supabase_url=$URL" >> "$GITHUB_OUTPUT"
+          echo "anon_key=$KEY" >> "$GITHUB_OUTPUT"
+
   user-management-smoke:
     runs-on: ubuntu-24.04
+    needs: config
     timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
+      ANON_KEY: ${{ needs.config.outputs.anon_key }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
@@ -43,6 +81,7 @@ jobs:
       - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
         with:
           deno-version: v1.46.x
+
 
       - name: Fetch demo credentials
         run: |
@@ -81,7 +120,11 @@ jobs:
 
   exchange-rates-smoke:
     runs-on: ubuntu-24.04
+    needs: config
     timeout-minutes: 3
+    env:
+      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
+      ANON_KEY: ${{ needs.config.outputs.anon_key }}
     steps:
       - name: Ping exchange-rates
         run: |
@@ -98,8 +141,13 @@ jobs:
 
   tracking-public-smoke:
     runs-on: ubuntu-24.04
+    needs: config
     timeout-minutes: 3
+    env:
+      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
+      ANON_KEY: ${{ needs.config.outputs.anon_key }}
     steps:
+
       - name: Ping tracking-public (token inexistente debe responder 404/410)
         run: |
           set -euo pipefail
@@ -118,8 +166,13 @@ jobs:
   rpc-smoke:
     name: RPC smoke (dinero, como authenticated)
     runs-on: ubuntu-24.04
+    needs: config
     timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
+      ANON_KEY: ${{ needs.config.outputs.anon_key }}
     steps:
+
       - name: Login demo (reutiliza demo-access)
         run: |
           set -euo pipefail
@@ -213,7 +266,7 @@ jobs:
 
   notify-failure:
     name: Notificar fallo de smoke (issue)
-    needs: [user-management-smoke, exchange-rates-smoke, tracking-public-smoke, rpc-smoke]
+    needs: [config, user-management-smoke, exchange-rates-smoke, tracking-public-smoke, rpc-smoke]
     if: failure()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -222,7 +275,7 @@ jobs:
       issues: write
     steps:
       - name: Crear o actualizar issue de fallo
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const label = 'smoke-failure';

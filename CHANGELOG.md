@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.480.3] - 2026-08-10
+- CI (post-deploy-smoke): los 4 jobs fallaban con exit code 3 (curl "URL malformada") porque los secrets `SUPABASE_URL`/`SUPABASE_ANON_KEY` no están configurados. Se agregó el job `config`, que resuelve ambos valores desde los secrets y, si faltan, cae a los valores publicables de `.env`; si tampoco existen, falla con un mensaje explícito.
+- CI: `actions/github-script` subió de v7.1.0 a v8.0.0 para eliminar el aviso de deprecación de Node.js 20.
+
 ## [13.480.2] - 2026-08-10
 - Tests: se sincronizaron pruebas que quedaron desfasadas tras las migraciones: `registrarPagoFactura` ahora devuelve `{ pagoId, movimientoBancario }`, el hook `useRegistrarPagoSubmit` desestructura ese objeto (mock de `notifyWarning` agregado) y el caso `sin_tc` de la proyección requiere conceptos en USD.
 - Fix: se agregó el mensaje amigable de `LC_ORG_SCOPE_PENDIENTE`.
