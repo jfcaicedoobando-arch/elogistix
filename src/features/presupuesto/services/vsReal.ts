@@ -20,8 +20,7 @@ import {
   type ResumenVsReal,
 } from "./vsRealDomain";
 
-export { agregarGastosCxP } from "./vsRealDomain";
-export type { FilaVsReal, ResumenVsReal, CxpRow } from "./vsRealDomain";
+export type { FilaVsReal, ResumenVsReal } from "./vsRealDomain";
 
 export async function fetchPresupuestoVsReal(
   periodo: string,
