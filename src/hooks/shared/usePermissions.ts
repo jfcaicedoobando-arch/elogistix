@@ -76,6 +76,7 @@ export function usePermissions() {
     role: effectiveRole,
     canAdminTenant,
     canAdminCuentasBancarias,
+    canCapturarMovimientoBancario,
 
     canEditOperations,
     canEditFinance,
