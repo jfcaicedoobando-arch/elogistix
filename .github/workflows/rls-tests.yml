@@ -470,6 +470,10 @@ jobs:
       - name: Ola 4 ALTAS - indices unicos vivos (N15, N16)
         run: $PSQL -f supabase/tests/ola4_altas_indices.sql
 
+      - name: CXP - rechazo libera embarque y conceptos (v13.493.0)
+        run: $PSQL -f supabase/tests/cxp_rechazo_libera_embarque.sql
+
+
 
 
 
