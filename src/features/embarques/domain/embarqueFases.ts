@@ -79,11 +79,16 @@ export function calcularFasesEmbarque(
   ];
   const idxActual = orden.indexOf(faseActual);
 
+  // v13.492.0 — Un embarque en Borrador NO puede mostrar fases avanzadas como
+  // completadas: antes la fase "Confirmado" venía tachada de fábrica y el ETD
+  // vencido tachaba "En Tránsito", haciendo ver un borrador como confirmado.
+  const esBorrador = embarque.estado === "Borrador";
   const cotizacionCompletada = !!embarque.cotizacion_id;
   const transitoCompletada = ESTADOS_POST_TRANSITO.has(estadoVisual)
-    || (!!embarque.etd && new Date(embarque.etd) <= startOfToday());
-  const arriboCompletada = !!embarque.fecha_llegada_real
-    || ESTADOS_POST_ARRIBO.has(estadoVisual);
+    || (!esBorrador && !!embarque.etd && new Date(embarque.etd) <= startOfToday());
+  const arriboCompletada = !esBorrador
+    && (!!embarque.fecha_llegada_real || ESTADOS_POST_ARRIBO.has(estadoVisual));
+
   const aduanaCompletada = ESTADOS_POST_ADUANA.has(estadoVisual);
   const entregadoCompletada = ESTADOS_POST_ENTREGADO.has(estadoVisual);
   const eirCompletada = ESTADOS_POST_EIR.has(estadoVisual);
