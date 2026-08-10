@@ -43,30 +43,28 @@ function etiqueta(c: CuentaLote) {
 }
 
 export function DialogCobroLoteDatos(p: Props) {
-  const hintTc = p.tcDof ? ` · TC DOF ${p.tcDof.usdMxn} (${p.tcDof.fecha})` : "";
-
   return (
-    <FormDialogSection title="Datos del depósito">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <FormDialogSection flat title="Datos del depósito">
+      <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 md:grid-cols-3">
         <div className="space-y-1.5">
           <Label>Fecha del cobro</Label>
           <DatePickerMx value={p.fecha} onChange={(v) => p.onFecha(v ?? "")} className="w-full" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="cobro-lote-total">Importe recibido ({p.moneda})</Label>
+          <Label htmlFor="cobro-lote-total">Importe recibido</Label>
           <MoneyInput
             id="cobro-lote-total"
             value={p.total === "" ? null : Number(p.total)}
             currency={p.moneda}
             onChange={(n: number) => p.onTotal(round2(n))}
           />
-          <p className="text-xs text-muted-foreground">
-            Saldo seleccionado: {formatCurrency(p.saldoTotal, p.moneda)}
-            {hintTc}
+          <p className="truncate text-xs text-muted-foreground">
+            Saldo {formatCurrency(p.saldoTotal, p.moneda)}
+            {p.tcDof ? ` · TC DOF ${p.tcDof.usdMxn}` : ""}
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label>Forma de pago (SAT)</Label>
+          <Label>Forma de pago</Label>
           <Select value={p.formaPago} onValueChange={p.onFormaPago}>
             <SelectTrigger aria-label="Forma de pago"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -75,9 +73,10 @@ export function DialogCobroLoteDatos(p: Props) {
               ))}
             </SelectContent>
           </Select>
+          <p className="text-xs text-muted-foreground">Catálogo SAT</p>
         </div>
         <div className="space-y-1.5">
-          <Label>Cuenta bancaria (opcional)</Label>
+          <Label>Cuenta bancaria</Label>
           <Select value={p.cuentaId} onValueChange={p.onCuentaId}>
             <SelectTrigger aria-label="Cuenta bancaria">
               <SelectValue placeholder={`Cuentas en ${p.moneda}`} />
@@ -88,6 +87,7 @@ export function DialogCobroLoteDatos(p: Props) {
               ))}
             </SelectContent>
           </Select>
+          <p className="text-xs text-muted-foreground">Opcional</p>
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="cobro-lote-ref">Referencia bancaria</Label>
