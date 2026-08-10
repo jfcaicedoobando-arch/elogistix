@@ -129,7 +129,7 @@ export function CambiarPasswordDialog({
       onOpenChange={onOpenChange}
       icon={KeyRound}
       title="Cambiar contraseña"
-      description="Ingresa tu nueva contraseña (mínimo 8 caracteres)."
+      description={`Ingresa tu nueva contraseña (mínimo ${PASSWORD_MIN} caracteres).`}
       size="md"
       footer={
         <>
@@ -152,9 +152,11 @@ export function CambiarPasswordDialog({
             value={nueva}
             onChange={(e) => setNueva(e.target.value)}
             autoComplete="new-password"
-            maxLength={72}
+            maxLength={PASSWORD_MAX}
           />
+          <PasswordStrengthMeter password={nueva} />
         </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="cambiar-pass-confirma">Confirmar contraseña</Label>
           <Input
