@@ -46,6 +46,11 @@ export function buildFilasProyeccion(
     const tcEur = tcEurRaw > 0 ? tcEurRaw : 0;
     const v = ventasMap.get(e.id) ?? [];
     const c = costosMap.get(e.id) ?? [];
+    // RG14 (Ola 3): el badge "Sin TC" sólo aplica si hay conceptos en moneda
+    // extranjera que requieran conversión; un embarque 100% MXN no lo necesita.
+    const conceptos = [...v, ...c];
+    const requiereUsd = conceptos.some((x) => x.moneda?.toUpperCase() === "USD");
+    const requiereEur = conceptos.some((x) => x.moneda?.toUpperCase() === "EUR");
     return {
       embarque_id: e.id,
       expediente: e.expediente ?? "",
@@ -55,7 +60,7 @@ export function buildFilasProyeccion(
       contenedor: e.contenedor,
       tipo_cambio_usd: tcUsd,
       tipo_cambio_eur: tcEur,
-      sin_tc: tcUsd === 0,
+      sin_tc: (requiereUsd && tcUsd === 0) || (requiereEur && tcEur === 0),
       tiene_proforma: !!e.tiene_proforma,
       tiene_factura_pdf: !!e.expediente && facturadosSet.has(e.expediente),
       venta_mxn: sumarConceptosEnMxn(v, tcUsd, tcEur),
