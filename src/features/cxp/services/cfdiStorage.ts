@@ -8,7 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { extractFacturaPath } from "@/services/storage/facturas";
 export { subirArchivosNcProveedor } from "@/features/cxp/services/cfdiStorageNc";
-export { resolverOrganizationId } from "@/features/cxp/services/cfdiOrg";
+
 export type { TipoAdjuntoCfdi } from "@/features/cxp/services/cfdiValidation";
 import { resolverOrganizationId } from "@/features/cxp/services/cfdiOrg";
 import {
