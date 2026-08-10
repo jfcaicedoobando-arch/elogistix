@@ -1,106 +1,24 @@
 /**
  * Columnas de la tabla Cartera (`/facturacion/cartera`).
- * v13.200.0: sin `<Link>` inline. La navegación al detalle de factura
- * se hace por row-click accesible desde `Cartera.tsx` (getRowHref).
  * v13.313.1: agregada columna de acción "Recordatorio".
+ * v13.491.0: selección y folio viven en `carteraColumns.selection.tsx`.
  */
-import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Mail } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
-import type { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { buildCarteraSelectionColumns } from "./carteraColumns.selection";
+import type { CarteraRow } from "./carteraColumns.types";
 
-export type CarteraRow = NonNullable<ReturnType<typeof useCarteraPendiente>["data"]>[number];
-
-/** Evita el doble toggle cuando el clic ya cayó sobre el propio checkbox. */
-function esClickEnCheckbox(target: EventTarget | null): boolean {
-  return target instanceof Element && !!target.closest('[role="checkbox"]');
-}
-
-
+export type { CarteraRow };
 
 export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void): ColumnDef<CarteraRow, unknown>[] {
   return defineColumns<CarteraRow>([
-    {
-      id: "selection",
-      header: ({ table }) => (
-        <div
-          className="flex h-9 w-full cursor-pointer items-center justify-center"
-          data-no-row-nav
-          onClick={(e) => {
-            e.stopPropagation();
-            if (esClickEnCheckbox(e.target)) return;
-            table.toggleAllPageRowsSelected(!table.getIsAllPageRowsSelected());
-          }}
-          role="presentation"
-        >
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected()
-                ? true
-                : table.getIsSomePageRowsSelected()
-                  ? "indeterminate"
-                  : false
-            }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Seleccionar todas"
-          />
-        </div>
-      ),
-      cell: ({ row }) => (
-        // v13.490.0 — El área completa de la celda selecciona: un clic apenas
-        // fuera del checkbox ya no navega al detalle ni pierde la selección.
-        <div
-          className="flex h-9 w-full cursor-pointer items-center justify-center"
-          data-no-row-nav
-          onClick={(e) => {
-            e.stopPropagation();
-            if (esClickEnCheckbox(e.target)) return;
-            row.toggleSelected(!row.getIsSelected());
-          }}
-          role="presentation"
-        >
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label={`Seleccionar factura ${row.original.numero ?? ""}`}
-          />
-        </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-      meta: { width: COL_W.micro, className: "p-0" },
-    },
-    {
-      id: "numero",
-      header: "Folio",
-      accessorFn: (r) => r.numero ?? "",
-      enableSorting: true,
-      meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
-      cell: ({ row, table }) => {
-        // Con selección activa el folio abre en pestaña nueva: así el usuario
-        // puede revisar una factura sin perder lo que ya marcó.
-        const haySeleccion = table.getSelectedRowModel().rows.length > 0;
-        return (
-          <Link
-            to={`/facturacion/${row.original.factura_id}`}
-            data-no-row-nav
-            target={haySeleccion ? "_blank" : undefined}
-            rel={haySeleccion ? "noopener noreferrer" : undefined}
-            title={haySeleccion ? "Se abre en pestaña nueva para no perder tu selección" : undefined}
-            className="underline-offset-2 hover:underline focus-visible:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {row.original.numero ?? "—"}
-          </Link>
-        );
-      },
-    },
+    ...buildCarteraSelectionColumns(),
+
 
 
 
