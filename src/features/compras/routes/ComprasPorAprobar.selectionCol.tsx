@@ -11,33 +11,45 @@ interface Args {
   rows: FacturaCxP[];
   selected: Set<string>;
   setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
+  /**
+   * Ids que este usuario NO puede aprobar (segregación de funciones: capturó
+   * él mismo la factura). Se muestran deshabilitados con explicación.
+   */
+  bloqueados?: Set<string>;
+  motivoBloqueo?: string;
 }
 
-export function buildSelectionColumn({ rows, selected, setSelected }: Args): ColumnDef<FacturaCxP, unknown> {
+export function buildSelectionColumn({
+  rows, selected, setSelected, bloqueados, motivoBloqueo,
+}: Args): ColumnDef<FacturaCxP, unknown> {
+  const esBloqueada = (id: string) => Boolean(bloqueados?.has(id));
+  const seleccionables = rows.map((r) => r.id).filter((id) => !esBloqueada(id));
   return defineColumns<FacturaCxP>([
     {
       id: "sel",
       header: () => {
-        const allIds = rows.map((r) => r.id);
-        const allSel = allIds.length > 0 && allIds.every((id) => selected.has(id));
-        const someSel = allIds.some((id) => selected.has(id));
+        const allSel = seleccionables.length > 0 && seleccionables.every((id) => selected.has(id));
+        const someSel = seleccionables.some((id) => selected.has(id));
         return (
           <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
             <Checkbox
               aria-label={allSel ? "Deseleccionar todas" : "Seleccionar todas"}
               checked={allSel ? true : someSel ? "indeterminate" : false}
+              disabled={seleccionables.length === 0}
               onCheckedChange={(v) => {
-                setSelected(() => (v ? new Set(allIds) : new Set()));
+                setSelected(() => (v ? new Set(seleccionables) : new Set()));
               }}
             />
           </div>
         );
       },
-      cell: ({ row }) => (
-        <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
+      cell: ({ row }) => {
+        const bloqueada = esBloqueada(row.original.id);
+        const checkbox = (
           <Checkbox
             aria-label={`Seleccionar factura ${row.original.folio_proveedor}`}
             checked={selected.has(row.original.id)}
+            disabled={bloqueada}
             onCheckedChange={(v) => {
               setSelected((prev) => {
                 const next = new Set(prev);
@@ -47,8 +59,24 @@ export function buildSelectionColumn({ rows, selected, setSelected }: Args): Col
               });
             }}
           />
-        </div>
-      ),
+        );
+        return (
+          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
+            {bloqueada ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>{checkbox}</span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  {motivoBloqueo ?? "No puedes aprobar esta factura."}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              checkbox
+            )}
+          </div>
+        );
+      },
       meta: { align: "center" },
       size: 40,
     },
