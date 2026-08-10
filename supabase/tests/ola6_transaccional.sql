@@ -150,8 +150,9 @@ BEGIN
   SELECT id INTO v_p1 FROM public.puertos ORDER BY code LIMIT 1;
   SELECT id INTO v_p2 FROM public.puertos ORDER BY code DESC LIMIT 1;
 
-  INSERT INTO public.proveedores (organization_id, nombre)
-  VALUES (v_org, 'PROV OLA6') RETURNING id INTO v_prov;
+  INSERT INTO public.proveedores (organization_id, nombre, categoria, tipo)
+  VALUES (v_org, 'PROV OLA6', 'Logistico'::public.categoria_proveedor,
+          'Naviera'::public.tipo_proveedor) RETURNING id INTO v_prov;
 
   INSERT INTO public.costeo_agentes (organization_id, proveedor_id, nombre, pais)
   VALUES (v_org, v_prov, 'AGENTE OLA6', 'CN') RETURNING id INTO v_agente;
