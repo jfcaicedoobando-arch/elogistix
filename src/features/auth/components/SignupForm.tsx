@@ -1,6 +1,5 @@
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useState } from "react";
 import { signUpWithEmail } from "@/features/auth/services";
 import { Button } from "@/components/ui/button";
@@ -13,37 +12,10 @@ import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { getFirstFieldError } from "./SignupForm.helpers";
-import { passwordSchema, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
+import { PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
+import { signupSchema, type SignupValues } from "./SignupForm.schema";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
 
-
-/**
- * v13.312.19 — Ola 1 · PR-6 paso 2: migrado de 10 `useState` a RHF+zod.
- * El schema valida el match de contraseñas y el checkbox de términos.
- */
-const signupSchema = z
-  .object({
-    name: z.string().min(1, "Ingresa tu nombre."),
-    company: z
-      .string()
-      .trim()
-      .min(2, "El nombre de la empresa debe tener entre 2 y 120 caracteres.")
-      .max(120, "El nombre de la empresa debe tener entre 2 y 120 caracteres."),
-    phone: z.string().optional(),
-    email: z.string().email("Correo inválido."),
-    password: passwordSchema,
-    password2: passwordSchema,
-
-    acceptTerms: z.literal(true, {
-      message: "Debes aceptar los términos para continuar.",
-    }),
-  })
-  .refine((v) => v.password === v.password2, {
-    path: ["password2"],
-    message: "Las contraseñas no coinciden.",
-  });
-
-type SignupValues = z.infer<typeof signupSchema>;
 
 export function SignupForm() {
   const { toast } = useToast();
