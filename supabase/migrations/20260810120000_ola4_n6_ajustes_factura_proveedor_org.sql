@@ -108,3 +108,6 @@ BEGIN
 END;
 $$;
 
+-- H6: permisos explícitos (idempotente).
+REVOKE ALL ON FUNCTION public.crear_ajustes_factura_proveedor_rpc(uuid, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.crear_ajustes_factura_proveedor_rpc(uuid, jsonb) TO authenticated, service_role;
