@@ -22,6 +22,8 @@ export interface NotaCreditoRow {
   moneda: string;
   factura_id: string;
   updated_at: string;
+  /** Ola 9 · M6: TC propio de la NC para no revaluar con el TC del mes. */
+  tipo_cambio: number | null;
 }
 
 export interface ProveedorFacturaRow {
@@ -58,6 +60,7 @@ export function mapNotaCreditoRows(data: unknown): NotaCreditoRow[] {
     moneda: str(r.moneda),
     factura_id: str(r.factura_id),
     updated_at: str(r.updated_at),
+    tipo_cambio: r.tipo_cambio == null ? null : num(r.tipo_cambio),
   }));
 }
 
