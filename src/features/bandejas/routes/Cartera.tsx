@@ -28,6 +28,8 @@ import { CarteraMobileList } from "./_sections/CarteraMobileList";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { DialogCobroLoteCliente } from "@/features/facturacion/components/DialogCobroLoteCliente";
+import { derivarLoteCobro } from "./_sections/carteraLote";
 
 /** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
 function formatNativos(b: SaldosPorMonedaCartera): string {
