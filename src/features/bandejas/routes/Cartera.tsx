@@ -13,8 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Inbox, Layers } from "lucide-react";
+import { Inbox } from "lucide-react";
 import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -28,6 +27,7 @@ import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 import { DialogCobroLoteCliente } from "@/features/facturacion/components/DialogCobroLoteCliente";
 import { derivarLoteCobro } from "./_sections/carteraLote";
+import { CarteraSelectionBar } from "./_sections/CarteraSelectionBar";
 
 
 export default function Cartera() {
@@ -62,22 +62,12 @@ export default function Cartera() {
       <PageHeader
         title="Cartera"
         description="Facturas vencidas y por vencer en los próximos 7 días. Cambia el filtro de urgencia para ver toda la cartera."
-        actions={
-          selectedIds.length > 0 && (
-            <Button
-              onClick={() => setLoteOpen(true)}
-              disabled={!lote}
-              title={
-                lote
-                  ? undefined
-                  : "Selecciona 2 o más facturas del mismo cliente y la misma moneda"
-              }
-            >
-              <Layers className="h-4 w-4 mr-2" />
-              Cobro en lote ({selectedIds.length})
-            </Button>
-          )
-        }
+      />
+      <CarteraSelectionBar
+        total={selectedIds.length}
+        lote={lote}
+        onCobroLote={() => setLoteOpen(true)}
+        onLimpiar={() => setRowSelection({})}
       />
       <CarteraKpis
         totalFacturas={scoped.length}

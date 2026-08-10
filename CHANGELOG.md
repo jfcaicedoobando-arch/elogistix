@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.490.0] - 2026-08-10
+- Cartera: al seleccionar facturas para el cobro en lote, un clic apenas fuera del checkbox navegaba al detalle y borraba la selección. Ahora (1) toda la celda del checkbox selecciona (área de 36 px, encabezado incluido), (2) con al menos una factura marcada la tabla entra en **modo selección**: el clic o Enter en cualquier parte de la fila marca/desmarca en lugar de navegar (`selectionMode` en `DataTable`/`DataTableBody`, derivado de `rowSelection`), (3) el folio queda como único drilldown explícito y abre en pestaña nueva mientras haya selección, y (4) nueva barra `CarteraSelectionBar` sticky con el conteo, cliente/moneda, el motivo cuando el lote no aplica, "Cobro en lote" y "Limpiar selección" (el botón sale del PageHeader). `buildSelectionColumn` hereda el área de clic ampliada.
+
 ## [13.489.9] - 2026-08-10
 - UI del modal "Cobro en lote de cliente": los totales (Repartido / Sin asignar) se dibujaban **encima** de la tabla de facturas porque la sección usaba el grid de 2 columnas; ahora las secciones de reparto y notas son `flat` a todo el ancho. El modal pasa a `3xl`, "Datos del depósito" usa 3 columnas con etiquetas cortas, el saldo seleccionado va como chip en el header y el resumen vivo (con el error de validación y el conteo de facturas liquidadas) se fija en la banda `stickyBottom`. La tabla de reparto gana scroll horizontal, anchos por columna, zebra, campo de captura más cómodo y badges "Liquidada"/"Parcial". Verificado en 1280 × 720.
 

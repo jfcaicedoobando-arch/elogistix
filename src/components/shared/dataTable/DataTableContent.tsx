@@ -27,6 +27,8 @@ interface DataTableContentProps<T> {
   onRowMouseEnter?: (item: T) => void;
   getRowHref?: (item: T) => string | null;
   getRowAriaLabel?: (item: T) => string;
+  /** Ver DataTableBody: clic en fila alterna selección en vez de navegar. */
+  selectionMode?: boolean;
   renderedFooter: React.ReactNode;
   showFooter: boolean;
 }
@@ -36,7 +38,7 @@ export function DataTableContent<T>(props: DataTableContentProps<T>) {
     table, tableClassName, striped, bordered, hoverable, stickyHeader,
     density, isLoading, skeletonRows, emptyMessage, emptyHint, emptyIcon,
     emptyState, rowClassName, onRowClick, onRowMouseEnter, getRowHref,
-    getRowAriaLabel, renderedFooter, showFooter,
+    getRowAriaLabel, selectionMode, renderedFooter, showFooter,
   } = props;
 
   const { ref: scrollRef, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
@@ -67,6 +69,7 @@ export function DataTableContent<T>(props: DataTableContentProps<T>) {
             onRowMouseEnter={onRowMouseEnter}
             getRowHref={getRowHref}
             getRowAriaLabel={getRowAriaLabel}
+            selectionMode={selectionMode}
           />
           {showFooter && <TableFooter>{renderedFooter}</TableFooter>}
         </Table>

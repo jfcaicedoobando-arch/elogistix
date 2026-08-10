@@ -16,6 +16,11 @@ import { Checkbox } from "@/components/ui/checkbox";
  *     ...
  *   />
  */
+/** Evita el doble toggle cuando el clic ya cayó sobre el propio checkbox. */
+function esClickEnCheckbox(target: EventTarget | null): boolean {
+  return target instanceof Element && !!target.closest('[role="checkbox"]');
+}
+
 export function buildSelectionColumn<T>(): ColumnDef<T, unknown> {
   return defineColumns<T>([
     {
@@ -24,7 +29,15 @@ export function buildSelectionColumn<T>(): ColumnDef<T, unknown> {
         const all = table.getIsAllPageRowsSelected();
         const some = table.getIsSomePageRowsSelected();
         return (
-          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
+          <div
+            data-no-row-nav
+            onClick={(e) => {
+              e.stopPropagation();
+              if (esClickEnCheckbox(e.target)) return;
+              table.toggleAllPageRowsSelected(!all);
+            }}
+            className="flex h-9 w-full cursor-pointer items-center justify-center"
+          >
             <Checkbox
               checked={some ? "indeterminate" : all}
               onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
@@ -35,7 +48,15 @@ export function buildSelectionColumn<T>(): ColumnDef<T, unknown> {
       },
       meta: { width: "w-[40px]", align: "center", className: "p-0" },
       cell: ({ row }) => (
-        <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
+        <div
+          data-no-row-nav
+          onClick={(e) => {
+            e.stopPropagation();
+            if (esClickEnCheckbox(e.target)) return;
+            row.toggleSelected(!row.getIsSelected());
+          }}
+          className="flex h-9 w-full cursor-pointer items-center justify-center"
+        >
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
