@@ -278,7 +278,7 @@ jobs:
           {
             echo "## ✅ PROMOCIÓN AUTORIZADA"
             echo ""
-            echo 'Nota: este veredicto no publica automáticamente en Lovable. El frontend sigue requiriendo `Share → Publish → Update` en el editor de Lovable.'
+            echo "Nota: este veredicto no publica automáticamente en Lovable. El frontend sigue requiriendo \`Share → Publish → Update\` en el editor de Lovable."
           } >> "$GITHUB_STEP_SUMMARY"
 
 
