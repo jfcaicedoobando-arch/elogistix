@@ -167,7 +167,7 @@ describe("construirFilaHueco", () => {
     expect(r?.ventaUsd).toBe(100 / 20 + 10);
   });
 
-  it("usa default 1 para tipo_cambio null", () => {
+  it("Ola 9 · M5: sin tipo_cambio no asume 1:1, marca sin_tc y deja MXN en 0", () => {
     const map = new Map<string, { monto: number; moneda: string }[]>();
     map.set("e1", [{ monto: 50, moneda: "USD" }]);
     const r = construirFilaHueco(
@@ -175,8 +175,10 @@ describe("construirFilaHueco", () => {
       map,
       new Date("2026-06-12T00:00:00"),
     );
-    expect(r?.ventaMxn).toBe(50);
+    expect(r?.ventaMxn).toBe(0);
+    expect(r?.sin_tc).toBe(true);
   });
+
 
   it("normaliza cliente_nombre/operador null a ''", () => {
     const r = construirFilaHueco(

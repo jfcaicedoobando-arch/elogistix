@@ -14,6 +14,7 @@ const fila: FilaHueco = {
   diasDesdeEta: 10,
   ventaUsd: 123.456,
   ventaMxn: 2469.12,
+  sin_tc: false,
 };
 
 describe("buildHuecoCsvFilename", () => {

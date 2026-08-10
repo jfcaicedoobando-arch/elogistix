@@ -18,6 +18,7 @@ function makeFilaHueco(overrides: Partial<FilaHueco> = {}): FilaHueco {
     bl_master: "MASTER123",
     bl_house: "HOUSE456",
     diasDesdeEta: 10,
+    sin_tc: false,
     ventaUsd: 1500.5,
     ventaMxn: 25000.75,
     ...overrides,

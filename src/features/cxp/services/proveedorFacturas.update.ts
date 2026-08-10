@@ -121,12 +121,26 @@ export async function actualizarFacturaProveedor(
     (Number(payload.iva) || 0) +
     (Number(payload.ieps) || 0) -
     (Number(payload.retenciones) || 0);
+  // Ola 9 · A6: ignorar pagos borrados (soft-delete) y descontar las notas de
+  // crédito ya aplicadas/timbradas; si no, el "total pagado" se infla y bloquea
+  // ediciones legítimas de la factura.
   const { data: pagos, error: errPagos } = await supabase
     .from("pagos_proveedor")
     .select("monto")
-    .eq("proveedor_factura_id", id);
+    .eq("proveedor_factura_id", id)
+    .is("deleted_at", null);
   if (errPagos) throw errPagos;
-  const totalPagado = (pagos ?? []).reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
+  const { data: notas, error: errNotas } = await supabase
+    .from("proveedor_notas_credito")
+    .select("monto")
+    .eq("proveedor_factura_id", id)
+    .in("estado", ["Aplicada"])
+    .is("deleted_at", null);
+  if (errNotas) throw errNotas;
+  const totalNotas = (notas ?? []).reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
+  const totalPagado =
+    (pagos ?? []).reduce((acc, p) => acc + (Number(p.monto) || 0), 0) + totalNotas;
+
   // Tolerancia de 1 centavo por redondeos.
   if (nuevoTotal + 0.01 < totalPagado) throw new SaldoNegativoError(totalPagado);
 

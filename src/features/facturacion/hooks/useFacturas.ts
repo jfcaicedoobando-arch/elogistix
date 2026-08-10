@@ -68,7 +68,12 @@ export function useMarcarCostoPagado() {
       queryClient.invalidateQueries({ queryKey: queryKeys.facturas.gastosPendientes });
       queryClient.invalidateQueries({ queryKey: queryKeys.facturas.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      // Ola 9 · M13: el costo también alimenta CxP (gastos vinculables y
+      // facturas de proveedor); sin esto la pantalla de compras se desfasa.
+      queryClient.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });
       invalidateSidebarAlerts(queryClient);
+
       notifySuccess(undefined, { title: "Costo marcado como pagado" });
     },
     onError: (error: Error) => {

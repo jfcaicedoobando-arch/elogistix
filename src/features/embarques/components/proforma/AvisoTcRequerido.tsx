@@ -11,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { parseMonto } from "@/lib/format/parseMonto";
 
 interface Props {
   /** Último TC DOF conocido, usado como valor sugerido. */
@@ -22,7 +23,9 @@ interface Props {
 export function AvisoTcRequerido({ tcSugerido, guardando, onGuardarYReintentar }: Props) {
   const [valor, setValor] = useState("");
 
-  const tc = Number(valor.replace(",", "."));
+  // Ola 9 · B5: parseo centralizado (maneja "$ 1,200.50" y espacios duros).
+  const tc = parseMonto(valor, NaN);
+
   const valido = Number.isFinite(tc) && tc > 0;
 
   return (

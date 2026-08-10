@@ -83,7 +83,7 @@ async function fetchFacturasMes(orgId: string | null, desde: string, hasta: stri
 async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: string): Promise<NotaCreditoRow[]> {
   let q = supabase
     .from("factura_notas_credito")
-    .select("monto, moneda, factura_id, updated_at")
+    .select("monto, moneda, factura_id, updated_at, tipo_cambio")
     .eq("estado", "Aplicada")
     .gte("updated_at", `${desde}T00:00:00`)
     .lte("updated_at", `${hasta}T23:59:59`)
@@ -130,7 +130,14 @@ function ingresosDeNotas(
 ): void {
   for (const nc of ncs) {
     const id = `nc-${nc.factura_id}`;
-    out.embarques.push({ id, modo: "Marítimo", tipo_cambio_usd: tc.usd, tipo_cambio_eur: tc.eur });
+    // Ola 9 · M6: usar el TC de la nota de crédito cuando exista; sólo caer al
+    // TC del mes si la NC no lo tiene capturado.
+    out.embarques.push({
+      id,
+      modo: "Marítimo",
+      tipo_cambio_usd: fallbackTC(Number(nc.tipo_cambio ?? 0), tc.usd),
+      tipo_cambio_eur: tc.eur,
+    });
     out.ventas.push({
       embarque_id: id,
       descripcion: "Notas de crédito",

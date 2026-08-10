@@ -18,7 +18,10 @@ export interface FilaHueco {
   diasDesdeEta: number;
   ventaMxn: number;
   ventaUsd: number;
+  /** Ola 9 · M5: el embarque no tiene TC capturado; las conversiones valen 0. */
+  sin_tc: boolean;
 }
+
 
 export function diasDesde(fechaIso: string, hoy: Date): number {
   const d = new Date(fechaIso + "T00:00:00");
@@ -43,8 +46,12 @@ export function construirFilaHueco(
   hoy: Date,
 ): FilaHueco | null {
   if (!e.eta) return null;
-  const tcUsd = Number(e.tipo_cambio_usd ?? 1);
-  const tcEur = Number(e.tipo_cambio_eur ?? 1);
+  // Ola 9 · M5: sin TC capturado NO se asume 1 MXN = 1 USD/EUR. Se marca la
+  // fila como `sin_tc` y las conversiones usan 0 para no inventar pesos.
+  const tcUsdRaw = Number(e.tipo_cambio_usd ?? 0);
+  const tcEurRaw = Number(e.tipo_cambio_eur ?? 0);
+  const tcUsd = tcUsdRaw > 0 ? tcUsdRaw : 0;
+  const tcEur = tcEurRaw > 0 ? tcEurRaw : 0;
   const ventas = ventasMap.get(e.id) ?? [];
   return {
     embarque_id: e.id,
@@ -58,5 +65,7 @@ export function construirFilaHueco(
     diasDesdeEta: diasDesde(e.eta, hoy),
     ventaMxn: sumarConceptosEnMxn(ventas, tcUsd, tcEur),
     ventaUsd: sumarConceptosEnUsd(ventas, tcUsd, tcEur),
+    sin_tc: tcUsd === 0,
   };
 }
+

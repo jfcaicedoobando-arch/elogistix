@@ -5,7 +5,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { hoyMx } from "@/lib/date/mx";
 import type { Tables } from "@/integrations/supabase/types";
+
 
 
 export type FacturaRow = Tables<"facturas">;
@@ -102,7 +104,7 @@ export async function marcarCostoPagado(input: { id: string; referenciaPago?: st
       .from("conceptos_costo")
       .update({
         estado_liquidacion: "Pagado",
-        fecha_pago: new Date().toISOString().split("T")[0],
+        fecha_pago: hoyMx(),
         referencia_pago: input.referenciaPago || null,
       })
       .eq("id", input.id),

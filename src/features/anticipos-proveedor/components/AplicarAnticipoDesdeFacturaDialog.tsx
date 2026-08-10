@@ -19,6 +19,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useAplicarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
+import { parseMonto } from "@/lib/format/parseMonto";
 
 interface Props {
   open: boolean;
@@ -67,7 +68,9 @@ export function AplicarAnticipoDesdeFacturaDialog({
     onOpenChange(o);
   };
 
-  const montoNum = Number(monto);
+  // Ola 9 · B5: parseo centralizado de montos tecleados.
+  const montoNum = parseMonto(monto, NaN);
+
   const monedaDifiere = Boolean(anticipo) && anticipo!.moneda !== monedaFactura;
   const desajuste = useMemo(
     () =>

@@ -82,7 +82,10 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
             onKeyUp={(e) => setCapsOn(e.getModifierState && e.getModifierState("CapsLock"))}
             onKeyDown={(e) => setCapsOn(e.getModifierState && e.getModifierState("CapsLock"))}
             required
-            minLength={6}
+            /* Ola 9 · B2: el inicio de sesión no impone la política (usuarios
+               antiguos pueden tener contraseñas más cortas); la política vive en
+               `src/lib/passwords/policy.ts` y aplica en alta/cambio. */
+
             autoComplete="current-password"
             className="pr-10"
           />

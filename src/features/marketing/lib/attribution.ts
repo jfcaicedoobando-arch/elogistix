@@ -4,9 +4,11 @@
  * `../hooks/useUtmParams` y utiliza estas funciones/constantes.
  */
 
-import { safeSessionStorage } from "@/lib/browserStorage";
+import { safeSessionStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
-export const ATTRIBUTION_STORAGE_KEY = "librecarga_attribution_v1";
+/** Ola 9 · B6: la llave vive en el catálogo central `STORAGE_KEYS`. */
+export const ATTRIBUTION_STORAGE_KEY = STORAGE_KEYS.marketingAttribution;
+
 
 export interface Attribution {
   utm_source: string | null;
