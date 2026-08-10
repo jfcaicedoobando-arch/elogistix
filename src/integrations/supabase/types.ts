@@ -6634,6 +6634,35 @@ export type Database = {
           },
         ]
       }
+      super_admin_org_activa: {
+        Row: {
+          created_at: string
+          organization_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          organization_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          organization_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "super_admin_org_activa_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -8771,6 +8800,7 @@ export type Database = {
         }[]
       }
       org_requerida: { Args: { p_org: string }; Returns: string }
+      org_scope: { Args: never; Returns: string }
       pago_detalle: { Args: { p_id: string; p_tipo: string }; Returns: Json }
       pnl_financiero_embarque: { Args: { _embarque_id: string }; Returns: Json }
       portal_obtener_proforma_por_token: {
@@ -9139,6 +9169,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      set_super_admin_org: { Args: { p_org: string }; Returns: undefined }
       sidebar_alert_counts: {
         Args: never
         Returns: {
