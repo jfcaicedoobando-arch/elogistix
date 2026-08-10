@@ -500,6 +500,7 @@ export type Database = {
           motivo_ignorar: string
           organization_id: string
           pago_factura_id: string | null
+          pago_factura_lote_id: string | null
           pago_proveedor_id: string | null
           pago_proveedor_lote_id: string | null
           referencia: string
@@ -524,6 +525,7 @@ export type Database = {
           motivo_ignorar?: string
           organization_id?: string
           pago_factura_id?: string | null
+          pago_factura_lote_id?: string | null
           pago_proveedor_id?: string | null
           pago_proveedor_lote_id?: string | null
           referencia?: string
@@ -548,6 +550,7 @@ export type Database = {
           motivo_ignorar?: string
           organization_id?: string
           pago_factura_id?: string | null
+          pago_factura_lote_id?: string | null
           pago_proveedor_id?: string | null
           pago_proveedor_lote_id?: string | null
           referencia?: string
@@ -566,6 +569,13 @@ export type Database = {
             columns: ["cuenta_bancaria_id"]
             isOneToOne: false
             referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bbva_movimientos_pago_factura_lote_id_fkey"
+            columns: ["pago_factura_lote_id"]
+            isOneToOne: false
+            referencedRelation: "pagos_factura_lote"
             referencedColumns: ["id"]
           },
           {
@@ -5180,6 +5190,7 @@ export type Database = {
           folio_rep: number | null
           forma_pago: string
           id: string
+          lote_id: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
           monto_aplicado_factura: number
@@ -5218,6 +5229,7 @@ export type Database = {
           folio_rep?: number | null
           forma_pago?: string
           id?: string
+          lote_id?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           monto: number
           monto_aplicado_factura: number
@@ -5256,6 +5268,7 @@ export type Database = {
           folio_rep?: number | null
           forma_pago?: string
           id?: string
+          lote_id?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
           monto_aplicado_factura?: number
@@ -5298,6 +5311,85 @@ export type Database = {
             columns: ["factura_id"]
             isOneToOne: false
             referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_factura_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "pagos_factura_lote"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagos_factura_lote: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          created_by: string | null
+          cuenta_bancaria_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          fecha_pago: string
+          forma_pago: string
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto_total: number
+          notas: string
+          organization_id: string
+          referencia: string
+          tipo_cambio_usd: number | null
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          created_by?: string | null
+          cuenta_bancaria_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_pago?: string
+          forma_pago?: string
+          id?: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto_total: number
+          notas?: string
+          organization_id: string
+          referencia?: string
+          tipo_cambio_usd?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          created_by?: string | null
+          cuenta_bancaria_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_pago?: string
+          forma_pago?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto_total?: number
+          notas?: string
+          organization_id?: string
+          referencia?: string
+          tipo_cambio_usd?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_factura_lote_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_factura_lote_cuenta_bancaria_id_fkey"
+            columns: ["cuenta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_bancarias"
             referencedColumns: ["id"]
           },
         ]
@@ -9059,6 +9151,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      registrar_pago_cliente_lote: { Args: { p_payload: Json }; Returns: Json }
       registrar_pago_proveedor_lote: {
         Args: { p_payload: Json }
         Returns: string

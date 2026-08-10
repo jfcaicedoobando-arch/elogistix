@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.488.0] - 2026-08-10
+- Nuevo flujo **Cobro en lote de cliente** (pago múltiple CxC): en **Cartera** se seleccionan varias facturas del mismo cliente y misma moneda y se captura un solo depósito; el importe se reparte FIFO por vencimiento (editable renglón por renglón) y se registra de forma atómica (N pagos + 1 movimiento bancario) vía RPC `registrar_pago_cliente_lote`.
+- Base de datos: tabla `pagos_factura_lote` con RLS y tenancy, `lote_id` en `pagos_factura`, `pago_factura_lote_id` en `bbva_movimientos` y ajuste de `assert_movimiento_pago_consistente()`.
+- REP: emisión individual automática por cada factura PPD timbrada incluida en el lote.
+- UI: `DialogCobroLoteCliente` (+ secciones de datos y renglones), columna de selección en Cartera y KPIs extraídos a `_sections/CarteraKpis.tsx` (Power-of-10 #4).
+- Tests: `pagoClienteLote.test.ts` (FIFO y validaciones) y `carteraLote.test.ts` (derivación de la selección).
+
+
+
 ## [13.487.3] - 2026-08-10
 - Limpieza (knip `lint:unused:strict` en verde): eliminados re-exports muertos `resolverOrganizationId` (`cxp/services/cfdiStorage.ts`), `agregarGastosCxP` y `CxpRow` (`presupuesto/services/vsReal.ts`) y `Organization` (`lib/contexts/OrganizationContext.tsx`); los consumidores ya importaban de los módulos de origen.
 - `knip.json`: `zod-validation-error` pasa a `ignoreDependencies` (existe sólo como pin en `overrides`/`resolutions`, no se importa en código).

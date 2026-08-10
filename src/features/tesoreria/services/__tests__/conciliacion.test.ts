@@ -31,6 +31,7 @@ function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
     pago_factura_id: null,
     anticipo_proveedor_id: null,
     pago_proveedor_lote_id: null,
+    pago_factura_lote_id: null,
     conciliado_at: null,
     conciliado_por: null,
     motivo_ignorar: "",

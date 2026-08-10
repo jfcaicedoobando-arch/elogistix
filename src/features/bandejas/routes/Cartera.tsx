@@ -7,41 +7,35 @@
  * barra `<UnifiedFiltersBar />` compartida con Facturación/Embarques.
  * v13.313.1: agregado diálogo de recordatorio de cobranza.
  */
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Inbox } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { Button } from "@/components/ui/button";
+import { Inbox, Layers } from "lucide-react";
 import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
-import { type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
-import { requiereEquivalente } from "@/features/bandejas/domain/carteraFx";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
 import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { CarteraMobileList } from "./_sections/CarteraMobileList";
+import { CarteraKpis } from "./_sections/CarteraKpis";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { DialogCobroLoteCliente } from "@/features/facturacion/components/DialogCobroLoteCliente";
+import { derivarLoteCobro } from "./_sections/carteraLote";
 
-/** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
-function formatNativos(b: SaldosPorMonedaCartera): string {
-  const parts: string[] = [];
-  if (b.MXN > 0) parts.push(formatCurrency(b.MXN, "MXN"));
-  if (b.USD > 0) parts.push(formatCurrency(b.USD, "USD"));
-  for (const [cod, monto] of Object.entries(b.otras)) {
-    if (monto > 0) parts.push(formatCurrency(monto, cod));
-  }
-  return parts.length > 0 ? parts.join(" · ") : formatCurrency(0, "MXN");
-}
 
 export default function Cartera() {
   const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [loteOpen, setLoteOpen] = useState(false);
   const {
+    data,
     paged,
     monedas,
     scoped,
@@ -56,49 +50,44 @@ export default function Cartera() {
     columns,
   } = useCarteraPage((row) => setRecordatorio(row));
 
+  const selectedIds = useMemo(() => Object.keys(rowSelection), [rowSelection]);
+  const seleccionadas = useMemo(
+    () => data.filter((r) => selectedIds.includes(r.factura_id)),
+    [data, selectedIds],
+  );
+  const lote = useMemo(() => derivarLoteCobro(seleccionadas), [seleccionadas]);
+
   return (
     <PageContainer>
       <PageHeader
         title="Cartera"
         description="Facturas vencidas y por vencer en los próximos 7 días. Cambia el filtro de urgencia para ver toda la cartera."
+        actions={
+          selectedIds.length > 0 && (
+            <Button
+              onClick={() => setLoteOpen(true)}
+              disabled={!lote}
+              title={
+                lote
+                  ? undefined
+                  : "Selecciona 2 o más facturas del mismo cliente y la misma moneda"
+              }
+            >
+              <Layers className="h-4 w-4 mr-2" />
+              Cobro en lote ({selectedIds.length})
+            </Button>
+          )
+        }
+      />
+      <CarteraKpis
+        totalFacturas={scoped.length}
+        saldosNativos={saldosNativos}
+        vencidasCount={vencidasCount}
+        vencidoNativo={vencidoNativo}
+        eqTotal={eqTotal}
+        eqVencido={eqVencido}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle>Facturas en foco</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold">{scoped.length}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle>Saldo total</CardTitle></CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold tabular-nums">{formatNativos(saldosNativos)}</div>
-            {requiereEquivalente(saldosNativos) && (
-              <div
-                className="text-xs text-muted-foreground mt-1"
-                title={eqTotal.facturasSinTc > 0 ? `${eqTotal.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
-              >
-                ≈ {formatCurrency(eqTotal.totalMxn, "MXN")} equivalente
-                {eqTotal.facturasSinTc > 0 && <span className="ml-1">({eqTotal.facturasSinTc} sin TC)</span>}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle>Vencido ({vencidasCount})</CardTitle></CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold text-destructive tabular-nums">{formatNativos(vencidoNativo)}</div>
-            {requiereEquivalente(vencidoNativo) && (
-              <div
-                className="text-xs text-muted-foreground mt-1"
-                title={eqVencido.facturasSinTc > 0 ? `${eqVencido.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
-              >
-                ≈ {formatCurrency(eqVencido.totalMxn, "MXN")} equivalente
-                {eqVencido.facturasSinTc > 0 && <span className="ml-1">({eqVencido.facturasSinTc} sin TC)</span>}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       <UnifiedFiltersBar
         search={paged.search}
@@ -179,15 +168,30 @@ export default function Cartera() {
             emptyIcon={Inbox}
             emptyMessage="Sin cartera pendiente"
             emptyHint="¡Todo cobrado!"
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
           />
         </CardContent>
       </Card>
+
+      {lote && (
+        <DialogCobroLoteCliente
+          open={loteOpen}
+          onOpenChange={setLoteOpen}
+          clienteId={lote.clienteId}
+          clienteNombre={lote.clienteNombre}
+          moneda={lote.moneda}
+          facturas={lote.facturas}
+          onDone={() => setRowSelection({})}
+        />
+      )}
 
       <DialogRecordatorioCobranza
         open={recordatorio !== null}
         onOpenChange={(open) => !open && setRecordatorio(null)}
         factura={recordatorio}
       />
+
     </PageContainer>
   );
 }

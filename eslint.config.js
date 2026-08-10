@@ -113,6 +113,8 @@ const CROSS_FEATURE_ALLOWLIST = [
   "src/features/admin/hooks/useAdminOrgConfig.ts",
   "src/features/admin/routes/admin-org/Configuracion.tsx",
   "src/features/auth/routes/TrackingPublico.tsx",
+  // v13.488.0 — Cartera monta el diálogo de cobro en lote de facturación (CxC).
+  "src/features/bandejas/routes/Cartera.tsx",
   "src/features/bandejas/routes/CxpPorCapturar.tsx",
   "src/features/cliente/routes/ClienteDetalle.tsx",
   // v13.343.0 — el panel 360 se movió a esta sección al dividir ClienteDetalle.

@@ -6,6 +6,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Mail } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBuilders";
@@ -18,6 +19,31 @@ export type CarteraRow = NonNullable<ReturnType<typeof useCarteraPendiente>["dat
 export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void): ColumnDef<CarteraRow, unknown>[] {
   return defineColumns<CarteraRow>([
     {
+      id: "selection",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Seleccionar todas"
+        />
+      ),
+      cell: ({ row }) => (
+        <span
+          onClick={(e) => e.stopPropagation()}
+          role="presentation"
+        >
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label={`Seleccionar factura ${row.original.numero ?? ""}`}
+          />
+        </span>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+      meta: { width: COL_W.micro },
+    },
+    {
       id: "numero",
       header: "Folio",
       accessorFn: (r) => r.numero ?? "",
@@ -25,6 +51,7 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
       meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.numero ?? "—",
     },
+
     {
       id: "cliente",
       header: "Cliente",
