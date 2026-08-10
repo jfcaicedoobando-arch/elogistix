@@ -69,7 +69,7 @@ export function construirFilaHueco(
     diasDesdeEta: diasDesde(e.eta, hoy),
     ventaMxn: sumarConceptosEnMxn(ventas, tcUsd, tcEur),
     ventaUsd: sumarConceptosEnUsd(ventas, tcUsd, tcEur),
-    sin_tc: tcUsd === 0,
+    sin_tc: (requiereUsd && tcUsd === 0) || (requiereEur && tcEur === 0),
   };
 }
 
