@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.489.7] - 2026-08-10
+- CI (guard `gen:types`): `src/integrations/supabase/types.ts` estaba STALE porque la migración `20260810133000` (onboarding con organización explícita) nunca se aplicó a la base en vivo — seguía existiendo `complete_onboarding(text,text,text)`. Se reaplicó la definición con firma `(uuid,text,text,text)` y los tipos ya coinciden con el esquema de migraciones.
+- Manifest de release regenerado para 13.489.7.
+
 ## [13.489.6] - 2026-08-10
 - CI (job *schema-baseline*): el paso *Compare against committed baseline* reprobaba el pipeline porque `supabase/schema/baseline.sql` nunca se ha sembrado. Ese archivo sólo puede generarse con el `pg_dump` de la imagen Postgres pinneada (15.8) — un dump de otra versión produce diffs falsos —, así que ahora el paso hace *bootstrap*: si la baseline no existe emite un `::warning::` con instrucciones y deja el snapshot en el artifact `schema-snapshot-actual` en lugar de fallar. Al committear ese artifact como `supabase/schema/baseline.sql`, el guard de drift de esquema queda activo y estricto.
 - Manifest de release regenerado para 13.489.6.
