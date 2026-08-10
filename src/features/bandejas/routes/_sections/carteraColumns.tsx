@@ -82,14 +82,22 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
       accessorFn: (r) => r.numero ?? "",
       enableSorting: true,
       meta: { width: COL_W.monto, className: "font-medium whitespace-nowrap", sticky: true },
-      cell: ({ row }) => (
-        <Link
-          to={`/facturacion/${row.original.factura_id}`}
-          data-no-row-nav
-          className="underline-offset-2 hover:underline focus-visible:underline"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {row.original.numero ?? "—"}
+      cell: ({ row, table }) => {
+        // Con selección activa el folio abre en pestaña nueva: así el usuario
+        // puede revisar una factura sin perder lo que ya marcó.
+        const haySeleccion = table.getSelectedRowModel().rows.length > 0;
+        return (
+          <Link
+            to={`/facturacion/${row.original.factura_id}`}
+            data-no-row-nav
+            target={haySeleccion ? "_blank" : undefined}
+            rel={haySeleccion ? "noopener noreferrer" : undefined}
+            title={haySeleccion ? "Se abre en pestaña nueva para no perder tu selección" : undefined}
+            className="underline-offset-2 hover:underline focus-visible:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {row.original.numero ?? "—"}
+
         </Link>
       ),
     },
