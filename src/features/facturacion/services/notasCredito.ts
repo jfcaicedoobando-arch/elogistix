@@ -21,6 +21,8 @@ export interface ConceptoNotaCredito {
   clave_unidad?: string | null;
   unidad?: string | null;
   tasa_iva?: number | null;
+  /** Ola 4 · N19: régimen de IVA del concepto (gravado_16 | tasa_0 | exento). */
+  tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
 }
 
 export interface CrearNotaCreditoInput {

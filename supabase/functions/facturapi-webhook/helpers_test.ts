@@ -108,6 +108,17 @@ Deno.test("cancellation_status_updated: accepted -> patch con accepted (sin limp
   assertEquals(r!.patch.cancelacion_solicitada_en, undefined);
 });
 
+Deno.test("cancellation_status_updated: accepted también fija estado y preserva_sustituida (Ola 4 · N18)", () => {
+  const r = mapEventToFacturaPatch({
+    type: "invoice.cancellation_status_updated",
+    data: { object: { id: "fa_10", cancellation_status: "accepted" } },
+  });
+  assert(r);
+  assertEquals(r!.patch.estado, "Cancelada");
+  assertEquals(typeof r!.patch.cancelado_en, "string");
+  assertEquals(r!.preserva_sustituida, true);
+});
+
 Deno.test("cancellation_status_updated: pending -> sólo actualiza estado async", () => {
   const r = mapEventToFacturaPatch({
     type: "invoice.cancellation_status_updated",

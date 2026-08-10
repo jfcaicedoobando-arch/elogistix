@@ -51,6 +51,27 @@ function resolverCierreGanada(
   };
 }
 
+/**
+ * Ola 4 · N49: al SALIR de una etapa cerrada se limpian sus campos de cierre.
+ * Antes una oportunidad devuelta de "ganada" a una etapa abierta conservaba
+ * fecha_cierre_real/valor_real (y la de "perdida", su motivo) — dato
+ * contradictorio con el formulario, que exige cierre sólo en etapas cerradas.
+ */
+export function resolverLimpiezaCierre(
+  etapaDestino: (CrmEtapaRow & { tipo?: string }) | undefined,
+  etapaOrigen: (CrmEtapaRow & { tipo?: string }) | undefined,
+): { fecha_cierre_real?: null; valor_real?: null; motivo_perdida_id?: null } {
+  const patch: { fecha_cierre_real?: null; valor_real?: null; motivo_perdida_id?: null } = {};
+  if (etapaOrigen?.tipo === "ganada" && etapaDestino?.tipo !== "ganada") {
+    patch.fecha_cierre_real = null;
+    patch.valor_real = null;
+  }
+  if (etapaOrigen?.tipo === "perdida" && etapaDestino?.tipo !== "perdida") {
+    patch.motivo_perdida_id = null;
+  }
+  return patch;
+}
+
 export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
   const mover = useMoverEtapaConAutomatizacion();
   const [proximoPaso, setProximoPaso] = useState<ProximoPasoTarget | null>(null);
@@ -72,11 +93,21 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
           etapa_id: etapaId,
           probabilidad,
           ...resolverCierreGanada(etapaDestino, op),
+          // Ola 4 · N49: limpiar cierre real / motivo al salir de ganada/perdida.
+          ...resolverLimpiezaCierre(etapaDestino, etapaOrigen),
         });
         const { showUndoToast } = await import("@/features/crm/hooks/useUndoToast");
         showUndoToast("Etapa actualizada", async () => {
           if (!etapaPrev) return;
-          await mover.mutateAsync({ id, etapa_id: etapaPrev, probabilidad: probPrev });
+          // Ola 4 · N49: el Undo aplica la misma limpieza con origen/destino
+          // invertidos (p. ej. deshacer abierta→ganada limpia el cierre real
+          // que resolverCierreGanada acababa de escribir).
+          await mover.mutateAsync({
+            id,
+            etapa_id: etapaPrev,
+            probabilidad: probPrev,
+            ...resolverLimpiezaCierre(etapaOrigen, etapaDestino),
+          });
         });
         // Disciplina de pipeline: al avanzar a una etapa ABIERTA se pide el
         // próximo paso (ninguna oportunidad viva sin siguiente acción).

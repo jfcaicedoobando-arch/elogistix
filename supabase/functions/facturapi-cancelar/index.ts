@@ -77,6 +77,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   // NO el UUID SAT. El UUID SAT sólo lo usamos para bitácora/auditoría.
   let sustituyeUuidResuelto: string | undefined = rawBody.sustituye_uuid;
   let sustituyeFacturapiId: string | undefined;
+  let sustitutaOrgId: string | undefined;
   const sustituidaPorFacturaId: string | null = rawBody.sustituida_por_factura_id ?? null;
   if (sustituidaPorFacturaId) {
     const snap = await resolveSustitutaSnapshot(supabase, sustituidaPorFacturaId);
@@ -85,6 +86,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     }
     sustituyeUuidResuelto = snap.uuid;
     sustituyeFacturapiId = snap.facturapiId;
+    sustitutaOrgId = snap.organizationId;
   }
 
   const validated = validateCancelacionInput({ ...rawBody, sustituye_uuid: sustituyeUuidResuelto });
@@ -100,6 +102,12 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .maybeSingle();
   if (fErr || !factura) return jsonResponse({ error: "factura_not_found" }, 404);
   if (!factura.facturapi_id) return jsonResponse({ error: "no_timbrada" }, 409);
+  // Ola 4 · N38: la sustituta debe pertenecer a la MISMA organización que la
+  // factura a cancelar — sin este guard se grababa `sustituida_por`
+  // cross-tenant y el pre-flight consultaba un ObjectId ajeno.
+  if (sustitutaOrgId && sustitutaOrgId !== factura.organization_id) {
+    return jsonResponse({ error: "sustituta_otra_org", message: "La factura sustituta pertenece a otra organización." }, 422);
+  }
   if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }

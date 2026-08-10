@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useLiquidaciones } from "@/features/comisiones/hooks";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { DialogGenerarLiquidacion } from "./DialogGenerarLiquidacion";
 import { DialogRegistrarPagoLiquidacion } from "./DialogRegistrarPagoLiquidacion";
 import type { LiquidacionRow } from "@/features/comisiones/services";
@@ -15,14 +16,21 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
   const { data: liquidaciones = [], isLoading } = useLiquidaciones();
   const [genOpen, setGenOpen] = useState(false);
   const [pagoOpen, setPagoOpen] = useState<LiquidacionRow | null>(null);
+  // Ola 4 · N28: mismos roles que la RPC/RLS — gerentes son sólo lectura.
+  const { effectiveRole } = useAuth();
+  const puedeGestionar =
+    effectiveRole != null &&
+    ["admin", "admin_org", "super_admin", "contador", "tesorero"].includes(effectiveRole);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => setGenOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Generar liquidación
-        </Button>
-      </div>
+      {puedeGestionar && (
+        <div className="flex justify-end">
+          <Button onClick={() => setGenOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Generar liquidación
+          </Button>
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-0">
@@ -61,7 +69,7 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
                       </td>
                       <td className="p-2 text-xs text-muted-foreground">{l.referencia ?? "—"}</td>
                       <td className="p-2 text-right">
-                        {!l.fecha_pago && (
+                        {!l.fecha_pago && puedeGestionar && (
                           <Button size="sm" variant="outline" onClick={() => setPagoOpen(l)}>
                             <CheckCircle2 className="h-4 w-4 mr-1" /> Registrar pago
                           </Button>

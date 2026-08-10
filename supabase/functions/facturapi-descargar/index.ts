@@ -47,6 +47,17 @@ type Resolved =
   | { ok: true; data: ResolvedTarget }
   | { ok: false; status: number; body: unknown };
 
+/**
+ * Ola 4 · N39: `folio` ya incluye la serie desde que se persiste al timbrar
+ * (`<serie><folio>`, v13.213.20). Concatenar serie+folio de nuevo duplicaba
+ * la serie ("NCNC7.pdf"). Fallback defensivo sólo para filas legacy con
+ * `folio` vacío. Extraída como función pura exportada para poder testearla
+ * sin mockear Supabase.
+ */
+export function resolveFolioSerieNc(serie: string, folio: string): string {
+  return folio || `${serie}${folio}`;
+}
+
 async function resolveFromNc(
   supabase: ReturnType<typeof createClient>, id: string,
 ): Promise<Resolved> {
@@ -79,7 +90,10 @@ async function resolveFromNc(
       facturapiId: ncId,
       organizationId: nc.organization_id as string,
       tipoDoc: "NotaCredito",
-      folioSerie: `${serie}${folio}`,
+      // Ola 4 · N39: al timbrar, `folio` ya se persiste como `<serie><folio>`
+      // (v13.213.20), así que concatenar serie+folio duplicaba la serie
+      // ("NCNC7.pdf"). Fallback defensivo para filas legacy sin folio.
+      folioSerie: resolveFolioSerieNc(serie, folio),
       clienteId,
       cliente,
       fecha,
@@ -119,6 +133,7 @@ async function resolveFromPago(
       tipoDoc: "REP",
       folioSerie: `${serie}${folio}`,
       cliente,
+      clienteId,
       fecha: (pago.fecha_pago as string | null) ?? null,
     },
   };

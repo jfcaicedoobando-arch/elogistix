@@ -61,23 +61,29 @@ describe('auditoria/revisiones', () => {
     ).rejects.toThrow(/organization_id/);
   });
 
-  it('asignarResponsableHallazgo construye payload con estado_revision default=pendiente', async () => {
+  // Ola 4 · N29: asignarResponsableHallazgo dejó de usar upsert (select-then-branch)
+  // para que un hallazgo revisado nunca se reabra por reasignación.
+
+  it('asignarResponsableHallazgo inserta con estado_revision default=pendiente cuando no existe revisión', async () => {
     const input = {
       organization_id: 'org-1',
       embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h', detalle: 'd',
       responsable_id: 'r1', responsable_email: 'r@e', asignado_por: 'u',
       asignado_por_email: 'u@e', fecha_limite: null,
     } as any;
-    mockSupabase.current = createSupabaseChainMock({ id: '1', ...input });
+    // data [] → maybeSingle null → rama INSERT.
+    mockSupabase.current = createSupabaseChainMock([]);
     await asignarResponsableHallazgo(input);
-    const [payload] = mockSupabase.current.upsert.mock.calls[0];
+    expect(mockSupabase.current.insert).toHaveBeenCalledTimes(1);
+    expect(mockSupabase.current.upsert).not.toHaveBeenCalled();
+    const [payload] = mockSupabase.current.insert.mock.calls[0];
     expect(payload.estado_revision).toBe('pendiente');
     expect(payload.responsable_id).toBe('r1');
     expect(payload.organization_id).toBe('org-1');
     expect(payload.asignado_at).toEqual(expect.any(String));
   });
 
-  it('asignarResponsableHallazgo respeta estado_revision explícito', async () => {
+  it('asignarResponsableHallazgo actualiza respetando estado_revision explícito si no está revisado', async () => {
     const input = {
       organization_id: 'org-1',
       embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h', detalle: 'd',
@@ -85,9 +91,25 @@ describe('auditoria/revisiones', () => {
       asignado_por_email: 'u@e', fecha_limite: null,
       estado_revision: 'en_progreso' as const,
     } as any;
-    mockSupabase.current = createSupabaseChainMock({ id: '1' });
+    mockSupabase.current = createSupabaseChainMock({ id: '1', estado_revision: 'pendiente' });
     await asignarResponsableHallazgo(input);
-    expect(mockSupabase.current.upsert.mock.calls[0][0].estado_revision).toBe('en_progreso');
+    expect(mockSupabase.current.update).toHaveBeenCalledTimes(1);
+    expect(mockSupabase.current.update.mock.calls[0][0].estado_revision).toBe('en_progreso');
+  });
+
+  it('asignarResponsableHallazgo NO reabre una revisión revisada (Ola 4 · N29)', async () => {
+    const input = {
+      organization_id: 'org-1',
+      embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h', detalle: 'd',
+      responsable_id: 'r2', responsable_email: 'nuevo@e', asignado_por: 'u',
+      asignado_por_email: 'u@e', fecha_limite: null,
+    } as any;
+    mockSupabase.current = createSupabaseChainMock({ id: '1', estado_revision: 'revisado' });
+    await asignarResponsableHallazgo(input);
+    expect(mockSupabase.current.update).toHaveBeenCalledTimes(1);
+    const [patch] = mockSupabase.current.update.mock.calls[0];
+    expect(patch).not.toHaveProperty('estado_revision');
+    expect(patch.responsable_id).toBe('r2');
   });
 
   it('deleteAuditoriaRevision borra por id', async () => {

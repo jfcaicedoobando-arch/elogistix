@@ -189,21 +189,25 @@ export async function verificarRelacionSustitutaSAT(
   }
 }
 
-/** Resuelve UUID + facturapi_id de la sustituta a partir de su factura_id local. */
+/**
+ * Resuelve UUID + facturapi_id de la sustituta a partir de su factura_id local.
+ * Ola 4 · N38: expone `organizationId` para que el handler rechace sustitutas
+ * de OTRA organización (antes se podía grabar `sustituida_por` cross-tenant).
+ */
 export async function resolveSustitutaSnapshot(
   supabase: SupabaseClient,
   sustituidaPorFacturaId: string,
 ): Promise<
-  | { ok: true; uuid: string; facturapiId: string }
+  | { ok: true; uuid: string; facturapiId: string; organizationId: string }
   | { ok: false }
 > {
   const { data } = await supabase
     .from("facturas")
-    .select("id, uuid_fiscal, facturapi_id")
+    .select("id, uuid_fiscal, facturapi_id, organization_id")
     .eq("id", sustituidaPorFacturaId)
     .maybeSingle();
   if (!data?.uuid_fiscal || !data.facturapi_id) return { ok: false };
-  return { ok: true, uuid: data.uuid_fiscal as string, facturapiId: data.facturapi_id as string };
+  return { ok: true, uuid: data.uuid_fiscal as string, facturapiId: data.facturapi_id as string, organizationId: data.organization_id as string };
 }
 
 /**

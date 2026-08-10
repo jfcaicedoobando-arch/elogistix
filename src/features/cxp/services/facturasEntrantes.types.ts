@@ -65,6 +65,10 @@ export function mensajeDuplicadoEntrante(mensaje: string): string | null {
   if (/uq_efe_uuid_fiscal/i.test(mensaje)) {
     return "El XML de esta factura ya está en el buzón (mismo UUID fiscal).";
   }
+  // N36 (Ola 4): índice único de xml_hash (organization_id, xml_hash).
+  if (/uq_efe_org_xml_hash_vivo/i.test(mensaje)) {
+    return "Este XML ya está en el buzón de esta organización.";
+  }
   if (/duplicate key|unique/i.test(mensaje)) {
     return "Este archivo ya fue subido al buzón de este embarque.";
   }
