@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.474.1] - 2026-08-10
+- Suite de pruebas (Ola 7 cierre) — `scripts/lib/walk.ts` ahora usa `readdirSync(withFileTypes)` y memoiza el recorrido en `globalThis`: los ~35 guardrails de arquitectura ya no saturan el I/O del runner y dejan de fallar por timeout de 15 s en corridas completas.
+- `mutations.test.ts` — se sustituye un `await import()` dentro del test por import estático (`EmbarqueBloqueadoError`), eliminando el último test intermitente. Suite completa en verde.
+
 ## [13.473.3] - 2026-08-09
 - CI (`audit:tests`) — se reemplazan 3 aserciones débiles `rejects.toBeTruthy()` por `rejects.toThrow(/mensaje/)` (tarifas, convertir lead, eliminar proforma) y se renombran títulos duplicados de tests para reflejar la RPC que validan.
 
