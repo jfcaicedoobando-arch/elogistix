@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.479.1] - 2026-08-10
+- Fix CI (H6): se re-aplicaron los permisos de ejecución de `convertir_prospecto_a_cliente_rpc` (sin acceso público/anónimo) en una migración correctiva y se subió el baseline del auditor de migraciones.
+
 ## [13.479.0] - 2026-08-10
 - Fix (RG1): nueva pantalla `/sin-acceso`. Una sesión sin rol ni organización ya no queda en un bucle infinito entre `/` y `/inicio`.
 - Fix (RG2): al convertir un prospecto en cliente, los RFC genéricos del SAT (`XAXX010101000` / `XEXX010101000`) ya no fusionan prospectos distintos en un mismo cliente.
