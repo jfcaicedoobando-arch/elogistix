@@ -135,9 +135,14 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
                 isAdmin,
               })}
               puedeAdjuntarXml={Boolean(puedeAdjuntar && row.estado === "por_capturar")}
+              puedeReactivar={canEdit && puedeReactivarEntrante({
+                estado: row.estado,
+                proveedorFacturaId: row.proveedor_factura_id,
+              })}
               onVer={(path, nombre) => void abrirArchivo(path, nombre)}
               onAdjuntarXml={(fila, xml) => void onAdjuntarXml(fila, xml)}
               onEliminar={setAEliminar}
+              onReactivar={setAReactivar}
             />
           ))}
         </CardContent>
@@ -152,14 +157,12 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
         />
       )}
 
-      <ConfirmActionDialog
-        open={Boolean(aEliminar)}
-        onOpenChange={(v) => { if (!v) setAEliminar(null); }}
-        title="Retirar archivo del buzón"
-        description="El archivo dejará de estar disponible para contabilidad. Esta acción no se puede deshacer."
-        confirmLabel="Retirar"
-        variant="destructive"
-        onConfirm={async () => {
+      <EntrantesConfirmDialogs
+        aEliminar={aEliminar}
+        aReactivar={aReactivar}
+        onCerrarEliminar={() => setAEliminar(null)}
+        onCerrarReactivar={() => setAReactivar(null)}
+        onConfirmarEliminar={async () => {
           if (!aEliminar) return;
           await eliminar.mutateAsync({
             id: aEliminar.id,
@@ -168,7 +171,13 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
           });
           setAEliminar(null);
         }}
+        onConfirmarReactivar={async () => {
+          if (!aReactivar) return;
+          await reactivar.mutateAsync({ id: aReactivar.id, nombre: aReactivar.nombre_archivo });
+          setAReactivar(null);
+        }}
       />
     </>
   );
+
 }
