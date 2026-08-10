@@ -49,8 +49,13 @@ export function useEmbarqueForm() {
   useEffect(() => {
     if (tiposDeCambio && !hidratadoDesdeEmbarque.current) {
       const opts = { shouldValidate: true, shouldDirty: true } as const;
-      methods.setValue("tipoCambioUSD", String(tiposDeCambio.usdMxn), opts);
-      if (tiposDeCambio.eurMxn != null) {
+      // B7 (Ola 7): si el T/C remoto llega DESPUÉS de que el usuario ya lo
+      // tecleó, no se sobrescribe su captura (se respeta `dirtyFields`).
+      const tocados = methods.formState.dirtyFields;
+      if (!tocados.tipoCambioUSD) {
+        methods.setValue("tipoCambioUSD", String(tiposDeCambio.usdMxn), opts);
+      }
+      if (tiposDeCambio.eurMxn != null && !tocados.tipoCambioEUR) {
         methods.setValue("tipoCambioEUR", String(tiposDeCambio.eurMxn), opts);
       }
     }

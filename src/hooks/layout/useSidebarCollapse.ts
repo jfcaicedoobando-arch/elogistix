@@ -9,15 +9,15 @@
  * lógica de auto-expansión vive en `SidebarGroupBlock`.
  */
 import { useCallback, useEffect, useState } from "react";
+import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
-const STORAGE_KEY = "sidebar:collapsed:v1";
+const STORAGE_KEY = STORAGE_KEYS.sidebarCollapsed;
 
 type CollapsedMap = Record<string, boolean>;
 
 function readInitial(): CollapsedMap {
-  if (typeof window === "undefined") return {};
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = safeLocalStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
@@ -40,12 +40,7 @@ export function useSidebarCollapse(): UseSidebarCollapseApi {
   const [state, setState] = useState<CollapsedMap>(readInitial);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // ignorar (cuota / modo privado / etc.)
-    }
+    safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
   const isCollapsed = useCallback((label: string) => state[label] === true, [state]);

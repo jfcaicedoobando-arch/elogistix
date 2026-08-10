@@ -137,6 +137,25 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "Indica el motivo para poder continuar.",
   LC_COTIZACION_SIN_IMPORTES:
     "La cotización no tiene importes de venta capturados. Agrega al menos un concepto con precio antes de continuar.",
+  // ── Ola 6: RPC transaccionales (CRM, cotizaciones, tarifas, proformas) ──
+  LC_CLIENTE_NO_ENCONTRADO:
+    "No encontramos el cliente. Recarga la página y vuelve a intentarlo.",
+  LC_CLIENTE_SIN_NOMBRE: "Captura el nombre del cliente para continuar.",
+  LC_COTIZACION_NO_ENCONTRADA:
+    "No encontramos la cotización. Es posible que alguien más la haya eliminado.",
+  LC_COTIZACION_NO_REACTIVABLE:
+    "Solo se pueden reactivar cotizaciones rechazadas o vencidas.",
+  LC_LEAD_NO_ENCONTRADO:
+    "No encontramos el prospecto. Recarga la página y vuelve a intentarlo.",
+  LC_OPORTUNIDAD_SIN_NOMBRE: "Captura el nombre de la oportunidad para continuar.",
+  LC_PIPELINE_SIN_ETAPAS:
+    "El pipeline no tiene etapas configuradas. Configúralas antes de convertir prospectos.",
+  LC_PROFORMA_FACTURADA:
+    "La proforma ya está facturada: no puede eliminarse ni modificarse.",
+  LC_PROFORMA_NO_ENCONTRADA:
+    "No encontramos la proforma. Es posible que alguien más la haya eliminado.",
+  LC_TARIFA_NO_ENCONTRADA:
+    "No encontramos la tarifa. Recarga el catálogo y vuelve a intentarlo.",
   LC_VALIDACION:
     "La validación no pasó. Revisa los motivos indicados y corrige la información antes de continuar.",
 };

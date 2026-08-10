@@ -58,7 +58,6 @@ function candidateIdentifiers(window: string): string[] {
  * Clave: `<ruta relativa>::<identificador>`.
  */
 const BASELINE = new Set<string>([
-  "src/features/cotizacion/services/mutations/reactivar.ts::estado_anterior",
   "src/features/cotizacion/services/versiones.ts::duplicar_cotizacion",
   "src/features/cotizacion/services/versiones.ts::cotizacion_versiones",
   "src/features/embarques/components/_sections/tabDemorasColumns.tsx::fecha_descarga",

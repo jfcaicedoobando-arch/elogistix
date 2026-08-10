@@ -9,12 +9,13 @@ import {
   ATTRIBUTION_STORAGE_KEY,
   type Attribution,
 } from "@/features/marketing/lib/attribution";
+import { safeSessionStorage } from "@/lib/browserStorage";
 
 export function useCaptureUtmParams(): void {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const existing = window.sessionStorage.getItem(ATTRIBUTION_STORAGE_KEY);
+      const existing = safeSessionStorage.getItem(ATTRIBUTION_STORAGE_KEY);
       if (existing) return;
       const params = new URLSearchParams(window.location.search);
       const data: Attribution = {
@@ -26,7 +27,7 @@ export function useCaptureUtmParams(): void {
         referrer: document.referrer || null,
         landing_path: window.location.pathname + window.location.search,
       };
-      window.sessionStorage.setItem(ATTRIBUTION_STORAGE_KEY, JSON.stringify(data));
+      safeSessionStorage.setItem(ATTRIBUTION_STORAGE_KEY, JSON.stringify(data));
     } catch {
       // sessionStorage puede fallar en modo privado; silencioso.
     }

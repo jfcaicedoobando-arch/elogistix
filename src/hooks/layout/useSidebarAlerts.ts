@@ -28,6 +28,13 @@ const SIDEBAR_QUERY_TUNING = {
   staleTime: staleTimes.VERY_LONG,
   gcTime: 60 * 60_000,
   refetchOnMount: false,
+  // A12 (Ola 7): red de seguridad. Las mutaciones relevantes invalidan estos
+  // contadores, pero un cambio hecho por otro usuario (o por un cron) dejaba
+  // el badge congelado hasta 30 min. Un refetch cada 5 min con la pestaña
+  // activa mantiene el número vivo sin volver al problema de las ~11k llamadas
+  // (antes se disparaba en CADA navegación).
+  refetchInterval: 5 * 60_000,
+  refetchIntervalInBackground: false,
 } as const;
 
 /** Invalida los badges del sidebar para que se recalculen en el próximo render. */

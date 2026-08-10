@@ -11,6 +11,7 @@ import { FormSection } from "./facturaFormPrimitives";
 import { formatCurrency } from "@/lib/formatters";
 import type { ConceptoManual } from "@/features/cxp/hooks/useConceptosManuales";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
+import { parseMonto } from "@/lib/format/parseMonto";
 
 interface Props {
   /** Oculta la sección cuando el desglose viene de un CFDI (inmutable). */
@@ -30,8 +31,7 @@ interface Props {
 
 
 function num(v: string): number {
-  const n = Number(v.replace(/,/g, ""));
-  return Number.isFinite(n) ? n : 0;
+  return parseMonto(v);
 }
 
 export function ConceptosManualesSection({

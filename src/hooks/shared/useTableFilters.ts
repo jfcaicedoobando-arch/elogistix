@@ -62,13 +62,22 @@ export function useTableFilters<TFilters extends Record<string, string>>({
     parseAsString.withDefault(""),
   );
 
+  // M12 (Ola 7): al mover el rango de fechas el conjunto de resultados cambia
+  // por completo; quedarse en la página 7 mostraba una tabla vacía. Se regresa
+  // siempre a la primera página, igual que ya hacen `setSearch`/`setFilter`.
   const setDateFrom = useCallback(
-    (v: string) => setDateFromRaw(v || null),
-    [setDateFromRaw],
+    (v: string) => {
+      if (base.page !== 0) base.setPage(0);
+      setDateFromRaw(v || null);
+    },
+    [setDateFromRaw, base],
   );
   const setDateTo = useCallback(
-    (v: string) => setDateToRaw(v || null),
-    [setDateToRaw],
+    (v: string) => {
+      if (base.page !== 0) base.setPage(0);
+      setDateToRaw(v || null);
+    },
+    [setDateToRaw, base],
   );
 
   const isInRange = useCallback(

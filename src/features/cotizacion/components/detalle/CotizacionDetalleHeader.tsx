@@ -13,11 +13,13 @@ interface Props {
   nombreDestinatario: string;
   onBack: () => void;
   onExportarPdf: () => void;
+  /** M14 (Ola 7): true mientras el PDF se genera; evita el doble clic. */
+  exportandoPdf?: boolean;
   onEnviarEmail?: () => void;
   yaEnviada?: boolean;
 }
 
-export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExportarPdf, onEnviarEmail, yaEnviada }: Props) {
+export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExportarPdf, exportandoPdf = false, onEnviarEmail, yaEnviada }: Props) {
   const volver = useVolver("/cotizaciones");
   // R-08: una cotización sin importe no puede enviarse al cliente.
   const sinImporte = !(Number(cotizacion.subtotal) > 0);
@@ -38,8 +40,8 @@ export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExpo
       meta={metaFecha ? <span className="text-xs text-muted-foreground">{metaFecha}</span> : undefined}
       trailing={
         <>
-          <Button variant="outline" size="sm" onClick={onExportarPdf}>
-            <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
+          <Button variant="outline" size="sm" onClick={onExportarPdf} disabled={exportandoPdf}>
+            <FileDown className="h-4 w-4 mr-1" /> {exportandoPdf ? "Generando…" : "Exportar PDF"}
           </Button>
           {onEnviarEmail && !cotizacion.es_prospecto && (
             <TooltipProvider>
