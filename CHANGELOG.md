@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.475.1] - 2026-08-10
+- Corregido `trg_clientes_normaliza_campos`: convertía `rfc`/`email` vacíos a `NULL` en columnas `NOT NULL`, rompiendo la conversión de prospecto a cliente (`convertir_lead_rpc`). Ahora se conservan como texto vacío.
+
+
 ## [13.475.0] - 2026-08-10
 - Ola 8 (B2) — Política única de contraseñas en `src/lib/passwords/policy.ts` (mínimo 10, máximo 72) aplicada en registro, restablecimiento, cambio propio y alta por admin. Antes había reglas distintas (6, 6, 8, 8) y la edge function aceptaba 6, siendo la más laxa.
 - Ola 8 (B2) — Nuevo `PasswordStrengthMeter` compartido y test de paridad frontend ↔ edge function para evitar que los mínimos se vuelvan a separar.
