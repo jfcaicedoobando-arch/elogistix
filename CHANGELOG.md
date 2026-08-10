@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.480.0] - 2026-08-10
+- Fix (RG8): los archivos canónicos de `supabase/schema/` usan `IS DISTINCT FROM` al comparar la organización del usuario, para no reintroducir el hueco cross-org si se regenera el esquema.
+- Fix (RG10): una proforma con folio de factura externa suelto (sin factura real) ya puede eliminarse; sólo bloquea una factura viva o el estado "facturada".
+- Fix (RG11): reactivar una cotización vencida/archivada ya no permite saltar directo a "Aceptada" sin el flujo de aceptación (snapshot/versionado).
+- Fix (RG12): al reactivar a "Enviada" con vigencia expirada, la vigencia se prorroga 7 días para que el proceso nocturno no la venza de nuevo.
+- Fix (RG13): al convertir un prospecto sin vendedor asignado, la oportunidad hereda el correo del usuario que hace la conversión.
+- Fix (RG16): al editar una tarifa marítima ya se pueden limpiar los campos opcionales (naviera, agente, ruta, tipo de contenedor, flete base, días libres); las fechas de vigencia siguen protegidas.
+- Verificación (RG22): la migración falla ruidosamente si alguna función conserva el predicado cross-org viejo en lugar de `public.org_scope()`.
+
+
 ## [13.479.3] - 2026-08-10
 - Fix CI (cobertura LC): agregado mensaje amigable para `LC_FACTURA_PROVEEDOR_NO_ENCONTRADA` en `lcCodeMessages.financiero.ts`, usado por `guard_pago_proveedor`.
 

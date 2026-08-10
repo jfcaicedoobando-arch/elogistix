@@ -71,7 +71,7 @@ export function useEnvioDocumentoForm(
 ): EnvioFormState {
   const { user } = useAuth();
 
-  const { data, isLoading: loadingContactos } = useQuery({
+  const { data, isLoading: loadingContactos, isSuccess: contactosResueltos } = useQuery({
     queryKey: queryKeys.clientes.contactos(clienteId ?? "_none_"),
     enabled: !!clienteId && open,
     queryFn: () => fetchContactosClienteConEmail(clienteId!),
@@ -96,20 +96,28 @@ export function useEnvioDocumentoForm(
   const ccInicialRef = useRef(ccInicial);
   const destInicialRef = useRef(destinatariosManualesInicial);
   const userEmail = user?.email;
-  buildAsuntoInicialRef.current = buildAsuntoInicial;
-  ccInicialRef.current = ccInicial;
-  destInicialRef.current = destinatariosManualesInicial;
+
+  // RG17 (Ola 3): las refs se sincronizan en efecto, no durante el render.
+  useEffect(() => {
+    buildAsuntoInicialRef.current = buildAsuntoInicial;
+    ccInicialRef.current = ccInicial;
+    destInicialRef.current = destinatariosManualesInicial;
+  });
 
   // Ola 9 · B7: la precarga corre UNA vez por apertura. Antes se re-ejecutaba
   // cada vez que la query de contactos refrescaba y borraba lo ya capturado.
   const precargadoRef = useRef(false);
-  if (!open) precargadoRef.current = false;
+  useEffect(() => {
+    if (!open) precargadoRef.current = false;
+  }, [open]);
 
   useEffect(() => {
     if (!open || precargadoRef.current) return;
-    // Sólo se considera precargado cuando ya llegaron los contactos; así la
-    // primera pasada con la query vacía no bloquea la precarga real.
-    if (contactos.length > 0) precargadoRef.current = true;
+    // RG17: se precarga cuando la query YA resolvió, aunque venga vacía (un
+    // cliente sin contactos no tiene nada más que esperar). Antes el flag nunca
+    // se marcaba con 0 contactos y cualquier refresh pisaba las ediciones.
+    if (clienteId && !contactosResueltos) return;
+    precargadoRef.current = true;
     setAsunto(buildAsuntoInicialRef.current());
     setMensaje("");
     setEmailManual("");
@@ -122,7 +130,7 @@ export function useEnvioDocumentoForm(
     setCcManual(precargaCc.join(", "));
     setEmailsManualesAgregados(precargaDest);
     setSeleccionados(seleccionadosPre);
-  }, [open, contactos, ccInicialKey, destInicialKey, userEmail]);
+  }, [open, contactos, contactosResueltos, clienteId, ccInicialKey, destInicialKey, userEmail]);
 
 
   const agregarManual = () => {

@@ -53,6 +53,10 @@ export function construirFilaHueco(
   const tcUsd = tcUsdRaw > 0 ? tcUsdRaw : 0;
   const tcEur = tcEurRaw > 0 ? tcEurRaw : 0;
   const ventas = ventasMap.get(e.id) ?? [];
+  // RG14 (Ola 3): "Sin TC" sólo si hay conceptos en moneda extranjera sin el TC
+  // correspondiente; un embarque 100% MXN no lo necesita.
+  const requiereUsd = ventas.some((x) => x.moneda?.toUpperCase() === "USD");
+  const requiereEur = ventas.some((x) => x.moneda?.toUpperCase() === "EUR");
   return {
     embarque_id: e.id,
     expediente: e.expediente ?? "",
@@ -65,7 +69,7 @@ export function construirFilaHueco(
     diasDesdeEta: diasDesde(e.eta, hoy),
     ventaMxn: sumarConceptosEnMxn(ventas, tcUsd, tcEur),
     ventaUsd: sumarConceptosEnUsd(ventas, tcUsd, tcEur),
-    sin_tc: tcUsd === 0,
+    sin_tc: (requiereUsd && tcUsd === 0) || (requiereEur && tcEur === 0),
   };
 }
 

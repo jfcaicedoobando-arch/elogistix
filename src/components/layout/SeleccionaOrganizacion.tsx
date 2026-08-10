@@ -11,7 +11,12 @@ import { ROUTES } from "@/constants/routes";
  * elegido una organización. Evita mostrar datos de un cliente al azar.
  */
 function SeleccionaOrganizacionBase() {
-  const { organizations, setActiveOrganization } = useOrganization();
+  const {
+    organizations,
+    setActiveOrganization,
+    errorOrganizaciones,
+    reintentarCargaOrganizaciones,
+  } = useOrganization();
 
   return (
     <Card className="mx-auto mt-10 max-w-lg">
@@ -39,6 +44,18 @@ function SeleccionaOrganizacionBase() {
             </Button>
           ))}
         </div>
+        {/* RG7: si la carga falló (red/permiso), sin este estado el super admin
+            se quedaba atrapado sin lista y sin forma de reintentar. */}
+        {errorOrganizaciones && (
+          <div className="space-y-2" role="alert">
+            <p className="text-sm text-destructive">
+              No se pudieron cargar las organizaciones. Revisa tu conexión.
+            </p>
+            <Button variant="outline" size="sm" onClick={reintentarCargaOrganizaciones}>
+              Reintentar
+            </Button>
+          </div>
+        )}
         <Button asChild variant="ghost" size="sm">
           <Link to={ROUTES.ADMIN_ORGANIZACIONES}>Ir a la consola de plataforma</Link>
         </Button>

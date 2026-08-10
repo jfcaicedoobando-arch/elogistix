@@ -12,7 +12,6 @@ export const DOMINIOS_E2E_POR_DEFECTO = [
   "e2e.local",
   "example.com",
   "test.local",
-  "mailinator.com",
 ];
 
 /**

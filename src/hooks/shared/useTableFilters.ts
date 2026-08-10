@@ -52,6 +52,9 @@ export function useTableFilters<TFilters extends Record<string, string>>({
   filterLabels,
 }: UseTableFiltersOpts<TFilters>): TableFiltersState<TFilters> {
   const base = useListPageState<TFilters>(defaultFilters, defaultPageSize);
+  // RG20 (Ola 3): `base` es un objeto nuevo cada render; usarlo como
+  // dependencia hacía inestables estos callbacks. Se extraen las piezas.
+  const { page, setPage } = base;
 
   const [dateFrom, setDateFromRaw] = useQueryState(
     "from",
@@ -67,17 +70,17 @@ export function useTableFilters<TFilters extends Record<string, string>>({
   // siempre a la primera página, igual que ya hacen `setSearch`/`setFilter`.
   const setDateFrom = useCallback(
     (v: string) => {
-      if (base.page !== 0) base.setPage(0);
+      if (page !== 0) setPage(0);
       setDateFromRaw(v || null);
     },
-    [setDateFromRaw, base],
+    [setDateFromRaw, page, setPage],
   );
   const setDateTo = useCallback(
     (v: string) => {
-      if (base.page !== 0) base.setPage(0);
+      if (page !== 0) setPage(0);
       setDateToRaw(v || null);
     },
-    [setDateToRaw, base],
+    [setDateToRaw, page, setPage],
   );
 
   const isInRange = useCallback(

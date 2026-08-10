@@ -171,7 +171,9 @@ export async function fetchExchangeRates(fecha?: string): Promise<ExchangeRates>
     eurMxn: data?.eurMxn ?? EXCHANGE_RATES_FALLBACK.eurMxn,
     fechaAplicada: data?.fechaAplicada,
     // FIX-10: la edge usa snake_case (`es_fallback`), el cliente camelCase.
-    esFallback: data?.es_fallback === true,
+    // RG18 (Ola 3): si el cuerpo 200 viene sin `usdMxn`, estamos mostrando el
+    // fallback aunque la edge no lo haya marcado; hay que declararlo.
+    esFallback: data?.es_fallback === true || data?.usdMxn == null,
   };
 }
 

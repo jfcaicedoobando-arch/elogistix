@@ -30,7 +30,7 @@ export function Layout() {
   }, []);
 
   const isMobile = useIsMobile();
-  const { requiereSeleccionOrg } = useOrganization();
+  const { requiereSeleccionOrg, loading } = useOrganization();
 
 
   return (
@@ -70,7 +70,16 @@ export function Layout() {
             <PageContainer noSpacing>
               <ErrorBoundary resetKey={location.pathname}>
                 <Suspense fallback={<RouteLoadingFallback />}>
-                  {requiereSeleccionOrg ? <SeleccionaOrganizacion /> : <Outlet />}
+                  {/* RG6: mientras el contexto restaura el tenant del super
+                      admin no se evalúa `requiereSeleccionOrg`; si no, la
+                      pantalla de selección parpadea en cada recarga. */}
+                  {loading ? (
+                    <RouteLoadingFallback />
+                  ) : requiereSeleccionOrg ? (
+                    <SeleccionaOrganizacion />
+                  ) : (
+                    <Outlet />
+                  )}
                 </Suspense>
               </ErrorBoundary>
             </PageContainer>

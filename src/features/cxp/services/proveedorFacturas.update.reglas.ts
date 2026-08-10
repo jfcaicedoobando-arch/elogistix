@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { ProveedorFacturaRow } from "./proveedorFacturas";
 import type { ActualizarFacturaPayload } from "./proveedorFacturas.update.types";
+import { sumarPagosEnMonedaFactura } from "./proveedorFacturas.helpers";
 
 export class SaldoNegativoError extends Error {
   code = "SALDO_NEGATIVO" as const;
@@ -55,11 +56,14 @@ export function calcularTotal(payload: ActualizarFacturaPayload): number {
  * Ola 9 · A6: ignora pagos borrados (soft-delete) y descuenta las notas de
  * crédito aplicadas; si no, el "total pagado" se infla y bloquea ediciones
  * legítimas. Tolerancia de 1 centavo por redondeos.
+ * RG4 (Ola 3): los pagos se suman en la MONEDA DE LA FACTURA
+ * (`monto_en_moneda_factura`), igual que el listado; sumar `monto` crudo
+ * inflaba ~17× cuando la factura es USD y el pago se hizo en MXN.
  */
 export async function validarTotalNoMenorAPagado(id: string, nuevoTotal: number): Promise<void> {
   const { data: pagos, error: errPagos } = await supabase
     .from("pagos_proveedor")
-    .select("monto")
+    .select("monto, monto_en_moneda_factura, deleted_at")
     .eq("proveedor_factura_id", id)
     .is("deleted_at", null);
   if (errPagos) throw errPagos;
@@ -71,7 +75,6 @@ export async function validarTotalNoMenorAPagado(id: string, nuevoTotal: number)
     .is("deleted_at", null);
   if (errNotas) throw errNotas;
   const totalNotas = (notas ?? []).reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
-  const totalPagado =
-    (pagos ?? []).reduce((acc, p) => acc + (Number(p.monto) || 0), 0) + totalNotas;
+  const totalPagado = sumarPagosEnMonedaFactura(pagos ?? []) + totalNotas;
   if (nuevoTotal + 0.01 < totalPagado) throw new SaldoNegativoError(totalPagado);
 }
