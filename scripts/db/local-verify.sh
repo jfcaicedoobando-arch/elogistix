@@ -156,8 +156,28 @@ if [ "$REUSE" != "1" ]; then
   fi
 fi
 
+# ---------- 2b) Snapshot del esquema (baseline golden) ----------
+if [ -n "$SNAPSHOT_OUT" ]; then
+  step "Generando snapshot de esquema → $SNAPSHOT_OUT"
+  mkdir -p "$(dirname "$SNAPSHOT_OUT")"
+  if bash scripts/db/schema-snapshot.sh "$SNAPSHOT_OUT" 2> "$LOGDIR/snapshot.log"; then
+    ok "snapshot ($(wc -l < "$SNAPSHOT_OUT") líneas)"
+  else
+    fail "no se pudo generar el snapshot — ver $LOGDIR/snapshot.log"
+    cat "$LOGDIR/snapshot.log" >&2
+    exit 1
+  fi
+fi
+
+if [ "$ONLY_SCHEMA" = "1" ]; then
+  printf '\n'
+  ok "Sólo esquema: migraciones + guardias en verde. Logs: $LOGDIR"
+  exit 0
+fi
+
 # ---------- 3) Suites SQL/RLS ----------
 declare -a SUITES=()
+
 if [ -n "$SUITES_ARG" ]; then
   IFS=',' read -r -a SUITES <<< "$SUITES_ARG"
 elif [ "$RUN_ALL" = "1" ]; then
