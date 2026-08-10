@@ -8,6 +8,8 @@
  * más próxima a vencer y el remanente se aplica a las siguientes.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { roundMoney } from "@/lib/financial/financialUtils";
+
 
 export interface FacturaLoteCandidata {
   factura_id: string;
