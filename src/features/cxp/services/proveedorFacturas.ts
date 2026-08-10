@@ -104,7 +104,6 @@ export interface FacturaCxP {
   };
 }
 
-
 export interface FetchCxPFiltros {
   search?: string;
   proveedor_id?: string;
