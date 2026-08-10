@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.487.2] - 2026-08-10
+- Datos (corrección puntual): 5 facturas migradas del sistema anterior de Sergio Iñiguez (folios 658 · ELIMP00076, 659 · ELIMP00078, 768 · ELIMP00107, 785 · ELIMP00100, 788 · ELIMP00101) pasaron de `Vencida` a `Pagada`. Sin pagos asociados por decisión operativa (se cobraron fuera de la app); se agregó nota `[Legacy] Cobrada en sistema anterior; pago no registrado en la app.` Montos, moneda, fechas y cliente sin cambios. Sin migración de esquema.
+
+
+
 ## [13.487.1] - 2026-08-10
 - Fix Tesorería · Conciliación: el rol `contador` veía los botones "Movimiento manual" e "Importar XLSX/CSV" pero la base rechazaba la escritura con RLS 42501 (`bbva_movimientos`). Nueva capacidad `CAPTURAR_MOVIMIENTO_BANCARIO` (super_admin, admin_org, admin, tesorero) como espejo exacto de las políticas de INSERT/UPDATE; la UI ahora oculta captura, importación y "Eliminar movimiento manual" para roles de sólo lectura y muestra el motivo. Sin migración: los permisos de la base no cambian.
 - Test: `ConciliacionToolbar.permisos.test.tsx`.
