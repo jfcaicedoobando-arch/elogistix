@@ -61,7 +61,9 @@ describe("OrganizationContext · super admin sin organización", () => {
   it("respeta la preferencia guardada", async () => {
     getItem.mockReturnValue("org-b");
     const { result } = renderHook(() => useOrganization(), { wrapper });
-    await waitFor(() => expect(result.current.organizationId).toBe("org-b"));
+    // Timeout holgado: bajo la suite completa el efecto de hidratación tarda
+    // más que el default de 1s de `waitFor` (test intermitente en CI).
+    await waitFor(() => expect(result.current.organizationId).toBe("org-b"), { timeout: 15000 });
     expect(result.current.requiereSeleccionOrg).toBe(false);
   });
 
