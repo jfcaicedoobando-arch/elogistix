@@ -123,8 +123,8 @@ describe("crearCotizacion", () => {
     await runWithFrozenClock("2026-08-11T01:00:00Z", async () => {
       mock.setTableResult("cotizaciones", { data: { id: "cot-9" }, error: null });
       await crearCotizacion({ ...baseInput, vigencia_dias: 30 });
-      const insert = mock.tableCalls.find((c) => c.table === "cotizaciones");
-      expect(insert?.payload?.fecha_vigencia).toBe("2026-09-09");
+      const payload = mock.getMutationPayload("cotizaciones") as { fecha_vigencia?: string };
+      expect(payload?.fecha_vigencia).toBe("2026-09-09");
     });
   });
 });
