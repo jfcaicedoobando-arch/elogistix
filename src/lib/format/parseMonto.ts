@@ -22,9 +22,15 @@ export function limpiarSeparadoresMiles(raw: string): string {
 /**
  * Convierte un monto tecleado a número finito. Devuelve `fallback` cuando el
  * texto no es interpretable (`""`, `"."`, `"abc"`, `"1.2.3"`).
+ *
+ * RG5 (Ola 3): en México se teclea coma decimal ("19,55"). Cuando queda una
+ * sola coma y ningún punto, se interpreta como separador decimal; "1,250.50" y
+ * "15,000" siguen tratándose como miles.
  */
 export function parseMonto(raw: string, fallback = 0): number {
-  const limpio = limpiarSeparadoresMiles(raw);
+  let limpio = limpiarSeparadoresMiles(raw);
+  const comas = (limpio.match(/,/g) ?? []).length;
+  if (comas === 1 && !limpio.includes(".")) limpio = limpio.replace(",", ".");
   if (limpio === "") return fallback;
   const n = Number(limpio);
   return Number.isFinite(n) ? n : fallback;
