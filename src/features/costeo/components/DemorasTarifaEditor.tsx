@@ -3,6 +3,7 @@
  * Permite agregar/quitar tramos (desde_dia, hasta_dia, monto/día) y guardar.
  */
 import { useEffect, useState } from "react";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -157,10 +158,10 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
                 />
               </TableCell>
               <TableCell>
-                <Input
-                  type="number" min={0} step="0.01" value={r.monto_por_dia}
+                <MoneyInput
+                  value={r.monto_por_dia}
                   aria-label={`Monto por día del tramo ${idx + 1}`}
-                  onChange={(e) => update(r._key, { monto_por_dia: Number(e.target.value) || 0 })}
+                  onChange={(n: number) => update(r._key, { monto_por_dia: n })}
                 />
               </TableCell>
               <TableCell>

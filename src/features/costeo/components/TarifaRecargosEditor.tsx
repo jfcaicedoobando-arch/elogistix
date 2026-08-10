@@ -3,6 +3,7 @@
  * Conceptos sugeridos: BAF, LSS, ISPS, THC Origen, Cargos en Origen/Destino, Otro.
  */
 import { Button } from "@/components/ui/button";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -64,14 +65,11 @@ export function TarifaRecargosEditor({ value, onChange }: Props) {
           </div>
           <div className="col-span-3">
             <Label htmlFor={`recargo-monto-${i}`} className="sr-only">{`Monto del recargo ${i + 1}`}</Label>
-            <Input
+            <MoneyInput
               id={`recargo-monto-${i}`}
-              type="number"
-              min={0}
-              step="0.01"
               value={r.monto}
-              onChange={(e) => update(i, { monto: Number(e.target.value) || 0 })}
-              placeholder="Monto USD"
+              onChange={(n: number) => update(i, { monto: n })}
+              currency="USD"
               aria-label={`Monto del recargo ${i + 1} en USD`}
             />
           </div>

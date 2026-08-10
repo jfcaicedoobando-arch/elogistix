@@ -3,6 +3,7 @@
  * Extraído de `NuevaOportunidadDialog.tsx`.
  */
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -87,11 +88,12 @@ export default function OportunidadFormFields({
         </Select>
       </div>
       <div className="space-y-1">
-        <Label>Monto estimado</Label>
-        <Input
-          type="number" min={0} step="0.01"
+        <Label htmlFor="op-monto-estimado">Monto estimado</Label>
+        <MoneyInput
+          id="op-monto-estimado"
           value={form.monto_estimado}
-          onChange={(e) => set("monto_estimado", Number(e.target.value))}
+          currency={form.moneda}
+          onChange={(n: number) => set("monto_estimado", n)}
         />
       </div>
       <div className="space-y-1">
@@ -127,11 +129,12 @@ export default function OportunidadFormFields({
             <DatePickerMx value={form.fecha_cierre_real} onChange={(v) => set("fecha_cierre_real", v)} className="w-full" />
           </div>
           <div className="space-y-1">
-            <Label>Valor real</Label>
-            <Input
-              type="number" min={0} step="0.01"
+            <Label htmlFor="op-valor-real">Valor real</Label>
+            <MoneyInput
+              id="op-valor-real"
               value={form.valor_real}
-              onChange={(e) => set("valor_real", Number(e.target.value))}
+              currency={form.moneda}
+              onChange={(n: number) => set("valor_real", n)}
             />
           </div>
         </>
