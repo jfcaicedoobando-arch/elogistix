@@ -20,8 +20,9 @@ import { translateAuthError } from "@/lib/auth/translateAuthError";
  */
 const resetSchema = z
   .object({
-    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
-    password2: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+    password: passwordSchema,
+    password2: passwordSchema,
+
   })
   .refine((v) => v.password === v.password2, {
     path: ["password2"],
