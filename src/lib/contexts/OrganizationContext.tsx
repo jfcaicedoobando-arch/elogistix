@@ -66,8 +66,11 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       const activeId = stored && orgList.find(o => o.id === stored) ? stored : null;
       setSuperAdminActiveId(activeId);
       // Re-sincroniza el servidor con la preferencia local (otro navegador o
-      // sesión pudo dejar seleccionado un tenant distinto).
-      void setSuperAdminOrg(activeId).catch(() => undefined);
+      // sesión pudo dejar seleccionado un tenant distinto). Se espera el
+      // round-trip ANTES de liberar `loading`: así ninguna query de agregación
+      // se dispara con el tenant equivocado.
+      await setSuperAdminOrg(activeId).catch(() => undefined);
+      if (cancelled) return;
       setLoadingSA(false);
     })();
     return () => { cancelled = true; };
