@@ -43,11 +43,11 @@ BEGIN
   VALUES (v_emb, v_org, 'Costo 1', 10, 'USD'), (v_emb, v_org, 'Costo 2', 20, 'USD'),
          (v_emb, v_org, 'Costo 3', 30, 'USD');
 
-  -- N8: embarque del año actual con venta en USD y SIN tipo_cambio_usd (<=1).
+  -- N8: embarque del año actual con venta en USD y con tipo_cambio_usd = 1 (equivale a "sin TC").
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, eta, tipo_cambio_usd)
   VALUES ('c4444444-4444-4444-4444-444444444444', v_org, v_cli, 'ELNSB001',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
-          make_date(EXTRACT(year FROM CURRENT_DATE)::int, 1, 15), 0)
+          make_date(EXTRACT(year FROM CURRENT_DATE)::int, 1, 15), 1)
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.conceptos_venta (embarque_id, organization_id, descripcion, precio_unitario, total, moneda)
   VALUES ('c4444444-4444-4444-4444-444444444444', v_org, 'Venta sin TC', 500, 500, 'USD');
