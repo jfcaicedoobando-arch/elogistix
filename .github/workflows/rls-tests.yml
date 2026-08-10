@@ -740,7 +740,7 @@ jobs:
   rls-tests-result:
     name: RLS tests result
     runs-on: ubuntu-24.04
-    needs: [rls-suites, rls-guards]
+    needs: [rls-suites, rls-guards, schema-baseline]
     if: always()
     permissions:
       contents: read
