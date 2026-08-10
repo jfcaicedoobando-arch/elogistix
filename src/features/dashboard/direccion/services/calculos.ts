@@ -121,4 +121,3 @@ export {
   calcularHero,
   calcularPulso,
 } from "./calculosCartera";
-export type { CalcularHeroParams } from "./calculosCartera";
