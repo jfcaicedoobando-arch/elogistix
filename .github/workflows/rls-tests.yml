@@ -589,6 +589,153 @@ jobs:
           echo "types.ts sincronizado con el esquema de migraciones"
 
 
+  schema-baseline:
+    name: Baseline de esquema (estado final esperado)
+    runs-on: ubuntu-24.04
+    needs: rls
+    timeout-minutes: 10
+    # El drift radar prueba que las migraciones APLIQUEN; este job prueba que el
+    # estado final sea EXACTAMENTE el esperado. Cubre lo que ninguna otra suite
+    # ve: un índice borrado, un CHECK relajado, un GRANT abierto de más, un
+    # trigger eliminado o el cuerpo de una RPC cambiado sin querer.
+    # Se actualiza a propósito con: bun run db:baseline:update
+
+    services:
+      postgres:
+        image: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+          --shm-size=256m
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+      PSQL: psql -v ON_ERROR_STOP=1 -X -q
+      BASELINE: supabase/schema/baseline.sql
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Download database snapshot
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: rls-db-snapshot
+          path: .rls-snapshot/
+
+      - name: Create Supabase roles before restore
+        run: |
+          $PSQL <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+              CREATE ROLE anon NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+              CREATE ROLE authenticated NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+              CREATE ROLE service_role NOLOGIN BYPASSRLS;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
+              CREATE ROLE authenticator NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
+              CREATE ROLE supabase_admin NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
+              CREATE ROLE supabase_auth_admin NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
+              CREATE ROLE supabase_storage_admin NOLOGIN;
+            END IF;
+          END $$;
+          SQL
+
+      - name: Restore database snapshot
+        run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
+
+      - name: Generate normalized schema snapshot
+        run: |
+          set -euo pipefail
+          # pg_dump se ejecuta DENTRO del contenedor de la imagen pinneada:
+          # el pg_dump del runner (v16) formatea distinto al del servidor (15.8)
+          # y produciría diffs falsos contra la baseline generada en local.
+          container=$(docker ps --filter "ancestor=${POSTGRES_IMAGE}" --format '{{.Names}}' | head -1)
+          if [ -z "$container" ]; then
+            echo "::error::No se encontró el contenedor Postgres (imagen pinneada)."
+            exit 1
+          fi
+          bash scripts/db/schema-snapshot.sh /tmp/schema.actual.sql "$container"
+          wc -l /tmp/schema.actual.sql
+
+      - name: Upload generated snapshot
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: schema-snapshot-actual
+          path: /tmp/schema.actual.sql
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Compare against committed baseline
+        run: |
+          set -uo pipefail
+          if [ ! -f "$BASELINE" ]; then
+            echo "::error::Falta $BASELINE. Genérala una vez con: bun run db:baseline:update"
+            {
+              echo "## ❌ Baseline de esquema ausente"
+              echo ""
+              echo "Este repo aún no tiene \`$BASELINE\`. Generala en local con:"
+              echo ""
+              echo '```sh'
+              echo 'bun run db:baseline:update'
+              echo '```'
+              echo ""
+              echo "O descargá el artifact \`schema-snapshot-actual\` de este run y committealo en esa ruta."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          if diff -u "$BASELINE" /tmp/schema.actual.sql > /tmp/schema.diff; then
+            echo "✓ El estado final del esquema coincide con la baseline"
+            echo "## ✅ Baseline de esquema sin cambios" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "::error::El esquema resultante NO coincide con $BASELINE"
+          head -200 /tmp/schema.diff
+          {
+            echo "## ❌ Drift de esquema contra la baseline"
+            echo ""
+            echo "Si el cambio es intencional, regenerá la baseline con \`bun run db:baseline:update\` y committeala."
+            echo ""
+            echo '```diff'
+            head -300 /tmp/schema.diff
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+      - name: Upload schema diff
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: schema-baseline-diff
+          path: /tmp/schema.diff
+          if-no-files-found: ignore
+          retention-days: 7
+
+
 
   rls-tests-result:
     name: RLS tests result
