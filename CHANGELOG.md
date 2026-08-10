@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.479.2] - 2026-08-10
+- Fix CI (arquitectura): el cast a `jsonb` en `crearAjustesFacturaProveedor.ts` se marcó con `// SAFE-CAST:` para cumplir la auditoría de casts.
+
 ## [13.479.1] - 2026-08-10
 - Fix CI (H6): se re-aplicaron los permisos de ejecución de `convertir_prospecto_a_cliente_rpc` (sin acceso público/anónimo) en una migración correctiva y se subió el baseline del auditor de migraciones.
 
