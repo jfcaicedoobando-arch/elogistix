@@ -11,7 +11,6 @@ import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
 export {
   createUserViaEdgeFunction,
   type CreateUserParams,
-  type CreateUserResponse,
 } from "./mutaciones.alta";
 
 /**
