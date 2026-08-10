@@ -111,7 +111,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
           />
         )}
 
-        {esMovimientoManual(movimiento) && movimiento.estado_conciliacion !== "Conciliado" && (
+        {puedeCapturar && esMovimientoManual(movimiento) && movimiento.estado_conciliacion !== "Conciliado" && (
           <Button
             variant="outline"
             size="sm"

@@ -26,9 +26,11 @@ import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoShe
 import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { MovimientoManualDialog } from "./_sections/MovimientoManualDialog";
 import { ConciliacionToolbar } from "./_sections/ConciliacionToolbar";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 export default function TesoreriaConciliacion() {
   const { data: cuentas = [] } = useCuentasBancarias();
+  const { canCapturarMovimientoBancario } = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
   const [cuentaId, setCuentaIdState] = useState<string>(searchParams.get("cuenta") ?? "");
   const setCuentaId = (id: string) => {
@@ -130,6 +132,7 @@ export default function TesoreriaConciliacion() {
         fileRef={fileRef}
         onFile={handleFile}
         importando={importar.isPending}
+        puedeCapturar={canCapturarMovimientoBancario}
       />
 
       {!cuentaId ? (
@@ -172,7 +175,7 @@ export default function TesoreriaConciliacion() {
       )}
 
       <MovimientoManualDialog
-        open={manualOpen}
+        open={manualOpen && canCapturarMovimientoBancario}
         onOpenChange={setManualOpen}
         cuentas={cuentas}
         manualForm={manualForm}

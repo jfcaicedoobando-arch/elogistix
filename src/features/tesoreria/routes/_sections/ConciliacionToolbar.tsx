@@ -35,12 +35,14 @@ interface Props {
   fileRef: RefObject<HTMLInputElement | null>;
   onFile: (e: ChangeEvent<HTMLInputElement>) => void;
   importando: boolean;
+  /** Espejo UI de la política RLS de `bbva_movimientos` (tesorero + admins). */
+  puedeCapturar: boolean;
 }
 
 export function ConciliacionToolbar({
   cuentas, cuentaId, onCuentaChange, estado, onEstadoChange,
   pendientesCount, isAutoConciliando, onConciliarExactos, onAbrirManual,
-  fileRef, onFile, importando,
+  fileRef, onFile, importando, puedeCapturar,
 }: Props) {
   return (
     <Card>
@@ -76,15 +78,23 @@ export function ConciliacionToolbar({
           {isAutoConciliando ? "Conciliando..." : "Conciliar exactos"}
         </Button>
 
-        <Button variant="outline" onClick={onAbrirManual} disabled={!cuentaId}>
-          <Plus className="h-4 w-4 mr-2" /> Movimiento manual
-        </Button>
+        {puedeCapturar ? (
+          <>
+            <Button variant="outline" onClick={onAbrirManual} disabled={!cuentaId}>
+              <Plus className="h-4 w-4 mr-2" /> Movimiento manual
+            </Button>
 
-        <input ref={fileRef} type="file" accept=".xlsx,.csv" onChange={onFile} className="hidden" />
-        <Button onClick={() => fileRef.current?.click()} disabled={!cuentaId || importando}>
-          <Upload className="h-4 w-4 mr-2" />
-          {importando ? "Importando..." : "Importar XLSX/CSV"}
-        </Button>
+            <input ref={fileRef} type="file" accept=".xlsx,.csv" onChange={onFile} className="hidden" />
+            <Button onClick={() => fileRef.current?.click()} disabled={!cuentaId || importando}>
+              <Upload className="h-4 w-4 mr-2" />
+              {importando ? "Importando..." : "Importar XLSX/CSV"}
+            </Button>
+          </>
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            Sólo tesorería puede capturar o importar movimientos bancarios.
+          </span>
+        )}
       </CardContent>
     </Card>
   );
