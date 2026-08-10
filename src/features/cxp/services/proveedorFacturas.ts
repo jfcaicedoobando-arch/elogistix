@@ -85,7 +85,7 @@ export interface FacturaCxP {
   fecha_cancelacion: string | null;
   motivo_cancelacion: string | null;
   cancelada_por: string | null;
-  /** Quién capturó la factura. Necesario para la segregación de funciones (SoD). */
+  /** Quién capturó la factura (segregación de funciones al aprobar). */
   created_by: string | null;
   /**
    * Flags derivados de la factura que enriquecen el chip de estado sin
