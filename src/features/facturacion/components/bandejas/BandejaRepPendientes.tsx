@@ -4,7 +4,7 @@
  * v13.491.0 — timbrado desde la propia bandeja: botón por renglón y selección
  * múltiple para timbrar varios REP en una sola pasada.
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReceiptText } from "lucide-react";
 import { DataTable } from "@/components/shared/DataTable";
@@ -27,14 +27,14 @@ export function BandejaRepPendientes() {
   const { timbrar, enProceso, progreso } = useTimbrarRepsLote();
   const [pagoEnProceso, setPagoEnProceso] = useState<string | null>(null);
 
-  const timbrarUno = async (pagoId: string) => {
+  const timbrarUno = useCallback(async (pagoId: string) => {
     setPagoEnProceso(pagoId);
     try {
       await timbrar([pagoId]);
     } finally {
       setPagoEnProceso(null);
     }
-  };
+  }, [timbrar]);
 
   const timbrarSeleccion = async () => {
     const ids = [...selection.selectedIds];
@@ -52,8 +52,7 @@ export function BandejaRepPendientes() {
         bloqueado: enProceso,
       }),
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pagoEnProceso, enProceso],
+    [pagoEnProceso, enProceso, timbrarUno],
   );
 
   const paged = useClientPagedList<FilaRepPendiente, Filters>({

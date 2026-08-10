@@ -17,14 +17,14 @@
  */
 import type React from "react";
 import { type LucideIcon } from "lucide-react";
-import { flexRender, type Table } from "@tanstack/react-table";
+import type { Table } from "@tanstack/react-table";
 import { useSafeNavigate } from "./useSafeNavigate";
-import { TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { TableBody } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { ALIGN_CLASS, DENSITY_CELL, type ColumnAlign, type TableDensity } from "./types";
-import { handleRowClick, handleRowKeyDown, isInteractiveDescendant } from "./rowNav";
+import { DENSITY_CELL, type TableDensity } from "./types";
 import { DataTableBodySkeleton } from "./DataTableBodySkeleton";
 import { DataTableBodyEmpty } from "./DataTableBodyEmpty";
+import { DataTableRow } from "./DataTableRow";
 import "./columnMeta";
 
 interface Props<T> {
@@ -88,77 +88,23 @@ export function DataTableBody<T>({
 
   return (
     <TableBody>
-      {rows.map((row) => {
-        const item = row.original;
-        const seleccionable = selectionMode && row.getCanSelect();
-        const href = seleccionable ? null : (getRowHref?.(item) ?? null);
-        const navigable = !!href;
-        const clickable = navigable || !!onRowClick || seleccionable;
-        return (
-          <TableRow
-            key={row.id}
-            className={cn(
-              clickable && "cursor-pointer",
-              (navigable || seleccionable) && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-              !striped && "even:bg-transparent",
-              !hoverable && "hover:bg-transparent",
-              rowClassName?.(item),
-            )}
-            role={navigable ? "link" : undefined}
-            tabIndex={navigable || seleccionable ? 0 : undefined}
-            aria-selected={seleccionable ? row.getIsSelected() : undefined}
-            aria-label={navigable ? getRowAriaLabel?.(item) : undefined}
-            onClick={(e) => {
-              if (seleccionable) {
-                if (isInteractiveDescendant(e.target)) return;
-                row.toggleSelected(!row.getIsSelected());
-                return;
-              }
-              if (navigable && href) {
-                handleRowClick(e, { href, navigate });
-                if (e.defaultPrevented) return;
-              }
-              if (onRowClick && !isInteractiveDescendant(e.target)) onRowClick(item);
-            }}
-            onKeyDown={(e) => {
-              if (seleccionable) {
-                if (isInteractiveDescendant(e.target)) return;
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  row.toggleSelected(!row.getIsSelected());
-                }
-                return;
-              }
-              if (navigable && href) handleRowKeyDown(e, { href, navigate });
-            }}
-            onAuxClick={(e) => {
-              if (navigable && href && e.button === 1) {
-                e.preventDefault();
-                window.open(href, "_blank", "noopener,noreferrer");
-              }
-            }}
-            onMouseEnter={onRowMouseEnter ? () => onRowMouseEnter(item) : undefined}
-          >
-
-            {row.getVisibleCells().map((cell) => {
-              const meta = cell.column.columnDef.meta ?? {};
-              const align: ColumnAlign = meta.align ?? "left";
-              return (
-                <TableCell
-                  key={cell.id}
-                  className={cn(
-                    meta.width, cellPad, ALIGN_CLASS[align], borderCell, meta.className,
-                    meta.sticky && "sticky left-0 z-[5] bg-background [tr:nth-child(even)_&]:bg-muted/45 dark:[tr:nth-child(even)_&]:bg-muted/30 [tr:hover_&]:bg-primary/5 [tr[data-state=selected]_&]:bg-muted shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]",
-                    meta.stickyRight && "sticky right-0 z-[5] bg-background [tr:nth-child(even)_&]:bg-muted/45 dark:[tr:nth-child(even)_&]:bg-muted/30 [tr:hover_&]:bg-primary/5 [tr[data-state=selected]_&]:bg-muted shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
-                  )}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              );
-            })}
-          </TableRow>
-        );
-      })}
+      {rows.map((row) => (
+        <DataTableRow
+          key={row.id}
+          row={row}
+          cellPad={cellPad}
+          borderCell={borderCell}
+          striped={striped}
+          hoverable={hoverable}
+          selectionMode={selectionMode}
+          navigate={navigate}
+          rowClassName={rowClassName}
+          onRowClick={onRowClick}
+          onRowMouseEnter={onRowMouseEnter}
+          getRowHref={getRowHref}
+          getRowAriaLabel={getRowAriaLabel}
+        />
+      ))}
     </TableBody>
   );
 }

@@ -5,18 +5,10 @@
  */
 import { FileEdit } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { etdVencido } from "@/features/embarques/domain/etdVencido";
 
 interface Props {
   etd: string | null;
-}
-
-/** ETD vencido = fecha de salida anterior a hoy (comparación en UTC). */
-export function etdVencido(etd: string | null): boolean {
-  if (!etd) return false;
-  const now = new Date();
-  const hoy = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  const fecha = new Date(`${etd.slice(0, 10)}T00:00:00Z`).getTime();
-  return !Number.isNaN(fecha) && fecha < hoy;
 }
 
 export function AlertaBorrador({ etd }: Props) {

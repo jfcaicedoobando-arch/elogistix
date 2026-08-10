@@ -65,43 +65,16 @@ export function StatusActionBar({
 
       <div className="flex items-center gap-2">
         {puedeAprobar && pendiente && (
-          <>
-            <Button size="sm" variant="ghost"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={() => setOpenRechazar(true)} disabled={aprobar.isPending}>
-              <X className="h-4 w-4 mr-1" /> Rechazar
-            </Button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Button
-                    size="sm"
-                    onClick={() => setOpenAprobar(true)}
-                    disabled={aprobar.isPending || Boolean(motivoBloqueoAprobacion)}
-                  >
-                    <Check className="h-4 w-4 mr-1" /> Aprobar factura
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              {motivoBloqueoAprobacion && (
-                <TooltipContent className="max-w-xs">{motivoBloqueoAprobacion}</TooltipContent>
-              )}
-            </Tooltip>
-          </>
+          <AprobarRechazarBotones
+            pending={aprobar.isPending}
+            motivoBloqueoAprobacion={motivoBloqueoAprobacion}
+            onAbrirAprobar={() => setOpenAprobar(true)}
+            onAbrirRechazar={() => setOpenRechazar(true)}
+          />
         )}
         {!pendiente && onPagar && flags.pagable && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <Button size="sm" onClick={() => onPagar(f)} disabled={!flags.aprobada}>
-                  <Banknote className="h-4 w-4 mr-1" /> Registrar pago
-                </Button>
-              </span>
-            </TooltipTrigger>
-            {!flags.aprobada && <TooltipContent>Requiere aprobación antes de pagar</TooltipContent>}
-          </Tooltip>
+          <BotonRegistrarPago factura={f} aprobada={flags.aprobada} onPagar={onPagar} />
         )}
-
         {hasOverflow && (
           <OverflowMenu
             f={f} flags={flags} cancelada={cancelada}
@@ -165,5 +138,57 @@ function OverflowMenu({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function AprobarRechazarBotones({
+  pending, motivoBloqueoAprobacion, onAbrirAprobar, onAbrirRechazar,
+}: {
+  pending: boolean;
+  motivoBloqueoAprobacion: string | null;
+  onAbrirAprobar: () => void;
+  onAbrirRechazar: () => void;
+}) {
+  return (
+    <>
+      <Button size="sm" variant="ghost"
+        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+        onClick={onAbrirRechazar} disabled={pending}>
+        <X className="h-4 w-4 mr-1" /> Rechazar
+      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span>
+            <Button size="sm" onClick={onAbrirAprobar} disabled={pending || Boolean(motivoBloqueoAprobacion)}>
+              <Check className="h-4 w-4 mr-1" /> Aprobar factura
+            </Button>
+          </span>
+        </TooltipTrigger>
+        {motivoBloqueoAprobacion && (
+          <TooltipContent className="max-w-xs">{motivoBloqueoAprobacion}</TooltipContent>
+        )}
+      </Tooltip>
+    </>
+  );
+}
+
+function BotonRegistrarPago({
+  factura, aprobada, onPagar,
+}: {
+  factura: FacturaCxP;
+  aprobada: boolean;
+  onPagar: (f: FacturaCxP) => void;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span>
+          <Button size="sm" onClick={() => onPagar(factura)} disabled={!aprobada}>
+            <Banknote className="h-4 w-4 mr-1" /> Registrar pago
+          </Button>
+        </span>
+      </TooltipTrigger>
+      {!aprobada && <TooltipContent>Requiere aprobación antes de pagar</TooltipContent>}
+    </Tooltip>
   );
 }
