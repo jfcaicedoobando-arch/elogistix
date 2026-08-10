@@ -775,16 +775,20 @@ jobs:
         run: |
           suites="${{ needs.rls-suites.result }}"
           guards="${{ needs.rls-guards.result }}"
+          baseline="${{ needs.schema-baseline.result }}"
           echo "rls-suites result: $suites"
           echo "rls-guards result: $guards"
+          echo "schema-baseline result: $baseline"
           fail=0
           [ "$suites" = "success" ] || fail=1
           [ "$guards" = "success" ] || fail=1
+          [ "$baseline" = "success" ] || fail=1
           if [ "$fail" = "1" ]; then
-            echo "::error::Una o más suites RLS o guards conductuales fallaron"
+            echo "::error::Una o más suites RLS, guards conductuales o la baseline de esquema fallaron"
             exit 1
           fi
-          echo "✓ Todas las suites RLS y los guards conductuales pasaron"
+          echo "✓ Suites RLS, guards conductuales y baseline de esquema en verde"
+
 
 
 
