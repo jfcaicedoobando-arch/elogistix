@@ -13,7 +13,6 @@ import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { usePermissions } from "@/hooks/shared";
 import { DialogFacturaProveedorSinPermiso } from "@/features/cxp/components/DialogFacturaProveedorSinPermiso";
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
-import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
 import { TotalesChipDesglose } from "./TotalesChipDesglose";
 import { PendientesGuardarHint } from "./PendientesGuardarHint";
@@ -152,20 +151,7 @@ function DialogNuevaFacturaProveedorForm({
         </div>
       </FormDialogShell>
 
-
-      {ctl.askCrearProv && (
-        <CrearProveedorDesdeCfdiDialog
-          open={!!ctl.askCrearProv}
-          onOpenChange={(o) => { if (!o) ctl.setAskCrearProv(null); }}
-          rfc={ctl.askCrearProv.rfc}
-          nombre={ctl.askCrearProv.nombre}
-          organizationId={ctl.organizationId}
-          onCreated={(id, nombre) => {
-            ctl.handleProveedor(id, nombre);
-            ctl.setAskCrearProv(null);
-          }}
-        />
-      )}
     </>
   );
 }
+

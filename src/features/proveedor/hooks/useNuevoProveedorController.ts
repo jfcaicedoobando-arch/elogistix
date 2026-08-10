@@ -16,6 +16,7 @@ import {
   type TipoProveedor,
 } from "./useNuevoProveedorController.constants";
 import { mergeCsfPatch, procesarCsfUpload } from "./useNuevoProveedorController.csf";
+import { formInicialProveedor, type PrefillProveedor } from "./useNuevoProveedorController.prefill";
 import { preparePayload } from "./useNuevoProveedorController.helpers";
 import { notifyError } from "@/lib/ui/appFeedback";
 
@@ -29,9 +30,11 @@ export {    type NuevoProveedorForm } from "./useNuevoProveedorController.consta
 export function useNuevoProveedorController(
   onSave: (data: TablesInsert<"proveedores">) => void | Promise<void>,
   onClose: () => void,
+  /** Valores iniciales opcionales (p. ej. datos detectados en un CFDI). */
+  prefill?: PrefillProveedor,
 ) {
   const { organizationId } = useOrgFilter();
-  const [form, setForm] = useState<NuevoProveedorForm>({ ...EMPTY_PROVEEDOR_FORM });
+  const [form, setForm] = useState<NuevoProveedorForm>(() => formInicialProveedor(prefill));
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);

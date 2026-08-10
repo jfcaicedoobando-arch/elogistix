@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.492.1] - 2026-08-10
+- Captura de factura de proveedor: cuando el emisor del CFDI/PDF no existe en el catálogo, el modal ya **no** abre un mini-formulario para crearlo (creaba altas incompletas con tipo/país/moneda por defecto). Ahora muestra el aviso `ProveedorNoEncontradoAlert` con el nombre y RFC/Tax ID detectados y un botón que abre **Proveedores** en pestaña nueva con el alta prellenada (`/compras/proveedores?nuevo=1&rfc=&nombre=`); la captura en curso no se pierde y el proveedor sigue siendo obligatorio para guardar.
+- `NuevoProveedorDialog`/`useNuevoProveedorController` aceptan `prefill` (nombre y RFC) y la pantalla de Proveedores lee esos parámetros de la URL y los limpia al cerrar. Se eliminó `CrearProveedorDesdeCfdiDialog`.
+
 ## [13.492.0] - 2026-08-10
 - Embarques en **Borrador** ya no se leen como confirmados (caso ELIMP00323): la línea de tiempo de fases marcaba "Confirmado" como completada de forma fija y completaba "En Tránsito" en cuanto el ETD vencía, aunque el embarque nunca se hubiera confirmado. Ahora `calcularFasesEmbarque` respeta el estado guardado: en borrador la fase se etiqueta **"Por confirmar"** y queda como fase actual, y ni En Tránsito ni Arribo se completan por fechas.
 - Nueva `AlertaBorrador` (extraída de `EmbarqueDetalleTabs`): el aviso amarillo advierte explícitamente cuando el **ETD ya venció** y el embarque sigue sin confirmar.

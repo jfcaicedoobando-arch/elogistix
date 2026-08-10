@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,22 @@ export default function Proveedores() {
   const [origen, setOrigen] = useState<OrigenFiltro>("todos");
   const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("todos");
   const [nuevoOpen, setNuevoOpen] = useState(false);
+  // Atajo desde la captura de facturas de proveedor: ?nuevo=1&rfc=&nombre=
+  const [searchParams, setSearchParams] = useSearchParams();
+  const prefillRfc = searchParams.get("rfc") ?? "";
+  const prefillNombre = searchParams.get("nombre") ?? "";
+  const pedirNuevo = searchParams.get("nuevo") === "1";
+  useEffect(() => {
+    if (pedirNuevo) setNuevoOpen(true);
+  }, [pedirNuevo]);
+  const cerrarNuevo = (abierto: boolean) => {
+    setNuevoOpen(abierto);
+    if (!abierto && pedirNuevo) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("nuevo"); next.delete("rfc"); next.delete("nombre");
+      setSearchParams(next, { replace: true });
+    }
+  };
   const [importOpen, setImportOpen] = useState(false);
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
@@ -77,7 +93,13 @@ export default function Proveedores() {
         onCreateNew={() => setNuevoOpen(true)}
       />
 
-      <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={handleAdd} />
+      <NuevoProveedorDialog
+        key={`${prefillRfc}|${prefillNombre}`}
+        open={nuevoOpen}
+        onOpenChange={cerrarNuevo}
+        onSave={handleAdd}
+        prefill={pedirNuevo ? { rfc: prefillRfc, nombre: prefillNombre } : undefined}
+      />
 
       <ProveedoresImportDialog open={importOpen} onOpenChange={setImportOpen} />
 

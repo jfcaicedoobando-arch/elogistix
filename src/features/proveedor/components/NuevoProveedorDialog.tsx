@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useNuevoProveedorController } from "@/features/proveedor/hooks";
+import type { PrefillProveedor } from "@/features/proveedor/hooks/useNuevoProveedorController.prefill";
 import { NuevoProveedorStep1 } from "./NuevoProveedorStep1";
 import { NuevoProveedorStep2 } from "./NuevoProveedorStep2";
 
@@ -16,10 +17,12 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (data: TablesInsert<"proveedores">) => void;
+  /** Prellenado opcional (datos detectados en una factura de proveedor). */
+  prefill?: PrefillProveedor;
 }
 
-export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Props) {
-  const c = useNuevoProveedorController(onSave, () => onOpenChange(false));
+export default function NuevoProveedorDialog({ open, onOpenChange, onSave, prefill }: Props) {
+  const c = useNuevoProveedorController(onSave, () => onOpenChange(false), prefill);
 
   const origen = c.form.origen_proveedor;
   const headerAside = origen ? (

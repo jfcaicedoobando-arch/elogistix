@@ -11,6 +11,7 @@ import { EntranteCapturaBanner } from "./EntranteCapturaBanner";
 import { OrigenDocumentoPicker } from "./OrigenDocumentoPicker";
 import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CfdiDuplicadoAlert } from "./CfdiDuplicadoAlert";
+import { ProveedorNoEncontradoAlert } from "./ProveedorNoEncontradoAlert";
 import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
 import { ConceptosManualesSection } from "./ConceptosManualesSection";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
@@ -42,6 +43,12 @@ export function BandaOrigenYAlertas({
         mensaje={autocarga.mensaje}
       />
       <CfdiDuplicadoAlert factura={ctl.cfdiDuplicado} onVerFactura={onVerFacturaDuplicada} />
+      {ctl.askCrearProv && (
+        <ProveedorNoEncontradoAlert
+          rfc={ctl.askCrearProv.rfc}
+          nombre={ctl.askCrearProv.nombre}
+        />
+      )}
       <OrigenDocumentoPicker mode={ctl.mode} onModeChange={ctl.setMode} />
     </div>
   );
