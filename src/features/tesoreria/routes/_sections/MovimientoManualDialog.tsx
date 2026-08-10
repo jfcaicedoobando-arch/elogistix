@@ -47,14 +47,26 @@ export function MovimientoManualDialog({
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-3">
+      <div
+        className="grid grid-cols-2 gap-3"
+        onKeyDown={(e) => {
+          // Enter en cualquier campo guarda (sin cerrar el modal a ciegas).
+          if (e.key === "Enter" && !e.shiftKey && manualEsValido && !isPending) {
+            const t = e.target as HTMLElement;
+            if (t.tagName === "INPUT") {
+              e.preventDefault();
+              onGuardar();
+            }
+          }
+        }}
+      >
         <div className="col-span-2">
-          <Label>Cuenta bancaria *</Label>
+          <Label htmlFor="mov-cuenta">Cuenta bancaria *</Label>
           <Select
             value={manualForm.cuentaBancariaId ?? ""}
             onValueChange={(v) => setManualField("cuentaBancariaId", v)}
           >
-            <SelectTrigger><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
+            <SelectTrigger id="mov-cuenta"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
             <SelectContent>
               {cuentas.map((c) => (
                 <SelectItem key={c.id} value={c.id}>{c.banco} · {c.alias} ({c.moneda})</SelectItem>
@@ -63,7 +75,7 @@ export function MovimientoManualDialog({
           </Select>
         </div>
         <div>
-          <Label>Fecha *</Label>
+          <Label htmlFor="mov-fecha">Fecha *</Label>
           <DatePickerMx
             value={manualForm.fecha ?? ""}
             onChange={(v) => setManualField("fecha", v)}
@@ -71,12 +83,12 @@ export function MovimientoManualDialog({
           />
         </div>
         <div>
-          <Label>Tipo *</Label>
+          <Label htmlFor="mov-tipo">Tipo *</Label>
           <Select
             value={manualForm.tipo ?? "cargo"}
             onValueChange={(v) => setManualField("tipo", v as "cargo" | "abono")}
           >
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger id="mov-tipo"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="cargo">Cargo</SelectItem>
               <SelectItem value="abono">Abono</SelectItem>
@@ -84,28 +96,39 @@ export function MovimientoManualDialog({
           </Select>
         </div>
         <div className="col-span-2">
-          <Label>Concepto *</Label>
+          <Label htmlFor="mov-concepto">Concepto *</Label>
           <Input
+            id="mov-concepto"
             value={manualForm.concepto ?? ""}
             onChange={(e) => setManualField("concepto", e.target.value)}
           />
         </div>
         <div>
-          <Label>Referencia</Label>
+          <Label htmlFor="mov-referencia">Referencia</Label>
           <Input
+            id="mov-referencia"
             value={manualForm.referencia ?? ""}
             onChange={(e) => setManualField("referencia", e.target.value)}
           />
         </div>
         <div>
-          <Label>Importe *</Label>
-          <Input
-            type="number" step="0.01"
-            value={manualForm.monto ?? ""}
-            onChange={(e) => setManualField("monto", Number(e.target.value))}
+          <Label htmlFor="mov-importe">Importe *</Label>
+          <MoneyInput
+            id="mov-importe"
+            value={manualForm.monto ?? null}
+            onChange={(n) => setManualField("monto", n)}
+            currency={monedaCuenta}
+            aria-invalid={!!erroresManual.monto}
+            aria-describedby={erroresManual.monto ? "mov-importe-error" : undefined}
           />
+          {erroresManual.monto && (
+            <p id="mov-importe-error" className="mt-1 text-xs text-destructive">
+              {erroresManual.monto}
+            </p>
+          )}
         </div>
       </div>
+
     </FormDialogShell>
   );
 }
