@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 const Landing = lazy(() => import("./Landing"));
 
 export default function HomeRoute() {
-  const { user, loading } = useAuth();
+  const { user, effectiveRole, loading } = useAuth();
 
   if (loading) {
     return (
@@ -23,7 +23,8 @@ export default function HomeRoute() {
   }
 
   if (user) {
-    return <Navigate to="/inicio" replace />;
+    // RG1: sin rol efectivo, `/inicio` nos rebotaría de vuelta aquí (bucle).
+    return <Navigate to={effectiveRole ? "/inicio" : "/sin-acceso"} replace />;
   }
 
   return (

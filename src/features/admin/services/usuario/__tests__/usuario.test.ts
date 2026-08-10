@@ -46,7 +46,7 @@ describe("services/usuario", () => {
       data: [{ id: "u1", email: "a@b.com", created_at: "2026-02-01" }],
       error: null,
     });
-    const r = await fetchUsuariosOrganizacion();
+    const r = await fetchUsuariosOrganizacion("org-1");
     expect(r[0].email).toBe("a@b.com");
     expect(r[0].role).toBe("admin");
   });
@@ -57,13 +57,13 @@ describe("services/usuario", () => {
       error: null,
     });
     mock.invoke.mockResolvedValue({ data: null, error: { message: "fail" } });
-    const r = await fetchUsuariosOrganizacion();
+    const r = await fetchUsuariosOrganizacion("org-1");
     expect(r[0].email).toBe(UNRESOLVED_EMAIL);
   });
 
   it("fetchUsuariosOrganizacion propaga error de members", async () => {
     mock.setTableResult("organization_members", { data: null, error: { message: "boom" } });
-    await expect(fetchUsuariosOrganizacion()).rejects.toThrow();
+    await expect(fetchUsuariosOrganizacion("org-1")).rejects.toThrow();
   });
 
   it("updateUserRole hace update", async () => {

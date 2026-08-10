@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.479.0] - 2026-08-10
+- Fix (RG1): nueva pantalla `/sin-acceso`. Una sesión sin rol ni organización ya no queda en un bucle infinito entre `/` y `/inicio`.
+- Fix (RG2): al convertir un prospecto en cliente, los RFC genéricos del SAT (`XAXX010101000` / `XEXX010101000`) ya no fusionan prospectos distintos en un mismo cliente.
+- Fix (RG3b): un `super_admin` ya no queda degradado por tener una membresía con rol bajo en alguna organización.
+- Fix (P1): los ajustes de una factura de proveedor se crean en una sola transacción vía `crear_ajustes_factura_proveedor_rpc` (antes un fallo parcial dejaba conceptos de costo huérfanos).
+- Seguridad (P2): los listados de usuarios (internos y de portales) son fail-closed: sin organización activa no devuelven nada.
+- Fix (P4): al marcar un costo como pagado se invalidan también las cachés de conceptos de costo y del módulo Compras.
+
 ## [13.478.9] - 2026-08-10
 - Fix CI (arquitectura): `proveedorFacturas.update.ts` se dividió en `.reglas.ts` (validaciones) y `.types.ts` (tipos) para volver al límite Power-of-10 de 200 líneas.
 

@@ -7996,6 +7996,10 @@ export type Database = {
           total_count: number
         }[]
       }
+      crear_ajustes_factura_proveedor_rpc: {
+        Args: { p_ajustes: Json; p_factura_id: string }
+        Returns: Json
+      }
       crear_embarque_borrador_core: {
         Args: { p_cotizacion_id: string }
         Returns: string

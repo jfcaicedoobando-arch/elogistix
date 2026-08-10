@@ -72,6 +72,10 @@ export function useMarcarCostoPagado() {
       // facturas de proveedor); sin esto la pantalla de compras se desfasa.
       queryClient.invalidateQueries({ queryKey: queryKeys.cxp.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });
+      // Ola 3 · P4: el concepto vive también en el expediente de costos y en
+      // las bandejas de Compras; sin esto seguían mostrándolo como pendiente.
+      queryClient.invalidateQueries({ queryKey: queryKeys.conceptosCosto.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.compras.all });
       invalidateSidebarAlerts(queryClient);
 
       notifySuccess(undefined, { title: "Costo marcado como pagado" });

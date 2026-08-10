@@ -70,7 +70,8 @@ export function ProtectedRoute({ children, allowedRoles, inline = false }: Prote
   }
 
   if (sinAcceso) {
-    return <Navigate to="/" replace />;
+    // RG1: antes íbamos a "/" y HomeRoute rebotaba a "/inicio" → bucle infinito.
+    return <Navigate to="/sin-acceso" replace />;
   }
 
   return <>{children}</>;

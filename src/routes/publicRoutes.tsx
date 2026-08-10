@@ -8,6 +8,7 @@ import { Route, Navigate } from "react-router-dom";
 const Login = lazy(() => import("@/features/auth/routes/Login"));
 const ResetPassword = lazy(() => import("@/features/auth/routes/ResetPassword"));
 const NotFound = lazy(() => import("@/features/auth/routes/NotFound"));
+const SinAcceso = lazy(() => import("@/features/auth/routes/SinAcceso"));
 const TrackingPublico = lazy(() => import("@/features/auth/routes/TrackingPublico"));
 const Unsubscribe = lazy(() => import("@/features/auth/routes/Unsubscribe"));
 const HomeRoute = lazy(() => import("@/features/marketing/routes/HomeRoute"));
@@ -38,6 +39,8 @@ export const publicRoutes = (
     <Route path="/recursos/guia-puertos-mexico" element={<GuiaPuertosMexico />} />
     <Route path="/onboarding" element={<Onboarding />} />
     <Route path="/portal/proformas/:token" element={<PortalProforma />} />
+    {/* RG1: aterrizaje estable para sesiones sin rol/organización (sin bucle). */}
+    <Route path="/sin-acceso" element={<SinAcceso />} />
     <Route path="*" element={<NotFound />} />
 
   </>

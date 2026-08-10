@@ -32,7 +32,8 @@ export function useUsuarios(opciones?: { enabled?: boolean }) {
   return useQuery<UserRow[]>({
     queryKey: queryKeys.usuarios.scope(orgScope),
     queryFn: () => fetchUsuariosOrganizacion(orgScope),
-    enabled: opciones?.enabled ?? true,
+    // P2: sin tenant activo el servicio es fail-closed; no disparamos la query.
+    enabled: (opciones?.enabled ?? true) && !!orgScope,
     // Catálogo: cambia rara vez, evitar refetch en cada mount.
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,

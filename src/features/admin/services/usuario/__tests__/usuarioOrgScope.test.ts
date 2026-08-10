@@ -48,11 +48,11 @@ describe("usuario · alcance por organización (U-01/U-02)", () => {
     expect(eqArgs("organization_members")).toContainEqual(["organization_id", "org-1"]);
   });
 
-  it("fetchUsuariosOrganizacion no filtra cuando no hay organización (super_admin)", async () => {
+  // Ola 3 · P2 (fail-closed): sin organización activa no se consulta nada.
+  it("fetchUsuariosOrganizacion falla cuando no hay organización activa", async () => {
     mock.setTableResult("organization_members", { data: [], error: null });
-    mock.invoke.mockResolvedValue({ data: [], error: null });
-    await fetchUsuariosOrganizacion(null);
-    expect(eqArgs("organization_members")).toHaveLength(0);
+    await expect(fetchUsuariosOrganizacion(null)).rejects.toThrow("LC_ORG_REQUERIDA");
+    expect(mock.tableCalls).toHaveLength(0);
   });
 
   it("expone el nombre de la organización de cada membresía", async () => {

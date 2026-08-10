@@ -11,19 +11,20 @@
  *  - `origen='ajuste_factura_proveedor'` permite distinguirlos en UI y en
  *    la reversión al cancelar la factura (trigger BD `tg_reverse_ajustes_on_cancel`).
  *
- * Idempotencia: antes de crear, se soft-deletean ajustes previos de la
- * misma factura (mismo `proveedor_factura_id`). Así una edición futura no
- * duplica renglones.
+ * Ola 3 · P1 (atomicidad): la limpieza de ajustes previos + inserción de
+ * conceptos + puentes se ejecuta dentro de la RPC
+ * `crear_ajustes_factura_proveedor_rpc`, en UNA sola transacción. Antes eran
+ * 3 llamadas independientes: si fallaba la última, quedaban conceptos de
+ * costo huérfanos (sin puente) inflando el costo del embarque.
  */
 import currency from "currency.js";
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import type { VinculoLinea } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 const TOLERANCIA = 0.01;
-const ORIGEN_AJUSTE = "ajuste_factura_proveedor";
 
 export interface CrearAjustesInput {
   facturaId: string;
@@ -40,24 +41,6 @@ export interface CrearAjustesResult {
   ajustesCreados: number;
 }
 
-/** Soft-delete de ajustes previos de esta factura (idempotencia). */
-async function limpiarAjustesPrevios(facturaId: string): Promise<void> {
-  const { data: puentes } = await supabase
-    .from("proveedor_facturas_conceptos")
-    .select("concepto_costo_id")
-    .eq("proveedor_factura_id", facturaId);
-  const ids = (puentes ?? [])
-    .map((p) => p.concepto_costo_id)
-    .filter((id): id is string => !!id);
-  if (ids.length === 0) return;
-  await supabase
-    .from("conceptos_costo")
-    .update({ deleted_at: new Date().toISOString() })
-    .in("id", ids)
-    .eq("origen", ORIGEN_AJUSTE)
-    .is("deleted_at", null);
-}
-
 export async function crearAjustesFacturaProveedor(
   input: CrearAjustesInput,
 ): Promise<CrearAjustesResult> {
@@ -70,48 +53,28 @@ export async function crearAjustesFacturaProveedor(
 
   if (deltas.length === 0) return { ajustesCreados: 0 };
 
-  await limpiarAjustesPrevios(input.facturaId);
-
-  const nuevos = deltas.map((d) => ({
+  const ajustes = deltas.map((d) => ({
     embarque_id: d.vinculo.embarqueId,
-    organization_id: input.organizationId,
-    proveedor_id: input.proveedorId,
-    proveedor_nombre: input.proveedorNombre,
-    concepto: `Ajuste factura ${input.folio}: ${d.vinculo.descripcion}`,
+    descripcion: d.vinculo.descripcion,
     monto: d.delta,
-    moneda: input.moneda,
-    origen: ORIGEN_AJUSTE,
-    estado_liquidacion: "Pagado" as const,
-    fecha_pago: input.fechaEmision,
-    referencia_pago: input.folio,
   }));
 
-  const { data: creados, error: errIns } = await supabase
-    .from("conceptos_costo")
-    .insert(nuevos)
-    .select("id");
-  if (errIns) throw errIns;
+  const { data, error } = await supabase.rpc("crear_ajustes_factura_proveedor_rpc", {
+    p_factura_id: input.facturaId,
+    p_ajustes: ajustes as unknown as Json,
+  });
+  if (error) throw error;
 
-  const rows = (creados ?? []).map((c, i) => ({
-    proveedor_factura_id: input.facturaId,
-    organization_id: input.organizationId,
-    concepto_costo_id: c.id,
-    descripcion: nuevos[i].concepto,
-    cantidad: 1,
-    monto: nuevos[i].monto,
-  }));
-  const { error: errLink } = await supabase
-    .from("proveedor_facturas_conceptos")
-    .insert(rows);
-  if (errLink) throw errLink;
+  // SAFE-CAST: la RPC devuelve { ajustes_creados: number, folio: string }.
+  const creados = Number((data as { ajustes_creados?: number } | null)?.ajustes_creados ?? 0);
 
   await registrarActividad({
     modulo: "cxp",
     accion: "crear_ajustes_factura_proveedor",
     entidadId: input.facturaId,
     entidadNombre: input.folio,
-    detalles: { ajustesCreados: rows.length },
+    detalles: { ajustesCreados: creados },
   });
 
-  return { ajustesCreados: rows.length };
+  return { ajustesCreados: creados };
 }
