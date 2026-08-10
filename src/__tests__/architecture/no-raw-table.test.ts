@@ -30,6 +30,7 @@ const ALLOWLIST: readonly string[] = [
   "src/components/shared/dataTable/DataTableBodyEmpty.tsx",
   "src/components/shared/dataTable/DataTableBodySkeleton.tsx",
   "src/components/shared/dataTable/DataTableHeaderRow.tsx",
+  "src/components/shared/dataTable/DataTableRow.tsx",
   // Form-tables editables con render row complejo (inputs/textareas por celda).
   "src/features/cotizacion/components/SeccionMercanciaAerea.tsx",
   "src/features/cotizacion/components/SeccionMercanciaMaritimaLCL.tsx",
