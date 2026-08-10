@@ -23,10 +23,14 @@ interface Props {
   row: FacturaEntranteRow;
   puedeEliminar: boolean;
   puedeAdjuntarXml: boolean;
+  /** v13.494.0 — Documento rechazado que puede volver a "Por capturar". */
+  puedeReactivar?: boolean;
   onVer: (path: string, nombre: string) => void;
   onAdjuntarXml: (row: FacturaEntranteRow, xml: File) => void;
   onEliminar: (row: FacturaEntranteRow) => void;
+  onReactivar?: (row: FacturaEntranteRow) => void;
 }
+
 
 function FolioInternoChip({ row }: { row: FacturaEntranteRow }) {
   const folio = row.proveedor_facturas?.folio_interno;
