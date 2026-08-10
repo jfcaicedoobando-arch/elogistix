@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { EntrantesConfirmDialogs } from "@/features/embarques/components/entrantes/EntrantesConfirmDialogs";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
