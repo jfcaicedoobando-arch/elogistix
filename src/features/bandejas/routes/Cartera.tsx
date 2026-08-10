@@ -210,15 +210,30 @@ export default function Cartera() {
             emptyIcon={Inbox}
             emptyMessage="Sin cartera pendiente"
             emptyHint="¡Todo cobrado!"
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
           />
         </CardContent>
       </Card>
+
+      {lote && (
+        <DialogCobroLoteCliente
+          open={loteOpen}
+          onOpenChange={setLoteOpen}
+          clienteId={lote.clienteId}
+          clienteNombre={lote.clienteNombre}
+          moneda={lote.moneda}
+          facturas={lote.facturas}
+          onDone={() => setRowSelection({})}
+        />
+      )}
 
       <DialogRecordatorioCobranza
         open={recordatorio !== null}
         onOpenChange={(open) => !open && setRecordatorio(null)}
         factura={recordatorio}
       />
+
     </PageContainer>
   );
 }
