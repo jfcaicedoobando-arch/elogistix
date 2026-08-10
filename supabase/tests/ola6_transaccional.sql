@@ -145,6 +145,17 @@ BEGIN
   ----------------------------------------------------------------------------
   -- M7: actualizar_tarifa_con_recargos_rpc (una sola transacción)
   ----------------------------------------------------------------------------
+  -- Catálogos globales: en una base limpia (CI) pueden estar vacíos, se siembran.
+  INSERT INTO public.navieras (code, name)
+  VALUES ('OLAS', 'NAVIERA OLA6')
+  ON CONFLICT (code) DO NOTHING;
+  INSERT INTO public.tipos_contenedor (code, name)
+  VALUES ('40HC', '40 High Cube')
+  ON CONFLICT (code) DO NOTHING;
+  INSERT INTO public.puertos (code, name, country)
+  VALUES ('CNSHA', 'Shanghai', 'CN'), ('MXZLO', 'Manzanillo', 'MX')
+  ON CONFLICT (code) DO NOTHING;
+
   SELECT id INTO v_naviera FROM public.navieras ORDER BY code LIMIT 1;
   SELECT id INTO v_tipo FROM public.tipos_contenedor ORDER BY code LIMIT 1;
   SELECT id INTO v_p1 FROM public.puertos ORDER BY code LIMIT 1;

@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.478.6] - 2026-08-10
+- Tests: `ola6_transaccional.sql` siembra los catálogos globales (naviera, tipo de contenedor y puertos) antes de crear la tarifa, evitando `naviera_id` nulo en una base limpia de CI.
+
+
+
 ## [13.478.5] - 2026-08-10
 - Tests: el test `ola6_transaccional.sql` ahora crea el proveedor con `categoria = 'Logistico'` y `tipo = 'Naviera'`, cumpliendo `proveedores_categoria_check`.
 
