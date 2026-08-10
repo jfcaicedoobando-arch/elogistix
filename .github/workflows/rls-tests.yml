@@ -842,7 +842,14 @@ jobs:
           # una base reconstruida (su ancla vive en una migración legacy que
           # falla antes). Su estado final lo garantiza, de forma determinista y
           # sin anclas, la migración FIX C5-b posterior al corte.
-          DRIFT_CORTE: "20260729040000"
+          #
+          # 20260812090001 mueve el corte por encima de 20260812090000
+          # (Ola 4 N41/N44/N45): esa migración aborta siempre porque cambiaba
+          # los nombres de las columnas de salida de cartera_pendiente con
+          # CREATE OR REPLACE ("cannot change return type"). Su estado final lo
+          # garantizan, ya corregidas, las migraciones de reaplicación
+          # posteriores (cartera_pendiente + dashboard_summary/details).
+          DRIFT_CORTE: "20260812090001"
 
         run: |
           set -uo pipefail

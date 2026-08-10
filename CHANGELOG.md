@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.489.1] - 2026-08-10
+- CI (drift radar): la migración `20260812090000` (Ola 4 · N41/N44/N45) abortaba siempre porque cambiaba los nombres de las columnas de salida de `cartera_pendiente()` con `CREATE OR REPLACE` (`cannot change return type of existing function`), por lo que los tres fixes nunca llegaron a la base.
+- `cartera_pendiente()`: se reaplica N44 conservando la firma vigente (`factura_id`…`ultimo_contacto`, `estado`); las notas de crédito ahora se convierten a la moneda de la factura antes de restarse del saldo.
+- `dashboard_summary()` / `dashboard_details()`: se reaplican N41 (gastos operativos valuados por su propia moneda; EUR con el TC del embarque; conteo `gastosOperativosSinTC`) y N45 (facturas `Sustituida` excluidas del flag *facturado*).
+- `DRIFT_CORTE` movido a `20260812090001` con nota: el estado final lo garantizan las migraciones de reaplicación.
+
 ## [13.489.0] - 2026-08-10
 - Conciliación bancaria: los roles contables (**contador** y **auxiliar contable**) ya pueden capturar, editar e importar movimientos bancarios de su organización (antes la base respondía 42501). Políticas `Tesoreria write/update bbva_movimientos` ampliadas y `CAPTURAR_MOVIMIENTO_BANCARIO` actualizada.
 - Segregación de funciones: los roles contables ya **no** pueden subir facturas de proveedor recibidas en el tab *Costos* del embarque; queda reservado a operaciones y administradores (política `Operaciones sube facturas entrantes` y nueva capacidad `SUBIR_FACTURA_ENTRANTE_EMBARQUE`). Contabilidad sigue consultando los archivos, adjuntando XML y capturando la factura en CxP.
