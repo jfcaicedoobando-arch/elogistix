@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.489.3] - 2026-08-10
+- CI `audit:tests`: títulos duplicados entre los tests de pago en lote a proveedor y cobro en lote a cliente renombrados (`repartirFifo (CxP · pago proveedor en lote)`, `acepta un reparto válido de pago a proveedor`).
+- CI `audit:migrations` (H6): `20260810195819` recreó `assert_movimiento_pago_consistente()` sin el bloque de permisos; migración correctiva FIX-H6-12 re-aplica `REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO authenticated, service_role`, y el baseline del auditor sube a `20260810204343`.
+
+
+
 ## [13.489.2] - 2026-08-10
 - CI: `deploy-gate.yml` seguía con `DRIFT_BASELINE: 20260729040000`, por lo que volvía a marcar como *drift NUEVO* la migración histórica `20260812090000`. Se movió a `20260812090001` para quedar sincronizado con `DRIFT_CORTE` de `rls-tests.yml`.
 

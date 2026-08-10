@@ -108,8 +108,14 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    correctiva `20260810053328` re-aplica los permisos (`REVOKE ALL … FROM
  *    PUBLIC, anon` + `GRANT EXECUTE … TO authenticated, service_role`); el
  *    archivo original queda como legacy auditado.
+ *  - `20260810204343` — post-FIX-H6-12: `20260810195819` recreó
+ *    `assert_movimiento_pago_consistente()` (SECURITY DEFINER) sin el bloque
+ *    REVOKE/GRANT en el mismo archivo. La migración correctiva
+ *    `20260810204343` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon`
+ *    + `GRANT EXECUTE … TO authenticated, service_role`); el archivo original
+ *    queda como legacy auditado.
  */
-const BASELINE = "20260810053328";
+const BASELINE = "20260810204343";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
