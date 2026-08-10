@@ -7,13 +7,14 @@
  * barra `<UnifiedFiltersBar />` compartida con Facturación/Embarques.
  * v13.313.1: agregado diálogo de recordatorio de cobranza.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Inbox } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Inbox, Layers } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
 import { type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
