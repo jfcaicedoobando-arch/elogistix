@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.481.2] - 2026-08-10
+- Tests (Ola 4): `supabase/tests/ola4_altas.sql` fallaba en CI porque el embarque ajeno de la org B se insertaba sin `cliente_id` (columna NOT NULL). Se siembra un cliente de la org B y se pasa su id en el fixture.
+
 ## [13.481.1] - 2026-08-10
 - CI (Drift radar): las migraciones `20260810121500` y `20260810153744` no aplicaban en base limpia porque la tabla `public.cobranza_seguimiento` nace en una migración legacy que ya no aplica. Se agregó un prelude idempotente (tabla, grants, RLS, políticas y trigger con guardas `IF NOT EXISTS`) en la primera de ellas; sin efecto en bases existentes.
 
