@@ -5,6 +5,7 @@
  */
 import { differenceInDays, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 /** v13.380.0 — `Por liquidar` se suma al pendiente administrativo. */
 export type EstadoPendienteAdmin = "Entregado" | "EIR" | "Por liquidar";
@@ -41,9 +42,12 @@ export async function fetchEmbarquesPendientesAdmin(): Promise<EmbarquesPendient
     .from("embarques")
     .select(COLUMNS)
     .in("estado", ESTADOS)
+    // Ola 4 · N26: sin este filtro los embarques soft-eliminados inflaban el conteo.
+    .is("deleted_at", null)
     .order("updated_at", { ascending: true })
     .limit(200);
   if (error) throw new Error(error.message);
+  assertNotTruncated(data, 200, "dashboard.embarquesPendientesAdmin");
 
   const rows = (data ?? []) as Array<{
     id: string;

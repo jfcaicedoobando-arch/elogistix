@@ -40,4 +40,12 @@ describe("toCsv (serializeCsv)", () => {
   it("solo headers cuando no hay filas", () => {
     expect(toCsv(["a", "b"], [])).toBe("a,b");
   });
+
+  it("N35: neutraliza celdas que inician con = + - @ (CSV injection)", () => {
+    const csv = toCsv(["concepto"], [['=HIPERVINCULO("http://evil","pago")'], ["+1"], ["@x"], ["ok"]]);
+    expect(csv).toContain("'=HIPERVINCULO");
+    expect(csv).toContain("'+1");
+    expect(csv).toContain("'@x");
+    expect(csv).toContain("ok");
+  });
 });

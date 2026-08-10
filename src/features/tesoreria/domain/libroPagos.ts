@@ -157,6 +157,9 @@ export function totalesLibroPagos(pagos: readonly PagoLibro[]): TotalesLibroPago
   let cobradoMxn = 0;
   let pagadoMxn = 0;
   for (const p of pagos) {
+    // Ola 4 · N20: los ajustes no mueven dinero y los anticipos aplicados ya se
+    // contaron cuando entró el anticipo; sumarlos infla el flujo de caja.
+    if (p.es_ajuste || p.es_anticipo_aplicado) continue;
     if (esEntrada(p)) cobradoMxn += p.monto_mxn;
     else pagadoMxn += p.monto_mxn;
   }

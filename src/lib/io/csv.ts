@@ -1,6 +1,8 @@
 /**
  * Utilidades de conversión a CSV (RFC 4180 simplificado).
  */
+import { neutralizarFormulaCsv } from "../csv/serializeCsv";
+
 export function toCSV(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return "";
   const headers = Array.from(
@@ -11,11 +13,12 @@ export function toCSV(rows: Record<string, unknown>[]): string {
   );
   const escape = (v: unknown): string => {
     if (v === null || v === undefined) return "";
-    const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+    // N35 (Ola 4): CSV injection.
+    const s = neutralizarFormulaCsv(typeof v === "object" ? JSON.stringify(v) : String(v));
     if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
     return s;
   };
-  const lines = [headers.join(",")];
+  const lines = [headers.map(neutralizarFormulaCsv).join(",")];
   for (const row of rows) {
     lines.push(headers.map((h) => escape(row[h])).join(","));
   }

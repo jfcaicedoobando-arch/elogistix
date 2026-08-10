@@ -9,9 +9,12 @@
  *  - Fechas en DD/MM/YYYY (con o sin separador) o DD-MMM-YYYY → ISO YYYY-MM-DD.
  *  - Montos con comas / signos / paréntesis → number positivo.
  *  - Calcula `hash_dedupe = sha1(fecha|concepto|referencia|cargo|abono)` para
- *    evitar duplicados al re-importar el mismo periodo.
+ *    evitar duplicados al re-importar el mismo periodo. N32 (Ola 4): la 2ª+
+ *    ocurrencia del mismo hash DENTRO del archivo recibe sufijo ordinal
+ *    determinista, para no colapsar movimientos reales idénticos.
  */
 import { isoUtcDay } from "@/lib/date/mx";
+import { leerArchivoTexto } from "@/lib/io/readFileText";
 import Papa from "papaparse";
 import { logger } from "@/lib/observability/logger";
 
@@ -44,6 +47,17 @@ function findColIdx(headers: string[], candidates: string[]): number {
   return -1;
 }
 
+/**
+ * N33 (Ola 4): valida contra el calendario real. Antes el ISO se armaba por
+ * interpolación de strings y un 31/02 o un mes >12 viajaba hasta el upsert,
+ * donde Postgres rechazaba el LOTE COMPLETO con un error crudo.
+ */
+function esFechaValida(yyyy: number, mm: number, dd: number): boolean {
+  if (yyyy < 2000 || yyyy > 2099 || mm < 1 || mm > 12 || dd < 1 || dd > 31) return false;
+  const d = new Date(Date.UTC(yyyy, mm - 1, dd));
+  return d.getUTCFullYear() === yyyy && d.getUTCMonth() === mm - 1 && d.getUTCDate() === dd;
+}
+
 function parseFecha(raw: unknown): string | null {
   if (raw == null) return null;
   if (raw instanceof Date) return isoUtcDay(raw);
@@ -58,6 +72,8 @@ function parseFecha(raw: unknown): string | null {
   if (m1) {
     const [, d, mo, y] = m1;
     const yyyy = y.length === 2 ? `20${y}` : y;
+    // N33 (Ola 4): DD/MM estricto; inválida → null (fila descartada con warning).
+    if (!esFechaValida(Number(yyyy), Number(mo), Number(d))) return null;
     return `${yyyy}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
   // DD-MMM-YYYY (e.g. 15-MAY-2026)
@@ -71,6 +87,7 @@ function parseFecha(raw: unknown): string | null {
     const mo = meses[norm(monStr).slice(0, 3)];
     if (!mo) return null;
     const yyyy = y.length === 2 ? `20${y}` : y;
+    if (!esFechaValida(Number(yyyy), Number(mo), Number(d))) return null;
     return `${yyyy}-${mo}-${d.padStart(2, "0")}`;
   }
   return null;
@@ -112,6 +129,26 @@ function findHeaderRow(rows: string[][]): number {
   return -1;
 }
 
+/**
+ * N33 (Ola 4): heurística anti-MM/DD. En un archivo DD/MM real el segundo
+ * componente (mes) nunca pasa de 12; si la mayoría de las filas lo supera,
+ * el archivo casi seguro viene en MM/DD y seguir importaría fechas cambiadas
+ * silenciosamente en todas las filas con día ≤12.
+ */
+function detectarFormatoMmDd(rows: string[][], colFecha: number, desdeFila: number): boolean {
+  let total = 0;
+  let sospechosas = 0;
+  for (let r = desdeFila; r < rows.length; r++) {
+    const raw = rows[r]?.[colFecha];
+    if (typeof raw !== "string") continue;
+    const m = raw.trim().match(/^\d{1,2}[/-](\d{1,2})[/-]\d{2,4}$/);
+    if (!m) continue;
+    total++;
+    if (Number(m[1]) > 12) sospechosas++;
+  }
+  return total > 0 && sospechosas > total / 2;
+}
+
 interface ColIdx { fecha: number; conc: number; ref: number; cargo: number; abono: number; saldo: number }
 
 function parseMontosRow(row: unknown[], idx: ColIdx):
@@ -129,10 +166,21 @@ function parseMontosRow(row: unknown[], idx: ColIdx):
   return { cargo: cargoRaw, abono: abonoRaw, saldo };
 }
 
-async function rowToMovimiento(row: unknown[], idx: ColIdx): Promise<MovimientoParseado | null> {
+async function rowToMovimiento(
+  row: unknown[],
+  idx: ColIdx,
+  numFila?: number,
+): Promise<MovimientoParseado | null> {
   if (!row || row.every((c) => c == null || String(c).trim() === "")) return null;
   const fecha = parseFecha(row[idx.fecha]);
-  if (!fecha) return null;
+  if (!fecha) {
+    // N33 (Ola 4): antes se descartaba en silencio y sin identificar la fila.
+    logger.warn("bbva", "fila descartada: fecha inválida o ilegible", {
+      fila: numFila,
+      valor: String(row[idx.fecha] ?? ""),
+    });
+    return null;
+  }
   const concepto = String(row[idx.conc] ?? "").trim();
   const referencia = idx.ref >= 0 ? String(row[idx.ref] ?? "").trim() : "";
   const montos = parseMontosRow(row, idx);
@@ -144,6 +192,34 @@ async function rowToMovimiento(row: unknown[], idx: ColIdx): Promise<MovimientoP
 }
 
 
+
+/**
+ * N32 (Ola 4): dos movimientos reales idénticos el mismo día (comisión + IVA,
+ * dos nóminas del mismo importe con referencia vacía) generaban el mismo
+ * hash_dedupe y el upsert descartaba el segundo silenciosamente.
+ *
+ * Sin tocar el hash base (cambiarlo re-importaría TODOS los históricos como
+ * nuevos), la 2ª/3ª… ocurrencia dentro del MISMO archivo recibe un sufijo
+ * ordinal determinista: mismo archivo → mismos hashes → la re-importación
+ * sigue siendo idempotente.
+ */
+async function desambiguarColisiones(
+  movimientos: MovimientoParseado[],
+): Promise<MovimientoParseado[]> {
+  const vistos = new Map<string, number>();
+  let colisiones = 0;
+  for (const m of movimientos) {
+    const n = vistos.get(m.hash_dedupe) ?? 0;
+    vistos.set(m.hash_dedupe, n + 1);
+    if (n === 0) continue;
+    colisiones++;
+    m.hash_dedupe = await sha1(`${m.hash_dedupe}|fila-${n + 1}`);
+  }
+  if (colisiones > 0) {
+    logger.warn("bbva", "movimientos idénticos en el mismo archivo: se conservan con hash ordinal", { colisiones });
+  }
+  return movimientos;
+}
 
 async function filasAMovimientos(rows: string[][]): Promise<MovimientoParseado[]> {
   const headerIdx = findHeaderRow(rows);
@@ -160,18 +236,24 @@ async function filasAMovimientos(rows: string[][]): Promise<MovimientoParseado[]
     saldo: findColIdx(headers, HEADERS_SALDO),
   };
 
+  if (idx.fecha >= 0 && detectarFormatoMmDd(rows, idx.fecha, headerIdx + 1)) {
+    throw new Error(
+      "El archivo parece usar formato MM/DD/AAAA (mes primero). El importador espera DD/MM/AAAA; convierte las fechas antes de importar para evitar movimientos con fecha cambiada.",
+    );
+  }
   const movimientos: MovimientoParseado[] = [];
   for (let r = headerIdx + 1; r < rows.length; r++) {
-    const m = await rowToMovimiento(rows[r], idx);
+    const m = await rowToMovimiento(rows[r], idx, r + 1);
     if (m) movimientos.push(m);
   }
-  return movimientos;
+  return desambiguarColisiones(movimientos);
 }
 
 export async function parseEstadoCuentaBBVA(file: File): Promise<MovimientoParseado[]> {
   const isCsv = file.name.toLowerCase().endsWith(".csv") || file.type.includes("csv");
   if (isCsv) {
-    const text = await file.text();
+    // N34 (Ola 4): tolera Windows-1252 (estados de cuenta Net Cash en es-MX).
+    const text = (await leerArchivoTexto(file)).replace(/^\uFEFF/, "");
     const { data } = Papa.parse<string[]>(text, { skipEmptyLines: true });
     return filasAMovimientos(data);
   }

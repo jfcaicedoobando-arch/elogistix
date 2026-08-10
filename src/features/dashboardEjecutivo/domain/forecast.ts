@@ -19,6 +19,8 @@ export interface ForecastPoint {
   banda_min: number | null;
   banda_max: number | null;
   esProyeccion: boolean;
+  /** Ola 4 · N46: el mes en curso es parcial (no cerrado). */
+  esParcial: boolean;
 }
 
 const BANDA_PCT = 0.15;
@@ -40,7 +42,11 @@ function promedio(arr: number[]): number {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
 
-export function computeForecast(historico: PuntoEERR[], mesesAdelante = 3): ForecastPoint[] {
+export function computeForecast(
+  historico: PuntoEERR[],
+  mesesAdelante = 3,
+  mesEnCurso?: string,
+): ForecastPoint[] {
   const puntosReales: ForecastPoint[] = historico.map((p) => ({
     periodo: p.periodo,
     ingresos: p.ingresos,
@@ -50,11 +56,14 @@ export function computeForecast(historico: PuntoEERR[], mesesAdelante = 3): Fore
     banda_min: null,
     banda_max: null,
     esProyeccion: false,
+    esParcial: !!mesEnCurso && p.periodo === mesEnCurso,
   }));
 
-  if (historico.length < VENTANA || mesesAdelante <= 0) return puntosReales;
+  // Ola 4 · N46: el mes en curso está incompleto; promediarlo hunde el forecast.
+  const completos = mesEnCurso ? historico.filter((p) => p.periodo !== mesEnCurso) : historico;
+  if (completos.length < VENTANA || mesesAdelante <= 0) return puntosReales;
 
-  const ultimos = historico.slice(-VENTANA);
+  const ultimos = completos.slice(-VENTANA);
   const avgIngresos = promedio(ultimos.map((p) => p.ingresos));
 
   let cursor = historico[historico.length - 1].periodo;
@@ -70,6 +79,7 @@ export function computeForecast(historico: PuntoEERR[], mesesAdelante = 3): Fore
       banda_min: avgIngresos * (1 - BANDA_PCT),
       banda_max: avgIngresos * (1 + BANDA_PCT),
       esProyeccion: true,
+      esParcial: false,
     });
   }
 

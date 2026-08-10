@@ -98,8 +98,14 @@ export function valuarFactura(
   tc: TcCorte | null,
 ): { mxnHistorico: number; mxnCorte: number; diferencia: number } {
   const esMxn = (f.moneda || "MXN").toUpperCase() === "MXN";
-  const tcHist = esMxn ? 1 : f.tipoCambio > 0 ? f.tipoCambio : 0;
   const tcAlCorte = tcCorteDeMoneda(f.moneda, tc);
+  // Ola 4 · N47: sin TC histórico confiable no hay valuación histórica; se
+  // reporta al TC del corte (si existe) en lugar de un falso 0.
+  if (!esMxn && !(f.tipoCambio > 0)) {
+    const mxn = tcAlCorte ? round2(f.saldo * tcAlCorte) : 0;
+    return { mxnHistorico: mxn, mxnCorte: mxn, diferencia: 0 };
+  }
+  const tcHist = esMxn ? 1 : f.tipoCambio;
   const mxnHistorico = round2(f.saldo * tcHist);
   // Sin TC del corte disponible se conserva el histórico para no inventar cifras.
   const mxnCorte = round2(f.saldo * (tcAlCorte ?? tcHist));

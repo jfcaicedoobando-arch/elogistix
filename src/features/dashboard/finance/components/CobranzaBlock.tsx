@@ -22,6 +22,8 @@ interface Props {
   aging: AgingBuckets;
   facturasVencidas: FacturaVencida[];
   loading: boolean;
+  /** Ola 4 · N22: facturas excluidas del aging MXN por falta de TC confiable. */
+  agingSinTc?: number;
 }
 
 const AGING_LABELS: Array<{ key: keyof AgingBuckets; label: string; tone: string }> = [
@@ -32,7 +34,7 @@ const AGING_LABELS: Array<{ key: keyof AgingBuckets; label: string; tone: string
   { key: "b90plus", label: "90+ d", tone: "bg-aging-5/40 text-foreground" },
 ];
 
-export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
+export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0 }: Props) {
   const totalAging =
     aging.b0_15 + aging.b16_30 + aging.b31_60 + aging.b61_90 + aging.b90plus;
 
@@ -77,6 +79,11 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
               );
             })}
           </div>
+        )}
+        {agingSinTc > 0 && !loading && (
+          <p className="text-2xs text-muted-foreground">
+            {agingSinTc} factura(s) en moneda extranjera sin tipo de cambio no se incluyen en el total en MXN.
+          </p>
         )}
 
         <div>

@@ -19,6 +19,8 @@ export interface ConceptoNC {
   clave_unidad?: string | null;
   unidad?: string | null;
   tasa_iva?: number | null;
+  /** Ola 4 · N19: mismo contrato que el timbrado de facturas. */
+  tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
 }
 
 export interface NotaCreditoContext {
@@ -75,7 +77,7 @@ export interface FacturapiNcPayload {
       unit_key: string;
       unit_name: string;
       tax_included: false;
-      taxes: Array<{ type: "IVA"; rate: number; factor: "Tasa" }>;
+      taxes: Array<{ type: "IVA"; rate: number; factor: "Tasa" | "Exento" }>;
     };
   }>;
 }
@@ -104,6 +106,17 @@ export function validateNcContext(ctx: NotaCreditoContext): ValidationIssue[] {
   if (!ctx.uso_cfdi) issues.push({ field: "uso_cfdi", message: "Uso de CFDI requerido (usualmente G02 para NC)" });
   if (!ctx.forma_pago) issues.push({ field: "forma_pago", message: "Forma de pago SAT requerida" });
   if (!ctx.conceptos.length) issues.push({ field: "conceptos", message: "La nota de crédito no tiene conceptos" });
+  // Ola 4 · N19: mismo guard que el timbrado de facturas — sin TC confiable la
+  // NC se emitía con exchange=1 (USD tratado como MXN).
+  if (ctx.moneda !== "MXN") {
+    const tc = Number(ctx.tipo_cambio);
+    if (!Number.isFinite(tc) || tc <= 1) {
+      issues.push({
+        field: "tipo_cambio",
+        message: `Tipo de cambio inválido para ${ctx.moneda}: se requiere un valor mayor a 1`,
+      });
+    }
+  }
   ctx.conceptos.forEach((c, i) => {
     if (!c.clave_sat) issues.push({ field: `conceptos[${i}].clave_sat`, message: `Concepto "${c.descripcion}" sin clave SAT` });
     if (!c.clave_unidad) issues.push({ field: `conceptos[${i}].clave_unidad`, message: `Concepto "${c.descripcion}" sin clave de unidad` });
@@ -111,6 +124,14 @@ export function validateNcContext(ctx: NotaCreditoContext): ValidationIssue[] {
     if (c.precio_unitario < 0) issues.push({ field: `conceptos[${i}].precio_unitario`, message: "Precio inválido" });
   });
   return issues;
+}
+
+/** Ola 4 · N19: un concepto exento se timbra con factor "Exento", no "Tasa" 0. */
+export function buildTaxesNc(c: ConceptoNC) {
+  const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
+  if (tipo === "exento") return [{ type: "IVA" as const, rate: 0, factor: "Exento" as const }];
+  const rate = tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16);
+  return [{ type: "IVA" as const, rate, factor: "Tasa" as const }];
 }
 
 export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
@@ -137,7 +158,7 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
         unit_key: c.clave_unidad ?? "E48",
         unit_name: c.unidad ?? "Unidad de servicio",
         tax_included: false,
-        taxes: [{ type: "IVA", rate: c.tasa_iva ?? 0.16, factor: "Tasa" }],
+        taxes: buildTaxesNc(c),
       },
     })),
   };

@@ -26,7 +26,11 @@ import {
 
 export default function ReportesCartera() {
   useDocumentTitle("Cartera y antigüedad");
-  const [fechaCorte, setFechaCorte] = useState<string>(() => todayLocalISO());
+  // Ola 4 · N25: los saldos que alimentan este reporte son "a hoy" (RPCs de
+  // cobranza/CxP), así que una fecha de corte pasada mostraría saldos actuales
+  // con fecha equivocada. El corte queda fijo en hoy hasta tener saldos
+  // históricos por fecha.
+  const [fechaCorte] = useState<string>(() => todayLocalISO());
   const [busqueda, setBusqueda] = useState("");
   const [generandoPdf, setGenerandoPdf] = useState(false);
 
@@ -84,9 +88,13 @@ export default function ReportesCartera() {
             <DatePickerMx
               id="cartera-corte"
               value={fechaCorte}
-              onChange={(iso) => setFechaCorte(iso || todayLocalISO())}
+              onChange={() => undefined}
+              disabled
               className="w-40"
             />
+            <p className="text-2xs text-muted-foreground">
+              Corte fijo al día de hoy: los saldos provienen de la cartera vigente.
+            </p>
           </div>
           <div className="min-w-[220px] flex-1 space-y-1">
             <Label htmlFor="cartera-buscar" className="text-xs">Cliente, proveedor, folio o expediente</Label>
@@ -97,7 +105,10 @@ export default function ReportesCartera() {
               placeholder="Buscar…"
             />
           </div>
-          <p className="text-xs text-muted-foreground">{leyenda}</p>
+          <p className="text-xs text-muted-foreground">
+            {leyenda} Las facturas en EUR aún no se revalúan (no hay tipo de cambio EUR
+            histórico en cuentas por pagar) y se reportan sin valuación en pesos.
+          </p>
         </CardContent>
       </Card>
 

@@ -55,6 +55,9 @@ export async function loadEmbarques(orgId: string | null, desdeIso: string): Pro
   let q = supabase.from("embarques")
     .select("id, modo, estado, eta, cerrado_at, cliente_id, cliente_nombre, tipo_cambio_usd, tipo_cambio_eur")
     .is("deleted_at", null)
+    // Ola 4 · N23: el EERR excluye Cancelado; los KPIs de Dirección deben usar
+    // el mismo universo o venta/costo no cuadran entre pantallas.
+    .neq("estado", "Cancelado")
     .or(`cerrado_at.gte.${desdeIso},eta.gte.${desdeIso}`)
     .limit(LIMITE_EMBARQUES);
   if (orgId) q = q.eq("organization_id", orgId);
@@ -98,7 +101,9 @@ export async function loadEmbarquesActivos(orgId: string | null): Promise<Embarq
   let q = supabase.from("embarques")
     .select("estado, eta")
     .is("deleted_at", null)
-    .not("estado", "in", "(Entregado,Cancelado)")
+    // Ola 4 · N21: "activos" son embarques en operación. Borrador/Cotización aún
+    // no operan y Por liquidar/Cerrado/EIR ya cerraron: incluirlos inflaba el KPI.
+    .not("estado", "in", '("Cotización","Borrador","Por liquidar","Cerrado","EIR","Entregado","Cancelado")')
     .limit(LIMITE_EMBARQUES);
   if (orgId) q = q.eq("organization_id", orgId);
   const { data, error } = await q;

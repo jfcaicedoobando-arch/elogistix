@@ -60,10 +60,19 @@ function mapCancellationStatusUpdated(ctx: EventCtx): MappedUpdate | null {
     patch.cancelacion_solicitada_en = null;
     patch.cancelacion_vence_en = null;
   }
+  // Ola 4 · N18: si el SAT acepta la cancelación, el estado debe cerrarse aquí.
+  // Antes dependíamos del evento `invoice.canceled`; si se perdía o llegaba
+  // fuera de orden la factura quedaba 'Emitida' con cancellation_status
+  // 'accepted' para siempre (y la reconciliación tampoco la reparaba).
+  if (ctx.cancellationStatus === "accepted") {
+    patch.estado = "Cancelada";
+    patch.cancelado_en = new Date().toISOString();
+  }
   return {
     facturapi_id: ctx.facturapi_id,
     patch,
     bitacora_accion: "facturapi_webhook_cancellation_status",
+    preserva_sustituida: ctx.cancellationStatus === "accepted",
   };
 }
 

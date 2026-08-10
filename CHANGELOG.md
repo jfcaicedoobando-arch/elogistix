@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.482.0] - 2026-08-10
+- Ola 4 (medias/bajas · frontend): N23 los KPIs de Dirección excluyen embarques `Cancelado` (alineados con el EERR). N25 el reporte de Cartera fija el corte al día de hoy (los saldos son vigentes) y documenta que EUR no se revalúa. N26 filtros `deleted_at IS NULL` + `assertNotTruncated` en embarques pendientes (admin) y dashboard del Operador. N32 el importador BBVA desambigua movimientos idénticos dentro del mismo archivo con sufijo ordinal determinista (idempotente). N33 valida fechas contra el calendario real (una fila inválida ya no tira el lote) y aborta archivos MM/DD con mensaje claro. N34 nuevo `leerArchivoTexto` con fallback Windows-1252 en BBVA y en la importación masiva. N35 los serializers CSV neutralizan inyección de fórmulas (`= + - @`). N40 la guardia de tipo de cambio valida la moneda del concepto (EUR con TC EUR). N43 `assertNotTruncated` en las bandejas CxP/cartera (RPCs con LIMIT 500). N46 el forecast multi-mes excluye el mes en curso (parcial). N47 el aging CxP ya no valúa EUR con el TC del dólar.
+
 ## [13.481.7] - 2026-08-10
 - Decision (migrations): no se realiza squash/rollup de migraciones SQL en este momento. Las 817 migraciones ya están aplicadas en producción/previews; el riesgo de modificar el historial supera a la ganancia. Se vigilarán dos métricas de activación: >1500 migraciones o tiempo de base limpia >10 min.
 

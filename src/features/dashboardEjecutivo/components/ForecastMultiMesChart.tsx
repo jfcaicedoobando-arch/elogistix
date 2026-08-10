@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { formatCurrencyCompact } from "@/lib/formatters/numbers";
 import { computeForecast } from "@/features/dashboardEjecutivo/domain/forecast";
+import { ymMx } from "@/lib/date/mx";
 import type { PuntoEERR } from "@/features/dashboardEjecutivo/services";
 
 interface Props {
@@ -19,7 +20,8 @@ interface Props {
 }
 
 export function ForecastMultiMesChart({ historico, mesesAdelante = 3 }: Props) {
-  const data = computeForecast(historico, mesesAdelante);
+  // Ola 4 · N46: el mes en curso es parcial y no debe promediarse en el forecast.
+  const data = computeForecast(historico, mesesAdelante, ymMx());
   const suficiente = historico.length >= 3;
 
   return (
@@ -28,6 +30,7 @@ export function ForecastMultiMesChart({ historico, mesesAdelante = 3 }: Props) {
         <CardTitle>Forecast de ingresos</CardTitle>
         <p className="text-xs text-muted-foreground">
           Meses reales + proyección {mesesAdelante} meses (promedio móvil 3m, banda ±15%).
+          El mes en curso es parcial y se excluye del promedio.
         </p>
       </CardHeader>
       <CardContent>

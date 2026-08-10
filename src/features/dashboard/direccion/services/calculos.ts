@@ -17,6 +17,33 @@ export interface EmbarqueAgg {
   cliente_id: string | null; cliente_nombre: string; mes: string;
 }
 
+interface TcEmbarque { usd: number; eur: number }
+
+/**
+ * Ola 4 · N40: la guardia valida el TC de la MONEDA DEL CONCEPTO. Antes un
+ * concepto EUR se aceptaba/descartaba según el TC USD y terminaba valuado con
+ * el tipo de cambio equivocado (o descartado teniendo TC EUR válido).
+ */
+function tcAplicable(moneda: string | null | undefined, t: TcEmbarque): number {
+  const m = (moneda ?? "MXN").toUpperCase();
+  if (m === "MXN") return 1;
+  return m === "EUR" ? t.eur : t.usd;
+}
+
+function mapaTc(embarques: EmbarqueRow[]): Map<string, TcEmbarque> {
+  // FIX-11 (Fase 4): sin fallback silencioso a TC=1. Si el embarque no tiene
+  // TC capturado, sólo agregamos filas ya en MXN; USD/EUR se ignoran para no
+  // inflar la utilidad. El dashboard exhibe el hueco vía `facturas_sin_tc`.
+  return new Map(embarques.map((e) => {
+    const usd = Number(e.tipo_cambio_usd);
+    const eur = Number(e.tipo_cambio_eur);
+    return [e.id, {
+      usd: Number.isFinite(usd) && usd > 0 ? usd : 0,
+      eur: Number.isFinite(eur) && eur > 0 ? eur : 0,
+    }];
+  }));
+}
+
 export function agregarEmbarques(
   embarques: EmbarqueRow[], ventas: ConceptoVentaRow[], costos: ConceptoCostoRow[],
 ): EmbarqueAgg[] {
@@ -30,29 +57,20 @@ export function agregarEmbarques(
       mes: fecha.slice(0, 7),
     });
   }
-  // FIX-11 (Fase 4): sin fallback silencioso a TC=1. Si el embarque no tiene
-  // TC capturado, sólo agregamos filas ya en MXN; USD/EUR se ignoran para no
-  // inflar la utilidad. El dashboard exhibe el hueco vía `facturas_sin_tc`.
-  const tc = new Map(embarques.map((e) => {
-    const usd = Number(e.tipo_cambio_usd);
-    const eur = Number(e.tipo_cambio_eur);
-    return [e.id, {
-      usd: Number.isFinite(usd) && usd > 0 ? usd : 0,
-      eur: Number.isFinite(eur) && eur > 0 ? eur : 0,
-    }];
-  }));
+  const tc = mapaTc(embarques);
   for (const v of ventas) {
     const a = map.get(v.embarque_id); if (!a) continue;
     const t = tc.get(v.embarque_id)!;
-    if (v.moneda !== 'MXN' && t.usd <= 0) continue;
+    if (tcAplicable(v.moneda, t) <= 0) continue;
     a.venta += toMxn(v.total, v.moneda, t.usd, t.eur);
   }
   for (const c of costos) {
     const a = map.get(c.embarque_id); if (!a) continue;
     const t = tc.get(c.embarque_id)!;
-    if (c.moneda !== 'MXN' && t.usd <= 0) continue;
+    if (tcAplicable(c.moneda, t) <= 0) continue;
     a.costo += toMxn(c.monto, c.moneda, t.usd, t.eur);
   }
+
   return Array.from(map.values());
 }
 
@@ -166,9 +184,17 @@ export function calcularPulso(
     const est = r.estado ?? "Sin estado";
     porEstado.set(est, (porEstado.get(est) ?? 0) + 1);
     if (r.eta) {
-      const eta = new Date(`${r.eta}T00:00:00Z`);
-      if (eta >= hoy && eta <= en7d) arribos_7d += 1;
-      if (est === "En Aduana" && eta < hoy) demoras += 1;
+      // Ola 4 · N21: comparar por DÍA. `hoy` es un instante, así que un ETA de
+      // hoy quedaba fuera de "arribos 7d" y cualquier ETA de hoy contaba como
+      // demora desde la medianoche. La demora exige > 7 días de retraso.
+      const etaDia = r.eta.slice(0, 10);
+      const hoyDia = hoy.toISOString().slice(0, 10);
+      const en7dDia = en7d.toISOString().slice(0, 10);
+      if (etaDia >= hoyDia && etaDia <= en7dDia) arribos_7d += 1;
+      const diasRetraso = Math.floor(
+        (Date.parse(`${hoyDia}T00:00:00Z`) - Date.parse(`${etaDia}T00:00:00Z`)) / 86_400_000,
+      );
+      if (est === "En Aduana" && diasRetraso > 7) demoras += 1;
     }
   }
   const cfdi = facturas.filter((f) => f.uuid_fiscal && f.timbrado_en && f.timbrado_en.slice(0, 7) === mesActual).length;

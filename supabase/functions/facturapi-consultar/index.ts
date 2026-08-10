@@ -40,7 +40,7 @@ interface ResolvedPatch {
  */
 function resolveNextAction(remote: FapiInvoiceStatus, local: FacturaPendiente, nowIso: string): ResolvedPatch {
   const cs = (remote.cancellation_status ?? "").toLowerCase();
-  if (cs === local.cancellation_status) return { outcome: "no_change", patch: {} };
+  // Ola 4 · N18: "aceptada" se evalúa antes del guard de igualdad.
   if (cs === "accepted" || remote.status === "canceled") {
     return {
       outcome: "accepted",
@@ -51,6 +51,7 @@ function resolveNextAction(remote: FapiInvoiceStatus, local: FacturaPendiente, n
       },
     };
   }
+  if (cs === local.cancellation_status) return { outcome: "no_change", patch: {} };
   if (cs === "rejected" || cs === "expired") {
     return {
       outcome: cs,

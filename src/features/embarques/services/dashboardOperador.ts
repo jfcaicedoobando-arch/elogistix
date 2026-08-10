@@ -14,6 +14,7 @@
  * no `tracking_externo` (legacy reservada para integraciones automáticas).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { ESTADOS_ACTIVOS } from "@/features/embarques/constants/embarqueConstants";
 
 export interface OperadorEmbarqueLite {
@@ -44,8 +45,11 @@ export async function fetchDocsFaltantesOperador(email: string): Promise<DocsFal
     .select("id, expediente, cliente_nombre, estado, eta")
     .eq("operador", email)
     .in("estado", [...ESTADOS_ACTIVOS])
+    // Ola 4 · N26: excluir soft-deleted.
+    .is("deleted_at", null)
     .limit(200);
   if (error) throw error;
+  assertNotTruncated(embarques, 200, "operador.embarquesActivos");
   if (!embarques || embarques.length === 0) return [];
   const ids = embarques.map((e) => e.id);
   const { data: docs, error: docsErr } = await supabase
@@ -78,8 +82,11 @@ export async function fetchSinTrackingOperador(email: string): Promise<SinTracki
     .select("id, expediente, cliente_nombre, estado, eta")
     .eq("operador", email)
     .in("estado", ["En Tránsito"])
+    // Ola 4 · N26: excluir soft-deleted.
+    .is("deleted_at", null)
     .limit(200);
   if (error) throw error;
+  assertNotTruncated(embarques, 200, "operador.sinTracking");
   if (!embarques || embarques.length === 0) return [];
   const ids = embarques.map((e) => e.id);
   const { data: eventos, error: eErr } = await supabase

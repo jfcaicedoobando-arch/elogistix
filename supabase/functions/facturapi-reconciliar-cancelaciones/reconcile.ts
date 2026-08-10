@@ -57,10 +57,9 @@ export function resolveNextAction(
 ): ResolvedPatch {
   const cs = (remote.cancellation_status ?? "").toLowerCase();
 
-  if (cs === local.cancellation_status) {
-    return { outcome: "no_change", patch: {} };
-  }
-
+  // Ola 4 · N18: el chequeo de "aceptada" va ANTES del guard de igualdad; si no,
+  // una factura con cs='accepted' en ambos lados pero estado='Emitida' nunca se
+  // reparaba (reconciliación ciega).
   if (cs === "accepted" || remote.status === "canceled") {
     const esSustitucion = !!local.sustituida_por;
     return {
@@ -71,6 +70,10 @@ export function resolveNextAction(
         cancelado_en: nowIso,
       },
     };
+  }
+
+  if (cs === local.cancellation_status) {
+    return { outcome: "no_change", patch: {} };
   }
 
   if (cs === "rejected") {
