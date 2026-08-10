@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.478.1] - 2026-08-10
+- CI: se silencian advertencias `SC2016` de shellcheck en `.github/workflows/deploy-gate.yml` (expresiones de shell intencionales, no variables de Actions).
+
 ## [13.478.0] - 2026-08-10
 - Super admin: al elegir una organización en el selector, el tenant se persiste en el servidor (`set_super_admin_org` / `org_scope()`), así los tableros y reportes agregados dejan de mostrar datos de otra organización.
 - Las llaves de caché de tablero y operaciones incluyen la organización activa: cambiar de tenant ya no reutiliza datos del anterior.
