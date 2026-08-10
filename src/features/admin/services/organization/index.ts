@@ -33,6 +33,6 @@ export async function listActiveOrganizations<T = OrganizationRow>(): Promise<T[
  * de todas las organizaciones mezclados.
  */
 export async function setSuperAdminOrg(organizationId: string | null): Promise<void> {
-  const { error } = await supabase.rpc("set_super_admin_org", { p_org: organizationId });
+  const { error } = await supabase.rpc("set_super_admin_org", { p_org: organizationId } as never);
   if (error) throw error;
 }

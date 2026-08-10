@@ -1,3 +1,4 @@
+import { useOrgActiva } from "@/hooks/shared";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
@@ -165,8 +166,9 @@ function mapOperador(op: ServerOperadorRaw): OperadorData {
  * Replaces previous approach of downloading ALL embarques and aggregating client-side.
  */
 export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
+  const { organizationId } = useOrgActiva();
   const { data: stats, isLoading, isError, refetch } = useQuery({
-    queryKey: queryKeys.operaciones.stats,
+    queryKey: queryKeys.operaciones.stats(organizationId),
     queryFn: fetchOperacionesStats,
     staleTime: 60_000,
   });
