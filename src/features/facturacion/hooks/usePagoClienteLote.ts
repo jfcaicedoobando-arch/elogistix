@@ -6,7 +6,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
-import { emitirRep } from "@/features/facturacion/services/repFacturapi";
+import { resumenRepLote, timbrarRepsSecuencial } from "@/features/facturacion/services/repLote";
 import {
   registrarPagoClienteLote,
   traducirErrorCobroLote,
@@ -19,19 +19,6 @@ export interface CobroLoteVars extends RegistrarCobroLoteInput {
   facturasConRep?: string[];
 }
 
-async function timbrarReps(res: CobroLoteResultado, facturasConRep: string[]): Promise<number> {
-  let fallidos = 0;
-  for (const pago of res.pagos) {
-    if (!facturasConRep.includes(pago.factura_id)) continue;
-    try {
-      await emitirRep(pago.pago_id);
-    } catch {
-      fallidos += 1;
-    }
-  }
-  return fallidos;
-}
-
 export function usePagoClienteLote() {
   const qc = useQueryClient();
 
@@ -39,13 +26,19 @@ export function usePagoClienteLote() {
     mutationFn: async (vars: CobroLoteVars): Promise<CobroLoteResultado> => {
       const res = await registrarPagoClienteLote(vars);
       const conRep = vars.facturasConRep ?? [];
-      if (conRep.length > 0) {
-        const fallidos = await timbrarReps(res, conRep);
-        if (fallidos > 0) {
+      const pagoIds = res.pagos
+        .filter((p) => conRep.includes(p.factura_id))
+        .map((p) => p.pago_id);
+
+      if (pagoIds.length > 0) {
+        const rep = await timbrarRepsSecuencial(pagoIds);
+        if (rep.fallos.length > 0) {
           notifyWarning(undefined, {
-            title: "Cobro registrado; algunos REP no se timbraron",
-            description: `${fallidos} recibo(s) de pago quedaron pendientes. Puedes reintentar desde el historial de pagos.`,
+            title: `Cobro registrado — ${resumenRepLote(rep)}`,
+            description: `Los pagos con error quedaron en la bandeja "REP pendientes" para reintentar. Primer error: ${rep.fallos[0].mensaje}`,
           });
+        } else {
+          notifySuccess(undefined, { title: resumenRepLote(rep) });
         }
       }
       return res;
