@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.478.4] - 2026-08-10
+- Tests: el test `ola6_transaccional.sql` ahora usa un expediente con formato válido (`ELOLA6001`) en lugar de `EXP-OLA6`, que violaba `embarques_expediente_formato_valido`.
+
 ## [13.478.3] - 2026-08-10
 - Fix: la restricción `clientes_rfc_formato` ahora acepta RFC vacío, permitiendo convertir prospectos a clientes cuando aún no se captura el RFC (el formato se sigue validando cuando hay valor).
 

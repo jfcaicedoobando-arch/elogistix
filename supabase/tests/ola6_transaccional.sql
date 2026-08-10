@@ -109,7 +109,7 @@ BEGIN
   -- M15: eliminar_proforma_rpc bloquea proformas facturadas
   ----------------------------------------------------------------------------
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org, v_cli, 'EXP-OLA6',
+  VALUES (v_org, v_cli, 'ELOLA6001',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb;
 
@@ -117,7 +117,7 @@ BEGIN
     organization_id, numero, embarque_id, cliente_id, cliente_nombre, expediente,
     subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn, estado_proforma
   ) VALUES (
-    v_org, 'PF-OLA6-1', v_emb, v_cli, 'PROSPECTO OLA6', 'EXP-OLA6',
+    v_org, 'PF-OLA6-1', v_emb, v_cli, 'PROSPECTO OLA6', 'ELOLA6001',
     100, 16, 116, 2000, 320, 2320, 'facturada'
   ) RETURNING id INTO v_pf;
 
