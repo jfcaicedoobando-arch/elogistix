@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.481.1] - 2026-08-10
+- CI (Drift radar): las migraciones `20260810121500` y `20260810153744` no aplicaban en base limpia porque la tabla `public.cobranza_seguimiento` nace en una migración legacy que ya no aplica. Se agregó un prelude idempotente (tabla, grants, RLS, políticas y trigger con guardas `IF NOT EXISTS`) en la primera de ellas; sin efecto en bases existentes.
+
 ## [13.481.0] - 2026-08-10
 - Tests (Ola 4 ALTAS): nueva batería de regresión para los 17 hallazgos. SQL: `supabase/tests/ola4_altas.sql` (tenancy de RPCs N6/N12), `ola4_altas_finanzas.sql` (profit sin fan-out N7, EERR N8, `dias_vencido` con signo N9, Borrador fuera del dashboard N10) y `ola4_altas_indices.sql` (índices únicos con `deleted_at IS NULL`, N15/N16); los tres quedaron registrados en el job `rls-guards`.
 - Tests (Deno): idempotencia del claim de notas de crédito (N1), orden dedupe-tras-éxito del webhook (N2/N3) y persistencia de estados de cancelación SAT (N4/N5).
