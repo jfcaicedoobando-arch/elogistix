@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { getFirstFieldError } from "./SignupForm.helpers";
-import { passwordSchema } from "@/lib/passwords/policy";
+import { passwordSchema, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
 
 
