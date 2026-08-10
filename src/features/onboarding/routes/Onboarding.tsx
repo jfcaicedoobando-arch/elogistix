@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { Seo } from "@/components/shared/Seo";
 import { completeOnboarding } from "@/features/onboarding/services/completeOnboarding";
 import { OnboardingForm } from "@/features/onboarding/components/OnboardingForm";
@@ -18,7 +19,9 @@ import { ROUTES } from "@/constants/routes";
 import { validateOnboarding } from "@/features/onboarding/lib/onboardingValidation";
 
 export default function Onboarding() {
-  const { user, organization, organizationId, loading, refreshProfile } = useAuth();
+  const { user, organization, loading, refreshProfile } = useAuth();
+  // A2: la organización activa (soporta super admin con tenant seleccionado).
+  const { organizationId } = useOrgActiva();
   const navigate = useNavigate();
   const { toast } = useToast();
 

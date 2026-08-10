@@ -14,7 +14,11 @@ const { mockUseAuth, mockUseLiquidaciones } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/contexts/AuthContext", () => ({ useAuth: mockUseAuth }));
-vi.mock("@/features/comisiones/hooks", () => ({ useLiquidaciones: mockUseLiquidaciones }));
+vi.mock("@/features/comisiones/hooks", () => ({
+  useLiquidaciones: mockUseLiquidaciones,
+  useGenerarLiquidacion: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
+  useRegistrarPagoLiquidacion: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
+}));
 
 const LIQ_ROW = {
   id: "l1",

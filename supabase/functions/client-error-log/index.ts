@@ -39,7 +39,10 @@ interface ClientErrorPayload {
 export const MAX_BODY_BYTES = 64 * 1024;
 
 type RpcClient = {
-  rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
+  rpc: (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => PromiseLike<{ data: unknown; error: { message?: string } | null }>;
 };
 
 export function getClientIp(req: Request): string {

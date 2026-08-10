@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.486.2] - 2026-08-10
+- Suite completa en verde (980 archivos / 6609 tests vitest). Correcciones: mensajes faltantes `LC_ONBOARDING_ORG_AJENA`, `LC_ONBOARDING_ORG_REQUERIDA` y `LC_OWNER_YA_ASIGNADO`; `Onboarding.tsx` ahora usa `useOrgActiva()` en lugar de `useAuth().organizationId` (regla A2).
+- Tests: `cfdiStorage.test.ts` alineado con la validación de extensión (PDF con `.pdf`) y aserción `rejects.toThrow(/boom/i)`; `TabLiquidaciones.test.tsx` mockea `useGenerarLiquidacion`/`useRegistrarPagoLiquidacion`; `OrganizationContext.superAdmin.test.tsx` con `waitFor` de 15s (intermitente bajo carga).
+
 ## [13.486.1] - 2026-08-10
 - CI (Lint): `bun run lint` fallaba con `ERR_PACKAGE_PATH_NOT_EXPORTED` al resolver `zod-validation-error/v4` (ESLint 10 + `eslint-plugin-react-hooks` con zod 4, pero el paquete resuelto era 3.5.4 que no expone el subpath). Se fija `zod-validation-error@^4.0.2` como dependencia de desarrollo y en `overrides`/`resolutions`.
 - Lint (errores restantes): `HallazgosTabla.tsx` — celda "Responsable" extraída a `HallazgoResponsableCell.tsx` (complejidad 17 → dentro del límite); `parseConceptosSugeridos` movido de `FacturaNotasCreditoSeccion.tsx` a `facturaNotasCreditoConceptos.ts` (regla `react-refresh/only-export-components`); eliminados los `any` de `client-error-log/index.ts` y del test `facturapi-cancelar/index_n38_test.ts`.

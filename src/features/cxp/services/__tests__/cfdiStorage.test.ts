@@ -62,19 +62,19 @@ describe("subirArchivosCfdiFactura — prefijo de ruta para RLS", () => {
     expect(path.startsWith("cfdi/")).toBe(false);
   });
 
-  it("N50: XML y PDF con el mismo nombre NO comparten path (prefijo de slot)", async () => {
+  it("N50: XML y PDF con el mismo nombre base NO comparten path (prefijo de slot)", async () => {
     await subirArchivosCfdiFactura({
       facturaId: "fac-123",
       organizationId: "00000000-0000-0000-0000-000000000001",
       xmlFile: archivo("<cfdi:Comprobante/>", "mismo.xml", "application/xml"),
-      pdfFile: archivo("%PDF-1.4 …", "mismo.xml", "application/pdf"),
+      pdfFile: archivo("%PDF-1.4 …", "mismo.pdf", "application/pdf"),
     });
 
     expect(uploadMock).toHaveBeenCalledTimes(2);
     const [pathXml] = uploadMock.mock.calls[0];
     const [pathPdf] = uploadMock.mock.calls[1];
     expect(pathXml).toContain("xml-mismo.xml");
-    expect(pathPdf).toContain("pdf-mismo.xml");
+    expect(pathPdf).toContain("pdf-mismo.pdf");
     expect(pathXml).not.toBe(pathPdf);
   });
 
@@ -100,7 +100,7 @@ describe("subirArchivosCfdiFactura — prefijo de ruta para RLS", () => {
         xmlFile: archivo("<x/>", "factura.xml", "application/xml"),
         pdfFile: null,
       }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/boom/i);
     expect(removeMock).toHaveBeenCalledTimes(1);
     const [paths] = removeMock.mock.calls[0];
     expect(paths).toHaveLength(1);

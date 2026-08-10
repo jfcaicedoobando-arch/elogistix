@@ -159,6 +159,12 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "No encontramos la proforma. Es posible que alguien más la haya eliminado.",
   LC_TARIFA_NO_ENCONTRADA:
     "No encontramos la tarifa. Recarga el catálogo y vuelve a intentarlo.",
+  LC_ONBOARDING_ORG_AJENA:
+    "No administras esa organización, así que no puedes completar su configuración inicial.",
+  LC_ONBOARDING_ORG_REQUERIDA:
+    "No pudimos determinar tu organización. Recarga la página e inténtalo de nuevo.",
+  LC_OWNER_YA_ASIGNADO:
+    "El usuario elegido ya pertenece a una organización. Elige otro o retíralo primero de la actual.",
   LC_VALIDACION:
     "La validación no pasó. Revisa los motivos indicados y corrige la información antes de continuar.",
 };
