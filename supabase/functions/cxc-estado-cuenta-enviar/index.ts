@@ -80,18 +80,9 @@ async function loadFacturasVivas(
   return (data ?? []) as FacturaCliente[];
 }
 
-function calcularTotales(facturas: FacturaCliente[], monedaDominante: string) {
-  const fMoneda = facturas.filter((f) => f.moneda === monedaDominante || (!f.moneda && monedaDominante === 'MXN'));
-  const total = fMoneda.reduce((acc, f) => acc + (f.total ?? 0), 0);
-  const saldo = fMoneda.reduce((acc, f) => acc + (f.saldo ?? 0), 0);
-  const hoy = new Date().toISOString();
-  const vencido = fMoneda.reduce((acc, f) => {
-    if (f.estado === 'Pagada' || f.estado === 'Parcialmente pagada') return acc;
-    const dias = diasEntre(f.fecha_vencimiento, hoy) ?? 0;
-    return dias > 0 ? acc + (f.saldo ?? 0) : acc;
-  }, 0);
-  return { total, saldo, vencido };
-}
+// M9: los totales viven en `totales.ts` (lógica pura, agrupada por moneda y
+// con las facturas parcialmente pagadas incluidas en el vencido).
+
 
 async function resolveDestinatario(
   adminClient: SupabaseClient,
