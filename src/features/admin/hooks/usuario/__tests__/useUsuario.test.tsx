@@ -14,6 +14,11 @@ vi.mock('@/features/admin/services/usuario', () => ({
   deleteUserViaEdgeFunction: mockDelete,
 }));
 
+// P2: el hook queda deshabilitado sin tenant activo; fijamos uno.
+vi.mock('@/hooks/shared/useOrgActiva', () => ({
+  useOrgActiva: () => ({ organizationId: 'org-1' }),
+}));
+
 import { useUsuarios, useUpdateUserRole, useDeleteUser } from '../useUsuarios';
 
 describe('useUsuario Hooks', () => {
