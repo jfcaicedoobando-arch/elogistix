@@ -7,7 +7,7 @@
  * error rojo `LC_SOD_VIOLATION` después de intentarlo.
  */
 import { useCallback } from "react";
-import { useAuth } from "@/hooks/shared/useAuth";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import type { AppRole } from "@/types/appRole";
 import { motivoBloqueoAprobacion } from "@/features/cxp/permissions";
 
