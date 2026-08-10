@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.479.3] - 2026-08-10
+- Fix CI (cobertura LC): agregado mensaje amigable para `LC_FACTURA_PROVEEDOR_NO_ENCONTRADA` en `lcCodeMessages.financiero.ts`, usado por `guard_pago_proveedor`.
+
 ## [13.479.2] - 2026-08-10
 - Fix CI (arquitectura): el cast a `jsonb` en `crearAjustesFacturaProveedor.ts` se marcó con `// SAFE-CAST:` para cumplir la auditoría de casts.
 
