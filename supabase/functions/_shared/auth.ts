@@ -92,13 +92,17 @@ export async function authorizeOrgMembership(
   userId: string,
   organizationId: string,
 ): Promise<boolean> {
+  // Ola 9 · A13: sólo `super_admin` es rol de PLATAFORMA con acceso cross-org.
+  // El `admin` global es un rol legacy de organización y ya NO abre otras orgs;
+  // debe validarse por membresía, igual que `authorizeOrgRole`.
   const { data: superRole } = await adminClient
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .in("role", ["super_admin", "admin"])
+    .eq("role", "super_admin")
     .maybeSingle();
   if (superRole) return true;
+
   const { data: member } = await adminClient
     .from("organization_members")
     .select("id")
