@@ -48,9 +48,16 @@ export function NuevaCuentaFormFields({ form, setField }: NuevaCuentaFormFieldsP
         </Select>
       </div>
       <div>
-        <Label>Saldo inicial</Label>
-        <Input type="number" step="0.01" value={form.saldoInicial} onChange={(e) => setField("saldoInicial", Number(e.target.value))} />
+        <Label htmlFor="cuenta-saldo-inicial">Saldo inicial</Label>
+        <MoneyInput
+          id="cuenta-saldo-inicial"
+          value={form.saldoInicial}
+          onChange={(n) => setField("saldoInicial", n)}
+          currency={form.moneda}
+          allowNegative
+        />
       </div>
+
       <div>
         <Label>Saldo inicial al día *</Label>
         <DatePickerMx
