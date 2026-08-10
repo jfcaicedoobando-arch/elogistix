@@ -59,9 +59,11 @@ export async function crearAjustesFacturaProveedor(
     monto: d.delta,
   }));
 
+  // SAFE-CAST: `ajustes` es un arreglo de objetos planos serializables a jsonb.
+  const payload = ajustes as unknown as Json;
   const { data, error } = await supabase.rpc("crear_ajustes_factura_proveedor_rpc", {
     p_factura_id: input.facturaId,
-    p_ajustes: ajustes as unknown as Json,
+    p_ajustes: payload,
   });
   if (error) throw error;
 
