@@ -152,8 +152,8 @@ async function buildTemplateData(
   input: z.infer<typeof BodySchema>,
 ): Promise<Record<string, unknown>> {
   const { periodo, mensaje } = input;
-  const moneda = facturas.length > 0 ? facturas[0].moneda ?? 'MXN' : 'MXN';
-  const { total, saldo, vencido } = calcularTotales(facturas, moneda);
+  const totales = calcularTotalesPorMoneda(facturas);
+  const monedas = totales.map((t) => t.moneda);
 
   const [perfil, orgName] = await Promise.all([
     loadPerfil(supabaseAdmin, userId),
@@ -164,10 +164,11 @@ async function buildTemplateData(
   return {
     cliente: cliente.nombre ?? orgName ?? 'Cliente',
     periodo: periodo ?? '',
-    totalFacturas: formatCurrency(total, moneda),
-    totalSaldo: formatCurrency(saldo, moneda),
-    totalVencido: formatCurrency(vencido, moneda),
-    moneda,
+    totalFacturas: formatPorMoneda(totales, 'total'),
+    totalSaldo: formatPorMoneda(totales, 'saldo'),
+    totalVencido: formatPorMoneda(totales, 'vencido'),
+    desgloseMonedas: totales,
+    moneda: monedas.length === 1 ? monedas[0] : monedas.join(', ') || MONEDA_ESTADO_CUENTA_DEFAULT,
     mensaje: mensaje ?? '',
     enlacePortal: `${publicSiteUrl}/portal/estado-de-cuenta`,
     ejecutivoNombre: perfil?.nombre ?? '',
