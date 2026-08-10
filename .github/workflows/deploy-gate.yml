@@ -248,6 +248,9 @@ jobs:
     steps:
       - name: Veredicto
         id: veredicto
+        # shellcheck disable=SC2016
+        # Las ${...} de las líneas siguientes son parámetros de shell (expansión
+        # intencional en runtime), no variables de GitHub Actions.
         run: |
           fail=0
           for pair in "auditoría de migraciones:${{ needs.auditoria-migraciones.result }}" \
