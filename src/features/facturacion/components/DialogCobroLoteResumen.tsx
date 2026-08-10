@@ -12,6 +12,8 @@ interface Props {
   totalRepartido: number;
   sinAsignar: number;
   error: string | null;
+  /** Facturas PPD timbradas del reparto que generarán REP automáticamente. */
+  repRequeridos?: number;
 }
 
 export function DialogCobroLoteResumen(p: Props) {
@@ -39,6 +41,13 @@ export function DialogCobroLoteResumen(p: Props) {
           {liquidadas} de {conMonto || p.facturas.length} quedan liquidadas
         </span>
       </div>
+      {!!p.repRequeridos && p.repRequeridos > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {p.repRequeridos === 1
+            ? "1 factura requiere complemento de pago (REP): se timbrará automáticamente al aplicar el cobro."
+            : `${p.repRequeridos} facturas requieren complemento de pago (REP): se timbrarán automáticamente al aplicar el cobro.`}
+        </p>
+      )}
       {p.error && <p className="text-xs text-destructive">{p.error}</p>}
     </div>
   );

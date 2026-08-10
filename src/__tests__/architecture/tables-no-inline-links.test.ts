@@ -30,7 +30,9 @@ const ALLOWLIST: readonly string[] = [
   // filas marcadas la fila deja de navegar (modo selección) y el folio es la
   // única vía explícita al detalle. `getRowHref` sigue siendo el drilldown
   // cuando no hay selección activa.
-  "src/features/bandejas/routes/_sections/carteraColumns.tsx",
+  // v13.491.0 — la celda de folio se movió a este archivo al dividir
+  // carteraColumns.tsx (Power of 10: ≤ 200 líneas).
+  "src/features/bandejas/routes/_sections/carteraColumns.selection.tsx",
 ];
 
 

@@ -54,6 +54,25 @@ export function usePagoClienteLoteState(a: Args) {
     setRenglones(repartirFifo(a.facturas, saldoTotal).renglones);
   }, [a.open, a.facturas, saldoTotal]);
 
+  // Aviso previo: cuáles de las facturas candidatas exigirán REP (PPD timbradas).
+  const [idsConRep, setIdsConRep] = useState<string[]>([]);
+  useEffect(() => {
+    if (!a.open) return;
+    let vivo = true;
+    const ids = a.facturas.map((f) => f.factura_id);
+    obtenerFacturasConRep(ids)
+      .then((res) => {
+        if (vivo) setIdsConRep(res);
+      })
+      .catch(() => {
+        if (vivo) setIdsConRep([]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [a.open, a.facturas]);
+
+
   const esExtranjera = a.moneda !== "MXN";
   const pedirTc = a.open && esExtranjera;
   const { data: tcDofRaw } = useTcDofPorFecha(pedirTc ? fecha : null, pedirTc);
@@ -69,6 +88,9 @@ export function usePagoClienteLoteState(a: Args) {
     moneda: a.moneda,
   });
   const sinAsignar = round2(totalNum - totalRepartido);
+  const repRequeridos = renglones.filter(
+    (r) => r.monto > 0 && idsConRep.includes(r.factura_id),
+  ).length;
 
   const recalcular = (nuevoTotal: number) => {
     setTotal(nuevoTotal === 0 ? "" : String(nuevoTotal));
@@ -104,7 +126,7 @@ export function usePagoClienteLoteState(a: Args) {
     fecha, setFecha, total, formaPago, setFormaPago, referencia, setReferencia,
     cuentaId, setCuentaId, notas, setNotas, renglones,
     saldoTotal, tcDof, cuentasMoneda,
-    error, sinAsignar, totalRepartido, recalcular, setMonto, submit,
+    error, sinAsignar, totalRepartido, repRequeridos, recalcular, setMonto, submit,
     guardando: registrar.isPending,
   };
 }

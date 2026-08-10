@@ -74,6 +74,7 @@ export function DialogCobroLoteCliente(p: Props) {
           totalRepartido={s.totalRepartido}
           sinAsignar={s.sinAsignar}
           error={s.error}
+          repRequeridos={s.repRequeridos}
         />
       }
       footer={footer}

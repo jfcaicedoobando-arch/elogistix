@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.491.0] - 2026-08-10
+- REP (complemento de pago) tras un cobro en lote: el lote registraba los pagos pero **no timbraba** los REP, así que el contador tenía que entrar factura por factura. Ahora el timbrado es automático y secuencial al aplicar el lote (nuevo `services/repLote.ts` con `timbrarRepsSecuencial` + resumen es-MX; `usePagoClienteLote` lo usa y avisa si algún REP falló, sin revertir el cobro). La bandeja "REP pendientes" gana botón **Timbrar REP** por renglón y selección múltiple con la barra `BandejaRepAcciones` para timbrar varios de una pasada (`useTimbrarRepsLote`, columnas en `bandejaRepColumns.tsx`). El modal de cobro en lote avisa en la banda de totales cuántas facturas requerirán REP antes de aplicar (`repRequeridos`).
+- Power of 10: `carteraColumns.tsx` había quedado en 203 líneas; se dividió en `carteraColumns.selection.tsx` (checkbox + folio) y `carteraColumns.types.ts`.
+
 ## [13.490.0] - 2026-08-10
 - Cartera: al seleccionar facturas para el cobro en lote, un clic apenas fuera del checkbox navegaba al detalle y borraba la selección. Ahora (1) toda la celda del checkbox selecciona (área de 36 px, encabezado incluido), (2) con al menos una factura marcada la tabla entra en **modo selección**: el clic o Enter en cualquier parte de la fila marca/desmarca en lugar de navegar (`selectionMode` en `DataTable`/`DataTableBody`, derivado de `rowSelection`), (3) el folio queda como único drilldown explícito y abre en pestaña nueva mientras haya selección, y (4) nueva barra `CarteraSelectionBar` sticky con el conteo, cliente/moneda, el motivo cuando el lote no aplica, "Cobro en lote" y "Limpiar selección" (el botón sale del PageHeader). `buildSelectionColumn` hereda el área de clic ampliada.
 
