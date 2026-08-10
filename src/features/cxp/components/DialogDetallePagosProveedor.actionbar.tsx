@@ -24,6 +24,12 @@ interface Props {
   factura: FacturaCxP;
   canEdit: boolean;
   puedeAprobar: boolean;
+  /**
+   * Motivo por el que este usuario NO puede aprobar esta factura en concreto
+   * (segregación de funciones). Si viene, el botón "Aprobar factura" se
+   * deshabilita con tooltip explicativo; rechazar sigue permitido.
+   */
+  motivoBloqueoAprobacion?: string | null;
   flags: FacturaFlags;
   onPagar?: (f: FacturaCxP) => void;
   onEditar?: (f: FacturaCxP) => void;
@@ -33,7 +39,7 @@ interface Props {
 }
 
 export function StatusActionBar({
-  factura: f, canEdit, puedeAprobar, flags,
+  factura: f, canEdit, puedeAprobar, motivoBloqueoAprobacion = null, flags,
   onPagar, onEditar, onEliminar, onCerrarSinPago, onCancelar,
 }: Props) {
   const [openAprobar, setOpenAprobar] = useState(false);
@@ -65,9 +71,22 @@ export function StatusActionBar({
               onClick={() => setOpenRechazar(true)} disabled={aprobar.isPending}>
               <X className="h-4 w-4 mr-1" /> Rechazar
             </Button>
-            <Button size="sm" onClick={() => setOpenAprobar(true)} disabled={aprobar.isPending}>
-              <Check className="h-4 w-4 mr-1" /> Aprobar factura
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    size="sm"
+                    onClick={() => setOpenAprobar(true)}
+                    disabled={aprobar.isPending || Boolean(motivoBloqueoAprobacion)}
+                  >
+                    <Check className="h-4 w-4 mr-1" /> Aprobar factura
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {motivoBloqueoAprobacion && (
+                <TooltipContent className="max-w-xs">{motivoBloqueoAprobacion}</TooltipContent>
+              )}
+            </Tooltip>
           </>
         )}
         {!pendiente && onPagar && flags.pagable && (
