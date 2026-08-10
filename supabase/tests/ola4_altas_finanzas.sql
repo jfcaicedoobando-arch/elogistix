@@ -136,14 +136,33 @@ $n9$ LANGUAGE plpgsql;
 DO $n10$
 DECLARE
   v_resumen jsonb; v_total_activos int; v_confirmado int;
+  v_org_n10 uuid := 'ca111111-1111-1111-1111-111111111111';
+  v_uid_n10 uuid := 'ca555555-5555-5555-5555-555555555555';
+  v_cli_n10 uuid := 'ca222222-2222-2222-2222-222222222222';
 BEGIN
+  -- Org aislada para N10: así totalActivos sólo refleja el Borrador.
+  -- La siembra corre SIN claims para no disparar el guard tarifa-first.
+  PERFORM set_config('request.jwt.claims', '', true);
+
+  INSERT INTO public.organizations (id, nombre) VALUES (v_org_n10, 'Test Org Ola4 N10')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO auth.users (id, email) VALUES (v_uid_n10, 'ola4-n10@test.mx')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.organization_members (organization_id, user_id, role)
+  VALUES (v_org_n10, v_uid_n10, 'contador') ON CONFLICT DO NOTHING;
+  INSERT INTO public.clientes (id, organization_id, nombre)
+  VALUES (v_cli_n10, v_org_n10, 'Cliente Ola4 N10') ON CONFLICT (id) DO NOTHING;
+
   INSERT INTO public.embarques (
-    id, organization_id, expediente, modo, tipo, estado, etd, eta
+    id, organization_id, cliente_id, expediente, modo, tipo, estado, etd, eta
   ) VALUES (
-    'c1212121-1212-1212-1212-121212121212', 'c1111111-1111-1111-1111-111111111111',
-    'OLA4N10001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
+    'c1212121-1212-1212-1212-121212121212', v_org_n10, v_cli_n10,
+    'ELNSD001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
     'Borrador'::public.estado_embarque, CURRENT_DATE + 10, CURRENT_DATE + 20
   );
+
+  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid_n10)::text, true);
+
 
   v_resumen := public.dashboard_summary();
   v_total_activos := (v_resumen->>'totalActivos')::int;
