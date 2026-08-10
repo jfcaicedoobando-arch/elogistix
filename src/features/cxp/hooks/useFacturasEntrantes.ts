@@ -15,6 +15,8 @@ import {
   type FacturaEntranteRow,
   type SubirFacturaEntranteInput,
 } from "@/features/cxp/services/facturasEntrantes";
+import { reactivarFacturaEntrante } from "@/features/cxp/services/facturasEntrantesReactivar";
+
 import type { CfdiXmlMeta } from "@/lib/domain/cfdiXmlMeta";
 import { cxp } from "@/features/cxp/queryKeys";
 
