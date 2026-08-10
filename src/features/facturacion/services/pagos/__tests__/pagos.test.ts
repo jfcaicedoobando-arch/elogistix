@@ -47,7 +47,7 @@ describe("listarPagosFactura", () => {
 describe("registrarPagoFactura", () => {
   it("happy path: inserta sin error y devuelve el id", async () => {
     mock.setTableResult("pagos_factura", { data: { id: "pago-1" }, error: null });
-    await expect(registrarPagoFactura(validInput)).resolves.toBe("pago-1");
+    await expect(registrarPagoFactura(validInput)).resolves.toMatchObject({ pagoId: "pago-1" });
     expect(mock.tableCalls[0]?.ops).toContain("insert");
   });
 
