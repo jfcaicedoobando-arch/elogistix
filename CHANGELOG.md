@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.478.9] - 2026-08-10
+- Fix CI (arquitectura): `proveedorFacturas.update.ts` se dividió en `.reglas.ts` (validaciones) y `.types.ts` (tipos) para volver al límite Power-of-10 de 200 líneas.
+
 ## [13.478.8] - 2026-08-10
+
 - Fix CI: agregado el mensaje amigable para `LC_ORG_INEXISTENTE` (organización seleccionada ya no existe).
 - Fix CI: los tests Deno de `user-management` ahora esperan el mínimo de 10 caracteres de contraseña (política vigente).
 - Lint: `usePdfExport` ya no declara `isExporting` como dependencia innecesaria y `actualizarFacturaProveedor` extrae `calcularTotal` y `validarTotalNoMenorAPagado` para bajar su complejidad.
