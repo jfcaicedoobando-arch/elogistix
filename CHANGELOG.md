@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.491.1] - 2026-08-10
+- Aprobación de facturas de proveedor (`LC_SOD_VIOLATION`): el botón "Aprobar factura" se mostraba habilitado a quien capturó la factura y el bloqueo por **segregación de funciones** aparecía como error rojo hasta después del clic. Ahora la regla se evalúa antes: nuevo `motivoBloqueoAprobacion`/`puedeAprobarEstaFactura` en `features/cxp/permissions.ts` (espejo de la RPC: `admin`, `admin_org` y `super_admin` exentos) más el hook `useSodAprobacion`. En el detalle, "Aprobar factura" queda deshabilitado con tooltip explicativo (rechazar sigue permitido); en la bandeja "Por aprobar" las facturas propias no son seleccionables para el lote (`ComprasPorAprobar.selectionCol` con `bloqueados` y la lógica movida al hook `ComprasPorAprobar.useColumnas`). El mensaje de error, si igual llega a ocurrir, ahora dice a quién pedirle la aprobación.
+- `created_by` se agregó al lector de facturas de proveedor (`FacturaCxP`) para poder aplicar la regla en el cliente.
+
+
 ## [13.491.0] - 2026-08-10
 - REP (complemento de pago) tras un cobro en lote: el lote registraba los pagos pero **no timbraba** los REP, así que el contador tenía que entrar factura por factura. Ahora el timbrado es automático y secuencial al aplicar el lote (nuevo `services/repLote.ts` con `timbrarRepsSecuencial` + resumen es-MX; `usePagoClienteLote` lo usa y avisa si algún REP falló, sin revertir el cobro). La bandeja "REP pendientes" gana botón **Timbrar REP** por renglón y selección múltiple con la barra `BandejaRepAcciones` para timbrar varios de una pasada (`useTimbrarRepsLote`, columnas en `bandejaRepColumns.tsx`). El modal de cobro en lote avisa en la banda de totales cuántas facturas requerirán REP antes de aplicar (`repRequeridos`).
 - Power of 10: `carteraColumns.tsx` había quedado en 203 líneas; se dividió en `carteraColumns.selection.tsx` (checkbox + folio) y `carteraColumns.types.ts`.
