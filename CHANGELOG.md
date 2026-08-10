@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.494.2] - 2026-08-10
+- Fix CI: `src/components/shared/dataTable/DataTableRow.tsx` se agregó a la allowlist del guardrail `no-raw-table` (es parte de la implementación misma del `DataTable`).
+
 ## [13.494.1] - 2026-08-10
 - Fix CI (`audit:migrations`, regla H6): nueva migración correctiva que re-aplica los permisos de `public._cxp_desvincular_por_rechazo` (faltaba `GRANT EXECUTE ... TO service_role`) y de `public.aprobar_factura_proveedor` (faltaba `REVOKE ALL ... FROM PUBLIC`).
 - Baseline del auditor de migraciones bumpeado a `20260810235028` con la nota FIX-H6-13.
