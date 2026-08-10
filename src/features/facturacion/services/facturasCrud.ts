@@ -5,7 +5,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { hoyMx } from "@/lib/date/mx";
 import type { Tables } from "@/integrations/supabase/types";
+
 
 
 export type FacturaRow = Tables<"facturas">;

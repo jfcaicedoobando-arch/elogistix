@@ -4,6 +4,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchEtapasPipelineActivas } from "@/features/crm/services/etapas";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { hoyMx } from "@/lib/date/mx";
+
 
 /**
  * Mapea el estado de una cotización a la etapa CRM correspondiente y la aplica

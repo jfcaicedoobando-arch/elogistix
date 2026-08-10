@@ -22,7 +22,9 @@ interface Props {
 export function AvisoTcRequerido({ tcSugerido, guardando, onGuardarYReintentar }: Props) {
   const [valor, setValor] = useState("");
 
-  const tc = Number(valor.replace(",", "."));
+  // Ola 9 · B5: parseo centralizado (maneja "$ 1,200.50" y espacios duros).
+  const tc = parseMonto(valor, NaN);
+
   const valido = Number.isFinite(tc) && tc > 0;
 
   return (
