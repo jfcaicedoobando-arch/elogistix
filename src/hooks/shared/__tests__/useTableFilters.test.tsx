@@ -51,8 +51,12 @@ describe("useTableFilters", () => {
       () => useTableFilters({ defaultFilters: {} as Record<string, string> }),
       { wrapper },
     );
-    await act(async () => result.current.setDateFrom("2026-01-01"));
-    await act(async () => result.current.setDateTo("2026-12-31"));
+    // El adaptador de pruebas de nuqs no conserva la URL entre flushes, así
+    // que ambos extremos del rango se aplican en el mismo batch.
+    await act(async () => {
+      result.current.setDateFrom("2026-01-01");
+      result.current.setDateTo("2026-12-31");
+    });
     expect(result.current.isInRange("2026-06-15")).toBe(true);
     expect(result.current.isInRange("2025-12-31")).toBe(false);
     expect(result.current.activeChips).toHaveLength(2);
