@@ -20,6 +20,7 @@ import {
   actualizarFechaLlegadaRealEmbarque,
   insertarNotaEmbarque,
   reabrirEmbarqueRpc,
+  EmbarqueBloqueadoError,
 } from "@/features/embarques/services/mutations";
 
 
@@ -204,7 +205,6 @@ describe("eliminarEmbarqueRpc", () => {
   });
 
   it("convierte el marcador LC_EMBARQUE_BLOQUEADO en EmbarqueBloqueadoError con motivos (Fase E)", async () => {
-    const { EmbarqueBloqueadoError } = await import("@/features/embarques/services");
     const motivos = {
       facturas: 2,
       cxp: 1,
