@@ -21,7 +21,7 @@ interface Props {
 
 const DEFAULT_ROLE: AppRole = "customer_service";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Ola 8 · B2: el mínimo vive en `@/lib/passwords/policy` (fuente única).
+
 
 export default function NuevoUsuarioDialog({
   open,
