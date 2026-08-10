@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.489.6] - 2026-08-10
+- CI (job *schema-baseline*): el paso *Compare against committed baseline* reprobaba el pipeline porque `supabase/schema/baseline.sql` nunca se ha sembrado. Ese archivo sólo puede generarse con el `pg_dump` de la imagen Postgres pinneada (15.8) — un dump de otra versión produce diffs falsos —, así que ahora el paso hace *bootstrap*: si la baseline no existe emite un `::warning::` con instrucciones y deja el snapshot en el artifact `schema-snapshot-actual` en lugar de fallar. Al committear ese artifact como `supabase/schema/baseline.sql`, el guard de drift de esquema queda activo y estricto.
+- Manifest de release regenerado para 13.489.6.
+
+
+
 ## [13.489.5] - 2026-08-10
 - Power of 10: `src/lib/access/permissionMatrix.ts` había crecido a 223 líneas (rompía `architecture-baseline` y `audit-report`). Se dividió en `permissionMatrix.finanzas.ts` (facturación, pagos, cobros, cuentas bancarias, conciliación, movimientos bancarios) y `permissionMatrix.operaciones.ts` (cotización, embarques, handoff, proformas, facturas entrantes); el archivo original queda con los grupos de roles y re-exporta todo, así que ningún import existente cambia.
 - CI: regenerado `supabase/releases/migration-manifest.json` para la versión 13.489.5 (833 migraciones), que faltaba y hacía fallar `db:release-manifest:check`.
