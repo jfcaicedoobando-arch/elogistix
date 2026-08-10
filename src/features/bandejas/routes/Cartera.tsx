@@ -44,7 +44,12 @@ function formatNativos(b: SaldosPorMonedaCartera): string {
 
 export default function Cartera() {
   const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
+export default function Cartera() {
+  const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [loteOpen, setLoteOpen] = useState(false);
   const {
+    data,
     paged,
     monedas,
     scoped,
@@ -59,12 +64,37 @@ export default function Cartera() {
     columns,
   } = useCarteraPage((row) => setRecordatorio(row));
 
+  const selectedIds = useMemo(() => Object.keys(rowSelection), [rowSelection]);
+  const seleccionadas = useMemo(
+    () => data.filter((r) => selectedIds.includes(r.factura_id)),
+    [data, selectedIds],
+  );
+  const lote = useMemo(() => derivarLoteCobro(seleccionadas), [seleccionadas]);
+
   return (
     <PageContainer>
       <PageHeader
         title="Cartera"
         description="Facturas vencidas y por vencer en los próximos 7 días. Cambia el filtro de urgencia para ver toda la cartera."
+        actions={
+          selectedIds.length > 0 && (
+            <Button
+              onClick={() => setLoteOpen(true)}
+              disabled={!lote}
+              title={
+                lote
+                  ? undefined
+                  : "Selecciona 2 o más facturas del mismo cliente y la misma moneda"
+              }
+            >
+              <Layers className="h-4 w-4 mr-2" />
+              Cobro en lote ({selectedIds.length})
+            </Button>
+          )
+        }
       />
+
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
