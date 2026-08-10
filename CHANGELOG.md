@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.481.3] - 2026-08-10
+- Tests (Ola 4): el expediente del fixture (`OLA4B001`) no cumplía el formato `^EL[A-Z]{3}[0-9]+$`; se cambió a `ELOLB001`.
+
 ## [13.481.2] - 2026-08-10
 - Tests (Ola 4): `supabase/tests/ola4_altas.sql` fallaba en CI porque el embarque ajeno de la org B se insertaba sin `cliente_id` (columna NOT NULL). Se siembra un cliente de la org B y se pasa su id en el fixture.
 
