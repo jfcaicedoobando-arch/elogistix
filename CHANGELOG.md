@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.476.0] - 2026-08-10
+- Ola 9 (M5) — Bandeja de huecos de facturación: sin tipo de cambio capturado ya no se asume 1 USD = 1 MXN; la fila se marca `sin_tc` y las conversiones quedan en 0.
+- Ola 9 (A6) — Edición de facturas de proveedor: el "total pagado" ignora pagos borrados y descuenta notas de crédito aplicadas, dejando de bloquear ediciones legítimas.
+- Ola 9 (M14) — Candado de exportación PDF en `useRef`: el doble clic en el mismo frame ya no genera dos archivos.
+- Ola 9 (B3) — `round2` del pago en lote delega en `roundMoney` (fuente única de redondeo financiero).
+- Ola 9 (B2) — El formulario de inicio de sesión ya no impone un mínimo propio de 6 caracteres; la política vive sólo en `src/lib/passwords/policy.ts`.
+- Ola 9 (B6) — `attribution.ts` usa la llave central de `STORAGE_KEYS`.
+- Ola 9 (B5) — Parseo de montos centralizado en el aviso de TC de proforma y en la aplicación de anticipos.
+- Ola 9 (A11) — Fechas de pago y de cierre CRM usan `hoyMx()` (fecha local de México) en lugar de UTC.
+- Ola 9 (M13) — Marcar un costo como pagado invalida también las consultas de CxP y facturas de proveedor.
+- Ola 9 (M6) — El estado de resultados devengado usa el tipo de cambio propio de cada nota de crédito.
+- Ola 9 (B7) — La precarga de destinatarios en los envíos por correo corre una sola vez por apertura y ya no borra lo capturado al refrescar contactos.
+- Ola 9 (A13) — Edge functions: sólo `super_admin` tiene acceso cross-org; el `admin` global se valida por membresía.
+
 ## [13.475.1] - 2026-08-10
 - Corregido `trg_clientes_normaliza_campos`: convertía `rfc`/`email` vacíos a `NULL` en columnas `NOT NULL`, rompiendo la conversión de prospecto a cliente (`convertir_lead_rpc`). Ahora se conservan como texto vacío.
 
