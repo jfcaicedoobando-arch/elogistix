@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { useOrgActiva } from "@/hooks/shared";
 import { fetchDashboardSummary, fetchDashboardDetails } from "@/features/dashboard/services";
 import {
   ESTADOS_FILTRO,
@@ -38,9 +39,10 @@ export type {
  * Este hook se concentra en orquestar la query, el filtro de estado y los memos.
  */
 export function useDashboardData() {
+  const { organizationId } = useOrgActiva();
   // Summary: KPIs + conteos + resumen mensual — payload pequeño, carga eager
   const { data: summary, isLoading, isError, refetch } = useQuery({
-    queryKey: queryKeys.dashboard.statsSummary,
+    queryKey: queryKeys.dashboard.statsSummary(organizationId),
     queryFn: fetchDashboardSummary,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
@@ -49,7 +51,7 @@ export function useDashboardData() {
   // Details: listas largas — corre EN PARALELO con summary (no esperamos a que summary
   // termine). HTTP/2 multiplexa ambas peticiones sobre la misma conexión, mejorando TTI.
   const { data: details } = useQuery({
-    queryKey: queryKeys.dashboard.statsDetails,
+    queryKey: queryKeys.dashboard.statsDetails(organizationId),
     queryFn: fetchDashboardDetails,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,

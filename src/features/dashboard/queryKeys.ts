@@ -6,8 +6,12 @@ export const bitacora = {
 
 export const dashboard = {
   stats: ['dashboard-stats'] as const,
-  statsSummary: ['dashboard-stats', 'summary'] as const,
-  statsDetails: ['dashboard-stats', 'details'] as const,
+  // El servidor resuelve la organización con `org_scope()`; la incluimos en la
+  // llave para que el caché nunca mezcle tenants al cambiar de organización.
+  statsSummary: (organizationId?: string | null) =>
+    ['dashboard-stats', 'summary', organizationId ?? null] as const,
+  statsDetails: (organizationId?: string | null) =>
+    ['dashboard-stats', 'details', organizationId ?? null] as const,
   ventasUSD: ['dashboard-ventas-usd'] as const,
   costosUSD: ['dashboard-costos-usd'] as const,
   profitAggregated: ['dashboard-profit-aggregated'] as const,
@@ -19,8 +23,10 @@ export const operadores = {
 } as const;
 
 export const operaciones = {
-  stats: ['operaciones-stats'] as const,
+  stats: (organizationId?: string | null) =>
+    ['operaciones-stats', organizationId ?? null] as const,
 } as const;
+
 
 export const reportes = {
   conceptos: ['reportes', 'conceptos'] as const,

@@ -23,3 +23,16 @@ export async function listActiveOrganizations<T = OrganizationRow>(): Promise<T[
   if (error) throw error;
   return fromDb<T[]>(data ?? []);
 }
+
+/**
+ * Persiste en el servidor el tenant activo del super admin.
+ *
+ * Las funciones de agregación (`dashboard_summary`, `direccion_totales`,
+ * `operaciones_stats`, etc.) resuelven la organización con `public.org_scope()`,
+ * que lee esta selección. Sin este guardado el super admin recibiría los datos
+ * de todas las organizaciones mezclados.
+ */
+export async function setSuperAdminOrg(organizationId: string | null): Promise<void> {
+  const { error } = await supabase.rpc("set_super_admin_org", { p_org: organizationId } as never);
+  if (error) throw error;
+}

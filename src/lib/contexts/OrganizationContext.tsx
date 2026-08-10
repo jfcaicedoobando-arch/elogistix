@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { listActiveOrganizations } from "@/features/admin/services/organization";
+import { listActiveOrganizations, setSuperAdminOrg } from "@/features/admin/services/organization";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import { syncSentryActiveOrg } from "@/lib/observability/sentry/user";
 
@@ -65,18 +65,31 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       // preferencia que él eligió explícitamente (y que sigue activa).
       const activeId = stored && orgList.find(o => o.id === stored) ? stored : null;
       setSuperAdminActiveId(activeId);
+      // Re-sincroniza el servidor con la preferencia local (otro navegador o
+      // sesión pudo dejar seleccionado un tenant distinto). Se espera el
+      // round-trip ANTES de liberar `loading`: así ninguna query de agregación
+      // se dispara con el tenant equivocado.
+      await setSuperAdminOrg(activeId).catch(() => undefined);
+      if (cancelled) return;
       setLoadingSA(false);
     })();
     return () => { cancelled = true; };
   }, [user, isSuperAdmin]);
 
   const setActiveOrganization = useCallback((id: string) => {
-    if (isSuperAdmin) {
-      setSuperAdminActiveId(id);
-      safeLocalStorage.setItem(STORAGE_KEYS.superAdminActiveOrg, id);
-      // R6-FIX4: al cambiar de tenant, ninguna caché previa sigue siendo válida.
-      queryClient.clear();
-    }
+    if (!isSuperAdmin) return;
+    setSuperAdminActiveId(id);
+    safeLocalStorage.setItem(STORAGE_KEYS.superAdminActiveOrg, id);
+    // El tenant activo se persiste en el servidor: las RPC de agregación
+    // (`dashboard_summary`, `operaciones_stats`, ...) resuelven la organización
+    // con `org_scope()`. Sin este guardado el super admin vería los datos de
+    // todas las organizaciones mezclados. Se limpia la caché ya persistida
+    // *antes* del round-trip y se vuelve a limpiar después para que ninguna
+    // query en vuelo guarde datos del tenant anterior.
+    queryClient.clear();
+    void setSuperAdminOrg(id)
+      .catch(() => undefined)
+      .finally(() => queryClient.clear());
   }, [isSuperAdmin, queryClient]);
 
   const clearActiveOrganization = useCallback(() => {
@@ -84,6 +97,9 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     setSuperAdminActiveId(null);
     safeLocalStorage.removeItem(STORAGE_KEYS.superAdminActiveOrg);
     queryClient.clear();
+    void setSuperAdminOrg(null)
+      .catch(() => undefined)
+      .finally(() => queryClient.clear());
   }, [isSuperAdmin, queryClient]);
 
   const value = useMemo<OrganizationContextType>(() => {

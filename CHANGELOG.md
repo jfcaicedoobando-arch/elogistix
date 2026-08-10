@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.478.0] - 2026-08-10
+- Super admin: al elegir una organización en el selector, el tenant se persiste en el servidor (`set_super_admin_org` / `org_scope()`), así los tableros y reportes agregados dejan de mostrar datos de otra organización.
+- Las llaves de caché de tablero y operaciones incluyen la organización activa: cambiar de tenant ya no reutiliza datos del anterior.
+- Prueba RLS nueva `supabase/tests/rls/test_rls_org_scope.sql` y cobertura del contexto de organización.
+
 ## [13.477.0] - 2026-08-10
 - Ola 10 (A11) — La vigencia de una cotización nueva se calcula con la fecha de México: dar de alta después de las 18:00 ya no la vencía un día tarde.
 - Ola 10 (M9) — Estado de cuenta por correo: las facturas "Parcialmente pagada" con saldo vencido ya cuentan como vencido, y los totales se agrupan por moneda en lugar de reportar sólo la divisa de la primera factura.
