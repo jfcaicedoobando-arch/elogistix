@@ -7,6 +7,9 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { updateOwnPassword } from "@/lib/auth/changePassword";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { validarPassword, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
+import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
+
 
 
 interface Props {
