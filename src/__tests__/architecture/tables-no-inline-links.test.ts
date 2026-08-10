@@ -25,7 +25,14 @@ const LINK_IMPORT_RE =
   /import\s*(?:type\s*)?\{[^}]*\bLink\b[^}]*\}\s*from\s*["']react-router-dom["']/;
 
 /** Archivos autorizados a importar `Link` en columnas (excepciones justificadas). */
-const ALLOWLIST: readonly string[] = [];
+const ALLOWLIST: readonly string[] = [
+  // v13.490.0 — Cartera tiene selección múltiple para el cobro en lote: con
+  // filas marcadas la fila deja de navegar (modo selección) y el folio es la
+  // única vía explícita al detalle. `getRowHref` sigue siendo el drilldown
+  // cuando no hay selección activa.
+  "src/features/bandejas/routes/_sections/carteraColumns.tsx",
+];
+
 
 const isColumnFile = (rel: string) =>
   /columns\.tsx$/i.test(rel) && !/\.test\.tsx?$/i.test(rel);
