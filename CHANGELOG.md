@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.489.5] - 2026-08-10
+- Power of 10: `src/lib/access/permissionMatrix.ts` había crecido a 223 líneas (rompía `architecture-baseline` y `audit-report`). Se dividió en `permissionMatrix.finanzas.ts` (facturación, pagos, cobros, cuentas bancarias, conciliación, movimientos bancarios) y `permissionMatrix.operaciones.ts` (cotización, embarques, handoff, proformas, facturas entrantes); el archivo original queda con los grupos de roles y re-exporta todo, así que ningún import existente cambia.
+
+
+
 ## [13.489.4] - 2026-08-10
 - CI (job *Prepare RLS database snapshot*): el loop de `Apply migrations` abortaba el pipeline con exit 3 en `20260812090000` (Ola 4 N41/N44/N45), que no aplica en base limpia por el cambio de firma de `cartera_pendiente()`. Ahora el loop lleva `MIGRACIONES_EXENTAS` (`20260729035825`, `20260812090000`) — mismas exenciones que `DRIFT_CORTE` — y sólo emite *warning*; cualquier otra migración que falle sigue rompiendo el build.
 - El estado final de esos fixes lo garantizan las migraciones de reaplicación `20260810203738` (cartera) y `20260810203939` (dashboards).
