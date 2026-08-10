@@ -45,9 +45,16 @@ BEGIN
     (v_cat_b, v_org_b, 'Cat Ola4 B', 0, true, 'CostoDirectoEmbarque')
   ON CONFLICT (id) DO NOTHING;
 
+  -- Cliente de la org B (requerido por embarques.cliente_id NOT NULL).
+  INSERT INTO public.clientes (id, organization_id, nombre, rfc, email)
+  VALUES ('b9999999-9999-9999-9999-999999999999', v_org_b, 'Cliente Ola4 B',
+          'XAXX010101000', 'ola4-b@test.mx')
+  ON CONFLICT (id) DO NOTHING;
+
   -- Embarque de la org B (ajeno) para el caso N6.
-  INSERT INTO public.embarques (id, organization_id, expediente, modo, tipo)
+  INSERT INTO public.embarques (id, organization_id, expediente, cliente_id, modo, tipo)
   VALUES ('b7777777-7777-7777-7777-777777777777', v_org_b, 'OLA4B001',
+          'b9999999-9999-9999-9999-999999999999',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   ON CONFLICT (id) DO NOTHING;
 
