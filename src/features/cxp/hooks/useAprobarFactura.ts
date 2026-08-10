@@ -40,10 +40,11 @@ export function useAprobarFactura() {
       notifySuccess(undefined, {
         title: vars.aprobar ? "Factura aprobada" : "Factura rechazada",
         description: ctx
-          ? `${ctx} — ${vars.aprobar ? "quedó lista para programar pago." : "el proveedor será notificado."}`
+          ? `${ctx} — ${vars.aprobar ? "quedó lista para programar pago." : "se canceló y liberó el embarque; sus costos volvieron a pendientes de factura."}`
           : vars.aprobar
             ? "La factura quedó lista para programar pago."
-            : "El motivo se registró en la bitácora.",
+            : "Se canceló y liberó el embarque; sus costos volvieron a pendientes de factura.",
+
       });
     },
     onError: (error: Error, vars) => {
