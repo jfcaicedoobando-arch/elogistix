@@ -36,3 +36,14 @@ export async function setSuperAdminOrg(organizationId: string | null): Promise<v
   const { error } = await supabase.rpc("set_super_admin_org", { p_org: organizationId } as never);
   if (error) throw error;
 }
+
+/**
+ * RG9 (Ola 3): lee el tenant activo que el super admin ya persistió en el
+ * servidor (pudo elegirlo desde OTRO dispositivo/navegador). `org_scope()`
+ * devuelve justo esa selección, o NULL si no hay ninguna.
+ */
+export async function getSuperAdminOrg(): Promise<string | null> {
+  const { data, error } = await supabase.rpc("org_scope");
+  if (error) throw error;
+  return (data as string | null) ?? null;
+}
