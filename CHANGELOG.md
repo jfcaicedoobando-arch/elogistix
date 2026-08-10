@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.493.0] - 2026-08-10
+- **Rechazar factura de proveedor ahora rompe el vínculo con el embarque**: nueva función `public._cxp_desvincular_por_rechazo(uuid, text)` invocada desde `aprobar_factura_proveedor` cuando `p_aprobar = false`. Revierte los conceptos `ajuste_factura_proveedor`, borra los renglones de `proveedor_facturas_conceptos` (los costos vuelven a **pendientes de factura**), pone `embarque_id = NULL`, marca el archivo de `embarque_facturas_entrantes` como `rechazada` con el motivo y cancela la factura (`estado = 'Cancelada'`, motivo de cancelación = motivo del rechazo).
+- Si la factura tiene pagos vivos o está `Pagada`, el rechazo se bloquea con `LC_CXP_RECHAZO_CON_PAGOS` (mensaje amigable nuevo en `lcCodeMessages.financiero.ts` y regla en `aprobacionFactura.ts`). La bitácora registra vínculos eliminados, ajustes revertidos y el embarque liberado.
+- UI: el diálogo de rechazo advierte las consecuencias antes de confirmar, el toast lo refleja y `useAprobarFactura` invalida embarques, `conceptos_costo` y facturas entrantes al rechazar.
+- Corrección de datos de **FP-000114** (embarque ELIMP00295): ajuste de −72 USD revertido, 4 vínculos eliminados, embarque liberado y factura cancelada.
+- Nueva prueba `supabase/tests/cxp_rechazo_libera_embarque.sql` registrada en el workflow `rls-tests`.
+
+
+
 ## [13.492.2] - 2026-08-10
 - Lint en verde (`--max-warnings 0`): se bajó la complejidad ciclomática de `DataTableBody` extrayendo `DataTableRow` + `rowHandlers.ts`, de `StatusActionBar` (nuevos `AprobarRechazarBotones` y `BotonRegistrarPago`) y de `calcularFasesEmbarque` (helper `calcularCompletadas`).
 - `etdVencido` se movió a `src/features/embarques/domain/etdVencido.ts` para que `AlertaBorrador` sólo exporte componentes; `BandejaRepPendientes` usa `useCallback` en lugar de silenciar `react-hooks/exhaustive-deps` (habilita de nuevo el React Compiler).
