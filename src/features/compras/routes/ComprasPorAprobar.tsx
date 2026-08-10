@@ -29,6 +29,7 @@ type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
 
 export default function ComprasPorAprobar() {
   const { canAprobarFacturaProveedor } = usePermissions();
+  const { idsBloqueados } = useSodAprobacion();
   const navigate = useNavigate();
   const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("pendiente");
   const [search, setSearch] = useState("");
