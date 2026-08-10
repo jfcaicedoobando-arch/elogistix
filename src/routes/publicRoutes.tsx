@@ -8,6 +8,7 @@ import { Route, Navigate } from "react-router-dom";
 const Login = lazy(() => import("@/features/auth/routes/Login"));
 const ResetPassword = lazy(() => import("@/features/auth/routes/ResetPassword"));
 const NotFound = lazy(() => import("@/features/auth/routes/NotFound"));
+const SinAcceso = lazy(() => import("@/features/auth/routes/SinAcceso"));
 const TrackingPublico = lazy(() => import("@/features/auth/routes/TrackingPublico"));
 const Unsubscribe = lazy(() => import("@/features/auth/routes/Unsubscribe"));
 const HomeRoute = lazy(() => import("@/features/marketing/routes/HomeRoute"));
