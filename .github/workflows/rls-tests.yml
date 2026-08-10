@@ -137,19 +137,42 @@ jobs:
 
       - name: Apply migrations
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
+        env:
+          # Migraciones legacy que NO aplican en base limpia y cuyo estado
+          # final garantiza una migración posterior (mismas exenciones que el
+          # radar de drift, `DRIFT_CORTE`). Los archivos de supabase/migrations
+          # son inmutables, por eso la exención vive aquí.
+          #  - 20260729035825: FIX C5 parchea por texto definiciones vigentes
+          #    (estado final en FIX C5-b).
+          #  - 20260812090000: Ola 4 N41/N44/N45 intentaba renombrar las
+          #    columnas de salida de `cartera_pendiente()` con CREATE OR
+          #    REPLACE (`cannot change return type of existing function`);
+          #    estado final en 20260810203738 y 20260810203939.
+          MIGRACIONES_EXENTAS: "20260729035825 20260812090000"
         run: |
+          set -uo pipefail
           shopt -s nullglob
           # --single-transaction: si una migración falla a la mitad, hace
-          # rollback completo del archivo y aborta el loop (ON_ERROR_STOP=1).
-          # Evita estado parcial de objetos creados antes del error.
+          # rollback completo del archivo (ON_ERROR_STOP=1). Evita estado
+          # parcial de objetos creados antes del error.
           for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
             base=$(basename "$f")
             echo "▶ $base"
-            sed -E \
+            if sed -E \
               -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
               -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
-              "$f" | $PSQL --single-transaction
+              "$f" | $PSQL --single-transaction; then
+              continue
+            fi
+            ts="${base%%_*}"
+            if [[ " $MIGRACIONES_EXENTAS " == *" $ts "* ]]; then
+              echo "::warning file=$f::migración legacy exenta (no aplica en base limpia; estado final en migración posterior)"
+              continue
+            fi
+            echo "::error file=$f::la migración no aplica en una base limpia"
+            exit 1
           done
+
 
 
 
