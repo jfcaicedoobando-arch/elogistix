@@ -91,8 +91,10 @@ function AdjuntarXmlButton({ onSelect }: { onSelect: (xml: File) => void }) {
 }
 
 export function FacturaEntranteItem({
-  row, puedeEliminar, puedeAdjuntarXml, onVer, onAdjuntarXml, onEliminar,
+  row, puedeEliminar, puedeAdjuntarXml, puedeReactivar = false,
+  onVer, onAdjuntarXml, onEliminar, onReactivar,
 }: Props) {
+
   const chips = chipsArchivosEntrante(row);
   const tieneXml = chips.includes("xml");
   const tienePdf = chips.includes("pdf");
