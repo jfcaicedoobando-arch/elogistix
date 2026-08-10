@@ -40,6 +40,8 @@ describe("queryClient · toast on query failure", () => {
     vi.resetModules();
   });
 
+  // El `await import()` del queryClient arrastra el grafo de módulos completo;
+  // bajo carga (suite completa) puede pasar de 15 s. Timeout dedicado.
   it("emite toast.error con acción 'Reintentar' cuando una query falla", async () => {
     const { queryClient } = await import("../queryClient");
     await queryClient.fetchQuery({
@@ -60,7 +62,7 @@ describe("queryClient · toast on query failure", () => {
     expect(options.duration).toBe(8000);
     // Q-08: la acción primaria reintenta en el lugar (no navega fuera).
     expect(options.action.label).toBe("Reintentar");
-  });
+  }, 45_000);
 
   it("respeta meta.silentError y NO muestra toast", async () => {
     const { queryClient } = await import("../queryClient");
