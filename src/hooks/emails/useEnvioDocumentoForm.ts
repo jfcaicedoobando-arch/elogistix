@@ -100,8 +100,14 @@ export function useEnvioDocumentoForm(
   ccInicialRef.current = ccInicial;
   destInicialRef.current = destinatariosManualesInicial;
 
+  // Ola 9 · B7: la precarga corre UNA vez por apertura. Antes se re-ejecutaba
+  // cada vez que la query de contactos refrescaba y borraba lo ya capturado.
+  const precargadoRef = useRef(false);
+  if (!open) precargadoRef.current = false;
+
   useEffect(() => {
-    if (!open) return;
+    if (!open || precargadoRef.current) return;
+    precargadoRef.current = true;
     setAsunto(buildAsuntoInicialRef.current());
     setMensaje("");
     setEmailManual("");
@@ -115,6 +121,7 @@ export function useEnvioDocumentoForm(
     setEmailsManualesAgregados(precargaDest);
     setSeleccionados(seleccionadosPre);
   }, [open, contactos, ccInicialKey, destInicialKey, userEmail]);
+
 
   const agregarManual = () => {
     const v = emailManual.trim();
