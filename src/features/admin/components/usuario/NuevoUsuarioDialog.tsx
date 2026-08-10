@@ -11,6 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSection";
 import { NuevoUsuarioAccesoSection } from "./NuevoUsuarioAccesoSection";
+// Ola 8 · B2: el mínimo de contraseña vive en un solo módulo compartido.
+import { PASSWORD_MIN } from "@/lib/passwords/policy";
+
 
 interface Props {
   open: boolean;
