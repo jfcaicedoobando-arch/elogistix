@@ -39,6 +39,8 @@ export const publicRoutes = (
     <Route path="/recursos/guia-puertos-mexico" element={<GuiaPuertosMexico />} />
     <Route path="/onboarding" element={<Onboarding />} />
     <Route path="/portal/proformas/:token" element={<PortalProforma />} />
+    {/* RG1: aterrizaje estable para sesiones sin rol/organización (sin bucle). */}
+    <Route path="/sin-acceso" element={<SinAcceso />} />
     <Route path="*" element={<NotFound />} />
 
   </>
