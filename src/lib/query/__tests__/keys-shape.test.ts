@@ -19,7 +19,7 @@ const EXPECTED_DOMAINS = [
   "usuariosPortalCliente", "usuariosPortalAgente",
   "costeo", "portalAgente", "proveedorFacturas", "proveedorNotasCredito",
   "pagosProveedor", "proveedorSalud", "conceptosCosto",
-  "bandejas", "productosCatalogo", "direccion", "dashboardOperador",
+  "compras", "bandejas", "productosCatalogo", "direccion", "dashboardOperador",
   "embarquesPendientesAdmin", "alertasSistema", "demoLeads", "notificaciones",
   "marketing", "cxc", "auth",
 ] as const;
