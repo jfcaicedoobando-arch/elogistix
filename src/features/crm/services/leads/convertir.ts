@@ -32,8 +32,6 @@ export async function convertirLead(
     p_monto_estimado: params.montoEstimado,
     p_moneda: params.moneda,
     p_fecha_estimada_cierre: params.fechaEstimadaCierre ?? null,
-    // SAFE-CAST: los tipos generados aún no incluyen la firma del RPC de Ola 6;
-    // las claves corresponden 1:1 con los parámetros declarados en la migración.
   } as unknown as Parameters<typeof supabase.rpc<"convertir_lead_rpc">>[1];
   const { data, error } = await supabase.rpc("convertir_lead_rpc", rpcArgs);
 
