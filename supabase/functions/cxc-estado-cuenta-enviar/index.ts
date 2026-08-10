@@ -4,6 +4,11 @@ import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { wrapEdgeHandler } from '../_shared/sentry.ts';
 import { authenticate } from '../_shared/auth.ts';
 import { DESTINATARIO_NO_PERMITIDO, emailPerteneceACliente } from '../_shared/destinatarioCliente.ts';
+import {
+  calcularTotalesPorMoneda,
+  formatPorMoneda,
+  MONEDA_ESTADO_CUENTA_DEFAULT,
+} from './totales.ts';
 
 
 const BodySchema = z.object({
@@ -36,17 +41,6 @@ function corsJson(body: unknown, status: number, req: Request) {
   });
 }
 
-function formatCurrency(value: number, moneda: string): string {
-  return `${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${moneda}`;
-}
-
-function diasEntre(isoVencimiento: string | null, isoHoy: string | null): number | null {
-  if (!isoVencimiento) return null;
-  const venc = new Date(isoVencimiento);
-  const hoy = isoHoy ? new Date(isoHoy) : new Date();
-  if (Number.isNaN(venc.getTime()) || Number.isNaN(hoy.getTime())) return null;
-  return Math.floor((hoy.getTime() - venc.getTime()) / (1000 * 60 * 60 * 24));
-}
 
 async function loadCliente(
   adminClient: SupabaseClient,
@@ -91,18 +85,9 @@ async function loadFacturasVivas(
   return (data ?? []) as FacturaCliente[];
 }
 
-function calcularTotales(facturas: FacturaCliente[], monedaDominante: string) {
-  const fMoneda = facturas.filter((f) => f.moneda === monedaDominante || (!f.moneda && monedaDominante === 'MXN'));
-  const total = fMoneda.reduce((acc, f) => acc + (f.total ?? 0), 0);
-  const saldo = fMoneda.reduce((acc, f) => acc + (f.saldo ?? 0), 0);
-  const hoy = new Date().toISOString();
-  const vencido = fMoneda.reduce((acc, f) => {
-    if (f.estado === 'Pagada' || f.estado === 'Parcialmente pagada') return acc;
-    const dias = diasEntre(f.fecha_vencimiento, hoy) ?? 0;
-    return dias > 0 ? acc + (f.saldo ?? 0) : acc;
-  }, 0);
-  return { total, saldo, vencido };
-}
+// M9: los totales viven en `totales.ts` (lógica pura, agrupada por moneda y
+// con las facturas parcialmente pagadas incluidas en el vencido).
+
 
 async function resolveDestinatario(
   adminClient: SupabaseClient,
@@ -172,8 +157,8 @@ async function buildTemplateData(
   input: z.infer<typeof BodySchema>,
 ): Promise<Record<string, unknown>> {
   const { periodo, mensaje } = input;
-  const moneda = facturas.length > 0 ? facturas[0].moneda ?? 'MXN' : 'MXN';
-  const { total, saldo, vencido } = calcularTotales(facturas, moneda);
+  const totales = calcularTotalesPorMoneda(facturas);
+  const monedas = totales.map((t) => t.moneda);
 
   const [perfil, orgName] = await Promise.all([
     loadPerfil(supabaseAdmin, userId),
@@ -184,10 +169,11 @@ async function buildTemplateData(
   return {
     cliente: cliente.nombre ?? orgName ?? 'Cliente',
     periodo: periodo ?? '',
-    totalFacturas: formatCurrency(total, moneda),
-    totalSaldo: formatCurrency(saldo, moneda),
-    totalVencido: formatCurrency(vencido, moneda),
-    moneda,
+    totalFacturas: formatPorMoneda(totales, 'total'),
+    totalSaldo: formatPorMoneda(totales, 'saldo'),
+    totalVencido: formatPorMoneda(totales, 'vencido'),
+    desgloseMonedas: totales,
+    moneda: monedas.length === 1 ? monedas[0] : monedas.join(', ') || MONEDA_ESTADO_CUENTA_DEFAULT,
     mensaje: mensaje ?? '',
     enlacePortal: `${publicSiteUrl}/portal/estado-de-cuenta`,
     ejecutivoNombre: perfil?.nombre ?? '',

@@ -10,6 +10,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
+import { runWithFrozenClock } from "@/test/helpers/withFrozenClock";
 import { crearCotizacion } from "../crear";
 import type { CreateCotizacionInput } from "@/features/cotizacion/types";
 
@@ -115,5 +116,15 @@ describe("crearCotizacion", () => {
     await expect(crearCotizacion({ ...baseInput, cliente_nombre: "" })).rejects.toThrow();
     expect(mock.tableCalls).toHaveLength(0);
     expect(mock.rpcCalls).toHaveLength(0);
+  });
+
+  it("A11: la vigencia se calcula con la fecha CDMX (19:00 MX no se corre un día)", async () => {
+    // 2026-08-11T01:00:00Z = 10/08/2026 19:00 en CDMX.
+    await runWithFrozenClock("2026-08-11T01:00:00Z", async () => {
+      mock.setTableResult("cotizaciones", { data: { id: "cot-9" }, error: null });
+      await crearCotizacion({ ...baseInput, vigencia_dias: 30 });
+      const payload = mock.getMutationPayload("cotizaciones") as { fecha_vigencia?: string };
+      expect(payload?.fecha_vigencia).toBe("2026-09-09");
+    });
   });
 });

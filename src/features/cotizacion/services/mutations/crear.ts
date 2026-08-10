@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CotizacionRow, CreateCotizacionInput } from "@/features/cotizacion/types";
 import { fromDbChecked } from "@/lib/supabase/cast";
+import { hoyMx, isoUtcDay, parseLocalMx } from "@/lib/date/mx";
 import { cotizacionRowDbSchema } from "../readSchemas";
 
 import { cotizacionDraftInputSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
@@ -28,13 +29,12 @@ async function generarFolioAtomico(): Promise<string> {
 export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
   parseOrThrow(cotizacionDraftInputSchema, input, "Cotización");
   const folio = await generarFolioAtomico();
-  const fechaVigencia = new Date();
-  fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
-  const payload = buildCotizacionInsertPayload(
-    input,
-    folio,
-    fechaVigencia.toISOString().split("T")[0],
-  );
+  // Ola 10 · A11: la vigencia se calcula desde "hoy" en zona CDMX. Con
+  // `toISOString()` cualquier alta después de las 18:00 hora de México
+  // guardaba la fecha del día siguiente (la cotización vencía un día tarde).
+  const base = parseLocalMx(hoyMx());
+  base.setUTCDate(base.getUTCDate() + input.vigencia_dias);
+  const payload = buildCotizacionInsertPayload(input, folio, isoUtcDay(base));
 
   const { data, error } = await supabase
     .from("cotizaciones")
