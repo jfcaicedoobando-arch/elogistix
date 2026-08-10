@@ -10,13 +10,11 @@ import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
-import { unwrapOr, run } from "@/lib/supabase/response";
+import { unwrapOr } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import {
   bitacoraImportarMovimientos,
   bitacoraConciliarMovimiento,
-  bitacoraDesconciliarMovimiento,
-  bitacoraIgnorarMovimiento,
 } from "./conciliacionBitacora";
 
 export type MovimientoBBVA = Tables<"bbva_movimientos">;
@@ -171,33 +169,10 @@ export async function conciliarConPago(
 }
 
 
-export async function desconciliarMovimiento(movId: string) {
-  await run(
-    supabase
-      .from("bbva_movimientos")
-      .update({
-        pago_factura_id: null,
-        pago_proveedor_id: null,
-        estado_conciliacion: "Pendiente",
-        conciliado_por: null,
-        conciliado_at: null,
-      })
-      .eq("id", movId)
-      .is("deleted_at", null),
-  );
-  await bitacoraDesconciliarMovimiento(movId);
-}
-
-export async function ignorarMovimiento(movId: string, motivo: string) {
-  await run(
-    supabase
-      .from("bbva_movimientos")
-      .update({ estado_conciliacion: "Ignorado", motivo_ignorar: motivo })
-      .eq("id", movId)
-      .is("deleted_at", null),
-  );
-  await bitacoraIgnorarMovimiento(movId, motivo);
-}
+export {
+  desconciliarMovimiento,
+  ignorarMovimiento,
+} from "./conciliacionEstados";
 
 export {
   registrarMovimientoManual,

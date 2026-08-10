@@ -438,6 +438,17 @@ jobs:
       - name: Integridad transaccional - ola6 RPCs atomicas (A3, M3, M4, M15)
         run: $PSQL -f supabase/tests/ola6_transaccional.sql
 
+      - name: Ola 4 ALTAS - tenancy de RPCs (N6, N12)
+        run: $PSQL -f supabase/tests/ola4_altas.sql
+
+      - name: Ola 4 ALTAS - reportes financieros (N7, N8, N9, N10)
+        run: $PSQL -f supabase/tests/ola4_altas_finanzas.sql
+
+      - name: Ola 4 ALTAS - indices unicos vivos (N15, N16)
+        run: $PSQL -f supabase/tests/ola4_altas_indices.sql
+
+
+
 
   types-drift:
     name: Drift types.ts (esquema <-> tipos TS)

@@ -68,4 +68,13 @@ describe("configuracion service", () => {
     ).rejects.toThrow(/organizationId/);
     expect(mock.tableCalls.filter((c) => c.table === "configuracion")).toHaveLength(0);
   });
+
+  it("updateConfiguracionByCategoriaClave filtra el update por organization_id (Ola 4 · N11)", async () => {
+    mock.setTableResult("configuracion", { data: null, error: null });
+    await updateConfiguracionByCategoriaClave("org-9", [
+      { categoria: "empresa", clave: "nombre", valor: "Z" },
+    ]);
+    const call = mock.tableCalls.find((c) => c.table === "configuracion");
+    expect(call?.opArgs).toContainEqual(["organization_id", "org-9"]);
+  });
 });

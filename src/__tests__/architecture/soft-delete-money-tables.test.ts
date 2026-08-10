@@ -28,8 +28,15 @@ const CASOS: Array<{ file: string; tabla: string; minOcurrencias: number }> = [
   {
     file: "src/features/tesoreria/services/conciliacion.ts",
     tabla: "bbva_movimientos",
-    minOcurrencias: 4,
+    minOcurrencias: 3,
   },
+  {
+    // desconciliar/ignorar salieron a este archivo por el límite de 200 líneas.
+    file: "src/features/tesoreria/services/conciliacionEstados.ts",
+    tabla: "bbva_movimientos",
+    minOcurrencias: 2,
+  },
+
   {
     file: "src/features/proveedor/services/proveedoresCrud.ts",
     tabla: "proveedores",
