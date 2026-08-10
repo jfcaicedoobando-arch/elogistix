@@ -59,7 +59,7 @@ export function DialogCobroLoteCliente(p: Props) {
       size="3xl"
       bodyClassName="py-4 space-y-4"
       headerAside={
-        <div className="leading-tight">
+        <div className="pr-6 leading-tight">
           <p className="text-overline text-muted-foreground">Saldo seleccionado</p>
           <p className="text-sm font-semibold tabular-nums">
             {formatCurrency(s.saldoTotal, p.moneda)}
