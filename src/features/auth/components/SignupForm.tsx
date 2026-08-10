@@ -28,8 +28,9 @@ const signupSchema = z
       .max(120, "El nombre de la empresa debe tener entre 2 y 120 caracteres."),
     phone: z.string().optional(),
     email: z.string().email("Correo inválido."),
-    password: z.string().min(6, "Mínimo 6 caracteres."),
-    password2: z.string().min(6, "Mínimo 6 caracteres."),
+    password: passwordSchema,
+    password2: passwordSchema,
+
     acceptTerms: z.literal(true, {
       message: "Debes aceptar los términos para continuar.",
     }),
