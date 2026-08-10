@@ -59,15 +59,16 @@ async function fetchPortalEmailMap(userIds: string[]): Promise<Record<string, st
 
 
 
-/** U-01: acota el listado a la organización activa (null = todas, super_admin). */
+/** P2 (fail-closed): sin organización activa no se lista nada. */
 export async function fetchUsuariosPortalCliente(
   orgId?: string | null,
 ): Promise<PortalClienteUserRow[]> {
-  let query = supabase
+  if (!orgId) throw new Error("LC_ORG_REQUERIDA");
+  const query = supabase
     .from("client_users")
     .select("id, user_id, cliente_id, created_at, clientes:cliente_id(nombre)")
+    .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
-  if (orgId) query = query.eq("organization_id", orgId);
   const { data, error } = await query;
   if (error) throw error;
   type Row = {
