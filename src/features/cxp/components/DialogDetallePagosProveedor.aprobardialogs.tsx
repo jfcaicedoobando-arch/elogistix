@@ -43,9 +43,13 @@ export function AprobarRechazarDialogs({
       <ReasonDialog
         open={openRechazar} onOpenChange={setOpenRechazar} icon={XCircle}
         title="Rechazar factura"
-        description={ctxLabel
-          ? `${ctxLabel} — Indica el motivo del rechazo. Será registrado en la bitácora y notificado al proveedor.`
-          : "Indica el motivo del rechazo."}
+        description={[
+          ctxLabel ? `${ctxLabel} — ` : "",
+          "Al rechazar: la factura se cancela, suelta el embarque y sus costos vuelven a quedar ",
+          "pendientes de factura. El archivo del proveedor queda marcado como rechazado. ",
+          "Indica el motivo (se registra en la bitácora).",
+        ].join("")}
+
         label="Motivo"
         placeholder={`Ej. Folio incorrecto, falta XML, monto no coincide... (máx. ${MOTIVO_RECHAZO_MAX} caracteres)`}
         confirmLabel="Rechazar factura"
