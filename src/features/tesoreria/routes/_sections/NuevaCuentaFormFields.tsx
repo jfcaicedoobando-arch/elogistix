@@ -3,6 +3,8 @@
  * Extraído de `TesoreriaCuentas` (límite Power-of-10 de 200 líneas).
  */
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/shared/MoneyInput";
+
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import {
