@@ -17,6 +17,7 @@ import { refPagoDeMovimiento } from "@/features/tesoreria/domain/pagoDetalle";
 import {
   EstadoConciliado, EstadoIgnorado, ListaCandidatos,
 } from "@/features/tesoreria/components/PanelConciliacionEstados";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 interface Props {
   movimiento: MovimientoBBVA | null;
   onClose: () => void;
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN" }: Props) {
+  const { canCapturarMovimientoBancario: puedeCapturar } = usePermissions();
   const { data: candidatos = [], isLoading } = useSugerirCandidatos(movimiento);
   const conciliar = useConciliarPago();
   const ignorar = useIgnorarMovimiento();
@@ -111,7 +113,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
           />
         )}
 
-        {esMovimientoManual(movimiento) && movimiento.estado_conciliacion !== "Conciliado" && (
+        {puedeCapturar && esMovimientoManual(movimiento) && movimiento.estado_conciliacion !== "Conciliado" && (
           <Button
             variant="outline"
             size="sm"

@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.487.1] - 2026-08-10
+- Fix Tesorería · Conciliación: el rol `contador` veía los botones "Movimiento manual" e "Importar XLSX/CSV" pero la base rechazaba la escritura con RLS 42501 (`bbva_movimientos`). Nueva capacidad `CAPTURAR_MOVIMIENTO_BANCARIO` (super_admin, admin_org, admin, tesorero) como espejo exacto de las políticas de INSERT/UPDATE; la UI ahora oculta captura, importación y "Eliminar movimiento manual" para roles de sólo lectura y muestra el motivo. Sin migración: los permisos de la base no cambian.
+- Test: `ConciliacionToolbar.permisos.test.tsx`.
+
 ## [13.487.0] - 2026-08-10
 - UX/dinero: nuevo campo estándar `MoneyInput` (`src/components/shared/MoneyInput.tsx` + helpers puros en `utils/moneyInputFormat.ts`): formato en vivo con separador de miles, cursor estable, acepta coma decimal, recorta a 2 decimales, se puede vaciar (adiós al "0" pegajoso) y sufijo opcional de moneda.
 - Migrados a `MoneyInput`: Tesorería (importe de movimiento manual, monto de pago programado, saldo inicial de cuenta), CxP (importe total y renglones de pago en lote, vincular conceptos), Costeo (flete base, recargos, monto por día de demoras), CRM (monto estimado y valor real) y Cotización (precio unitario del concepto inline).

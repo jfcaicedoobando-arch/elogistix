@@ -4,6 +4,7 @@ import {
   ADMIN_CUENTAS_BANCARIAS,
   APROBAR_FACTURA_PROVEEDOR,
   CAPTURAR_FACTURA_PROVEEDOR,
+  CAPTURAR_MOVIMIENTO_BANCARIO,
 
   CERRAR_EMBARQUE,
   COTIZAR_SIN_DESGLOSE,
@@ -38,6 +39,7 @@ export function usePermissions() {
 
   const canAdminTenant = has(TENANT_ADMINS, roleStr);
   const canAdminCuentasBancarias = has(ADMIN_CUENTAS_BANCARIAS, roleStr);
+  const canCapturarMovimientoBancario = has(CAPTURAR_MOVIMIENTO_BANCARIO, roleStr);
 
   const canEditOperations = has(OPERATIONS, roleStr);
   const canEditFinance = has(FINANCE, roleStr);
@@ -74,6 +76,7 @@ export function usePermissions() {
     role: effectiveRole,
     canAdminTenant,
     canAdminCuentasBancarias,
+    canCapturarMovimientoBancario,
 
     canEditOperations,
     canEditFinance,
