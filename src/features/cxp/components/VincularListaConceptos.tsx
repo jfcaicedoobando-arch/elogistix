@@ -4,7 +4,6 @@
  */
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoneyInput } from "@/components/shared/MoneyInput";
-import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/formatters";
 import { lineaExcedeOriginal } from "@/features/cxp/utils/topeVinculacion";
 import type { ConceptoCostoAbierto } from "@/features/cxp/hooks";
@@ -64,7 +63,7 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
                         value={sel.monto}
                         onChange={(n: number) => onChangeMonto(it.id, n)}
                         aria-invalid={excede || undefined}
-                        aria-label={`Importe aplicado al concepto ${it.descripcion ?? ""}`}
+                        aria-label={`Importe aplicado al concepto ${it.concepto}`}
                         className={`w-28 h-8 ${excede ? "border-destructive text-destructive" : ""}`}
                       />
                     </div>

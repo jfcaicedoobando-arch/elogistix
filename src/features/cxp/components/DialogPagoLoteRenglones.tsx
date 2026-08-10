@@ -2,7 +2,6 @@
  * Tabla de reparto del pago en lote (v13.445.0).
  * Se extrae del diálogo para respetar el límite de 200 líneas por componente.
  */
-import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { toTitleCase } from "@/lib/formatters";

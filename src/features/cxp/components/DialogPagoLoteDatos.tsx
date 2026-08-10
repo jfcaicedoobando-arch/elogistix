@@ -59,7 +59,7 @@ export function DialogPagoLoteDatos(p: Props) {
           <Label htmlFor="lote-total">Importe total ({p.moneda})</Label>
           <MoneyInput
             id="lote-total"
-            value={p.total}
+            value={p.total === "" ? null : Number(p.total)}
             currency={p.moneda}
             onChange={(n: number) => p.onTotal(round2(n))}
           />
