@@ -103,7 +103,7 @@ BEGIN
         'descripcion', 'ajuste cross-tenant', 'monto', 100))
     );
     RAISE EXCEPTION 'TEST FAIL: N6 - se aceptó un ajuste referenciando un embarque de otra organización';
-  EXCEPTION WHEN raise_exception THEN
+  EXCEPTION WHEN OTHERS THEN
     IF SQLERRM NOT LIKE '%LC_EMBARQUE_AJENO%' THEN
       RAISE EXCEPTION 'TEST FAIL: N6 - error inesperado: %', SQLERRM;
     END IF;
@@ -123,7 +123,7 @@ BEGIN
       'b4444444-4444-4444-4444-444444444444'::uuid,
       100);
     RAISE EXCEPTION 'TEST FAIL: N12 - se aplicó un anticipo de otra organización';
-  EXCEPTION WHEN raise_exception THEN
+  EXCEPTION WHEN OTHERS THEN
     IF SQLERRM NOT LIKE '%LC_ANTICIPO_OTRA_ORG%' THEN
       RAISE EXCEPTION 'TEST FAIL: N12 - error inesperado en aplicar_anticipo_a_factura: %', SQLERRM;
     END IF;
@@ -141,7 +141,7 @@ BEGIN
     PERFORM public.cancelar_anticipo_proveedor(
       'b8888888-8888-8888-8888-888888888888'::uuid, 'motivo de prueba ola4');
     RAISE EXCEPTION 'TEST FAIL: N12 - se canceló un anticipo de otra organización';
-  EXCEPTION WHEN raise_exception THEN
+  EXCEPTION WHEN OTHERS THEN
     IF SQLERRM NOT LIKE '%LC_ANTICIPO_OTRA_ORG%' THEN
       RAISE EXCEPTION 'TEST FAIL: N12 - error inesperado en cancelar_anticipo_proveedor: %', SQLERRM;
     END IF;

@@ -26,14 +26,13 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'contador') ON CONFLICT DO NOTHING;
-  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 
   INSERT INTO public.clientes (id, organization_id, nombre)
   VALUES (v_cli, v_org, 'Cliente Ola4 N7') ON CONFLICT (id) DO NOTHING;
 
   -- N7: un embarque con 2 ventas y 3 costos → no debe haber fan-out.
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, eta, tipo_cambio_usd)
-  VALUES (v_emb, v_org, v_cli, 'OLA4N7001', 'Marítimo'::public.modo_transporte,
+  VALUES (v_emb, v_org, v_cli, 'ELN7A001', 'Marítimo'::public.modo_transporte,
           'Importación'::public.tipo_operacion, CURRENT_DATE, 18.0)
   ON CONFLICT (id) DO NOTHING;
 
@@ -46,7 +45,7 @@ BEGIN
 
   -- N8: embarque del año actual con venta en USD y SIN tipo_cambio_usd (<=1).
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, eta, tipo_cambio_usd)
-  VALUES ('c4444444-4444-4444-4444-444444444444', v_org, v_cli, 'OLA4N8001',
+  VALUES ('c4444444-4444-4444-4444-444444444444', v_org, v_cli, 'ELN8A001',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
           make_date(EXTRACT(year FROM CURRENT_DATE)::int, 1, 15), 0)
   ON CONFLICT (id) DO NOTHING;
@@ -62,6 +61,10 @@ BEGIN
     'OLA4N9001', 'MXN'::public.moneda, 1000, 'Emitida'::public.estado_factura,
     CURRENT_DATE - 5, CURRENT_DATE + 10
   ) ON CONFLICT (id) DO NOTHING;
+
+  -- La sesión se fija AL FINAL: sembrar embarques con claims de 'contador'
+  -- dispara el guard "requiere cotización Aceptada" (tarifa-first).
+  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
 END
 $fixture$ LANGUAGE plpgsql;
 

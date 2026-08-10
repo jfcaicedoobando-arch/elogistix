@@ -48,6 +48,26 @@ BEGIN
   INSERT INTO public.cuentas_bancarias (id, organization_id, alias)
   VALUES (v_cuenta, v_org, 'Cuenta Ola4 Indices') ON CONFLICT (id) DO NOTHING;
 
+  -- El trigger assert_movimiento_pago_consistente exige un pago vivo real.
+  INSERT INTO public.clientes (id, organization_id, nombre)
+  VALUES ('d3333333-3333-3333-3333-333333333333', v_org, 'Cliente Ola4 Indices')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.facturas (
+    id, organization_id, cliente_id, cliente_nombre, numero, expediente,
+    moneda, total, estado, fecha_emision, fecha_vencimiento
+  ) VALUES (
+    'd4444444-4444-4444-4444-444444444444', v_org,
+    'd3333333-3333-3333-3333-333333333333', 'Cliente Ola4 Indices', 'OLA4-IDX-01',
+    'ELIDX001', 'MXN'::public.moneda, 1000, 'Emitida'::public.estado_factura,
+    CURRENT_DATE - 1, CURRENT_DATE + 20
+  ) ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.pagos_factura (
+    id, organization_id, factura_id, monto, moneda, fecha_pago
+  ) VALUES (
+    v_pago, v_org, 'd4444444-4444-4444-4444-444444444444', 100,
+    'MXN'::public.moneda, CURRENT_DATE
+  ) ON CONFLICT (id) DO NOTHING;
+
   INSERT INTO public.bbva_movimientos (
     id, organization_id, cuenta_bancaria_id, fecha, cargo, hash_dedupe, pago_factura_id
   ) VALUES (
