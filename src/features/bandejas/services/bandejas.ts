@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 export interface CxpPorCapturarRow {
   embarque_id: string;
@@ -55,12 +56,16 @@ export interface CarteraPendienteRow {
 export async function fetchCxpPorCapturar(): Promise<CxpPorCapturarRow[]> {
   const { data, error } = await supabase.rpc("cxp_por_capturar");
   if (error) throw error;
+  // Ola 4 · N43: la RPC lleva LIMIT 500; sin esto los KPIs mentían en silencio.
+  assertNotTruncated(data, 500, "bandejas.cxpPorCapturar");
   return (data ?? []) as CxpPorCapturarRow[];
 }
 
 export async function fetchCxpPorPagar(): Promise<CxpPorPagarRow[]> {
   const { data, error } = await supabase.rpc("cxp_por_pagar");
   if (error) throw error;
+  // Ola 4 · N43: la RPC lleva LIMIT 500; sin esto los KPIs mentían en silencio.
+  assertNotTruncated(data, 500, "bandejas.cxpPorPagar");
   return (data ?? []) as CxpPorPagarRow[];
 }
 
@@ -69,5 +74,7 @@ export async function fetchCxpPorPagar(): Promise<CxpPorPagarRow[]> {
 export async function fetchCarteraPendiente(): Promise<CarteraPendienteRow[]> {
   const { data, error } = await supabase.rpc("cartera_pendiente");
   if (error) throw error;
+  // Ola 4 · N43: la RPC lleva LIMIT 500; sin esto los KPIs mentían en silencio.
+  assertNotTruncated(data, 500, "bandejas.carteraPendiente");
   return (data ?? []) as CarteraPendienteRow[];
 }

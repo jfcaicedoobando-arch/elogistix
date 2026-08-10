@@ -43,7 +43,9 @@ export function facturasCarteraDeCxp(rows: readonly FacturaCxP[]): FacturaCarter
     saldo: Number(r.saldo ?? 0),
     fechaEmision: r.fecha_emision,
     fechaVencimiento: r.fecha_vencimiento ?? null,
-    tipoCambio: Number(r.tipo_cambio_usd ?? 0),
+    // Ola 4 · N47: `tipo_cambio_usd` es SÓLO para USD. Aplicarlo a EUR valuaba
+    // euros al tipo de cambio del dólar; sin TC EUR la factura queda sin valuar.
+    tipoCambio: (r.moneda ?? "MXN").toUpperCase() === "EUR" ? 0 : Number(r.tipo_cambio_usd ?? 0),
   }));
 }
 

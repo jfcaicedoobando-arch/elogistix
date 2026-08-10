@@ -87,6 +87,7 @@ export function FinanceDashboard() {
 
       <CobranzaBlock
         aging={dash.aging}
+        agingSinTc={dash.agingSinTc}
         facturasVencidas={dash.facturasVencidas}
         loading={dash.isLoading}
       />

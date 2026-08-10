@@ -4,7 +4,23 @@
  */
 import Papa from "papaparse";
 
+/**
+ * N35 (Ola 4): neutraliza inyección de fórmulas (CSV injection). Los
+ * conceptos/referencias del estado de cuenta vienen de archivos externos
+ * importados; al abrir el export en Excel una celda que inicia con
+ * = + - @ (o tab/CR) se ejecuta como fórmula. Anteponemos comilla simple.
+ */
+export function neutralizarFormulaCsv(valor: string): string {
+  return /^[=+\-@\t\r]/.test(valor) ? `'${valor}` : valor;
+}
+
 export function toCsv(headers: string[], rows: string[][], delimiter: "," | ";" = ","): string {
-  const out = Papa.unparse({ fields: headers, data: rows }, { delimiter, newline: "\n" });
+  const out = Papa.unparse(
+    {
+      fields: headers.map(neutralizarFormulaCsv),
+      data: rows.map((r) => r.map((c) => neutralizarFormulaCsv(String(c ?? "")))),
+    },
+    { delimiter, newline: "\n" },
+  );
   return out.replace(/\n+$/, "");
 }

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { leerArchivoTexto } from "@/lib/io/readFileText";
 import { parseCsv } from "@/lib/csv/parseCsv";
 import type { ImportPreview } from "@/lib/csv/importSchemas";
 
@@ -31,7 +32,8 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
     setError(null);
     setFileName(file.name);
     try {
-      const text = await file.text();
+      // N34 (Ola 4): tolera Windows-1252 (exports de Excel en es-MX).
+      const text = await leerArchivoTexto(file);
       const parsed = parseCsv(text);
       if (parsed.rows.length === 0) {
         setError("El archivo no contiene filas de datos.");

@@ -102,4 +102,47 @@ describe("parseEstadoCuentaBBVA", () => {
     const b = await parseEstadoCuentaBBVA(csvFile("b.csv", csv));
     expect(a[0].hash_dedupe).toBe(b[0].hash_dedupe);
   });
+
+  it("N32: dos movimientos idénticos el mismo día se conservan con hashes distintos", async () => {
+    const csv = [
+      HEADER,
+      '05/05/2026,COMISION SPEI,,"$150.00",,1000.00',
+      '05/05/2026,COMISION SPEI,,"$150.00",,850.00',
+    ].join("\n");
+    const movs = await parseEstadoCuentaBBVA(csvFile("bbva.csv", csv));
+    expect(movs).toHaveLength(2);
+    expect(movs[0].hash_dedupe).not.toBe(movs[1].hash_dedupe);
+  });
+
+  it("N32: el sufijo ordinal es determinista (mismo archivo → mismos hashes)", async () => {
+    const csv = [
+      HEADER,
+      '05/05/2026,COMISION SPEI,,"$150.00",,1000.00',
+      '05/05/2026,COMISION SPEI,,"$150.00",,850.00',
+    ].join("\n");
+    const a = await parseEstadoCuentaBBVA(csvFile("a.csv", csv));
+    const b = await parseEstadoCuentaBBVA(csvFile("b.csv", csv));
+    expect(a.map((m) => m.hash_dedupe)).toEqual(b.map((m) => m.hash_dedupe));
+  });
+
+  it("N33: una fecha inválida (31/02) descarta sólo su fila, no el lote", async () => {
+    const csv = [
+      HEADER,
+      '31/02/2026,FECHA MALA,REFX,"$100.00",,1000.00',
+      '02/05/2026,DEPOSITO CLIENTE,REF002,,"$5,000.00",103765.43',
+    ].join("\n");
+    const movs = await parseEstadoCuentaBBVA(csvFile("bbva.csv", csv));
+    expect(movs).toHaveLength(1);
+    expect(movs[0].fecha).toBe("2026-05-02");
+  });
+
+  it("N33: un archivo MM/DD (mes primero) aborta con mensaje claro", async () => {
+    const csv = [
+      HEADER,
+      '12/31/2026,MONTH FIRST A,REF1,"$100.00",,1000.00',
+      '11/30/2026,MONTH FIRST B,REF2,"$200.00",,1200.00',
+      '10/29/2026,MONTH FIRST C,REF3,"$300.00",,1500.00',
+    ].join("\n");
+    await expect(parseEstadoCuentaBBVA(csvFile("bbva.csv", csv))).rejects.toThrow(/MM\/DD\/AAAA/);
+  });
 });

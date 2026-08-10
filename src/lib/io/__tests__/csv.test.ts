@@ -25,4 +25,10 @@ describe("toCSV", () => {
     const out = toCSV([{ a: 1 }, { b: 2 }]);
     expect(out.split("\n")[0]).toBe("a,b");
   });
+
+  it("N35: neutraliza fórmulas en celdas y encabezados", () => {
+    const csv = toCSV([{ "=raro": "=1+1" }]);
+    expect(csv.split("\n")[0]).toBe("'=raro");
+    expect(csv).toContain("'=1+1");
+  });
 });
