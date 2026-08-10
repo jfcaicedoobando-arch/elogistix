@@ -2,7 +2,6 @@
  * Una fila de `DataTableBody`. Se extrajo del cuerpo de la tabla para respetar
  * el límite de complejidad ciclomática (ESLint 16) y mantener el body legible.
  */
-import type React from "react";
 import { flexRender, type Row } from "@tanstack/react-table";
 import type { NavigateFunction } from "react-router-dom";
 import { TableCell, TableRow } from "@/components/ui/table";
