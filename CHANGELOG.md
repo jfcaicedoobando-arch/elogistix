@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.478.2] - 2026-08-10
+- Fix migración `org_scope`: el bloque que reescribe funciones ahora excluye agregados/ventana y lenguajes internos (`prokind='f'` + `sql/plpgsql`), evitando el error "array_agg is an aggregate function" al aplicar en una base limpia.
+
 ## [13.478.1] - 2026-08-10
+
 - CI: se silencian advertencias `SC2016` de shellcheck en `.github/workflows/deploy-gate.yml` (expresiones de shell intencionales, no variables de Actions).
 
 ## [13.478.0] - 2026-08-10
