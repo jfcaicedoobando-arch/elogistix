@@ -739,7 +739,7 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-
+          if diff -u "$BASELINE" /tmp/schema.actual.sql > /tmp/schema.diff; then
             echo "✓ El estado final del esquema coincide con la baseline"
             echo "## ✅ Baseline de esquema sin cambios" >> "$GITHUB_STEP_SUMMARY"
             exit 0
