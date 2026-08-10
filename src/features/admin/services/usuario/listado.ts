@@ -90,11 +90,14 @@ async function cargarDirectorioAuth(): Promise<Record<string, ListUsersRow>> {
  * tabla pueda atribuir correctamente el usuario.
  */
 export async function fetchUsuariosOrganizacion(orgId?: string | null): Promise<UserRow[]> {
-  let query = supabase
+  // Ola 3 · P2 (fail-closed): sin organización activa NO listamos nada. Antes
+  // se omitía el filtro y el listado traía usuarios de todas las orgs.
+  if (!orgId) throw new Error("LC_ORG_REQUERIDA");
+  const query = supabase
     .from("organization_members")
     .select("user_id, role, created_at, organization_id, organizations(nombre)")
+    .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
-  if (orgId) query = query.eq("organization_id", orgId);
   const { data: membersData, error: membersError } = await query;
 
   if (membersError) throw membersError;
