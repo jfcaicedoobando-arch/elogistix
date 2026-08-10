@@ -54,6 +54,7 @@ const base: FacturaCxP = {
   fecha_cancelacion: null,
   motivo_cancelacion: null,
   cancelada_por: null,
+  created_by: null,
   flags: {
     parcial: true,
     parcialPct: 50,

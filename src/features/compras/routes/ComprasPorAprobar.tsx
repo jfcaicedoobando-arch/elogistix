@@ -14,10 +14,9 @@ import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
 import { useVerificarSatLote } from "@/features/cxp/hooks/useVerificarSatLote";
-import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
-import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
+import { useColumnasPorAprobar } from "./ComprasPorAprobar.useColumnas";
 import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog";
 import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
@@ -51,12 +50,7 @@ export default function ComprasPorAprobar() {
   const { data: rechazadas = [] } = useFacturasCxP({ aprobacion: "rechazada" });
 
   const seleccionEnLote = canAprobarFacturaProveedor && aprobacion === "pendiente";
-
-  const columns = useMemo(() => {
-    const base = buildCxPColumns();
-    if (!seleccionEnLote) return base;
-    return [buildSelectionColumn({ rows, selected, setSelected }), ...base];
-  }, [rows, selected, seleccionEnLote]);
+  const { columns } = useColumnasPorAprobar({ rows, selected, setSelected, seleccionEnLote });
 
   const currentTotalMxn = useMemo(() => sumaMxn(rows), [rows]);
   const currentTotalUsd = useMemo(() => sumaUsd(rows), [rows]);
