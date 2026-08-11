@@ -62,7 +62,14 @@ function MetaEntrante({ row }: { row: FacturaEntranteRow }) {
           {total != null ? ` · ${formatCurrency(Number(total), row.moneda_detectada ?? "MXN")}` : ""}
         </p>
       )}
+      {row.monto_declarado != null && (
+        <p className="text-xs text-muted-foreground">
+          Monto declarado por operaciones:{" "}
+          {formatCurrency(Number(row.monto_declarado), row.moneda_declarada ?? "MXN")}
+        </p>
+      )}
       {row.nota && <p className="text-xs text-muted-foreground">Nota: {row.nota}</p>}
+
       {row.rechazo_motivo && <p className="text-xs text-destructive">Rechazada: {row.rechazo_motivo}</p>}
     </>
   );
