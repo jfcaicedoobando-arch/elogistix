@@ -40,18 +40,24 @@ const REGLAS: Regla[] = [
     e.message && (/SOBREPAGO_PROVEEDOR/i.test(e.message) || /excede el saldo pendiente/i.test(e.message))
       ? "El pago excede el saldo pendiente de la factura. Revisa los pagos previos y las notas de crédito aplicadas."
       : null,
+  // v13.497.1: la regla de "embarque cerrado" debe evaluarse ANTES del 23514
+  // genérico; el candado de cierre emite ERRCODE check_violation y el mensaje
+  // genérico ("no cumplen una regla del sistema") resultaba ambiguo.
+  (e) =>
+    e.message && /embarque\s+cerrado/i.test(e.message)
+      ? "El expediente del embarque está cerrado, por eso no se pudo actualizar su costo. Reabre el embarque y vuelve a registrar el pago."
+      : null,
   (e) => {
     if (e.code !== "23514" && e.code !== "check_violation") return null;
     if (e.message?.includes("aprobada")) {
       return "La factura debe estar aprobada antes de registrar pagos.";
     }
-    return "Los datos del pago no cumplen una regla del sistema.";
+    return e.message?.trim()
+      ? `Los datos del pago no cumplen una regla del sistema: ${e.message}`
+      : "Los datos del pago no cumplen una regla del sistema.";
   },
-  (e) =>
-    e.message && /embarque.*cerrado/i.test(e.message)
-      ? "No se puede registrar el pago: el embarque ya está cerrado."
-      : null,
 ];
+
 
 export function traducirErrorPagoProveedor(err: unknown): string {
   if (!err) return FALLBACK;

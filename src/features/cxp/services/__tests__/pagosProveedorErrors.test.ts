@@ -41,8 +41,24 @@ describe("traducirErrorPagoProveedor", () => {
     ).toMatch(/excede el saldo pendiente/i);
   });
 
+  it("prioriza 'embarque cerrado' sobre el 23514 genérico (v13.497.1)", () => {
+    const msg = traducirErrorPagoProveedor({
+      code: "23514",
+      message: "Embarque cerrado: edición bloqueada (tabla conceptos_costo)",
+    });
+    expect(msg).toMatch(/expediente del embarque está cerrado/i);
+    expect(msg).toMatch(/Reabre el embarque/i);
+  });
+
+  it("un 23514 desconocido conserva el detalle técnico", () => {
+    expect(traducirErrorPagoProveedor({ code: "23514", message: "pagos_proveedor_tc_pos" })).toMatch(
+      /pagos_proveedor_tc_pos/,
+    );
+  });
+
   it("fallback genérico cuando no hay info", () => {
     expect(traducirErrorPagoProveedor(null)).toMatch(/Inténtalo/);
     expect(traducirErrorPagoProveedor({})).toMatch(/Inténtalo/);
   });
 });
+
