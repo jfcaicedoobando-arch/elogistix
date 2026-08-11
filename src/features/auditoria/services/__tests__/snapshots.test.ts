@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createSupabaseChainMock } from '@/test/utils/_supabaseChainMock';
+import { createSupabaseChainMock } from '@/services/__tests__/_supabaseChainMock';
 
 const { mockSupabase } = vi.hoisted(() => ({ mockSupabase: { current: null as any } }));
 
