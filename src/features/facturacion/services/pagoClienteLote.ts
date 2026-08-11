@@ -9,6 +9,13 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { round2 } from "@/features/cxp/services/pagoProveedorLote";
+import {
+  errorCuadre,
+  errorFacturaDuplicada,
+  errorMonedaCuenta,
+  errorRenglonExcedeSaldo,
+} from "./cobroLoteValidaciones";
+
 
 export { round2 };
 
@@ -98,34 +105,16 @@ export function validarCobroLote(
   if (conMonto.length < 2) {
     return { error: "El importe debe alcanzar para al menos dos facturas.", totalRepartido };
   }
-  for (const r of conMonto) {
-    const f = facturas.find((x) => x.factura_id === r.factura_id);
-    if (f && r.monto > round2(f.saldo) + 0.009) {
-      return {
-        error: `El importe asignado a la factura ${f.numero ?? ""} excede su saldo.`,
-        totalRepartido,
-      };
-    }
-  }
-  if (totalRepartido > round2(total) + 0.009) {
-    return { error: "La suma repartida no puede exceder el importe recibido.", totalRepartido };
-  }
-  // Ola 5 · RG4-5: el sobrante ya no es una advertencia — es error. El
-  // importe recibido debe repartirse por completo (tolerancia 0.01).
-  if (round2(total) - totalRepartido > 0.009) {
-    return {
-      error: "El reparto debe cubrir exactamente el importe recibido: ajusta el importe o los importes por factura hasta que no quede sobrante sin asignar.",
-      totalRepartido,
-    };
-  }
-  if (opts.cuentaId && opts.monedaCuenta && opts.monedaCuenta !== opts.moneda) {
-    return {
-      error: `La cuenta está en ${opts.monedaCuenta} y el cobro en ${opts.moneda}. Elige una cuenta en la misma moneda.`,
-      totalRepartido,
-    };
-  }
-  return { error: null, totalRepartido };
+
+  const error =
+    errorFacturaDuplicada(facturas, conMonto) ??
+    errorRenglonExcedeSaldo(facturas, conMonto) ??
+    errorCuadre(total, totalRepartido) ??
+    errorMonedaCuenta(opts);
+
+  return { error, totalRepartido };
 }
+
 
 /**
  * De las facturas seleccionadas, devuelve las PPD ya timbradas: cada pago que

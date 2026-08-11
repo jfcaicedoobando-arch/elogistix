@@ -21,6 +21,23 @@ Top 10 funciones más redefinidas — capturadas 1:1 desde la BD el 2026-07-23:
 | `actualizar_embarque_completo` | `embarques/` |
 | `crear_embarque_borrador_core` | `embarques/` |
 
+## Altas Ola 6 (O6-SCHEMA) — capturadas 1:1 desde las migraciones 2026-08-18/19
+
+| Función | Dominio | Migración canónica |
+| --- | --- | --- |
+| `dashboard_summary` | `dashboards/` | `20260818120000` (RG5-2) |
+| `dashboard_details` | `dashboards/` | `20260818090000` (RG4-2) |
+| `cartera_pendiente` | `facturacion/` | `20260818090100` (RG4-13) |
+| `direccion_totales` | `facturacion/` | `20260818090100` (N23) |
+| `registrar_pago_cliente_lote` | `facturacion/` | `20260818110000` (RG4-5/RG4-6) |
+| `_cxp_desvincular_por_rechazo` | `cxp/` | `20260819090100` (RG5-3) |
+| `retirar_factura_entrante` + `reactivar_factura_entrante` | `cxp/` | `20260819090100` (RG5-4) |
+| `regenerar_movimiento_pago_proveedor` | `cxp/` | `20260819090000` (RG5-1) |
+
+**`cartera_pendiente` — firma congelada:** 14 columnas de salida
+(`factura_id … ultimo_contacto, estado`). Renombrarlas aborta la migración con
+42P13 (fue la causa de que `20260812090000` quedara como no-op, Ola 6 · RG4-1).
+
 ## Flujo obligatorio a partir de 2026-07-23
 
 Cualquier PR que modifique una función listada aquí:

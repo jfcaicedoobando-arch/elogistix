@@ -1,5 +1,18 @@
 # Changelog
 
+## [13.500.0] - 2026-08-11
+- **Ola 6 (cadena de migraciones + regresiones de la Ola 5)**:
+  - **[RG4-1]** La migración histórica `20260812090000` queda como no-op documentado: redefinía `cartera_pendiente()` con otras columnas de salida y abortaba con 42P13, bloqueando toda base creada desde cero. Sus fixes reales viven en `20260810203738`, `20260810203939` y `20260818090000`.
+  - **[O6-REN]** Las 4 migraciones de la Ola 5 con nombre UUID se renombraron a `20260818090000/090100/100000/110000` para que ordenen DESPUÉS de las versiones viejas que sobrescribían.
+  - **[RG5-2]** `dashboard_summary`: el conteo `gastosOperativosSinTC` ya cuenta las facturas en EUR sin tipo de cambio (`COALESCE(tipo_cambio_eur, 0)`); antes `NULL > 1` las descartaba justo a ellas.
+  - **[RG5-1]** `regenerar_movimiento_pago_proveedor` es fail-closed: sin organización activa responde `LC_SIN_ORG` (42501) en lugar de saltarse la validación cross-org.
+  - **[RG5-3]** Al rechazar una factura de proveedor, el documento del buzón suelta `proveedor_factura_id`, así que ya puede retirarse o reactivarse (antes quedaba en limbo).
+  - **[RG5-4]** `retirar_factura_entrante` y `reactivar_factura_entrante` validan el estado DENTRO del `UPDATE` (`ROW_COUNT`): una captura concurrente ya no puede colarse entre la lectura y la escritura.
+  - **[RG4-6]** El cobro en lote de cliente rechaza dos renglones a la misma factura antes de validar saldos.
+  - **[RG5-5]** Un solo aviso al terminar un cobro en lote (antes salían dos toasts simultáneos: cobro y REP).
+  - **[O6-SCHEMA]** Nuevas fuentes canónicas en `supabase/schema/`: `dashboards/dashboard_summary`, `dashboards/dashboard_details`, `facturacion/cartera_pendiente`, `facturacion/direccion_totales`, `facturacion/registrar_pago_cliente_lote`, `cxp/_cxp_desvincular_por_rechazo`, `cxp/entrantes_retirar_reactivar` y `cxp/regenerar_movimiento_pago_proveedor`, con la firma congelada de `cartera_pendiente` documentada.
+  - Power of 10: `pagoClienteLote.ts` delega en el nuevo `cobroLoteValidaciones.ts` y `facturasEntrantesUpload.ts` en `facturasEntrantesUploadHelpers.ts`.
+
 ## [13.499.3] - 2026-08-11
 - Reducida la complejidad de 5 funciones que rompían el lint (`--max-warnings 0`): buzón CxP (manejo común de errores de guardado), cobro en lote de cliente (hooks `useIdsConRep` y `useTcLote`), recuperación de claims (flujos de factura y nota de crédito separados) y webhook de FacturAPI (dispatch, validación de firma y registro de dedupe extraídos). Sin cambios de comportamiento.
 
