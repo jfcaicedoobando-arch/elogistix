@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.509.2] - 2026-08-11
+- CI verde: se corrigieron los 4 trabajos que fallaban.
+- ESLint: se dividieron `FacturaEntranteItem` (nuevos `MetaEntrante` y `AccionesEntrante`) y la zona de archivos del diálogo del buzón (`SeccionArchivosEntrante`) para bajar la complejidad; `MONEDAS_ENTRANTE` se movió a su propio módulo.
+- Hook `useHidratacionEditarEmbarque`: el catálogo de proveedores se memoiza para que el efecto no cambie en cada render.
+- Auditorías: las migraciones del buzón de conceptos ahora recrean sus políticas de forma idempotente (H4) y las funciones de embarque revocan permisos a PUBLIC/anon (H6).
+- Tests: se renombraron dos títulos duplicados y se actualizaron los tests del webhook de FacturAPI al nuevo orden interno (dedupe registrado después de procesar).
+
 ## [13.509.1] - 2026-08-11
 - CxP: al cancelar una factura de proveedor, el documento del buzón sí queda como **Rechazado** con su motivo. El orden interno estaba invertido: se cancelaba primero (y el trigger devolvía el documento a "Por capturar" borrando el vínculo) y sólo después se intentaba marcarlo como rechazado, cuando ya no se podía ubicar. Ahora se guardan los documentos antes de cancelar.
 
