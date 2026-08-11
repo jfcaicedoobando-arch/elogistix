@@ -45,6 +45,8 @@ interface Props {
   /** v13.368.0 — Factura viva que ya usa este CFDI; bloquea volver a capturarlo. */
   facturaExistenteId?: string | null;
   facturaExistenteFolio?: string | null;
+  /** v13.501.0 — La factura previa del mismo CFDI está cancelada. */
+  facturaExistenteCancelada?: boolean;
   onVer: (row: Fila) => void;
   onVerXml: (row: Fila) => void;
   onCapturar: (row: Fila) => void;
@@ -59,6 +61,7 @@ export function FacturaEntranteRow({
   soloLectura = false,
   facturaExistenteId = null,
   facturaExistenteFolio = null,
+  facturaExistenteCancelada = false,
   onVer,
   onVerXml,
   onCapturar,
@@ -88,6 +91,7 @@ export function FacturaEntranteRow({
             sinXml={entranteSinXml(row)}
             yaCapturado={!soloLectura && facturaExistenteId !== null}
             folioExistente={facturaExistenteFolio}
+            canceladaExistente={facturaExistenteCancelada}
           />
           <MetaEntrante row={row} />
         </button>
@@ -99,6 +103,7 @@ export function FacturaEntranteRow({
           row={row}
           editable={!soloLectura && puedeProcesar}
           facturaExistenteId={facturaExistenteId}
+          facturaExistenteCancelada={facturaExistenteCancelada}
           onVer={onVer}
           onVerXml={onVerXml}
           onCapturar={onCapturar}
