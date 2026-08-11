@@ -24,6 +24,9 @@ export function useSubirEntranteForm({ organizationId }: Args) {
   const [proveedor, setProveedor] = useState<ProveedorDetectado | null>(null);
   const [proveedorDetectado, setProveedorDetectado] = useState<ProveedorDetectado | null>(null);
   const [nota, setNota] = useState("");
+  // v13.503.0 — Monto declarado por operaciones (se coteja contra lo costeado).
+  const [montoDeclarado, setMontoDeclarado] = useState<number | null>(null);
+  const [monedaDeclarada, setMonedaDeclarada] = useState("MXN");
   const [error, setError] = useState<string | null>(null);
   const [leyendoXml, setLeyendoXml] = useState(false);
 
@@ -34,6 +37,8 @@ export function useSubirEntranteForm({ organizationId }: Args) {
     setProveedor(null);
     setProveedorDetectado(null);
     setNota("");
+    setMontoDeclarado(null);
+    setMonedaDeclarada("MXN");
     setError(null);
   }, []);
 
@@ -42,6 +47,9 @@ export function useSubirEntranteForm({ organizationId }: Args) {
     try {
       const leido = await extraerCfdiXmlMetaDeArchivo(archivo);
       setMeta(leido);
+      // Prellena el monto con el total del CFDI (el operador puede ajustarlo).
+      if (leido.total != null && leido.total > 0) setMontoDeclarado(leido.total);
+      if (leido.moneda) setMonedaDeclarada(leido.moneda);
       const encontrado = leido.rfcEmisor
         ? await findProveedorByRfcEnOrg(leido.rfcEmisor, organizationId)
         : null;
@@ -89,6 +97,8 @@ export function useSubirEntranteForm({ organizationId }: Args) {
 
   return {
     pdf, xml, meta, metaUtil, proveedor, proveedorDetectado, nota, error, leyendoXml, listo,
-    setProveedor, setNota, setError, agregarArchivos, quitarPdf, quitarXml, limpiar,
+    montoDeclarado, monedaDeclarada,
+    setProveedor, setNota, setError, setMontoDeclarado, setMonedaDeclarada,
+    agregarArchivos, quitarPdf, quitarXml, limpiar,
   };
 }

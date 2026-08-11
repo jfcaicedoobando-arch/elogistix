@@ -16,6 +16,7 @@ import {
   fetchExpedientesCliente,
   fetchProveedoresForSelect,
   fetchProveedoresDelEmbarque,
+  fetchCostosProveedorEmbarque,
   type EmbarquesPaginadosFilters,
 } from "@/features/embarques/services";
 
@@ -74,6 +75,14 @@ export const embarqueQueries = {
     queryOptions({
       queryKey: queryKeys.embarques.proveedoresDelEmbarque(embarqueId),
       queryFn: () => fetchProveedoresDelEmbarque(embarqueId),
+      staleTime: staleTimes.SHORT,
+    }),
+
+  /** v13.503.0 — Costos vivos del embarque para un proveedor, por moneda. */
+  costosProveedor: (embarqueId: string, proveedorId: string) =>
+    queryOptions({
+      queryKey: queryKeys.embarques.costosProveedor(embarqueId, proveedorId),
+      queryFn: () => fetchCostosProveedorEmbarque(embarqueId, proveedorId),
       staleTime: staleTimes.SHORT,
     }),
 } as const;

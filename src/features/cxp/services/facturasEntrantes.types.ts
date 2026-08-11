@@ -26,6 +26,9 @@ export interface FacturaEntranteRow {
   folio_detectado: string | null;
   total_detectado: number | null;
   moneda_detectada: string | null;
+  /** v13.503.0 — Monto capturado por operaciones al subir el documento. */
+  monto_declarado: number | null;
+  moneda_declarada: string | null;
   rechazo_motivo: string | null;
   subido_por: string | null;
   capturado_por: string | null;
@@ -44,6 +47,8 @@ export const SELECT_COLS_ENTRANTES =
   "id, embarque_id, organization_id, archivo_path, archivo_hash, nombre_archivo, nota, estado," +
   " xml_path, xml_nombre, uuid_fiscal, rfc_emisor, folio_serie, fecha_emision," +
   " proveedor_id, proveedor_factura_id, folio_detectado, total_detectado, moneda_detectada," +
+  " monto_declarado, moneda_declarada," +
+
   " rechazo_motivo, subido_por, capturado_por, created_at," +
   " embarques:embarque_id(expediente), proveedores:proveedor_id(nombre, origen_proveedor)," +
   " proveedor_facturas:proveedor_factura_id(folio_interno, estado, total)";
@@ -58,6 +63,9 @@ export interface SubirFacturaEntranteInput {
   organizationId: string;
   proveedorId?: string | null;
   nota?: string | null;
+  /** v13.503.0 — Monto y moneda declarados por operaciones (cotejo de costos). */
+  montoDeclarado?: number | null;
+  monedaDeclarada?: string | null;
 }
 
 /** Traduce errores de unicidad de Postgres a un mensaje entendible. */

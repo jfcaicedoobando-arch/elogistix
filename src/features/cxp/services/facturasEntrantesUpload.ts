@@ -69,6 +69,8 @@ function filaEntranteAInsertar(params: {
     ...columnasXmlEntrante({ soloXml: !input.pdf, principal, xmlSubido }),
     ...columnasMetaEntrante(input.meta),
     nota: input.nota?.trim() || null,
+    monto_declarado: input.montoDeclarado ?? null,
+    moneda_declarada: input.montoDeclarado != null ? (input.monedaDeclarada ?? "MXN") : null,
     proveedor_id: input.proveedorId ?? null,
     subido_por: userId,
   };

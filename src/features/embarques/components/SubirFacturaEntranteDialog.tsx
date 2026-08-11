@@ -3,18 +3,21 @@
  * al buzón del embarque (modo archivo: no crea la factura contable).
  *
  * v13.360.0 — Un solo documento con ambos archivos + lectura del CFDI.
+ * v13.503.0 — Zona de carga única con chips, verificación del monto facturado
+ * contra lo costeado y nota colapsada.
  */
 import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useSubirFacturaEntrante } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { useSubirEntranteForm } from "@/features/cxp/hooks/useSubirEntranteForm";
+import { useCostosProveedorEmbarque } from "@/features/embarques/hooks/useEmbarqueQueries";
 import { ArchivosEntranteDropZone } from "@/features/embarques/components/entrantes/ArchivosEntranteDropZone";
 import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiMetaPreview";
+import { NotaContabilidadCampo } from "@/features/embarques/components/entrantes/NotaContabilidadCampo";
 import { SeccionProveedorEntrante } from "@/features/embarques/components/entrantes/SeccionProveedorEntrante";
+import { VerificacionMontoEntrante } from "@/features/embarques/components/entrantes/VerificacionMontoEntrante";
 
 interface Props {
   open: boolean;
@@ -26,6 +29,7 @@ interface Props {
 export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, organizationId }: Props) {
   const form = useSubirEntranteForm({ organizationId });
   const subir = useSubirFacturaEntrante();
+  const costos = useCostosProveedorEmbarque(embarqueId, form.proveedor?.id);
 
   const cerrar = () => {
     form.limpiar();
@@ -41,6 +45,8 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
       embarqueId,
       organizationId,
       nota: form.nota,
+      montoDeclarado: form.montoDeclarado,
+      monedaDeclarada: form.monedaDeclarada,
     });
     cerrar();
   };
@@ -93,17 +99,25 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
         onSeleccionar={form.setProveedor}
       />
 
+      <FormDialogSection
+        title="Verificación del monto"
+        description="Compara lo que facturó el proveedor contra lo costeado en el embarque."
+        cols={1}
+      >
+        <VerificacionMontoEntrante
+          monto={form.montoDeclarado}
+          moneda={form.monedaDeclarada}
+          onMonto={form.setMontoDeclarado}
+          onMoneda={form.setMonedaDeclarada}
+          totalCfdi={form.meta?.total ?? null}
+          costeadoPorMoneda={costos.data}
+          cargandoCostos={costos.isLoading}
+          proveedorElegido={Boolean(form.proveedor)}
+        />
+      </FormDialogSection>
+
       <FormDialogSection title="Nota para contabilidad" cols={1}>
-        <div className="space-y-2">
-          <Label htmlFor="factura-entrante-nota">Opcional</Label>
-          <Textarea
-            id="factura-entrante-nota"
-            value={form.nota}
-            onChange={(e) => form.setNota(e.target.value)}
-            placeholder="Ej. Factura del agente en Shanghái, incluye THC destino."
-            rows={3}
-          />
-        </div>
+        <NotaContabilidadCampo nota={form.nota} onNota={form.setNota} />
       </FormDialogSection>
     </FormDialogShell>
   );
