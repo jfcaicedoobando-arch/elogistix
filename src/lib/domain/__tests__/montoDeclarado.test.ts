@@ -36,7 +36,7 @@ describe("cotejarMontoDeclarado", () => {
     ).toBe("coincide");
   });
 
-  it("difiere y reporta diferencia y porcentaje", () => {
+  it("difiere del monto declarado y reporta diferencia y porcentaje", () => {
     const r = cotejarMontoDeclarado({
       montoDeclarado: 1000, monedaDeclarada: "MXN", montoCapturado: 1200, monedaCapturada: "MXN",
     });

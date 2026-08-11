@@ -48,7 +48,7 @@ describe("actualizarDatosEntrante", () => {
     expect(rpc.mock.calls[0][1]).toMatchObject({ p_monto_declarado: null, p_moneda_declarada: null });
   });
 
-  it("propaga el error de la RPC", async () => {
+  it("propaga el error de la RPC al editar datos declarados", async () => {
     rpc.mockResolvedValue({ error: { message: "LC_ENTRANTE_NO_EDITABLE" } });
     await expect(actualizarDatosEntrante("doc-1", DATOS)).rejects.toMatchObject({
       message: "LC_ENTRANTE_NO_EDITABLE",
