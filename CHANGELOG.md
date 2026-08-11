@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.498.0] - 2026-08-11
+- **Modal "Pago en lote a proveedor" rediseñado** con la misma estructura y UX del "Cobro en lote de cliente": modal más ancho, saldo seleccionado siempre visible en el encabezado y datos de la transferencia en tres columnas con ayudas cortas.
+- La tabla de reparto ahora tiene filas alternadas, scroll horizontal en pantallas angostas, campo de importe alineado a la derecha con moneda y etiquetas "Liquidada" / "Parcial" por factura.
+- Los totales (repartido, sin asignar y facturas liquidadas) y los mensajes de validación viven en una banda fija sobre los botones, siempre visible al hacer scroll.
+- Sin cambios de reglas de negocio: mismo reparto FIFO, mismas validaciones y un solo movimiento bancario.
+- Pruebas: nueva prueba del resumen del lote (`DialogPagoLoteResumen.test.tsx`).
+
+
 ## [13.497.1] - 2026-08-11
 - **No se podía pagar una factura de proveedor de un expediente cerrado** (FP-000024 / ELIMP00154): al guardar el pago, el sistema intentaba marcar el costo del embarque como "Pagado" y el candado de cierre revertía todo. Ahora esa sincronización automática se permite; la edición manual de importes o conceptos de un embarque cerrado sigue bloqueada.
 - **Toast más claro**: el mensaje ambiguo "Los datos del pago no cumplen una regla del sistema" se reemplaza por el motivo real y la salida ("El expediente del embarque está cerrado… Reabre el embarque"). Los demás errores de regla conservan el detalle técnico.

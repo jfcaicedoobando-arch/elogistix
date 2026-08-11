@@ -3,16 +3,19 @@
  * Una transferencia (una referencia bancaria) contra varias facturas del mismo
  * proveedor y misma moneda. El reparto por defecto es FIFO por vencimiento y
  * es editable renglón por renglón.
+ * v13.498.0: mismo layout/UX que el "Cobro en lote de cliente" (CxC).
  */
 import { Layers, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { usePagoLoteState } from "@/features/cxp/hooks/usePagoLoteState";
 import { type OrigenProveedor } from "./pagoProveedorHelpers";
 import { DialogPagoLoteDatos } from "./DialogPagoLoteDatos";
 import { DialogPagoLoteRenglones } from "./DialogPagoLoteRenglones";
+import { DialogPagoLoteResumen } from "./DialogPagoLoteResumen";
 import { formatCurrency } from "@/lib/formatters";
 import { type FacturaLoteCandidata } from "@/features/cxp/services/pagoProveedorLote";
 
@@ -57,7 +60,26 @@ export function DialogPagoLoteProveedor(p: Props) {
       icon={Layers}
       title="Pago en lote a proveedor"
       description={`Una sola transferencia a ${p.proveedorNombre} repartida entre ${p.facturas.length} facturas en ${p.moneda}.`}
-      size="xl"
+      size="3xl"
+      bodyClassName="py-4 space-y-4"
+      headerAside={
+        <div className="pr-6 leading-tight">
+          <p className="text-overline text-muted-foreground">Saldo seleccionado</p>
+          <p className="text-sm font-semibold tabular-nums">
+            {formatCurrency(s.saldoTotal, p.moneda)}
+          </p>
+        </div>
+      }
+      stickyBottom={
+        <DialogPagoLoteResumen
+          facturas={p.facturas}
+          renglones={s.renglones}
+          moneda={p.moneda}
+          totalRepartido={s.totalRepartido}
+          sinAsignar={s.sinAsignar}
+          error={s.error}
+        />
+      }
       footer={footer}
     >
       <DialogPagoLoteDatos
@@ -80,8 +102,9 @@ export function DialogPagoLoteProveedor(p: Props) {
       />
 
       <FormDialogSection
+        flat
         title="Reparto entre facturas"
-        description="Se sugiere pagar primero lo que vence antes. Puedes ajustar cada importe."
+        description="Se paga primero lo que vence antes. Puedes ajustar cada importe."
       >
         <DialogPagoLoteRenglones
           facturas={p.facturas}
@@ -89,19 +112,19 @@ export function DialogPagoLoteProveedor(p: Props) {
           moneda={p.moneda}
           onMontoChange={s.setMonto}
         />
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-          <span className="text-muted-foreground">
-            Repartido: <strong className="tabular-nums">{formatCurrency(s.totalRepartido, p.moneda)}</strong>
-          </span>
-          <span className={s.sinAsignar > 0.009 ? "text-warning" : "text-muted-foreground"}>
-            Sin asignar: <strong className="tabular-nums">{formatCurrency(s.sinAsignar, p.moneda)}</strong>
-          </span>
-        </div>
-        {s.error && <p className="mt-2 text-xs text-destructive">{s.error}</p>}
       </FormDialogSection>
 
-      <FormDialogSection title="Notas">
-        <Textarea value={s.notas} onChange={(e) => s.setNotas(e.target.value)} rows={2} />
+      <FormDialogSection flat>
+        <div className="space-y-1.5">
+          <Label htmlFor="lote-notas">Notas</Label>
+          <Textarea
+            id="lote-notas"
+            value={s.notas}
+            onChange={(e) => s.setNotas(e.target.value)}
+            rows={2}
+            placeholder="Observaciones de la transferencia (opcional)"
+          />
+        </div>
       </FormDialogSection>
     </FormDialogShell>
   );
