@@ -1,4 +1,5 @@
-import { Landmark, Plus } from "lucide-react";
+import { useState } from "react";
+import { Landmark, Plus, ArrowRightLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
@@ -12,6 +13,8 @@ import { useSaldosCuentas } from "@/features/tesoreria/hooks/useTesoreriaCuentas
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { CuentaBancariaCard } from "./_sections/CuentaBancariaCard";
 import { NuevaCuentaFormFields } from "./_sections/NuevaCuentaFormFields";
+import { DialogTraspasoCuentas } from "./_sections/DialogTraspasoCuentas";
+
 
 export default function TesoreriaCuentas() {
   const {
