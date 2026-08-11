@@ -70,6 +70,7 @@ BEGIN
   -- Cerramos el embarque recorriendo la cadena de transiciones válidas
   -- (Confirmado → En Tránsito → Arribo → En Aduana → Entregado → Cerrado).
   -- El bypass de cierre sólo evita el guard de self-update, no el de transición.
+  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
   PERFORM set_config('app.bypass_cierre', 'on', true);
   UPDATE public.embarques SET estado = 'En Tránsito'::public.estado_embarque WHERE id = v_emb;
   UPDATE public.embarques SET estado = 'Arribo'::public.estado_embarque WHERE id = v_emb;
@@ -113,7 +114,9 @@ BEGIN
   DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
   DELETE FROM public.embarques WHERE organization_id = v_org;
   DELETE FROM public.clientes WHERE organization_id = v_org;
+  DELETE FROM public.organization_members WHERE organization_id = v_org;
   DELETE FROM public.organizations WHERE id = v_org;
+  DELETE FROM auth.users WHERE id = v_uid;
   PERFORM set_config('app.bypass_cierre', 'off', true);
 
   RAISE NOTICE 'OK: pagos a proveedor permitidos en embarques Cerrados.';
