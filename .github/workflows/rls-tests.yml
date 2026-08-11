@@ -80,40 +80,45 @@ jobs:
 
       - name: Validate matrix covers every test_rls_*.sql
         # Si alguien añade supabase/tests/rls/test_rls_<nuevo>.sql y olvida
-        # registrarlo en `matrix.suite`, la suite no se ejecuta y CI pasa en
-        # verde. Aquí fallamos explícitamente si hay drift entre archivos y
-        # la matriz declarada en este workflow.
+        # registrarlo en la matriz, la suite no se ejecuta y CI pasa en verde.
+        # Aquí fallamos explícitamente si hay drift entre archivos y los grupos
+        # declarados en este workflow.
+        #
+        # v13.514.0 — Los 25 jobs por suite se agruparon en 5 jobs; la lista
+        # ahora vive en las líneas `suites: a b c` de `matrix.include`, así que
+        # el parser lee esas líneas y las parte por espacios. También detecta
+        # suites declaradas dos veces en distintos grupos (correrían doble y
+        # gastarían tiempo sin cubrir nada nuevo).
         run: |
           set -euo pipefail
           expected=$(find supabase/tests/rls -maxdepth 1 -name 'test_rls_*.sql' -printf '%f\n' \
             | sed -E 's|^test_rls_||; s|\.sql$||' \
             | LC_ALL=C sort)
-          # La lista se extrae del propio bloque `matrix.suite` de este workflow
-          # para que no exista una copia manual que se desincronice.
-          declared=$(awk '
-            /^[[:space:]]*suite:[[:space:]]*$/ { capture = 1; next }
-            capture && /^[[:space:]]*-[[:space:]]*[A-Za-z0-9_]+[[:space:]]*$/ {
-              gsub(/^[[:space:]]*-[[:space:]]*|[[:space:]]*$/, "");
-              print; next
-            }
-            # Líneas en blanco o comentarios no cierran el bloque: sólo lo hace
-            # la siguiente clave YAML (evita listas truncadas en silencio).
-            capture && /^[[:space:]]*(#.*)?$/ { next }
-            capture { capture = 0 }
-          ' .github/workflows/rls-tests.yml | LC_ALL=C sort)
+          # La lista se extrae del propio bloque `matrix.include` de este
+          # workflow para que no exista una copia manual que se desincronice.
+          crudo=$(sed -nE 's|^[[:space:]]*suites:[[:space:]]*(.+)$|\1|p' \
+            .github/workflows/rls-tests.yml | tr ' ' '\n' | grep -E '^[A-Za-z0-9_]+$' || true)
+          declared=$(printf '%s\n' "$crudo" | LC_ALL=C sort -u)
           if [ -z "$declared" ]; then
-            echo "::error::No se pudo extraer matrix.suite del workflow (¿cambió el formato YAML?)"
+            echo "::error::No se pudo extraer matrix.include[].suites del workflow (¿cambió el formato YAML?)"
+            exit 1
+          fi
+          duplicadas=$(printf '%s\n' "$crudo" | LC_ALL=C sort | uniq -d)
+          if [ -n "$duplicadas" ]; then
+            echo "::error::Suites declaradas en más de un grupo:"
+            echo "$duplicadas"
             exit 1
           fi
           if ! diff <(echo "$expected") <(echo "$declared") >/dev/null; then
-            echo "::error::matrix.suite está desincronizada con los archivos test_rls_*.sql"
+            echo "::error::La matriz de grupos está desincronizada con los archivos test_rls_*.sql"
             echo "--- esperados (archivos en disco) ---"
             echo "$expected"
-            echo "--- declarados (matrix.suite) ---"
+            echo "--- declarados (matrix.include[].suites) ---"
             echo "$declared"
             exit 1
           fi
-          echo "✓ matrix.suite cubre $(echo "$expected" | wc -l) suites"
+          echo "✓ La matriz cubre $(echo "$expected" | wc -l) suites"
+
 
 
       - name: Restore cached snapshot (if any)
