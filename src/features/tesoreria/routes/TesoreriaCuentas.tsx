@@ -23,8 +23,9 @@ export default function TesoreriaCuentas() {
   } = useTesoreriaCuentasController();
   // Sentry JAVASCRIPT-REACT-3S/3T: sólo administradores y tesorero pueden
   // escribir en `cuentas_bancarias` (RLS). El contador sólo consulta.
-  const { canAdminCuentasBancarias } = usePermissions();
+  const { canAdminCuentasBancarias, canCapturarMovimientoBancario } = usePermissions();
   const { data: saldos = [] } = useSaldosCuentas();
+  const [openTraspaso, setOpenTraspaso] = useState(false);
 
   return (
     <PageContainer>
@@ -36,13 +37,21 @@ export default function TesoreriaCuentas() {
             : "Consulta de cuentas para conciliación (sólo administradores y tesorería pueden editarlas)"
         }
         actions={
-          canAdminCuentasBancarias ? (
-            <Button onClick={() => setOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" /> Nueva cuenta
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            {canCapturarMovimientoBancario && (
+              <Button variant="outline" onClick={() => setOpenTraspaso(true)}>
+                <ArrowRightLeft className="h-4 w-4 mr-2" /> Traspaso
+              </Button>
+            )}
+            {canAdminCuentasBancarias ? (
+              <Button onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" /> Nueva cuenta
+              </Button>
+            ) : null}
+          </div>
         }
       />
+
 
       {isLoading || isError ? (
         <AsyncBoundary
