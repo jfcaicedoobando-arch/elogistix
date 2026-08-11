@@ -3,6 +3,8 @@
  * desde el buzón CxP (v13.366.0).
  * v13.400.0 — Optimizado para HD: ancho 4xl, dos columnas desde `lg`, KPIs de
  * totales fijos arriba y semáforo de cuadre fijo sobre el footer.
+ * v13.507.0 — Modo buzón: hereda proveedor, nota y conceptos que declaró
+ * operaciones, y esconde la carga de archivos porque el documento ya existe.
  */
 import { useNavigate } from "react-router-dom";
 import { Loader2, FileSpreadsheet } from "lucide-react";
@@ -22,7 +24,10 @@ import {
 
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
 import { usePrefillVinculosEntrante } from "@/features/cxp/hooks/usePrefillVinculosEntrante";
+import { useHerenciaEntrante } from "@/features/cxp/hooks/useHerenciaEntrante";
 import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
+import { abrirFacturaEntrante } from "@/features/cxp/services/facturasEntrantes";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
 
@@ -63,9 +68,29 @@ function DialogNuevaFacturaProveedorForm({
     onCfdiParsed: ctl.handleCfdiParsed, onPdfParsed: ctl.handlePdfIaParsed,
   });
 
-  usePrefillVinculosEntrante({
-    entrante, abierto: open, aplicarSugerencias: ctl.aplicarSugerencias,
+  useHerenciaEntrante({
+    entrante, abierto: open,
+    provIdActual: ctl.values.provId,
+    notaActual: ctl.values.notas,
+    onProveedor: (id, nombre) => ctl.handleProveedor(id, nombre),
+    onNota: (nota) => ctl.handleChange("notas", nota),
   });
+  const herencia = usePrefillVinculosEntrante({
+    entrante, abierto: open, habilitado: Boolean(ctl.values.provId),
+    aplicarSugerencias: ctl.aplicarSugerencias,
+  });
+
+  const verArchivoBuzon = async (path: string, nombre: string) => {
+    try {
+      await abrirFacturaEntrante(path, nombre);
+    } catch (error) {
+      notifyError(undefined, {
+        title: "No se pudo abrir el archivo del buzón",
+        error,
+        method: "ABRIR_FACTURA_ENTRANTE_CAPTURA",
+      });
+    }
+  };
 
   const sub = Number(ctl.values.subtotal) || 0;
   const iva = Number(ctl.values.iva) || 0;
@@ -89,6 +114,15 @@ function DialogNuevaFacturaProveedorForm({
         total={ctl.total}
         topeExcedido={ctl.topeVinculacion.excede}
         cfdiDuplicado={!!ctl.cfdiDuplicado}
+        avisoMontoDeclarado={
+          entrante
+            ? {
+                montoDeclarado: entrante.montoDeclarado,
+                monedaDeclarada: entrante.monedaDeclarada,
+              }
+            : undefined
+        }
+        sinVinculos={Boolean(entrante) && Object.keys(ctl.vinculos).length === 0}
       />
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
         Cancelar
@@ -138,6 +172,8 @@ function DialogNuevaFacturaProveedorForm({
             ctl={ctl}
             entrante={entrante ?? null}
             autocarga={autocarga}
+            modoBuzon={Boolean(entrante)}
+            onVerArchivoBuzon={(path, nombre) => void verArchivoBuzon(path, nombre)}
             onVerFacturaDuplicada={(id: string) => {
               ctl.reset();
               onOpenChange(false);
@@ -150,8 +186,14 @@ function DialogNuevaFacturaProveedorForm({
               ctl={ctl}
               categorias={cats.data ?? []}
               keyRenglonSospechoso={keyRenglonSospechoso}
+              modoBuzon={Boolean(entrante)}
             />
-            <ColumnaDatosFactura ctl={ctl} categorias={cats.data ?? []} />
+            <ColumnaDatosFactura
+              ctl={ctl}
+              categorias={cats.data ?? []}
+              herencia={entrante ? herencia : null}
+              sinCostoCapturado={entrante?.sinCostoCapturado}
+            />
           </div>
         </div>
       </FormDialogShell>
