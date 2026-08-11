@@ -72,6 +72,9 @@ export function DetailHeader({
   // Cuando `backTo` es la función de `useVolver`, conocemos su ruta de respaldo:
   // se pinta como enlace real (clic central / pestaña nueva) sin perder la
   // lógica history-aware del clic normal (v13.497.0).
+  // SAFE-CAST: `useVolver` adjunta la propiedad `fallback` a la función que
+  // devuelve; el tipo público es sólo `() => void`, así que se lee de forma
+  // defensiva y se valida con `typeof` antes de usarla.
   const backFn = typeof backTo === "function" ? (backTo as unknown as { fallback?: string }) : null;
   const hrefRespaldo = typeof backFn?.fallback === "string" ? backFn.fallback : null;
 
