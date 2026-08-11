@@ -34,6 +34,7 @@ import {
 
 import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 import { SubirFacturaEntranteDialog } from "@/features/embarques/components/SubirFacturaEntranteDialog";
+import { CorregirDatosEntranteDialog } from "@/features/embarques/components/entrantes/CorregirDatosEntranteDialog";
 import { FacturaEntranteItem } from "@/features/embarques/components/entrantes/FacturaEntranteItem";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 
@@ -55,6 +56,8 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   const [subirOpen, setSubirOpen] = useState(false);
   const [aEliminar, setAEliminar] = useState<FacturaEntranteRow | null>(null);
   const [aReactivar, setAReactivar] = useState<FacturaEntranteRow | null>(null);
+  // v13.508.0 — Corrección de datos declarados sin volver a subir el archivo.
+  const [aCorregir, setACorregir] = useState<FacturaEntranteRow | null>(null);
 
 
   const filas = data ?? [];
@@ -144,8 +147,10 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
               })}
               onVer={(path, nombre) => void abrirArchivo(path, nombre)}
               onAdjuntarXml={(fila, xml) => void onAdjuntarXml(fila, xml)}
+              puedeCorregir={puedeSubir && row.estado !== "capturada"}
               onEliminar={setAEliminar}
               onReactivar={setAReactivar}
+              onCorregir={setACorregir}
             />
           ))}
         </CardContent>
@@ -159,6 +164,11 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
           organizationId={organizationId}
         />
       )}
+
+      <CorregirDatosEntranteDialog
+        row={aCorregir}
+        onOpenChange={(v) => { if (!v) setACorregir(null); }}
+      />
 
       <EntrantesConfirmDialogs
         aEliminar={aEliminar}

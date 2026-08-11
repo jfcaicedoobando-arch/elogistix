@@ -5,7 +5,7 @@
  */
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { FileCode2, FileText, Link2 as LinkIcon, RotateCcw, Trash2, Upload } from "lucide-react";
+import { FileCode2, FileText, Link2 as LinkIcon, PencilLine, RotateCcw, Trash2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters/dates";
@@ -25,10 +25,13 @@ interface Props {
   puedeAdjuntarXml: boolean;
   /** v13.494.0 — Documento rechazado que puede volver a "Por capturar". */
   puedeReactivar?: boolean;
+  /** v13.508.0 — Corregir proveedor/monto/conceptos sin volver a subir. */
+  puedeCorregir?: boolean;
   onVer: (path: string, nombre: string) => void;
   onAdjuntarXml: (row: FacturaEntranteRow, xml: File) => void;
   onEliminar: (row: FacturaEntranteRow) => void;
   onReactivar?: (row: FacturaEntranteRow) => void;
+  onCorregir?: (row: FacturaEntranteRow) => void;
 }
 
 
@@ -109,8 +112,8 @@ function AdjuntarXmlButton({ onSelect }: { onSelect: (xml: File) => void }) {
 }
 
 export function FacturaEntranteItem({
-  row, puedeEliminar, puedeAdjuntarXml, puedeReactivar = false,
-  onVer, onAdjuntarXml, onEliminar, onReactivar,
+  row, puedeEliminar, puedeAdjuntarXml, puedeReactivar = false, puedeCorregir = false,
+  onVer, onAdjuntarXml, onEliminar, onReactivar, onCorregir,
 }: Props) {
 
   const chips = chipsArchivosEntrante(row);
@@ -153,6 +156,11 @@ export function FacturaEntranteItem({
         )}
         {!tieneXml && puedeAdjuntarXml && (
           <AdjuntarXmlButton onSelect={(xml) => onAdjuntarXml(row, xml)} />
+        )}
+        {puedeCorregir && onCorregir && (
+          <Button size="sm" variant="outline" onClick={() => onCorregir(row)}>
+            <PencilLine className="mr-2 h-4 w-4" /> Corregir datos
+          </Button>
         )}
         {puedeReactivar && onReactivar && (
           <Button size="sm" variant="secondary" onClick={() => onReactivar(row)}>
