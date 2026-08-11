@@ -120,8 +120,7 @@ function DialogNuevaFacturaProveedorForm({
   );
 
   return (
-    <>
-      <FormDialogShell
+    <FormDialogShell
         open={open}
         onOpenChange={(o) => { if (!o) ctl.reset(); onOpenChange(o); }}
         icon={FileSpreadsheet}
@@ -183,9 +182,7 @@ function DialogNuevaFacturaProveedorForm({
             />
           </div>
         </div>
-      </FormDialogShell>
-
-    </>
+    </FormDialogShell>
   );
 }
 

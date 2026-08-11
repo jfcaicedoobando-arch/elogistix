@@ -25,14 +25,11 @@ import {
   useRechazarFacturaEntrante,
 } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
-import { RechazarFacturaEntranteDialog } from "@/features/bandejas/components/RechazarFacturaEntranteDialog";
-import { MarcarCapturadaDialog } from "@/features/bandejas/components/MarcarCapturadaDialog";
 import { FacturasEntrantesToolbar } from "@/features/bandejas/components/FacturasEntrantesToolbar";
 import { FacturasEntrantesLista } from "@/features/bandejas/components/FacturasEntrantesLista";
-import { PreviaFacturaEntranteSheet } from "@/features/bandejas/components/PreviaFacturaEntranteSheet";
 import { useBuzonEntrantesFiltros } from "@/features/bandejas/hooks/useBuzonEntrantesFiltros";
+import { BuzonEntrantesModales } from "@/features/bandejas/components/BuzonEntrantesModales";
 import { useCapturaDesdeBuzon } from "@/features/bandejas/hooks/useCapturaDesdeBuzon";
-import { DialogNuevaFacturaProveedor } from "@/features/cxp";
 
 export default function CxpBuzonEntrantes() {
   const { canCapturarFacturaProveedor } = usePermissions();
@@ -154,47 +151,31 @@ export default function CxpBuzonEntrantes() {
         </TabsContent>
       </Tabs>
 
-      <PreviaFacturaEntranteSheet
-        row={enPrevia}
-        onOpenChange={(v) => { if (!v) setEnPrevia(null); }}
+      <BuzonEntrantesModales
         puedeProcesar={canCapturarFacturaProveedor}
-        onVerXml={acciones.onVerXml}
-        onCapturar={acciones.onCapturar}
-        onCrearFactura={acciones.onCrearFactura}
-        onRechazar={acciones.onRechazar}
-      />
-
-      <MarcarCapturadaDialog
-        open={Boolean(aCapturar)}
-        onOpenChange={(v) => { if (!v) setACapturar(null); }}
-        embarqueId={aCapturar?.embarque_id ?? null}
-        expediente={aCapturar?.embarques?.expediente ?? null}
-        nombreArchivo={aCapturar?.nombre_archivo ?? null}
-        pendiente={capturar.isPending}
-        onConfirm={async (facturaId) => {
+        acciones={acciones}
+        enPrevia={enPrevia}
+        onCerrarPrevia={() => setEnPrevia(null)}
+        aCapturar={aCapturar}
+        onCerrarCapturar={() => setACapturar(null)}
+        capturarPendiente={capturar.isPending}
+        onConfirmarCapturada={async (facturaId) => {
           if (!aCapturar) return;
           await capturar.mutateAsync({ id: aCapturar.id, facturaId });
           setACapturar(null);
         }}
-      />
-
-      <DialogNuevaFacturaProveedor
-        open={Boolean(captura.entrante)}
-        onOpenChange={(v) => { if (!v) captura.cerrar(); }}
-        entrante={captura.entrante}
-        onCapturada={captura.cerrar}
-      />
-
-      <RechazarFacturaEntranteDialog
-        open={Boolean(aRechazar)}
-        onOpenChange={(v) => { if (!v) setARechazar(null); }}
-        pendiente={rechazar.isPending}
-        onConfirm={async (motivo) => {
+        aRechazar={aRechazar}
+        onCerrarRechazar={() => setARechazar(null)}
+        rechazarPendiente={rechazar.isPending}
+        onConfirmarRechazo={async (motivo) => {
           if (!aRechazar) return;
           await rechazar.mutateAsync({ id: aRechazar.id, motivo });
           setARechazar(null);
         }}
+        entranteCaptura={captura.entrante}
+        onCerrarCaptura={captura.cerrar}
       />
+
       </CargaGuard>
     </PageContainer>
   );
