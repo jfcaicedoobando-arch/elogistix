@@ -85,11 +85,12 @@ async function describirFactura(facturaId: string): Promise<string> {
 /**
  * Inserta el movimiento bancario conciliado del pago. No lanza: el pago ya
  * quedó guardado y no queremos revertirlo por un fallo del movimiento.
- * Devuelve `true` si el movimiento se creó.
+ * Devuelve `{ ok: true }` si el movimiento se creó y, si no, el motivo real del
+ * rechazo (v13.495.0) para que la UI pueda avisar en lugar de fallar en silencio.
  */
 export async function crearMovimientoBancarioPago(
   input: MovimientoPagoInput,
-): Promise<boolean> {
+): Promise<ResultadoMovimientoPago> {
   const [concepto, monedaCuenta] = await Promise.all([
     describirFactura(input.facturaId),
     monedaDeCuenta(input.cuentaBancariaId),
