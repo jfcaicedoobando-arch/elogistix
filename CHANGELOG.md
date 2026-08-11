@@ -1,3 +1,4 @@
+# Changelog
 
 ## [13.508.0] - 2026-08-14
 - **Corregir datos del documento del buzón**: operaciones ya puede ajustar proveedor, monto declarado, conceptos sugeridos y nota sin retirar el archivo ni volverlo a subir (botón "Corregir datos" en el buzón del embarque).
