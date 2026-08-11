@@ -60,15 +60,6 @@ export function cotejarMontoFacturado({
   };
 }
 
-/** True cuando el monto capturado a mano no cuadra con el total del CFDI. */
-export function montoDifiereDelCfdi(
-  monto: number | null,
-  totalCfdi: number | null | undefined,
-): boolean {
-  if (monto == null || totalCfdi == null) return false;
-  if (!Number.isFinite(monto) || !Number.isFinite(totalCfdi)) return false;
-  return roundMoney(Math.abs(monto - totalCfdi)) > 0.01;
-}
 
 /**
  * ¿El monto capturado se separó del total del CFDI? Usamos la misma tolerancia
