@@ -150,45 +150,41 @@ function cleanupPdfFontCache(): void {
   } catch { /* noop */ }
 }
 
+/**
+ * v13.513.0 — `afterEach` adelgazado (auditoría CI/tests). Sólo lo que DEBE
+ * correr entre tests: desmontar el DOM de RTL, devolver los timers reales y
+ * limpiar handlers/mocks. El GC y la caché de fuentes de PDF son caros y ya no
+ * cambian el resultado de un test, así que viven en el `afterAll` por archivo.
+ */
 afterEach(() => {
   cleanup();
   resetDom();
   cancelPendingFrames();
   vi.useRealTimers();
   resetGlobalErrorHandlers();
-  vi.clearAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   cleanupGlobalQueryClient();
-  cleanupPdfFontCache();
-  maybeGc();
 });
 
 /**
  * Cleanup defensivo ANTES de cada test (13.85.3 — quick win audit #2).
- * `afterEach` ya limpia mocks tras el test previo, pero `beforeEach` blinda
- * casos donde un archivo declara mocks a nivel módulo y deja contadores
- * sucios al arrancar la suite, o cuando el archivo previo aborta sin pasar
- * por su `afterEach`.
+ * Único punto donde se limpian contadores de mocks: blinda archivos que
+ * declaran mocks a nivel módulo y arrancan con contadores sucios, o cuando el
+ * archivo previo aborta sin pasar por su teardown.
  */
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
-
-
 /**
  * Teardown final por archivo: aquí sí es seguro restaurar implementaciones
- * porque no quedan más tests en el archivo y el siguiente correrá en un fork
- * nuevo (vitest.config.ts: maxForks=1 + fileParallelism=false).
+ * porque no quedan más tests en el archivo y cada archivo corre en su propio
+ * fork (`pool: "forks"` + `isolate: true` en vitest.config.ts).
  */
 afterAll(() => {
-  try {
-    const pdfFontModule = (globalThis as Record<string, unknown>)["__REACT_PDF_FONT__"] as
-      | { _fontkit?: unknown; clear?: () => void }
-      | undefined;
-    if (pdfFontModule?.clear) pdfFontModule.clear();
-  } catch { /* noop */ }
+  cleanupPdfFontCache();
   vi.restoreAllMocks();
   maybeGc();
 });
+
