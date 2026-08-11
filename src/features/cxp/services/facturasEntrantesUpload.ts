@@ -90,6 +90,24 @@ function filaEntranteAInsertar(params: {
   };
 }
 
+/**
+ * Limpieza + traducción común de errores al guardar el renglón del buzón:
+ * con 23505 (unicidad) NO se borra el objeto — el path es content-addressed y
+ * lo referencia la fila ganadora de la carrera. Para otros errores se limpian
+ * sólo los paths sin fila viva. Devuelve el error listo para lanzar.
+ */
+async function errorGuardadoEntrante(
+  error: { message: string; details?: string | null },
+  paths: string[],
+  organizationId: string,
+): Promise<Error | typeof error> {
+  if (!esErrorUnicidad(error)) {
+    await limpiarArchivosHuerfanosSeguro(paths, organizationId);
+  }
+  const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
+  return duplicado ? new Error(duplicado) : error;
+}
+
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
   const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
   if (invalido) throw new Error(invalido);
@@ -125,18 +143,11 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
     .select("id")
     .single();
   if (error) {
-    // Ola 5 · RG4-7: con error de UNICIDAD (23505) NO se borra nada — el path
-    // es content-addressed y el objeto lo referencia la fila GANADORA de la
-    // carrera. Para otros errores, cleanup sólo de paths sin fila viva.
-    if (!esErrorUnicidad(error)) {
-      await limpiarArchivosHuerfanosSeguro(
-        [principal.path, ...(xmlSubido ? [xmlSubido.path] : [])],
-        input.organizationId,
-      );
-    }
-    const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
-    if (duplicado) throw new Error(duplicado);
-    throw error;
+    throw await errorGuardadoEntrante(
+      error,
+      [principal.path, ...(xmlSubido ? [xmlSubido.path] : [])],
+      input.organizationId,
+    );
   }
   await registrarActividad({
     modulo: "cxp",
@@ -178,14 +189,8 @@ export async function adjuntarXmlFacturaEntrante(params: {
     })
     .eq("id", params.id);
   if (error) {
-    // Ola 5 · RG4-7: mismo criterio que subirFacturaEntrante — con 23505 el
-    // XML es compartido por otra fila viva; en otros errores sólo se borra
-    // si ninguna fila viva del buzón lo referencia.
-    if (!esErrorUnicidad(error)) {
-      await limpiarArchivosHuerfanosSeguro([subido.path], params.organizationId);
-    }
-    const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
-    throw duplicado ? new Error(duplicado) : error;
+    // Ola 5 · RG4-7: mismo criterio que subirFacturaEntrante.
+    throw await errorGuardadoEntrante(error, [subido.path], params.organizationId);
   }
   await registrarActividad({
     modulo: "cxp",

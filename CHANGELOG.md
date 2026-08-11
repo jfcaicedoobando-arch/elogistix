@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.499.3] - 2026-08-11
+- Reducida la complejidad de 5 funciones que rompían el lint (`--max-warnings 0`): buzón CxP (manejo común de errores de guardado), cobro en lote de cliente (hooks `useIdsConRep` y `useTcLote`), recuperación de claims (flujos de factura y nota de crédito separados) y webhook de FacturAPI (dispatch, validación de firma y registro de dedupe extraídos). Sin cambios de comportamiento.
+
 ## [13.499.2] - 2026-08-11
 - Corregido el test `supabase/tests/cxp_pago_embarque_cerrado.sql`: ahora cierra el embarque recorriendo la cadena válida de estados (Confirmado → En Tránsito → Arribo → En Aduana → Entregado → Cerrado) en lugar de saltar directo a Cerrado, que disparaba `LC_TRANSICION_INVALIDA`.
 
