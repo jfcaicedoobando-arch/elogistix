@@ -137,7 +137,7 @@ export async function registrarPagoProveedor(
       tipoCambioUsd: input.tipo_cambio_usd,
       referencia: input.referencia,
       userId,
-    });
+    }));
   }
 
   // Recalcular estado de la factura origen
