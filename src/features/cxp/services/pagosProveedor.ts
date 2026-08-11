@@ -126,7 +126,7 @@ export async function registrarPagoProveedor(
   // conciliado para que /tesoreria refleje la salida de efectivo.
   let movimientoCreado = false;
   if (input.cuenta_bancaria_id) {
-    movimientoCreado = await crearMovimientoBancarioPago({
+    movimientoCreado = avisarMovimientoNoCreado(await crearMovimientoBancarioPago({
       pagoId: data.id,
       organizationId,
       cuentaBancariaId: input.cuenta_bancaria_id,
