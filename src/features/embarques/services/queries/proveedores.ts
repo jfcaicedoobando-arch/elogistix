@@ -56,3 +56,37 @@ export function dedupeProveedores(
     a.nombre.localeCompare(b.nombre, "es-MX"),
   );
 }
+
+/**
+ * v13.503.0 — Suma de costos vivos del embarque para un proveedor, agrupada por
+ * moneda. Sirve para cotejar lo que facturó el proveedor contra lo costeado.
+ */
+export async function fetchCostosProveedorEmbarque(
+  embarqueId: string,
+  proveedorId: string,
+): Promise<Record<string, number>> {
+  const { data, error } = await supabase
+    .from("conceptos_costo")
+    .select("monto, moneda")
+    .eq("embarque_id", embarqueId)
+    .eq("proveedor_id", proveedorId)
+    .is("deleted_at", null)
+    .limit(500);
+  if (error) throw error;
+  return sumarPorMoneda(data ?? []);
+}
+
+/** Agrupa importes por moneda (helper puro, testeable). */
+export function sumarPorMoneda(
+  filas: ReadonlyArray<{ monto: number | null; moneda: string | null }>,
+): Record<string, number> {
+  const totales: Record<string, number> = {};
+  for (const fila of filas) {
+    const moneda = fila.moneda ?? "MXN";
+    const monto = Number(fila.monto ?? 0);
+    if (!Number.isFinite(monto)) continue;
+    totales[moneda] = (totales[moneda] ?? 0) + monto;
+  }
+  return totales;
+}
+
