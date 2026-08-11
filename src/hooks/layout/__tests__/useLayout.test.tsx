@@ -28,6 +28,9 @@ vi.mock('@/features/cxp/hooks/useCxpPendientesAprobacion', () => ({
 vi.mock('@/features/cxp/hooks/useCxpPorPagarCount', () => ({
   useCxpPorPagarCount: () => ({ data: 0 }),
 }));
+vi.mock('@/features/cxp/hooks/useEntrantesPorCapturarCount', () => ({
+  useEntrantesPorCapturarCount: () => ({ data: 0 }),
+}));
 
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useAppSidebarSections } from '../useAppSidebarSections';
