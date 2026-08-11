@@ -35,7 +35,7 @@ interface DialogTraspasoCuentasProps {
 export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTraspasoCuentasProps) {
   const [origenId, setOrigenId] = useState<string>("");
   const [destinoId, setDestinoId] = useState<string>("");
-  const [fecha, setFecha] = useState<string>(todayIso());
+  const [fecha, setFecha] = useState<string>(hoyIso());
   const [montoOrigen, setMontoOrigen] = useState<number>(0);
   const [tipoCambio, setTipoCambio] = useState<number>(1);
   const [comision, setComision] = useState<number>(0);
@@ -48,7 +48,8 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
     if (!open) return;
     setOrigenId("");
     setDestinoId("");
-    setFecha(todayIso());
+    setFecha(hoyIso());
+
     setMontoOrigen(0);
     setTipoCambio(1);
     setComision(0);
