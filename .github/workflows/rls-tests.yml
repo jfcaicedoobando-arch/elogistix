@@ -750,7 +750,7 @@ jobs:
 
       - name: Aggregate matrix result
         # Job único para usar como required check en branch protection,
-        # evitando tener que listar las 19 suites individualmente.
+        # evitando tener que listar los grupos individualmente.
         run: |
           suites="${{ needs.rls-suites.result }}"
           guards="${{ needs.rls-guards.result }}"
