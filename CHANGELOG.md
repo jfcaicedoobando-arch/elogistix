@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.507.0] - 2026-08-13
+- CxP: la captura desde el buzón entra en "modo asistido": se oculta el selector de origen y la zona de carga, y se muestra la tarjeta del documento con enlaces a PDF/XML y expediente.
+- CxP: la captura hereda proveedor y nota que declaró operaciones, sin pisar lo que el contador ya escribió.
+- CxP: banda de sugerencias de operaciones con "Quitar todos" / "Volver a aplicar"; se descartan conceptos que ya tienen factura vigente.
+- CxP: cotejo del importe capturado contra el monto declarado por operaciones (tolerancia ±1% o ±$1) como aviso no bloqueante.
+
 ## [13.506.0] - 2026-08-11
 - **Subir factura al buzón captura más información desde operaciones**: en el modal de subida el operador ahora marca a qué **conceptos de costo** del embarque corresponde el documento (con el importe de cada uno) o declara "aún sin costo capturado". Sin esa respuesta el botón de envío queda deshabilitado.
 - **Contabilidad recibe el trabajo hecho**: al capturar la factura desde el buzón, los conceptos marcados llegan **pre-vinculados** en el formulario; se descartan automáticamente los que ya tengan otra factura viva.
