@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.513.0] - 2026-08-11
+- Auditoría CI/tests — Fase 1 (limpieza rápida): se eliminaron `codecov.yml` y `vitest.fast.config.ts` (config muerta/redundante) y el shim deprecado `src/test/utils/_supabaseChainMock.ts`; los ~20 tests que lo importaban ahora apuntan a la fuente única `@/services/__tests__/_supabaseChainMock`.
+- `src/test/setup.ts`: `afterEach` adelgazado (se movieron `cleanupPdfFontCache` y el GC al `afterAll` por archivo y se eliminó el `vi.clearAllMocks()` duplicado, que ya corre en `beforeEach`); comentarios obsoletos sobre `maxForks=1`/`fileParallelism=false` corregidos aquí y en `queryWrapper.tsx`.
+- `.gitignore`: se ignora todo `reports/` (antes sólo `reports/junit.xml`) para no versionar artefactos de auditoría/cobertura.
+- Nota: `vitest.perf.config.ts` se conserva (los `*.perf.*` están excluidos a nivel de proyecto y un `--exclude` por CLI no los rescata) y NO se borraron los 19 "tests de barrel" señalados por la guía: en este repo sí ejercitan lógica real (p.ej. `fetchPlanes`), así que borrarlos habría reducido cobertura.
+
 ## [13.512.2] - 2026-08-11
 - CI: la migración de traspasos bancarios ahora es idempotente (`IF NOT EXISTS` en índices y columna, `DROP POLICY/TRIGGER IF EXISTS` previo) para cumplir la regla H4 de `audit:migrations`.
 

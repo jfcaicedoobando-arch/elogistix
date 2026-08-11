@@ -1,11 +1,12 @@
 /**
  * Helper para mockear `supabase.from(...).select().eq()...` en tests Vitest.
  *
- * **Fuente única de verdad (v13.85.3 — consolidación).** El antiguo helper
- * de `src/test/utils/_supabaseChainMock.ts` ahora re-exporta desde aquí
- * para evitar dos implementaciones divergentes.
+ * **Fuente única de verdad (v13.513.0 — consolidación).** El antiguo shim
+ * `src/test/utils/_supabaseChainMock.ts` fue eliminado; todos los tests
+ * importan directamente desde aquí.
  *
  * APIs disponibles:
+
  * - `createSupabaseMock()` — completa, con `setTableResult`/`setRpcResult`,
  *   captura de llamadas, payloads de mutación. **Preferida**.
  * - `createSupabaseChainMock(data, error)` — wrapper retrocompatible para los
