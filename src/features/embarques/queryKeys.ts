@@ -11,6 +11,10 @@ export const embarques = {
   conceptosVenta: (id?: string) => ['conceptos_venta', id] as const,
   conceptosCosto: (id?: string) => ['conceptos_costo', id] as const,
   proveedoresDelEmbarque: (id?: string) => ['embarques', 'proveedores-del-embarque', id] as const,
+  /** v13.503.0 — Costos vivos del embarque para un proveedor (cotejo de monto). */
+  costosProveedor: (embarqueId?: string, proveedorId?: string | null) =>
+    ['embarques', 'costos-proveedor', embarqueId, proveedorId] as const,
+
   documentos: (id: string) => ['documentos_embarque', id] as const,
   notas: (id: string) => ['notas_embarque', id] as const,
   facturas: (id: string) => ['facturas', 'embarque', id] as const,
