@@ -21,6 +21,14 @@ export const LC_CODE_MESSAGES_COBRANZA: Record<string, string> = {
     "La cuenta bancaria pertenece a otra organización.",
   LC_COBRO_LOTE_CUENTA_DIVISA:
     "La moneda de la cuenta no coincide con la del cobro en lote.",
+  // Ola 5 · RG4-5/RG4-6.
+  LC_COBRO_LOTE_IMPORTE_REQUERIDO:
+    "Captura el importe recibido del depósito para registrar el cobro en lote.",
+  LC_COBRO_LOTE_IMPORTE_NO_CUADRA:
+    "El reparto entre facturas no cuadra con el importe recibido: no se permite dinero sin asignar.",
+  LC_COBRO_LOTE_FACTURA_DUPLICADA:
+    "Una factura aparece más de una vez en el mismo cobro en lote.",
   LC_MOVIMIENTO_LOTE_COBRO_INEXISTENTE:
     "No se encontró el movimiento bancario del cobro en lote.",
 };
+
