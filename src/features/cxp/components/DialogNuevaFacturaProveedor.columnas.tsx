@@ -3,11 +3,19 @@
  *
  * Estructura: alertas de ancho completo → selector de origen → dos columnas
  * (izquierda: documento y partidas · derecha: datos de la factura y embarque).
+ *
+ * v13.507.0 — Modo buzón: cuando el documento ya viene de operaciones se
+ * esconden el selector de origen y la zona de carga (no hay nada que subir) y
+ * en su lugar se muestra la tarjeta del documento con sus enlaces.
  */
 import type { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import type { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
 import type { CategoriaPresupuestoLite, EntranteParaCaptura } from "@/features/cxp/types";
 import { EntranteCapturaBanner } from "./EntranteCapturaBanner";
+import { DocumentoBuzonCard } from "./DocumentoBuzonCard";
+import { AvisoMontoDeclarado } from "./AvisoMontoDeclarado";
+import { SugerenciasOperacionesBanda } from "./SugerenciasOperacionesBanda";
+import type { HerenciaSugerencias } from "@/features/cxp/hooks/usePrefillVinculosEntrante";
 import { OrigenDocumentoPicker } from "./OrigenDocumentoPicker";
 import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CfdiDuplicadoAlert } from "./CfdiDuplicadoAlert";
@@ -29,19 +37,40 @@ interface Props {
   autocarga: Autocarga;
   keyRenglonSospechoso: string | null;
   onVerFacturaDuplicada: (id: string) => void;
+  /** v13.507.0 — La captura nace de un documento del buzón. */
+  modoBuzon?: boolean;
+  onVerArchivoBuzon?: (path: string, nombre: string) => void;
 }
 
 /** Banda superior: avisos que aplican a todo el modal + origen del documento. */
 export function BandaOrigenYAlertas({
-  ctl, entrante, autocarga, onVerFacturaDuplicada,
+  ctl, entrante, autocarga, onVerFacturaDuplicada, modoBuzon, onVerArchivoBuzon,
 }: Omit<Props, "categorias" | "keyRenglonSospechoso">) {
+  const enBuzon = Boolean(modoBuzon && entrante);
   return (
     <div className="space-y-4">
-      <EntranteCapturaBanner
-        entrante={entrante}
-        estado={autocarga.estado}
-        mensaje={autocarga.mensaje}
-      />
+      {enBuzon && entrante ? (
+        <DocumentoBuzonCard
+          entrante={entrante}
+          estado={autocarga.estado}
+          mensaje={autocarga.mensaje}
+          onVerArchivo={onVerArchivoBuzon ?? (() => undefined)}
+        />
+      ) : (
+        <EntranteCapturaBanner
+          entrante={entrante}
+          estado={autocarga.estado}
+          mensaje={autocarga.mensaje}
+        />
+      )}
+      {enBuzon && entrante && (
+        <AvisoMontoDeclarado
+          montoDeclarado={entrante.montoDeclarado}
+          monedaDeclarada={entrante.monedaDeclarada}
+          montoCapturado={Number(ctl.values.subtotal) || 0}
+          monedaCapturada={ctl.values.moneda}
+        />
+      )}
       <CfdiDuplicadoAlert factura={ctl.cfdiDuplicado} onVerFactura={onVerFacturaDuplicada} />
       {ctl.askCrearProv && (
         <ProveedorNoEncontradoAlert
@@ -49,28 +78,30 @@ export function BandaOrigenYAlertas({
           nombre={ctl.askCrearProv.nombre}
         />
       )}
-      <OrigenDocumentoPicker mode={ctl.mode} onModeChange={ctl.setMode} />
+      {!enBuzon && <OrigenDocumentoPicker mode={ctl.mode} onModeChange={ctl.setMode} />}
     </div>
   );
 }
 
 /** Columna izquierda: de dónde viene la factura, partidas, fechas e importes. */
 export function ColumnaDocumento({
-  ctl, categorias, keyRenglonSospechoso,
-}: Omit<Props, "entrante" | "autocarga" | "onVerFacturaDuplicada">) {
+  ctl, categorias, keyRenglonSospechoso, modoBuzon,
+}: Omit<Props, "entrante" | "autocarga" | "onVerFacturaDuplicada" | "onVerArchivoBuzon">) {
   const sinPartidas =
     ctl.cfdiConceptos.length === 0 && ctl.conceptosManuales.conceptos.length === 0;
 
   return (
     <div className="space-y-5 min-w-0">
-      <CargaCfdiSection
+      {!modoBuzon && (
+        <CargaCfdiSection
         mode={ctl.mode}
         categorias={categorias}
         onParsed={ctl.handleCfdiParsed}
         onPdfIaParsed={ctl.handlePdfIaParsed}
         cfdiReady={!!ctl.pendingCfdi && ctl.pendingCfdi.origen === "cfdi"}
         pdfIaReady={!!ctl.pendingCfdi && ctl.pendingCfdi.origen === "pdf_ia"}
-      />
+        />
+      )}
 
       <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />
 
@@ -84,7 +115,7 @@ export function ColumnaDocumento({
         onEliminar={ctl.conceptosManuales.eliminar}
       />
 
-      {sinPartidas && ctl.mode !== "manual" && (
+      {sinPartidas && (modoBuzon || ctl.mode !== "manual") && (
         <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">
           Sube el documento y aquí aparecerán las partidas de la factura.
         </p>
@@ -108,10 +139,15 @@ export function ColumnaDocumento({
 interface DatosProps {
   ctl: Ctl;
   categorias: CategoriaPresupuestoLite[];
+  /** v13.507.0 — Sugerencias heredadas del buzón (sólo en modo buzón). */
+  herencia?: HerenciaSugerencias | null;
+  sinCostoCapturado?: boolean;
 }
 
 /** Columna derecha: proveedor, categoría, notas y vinculación al embarque. */
-export function ColumnaDatosFactura({ ctl, categorias }: DatosProps) {
+export function ColumnaDatosFactura({
+  ctl, categorias, herencia, sinCostoCapturado,
+}: DatosProps) {
   return (
     <div className="space-y-5 min-w-0">
       <FacturaProveedorFormFields
@@ -123,6 +159,17 @@ export function ColumnaDatosFactura({ ctl, categorias }: DatosProps) {
         errors={ctl.errors}
         sinFechasEImportes
       />
+
+      {herencia && ctl.values.provId && (
+        <SugerenciasOperacionesBanda
+          aplicados={herencia.aplicados}
+          descartados={herencia.descartados}
+          sinCostoCapturado={Boolean(sinCostoCapturado)}
+          marcadosAhora={Object.keys(ctl.vinculos).length}
+          onQuitarTodos={ctl.limpiarVinculos}
+          onReaplicar={herencia.reaplicar}
+        />
+      )}
 
       {ctl.values.provId ? (
         <VincularEmbarqueSection
