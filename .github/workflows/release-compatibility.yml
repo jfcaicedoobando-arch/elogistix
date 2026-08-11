@@ -24,7 +24,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # necesario para el auto-commit del manifest en push a main
 
 concurrency:
   group: release-compatibility-${{ github.ref }}
@@ -99,6 +99,31 @@ jobs:
           fi
 
       - name: Verify migration manifest
+        id: manifest
         run: |
           set -euo pipefail
-          bun run db:release-manifest:check
+          if bun run db:release-manifest:check; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            if [ "${{ github.event_name }}" != "push" ]; then
+              exit 1
+            fi
+            echo "::warning::Manifest desactualizado — se intentará auto-reparación (push a main)."
+          fi
+
+      - name: Auto-heal manifest (push a main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.manifest.outputs.ok == 'false'
+        run: |
+          set -euo pipefail
+          bun run db:release-manifest:update
+          bun run db:release-manifest:check   # si sigue fallando tras regenerar, el run muere aquí
+          git config user.name "release-manifest-bot"
+          git config user.email "release-manifest-bot@users.noreply.github.com"
+          git add supabase/releases/migration-manifest.json
+          if git diff --cached --quiet; then
+            echo "Manifest regenerado pero sin cambios que commitear."
+            exit 0
+          fi
+          git commit -m "chore(release): regenera migration-manifest para APP_VERSION ${{ steps.versions.outputs.current }} [skip ci]"
+          git push origin HEAD:main

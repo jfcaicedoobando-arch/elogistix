@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.517.1] - 2026-08-11
+- CI — `release-compatibility` ahora es auto-curativo: en `push` a main regenera `supabase/releases/migration-manifest.json` y lo commitea con `[skip ci]` en vez de fallar; en `pull_request` sigue fallando duro. Se regeneró el manifest faltante para la versión actual.
+
 ## [13.517.0] - 2026-08-11
 - Infra — nueva migración `20260819110000_storage_buckets_infra_drift.sql`: registra en el historial los buckets privados `cotizaciones-pdf`, `facturas-pdf`, `cxp-inbox` y `agente-cartas-garantia` (creados a mano → drift) forzando `public = false`, más un guardarraíl `DO $$` que aborta si falta alguno de los 7 buckets requeridos. Idempotente y no-op en producción (los 7 ya existen y están privados); cierra el drift para entornos nuevos y para la restauración del snapshot en CI.
 
