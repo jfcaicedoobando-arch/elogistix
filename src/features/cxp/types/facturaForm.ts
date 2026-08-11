@@ -27,6 +27,8 @@ export interface FacturaFormValues {
 export interface CategoriaPresupuestoLite {
   id: string;
   nombre: string;
+  /** v13.510.0 — Permite fijar COGS cuando el documento nació de un embarque. */
+  tipo_contable?: Database["public"]["Enums"]["tipo_contable_categoria"] | null;
 }
 
 export type TcOrigen = "dof" | "cfdi" | "manual" | "vacio";
