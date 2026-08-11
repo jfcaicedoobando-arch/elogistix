@@ -19,13 +19,15 @@ BEGIN
   VALUES ('TEST PAGO CERRADO', 'TPC000000XX0', 'basico', true)
   RETURNING id INTO v_org;
 
-  -- Sesión simulada: el trigger de demoras (al pasar a 'Entregado') exige que
-  -- auth.uid() sea miembro de la organización, si no lanza 'No autorizado'.
+  -- Sesión simulada (se activa más abajo): el trigger de demoras al pasar a
+  -- 'Entregado' exige que auth.uid() sea miembro de la org, si no lanza
+  -- 'No autorizado'. Se siembra el usuario aquí, pero los claims se fijan
+  -- justo antes de las transiciones para no disparar guards de alta.
   INSERT INTO auth.users (id, email) VALUES (v_uid, 'pago-cerrado@test.mx')
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'admin_org') ON CONFLICT DO NOTHING;
-  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
+
 
 
 
