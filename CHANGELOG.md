@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.510.1] - 2026-08-11
+- CI (Power of 10): se dividieron archivos que rebasaron 200 líneas — el modal de captura (`ColumnaDatosFactura` a `DialogNuevaFacturaProveedor.datos.tsx`), el cableado del modo buzón (`useModoBuzonWiring.ts`) y los modales del buzón (`BuzonEntrantesModales.tsx`); sin cambios funcionales.
+
 ## [13.510.0] - 2026-08-11
 - Captura desde el buzón: la vinculación muestra primero el expediente del documento (los demás embarques del proveedor quedan colapsados) y avisa cuando ese expediente ya no tiene costos pendientes.
 - Categoría contable: si el documento nació de un embarque se fija en costo directo (COGS) y el selector queda bloqueado, con enlace "Cambiar categoría" para casos excepcionales; se avisa si la organización no tiene categoría COGS activa.
