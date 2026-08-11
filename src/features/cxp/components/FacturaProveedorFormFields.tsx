@@ -38,13 +38,15 @@ interface Props {
    * de captura los coloca en la otra columna (ver `FechasEImportesBlock`).
    */
   sinFechasEImportes?: boolean;
+  /** v13.510.0 — Categoría fijada en COGS cuando el documento viene del buzón. */
+  categoriaCogs?: CategoriaCogsBuzon | null;
 }
 
 
 export function FacturaProveedorFormFields({
   values, onChange, onProveedor, categorias, errors = {},
   proveedorReadOnly = false, proveedorNombre, sinFechasEImportes = false,
-
+  categoriaCogs,
   tcOrigen = "vacio", tcFechaAplicada, onObtenerDof, dofLoading = false,
 }: Props) {
   
