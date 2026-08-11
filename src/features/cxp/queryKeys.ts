@@ -26,6 +26,9 @@ export const cxp = {
   facturasEntrantesEmbarque: (embarqueId: string) =>
     ["cxp", "facturas-entrantes", "embarque", embarqueId] as const,
   facturasEntrantesPendientes: ["cxp", "facturas-entrantes", "pendientes"] as const,
+  /** v13.502.0 — Badge del sidebar: documentos por capturar en el buzón. */
+  facturasEntrantesPorCapturarCount:
+    ["cxp", "facturas-entrantes", "por-capturar-count"] as const,
   facturasEntrantesEstado: (estado: string) =>
     ["cxp", "facturas-entrantes", "estado", estado] as const,
   /** v13.430.1 — Documento del buzón vinculado a una factura de proveedor. */
