@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.495.0] - 2026-08-11
+- **Pagos "pagados" sin movimiento en banco (FP-000097 y FP-000100)**: se generaron los movimientos bancarios faltantes en la cuenta BBVA USD (562 USD y 62 USD), ya conciliados y vinculados a su pago. Causa: los pagos se capturaron con rol `contador` antes de que la RLS de `bbva_movimientos` permitiera escritura a tesorero/contador (10/08 20:27) y el error se descartaba en silencio.
+- **Nueva acción "Regenerar movimiento"** en la conciliación de tesorería del detalle de la factura de proveedor, para cada incidencia "Sin movimiento en banco".
+- Nueva función de base de datos `public.regenerar_movimiento_pago_proveedor(uuid)` (valida organización, permisos de tesorería, pago vivo con cuenta bancaria y que no exista ya un movimiento vigente; registra el cargo en la moneda de la cuenta).
+- **Ya no falla en silencio**: `crearMovimientoBancarioPago` devuelve `{ ok, error }` y al registrar o editar un pago se muestra un aviso con el motivo real cuando el movimiento no se pudo crear.
+- Mensajes amigables nuevos: `LC_MOVIMIENTO_SIN_PERMISO`, `LC_MOVIMIENTO_SIN_CUENTA`, `LC_MOVIMIENTO_YA_EXISTE`.
+
+
 ## [13.494.2] - 2026-08-10
 - Fix CI: `src/components/shared/dataTable/DataTableRow.tsx` se agregó a la allowlist del guardrail `no-raw-table` (es parte de la implementación misma del `DataTable`).
 
