@@ -25,14 +25,11 @@ import {
   useRechazarFacturaEntrante,
 } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
-import { RechazarFacturaEntranteDialog } from "@/features/bandejas/components/RechazarFacturaEntranteDialog";
-import { MarcarCapturadaDialog } from "@/features/bandejas/components/MarcarCapturadaDialog";
 import { FacturasEntrantesToolbar } from "@/features/bandejas/components/FacturasEntrantesToolbar";
 import { FacturasEntrantesLista } from "@/features/bandejas/components/FacturasEntrantesLista";
-import { PreviaFacturaEntranteSheet } from "@/features/bandejas/components/PreviaFacturaEntranteSheet";
 import { useBuzonEntrantesFiltros } from "@/features/bandejas/hooks/useBuzonEntrantesFiltros";
+import { BuzonEntrantesModales } from "@/features/bandejas/components/BuzonEntrantesModales";
 import { useCapturaDesdeBuzon } from "@/features/bandejas/hooks/useCapturaDesdeBuzon";
-import { DialogNuevaFacturaProveedor } from "@/features/cxp";
 
 export default function CxpBuzonEntrantes() {
   const { canCapturarFacturaProveedor } = usePermissions();
