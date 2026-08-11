@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.518.0] - 2026-08-11
+- Infra (sin aplicar) — dos migraciones nuevas creadas tal cual: `20260819120000_rls_auth_uid_initplan_backport.sql` (P3: envuelve `auth.uid()`/`auth.jwt()` crudos en `(SELECT ...)` en todas las políticas RLS vivas de `public` y `storage.objects`, con verificación final que aborta si queda alguna cruda) y `20260819120100_db_limpieza_indices_force_rls.sql` (P4: DROP de índices duplicados, `FORCE ROW LEVEL SECURITY` en tablas de dinero y `DO` de verificación de cobertura de índices).
+
 ## [13.517.1] - 2026-08-11
 - CI — `release-compatibility` ahora es auto-curativo: en `push` a main regenera `supabase/releases/migration-manifest.json` y lo commitea con `[skip ci]` en vez de fallar; en `pull_request` sigue fallando duro. Se regeneró el manifest faltante para la versión actual.
 
