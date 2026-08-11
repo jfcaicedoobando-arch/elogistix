@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.514.0] - 2026-08-11
+- Auditoría CI/tests — Fase 2 (optimización de CI, parte 2/2). Se atacó el desperdicio de runners en los workflows de base de datos:
+- `rls-tests.yml`: los **25 jobs "1 suite = 1 job" se agruparon en 5 jobs** (`aislamiento`, `financiero`, `operaciones`, `roles`, `costeo`). Cada job levantaba su propio Postgres y hacía `pg_restore` del snapshot (~40 s) para correr un `.sql` de ~10 s; ahora se restaura una vez por grupo y las suites corren en serie dentro del job, sin cortar en la primera falla (un PR ve todos los fallos del grupo de una vez). Los grupos siguen corriendo en paralelo, así que el reloj de pared casi no cambia y el consumo de runners baja ~5x.
+- El guard de "verde vacío prohibido" se adaptó: ahora lee las líneas `suites:` de `matrix.include` y además falla si una suite quedó declarada en dos grupos (correría doble sin cubrir nada nuevo). Sigue siendo imposible agregar un `test_rls_*.sql` y que el CI pase en verde sin ejecutarlo.
+- Nuevo `supabase/tests/rls/_ci_roles.sql`: la creación de los 7 roles de Supabase (`anon`, `authenticated`, `service_role`, …) estaba **copiada 6 veces** (5 bloques inline en el workflow + `_ci_bootstrap.sql`). Ahora vive en un solo archivo idempotente que el workflow invoca con `-f` y el bootstrap con `\ir`.
+- `deploy-gate.yml`: se eliminó el job `suite-rls`, que hacía polling contra la API de Actions **hasta 25 minutos** con un runner facturado sin hacer nada. Ahora el gate se dispara por `workflow_run` cuando `rls-tests` termina y lee su conclusión del evento; si el commit no toca `supabase/**` (y por lo tanto `rls-tests` no corre), el gate se dispara en el push y marca RLS como "no aplica". Ningún push a `main` queda sin gate.
+- El corte del radar de drift dejó de estar duplicado (`DRIFT_BASELINE` en `deploy-gate.yml` vs `DRIFT_CORTE` en `rls-tests.yml`, que podían divergir en silencio): ahora es una fuente única, `supabase/tests/rls/drift-corte.env`, que ambos workflows cargan al `GITHUB_ENV`.
+- Se unificó `actions/github-script` a `v8.0.0` en los 7 workflows que lo usaban.
+
+
 ## [13.513.0] - 2026-08-11
 - Auditoría CI/tests — Fase 1 (limpieza rápida): se eliminaron `codecov.yml` y `vitest.fast.config.ts` (config muerta/redundante) y el shim deprecado `src/test/utils/_supabaseChainMock.ts`; los ~20 tests que lo importaban ahora apuntan a la fuente única `@/services/__tests__/_supabaseChainMock`.
 - `src/test/setup.ts`: `afterEach` adelgazado (se movieron `cleanupPdfFontCache` y el GC al `afterAll` por archivo y se eliminó el `vi.clearAllMocks()` duplicado, que ya corre en `beforeEach`); comentarios obsoletos sobre `maxForks=1`/`fileParallelism=false` corregidos aquí y en `queryWrapper.tsx`.

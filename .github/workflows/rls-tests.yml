@@ -80,40 +80,45 @@ jobs:
 
       - name: Validate matrix covers every test_rls_*.sql
         # Si alguien añade supabase/tests/rls/test_rls_<nuevo>.sql y olvida
-        # registrarlo en `matrix.suite`, la suite no se ejecuta y CI pasa en
-        # verde. Aquí fallamos explícitamente si hay drift entre archivos y
-        # la matriz declarada en este workflow.
+        # registrarlo en la matriz, la suite no se ejecuta y CI pasa en verde.
+        # Aquí fallamos explícitamente si hay drift entre archivos y los grupos
+        # declarados en este workflow.
+        #
+        # v13.514.0 — Los 25 jobs por suite se agruparon en 5 jobs; la lista
+        # ahora vive en las líneas `suites: a b c` de `matrix.include`, así que
+        # el parser lee esas líneas y las parte por espacios. También detecta
+        # suites declaradas dos veces en distintos grupos (correrían doble y
+        # gastarían tiempo sin cubrir nada nuevo).
         run: |
           set -euo pipefail
           expected=$(find supabase/tests/rls -maxdepth 1 -name 'test_rls_*.sql' -printf '%f\n' \
             | sed -E 's|^test_rls_||; s|\.sql$||' \
             | LC_ALL=C sort)
-          # La lista se extrae del propio bloque `matrix.suite` de este workflow
-          # para que no exista una copia manual que se desincronice.
-          declared=$(awk '
-            /^[[:space:]]*suite:[[:space:]]*$/ { capture = 1; next }
-            capture && /^[[:space:]]*-[[:space:]]*[A-Za-z0-9_]+[[:space:]]*$/ {
-              gsub(/^[[:space:]]*-[[:space:]]*|[[:space:]]*$/, "");
-              print; next
-            }
-            # Líneas en blanco o comentarios no cierran el bloque: sólo lo hace
-            # la siguiente clave YAML (evita listas truncadas en silencio).
-            capture && /^[[:space:]]*(#.*)?$/ { next }
-            capture { capture = 0 }
-          ' .github/workflows/rls-tests.yml | LC_ALL=C sort)
+          # La lista se extrae del propio bloque `matrix.include` de este
+          # workflow para que no exista una copia manual que se desincronice.
+          crudo=$(sed -nE 's|^[[:space:]]*suites:[[:space:]]*(.+)$|\1|p' \
+            .github/workflows/rls-tests.yml | tr ' ' '\n' | grep -E '^[A-Za-z0-9_]+$' || true)
+          declared=$(printf '%s\n' "$crudo" | LC_ALL=C sort -u)
           if [ -z "$declared" ]; then
-            echo "::error::No se pudo extraer matrix.suite del workflow (¿cambió el formato YAML?)"
+            echo "::error::No se pudo extraer matrix.include[].suites del workflow (¿cambió el formato YAML?)"
+            exit 1
+          fi
+          duplicadas=$(printf '%s\n' "$crudo" | LC_ALL=C sort | uniq -d)
+          if [ -n "$duplicadas" ]; then
+            echo "::error::Suites declaradas en más de un grupo:"
+            echo "$duplicadas"
             exit 1
           fi
           if ! diff <(echo "$expected") <(echo "$declared") >/dev/null; then
-            echo "::error::matrix.suite está desincronizada con los archivos test_rls_*.sql"
+            echo "::error::La matriz de grupos está desincronizada con los archivos test_rls_*.sql"
             echo "--- esperados (archivos en disco) ---"
             echo "$expected"
-            echo "--- declarados (matrix.suite) ---"
+            echo "--- declarados (matrix.include[].suites) ---"
             echo "$declared"
             exit 1
           fi
-          echo "✓ matrix.suite cubre $(echo "$expected" | wc -l) suites"
+          echo "✓ La matriz cubre $(echo "$expected" | wc -l) suites"
+
 
 
       - name: Restore cached snapshot (if any)
@@ -230,42 +235,31 @@ jobs:
           retention-days: 1
           compression-level: 9
 
+  # v13.514.0 (auditoría CI · Fase 2) — Antes había 1 job por suite (25 jobs).
+  # Cada job levantaba su propio Postgres y hacía `pg_restore` del snapshot
+  # (~40 s de arranque) para correr un archivo SQL de ~10 s: el 80 % del tiempo
+  # era montar y desmontar la base. Ahora son 5 grupos que restauran UNA vez y
+  # corren sus suites en serie. Los grupos siguen en paralelo entre sí, así que
+  # el reloj de pared casi no cambia y el consumo de runners baja ~5x.
   rls-suites:
-    name: RLS suite — ${{ matrix.suite }}
+    name: RLS suites — ${{ matrix.grupo }}
     runs-on: ubuntu-24.04
     needs: rls
-    timeout-minutes: 10
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        suite:
-          - isolation
-          - financiero
-          - financiero_critico
-          - crm_operacional
-          - operaciones
-          - org_scope
-
-          - tarifas_y_costeo
-          - reg_costeo
-          - reg_portales
-          - reg_r4_cotizacion_guard
-          - reg_r4_pricing
-          - roles_no_admin
-          - roles_negocio
-          - portal_intra_org
-          - rpc_provision_organization
-          - rpc_financieras
-          - rpc_por_rol
-          - rpc_smoke_roles
-          - tablas_dinero_extra
-          - anon_deny_all
-          - cross_tenant_mutations
-          - policy_linter
-          - soft_delete_rpcs
-          - storage_objects
-          - reportes_multi_tenant
-
+        include:
+          - grupo: aislamiento
+            suites: isolation org_scope anon_deny_all cross_tenant_mutations policy_linter
+          - grupo: financiero
+            suites: financiero financiero_critico rpc_financieras tablas_dinero_extra reportes_multi_tenant
+          - grupo: operaciones
+            suites: operaciones crm_operacional soft_delete_rpcs storage_objects
+          - grupo: roles
+            suites: roles_no_admin roles_negocio rpc_por_rol rpc_smoke_roles rpc_provision_organization portal_intra_org
+          - grupo: costeo
+            suites: tarifas_y_costeo reg_costeo reg_portales reg_r4_cotizacion_guard reg_r4_pricing
 
     services:
       postgres:
@@ -306,33 +300,8 @@ jobs:
         # El snapshot incluye policies con `TO authenticated/anon/service_role`;
         # pg_restore falla con "role does not exist" si esos roles no están
         # creados en la BD destino (vanilla Postgres no los trae).
-        run: |
-          $PSQL <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-              CREATE ROLE anon NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-              CREATE ROLE authenticated NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
-              CREATE ROLE service_role NOLOGIN BYPASSRLS;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-              CREATE ROLE authenticator NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-              CREATE ROLE supabase_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
-              CREATE ROLE supabase_auth_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
-              CREATE ROLE supabase_storage_admin NOLOGIN;
-            END IF;
-          END $$;
-          SQL
+        # v13.514.0 — La lista vive en `_ci_roles.sql` (antes: 5 copias inline).
+        run: $PSQL -f supabase/tests/rls/_ci_roles.sql
 
       - name: Restore database snapshot
         run: |
@@ -342,21 +311,52 @@ jobs:
           pg_restore --no-owner --dbname=postgres \
             .rls-snapshot/db.dump
 
-      - name: Run RLS suite — ${{ matrix.suite }}
+      - name: Run RLS suites — ${{ matrix.grupo }}
+        env:
+          SUITES: ${{ matrix.suites }}
         run: |
+          set -uo pipefail
           mkdir -p .rls-logs
-          set -o pipefail
-          $PSQL -f supabase/tests/rls/test_rls_${{ matrix.suite }}.sql \
-            2>&1 | tee ".rls-logs/suite-${{ matrix.suite }}.log"
+          fallidas=""
+          for suite in $SUITES; do
+            archivo="supabase/tests/rls/test_rls_${suite}.sql"
+            if [ ! -f "$archivo" ]; then
+              echo "::error::$archivo no existe (matriz desincronizada)"
+              fallidas="$fallidas $suite"
+              continue
+            fi
+            echo "::group::suite $suite"
+            # Cada suite corre aunque la anterior falle: así un PR ve TODOS los
+            # fallos del grupo en una sola vuelta y no uno por push.
+            if $PSQL -f "$archivo" 2>&1 | tee ".rls-logs/suite-${suite}.log"; then
+              echo "✓ $suite"
+            else
+              echo "::error::RLS suite fallida: $suite"
+              fallidas="$fallidas $suite"
+            fi
+            echo "::endgroup::"
+          done
+          {
+            echo "### RLS — grupo \`${{ matrix.grupo }}\`"
+            echo ""
+            if [ -n "$fallidas" ]; then
+              echo "❌ Suites fallidas:"
+              for s in $fallidas; do echo "- \`$s\`"; done
+            else
+              echo "✅ Todas las suites del grupo pasaron."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ -z "$fallidas" ]
 
-      - name: Upload suite log
+      - name: Upload suite logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: rls-suite-log-${{ matrix.suite }}
-          path: .rls-logs/suite-${{ matrix.suite }}.log
+          name: rls-suite-logs-${{ matrix.grupo }}
+          path: .rls-logs/
           if-no-files-found: warn
           retention-days: 7
+
 
   rls-guards:
     name: Guards conductuales + schema invariants (siempre)
@@ -403,33 +403,11 @@ jobs:
           path: .rls-snapshot/
 
       - name: Create Supabase roles before restore
-        run: |
-          $PSQL <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-              CREATE ROLE anon NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-              CREATE ROLE authenticated NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
-              CREATE ROLE service_role NOLOGIN BYPASSRLS;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-              CREATE ROLE authenticator NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-              CREATE ROLE supabase_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
-              CREATE ROLE supabase_auth_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
-              CREATE ROLE supabase_storage_admin NOLOGIN;
-            END IF;
-          END $$;
-          SQL
+        # El snapshot incluye policies con `TO authenticated/anon/service_role`;
+        # pg_restore falla con "role does not exist" si esos roles no están
+        # creados en la BD destino (vanilla Postgres no los trae).
+        # v13.514.0 — La lista vive en `_ci_roles.sql` (antes: 5 copias inline).
+        run: $PSQL -f supabase/tests/rls/_ci_roles.sql
 
       - name: Restore database snapshot
         run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
@@ -532,33 +510,11 @@ jobs:
           path: .rls-snapshot/
 
       - name: Create Supabase roles before restore
-        run: |
-          $PSQL <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-              CREATE ROLE anon NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-              CREATE ROLE authenticated NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
-              CREATE ROLE service_role NOLOGIN BYPASSRLS;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-              CREATE ROLE authenticator NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-              CREATE ROLE supabase_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
-              CREATE ROLE supabase_auth_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
-              CREATE ROLE supabase_storage_admin NOLOGIN;
-            END IF;
-          END $$;
-          SQL
+        # El snapshot incluye policies con `TO authenticated/anon/service_role`;
+        # pg_restore falla con "role does not exist" si esos roles no están
+        # creados en la BD destino (vanilla Postgres no los trae).
+        # v13.514.0 — La lista vive en `_ci_roles.sql` (antes: 5 copias inline).
+        run: $PSQL -f supabase/tests/rls/_ci_roles.sql
 
       - name: Restore database snapshot
         run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
@@ -670,33 +626,11 @@ jobs:
           path: .rls-snapshot/
 
       - name: Create Supabase roles before restore
-        run: |
-          $PSQL <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-              CREATE ROLE anon NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-              CREATE ROLE authenticated NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
-              CREATE ROLE service_role NOLOGIN BYPASSRLS;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-              CREATE ROLE authenticator NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-              CREATE ROLE supabase_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
-              CREATE ROLE supabase_auth_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
-              CREATE ROLE supabase_storage_admin NOLOGIN;
-            END IF;
-          END $$;
-          SQL
+        # El snapshot incluye policies con `TO authenticated/anon/service_role`;
+        # pg_restore falla con "role does not exist" si esos roles no están
+        # creados en la BD destino (vanilla Postgres no los trae).
+        # v13.514.0 — La lista vive en `_ci_roles.sql` (antes: 5 copias inline).
+        run: $PSQL -f supabase/tests/rls/_ci_roles.sql
 
       - name: Restore database snapshot
         run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
@@ -789,31 +723,34 @@ jobs:
       actions: read
     steps:
 
-      - name: Detallar suites fallidas
+      - name: Detallar grupos fallidos
         # El resultado agregado sólo dice "failure": sin esto hay que abrir a
-        # mano las 19 suites para saber cuál rompió. Aquí listamos las suites
-        # fallidas con su enlace directo, en el log y en el summary.
+        # mano los grupos para saber cuál rompió. Aquí listamos los grupos
+        # fallidos con su enlace directo, en el log y en el summary. El log de
+        # cada suite individual queda en el artifact `rls-suite-logs-<grupo>`.
         if: needs.rls-suites.result != 'success'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
+            const PREFIJO = 'RLS suites — ';
             const jobs = await github.paginate(
               github.rest.actions.listJobsForWorkflowRun,
               { owner: context.repo.owner, repo: context.repo.repo, run_id: context.runId, per_page: 100 },
             );
             const fallidas = jobs.filter(
-              (j) => j.name.startsWith('RLS suite —') && j.conclusion !== 'success' && j.conclusion !== 'skipped',
+              (j) => j.name.startsWith(PREFIJO) && j.conclusion !== 'success' && j.conclusion !== 'skipped',
             );
             const lineas = fallidas.length
-              ? fallidas.map((j) => `- **${j.name.replace('RLS suite — ', '')}** (${j.conclusion}) → ${j.html_url}`)
-              : ['- (no se pudo identificar la suite; revisa los artifacts `rls-suite-log-*`)'];
+              ? fallidas.map((j) => `- **${j.name.replace(PREFIJO, '')}** (${j.conclusion}) → ${j.html_url}`)
+              : ['- (no se pudo identificar el grupo; revisa los artifacts `rls-suite-logs-*`)'];
             for (const l of lineas) core.error(l);
-            core.summary.addRaw(`## ❌ Suites RLS fallidas\n${lineas.join('\n')}\n`);
+            core.summary.addRaw(`## ❌ Grupos de suites RLS fallidos\n${lineas.join('\n')}\n`);
             await core.summary.write();
+
 
       - name: Aggregate matrix result
         # Job único para usar como required check en branch protection,
-        # evitando tener que listar las 19 suites individualmente.
+        # evitando tener que listar los grupos individualmente.
         run: |
           suites="${{ needs.rls-suites.result }}"
           guards="${{ needs.rls-guards.result }}"
@@ -873,27 +810,19 @@ jobs:
       - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
         run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
 
+      # Corte histórico: todo lo anterior es deuda congelada (se informa, no
+      # rompe). Todo lo posterior DEBE aplicar sobre una base limpia.
+      #
+      # v13.514.0 — El valor ya NO se escribe aquí: vive en
+      # `supabase/tests/rls/drift-corte.env`, que también lee el `radar-drift`
+      # de `deploy-gate.yml`. Antes había dos literales que podían divergir.
+      - name: Cargar corte de drift (fuente única)
+        run: cat supabase/tests/rls/drift-corte.env >> "$GITHUB_ENV"
+
       - name: Apply migrations SIN parches de drift
         id: apply
-        env:
-          # Corte histórico: todo lo anterior es deuda congelada (se informa,
-          # no rompe). Todo lo posterior DEBE aplicar sobre una base limpia.
-          #
-          # 20260729040000 mueve el corte por encima de 20260729035825 (FIX C5),
-          # que parchea por texto definiciones vigentes y no puede aplicar sobre
-          # una base reconstruida (su ancla vive en una migración legacy que
-          # falla antes). Su estado final lo garantiza, de forma determinista y
-          # sin anclas, la migración FIX C5-b posterior al corte.
-          #
-          # 20260812090001 mueve el corte por encima de 20260812090000
-          # (Ola 4 N41/N44/N45): esa migración aborta siempre porque cambiaba
-          # los nombres de las columnas de salida de cartera_pendiente con
-          # CREATE OR REPLACE ("cannot change return type"). Su estado final lo
-          # garantizan, ya corregidas, las migraciones de reaplicación
-          # posteriores (cartera_pendiente + dashboard_summary/details).
-          DRIFT_CORTE: "20260812090001"
-
         run: |
+
           set -uo pipefail
           shopt -s nullglob
           legacy=0

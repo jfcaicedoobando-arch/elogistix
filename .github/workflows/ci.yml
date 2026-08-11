@@ -26,15 +26,71 @@ concurrency:
 # v13.303.5 — Split `quality` (antes serial ~12 min) en 5 jobs paralelos.
 # Cada job comparte el cache de Bun (via `./.github/actions/setup-bun`).
 # Cache adicional por job cuando aplica (ESLint, tsc incremental, Vite).
+#
+# v13.514.0 (auditoría CI · Fase 2) — Job `changes` con path filtering: un PR
+# que sólo toca `supabase/**` ya no arranca 10 shards de Vitest, build, lint,
+# typecheck ni knip. `audits` corre SIEMPRE (audita migraciones y esquema) y
+# `edge-functions` conserva su gate propio por `git diff`.
 
 jobs:
+  # ---------------------------------------------------------------------
+  # 0) CHANGES — clasifica el diff para saltar jobs de frontend.
+  # ---------------------------------------------------------------------
+  changes:
+    name: Detect changed areas
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          # En push a main `base` queda vacío → compara contra el commit previo.
+          # Si el evento no permite diffear, `paths-filter` marca todo como
+          # cambiado, que es el fallback seguro (corremos todo).
+          filters: |
+            frontend:
+              - 'src/**'
+              - 'public/**'
+              - 'index.html'
+              - 'package.json'
+              - 'bun.lock'
+              - 'vite.config.ts'
+              - 'vitest*.config.ts'
+              - 'tsconfig*.json'
+              - 'eslint.config.js'
+              - 'tailwind.config.ts'
+              - 'postcss.config.js'
+              - 'components.json'
+              - 'knip.json'
+              - 'scripts/**'
+              - 'vite-plugins/**'
+              - '.github/workflows/ci.yml'
+              - '.github/actions/**'
+            backend:
+              - 'supabase/**'
+
   # ---------------------------------------------------------------------
   # 1) LINT — ESLint con cache incremental. Antes ~90 s; con cache ~10-15 s.
   # ---------------------------------------------------------------------
   lint:
     name: ESLint
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 8
+
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -65,6 +121,8 @@ jobs:
   # ---------------------------------------------------------------------
   typecheck:
     name: TypeScript
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -93,6 +151,8 @@ jobs:
   # ---------------------------------------------------------------------
   knip:
     name: Unused code (knip strict)
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -195,6 +255,8 @@ jobs:
   # ---------------------------------------------------------------------
   build:
     name: Build
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -304,6 +366,8 @@ jobs:
   # ---------------------------------------------------------------------
   tests:
     name: Tests (shard ${{ matrix.shard }}/${{ matrix.total }})
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
@@ -372,8 +436,8 @@ jobs:
   # ---------------------------------------------------------------------
   coverage:
     name: Coverage merge & report
-    needs: tests
-    if: always()
+    needs: [changes, tests]
+    if: always() && needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -458,16 +522,27 @@ jobs:
   # ---------------------------------------------------------------------
   ci-success:
     name: CI Success (aggregator)
-    needs: [lint, typecheck, knip, audits, build, edge-functions, tests, coverage]
+    needs: [changes, lint, typecheck, knip, audits, build, edge-functions, tests, coverage]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
       - name: Verify all required jobs succeeded
+        env:
+          FRONTEND_CHANGED: ${{ needs.changes.outputs.frontend }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
         run: |
           # Falla si cualquier job requerido falló o fue cancelado.
           # Úsalo como único required check en branch protection: así puedes
           # cambiar la matriz de shards sin tocar la configuración del repo.
+          #
+          # v13.514.0 — `skipped` SÓLO se acepta en los jobs gateados por
+          # `changes` y SÓLO cuando el diff no tocó frontend. Cualquier otro
+          # `skipped` sigue siendo una falla (gate anti-skip-silencioso).
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "::error::El job changes no terminó en success ($CHANGES_RESULT); no se puede evaluar el gate."
+            exit 1
+          fi
           fail=0
           for job in lint typecheck knip audits build edge-functions tests coverage; do
             case "$job" in
@@ -481,12 +556,20 @@ jobs:
               coverage)       result="${{ needs.coverage.result }}" ;;
             esac
             echo "$job=$result"
-            if [ "$result" != "success" ]; then
-              fail=1
-            fi
+            [ "$result" = "success" ] && continue
+            case "$job" in
+              lint|typecheck|knip|build|tests|coverage)
+                if [ "$result" = "skipped" ] && [ "$FRONTEND_CHANGED" != "true" ]; then
+                  echo "  ↳ omitido legítimamente: el diff no toca frontend."
+                  continue
+                fi
+                ;;
+            esac
+            fail=1
           done
           if [ "$fail" != "0" ]; then
             echo "::error::Uno o más jobs requeridos no terminaron en success."
             exit 1
           fi
           echo "Todos los jobs requeridos pasaron."
+
