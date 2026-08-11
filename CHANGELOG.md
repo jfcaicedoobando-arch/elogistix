@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.508.1] - 2026-08-11
+- CxP: al cancelar una factura de proveedor, el documento del buzón vuelve a quedar en "Rechazada" con su motivo (un trigger lo reabría como "Por capturar" y borraba el vínculo antes de que se aplicara el rechazo).
+
 ## [13.508.0] - 2026-08-14
 - **Corregir datos del documento del buzón**: operaciones ya puede ajustar proveedor, monto declarado, conceptos sugeridos y nota sin retirar el archivo ni volverlo a subir (botón "Corregir datos" en el buzón del embarque).
 - **Rescate desde el buzón central**: en la pestaña "Rechazadas" de Compras > Buzón de facturas se puede devolver un documento a "Por capturar" sin entrar al embarque.
