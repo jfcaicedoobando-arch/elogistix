@@ -21,6 +21,7 @@ import {
   useCapturarFacturaEntrante,
   useFacturasEntrantesPendientes,
   useFacturasEntrantesPorEstado,
+  useReactivarFacturaEntrante,
   useRechazarFacturaEntrante,
 } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
@@ -38,6 +39,7 @@ export default function CxpBuzonEntrantes() {
   const { data: pendientes = [], isLoading, isError, refetch } = useFacturasEntrantesPendientes();
   const rechazar = useRechazarFacturaEntrante();
   const capturar = useCapturarFacturaEntrante();
+  const reactivar = useReactivarFacturaEntrante();
   const [tab, setTab] = useState("pendientes");
   const capturadas = useFacturasEntrantesPorEstado("capturada", tab === "capturadas");
   const rechazadas = useFacturasEntrantesPorEstado("rechazada", tab === "rechazadas");
@@ -147,6 +149,7 @@ export default function CxpBuzonEntrantes() {
             tituloVacio="Sin documentos rechazados"
             textoVacio="Aquí aparecerán los documentos devueltos a operación, con su motivo."
             {...acciones}
+            onReactivar={(row) => void reactivar.mutateAsync({ id: row.id, nombre: row.nombre_archivo })}
           />
         </TabsContent>
       </Tabs>

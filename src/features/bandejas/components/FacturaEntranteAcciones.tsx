@@ -3,7 +3,7 @@
  * v13.368.0
  */
 import { Link } from "react-router-dom";
-import { CheckCircle2, Eye, FileCode2, FilePlus2, MoreHorizontal, XCircle } from "lucide-react";
+import { CheckCircle2, Eye, FileCode2, FilePlus2, MoreHorizontal, RotateCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,6 +25,8 @@ interface Props {
   onCapturar: (row: Fila) => void;
   onCrearFactura: (row: Fila) => void;
   onRechazar: (row: Fila) => void;
+  /** v13.508.0 — Devuelve un documento rechazado a "Por capturar". */
+  onReactivar?: (row: Fila) => void;
 }
 
 export function FacturaEntranteAcciones({
@@ -37,6 +39,7 @@ export function FacturaEntranteAcciones({
   onCapturar,
   onCrearFactura,
   onRechazar,
+  onReactivar,
 }: Props) {
   const yaCapturado = facturaExistenteId !== null;
 
@@ -89,6 +92,11 @@ export function FacturaEntranteAcciones({
               onClick={() => onRechazar(row)}
             >
               <XCircle className="mr-2 h-4 w-4" /> Rechazar
+            </DropdownMenuItem>
+          )}
+          {onReactivar && row.estado === "rechazada" && !row.proveedor_factura_id && (
+            <DropdownMenuItem onClick={() => onReactivar(row)}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Devolver a por capturar
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

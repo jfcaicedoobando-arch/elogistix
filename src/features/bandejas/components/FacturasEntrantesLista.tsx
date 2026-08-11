@@ -15,6 +15,7 @@ export interface AccionesEntrante {
   onCapturar: (row: Fila) => void;
   onCrearFactura: (row: Fila) => void;
   onRechazar: (row: Fila) => void;
+  onReactivar?: (row: Fila) => void;
 }
 
 interface Props extends AccionesEntrante {
