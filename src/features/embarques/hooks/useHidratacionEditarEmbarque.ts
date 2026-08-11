@@ -18,6 +18,7 @@ interface ConceptoVentaDb {
 interface ConceptoCostoDb {
   id: string;
   proveedor_id: string | null;
+  proveedor_nombre?: string | null;
   concepto: string;
   monto: number | string;
   moneda: string;
