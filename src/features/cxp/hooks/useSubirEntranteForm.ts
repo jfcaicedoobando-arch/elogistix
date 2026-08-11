@@ -1,6 +1,9 @@
 /**
  * Estado del formulario de subida al buzón CxP: dos ranuras (PDF + XML),
  * lectura automática del CFDI y detección del proveedor por RFC.
+ *
+ * v13.506.0 — El operador también marca a qué conceptos de costo del embarque
+ * corresponde el documento (sugerencia para contabilidad).
  */
 import { useCallback, useMemo, useState } from "react";
 import { emparejarArchivosEntrantes, validarParejaEntrante } from "@/lib/domain/facturasEntrantes";
@@ -11,6 +14,13 @@ import { notifyError } from "@/lib/ui/appFeedback";
 export interface ProveedorDetectado {
   id: string;
   nombre: string;
+}
+
+/** Concepto de costo marcado por el operador, con su importe sugerido. */
+export interface ConceptoSugeridoSeleccion {
+  monto: number;
+  moneda: string;
+  concepto: string;
 }
 
 interface Args {
@@ -27,6 +37,9 @@ export function useSubirEntranteForm({ organizationId }: Args) {
   // v13.503.0 — Monto declarado por operaciones (se coteja contra lo costeado).
   const [montoDeclarado, setMontoDeclarado] = useState<number | null>(null);
   const [monedaDeclarada, setMonedaDeclarada] = useState("MXN");
+  // v13.506.0 — Conceptos de costo que el operador dice que cubre el documento.
+  const [conceptos, setConceptos] = useState<Record<string, ConceptoSugeridoSeleccion>>({});
+  const [sinCostoCapturado, setSinCostoCapturado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [leyendoXml, setLeyendoXml] = useState(false);
 
@@ -39,6 +52,8 @@ export function useSubirEntranteForm({ organizationId }: Args) {
     setNota("");
     setMontoDeclarado(null);
     setMonedaDeclarada("MXN");
+    setConceptos({});
+    setSinCostoCapturado(false);
     setError(null);
   }, []);
 
@@ -89,16 +104,69 @@ export function useSubirEntranteForm({ organizationId }: Args) {
     setError(null);
   }, []);
 
+  /** Al cambiar de proveedor los conceptos marcados ya no aplican. */
+  const elegirProveedor = useCallback((sel: ProveedorDetectado | null) => {
+    setProveedor(sel);
+    setConceptos({});
+  }, []);
+
+  const toggleConcepto = useCallback(
+    (c: { id: string; concepto: string; monto: number; moneda: string }, marcado: boolean) => {
+      setConceptos((actual) => {
+        const siguiente = { ...actual };
+        if (marcado) {
+          siguiente[c.id] = { monto: c.monto, moneda: c.moneda, concepto: c.concepto };
+        } else {
+          delete siguiente[c.id];
+        }
+        return siguiente;
+      });
+      if (marcado) setSinCostoCapturado(false);
+    },
+    [],
+  );
+
+  const setMontoConcepto = useCallback((conceptoId: string, monto: number) => {
+    setConceptos((actual) => (
+      actual[conceptoId] ? { ...actual, [conceptoId]: { ...actual[conceptoId], monto } } : actual
+    ));
+  }, []);
+
+  const marcarSinCosto = useCallback((valor: boolean) => {
+    setSinCostoCapturado(valor);
+    if (valor) setConceptos({});
+  }, []);
+
+  const conceptosSeleccionados = useMemo(
+    () => Object.entries(conceptos).map(([conceptoId, sel]) => ({ conceptoId, ...sel })),
+    [conceptos],
+  );
+  /** Suma de lo marcado por moneda, para cotejar contra el monto declarado. */
+  const sumaSugeridaPorMoneda = useMemo(() => {
+    const totales: Record<string, number> = {};
+    for (const s of conceptosSeleccionados) {
+      totales[s.moneda] = (totales[s.moneda] ?? 0) + s.monto;
+    }
+    return totales;
+  }, [conceptosSeleccionados]);
+
   const metaUtil = useMemo(() => (meta ? metaCfdiUtil(meta) : false), [meta]);
   // Exige proveedor: un documento sin dueño obliga a contabilidad a adivinar.
+  // Exige además decir a qué costo corresponde (o declarar que no corresponde).
   const listo = Boolean(
-    (pdf || xml) && proveedor && !leyendoXml && !validarParejaEntrante({ pdf, xml }),
+    (pdf || xml)
+    && proveedor
+    && !leyendoXml
+    && !validarParejaEntrante({ pdf, xml })
+    && (conceptosSeleccionados.length > 0 || sinCostoCapturado),
   );
 
   return {
     pdf, xml, meta, metaUtil, proveedor, proveedorDetectado, nota, error, leyendoXml, listo,
     montoDeclarado, monedaDeclarada,
-    setProveedor, setNota, setError, setMontoDeclarado, setMonedaDeclarada,
+    conceptos, conceptosSeleccionados, sumaSugeridaPorMoneda, sinCostoCapturado,
+    setProveedor: elegirProveedor, setNota, setError, setMontoDeclarado, setMonedaDeclarada,
+    toggleConcepto, setMontoConcepto, marcarSinCosto,
     agregarArchivos, quitarPdf, quitarXml, limpiar,
   };
 }
