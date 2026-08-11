@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.515.0] - 2026-08-11
+- Auditoría — Fase 3 (RLS y seguridad). Nueva migración de endurecimiento:
+- El rol anónimo ya no tiene `USAGE` sobre el esquema `extensions` (superficie de ataque innecesaria).
+- Las 4 funciones de la cola de correo (`enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq`) quedan sólo para `service_role`: `authenticated` ya no puede encolar, leer ni borrar correo desde el cliente.
+- Performance RLS: se envolvió `auth.uid()` en `(select auth.uid())` en las 2 políticas de `public` que aún lo llamaban por fila (`nav_events insert own org` y `Super admin maneja su tenant activo`). El resto de las 276 políticas ya estaba envuelto.
+- Índices para predicados RLS: `idx_pagos_proveedor_lote_org` e `idx_cotizacion_costos_historico_org`. Las demás tablas señaladas por la guía ya quedaban cubiertas por su PK o por índices únicos que arrancan con `organization_id` (se verificó contra `pg_indexes`).
+- Decisiones documentadas en la migración: (a) **no** se revoca `EXECUTE` a `anon` sobre `has_role`, `current_agente_id` y `current_agente_org` — hay políticas vivas con `roles = {public}` que las invocan y revocar produciría `42501` en sesiones anónimas o expiradas (siguen en la whitelist FIX-45 y devuelven NULL/false sin `uid`); (b) **no** se dropean `_backup_merge_*_20260602` por instrucción del dueño; (c) los 4 buckets privados ya existían.
+
 ## [13.514.0] - 2026-08-11
 - Auditoría CI/tests — Fase 2 (optimización de CI, parte 2/2). Se atacó el desperdicio de runners en los workflows de base de datos:
 - `rls-tests.yml`: los **25 jobs "1 suite = 1 job" se agruparon en 5 jobs** (`aislamiento`, `financiero`, `operaciones`, `roles`, `costeo`). Cada job levantaba su propio Postgres y hacía `pg_restore` del snapshot (~40 s) para correr un `.sql` de ~10 s; ahora se restaura una vez por grupo y las suites corren en serie dentro del job, sin cortar en la primera falla (un PR ve todos los fallos del grupo de una vez). Los grupos siguen corriendo en paralelo, así que el reloj de pared casi no cambia y el consumo de runners baja ~5x.
