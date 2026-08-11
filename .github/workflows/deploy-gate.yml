@@ -196,7 +196,7 @@ jobs:
           persist-credentials: false
 
       - name: Cargar corte de drift (fuente única)
-        run: cat "$DRIFT_CORTE_FILE" >> "$GITHUB_ENV"
+        run: grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$DRIFT_CORTE_FILE" >> "$GITHUB_ENV"
 
       - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
         run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
