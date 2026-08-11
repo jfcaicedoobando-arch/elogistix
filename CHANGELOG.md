@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.509.1] - 2026-08-11
+- CxP: al cancelar una factura de proveedor, el documento del buzón sí queda como **Rechazado** con su motivo. El orden interno estaba invertido: se cancelaba primero (y el trigger devolvía el documento a "Por capturar" borrando el vínculo) y sólo después se intentaba marcarlo como rechazado, cuando ya no se podía ubicar. Ahora se guardan los documentos antes de cancelar.
+
+
+
 ## [13.509.0] - 2026-08-11
 - **Costos sin proveedor (embarques 336, 338, 340, 350, 353, 357)**: al guardar la edición de un embarque, el wizard mandaba el proveedor en blanco y borraba el nombre que venía de la cotización. Ahora un proveedor vacío ya no sobrescribe el que ya estaba.
 - El wizard de edición resuelve el proveedor del catálogo a partir del nombre heredado (coincidencia exacta o única por prefijo) y lo muestra en el campo en vez de dejarlo vacío.
