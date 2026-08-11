@@ -17,6 +17,7 @@ import {
   fetchProveedoresForSelect,
   fetchProveedoresDelEmbarque,
   fetchCostosProveedorEmbarque,
+  fetchConceptosCostoEmbarqueProveedor,
   type EmbarquesPaginadosFilters,
 } from "@/features/embarques/services";
 
@@ -83,6 +84,14 @@ export const embarqueQueries = {
     queryOptions({
       queryKey: queryKeys.embarques.costosProveedor(embarqueId, proveedorId),
       queryFn: () => fetchCostosProveedorEmbarque(embarqueId, proveedorId),
+      staleTime: staleTimes.SHORT,
+    }),
+
+  /** v13.506.0 — Conceptos pendientes del proveedor en el embarque (buzón CxP). */
+  conceptosProveedorEmbarque: (embarqueId: string, proveedorId: string) =>
+    queryOptions({
+      queryKey: queryKeys.embarques.conceptosProveedorEmbarque(embarqueId, proveedorId),
+      queryFn: () => fetchConceptosCostoEmbarqueProveedor(embarqueId, proveedorId),
       staleTime: staleTimes.SHORT,
     }),
 } as const;
