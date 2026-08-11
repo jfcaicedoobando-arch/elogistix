@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.512.1] - 2026-08-11
+- CI: se agregaron los mensajes amigables faltantes para los códigos `LC_TRASPASO_*` usados por la RPC de traspasos bancarios; se movieron a un catálogo propio (`lcCodeMessages.traspasos.ts`) para mantener el límite Power-of-10.
+
 ## [13.512.0] - 2026-08-11
 - Traspasos entre cuentas propias de banco: nuevo modal en Tesorería › Cuentas que permite registrar movimientos entre cuentas del mismo tenant, incluyendo comisión y tipo de cambio para cuentas en distinta moneda; se generan los movimientos bancarios auto-conciliados vía `registrar_traspaso_bancario`.
 
