@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.497.1] - 2026-08-11
+- **No se podía pagar una factura de proveedor de un expediente cerrado** (FP-000024 / ELIMP00154): al guardar el pago, el sistema intentaba marcar el costo del embarque como "Pagado" y el candado de cierre revertía todo. Ahora esa sincronización automática se permite; la edición manual de importes o conceptos de un embarque cerrado sigue bloqueada.
+- **Toast más claro**: el mensaje ambiguo "Los datos del pago no cumplen una regla del sistema" se reemplaza por el motivo real y la salida ("El expediente del embarque está cerrado… Reabre el embarque"). Los demás errores de regla conservan el detalle técnico.
+- Pruebas: unitarias del traductor de errores y prueba SQL `cxp_pago_embarque_cerrado.sql` (registrada en CI).
+
+
+
 ## [13.497.0] - 2026-08-11
 - **Botón "Volver" que a veces no hacía nada** (detalle de factura de proveedor y demás páginas de detalle): si la entrada anterior del historial era la misma página, el "atrás" no cambiaba la pantalla. Ahora, si la ruta no cambia, se navega a la ruta de respaldo del módulo.
 - El botón Volver del encabezado de detalle se pinta como enlace real con su ruta de respaldo: se puede abrir en pestaña nueva o con clic central.
