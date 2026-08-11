@@ -69,11 +69,32 @@ export function DetailHeader({
   const navigate = useNavigate();
   const backClasses = "-ml-2 h-8 px-2 text-muted-foreground hover:text-foreground";
 
+  // Cuando `backTo` es la función de `useVolver`, conocemos su ruta de respaldo:
+  // se pinta como enlace real (clic central / pestaña nueva) sin perder la
+  // lógica history-aware del clic normal (v13.497.0).
+  const backFn = typeof backTo === "function" ? (backTo as unknown as { fallback?: string }) : null;
+  const hrefRespaldo = typeof backFn?.fallback === "string" ? backFn.fallback : null;
+
+
   return (
     <div className={cn("space-y-3", className)}>
       {backTo === null ? null : typeof backTo === "string" ? (
         <Button variant="ghost" size="sm" className={backClasses} asChild>
           <Link to={backTo}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            {backLabel}
+          </Link>
+        </Button>
+      ) : hrefRespaldo ? (
+        <Button variant="ghost" size="sm" className={backClasses} asChild>
+          <Link
+            to={hrefRespaldo}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+              e.preventDefault();
+              (backTo as () => void)();
+            }}
+          >
             <ArrowLeft className="h-4 w-4 mr-1" />
             {backLabel}
           </Link>
@@ -89,6 +110,7 @@ export function DetailHeader({
           {backLabel}
         </Button>
       )}
+
 
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">

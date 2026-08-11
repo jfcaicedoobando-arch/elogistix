@@ -45,4 +45,27 @@ describe("useVolver", () => {
     act(() => result.current());
     expect(navigateMock).toHaveBeenCalledWith("/embarques?tab=activos");
   });
+
+  it("expone la ruta de respaldo para pintarla como enlace", () => {
+    const { result } = renderHook(() => useVolver("/compras/facturas"), {
+      wrapper: wrapperWithEntries(["/compras/facturas/1"]),
+    });
+    expect(result.current.fallback).toBe("/compras/facturas");
+  });
+
+  it("usa el fallback si el 'atrás' no cambió la ruta (entrada anterior igual)", () => {
+    vi.useFakeTimers();
+    navigateMock.mockClear();
+    const { result } = renderHook(() => useVolver("/compras/facturas"), {
+      wrapper: wrapperWithEntries(["/compras/facturas/1", "/compras/facturas/1"]),
+    });
+    act(() => result.current());
+    expect(navigateMock).toHaveBeenCalledWith(-1);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(navigateMock).toHaveBeenCalledWith("/compras/facturas", { replace: true });
+    vi.useRealTimers();
+  });
 });
+

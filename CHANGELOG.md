@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.497.0] - 2026-08-11
+- **Botón "Volver" que a veces no hacía nada** (detalle de factura de proveedor y demás páginas de detalle): si la entrada anterior del historial era la misma página, el "atrás" no cambiaba la pantalla. Ahora, si la ruta no cambia, se navega a la ruta de respaldo del módulo.
+- El botón Volver del encabezado de detalle se pinta como enlace real con su ruta de respaldo: se puede abrir en pestaña nueva o con clic central.
+- Pruebas de `useVolver` para el respaldo por "atrás sin efecto" y para la ruta expuesta.
+
 ## [13.496.1] - 2026-08-11
 - CI en verde: se dividió `embarqueFases.ts` en `embarqueFasesCompletitud.ts` (límite de 200 líneas), se completó el mock de `useReactivarFacturaEntrante` en la prueba de permisos del buzón y la prueba Fase O ahora busca la migración que **define** `aprobar_factura_proveedor` (no la de permisos FIX-H6-13).
 
