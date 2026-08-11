@@ -90,12 +90,10 @@ const maybeGc = (): void => {
 };
 
 /**
- * Cleanup global tras cada test para evitar la fuga acumulativa de memoria
- * detectada cuando la suite corre en un solo `vitest run` (vs. 2 shards).
- *
- * Mantiene `clearAllMocks` (NO `resetAllMocks`/`restoreAllMocks`) porque
+ * Helpers de limpieza usados por el teardown. `clearAllMocks` (NO
+ * `resetAllMocks`/`restoreAllMocks`) es lo único que corre entre tests porque
  * varios archivos declaran mocks a nivel módulo con `vi.hoisted` / `vi.mock`
- * que se romperían si destruimos las implementaciones entre tests.
+ * que se romperían si destruimos las implementaciones.
  */
 function resetDom(): void {
   try {

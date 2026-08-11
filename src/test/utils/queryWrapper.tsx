@@ -10,7 +10,7 @@ import { NuqsTestingAdapter } from "nuqs/adapters/testing";
  * entre tests (causa del crecimiento de memoria en shards grandes).
  *
  * La asignación a globalThis es segura porque `vitest.config.ts`
- * fuerza `fileParallelism=false` + `maxForks=1`.
+ * aísla cada archivo en su propio fork (`pool: "forks"` + `isolate: true`).
  */
 export function createWrapper() {
   const client = new QueryClient({
