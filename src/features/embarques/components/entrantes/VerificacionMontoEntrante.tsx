@@ -7,7 +7,7 @@
  */
 import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import MoneyInput from "@/components/shared/MoneyInput";
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import {
   Select,
   SelectContent,
