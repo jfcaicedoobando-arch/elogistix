@@ -50,6 +50,7 @@ BEGIN
     (org_a, vendedor_a, 'vendedor'),
     (org_a, contador_a, 'contador'),
     (org_a, tesorero_a, 'tesorero'),
+    (org_a, auxiliar_a, 'auxiliar_contable'),
     (org_a, cobranza_a, 'ejecutivo_cobranza');
 
   INSERT INTO public.user_roles(user_id, role) VALUES
@@ -57,6 +58,7 @@ BEGIN
     (vendedor_a, 'vendedor'),
     (contador_a, 'contador'),
     (tesorero_a, 'tesorero'),
+    (auxiliar_a, 'auxiliar_contable'),
     (cobranza_a, 'ejecutivo_cobranza'),
     (super_u,    'super_admin');
 
