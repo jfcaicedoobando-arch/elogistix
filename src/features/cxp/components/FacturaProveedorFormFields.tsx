@@ -3,17 +3,13 @@
  * Inputs numéricos sin spinners (NumericInput), secciones con iconos
  * y agrupación moneda+importes. El total vive en el header del dialog.
  */
-import { FileText } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { FormSection, FieldError, RequiredMark } from "./facturaFormPrimitives";
 import type {
   FacturaFormValues,
   CategoriaPresupuestoLite,
   TcOrigen,
 } from "@/features/cxp/types";
+import type { CategoriaCogsBuzon } from "@/features/cxp/hooks/useCategoriaCogsBuzon";
+import { CategoriaContableSection } from "./FacturaProveedorFormFields.categoria";
 import { ProveedorYFolioSection, NotasSection } from "./FacturaProveedorFormFields.sections";
 import { FechasEImportesBlock } from "./FacturaProveedorFechasImportes";
 
