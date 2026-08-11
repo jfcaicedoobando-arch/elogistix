@@ -31,7 +31,7 @@ e2e/.tmp/
 
 # Reports y archivos generados por auditoría (no deben trackear)
 .lovable/
-reports/junit.xml
+reports/
 
 # ci:fast local logs
 .ci-fast-logs/
