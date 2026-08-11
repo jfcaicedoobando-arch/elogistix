@@ -96,6 +96,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     cargandoContenedores,
     conceptosVentaDb,
     conceptosCostoDb,
+    proveedoresDb,
     inicializarVenta,
     inicializarCosto,
     methods,

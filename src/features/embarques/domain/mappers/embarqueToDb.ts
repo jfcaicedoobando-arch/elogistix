@@ -172,13 +172,20 @@ export function buildConceptosCostoPayload(
 ) {
   return conceptosCosto
     .filter((c) => c.concepto)
-    .map((c) => ({
-      ...(c.dbId ? { id: c.dbId } : {}),
-      proveedor_id: c.proveedorId || null,
-      proveedor_nombre: proveedoresDb.find((p) => p.id === c.proveedorId)?.nombre || "",
-      concepto: c.concepto,
-      monto: c.monto,
-      moneda: monedaSchema.parse(c.moneda),
-      contenedor_id: c.contenedorId ?? null,
-    }));
+    .map((c) => {
+      // v13.509.0 — Si el costo no tiene proveedor de catálogo (típico en
+      // costos replicados desde cotización), conservamos el nombre heredado
+      // en vez de mandar cadena vacía y borrarlo en BD.
+      const nombreCatalogo = proveedoresDb.find((p) => p.id === c.proveedorId)?.nombre;
+      const nombre = (nombreCatalogo ?? c.proveedorNombre ?? "").trim();
+      return {
+        ...(c.dbId ? { id: c.dbId } : {}),
+        proveedor_id: c.proveedorId || null,
+        proveedor_nombre: nombre,
+        concepto: c.concepto,
+        monto: c.monto,
+        moneda: monedaSchema.parse(c.moneda),
+        contenedor_id: c.contenedorId ?? null,
+      };
+    });
 }

@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import type { UseFormReturn, FieldValues } from "react-hook-form";
 import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { resolverValorContactoDesdeTexto } from "@/features/cliente/domain/contacto";
+import { resolverProveedorIdPorNombre, type ProveedorCatalogo } from "@/features/embarques/domain/resolverProveedor";
 
 interface ConceptoVentaDb {
   id: string;
@@ -18,6 +19,7 @@ interface ConceptoVentaDb {
 interface ConceptoCostoDb {
   id: string;
   proveedor_id: string | null;
+  proveedor_nombre?: string | null;
   concepto: string;
   monto: number | string;
   moneda: string;
@@ -41,8 +43,10 @@ interface Params<TForm extends FieldValues> {
   cargandoContenedores: boolean;
   conceptosVentaDb: ConceptoVentaDb[];
   conceptosCostoDb: ConceptoCostoDb[];
+  /** Catálogo de proveedores para resolver el nombre heredado → id. */
+  proveedoresDb?: ReadonlyArray<ProveedorCatalogo>;
   inicializarVenta: (rows: Array<{ id: number; dbId?: string | null; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null }>) => void;
-  inicializarCosto: (rows: Array<{ id: number; dbId?: string | null; proveedorId: string; concepto: string; monto: number; moneda: string; contenedorId: string | null }>) => void;
+  inicializarCosto: (rows: Array<{ id: number; dbId?: string | null; proveedorId: string; proveedorNombre?: string | null; concepto: string; monto: number; moneda: string; contenedorId: string | null }>) => void;
   methods: UseFormReturn<TForm>;
 }
 
@@ -74,19 +78,25 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
   }, [p.initialized, p.hidratoVenta, p.conceptosVentaDb]);
 
   // Conceptos costo — hidratar UNA sola vez.
+  // v13.509.0 — Si el costo trae nombre de proveedor pero no id (costos
+  // replicados de cotización), lo resolvemos contra el catálogo y en todo caso
+  // conservamos el nombre para no perderlo al guardar.
+  const proveedoresDb = p.proveedoresDb ?? [];
   useEffect(() => {
     if (!p.initialized || p.hidratoCosto || p.conceptosCostoDb.length === 0) return;
+    if (proveedoresDb.length === 0) return;
     inicializarCostoRef.current(p.conceptosCostoDb.map((c, i) => ({
       id: i + 1,
       dbId: c.id, // v13.207.0 — preservamos UUID para merge en RPC
-      proveedorId: c.proveedor_id ?? "",
+      proveedorId: c.proveedor_id ?? resolverProveedorIdPorNombre(c.proveedor_nombre, proveedoresDb),
+      proveedorNombre: c.proveedor_nombre ?? null,
       concepto: c.concepto,
       monto: Number(c.monto),
       moneda: c.moneda,
       contenedorId: c.contenedor_id ?? null,
     })));
     setHidratoCostoRef.current(true);
-  }, [p.initialized, p.hidratoCosto, p.conceptosCostoDb]);
+  }, [p.initialized, p.hidratoCosto, p.conceptosCostoDb, proveedoresDb]);
 
   // Contactos shipper/consignatario
   useEffect(() => {
