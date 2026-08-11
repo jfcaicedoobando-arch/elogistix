@@ -64,29 +64,8 @@ function DialogNuevaFacturaProveedorForm({
     onCerrar: () => onOpenChange(false),
   });
   const ctl = useNuevaFacturaProveedorForm(wiring.onDone, wiring.embarqueInicial);
-  const autocarga = useAutocargaEntrante({
-    entrante, abierto: open, categorias: cats.data ?? [],
-    onCfdiParsed: ctl.handleCfdiParsed, onPdfParsed: ctl.handlePdfIaParsed,
-  });
-
-  useHerenciaEntrante({
-    entrante, abierto: open,
-    provIdActual: ctl.values.provId,
-    notaActual: ctl.values.notas,
-    onProveedor: (id, nombre) => ctl.handleProveedor(id, nombre),
-    onNota: (nota) => ctl.handleChange("notas", nota),
-  });
-  const categoriaCogs = useCategoriaCogsBuzon({
-    categorias: cats.data ?? [],
-    documentoId: entrante?.id ?? null,
-    expediente: entrante?.expediente ?? null,
-    abierto: open,
-    categoriaActual: ctl.values.categoriaId,
-    onCategoria: (id) => ctl.handleChange("categoriaId", id),
-  });
-  const herencia = usePrefillVinculosEntrante({
-    entrante, abierto: open, habilitado: Boolean(ctl.values.provId),
-    aplicarSugerencias: ctl.aplicarSugerencias,
+  const { autocarga, categoriaCogs, herencia } = useModoBuzonWiring({
+    ctl, categorias: cats.data ?? [], entrante, abierto: open,
   });
 
   const verArchivoBuzon = async (path: string, nombre: string) => {
