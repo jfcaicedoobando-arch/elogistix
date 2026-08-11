@@ -26,15 +26,16 @@ CREATE TABLE public.traspasos_bancarios (
   CONSTRAINT traspasos_estado_valido CHECK (estado IN ('Registrado','Cancelado'))
 );
 
-CREATE UNIQUE INDEX uq_traspasos_folio_org ON public.traspasos_bancarios(organization_id, folio);
-CREATE INDEX idx_traspasos_org_fecha ON public.traspasos_bancarios(organization_id, fecha DESC);
-CREATE INDEX idx_traspasos_cuentas ON public.traspasos_bancarios(cuenta_origen_id, cuenta_destino_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_traspasos_folio_org ON public.traspasos_bancarios(organization_id, folio);
+CREATE INDEX IF NOT EXISTS idx_traspasos_org_fecha ON public.traspasos_bancarios(organization_id, fecha DESC);
+CREATE INDEX IF NOT EXISTS idx_traspasos_cuentas ON public.traspasos_bancarios(cuenta_origen_id, cuenta_destino_id);
 
 GRANT SELECT, INSERT, UPDATE ON public.traspasos_bancarios TO authenticated;
 GRANT ALL ON public.traspasos_bancarios TO service_role;
 
 ALTER TABLE public.traspasos_bancarios ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Tenant CRUD traspasos_bancarios" ON public.traspasos_bancarios;
 CREATE POLICY "Tenant CRUD traspasos_bancarios"
 ON public.traspasos_bancarios
 TO authenticated
@@ -47,6 +48,7 @@ WITH CHECK (
   AND ((SELECT has_role((SELECT auth.uid()), 'admin'::app_role)) OR (SELECT has_role((SELECT auth.uid()), 'super_admin'::app_role)))
 );
 
+DROP POLICY IF EXISTS "Tesoreria read traspasos_bancarios" ON public.traspasos_bancarios;
 CREATE POLICY "Tesoreria read traspasos_bancarios"
 ON public.traspasos_bancarios FOR SELECT TO authenticated
 USING (
@@ -56,6 +58,7 @@ USING (
     OR (SELECT has_role((SELECT auth.uid()), 'auxiliar_contable'::app_role)))
 );
 
+DROP POLICY IF EXISTS "Tesoreria write traspasos_bancarios" ON public.traspasos_bancarios;
 CREATE POLICY "Tesoreria write traspasos_bancarios"
 ON public.traspasos_bancarios FOR INSERT TO authenticated
 WITH CHECK (
@@ -65,6 +68,7 @@ WITH CHECK (
     OR (SELECT has_role((SELECT auth.uid()), 'auxiliar_contable'::app_role)))
 );
 
+DROP POLICY IF EXISTS "Tesoreria update traspasos_bancarios" ON public.traspasos_bancarios;
 CREATE POLICY "Tesoreria update traspasos_bancarios"
 ON public.traspasos_bancarios FOR UPDATE TO authenticated
 USING (
@@ -80,15 +84,16 @@ WITH CHECK (
     OR (SELECT has_role((SELECT auth.uid()), 'auxiliar_contable'::app_role)))
 );
 
+DROP TRIGGER IF EXISTS trg_traspasos_bancarios_updated ON public.traspasos_bancarios;
 CREATE TRIGGER trg_traspasos_bancarios_updated
 BEFORE UPDATE ON public.traspasos_bancarios
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Liga de cada pierna con su traspaso
 ALTER TABLE public.bbva_movimientos
-  ADD COLUMN traspaso_id uuid REFERENCES public.traspasos_bancarios(id) ON DELETE SET NULL;
+  ADD COLUMN IF NOT EXISTS traspaso_id uuid REFERENCES public.traspasos_bancarios(id) ON DELETE SET NULL;
 
-CREATE INDEX idx_bbva_movimientos_traspaso
+CREATE INDEX IF NOT EXISTS idx_bbva_movimientos_traspaso
   ON public.bbva_movimientos(traspaso_id) WHERE traspaso_id IS NOT NULL;
 
 -- RPC: registrar traspaso (SECURITY INVOKER: la RLS de ambas tablas aplica)
