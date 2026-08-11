@@ -25,6 +25,7 @@ import {
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
 import { usePrefillVinculosEntrante } from "@/features/cxp/hooks/usePrefillVinculosEntrante";
 import { useHerenciaEntrante } from "@/features/cxp/hooks/useHerenciaEntrante";
+import { useCategoriaCogsBuzon } from "@/features/cxp/hooks/useCategoriaCogsBuzon";
 import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
 import { abrirFacturaEntrante } from "@/features/cxp/services/facturasEntrantes";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -74,6 +75,14 @@ function DialogNuevaFacturaProveedorForm({
     notaActual: ctl.values.notas,
     onProveedor: (id, nombre) => ctl.handleProveedor(id, nombre),
     onNota: (nota) => ctl.handleChange("notas", nota),
+  });
+  const categoriaCogs = useCategoriaCogsBuzon({
+    categorias: cats.data ?? [],
+    documentoId: entrante?.id ?? null,
+    expediente: entrante?.expediente ?? null,
+    abierto: open,
+    categoriaActual: ctl.values.categoriaId,
+    onCategoria: (id) => ctl.handleChange("categoriaId", id),
   });
   const herencia = usePrefillVinculosEntrante({
     entrante, abierto: open, habilitado: Boolean(ctl.values.provId),
@@ -193,6 +202,8 @@ function DialogNuevaFacturaProveedorForm({
               categorias={cats.data ?? []}
               herencia={entrante ? herencia : null}
               sinCostoCapturado={entrante?.sinCostoCapturado}
+              entrante={entrante ?? null}
+              categoriaCogs={entrante ? categoriaCogs : null}
             />
           </div>
         </div>
