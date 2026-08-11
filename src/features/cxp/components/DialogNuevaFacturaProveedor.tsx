@@ -176,10 +176,10 @@ function DialogNuevaFacturaProveedorForm({
             <ColumnaDatosFactura
               ctl={ctl}
               categorias={cats.data ?? []}
-              herencia={entrante ? herencia : null}
+              herencia={herencia}
               sinCostoCapturado={entrante?.sinCostoCapturado}
               entrante={entrante ?? null}
-              categoriaCogs={entrante ? categoriaCogs : null}
+              categoriaCogs={categoriaCogs}
             />
           </div>
         </div>
