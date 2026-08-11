@@ -25,6 +25,7 @@ vi.mock("@/features/cxp/hooks/useFacturasEntrantes", () => ({
   useEliminarFacturaEntrante: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useAdjuntarXmlFacturaEntrante: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useSubirFacturaEntrante: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useReactivarFacturaEntrante: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 describe("<TabFacturasEntrantes /> permisos de subida", () => {

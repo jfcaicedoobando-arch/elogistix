@@ -9,6 +9,7 @@
  * y `embarqueEstadoTemporal.ts`; aquí se re-exportan por compatibilidad.
  */
 import { calcularEstadoEmbarque } from "./embarque";
+import { calcularCompletadas, faseIdParaEstado } from "./embarqueFasesCompletitud";
 import type {
   EmbarqueFasesInput,
   FaseEmbarque,
@@ -31,34 +32,6 @@ function iconoTransito(modo: string): FaseIconoId {
 }
 
 
-
-// v13.380.0 — Orden: Arribo → En Aduana → Entregado → EIR → Por liquidar →
-// Cerrado. Cada set representa "estados iguales o posteriores a".
-const ESTADOS_POST_TRANSITO = new Set([
-  "En Tránsito", "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Por liquidar", "Cerrado",
-]);
-const ESTADOS_POST_ARRIBO = new Set([
-  "Arribo", "En Aduana", "Llegada", "Entregado", "EIR", "Por liquidar", "Cerrado",
-]);
-const ESTADOS_POST_ADUANA = new Set([
-  "En Aduana", "Entregado", "EIR", "Por liquidar", "Cerrado",
-]);
-const ESTADOS_POST_ENTREGADO = new Set(["Entregado", "EIR", "Por liquidar", "Cerrado"]);
-const ESTADOS_POST_EIR = new Set(["EIR", "Por liquidar", "Cerrado"]);
-const ESTADOS_POST_POR_LIQUIDAR = new Set(["Por liquidar", "Cerrado"]);
-
-function faseIdParaEstado(estadoVisual: string): FaseId {
-  if (estadoVisual === "Cerrado") return "cerrado";
-  if (estadoVisual === "Por liquidar") return "por_liquidar";
-  if (estadoVisual === "EIR") return "eir";
-  if (estadoVisual === "Entregado") return "entregado";
-  if (estadoVisual === "En Aduana") return "en_aduana";
-  // "Llegada" (deprecado) y "Arribo" se agrupan en la fase de Arribo.
-  if (estadoVisual === "Arribo" || estadoVisual === "Llegada") return "arribo";
-  if (estadoVisual === "En Tránsito") return "en_transito";
-  if (estadoVisual === "Confirmado") return "confirmado";
-  return "confirmado";
-}
 
 export function calcularFasesEmbarque(
   embarque: EmbarqueFasesInput,
@@ -178,36 +151,7 @@ export function hayFechasFueraDeOrden(fases: FaseEmbarque[]): boolean {
   return false;
 }
 
-function startOfToday(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
 /** Traduce el flag de completitud al estado de la fase. */
 function est(completada: boolean): "completada" | "pendiente" {
   return completada ? "completada" : "pendiente";
-}
-
-/**
- * Calcula qué fases están completadas. Un embarque en Borrador nunca marca
- * tránsito/arribo por fechas vencidas (v13.492.0).
- */
-function calcularCompletadas(
-  embarque: EmbarqueFasesInput,
-  estadoVisual: string,
-  esBorrador: boolean,
-) {
-  const etdPasado = !!embarque.etd && new Date(embarque.etd) <= startOfToday();
-  return {
-    cotizacion: !!embarque.cotizacion_id,
-    transito: ESTADOS_POST_TRANSITO.has(estadoVisual) || (!esBorrador && etdPasado),
-    arribo: !esBorrador
-      && (!!embarque.fecha_llegada_real || ESTADOS_POST_ARRIBO.has(estadoVisual)),
-    aduana: ESTADOS_POST_ADUANA.has(estadoVisual),
-    entregado: ESTADOS_POST_ENTREGADO.has(estadoVisual),
-    eir: ESTADOS_POST_EIR.has(estadoVisual),
-    porLiquidar: ESTADOS_POST_POR_LIQUIDAR.has(estadoVisual),
-    cerrado: estadoVisual === "Cerrado",
-  };
 }
