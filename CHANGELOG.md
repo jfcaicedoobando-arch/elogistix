@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.512.2] - 2026-08-11
+- CI: la migración de traspasos bancarios ahora es idempotente (`IF NOT EXISTS` en índices y columna, `DROP POLICY/TRIGGER IF EXISTS` previo) para cumplir la regla H4 de `audit:migrations`.
+
 ## [13.512.1] - 2026-08-11
 - CI: se agregaron los mensajes amigables faltantes para los códigos `LC_TRASPASO_*` usados por la RPC de traspasos bancarios; se movieron a un catálogo propio (`lcCodeMessages.traspasos.ts`) para mantener el límite Power-of-10.
 
