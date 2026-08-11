@@ -3,6 +3,7 @@
  * Vive en `services/embarque` porque es donde se consume (conceptos costo).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fetchCostosConFactura } from "@/features/embarques/services/costosConFactura";
 
 export async function fetchProveedoresForSelect(organizationId: string | null) {
   // 12.34.0: .limit(500) defensivo (evita cap silencioso de 1000 PostgREST).
