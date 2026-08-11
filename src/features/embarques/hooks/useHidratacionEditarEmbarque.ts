@@ -42,8 +42,10 @@ interface Params<TForm extends FieldValues> {
   cargandoContenedores: boolean;
   conceptosVentaDb: ConceptoVentaDb[];
   conceptosCostoDb: ConceptoCostoDb[];
+  /** Catálogo de proveedores para resolver el nombre heredado → id. */
+  proveedoresDb?: ReadonlyArray<ProveedorCatalogo>;
   inicializarVenta: (rows: Array<{ id: number; dbId?: string | null; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null }>) => void;
-  inicializarCosto: (rows: Array<{ id: number; dbId?: string | null; proveedorId: string; concepto: string; monto: number; moneda: string; contenedorId: string | null }>) => void;
+  inicializarCosto: (rows: Array<{ id: number; dbId?: string | null; proveedorId: string; proveedorNombre?: string | null; concepto: string; monto: number; moneda: string; contenedorId: string | null }>) => void;
   methods: UseFormReturn<TForm>;
 }
 
