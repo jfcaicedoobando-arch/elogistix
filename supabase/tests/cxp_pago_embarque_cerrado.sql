@@ -5,6 +5,7 @@
 DO $$
 DECLARE
   v_org uuid;
+  v_uid uuid := gen_random_uuid();
   v_cli uuid;
   v_emb uuid;
   v_cat uuid;
@@ -17,6 +18,16 @@ BEGIN
   INSERT INTO public.organizations (nombre, rfc, plan, activo)
   VALUES ('TEST PAGO CERRADO', 'TPC000000XX0', 'basico', true)
   RETURNING id INTO v_org;
+
+  -- Sesión simulada: el trigger de demoras (al pasar a 'Entregado') exige que
+  -- auth.uid() sea miembro de la organización, si no lanza 'No autorizado'.
+  INSERT INTO auth.users (id, email) VALUES (v_uid, 'pago-cerrado@test.mx')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.organization_members (organization_id, user_id, role)
+  VALUES (v_org, v_uid, 'admin_org') ON CONFLICT DO NOTHING;
+  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
+
+
 
   INSERT INTO public.clientes (organization_id, nombre, rfc)
   VALUES (v_org, 'CLIENTE PAGO CERRADO', '') RETURNING id INTO v_cli;
