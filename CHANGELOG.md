@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.499.1] - 2026-08-11
+- Mensajes claros para los nuevos códigos del cobro en lote (importe requerido, importe que no cuadra y factura repetida) y separación de `pagoClienteLote.ts` para respetar el límite de 200 líneas.
+- Pendiente conocido: la migración histórica `20260812090000` no se puede convertir en no-op desde el editor (los archivos de migración los gestiona la plataforma); no afecta producción, sólo bases creadas desde cero.
+
 ## [13.499.0] - 2026-08-11
 - **Ola 5 (regresiones de la Ola 4)**:
 - Los gastos operativos en USD sin tipo de cambio ya no se valuaban en $0 en los tableros; los gastos en EUR usan el tipo de cambio del embarque vinculado.
