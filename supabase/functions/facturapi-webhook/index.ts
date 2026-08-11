@@ -155,10 +155,27 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     return jsonResponse({ ok: true, ignored: "duplicate_event", event_id: eventKey });
   }
 
+  // Ola 5 · RG4-10 · dispatch: los eventos `receipt.*` van directo a REP.
+  // Los `invoice.*` se intentan primero como factura y SÓLO si el id no
+  // matcheó ninguna factura de la org (`factura_not_found`) se reintentan
+  // como REP — FacturAPI a veces notifica la cancelación de un complemento
+  // de pago con tipos `invoice.*`.
   const receipt = mapEventToReceiptPatch(event);
-  const result = receipt
-    ? await handleReceiptEvent(supabase, orgId, event, receipt)
-    : await handleFacturaEvent(supabase, orgId, event);
+  const esReceiptNativo = event.type.startsWith("receipt.");
+  let result: Response;
+  if (receipt && esReceiptNativo) {
+    result = await handleReceiptEvent(supabase, orgId, event, receipt);
+  } else {
+    result = await handleFacturaEvent(supabase, orgId, event);
+    if (receipt && result.ok) {
+      const clon = result.clone();
+      const body = await clon.json().catch(() => null);
+      if (body && (body as { ignored?: string }).ignored === "factura_not_found") {
+        result = await handleReceiptEvent(supabase, orgId, event, receipt);
+      }
+    }
+  }
+
 
   // Ola 4 · N2: si el procesamiento falló (5xx) NO registramos dedupe —
   // el reintento de FacturAPI (hasta 10×) volverá a ejecutar el handler.

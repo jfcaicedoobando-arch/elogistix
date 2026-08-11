@@ -25,7 +25,7 @@ interface Props {
   total: string;
   onTotal: (v: number) => void;
   saldoTotal: number;
-  tcDof: { usdMxn: number; fecha: string } | null;
+  tcDof: { usdMxn: number; eurMxn: number | null; fecha: string } | null;
   formaPago: string;
   onFormaPago: (v: string) => void;
   cuentaId: string;
@@ -43,6 +43,9 @@ function etiqueta(c: CuentaLote) {
 }
 
 export function DialogCobroLoteDatos(p: Props) {
+  // Ola 5 · RG4-11: el hint nombra la moneda real del TC mostrado.
+  const tcValor = p.moneda === "EUR" ? p.tcDof?.eurMxn : p.tcDof?.usdMxn;
+  const hintTc = p.tcDof && tcValor ? ` · TC DOF ${p.moneda} ${tcValor} (${p.tcDof.fecha})` : "";
   return (
     <FormDialogSection flat title="Datos del depósito">
       <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 md:grid-cols-3">
@@ -60,7 +63,7 @@ export function DialogCobroLoteDatos(p: Props) {
           />
           <p className="truncate text-xs text-muted-foreground">
             Saldo {formatCurrency(p.saldoTotal, p.moneda)}
-            {p.tcDof ? ` · TC DOF ${p.tcDof.usdMxn}` : ""}
+            {hintTc}
           </p>
         </div>
         <div className="space-y-1.5">

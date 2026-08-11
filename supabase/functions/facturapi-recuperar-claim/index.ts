@@ -12,7 +12,8 @@ import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
-  loadFactura, validarClaim, buscarCfdiPorExternalId, promoverFactura, liberarClaim,
+  loadFactura, loadNotaCredito, validarClaim, buscarCfdiPorExternalId,
+  promoverFactura, promoverNc, liberarClaim, liberarClaimNc,
   type ReqBody, type FapiClient,
 } from "./recuperar.ts";
 
@@ -36,7 +37,37 @@ Deno.serve(wrapEdgeHandler("facturapi-recuperar-claim", async (req) => {
   const user = { id: userData.user.id, email: userData.user.email };
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
+
+  // Ola 5 · RG4-4: la emisión de NC (Ola 4 · N1) también usa claim
+  // PENDING:<uuid> + external_id; si la edge muere entre el timbrado y el
+  // persist, preloadNcContext devuelve 409 ya_timbrada para siempre. Aquí la
+  // reconciliamos contra FacturAPI con el mismo flujo que las facturas.
+  if (body.nota_credito_id) {
+    const nc = await loadNotaCredito(supabase, body.nota_credito_id);
+    if (nc instanceof Response) return nc;
+
+    if (!(await authorizeOrgRole(supabase, user.id, nc.organization_id, ROLES_EMISOR_FISCAL))) {
+      return jsonResponse({ error: "forbidden" }, 403);
+    }
+
+    const { claimTag, edadMin, response: ncValidation } = validarClaim(nc, "nota de crédito");
+    if (ncValidation) return ncValidation;
+
+    const resolvedNc = await getFacturapiClient(supabase, nc.organization_id);
+    if (!resolvedNc.ok) return jsonResponse({ error: resolvedNc.data.error, message: resolvedNc.data.message }, resolvedNc.data.status);
+
+    const matchNc = await buscarCfdiPorExternalId(resolvedNc.data.client as FapiClient, claimTag, nc.facturapi_claim_at);
+    if (matchNc instanceof Response) return matchNc;
+    if (matchNc?.id && matchNc.uuid) {
+      return promoverNc({
+        supabase, nc, match: matchNc, claimTag, user,
+        apiKey: resolvedNc.data.apiKey, ambiente: resolvedNc.data.ambiente,
+      });
+    }
+    return liberarClaimNc(supabase, nc, claimTag, edadMin, user);
+  }
+
+  if (!body.factura_id) return jsonResponse({ error: "factura_id_o_nota_credito_id_required" }, 400);
 
   const factura = await loadFactura(supabase, body.factura_id);
   if (factura instanceof Response) return factura;

@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.499.0] - 2026-08-11
+- **Ola 5 (regresiones de la Ola 4)**:
+- Los gastos operativos en USD sin tipo de cambio ya no se valuaban en $0 en los tableros; los gastos en EUR usan el tipo de cambio del embarque vinculado.
+- La cartera dejó de ocultar facturas por un filtro de organización redundante y los embarques "Cancelado" ya no suman en los totales de Dirección.
+- Cuentas por pagar: al reeditar una factura ya no se duplican costos; `auxiliar_contable` puede capturar y editar movimientos bancarios y `tesorero` puede generar liquidaciones de comisiones.
+- Cobro en lote de cliente: se valida que el importe recibido cuadre con el reparto, se rechazan facturas repetidas en el mismo lote, se bloquean lotes duplicados recientes y se usa el tipo de cambio correcto en lotes en EUR.
+- Notas de crédito: se puede recuperar un timbrado atascado desde la propia nota de crédito.
+- Buzón de facturas recibidas: la limpieza de archivos temporales ya no borra el archivo de la captura que sí se guardó.
+- Complementos de pago (REP): los avisos de cancelación que llegan como eventos de factura ahora actualizan correctamente el estado de cancelación del REP.
+- Importación de CSV: los archivos generados por Excel en Windows ya no muestran caracteres corruptos (acentos y ñ).
+
 ## [13.498.1] - 2026-08-11
 - **CI en verde**: el cast de `backTo` en `DetailHeader.tsx` no tenía el marcador `// SAFE-CAST:`, lo que rompía las auditorías de arquitectura y el baseline de casts (0 HIGH/CRITICAL). Se documentó el cast; sin cambios de comportamiento.
 

@@ -15,6 +15,7 @@ import { useTimbrarNotaCredito, useCancelarNotaCredito } from "@/features/factur
 import { FacturaNotasCreditoTable } from "./FacturaNotasCreditoTable";
 import type { Tables } from "@/integrations/supabase/types";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ClaimPendingBanner } from "./ClaimPendingBanner";
 import { parseConceptosSugeridos } from "./facturaNotasCreditoConceptos";
 
 type Moneda = Tables<"facturas">["moneda"];
@@ -76,21 +77,36 @@ export function FacturaNotasCreditoSeccion(props: Props) {
           )
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" className="py-2" />
         ) : notas.length === 0 ? (
           <p className="text-sm text-muted-foreground">Esta factura no tiene notas de crédito.</p>
         ) : (
-          <FacturaNotasCreditoTable
-            notas={notas}
-            canEdit={canEdit}
-            uuidFacturaOriginal={uuidFacturaOriginal}
-            timbrando={timbrar.isPending}
-            onTimbrar={(id) => timbrar.mutate(id)}
-            onEmail={setEmailNcId}
-            onCancelar={setCancelarNcId}
-          />
+          <>
+            {/* Ola 5 · RG4-4: una NC con claim PENDING atascado se recupera
+                con el mismo flujo que las facturas. */}
+            {notas
+              .filter((nc) => nc.facturapi_id?.startsWith("PENDING:"))
+              .map((nc) => (
+                <ClaimPendingBanner
+                  key={nc.id}
+                  facturaId={facturaId}
+                  notaCreditoId={nc.id}
+                  facturapiId={nc.facturapi_id}
+                  facturapiClaimAt={nc.facturapi_claim_at}
+                />
+              ))}
+            <FacturaNotasCreditoTable
+              notas={notas}
+              canEdit={canEdit}
+              uuidFacturaOriginal={uuidFacturaOriginal}
+              timbrando={timbrar.isPending}
+              onTimbrar={(id) => timbrar.mutate(id)}
+              onEmail={setEmailNcId}
+              onCancelar={setCancelarNcId}
+            />
+          </>
         )}
       </CardContent>
 

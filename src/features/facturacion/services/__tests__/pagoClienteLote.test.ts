@@ -94,6 +94,12 @@ describe("validarCobroLote", () => {
     expect(res.error).toMatch(/no puede exceder/i);
   });
 
+  it("rechaza sobrante sin asignar (Ola 5 · RG4-5)", () => {
+    const { renglones } = repartirFifo(facturas, 1200);
+    const res = validarCobroLote(facturas, renglones, 1500, opts);
+    expect(res.error).toMatch(/exactamente el importe recibido/i);
+  });
+
   it("rechaza cuenta bancaria en otra moneda", () => {
     const { renglones } = repartirFifo(facturas, 1200);
     const res = validarCobroLote(facturas, renglones, 1200, {

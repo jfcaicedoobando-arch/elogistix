@@ -77,6 +77,13 @@ export function usePagoClienteLoteState(a: Args) {
   const pedirTc = a.open && esExtranjera;
   const { data: tcDofRaw } = useTcDofPorFecha(pedirTc ? fecha : null, pedirTc);
   const tcDof = esExtranjera ? tcDofRaw ?? null : null;
+  // Ola 5 · RG4-11: el TC que se guarda es el de la MONEDA DEL LOTE.
+  // Antes un lote EUR guardaba el TC DOF USD en tipo_cambio_usd.
+  const tcAplicable = !esExtranjera
+    ? null
+    : a.moneda === "EUR"
+      ? tcDof?.eurMxn ?? null
+      : tcDof?.usdMxn ?? null;
 
   const totalNum = round2(Number(total) || 0);
   const cuentasMoneda = cuentas.filter((c) => c.moneda === a.moneda);
@@ -113,8 +120,11 @@ export function usePagoClienteLoteState(a: Args) {
       forma_pago: formaPago,
       referencia,
       cuenta_bancaria_id: cuentaId || null,
-      tipo_cambio_usd: tcDof?.usdMxn ?? null,
+      tipo_cambio_usd: tcAplicable,
       notas,
+      // Ola 5 · RG4-5: el importe recibido viaja a la RPC (defensa en
+      // profundidad: la validación exacta también vive en la función).
+      importe_recibido: totalNum,
       renglones,
       facturasConRep: await obtenerFacturasConRep(aplicadas),
     });
@@ -125,7 +135,7 @@ export function usePagoClienteLoteState(a: Args) {
   return {
     fecha, setFecha, total, formaPago, setFormaPago, referencia, setReferencia,
     cuentaId, setCuentaId, notas, setNotas, renglones,
-    saldoTotal, tcDof, cuentasMoneda,
+    saldoTotal, tcDof, tcAplicable, cuentasMoneda,
     error, sinAsignar, totalRepartido, repRequeridos, recalcular, setMonto, submit,
     guardando: registrar.isPending,
   };

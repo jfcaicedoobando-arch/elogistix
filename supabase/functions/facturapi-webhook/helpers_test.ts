@@ -92,9 +92,40 @@ Deno.test("mapEventToReceiptPatch: receipt.canceled", () => {
   assertEquals(r!.patch.estado_rep, "Cancelado");
 });
 
-Deno.test("mapEventToReceiptPatch: invoice.* -> null", () => {
-  assertEquals(mapEventToReceiptPatch({ type: "invoice.status_updated", data: { object: { id: "fa_1" } } }), null);
+// Ola 5 · RG4-10: los eventos `invoice.*` también se mapean como REP (el
+// dispatcher los intenta como factura primero y cae a REP si no matchea).
+Deno.test("mapEventToReceiptPatch: invoice.canceled -> patch de REP cancelado", () => {
+  const r = mapEventToReceiptPatch({ type: "invoice.canceled", data: { object: { id: "fa_1" } } });
+  assert(r);
+  assertEquals(r!.facturapi_rep_id, "fa_1");
+  assertEquals(r!.patch.estado_rep, "Cancelado");
+  assertEquals(r!.patch.rep_cancellation_status, "accepted");
 });
+
+Deno.test("mapEventToReceiptPatch: cancellation_status accepted fija rep_cancellation_status", () => {
+  const r = mapEventToReceiptPatch({
+    type: "receipt.status_updated",
+    data: { object: { id: "rep_3", cancellation_status: "accepted" } },
+  });
+  assert(r);
+  assertEquals(r!.patch.estado_rep, "Cancelado");
+  assertEquals(r!.patch.rep_cancellation_status, "accepted");
+});
+
+Deno.test("mapEventToReceiptPatch: cancellation_status pending NO cambia estado_rep", () => {
+  const r = mapEventToReceiptPatch({
+    type: "receipt.status_updated",
+    data: { object: { id: "rep_4", cancellation_status: "pending" } },
+  });
+  assert(r);
+  assertEquals(r!.patch.estado_rep, undefined);
+  assertEquals(r!.patch.rep_cancellation_status, "pending");
+});
+
+Deno.test("mapEventToReceiptPatch: sin object -> null", () => {
+  assertEquals(mapEventToReceiptPatch({ type: "receipt.canceled" }), null);
+});
+
 
 // ── cancellation_status_updated ─────────────────────────────────────────────
 Deno.test("cancellation_status_updated: accepted -> patch con accepted (sin limpiar timestamps)", () => {
@@ -207,4 +238,13 @@ Deno.test("index.ts: si el procesamiento falla (result.ok=false) se retorna ANTE
 
 Deno.test("index.ts: 'Emitida' es el único estado usado para invoice.status_updated valid (nunca 'Timbrada')", () => {
   assert(!webhookIndexSource.includes('"Timbrada"'), "index.ts no debe usar el literal 'Timbrada'");
+});
+
+// ── Ola 5 · RG4-10: dispatch REP vs factura ────────────────────────────────
+Deno.test("index.ts: los eventos invoice.* se intentan como factura antes que como REP", () => {
+  assertStringIncludes(webhookIndexSource, 'event.type.startsWith("receipt.")');
+  assertStringIncludes(webhookIndexSource, '=== "factura_not_found"');
+  const idxFactura = webhookIndexSource.indexOf("await handleFacturaEvent(supabase, orgId, event)");
+  const idxFallback = webhookIndexSource.indexOf('=== "factura_not_found"');
+  assert(idxFactura >= 0 && idxFallback >= 0 && idxFactura < idxFallback);
 });

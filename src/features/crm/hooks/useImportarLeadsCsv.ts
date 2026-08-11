@@ -10,6 +10,7 @@ import {
   mapLeadCsvRows,
   type ParsedLeadRow,
 } from "@/lib/csv/leadsCsv";
+import { leerArchivoTexto } from "@/lib/io/readFileText";
 
 export interface UseImportarLeadsCsvOptions {
   onDone: () => void;
@@ -27,7 +28,10 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
 
   const handleFile = useCallback(async (file: File) => {
     setFileName(file.name);
-    const text = await file.text();
+    // Ola 5 · N34: file.text() decodifica siempre UTF-8 → mojibake con CSV
+    // Windows-1252 de Excel en es-MX (acentos/ñ corruptos en empresas y
+    // contactos). El helper intenta UTF-8 fatal y cae a windows-1252.
+    const text = await leerArchivoTexto(file);
     setRows(mapLeadCsvRows(parseLeadsCsv(text)));
   }, []);
 

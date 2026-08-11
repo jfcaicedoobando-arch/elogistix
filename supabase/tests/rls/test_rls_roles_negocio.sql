@@ -5,6 +5,7 @@
 --   - vendedor              → CRM scoped
 --   - contador              → lectura financiera, mutación limitada
 --   - tesorero              → cuentas bancarias / bbva_movimientos
+--   - auxiliar_contable     → bbva_movimientos (RG4-8)
 --   - ejecutivo_cobranza    → cobranza_seguimiento
 --   - super_admin (positivo)→ ve datos de todas las orgs
 --
@@ -24,6 +25,7 @@ DECLARE
   vendedor_a uuid := gen_random_uuid();
   contador_a uuid := gen_random_uuid();
   tesorero_a uuid := gen_random_uuid();
+  auxiliar_a uuid := gen_random_uuid();
   cobranza_a uuid := gen_random_uuid();
   super_u uuid := gen_random_uuid();
   cli_a uuid := gen_random_uuid();
@@ -49,6 +51,7 @@ BEGIN
     (org_a, vendedor_a, 'vendedor'),
     (org_a, contador_a, 'contador'),
     (org_a, tesorero_a, 'tesorero'),
+    (org_a, auxiliar_a, 'auxiliar_contable'),
     (org_a, cobranza_a, 'ejecutivo_cobranza');
 
   INSERT INTO public.user_roles(user_id, role) VALUES
@@ -56,6 +59,7 @@ BEGIN
     (vendedor_a, 'vendedor'),
     (contador_a, 'contador'),
     (tesorero_a, 'tesorero'),
+    (auxiliar_a, 'auxiliar_contable'),
     (cobranza_a, 'ejecutivo_cobranza'),
     (super_u,    'super_admin');
 
@@ -166,6 +170,37 @@ BEGIN
   PERFORM pg_temp.assert(visible = 0, 'tesorero_a NO debe ver bbva_movimientos de org_b');
 
   -- ════════════════════════════════════════════════════════════════════════
+  -- AUXILIAR_CONTABLE (org_a) — Ola 5 · RG4-8: la matriz
+  -- CAPTURAR_MOVIMIENTO_BANCARIO lo incluye; la BD lo rechazaba con 42501.
+  -- ════════════════════════════════════════════════════════════════════════
+  PERFORM pg_temp.as_user(auxiliar_a);
+  -- Captura en su org: permitida (si RLS lo rechazara, el INSERT abortaría).
+  INSERT INTO public.bbva_movimientos(
+    id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
+    cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en
+  ) VALUES
+    (gen_random_uuid(), org_a, cuenta_a, CURRENT_DATE, 'Dep manual auxiliar', 'REF-AUX',
+      0, 750, 'hash-rol-auxiliar', 'Pendiente', '', now());
+  -- Lectura y edición en su org: permitidas (la policy de SELECT también se
+  -- alineó; sin ella el UPDATE matchearía 0 filas silenciosamente).
+  UPDATE public.bbva_movimientos SET concepto = 'Dep manual auxiliar (editado)'
+  WHERE referencia = 'REF-AUX';
+  SELECT count(*) INTO visible FROM public.bbva_movimientos
+  WHERE referencia = 'REF-AUX' AND concepto = 'Dep manual auxiliar (editado)';
+  PERFORM pg_temp.assert(visible = 1, 'auxiliar_a debe capturar, leer y editar movimientos de su org');
+  -- …pero NO puede capturarlo en otra org
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.bbva_movimientos(id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia, cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en) VALUES (%L, %L, %L, CURRENT_DATE, %L, %L, 0, 1, %L, %L, %L, now())',
+      gen_random_uuid(), org_b, cuenta_b, 'HACK', 'REF-HACK-AUX', 'hash-rol-hack-aux', 'Pendiente', ''
+    ),
+    'auxiliar_a NO debe poder capturar movimiento bancario en org_b'
+  );
+  -- …ni ver los movimientos de otra org
+  SELECT count(*) INTO visible FROM public.bbva_movimientos WHERE id = mov_b;
+  PERFORM pg_temp.assert(visible = 0, 'auxiliar_a NO debe ver bbva_movimientos de org_b');
+
+  -- ════════════════════════════════════════════════════════════════════════
   -- EJECUTIVO_COBRANZA (org_a) — cobranza_seguimiento
   -- ════════════════════════════════════════════════════════════════════════
   PERFORM pg_temp.as_user(cobranza_a);
@@ -184,7 +219,7 @@ BEGIN
   PERFORM pg_temp.assert(visible = 2, format('super_admin debe ver ambos embarques, vio %s', visible));
 
   PERFORM pg_temp.as_postgres();
-  RAISE NOTICE '✓ test_rls_roles_negocio: 16 aserciones OK';
+  RAISE NOTICE '✓ test_rls_roles_negocio: 19 aserciones OK';
 END;
 $$;
 
