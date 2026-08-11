@@ -27,7 +27,7 @@
     "test:shard": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run",
     "test:watch": "vitest",
     "test:fast": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --exclude='**/canaries/**' --exclude='**/pdfLeak*' --exclude='src/**/*.perf.test.tsx' --exclude='src/**/*.perf.ts'",
-    "test:perf": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --exclude='node_modules/**' --exclude='dist/**' src/components/shared/dataTable/__tests__/DataTable.perf.test.tsx",
+    "test:perf": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --config vitest.perf.config.ts",
     "test:coverage": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --coverage",
     "test:coverage:shard": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --coverage --reporter=blob --reporter=default --retry=2",
     "test:coverage:merge": "NODE_OPTIONS=\"--max-old-space-size=4096\" vitest run --merge-reports=.vitest-reports --coverage",
