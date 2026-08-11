@@ -24,7 +24,8 @@ export async function fetchClienteFinancials(clienteId: string): Promise<Cliente
     .from("facturas")
     .select("total, moneda, estado, embarque_id")
     .eq("cliente_id", clienteId)
-    .in("estado", [...FACTURA_ESTADOS_VIVOS]);
+    .in("estado", [...FACTURA_ESTADOS_VIVOS])
+    .is("deleted_at", null);
   if (errF) throw errF;
 
   let facturadoUSD = 0;

@@ -124,6 +124,8 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
       factura_notas_credito(monto, estado, deleted_at)
     `)
     .in("estado", [...ESTADOS_ACTIVOS])
+    // B-xxx: excluye facturas borradas lógicamente (duplicados legacy).
+    .is("deleted_at", null)
     .order("fecha_vencimiento", { ascending: true })
     .limit(LIMITE_COBRANZA);
 

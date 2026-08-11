@@ -42,7 +42,8 @@ export async function fetchLayoutContableData(facturaIds: string[]): Promise<Lay
     .select(
       "numero, fecha_emision, subtotal, iva, total, moneda, tipo_cambio, expediente, referencia_bl, estado, cliente_id, cliente_nombre",
     )
-    .in("id", facturaIds);
+    .in("id", facturaIds)
+    .is("deleted_at", null);
   if (error) throw error;
 
   const facturas = (rows ?? []) as LayoutContableRow[];
@@ -85,6 +86,7 @@ export async function fetchEstadoCuentaFacturas(clienteId: string): Promise<Esta
     .select("numero, fecha_emision, fecha_vencimiento, total, moneda, estado, expediente")
     .eq("cliente_id", clienteId)
     .in("estado", ["Emitida", "Vencida"])
+    .is("deleted_at", null)
     .order("fecha_emision", { ascending: true });
   if (error) throw error;
   return (data ?? []) as EstadoCuentaFactura[];

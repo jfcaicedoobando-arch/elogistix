@@ -22,6 +22,7 @@ export async function fetchPortalFacturas(clienteIds: string[]) {
       .in("cliente_id", clienteIds)
       // Portal: sólo CFDI vigentes; detalle sí accesible por URL directa.
       .in("estado", [...FACTURA_ESTADOS_VIVOS])
+      .is("deleted_at", null)
       .order("fecha_emision", { ascending: false })
       .limit(PORTAL_LIST_MAX),
     [],
@@ -52,6 +53,7 @@ export async function fetchPortalFactura(id: string) {
       .from("facturas")
       .select(PORTAL_FACTURA_DETAIL_COLUMNS)
       .eq("id", id)
+      .is("deleted_at", null)
       .maybeSingle(),
   );
   // B-106: expediente de respaldo desde el embarque vinculado (tolera RLS).
