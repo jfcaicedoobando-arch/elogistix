@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.509.5] - 2026-08-11
+- Guardar embarque: `actualizar_embarque_completo` llamaba a `idempotency_store` con un argumento extra (42883); ahora usa la firma real `(_key uuid, _response jsonb)`.
+
 ## [13.509.4] - 2026-08-11
 - Guardar embarque: se corrigió el error `column "proveedor_factura_id" does not exist` (42703) en `actualizar_embarque_completo`; el resguardo de costos ya facturados ahora consulta la tabla puente `proveedor_facturas_conceptos`.
 
