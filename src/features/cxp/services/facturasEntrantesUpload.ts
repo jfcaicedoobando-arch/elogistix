@@ -24,6 +24,7 @@ import {
   esErrorUnicidad,
   limpiarArchivosHuerfanosSeguro,
 } from "@/features/cxp/services/facturasEntrantesDedupe";
+import { guardarConceptosSugeridos } from "@/features/cxp/services/facturasEntrantesConceptos";
 import {
   calcularHash,
   mensajeErrorStorage,
@@ -144,31 +145,6 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
     entidadNombre: archivoPrincipal.name,
   });
   return data.id;
-}
-
-/**
- * v13.506.0 — Guarda la sugerencia de conceptos del operador. Best-effort: el
- * documento ya está en el buzón; si esto falla, contabilidad puede vincular a
- * mano y no tiene sentido perder la subida.
- */
-async function guardarConceptosSugeridos(
-  entranteId: string,
-  input: SubirFacturaEntranteInput,
-): Promise<void> {
-  const lista = input.conceptosSugeridos ?? [];
-  if (lista.length === 0) return;
-  const { error } = await supabase
-    .from("embarque_facturas_entrantes_conceptos")
-    .insert(lista.map((c) => ({
-      entrante_id: entranteId,
-      concepto_costo_id: c.conceptoId,
-      organization_id: input.organizationId,
-      monto_sugerido: c.monto,
-    })));
-  if (error) {
-    // No se interrumpe la subida: sólo se pierde la sugerencia.
-    console.warn("No se pudieron guardar los conceptos sugeridos del buzón", error.message);
-  }
 }
 
 /** Completa un documento existente adjuntándole el XML que faltaba. */
