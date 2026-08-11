@@ -90,6 +90,12 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_MOVIMIENTO_DIVISA_MISMATCH:
     "La divisa del movimiento no coincide con la del pago.",
   LC_MOVIMIENTO_DOBLE_VINCULO: "El movimiento ya está vinculado a otro pago.",
+  LC_MOVIMIENTO_SIN_PERMISO:
+    "Necesitas permiso de tesorería (tesorero, contador o administrador) para regenerar el movimiento bancario.",
+  LC_MOVIMIENTO_SIN_CUENTA:
+    "Este pago no salió de una cuenta bancaria registrada, así que no hay movimiento que generar. Edita el pago y elige la cuenta.",
+  LC_MOVIMIENTO_YA_EXISTE:
+    "Este pago ya tiene su movimiento bancario. Vuelve a conciliar para actualizar la vista.",
 
   // ── Anticipos ──────────────────────────────────────────────────────────
   LC_ANTICIPO_NO_EXISTE: "El anticipo no existe.",
