@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.496.1] - 2026-08-11
+- CI en verde: se dividió `embarqueFases.ts` en `embarqueFasesCompletitud.ts` (límite de 200 líneas), se completó el mock de `useReactivarFacturaEntrante` en la prueba de permisos del buzón y la prueba Fase O ahora busca la migración que **define** `aprobar_factura_proveedor` (no la de permisos FIX-H6-13).
+
 ## [13.496.0] - 2026-08-11
 - **Movimiento bancario huérfano al borrar un pago (FP-000100)**: si el movimiento se desvinculaba antes de eliminar el pago, `pago_proveedor_id` quedaba en NULL y el movimiento seguía apareciendo en el estado de cuenta. Ahora la baja del pago también busca el movimiento por su huella `pago-<id>`.
 - Limpieza de datos: se dio de baja el movimiento huérfano de 62 USD (COSCO, 10/08) del pago borrado de FP-000100. Barrido confirmó que era el único caso.
