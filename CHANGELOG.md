@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.517.0] - 2026-08-11
+- Infra — nueva migración `20260819110000_storage_buckets_infra_drift.sql`: registra en el historial los buckets privados `cotizaciones-pdf`, `facturas-pdf`, `cxp-inbox` y `agente-cartas-garantia` (creados a mano → drift) forzando `public = false`, más un guardarraíl `DO $$` que aborta si falta alguno de los 7 buckets requeridos. Idempotente y no-op en producción (los 7 ya existen y están privados); cierra el drift para entornos nuevos y para la restauración del snapshot en CI.
+
 ## [13.516.1] - 2026-08-11
 - Fix CI — `drift-corte.env` contenía comentarios (`#`) que rompían `cat >> $GITHUB_ENV` ("Unable to process file command 'env'"). Reemplazado `cat` por `grep -E '^[A-Za-z_][A-Za-z0-9_]*='` en `rls-tests.yml` y `deploy-gate.yml` para inyectar sólo pares `KEY=VALUE` válidos.
 
