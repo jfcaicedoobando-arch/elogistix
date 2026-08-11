@@ -143,18 +143,11 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
     .select("id")
     .single();
   if (error) {
-    // Ola 5 · RG4-7: con error de UNICIDAD (23505) NO se borra nada — el path
-    // es content-addressed y el objeto lo referencia la fila GANADORA de la
-    // carrera. Para otros errores, cleanup sólo de paths sin fila viva.
-    if (!esErrorUnicidad(error)) {
-      await limpiarArchivosHuerfanosSeguro(
-        [principal.path, ...(xmlSubido ? [xmlSubido.path] : [])],
-        input.organizationId,
-      );
-    }
-    const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
-    if (duplicado) throw new Error(duplicado);
-    throw error;
+    await fallarGuardadoEntrante(
+      error,
+      [principal.path, ...(xmlSubido ? [xmlSubido.path] : [])],
+      input.organizationId,
+    );
   }
   await registrarActividad({
     modulo: "cxp",
