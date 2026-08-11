@@ -102,6 +102,11 @@ jobs:
     name: Guard (E2E secrets)
     needs: [guard-workflow-run]
     runs-on: ubuntu-24.04
+    # v13.518.1 (GHA-audit seguridad) — los secrets del environment e2e-staging
+    # NO se exponen a PRs de forks: un PR que edite un spec podría exfiltrarlos.
+    # Sólo corre en PRs de ramas internas del propio repo (o en dispatch/
+    # schedule/workflow_run, donde head.repo es nulo y la condición se cumple).
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
     # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
     environment: e2e-staging

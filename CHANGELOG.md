@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.518.1] - 2026-08-11
+- Seguridad CI — `e2e.yml`: el job `guard-secrets` (y por dependencia toda la suite con el environment `e2e-staging`) ya sólo corre en PRs de ramas internas del repo, evitando que un PR de fork que edite un spec exfiltre los secrets de staging. Gates anti-skip intactos.
+- Seguridad CI — `release-compatibility.yml`: el step "Auto-heal manifest" ya no interpola `${{ steps.versions.outputs.current }}` dentro del `run:`; ahora pasa por `env: APP_VERSION_CURRENT` y se usa como `"$APP_VERSION_CURRENT"` (evita inyección de script). `actions/github-script` ya estaba en v8 en todos los workflows, incluido `deploy-gate.yml`.
+
 ## [13.518.0] - 2026-08-11
 - Infra (sin aplicar) — dos migraciones nuevas creadas tal cual: `20260819120000_rls_auth_uid_initplan_backport.sql` (P3: envuelve `auth.uid()`/`auth.jwt()` crudos en `(SELECT ...)` en todas las políticas RLS vivas de `public` y `storage.objects`, con verificación final que aborta si queda alguna cruda) y `20260819120100_db_limpieza_indices_force_rls.sql` (P4: DROP de índices duplicados, `FORCE ROW LEVEL SECURITY` en tablas de dinero y `DO` de verificación de cobertura de índices).
 
