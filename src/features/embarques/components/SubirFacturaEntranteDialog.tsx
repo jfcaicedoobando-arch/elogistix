@@ -5,6 +5,8 @@
  * v13.360.0 — Un solo documento con ambos archivos + lectura del CFDI.
  * v13.503.0 — Zona de carga única con chips, verificación del monto facturado
  * contra lo costeado y nota colapsada.
+ * v13.506.0 — El operador marca a qué conceptos de costo corresponde y confirma
+ * con un resumen antes de enviar.
  */
 import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,8 +14,13 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useSubirFacturaEntrante } from "@/features/cxp/hooks/useFacturasEntrantes";
 import { useSubirEntranteForm } from "@/features/cxp/hooks/useSubirEntranteForm";
-import { useCostosProveedorEmbarque } from "@/features/embarques/hooks/useEmbarqueQueries";
+import {
+  useConceptosProveedorEmbarque,
+  useCostosProveedorEmbarque,
+} from "@/features/embarques/hooks/useEmbarqueQueries";
 import { ArchivosEntranteDropZone } from "@/features/embarques/components/entrantes/ArchivosEntranteDropZone";
+import { ConceptosSugeridosEntrante } from "@/features/embarques/components/entrantes/ConceptosSugeridosEntrante";
+import { ResumenSubidaEntrante } from "@/features/embarques/components/entrantes/ResumenSubidaEntrante";
 import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiMetaPreview";
 import { NotaContabilidadCampo } from "@/features/embarques/components/entrantes/NotaContabilidadCampo";
 import { SeccionProveedorEntrante } from "@/features/embarques/components/entrantes/SeccionProveedorEntrante";
@@ -30,6 +37,7 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
   const form = useSubirEntranteForm({ organizationId });
   const subir = useSubirFacturaEntrante();
   const costos = useCostosProveedorEmbarque(embarqueId, form.proveedor?.id);
+  const conceptos = useConceptosProveedorEmbarque(embarqueId, form.proveedor?.id);
 
   const cerrar = () => {
     form.limpiar();
@@ -47,6 +55,11 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
       nota: form.nota,
       montoDeclarado: form.montoDeclarado,
       monedaDeclarada: form.monedaDeclarada,
+      conceptosSugeridos: form.conceptosSeleccionados.map((c) => ({
+        conceptoId: c.conceptoId,
+        monto: c.monto,
+      })),
+      sinCostoCapturado: form.sinCostoCapturado,
     });
     cerrar();
   };
@@ -100,6 +113,23 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
       />
 
       <FormDialogSection
+        title="Conceptos que cubre la factura"
+        description="Marca los costos del embarque que corresponden a este documento; contabilidad los recibirá pre-marcados."
+        cols={1}
+      >
+        <ConceptosSugeridosEntrante
+          conceptos={conceptos.data}
+          cargando={conceptos.isLoading}
+          proveedorElegido={Boolean(form.proveedor)}
+          seleccion={form.conceptos}
+          sinCostoCapturado={form.sinCostoCapturado}
+          onToggle={form.toggleConcepto}
+          onMonto={form.setMontoConcepto}
+          onSinCosto={form.marcarSinCosto}
+        />
+      </FormDialogSection>
+
+      <FormDialogSection
         title="Verificación del monto"
         description="Compara lo que facturó el proveedor contra lo costeado en el embarque."
         cols={1}
@@ -119,6 +149,15 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
       <FormDialogSection title="Nota para contabilidad" cols={1}>
         <NotaContabilidadCampo nota={form.nota} onNota={form.setNota} />
       </FormDialogSection>
+
+      <ResumenSubidaEntrante
+        proveedorNombre={form.proveedor?.nombre ?? null}
+        monto={form.montoDeclarado}
+        moneda={form.monedaDeclarada}
+        archivos={{ pdf: Boolean(form.pdf), xml: Boolean(form.xml) }}
+        conceptosMarcados={form.conceptosSeleccionados.length}
+        sinCostoCapturado={form.sinCostoCapturado}
+      />
     </FormDialogShell>
   );
 }
