@@ -25,5 +25,7 @@ export function crearAccionesVinculos(
       setVinculos((prev) => setVinculoMontoReducer(prev, conceptoId, monto)),
     aplicarSugerencias: (sugs: ReadonlyArray<SugerenciaAplicable>) =>
       setVinculos(() => aplicarSugerenciasReducer(sugs)),
+    /** v13.507.0 — Quita todos los vínculos (botón "Quitar todos"). */
+    limpiarVinculos: () => setVinculos({}),
   };
 }
