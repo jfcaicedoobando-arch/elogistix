@@ -72,6 +72,11 @@ export function GrupoCostosProveedor({
           {abierto ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
           <span className="font-medium text-sm truncate" title={proveedorNombre}>{toTitleCase(proveedorNombre)}</span>
           <Badge variant="outline" className="text-xs">{filas.length}</Badge>
+          {/* v13.509.0 — Avisamos los costos sin proveedor: bloquean el cotejo
+              con la factura del proveedor y deben completarse antes de facturar. */}
+          {proveedorNombre === "Sin proveedor" && (
+            <Badge variant="destructive" className="text-xs shrink-0">Asignar proveedor</Badge>
+          )}
         </div>
         <TooltipProvider delayDuration={200}>
           <div className="flex items-center gap-3 text-xs tabular-nums shrink-0">
