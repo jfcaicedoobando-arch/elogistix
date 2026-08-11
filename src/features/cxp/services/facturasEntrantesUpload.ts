@@ -21,7 +21,8 @@ import {
 } from "@/features/cxp/services/facturasEntrantes.types";
 import {
   validarNoDuplicadoEnBuzon,
-  limpiarArchivosHuerfanos,
+  esErrorUnicidad,
+  limpiarArchivosHuerfanosSeguro,
 } from "@/features/cxp/services/facturasEntrantesDedupe";
 
 async function calcularHash(file: File): Promise<string> {
@@ -124,8 +125,15 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
     .select("id")
     .single();
   if (error) {
-    // N36 (Ola 4): cleanup — evita huérfanos en cxp-inbox si el insert falla.
-    await limpiarArchivosHuerfanos([principal.path, ...(xmlSubido ? [xmlSubido.path] : [])]);
+    // Ola 5 · RG4-7: con error de UNICIDAD (23505) NO se borra nada — el path
+    // es content-addressed y el objeto lo referencia la fila GANADORA de la
+    // carrera. Para otros errores, cleanup sólo de paths sin fila viva.
+    if (!esErrorUnicidad(error)) {
+      await limpiarArchivosHuerfanosSeguro(
+        [principal.path, ...(xmlSubido ? [xmlSubido.path] : [])],
+        input.organizationId,
+      );
+    }
     const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
     if (duplicado) throw new Error(duplicado);
     throw error;
@@ -170,8 +178,12 @@ export async function adjuntarXmlFacturaEntrante(params: {
     })
     .eq("id", params.id);
   if (error) {
-    // N36 (Ola 4): cleanup del objeto subido si el update falla.
-    await limpiarArchivosHuerfanos([subido.path]);
+    // Ola 5 · RG4-7: mismo criterio que subirFacturaEntrante — con 23505 el
+    // XML es compartido por otra fila viva; en otros errores sólo se borra
+    // si ninguna fila viva del buzón lo referencia.
+    if (!esErrorUnicidad(error)) {
+      await limpiarArchivosHuerfanosSeguro([subido.path], params.organizationId);
+    }
     const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
     throw duplicado ? new Error(duplicado) : error;
   }

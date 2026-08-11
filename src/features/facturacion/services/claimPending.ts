@@ -29,3 +29,20 @@ export async function recuperarClaimFactura(
   if (error) throw error;
   return data ?? { outcome: "sin_cambios" };
 }
+
+/**
+ * Ola 5 · RG4-4: la emisión de NC (Ola 4 · N1) también usa claim
+ * PENDING:<uuid>; esta función invoca la misma edge con `nota_credito_id`
+ * para reconciliar el estado si la edge murió entre el timbrado y el
+ * persist.
+ */
+export async function recuperarClaimNotaCredito(
+  notaCreditoId: string,
+): Promise<RecuperarClaimResponse> {
+  const { data, error } = await supabase.functions.invoke<RecuperarClaimResponse>(
+    "facturapi-recuperar-claim",
+    { body: { nota_credito_id: notaCreditoId } },
+  );
+  if (error) throw error;
+  return data ?? { outcome: "sin_cambios" };
+}

@@ -7,6 +7,10 @@
  * retimbrar y sin `uuid_fiscal`. Este banner permite al usuario invocar
  * `facturapi-recuperar-claim` para reconciliar contra FacturAPI (promover si
  * el CFDI sí se timbró, liberar si no hubo tal).
+ *
+ * Ola 5 · RG4-4: acepta un `notaCreditoId` opcional para reutilizar el mismo
+ * banner en notas de crédito, que reclaman su fila con el mismo patrón
+ * PENDING:<uuid> (Ola 4 · N1) y también pueden quedar huérfanas.
  */
 import { useState } from "react";
 import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
@@ -14,7 +18,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { notifyInfo, notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { recuperarClaimFactura, type RecuperarClaimResponse } from "@/features/facturacion/services/claimPending";
+import {
+  recuperarClaimFactura,
+  recuperarClaimNotaCredito,
+  type RecuperarClaimResponse,
+} from "@/features/facturacion/services/claimPending";
 import { useQueryClient } from "@tanstack/react-query";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
@@ -22,6 +30,8 @@ interface Props {
   facturaId: string;
   facturapiId: string | null;
   facturapiClaimAt: string | null;
+  /** Ola 5 · RG4-4: si se provee, recupera el claim de esta NC en vez del de la factura. */
+  notaCreditoId?: string;
 }
 
 const MENSAJES: Record<RecuperarClaimResponse["outcome"], { titulo: string; tono: "success" | "info" | "error" }> = {
@@ -33,12 +43,13 @@ const MENSAJES: Record<RecuperarClaimResponse["outcome"], { titulo: string; tono
   claim_perdido: { titulo: "La reserva cambió durante la recuperación", tono: "error" },
 };
 
-export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt }: Props) {
+export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, notaCreditoId }: Props) {
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
 
   if (!facturapiId?.startsWith("PENDING:")) return null;
 
+  const esNc = !!notaCreditoId;
   const edadMs = facturapiClaimAt ? Date.now() - new Date(facturapiClaimAt).getTime() : 0;
   const edadMin = Math.floor(edadMs / 60_000);
   const puedeIntentar = edadMin >= 3;
@@ -46,7 +57,9 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt }:
   const onRecuperar = async () => {
     setLoading(true);
     try {
-      const data = await recuperarClaimFactura(facturaId);
+      const data = esNc
+        ? await recuperarClaimNotaCredito(notaCreditoId!)
+        : await recuperarClaimFactura(facturaId);
       const outcome = data?.outcome ?? "sin_cambios";
       const info = MENSAJES[outcome] ?? MENSAJES.sin_cambios;
       const description = data?.message;
@@ -59,6 +72,9 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt }:
         });
       } else notifyInfo(undefined, { title: info.titulo, description });
       await qc.invalidateQueries({ queryKey: facturasKeys.detail(facturaId) });
+      if (esNc) {
+        await qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) });
+      }
     } catch (err) {
       notifyError(undefined, {
         title: "No se pudo recuperar el timbrado",
@@ -76,7 +92,7 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt }:
       <AlertTitle>Timbrado en proceso interrumpido</AlertTitle>
       <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <span>
-          Esta factura quedó reservada hace {edadMin} min sin confirmación de FacturAPI.
+          {esNc ? "Esta nota de crédito" : "Esta factura"} quedó reservada hace {edadMin} min sin confirmación de FacturAPI.
           {" "}Verifica si el CFDI se emitió y reconcilia el estado.
         </span>
         <Button

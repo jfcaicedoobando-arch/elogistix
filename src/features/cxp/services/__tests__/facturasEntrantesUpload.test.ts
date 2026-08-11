@@ -18,6 +18,7 @@ const selectChain = {
   eq: vi.fn().mockReturnThis(),
   is: vi.fn().mockReturnThis(),
   limit: vi.fn(),
+  in: vi.fn().mockReturnThis(),
 };
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -56,6 +57,7 @@ describe("subirFacturaEntrante", () => {
     selectChain.select.mockReturnThis();
     selectChain.eq.mockReturnThis();
     selectChain.is.mockReturnThis();
+    selectChain.in.mockReturnThis();
     insertChain.select.mockReturnThis();
     upload.mockResolvedValue({ error: null });
   });
@@ -92,10 +94,11 @@ describe("subirFacturaEntrante", () => {
     expect(upload).not.toHaveBeenCalled();
   });
 
-  it("N36: si el insert falla, limpia los archivos subidos (principal + xml)", async () => {
+  it("RG4-7 (Ola 5): si el insert falla con error NO de unicidad, limpia los archivos subidos", async () => {
     selectChain.limit.mockResolvedValue({ data: [], error: null });
     upload.mockResolvedValue({ error: null });
-    insertSingle.mockResolvedValue({ data: null, error: { message: "duplicate key" } });
+    // Error genérico (red/RLS): la fila NO existe → cleanup seguro borra todo.
+    insertSingle.mockResolvedValue({ data: null, error: { message: "connection reset" } });
     remove.mockResolvedValue({ error: null });
 
     await expect(
@@ -105,6 +108,24 @@ describe("subirFacturaEntrante", () => {
     expect(remove).toHaveBeenCalledTimes(1);
     const [paths] = remove.mock.calls[0];
     expect(paths).toHaveLength(2);
+  });
+
+  it("RG4-7 (Ola 5): con 23505 NO borra el objeto — lo comparte la fila ganadora de la carrera", async () => {
+    selectChain.limit.mockResolvedValue({ data: [], error: null });
+    upload.mockResolvedValue({ error: null });
+    insertSingle.mockResolvedValue({
+      data: null,
+      error: {
+        code: "23505",
+        message: 'duplicate key value violates unique constraint "uq_efe_org_hash_vivo"',
+      },
+    });
+
+    await expect(
+      subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo("f.pdf"), xml: null }),
+    ).rejects.toThrow(/ya fue subido al buzón|ya está en el buzón|duplicate key/i);
+
+    expect(remove).not.toHaveBeenCalled();
   });
 
   it("sube exitosamente y no llama a cleanup cuando el insert es correcto", async () => {
@@ -125,6 +146,7 @@ describe("adjuntarXmlFacturaEntrante", () => {
     selectChain.select.mockReturnThis();
     selectChain.eq.mockReturnThis();
     selectChain.is.mockReturnThis();
+    selectChain.in.mockReturnThis();
     upload.mockResolvedValue({ error: null });
   });
 
@@ -143,10 +165,10 @@ describe("adjuntarXmlFacturaEntrante", () => {
     expect(upload).not.toHaveBeenCalled();
   });
 
-  it("N36: si el update falla, limpia el XML ya subido", async () => {
+  it("RG4-7 (Ola 5): si el update falla con error NO de unicidad, limpia el XML subido", async () => {
     selectChain.limit.mockResolvedValue({ data: [], error: null });
     upload.mockResolvedValue({ error: null });
-    eqUpdate.mockResolvedValue({ error: { message: "duplicate key" } });
+    eqUpdate.mockResolvedValue({ error: { message: "connection reset" } });
     remove.mockResolvedValue({ error: null });
 
     await expect(
@@ -160,6 +182,51 @@ describe("adjuntarXmlFacturaEntrante", () => {
     ).rejects.toThrow();
 
     expect(remove).toHaveBeenCalledTimes(1);
+  });
+
+  it("RG4-7 (Ola 5): con 23505 en el update NO borra el XML (otra fila viva lo referencia)", async () => {
+    selectChain.limit.mockResolvedValue({ data: [], error: null });
+    upload.mockResolvedValue({ error: null });
+    eqUpdate.mockResolvedValue({
+      error: {
+        code: "23505",
+        message: 'duplicate key value violates unique constraint "uq_efe_org_xml_hash_vivo"',
+      },
+    });
+
+    await expect(
+      adjuntarXmlFacturaEntrante({
+        id: "doc-1",
+        xml: archivo("f.xml", "text/xml"),
+        meta: null,
+        embarqueId: "emb-1",
+        organizationId: "org-1",
+      }),
+    ).rejects.toThrow(/Este XML ya está en el buzón de esta organización|duplicate key/i);
+
+    expect(remove).not.toHaveBeenCalled();
+  });
+
+  it("RG4-7 (Ola 5): con error no-unicidad pero path referenciado por fila viva, tampoco borra", async () => {
+    selectChain.limit.mockResolvedValue({ data: [], error: null });
+    upload.mockResolvedValue({ error: null });
+    eqUpdate.mockResolvedValue({ error: { message: "connection reset" } });
+    // La verificación del cleanup seguro encuentra el path referenciado.
+    selectChain.in.mockImplementation((_col: string, paths: string[]) =>
+      Promise.resolve({ data: paths.map((p) => ({ [_col]: p })), error: null }),
+    );
+
+    await expect(
+      adjuntarXmlFacturaEntrante({
+        id: "doc-1",
+        xml: archivo("f.xml", "text/xml"),
+        meta: null,
+        embarqueId: "emb-1",
+        organizationId: "org-1",
+      }),
+    ).rejects.toThrow();
+
+    expect(remove).not.toHaveBeenCalled();
   });
 
   it("adjunta el XML exitosamente sin llamar a cleanup", async () => {
