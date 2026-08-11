@@ -10,6 +10,7 @@
  * Function `parse-cfdi-xml` al capturar la factura).
  */
 import { parseImporteFiscal } from "@/lib/domain/facturaConceptos";
+import { leerArchivoTexto } from "@/lib/io/readFileText";
 
 export interface CfdiXmlMeta {
   uuid: string | null;
@@ -94,7 +95,8 @@ export function extraerCfdiXmlMeta(xmlTexto: string): CfdiXmlMeta {
 
 /** Lee el archivo y extrae los metadatos. */
 export async function extraerCfdiXmlMetaDeArchivo(file: File): Promise<CfdiXmlMeta> {
-  const texto = await file.text();
+  // N34 (Ola 5): tolera Windows-1252 aunque CFDI suele ser UTF-8.
+  const texto = await leerArchivoTexto(file);
   return extraerCfdiXmlMeta(texto);
 }
 
