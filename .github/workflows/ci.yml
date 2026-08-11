@@ -528,10 +528,21 @@ jobs:
     timeout-minutes: 1
     steps:
       - name: Verify all required jobs succeeded
+        env:
+          FRONTEND_CHANGED: ${{ needs.changes.outputs.frontend }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
         run: |
           # Falla si cualquier job requerido falló o fue cancelado.
           # Úsalo como único required check en branch protection: así puedes
           # cambiar la matriz de shards sin tocar la configuración del repo.
+          #
+          # v13.514.0 — `skipped` SÓLO se acepta en los jobs gateados por
+          # `changes` y SÓLO cuando el diff no tocó frontend. Cualquier otro
+          # `skipped` sigue siendo una falla (gate anti-skip-silencioso).
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "::error::El job `changes` no terminó en success ($CHANGES_RESULT); no se puede evaluar el gate."
+            exit 1
+          fi
           fail=0
           for job in lint typecheck knip audits build edge-functions tests coverage; do
             case "$job" in
@@ -545,12 +556,20 @@ jobs:
               coverage)       result="${{ needs.coverage.result }}" ;;
             esac
             echo "$job=$result"
-            if [ "$result" != "success" ]; then
-              fail=1
-            fi
+            [ "$result" = "success" ] && continue
+            case "$job" in
+              lint|typecheck|knip|build|tests|coverage)
+                if [ "$result" = "skipped" ] && [ "$FRONTEND_CHANGED" != "true" ]; then
+                  echo "  ↳ omitido legítimamente: el diff no toca frontend."
+                  continue
+                fi
+                ;;
+            esac
+            fail=1
           done
           if [ "$fail" != "0" ]; then
             echo "::error::Uno o más jobs requeridos no terminaron en success."
             exit 1
           fi
           echo "Todos los jobs requeridos pasaron."
+
