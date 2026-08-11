@@ -90,6 +90,24 @@ function filaEntranteAInsertar(params: {
   };
 }
 
+/**
+ * Manejo común de errores al guardar el renglón del buzón:
+ * con 23505 (unicidad) NO se borra el objeto — el path es content-addressed y
+ * lo referencia la fila ganadora de la carrera. Para otros errores se limpian
+ * sólo los paths sin fila viva. Siempre termina lanzando.
+ */
+async function fallarGuardadoEntrante(
+  error: { message: string; details?: string | null },
+  paths: string[],
+  organizationId: string,
+): Promise<never> {
+  if (!esErrorUnicidad(error)) {
+    await limpiarArchivosHuerfanosSeguro(paths, organizationId);
+  }
+  const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
+  throw duplicado ? new Error(duplicado) : error;
+}
+
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
   const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
   if (invalido) throw new Error(invalido);
