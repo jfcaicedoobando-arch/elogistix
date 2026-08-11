@@ -37,8 +37,14 @@ export function FilaCostoPrecio({
   return (
     <div className={`grid ${cols} gap-2 items-center`}>
       <Select value={costo.proveedorId} onValueChange={v => update(costo.id, 'proveedorId', v)}>
-        <SelectTrigger className="text-sm" title={proveedoresDb.find(p => p.id === costo.proveedorId)?.nombre}>
-          <SelectValue placeholder="Proveedor" />
+        <SelectTrigger
+          className={`text-sm ${!costo.proveedorId && costo.proveedorNombre ? 'border-warning/60' : ''}`}
+          title={proveedoresDb.find(p => p.id === costo.proveedorId)?.nombre ?? costo.proveedorNombre ?? undefined}
+        >
+          {/* v13.509.0 — Si el costo viene de cotización sólo con nombre, lo
+              mostramos como texto para que el operador lo confirme en vez de
+              ver el campo vacío. */}
+          <SelectValue placeholder={costo.proveedorNombre?.trim() || "Proveedor"} />
         </SelectTrigger>
         <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}</SelectContent>
       </Select>
