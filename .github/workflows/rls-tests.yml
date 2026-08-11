@@ -817,7 +817,7 @@ jobs:
       # `supabase/tests/rls/drift-corte.env`, que también lee el `radar-drift`
       # de `deploy-gate.yml`. Antes había dos literales que podían divergir.
       - name: Cargar corte de drift (fuente única)
-        run: cat supabase/tests/rls/drift-corte.env >> "$GITHUB_ENV"
+        run: grep -E '^[A-Za-z_][A-Za-z0-9_]*=' supabase/tests/rls/drift-corte.env >> "$GITHUB_ENV"
 
       - name: Apply migrations SIN parches de drift
         id: apply
