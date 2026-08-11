@@ -5,6 +5,7 @@
 DO $$
 DECLARE
   v_org uuid;
+  v_uid uuid := gen_random_uuid();
   v_cli uuid;
   v_emb uuid;
   v_cat uuid;
@@ -17,6 +18,18 @@ BEGIN
   INSERT INTO public.organizations (nombre, rfc, plan, activo)
   VALUES ('TEST PAGO CERRADO', 'TPC000000XX0', 'basico', true)
   RETURNING id INTO v_org;
+
+  -- Sesión simulada (se activa más abajo): el trigger de demoras al pasar a
+  -- 'Entregado' exige que auth.uid() sea miembro de la org, si no lanza
+  -- 'No autorizado'. Se siembra el usuario aquí, pero los claims se fijan
+  -- justo antes de las transiciones para no disparar guards de alta.
+  INSERT INTO auth.users (id, email) VALUES (v_uid, 'pago-cerrado@test.mx')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.organization_members (organization_id, user_id, role)
+  VALUES (v_org, v_uid, 'admin_org') ON CONFLICT DO NOTHING;
+
+
+
 
   INSERT INTO public.clientes (organization_id, nombre, rfc)
   VALUES (v_org, 'CLIENTE PAGO CERRADO', '') RETURNING id INTO v_cli;
@@ -57,6 +70,7 @@ BEGIN
   -- Cerramos el embarque recorriendo la cadena de transiciones válidas
   -- (Confirmado → En Tránsito → Arribo → En Aduana → Entregado → Cerrado).
   -- El bypass de cierre sólo evita el guard de self-update, no el de transición.
+  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
   PERFORM set_config('app.bypass_cierre', 'on', true);
   UPDATE public.embarques SET estado = 'En Tránsito'::public.estado_embarque WHERE id = v_emb;
   UPDATE public.embarques SET estado = 'Arribo'::public.estado_embarque WHERE id = v_emb;
@@ -100,7 +114,9 @@ BEGIN
   DELETE FROM public.presupuesto_categorias WHERE organization_id = v_org;
   DELETE FROM public.embarques WHERE organization_id = v_org;
   DELETE FROM public.clientes WHERE organization_id = v_org;
+  DELETE FROM public.organization_members WHERE organization_id = v_org;
   DELETE FROM public.organizations WHERE id = v_org;
+  DELETE FROM auth.users WHERE id = v_uid;
   PERFORM set_config('app.bypass_cierre', 'off', true);
 
   RAISE NOTICE 'OK: pagos a proveedor permitidos en embarques Cerrados.';
