@@ -121,6 +121,8 @@ jobs:
   # ---------------------------------------------------------------------
   typecheck:
     name: TypeScript
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -149,6 +151,8 @@ jobs:
   # ---------------------------------------------------------------------
   knip:
     name: Unused code (knip strict)
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
@@ -251,6 +255,8 @@ jobs:
   # ---------------------------------------------------------------------
   build:
     name: Build
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -360,6 +366,8 @@ jobs:
   # ---------------------------------------------------------------------
   tests:
     name: Tests (shard ${{ matrix.shard }}/${{ matrix.total }})
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
@@ -428,8 +436,8 @@ jobs:
   # ---------------------------------------------------------------------
   coverage:
     name: Coverage merge & report
-    needs: tests
-    if: always()
+    needs: [changes, tests]
+    if: always() && needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -514,7 +522,7 @@ jobs:
   # ---------------------------------------------------------------------
   ci-success:
     name: CI Success (aggregator)
-    needs: [lint, typecheck, knip, audits, build, edge-functions, tests, coverage]
+    needs: [changes, lint, typecheck, knip, audits, build, edge-functions, tests, coverage]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 1
