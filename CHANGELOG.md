@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.504.2] - 2026-08-11
+- **Pruebas**: el test `cxp_pago_embarque_cerrado.sql` ahora simula una sesión de usuario miembro de la organización antes de mover el expediente a *Entregado*, porque el recálculo automático de demoras exige un usuario autorizado y el test fallaba con "No autorizado".
+
 ## [13.504.1] - 2026-08-11
 - **Arquitectura**: se dividió `proveedorFacturas.ts` (231 líneas) extrayendo los tipos y filtros de CxP a `proveedorFacturas.types.ts`, para volver a cumplir el límite de 200 líneas por archivo. Sin cambios de comportamiento.
 
