@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.502.0] - 2026-08-11
+- **Sidebar · badge del Buzón de facturas**: junto a *Compras → Buzón de facturas* aparece el número de documentos pendientes por capturar (estado `por_capturar`, sin eliminados), con tooltip "N documento(s) por capturar en el buzón". Se oculta cuando el buzón está vacío o el sidebar está colapsado, se refresca al subir/capturar/rechazar/retirar documentos y cada minuto como red de seguridad si otro usuario captura.
+
 ## [13.501.0] - 2026-08-11
 - **CxP · facturas canceladas visibles**: el listado de Cuentas por pagar ocultaba siempre las canceladas, así que buscar `FP-000042` no devolvía nada y el filtro "Cancelada" salía vacío. Ahora se ocultan sólo en la vista por defecto: al buscar texto o filtrar por "Cancelada" sí aparecen.
 - **Buzón CxP · aviso claro**: cuando el CFDI del documento corresponde a una factura **cancelada**, la fila muestra "CFDI de factura cancelada · FP-000042" (con explicación en tooltip) en lugar de un genérico "CFDI ya capturado", y el botón dice "Ver factura cancelada".

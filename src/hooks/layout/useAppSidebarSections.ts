@@ -5,6 +5,7 @@ import { useActividadesVencidasCount } from "@/features/crm/hooks/useCrmDashboar
 import { useSidebarAlerts } from "@/hooks/layout/useSidebarAlerts";
 import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
 import { useCxpPorPagarCount } from "@/features/cxp/hooks/useCxpPorPagarCount";
+import { useEntrantesPorCapturarCount } from "@/features/cxp/hooks/useEntrantesPorCapturarCount";
 import {
   SIDEBAR_CRM_ITEMS,
   SIDEBAR_SISTEMA_ITEMS,
@@ -27,13 +28,20 @@ interface BadgeCounts {
   facturasVencidas: number;
   cxpPorAprobar: number;
   cxpPorPagar: number;
+  /** v13.502.0 — Documentos del buzón CxP esperando captura. */
+  buzonPorCapturar: number;
   /** FIX 9.2 — desglose del badge compuesto de Embarques, para el tooltip. */
   embarquesHint?: string;
 }
 
 function patchSidebarBadges(sections: SidebarSection[], counts: BadgeCounts): SidebarSection[] {
-  const { embarquesAlertas, facturasVencidas, cxpPorAprobar, cxpPorPagar, embarquesHint } = counts;
-  if (embarquesAlertas <= 0 && facturasVencidas <= 0 && cxpPorAprobar <= 0 && cxpPorPagar <= 0) return sections;
+  const {
+    embarquesAlertas, facturasVencidas, cxpPorAprobar, cxpPorPagar, buzonPorCapturar, embarquesHint,
+  } = counts;
+  if (
+    embarquesAlertas <= 0 && facturasVencidas <= 0 && cxpPorAprobar <= 0
+    && cxpPorPagar <= 0 && buzonPorCapturar <= 0
+  ) return sections;
   return sections.map((sec) => ({
     ...sec,
     items: sec.items.map((it) => {
@@ -43,6 +51,12 @@ function patchSidebarBadges(sections: SidebarSection[], counts: BadgeCounts): Si
         return { ...it, badgeCount: facturasVencidas, badgeHint: `${facturasVencidas} factura(s) vencida(s) por cobrar` };
       if (it.url === "/compras/por-aprobar" && cxpPorAprobar > 0)
         return { ...it, badgeCount: cxpPorAprobar, badgeHint: `${cxpPorAprobar} factura(s) de proveedor esperando aprobación` };
+      if (it.url === "/compras/buzon" && buzonPorCapturar > 0)
+        return {
+          ...it,
+          badgeCount: buzonPorCapturar,
+          badgeHint: `${buzonPorCapturar} documento(s) por capturar en el buzón`,
+        };
       if (it.url === "/compras/por-pagar" && cxpPorPagar > 0)
         return { ...it, badgeCount: cxpPorPagar, badgeHint: `${cxpPorPagar} factura(s) de proveedor por pagar` };
       return it;
@@ -61,6 +75,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { embarquesDemora, facturasVencidas, garantiasAtoradas, adminPendientes } = useSidebarAlerts();
   const { data: cxpPorAprobar = 0 } = useCxpPendientesAprobacion();
   const { data: cxpPorPagar = 0 } = useCxpPorPagarCount();
+  const { data: buzonPorCapturar = 0 } = useEntrantesPorCapturarCount();
   const embarquesAlertas = embarquesDemora + garantiasAtoradas + adminPendientes;
   const embarquesHint = [
     `${embarquesDemora} con demora`,
@@ -72,6 +87,7 @@ export function useAppSidebarSections(): SidebarSection[] {
     facturasVencidas,
     cxpPorAprobar,
     cxpPorPagar,
+    buzonPorCapturar,
     embarquesHint,
   };
 
