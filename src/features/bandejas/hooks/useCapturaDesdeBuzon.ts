@@ -26,6 +26,13 @@ function aEntranteParaCaptura(row: FacturaEntranteRow): EntranteParaCaptura {
     conceptosSugeridos: mapearConceptosSugeridos(
       row.embarque_facturas_entrantes_conceptos,
     ),
+    proveedorId: row.proveedor_id ?? null,
+    proveedorNombre: row.proveedores?.nombre ?? null,
+    montoDeclarado: row.monto_declarado ?? null,
+    monedaDeclarada: row.moneda_declarada ?? null,
+    notaOperaciones: row.nota ?? null,
+    sinCostoCapturado: Boolean(row.sin_costo_capturado),
+    creadoEn: row.created_at ?? null,
   };
 }
 

@@ -104,7 +104,7 @@ export function useNuevaFacturaProveedorForm(
     setEmbarqueAdHoc(null);
   };
 
-  const { toggleVinculo, setVinculoMonto, aplicarSugerencias } =
+  const { toggleVinculo, setVinculoMonto, aplicarSugerencias, limpiarVinculos } =
     crearAccionesVinculos(setVinculos);
 
 
@@ -186,7 +186,7 @@ export function useNuevaFacturaProveedorForm(
   return {
     values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed, handlePdfIaParsed,
-    vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
+    vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias, limpiarVinculos,
     conceptosManuales: manuales, cuadreManual, cfdiDuplicado, topeVinculacion,
     // Bloqueo de guardado: CFDI capturado, mutación en curso o tope excedido.
     puedeGuardar: !cfdiDuplicado && !crear.isPending && !topeVinculacion.excede,
