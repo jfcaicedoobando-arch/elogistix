@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.504.1] - 2026-08-11
+- **Arquitectura**: se dividió `proveedorFacturas.ts` (231 líneas) extrayendo los tipos y filtros de CxP a `proveedorFacturas.types.ts`, para volver a cumplir el límite de 200 líneas por archivo. Sin cambios de comportamiento.
+
 ## [13.504.0] - 2026-08-11
 - **Sidebar · badge del Buzón sincronizado en tiempo real**: el conteo de documentos por capturar ahora escucha los cambios de `embarque_facturas_entrantes` (alta, captura, retiro, reactivación o borrado) y se actualiza al instante para todos los usuarios de la organización, sin esperar a recargar.
 - **Respaldos**: se conserva la revalidación cada minuto y se agregó revalidación al volver el foco a la pestaña, por si el canal en tiempo real se cae o el navegador estuvo suspendido.
