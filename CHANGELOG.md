@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.516.1] - 2026-08-11
+- Fix CI — `drift-corte.env` contenía comentarios (`#`) que rompían `cat >> $GITHUB_ENV` ("Unable to process file command 'env'"). Reemplazado `cat` por `grep -E '^[A-Za-z_][A-Za-z0-9_]*='` en `rls-tests.yml` y `deploy-gate.yml` para inyectar sólo pares `KEY=VALUE` válidos.
+
 ## [13.516.0] - 2026-08-11
 - Auditoría — Fase 4 (cobertura de los módulos de dinero). 64 tests nuevos en los módulos que estaban sin red de seguridad:
 - `src/features/cobranza/` (antes 0 tests): 18 tests para los servicios de estado de cuenta y recordatorio de cobranza y sus dos hooks (camino feliz, `error` de Supabase, listas vacías y montos en distinta moneda).
