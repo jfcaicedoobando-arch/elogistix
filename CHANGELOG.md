@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.509.4] - 2026-08-11
+- Guardar embarque: se corrigió el error `column "proveedor_factura_id" does not exist` (42703) en `actualizar_embarque_completo`; el resguardo de costos ya facturados ahora consulta la tabla puente `proveedor_facturas_conceptos`.
+
 ## [13.509.3] - 2026-08-11
 - Tests CxP: la limpieza de `cxp_cancelacion_libera_embarque.sql` elimina al final la bitácora generada por la cancelación antes de borrar la organización temporal, evitando la violación de llave foránea en CI.
 
