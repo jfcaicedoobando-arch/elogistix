@@ -54,8 +54,14 @@ BEGIN
     (organization_id, proveedor_factura_id, concepto_costo_id, descripcion, cantidad, monto)
   VALUES (v_org, v_pf, v_cc, 'Flete Internacional', 1, 1000);
 
-  -- Cerramos el embarque directamente (bypass del guard de self-update).
+  -- Cerramos el embarque recorriendo la cadena de transiciones válidas
+  -- (Confirmado → En Tránsito → Arribo → En Aduana → Entregado → Cerrado).
+  -- El bypass de cierre sólo evita el guard de self-update, no el de transición.
   PERFORM set_config('app.bypass_cierre', 'on', true);
+  UPDATE public.embarques SET estado = 'En Tránsito'::public.estado_embarque WHERE id = v_emb;
+  UPDATE public.embarques SET estado = 'Arribo'::public.estado_embarque WHERE id = v_emb;
+  UPDATE public.embarques SET estado = 'En Aduana'::public.estado_embarque WHERE id = v_emb;
+  UPDATE public.embarques SET estado = 'Entregado'::public.estado_embarque WHERE id = v_emb;
   UPDATE public.embarques SET estado = 'Cerrado'::public.estado_embarque WHERE id = v_emb;
   PERFORM set_config('app.bypass_cierre', 'off', true);
 
