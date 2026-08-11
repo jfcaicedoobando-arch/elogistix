@@ -239,3 +239,12 @@ Deno.test("index.ts: si el procesamiento falla (result.ok=false) se retorna ANTE
 Deno.test("index.ts: 'Emitida' es el único estado usado para invoice.status_updated valid (nunca 'Timbrada')", () => {
   assert(!webhookIndexSource.includes('"Timbrada"'), "index.ts no debe usar el literal 'Timbrada'");
 });
+
+// ── Ola 5 · RG4-10: dispatch REP vs factura ────────────────────────────────
+Deno.test("index.ts: los eventos invoice.* se intentan como factura antes que como REP", () => {
+  assertStringIncludes(webhookIndexSource, 'event.type.startsWith("receipt.")');
+  assertStringIncludes(webhookIndexSource, '=== "factura_not_found"');
+  const idxFactura = webhookIndexSource.indexOf("await handleFacturaEvent(supabase, orgId, event)");
+  const idxFallback = webhookIndexSource.indexOf('=== "factura_not_found"');
+  assert(idxFactura >= 0 && idxFallback >= 0 && idxFactura < idxFallback);
+});
