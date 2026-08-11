@@ -90,3 +90,41 @@ export function sumarPorMoneda(
   return totales;
 }
 
+/** v13.506.0 — Concepto de costo del embarque ofrecido al subir al buzón. */
+export interface ConceptoCostoEmbarque {
+  id: string;
+  concepto: string;
+  monto: number;
+  moneda: string;
+  /** Ya lo cubre una factura de proveedor viva: no se debe volver a sugerir. */
+  yaFacturado: boolean;
+}
+
+/**
+ * v13.506.0 — Conceptos de costo vivos y pendientes del proveedor en ESE
+ * embarque. El operador marca cuáles cubre el documento que sube al buzón.
+ */
+export async function fetchConceptosCostoEmbarqueProveedor(
+  embarqueId: string,
+  proveedorId: string,
+): Promise<ConceptoCostoEmbarque[]> {
+  const { data, error } = await supabase
+    .from("conceptos_costo")
+    .select("id, concepto, monto, moneda")
+    .eq("embarque_id", embarqueId)
+    .eq("proveedor_id", proveedorId)
+    .eq("estado_liquidacion", "Pendiente")
+    .is("deleted_at", null)
+    .order("concepto")
+    .limit(200);
+  if (error) throw error;
+  const conFactura = await fetchCostosConFactura(embarqueId);
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    concepto: r.concepto ?? "Concepto sin nombre",
+    monto: Number(r.monto ?? 0),
+    moneda: r.moneda ?? "MXN",
+    yaFacturado: conFactura.has(r.id),
+  }));
+}
+
