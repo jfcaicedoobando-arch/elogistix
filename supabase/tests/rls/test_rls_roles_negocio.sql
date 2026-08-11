@@ -169,6 +169,37 @@ BEGIN
   PERFORM pg_temp.assert(visible = 0, 'tesorero_a NO debe ver bbva_movimientos de org_b');
 
   -- ════════════════════════════════════════════════════════════════════════
+  -- AUXILIAR_CONTABLE (org_a) — Ola 5 · RG4-8: la matriz
+  -- CAPTURAR_MOVIMIENTO_BANCARIO lo incluye; la BD lo rechazaba con 42501.
+  -- ════════════════════════════════════════════════════════════════════════
+  PERFORM pg_temp.as_user(auxiliar_a);
+  -- Captura en su org: permitida (si RLS lo rechazara, el INSERT abortaría).
+  INSERT INTO public.bbva_movimientos(
+    id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
+    cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en
+  ) VALUES
+    (gen_random_uuid(), org_a, cuenta_a, CURRENT_DATE, 'Dep manual auxiliar', 'REF-AUX',
+      0, 750, 'hash-rol-auxiliar', 'Pendiente', '', now());
+  -- Lectura y edición en su org: permitidas (la policy de SELECT también se
+  -- alineó; sin ella el UPDATE matchearía 0 filas silenciosamente).
+  UPDATE public.bbva_movimientos SET concepto = 'Dep manual auxiliar (editado)'
+  WHERE referencia = 'REF-AUX';
+  SELECT count(*) INTO visible FROM public.bbva_movimientos
+  WHERE referencia = 'REF-AUX' AND concepto = 'Dep manual auxiliar (editado)';
+  PERFORM pg_temp.assert(visible = 1, 'auxiliar_a debe capturar, leer y editar movimientos de su org');
+  -- …pero NO puede capturarlo en otra org
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.bbva_movimientos(id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia, cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en) VALUES (%L, %L, %L, CURRENT_DATE, %L, %L, 0, 1, %L, %L, %L, now())',
+      gen_random_uuid(), org_b, cuenta_b, 'HACK', 'REF-HACK-AUX', 'hash-rol-hack-aux', 'Pendiente', ''
+    ),
+    'auxiliar_a NO debe poder capturar movimiento bancario en org_b'
+  );
+  -- …ni ver los movimientos de otra org
+  SELECT count(*) INTO visible FROM public.bbva_movimientos WHERE id = mov_b;
+  PERFORM pg_temp.assert(visible = 0, 'auxiliar_a NO debe ver bbva_movimientos de org_b');
+
+  -- ════════════════════════════════════════════════════════════════════════
   -- EJECUTIVO_COBRANZA (org_a) — cobranza_seguimiento
   -- ════════════════════════════════════════════════════════════════════════
   PERFORM pg_temp.as_user(cobranza_a);
