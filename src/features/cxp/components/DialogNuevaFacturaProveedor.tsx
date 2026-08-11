@@ -23,10 +23,7 @@ import {
 } from "./DialogNuevaFacturaProveedor.columnas";
 
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
-import { usePrefillVinculosEntrante } from "@/features/cxp/hooks/usePrefillVinculosEntrante";
-import { useHerenciaEntrante } from "@/features/cxp/hooks/useHerenciaEntrante";
-import { useCategoriaCogsBuzon } from "@/features/cxp/hooks/useCategoriaCogsBuzon";
-import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
+import { useModoBuzonWiring } from "@/features/cxp/hooks/useModoBuzonWiring";
 import { abrirFacturaEntrante } from "@/features/cxp/services/facturasEntrantes";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
