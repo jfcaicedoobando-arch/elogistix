@@ -5,6 +5,7 @@
  * comisión opcional en `bbva_movimientos`, todos auto-conciliados.
  */
 import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
 import { ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +20,11 @@ import { MoneyInput } from "@/components/shared/MoneyInput";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
 import type { Tables } from "@/integrations/supabase/types";
 import { formatCurrency } from "@/lib/formatters";
-import { todayIso } from "@/lib/dates";
 
 type Cuenta = Tables<"cuentas_bancarias">;
+
+const hoyIso = () => format(new Date(), "yyyy-MM-dd");
+
 
 interface DialogTraspasoCuentasProps {
   open: boolean;
