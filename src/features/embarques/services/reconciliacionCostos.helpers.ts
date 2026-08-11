@@ -110,6 +110,9 @@ export function buildFilasReconciliacion(
   const porConcepto = new Map<string, FacturaVinculada[]>();
   for (const v of vinculos) {
     if (!v.concepto_costo_id || !v.proveedor_facturas || v.proveedor_facturas.deleted_at) continue;
+    // v13.505.0 — una factura Cancelada (p. ej. cancelada ante el SAT) no
+    // cuenta como facturada: el concepto vuelve a quedar "sin factura".
+    if ((v.proveedor_facturas.estado ?? "").toLowerCase() === "cancelada") continue;
     const arr = porConcepto.get(v.concepto_costo_id) ?? [];
     arr.push({
       proveedor_factura_id: v.proveedor_facturas.id,
