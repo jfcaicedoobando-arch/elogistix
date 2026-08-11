@@ -93,6 +93,20 @@ export function useProveedoresDelEmbarque(embarqueId: string | undefined) {
   });
 }
 
+/**
+ * v13.503.0 — Costos vivos del proveedor en el embarque (cotejo del monto
+ * facturado contra lo costeado al subir un documento al buzón CxP).
+ */
+export function useCostosProveedorEmbarque(
+  embarqueId: string | undefined,
+  proveedorId: string | null | undefined,
+) {
+  return useQuery({
+    ...embarqueQueries.costosProveedor(embarqueId ?? '', proveedorId ?? ''),
+    enabled: !!embarqueId && !!proveedorId,
+  });
+}
+
 export function useProveedoresForSelect() {
   const { organizationId } = useOrgFilter();
   return useQuery(embarqueQueries.proveedoresSelect(organizationId));
