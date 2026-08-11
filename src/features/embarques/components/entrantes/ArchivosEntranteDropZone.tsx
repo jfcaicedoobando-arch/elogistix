@@ -1,44 +1,13 @@
 /**
- * Ranuras de archivo del buzón CxP: PDF de la factura y XML del CFDI, con
- * zona de arrastrar y soltar que acomoda ambos archivos por extensión.
+ * v13.503.0 — Zona única de carga del buzón CxP (arrastrar o hacer clic) más
+ * los chips de estado de PDF/XML. Antes había tres recuadros: la zona grande y
+ * dos ranuras punteadas que se confundían con más zonas de carga.
  */
 import { useRef, useState } from "react";
-import { FileText, FileCode2, Upload, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TAMANO_MAX_ENTRANTE_MB } from "@/lib/domain/facturasEntrantes";
-
-interface SlotProps {
-  titulo: string;
-  ayuda: string;
-  archivo: File | null;
-  icono: typeof FileText;
-  onQuitar: () => void;
-}
-
-function ArchivoSlot({ titulo, ayuda, archivo, icono: Icono, onQuitar }: SlotProps) {
-  return (
-    <div className={cn(
-      "flex items-start gap-3 rounded-md border p-3",
-      archivo ? "border-primary/40 bg-primary/5" : "border-dashed",
-    )}>
-      <Icono className={cn("mt-0.5 h-4 w-4 shrink-0", archivo ? "text-primary" : "text-muted-foreground")} />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">{titulo}</p>
-        {archivo ? (
-          <p className="truncate text-xs text-muted-foreground">{archivo.name}</p>
-        ) : (
-          <p className="text-xs text-muted-foreground">{ayuda}</p>
-        )}
-      </div>
-      {archivo && (
-        <Button type="button" size="icon" variant="ghost" className="h-6 w-6" onClick={onQuitar} aria-label={`Quitar ${titulo}`}>
-          <X className="h-3.5 w-3.5" />
-        </Button>
-      )}
-    </div>
-  );
-}
+import { ArchivosEntranteChips } from "@/features/embarques/components/entrantes/ArchivosEntranteChips";
 
 interface Props {
   pdf: File | null;
@@ -48,7 +17,13 @@ interface Props {
   onQuitarXml: () => void;
 }
 
-export function ArchivosEntranteDropZone({ pdf, xml, onArchivos, onQuitarPdf, onQuitarXml }: Props) {
+export function ArchivosEntranteDropZone({
+  pdf,
+  xml,
+  onArchivos,
+  onQuitarPdf,
+  onQuitarXml,
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [sobre, setSobre] = useState(false);
 
@@ -65,7 +40,7 @@ export function ArchivosEntranteDropZone({ pdf, xml, onArchivos, onQuitarPdf, on
           onArchivos(Array.from(e.dataTransfer.files));
         }}
         className={cn(
-          "flex w-full flex-col items-center gap-1 rounded-md border border-dashed p-6 text-center transition-colors",
+          "flex w-full flex-col items-center gap-1 rounded-md border border-dashed p-5 text-center transition-colors",
           sobre ? "border-primary bg-primary/10" : "hover:bg-muted/50",
         )}
       >
@@ -86,22 +61,12 @@ export function ArchivosEntranteDropZone({ pdf, xml, onArchivos, onQuitarPdf, on
           e.target.value = "";
         }}
       />
-      <div className="grid gap-2 sm:grid-cols-2">
-        <ArchivoSlot
-          titulo="PDF de la factura"
-          ayuda="Representación impresa de la factura"
-          archivo={pdf}
-          icono={FileText}
-          onQuitar={onQuitarPdf}
-        />
-        <ArchivoSlot
-          titulo="XML del CFDI"
-          ayuda="Obligatorio en proveedores mexicanos"
-          archivo={xml}
-          icono={FileCode2}
-          onQuitar={onQuitarXml}
-        />
-      </div>
+      <ArchivosEntranteChips
+        pdf={pdf}
+        xml={xml}
+        onQuitarPdf={onQuitarPdf}
+        onQuitarXml={onQuitarXml}
+      />
     </div>
   );
 }
