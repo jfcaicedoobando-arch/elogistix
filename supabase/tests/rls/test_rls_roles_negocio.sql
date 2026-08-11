@@ -5,6 +5,7 @@
 --   - vendedor              → CRM scoped
 --   - contador              → lectura financiera, mutación limitada
 --   - tesorero              → cuentas bancarias / bbva_movimientos
+--   - auxiliar_contable     → bbva_movimientos (RG4-8)
 --   - ejecutivo_cobranza    → cobranza_seguimiento
 --   - super_admin (positivo)→ ve datos de todas las orgs
 --
@@ -218,7 +219,7 @@ BEGIN
   PERFORM pg_temp.assert(visible = 2, format('super_admin debe ver ambos embarques, vio %s', visible));
 
   PERFORM pg_temp.as_postgres();
-  RAISE NOTICE '✓ test_rls_roles_negocio: 16 aserciones OK';
+  RAISE NOTICE '✓ test_rls_roles_negocio: 19 aserciones OK';
 END;
 $$;
 
