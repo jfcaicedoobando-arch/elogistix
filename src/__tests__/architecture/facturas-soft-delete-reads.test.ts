@@ -47,7 +47,9 @@ function listarArchivos(dir: string, acc: string[] = []): string[] {
 }
 
 /** Devuelve los bloques de query que arrancan en `.from("facturas")`. */
-function bloquesDeLectura(src: string): string[] {
+function bloquesDeLectura(fuente: string): string[] {
+  // Quita comentarios de línea: un ";" dentro de un comentario cortaría el bloque.
+  const src = fuente.replace(/\/\/[^\n]*/g, "");
   const bloques: string[] = [];
   const regex = /\.from\(\s*"facturas"\s*\)/g;
   let m: RegExpExecArray | null;
