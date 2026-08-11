@@ -306,33 +306,8 @@ jobs:
         # El snapshot incluye policies con `TO authenticated/anon/service_role`;
         # pg_restore falla con "role does not exist" si esos roles no están
         # creados en la BD destino (vanilla Postgres no los trae).
-        run: |
-          $PSQL <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-              CREATE ROLE anon NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-              CREATE ROLE authenticated NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
-              CREATE ROLE service_role NOLOGIN BYPASSRLS;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-              CREATE ROLE authenticator NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-              CREATE ROLE supabase_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
-              CREATE ROLE supabase_auth_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
-              CREATE ROLE supabase_storage_admin NOLOGIN;
-            END IF;
-          END $$;
-          SQL
+        # v13.514.0 — La lista vive en `_ci_roles.sql` (antes: 5 copias inline).
+        run: $PSQL -f supabase/tests/rls/_ci_roles.sql
 
       - name: Restore database snapshot
         run: |
@@ -403,33 +378,11 @@ jobs:
           path: .rls-snapshot/
 
       - name: Create Supabase roles before restore
-        run: |
-          $PSQL <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-              CREATE ROLE anon NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-              CREATE ROLE authenticated NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
-              CREATE ROLE service_role NOLOGIN BYPASSRLS;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-              CREATE ROLE authenticator NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-              CREATE ROLE supabase_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
-              CREATE ROLE supabase_auth_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
-              CREATE ROLE supabase_storage_admin NOLOGIN;
-            END IF;
-          END $$;
-          SQL
+        # El snapshot incluye policies con `TO authenticated/anon/service_role`;
+        # pg_restore falla con "role does not exist" si esos roles no están
+        # creados en la BD destino (vanilla Postgres no los trae).
+        # v13.514.0 — La lista vive en `_ci_roles.sql` (antes: 5 copias inline).
+        run: $PSQL -f supabase/tests/rls/_ci_roles.sql
 
       - name: Restore database snapshot
         run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
@@ -532,33 +485,11 @@ jobs:
           path: .rls-snapshot/
 
       - name: Create Supabase roles before restore
-        run: |
-          $PSQL <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-              CREATE ROLE anon NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-              CREATE ROLE authenticated NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
-              CREATE ROLE service_role NOLOGIN BYPASSRLS;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-              CREATE ROLE authenticator NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-              CREATE ROLE supabase_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
-              CREATE ROLE supabase_auth_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
-              CREATE ROLE supabase_storage_admin NOLOGIN;
-            END IF;
-          END $$;
-          SQL
+        # El snapshot incluye policies con `TO authenticated/anon/service_role`;
+        # pg_restore falla con "role does not exist" si esos roles no están
+        # creados en la BD destino (vanilla Postgres no los trae).
+        # v13.514.0 — La lista vive en `_ci_roles.sql` (antes: 5 copias inline).
+        run: $PSQL -f supabase/tests/rls/_ci_roles.sql
 
       - name: Restore database snapshot
         run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
@@ -670,33 +601,11 @@ jobs:
           path: .rls-snapshot/
 
       - name: Create Supabase roles before restore
-        run: |
-          $PSQL <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
-              CREATE ROLE anon NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
-              CREATE ROLE authenticated NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
-              CREATE ROLE service_role NOLOGIN BYPASSRLS;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-              CREATE ROLE authenticator NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-              CREATE ROLE supabase_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
-              CREATE ROLE supabase_auth_admin NOLOGIN;
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN
-              CREATE ROLE supabase_storage_admin NOLOGIN;
-            END IF;
-          END $$;
-          SQL
+        # El snapshot incluye policies con `TO authenticated/anon/service_role`;
+        # pg_restore falla con "role does not exist" si esos roles no están
+        # creados en la BD destino (vanilla Postgres no los trae).
+        # v13.514.0 — La lista vive en `_ci_roles.sql` (antes: 5 copias inline).
+        run: $PSQL -f supabase/tests/rls/_ci_roles.sql
 
       - name: Restore database snapshot
         run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
