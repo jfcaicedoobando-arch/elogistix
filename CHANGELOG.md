@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.509.3] - 2026-08-11
+- Tests CxP: la limpieza de `cxp_cancelacion_libera_embarque.sql` elimina al final la bitácora generada por la cancelación antes de borrar la organización temporal, evitando la violación de llave foránea en CI.
+
 ## [13.509.2] - 2026-08-11
 - CI verde: se corrigieron los 4 trabajos que fallaban.
 - ESLint: se dividieron `FacturaEntranteItem` (nuevos `MetaEntrante` y `AccionesEntrante`) y la zona de archivos del diálogo del buzón (`SeccionArchivosEntrante`) para bajar la complejidad; `MONEDAS_ENTRANTE` se movió a su propio módulo.

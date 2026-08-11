@@ -104,6 +104,9 @@ BEGIN
   DELETE FROM public.embarques WHERE organization_id = v_org;
   DELETE FROM public.clientes WHERE organization_id = v_org;
   DELETE FROM public.organization_members WHERE organization_id = v_org;
+  -- La cancelación y los triggers de limpieza registran actividad para esta org.
+  -- Se borra al final para no dejar nuevas referencias antes de eliminar el tenant.
+  DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
   DELETE FROM public.organizations WHERE id = v_org;
   DELETE FROM auth.users WHERE id = v_uid;
 
