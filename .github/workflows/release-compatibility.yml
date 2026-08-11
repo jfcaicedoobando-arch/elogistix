@@ -114,6 +114,8 @@ jobs:
 
       - name: Auto-heal manifest (push a main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.manifest.outputs.ok == 'false'
+        env:
+          APP_VERSION_CURRENT: ${{ steps.versions.outputs.current }}
         run: |
           set -euo pipefail
           bun run db:release-manifest:update
@@ -125,5 +127,5 @@ jobs:
             echo "Manifest regenerado pero sin cambios que commitear."
             exit 0
           fi
-          git commit -m "chore(release): regenera migration-manifest para APP_VERSION ${{ steps.versions.outputs.current }} [skip ci]"
+          git commit -m "chore(release): regenera migration-manifest para APP_VERSION $APP_VERSION_CURRENT [skip ci]"
           git push origin HEAD:main
