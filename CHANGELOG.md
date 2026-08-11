@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.505.0] - 2026-08-11
+- **Cancelar factura de proveedor ahora libera el expediente**: al cancelar una factura (por ejemplo, cancelada ante el SAT) se rompe el vínculo con los conceptos de costo del embarque, se suelta el expediente y el documento del buzón queda libre para recapturarlo o retirarlo. Antes esto sólo pasaba al *rechazar*; al *cancelar* la factura seguía apareciendo vinculada en el tab de Costos (caso FP-000042 del expediente ELIMP00302).
+- **Limpieza de datos**: se desvincularon las 6 facturas canceladas que seguían pegadas a expedientes (32 vínculos). No se borró ninguna factura ni concepto de costo original.
+- **Vista de costos, doble red de seguridad**: la conciliación cotizado vs real y el marcado de "ya tiene factura" ignoran las facturas Canceladas y borradas, así que un vínculo residual ya no infla el "real facturado"; el renglón vuelve a mostrarse como *Sin factura*.
+- **Pruebas**: nuevo `supabase/tests/cxp_cancelacion_libera_embarque.sql` en CI y tests unitarios de `buildFilasReconciliacion` y `fetchCostosConFactura` con facturas canceladas.
+
+
 ## [13.504.2] - 2026-08-11
 - **Pruebas**: el test `cxp_pago_embarque_cerrado.sql` ahora simula una sesión de usuario miembro de la organización antes de mover el expediente a *Entregado*, porque el recálculo automático de demoras exige un usuario autorizado y el test fallaba con "No autorizado".
 
