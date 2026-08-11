@@ -98,6 +98,12 @@ export default function TesoreriaCuentas() {
         <NuevaCuentaFormFields form={form} setField={setField} />
       </FormDialogShell>
 
+      <DialogTraspasoCuentas
+        open={openTraspaso}
+        onOpenChange={setOpenTraspaso}
+        cuentas={cuentas}
+      />
+
       <ConfirmDeleteAlert
         open={!!deleteTarget}
         onOpenChange={(v) => { if (!v) cancelarEliminar(); }}
@@ -108,5 +114,6 @@ export default function TesoreriaCuentas() {
         onConfirm={confirmarEliminar}
       />
     </PageContainer>
+
   );
 }
