@@ -69,3 +69,16 @@ export function montoDifiereDelCfdi(
   if (!Number.isFinite(monto) || !Number.isFinite(totalCfdi)) return false;
   return roundMoney(Math.abs(monto - totalCfdi)) > 0.01;
 }
+
+/**
+ * ¿El monto capturado se separó del total del CFDI? Usamos la misma tolerancia
+ * mínima ($1) porque son el mismo documento: cualquier diferencia real importa.
+ */
+export function montoDifiereDelCfdi(
+  monto: number | null,
+  totalCfdi: number | null,
+): boolean {
+  if (monto == null || totalCfdi == null) return false;
+  if (!Number.isFinite(monto) || !Number.isFinite(totalCfdi)) return false;
+  return Math.abs(roundMoney(monto - totalCfdi)) > TOLERANCIA_MONTO_MINIMA;
+}
