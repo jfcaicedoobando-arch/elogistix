@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.503.0] - 2026-08-11
+- **Buzón CxP · modal de subida rediseñado**: se eliminaron los tres recuadros de carga. Ahora hay **una sola zona** donde se arrastran (o eligen) el PDF y el XML juntos, y el estado de cada archivo se ve como chip (`PDF ✓` / `XML del CFDI · pendiente`), con botón para quitarlo.
+- **Verificación del monto facturado**: operaciones captura el monto y la moneda de la factura (se pre-llenan desde el XML cuando existe) y el modal lo compara contra los **costos vivos del proveedor en el embarque**: avisa si coincide, si difiere (con diferencia y porcentaje, tolerancia ±1% o ±$1) o si no hay costos comparables en esa moneda. Es un aviso, nunca un bloqueo.
+- **Persistencia y visibilidad**: el monto declarado se guarda en el documento del buzón (`monto_declarado` / `moneda_declarada`) y se muestra en la fila del buzón para que contabilidad lo coteje al capturar.
+- **Nota para contabilidad** colapsada por defecto, para acortar el modal.
+
+
 ## [13.502.0] - 2026-08-11
 - **Sidebar · badge del Buzón de facturas**: junto a *Compras → Buzón de facturas* aparece el número de documentos pendientes por capturar (estado `por_capturar`, sin eliminados), con tooltip "N documento(s) por capturar en el buzón". Se oculta cuando el buzón está vacío o el sidebar está colapsado, se refresca al subir/capturar/rechazar/retirar documentos y cada minuto como red de seguridad si otro usuario captura.
 
