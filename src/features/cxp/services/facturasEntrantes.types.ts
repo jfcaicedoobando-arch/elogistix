@@ -46,8 +46,9 @@ export interface FacturaEntranteRow {
 export const SELECT_COLS_ENTRANTES =
   "id, embarque_id, organization_id, archivo_path, archivo_hash, nombre_archivo, nota, estado," +
   " xml_path, xml_nombre, uuid_fiscal, rfc_emisor, folio_serie, fecha_emision," +
-  " proveedor_id, proveedor_factura_id, folio_detectado, total_detectado, moneda_detectada,
-  monto_declarado, moneda_declarada," +
+  " proveedor_id, proveedor_factura_id, folio_detectado, total_detectado, moneda_detectada," +
+  " monto_declarado, moneda_declarada," +
+
   " rechazo_motivo, subido_por, capturado_por, created_at," +
   " embarques:embarque_id(expediente), proveedores:proveedor_id(nombre, origen_proveedor)," +
   " proveedor_facturas:proveedor_factura_id(folio_interno, estado, total)";
