@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.512.0] - 2026-08-11
+- Traspasos entre cuentas propias de banco: nuevo modal en Tesorería › Cuentas que permite registrar movimientos entre cuentas del mismo tenant, incluyendo comisión y tipo de cambio para cuentas en distinta moneda; se generan los movimientos bancarios auto-conciliados vía `registrar_traspaso_bancario`.
+
 ## [13.511.0] - 2026-08-11
+
 - Correos transaccionales (Sentry JAVASCRIPT-REACT-4X): el estado de cuenta y el recordatorio de cobranza vencida fallaban al renderizar porque usaban tonos (`info`, `warning`) que no existían en el catálogo de colores; se registraron y el chip ahora cae a un tono por omisión ante cualquier tono nuevo.
 - Sentry menos ruidoso: los avisos de documento duplicado en el buzón CxP ("ya está en el buzón" / "ya fue capturado") son validaciones esperadas y ya no se reportan como error (se siguen mostrando al usuario).
 - Se cerraron en Sentry los issues JAVASCRIPT-REACT-4Z y 4Y (`idempotency_store` con firma incorrecta), ya corregidos en 13.509.5.
