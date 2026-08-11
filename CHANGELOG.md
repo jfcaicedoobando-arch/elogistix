@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.516.0] - 2026-08-11
+- Auditoría — Fase 4 (cobertura de los módulos de dinero). 64 tests nuevos en los módulos que estaban sin red de seguridad:
+- `src/features/cobranza/` (antes 0 tests): 18 tests para los servicios de estado de cuenta y recordatorio de cobranza y sus dos hooks (camino feliz, `error` de Supabase, listas vacías y montos en distinta moneda).
+- `src/features/cxc/` (antes 1 de 9 archivos): 18 tests para `cxcAging`, `cxcAgingExport` y `useCxcAging` — buckets de antigüedad, días vencidos, etiquetado/conversión de moneda en la exportación y errores de Supabase.
+- `src/features/portal-agente/` (antes 0 de 14): 21 tests que verifican el **scoping por agente** (las consultas van por RPC/RLS, sin filtros manipulables desde el cliente), el aislamiento de `queryKey` por organización y las respuestas vacías/nulas.
+- `src/features/anticipos-proveedor/__tests__/hooks.test.ts`: se reescribió — hacía aritmética con variables locales sin importar nada; ahora ejercita `useAnticiposProveedor` real (mapeo `aplicado = monto - saldo_disponible`, `disponible`, estabilidad de la queryKey por filtros y estado de error).
+- Verificación: 80 tests en verde en los 4 módulos (16 archivos).
+
 ## [13.515.0] - 2026-08-11
 - Auditoría — Fase 3 (RLS y seguridad). Nueva migración de endurecimiento:
 - El rol anónimo ya no tiene `USAGE` sobre el esquema `extensions` (superficie de ataque innecesaria).
