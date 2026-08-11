@@ -130,7 +130,13 @@ export async function crearMovimientoBancarioPago(
   return { ok: true };
 }
 
-/** Soft-delete del movimiento vinculado cuando se elimina el pago. */
+/**
+ * Soft-delete del movimiento vinculado cuando se elimina (o edita) el pago.
+ *
+ * v13.496.0 — si el usuario desconcilió el movimiento antes de borrar el pago,
+ * `pago_proveedor_id` quedó en NULL y el movimiento sobrevivía en el estado de
+ * cuenta. Ahora también se busca por su huella `pago-<pagoId>`.
+ */
 export async function eliminarMovimientoBancarioPago(
   pagoId: string,
   userId: string | null,
@@ -138,8 +144,9 @@ export async function eliminarMovimientoBancarioPago(
   await supabase
     .from("bbva_movimientos")
     .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-    .eq("pago_proveedor_id", pagoId)
+    .or(`pago_proveedor_id.eq.${pagoId},hash_dedupe.eq.pago-${pagoId}`)
     .is("deleted_at", null);
+
   await registrarActividad({
     modulo: "tesoreria",
     accion: "eliminar_movimiento_bancario_pago",
