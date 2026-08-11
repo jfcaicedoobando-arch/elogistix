@@ -18,7 +18,7 @@ import {
   useConceptosProveedorEmbarque,
   useCostosProveedorEmbarque,
 } from "@/features/embarques/hooks/useEmbarqueQueries";
-import { ArchivosEntranteDropZone } from "@/features/embarques/components/entrantes/ArchivosEntranteDropZone";
+import { SeccionArchivosEntrante } from "@/features/embarques/components/entrantes/SeccionArchivosEntrante";
 import { ConceptosSugeridosEntrante } from "@/features/embarques/components/entrantes/ConceptosSugeridosEntrante";
 import { ResumenSubidaEntrante } from "@/features/embarques/components/entrantes/ResumenSubidaEntrante";
 import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiMetaPreview";
@@ -80,22 +80,15 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
         </>
       )}
     >
-      <FormDialogSection title="Archivos de la factura" cols={1}>
-        <ArchivosEntranteDropZone
-          pdf={form.pdf}
-          xml={form.xml}
-          onArchivos={form.agregarArchivos}
-          onQuitarPdf={form.quitarPdf}
-          onQuitarXml={form.quitarXml}
-        />
-        {form.leyendoXml && <p className="text-xs text-muted-foreground">Leyendo el XML…</p>}
-        {form.error && <p className="text-sm text-destructive">{form.error}</p>}
-        {!form.xml && form.pdf && (
-          <p className="text-xs text-warning">
-            Sin XML sólo puede capturarse como factura extranjera. Si el proveedor es mexicano, pídele el CFDI.
-          </p>
-        )}
-      </FormDialogSection>
+      <SeccionArchivosEntrante
+        pdf={form.pdf}
+        xml={form.xml}
+        leyendoXml={form.leyendoXml}
+        error={form.error}
+        onArchivos={form.agregarArchivos}
+        onQuitarPdf={form.quitarPdf}
+        onQuitarXml={form.quitarXml}
+      />
 
       {form.meta && !form.leyendoXml && (
         <FormDialogSection title="Datos detectados" cols={1}>

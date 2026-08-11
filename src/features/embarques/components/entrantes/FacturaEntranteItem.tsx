@@ -3,20 +3,17 @@
  * Muestra qué archivos llegaron (PDF/XML), los datos leídos del CFDI y las
  * acciones disponibles según el estado y el rol.
  */
-import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { FileCode2, FileText, Link2 as LinkIcon, PencilLine, RotateCcw, Trash2, Upload } from "lucide-react";
+import { Link2 as LinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/formatters/dates";
-import { formatCurrency } from "@/lib/formatters/numbers";
 import {
   chipsArchivosEntrante,
-  diasEnEspera,
   etiquetaEstadoEntrante,
   faltaXmlFiscal,
   varianteEstadoEntrante,
 } from "@/lib/domain/facturasEntrantes";
+import { MetaEntrante } from "@/features/embarques/components/entrantes/MetaEntrante";
+import { AccionesEntrante } from "@/features/embarques/components/entrantes/AccionesEntrante";
 import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 
 interface Props {
@@ -34,7 +31,6 @@ interface Props {
   onCorregir?: (row: FacturaEntranteRow) => void;
 }
 
-
 function FolioInternoChip({ row }: { row: FacturaEntranteRow }) {
   const folio = row.proveedor_facturas?.folio_interno;
   if (!row.proveedor_factura_id) return null;
@@ -50,72 +46,10 @@ function FolioInternoChip({ row }: { row: FacturaEntranteRow }) {
   );
 }
 
-function MetaEntrante({ row }: { row: FacturaEntranteRow }) {
-  const total = row.total_detectado;
-  return (
-    <>
-      <p className="text-xs text-muted-foreground">
-        Subida el {formatDate(row.created_at)}
-        {row.estado === "por_capturar" ? ` · ${diasEnEspera(row.created_at)} día(s) en espera` : ""}
-        {row.proveedores?.nombre ? ` · ${row.proveedores.nombre}` : ""}
-      </p>
-      {(row.folio_serie || total != null) && (
-        <p className="text-xs text-muted-foreground">
-          {row.folio_serie ? `Folio proveedor ${row.folio_serie}` : "Sin folio del proveedor"}
-          {total != null ? ` · ${formatCurrency(Number(total), row.moneda_detectada ?? "MXN")}` : ""}
-        </p>
-      )}
-      {row.monto_declarado != null && (
-        <p className="text-xs text-muted-foreground">
-          Monto declarado por operaciones:{" "}
-          {formatCurrency(Number(row.monto_declarado), row.moneda_declarada ?? "MXN")}
-        </p>
-      )}
-      {(row.embarque_facturas_entrantes_conceptos?.length ?? 0) > 0 && (
-        <p className="text-xs text-muted-foreground">
-          Conceptos sugeridos por operaciones:{" "}
-          {row.embarque_facturas_entrantes_conceptos?.length}
-        </p>
-      )}
-      {row.sin_costo_capturado && !row.proveedor_factura_id && (
-        <p className="text-xs text-muted-foreground">
-          Operaciones indicó que aún no hay costo capturado para este documento.
-        </p>
-      )}
-      {row.nota && <p className="text-xs text-muted-foreground">Nota: {row.nota}</p>}
-
-      {row.rechazo_motivo && <p className="text-xs text-destructive">Rechazada: {row.rechazo_motivo}</p>}
-    </>
-  );
-}
-
-function AdjuntarXmlButton({ onSelect }: { onSelect: (xml: File) => void }) {
-  const inputXml = useRef<HTMLInputElement>(null);
-  return (
-    <>
-      <Button size="sm" variant="secondary" onClick={() => inputXml.current?.click()}>
-        <Upload className="mr-2 h-4 w-4" /> Adjuntar XML
-      </Button>
-      <input
-        ref={inputXml}
-        type="file"
-        className="hidden"
-        accept=".xml,text/xml,application/xml"
-        onChange={(e) => {
-          const archivo = e.target.files?.[0];
-          if (archivo) onSelect(archivo);
-          e.target.value = "";
-        }}
-      />
-    </>
-  );
-}
-
 export function FacturaEntranteItem({
   row, puedeEliminar, puedeAdjuntarXml, puedeReactivar = false, puedeCorregir = false,
   onVer, onAdjuntarXml, onEliminar, onReactivar, onCorregir,
 }: Props) {
-
   const chips = chipsArchivosEntrante(row);
   const tieneXml = chips.includes("xml");
   const tienePdf = chips.includes("pdf");
@@ -139,41 +73,20 @@ export function FacturaEntranteItem({
         </div>
         <MetaEntrante row={row} />
       </div>
-      <div className="flex shrink-0 flex-wrap gap-2">
-        {tienePdf && (
-          <Button size="sm" variant="outline" onClick={() => onVer(row.archivo_path, row.nombre_archivo)}>
-            <FileText className="mr-2 h-4 w-4" /> Ver PDF
-          </Button>
-        )}
-        {tieneXml && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onVer(row.xml_path ?? row.archivo_path, row.xml_nombre ?? row.nombre_archivo)}
-          >
-            <FileCode2 className="mr-2 h-4 w-4" /> XML
-          </Button>
-        )}
-        {!tieneXml && puedeAdjuntarXml && (
-          <AdjuntarXmlButton onSelect={(xml) => onAdjuntarXml(row, xml)} />
-        )}
-        {puedeCorregir && onCorregir && (
-          <Button size="sm" variant="outline" onClick={() => onCorregir(row)}>
-            <PencilLine className="mr-2 h-4 w-4" /> Corregir datos
-          </Button>
-        )}
-        {puedeReactivar && onReactivar && (
-          <Button size="sm" variant="secondary" onClick={() => onReactivar(row)}>
-            <RotateCcw className="mr-2 h-4 w-4" /> Devolver a por capturar
-          </Button>
-        )}
-        {puedeEliminar && (
-          <Button size="sm" variant="ghost" onClick={() => onEliminar(row)} aria-label="Retirar del buzón">
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
-        )}
-
-      </div>
+      <AccionesEntrante
+        row={row}
+        tienePdf={tienePdf}
+        tieneXml={tieneXml}
+        puedeEliminar={puedeEliminar}
+        puedeAdjuntarXml={puedeAdjuntarXml}
+        puedeReactivar={puedeReactivar}
+        puedeCorregir={puedeCorregir}
+        onVer={onVer}
+        onAdjuntarXml={onAdjuntarXml}
+        onEliminar={onEliminar}
+        onReactivar={onReactivar}
+        onCorregir={onCorregir}
+      />
     </div>
   );
 }

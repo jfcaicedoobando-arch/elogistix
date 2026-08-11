@@ -220,20 +220,23 @@ Deno.test("invoice.canceled marca preserva_sustituida=true", () => {
 const webhookIndexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
 
 Deno.test("index.ts: el insert de dedupe ocurre DESPUÉS de procesar el evento, no antes", () => {
-  const idxProcesar = webhookIndexSource.indexOf("await handleReceiptEvent(supabase, orgId, event, receipt)");
+  const idxProcesar = webhookIndexSource.indexOf("await despacharEvento(supabase, orgId, event)");
   const idxDedupeCheck = webhookIndexSource.indexOf('.eq("event_id", eventKey)');
-  const idxDedupeInsert = webhookIndexSource.indexOf('.insert({\n      organization_id: orgId,\n      event_id: eventKey,');
-  assert(idxDedupeCheck >= 0 && idxProcesar >= 0 && idxDedupeInsert >= 0, "deben existir las tres etapas");
-  // El chequeo de duplicado va antes de procesar; el insert va después.
+  const idxDedupeRegistro = webhookIndexSource.indexOf("await registrarDedupe(supabase, orgId, eventKey, event)");
+  assert(
+    idxDedupeCheck >= 0 && idxProcesar >= 0 && idxDedupeRegistro >= 0,
+    "deben existir las tres etapas",
+  );
+  // El chequeo de duplicado va antes de procesar; el registro va después.
   assert(idxDedupeCheck < idxProcesar, "el chequeo de dedupe debe ser previo al procesamiento");
-  assert(idxProcesar < idxDedupeInsert, "el insert de dedupe debe ser posterior al procesamiento");
+  assert(idxProcesar < idxDedupeRegistro, "el registro de dedupe debe ser posterior al procesamiento");
 });
 
 Deno.test("index.ts: si el procesamiento falla (result.ok=false) se retorna ANTES de insertar el dedupe", () => {
   assertStringIncludes(webhookIndexSource, "if (!result.ok) return result;");
-  const idxGuard = webhookIndexSource.indexOf("if (!result.ok) return result;");
-  const idxInsert = webhookIndexSource.indexOf('.insert({\n      organization_id: orgId,\n      event_id: eventKey,');
-  assert(idxGuard >= 0 && idxInsert >= 0 && idxGuard < idxInsert);
+  const idxGuard = webhookIndexSource.lastIndexOf("if (!result.ok) return result;");
+  const idxRegistro = webhookIndexSource.indexOf("await registrarDedupe(supabase, orgId, eventKey, event)");
+  assert(idxGuard >= 0 && idxRegistro >= 0 && idxGuard < idxRegistro);
 });
 
 Deno.test("index.ts: 'Emitida' es el único estado usado para invoice.status_updated valid (nunca 'Timbrada')", () => {
@@ -243,8 +246,9 @@ Deno.test("index.ts: 'Emitida' es el único estado usado para invoice.status_upd
 // ── Ola 5 · RG4-10: dispatch REP vs factura ────────────────────────────────
 Deno.test("index.ts: los eventos invoice.* se intentan como factura antes que como REP", () => {
   assertStringIncludes(webhookIndexSource, 'event.type.startsWith("receipt.")');
-  assertStringIncludes(webhookIndexSource, '=== "factura_not_found"');
+  assertStringIncludes(webhookIndexSource, '!== "factura_not_found"');
   const idxFactura = webhookIndexSource.indexOf("await handleFacturaEvent(supabase, orgId, event)");
-  const idxFallback = webhookIndexSource.indexOf('=== "factura_not_found"');
+  const idxFallback = webhookIndexSource.indexOf('!== "factura_not_found"');
   assert(idxFactura >= 0 && idxFallback >= 0 && idxFactura < idxFallback);
 });
+

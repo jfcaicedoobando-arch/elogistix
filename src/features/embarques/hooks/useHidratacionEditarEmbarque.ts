@@ -2,7 +2,7 @@
  * Efectos de hidratación para EditarEmbarque. Extraído de useEditarEmbarqueWizard
  * para mantener el controller bajo el límite Power of 10 (<200 líneas).
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { UseFormReturn, FieldValues } from "react-hook-form";
 import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { resolverValorContactoDesdeTexto } from "@/features/cliente/domain/contacto";
@@ -81,7 +81,7 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
   // v13.509.0 — Si el costo trae nombre de proveedor pero no id (costos
   // replicados de cotización), lo resolvemos contra el catálogo y en todo caso
   // conservamos el nombre para no perderlo al guardar.
-  const proveedoresDb = p.proveedoresDb ?? [];
+  const proveedoresDb = useMemo(() => p.proveedoresDb ?? [], [p.proveedoresDb]);
   useEffect(() => {
     if (!p.initialized || p.hidratoCosto || p.conceptosCostoDb.length === 0) return;
     if (proveedoresDb.length === 0) return;

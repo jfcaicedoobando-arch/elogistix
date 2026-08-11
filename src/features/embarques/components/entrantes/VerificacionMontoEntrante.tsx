@@ -17,12 +17,12 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { cn } from "@/lib/utils";
+import { MONEDAS_ENTRANTE } from "@/features/embarques/components/entrantes/monedasEntrante";
 import {
   cotejarMontoFacturado,
   montoDifiereDelCfdi,
 } from "@/lib/domain/montoEntranteCotejo";
 
-export const MONEDAS_ENTRANTE = ["MXN", "USD", "EUR"] as const;
 
 interface Props {
   monto: number | null;
