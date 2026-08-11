@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.509.0] - 2026-08-11
+- **Costos sin proveedor (embarques 336, 338, 340, 350, 353, 357)**: al guardar la edición de un embarque, el wizard mandaba el proveedor en blanco y borraba el nombre que venía de la cotización. Ahora un proveedor vacío ya no sobrescribe el que ya estaba.
+- El wizard de edición resuelve el proveedor del catálogo a partir del nombre heredado (coincidencia exacta o única por prefijo) y lo muestra en el campo en vez de dejarlo vacío.
+- Al crear un embarque desde cotización, los costos replicados ahora también guardan el `proveedor_id` del catálogo, no sólo el nombre.
+- Backfill: se repuso el proveedor en los costos afectados tomándolo de la cotización de origen (sin tocar importes ni costos pagados).
+- Pestaña Costos: el grupo "Sin proveedor" muestra un badge "Asignar proveedor".
+- Base de datos: `actualizar_embarque_completo`, `_crear_embarque_replicar_conceptos` y nueva función `_resolver_proveedor_por_nombre`.
+
 ## [13.508.1] - 2026-08-11
 - CxP: al cancelar una factura de proveedor, el documento del buzón vuelve a quedar en "Rechazada" con su motivo (un trigger lo reabría como "Por capturar" y borraba el vínculo antes de que se aplicara el rechazo).
 
