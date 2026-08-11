@@ -7522,6 +7522,17 @@ export type Database = {
         Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
         Returns: Json
       }
+      actualizar_datos_entrante: {
+        Args: {
+          p_documento_id: string
+          p_moneda_declarada: string
+          p_monto_declarado: number
+          p_nota: string
+          p_proveedor_id: string
+          p_sin_costo_capturado: boolean
+        }
+        Returns: undefined
+      }
       actualizar_embarque_completo: {
         Args: {
           p_conceptos_costo?: Json
@@ -9166,6 +9177,10 @@ export type Database = {
       recotizar_cotizacion: {
         Args: { p_cotizacion_id: string; p_motivo: string }
         Returns: Json
+      }
+      reemplazar_conceptos_entrante: {
+        Args: { p_conceptos: Json; p_documento_id: string }
+        Returns: number
       }
       refrescar_garantia_desde_tarifa: {
         Args: { p_embarque_id: string }
