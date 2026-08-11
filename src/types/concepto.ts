@@ -20,6 +20,12 @@ export interface ConceptoCostoLocal {
   /** UUID persistido en `conceptos_costo.id`. Ver nota en `ConceptoVentaLocal.dbId`. */
   dbId?: string | null;
   proveedorId: string;
+  /**
+   * Nombre del proveedor tal como viene de BD (`conceptos_costo.proveedor_nombre`).
+   * Los costos replicados desde cotización sólo traen el nombre; lo conservamos
+   * para no perderlo al guardar cuando no existe un id de catálogo (v13.509.0).
+   */
+  proveedorNombre?: string | null;
   concepto: string;
   monto: number;
   moneda: string;
