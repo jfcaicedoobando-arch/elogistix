@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.501.0] - 2026-08-11
+- **CxP · facturas canceladas visibles**: el listado de Cuentas por pagar ocultaba siempre las canceladas, así que buscar `FP-000042` no devolvía nada y el filtro "Cancelada" salía vacío. Ahora se ocultan sólo en la vista por defecto: al buscar texto o filtrar por "Cancelada" sí aparecen.
+- **Buzón CxP · aviso claro**: cuando el CFDI del documento corresponde a una factura **cancelada**, la fila muestra "CFDI de factura cancelada · FP-000042" (con explicación en tooltip) en lugar de un genérico "CFDI ya capturado", y el botón dice "Ver factura cancelada".
+- **Modal de captura**: la alerta de CFDI duplicado explica que el UUID sigue ocupado aunque la factura previa esté cancelada, y sugiere retirar el documento o pedir un CFDI de reemplazo.
+
 ## [13.500.0] - 2026-08-11
 - **Ola 6 (cadena de migraciones + regresiones de la Ola 5)**:
   - **[RG4-1]** La migración histórica `20260812090000` queda como no-op documentado: redefinía `cartera_pendiente()` con otras columnas de salida y abortaba con 42P13, bloqueando toda base creada desde cero. Sus fixes reales viven en `20260810203738`, `20260810203939` y `20260818090000`.

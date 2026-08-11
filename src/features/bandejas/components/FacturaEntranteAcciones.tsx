@@ -18,6 +18,8 @@ interface Props {
   editable: boolean;
   /** Id de la factura viva que ya usa este CFDI, si existe. */
   facturaExistenteId: string | null;
+  /** v13.501.0 — La factura previa del mismo CFDI está cancelada. */
+  facturaExistenteCancelada?: boolean;
   onVer: (row: Fila) => void;
   onVerXml: (row: Fila) => void;
   onCapturar: (row: Fila) => void;
@@ -29,6 +31,7 @@ export function FacturaEntranteAcciones({
   row,
   editable,
   facturaExistenteId,
+  facturaExistenteCancelada = false,
   onVer,
   onVerXml,
   onCapturar,
@@ -42,7 +45,8 @@ export function FacturaEntranteAcciones({
       {editable && yaCapturado && (
         <Button size="sm" variant="outline" className="flex-1 md:flex-none" asChild>
           <Link to={`/compras/facturas/${facturaExistenteId}`}>
-            <Eye className="mr-2 h-4 w-4" /> Ver factura
+            <Eye className="mr-2 h-4 w-4" />
+            {facturaExistenteCancelada ? "Ver factura cancelada" : "Ver factura"}
           </Link>
         </Button>
       )}

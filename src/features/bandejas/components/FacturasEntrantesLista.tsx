@@ -72,6 +72,7 @@ export function FacturasEntrantesLista({
             soloLectura={soloLectura}
             facturaExistenteId={existente?.id ?? null}
             facturaExistenteFolio={existente?.folio_interno ?? null}
+            facturaExistenteCancelada={existente?.estado === "Cancelada"}
             {...acciones}
           />
         );

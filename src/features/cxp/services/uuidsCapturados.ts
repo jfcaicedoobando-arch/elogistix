@@ -10,6 +10,12 @@ import { normalizarUuidFiscal } from "@/lib/domain/uuidFiscal";
 export interface FacturaPorUuid {
   id: string;
   folio_interno: string | null;
+  /**
+   * v13.501.0 — El estado importa: si la factura previa está **Cancelada**, el
+   * documento del buzón no está "ya capturado", queda atorado. La UI muestra un
+   * aviso distinto para que el usuario sepa que debe retirarlo.
+   */
+  estado: string | null;
 }
 
 /** Mapa `UUID normalizado -> factura viva`. Devuelve vacío si la consulta falla. */
@@ -24,14 +30,18 @@ export async function buscarFacturasPorUuidsFiscales(
 
   const { data, error } = await supabase
     .from("proveedor_facturas")
-    .select("id, folio_interno, uuid_fiscal")
+    .select("id, folio_interno, estado, uuid_fiscal")
     .in("uuid_fiscal", lista)
     .is("deleted_at", null);
   if (error || !data) return mapa;
 
   for (const row of data) {
     const key = normalizarUuidFiscal(row.uuid_fiscal);
-    if (key && !mapa.has(key)) mapa.set(key, { id: row.id, folio_interno: row.folio_interno });
+    if (key && !mapa.has(key)) mapa.set(key, {
+      id: row.id,
+      folio_interno: row.folio_interno,
+      estado: row.estado ?? null,
+    });
   }
   return mapa;
 }
