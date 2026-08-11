@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.519.0] - 2026-08-11
+- Seguridad BD (`rate_limit_anon_rpcs`) — las 4 RPCs ejecutables por `anon` ahora invocan `public.check_ratelimit` al inicio del cuerpo, con clave `rpc:<nombre>:<x-forwarded-for>:<auth.uid()|anon>` y fail-CLOSED (`RAISE EXCEPTION` P0001 con `retry_after`): `log_client_error_v1` 20/60s (cierra la inserción ilimitada de filas ~14 KB en `app_logs`), `get_tracking_public` 60/60s, `portal_obtener_proforma_por_token` 30/60s y `portal_responder_por_token` 10/60s. Lógica, GRANTs, `SECURITY DEFINER` y `search_path` intactos; las dos funciones de lectura pasan de `STABLE` a `VOLATILE` porque `check_ratelimit` escribe en `ratelimit_buckets`. `demo_leads` no tiene RPC de inserción (entra por política), así que queda documentado en la migración sin cambiar políticas.
+
+
+
 ## [13.518.1] - 2026-08-11
 - Seguridad CI — `e2e.yml`: el job `guard-secrets` (y por dependencia toda la suite con el environment `e2e-staging`) ya sólo corre en PRs de ramas internas del repo, evitando que un PR de fork que edite un spec exfiltre los secrets de staging. Gates anti-skip intactos.
 - Seguridad CI — `release-compatibility.yml`: el step "Auto-heal manifest" ya no interpola `${{ steps.versions.outputs.current }}` dentro del `run:`; ahora pasa por `env: APP_VERSION_CURRENT` y se usa como `"$APP_VERSION_CURRENT"` (evita inyección de script). `actions/github-script` ya estaba en v8 en todos los workflows, incluido `deploy-gate.yml`.
