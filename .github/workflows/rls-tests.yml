@@ -230,42 +230,31 @@ jobs:
           retention-days: 1
           compression-level: 9
 
+  # v13.514.0 (auditoría CI · Fase 2) — Antes había 1 job por suite (25 jobs).
+  # Cada job levantaba su propio Postgres y hacía `pg_restore` del snapshot
+  # (~40 s de arranque) para correr un archivo SQL de ~10 s: el 80 % del tiempo
+  # era montar y desmontar la base. Ahora son 5 grupos que restauran UNA vez y
+  # corren sus suites en serie. Los grupos siguen en paralelo entre sí, así que
+  # el reloj de pared casi no cambia y el consumo de runners baja ~5x.
   rls-suites:
-    name: RLS suite — ${{ matrix.suite }}
+    name: RLS suites — ${{ matrix.grupo }}
     runs-on: ubuntu-24.04
     needs: rls
-    timeout-minutes: 10
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        suite:
-          - isolation
-          - financiero
-          - financiero_critico
-          - crm_operacional
-          - operaciones
-          - org_scope
-
-          - tarifas_y_costeo
-          - reg_costeo
-          - reg_portales
-          - reg_r4_cotizacion_guard
-          - reg_r4_pricing
-          - roles_no_admin
-          - roles_negocio
-          - portal_intra_org
-          - rpc_provision_organization
-          - rpc_financieras
-          - rpc_por_rol
-          - rpc_smoke_roles
-          - tablas_dinero_extra
-          - anon_deny_all
-          - cross_tenant_mutations
-          - policy_linter
-          - soft_delete_rpcs
-          - storage_objects
-          - reportes_multi_tenant
-
+        include:
+          - grupo: aislamiento
+            suites: isolation org_scope anon_deny_all cross_tenant_mutations policy_linter
+          - grupo: financiero
+            suites: financiero financiero_critico rpc_financieras tablas_dinero_extra reportes_multi_tenant
+          - grupo: operaciones
+            suites: operaciones crm_operacional soft_delete_rpcs storage_objects
+          - grupo: roles
+            suites: roles_no_admin roles_negocio rpc_por_rol rpc_smoke_roles rpc_provision_organization portal_intra_org
+          - grupo: costeo
+            suites: tarifas_y_costeo reg_costeo reg_portales reg_r4_cotizacion_guard reg_r4_pricing
 
     services:
       postgres:
@@ -317,21 +306,52 @@ jobs:
           pg_restore --no-owner --dbname=postgres \
             .rls-snapshot/db.dump
 
-      - name: Run RLS suite — ${{ matrix.suite }}
+      - name: Run RLS suites — ${{ matrix.grupo }}
+        env:
+          SUITES: ${{ matrix.suites }}
         run: |
+          set -uo pipefail
           mkdir -p .rls-logs
-          set -o pipefail
-          $PSQL -f supabase/tests/rls/test_rls_${{ matrix.suite }}.sql \
-            2>&1 | tee ".rls-logs/suite-${{ matrix.suite }}.log"
+          fallidas=""
+          for suite in $SUITES; do
+            archivo="supabase/tests/rls/test_rls_${suite}.sql"
+            if [ ! -f "$archivo" ]; then
+              echo "::error::$archivo no existe (matriz desincronizada)"
+              fallidas="$fallidas $suite"
+              continue
+            fi
+            echo "::group::suite $suite"
+            # Cada suite corre aunque la anterior falle: así un PR ve TODOS los
+            # fallos del grupo en una sola vuelta y no uno por push.
+            if $PSQL -f "$archivo" 2>&1 | tee ".rls-logs/suite-${suite}.log"; then
+              echo "✓ $suite"
+            else
+              echo "::error::RLS suite fallida: $suite"
+              fallidas="$fallidas $suite"
+            fi
+            echo "::endgroup::"
+          done
+          {
+            echo "### RLS — grupo \`${{ matrix.grupo }}\`"
+            echo ""
+            if [ -n "$fallidas" ]; then
+              echo "❌ Suites fallidas:"
+              for s in $fallidas; do echo "- \`$s\`"; done
+            else
+              echo "✅ Todas las suites del grupo pasaron."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ -z "$fallidas" ]
 
-      - name: Upload suite log
+      - name: Upload suite logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: rls-suite-log-${{ matrix.suite }}
-          path: .rls-logs/suite-${{ matrix.suite }}.log
+          name: rls-suite-logs-${{ matrix.grupo }}
+          path: .rls-logs/
           if-no-files-found: warn
           retention-days: 7
+
 
   rls-guards:
     name: Guards conductuales + schema invariants (siempre)
