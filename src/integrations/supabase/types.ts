@@ -3468,6 +3468,7 @@ export type Database = {
           proveedor_id: string | null
           rechazo_motivo: string | null
           rfc_emisor: string | null
+          sin_costo_capturado: boolean
           subido_por: string | null
           total_detectado: number | null
           updated_at: string
@@ -3500,6 +3501,7 @@ export type Database = {
           proveedor_id?: string | null
           rechazo_motivo?: string | null
           rfc_emisor?: string | null
+          sin_costo_capturado?: boolean
           subido_por?: string | null
           total_detectado?: number | null
           updated_at?: string
@@ -3532,6 +3534,7 @@ export type Database = {
           proveedor_id?: string | null
           rechazo_motivo?: string | null
           rfc_emisor?: string | null
+          sin_costo_capturado?: boolean
           subido_por?: string | null
           total_detectado?: number | null
           updated_at?: string
@@ -3574,6 +3577,58 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      embarque_facturas_entrantes_conceptos: {
+        Row: {
+          concepto_costo_id: string
+          created_at: string
+          entrante_id: string
+          id: string
+          monto_sugerido: number | null
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          concepto_costo_id: string
+          created_at?: string
+          entrante_id: string
+          id?: string
+          monto_sugerido?: number | null
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          concepto_costo_id?: string
+          created_at?: string
+          entrante_id?: string
+          id?: string
+          monto_sugerido?: number | null
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embarque_facturas_entrantes_conceptos_concepto_costo_id_fkey"
+            columns: ["concepto_costo_id"]
+            isOneToOne: false
+            referencedRelation: "conceptos_costo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_facturas_entrantes_conceptos_entrante_id_fkey"
+            columns: ["entrante_id"]
+            isOneToOne: false
+            referencedRelation: "embarque_facturas_entrantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_facturas_entrantes_conceptos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
