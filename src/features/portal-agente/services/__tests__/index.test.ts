@@ -85,7 +85,7 @@ describe("portal-agente/services/index · scoping y errores", () => {
         data: null,
         error: { message: "permission denied" },
       });
-      await expect(fetchAgenteContext()).rejects.toBeTruthy();
+      await expect(fetchAgenteContext()).rejects.toThrow(/permission denied/i);
     });
   });
 
@@ -115,9 +115,9 @@ describe("portal-agente/services/index · scoping y errores", () => {
       expect(rutas).toEqual([]);
     });
 
-    it("propaga el error de Supabase", async () => {
+    it("propaga el error de Supabase al listar rutas del agente", async () => {
       mock.setRpcResult("get_agente_rutas", { data: null, error: { message: "boom" } });
-      await expect(fetchAgenteRutas()).rejects.toBeTruthy();
+      await expect(fetchAgenteRutas()).rejects.toThrow(/boom/i);
     });
   });
 
@@ -153,9 +153,9 @@ describe("portal-agente/services/index · scoping y errores", () => {
       expect(embarques).toEqual([]);
     });
 
-    it("propaga el error de Supabase", async () => {
+    it("propaga el error de Supabase al listar embarques del agente", async () => {
       mock.setTableResult("embarques", { data: null, error: { message: "denied" } });
-      await expect(fetchAgenteEmbarques()).rejects.toBeTruthy();
+      await expect(fetchAgenteEmbarques()).rejects.toThrow(/denied/i);
     });
   });
 });

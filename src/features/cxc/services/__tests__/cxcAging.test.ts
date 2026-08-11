@@ -104,7 +104,7 @@ function fila(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-describe("calcularTotalesAging", () => {
+describe("calcularTotalesAging (CxC)", () => {
   it("suma cada cubeta de antigüedad y el total general", () => {
     const rows = [
       fila({ vigente: 100, d_1_30: 50, d_31_60: 20, d_61_90: 10, mas_90: 5, saldo_total: 185 }),

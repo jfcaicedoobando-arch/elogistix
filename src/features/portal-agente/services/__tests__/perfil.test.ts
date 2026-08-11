@@ -25,8 +25,8 @@ describe("portal-agente/services/perfil · actualizarPasswordAgente", () => {
     expect(updateUser).toHaveBeenCalledWith({ password: "nuevaClave123!" });
   });
 
-  it("propaga el error de Supabase", async () => {
+  it("propaga el error de Supabase al cambiar la contraseña", async () => {
     updateUser.mockResolvedValue({ error: { message: "weak password" } });
-    await expect(actualizarPasswordAgente("123")).rejects.toBeTruthy();
+    await expect(actualizarPasswordAgente("123")).rejects.toThrow(/weak password/i);
   });
 });

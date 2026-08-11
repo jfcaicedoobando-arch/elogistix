@@ -117,6 +117,6 @@ describe("portal-agente/services/tarifas · fetchAgenteTarifas", () => {
       data: null,
       error: { message: "permission denied for table costeo_tarifas" },
     });
-    await expect(fetchAgenteTarifas()).rejects.toBeTruthy();
+    await expect(fetchAgenteTarifas()).rejects.toThrow(/permission denied/i);
   });
 });

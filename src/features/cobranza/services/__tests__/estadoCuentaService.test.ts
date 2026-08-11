@@ -66,7 +66,7 @@ describe("enviarEstadoCuentaEmail", () => {
     );
   });
 
-  it("lanza cuando supabase devuelve error de transporte", async () => {
+  it("estado de cuenta: lanza cuando supabase devuelve error de transporte", async () => {
     supabaseMock.functions.invoke.mockResolvedValue({
       data: null,
       error: new Error("network down"),
