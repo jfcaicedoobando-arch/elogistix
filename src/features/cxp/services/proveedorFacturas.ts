@@ -134,13 +134,21 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  // v13.501.0 — Antes se excluían las canceladas SIEMPRE, así que el filtro
+  // "Cancelada" del panel no devolvía nada y buscar su folio (p.ej. FP-000042)
+  // no encontraba una factura que sí existe. Ahora sólo se ocultan en la vista
+  // por defecto: al filtrar por "Cancelada" o al buscar texto, sí aparecen.
+  const incluirCanceladas = filtros.estatus === "Cancelada" || Boolean(filtros.search?.trim());
+
   let q = supabase
     .from("proveedor_facturas")
     .select(PROVEEDOR_FACTURAS_SELECT)
     .is("deleted_at", null)
-    .neq("estado", "Cancelada")
     .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
     .range(from, to);
+
+  if (!incluirCanceladas) q = q.neq("estado", "Cancelada");
+
 
   if (filtros.proveedor_id && filtros.proveedor_id !== "todos") q = q.eq("proveedor_id", filtros.proveedor_id);
   if (filtros.categoria_presupuesto_id && filtros.categoria_presupuesto_id !== "todas") {
