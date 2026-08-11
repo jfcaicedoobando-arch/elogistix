@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.508.0] - 2026-08-14
+- **Corregir datos del documento del buzón**: operaciones ya puede ajustar proveedor, monto declarado, conceptos sugeridos y nota sin retirar el archivo ni volverlo a subir (botón "Corregir datos" en el buzón del embarque).
+- **Rescate desde el buzón central**: en la pestaña "Rechazadas" de Compras > Buzón de facturas se puede devolver un documento a "Por capturar" sin entrar al embarque.
+- **Aviso al operador**: al rechazar un documento, el sistema crea una notificación interna para quien lo subió con el motivo del rechazo.
+- **Trazabilidad**: toda corrección de datos o de conceptos sugeridos queda en la bitácora de actividad.
+- Base de datos: RPCs `actualizar_datos_entrante` y `reemplazar_conceptos_entrante` (cambio atómico) e índice único que evita conceptos sugeridos duplicados.
+
 ## [13.507.0] - 2026-08-13
 - CxP: la captura desde el buzón entra en "modo asistido": se oculta el selector de origen y la zona de carga, y se muestra la tarjeta del documento con enlaces a PDF/XML y expediente.
 - CxP: la captura hereda proveedor y nota que declaró operaciones, sin pisar lo que el contador ya escribió.

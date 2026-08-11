@@ -53,6 +53,8 @@ interface Props {
   /** v13.366.0 — Captura la factura de proveedor con los datos del documento. */
   onCrearFactura: (row: Fila) => void;
   onRechazar: (row: Fila) => void;
+  /** v13.508.0 — Rescatar un documento rechazado por error. */
+  onReactivar?: (row: Fila) => void;
 }
 
 export function FacturaEntranteRow({
@@ -67,6 +69,7 @@ export function FacturaEntranteRow({
   onCapturar,
   onCrearFactura,
   onRechazar,
+  onReactivar,
 }: Props) {
   const antiguedad = antiguedadEntrante(row);
   const chips = chipsArchivosEntrante(row);
@@ -109,6 +112,7 @@ export function FacturaEntranteRow({
           onCapturar={onCapturar}
           onCrearFactura={onCrearFactura}
           onRechazar={onRechazar}
+          onReactivar={onReactivar}
         />
       </div>
     </Card>
