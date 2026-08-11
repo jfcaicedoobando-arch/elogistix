@@ -3458,7 +3458,9 @@ export type Database = {
           ia_estado: string
           ia_payload: Json | null
           id: string
+          moneda_declarada: string | null
           moneda_detectada: string | null
+          monto_declarado: number | null
           nombre_archivo: string
           nota: string | null
           organization_id: string
@@ -3488,7 +3490,9 @@ export type Database = {
           ia_estado?: string
           ia_payload?: Json | null
           id?: string
+          moneda_declarada?: string | null
           moneda_detectada?: string | null
+          monto_declarado?: number | null
           nombre_archivo: string
           nota?: string | null
           organization_id: string
@@ -3518,7 +3522,9 @@ export type Database = {
           ia_estado?: string
           ia_payload?: Json | null
           id?: string
+          moneda_declarada?: string | null
           moneda_detectada?: string | null
+          monto_declarado?: number | null
           nombre_archivo?: string
           nota?: string | null
           organization_id?: string
