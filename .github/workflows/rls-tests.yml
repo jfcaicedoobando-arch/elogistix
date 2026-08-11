@@ -873,27 +873,19 @@ jobs:
       - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
         run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
 
+      # Corte histórico: todo lo anterior es deuda congelada (se informa, no
+      # rompe). Todo lo posterior DEBE aplicar sobre una base limpia.
+      #
+      # v13.514.0 — El valor ya NO se escribe aquí: vive en
+      # `supabase/tests/rls/drift-corte.env`, que también lee el `radar-drift`
+      # de `deploy-gate.yml`. Antes había dos literales que podían divergir.
+      - name: Cargar corte de drift (fuente única)
+        run: cat supabase/tests/rls/drift-corte.env >> "$GITHUB_ENV"
+
       - name: Apply migrations SIN parches de drift
         id: apply
-        env:
-          # Corte histórico: todo lo anterior es deuda congelada (se informa,
-          # no rompe). Todo lo posterior DEBE aplicar sobre una base limpia.
-          #
-          # 20260729040000 mueve el corte por encima de 20260729035825 (FIX C5),
-          # que parchea por texto definiciones vigentes y no puede aplicar sobre
-          # una base reconstruida (su ancla vive en una migración legacy que
-          # falla antes). Su estado final lo garantiza, de forma determinista y
-          # sin anclas, la migración FIX C5-b posterior al corte.
-          #
-          # 20260812090001 mueve el corte por encima de 20260812090000
-          # (Ola 4 N41/N44/N45): esa migración aborta siempre porque cambiaba
-          # los nombres de las columnas de salida de cartera_pendiente con
-          # CREATE OR REPLACE ("cannot change return type"). Su estado final lo
-          # garantizan, ya corregidas, las migraciones de reaplicación
-          # posteriores (cartera_pendiente + dashboard_summary/details).
-          DRIFT_CORTE: "20260812090001"
-
         run: |
+
           set -uo pipefail
           shopt -s nullglob
           legacy=0
