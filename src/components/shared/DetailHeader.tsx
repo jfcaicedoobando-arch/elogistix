@@ -72,10 +72,9 @@ export function DetailHeader({
   // Cuando `backTo` es la función de `useVolver`, conocemos su ruta de respaldo:
   // se pinta como enlace real (clic central / pestaña nueva) sin perder la
   // lógica history-aware del clic normal (v13.497.0).
-  const hrefRespaldo =
-    typeof backTo === "function" && typeof (backTo as { fallback?: string }).fallback === "string"
-      ? (backTo as { fallback: string }).fallback
-      : null;
+  const backFn = typeof backTo === "function" ? (backTo as unknown as { fallback?: string }) : null;
+  const hrefRespaldo = typeof backFn?.fallback === "string" ? backFn.fallback : null;
+
 
   return (
     <div className={cn("space-y-3", className)}>
