@@ -7,7 +7,6 @@
  * Lógica pura (clasificación, mapeo, filtros cliente) en `./proveedorFacturas.helpers`.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
 import { orIlike } from "@/lib/search/ilike";
 import {
   PROVEEDOR_FACTURAS_SELECT,
@@ -15,6 +14,7 @@ import {
   aplicarFiltrosCliente,
   type Joined,
 } from "./proveedorFacturas.helpers";
+import type { FacturaCxP, FetchCxPFiltros } from "./proveedorFacturas.types";
 
 export type {
   ProveedorFacturaRow,
@@ -24,7 +24,6 @@ export type {
   FetchCxPFiltros,
 } from "./proveedorFacturas.types";
 
-import type { FetchCxPFiltros } from "./proveedorFacturas.types";
 
 
 /** α.1 — Default y cap defensivo para la paginación. */
