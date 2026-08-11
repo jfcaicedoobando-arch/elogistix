@@ -37,15 +37,32 @@ describe("fetchCostosConFactura", () => {
     });
     mock.setTableResult("proveedor_facturas_conceptos", {
       data: [
-        { concepto_costo_id: "cc-1" },
-        { concepto_costo_id: "cc-1" },
-        { concepto_costo_id: "cc-3" },
-        { concepto_costo_id: null },
+        { concepto_costo_id: "cc-1", proveedor_facturas: { estado: "Vigente", deleted_at: null } },
+        { concepto_costo_id: "cc-1", proveedor_facturas: { estado: "Pagada", deleted_at: null } },
+        { concepto_costo_id: "cc-3", proveedor_facturas: { estado: "Vigente", deleted_at: null } },
+        { concepto_costo_id: null, proveedor_facturas: { estado: "Vigente", deleted_at: null } },
       ],
       error: null,
     });
     const out = await fetchCostosConFactura("emb-1");
     expect(Array.from(out).sort()).toEqual(["cc-1", "cc-3"]);
+  });
+
+  it("ignora facturas Canceladas y borradas (v13.505.0)", async () => {
+    mock.setTableResult("conceptos_costo", {
+      data: [{ id: "cc-1" }, { id: "cc-2" }, { id: "cc-3" }],
+      error: null,
+    });
+    mock.setTableResult("proveedor_facturas_conceptos", {
+      data: [
+        { concepto_costo_id: "cc-1", proveedor_facturas: { estado: "Cancelada", deleted_at: null } },
+        { concepto_costo_id: "cc-2", proveedor_facturas: { estado: "Vigente", deleted_at: "2026-01-01" } },
+        { concepto_costo_id: "cc-3", proveedor_facturas: null },
+      ],
+      error: null,
+    });
+    const out = await fetchCostosConFactura("emb-1");
+    expect(out.size).toBe(0);
   });
 
   it("propaga error del paso conceptos_costo", async () => {

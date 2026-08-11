@@ -476,6 +476,9 @@ jobs:
       - name: CXP - pago permitido en embarque Cerrado (v13.497.1)
         run: $PSQL -f supabase/tests/cxp_pago_embarque_cerrado.sql
 
+      - name: CXP - cancelacion libera embarque y conceptos (v13.505.0)
+        run: $PSQL -f supabase/tests/cxp_cancelacion_libera_embarque.sql
+
 
 
 
