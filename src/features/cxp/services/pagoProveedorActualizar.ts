@@ -12,6 +12,7 @@ import {
   crearMovimientoBancarioPago,
   eliminarMovimientoBancarioPago,
 } from "./pagoProveedorMovimiento";
+import { avisarMovimientoNoCreado } from "./pagoProveedorMovimientoAviso";
 import { detallesPagoEditado } from "./pagoProveedorBitacora";
 import type { PagoProveedor } from "./pagosProveedorTypes";
 
@@ -73,7 +74,7 @@ export async function actualizarPagoProveedor(
   await eliminarMovimientoBancarioPago(input.id, userId);
   let movimientoCreado = false;
   if (input.cuenta_bancaria_id) {
-    movimientoCreado = await crearMovimientoBancarioPago({
+    movimientoCreado = avisarMovimientoNoCreado(await crearMovimientoBancarioPago({
       pagoId: input.id,
       organizationId: actual.organization_id,
       cuentaBancariaId: input.cuenta_bancaria_id,
@@ -84,7 +85,7 @@ export async function actualizarPagoProveedor(
       tipoCambioUsd: tc,
       referencia: input.referencia,
       userId,
-    });
+    }));
   }
 
   await registrarActividad({

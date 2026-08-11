@@ -9,6 +9,7 @@ import {
   crearMovimientoBancarioPago,
   eliminarMovimientoBancarioPago,
 } from "./pagoProveedorMovimiento";
+import { avisarMovimientoNoCreado } from "./pagoProveedorMovimientoAviso";
 import { detallesPagoRegistrado, detallesPagoEliminado } from "./pagoProveedorBitacora";
 import type {
   PagoProveedor,
@@ -126,7 +127,7 @@ export async function registrarPagoProveedor(
   // conciliado para que /tesoreria refleje la salida de efectivo.
   let movimientoCreado = false;
   if (input.cuenta_bancaria_id) {
-    movimientoCreado = await crearMovimientoBancarioPago({
+    movimientoCreado = avisarMovimientoNoCreado(await crearMovimientoBancarioPago({
       pagoId: data.id,
       organizationId,
       cuentaBancariaId: input.cuenta_bancaria_id,
@@ -137,7 +138,7 @@ export async function registrarPagoProveedor(
       tipoCambioUsd: input.tipo_cambio_usd,
       referencia: input.referencia,
       userId,
-    });
+    }));
   }
 
   // Recalcular estado de la factura origen

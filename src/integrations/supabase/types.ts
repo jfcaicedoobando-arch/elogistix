@@ -9110,6 +9110,10 @@ export type Database = {
         Args: { p_embarque_id: string }
         Returns: number
       }
+      regenerar_movimiento_pago_proveedor: {
+        Args: { p_pago_id: string }
+        Returns: string
+      }
       registrar_anticipo_proveedor: {
         Args: {
           p_cuenta_bancaria_id?: string

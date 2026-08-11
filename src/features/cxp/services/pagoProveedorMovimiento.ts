@@ -12,6 +12,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
+/** Resultado del intento de crear el movimiento bancario espejo del pago. */
+export interface ResultadoMovimientoPago {
+  ok: boolean;
+  /** Motivo del rechazo (mensaje de la BD) cuando `ok` es falso. */
+  error?: string;
+}
+
 export interface MovimientoPagoInput {
   pagoId: string;
   organizationId: string;
@@ -85,11 +92,12 @@ async function describirFactura(facturaId: string): Promise<string> {
 /**
  * Inserta el movimiento bancario conciliado del pago. No lanza: el pago ya
  * quedó guardado y no queremos revertirlo por un fallo del movimiento.
- * Devuelve `true` si el movimiento se creó.
+ * Devuelve `{ ok: true }` si el movimiento se creó y, si no, el motivo real del
+ * rechazo (v13.495.0) para que la UI pueda avisar en lugar de fallar en silencio.
  */
 export async function crearMovimientoBancarioPago(
   input: MovimientoPagoInput,
-): Promise<boolean> {
+): Promise<ResultadoMovimientoPago> {
   const [concepto, monedaCuenta] = await Promise.all([
     describirFactura(input.facturaId),
     monedaDeCuenta(input.cuentaBancariaId),
@@ -111,16 +119,15 @@ export async function crearMovimientoBancarioPago(
     importado_por: input.userId,
   };
   const { error } = await supabase.from("bbva_movimientos").insert(payload);
-  if (!error) {
-    await registrarActividad({
-      modulo: "tesoreria",
-      accion: "crear_movimiento_bancario_pago",
-      entidadId: input.pagoId,
-      entidadNombre: concepto,
-      detalles: { cuentaBancariaId: input.cuentaBancariaId, monto: payload.cargo },
-    });
-  }
-  return !error;
+  if (error) return { ok: false, error: error.message };
+  await registrarActividad({
+    modulo: "tesoreria",
+    accion: "crear_movimiento_bancario_pago",
+    entidadId: input.pagoId,
+    entidadNombre: concepto,
+    detalles: { cuentaBancariaId: input.cuentaBancariaId, monto: payload.cargo },
+  });
+  return { ok: true };
 }
 
 /** Soft-delete del movimiento vinculado cuando se elimina el pago. */
