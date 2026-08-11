@@ -16,13 +16,17 @@ export function ProveedorEntrante({
   sinXml,
   yaCapturado,
   folioExistente,
+  canceladaExistente = false,
 }: {
   row: Fila;
   sinXml: boolean;
   yaCapturado: boolean;
   folioExistente: string | null;
+  /** v13.501.0 — La factura previa del mismo CFDI está cancelada. */
+  canceladaExistente?: boolean;
 }) {
   const nombre = row.proveedores?.nombre ?? null;
+  const folio = folioExistente ? ` · ${folioExistente}` : "";
 
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -35,11 +39,24 @@ export function ProveedorEntrante({
         </span>
       )}
       {sinXml && <Badge variant="warning" size="sm">Falta XML</Badge>}
-      {yaCapturado && (
+      {yaCapturado && canceladaExistente && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="warning" size="sm">CFDI de factura cancelada{folio}</Badge>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            Este CFDI se capturó antes en {folioExistente ?? "una factura"}, que después se
+            canceló. No se puede volver a capturar con el mismo UUID: retira el documento del
+            buzón o consulta la factura cancelada.
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {yaCapturado && !canceladaExistente && (
         <Badge variant="neutral" size="sm">
-          CFDI ya capturado{folioExistente ? ` · ${folioExistente}` : ""}
+          CFDI ya capturado{folio}
         </Badge>
       )}
+
       {row.nota && (
         <Tooltip>
           <TooltipTrigger asChild>
