@@ -164,8 +164,11 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
   }
 
   // H4a — CREATE INDEX sin IF NOT EXISTS
+  // Se ignoran los comentarios de línea (`-- ...`): una migración puede
+  // documentar en prosa por qué NO crea un índice sin ser una violación.
+  const bodySinComentarios = body.replace(/--[^\n]*/g, "");
   const idxRe = /create\s+(?:unique\s+)?index\s+(?!if\s+not\s+exists)([a-z0-9_]+)/gi;
-  for (const m of body.matchAll(idxRe)) {
+  for (const m of bodySinComentarios.matchAll(idxRe)) {
     out.push({ file, check: "H4", detail: `CREATE INDEX ${m[1]} sin IF NOT EXISTS` });
   }
 
