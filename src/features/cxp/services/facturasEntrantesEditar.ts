@@ -36,7 +36,14 @@ export async function actualizarDatosEntrante(
     p_moneda_declarada: datos.montoDeclarado != null ? datos.monedaDeclarada : null,
     p_nota: datos.nota.trim() || null,
     p_sin_costo_capturado: datos.sinCostoCapturado,
-  } as unknown as { p_documento_id: string };
+  } as unknown as {
+    p_documento_id: string;
+    p_moneda_declarada: string;
+    p_monto_declarado: number;
+    p_nota: string;
+    p_proveedor_id: string;
+    p_sin_costo_capturado: boolean;
+  };
   const { error } = await supabase.rpc("actualizar_datos_entrante", args);
   if (error) throw error;
   await registrarActividad({
