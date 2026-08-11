@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.499.2] - 2026-08-11
+- Corregido el test `supabase/tests/cxp_pago_embarque_cerrado.sql`: ahora cierra el embarque recorriendo la cadena válida de estados (Confirmado → En Tránsito → Arribo → En Aduana → Entregado → Cerrado) en lugar de saltar directo a Cerrado, que disparaba `LC_TRANSICION_INVALIDA`.
+
 ## [13.499.1] - 2026-08-11
 - Mensajes claros para los nuevos códigos del cobro en lote (importe requerido, importe que no cuadra y factura repetida) y separación de `pagoClienteLote.ts` para respetar el límite de 200 líneas.
 - Pendiente conocido: la migración histórica `20260812090000` no se puede convertir en no-op desde el editor (los archivos de migración los gestiona la plataforma); no afecta producción, sólo bases creadas desde cero.
