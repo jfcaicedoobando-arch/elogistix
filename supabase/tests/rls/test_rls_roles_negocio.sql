@@ -24,6 +24,7 @@ DECLARE
   vendedor_a uuid := gen_random_uuid();
   contador_a uuid := gen_random_uuid();
   tesorero_a uuid := gen_random_uuid();
+  auxiliar_a uuid := gen_random_uuid();
   cobranza_a uuid := gen_random_uuid();
   super_u uuid := gen_random_uuid();
   cli_a uuid := gen_random_uuid();
