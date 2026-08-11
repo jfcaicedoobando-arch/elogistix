@@ -3,11 +3,26 @@
 /** Decide si un error debe llegar a Sentry. */
 export function shouldReportToSentry(error: unknown): boolean {
   if (error === undefined || error === null) return false;
+  if (isExpectedValidation(error)) return false;
   if (isAuthorizationError(error)) return false;
   if (isExpectedFacturapiValidation(error)) return false;
   if (isTransientFacturapiNetwork(error)) return false;
   return true;
 }
+
+/**
+ * Validaciones de negocio esperadas (marcadas con `expected = true` en el
+ * error). Son avisos correctos al usuario, no fallas: se muestran en el toast
+ * pero NO se reportan a Sentry para no esconder bugs reales.
+ */
+export function isExpectedValidation(err: unknown): boolean {
+  return (
+    typeof err === "object"
+    && err !== null
+    && (err as { expected?: unknown }).expected === true
+  );
+}
+
 
 export function isAuthorizationError(err: unknown): boolean {
   const msg =

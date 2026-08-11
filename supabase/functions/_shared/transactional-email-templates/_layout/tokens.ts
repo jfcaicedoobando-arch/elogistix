@@ -28,6 +28,12 @@ export const CHIP_TONES = {
   factura:      { bg: '#DCFCE7', fg: '#166534' },
   'nota-credito': { bg: '#FEE2E2', fg: '#991B1B' },
   rep:          { bg: '#E0E7FF', fg: '#3730A3' },
+  info:         { bg: '#F1F5F9', fg: '#334155' },
+  warning:      { bg: '#FEF3C7', fg: '#B45309' },
 } as const;
 
 export type ChipTone = keyof typeof CHIP_TONES;
+
+/** Tono por omisión: blindaje ante un tono nuevo sin registrar. */
+export const CHIP_TONE_FALLBACK = CHIP_TONES.info;
+

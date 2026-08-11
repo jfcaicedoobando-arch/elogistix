@@ -9,17 +9,19 @@ import {
   Body, Container, Head, Heading, Hr, Html, Img, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22';
 import * as S from './styles.ts';
-import { LOGO_URL, CHIP_TONES, type ChipTone } from './tokens.ts';
+import { LOGO_URL, CHIP_TONES, CHIP_TONE_FALLBACK, type ChipTone } from './tokens.ts';
 
 const SITE_NAME = 'Libre Carga';
 
 interface ChipProps { tone: ChipTone; label: string; }
 const EmailChip = ({ tone, label }: ChipProps) => {
-  const colors = CHIP_TONES[tone];
+  // Blindaje: un tono no registrado no debe tumbar el render del correo.
+  const colors = CHIP_TONES[tone] ?? CHIP_TONE_FALLBACK;
   return (
     <span style={{ ...S.chip, backgroundColor: colors.bg, color: colors.fg }}>{label}</span>
   );
 };
+
 
 interface Ejecutivo {
   ejecutivoNombre?: string;

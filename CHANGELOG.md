@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.511.0] - 2026-08-11
+- Correos transaccionales (Sentry JAVASCRIPT-REACT-4X): el estado de cuenta y el recordatorio de cobranza vencida fallaban al renderizar porque usaban tonos (`info`, `warning`) que no existían en el catálogo de colores; se registraron y el chip ahora cae a un tono por omisión ante cualquier tono nuevo.
+- Sentry menos ruidoso: los avisos de documento duplicado en el buzón CxP ("ya está en el buzón" / "ya fue capturado") son validaciones esperadas y ya no se reportan como error (se siguen mostrando al usuario).
+- Se cerraron en Sentry los issues JAVASCRIPT-REACT-4Z y 4Y (`idempotency_store` con firma incorrecta), ya corregidos en 13.509.5.
+
 ## [13.510.1] - 2026-08-11
 - CI (Power of 10): se dividieron archivos que rebasaron 200 líneas — el modal de captura (`ColumnaDatosFactura` a `DialogNuevaFacturaProveedor.datos.tsx`), el cableado del modo buzón (`useModoBuzonWiring.ts`) y los modales del buzón (`BuzonEntrantesModales.tsx`); sin cambios funcionales.
 

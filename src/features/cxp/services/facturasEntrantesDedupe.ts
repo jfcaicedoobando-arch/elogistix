@@ -7,6 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { BUCKET_CXP_INBOX } from "@/features/cxp/services/facturasEntrantes.types";
 
 /**
+ * Error de validación ESPERADA del buzón (documento duplicado). Se marca con
+ * `expected = true` para que el aviso llegue al usuario pero no a Sentry.
+ */
+export class BuzonDuplicadoError extends Error {
+  readonly expected = true;
+  constructor(message: string) {
+    super(message);
+    this.name = "BuzonDuplicadoError";
+  }
+}
+
+/**
  * v13.414.0 — Evita gemelos en el buzón: si ya hay un documento vivo con el
  * mismo hash (archivo principal o XML) en la organización, no se crea/adjunta
  * otro renglón.
@@ -25,7 +37,7 @@ export async function validarNoDuplicadoEnBuzon(
     .limit(1);
   if (error || !data || data.length === 0) return;
   const esXml = columna === "xml_hash";
-  throw new Error(
+  throw new BuzonDuplicadoError(
     data[0].estado === "capturada"
       ? esXml
         ? "Este XML ya fue capturado como factura de proveedor. Búscala en Compras › Facturas."
@@ -35,6 +47,7 @@ export async function validarNoDuplicadoEnBuzon(
         : "Este archivo ya está en el buzón esperando captura. Abre el documento existente en vez de subirlo otra vez.",
   );
 }
+
 
 /**
  * N36 (Ola 4): sin este cleanup, los archivos ya subidos a cxp-inbox
