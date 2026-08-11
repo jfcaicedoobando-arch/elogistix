@@ -505,6 +505,7 @@ export type Database = {
           pago_proveedor_lote_id: string | null
           referencia: string
           saldo: number | null
+          traspaso_id: string | null
         }
         Insert: {
           abono?: number
@@ -530,6 +531,7 @@ export type Database = {
           pago_proveedor_lote_id?: string | null
           referencia?: string
           saldo?: number | null
+          traspaso_id?: string | null
         }
         Update: {
           abono?: number
@@ -555,6 +557,7 @@ export type Database = {
           pago_proveedor_lote_id?: string | null
           referencia?: string
           saldo?: number | null
+          traspaso_id?: string | null
         }
         Relationships: [
           {
@@ -590,6 +593,13 @@ export type Database = {
             columns: ["pago_proveedor_lote_id"]
             isOneToOne: false
             referencedRelation: "pagos_proveedor_lote"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bbva_movimientos_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos_bancarios"
             referencedColumns: ["id"]
           },
         ]
@@ -7114,6 +7124,90 @@ export type Database = {
         }
         Relationships: []
       }
+      traspasos_bancarios: {
+        Row: {
+          comision: number
+          concepto: string
+          created_at: string
+          created_by: string | null
+          cuenta_destino_id: string
+          cuenta_origen_id: string
+          deleted_at: string | null
+          estado: string
+          fecha: string
+          folio: string
+          id: string
+          moneda_destino: Database["public"]["Enums"]["moneda"]
+          moneda_origen: Database["public"]["Enums"]["moneda"]
+          monto_destino: number
+          monto_origen: number
+          motivo_cancelacion: string
+          organization_id: string
+          referencia: string
+          tipo_cambio: number
+          updated_at: string
+        }
+        Insert: {
+          comision?: number
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          cuenta_destino_id: string
+          cuenta_origen_id: string
+          deleted_at?: string | null
+          estado?: string
+          fecha: string
+          folio: string
+          id?: string
+          moneda_destino: Database["public"]["Enums"]["moneda"]
+          moneda_origen: Database["public"]["Enums"]["moneda"]
+          monto_destino: number
+          monto_origen: number
+          motivo_cancelacion?: string
+          organization_id?: string
+          referencia?: string
+          tipo_cambio?: number
+          updated_at?: string
+        }
+        Update: {
+          comision?: number
+          concepto?: string
+          created_at?: string
+          created_by?: string | null
+          cuenta_destino_id?: string
+          cuenta_origen_id?: string
+          deleted_at?: string | null
+          estado?: string
+          fecha?: string
+          folio?: string
+          id?: string
+          moneda_destino?: Database["public"]["Enums"]["moneda"]
+          moneda_origen?: Database["public"]["Enums"]["moneda"]
+          monto_destino?: number
+          monto_origen?: number
+          motivo_cancelacion?: string
+          organization_id?: string
+          referencia?: string
+          tipo_cambio?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traspasos_bancarios_cuenta_destino_id_fkey"
+            columns: ["cuenta_destino_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traspasos_bancarios_cuenta_origen_id_fkey"
+            columns: ["cuenta_origen_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -7871,6 +7965,10 @@ export type Database = {
       }
       cancelar_factura_proveedor: {
         Args: { p_factura_id: string; p_motivo: string }
+        Returns: undefined
+      }
+      cancelar_traspaso_bancario: {
+        Args: { p_motivo?: string; p_traspaso_id: string }
         Returns: undefined
       }
       capturar_factura_entrante: {
@@ -9251,6 +9349,19 @@ export type Database = {
       registrar_pago_cliente_lote: { Args: { p_payload: Json }; Returns: Json }
       registrar_pago_proveedor_lote: {
         Args: { p_payload: Json }
+        Returns: string
+      }
+      registrar_traspaso_bancario: {
+        Args: {
+          p_comision?: number
+          p_concepto?: string
+          p_cuenta_destino_id: string
+          p_cuenta_origen_id: string
+          p_fecha: string
+          p_monto_origen: number
+          p_referencia?: string
+          p_tipo_cambio?: number
+        }
         Returns: string
       }
       reportes_resumen: {

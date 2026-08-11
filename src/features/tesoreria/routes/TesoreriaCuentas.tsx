@@ -1,4 +1,5 @@
-import { Landmark, Plus } from "lucide-react";
+import { useState } from "react";
+import { Landmark, Plus, ArrowRightLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
@@ -12,6 +13,8 @@ import { useSaldosCuentas } from "@/features/tesoreria/hooks/useTesoreriaCuentas
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { CuentaBancariaCard } from "./_sections/CuentaBancariaCard";
 import { NuevaCuentaFormFields } from "./_sections/NuevaCuentaFormFields";
+import { DialogTraspasoCuentas } from "./_sections/DialogTraspasoCuentas";
+
 
 export default function TesoreriaCuentas() {
   const {
@@ -20,8 +23,9 @@ export default function TesoreriaCuentas() {
   } = useTesoreriaCuentasController();
   // Sentry JAVASCRIPT-REACT-3S/3T: sólo administradores y tesorero pueden
   // escribir en `cuentas_bancarias` (RLS). El contador sólo consulta.
-  const { canAdminCuentasBancarias } = usePermissions();
+  const { canAdminCuentasBancarias, canCapturarMovimientoBancario } = usePermissions();
   const { data: saldos = [] } = useSaldosCuentas();
+  const [openTraspaso, setOpenTraspaso] = useState(false);
 
   return (
     <PageContainer>
@@ -33,13 +37,21 @@ export default function TesoreriaCuentas() {
             : "Consulta de cuentas para conciliación (sólo administradores y tesorería pueden editarlas)"
         }
         actions={
-          canAdminCuentasBancarias ? (
-            <Button onClick={() => setOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" /> Nueva cuenta
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            {canCapturarMovimientoBancario && (
+              <Button variant="outline" onClick={() => setOpenTraspaso(true)}>
+                <ArrowRightLeft className="h-4 w-4 mr-2" /> Traspaso
+              </Button>
+            )}
+            {canAdminCuentasBancarias ? (
+              <Button onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" /> Nueva cuenta
+              </Button>
+            ) : null}
+          </div>
         }
       />
+
 
       {isLoading || isError ? (
         <AsyncBoundary
@@ -86,6 +98,12 @@ export default function TesoreriaCuentas() {
         <NuevaCuentaFormFields form={form} setField={setField} />
       </FormDialogShell>
 
+      <DialogTraspasoCuentas
+        open={openTraspaso}
+        onOpenChange={setOpenTraspaso}
+        cuentas={cuentas}
+      />
+
       <ConfirmDeleteAlert
         open={!!deleteTarget}
         onOpenChange={(v) => { if (!v) cancelarEliminar(); }}
@@ -96,5 +114,6 @@ export default function TesoreriaCuentas() {
         onConfirm={confirmarEliminar}
       />
     </PageContainer>
+
   );
 }
