@@ -139,11 +139,62 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
 /**
  * Mapper de eventos `receipt.*` (REP / Complemento de Pagos) hacia
  * `public.pagos_factura`. Devuelve el `facturapi_rep_id` para hacer match.
+ *
+ * Ola 5 · RG4-10: los tipos `invoice.status_updated`/`invoice.canceled`
+ * también se mapean — FacturAPI puede notificar la cancelación de un REP con
+ * tipos invoice.*. El dispatcher (index.ts) los intenta como REP SÓLO si el
+ * id no matcheó ninguna factura de la organización.
  */
 export interface MappedReceiptUpdate {
   facturapi_rep_id: string;
   patch: Record<string, unknown>;
   bitacora_accion: string;
+}
+
+/**
+ * Ola 5 · RG4-10 — espejo de mapInvoiceStatusUpdated/mapCancellationStatusUpdated
+ * (rama de facturas, tras N18) para REPs: los eventos de cancelación también
+ * fijan `rep_cancellation_status` (columna de Ola 4 · N5, migración
+ * 20260810110100) y `rep_cancelado_en`. Antes un REP cancelado fuera de la
+ * edge quedaba `estado_rep='Cancelado'` con rep_cancellation_status='none'.
+ */
+function mapReceiptStatusUpdated(
+  facturapi_rep_id: string,
+  status: string | null,
+  uuid: string | null,
+  cancellationStatus: string | null,
+): MappedReceiptUpdate | null {
+  const patch: Record<string, unknown> = {};
+  if (uuid) patch.uuid_rep = uuid;
+  if (status === "canceled" || cancellationStatus === "accepted") {
+    patch.estado_rep = "Cancelado";
+    patch.rep_cancelado_en = new Date().toISOString();
+    patch.rep_cancellation_status = "accepted";
+  } else if (status === "valid") {
+    patch.estado_rep = "Timbrado";
+    patch.timbrado_rep_en = new Date().toISOString();
+    // pending/verifying/rejected/expired: se reporta el estado async del SAT
+    // SIN tocar estado_rep (espejo de mapCancellationStatusUpdated, que sólo
+    // cierra el estado cuando el SAT acepta la cancelación).
+    if (cancellationStatus) patch.rep_cancellation_status = cancellationStatus;
+  } else if (cancellationStatus) {
+    patch.rep_cancellation_status = cancellationStatus;
+  }
+  if (Object.keys(patch).length === 0) return null;
+  return { facturapi_rep_id, patch, bitacora_accion: "facturapi_webhook_rep_status" };
+}
+
+/** Ola 5 · RG4-10 — espejo de mapInvoiceCanceled para REPs. */
+function mapReceiptCanceled(facturapi_rep_id: string): MappedReceiptUpdate {
+  return {
+    facturapi_rep_id,
+    patch: {
+      estado_rep: "Cancelado",
+      rep_cancelado_en: new Date().toISOString(),
+      rep_cancellation_status: "accepted",
+    },
+    bitacora_accion: "facturapi_webhook_rep_canceled",
+  };
 }
 
 export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceiptUpdate | null {
@@ -152,27 +203,19 @@ export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceipt
   const facturapi_rep_id = obj.id;
   const status = typeof obj.status === "string" ? obj.status : null;
   const uuid = typeof obj.uuid === "string" ? obj.uuid : null;
+  // Ola 5 · RG4-10: el objeto también puede traer cancellation_status,
+  // igual que en la rama de facturas (extractCtx).
+  const cancellationStatus = typeof obj.cancellation_status === "string"
+    ? obj.cancellation_status.toLowerCase()
+    : null;
 
   switch (ev.type) {
-    case "receipt.status_updated": {
-      const patch: Record<string, unknown> = {};
-      if (uuid) patch.uuid_rep = uuid;
-      if (status === "canceled") {
-        patch.estado_rep = "Cancelado";
-        patch.rep_cancelado_en = new Date().toISOString();
-      } else if (status === "valid") {
-        patch.estado_rep = "Timbrado";
-        patch.timbrado_rep_en = new Date().toISOString();
-      }
-      if (Object.keys(patch).length === 0) return null;
-      return { facturapi_rep_id, patch, bitacora_accion: "facturapi_webhook_rep_status" };
-    }
+    case "receipt.status_updated":
+    case "invoice.status_updated":
+      return mapReceiptStatusUpdated(facturapi_rep_id, status, uuid, cancellationStatus);
     case "receipt.canceled":
-      return {
-        facturapi_rep_id,
-        patch: { estado_rep: "Cancelado", rep_cancelado_en: new Date().toISOString() },
-        bitacora_accion: "facturapi_webhook_rep_canceled",
-      };
+    case "invoice.canceled":
+      return mapReceiptCanceled(facturapi_rep_id);
     case "receipt.created":
       return {
         facturapi_rep_id,
