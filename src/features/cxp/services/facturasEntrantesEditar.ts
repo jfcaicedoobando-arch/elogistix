@@ -27,8 +27,6 @@ export async function actualizarDatosEntrante(
   datos: DatosEntranteEditables,
   nombreArchivo?: string | null,
 ): Promise<void> {
-  // SAFE-CAST: los tipos generados marcan los parámetros opcionales como no
-  // nulos; la RPC acepta NULL para limpiar cada dato declarado.
   const args = {
     p_documento_id: documentoId,
     p_proveedor_id: datos.proveedorId,
@@ -36,6 +34,8 @@ export async function actualizarDatosEntrante(
     p_moneda_declarada: datos.montoDeclarado != null ? datos.monedaDeclarada : null,
     p_nota: datos.nota.trim() || null,
     p_sin_costo_capturado: datos.sinCostoCapturado,
+    // SAFE-CAST: los tipos generados marcan los parámetros como no nulos; la
+    // RPC acepta NULL para limpiar cada dato declarado.
   } as unknown as {
     p_documento_id: string;
     p_moneda_declarada: string;
