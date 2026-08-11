@@ -540,7 +540,7 @@ jobs:
           # `changes` y SÓLO cuando el diff no tocó frontend. Cualquier otro
           # `skipped` sigue siendo una falla (gate anti-skip-silencioso).
           if [ "$CHANGES_RESULT" != "success" ]; then
-            echo "::error::El job `changes` no terminó en success ($CHANGES_RESULT); no se puede evaluar el gate."
+            echo "::error::El job changes no terminó en success ($CHANGES_RESULT); no se puede evaluar el gate."
             exit 1
           fi
           fail=0
