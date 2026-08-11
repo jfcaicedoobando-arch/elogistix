@@ -12,6 +12,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
+/** Resultado del intento de crear el movimiento bancario espejo del pago. */
+export interface ResultadoMovimientoPago {
+  ok: boolean;
+  /** Motivo del rechazo (mensaje de la BD) cuando `ok` es falso. */
+  error?: string;
+}
+
 export interface MovimientoPagoInput {
   pagoId: string;
   organizationId: string;
