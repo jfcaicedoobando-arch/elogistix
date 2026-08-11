@@ -27,14 +27,17 @@ export async function actualizarDatosEntrante(
   datos: DatosEntranteEditables,
   nombreArchivo?: string | null,
 ): Promise<void> {
-  const { error } = await supabase.rpc("actualizar_datos_entrante", {
+  // SAFE-CAST: los tipos generados marcan los parámetros opcionales como no
+  // nulos; la RPC acepta NULL para limpiar cada dato declarado.
+  const args = {
     p_documento_id: documentoId,
     p_proveedor_id: datos.proveedorId,
     p_monto_declarado: datos.montoDeclarado,
     p_moneda_declarada: datos.montoDeclarado != null ? datos.monedaDeclarada : null,
     p_nota: datos.nota.trim() || null,
     p_sin_costo_capturado: datos.sinCostoCapturado,
-  });
+  } as unknown as { p_documento_id: string };
+  const { error } = await supabase.rpc("actualizar_datos_entrante", args);
   if (error) throw error;
   await registrarActividad({
     modulo: "cxp",
@@ -66,6 +69,6 @@ export async function reemplazarConceptosEntrante(
     accion: "corregir_conceptos_entrante",
     entidadId: documentoId,
     entidadNombre: nombreArchivo ?? undefined,
-    detalle: { conceptos: conceptos.length },
+    detalles: { conceptos: conceptos.length },
   });
 }
