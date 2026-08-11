@@ -56,6 +56,7 @@ const REGLAS: Regla[] = [
       ? `Los datos del pago no cumplen una regla del sistema: ${e.message}`
       : "Los datos del pago no cumplen una regla del sistema.";
   },
+];
 
 
 export function traducirErrorPagoProveedor(err: unknown): string {
