@@ -189,14 +189,8 @@ export async function adjuntarXmlFacturaEntrante(params: {
     })
     .eq("id", params.id);
   if (error) {
-    // Ola 5 · RG4-7: mismo criterio que subirFacturaEntrante — con 23505 el
-    // XML es compartido por otra fila viva; en otros errores sólo se borra
-    // si ninguna fila viva del buzón lo referencia.
-    if (!esErrorUnicidad(error)) {
-      await limpiarArchivosHuerfanosSeguro([subido.path], params.organizationId);
-    }
-    const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
-    throw duplicado ? new Error(duplicado) : error;
+    // Ola 5 · RG4-7: mismo criterio que subirFacturaEntrante.
+    throw await errorGuardadoEntrante(error, [subido.path], params.organizationId);
   }
   await registrarActividad({
     modulo: "cxp",
