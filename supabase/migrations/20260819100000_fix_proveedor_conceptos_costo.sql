@@ -327,3 +327,10 @@ UPDATE public.conceptos_costo cc
    AND p.deleted_at IS NULL
    AND COALESCE(btrim(cc.proveedor_nombre), '') <> ''
    AND upper(btrim(p.nombre)) = upper(btrim(cc.proveedor_nombre));
+
+-- H6 · Hardening de permisos (idempotente): las funciones SECURITY DEFINER de
+-- este archivo no deben quedar ejecutables por PUBLIC/anon.
+REVOKE ALL ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) TO authenticated, service_role;
