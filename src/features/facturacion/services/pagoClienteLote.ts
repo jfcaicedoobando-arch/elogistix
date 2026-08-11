@@ -36,6 +36,8 @@ export interface RegistrarCobroLoteInput {
   referencia: string;
   cuenta_bancaria_id: string | null;
   notas?: string;
+  /** Ola 5 · RG4-5: importe real recibido; debe ser exactamente el reparto. */
+  importe_recibido: number;
   renglones: RenglonCobro[];
 }
 
@@ -108,6 +110,14 @@ export function validarCobroLote(
   if (totalRepartido > round2(total) + 0.009) {
     return { error: "La suma repartida no puede exceder el importe recibido.", totalRepartido };
   }
+  // Ola 5 · RG4-5: el sobrante ya no es una advertencia — es error. El
+  // importe recibido debe repartirse por completo (tolerancia 0.01).
+  if (round2(total) - totalRepartido > 0.009) {
+    return {
+      error: "El reparto debe cubrir exactamente el importe recibido: ajusta el importe o los importes por factura hasta que no quede sobrante sin asignar.",
+      totalRepartido,
+    };
+  }
   if (opts.cuentaId && opts.monedaCuenta && opts.monedaCuenta !== opts.moneda) {
     return {
       error: `La cuenta está en ${opts.monedaCuenta} y el cobro en ${opts.moneda}. Elige una cuenta en la misma moneda.`,
@@ -140,12 +150,33 @@ export async function registrarPagoClienteLote(
 ): Promise<CobroLoteResultado> {
   const payload = {
     ...input,
+    // Ola 5 · RG4-5: la RPC valida que el reparto cuadre con el importe.
+    importe_recibido: round2(input.importe_recibido),
     tipo_cambio_usd:
       input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null,
     renglones: input.renglones
       .filter((r) => r.monto > 0)
       .map((r) => ({ ...r, monto: round2(r.monto) })),
   };
+  // Ola 5 · RG4-12: guard de idempotencia. El botón ya se deshabilita
+  // mientras la mutación está en vuelo, pero un timeout ambiguo o un
+  // segundo diálogo idéntico creaban un lote duplicado completo (el
+  // hash_dedupe del movimiento es por lote nuevo). Se bloquea un lote
+  // idéntico (mismo cliente, fecha y total) creado en los últimos 10 min.
+  const totalRenglones = round2(payload.renglones.reduce((s, r) => s + r.monto, 0));
+  const { data: previos, error: errorPrevios } = await supabase
+    .from("pagos_factura_lote")
+    .select("id")
+    .eq("cliente_id", input.cliente_id)
+    .eq("fecha_pago", input.fecha_pago)
+    .eq("monto_total", totalRenglones)
+    .is("deleted_at", null)
+    .gte("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString())
+    .limit(1);
+  if (errorPrevios) throw errorPrevios;
+  if ((previos ?? []).length > 0) {
+    throw new Error("LC_COBRO_LOTE_DUPLICADO_RECIENTE");
+  }
   const { data, error } = await supabase.rpc("registrar_pago_cliente_lote", {
     p_payload: payload as never,
   });
@@ -171,6 +202,12 @@ export function traducirErrorCobroLote(error: Error): string {
   }
   if (m.includes("LC_COBRO_LOTE_MINIMO_FACTURAS")) {
     return "Un cobro en lote requiere al menos dos facturas.";
+  }
+  if (m.includes("LC_COBRO_LOTE_IMPORTE_NO_CUADRA") || m.includes("LC_COBRO_LOTE_IMPORTE_REQUERIDO")) {
+    return "El reparto no cuadra con el importe recibido: no se permite sobrante sin asignar.";
+  }
+  if (m.includes("LC_COBRO_LOTE_DUPLICADO_RECIENTE")) {
+    return "Ya registraste un cobro en lote idéntico hace unos minutos (mismo cliente, fecha e importe). Verifica el historial de pagos antes de reintentar.";
   }
   return "No se pudo registrar el cobro en lote.";
 }
