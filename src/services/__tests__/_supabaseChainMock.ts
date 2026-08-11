@@ -4,6 +4,8 @@
  * **Fuente única de verdad (v13.513.0 — consolidación).** El antiguo shim
  * `src/test/utils/_supabaseChainMock.ts` fue eliminado; todos los tests
  * importan directamente desde aquí.
+ *
+ * APIs disponibles:
 
  * - `createSupabaseMock()` — completa, con `setTableResult`/`setRpcResult`,
  *   captura de llamadas, payloads de mutación. **Preferida**.
