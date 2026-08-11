@@ -7495,6 +7495,10 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: undefined
       }
+      _resolver_proveedor_por_nombre: {
+        Args: { p_nombre: string; p_org: string }
+        Returns: string
+      }
       aceptar_cotizacion_version: {
         Args: { p_cotizacion_id: string }
         Returns: Json
