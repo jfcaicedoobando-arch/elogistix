@@ -112,16 +112,15 @@ export async function crearMovimientoBancarioPago(
     importado_por: input.userId,
   };
   const { error } = await supabase.from("bbva_movimientos").insert(payload);
-  if (!error) {
-    await registrarActividad({
-      modulo: "tesoreria",
-      accion: "crear_movimiento_bancario_pago",
-      entidadId: input.pagoId,
-      entidadNombre: concepto,
-      detalles: { cuentaBancariaId: input.cuentaBancariaId, monto: payload.cargo },
-    });
-  }
-  return !error;
+  if (error) return { ok: false, error: error.message };
+  await registrarActividad({
+    modulo: "tesoreria",
+    accion: "crear_movimiento_bancario_pago",
+    entidadId: input.pagoId,
+    entidadNombre: concepto,
+    detalles: { cuentaBancariaId: input.cuentaBancariaId, monto: payload.cargo },
+  });
+  return { ok: true };
 }
 
 /** Soft-delete del movimiento vinculado cuando se elimina el pago. */
