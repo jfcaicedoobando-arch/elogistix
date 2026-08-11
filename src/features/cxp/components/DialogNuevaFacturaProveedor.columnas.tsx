@@ -16,6 +16,7 @@ import { DocumentoBuzonCard } from "./DocumentoBuzonCard";
 import { AvisoMontoDeclarado } from "./AvisoMontoDeclarado";
 import { SugerenciasOperacionesBanda } from "./SugerenciasOperacionesBanda";
 import type { HerenciaSugerencias } from "@/features/cxp/hooks/usePrefillVinculosEntrante";
+import type { CategoriaCogsBuzon } from "@/features/cxp/hooks/useCategoriaCogsBuzon";
 import { OrigenDocumentoPicker } from "./OrigenDocumentoPicker";
 import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CfdiDuplicadoAlert } from "./CfdiDuplicadoAlert";
@@ -142,11 +143,14 @@ interface DatosProps {
   /** v13.507.0 — Sugerencias heredadas del buzón (sólo en modo buzón). */
   herencia?: HerenciaSugerencias | null;
   sinCostoCapturado?: boolean;
+  /** v13.510.0 — Documento del buzón: fija COGS y prioriza su expediente. */
+  entrante?: EntranteParaCaptura | null;
+  categoriaCogs?: CategoriaCogsBuzon | null;
 }
 
 /** Columna derecha: proveedor, categoría, notas y vinculación al embarque. */
 export function ColumnaDatosFactura({
-  ctl, categorias, herencia, sinCostoCapturado,
+  ctl, categorias, herencia, sinCostoCapturado, entrante, categoriaCogs,
 }: DatosProps) {
   return (
     <div className="space-y-5 min-w-0">
@@ -158,6 +162,7 @@ export function ColumnaDatosFactura({
         total={ctl.total}
         errors={ctl.errors}
         sinFechasEImportes
+        categoriaCogs={categoriaCogs}
       />
 
       {herencia && ctl.values.provId && (
@@ -186,6 +191,8 @@ export function ColumnaDatosFactura({
           embarqueAdHoc={ctl.embarqueAdHoc}
           onEmbarqueAdHoc={ctl.setEmbarqueAdHoc}
           tope={ctl.topeVinculacion}
+          embarqueIdPrioritario={entrante?.embarqueId ?? null}
+          expedientePrioritario={entrante?.expediente ?? null}
         />
       ) : (
         <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">

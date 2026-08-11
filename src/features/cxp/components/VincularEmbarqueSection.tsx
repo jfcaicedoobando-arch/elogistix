@@ -20,7 +20,7 @@ import type { ResultadoTopeVinculacion } from "@/features/cxp/utils/topeVinculac
 
 
 import { VincularFiltroToolbar } from "./VincularFiltroToolbar";
-import { VincularListaConceptos } from "./VincularListaConceptos";
+import { VincularGruposSplit } from "./VincularGruposSplit";
 import {
   agruparPorEmbarque,
   calcularPuedeSugerir,
@@ -50,6 +50,9 @@ interface Props {
   onEmbarqueAdHoc: (sel: EmbarqueSeleccionado | null) => void;
   /** Tope: lo asignado no puede exceder el subtotal de la factura. */
   tope: ResultadoTopeVinculacion;
+  /** v13.510.0 — Embarque que originó el documento del buzón (se prioriza). */
+  embarqueIdPrioritario?: string | null;
+  expedientePrioritario?: string | null;
 }
 
 
@@ -57,6 +60,7 @@ export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
   onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
   embarqueAdHoc, onEmbarqueAdHoc, tope,
+  embarqueIdPrioritario, expedientePrioritario,
 }: Props) {
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
@@ -162,11 +166,13 @@ export function VincularEmbarqueSection({
       />
 
       <div className="space-y-3 max-h-72 overflow-y-auto rounded-lg border p-2 bg-background">
-        <VincularListaConceptos
+        <VincularGruposSplit
           grupos={gruposFiltrados}
           seleccion={seleccion}
           onToggle={onToggle}
           onChangeMonto={onChangeMonto}
+          embarqueIdPrioritario={embarqueIdPrioritario}
+          expedientePrioritario={expedientePrioritario}
         />
       </div>
 

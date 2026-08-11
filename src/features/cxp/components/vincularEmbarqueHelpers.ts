@@ -57,6 +57,22 @@ export function filtrarGrupos(grupos: Grupo[], args: FiltrarGruposArgs): Grupo[]
   return out;
 }
 
+/**
+ * v13.510.0 — Separa el grupo del embarque que originó el documento del buzón
+ * del resto, para poder mostrarlo primero y colapsar los demás. Función pura.
+ */
+export function separarGrupoPrioritario(
+  grupos: Grupo[],
+  embarqueIdPrioritario?: string | null,
+): { prioritario: Grupo | null; otros: Grupo[] } {
+  if (!embarqueIdPrioritario) return { prioritario: null, otros: grupos };
+  const prioritario = grupos.find((g) => g.embarqueId === embarqueIdPrioritario) ?? null;
+  return {
+    prioritario,
+    otros: grupos.filter((g) => g.embarqueId !== embarqueIdPrioritario),
+  };
+}
+
 
 
 export function pluralS(n: number, base: string): string {

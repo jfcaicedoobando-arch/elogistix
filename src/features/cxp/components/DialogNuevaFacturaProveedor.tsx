@@ -23,9 +23,7 @@ import {
 } from "./DialogNuevaFacturaProveedor.columnas";
 
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
-import { usePrefillVinculosEntrante } from "@/features/cxp/hooks/usePrefillVinculosEntrante";
-import { useHerenciaEntrante } from "@/features/cxp/hooks/useHerenciaEntrante";
-import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
+import { useModoBuzonWiring } from "@/features/cxp/hooks/useModoBuzonWiring";
 import { abrirFacturaEntrante } from "@/features/cxp/services/facturasEntrantes";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
@@ -63,21 +61,8 @@ function DialogNuevaFacturaProveedorForm({
     onCerrar: () => onOpenChange(false),
   });
   const ctl = useNuevaFacturaProveedorForm(wiring.onDone, wiring.embarqueInicial);
-  const autocarga = useAutocargaEntrante({
-    entrante, abierto: open, categorias: cats.data ?? [],
-    onCfdiParsed: ctl.handleCfdiParsed, onPdfParsed: ctl.handlePdfIaParsed,
-  });
-
-  useHerenciaEntrante({
-    entrante, abierto: open,
-    provIdActual: ctl.values.provId,
-    notaActual: ctl.values.notas,
-    onProveedor: (id, nombre) => ctl.handleProveedor(id, nombre),
-    onNota: (nota) => ctl.handleChange("notas", nota),
-  });
-  const herencia = usePrefillVinculosEntrante({
-    entrante, abierto: open, habilitado: Boolean(ctl.values.provId),
-    aplicarSugerencias: ctl.aplicarSugerencias,
+  const { autocarga, categoriaCogs, herencia } = useModoBuzonWiring({
+    ctl, categorias: cats.data ?? [], entrante, abierto: open,
   });
 
   const verArchivoBuzon = async (path: string, nombre: string) => {
@@ -191,8 +176,10 @@ function DialogNuevaFacturaProveedorForm({
             <ColumnaDatosFactura
               ctl={ctl}
               categorias={cats.data ?? []}
-              herencia={entrante ? herencia : null}
+              herencia={herencia}
               sinCostoCapturado={entrante?.sinCostoCapturado}
+              entrante={entrante ?? null}
+              categoriaCogs={categoriaCogs}
             />
           </div>
         </div>

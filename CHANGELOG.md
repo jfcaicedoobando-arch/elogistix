@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.510.0] - 2026-08-11
+- Captura desde el buzón: la vinculación muestra primero el expediente del documento (los demás embarques del proveedor quedan colapsados) y avisa cuando ese expediente ya no tiene costos pendientes.
+- Categoría contable: si el documento nació de un embarque se fija en costo directo (COGS) y el selector queda bloqueado, con enlace "Cambiar categoría" para casos excepcionales; se avisa si la organización no tiene categoría COGS activa.
+
 ## [13.509.5] - 2026-08-11
 - Guardar embarque: `actualizar_embarque_completo` llamaba a `idempotency_store` con un argumento extra (42883); ahora usa la firma real `(_key uuid, _response jsonb)`.
 

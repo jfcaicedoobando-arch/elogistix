@@ -3,17 +3,13 @@
  * Inputs numéricos sin spinners (NumericInput), secciones con iconos
  * y agrupación moneda+importes. El total vive en el header del dialog.
  */
-import { FileText } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { FormSection, FieldError, RequiredMark } from "./facturaFormPrimitives";
 import type {
   FacturaFormValues,
   CategoriaPresupuestoLite,
   TcOrigen,
 } from "@/features/cxp/types";
+import type { CategoriaCogsBuzon } from "@/features/cxp/hooks/useCategoriaCogsBuzon";
+import { CategoriaContableSection } from "./FacturaProveedorFormFields.categoria";
 import { ProveedorYFolioSection, NotasSection } from "./FacturaProveedorFormFields.sections";
 import { FechasEImportesBlock } from "./FacturaProveedorFechasImportes";
 
@@ -42,13 +38,15 @@ interface Props {
    * de captura los coloca en la otra columna (ver `FechasEImportesBlock`).
    */
   sinFechasEImportes?: boolean;
+  /** v13.510.0 — Categoría fijada en COGS cuando el documento viene del buzón. */
+  categoriaCogs?: CategoriaCogsBuzon | null;
 }
 
 
 export function FacturaProveedorFormFields({
   values, onChange, onProveedor, categorias, errors = {},
   proveedorReadOnly = false, proveedorNombre, sinFechasEImportes = false,
-
+  categoriaCogs,
   tcOrigen = "vacio", tcFechaAplicada, onObtenerDof, dofLoading = false,
 }: Props) {
   
@@ -77,25 +75,17 @@ export function FacturaProveedorFormFields({
       )}
 
 
-      <FormSection title="Categoría contable" icon={<FileText className="h-3.5 w-3.5" />}>
-        <div className="space-y-1">
-          <Label>Categoría contable<RequiredMark /></Label>
-          <Select value={values.categoriaId || ""} onValueChange={(v) => onChange("categoriaId", v)}>
-            <SelectTrigger aria-required="true">
-              <SelectValue placeholder="Selecciona la categoría contable de esta factura" />
-            </SelectTrigger>
-            <SelectContent>
-              {categorias.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-label text-muted-foreground">
-            Un mismo proveedor puede emitir facturas para distintas categorías (COGS, gastos operativos, OpEx).
-          </p>
-          <FieldError msg={errors.categoriaId} />
-        </div>
-      </FormSection>
+      <CategoriaContableSection
+        value={values.categoriaId}
+        onChange={(v) => onChange("categoriaId", v)}
+        categorias={categorias}
+        error={errors.categoriaId}
+        bloqueada={categoriaCogs?.bloqueada}
+        motivo={categoriaCogs?.motivo}
+        onDesbloquear={categoriaCogs?.desbloquear}
+        avisoSinCogs={categoriaCogs?.avisoSinCogs}
+      />
+
 
       <NotasSection value={values.notas} onChange={(v) => onChange("notas", v)} />
     </div>
