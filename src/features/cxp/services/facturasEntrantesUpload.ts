@@ -143,7 +143,7 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
     .select("id")
     .single();
   if (error) {
-    await fallarGuardadoEntrante(
+    throw await errorGuardadoEntrante(
       error,
       [principal.path, ...(xmlSubido ? [xmlSubido.path] : [])],
       input.organizationId,
