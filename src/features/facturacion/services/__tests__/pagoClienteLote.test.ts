@@ -100,6 +100,19 @@ describe("validarCobroLote", () => {
     expect(res.error).toMatch(/exactamente el importe recibido/i);
   });
 
+  it("rechaza dos renglones a la misma factura (Ola 6 · RG4-6)", () => {
+    const res = validarCobroLote(
+      facturas,
+      [
+        { factura_id: "f-vieja", monto: 600 },
+        { factura_id: "f-vieja", monto: 400 },
+      ],
+      1000,
+      opts,
+    );
+    expect(res.error).toMatch(/más de una vez/i);
+  });
+
   it("rechaza cuenta bancaria en otra moneda", () => {
     const { renglones } = repartirFifo(facturas, 1200);
     const res = validarCobroLote(facturas, renglones, 1200, {
@@ -109,4 +122,5 @@ describe("validarCobroLote", () => {
     });
     expect(res.error).toMatch(/misma moneda/i);
   });
+
 });

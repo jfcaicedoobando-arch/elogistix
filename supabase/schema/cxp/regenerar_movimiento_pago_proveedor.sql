@@ -1,0 +1,108 @@
+-- Fuente canónica de public.regenerar_movimiento_pago_proveedor(uuid) (Ola 6 · O6-SCHEMA).
+-- 1:1 con supabase/migrations/20260819090000_ola6_rg51_regenerar_movimiento_fail_closed.sql.
+-- Ola 6 · RG5-1: fail-closed — sin organización resuelta se niega (LC_SIN_ORG).
+-- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_pago         public.pagos_proveedor;
+  v_org          uuid;
+  v_cuenta_mon   text;
+  v_cargo        numeric;
+  v_concepto     text;
+  v_mov_id       uuid;
+BEGIN
+  SELECT * INTO v_pago
+  FROM public.pagos_proveedor
+  WHERE id = p_pago_id AND deleted_at IS NULL;
+
+  IF v_pago.id IS NULL THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_PAGO_INEXISTENTE: el pago de proveedor no existe o está eliminado'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  -- Ola 6 · RG5-1: fail-closed. Sin organización resuelta no hay forma de
+  -- validar la pertenencia del pago: se niega.
+  v_org := public.org_scope();
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'LC_SIN_ORG: no hay organización activa para validar el pago; selecciona una organización antes de regenerar el movimiento'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_pago.organization_id IS DISTINCT FROM v_org THEN
+    RAISE EXCEPTION 'LC_ORG_MISMATCH: el pago pertenece a otra organización'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF NOT (
+    public.has_any_role(auth.uid(), ARRAY['tesorero','contador','admin','admin_org','super_admin']::app_role[])
+  ) THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_PERMISO: se requiere permiso de tesorería para regenerar el movimiento bancario'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_pago.cuenta_bancaria_id IS NULL THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_CUENTA: el pago no tiene cuenta bancaria, no hay movimiento que generar'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.bbva_movimientos
+    WHERE pago_proveedor_id = p_pago_id AND deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_YA_EXISTE: el pago ya tiene un movimiento bancario vigente'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT moneda::text INTO v_cuenta_mon
+  FROM public.cuentas_bancarias
+  WHERE id = v_pago.cuenta_bancaria_id AND deleted_at IS NULL;
+
+  IF v_cuenta_mon IS NULL THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_CUENTA: la cuenta bancaria del pago no existe o está dada de baja'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  -- El movimiento SIEMPRE se registra en la moneda de la cuenta.
+  v_cargo := v_pago.monto;
+  IF v_cuenta_mon IS DISTINCT FROM v_pago.moneda::text
+     AND COALESCE(v_pago.tipo_cambio_usd, 0) > 0 THEN
+    IF v_pago.moneda::text = 'USD' AND v_cuenta_mon = 'MXN' THEN
+      v_cargo := v_pago.monto * v_pago.tipo_cambio_usd;
+    ELSIF v_pago.moneda::text = 'MXN' AND v_cuenta_mon = 'USD' THEN
+      v_cargo := v_pago.monto / v_pago.tipo_cambio_usd;
+    END IF;
+  END IF;
+
+  SELECT 'Pago prov. '
+         || COALESCE(NULLIF(pf.folio_proveedor, ''), NULLIF(pf.folio_interno, ''), 's/folio')
+         || ' — ' || COALESCE(pr.nombre, pf.proveedor_nombre, 'proveedor')
+    INTO v_concepto
+  FROM public.proveedor_facturas pf
+  LEFT JOIN public.proveedores pr ON pr.id = pf.proveedor_id
+  WHERE pf.id = v_pago.proveedor_factura_id;
+
+  INSERT INTO public.bbva_movimientos (
+    organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
+    cargo, abono, hash_dedupe, estado_conciliacion, pago_proveedor_id,
+    conciliado_por, conciliado_at, importado_por
+  ) VALUES (
+    v_pago.organization_id, v_pago.cuenta_bancaria_id, v_pago.fecha_pago,
+    COALESCE(v_concepto, 'Pago a proveedor'), COALESCE(v_pago.referencia, ''),
+    ROUND(v_cargo, 2), 0, 'pago-' || p_pago_id::text, 'Conciliado', p_pago_id,
+    auth.uid(), now(), auth.uid()
+  )
+  RETURNING id INTO v_mov_id;
+
+  RETURN v_mov_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.regenerar_movimiento_pago_proveedor(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.regenerar_movimiento_pago_proveedor(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.regenerar_movimiento_pago_proveedor(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.regenerar_movimiento_pago_proveedor(uuid) TO service_role;
