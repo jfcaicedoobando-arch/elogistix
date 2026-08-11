@@ -77,25 +77,17 @@ export function FacturaProveedorFormFields({
       )}
 
 
-      <FormSection title="Categoría contable" icon={<FileText className="h-3.5 w-3.5" />}>
-        <div className="space-y-1">
-          <Label>Categoría contable<RequiredMark /></Label>
-          <Select value={values.categoriaId || ""} onValueChange={(v) => onChange("categoriaId", v)}>
-            <SelectTrigger aria-required="true">
-              <SelectValue placeholder="Selecciona la categoría contable de esta factura" />
-            </SelectTrigger>
-            <SelectContent>
-              {categorias.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-label text-muted-foreground">
-            Un mismo proveedor puede emitir facturas para distintas categorías (COGS, gastos operativos, OpEx).
-          </p>
-          <FieldError msg={errors.categoriaId} />
-        </div>
-      </FormSection>
+      <CategoriaContableSection
+        value={values.categoriaId}
+        onChange={(v) => onChange("categoriaId", v)}
+        categorias={categorias}
+        error={errors.categoriaId}
+        bloqueada={categoriaCogs?.bloqueada}
+        motivo={categoriaCogs?.motivo}
+        onDesbloquear={categoriaCogs?.desbloquear}
+        avisoSinCogs={categoriaCogs?.avisoSinCogs}
+      />
+
 
       <NotasSection value={values.notas} onChange={(v) => onChange("notas", v)} />
     </div>
