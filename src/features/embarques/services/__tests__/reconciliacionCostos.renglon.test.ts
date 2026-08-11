@@ -100,3 +100,18 @@ describe("buildFilasReconciliacion (Fase 3)", () => {
     });
   });
 });
+
+describe("buildFilasReconciliacion · facturas canceladas (v13.505.0)", () => {
+  it("ignora las facturas Canceladas: el concepto vuelve a sin_match", () => {
+    const conceptos = [
+      { id: "cc-1", concepto: "Flete", proveedor_nombre: "X", moneda: "USD", monto: 1000, estado_liquidacion: "Pendiente" },
+    ];
+    const vinc = [
+      { monto: 1000, concepto_costo_id: "cc-1", descripcion: "Flete mar", proveedor_facturas: { id: "f1", folio_proveedor: "A-1", fecha_emision: "2026-06-01", estado: "Cancelada", deleted_at: null } },
+    ];
+    const filas = buildFilasReconciliacion(conceptos, vinc);
+    expect(filas[0].facturas).toHaveLength(0);
+    expect(filas[0].real_facturado).toBe(0);
+    expect(filas[0].estatus_renglon).toBe("sin_match");
+  });
+});
