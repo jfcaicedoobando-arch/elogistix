@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.498.1] - 2026-08-11
+- **CI en verde**: el cast de `backTo` en `DetailHeader.tsx` no tenía el marcador `// SAFE-CAST:`, lo que rompía las auditorías de arquitectura y el baseline de casts (0 HIGH/CRITICAL). Se documentó el cast; sin cambios de comportamiento.
+
 ## [13.498.0] - 2026-08-11
 - **Modal "Pago en lote a proveedor" rediseñado** con la misma estructura y UX del "Cobro en lote de cliente": modal más ancho, saldo seleccionado siempre visible en el encabezado y datos de la transferencia en tres columnas con ayudas cortas.
 - La tabla de reparto ahora tiene filas alternadas, scroll horizontal en pantallas angostas, campo de importe alineado a la derecha con moneda y etiquetas "Liquidada" / "Parcial" por factura.
