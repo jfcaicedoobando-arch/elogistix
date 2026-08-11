@@ -68,6 +68,17 @@ function MetaEntrante({ row }: { row: FacturaEntranteRow }) {
           {formatCurrency(Number(row.monto_declarado), row.moneda_declarada ?? "MXN")}
         </p>
       )}
+      {(row.embarque_facturas_entrantes_conceptos?.length ?? 0) > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Conceptos sugeridos por operaciones:{" "}
+          {row.embarque_facturas_entrantes_conceptos?.length}
+        </p>
+      )}
+      {row.sin_costo_capturado && !row.proveedor_factura_id && (
+        <p className="text-xs text-muted-foreground">
+          Operaciones indicó que aún no hay costo capturado para este documento.
+        </p>
+      )}
       {row.nota && <p className="text-xs text-muted-foreground">Nota: {row.nota}</p>}
 
       {row.rechazo_motivo && <p className="text-xs text-destructive">Rechazada: {row.rechazo_motivo}</p>}

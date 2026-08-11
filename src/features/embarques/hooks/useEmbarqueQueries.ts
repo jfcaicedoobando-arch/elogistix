@@ -107,6 +107,20 @@ export function useCostosProveedorEmbarque(
   });
 }
 
+/**
+ * v13.506.0 — Conceptos de costo pendientes del proveedor en el embarque, para
+ * que el operador marque cuáles cubre el documento que sube al buzón.
+ */
+export function useConceptosProveedorEmbarque(
+  embarqueId: string | undefined,
+  proveedorId: string | null | undefined,
+) {
+  return useQuery({
+    ...embarqueQueries.conceptosProveedorEmbarque(embarqueId ?? '', proveedorId ?? ''),
+    enabled: !!embarqueId && !!proveedorId,
+  });
+}
+
 export function useProveedoresForSelect() {
   const { organizationId } = useOrgFilter();
   return useQuery(embarqueQueries.proveedoresSelect(organizationId));

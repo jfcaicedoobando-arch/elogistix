@@ -24,6 +24,7 @@ import {
   esErrorUnicidad,
   limpiarArchivosHuerfanosSeguro,
 } from "@/features/cxp/services/facturasEntrantesDedupe";
+import { guardarConceptosSugeridos } from "@/features/cxp/services/facturasEntrantesConceptos";
 import {
   calcularHash,
   mensajeErrorStorage,
@@ -70,6 +71,7 @@ function filaEntranteAInsertar(params: {
     ...columnasMetaEntrante(input.meta),
     nota: input.nota?.trim() || null,
     monto_declarado: input.montoDeclarado ?? null,
+    sin_costo_capturado: Boolean(input.sinCostoCapturado),
     moneda_declarada: input.montoDeclarado != null ? (input.monedaDeclarada ?? "MXN") : null,
     proveedor_id: input.proveedorId ?? null,
     subido_por: userId,
@@ -135,6 +137,7 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
       input.organizationId,
     );
   }
+  await guardarConceptosSugeridos(data.id, input);
   await registrarActividad({
     modulo: "cxp",
     accion: "subir_factura_entrante",

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.506.0] - 2026-08-11
+- **Subir factura al buzón captura más información desde operaciones**: en el modal de subida el operador ahora marca a qué **conceptos de costo** del embarque corresponde el documento (con el importe de cada uno) o declara "aún sin costo capturado". Sin esa respuesta el botón de envío queda deshabilitado.
+- **Contabilidad recibe el trabajo hecho**: al capturar la factura desde el buzón, los conceptos marcados llegan **pre-vinculados** en el formulario; se descartan automáticamente los que ya tengan otra factura viva.
+- **Resumen de confirmación**: antes de enviar se muestra una línea con proveedor, monto declarado, conceptos marcados y archivos adjuntos.
+- **Buzón más informativo**: cada documento muestra cuántos conceptos sugirió operaciones y el aviso de "sin costo capturado".
+- **Pruebas**: nuevos tests de `mapearConceptosSugeridos` y del estado del formulario de subida (conceptos marcados, suma por moneda y limpieza al cambiar de proveedor).
+
 ## [13.505.0] - 2026-08-11
 - **Cancelar factura de proveedor ahora libera el expediente**: al cancelar una factura (por ejemplo, cancelada ante el SAT) se rompe el vínculo con los conceptos de costo del embarque, se suelta el expediente y el documento del buzón queda libre para recapturarlo o retirarlo. Antes esto sólo pasaba al *rechazar*; al *cancelar* la factura seguía apareciendo vinculada en el tab de Costos (caso FP-000042 del expediente ELIMP00302).
 - **Limpieza de datos**: se desvincularon las 6 facturas canceladas que seguían pegadas a expedientes (32 vínculos). No se borró ninguna factura ni concepto de costo original.

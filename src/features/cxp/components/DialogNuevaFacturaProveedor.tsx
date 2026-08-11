@@ -21,6 +21,7 @@ import {
 } from "./DialogNuevaFacturaProveedor.columnas";
 
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
+import { usePrefillVinculosEntrante } from "@/features/cxp/hooks/usePrefillVinculosEntrante";
 import { useAutocargaEntrante } from "@/features/cxp/hooks/useAutocargaEntrante";
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
@@ -60,6 +61,10 @@ function DialogNuevaFacturaProveedorForm({
   const autocarga = useAutocargaEntrante({
     entrante, abierto: open, categorias: cats.data ?? [],
     onCfdiParsed: ctl.handleCfdiParsed, onPdfParsed: ctl.handlePdfIaParsed,
+  });
+
+  usePrefillVinculosEntrante({
+    entrante, abierto: open, aplicarSugerencias: ctl.aplicarSugerencias,
   });
 
   const sub = Number(ctl.values.subtotal) || 0;

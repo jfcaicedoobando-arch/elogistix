@@ -29,12 +29,20 @@ export interface FacturaEntranteRow {
   /** v13.503.0 — Monto capturado por operaciones al subir el documento. */
   monto_declarado: number | null;
   moneda_declarada: string | null;
+  /** v13.506.0 — El operador declaró que no corresponde a un costo capturado. */
+  sin_costo_capturado: boolean | null;
   rechazo_motivo: string | null;
   subido_por: string | null;
   capturado_por: string | null;
   created_at: string;
   embarques?: { expediente: string | null } | null;
   proveedores?: { nombre: string | null; origen_proveedor?: string | null } | null;
+  /** v13.506.0 — Conceptos de costo sugeridos por el operador al subir. */
+  embarque_facturas_entrantes_conceptos?: Array<{
+    concepto_costo_id: string;
+    monto_sugerido: number | null;
+    conceptos_costo?: { concepto: string | null; moneda: string | null } | null;
+  }> | null;
   /** v13.446.0 — Factura de proveedor en la que se capturó este documento. */
   proveedor_facturas?: {
     folio_interno: string | null;
@@ -47,11 +55,13 @@ export const SELECT_COLS_ENTRANTES =
   "id, embarque_id, organization_id, archivo_path, archivo_hash, nombre_archivo, nota, estado," +
   " xml_path, xml_nombre, uuid_fiscal, rfc_emisor, folio_serie, fecha_emision," +
   " proveedor_id, proveedor_factura_id, folio_detectado, total_detectado, moneda_detectada," +
-  " monto_declarado, moneda_declarada," +
+  " monto_declarado, moneda_declarada, sin_costo_capturado," +
 
   " rechazo_motivo, subido_por, capturado_por, created_at," +
   " embarques:embarque_id(expediente), proveedores:proveedor_id(nombre, origen_proveedor)," +
-  " proveedor_facturas:proveedor_factura_id(folio_interno, estado, total)";
+  " proveedor_facturas:proveedor_factura_id(folio_interno, estado, total)," +
+  " embarque_facturas_entrantes_conceptos(concepto_costo_id, monto_sugerido," +
+  " conceptos_costo:concepto_costo_id(concepto, moneda))";
 
 export interface SubirFacturaEntranteInput {
   /** PDF de la factura (opcional si el proveedor sólo mandó el XML). */
@@ -66,6 +76,9 @@ export interface SubirFacturaEntranteInput {
   /** v13.503.0 — Monto y moneda declarados por operaciones (cotejo de costos). */
   montoDeclarado?: number | null;
   monedaDeclarada?: string | null;
+  /** v13.506.0 — Conceptos de costo que el operador dice que cubre el documento. */
+  conceptosSugeridos?: ReadonlyArray<{ conceptoId: string; monto: number }>;
+  sinCostoCapturado?: boolean;
 }
 
 /** Traduce errores de unicidad de Postgres a un mensaje entendible. */
