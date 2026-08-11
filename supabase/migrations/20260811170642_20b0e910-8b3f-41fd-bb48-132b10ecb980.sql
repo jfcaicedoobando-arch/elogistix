@@ -20,6 +20,7 @@ GRANT ALL ON public.embarque_facturas_entrantes_conceptos TO service_role;
 
 ALTER TABLE public.embarque_facturas_entrantes_conceptos ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Tenant lectura conceptos entrante" ON public.embarque_facturas_entrantes_conceptos;
 CREATE POLICY "Tenant lectura conceptos entrante" ON public.embarque_facturas_entrantes_conceptos
   FOR SELECT TO authenticated
   USING (
@@ -27,6 +28,7 @@ CREATE POLICY "Tenant lectura conceptos entrante" ON public.embarque_facturas_en
     OR (SELECT public.has_role((SELECT auth.uid()), 'super_admin'::public.app_role))
   );
 
+DROP POLICY IF EXISTS "Operaciones registra conceptos entrante" ON public.embarque_facturas_entrantes_conceptos;
 CREATE POLICY "Operaciones registra conceptos entrante" ON public.embarque_facturas_entrantes_conceptos
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -42,6 +44,7 @@ CREATE POLICY "Operaciones registra conceptos entrante" ON public.embarque_factu
     )
   );
 
+DROP POLICY IF EXISTS "Autor borra conceptos entrante" ON public.embarque_facturas_entrantes_conceptos;
 CREATE POLICY "Autor borra conceptos entrante" ON public.embarque_facturas_entrantes_conceptos
   FOR DELETE TO authenticated
   USING (
