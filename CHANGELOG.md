@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.504.0] - 2026-08-11
+- **Sidebar · badge del Buzón sincronizado en tiempo real**: el conteo de documentos por capturar ahora escucha los cambios de `embarque_facturas_entrantes` (alta, captura, retiro, reactivación o borrado) y se actualiza al instante para todos los usuarios de la organización, sin esperar a recargar.
+- **Respaldos**: se conserva la revalidación cada minuto y se agregó revalidación al volver el foco a la pestaña, por si el canal en tiempo real se cae o el navegador estuvo suspendido.
+- **Base de datos**: se habilitó la publicación en tiempo real de `embarque_facturas_entrantes` (con `REPLICA IDENTITY FULL`). La RLS sigue aplicando, así que cada usuario sólo recibe eventos de su organización.
+
+
+
 ## [13.503.0] - 2026-08-11
 - **Buzón CxP · modal de subida rediseñado**: se eliminaron los tres recuadros de carga. Ahora hay **una sola zona** donde se arrastran (o eligen) el PDF y el XML juntos, y el estado de cada archivo se ve como chip (`PDF ✓` / `XML del CFDI · pendiente`), con botón para quitarlo.
 - **Verificación del monto facturado**: operaciones captura el monto y la moneda de la factura (se pre-llenan desde el XML cuando existe) y el modal lo compara contra los **costos vivos del proveedor en el embarque**: avisa si coincide, si difiere (con diferencia y porcentaje, tolerancia ±1% o ±$1) o si no hay costos comparables en esa moneda. Es un aviso, nunca un bloqueo.
