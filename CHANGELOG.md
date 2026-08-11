@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.496.0] - 2026-08-11
+- **Movimiento bancario huérfano al borrar un pago (FP-000100)**: si el movimiento se desvinculaba antes de eliminar el pago, `pago_proveedor_id` quedaba en NULL y el movimiento seguía apareciendo en el estado de cuenta. Ahora la baja del pago también busca el movimiento por su huella `pago-<id>`.
+- Limpieza de datos: se dio de baja el movimiento huérfano de 62 USD (COSCO, 10/08) del pago borrado de FP-000100. Barrido confirmó que era el único caso.
+- Test de regresión de `eliminarMovimientoBancarioPago`.
+
+
+
 ## [13.495.0] - 2026-08-11
 - **Pagos "pagados" sin movimiento en banco (FP-000097 y FP-000100)**: se generaron los movimientos bancarios faltantes en la cuenta BBVA USD (562 USD y 62 USD), ya conciliados y vinculados a su pago. Causa: los pagos se capturaron con rol `contador` antes de que la RLS de `bbva_movimientos` permitiera escritura a tesorero/contador (10/08 20:27) y el error se descartaba en silencio.
 - **Nueva acción "Regenerar movimiento"** en la conciliación de tesorería del detalle de la factura de proveedor, para cada incidencia "Sin movimiento en banco".
