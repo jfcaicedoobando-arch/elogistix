@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.519.1] - 2026-08-11
+- Datos (corrección manual) — se marcaron como **Pagada** las 25 facturas legacy (número sin prefijo `F`, emitidas fuera del sistema) que estaban en `Vencida`/`Borrador`: 18 de Elogistix (103,194.10 USD + 86,420 MXN) y 8 de la organización demo. Se agregó la nota `[Legacy] Cobrada en sistema anterior; pago no registrado en la app.` en las 31 facturas legacy sin pago registrado. No se crearon pagos (sin impacto en flujo de caja, conciliación ni REPs) y no se tocaron montos, monedas, fechas ni clientes. Total legacy: 133, todas en Pagada.
+
 ## [13.519.0] - 2026-08-11
 - Seguridad BD (`rate_limit_anon_rpcs`) — las 4 RPCs ejecutables por `anon` ahora invocan `public.check_ratelimit` al inicio del cuerpo, con clave `rpc:<nombre>:<x-forwarded-for>:<auth.uid()|anon>` y fail-CLOSED (`RAISE EXCEPTION` P0001 con `retry_after`): `log_client_error_v1` 20/60s (cierra la inserción ilimitada de filas ~14 KB en `app_logs`), `get_tracking_public` 60/60s, `portal_obtener_proforma_por_token` 30/60s y `portal_responder_por_token` 10/60s. Lógica, GRANTs, `SECURITY DEFINER` y `search_path` intactos; las dos funciones de lectura pasan de `STABLE` a `VOLATILE` porque `check_ratelimit` escribe en `ratelimit_buckets`. `demo_leads` no tiene RPC de inserción (entra por política), así que queda documentado en la migración sin cambiar políticas.
 
