@@ -107,18 +107,27 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         </div>
         {!mismoMoneda && origen && destino && (
           <div className="space-y-1.5">
-            <Label htmlFor="traspaso-tc">Tipo de cambio</Label>
+            <Label htmlFor="traspaso-tc">Tipo de cambio *</Label>
             <MoneyInput
               id="traspaso-tc"
               value={state.tipoCambio}
               onChange={(v) => setField("tipoCambio", v)}
               placeholder="1.00"
             />
-            <p className="text-xs text-muted-foreground">
-              {state.tipoCambio > 0
-                ? `Estimado con el TC capturado: ${origen.moneda} → ${destino.moneda}: ${formatCurrency(montoDestino, destino.moneda)}`
-                : `Captura el tipo de cambio para ver el equivalente en ${destino.moneda}.`}
-            </p>
+            {state.tipoCambio > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {`Estimado con el TC capturado: ${origen.moneda} → ${destino.moneda}: ${formatCurrency(montoDestino, destino.moneda)}`}
+              </p>
+            ) : (
+              <p className="text-xs text-destructive" role="alert">
+                Captura el tipo de cambio: es obligatorio porque las cuentas son de distinta moneda.
+              </p>
+            )}
+            {fechaTcDof && (
+              <p className="text-xs text-muted-foreground">
+                Sugerido con el TC DOF publicado el {fechaTcDof}. Puedes editarlo si tu banco usó otro.
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               El tipo de cambio multiplica: 1 {origen.moneda} = {state.tipoCambio || "?"} {destino.moneda}.
               Si tu referencia viene expresada al revés, divídela antes de capturarla.
