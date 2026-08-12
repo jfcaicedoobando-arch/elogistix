@@ -6,11 +6,11 @@
  * lo liberamos vía RPC para permitir un reintento seguro.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson } from "../_shared/response.ts";
 import {
   loadFactura, loadNotaCredito, loadPago, validarClaim, buscarCfdiPorExternalId,
   promoverFactura, promoverNc, promoverPago, liberarClaim, liberarClaimNc, liberarClaimPago,
@@ -136,11 +136,14 @@ async function recuperarPago(supabase: SB, user: Usuario, pagoId: string): Promi
 }
 
 Deno.serve(wrapEdgeHandler("facturapi-recuperar-claim", async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -148,7 +151,7 @@ Deno.serve(wrapEdgeHandler("facturapi-recuperar-claim", async (req) => {
   });
 
   const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
   const user = { id: userData.user.id, email: userData.user.email };
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
@@ -156,5 +159,5 @@ Deno.serve(wrapEdgeHandler("facturapi-recuperar-claim", async (req) => {
   if (body.nota_credito_id) return recuperarNotaCredito(supabase, user, body.nota_credito_id);
   if (body.factura_id) return recuperarFactura(supabase, user, body.factura_id);
   if (body.pago_id) return recuperarPago(supabase, user, body.pago_id);
-  return jsonResponse({ error: "factura_id_o_nota_credito_id_o_pago_id_required" }, 400);
+  return json({ error: "factura_id_o_nota_credito_id_o_pago_id_required" }, 400);
 }));

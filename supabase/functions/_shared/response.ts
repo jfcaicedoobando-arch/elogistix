@@ -1,4 +1,4 @@
-import { corsHeaders } from "./cors.ts";
+import { buildCors, corsHeaders } from "./cors.ts";
 
 /**
  * Respuesta JSON con headers CORS aplicados.
@@ -23,4 +23,15 @@ export function errorResponse(
   cors: Record<string, string> = corsHeaders,
 ): Response {
   return jsonResponse({ error: message }, status, cors);
+}
+
+/**
+ * EF-10: fábrica de `jsonResponse` ligada al CORS de whitelist del request.
+ * Úsala al inicio de handlers autenticados (`const json = makeJson(req)`) para
+ * que TODAS las respuestas lleven `Access-Control-Allow-Origin` de whitelist
+ * en vez del wildcard por defecto.
+ */
+export function makeJson(req: Request) {
+  const cors = buildCors(req);
+  return (body: unknown, status = 200): Response => jsonResponse(body, status, cors);
 }

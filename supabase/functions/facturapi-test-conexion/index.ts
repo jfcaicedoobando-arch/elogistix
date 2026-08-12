@@ -6,9 +6,9 @@
  * No expone la key al cliente; sólo devuelve `{ ok, ambiente, facturapi_org_id, nombre }`.
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { basicAuthHeader, FACTURAPI_BASE, resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 
 interface Body {
@@ -160,12 +160,17 @@ function errorResponse(err: unknown) {
   const isTimeout = (err as Error)?.message === "facturapi_timeout";
   console.error("[facturapi-test-conexion] facturapi-call-error", { status, isTimeout });
   const isAuthError = status === 401 || status === 403;
+  // EF-11: propagar el status HTTP real — con 200 los clientes que sólo
+  // evalúan response.ok trataban los errores de FacturApi como éxito.
+  const httpStatus = isTimeout
+    ? 504
+    : (Number.isInteger(status) && status >= 400 && status < 600 ? status : 502);
   return jsonResponse({
     ok: false,
-    status: isTimeout ? 504 : status,
+    status: httpStatus,
     detail: isTimeout ? { message: "Tiempo de espera agotado al contactar FacturApi (15s)." } : detail,
     message: isAuthError ? "La API key de FacturApi no es válida para este ambiente." : undefined,
-  }, 200);
+  }, httpStatus);
 }
 
 async function runTest(body: Body, sbAdmin: ReturnType<typeof createClient>) {
@@ -197,19 +202,22 @@ async function runTest(body: Body, sbAdmin: ReturnType<typeof createClient>) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
 
   const url = Deno.env.get("SUPABASE_URL")!;
   const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
   const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
   const body = await parseBody(req);
-  if (!body) return jsonResponse({ error: "invalid_body" }, 400);
+  if (!body) return json({ error: "invalid_body" }, 400);
 
   console.log("[facturapi-test-conexion] start", { org: body.organization_id, ambiente: body.ambiente });
 
   const auth = await authorizeRequest(req, url, anon, body.organization_id);
-  if (!auth.ok) return jsonResponse({ error: auth.error }, auth.status);
+  if (!auth.ok) return json({ error: auth.error }, auth.status);
   console.log("[facturapi-test-conexion] auth-ok");
 
   const sbAdmin = createClient(url, service);

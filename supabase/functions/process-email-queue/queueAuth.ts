@@ -36,8 +36,7 @@ async function verifyServiceRoleToken(token: string, supabaseUrl: string): Promi
   console.error('verifyServiceRoleToken: token != SUPABASE_SERVICE_ROLE_KEY', {
     tokenLen: token.length,
     keyLen: serviceRoleKey?.length ?? 0,
-    tokenPrefix: token.slice(0, 12),
-    keyPrefix: serviceRoleKey?.slice(0, 12) ?? '',
+    // EF-13: sin prefijos de token/key en logs.
   })
 
   // Fallback: decodificar payload y aceptar si role=service_role.

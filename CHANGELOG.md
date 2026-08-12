@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.529.0] - 2026-08-12
+- Auditoría Wave 1 — Sub-ola 4 (exposición pública y fugas): EF-10 (las 11 funciones fiscales autenticadas ya responden con la lista blanca de dominios en vez de permitir a cualquier sitio; un sitio ajeno recibe `null`), EF-11 (la prueba de conexión con FacturApi devuelve el código de error real —401/403/504— en vez de un "éxito" con el error escondido en el cuerpo; la pantalla de Configuración sigue mostrando el mensaje amigable).
+- EF-12 — El proceso automático que reconcilia cancelaciones ya no se traga los errores: cada fallo queda en consola y en Sentry con el id de la factura o nota de crédito, y si el lote llega al tope de 200 avisa que hay rezago acumulado.
+- EF-13 — Sin fugas en registros: el enlace de baja de correos ya sólo registra los primeros 8 caracteres del token, se quitaron los prefijos de llaves en los logs de la cola de correos y los mensajes enviados a Sentry ocultan `?token=`, `?api_key=` y credenciales `Bearer`.
+- UIB-07 — La vista interna de QA del logo (`/logo-preview`) sólo existe en desarrollo; en producción muestra la página de "no encontrado".
+- TC-02 — Nuevo comando `build:low-mem` para compilar sin sourcemaps en máquinas con poca memoria (~4 GB); el build normal no cambia. Requisito de RAM documentado en el README.
+
 ## [13.528.2] - 2026-08-12
 - Cobertura RLS: la tabla interna `demo_seed_state` (creada en EF-09) tenía la protección activada pero sin ninguna regla escrita, lo que el verificador de CI marcaba como hueco. Ahora tiene una regla explícita de "nadie puede leer ni escribir" para usuarios de la app; sólo los procesos internos la usan.
 

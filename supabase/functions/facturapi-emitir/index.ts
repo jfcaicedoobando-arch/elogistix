@@ -9,7 +9,7 @@
  *   serie, estado = 'Emitida', timbrado_en, timbrado_por.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 // Guardrail multi-tenant (v13.136.0): el helper se sigue importando para que
 // el test arquitectónico lo detecte; la API key real se inyecta al SDK vía
@@ -17,7 +17,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { loadFactura, validarTipoCambio, claimFactura, resolverSustitucion, cargarContexto, emitirYActualizar, type FacturaRow } from "./emitir.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -30,11 +30,14 @@ void resolveFacturapiKey;
 interface ReqBody { factura_id?: string }
 
 Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -42,17 +45,17 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   });
 
   const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
+  if (!body.factura_id) return json({ error: "factura_id_required" }, 400);
 
   const factura = await loadFactura(supabase, body.factura_id);
   if (factura instanceof Response) return factura;
-  if (factura.facturapi_id) return jsonResponse({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
+  if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
 
   if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
-    return jsonResponse({ error: "forbidden" }, 403);
+    return json({ error: "forbidden" }, 403);
   }
 
   const tcCheck = validarTipoCambio(factura);
@@ -65,7 +68,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (sustituyeUuid instanceof Response) return sustituyeUuid;
 
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
-  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
   const context = await cargarContexto(supabase, body.factura_id, factura, sustituyeUuid, claim.claimTag);
   if (context instanceof Response) return context;

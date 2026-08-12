@@ -114,6 +114,22 @@ function scrubExtraDeep(value: unknown, depth = 0): unknown {
   return out;
 }
 
+/**
+ * EF-13: scrubExtraDeep cubre ctx.extra, pero el MENSAJE de la excepción no se
+ * redactaba — errores de red que interpolan URLs con query params sensibles
+ * (`?token=`, `?api_key=`, `Bearer …`) llegaban crudos a Sentry.
+ */
+const SENSITIVE_VALUE_PATTERNS = [
+  /([?&](?:token|api[_-]?key|key|secret|password|signature)=)[^&\s]+/gi,
+  /(bearer\s+)[a-z0-9._~+/=-]+/gi,
+];
+
+export function scrubExceptionMessage(msg: string): string {
+  let out = msg;
+  for (const re of SENSITIVE_VALUE_PATTERNS) out = out.replace(re, "$1[Filtered]");
+  return out;
+}
+
 function truncatedExtra(extra: Record<string, unknown>): Record<string, unknown> {
   const scrubbed = scrubExtraDeep(extra) as Record<string, unknown>;
   try {
@@ -146,7 +162,15 @@ export async function captureEdgeException(err: unknown, ctx: EdgeErrorContext):
       if (ctx.status_code != null) scope.setTag("status_code", String(ctx.status_code));
       if (ctx.latency_ms != null) scope.setExtra("latency_ms", ctx.latency_ms);
       if (ctx.extra) scope.setContext("edge", truncatedExtra(ctx.extra));
-      Sentry.captureException(err);
+      // EF-13: redactar el mensaje antes de enviarlo (conserva name/stack).
+      if (err instanceof Error) {
+        const scrubbed = new Error(scrubExceptionMessage(err.message));
+        scrubbed.name = err.name;
+        scrubbed.stack = err.stack;
+        Sentry.captureException(scrubbed);
+      } else {
+        Sentry.captureException(err);
+      }
     });
     await Sentry.flush(2000);
   } catch (e) {

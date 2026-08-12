@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:low-mem": "BUILD_SOURCEMAPS=false vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/ --cache-strategy content",
     "lint:unused": "knip --no-progress",

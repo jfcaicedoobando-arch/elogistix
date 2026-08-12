@@ -134,6 +134,22 @@ export interface ProbarConexionResult {
   message?: string;
 }
 
+/**
+ * EF-11: la edge function ya responde con el status HTTP real (401/403/504…)
+ * en vez de 200 + `{ ok:false }`. supabase-js convierte eso en
+ * `FunctionsHttpError` y deja el body en `error.context` (una `Response`), así
+ * que lo leemos de ahí para seguir mostrando el mensaje de negocio.
+ */
+async function leerBodyDeError(error: unknown): Promise<ProbarConexionResult | null> {
+  const ctx = (error as { context?: unknown }).context;
+  if (!(ctx instanceof Response)) return null;
+  try {
+    return (await ctx.clone().json()) as ProbarConexionResult;
+  } catch {
+    return null;
+  }
+}
+
 export async function probarFacturapiConexion(
   orgId: string,
   ambiente: FacturapiAmbiente,
@@ -143,6 +159,8 @@ export async function probarFacturapiConexion(
     { body: { organization_id: orgId, ambiente } },
   );
   if (error) {
+    const body = await leerBodyDeError(error);
+    if (body) return { ...body, ok: false };
     const raw = error.message ?? "";
     const friendly = /failed to send a request/i.test(raw)
       ? "No fue posible contactar al servidor de FacturApi (timeout o red). Intenta nuevamente en unos segundos."
@@ -151,3 +169,4 @@ export async function probarFacturapiConexion(
   }
   return data ?? { ok: false, error: "empty_response" };
 }
+

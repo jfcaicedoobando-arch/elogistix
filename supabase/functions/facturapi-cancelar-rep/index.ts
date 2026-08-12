@@ -5,14 +5,14 @@
  * v13.91.0
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -26,26 +26,29 @@ interface ReqBody { pago_id?: string; motivo?: string; sustituye_uuid?: string }
 
 // eslint-disable-next-line complexity
 Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
   const { data: userData, error: uErr } = await supabase.auth.getUser();
-  if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+  if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.pago_id) return jsonResponse({ error: "pago_id_required" }, 400);
+  if (!body.pago_id) return json({ error: "pago_id_required" }, 400);
   if (!body.motivo || !MOTIVOS_VALIDOS.has(body.motivo)) {
-    return jsonResponse({ error: "motivo_invalido", message: "Motivo debe ser 01, 02, 03 o 04." }, 400);
+    return json({ error: "motivo_invalido", message: "Motivo debe ser 01, 02, 03 o 04." }, 400);
   }
   if (body.motivo === "01" && !body.sustituye_uuid) {
-    return jsonResponse({ error: "sustituye_uuid_requerido", message: "Motivo 01 requiere sustituye_uuid del REP nuevo." }, 400);
+    return json({ error: "sustituye_uuid_requerido", message: "Motivo 01 requiere sustituye_uuid del REP nuevo." }, 400);
   }
 
   const { data: pago, error: pErr } = await supabase
@@ -53,11 +56,11 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     .select("id, organization_id, facturapi_rep_id, estado_rep")
     .eq("id", body.pago_id)
     .maybeSingle();
-  if (pErr || !pago) return jsonResponse({ error: "pago_not_found" }, 404);
-  if (!pago.facturapi_rep_id) return jsonResponse({ error: "no_timbrado_rep" }, 409);
-  if (pago.estado_rep === "Cancelado") return jsonResponse({ error: "ya_cancelado" }, 409);
+  if (pErr || !pago) return json({ error: "pago_not_found" }, 404);
+  if (!pago.facturapi_rep_id) return json({ error: "no_timbrado_rep" }, 409);
+  if (pago.estado_rep === "Cancelado") return json({ error: "ya_cancelado" }, 409);
   if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
-    return jsonResponse({ error: "forbidden" }, 403);
+    return json({ error: "forbidden" }, 403);
   }
 
   // Ola 4 · N5: FacturAPI espera el facturapi_id (ObjectId) del REP
@@ -73,7 +76,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
       .eq("uuid_rep", body.sustituye_uuid!)
       .maybeSingle();
     if (!sustituto?.facturapi_rep_id) {
-      return jsonResponse({
+      return json({
         error: "sustituto_no_encontrado",
         message: "No hay un REP timbrado con ese UUID en esta organización. Timbra primero el REP sustituto.",
       }, 422);
@@ -82,7 +85,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   }
 
   const resolved = await getFacturapiClient(supabase, pago.organization_id);
-  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
   interface FapiCancelResponse { status?: string; cancellation_status?: string }
@@ -104,7 +107,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
         entidadId: pago.id,
         detalles: { op: err.op, timeout_ms: err.timeoutMs },
       });
-      return jsonResponse({ error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message }, 504);
+      return json({ error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message }, 504);
     }
     const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
@@ -117,7 +120,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
       detalles: { status, response: detail },
     });
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
+    return json({ error: "facturapi_error", status, detail, message }, 502);
   }
   // Ola 4 · N5: ramificar por cancellation_status como terminales.ts de
   // facturapi-cancelar — nunca marcar estado_rep='Cancelado' si el SAT dejó
@@ -143,7 +146,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
       entidadId: pago.id,
       detalles: { cancellation_status: cancellationStatus, motivo: body.motivo },
     });
-    return jsonResponse({
+    return json({
       ok: false,
       cancellation_status: cancellationStatus,
       message: cancellationStatus === "expired"
@@ -157,7 +160,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
       .from("pagos_factura")
       .update({ rep_cancellation_status: cancellationStatus, rep_motivo_cancel: body.motivo })
       .eq("id", pago.id);
-    if (pendErr) return jsonResponse({ error: "db_update_failed", detail: pendErr.message }, 500);
+    if (pendErr) return json({ error: "db_update_failed", detail: pendErr.message }, 500);
     await registrarBitacoraEdge(supabase, {
       organizationId: pago.organization_id,
       usuarioId: userData.user.id,
@@ -167,7 +170,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
       entidadId: pago.id,
       detalles: { motivo: body.motivo, cancellation_status: cancellationStatus },
     });
-    return jsonResponse({
+    return json({
       ok: true,
       pending: true,
       cancellation_status: cancellationStatus,
@@ -185,7 +188,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
       entidadId: pago.id,
       detalles: { cancellation_status: cancellationStatus, invoice_status: invoiceStatus },
     });
-    return jsonResponse({
+    return json({
       ok: false,
       cancellation_status: cancellationStatus,
       message: `FacturApi devolvió un estado inesperado: ${cancellationStatus || invoiceStatus}.`,
@@ -202,7 +205,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
       rep_motivo_cancel: body.motivo,
     })
     .eq("id", pago.id);
-  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: pago.organization_id,
@@ -214,5 +217,5 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     detalles: { motivo: body.motivo, sustituye_uuid: body.sustituye_uuid ?? null, cancellation_status: "accepted" },
   });
 
-  return jsonResponse({ ok: true, status: cancelResp.status ?? "canceled", cancellation_status: "accepted" });
+  return json({ ok: true, status: cancelResp.status ?? "canceled", cancellation_status: "accepted" });
 }));

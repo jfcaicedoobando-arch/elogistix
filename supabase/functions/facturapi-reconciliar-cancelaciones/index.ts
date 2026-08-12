@@ -6,7 +6,7 @@
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
-import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { wrapEdgeHandler, captureEdgeException, captureEdgeMessage } from "../_shared/sentry.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -131,6 +131,18 @@ async function reconcileOne(ctx: ReconcileCtx, factura: FacturaPendiente): Promi
     acumularOutcome(resumen, decision.outcome);
   } catch (_err) {
     resumen.errores++;
+    // EF-12: no tragar el error — sin id un fallo sistemático (API key rotada,
+    // red) sólo movía un contador invisible.
+    console.error("[reconciliar-cancelaciones] error", {
+      entidad: "factura",
+      id: factura.id,
+      error: _err instanceof Error ? _err.message : String(_err),
+    });
+    await captureEdgeException(_err, {
+      fn: "facturapi-reconciliar-cancelaciones",
+      organization_id: orgId,
+      extra: { factura_id: factura.id, facturapi_id: factura.facturapi_id },
+    });
   }
 }
 
@@ -199,6 +211,18 @@ async function reconcileOneNc(ctx: ReconcileCtx, nc: NotaCreditoPendiente): Prom
     acumularOutcome(resumen, decision.outcome);
   } catch (_err) {
     resumen.errores++;
+    // EF-12: no tragar el error — sin id un fallo sistemático (API key rotada,
+    // red) sólo movía un contador invisible.
+    console.error("[reconciliar-cancelaciones] error", {
+      entidad: "nc",
+      id: nc.id,
+      error: _err instanceof Error ? _err.message : String(_err),
+    });
+    await captureEdgeException(_err, {
+      fn: "facturapi-reconciliar-cancelaciones",
+      organization_id: orgId,
+      extra: { nota_credito_id: nc.id, facturapi_id: nc.facturapi_id },
+    });
   }
 }
 
@@ -225,6 +249,15 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
     .limit(200);
 
   if (fetchErr) return jsonResponse({ error: "db_fetch_failed", detail: fetchErr.message }, 500);
+
+  // EF-12: si el lote llega al tope de 200 probablemente hay backlog que tarda
+  // horas en drenar a 200/30 min — dejar señal en Sentry para operación.
+  if ((pendientes ?? []).length === 200) {
+    await captureEdgeMessage("facturapi_reconciliar_backlog", "warning", {
+      fn: "facturapi-reconciliar-cancelaciones",
+      extra: { pendientes: 200 },
+    });
+  }
 
   // EF-03: las cancelaciones asíncronas de NC también se reconcilian aquí —
   // el webhook no las resuelve (factura_not_found → ignored) y sin este
