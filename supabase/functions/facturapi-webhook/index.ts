@@ -32,15 +32,32 @@ async function handleReceiptEvent(
 ): Promise<Response> {
   const { data: pago } = await supabase
     .from("pagos_factura")
-    .select("id, organization_id")
+    .select("id, organization_id, estado_rep, rep_cancellation_status")
     .eq("facturapi_rep_id", receipt.facturapi_rep_id)
     .eq("organization_id", orgId)
     .maybeSingle();
   if (!pago) return jsonResponse({ ok: true, ignored: "pago_not_found" });
 
+  // EF-06 (guard N3 para REP): eventos fuera de orden no deben resucitar un
+  // REP cancelado (receipt.status_updated(valid) tardío tras receipt.canceled)
+  // ni regresar rep_cancellation_status accepted → pending/verifying.
+  const patch: Record<string, unknown> = { ...receipt.patch };
+  if (pago.estado_rep === "Cancelado" && patch.estado_rep === "Timbrado") {
+    delete patch.estado_rep;
+    delete patch.timbrado_rep_en;
+  }
+  if (
+    pago.rep_cancellation_status === "accepted" &&
+    typeof patch.rep_cancellation_status === "string" &&
+    patch.rep_cancellation_status !== "accepted"
+  ) {
+    delete patch.rep_cancellation_status;
+  }
+  if (Object.keys(patch).length === 0) return jsonResponse({ ok: true, ignored: "estado_ya_avanzado" });
+
   const { error: updErr } = await supabase
     .from("pagos_factura")
-    .update(receipt.patch)
+    .update(patch)
     .eq("id", pago.id);
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
