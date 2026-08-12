@@ -108,7 +108,7 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
           <Label htmlFor="carta">Carta Garantía vigente (sustituye depósito de contenedor)</Label>
         </div>
         {form.tiene_carta_garantia && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label htmlFor="carta-vigente">{rangoLabel("Vigencia", "hasta")} *</Label>
               <DatePickerMx
@@ -127,7 +127,7 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
                 onChange={(e) => setForm({ ...form, carta_garantia_folio: e.target.value || null })}
               />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <Label htmlFor="carta-notas">Notas de la carta</Label>
               <Textarea
                 id="carta-notas"
@@ -140,7 +140,7 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
         )}
       </fieldset>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label htmlFor="nav-dias-libres">Días libres de demoras (estándar)</Label>
           <Input

@@ -26,7 +26,7 @@ interface Props<F extends FormShape> {
 export function DireccionFiscalFields<F extends FormShape>({ form, setField, regimenRequired }: Props<F>) {
   return (
     <>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>Código Postal</Label>
           <Input
@@ -62,7 +62,7 @@ export function DireccionFiscalFields<F extends FormShape>({ form, setField, reg
           placeholder="Calle, número, colonia"
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>Ciudad / Municipio</Label>
           <Input

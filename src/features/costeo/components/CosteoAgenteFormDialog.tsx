@@ -111,7 +111,7 @@ export function CosteoAgenteFormDialog({
         </FormDialogSection>
 
         <FormDialogSection cols={2} flat>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label htmlFor="agente-pais">País</Label>
               <Input

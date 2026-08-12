@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
@@ -99,9 +99,7 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
           <Button variant="outline" onClick={() => handleClose(false)}>Cancelar</Button>
           <Button
             onClick={handleInvite}
-            disabled={!email || pending || (mode === "password" && password.length < 8)}
-          >
-            {pending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+            disabled={!email || pending || (mode === "password" && password.length < 8)} loading={pending}>
             {mode === "password" ? "Crear cuenta" : "Enviar invitación"}
           </Button>
         </>

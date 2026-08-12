@@ -4,7 +4,7 @@
  * dinero adelantado. No se permite en anticipos cancelados (lo valida la RPC).
  */
 import { useEffect, useState } from "react";
-import { Loader2, Ship } from "lucide-react";
+import { Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
@@ -42,8 +42,7 @@ export function VincularEmbarqueAnticipoDialog({ open, onOpenChange, anticipo }:
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={vincular.isPending}>
         Cancelar
       </Button>
-      <Button onClick={onSubmit} disabled={vincular.isPending || sinCambios}>
-        {vincular.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      <Button onClick={onSubmit} disabled={sinCambios} loading={vincular.isPending}>
         {vincular.isPending ? "Guardando…" : embarqueId ? "Vincular embarque" : "Quitar embarque"}
       </Button>
     </>

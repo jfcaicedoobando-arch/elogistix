@@ -9,7 +9,7 @@
  * v13.232.0 · Migrado a `ConfirmActionDialog` con Label a11y (Lote 7d.2).
  */
 import { useState } from "react";
-import { Database, Loader2, CheckCircle2 } from "lucide-react";
+import { Database, CheckCircle2 } from "lucide-react";
 import { type BackfillLegacyResult } from "@/features/admin/services/backfillLegacy";
 import { useBackfillLegacy } from "@/features/admin/hooks/useBackfillLegacy";
 import { Button } from "@/components/ui/button";
@@ -49,10 +49,7 @@ export function BackfillLegacyCard() {
         </p>
         <Button
           variant="outline"
-          onClick={() => setOpen(true)}
-          disabled={run.isPending}
-        >
-          {run.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          onClick={() => setOpen(true)} loading={run.isPending}>
           Ejecutar backfill
         </Button>
         {result && (

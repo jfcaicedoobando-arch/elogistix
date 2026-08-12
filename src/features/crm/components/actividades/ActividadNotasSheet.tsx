@@ -3,7 +3,6 @@
  * de una actividad sin abrir el diálogo completo.
  */
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,8 +60,7 @@ export default function ActividadNotasSheet({ actividad, open, onOpenChange }: P
         </div>
         <SheetFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleGuardar} disabled={mutate.isPending}>
-            {mutate.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+          <Button onClick={handleGuardar} loading={mutate.isPending}>
             Guardar
           </Button>
         </SheetFooter>

@@ -2,7 +2,6 @@
  * Card con el formulario de edición de datos básicos del lead.
  * Extraído de `pages/crm/LeadDetalle.tsx`.
  */
-import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,8 +104,7 @@ export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onS
 
         {canEdit && (
           <div className="flex justify-end mt-4">
-            <Button onClick={onSave} disabled={!dirty || isSaving}>
-              {isSaving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+            <Button onClick={onSave} disabled={!dirty} loading={isSaving}>
               Guardar cambios
             </Button>
           </div>

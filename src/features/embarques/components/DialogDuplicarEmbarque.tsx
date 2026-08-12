@@ -4,7 +4,7 @@
  * v12.1.0: lógica de estado/validación movida a `useDuplicarEmbarqueDialog`
  * y la fila por copia a `CopiaContenedorRow` para cumplir Power of 10.
  */
-import { Loader2, Plus, Copy } from "lucide-react";
+import { Plus, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
@@ -39,8 +39,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Cancelar
           </Button>
-          <Button onClick={handleConfirmar} disabled={isPending}>
-            {isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+          <Button onClick={handleConfirmar} loading={isPending}>
             Duplicar
           </Button>
         </>

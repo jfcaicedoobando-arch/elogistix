@@ -117,9 +117,7 @@ export function MigrarRolesLegacyCard() {
             <Button
               variant="outline"
               onClick={() => setOpen(true)}
-              disabled={run.isPending || total === 0}
-            >
-              {run.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              disabled={total === 0} loading={run.isPending}>
               Ejecutar migración
             </Button>
           </div>

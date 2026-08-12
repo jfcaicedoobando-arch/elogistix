@@ -59,7 +59,7 @@ export function EjecutarPagoDialog({
       }
     >
       <div
-        className="grid grid-cols-2 gap-3"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && puedeEjecutar && !isPending) {
             const t = e.target as HTMLElement;
@@ -70,7 +70,7 @@ export function EjecutarPagoDialog({
           }
         }}
       >
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <Label htmlFor="pago-cuenta">Cuenta bancaria *</Label>
           <Select value={form.cuentaBancariaId} onValueChange={(v) => setField("cuentaBancariaId", v)}>
             <SelectTrigger id="pago-cuenta"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>

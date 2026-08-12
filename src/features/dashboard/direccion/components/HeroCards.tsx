@@ -30,7 +30,7 @@ export function HeroCards({ hero }: { hero: HeroKpis }) {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="p-5 rounded-xl border border-border bg-card">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">Utilidad bruta del mes</p>
-        <p className="mt-2 text-3xl font-semibold tabular-nums">{fmt(hero.utilidad_mxn)}</p>
+        <p className="mt-2 text-kpi tabular-nums">{fmt(hero.utilidad_mxn)}</p>
         <p className="mt-1 text-sm text-muted-foreground tabular-nums">Margen {pct(hero.margen_pct)}</p>
         <div className="mt-2"><DeltaMargen actual={hero.margen_pct} previo={hero.margen_pct_prev} /></div>
       </Card>
@@ -39,7 +39,7 @@ export function HeroCards({ hero }: { hero: HeroKpis }) {
         <p className="text-xs uppercase tracking-wide text-destructive flex items-center gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5" aria-hidden /> Cartera vencida
         </p>
-        <p className="mt-2 text-3xl font-semibold tabular-nums text-destructive">{fmt(hero.cartera_vencida_mxn)}</p>
+        <p className="mt-2 text-kpi tabular-nums text-destructive">{fmt(hero.cartera_vencida_mxn)}</p>
         <p className="mt-1 text-sm text-destructive/80 tabular-nums">
           {hero.cartera_vencida_clientes} cliente{hero.cartera_vencida_clientes === 1 ? "" : "s"} con saldo vencido
         </p>
@@ -47,7 +47,7 @@ export function HeroCards({ hero }: { hero: HeroKpis }) {
 
       <Card className="p-5 rounded-xl border border-border bg-card">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">Facturación del mes</p>
-        <p className="mt-2 text-3xl font-semibold tabular-nums">{fmt(hero.facturado_mes_mxn)}</p>
+        <p className="mt-2 text-kpi tabular-nums">{fmt(hero.facturado_mes_mxn)}</p>
         <p className="mt-1 text-sm text-muted-foreground tabular-nums">
           {avance.toFixed(1)}% de la meta ({fmt(meta)})
         </p>

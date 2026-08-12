@@ -21,7 +21,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { ChevronsUpDown, Sparkles, Loader2 } from "lucide-react";
+import { ChevronsUpDown, Sparkles } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import {
   useCotizacionPlantillas,
@@ -77,8 +77,7 @@ export function PlantillaSelectorPaso1({ organizationId, form, onApplied }: Prop
         </div>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" disabled={aplicar.isPending}>
-              {aplicar.isPending && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
+            <Button variant="outline" size="sm" loading={aplicar.isPending}>
               Elegir plantilla
               <ChevronsUpDown className="h-3.5 w-3.5 ml-1 opacity-60" />
             </Button>

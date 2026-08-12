@@ -50,7 +50,7 @@ export function MovimientoManualDialog({
       }
     >
       <div
-        className="grid grid-cols-2 gap-3"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         onKeyDown={(e) => {
           // Enter en cualquier campo guarda (sin cerrar el modal a ciegas).
           if (e.key === "Enter" && !e.shiftKey && manualEsValido && !isPending) {
@@ -62,7 +62,7 @@ export function MovimientoManualDialog({
           }
         }}
       >
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <Label htmlFor="mov-cuenta">Cuenta bancaria *</Label>
           <Select
             value={manualForm.cuentaBancariaId ?? ""}
@@ -97,7 +97,7 @@ export function MovimientoManualDialog({
             </SelectContent>
           </Select>
         </div>
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <Label htmlFor="mov-concepto">Concepto *</Label>
           <Input
             id="mov-concepto"

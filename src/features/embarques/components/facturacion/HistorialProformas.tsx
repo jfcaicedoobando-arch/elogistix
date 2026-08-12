@@ -125,6 +125,7 @@ export function HistorialProformas({
                 size="icon"
                 className="h-8 w-8"
                 onClick={(e) => e.stopPropagation()}
+                aria-label={`Acciones de la proforma ${p.numero}`}
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>

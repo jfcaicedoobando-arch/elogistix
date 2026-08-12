@@ -66,7 +66,7 @@ export function TimbrarCompleto(props: CompletoProps) {
         ))}
       </ul>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label>Uso CFDI</Label>
           <Select value={usoCfdi} onValueChange={setUsoCfdi}>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CheckCircle2, AlertCircle, KeyRound } from "lucide-react";
+import { CheckCircle2, AlertCircle, KeyRound } from "lucide-react";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 
@@ -60,8 +60,7 @@ export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "" }: 
         ) : (
           <>
             <Button type="button" variant="ghost" onClick={() => handleClose(false)} disabled={loading}>Cancelar</Button>
-            <Button type="submit" form="forgot-password-form" disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+            <Button type="submit" form="forgot-password-form" loading={loading}>
               Enviar enlace
             </Button>
           </>

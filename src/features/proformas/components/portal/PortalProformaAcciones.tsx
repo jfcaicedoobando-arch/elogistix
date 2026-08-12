@@ -85,10 +85,7 @@ export function PortalProformaAcciones({ submitting, onResponder, error }: Props
               <Button
                 variant="destructive"
                 className="flex-1"
-                onClick={() => void ejecutar("rechazada")}
-                disabled={submitting}
-              >
-                {submitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                onClick={() => void ejecutar("rechazada")} loading={submitting}>
                 Confirmar rechazo
               </Button>
               <Button variant="outline" onClick={() => setModo("idle")} disabled={submitting}>

@@ -107,8 +107,8 @@ export function CatalogoClavesSATCard() {
                   <TableCell className="font-mono text-xs">{r.clave_unidad_sat}</TableCell>
                   <TableCell>{r.activo ? "Sí" : "No"}</TableCell>
                   <TableCell className="text-right">
-                    <Button size="icon" variant="ghost" onClick={() => startEdit(r)} disabled={busy}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => setRowAEliminar(r)} disabled={busy}><Trash2 className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => startEdit(r)} disabled={busy} aria-label={`Editar producto ${r.patron}`}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => setRowAEliminar(r)} disabled={busy} aria-label={`Eliminar producto ${r.patron}`}><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </DetailTableRow>
               ))}

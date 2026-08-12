@@ -8,7 +8,7 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,8 +136,7 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
             {!yaConvertido && (
-              <Button onClick={handleConvertir} disabled={convertir.isPending}>
-                {convertir.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+              <Button onClick={handleConvertir} loading={convertir.isPending}>
                 Convertir
               </Button>
             )}

@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { notifySuccess } from "@/lib/ui/appFeedback";
-import { Loader2, ArrowUpFromLine } from "lucide-react";
+import { ArrowUpFromLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useRegistrarPagoProveedor, useFacturaProveedor } from "@/features/cxp/hooks";
@@ -94,8 +94,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>
         Cancelar
       </Button>
-      <Button onClick={submit} disabled={submitDisabled} title={submitTitle}>
-        {registrar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      <Button onClick={submit} disabled={submitDisabled} title={submitTitle} loading={registrar.isPending}>
         {registrar.isPending ? "Guardando…" : "Registrar pago"}
       </Button>
     </>

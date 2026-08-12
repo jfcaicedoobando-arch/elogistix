@@ -34,7 +34,7 @@ const invalidCls = (invalid?: boolean) =>
 export function EntidadesFields({ form, setForm, agentes, navieras, errores, agenteIdFijo, agenteNombreFijo }: EntidadesProps) {
   const agenteBloqueado = Boolean(agenteIdFijo);
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
         <Label htmlFor="tarifa-agente">Agente *</Label>
         {agenteBloqueado ? (
@@ -108,7 +108,7 @@ export function RutaTipoFields({
   form, setForm, rutas, tipos, errores, multiple, rutaIds, onRutaIdsChange,
 }: RutaTipoProps) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
         <div className="flex items-center justify-between gap-2">
           <Label htmlFor="tarifa-ruta">{multiple ? "Rutas *" : "Ruta *"}</Label>

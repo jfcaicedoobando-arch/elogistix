@@ -137,7 +137,7 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
           <div onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label={`Acciones de la tarifa ${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`}>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

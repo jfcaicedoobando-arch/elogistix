@@ -5,7 +5,7 @@
  *   - KPI grid superior (Total emph, Subtotal, IVA, Ret) reemplaza headerAside.
  *   - Banners de pagos/re-aprobación unificados con banda de contexto.
  */
-import { Loader2, AlertTriangle, ShieldAlert, FileSpreadsheet } from "lucide-react";
+import { AlertTriangle, ShieldAlert, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
@@ -64,7 +64,7 @@ function EditorBody({ factura, ctl, categorias }: EditorBodyProps) {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
         <Kpi label="Subtotal" value={formatCurrency(sub, moneda)} />
         <Kpi label="IVA" value={formatCurrency(iva, moneda)} />
         <Kpi label="Retenciones" value={formatCurrency(ret, moneda)} />
@@ -112,8 +112,7 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>Cancelar</Button>
-      <Button onClick={ctl.submit} disabled={ctl.isPending || !ctl.hayCambios || !ctl.values}>
-        {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      <Button onClick={ctl.submit} disabled={!ctl.hayCambios || !ctl.values} loading={ctl.isPending}>
         {ctl.isPending ? "Guardando…" : "Guardar cambios"}
       </Button>
     </>

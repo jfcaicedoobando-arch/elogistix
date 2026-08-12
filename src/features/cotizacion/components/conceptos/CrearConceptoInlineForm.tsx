@@ -4,7 +4,6 @@
  * sin salir del wizard de cotización.
  */
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +56,7 @@ export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCread
         <Label htmlFor="cci-nombre" className="text-2xs">Nombre</Label>
         <Input id="cci-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} className="h-8 text-sm" />
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label htmlFor="cci-sat" className="text-2xs">Clave SAT</Label>
           <Input id="cci-sat" value={claveSat} onChange={(e) => setClaveSat(e.target.value)} placeholder="78101800" className="h-8 text-sm" />
@@ -80,8 +79,7 @@ export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCread
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
-        <Button type="button" size="sm" disabled={!puede || saving} onClick={handleCrear}>
-          {saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
+        <Button type="button" size="sm" disabled={!puede} onClick={handleCrear} loading={saving}>
           Crear concepto
         </Button>
       </div>

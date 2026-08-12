@@ -6,7 +6,7 @@
  * Mantiene el controller intacto y delega secciones a `NuevoClienteFormPieces`.
  */
 import { useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Loader2, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
@@ -90,8 +90,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
           <Button variant="outline" onClick={() => c.setStep(1)}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
           </Button>
-          <Button onClick={c.handleSave} disabled={!c.docsRequeridosCompletos || c.isSaving}>
-            {c.isSaving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+          <Button onClick={c.handleSave} disabled={!c.docsRequeridosCompletos} loading={c.isSaving}>
             {c.isSaving ? "Creando…" : "Crear cliente"}
           </Button>
         </>

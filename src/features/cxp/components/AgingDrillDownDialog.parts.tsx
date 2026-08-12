@@ -70,7 +70,7 @@ export function AgingKpiRow({ proveedor }: { proveedor: CxpAgingRow }) {
   const vencido = proveedor.d_1_30 + proveedor.d_31_60 + proveedor.d_61_90;
   const m = proveedor.moneda;
   return (
-    <div className="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-3 border-b bg-background">
+    <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 border-b bg-background">
       <Kpi label={`Saldo total (${m})`} value={formatCurrency(proveedor.saldo_total, m)} />
       <Kpi label="Por vencer" value={formatCurrency(porVencer, m)} />
       <Kpi

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, BadgeDollarSign } from "lucide-react";
+import { BadgeDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -49,14 +49,13 @@ export function DialogRegistrarPagoLiquidacion({
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={submit} disabled={reg.isPending}>
-            {reg.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+          <Button onClick={submit} loading={reg.isPending}>
             Registrar
           </Button>
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label>Fecha</Label>
           <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />

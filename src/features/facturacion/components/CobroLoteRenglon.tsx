@@ -94,8 +94,8 @@ export function CobroLoteRenglon(p: Props) {
       </td>
       <td className="px-3 py-2 text-right">
         <div className="flex items-center justify-end gap-2">
-          {liquidada && <Badge variant="outline" className="text-[10px]">Liquidada</Badge>}
-          {parcial && <Badge variant="secondary" className="text-[10px]">Parcial</Badge>}
+          {liquidada && <Badge variant="outline" className="text-2xs">Liquidada</Badge>}
+          {parcial && <Badge variant="secondary" className="text-2xs">Parcial</Badge>}
           <span className="tabular-nums text-muted-foreground">
             {formatCurrency(queda, p.moneda)}
           </span>

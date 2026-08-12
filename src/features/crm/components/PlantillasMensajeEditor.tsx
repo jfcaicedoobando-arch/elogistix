@@ -124,7 +124,7 @@ export default function PlantillasMensajeEditor() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <Label className="text-xs flex items-center gap-1">
-                      <Switch checked={p.activa} onCheckedChange={() => toggleActiva(p.id, p.activa)} />
+                      <Switch checked={p.activa} onCheckedChange={() => toggleActiva(p.id, p.activa)} aria-label={p.activa ? `Desactivar plantilla ${p.nombre}` : `Activar plantilla ${p.nombre}`} />
                       Activa
                     </Label>
                     <Button
@@ -132,6 +132,7 @@ export default function PlantillasMensajeEditor() {
                       variant="ghost"
                       className="h-8 w-8 text-destructive"
                       onClick={() => setAEliminar({ id: p.id, nombre: p.nombre })}
+                      aria-label={`Eliminar plantilla ${p.nombre}`}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>

@@ -4,7 +4,7 @@
  * Migrado a `FormDialogShell` (v13.121.0).
  */
 import { useState } from "react";
-import { Loader2, Target } from "lucide-react";
+import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -87,8 +87,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-      <Button onClick={handleSubmit} disabled={crear.isPending}>
-        {crear.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+      <Button onClick={handleSubmit} loading={crear.isPending}>
         Crear lead
       </Button>
     </>

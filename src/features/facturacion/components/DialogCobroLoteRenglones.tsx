@@ -3,6 +3,7 @@
  * Separada del diálogo para respetar el límite de 200 líneas por componente.
  */
 import { CobroLoteRenglon } from "./CobroLoteRenglon";
+import { LoteRenglonesTable } from "@/components/shared/LoteRenglonesTable";
 import type { FacturaCobroCandidata, RenglonCobro } from "@/features/facturacion/services/pagoClienteLote";
 
 interface Props {
@@ -25,18 +26,8 @@ export function DialogCobroLoteRenglones(p: Props) {
   );
 
   return (
-    <div className="overflow-x-auto rounded-md border">
-      <table className="w-full min-w-[660px] text-sm">
-        <thead className="bg-muted/50 text-xs text-muted-foreground">
-          <tr>
-            <th className="w-[18%] px-3 py-2 text-left font-medium">Factura</th>
-            <th className="w-[16%] px-3 py-2 text-left font-medium">Vence</th>
-            <th className="w-[18%] px-3 py-2 text-right font-medium">Saldo</th>
-            <th className="w-[26%] px-3 py-2 text-right font-medium">Se aplica</th>
-            <th className="w-[22%] px-3 py-2 text-right font-medium">Queda</th>
-          </tr>
-        </thead>
-        <tbody>
+    <LoteRenglonesTable>
+
           {orden.map((f, i) => (
             <CobroLoteRenglon
               key={f.factura_id}
@@ -50,8 +41,6 @@ export function DialogCobroLoteRenglones(p: Props) {
               onAsignarSaldo={() => p.onAsignarSaldo(f.factura_id)}
             />
           ))}
-        </tbody>
-      </table>
-    </div>
+    </LoteRenglonesTable>
   );
 }

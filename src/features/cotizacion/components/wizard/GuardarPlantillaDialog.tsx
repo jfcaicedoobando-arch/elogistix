@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { BookmarkPlus, Loader2 } from "lucide-react";
+import { BookmarkPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,8 +82,7 @@ export function GuardarPlantillaDialog({
           <Button variant="outline" onClick={() => handleClose(false)} disabled={guardar.isPending}>
             Cancelar
           </Button>
-          <Button onClick={handleGuardar} disabled={!puede || guardar.isPending}>
-            {guardar.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+          <Button onClick={handleGuardar} disabled={!puede} loading={guardar.isPending}>
             Guardar plantilla
           </Button>
         </>

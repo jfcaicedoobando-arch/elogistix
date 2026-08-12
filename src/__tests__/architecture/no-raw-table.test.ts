@@ -20,6 +20,55 @@ import { walk, relPath } from "../../../scripts/lib/walk";
 const ROOT = resolve(__dirname, "../../..");
 const RAW_TABLE_IMPORT = /from\s+["']@\/components\/ui\/table["']/;
 
+/** JSX de tabla cruda: `<table ...>` fuera de DataTable/DetailTable. */
+const RAW_TABLE_JSX = /<\s*table[\s>]/;
+
+/**
+ * Deuda congelada (UX-03): archivos que hoy renderizan `<table>` crudo.
+ * NO agregar entradas nuevas; quitar al migrar a DataTable/DetailTable.
+ */
+const RAW_TABLE_JSX_DEBT: readonly string[] = [
+  "src/components/shared/DataTable.tsx",
+  "src/components/shared/LoteRenglonesTable.tsx",
+  "src/components/ui/table.tsx",
+  "src/features/admin/components/MigrarRolesLegacyPreviewTable.tsx",
+  "src/features/admin/components/diagnosticoHealth/HealthSlowestTable.tsx",
+  "src/features/admin/routes/AdminDemoLeads.tsx",
+  "src/features/anticipos-proveedor/components/AnticiposAplicadosSection.tsx",
+  "src/features/comisiones/components/TabLiquidaciones.tsx",
+  "src/features/compras/routes/_sections/ConciliacionDetalleCuerpoTabla.tsx",
+  "src/features/compras/routes/_sections/ConciliacionDetalleFilaRenglon.tsx",
+  "src/features/cotizacion/components/plantillas/PlantillasTabla.tsx",
+  "src/features/cotizacion/components/revalidacion/RevalidarTarifaModal.tsx",
+  "src/features/cotizacion/routes/CotizacionInformativaDetalle.tsx",
+  "src/features/crm/components/Cliente360Panel.tsx",
+  "src/features/crm/components/ImportarLeadsCsvPreview.tsx",
+  "src/features/crm/components/OportunidadCotizacionesList.tsx",
+  "src/features/crm/routes/Analitica.tsx",
+  "src/features/crm/routes/CrmDashboard.tsx",
+  "src/features/cxp/components/CfdiConceptosPreview.tsx",
+  "src/features/cxp/components/ConceptosFacturaSection.tsx",
+  "src/features/cxp/components/DialogDetallePagosProveedor.sections.tsx",
+  "src/features/cxp/components/NotasCreditoSection.tsx",
+  "src/features/dashboardEjecutivo/components/SaldosBancosCard.tsx",
+  "src/features/embarques/components/OrigenCostosSection.tsx",
+  "src/features/embarques/components/contenedores/SeccionContenedoresReadonly.tsx",
+  "src/features/embarques/components/costos/GrupoCostosProveedor.tsx",
+  "src/features/facturacion/components/NotasCreditoRecientes.tsx",
+  "src/features/facturacion/components/detalle/FacturaNotasCreditoTable.tsx",
+  "src/features/facturacion/components/detalle/FacturaPagosTabla.tsx",
+  "src/features/facturacion/estadoCuenta/components/EstadoCuentaRowExpanded.tsx",
+  "src/features/marketing/routes/GuiaPuertosMexicoArticle.tsx",
+  "src/features/presupuesto/components/TabCaptura.tsx",
+  "src/features/presupuesto/components/TabCategorias.tsx",
+  "src/features/presupuesto/components/TabVsReal.tsx",
+  "src/features/profit/components/EstadoResultadosTable.tsx",
+  "src/features/proformas/components/portal/PortalProformaResumen.tsx",
+  "src/features/tesoreria/components/TablaFlujoSemanal.tsx",
+  "src/pdf/components/DataTable.tsx",
+];
+
+
 /** Archivos autorizados a importar `@/components/ui/table` directamente. */
 const ALLOWLIST: readonly string[] = [
   // Implementación misma del DataTable — consume las primitivas.
@@ -97,6 +146,25 @@ describe("architecture — no raw @/components/ui/table imports", () => {
       `Entradas en ALLOWLIST que ya no importan @/components/ui/table (o no existen).\n` +
         `Elimínalas de ALLOWLIST y de eslint.config.js.\n\n` +
         stale.join("\n"),
+    ).toEqual([]);
+  });
+  it("no hay JSX <table> crudo fuera de la deuda congelada", () => {
+    const violations: string[] = [];
+    for (const f of walk(join(ROOT, "src"), {
+      excludeDirs: ["__tests__", "node_modules"],
+      excludeFileRe: /\.(test|spec)\.tsx?$/,
+    })) {
+      // Sólo componentes: los generadores de HTML/PDF (.ts) no son JSX.
+      if (!f.endsWith(".tsx")) continue;
+      const src = readFileSync(f, "utf8");
+      if (!RAW_TABLE_JSX.test(src)) continue;
+      const rel = relPath(ROOT, f);
+      if (!RAW_TABLE_JSX_DEBT.includes(rel)) violations.push(rel);
+    }
+    expect(
+      violations,
+      `Nuevas tablas crudas detectadas. Usa <DataTable /> o <DetailTable />.\n\n` +
+        violations.join("\n"),
     ).toEqual([]);
   });
 });

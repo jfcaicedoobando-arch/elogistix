@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 const MONEDAS = [
   { value: "MXN", label: "Peso mexicano (MXN)" },
@@ -108,8 +108,7 @@ export function OnboardingForm({
       </div>
 
       <div className="flex flex-col gap-2 pt-2 sm:flex-row-reverse">
-        <Button type="submit" className="flex-1" disabled={submitting}>
-          {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+        <Button type="submit" className="flex-1" loading={submitting}>
           Guardar y continuar
         </Button>
         <Button

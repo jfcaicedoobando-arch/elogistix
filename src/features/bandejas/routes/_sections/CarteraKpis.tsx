@@ -41,19 +41,19 @@ export function CarteraKpis(p: Props) {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card>
         <CardHeader className="pb-2"><CardTitle>Facturas en foco</CardTitle></CardHeader>
-        <CardContent className="text-2xl font-semibold">{p.totalFacturas}</CardContent>
+        <CardContent className="text-kpi">{p.totalFacturas}</CardContent>
       </Card>
       <Card>
         <CardHeader className="pb-2"><CardTitle>Saldo total</CardTitle></CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold tabular-nums">{formatNativos(p.saldosNativos)}</div>
+          <div className="text-kpi tabular-nums">{formatNativos(p.saldosNativos)}</div>
           <Equivalencia saldos={p.saldosNativos} eq={p.eqTotal} />
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="pb-2"><CardTitle>Vencido ({p.vencidasCount})</CardTitle></CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-destructive tabular-nums">
+          <div className="text-kpi text-destructive tabular-nums">
             {formatNativos(p.vencidoNativo)}
           </div>
           <Equivalencia saldos={p.vencidoNativo} eq={p.eqVencido} />

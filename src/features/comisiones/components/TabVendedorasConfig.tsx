@@ -114,7 +114,7 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
                     <Save className="h-4 w-4" />
                   </Button>
                   <div className="flex items-center gap-2">
-                    <Switch checked={c.activa} onCheckedChange={(v) => toggleActiva(c.id, v)} />
+                    <Switch checked={c.activa} onCheckedChange={(v) => toggleActiva(c.id, v)} aria-label={c.activa ? "Desactivar comisión de la vendedora" : "Activar comisión de la vendedora"} />
                     <span className="text-xs text-muted-foreground">Activa</span>
                   </div>
                 </div>

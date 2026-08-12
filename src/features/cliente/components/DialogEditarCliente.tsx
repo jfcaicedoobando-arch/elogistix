@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { notifySuccess } from "@/lib/ui/appFeedback";
-import { AlertCircle, Loader2, UserCog } from "lucide-react";
+import { AlertCircle, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -128,8 +128,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
       footer={(
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={!form.nombre.trim() || !form.regimen_fiscal.trim() || isSaving}>
-            {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+          <Button onClick={handleSubmit} disabled={!form.nombre.trim() || !form.regimen_fiscal.trim()} loading={isSaving}>
             {isSaving ? "Guardando…" : "Guardar cambios"}
           </Button>
         </>

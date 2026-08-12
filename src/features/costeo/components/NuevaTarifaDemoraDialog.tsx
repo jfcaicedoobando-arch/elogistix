@@ -69,7 +69,7 @@ export function NuevaTarifaDemoraDialog({
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label htmlFor="dem-desde">Desde día</Label>
             <Input
@@ -104,7 +104,7 @@ export function NuevaTarifaDemoraDialog({
             onChange={(n: number) => setForm({ ...form, monto_por_dia_usd: n })}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label htmlFor="dem-vig-desde">{rangoLabel("Vigencia", "desde")}</Label>
             <DatePickerMx

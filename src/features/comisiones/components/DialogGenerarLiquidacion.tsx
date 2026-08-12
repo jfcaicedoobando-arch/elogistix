@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Banknote } from "lucide-react";
+import { Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -41,8 +41,7 @@ export function DialogGenerarLiquidacion({
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={submit} disabled={!vendedoraId || gen.isPending}>
-            {gen.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+          <Button onClick={submit} disabled={!vendedoraId} loading={gen.isPending}>
             Generar
           </Button>
         </>

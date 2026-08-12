@@ -44,7 +44,7 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
   const cuentaSel = cuentasCompatibles.find((c) => c.id === values.cuentaBancariaId) ?? null;
   const seleccionInvalida = Boolean(values.cuentaBancariaId) && !cuentaSel;
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="space-y-1">
         <Label>Fecha de pago</Label>
         <DatePickerMx value={values.fecha} onChange={(v) => onChange("fecha", v)} className="w-full" />
@@ -79,7 +79,7 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
           </SelectContent>
         </Select>
       </div>
-      <div className="col-span-2 space-y-1">
+      <div className="sm:col-span-2 space-y-1">
         <Label htmlFor="cobro-cuenta">Cuenta donde entró el dinero (opcional)</Label>
         <Select
           value={values.cuentaBancariaId || SIN_CUENTA}
@@ -114,12 +114,12 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
           aliasCuenta={cuentaSel?.alias}
         />
       </div>
-      <div className="col-span-2 space-y-1">
+      <div className="sm:col-span-2 space-y-1">
         <Label>Referencia</Label>
         <Input value={values.referencia} onChange={(e) => onChange("referencia", e.target.value)}
           placeholder="Folio SPEI, cheque..." />
       </div>
-      <div className="col-span-2 space-y-1">
+      <div className="sm:col-span-2 space-y-1">
         <Label>Notas</Label>
         <Textarea value={values.notas} onChange={(e) => onChange("notas", e.target.value)} rows={2} />
       </div>

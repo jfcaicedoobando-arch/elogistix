@@ -7,7 +7,7 @@
  * operaciones, y esconde la carga de archivos porque el documento ya existe.
  */
 import { useNavigate } from "react-router-dom";
-import { Loader2, FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 
@@ -108,8 +108,7 @@ function DialogNuevaFacturaProveedorForm({
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
         Cancelar
       </Button>
-      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar}>
-        {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar} loading={ctl.isPending}>
         {ctl.isPending ? "Guardando…" : "Guardar factura"}
       </Button>
     </>

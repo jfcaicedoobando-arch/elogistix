@@ -3,7 +3,7 @@
  * La factura es fija: sólo se elige el anticipo con saldo a favor y el monto.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, ArrowRightLeft, AlertTriangle } from "lucide-react";
+import { ArrowRightLeft, AlertTriangle } from "lucide-react";
 import { evaluarDesajusteEmbarque } from "@/features/anticipos-proveedor/domain/avisoEmbarqueAnticipo";
 
 import { Button } from "@/components/ui/button";
@@ -109,8 +109,7 @@ export function AplicarAnticipoDesdeFacturaDialog({
   const footer = (
     <>
       <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={aplicar.isPending}>Cancelar</Button>
-      <Button onClick={onSubmit} disabled={aplicar.isPending || !anticipoId}>
-        {aplicar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      <Button onClick={onSubmit} disabled={!anticipoId} loading={aplicar.isPending}>
         {aplicar.isPending ? "Aplicando…" : "Aplicar anticipo"}
       </Button>
     </>

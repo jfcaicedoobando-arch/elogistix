@@ -21,7 +21,7 @@ export interface NuevaCuentaFormFieldsProps {
 
 export function NuevaCuentaFormFields({ form, setField }: NuevaCuentaFormFieldsProps) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
         <Label>Banco</Label>
         <Input value={form.banco} onChange={(e) => setField("banco", e.target.value)} />
@@ -68,7 +68,7 @@ export function NuevaCuentaFormFields({ form, setField }: NuevaCuentaFormFieldsP
           className="w-full"
         />
       </div>
-      <p className="col-span-2 text-xs text-muted-foreground">
+      <p className="sm:col-span-2 text-xs text-muted-foreground">
         Los movimientos con fecha anterior a este día se guardan como historial, pero no
         afectan el saldo: ya vienen incluidos en el saldo inicial.
       </p>

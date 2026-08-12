@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useInviteClientUser } from "@/features/cliente/hooks";
 
@@ -46,8 +46,7 @@ export default function PortalInviteDialog({
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleInvite} disabled={!email || inviteMutation.isPending}>
-            {inviteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+          <Button onClick={handleInvite} disabled={!email} loading={inviteMutation.isPending}>
             Enviar Invitación
           </Button>
         </>

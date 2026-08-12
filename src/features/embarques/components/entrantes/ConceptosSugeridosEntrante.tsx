@@ -54,7 +54,7 @@ function FilaConcepto({
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>Costeado: {formatCurrency(concepto.monto, concepto.moneda)}</span>
           {concepto.yaFacturado && (
-            <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">ya facturado</Badge>
+            <Badge variant="secondary" className="h-4 px-1.5 text-2xs">ya facturado</Badge>
           )}
         </div>
       </div>

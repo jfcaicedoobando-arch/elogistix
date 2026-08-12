@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
 import { useCancelarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import { notifyWarning } from "@/lib/ui/appFeedback";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
@@ -68,7 +67,6 @@ export function CancelarAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
             disabled={cancelar.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {cancelar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {cancelar.isPending ? "Cancelando…" : "Cancelar anticipo"}
           </AlertDialogAction>
         </AlertDialogFooter>

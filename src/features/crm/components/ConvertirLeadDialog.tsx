@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Loader2, UserPlus } from "lucide-react";
+import { ArrowRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
@@ -64,8 +64,7 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
       {!yaConvertido && (
-        <Button onClick={handle} disabled={convertir.isPending}>
-          {convertir.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+        <Button onClick={handle} loading={convertir.isPending}>
           Convertir
         </Button>
       )}

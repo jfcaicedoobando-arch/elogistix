@@ -1,6 +1,5 @@
 /** Sub-componentes presentacionales del modal de registrar pago.
  *  Extraídos para que `DialogRegistrarPago` cumpla el límite de complejidad. */
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
@@ -26,8 +25,7 @@ export function FooterAcciones({
   return (
     <>
       <Button variant="outline" onClick={onCancel} disabled={ocupado}>Cancelar</Button>
-      <Button onClick={onGuardar} disabled={invalido || ocupado}>
-        {ocupado && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+      <Button onClick={onGuardar} disabled={invalido} loading={ocupado}>
         {timbrandoRep ? "Timbrando REP…" : "Registrar pago"}
       </Button>
     </>

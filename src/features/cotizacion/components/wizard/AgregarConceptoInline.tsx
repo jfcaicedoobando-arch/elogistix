@@ -11,7 +11,7 @@
  */
 import { useState } from "react";
 import { MoneyInput } from "@/components/shared/MoneyInput";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,8 +151,7 @@ export function AgregarConceptoInline({
           <Button variant="ghost" size="sm" onClick={() => handleOpenChange(false)}>
             Cancelar
           </Button>
-          <Button size="sm" onClick={handleAceptar} disabled={!puede || saving}>
-            {saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
+          <Button size="sm" onClick={handleAceptar} disabled={!puede} loading={saving}>
             Agregar
           </Button>
         </div>

@@ -2,7 +2,6 @@
  * QuickCreateOportunidadPopover — alta express de oportunidad (nombre + cliente opcional).
  */
 import { useState, useMemo } from "react";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,8 +75,8 @@ export default function QuickCreateOportunidadPopover({ onCreated, onMore, onClo
       </div>
       <div className="flex items-center justify-between pt-1">
         <Button variant="ghost" size="sm" onClick={onMore} className="text-xs">Más campos →</Button>
-        <Button size="sm" onClick={submit} disabled={crear.isPending || !etapaInicial}>
-          {crear.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Crear
+        <Button size="sm" onClick={submit} disabled={!etapaInicial} loading={crear.isPending}>
+          Crear
         </Button>
       </div>
     </div>

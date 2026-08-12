@@ -47,7 +47,7 @@ export function ConciliacionPagoCell({
         </ToneBadge>
 
         <div className="flex flex-col text-label text-muted-foreground min-w-0">
-          <span className="tabular-nums">{format(new Date(movimiento.fecha + "T00:00:00"), "dd/MM/yy")} · {formatCurrency(Number(movimiento.cargo), "MXN")}</span>
+          <span className="tabular-nums">{format(new Date(movimiento.fecha + "T00:00:00"), "dd/MM/yyyy")} · {formatCurrency(Number(movimiento.cargo), "MXN")}</span>
           {movimiento.referencia && <span className="truncate">Ref: {movimiento.referencia}</span>}
         </div>
         {!disabled && (
