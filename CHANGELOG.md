@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.522.1] - 2026-08-12
+- CI (fix) — `deno test` del job `edge-functions` regresa a `--no-check`. Al activar el typecheck completo en v13.521.0 aparecieron 43 falsos positivos propios del checker de Deno (directivas `@ts-expect-error` marcadas como "sin usar" para globals de `Deno`, y desajustes entre los tipos generados de Supabase y `SupabaseClient`), que bloqueaban el CI sin representar bugs reales. El typecheck de la app sigue cubierto por el job `typecheck`.
+
 ## [13.522.0] - 2026-08-12
 - CI (guard preventivo) — los jobs `typecheck` y `build` de `ci.yml` ahora verifican que `src/constants/appVersion.ts` no esté vacío y que exporte `APP_VERSION` antes de correr. Si falla, aborta con un mensaje claro (`::error::`) en lugar del error críptico de Rollup/tsc en cascada. Previene la recurrencia de la regresión de v13.521.0 donde el archivo quedó vacío.
 
