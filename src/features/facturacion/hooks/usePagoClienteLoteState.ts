@@ -18,6 +18,11 @@ import {
   type FacturaCobroCandidata,
   type RenglonCobro,
 } from "@/features/facturacion/services/pagoClienteLote";
+import {
+  asignarSaldoFactura,
+  asignarSobrante as asignarSobranteFifo,
+} from "@/features/facturacion/services/cobroLoteAtajos";
+
 
 
 interface Args {
