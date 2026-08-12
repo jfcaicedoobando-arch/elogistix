@@ -154,17 +154,8 @@ export function DatePickerMx({
         aria-disabled={disabled || undefined}
         className={cn(pickerTriggerClass({ showError, disabled }))}
       >
-        <DatePickerMxCalendar
-          value={value}
-          min={min}
-          max={max}
-          open={open}
-          disabled={disabled}
-          setOpen={setOpen}
-          onPick={onPick}
-          onClear={onCalendarClear}
-        />
-
+        {/* v13.550.0 — el input va PRIMERO en el DOM: al tabular el foco cae
+            directo en la captura de la fecha y no en el icono del calendario. */}
         <input
           ref={inputRef}
           id={id}
@@ -172,14 +163,26 @@ export function DatePickerMx({
           type="text"
           inputMode="numeric"
           autoComplete="off"
+          // eslint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus={autoFocus}
           value={text}
           onChange={handleChange}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(text); } }}
+          onKeyDown={(e) => {
+            manejarTeclaFecha(e, {
+              open,
+              setOpen,
+              commit: () => commit(text),
+              pendiente: text !== isoToDisplay(value),
+              disabled,
+              readOnly,
+            });
+          }}
           onPaste={handlePaste}
           onBlur={() => commit(text)}
           placeholder={placeholder}
           disabled={disabled}
           readOnly={readOnly}
+          aria-label={ariaLabel ?? (id ? undefined : title)}
           aria-invalid={showError || undefined}
           aria-describedby={describedBy}
           maxLength={10}
@@ -189,6 +192,7 @@ export function DatePickerMx({
         {text && !disabled && !readOnly && (
           <button
             type="button"
+            tabIndex={-1}
             onClick={clear}
             className={pickerClearClass}
             aria-label="Limpiar fecha"
@@ -196,8 +200,21 @@ export function DatePickerMx({
             <X className={pickerClearIconClass} />
           </button>
         )}
+
+        <DatePickerMxCalendar
+          value={value}
+          min={min}
+          max={max}
+          open={open}
+          disabled={disabled}
+          setOpen={setOpen}
+          onPick={onPick}
+          onClear={onCalendarClear}
+          onCerrar={() => inputRef.current?.focus()}
+        />
       </div>
       {showError && (
+
         <span id={errorId} className={pickerErrorClass}>
           {errorText ?? MENSAJE_FECHA_INVALIDA}
         </span>
