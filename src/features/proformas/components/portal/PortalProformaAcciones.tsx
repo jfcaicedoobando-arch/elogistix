@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { COPY_ENLACE, COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 
 interface Props {
   submitting: boolean;
@@ -22,13 +23,15 @@ export function PortalProformaAcciones({ submitting, onResponder, error }: Props
   async function ejecutar(respuesta: "aceptada" | "rechazada") {
     setLocalError(null);
     if (respuesta === "rechazada" && motivo.trim().length < 3) {
-      setLocalError("Escribe brevemente el motivo del rechazo.");
+      setLocalError(COPY_VALIDACION.motivoRechazo);
       return;
     }
     try {
       await onResponder(respuesta, motivo.trim());
     } catch (e) {
-      setLocalError((e as Error).message);
+      // Superficie pública: nunca exponer `error.message` crudo al cliente.
+      console.error("[portal-proforma]", e);
+      setLocalError(COPY_ENLACE.noDisponible);
     }
   }
 

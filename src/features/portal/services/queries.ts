@@ -10,7 +10,12 @@ import {
 } from "./columns";
 import { PORTAL_LIST_MAX, PORTAL_RELATED_MAX } from "./limits";
 
-export { fetchPortalClientUsers, fetchPortalClienteName, fetchPortalOrgName } from "./identity";
+export {
+  fetchPortalClientUsers,
+  fetchPortalClienteName,
+  fetchPortalContactoNombre,
+  fetchPortalOrgName,
+} from "./identity";
 export {
   fetchPortalFacturas,
   fetchPortalFactura,

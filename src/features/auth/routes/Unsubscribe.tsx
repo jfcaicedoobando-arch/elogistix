@@ -7,6 +7,7 @@ import {
   validateUnsubscribeToken,
   confirmUnsubscribe,
 } from "@/features/auth/services/unsubscribeService";
+import { COPY_BAJA_CORREOS, COPY_ENLACE } from "@/lib/copy/publicoCopy";
 
 type Status = "loading" | "valid" | "invalid" | "already" | "confirming" | "success" | "error";
 
@@ -44,13 +45,13 @@ export default function Unsubscribe() {
       const data = await confirmUnsubscribe(token);
       if (data.success || data.reason === "already_unsubscribed") setStatus("success");
       else {
-        setErrorMsg(data.error ?? "No se pudo procesar la baja");
+        setErrorMsg(COPY_BAJA_CORREOS.falla);
         setStatus("error");
       }
     } catch (e) {
       // UIB-15 (UX-02): superficie pública — nunca error.message crudo.
       console.error("[unsubscribe]", e);
-      setErrorMsg("No pudimos procesar la baja. Intenta de nuevo en unos minutos.");
+      setErrorMsg(COPY_BAJA_CORREOS.falla);
       setStatus("error");
     }
   };
@@ -61,29 +62,29 @@ export default function Unsubscribe() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MailMinus className="h-5 w-5" />
-            Cancelar suscripción
+            {COPY_BAJA_CORREOS.titulo}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {status === "loading" && (
             <p className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Validando enlace…
+              <Loader2 className="h-4 w-4 animate-spin" /> {COPY_BAJA_CORREOS.validando}
             </p>
           )}
           {status === "invalid" && (
             <p className="flex items-center gap-2 text-destructive">
-              <XCircle className="h-4 w-4" /> Este enlace de baja no es válido o ha expirado.
+              <XCircle className="h-4 w-4" /> {COPY_ENLACE.invalido}
             </p>
           )}
           {status === "already" && (
             <p className="flex items-center gap-2 text-muted-foreground">
-              <CheckCircle2 className="h-4 w-4" /> Esta dirección ya estaba dada de baja.
+              <CheckCircle2 className="h-4 w-4" /> {COPY_BAJA_CORREOS.yaDadoDeBaja}
             </p>
           )}
           {status === "valid" && (
             <>
               <p className="text-sm text-muted-foreground">
-                ¿Confirmas que deseas dejar de recibir correos de Libre Carga?
+                {COPY_BAJA_CORREOS.confirmar}
               </p>
               <Button onClick={handleConfirm} variant="destructive" className="w-full">
                 Confirmar baja
@@ -92,12 +93,12 @@ export default function Unsubscribe() {
           )}
           {status === "confirming" && (
             <p className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Procesando…
+              <Loader2 className="h-4 w-4 animate-spin" /> {COPY_BAJA_CORREOS.procesando}
             </p>
           )}
           {status === "success" && (
             <p className="flex items-center gap-2 text-success">
-              <CheckCircle2 className="h-4 w-4" /> Listo. Ya no recibirás más correos.
+              <CheckCircle2 className="h-4 w-4" /> {COPY_BAJA_CORREOS.exito}
             </p>
           )}
           {status === "error" && (
