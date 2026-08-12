@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.531.0] - 2026-08-20
+- Portales públicos (Sub-ola 6): Aviso de Privacidad y Términos quedan tras la bandera `LEGAL_CONTENT_APPROVED` mostrando un aviso neutral "en revisión" mientras no haya validación legal.
+- Tracking público, demo, login, portal del cliente y baja de correos ya no muestran errores técnicos en inglés: se traducen a copy es-MX y el detalle crudo va sólo a consola/Sentry.
+- Login valida email y contraseña antes de llamar al servidor; "Mi perfil" del portal usa el patrón estándar de carga con botón "Reintentar" y un error de red ya no se confunde con "cuenta sin empresa vinculada".
+- Interno: se dividieron `catalogos/services`, `tesoreria/domain/resumen` y el diálogo de demo para respetar el límite de 200 líneas.
+
 ## [13.530.0] - 2026-08-12
 - Auditoría Wave 1 — Sub-ola 5 (robustez fiscal y financiera residual). Los puntos EF-05 a EF-08 (timeouts SAT/cancelaciones, respaldo de XML, dedupe atómico del webhook y guardas de eventos fuera de orden) ya venían aplicados en versiones anteriores; se verificaron y quedan cerrados.
 - BL-10 — Las cuentas bancarias eliminadas ya no reaparecen en los selectores de bitácora de tesorería ni en el listado de cuentas: el listado siempre ignora cuentas borradas. Las cuentas sólo inactivas (no borradas) siguen visibles cuando se piden.
