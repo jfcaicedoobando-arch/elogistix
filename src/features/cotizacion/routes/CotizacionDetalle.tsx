@@ -79,7 +79,17 @@ export default function CotizacionDetalle() {
               cotizacion={cotizacion}
               nombreDestinatario={nombreDestinatario}
               onBack={() => navigate("/cotizaciones")}
-              onExportarPdf={() => void run(() => handleExportarPdf(cotizacion, tasaIva))}
+              onExportarPdf={() => {
+                // B-081: no generamos PDF en $0.00 (se enviaban cotizaciones vacías).
+                if (totalUSD + totalMXN <= 0) {
+                  notifyError(undefined, {
+                    title: "La cotización no tiene importes",
+                    description: "Los conceptos de venta suman $0.00. Revisa la sección de costos y sincroniza los conceptos de venta antes de descargar el PDF.",
+                  });
+                  return;
+                }
+                void run(() => handleExportarPdf(cotizacion, tasaIva));
+              }}
               exportandoPdf={isExporting}
               onEnviarEmail={canEdit ? () => setEnviarOpen(true) : undefined}
               yaEnviada={envios.length > 0}
