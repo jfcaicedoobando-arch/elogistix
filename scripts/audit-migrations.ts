@@ -120,8 +120,13 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `REVOKE ALL … FROM PUBLIC`. La migración correctiva `20260810235028`
  *    re-aplica ambos bloques; los archivos originales quedan como legacy
  *    auditados.
+ *  - `20260812184448` — post-FIX-H6-14: `20260812175701` recreó
+ *    `siguiente_folio_proveedor(uuid)` (SECURITY DEFINER) con GRANT pero sin
+ *    `REVOKE ALL … FROM PUBLIC`. La migración correctiva `20260812184448`
+ *    re-aplica el bloque canónico; el archivo original queda como legacy
+ *    auditado.
  */
-const BASELINE = "20260810235028";
+const BASELINE = "20260812184448";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
