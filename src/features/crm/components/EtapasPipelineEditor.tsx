@@ -121,11 +121,11 @@ export default function EtapasPipelineEditor() {
                   </Button>
                 </div>
                 <div className="col-span-1 flex flex-col items-center gap-0.5" title="Activa">
-                  <Switch checked={d.activa} onCheckedChange={(v) => set(e.id, { activa: v })} />
+                  <Switch checked={d.activa} onCheckedChange={(v) => set(e.id, { activa: v })} aria-label={`Etapa ${d.nombre} activa`} />
                   <span className="text-3xs text-muted-foreground">Activa</span>
                 </div>
                 <div className="col-span-1 flex flex-col items-center gap-0.5" title="Crear tarea de seguimiento al entrar a esta etapa">
-                  <Switch checked={d.crea_tarea_seguimiento} onCheckedChange={(v) => set(e.id, { crea_tarea_seguimiento: v })} />
+                  <Switch checked={d.crea_tarea_seguimiento} onCheckedChange={(v) => set(e.id, { crea_tarea_seguimiento: v })} aria-label={`Crear tarea de seguimiento al entrar a ${d.nombre}`} />
                   <span className="text-3xs text-muted-foreground">Tarea</span>
                 </div>
                 <Input

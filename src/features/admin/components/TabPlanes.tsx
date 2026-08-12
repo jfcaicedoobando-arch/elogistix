@@ -129,6 +129,7 @@ export default function TabPlanes() {
         <Switch
           checked={row.original.activo}
           onCheckedChange={(checked) => updatePlan.mutate({ id: row.original.id, activo: checked })}
+          aria-label={row.original.activo ? `Desactivar plan ${row.original.nombre}` : `Activar plan ${row.original.nombre}`}
         />
       ),
     },

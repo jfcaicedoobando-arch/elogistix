@@ -48,7 +48,7 @@ export default function TabNavieras() {
     {
       id: "activo", header: "Activo",
       meta: { className: "text-center", headerClassName: "text-center" },
-      cell: ({ row }) => <Switch checked={row.original.activo} onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })} />,
+      cell: ({ row }) => <Switch checked={row.original.activo} onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })} aria-label={row.original.activo ? `Desactivar naviera ${row.original.name}` : `Activar naviera ${row.original.name}`} />,
     },
     {
       id: "acciones", header: "",

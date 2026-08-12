@@ -49,7 +49,7 @@ export default function MotivosPerdidaEditor() {
           {motivos.map((m) => (
             <div key={m.id} className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">{m.nombre}</span>
-              <Switch checked={m.activa} onCheckedChange={(v) => toggle(m.id, v)} />
+              <Switch checked={m.activa} onCheckedChange={(v) => toggle(m.id, v)} aria-label={m.activa ? `Desactivar motivo ${m.nombre}` : `Activar motivo ${m.nombre}`} />
             </div>
           ))}
           {motivos.length === 0 && <p className="text-xs text-muted-foreground">Sin motivos configurados.</p>}
