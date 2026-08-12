@@ -10,12 +10,12 @@
  * Entrada: { factura_id: string }
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { authorizeOrgRole, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
 
 interface FapiInvoiceStatus {
   status?: string;
@@ -184,28 +184,31 @@ function flattenRelated(remote: FapiInvoiceRemote) {
 }
 
 async function handle(req: Request): Promise<Response> {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
   const { data: userData, error: uErr } = await supabase.auth.getUser();
-  if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+  if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as { factura_id?: string };
-  if (!body.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
+  if (!body.factura_id) return json({ error: "factura_id_required" }, 400);
 
   const loaded = await loadFactura(supabase, body.factura_id);
   if (!loaded.ok) return loaded.res;
   const factura = loaded.factura;
 
   if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_CONSULTA_FISCAL))) {
-    return jsonResponse({ error: "forbidden" }, 403);
+    return json({ error: "forbidden" }, 403);
   }
 
   const fetched = await fetchRemote(supabase, factura);
@@ -218,7 +221,7 @@ async function handle(req: Request): Promise<Response> {
     email: userData.user.email,
   });
 
-  return jsonResponse(buildResponse(factura, remote, divergencias, reconciliada));
+  return json(buildResponse(factura, remote, divergencias, reconciliada));
 }
 
 function buildResponse(

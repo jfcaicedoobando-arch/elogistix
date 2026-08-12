@@ -6,7 +6,7 @@
  * Salida: { uuid, folio, serie, facturapi_id, pdf_url, xml_url }
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
@@ -15,7 +15,7 @@ import { buildNcPayload, validateNcContext } from "./helpers.ts";
 import { preloadNcContext, buildNcContextFromRows, claimNotaCredito } from "./data.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
 
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -76,11 +76,14 @@ async function createNcInvoice(
 }
 
 Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -88,31 +91,31 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   });
 
   const { data: userData, error: uErr } = await supabase.auth.getUser();
-  if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+  if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.nota_credito_id) return jsonResponse({ error: "nota_credito_id_required" }, 400);
+  if (!body.nota_credito_id) return json({ error: "nota_credito_id_required" }, 400);
 
   const pre = await preloadNcContext(supabase, body.nota_credito_id);
-  if (!pre.ok) return jsonResponse(pre.body, pre.status);
+  if (!pre.ok) return json(pre.body, pre.status);
   const { nc, factura, cliente, email, referencias } = pre;
   if (!(await authorizeOrgRole(supabase, userData.user.id, nc.organization_id, ROLES_EMISOR_FISCAL))) {
-    return jsonResponse({ error: "forbidden" }, 403);
+    return json({ error: "forbidden" }, 403);
   }
 
   const resolved = await getFacturapiClient(supabase, nc.organization_id);
-  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
   const ctx = buildNcContextFromRows(nc, factura, cliente, email, referencias);
   const issues = validateNcContext(ctx);
-  if (issues.length > 0) return jsonResponse({ error: "validation_failed", issues }, 422);
+  if (issues.length > 0) return json({ error: "validation_failed", issues }, 422);
 
   // Ola 4 · N1: claim atómico ANTES de timbrar (patrón facturapi-emitir).
   // Se toma DESPUÉS de validar para no tener que liberarlo en el 422.
   // El tag viaja como external_id a FacturAPI para recuperar el CFDI si la
   // edge muere tras timbrar y antes de persistir.
   const claim = await claimNotaCredito(supabase, body.nota_credito_id);
-  if (!claim.ok) return jsonResponse(claim.body, claim.status);
+  if (!claim.ok) return json(claim.body, claim.status);
   ctx.external_id = claim.claimTag;
 
   const created = await createNcInvoice(supabase, resolved.data.client, buildNcPayload(ctx), {
@@ -121,7 +124,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     userEmail: userData.user.email,
     notaCreditoId: body.nota_credito_id,
   }, claim.release);
-  if (!created.ok) return jsonResponse(created.body, created.status);
+  if (!created.ok) return json(created.body, created.status);
 
   const persisted = await persistTimbradoNc({
     supabase,
@@ -135,8 +138,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     userId: userData.user.id,
     userEmail: userData.user.email,
   });
-  if (!persisted.ok) return jsonResponse(persisted.body, persisted.status);
-  return jsonResponse(persisted.body);
+  if (!persisted.ok) return json(persisted.body, persisted.status);
+  return json(persisted.body);
 }));
 
 interface PersistNcArgs {

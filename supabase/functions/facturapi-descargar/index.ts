@@ -15,12 +15,12 @@
  *         con Content-Disposition de descarga.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, authorizePortalCliente, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
 import { extractFacturapiMessage } from "../_shared/facturapiClient.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
 import { buildFilename, type CfdiTipoDoc } from "../_shared/facturaFilename.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -183,33 +183,36 @@ async function resolveTarget(
 
 
 Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
   const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
   const tipo = body.tipo;
   if (tipo !== "pdf" && tipo !== "xml") {
-    return jsonResponse({ error: "tipo_invalido", message: "tipo debe ser 'pdf' o 'xml'" }, 400);
+    return json({ error: "tipo_invalido", message: "tipo debe ser 'pdf' o 'xml'" }, 400);
   }
 
   const target = await resolveTarget(supabase, body);
-  if (!target.ok) return jsonResponse(target.body, target.status);
+  if (!target.ok) return json(target.body, target.status);
   const autorizado =
     (await authorizeOrgRole(supabase, userData.user.id, target.data.organizationId, ROLES_CONSULTA_FISCAL)) ||
     // El cliente del portal ve sus propios CFDI (no es miembro de la org).
     (await authorizePortalCliente(supabase, userData.user.id, target.data.clienteId, target.data.organizationId));
   if (!autorizado) {
-    return jsonResponse({ error: "forbidden" }, 403);
+    return json({ error: "forbidden" }, 403);
   }
 
   // La llave se resuelve con cliente SERVICE_ROLE (sin el JWT del usuario):
@@ -220,7 +223,7 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
   const resolved = await resolveFacturapiKey(adminClient, target.data.organizationId);
   if (!resolved.ok) {
-    return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+    return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   }
 
   // FacturApi: tanto facturas como REP usan /invoices/<id>/{pdf,xml}
@@ -232,7 +235,7 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   if (!fapiRes.ok) {
     const detail = await fapiRes.text().catch(() => "");
     const message = extractFacturapiMessage(detail, fapiRes.status);
-    return jsonResponse({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
+    return json({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
   }
 
   const contentType = tipo === "pdf" ? "application/pdf" : "application/xml";
@@ -248,7 +251,7 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   return new Response(fapiRes.body, {
     status: 200,
     headers: {
-      ...corsHeaders,
+      ...buildCors(req),
       "Content-Type": contentType,
       "Content-Disposition": `attachment; filename="${filename}"`,
       // Sin esto, fetch() en el navegador no puede leer Content-Disposition

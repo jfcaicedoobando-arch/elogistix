@@ -8,7 +8,7 @@
  * v13.91.0
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey, FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
@@ -18,7 +18,7 @@ import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers
 import { calcularParcialidad, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -30,13 +30,16 @@ interface ReqBody { pago_id?: string }
 
 // eslint-disable-next-line complexity
 Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
 
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -44,10 +47,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   });
 
   const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.pago_id) return jsonResponse({ error: "pago_id_required" }, 400);
+  if (!body.pago_id) return json({ error: "pago_id_required" }, 400);
 
   // 1) Pago
   const { data: pago, error: pErr } = await supabase
@@ -55,10 +58,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .select("id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago, referencia, estado_rep, facturapi_rep_id, monto_aplicado_factura")
     .eq("id", body.pago_id)
     .maybeSingle();
-  if (pErr || !pago) return jsonResponse({ error: "pago_not_found", detail: pErr?.message }, 404);
+  if (pErr || !pago) return json({ error: "pago_not_found", detail: pErr?.message }, 404);
   if (pago.facturapi_rep_id) {
     const esClaim = String(pago.facturapi_rep_id).startsWith("PENDING:");
-    return jsonResponse({
+    return json({
       error: "ya_timbrado_rep",
       message: esClaim
         ? "Hay un timbrado de REP en curso o interrumpido. Espera ~3 min y usa 'Recuperar timbrado'."
@@ -67,12 +70,12 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     }, 409);
   }
   if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
-    return jsonResponse({ error: "forbidden" }, 403);
+    return json({ error: "forbidden" }, 403);
   }
 
   // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
   const resolved = await getFacturapiClient(supabase, pago.organization_id);
-  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
 
@@ -82,9 +85,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .select("id, numero, serie, total, subtotal, iva, moneda, tipo_cambio, metodo_pago, uuid_fiscal, folio_fiscal, cliente_id, rfc_cliente, embarque_id, expediente, referencia_bl")
     .eq("id", pago.factura_id)
     .maybeSingle();
-  if (fErr || !factura) return jsonResponse({ error: "factura_not_found", detail: fErr?.message }, 404);
-  if (!factura.uuid_fiscal) return jsonResponse({ error: "factura_no_timbrada", message: "La factura original no está timbrada." }, 409);
-  if (factura.metodo_pago !== "PPD") return jsonResponse({ error: "no_aplica_rep", message: "La factura no es PPD; no requiere REP." }, 409);
+  if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
+  if (!factura.uuid_fiscal) return json({ error: "factura_no_timbrada", message: "La factura original no está timbrada." }, 409);
+  if (factura.metodo_pago !== "PPD") return json({ error: "no_aplica_rep", message: "La factura no es PPD; no requiere REP." }, 409);
 
   // α.1 — Tasa IVA efectiva de la factura original (extraída a context.ts).
   const tasaIvaFactura = tasaIvaFacturaOriginal(Number(factura.subtotal ?? 0), Number(factura.iva ?? 0));
@@ -95,7 +98,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .select("id, nombre, rfc, codigo_postal, regimen_fiscal")
     .eq("id", factura.cliente_id)
     .maybeSingle();
-  if (cErr || !cliente) return jsonResponse({ error: "cliente_not_found", detail: cErr?.message }, 404);
+  if (cErr || !cliente) return json({ error: "cliente_not_found", detail: cErr?.message }, 404);
 
   // La columna `es_principal` fue removida; tomamos el contacto más antiguo con email.
   const { data: contactoData } = await supabase
@@ -115,7 +118,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .is("deleted_at", null)
     .order("fecha_pago", { ascending: true })
     .order("created_at", { ascending: true });
-  if (ppErr) return jsonResponse({ error: "pagos_query_failed", detail: ppErr.message }, 500);
+  if (ppErr) return json({ error: "pagos_query_failed", detail: ppErr.message }, 500);
 
   const { numParcialidad, saldoAnt, impPagado, saldoInsoluto } = calcularParcialidad(
     pagosPrev, pago.id, Number(factura.total ?? 0), Number(pago.monto_aplicado_factura ?? 0),
@@ -161,7 +164,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: issues.map((i) => i.message).join("; ") })
       .eq("id", pago.id);
-    return jsonResponse({ error: "validation_failed", issues }, 422);
+    return json({ error: "validation_failed", issues }, 422);
   }
 
   // EF-01 (auditoría): claim atómico ANTES de timbrar — mismo patrón que
@@ -177,8 +180,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .is("facturapi_rep_id", null)
     .select("id")
     .maybeSingle();
-  if (claimErr) return jsonResponse({ error: "claim_failed", detail: claimErr.message }, 500);
-  if (!claimed) return jsonResponse({ error: "ya_timbrado_rep", message: "Otro proceso ya está timbrando este REP." }, 409);
+  if (claimErr) return json({ error: "claim_failed", detail: claimErr.message }, 500);
+  if (!claimed) return json({ error: "ya_timbrado_rep", message: "Otro proceso ya está timbrando este REP." }, 409);
   const releaseClaim = async () => {
     await supabase.from("pagos_factura")
       .update({ facturapi_rep_id: null, facturapi_rep_claim_at: null })
@@ -208,7 +211,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
         entidadId: pago.id,
         detalles: { op: err.op, timeout_ms: err.timeoutMs, external_id: claimTag },
       });
-      return jsonResponse({
+      return json({
         error: "facturapi_timeout",
         message: `${err.message}. Espera ~3 min y usa 'Recuperar timbrado' — el REP pudo haberse timbrado; no reintentes directamente.`,
         timeout_ms: err.timeoutMs,
@@ -234,7 +237,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       detalles: { status, response: detail },
     });
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
+    return json({ error: "facturapi_error", status, detail, message }, 502);
   }
   const fapiJson = invoice;
 
@@ -277,8 +280,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .eq("facturapi_rep_id", claimTag)
     .select("id")
     .maybeSingle();
-  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
-  if (!updRow) return jsonResponse({ error: "claim_perdido", message: "El claim de timbrado se perdió; usa 'Recuperar timbrado' con este pago.", facturapi_id: facturapiId, uuid }, 409);
+  if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (!updRow) return json({ error: "claim_perdido", message: "El claim de timbrado se perdió; usa 'Recuperar timbrado' con este pago.", facturapi_id: facturapiId, uuid }, 409);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: pago.organization_id,
@@ -293,5 +296,5 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     },
   });
 
-  return jsonResponse({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo });
+  return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo });
 }));
