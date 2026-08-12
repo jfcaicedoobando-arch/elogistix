@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, UserCog } from "lucide-react";
+import { UserCog } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useActualizarContactoPortal } from "@/features/portal/hooks";
 import { useToast } from "@/hooks/shared";
@@ -69,8 +69,7 @@ export function EditarContactoDialog({
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+          <Button onClick={handleSubmit} loading={isPending}>
             Guardar
           </Button>
         </>

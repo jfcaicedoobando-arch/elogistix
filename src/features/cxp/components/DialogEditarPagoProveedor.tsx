@@ -6,7 +6,7 @@
  * emisión, TC válido, coherencia cuenta/moneda y monto que no exceda el saldo
  * disponible (devolviendo al saldo el importe del pago que se edita).
  */
-import { Loader2, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -68,8 +68,7 @@ export function DialogEditarPagoProveedor({ open, onOpenChange, factura, pago }:
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={actualizar.isPending}>
         Cancelar
       </Button>
-      <Button onClick={submit} disabled={submitDisabled} title={f.validacion.error ?? undefined}>
-        {actualizar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      <Button onClick={submit} disabled={submitDisabled} title={f.validacion.error ?? undefined} loading={actualizar.isPending}>
         {actualizar.isPending ? "Guardando…" : "Guardar cambios"}
       </Button>
     </>

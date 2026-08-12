@@ -4,7 +4,7 @@
  * Migrado a `FormDialogShell` (v13.121.0).
  */
 import { useState, useMemo } from "react";
-import { Loader2, ClipboardList } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,8 +82,8 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-      <Button onClick={handleSubmit} disabled={crear.isPending}>
-        {crear.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Crear
+      <Button onClick={handleSubmit} loading={crear.isPending}>
+        Crear
       </Button>
     </>
   );

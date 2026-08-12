@@ -6,7 +6,7 @@
  * Migrado a FormDialogShell (v13.152.0 — Oleada 3).
  */
 import { useState } from "react";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -85,10 +85,7 @@ export function RespuestaClienteManualDialog({
       </Button>
       <Button
         variant={esAceptar ? "default" : "destructive"}
-        onClick={handleConfirmar}
-        disabled={loading}
-      >
-        {loading && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+        onClick={handleConfirmar} loading={loading}>
         {esAceptar ? "Confirmar aceptación" : "Confirmar rechazo"}
       </Button>
     </>

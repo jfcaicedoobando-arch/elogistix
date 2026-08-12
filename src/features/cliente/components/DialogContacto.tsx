@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2, User } from "lucide-react";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,8 +59,7 @@ export default function DialogContacto({ open, onOpenChange, contacto, onSave, i
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={!form.nombre.trim() || isSaving}>
-            {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+          <Button onClick={handleSubmit} disabled={!form.nombre.trim()} loading={isSaving}>
             {contacto ? 'Guardar Cambios' : 'Agregar'}
           </Button>
         </>

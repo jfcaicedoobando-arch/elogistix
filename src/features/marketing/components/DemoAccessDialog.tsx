@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { AlertCircle, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { createDemoLead } from "@/features/marketing/services/demoLeads";
@@ -183,8 +183,7 @@ export function DemoAccessDialog({ open, onOpenChange }: Props) {
           </label>
 
           <DialogFooter className="pt-2">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" loading={loading}>
               {loading ? "Abriendo demo…" : "Entrar a la demo"}
             </Button>
           </DialogFooter>

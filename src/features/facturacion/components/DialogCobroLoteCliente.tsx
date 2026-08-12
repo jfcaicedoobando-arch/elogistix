@@ -4,7 +4,7 @@
  * misma moneda. El reparto por defecto es FIFO por vencimiento y es editable
  * renglón por renglón.
  */
-import { Layers, Loader2 } from "lucide-react";
+import { Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -44,8 +44,7 @@ export function DialogCobroLoteCliente(p: Props) {
       <Button variant="outline" onClick={() => p.onOpenChange(false)} disabled={s.guardando}>
         Cancelar
       </Button>
-      <Button onClick={s.submit} disabled={!!s.error || s.guardando} title={s.error ?? undefined}>
-        {s.guardando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      <Button onClick={s.submit} disabled={!!s.error} title={s.error ?? undefined} loading={s.guardando}>
         {s.guardando ? "Guardando…" : "Aplicar cobro en lote"}
       </Button>
     </>

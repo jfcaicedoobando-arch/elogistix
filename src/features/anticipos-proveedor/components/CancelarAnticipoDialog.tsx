@@ -68,7 +68,6 @@ export function CancelarAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
             disabled={cancelar.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {cancelar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {cancelar.isPending ? "Cancelando…" : "Cancelar anticipo"}
           </AlertDialogAction>
         </AlertDialogFooter>

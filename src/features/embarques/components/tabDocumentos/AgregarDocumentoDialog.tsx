@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Loader2, FilePlus } from "lucide-react";
+import { FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,8 +71,7 @@ export function AgregarDocumentoDialog({ open, onOpenChange, embarqueId, modo, d
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={createDoc.isPending}>
             Cancelar
           </Button>
-          <Button onClick={handleCrear} disabled={createDoc.isPending}>
-            {createDoc.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+          <Button onClick={handleCrear} loading={createDoc.isPending}>
             Agregar
           </Button>
         </>

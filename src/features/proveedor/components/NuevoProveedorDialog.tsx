@@ -3,7 +3,7 @@
  * El render de cada paso vive en `NuevoProveedorStep1` / `NuevoProveedorStep2`
  * (mantenidos así para respetar el límite de 200 líneas Power-of-10).
  */
-import { ArrowLeft, ArrowRight, Loader2, Building2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2 } from "lucide-react";
 import type { TablesInsert } from "@/types/db";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,8 +59,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave, prefi
           <Button variant="outline" onClick={() => c.setStep(1)} disabled={c.saving}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
           </Button>
-          <Button onClick={c.handleSave} disabled={c.saving}>
-            {c.saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          <Button onClick={c.handleSave} loading={c.saving}>
             {c.saving ? "Guardando…" : "Crear proveedor"}
           </Button>
         </>

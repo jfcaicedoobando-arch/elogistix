@@ -80,8 +80,7 @@ export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCread
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
-        <Button type="button" size="sm" disabled={!puede || saving} onClick={handleCrear}>
-          {saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
+        <Button type="button" size="sm" disabled={!puede} onClick={handleCrear} loading={saving}>
           Crear concepto
         </Button>
       </div>

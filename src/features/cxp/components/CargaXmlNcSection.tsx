@@ -4,7 +4,7 @@
  * solo se encarga de presentar el dropzone y la advertencia de tipo de comprobante.
  */
 import { useRef } from "react";
-import { Upload, FileText, Loader2, CheckCircle2, X, AlertTriangle } from "lucide-react";
+import { Upload, FileText, CheckCircle2, X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
@@ -142,8 +142,7 @@ export function CargaXmlNcSection({ parsed, onParsed }: Props) {
             Limpiar
           </Button>
         )}
-        <Button type="button" size="sm" onClick={procesar} disabled={!xml || loading}>
-          {loading && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+        <Button type="button" size="sm" onClick={procesar} disabled={!xml} loading={loading}>
           {loading ? "Procesando…" : "Procesar XML"}
         </Button>
       </div>

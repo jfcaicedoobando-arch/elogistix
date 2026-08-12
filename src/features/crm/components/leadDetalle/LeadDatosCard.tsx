@@ -105,8 +105,7 @@ export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onS
 
         {canEdit && (
           <div className="flex justify-end mt-4">
-            <Button onClick={onSave} disabled={!dirty || isSaving}>
-              {isSaving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+            <Button onClick={onSave} disabled={!dirty} loading={isSaving}>
               Guardar cambios
             </Button>
           </div>

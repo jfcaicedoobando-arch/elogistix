@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { resolveDeepLinkDestino } from "@/features/auth/utils/deepLink";
 
@@ -119,8 +119,7 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
           </p>
         )}
       </div>
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+      <Button type="submit" className="w-full" loading={loading}>
         Iniciar sesión
       </Button>
     </form>

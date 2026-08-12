@@ -4,7 +4,7 @@
  * Migrado a `FormDialogShell` (v13.121.0).
  */
 import { useState } from "react";
-import { Loader2, Briefcase } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -115,8 +115,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-      <Button onClick={handleSubmit} disabled={pending}>
-        {pending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+      <Button onClick={handleSubmit} loading={pending}>
         {isEdit ? "Guardar cambios" : "Crear oportunidad"}
       </Button>
     </>

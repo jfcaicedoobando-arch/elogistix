@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import {
   useEnvioDocumentoForm,
@@ -91,8 +91,7 @@ export function EnviarDocumentoDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={!puedeEnviar}>
-            {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+          <Button onClick={handleSubmit} disabled={!puedeEnviar} loading={loading}>
             {esReenvio ? labelBotonReenviar : labelBotonEnviar}
           </Button>
         </>

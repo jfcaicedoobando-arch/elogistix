@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, UserPlus, RefreshCw } from "lucide-react";
+import { UserPlus, RefreshCw } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useCreateOrgMember } from "@/features/admin/hooks";
@@ -65,8 +65,7 @@ export default function CrearMiembroOrgDialog({ open, onOpenChange, organization
       footer={
         <>
           <Button type="button" variant="outline" onClick={() => handleClose(false)} disabled={loading}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={loading || !email || !password}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+          <Button onClick={handleSubmit} disabled={!email || !password} loading={loading}>
             Crear miembro
           </Button>
         </>

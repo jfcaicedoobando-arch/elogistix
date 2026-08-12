@@ -4,7 +4,7 @@
  * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
 import { useEffect, useMemo, useState } from "react";
-import { Tag, Loader2 } from "lucide-react";
+import { Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -126,11 +126,9 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
             <Button
               type="submit"
               form="tarifa-form"
-              disabled={pendiente || !valido}
+              disabled={!valido}
               aria-busy={pendiente || undefined}
-              title={pendiente ? "Guardando…" : tooltipFaltantes}
-            >
-              {pendiente && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+              title={pendiente ? "Guardando…" : tooltipFaltantes} loading={pendiente}>
               {guardarLabel}
             </Button>
           </div>

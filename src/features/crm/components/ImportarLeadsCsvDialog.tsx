@@ -4,7 +4,7 @@
  * `lib/csv/leadsCsv.ts` y el preview en `ImportarLeadsCsvPreview`.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { Upload, Loader2, FileUp } from "lucide-react";
+import { Upload, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useImportarLeadsCsv } from "@/features/crm/hooks";
@@ -29,8 +29,7 @@ export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-      <Button onClick={handleImport} disabled={validRows.length === 0 || isPending}>
-        {isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+      <Button onClick={handleImport} disabled={validRows.length === 0} loading={isPending}>
         Importar {validRows.length} leads
       </Button>
     </>

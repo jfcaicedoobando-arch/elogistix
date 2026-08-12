@@ -61,8 +61,7 @@ export default function ActividadNotasSheet({ actividad, open, onOpenChange }: P
         </div>
         <SheetFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleGuardar} disabled={mutate.isPending}>
-            {mutate.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+          <Button onClick={handleGuardar} loading={mutate.isPending}>
             Guardar
           </Button>
         </SheetFooter>

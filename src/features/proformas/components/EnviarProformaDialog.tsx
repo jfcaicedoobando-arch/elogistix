@@ -6,7 +6,7 @@
  * `proforma_envios`. Al terminar muestra el enlace del portal copiable.
  */
 import { useEffect, useState } from "react";
-import { Loader2, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,8 +100,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
         Cancelar
       </Button>
-      <Button onClick={handleEnviar} disabled={loading}>
-        {loading && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+      <Button onClick={handleEnviar} loading={loading}>
         Enviar correo
       </Button>
     </>

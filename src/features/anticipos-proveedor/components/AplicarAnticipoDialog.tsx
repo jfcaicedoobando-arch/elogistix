@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useForm, Controller, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { Loader2, ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,8 +90,7 @@ export function AplicarAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
   const footer = (
     <>
       <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={aplicar.isPending}>Cancelar</Button>
-      <Button onClick={onSubmit} disabled={aplicar.isPending || !facturaId}>
-        {aplicar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      <Button onClick={onSubmit} disabled={!facturaId} loading={aplicar.isPending}>
         {aplicar.isPending ? "Aplicando…" : "Aplicar anticipo"}
       </Button>
     </>

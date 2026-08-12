@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { Loader2, HandCoins } from "lucide-react";
+import { HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useRegistrarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
@@ -148,8 +148,7 @@ export function RegistrarAnticipoDialog({
   const footer = (
     <>
       <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={registrar.isPending}>Cancelar</Button>
-      <Button onClick={onSubmit} disabled={registrar.isPending}>
-        {registrar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      <Button onClick={onSubmit} loading={registrar.isPending}>
         {registrar.isPending ? "Guardando…" : "Registrar anticipo"}
       </Button>
     </>

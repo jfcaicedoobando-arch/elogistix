@@ -8,7 +8,7 @@
  * la limpieza en el siguiente frame si ya no queda ningún overlay abierto.
  */
 import { useEffect, useState } from "react";
-import { Ship, Loader2 } from "lucide-react";
+import { Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,8 +81,7 @@ export function NavieraFormDialog({ open, onOpenChange, naviera, nombreInicial, 
       footer={
         <>
           <Button variant="ghost" size="sm" onClick={() => handleOpenChange(false)}>Cancelar</Button>
-          <Button size="sm" disabled={!puede || pendiente} onClick={handleGuardar}>
-            {pendiente && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
+          <Button size="sm" disabled={!puede} onClick={handleGuardar} loading={pendiente}>
             {esEdicion ? "Guardar cambios" : "Crear naviera"}
           </Button>
         </>
