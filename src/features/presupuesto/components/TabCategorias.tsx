@@ -19,6 +19,7 @@ import { DialogCategoria } from "./DialogCategoria";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 export function TabCategorias() {
   const { organizationId } = useOrganization();
   const cats = usePresupuestoCategorias(false);
@@ -34,8 +35,7 @@ export function TabCategorias() {
       notifySuccess(undefined, { title: "Categorías por defecto creadas" });
       cats.refetch();
     } catch (e) {
-      const err = e as { message?: string };
-      notifyError(undefined, { title: err.message ?? "Error", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_1" });
+      notifyError(undefined, { title: "No se pudieron crear las categorías por defecto", description: getErrorMessage(e), error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_1" });
     }
   };
 
@@ -46,8 +46,7 @@ export function TabCategorias() {
       notifySuccess(undefined, { title: "Categoría eliminada" });
       setBorrarId(null);
     } catch (e) {
-      const err = e as { message?: string };
-      notifyError(undefined, { title: err.message ?? "No se pudo eliminar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_2" });
+      notifyError(undefined, { title: "No se pudo eliminar la categoría", description: getErrorMessage(e), error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_2" });
     }
   };
 

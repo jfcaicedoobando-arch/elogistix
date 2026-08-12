@@ -51,6 +51,8 @@ export interface PagoContext {
 export interface FacturapiRepPayload {
   type: "P";
   serie?: string;
+  /** EF-01: external_id = claimTag PENDING:<uuid> para recuperación de huérfanos. */
+  external_id?: string;
   /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
   pdf_custom_section?: string;
   customer: {

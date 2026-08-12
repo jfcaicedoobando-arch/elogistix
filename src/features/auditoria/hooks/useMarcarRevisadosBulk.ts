@@ -14,6 +14,7 @@ import { logger } from "@/lib/observability/logger";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
+import { getErrorMessage } from "@/lib/errors";
 
 const CHUNK = 5;
 
@@ -109,7 +110,7 @@ export function useMarcarRevisadosBulk() {
       logger.error("[useMarcarRevisadosBulk]", err);
       notifyError(undefined, {
         title: "Error al marcar hallazgos",
-        description: err.message,
+        description: getErrorMessage(err),
         method: "FEATURES_AUDITORIA_HOOKS_BULK_REVISADOS_1",
       });
     },

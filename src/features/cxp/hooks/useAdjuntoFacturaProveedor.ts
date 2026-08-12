@@ -14,6 +14,7 @@ import {
   type TipoAdjuntoCfdi,
 } from "@/features/cxp/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 interface AdjuntarVars {
   facturaId: string;
@@ -43,7 +44,7 @@ export function useAdjuntarArchivoCfdiFactura() {
     },
     onError: (error: Error, vars) => {
       notifyError(undefined, {
-        title: `No se pudo adjuntar el ${vars.tipo}: ${error.message}`,
+        title: `No se pudo adjuntar el ${vars.tipo}`, description: getErrorMessage(error),
         error,
         method: "CXP_ADJUNTAR_CFDI",
       });
@@ -61,7 +62,7 @@ export function useQuitarArchivoCfdiFactura() {
     },
     onError: (error: Error, vars) => {
       notifyError(undefined, {
-        title: `No se pudo quitar el ${vars.tipo}: ${error.message}`,
+        title: `No se pudo quitar el ${vars.tipo}`, description: getErrorMessage(error),
         error,
         method: "CXP_QUITAR_CFDI",
       });

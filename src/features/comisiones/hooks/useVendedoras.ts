@@ -13,6 +13,7 @@ import {
   asignarVendedoraEmbarque,
 } from "@/features/comisiones/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useVendedorasConfig() {
   return useQuery({
@@ -47,7 +48,7 @@ export function useUpsertVendedoraConfig() {
       notifySuccess(undefined, { title: "Configuración de vendedora guardada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al guardar configuración: ${error.message}`, error, method: "UPSERT_VENDEDORA_CONFIG" });
+      notifyError(undefined, { title: "No se pudo guardar configuración", description: getErrorMessage(error), error, method: "UPSERT_VENDEDORA_CONFIG" });
     },
   });
 }
@@ -62,7 +63,7 @@ export function useUpdateVendedoraConfig() {
       notifySuccess(undefined, { title: "Configuración actualizada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar configuración: ${error.message}`, error, method: "UPDATE_VENDEDORA_CONFIG" });
+      notifyError(undefined, { title: "No se pudo actualizar configuración", description: getErrorMessage(error), error, method: "UPDATE_VENDEDORA_CONFIG" });
     },
   });
 }
@@ -78,7 +79,7 @@ export function useAsignarVendedoraEmbarque() {
       notifySuccess(undefined, { title: "Vendedora asignada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al asignar vendedora: ${error.message}`, error, method: "ASSIGN_VENDEDORA" });
+      notifyError(undefined, { title: "No se pudo asignar vendedora", description: getErrorMessage(error), error, method: "ASSIGN_VENDEDORA" });
     },
   });
 }

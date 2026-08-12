@@ -20,6 +20,7 @@ import { DocumentoRailCard } from "@/components/shared/documento/DocumentoRailCa
 import { cn } from "@/lib/utils";
 
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
+import { getErrorMessage } from "@/lib/errors";
 import {
   useHistorialFactura,
   type EventoHistorialFactura,
@@ -114,7 +115,7 @@ export function HistorialFacturaSection({ facturaId }: Props) {
           </p>
           {error instanceof Error && (
             <p className="max-w-md truncate text-xs text-muted-foreground">
-              {error.message}
+              {getErrorMessage(error)}
             </p>
           )}
           <Button size="sm" variant="outline" onClick={() => refetch()}>

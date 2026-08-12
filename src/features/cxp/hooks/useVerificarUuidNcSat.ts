@@ -8,6 +8,7 @@ import { verificarUuidNcSat, type EstatusSat } from "@/features/cxp/services/ver
 import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { notificarNoVerificable } from "./satNoVerificable";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useVerificarUuidNcSat(facturaId: string | undefined) {
   const qc = useQueryClient();
@@ -27,7 +28,7 @@ export function useVerificarUuidNcSat(facturaId: string | undefined) {
     },
     onError: (err: Error) =>
       notifyError(undefined, {
-        title: `No se pudo consultar SAT: ${err.message}`,
+        title: "No se pudo consultar el SAT", description: getErrorMessage(err),
         error: err,
         method: "USE_VERIFICAR_UUID_NC_SAT",
       }),

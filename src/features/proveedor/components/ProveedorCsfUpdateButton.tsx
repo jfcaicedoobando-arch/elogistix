@@ -6,6 +6,7 @@ import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
 import type { Tables } from "@/types/db";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 interface Props {
   proveedor: Tables<"proveedores">;
   onUpdate: (id: string, patch: Record<string, string>) => Promise<unknown>;
@@ -60,8 +61,7 @@ export function ProveedorCsfUpdateButton({ proveedor, onUpdate }: Props) {
     try {
       data = await parseCsf(file);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "No se pudo procesar la CSF";
-      notifyError(undefined, { title: msg, error: err, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_1" });
+      notifyError(undefined, { title: "No se pudo procesar la CSF", description: getErrorMessage(err), error: err, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_1" });
       setCsfLoading(false);
       return;
     }

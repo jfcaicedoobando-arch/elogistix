@@ -24,6 +24,7 @@ export async function listOportunidades(p: ListOportunidadesParams): Promise<{ d
   let q = supabase
     .from("crm_oportunidades")
     .select(COLS, { count: "exact" })
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (p.search.trim()) {
     q = q.or(orIlike(["nombre", "cliente_nombre"], p.search));

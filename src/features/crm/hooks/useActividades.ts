@@ -20,6 +20,7 @@ import {
   type CrearActividadInput,
 } from "@/features/crm/services/actividades";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { CrmActividadRow, CrmActividadTipo, CrmEntidadTipo } from "@/features/crm/services/actividades";
 export type ActividadInput = CrearActividadInput;
@@ -74,7 +75,7 @@ export function useCrearActividad() {
       notifySuccess(undefined, { title: "Actividad agregada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear actividad: ${error.message}`, error, method: "CREATE_ACTIVIDAD" });
+      notifyError(undefined, { title: "No se pudo crear actividad", description: getErrorMessage(error), error, method: "CREATE_ACTIVIDAD" });
     },
   });
 }
@@ -89,7 +90,7 @@ export function useCompletarActividad() {
       notifySuccess(undefined, { title: "Actividad completada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al completar actividad: ${error.message}`, error, method: "COMPLETE_ACTIVIDAD" });
+      notifyError(undefined, { title: "No se pudo completar actividad", description: getErrorMessage(error), error, method: "COMPLETE_ACTIVIDAD" });
     },
   });
 }
@@ -105,7 +106,7 @@ export function usePosponerActividad() {
       notifySuccess(undefined, { title: "Actividad pospuesta" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al posponer actividad: ${error.message}`, error, method: "POSTPONE_ACTIVIDAD" });
+      notifyError(undefined, { title: "No se pudo posponer actividad", description: getErrorMessage(error), error, method: "POSTPONE_ACTIVIDAD" });
     },
   });
 }

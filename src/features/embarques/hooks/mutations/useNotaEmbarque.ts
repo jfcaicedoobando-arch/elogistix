@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import { insertarNotaEmbarque } from '@/features/embarques/services';
 import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
+import { getErrorMessage } from "@/lib/errors";
 
 export function useCreateNotaEmbarque() {
   const queryClient = useQueryClient();
@@ -16,7 +17,7 @@ export function useCreateNotaEmbarque() {
       notifySuccess(undefined, { title: "Nota agregada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al agregar nota: ${error.message}`, error, method: "CREATE_NOTA_EMBARQUE" });
+      notifyError(undefined, { title: "No se pudo agregar nota", description: getErrorMessage(error), error, method: "CREATE_NOTA_EMBARQUE" });
     },
   });
 }

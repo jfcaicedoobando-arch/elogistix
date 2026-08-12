@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { limpiarCancellationStatusVerificado } from "@/features/facturacion/services/limpiarPendingVerificado";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Args {
   facturaId: string;
@@ -33,7 +34,7 @@ export function useLimpiarPendingVerificado(facturaId: string | null | undefined
     onError: (err) =>
       notifyError(undefined, {
         title: "No se pudo limpiar el estado",
-        description: err.message,
+        description: getErrorMessage(err),
       }),
   });
 }

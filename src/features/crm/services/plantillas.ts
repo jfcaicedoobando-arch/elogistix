@@ -33,7 +33,7 @@ export async function fetchPlantillasMensaje(
   canal?: PlantillaCanal,
   soloActivas = true,
 ): Promise<PlantillaMensajeRow[]> {
-  let q = supabase.from("crm_plantillas_mensaje").select(COLS).order("nombre");
+  let q = supabase.from("crm_plantillas_mensaje").select(COLS).is("deleted_at", null).order("nombre");
   if (canal) q = q.eq("canal", canal);
   if (soloActivas) q = q.eq("activa", true);
   const data = await unwrapOr(q, []);

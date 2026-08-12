@@ -56,19 +56,22 @@ export async function fetchCrmDashboard(userId: string | undefined): Promise<Crm
   const hace7 = new Date(); hace7.setDate(hace7.getDate() - 7);
 
   const [leadsCountQ, opsAbiertasQ, actsPendQ, misActsQ, cerrandoQ, leadsViejosQ, etapasQ] = await Promise.all([
-    supabase.from("crm_leads").select("id", { count: "exact", head: true }),
+    supabase.from("crm_leads").select("id", { count: "exact", head: true }).is("deleted_at", null),
     supabase
       .from("crm_oportunidades")
       .select("id, nombre, cliente_nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre, etapa_id, crm_etapas_pipeline!inner(id, nombre, color, tipo)")
+      .is("deleted_at", null)
       .eq("crm_etapas_pipeline.tipo", "abierta"),
     supabase
       .from("crm_actividades")
       .select("id", { count: "exact", head: true })
-      .is("fecha_completada", null),
+      .is("fecha_completada", null)
+      .is("deleted_at", null),
     supabase
       .from("crm_actividades")
       .select(CRM_ACTIVIDADES_COLUMNS_MIN)
       .is("fecha_completada", null)
+      .is("deleted_at", null)
       .eq("responsable_id", userId ?? "")
       .gte("fecha_programada", hoyInicio.toISOString())
       .lte("fecha_programada", hoyFin.toISOString())
@@ -78,6 +81,7 @@ export async function fetchCrmDashboard(userId: string | undefined): Promise<Crm
       .from("crm_oportunidades")
       .select("id, nombre, cliente_nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre, crm_etapas_pipeline!inner(tipo)")
       .eq("crm_etapas_pipeline.tipo", "abierta")
+      .is("deleted_at", null)
       .gte("fecha_estimada_cierre", todayLocalISO())
       .lte("fecha_estimada_cierre", isoDaysFromNow(7))
       .order("fecha_estimada_cierre", { ascending: true })
@@ -86,6 +90,7 @@ export async function fetchCrmDashboard(userId: string | undefined): Promise<Crm
       .from("crm_leads")
       .select("id, empresa, contacto, fuente, created_at")
       .eq("estado", "Nuevo")
+      .is("deleted_at", null)
       .lte("created_at", hace7.toISOString())
       .order("created_at", { ascending: true })
       .limit(10),

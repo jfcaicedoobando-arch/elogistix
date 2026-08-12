@@ -10,6 +10,7 @@ import {
   type NuevaFacturaProveedorPayload,
 } from "@/features/cxp/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useCrearFacturaProveedor() {
   const qc = useQueryClient();
@@ -48,7 +49,7 @@ export function useEliminarFacturaProveedor() {
         });
         return;
       }
-      notifyError(undefined, { title: `Error al eliminar factura proveedor: ${error.message}`, error, method: "DELETE_FACTURA_PROVEEDOR" });
+      notifyError(undefined, { title: "No se pudo eliminar factura proveedor", description: getErrorMessage(error), error, method: "DELETE_FACTURA_PROVEEDOR" });
     },
   });
 }
@@ -75,7 +76,7 @@ export function useActualizarFacturaProveedor() {
         notifyError(undefined, { title: "Folio duplicado para este proveedor y fecha", error, method: "UPDATE_FACTURA_PROVEEDOR_DUP" });
         return;
       }
-      notifyError(undefined, { title: `Error al actualizar factura: ${error.message}`, error, method: "UPDATE_FACTURA_PROVEEDOR" });
+      notifyError(undefined, { title: "No se pudo actualizar factura", description: getErrorMessage(error), error, method: "UPDATE_FACTURA_PROVEEDOR" });
     },
   });
 }

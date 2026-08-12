@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { ROUTES } from "@/constants/routes";
 import { validateOnboarding } from "@/features/onboarding/lib/onboardingValidation";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function Onboarding() {
   const { user, organization, loading, refreshProfile } = useAuth();
@@ -65,7 +66,7 @@ export default function Onboarding() {
       });
       navigate(ROUTES.INICIO, { replace: true });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "No pudimos guardar los datos.";
+      const msg = getErrorMessage(err);
       setError(msg);
       notifyError(undefined, {
         title: "Error al completar onboarding",

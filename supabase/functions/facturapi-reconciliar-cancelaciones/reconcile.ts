@@ -141,3 +141,56 @@ export function acumularOutcome(resumen: Resumen, outcome: ResolvedPatch["outcom
   else if (outcome === "expired") resumen.expiradas++;
   else resumen.sin_cambio++;
 }
+
+
+/** EF-03: fila de NC con cancelación asíncrona pendiente. */
+export interface NotaCreditoPendiente {
+  id: string;
+  organization_id: string;
+  facturapi_id: string;
+  cancellation_status: string;
+}
+
+/**
+ * EF-03: espejo de resolveNextAction para notas de crédito. Las NC no tienen
+ * flujo de sustitución, así que el estado terminal siempre es 'Cancelada'.
+ */
+export function resolveNextActionNc(
+  remote: FapiInvoiceStatus,
+  local: NotaCreditoPendiente,
+  nowIso: string,
+): ResolvedPatch {
+  const cs = (remote.cancellation_status ?? "").toLowerCase();
+
+  if (cs === "accepted" || remote.status === "canceled") {
+    return {
+      outcome: "accepted",
+      patch: {
+        estado: "Cancelada",
+        cancellation_status: "accepted",
+        cancelado_en: nowIso,
+      },
+    };
+  }
+
+  if (cs === local.cancellation_status) {
+    return { outcome: "no_change", patch: {} };
+  }
+
+  if (cs === "rejected" || cs === "expired") {
+    return {
+      outcome: cs,
+      patch: {
+        cancellation_status: cs,
+        cancelacion_solicitada_en: null,
+        cancelacion_vence_en: null,
+      },
+    };
+  }
+
+  if (cs && cs !== local.cancellation_status) {
+    return { outcome: "transition", patch: { cancellation_status: cs } };
+  }
+
+  return { outcome: "no_change", patch: {} };
+}

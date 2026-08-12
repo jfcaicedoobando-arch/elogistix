@@ -8,6 +8,7 @@ import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactu
 import { useSustitutasDeFactura } from "@/features/facturacion/hooks/useSustitutasDeFactura";
 import type { MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
 import { todayLocalISO } from "@/lib/date/today";
+import { getErrorMessage } from "@/lib/errors";
 
 // RFC genérico SAT para "público en general" y extranjeros.
 const RFC_GENERICOS = new Set(["XAXX010101000", "XEXX010101000"]);
@@ -90,7 +91,7 @@ export function useCancelarFacturaController(params: Params) {
   };
 
   const errorMessage = cancelar.isError
-    ? (cancelar.error instanceof Error ? cancelar.error.message : String(cancelar.error))
+    ? getErrorMessage(cancelar.error)
     : null;
 
   return {

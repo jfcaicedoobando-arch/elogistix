@@ -86,8 +86,14 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const montoNum = Number(values.monto) || 0;
   const montoAplicado = convertirAMonedaFactura(montoNum, values.moneda, factura.moneda, rates);
   const excede = montoAplicado > saldo + 0.01;
-  const invalido = montoNum <= 0 || excede;
   const tipoCambio = montoNum > 0 ? montoAplicado / montoNum : 1;
+  // FE-01 / UIA-01: cross-moneda sin TC confiable (factorEntreMonedas === null,
+  // p. ej. exchange-rates caído) → bloqueamos el submit en vez de dejar el
+  // insert reventar contra CHECK (tipo_cambio > 0) con un 23514 crudo.
+  const tcBloqueado = factorEntreMonedas(values.moneda, factura.moneda, {
+    usd: rates?.usdMxn, eur: rates?.eurMxn,
+  }) === null;
+  const invalido = montoNum <= 0 || excede || tcBloqueado;
   const esPpdTimbrada = factura.metodoPago === "PPD" && !!factura.uuidFiscal;
 
   const handleChange = <K extends keyof PagoFormValues>(k: K, v: PagoFormValues[K]) =>
@@ -150,6 +156,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
         tipoCambio={tipoCambio}
         excede={excede}
         saldo={saldo}
+        tcBloqueado={tcBloqueado}
       />
 
     </FormDialogShell>

@@ -178,19 +178,24 @@ async function createInvoiceInFacturapi(
 ): Promise<FapiInvoice | Response> {
   const { supabase, facturapi, factura, facturaId, user, claim } = input;
   try {
-    // FIX-04/32 — timeout defensivo: si FacturApi cuelga, liberamos el claim
-    // y devolvemos 504 en vez de dejar la Edge Function ocupada 150 s.
+    // FIX-04/32 — timeout defensivo: si FacturApi cuelga devolvemos 504 en vez
+    // de dejar la Edge Function ocupada 150 s.
     return await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
   } catch (err) {
-    await claim.release();
     if (err instanceof FacturapiTimeoutError) {
+      // EF-02 (auditoría): en timeout NO liberamos el claim. Si FacturApi sí
+      // timbró, el tag PENDING:<uuid> (external_id) es la única correlación que
+      // permite a facturapi-recuperar-claim adoptar el CFDI; liberarlo aquí
+      // convertía un timeout benigno en un CFDI duplicado al reintentar.
       await registrarBitacoraEdge(supabase, {
         organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
         accion: "facturapi_emitir_timeout", entidadId: facturaId, entidadNombre: factura.numero ?? "",
         detalles: { op: err.op, timeout_ms: err.timeoutMs },
       });
-      return jsonResponse({ error: "facturapi_timeout", message: err.message, timeout_ms: err.timeoutMs }, 504);
+      return jsonResponse({ error: "facturapi_timeout", message: `${err.message}. Espera ~3 min y usa 'Recuperar timbrado' — no reintentes el timbrado directamente.`, timeout_ms: err.timeoutMs }, 504);
     }
+    // Error definitivo de FacturApi (no timbró): sí liberamos para reintentar.
+    await claim.release();
     const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
       organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",

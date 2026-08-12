@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead, DetailTableRow, DetailTableEmptyRow } from "@/components/shared/DetailTable";
+import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditRow } from "./CatalogoClavesSATCard.parts";
 import {
@@ -27,6 +28,8 @@ export function CatalogoClavesSATCard() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [showNew, setShowNew] = useState(false);
+  // UX-01: eliminar exige confirmación de doble paso.
+  const [rowAEliminar, setRowAEliminar] = useState<Row | null>(null);
 
   const busy = addMut.isPending || updateMut.isPending || deleteMut.isPending;
 
@@ -105,7 +108,7 @@ export function CatalogoClavesSATCard() {
                   <TableCell>{r.activo ? "Sí" : "No"}</TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" onClick={() => startEdit(r)} disabled={busy}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => deleteMut.mutate(r.id)} disabled={busy}><Trash2 className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => setRowAEliminar(r)} disabled={busy}><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </DetailTableRow>
               ))}
@@ -118,6 +121,16 @@ export function CatalogoClavesSATCard() {
           </Table>
         </div>
       </CardContent>
+      <DeleteConfirmDialog
+        open={!!rowAEliminar}
+        onOpenChange={(open) => { if (!open) setRowAEliminar(null); }}
+        entityName={rowAEliminar ? `el producto "${rowAEliminar.patron}"` : "este producto"}
+        description="El producto dejará de estar disponible para nuevas cotizaciones y facturas."
+        isPending={deleteMut.isPending}
+        onConfirm={() => {
+          if (rowAEliminar) deleteMut.mutate(rowAEliminar.id);
+        }}
+      />
     </Card>
   );
 }

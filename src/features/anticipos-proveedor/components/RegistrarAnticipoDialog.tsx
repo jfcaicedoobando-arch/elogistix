@@ -75,6 +75,10 @@ export function RegistrarAnticipoDialog({
   // Precarga el TC del DOF cuando la moneda deja de ser MXN.
   useEffect(() => {
     if (!open || moneda === "MXN" || !tc) return;
+    // EF-04: si el TC de la moneda es fallback estimado, NO sugerirlo — el
+    // usuario debe capturar el TC real (DOF/Banxico) manualmente.
+    if (moneda === "EUR" && tc.eurEsFallback) return;
+    if (moneda !== "EUR" && tc.esFallback) return;
     const sugerido = moneda === "EUR" ? tc.eurMxn : tc.usdMxn;
     if (sugerido && !(Number(tipoCambioUsd) > 0)) {
       setValue("tipoCambioUsd", sugerido, { shouldValidate: true, shouldDirty: true });

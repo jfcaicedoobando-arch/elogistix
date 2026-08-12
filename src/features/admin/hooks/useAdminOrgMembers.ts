@@ -13,6 +13,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { AppRole } from "@/types/appRole";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { getErrorMessage } from "@/lib/errors";
 export type MemberRow = OrgMemberRow;
 
 export function useAdminOrgMembers(id: string | undefined) {
@@ -32,7 +33,7 @@ export function useAdminOrgMembers(id: string | undefined) {
       notifySuccess(undefined, { title: "Rol actualizado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "Error al actualizar rol", description: error.message, method: "UPDATE_ORG_MEMBER_ROLE", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "No se pudo actualizar el rol", description: getErrorMessage(error), method: "UPDATE_ORG_MEMBER_ROLE", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -44,7 +45,7 @@ export function useAdminOrgMembers(id: string | undefined) {
       notifySuccess(undefined, { title: "Miembro eliminado de la organización" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "Error al eliminar miembro", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "No se pudo eliminar el miembro", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 

@@ -12,8 +12,8 @@ import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
-  loadFactura, loadNotaCredito, validarClaim, buscarCfdiPorExternalId,
-  promoverFactura, promoverNc, liberarClaim, liberarClaimNc,
+  loadFactura, loadNotaCredito, loadPago, validarClaim, buscarCfdiPorExternalId,
+  promoverFactura, promoverNc, promoverPago, liberarClaim, liberarClaimNc, liberarClaimPago,
   type ReqBody, type FapiClient,
 } from "./recuperar.ts";
 
@@ -93,6 +93,48 @@ async function recuperarFactura(supabase: SB, user: Usuario, facturaId: string):
   return liberarClaim(supabase, factura, claimTag, edadMin, user);
 }
 
+
+/**
+ * EF-01: la emisión de REP (`facturapi-emitir-rep`) también usa claim
+ * PENDING:<uuid> + external_id; si la edge muere entre timbrar y persistir,
+ * el pago queda 409 ya_timbrado_rep para siempre. Reconciliamos contra
+ * FacturAPI con el mismo flujo que facturas/NC.
+ */
+async function recuperarPago(supabase: SB, user: Usuario, pagoId: string): Promise<Response> {
+  const pago = await loadPago(supabase, pagoId);
+  if (pago instanceof Response) return pago;
+
+  if (!(await authorizeOrgRole(supabase, user.id, pago.organization_id, ROLES_EMISOR_FISCAL))) {
+    return jsonResponse({ error: "forbidden" }, 403);
+  }
+
+  const { claimTag, edadMin, response: validationResponse } = validarClaim(
+    { facturapi_id: pago.facturapi_rep_id, facturapi_claim_at: pago.facturapi_rep_claim_at },
+    "REP",
+  );
+  if (validationResponse) return validationResponse;
+
+  const resolved = await getFacturapiClient(supabase, pago.organization_id);
+  if (!resolved.ok) {
+    return jsonResponse(
+      { error: resolved.data.error, message: resolved.data.message },
+      resolved.data.status,
+    );
+  }
+
+  const match = await buscarCfdiPorExternalId(
+    resolved.data.client as FapiClient, claimTag, pago.facturapi_rep_claim_at,
+  );
+  if (match instanceof Response) return match;
+  if (match?.id && match.uuid) {
+    return promoverPago({
+      supabase, pago, match, claimTag, user,
+      apiKey: resolved.data.apiKey, ambiente: resolved.data.ambiente,
+    });
+  }
+  return liberarClaimPago(supabase, pago, claimTag, edadMin, user);
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-recuperar-claim", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
@@ -113,5 +155,6 @@ Deno.serve(wrapEdgeHandler("facturapi-recuperar-claim", async (req) => {
 
   if (body.nota_credito_id) return recuperarNotaCredito(supabase, user, body.nota_credito_id);
   if (body.factura_id) return recuperarFactura(supabase, user, body.factura_id);
-  return jsonResponse({ error: "factura_id_o_nota_credito_id_required" }, 400);
+  if (body.pago_id) return recuperarPago(supabase, user, body.pago_id);
+  return jsonResponse({ error: "factura_id_o_nota_credito_id_o_pago_id_required" }, 400);
 }));

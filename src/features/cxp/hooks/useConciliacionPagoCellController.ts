@@ -9,6 +9,7 @@ import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { sugerirMovsParaPagoProveedor } from "@/features/cxp/services/conciliacionBancaria";
 import { conciliarConPago, desconciliarMovimiento } from "@/features/tesoreria/services/conciliacion";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Params {
   pagoId: string;
@@ -49,7 +50,7 @@ export function useConciliacionPagoCellController({
       setOpen(false);
     },
     onError: (err: Error) => notifyError(undefined, {
-      title: `No se pudo vincular: ${err.message}`, error: err,
+      title: "No se pudo vincular el pago", description: getErrorMessage(err), error: err,
       method: "FEATURES_CXP_CONCILIACION_VINCULAR",
     }),
   });
@@ -62,7 +63,7 @@ export function useConciliacionPagoCellController({
       setOpen(false);
     },
     onError: (err: Error) => notifyError(undefined, {
-      title: `No se pudo desvincular: ${err.message}`, error: err,
+      title: "No se pudo desvincular el pago", description: getErrorMessage(err), error: err,
       method: "FEATURES_CXP_CONCILIACION_DESVINCULAR",
     }),
   });

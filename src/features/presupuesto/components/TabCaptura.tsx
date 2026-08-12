@@ -16,6 +16,7 @@ import {
 import { formatCurrency } from "@/lib/formatters/numbers";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 const MESES_LABEL = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 interface Props { anio: number; onAnioChange: (a: number) => void }
@@ -57,8 +58,7 @@ export function TabCaptura({ anio, onAnioChange }: Props) {
       });
       setDraft((d) => { const n = { ...d }; delete n[key]; return n; });
     } catch (e) {
-      const err = e as { message?: string };
-      notifyError(undefined, { title: err.message ?? "Error al guardar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCAPTURA_2" });
+      notifyError(undefined, { title: "No se pudo guardar el presupuesto", description: getErrorMessage(e), error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCAPTURA_2" });
     }
   };
 

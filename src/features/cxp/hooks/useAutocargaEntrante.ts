@@ -10,6 +10,7 @@ import { parseCfdiXml, type CfdiParsedResponse } from "@/features/cxp/services";
 import { parsePdfInvoice } from "@/features/cxp/services/parsePdfInvoice";
 import { descargarArchivoEntranteComoFile } from "@/features/cxp/services/capturaEntrante";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
+import { getErrorMessage } from "@/lib/errors";
 
 export type EstadoAutocarga = "idle" | "cargando" | "listo" | "error";
 
@@ -62,7 +63,7 @@ export function useAutocargaEntrante({ entrante, abierto, categorias, onCfdiPars
       } catch (error) {
         if (cancelado) return;
         setEstado("error");
-        setMensaje(error instanceof Error ? error.message : "No se pudo leer el documento");
+        setMensaje(getErrorMessage(error));
       }
     };
 

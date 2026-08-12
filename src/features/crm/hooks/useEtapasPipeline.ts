@@ -14,6 +14,7 @@ import {
   type CrmEtapaTipo,
 } from "@/features/crm/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { CrmEtapaRow, CrmEtapaTipo,  };
 
@@ -33,7 +34,7 @@ export function useActualizarEtapa() {
       notifySuccess(undefined, { title: "Etapa actualizada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar etapa: ${error.message}`, error, method: "UPDATE_ETAPA" });
+      notifyError(undefined, { title: "No se pudo actualizar etapa", description: getErrorMessage(error), error, method: "UPDATE_ETAPA" });
     },
   });
 }
@@ -62,7 +63,7 @@ export function useActualizarMotivoPerdida() {
       notifySuccess(undefined, { title: "Motivo actualizado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar motivo: ${error.message}`, error, method: "UPDATE_MOTIVO_PERDIDA" });
+      notifyError(undefined, { title: "No se pudo actualizar motivo", description: getErrorMessage(error), error, method: "UPDATE_MOTIVO_PERDIDA" });
     },
   });
 }
@@ -76,7 +77,7 @@ export function useCrearMotivoPerdida() {
       notifySuccess(undefined, { title: "Motivo creado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear motivo: ${error.message}`, error, method: "CREATE_MOTIVO_PERDIDA" });
+      notifyError(undefined, { title: "No se pudo crear motivo", description: getErrorMessage(error), error, method: "CREATE_MOTIVO_PERDIDA" });
     },
   });
 }

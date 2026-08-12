@@ -14,6 +14,7 @@ import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
 import { tituloTimbrado } from "@/features/facturacion/utils/uuidCorto";
+import { getErrorMessage } from "@/lib/errors";
 
 export interface CrearFacturaManualVars {
   input: CrearFacturaManualInput;
@@ -58,7 +59,7 @@ export function useCrearFacturaManual() {
     },
     onError: (err: Error) => {
       notifyError(undefined, {
-        title: `No se pudo completar la facturación: ${err.message}`,
+        title: "No se pudo completar la facturación", description: getErrorMessage(err),
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USECREARFACTURAMANUAL_1",
       });

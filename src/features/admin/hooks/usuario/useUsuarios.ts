@@ -11,6 +11,7 @@ import {
 import type { AppRole } from "@/types/appRole";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { UserRow };
 
@@ -57,7 +58,7 @@ export function useUpdateUserRole() {
       notifySuccess(undefined, { title: `Rol actualizado a ${vars.newRole}` });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al cambiar rol: ${error.message}`, error, method: "UPDATE_USER_ROLE" });
+      notifyError(undefined, { title: "No se pudo cambiar rol", description: getErrorMessage(error), error, method: "UPDATE_USER_ROLE" });
     },
   });
 }
@@ -71,7 +72,7 @@ export function useDeleteUser() {
       notifySuccess(undefined, { title: "Usuario eliminado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar usuario: ${error.message}`, error, method: "DELETE_USER" });
+      notifyError(undefined, { title: "No se pudo eliminar usuario", description: getErrorMessage(error), error, method: "DELETE_USER" });
     },
   });
 }
@@ -88,7 +89,7 @@ export function useQuitarDeOrganizacion() {
     },
     onError: (error: Error) => {
       notifyError(undefined, {
-        title: `Error al quitar al usuario: ${error.message}`,
+        title: "No se pudo quitar al usuario", description: getErrorMessage(error),
         error,
         method: "QUITAR_DE_ORGANIZACION",
       });
@@ -105,7 +106,7 @@ export function useResetPasswordUsuario() {
     },
     onError: (error: Error) => {
       notifyError(undefined, {
-        title: `Error al enviar el correo: ${error.message}`,
+        title: "No se pudo enviar el correo", description: getErrorMessage(error),
         error,
         method: "RESET_PASSWORD_USUARIO",
       });

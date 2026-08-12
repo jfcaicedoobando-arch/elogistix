@@ -34,7 +34,7 @@ export function useTimbrarRep(facturaId?: string) {
       void autoEnviarRepPorCorreo(pagoId).catch((err: unknown) => {
         notifyInfo(undefined, {
           title: "REP timbrado, pero no se pudo auto-enviar por correo",
-          description: err instanceof Error ? err.message : undefined,
+          description: getErrorMessage(err),
         });
       });
     },

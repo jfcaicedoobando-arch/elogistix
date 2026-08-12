@@ -6,6 +6,7 @@ import {
 } from "@/features/portal/services";
 import type { PortalPerfilData } from "@/features/portal/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { PortalPerfilData };
 
@@ -25,7 +26,7 @@ export function useActualizarContactoPortal() {
       notifySuccess(undefined, { title: "Datos de contacto actualizados" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar contacto: ${error.message}`, error, method: "PORTAL_UPDATE_CONTACT" });
+      notifyError(undefined, { title: "No se pudo actualizar contacto", description: getErrorMessage(error), error, method: "PORTAL_UPDATE_CONTACT" });
     },
   });
 }

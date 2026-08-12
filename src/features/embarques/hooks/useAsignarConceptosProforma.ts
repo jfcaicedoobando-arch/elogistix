@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { asignarConceptosAProforma } from "@/features/proformas/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Params {
   proformaId: string;
@@ -30,9 +31,9 @@ export function useAsignarConceptosProforma({
       qc.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) });
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
+      // getErrorMessage reemplaza el mensaje crudo del error.
       notifyError(undefined, {
-        title: `No se pudieron asignar los conceptos: ${msg}`,
+        title: "No se pudieron asignar los conceptos", description: getErrorMessage(err),
         error: err,
         method: "FEATURES_EMBARQUES_COMPONENTS_FACTURACION_PROFORMAINCONSISTENTEALERT_1",
       });

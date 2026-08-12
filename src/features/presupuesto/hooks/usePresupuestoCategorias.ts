@@ -6,6 +6,7 @@ import {
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useOrgFilter } from "@/hooks/shared";
+import { getErrorMessage } from "@/lib/errors";
 
 export function usePresupuestoCategorias(activas = true) {
   const { organizationId } = useOrgFilter();
@@ -25,7 +26,7 @@ export function useCrearCategoriaPresupuesto() {
       notifySuccess(undefined, { title: "Categoría creada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear categoría: ${error.message}`, error, method: "CREATE_PRESUPUESTO_CAT" });
+      notifyError(undefined, { title: "No se pudo crear categoría", description: getErrorMessage(error), error, method: "CREATE_PRESUPUESTO_CAT" });
     },
   });
 }
@@ -40,7 +41,7 @@ export function useActualizarCategoriaPresupuesto() {
       notifySuccess(undefined, { title: "Categoría actualizada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar categoría: ${error.message}`, error, method: "UPDATE_PRESUPUESTO_CAT" });
+      notifyError(undefined, { title: "No se pudo actualizar categoría", description: getErrorMessage(error), error, method: "UPDATE_PRESUPUESTO_CAT" });
     },
   });
 }
@@ -54,7 +55,7 @@ export function useEliminarCategoriaPresupuesto() {
       notifySuccess(undefined, { title: "Categoría eliminada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar categoría: ${error.message}`, error, method: "DELETE_PRESUPUESTO_CAT" });
+      notifyError(undefined, { title: "No se pudo eliminar categoría", description: getErrorMessage(error), error, method: "DELETE_PRESUPUESTO_CAT" });
     },
   });
 }

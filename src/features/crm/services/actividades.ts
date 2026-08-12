@@ -38,6 +38,7 @@ export async function listActividades(p: ListActividadesParams): Promise<{ data:
   let q = supabase
     .from("crm_actividades")
     .select(COLS, { count: "exact" })
+    .is("deleted_at", null)
     .order(sortKey, { ascending: sortDir === "asc", nullsFirst: false });
   if (p.search.trim()) q = q.ilike("asunto", ilikePattern(p.search));
   if (p.tipo !== "todos") q = q.eq("tipo", p.tipo);
@@ -143,6 +144,7 @@ export async function countActividadesVencidas(userId: string, email?: string | 
     .from("crm_actividades")
     .select("id", { count: "exact", head: true })
     .is("fecha_completada", null)
+    .is("deleted_at", null)
     .lt("fecha_programada", new Date().toISOString())
     .or(filtroResponsable(userId, email));
   if (error) throw error;
@@ -164,6 +166,7 @@ export async function listActividadesVencidas(userId: string, limit: number, ema
       .from("crm_actividades")
       .select(CRM_ACTIVIDADES_COLUMNS_MIN)
       .is("fecha_completada", null)
+      .is("deleted_at", null)
       .lt("fecha_programada", new Date().toISOString())
       .or(filtroResponsable(userId, email))
       .order("fecha_programada", { ascending: true })

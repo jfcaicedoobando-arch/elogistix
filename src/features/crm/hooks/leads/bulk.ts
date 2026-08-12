@@ -4,6 +4,7 @@ import { queryKeys } from "@/lib/query";
 import { bulkUpdateLeads, bulkSoftDeleteLeads, bulkCreateLeads } from "@/features/crm/services/leads";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { LeadInput } from "./constants";
+import { getErrorMessage } from "@/lib/errors";
 
 /** Actualiza un campo (estado o vendedor) sobre múltiples leads. */
 export function useActualizarLeadsBulk() {
@@ -18,7 +19,7 @@ export function useActualizarLeadsBulk() {
       notifySuccess(undefined, { title: `${data.updated} leads actualizados` });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar leads: ${error.message}`, error, method: "BULK_UPDATE_LEADS" });
+      notifyError(undefined, { title: "No se pudo actualizar leads", description: getErrorMessage(error), error, method: "BULK_UPDATE_LEADS" });
     },
   });
 }
@@ -37,7 +38,7 @@ export function useEliminarLeadsBulk() {
       notifySuccess(undefined, { title: `${data.deleted} leads eliminados` });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar leads: ${error.message}`, error, method: "BULK_DELETE_LEADS" });
+      notifyError(undefined, { title: "No se pudo eliminar leads", description: getErrorMessage(error), error, method: "BULK_DELETE_LEADS" });
     },
   });
 }
@@ -56,7 +57,7 @@ export function useCrearLeadsBulk() {
       notifySuccess(undefined, { title: `${data.inserted} leads importados` });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al importar leads: ${error.message}`, error, method: "BULK_CREATE_LEADS" });
+      notifyError(undefined, { title: "No se pudo importar leads", description: getErrorMessage(error), error, method: "BULK_CREATE_LEADS" });
     },
   });
 }

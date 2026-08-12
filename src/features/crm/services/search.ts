@@ -13,17 +13,19 @@ export type CrmSearchHit =
 export async function searchCrm(term: string): Promise<CrmSearchHit[]> {
   const like = ilikePattern(term);
   const [leadsRes, opsRes, actsRes] = await Promise.all([
-    supabase.from("crm_leads").select("id, empresa, contacto, email").ilike("empresa", like).limit(6),
+    supabase.from("crm_leads").select("id, empresa, contacto, email").ilike("empresa", like).is("deleted_at", null).limit(6),
     supabase
       .from("crm_oportunidades")
       .select("id, nombre, cliente_nombre")
       .or(orIlike(["nombre", "cliente_nombre"], term))
+      .is("deleted_at", null)
       .limit(6),
     supabase
       .from("crm_actividades")
       .select(CRM_ACTIVIDADES_COLUMNS_SEARCH)
       .ilike("asunto", like)
       .is("fecha_completada", null)
+      .is("deleted_at", null)
       .limit(6),
   ]);
   const hits: CrmSearchHit[] = [];

@@ -4,6 +4,7 @@ import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useToast, useMutationWithFeedback } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { getErrorMessage } from "@/lib/errors";
 import {
   fetchCosteoTarifas,
   insertTarifaConRecargos,
@@ -73,7 +74,7 @@ export function useCosteoTarifaMutations() {
       } else if (exitos.length === 0) {
         notifyError(undefined, {
           title: "No se pudo crear ninguna tarifa",
-          description: fallos[0].error.message,
+          description: getErrorMessage(fallos[0].error),
           error: fallos[0].error,
           method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_5",
         });

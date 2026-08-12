@@ -4,6 +4,7 @@
  */
 import { useMutation } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import {
   runAuditoriaBackfillLegacy,
   type BackfillLegacyResult,
@@ -23,7 +24,7 @@ export function useBackfillLegacy(options: UseBackfillLegacyOptions = {}) {
       options.onSuccess?.(data);
     },
     onError: (err) => {
-      notifyError(undefined, { title: err instanceof Error ? err.message : "Error al ejecutar backfill", error: err, method: "FEATURES_ADMIN_HOOKS_USEBACKFILLLEGACY_1" });
+      notifyError(undefined, { title: "No se pudo ejecutar el backfill", description: getErrorMessage(err), error: err, method: "FEATURES_ADMIN_HOOKS_USEBACKFILLLEGACY_1" });
     },
   });
 }

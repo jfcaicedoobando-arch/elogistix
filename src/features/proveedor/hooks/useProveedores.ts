@@ -13,6 +13,7 @@ import {
   type ProveedorListItem,
 } from "@/features/proveedor/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 
@@ -55,7 +56,7 @@ export function useProveedorMutations() {
       queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear proveedor: ${error.message}`, error, method: "CREATE_PROVEEDOR" });
+      notifyError(undefined, { title: "No se pudo crear proveedor", description: getErrorMessage(error), error, method: "CREATE_PROVEEDOR" });
     },
   });
 
@@ -67,7 +68,7 @@ export function useProveedorMutations() {
       notifySuccess(undefined, { title: "Proveedor actualizado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar proveedor: ${error.message}`, error, method: "UPDATE_PROVEEDOR" });
+      notifyError(undefined, { title: "No se pudo actualizar proveedor", description: getErrorMessage(error), error, method: "UPDATE_PROVEEDOR" });
     },
   });
 
@@ -78,7 +79,7 @@ export function useProveedorMutations() {
       notifySuccess(undefined, { title: "Proveedor eliminado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar proveedor: ${error.message}`, error, method: "DELETE_PROVEEDOR" });
+      notifyError(undefined, { title: "No se pudo eliminar proveedor", description: getErrorMessage(error), error, method: "DELETE_PROVEEDOR" });
     },
   });
 

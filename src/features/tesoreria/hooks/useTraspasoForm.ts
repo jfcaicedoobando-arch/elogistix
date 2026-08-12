@@ -27,7 +27,9 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     destinoId: "",
     fecha: hoyIso(),
     montoOrigen: 0,
-    tipoCambio: 1,
+    // UIA-02: 0 = "sin capturar". Antes el default 1 posteaba conversiones
+    // 1:1 silenciosas entre monedas distintas.
+    tipoCambio: 0,
     comision: 0,
     concepto: "",
     referencia: "",
@@ -40,7 +42,7 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
       destinoId: "",
       fecha: hoyIso(),
       montoOrigen: 0,
-      tipoCambio: 1,
+      tipoCambio: 0,
       comision: 0,
       concepto: "",
       referencia: "",
@@ -58,7 +60,8 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   const montoDestino = useMemo(() => {
     if (!state.montoOrigen || state.montoOrigen <= 0) return 0;
     if (mismoMoneda) return state.montoOrigen;
-    return state.montoOrigen * (state.tipoCambio || 1);
+    if (!state.tipoCambio || state.tipoCambio <= 0) return 0;
+    return state.montoOrigen * state.tipoCambio;
   }, [state.montoOrigen, mismoMoneda, state.tipoCambio]);
 
   const error = useMemo(() => {

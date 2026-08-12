@@ -9,6 +9,7 @@ import { queryKeys } from "@/lib/query";
 import { moverEtapaOportunidad } from "@/features/crm/services/oportunidades";
 import { runAutomatizaciones } from "@/features/crm/services/automatizacionesEtapa";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useMoverEtapaConAutomatizacion() {
   const qc = useQueryClient();
@@ -34,7 +35,7 @@ export function useMoverEtapaConAutomatizacion() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al mover etapa: ${error.message}`, error, method: "MOVE_ETAPA_OPORTUNIDAD" });
+      notifyError(undefined, { title: "No se pudo mover etapa", description: getErrorMessage(error), error, method: "MOVE_ETAPA_OPORTUNIDAD" });
     },
   });
 }

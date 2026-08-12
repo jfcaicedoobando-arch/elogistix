@@ -10,7 +10,7 @@
  *            interna `tipos_cambio_dof`; sólo si el día no está registrado se
  *            llama a Banxico.
  *
- * Contrato de respuesta invariante: `{ usdMxn, eurMxn }`.
+ * Contrato de respuesta invariante: `{ usdMxn, eurMxn|null, eur_es_fallback? }`.
  */
 // @ts-expect-error Deno remote import
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -53,9 +53,13 @@ export function rangoUltimosDias(hoy: Date, dias?: number) {
 
 interface Rates {
   usdMxn: number;
-  eurMxn: number;
+  // EF-04: null cuando la fuente no trae EUR — nunca el fallback 18.5
+  // disfrazado de TC real (contrato FIX-10).
+  eurMxn: number | null;
   fechaAplicada?: string;
   es_fallback?: false;
+  /** EF-04: true cuando el EUR no vino de Banxico/tabla (fallback parcial). */
+  eur_es_fallback?: boolean;
   origen?: "tabla" | "banxico";
 }
 
@@ -127,11 +131,14 @@ export async function leerTcDeTabla(fechaIso: string): Promise<Rates | null> {
     const usdMxn = Number(data.usd_mxn);
     if (!Number.isFinite(usdMxn) || usdMxn <= 0) return null;
     const eur = Number(data.eur_mxn);
+    const eurValido = Number.isFinite(eur) && eur > 0;
     return {
       usdMxn,
-      eurMxn: Number.isFinite(eur) && eur > 0 ? eur : FALLBACK.eurMxn,
+      // EF-04: EUR ausente ⇒ null + flag; jamás FALLBACK.eurMxn con es_fallback:false.
+      eurMxn: eurValido ? eur : null,
       fechaAplicada: data.fecha_publicacion_usd ?? undefined,
       es_fallback: false,
+      eur_es_fallback: !eurValido,
       origen: "tabla",
     };
   } catch {
@@ -204,9 +211,11 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
     }
     const rates: Rates = {
       usdMxn: usd.tc,
-      eurMxn: eurMxn ?? FALLBACK.eurMxn,
+      // EF-04: EUR ausente ⇒ null + flag; jamás FALLBACK.eurMxn con es_fallback:false.
+      eurMxn: eurMxn ?? null,
       fechaAplicada: usd.fechaAplicada,
       es_fallback: false,
+      eur_es_fallback: eurMxn == null,
       origen: "banxico",
     };
     guardarCache(rates);

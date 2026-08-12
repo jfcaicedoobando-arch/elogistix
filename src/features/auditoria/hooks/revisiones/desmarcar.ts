@@ -9,6 +9,7 @@ import { resolveAuthUser } from "./query";
 import { queryKeys } from "@/lib/query";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 export function useDesmarcarRevisado() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -41,7 +42,7 @@ export function useDesmarcarRevisado() {
     },
     onError: (err: Error) => {
       logger.error("[useDesmarcarRevisado] error:", err);
-      notifyError(undefined, { title: "Error al eliminar marca", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_DESMARCAR_1" });
+      notifyError(undefined, { title: "Error al eliminar marca", description: getErrorMessage(err), error: err, method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_DESMARCAR_1" });
     },
   });
 }

@@ -25,6 +25,7 @@ export async function fetchComentariosOportunidad(
     .from("crm_comentarios_oportunidad")
     .select(COLS)
     .eq("oportunidad_id", oportunidadId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw error;

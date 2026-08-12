@@ -7,6 +7,7 @@ import {
   type InviteClientUserParams,
 } from "@/features/cliente/services/usuarios";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 /**
  * Lista los usuarios del portal vinculados a un cliente específico.
@@ -34,7 +35,7 @@ export function useInviteClientUser(clienteId: string) {
       });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al invitar usuario: ${error.message}`, error, method: "INVITE_CLIENT_USER" });
+      notifyError(undefined, { title: "No se pudo invitar usuario", description: getErrorMessage(error), error, method: "INVITE_CLIENT_USER" });
     },
   });
 }
@@ -48,7 +49,7 @@ export function useRevokeClientUser(clienteId: string) {
       notifySuccess(undefined, { title: "Acceso revocado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al revocar usuario: ${error.message}`, error, method: "REVOKE_CLIENT_USER" });
+      notifyError(undefined, { title: "No se pudo revocar usuario", description: getErrorMessage(error), error, method: "REVOKE_CLIENT_USER" });
     },
   });
 }
@@ -64,7 +65,7 @@ export function useResendClientUserInvite(_clienteId: string) {
       notifySuccess(undefined, { title: "Invitación reenviada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al reenviar invitación: ${error.message}`, error, method: "RESEND_CLIENT_USER_INVITE" });
+      notifyError(undefined, { title: "No se pudo reenviar invitación", description: getErrorMessage(error), error, method: "RESEND_CLIENT_USER_INVITE" });
     },
   });
 }

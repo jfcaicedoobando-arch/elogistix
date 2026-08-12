@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { consultarEstadoFacturapi, type ConsultarFacturapiResult } from "@/features/facturacion/services/facturapi";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useConsultarFacturapi(facturaId: string | null | undefined) {
   const qc = useQueryClient();
@@ -27,7 +28,7 @@ export function useConsultarFacturapi(facturaId: string | null | undefined) {
     onError: (err) =>
       notifyError(undefined, {
         title: "No se pudo consultar FacturApi",
-        description: err.message,
+        description: getErrorMessage(err),
       }),
   });
 }

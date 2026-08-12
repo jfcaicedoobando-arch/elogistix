@@ -7,6 +7,7 @@ import {
 import { deleteUserViaEdgeFunction } from "@/features/admin/services/usuario";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useUsuariosOrgScope } from "./useUsuarios";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useUsuariosPortalCliente(opciones?: { enabled?: boolean }) {
   const orgScope = useUsuariosOrgScope();
@@ -45,7 +46,7 @@ export function useDeletePortalUser(tipo: "cliente" | "agente") {
     },
     onError: (error: Error) => {
       notifyError(undefined, {
-        title: `Error al eliminar usuario: ${error.message}`,
+        title: "No se pudo eliminar usuario", description: getErrorMessage(error),
         error,
         method: "DELETE_PORTAL_USER",
       });

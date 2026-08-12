@@ -23,6 +23,7 @@ import { InvitarAgentePasswordTab } from "./InvitarAgentePasswordTab";
 import { generarPasswordSegura } from "../utils/generarPasswordSegura";
 import { inviteAgentePortal } from "../services/inviteAgentePortal";
 import type { AgenteRow } from "./CosteoAgentesTable";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Props {
   agente: AgenteRow | null;
@@ -65,8 +66,7 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
       reset();
       onOpenChange(false);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(undefined, { title: `Error al invitar: ${msg}`, error: err, method: "INVITE_AGENTE" });
+      notifyError(undefined, { title: "No se pudo invitar al agente", description: getErrorMessage(err), error: err, method: "INVITE_AGENTE" });
     } finally {
       setPending(false);
     }

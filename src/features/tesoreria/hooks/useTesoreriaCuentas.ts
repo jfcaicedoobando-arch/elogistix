@@ -11,6 +11,7 @@ import {
 } from "@/features/tesoreria/services";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useCuentasBancarias(activas = true) {
   return useQuery({
@@ -29,7 +30,7 @@ export function useCrearCuenta() {
       notifySuccess(undefined, { title: "Cuenta bancaria creada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear cuenta: ${error.message}`, error, method: "CREATE_CUENTA_BANCARIA" });
+      notifyError(undefined, { title: "No se pudo crear cuenta", description: getErrorMessage(error), error, method: "CREATE_CUENTA_BANCARIA" });
     },
   });
 }
@@ -44,7 +45,7 @@ export function useEliminarCuenta() {
       notifySuccess(undefined, { title: "Cuenta bancaria eliminada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar cuenta: ${error.message}`, error, method: "DELETE_CUENTA_BANCARIA" });
+      notifyError(undefined, { title: "No se pudo eliminar cuenta", description: getErrorMessage(error), error, method: "DELETE_CUENTA_BANCARIA" });
     },
   });
 }

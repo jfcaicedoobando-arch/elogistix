@@ -5,6 +5,7 @@ import {
   insertEventoEmbarque,
 } from "@/features/embarques/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export interface EventoEmbarque {
   id: string;
@@ -51,7 +52,7 @@ export function useCreateEventoEmbarque(options: CreateEventoOptions = {}) {
     },
     onError: (error: Error) => {
       if (silent) return;
-      notifyError(undefined, { title: `Error al agregar evento: ${error.message}`, error, method: "CREATE_EVENTO_EMBARQUE" });
+      notifyError(undefined, { title: "No se pudo agregar evento", description: getErrorMessage(error), error, method: "CREATE_EVENTO_EMBARQUE" });
     },
   });
 }

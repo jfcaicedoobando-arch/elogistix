@@ -29,7 +29,8 @@ export async function fetchForecast(desde?: string, hasta?: string): Promise<For
   const etapaTipos = await fetchEtapaTipos();
   let q = supabase
     .from("crm_oportunidades")
-    .select("id, monto_estimado, probabilidad, fecha_estimada_cierre, vendedor_email, etapa_id");
+    .select("id, monto_estimado, probabilidad, fecha_estimada_cierre, vendedor_email, etapa_id")
+    .is("deleted_at", null);
   if (desde) q = q.gte("fecha_estimada_cierre", desde);
   if (hasta) q = q.lte("fecha_estimada_cierre", hasta);
   // Cap defensivo: agregado por org; >5000 oportunidades activas es señal
@@ -44,8 +45,8 @@ export async function fetchReportesCRM(): Promise<ReportesCRM> {
   // Caps defensivos para agregados por org. >5000 leads/oportunidades activos
   // → migrar a RPC con agregación server-side.
   const [leadsR, opsR, motivosR, etapasR] = await Promise.all([
-    supabase.from("crm_leads").select("estado, fuente").limit(LIMITE_CRM),
-    supabase.from("crm_oportunidades").select("motivo_perdida_id, etapa_id").limit(LIMITE_CRM),
+    supabase.from("crm_leads").select("estado, fuente").is("deleted_at", null).limit(LIMITE_CRM),
+    supabase.from("crm_oportunidades").select("motivo_perdida_id, etapa_id").is("deleted_at", null).limit(LIMITE_CRM),
     supabase.from("crm_motivos_perdida").select("id, nombre"),
     supabase.from("crm_etapas_pipeline").select("id, nombre, tipo"),
   ]);

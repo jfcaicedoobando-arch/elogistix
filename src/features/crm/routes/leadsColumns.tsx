@@ -9,6 +9,7 @@ import { toTitleCase } from "@/lib/formatters";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { LEAD_ESTADOS, useActualizarLead, type CrmLeadEstado, type CrmLeadRow } from "@/features/crm/hooks";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { getErrorMessage } from "@/lib/errors";
 
 const ESTADO_VARIANT: Record<CrmLeadEstado, "default" | "secondary" | "outline" | "destructive"> = {
   Nuevo: "default",
@@ -32,7 +33,7 @@ function EstadoCell({ lead }: { lead: CrmLeadRow }) {
           try {
             await actualizar.mutateAsync({ id: lead.id, patch: { estado: v as CrmLeadEstado } });
           } catch (err) {
-            notifyError(undefined, { title: "No se pudo actualizar", description: err instanceof Error ? err.message : undefined, error: err, method: "ESTADO_CELL" });
+            notifyError(undefined, { title: "No se pudo actualizar", description: getErrorMessage(err), error: err, method: "ESTADO_CELL" });
           }
         }}
         disabled={actualizar.isPending}

@@ -18,6 +18,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { CondicionesCreditoSection } from "./CondicionesCreditoSection";
 import { ComisionClienteSection } from "./ComisionClienteSection";
+import { getErrorMessage } from "@/lib/errors";
 
 interface ClienteData {
   nombre: string;
@@ -103,8 +104,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
       notifySuccess(undefined, { title: "CSF procesada. Verifica los datos actualizados antes de guardar." });
     } catch (err) {
       setCsfFileName(null);
-      const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
-      notifyError(undefined, { title: mensaje, error: err, method: "DIALOG_EDITAR_CLIENTE_CSF" });
+      notifyError(undefined, { title: "No se pudo procesar la CSF", description: getErrorMessage(err), error: err, method: "DIALOG_EDITAR_CLIENTE_CSF" });
     } finally {
       setParsingCsf(false);
     }

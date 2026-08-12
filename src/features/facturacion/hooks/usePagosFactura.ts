@@ -8,6 +8,7 @@ import {
   type RegistrarPagoInput,
 } from "@/features/facturacion/services/pagos";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export function usePagosFactura(facturaId: string | undefined) {
   return useQuery({
@@ -38,7 +39,7 @@ export function useRegistrarPagoFactura() {
     mutationFn: (input: RegistrarPagoInput) => registrarPagoFactura(input),
     onSuccess: (_d, vars) => invalidarFacturasYPagos(qc, vars.factura_id),
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al registrar pago: ${error.message}`, error, method: "REGISTER_PAYMENT" });
+      notifyError(undefined, { title: "No se pudo registrar pago", description: getErrorMessage(error), error, method: "REGISTER_PAYMENT" });
     },
   });
 }
@@ -52,7 +53,7 @@ export function useEliminarPagoFactura() {
       notifySuccess(undefined, { title: "Pago eliminado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar pago: ${error.message}`, error, method: "DELETE_PAYMENT" });
+      notifyError(undefined, { title: "No se pudo eliminar pago", description: getErrorMessage(error), error, method: "DELETE_PAYMENT" });
     },
   });
 }

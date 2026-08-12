@@ -12,6 +12,7 @@ import {
   type ComentarioRow,
 } from "@/features/crm/services";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { ComentarioRow };
 
@@ -42,7 +43,7 @@ export function useCrearComentarioOportunidad() {
       });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al agregar comentario: ${error.message}`, error, method: "CREATE_COMENTARIO_OP" });
+      notifyError(undefined, { title: "No se pudo agregar comentario", description: getErrorMessage(error), error, method: "CREATE_COMENTARIO_OP" });
     },
   });
 }

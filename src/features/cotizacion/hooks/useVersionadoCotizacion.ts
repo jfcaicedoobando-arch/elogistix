@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { recotizarCotizacion } from "@/features/cotizacion/services/versionado";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useRecotizarCotizacion() {
   const qc = useQueryClient();
@@ -20,7 +21,7 @@ export function useRecotizarCotizacion() {
     },
     onError: (error: Error) => {
       notifyError(undefined, {
-        title: `No se pudo re-cotizar: ${error.message}`,
+        title: "No se pudo generar la nueva cotización", description: getErrorMessage(error),
         error,
         method: "VERSIONADO_RECOTIZAR",
       });

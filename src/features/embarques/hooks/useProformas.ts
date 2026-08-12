@@ -17,6 +17,7 @@ import {
   type ProformaRow,
 } from "@/features/proformas/services";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 // Re-export tipos para que componentes/pages no tengan que importar del service.
 export type { ProformaConFactura,  ProformaRow };
@@ -77,7 +78,7 @@ export function useCrearProforma() {
       invalidateProformaCaches(queryClient, proforma.embarque_id);
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al generar proforma: ${error.message}`, error, method: "CREATE_PROFORMA" });
+      notifyError(undefined, { title: "No se pudo generar proforma", description: getErrorMessage(error), error, method: "CREATE_PROFORMA" });
     },
   });
 }
@@ -116,7 +117,7 @@ export function useEliminarProforma() {
         });
         return;
       }
-      notifyError(undefined, { title: `Error al eliminar proforma: ${error.message}`, error, method: "DELETE_PROFORMA" });
+      notifyError(undefined, { title: "No se pudo eliminar proforma", description: getErrorMessage(error), error, method: "DELETE_PROFORMA" });
     },
   });
 }

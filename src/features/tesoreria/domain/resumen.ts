@@ -48,9 +48,15 @@ export function calcularResumenTesoreria(args: {
   limite.setDate(limite.getDate() + 30);
   const enVentana = (iso: string | null) =>
     !!iso && new Date(iso + "T00:00:00") <= limite;
-  const tc = args.tipoCambioUsd && args.tipoCambioUsd > 0 ? args.tipoCambioUsd : 1;
+  // UIA-03: sin TC confiable NO se asume 1:1 — la porción en USD queda
+  // excluida de los totales MXN y se reporta vía `flujo_incompleto`.
+  const tc =
+    typeof args.tipoCambioUsd === "number" && args.tipoCambioUsd > 1 ? args.tipoCambioUsd : 0;
+  const tcConfiable = tc > 0;
 
   const flujo = calcularFlujo(args.cobranza, args.cxp, enVentana, tc);
+  flujo.flujo_incompleto =
+    !tcConfiable && (flujo.por_cobrar_usd > 0 || flujo.por_pagar_usd > 0);
   const vencidasCobranza = sumarVencidas(args.cobranza, (f) => f.estatus_cobranza, tc);
   const vencidasCxp = sumarVencidas(args.cxp, (f) => f.estatus, tc);
 
@@ -122,6 +128,7 @@ function calcularFlujo(
     por_pagar_mxn: 0, por_pagar_usd: 0,
     flujo_neto_mxn: 0, flujo_neto_usd: 0,
     por_cobrar_total_mxn: 0, por_pagar_total_mxn: 0,
+    flujo_incompleto: false,
   };
   for (const f of cobranza) {
     if (!enVentana(f.fecha_vencimiento) || f.saldo <= 0) continue;

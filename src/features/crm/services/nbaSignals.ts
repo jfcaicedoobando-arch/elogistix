@@ -22,6 +22,7 @@ export async function fetchNbaSignals(): Promise<NbaSignals> {
       .from("crm_leads")
       .select("id, empresa, created_at")
       .eq("estado", "Nuevo")
+      .is("deleted_at", null)
       .lte("created_at", hace24h.toISOString())
       .order("created_at", { ascending: true })
       .limit(20),
@@ -29,6 +30,7 @@ export async function fetchNbaSignals(): Promise<NbaSignals> {
       .from("crm_oportunidades")
       .select("id, nombre, fecha_estimada_cierre, updated_at, crm_etapas_pipeline!inner(tipo)")
       .eq("crm_etapas_pipeline.tipo", "abierta")
+      .is("deleted_at", null)
       .order("updated_at", { ascending: true })
       .limit(50),
   ]);

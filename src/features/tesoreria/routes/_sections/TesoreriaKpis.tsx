@@ -48,6 +48,11 @@ export function TesoreriaKpis({ data }: Props) {
         iconVariant="chip"
         variant="success"
         to={ROUTES.CARTERA}
+        hint={
+          data.flujo.flujo_incompleto
+            ? "Excluye saldos en USD sin tipo de cambio confiable."
+            : undefined
+        }
       />
       <KpiCard
         label="Por pagar 30 días"
@@ -61,6 +66,11 @@ export function TesoreriaKpis({ data }: Props) {
         iconVariant="chip"
         variant="warning"
         to={ROUTES.COMPRAS_POR_PAGAR}
+        hint={
+          data.flujo.flujo_incompleto
+            ? "Excluye saldos en USD sin tipo de cambio confiable."
+            : undefined
+        }
       />
       <KpiCard
         label="Flujo neto 30 días"

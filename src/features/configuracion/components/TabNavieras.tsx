@@ -9,18 +9,24 @@ import { useAllNavieras, useAdminNavieras } from "@/features/catalogos/hooks";
 import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { NavieraFormDialog } from "@/components/shared/NavieraFormDialog";
+import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
 import type { Naviera } from "@/features/catalogos/services";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { usePermissions } from "@/hooks/shared";
 
 export default function TabNavieras() {
   const { data: navieras = [], isLoading } = useAllNavieras();
   const { agregarNaviera, toggleActivo, eliminarNaviera } = useAdminNavieras();
+  const { canAdminTenant } = usePermissions();
   const [busqueda, setBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
   // Q-13/Q-12 (Ola 4): edición reutiliza el mismo `NavieraFormDialog` del
   // empty-state de `NavieraSelect` — un solo lugar cuida el fix de overlay.
   const [navieraEnEdicion, setNavieraEnEdicion] = useState<Naviera | null>(null);
+  // UX-01/UIA-05: eliminar exige confirmación de doble paso y sólo se ofrece
+  // a quien puede administrar el tenant.
+  const [navieraAEliminar, setNavieraAEliminar] = useState<Naviera | null>(null);
 
   const handleAgregar = () => {
     if (!nuevoCode.trim() || !nuevoName.trim()) return;
@@ -52,9 +58,11 @@ export default function TabNavieras() {
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setNavieraEnEdicion(row.original)} aria-label={`Editar naviera ${row.original.name}`}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarNaviera.mutate(row.original.id)} aria-label={`Eliminar naviera ${row.original.name}`}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {canAdminTenant && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setNavieraAEliminar(row.original)} aria-label={`Eliminar naviera ${row.original.name}`}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       ),
     },
@@ -100,6 +108,16 @@ export default function TabNavieras() {
         open={!!navieraEnEdicion}
         onOpenChange={(open) => { if (!open) setNavieraEnEdicion(null); }}
         naviera={navieraEnEdicion}
+      />
+      <DeleteConfirmDialog
+        open={!!navieraAEliminar}
+        onOpenChange={(open) => { if (!open) setNavieraAEliminar(null); }}
+        entityName={navieraAEliminar ? `la naviera "${navieraAEliminar.name}"` : "esta naviera"}
+        description="La naviera se eliminará del catálogo. Las cotizaciones y embarques existentes no se modifican."
+        isPending={eliminarNaviera.isPending}
+        onConfirm={() => {
+          if (navieraAEliminar) eliminarNaviera.mutate(navieraAEliminar.id);
+        }}
       />
     </Card>
   );

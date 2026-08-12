@@ -7,6 +7,7 @@ import {
   reconocerAlerta,
 } from "@/features/admin/services";
 import { queryKeys } from "@/lib/query";
+import { getErrorMessage } from "@/lib/errors";
 
 ;
 
@@ -54,7 +55,7 @@ export function useAcknowledgeAlerta() {
       qc.invalidateQueries({ queryKey: queryKeys.alertasSistema.listAll });
     },
     onError: (err: Error) => {
-      notifyError(undefined, { title: "No se pudo reconocer la alerta", description: err.message, error: err, method: "FEATURES_ADMIN_HOOKS_USEALERTASSISTEMA_1" });
+      notifyError(undefined, { title: "No se pudo reconocer la alerta", description: getErrorMessage(err), error: err, method: "FEATURES_ADMIN_HOOKS_USEALERTASSISTEMA_1" });
     },
   });
 }

@@ -19,6 +19,10 @@ export interface TcInicial {
   /** Fecha de publicación DOF (ISO `YYYY-MM-DD`) cuando la fuente es DOF. */
   fecha: string | null;
   fuente: "DOF" | "remoto";
+  /** EF-04: el TC USD proviene de un fallback estimado, no de una fuente real. */
+  esFallback: boolean;
+  /** EF-04: el TC EUR proviene del fallback estimado (18.5 hardcodeado). */
+  eurEsFallback: boolean;
 }
 
 export function useTcInicial(): { data: TcInicial | null; isLoading: boolean } {
@@ -38,6 +42,8 @@ export function useTcInicial(): { data: TcInicial | null; isLoading: boolean } {
         eurMxn: fila.eur_mxn == null ? null : Number(fila.eur_mxn),
         fecha: fila.fecha,
         fuente: "DOF",
+        esFallback: false,
+        eurEsFallback: fila.eur_mxn == null,
       },
       isLoading: false,
     };
@@ -50,6 +56,8 @@ export function useTcInicial(): { data: TcInicial | null; isLoading: boolean } {
         eurMxn: remoto.data.eurMxn,
         fecha: null,
         fuente: "remoto",
+        esFallback: remoto.data.esFallback === true,
+        eurEsFallback: remoto.data.eurEsFallback === true,
       },
       isLoading: false,
     };

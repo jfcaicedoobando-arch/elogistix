@@ -9,16 +9,22 @@ import { useAllPuertos, useAdminPuertos } from "@/features/catalogos/hooks";
 import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
+import { usePermissions } from "@/hooks/shared";
 
 type Puerto = { id: string; code: string; name: string; country: string; activo: boolean };
 
 export default function TabPuertos() {
   const { data: puertos = [], isLoading: puertosLoading } = useAllPuertos();
   const { agregarPuerto, toggleActivo, eliminarPuerto } = useAdminPuertos();
+  const { canAdminTenant } = usePermissions();
   const [puertoBusqueda, setPuertoBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
   const [nuevoCountry, setNuevoCountry] = useState("");
+  // UX-01/UIA-05: eliminar exige confirmación de doble paso y sólo se ofrece
+  // a quien puede administrar el tenant.
+  const [puertoAEliminar, setPuertoAEliminar] = useState<Puerto | null>(null);
 
   const handleAgregarPuerto = () => {
     if (!nuevoCode.trim() || !nuevoName.trim() || !nuevoCountry.trim()) return;
@@ -46,11 +52,14 @@ export default function TabPuertos() {
     {
       id: "eliminar", header: "",
       meta: { headerClassName: "w-12" },
-      cell: ({ row }) => (
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarPuerto.mutate(row.original.id)} aria-label={`Eliminar puerto ${row.original.name}`}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      ),
+      // UIA-05: el botón sólo se ofrece a quien sí tiene permiso de borrado
+      // (antes el usuario lo descubría con un toast de error tras el clic).
+      cell: ({ row }) =>
+        canAdminTenant ? (
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setPuertoAEliminar(row.original)} aria-label={`Eliminar puerto ${row.original.name}`}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        ) : null,
     },
   ]);
 
@@ -94,6 +103,16 @@ export default function TabPuertos() {
         </div>
         <p className="text-xs text-muted-foreground">{puertos.length} puertos en total · {puertos.filter(p => p.activo).length} activos</p>
       </CardContent>
+      <DeleteConfirmDialog
+        open={!!puertoAEliminar}
+        onOpenChange={(open) => { if (!open) setPuertoAEliminar(null); }}
+        entityName={puertoAEliminar ? `el puerto "${puertoAEliminar.name}"` : "este puerto"}
+        description="El puerto dejará de estar disponible en cotizaciones y embarques nuevos."
+        isPending={eliminarPuerto.isPending}
+        onConfirm={() => {
+          if (puertoAEliminar) eliminarPuerto.mutate(puertoAEliminar.id);
+        }}
+      />
     </Card>
   );
 }

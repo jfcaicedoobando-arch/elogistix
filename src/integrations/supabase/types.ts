@@ -4304,6 +4304,9 @@ export type Database = {
       }
       factura_notas_credito: {
         Row: {
+          acuse_cancelacion_fecha: string | null
+          acuse_cancelacion_status: string | null
+          acuse_cancelacion_xml: string | null
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           aprobada_at: string | null
           aprobada_por: string | null
@@ -4343,6 +4346,9 @@ export type Database = {
           xml_url: string | null
         }
         Insert: {
+          acuse_cancelacion_fecha?: string | null
+          acuse_cancelacion_status?: string | null
+          acuse_cancelacion_xml?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           aprobada_at?: string | null
           aprobada_por?: string | null
@@ -4382,6 +4388,9 @@ export type Database = {
           xml_url?: string | null
         }
         Update: {
+          acuse_cancelacion_fecha?: string | null
+          acuse_cancelacion_status?: string | null
+          acuse_cancelacion_xml?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           aprobada_at?: string | null
           aprobada_por?: string | null
@@ -5256,6 +5265,7 @@ export type Database = {
           embarque_id: string | null
           estado_rep: string
           factura_id: string
+          facturapi_rep_claim_at: string | null
           facturapi_rep_id: string | null
           fecha_pago: string
           folio_rep: number | null
@@ -5295,6 +5305,7 @@ export type Database = {
           embarque_id?: string | null
           estado_rep?: string
           factura_id: string
+          facturapi_rep_claim_at?: string | null
           facturapi_rep_id?: string | null
           fecha_pago: string
           folio_rep?: number | null
@@ -5334,6 +5345,7 @@ export type Database = {
           embarque_id?: string | null
           estado_rep?: string
           factura_id?: string
+          facturapi_rep_claim_at?: string | null
           facturapi_rep_id?: string | null
           fecha_pago?: string
           folio_rep?: number | null
@@ -8960,6 +8972,10 @@ export type Database = {
       is_soft_delete_table: { Args: { _table: string }; Returns: boolean }
       liberar_claim_facturapi_huerfano: {
         Args: { p_factura_id: string; p_min_edad_minutos?: number }
+        Returns: boolean
+      }
+      liberar_claim_rep_huerfano: {
+        Args: { p_min_edad_minutos?: number; p_pago_id: string }
         Returns: boolean
       }
       liberar_conceptos_de_proforma: {

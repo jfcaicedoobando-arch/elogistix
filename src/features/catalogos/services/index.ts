@@ -46,6 +46,9 @@ export interface ExchangeRates {
   /** FIX-10: `true` si los valores vienen del fallback (Banxico caído, sin token,
    *  error de red). Los flujos fiscales DEBEN rechazar rates con este flag. */
   esFallback?: boolean;
+  /** EF-04: `true` si el EUR es estimado (18.5) aunque el USD sea real. Los
+   *  flujos en moneda EUR DEBEN rechazar/marcar el TC cuando este flag está. */
+  eurEsFallback?: boolean;
 }
 
 // ─── Navieras ────────────────────────────────────────────────────────────────
@@ -174,6 +177,9 @@ export async function fetchExchangeRates(fecha?: string): Promise<ExchangeRates>
     // RG18 (Ola 3): si el cuerpo 200 viene sin `usdMxn`, estamos mostrando el
     // fallback aunque la edge no lo haya marcado; hay que declararlo.
     esFallback: data?.es_fallback === true || data?.usdMxn == null,
+    // EF-04: igual para el EUR — la edge lo declara con `eur_es_fallback` o
+    // con `eurMxn: null`; en ambos casos el valor mostrado (18.5) es estimado.
+    eurEsFallback: data?.eur_es_fallback === true || data?.eurMxn == null,
   };
 }
 
