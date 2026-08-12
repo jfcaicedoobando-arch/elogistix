@@ -87,17 +87,29 @@ export default function TesoreriaCuentas() {
         open={open}
         onOpenChange={setOpen}
         icon={Landmark}
-        title="Nueva cuenta bancaria"
-        description="Captura los datos de la nueva cuenta bancaria para conciliación."
+        title={editTarget ? `Editar cuenta · ${editTarget.alias}` : "Nueva cuenta bancaria"}
+        description={
+          editTarget
+            ? "Corrige los datos de la cuenta. El saldo inicial y su fecha de corte afectan los saldos y la conciliación."
+            : "Captura los datos de la nueva cuenta bancaria para conciliación."
+        }
         size="lg"
         footer={
           <>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={submit} disabled={submitting}>Guardar</Button>
+            <Button onClick={submit} loading={submitting}>Guardar</Button>
           </>
         }
       >
-        <NuevaCuentaFormFields form={form} setField={setField} />
+        <NuevaCuentaFormFields form={form} setField={setField} monedaBloqueada={monedaBloqueada} />
+        {avisoRecalculo && (
+          <Alert>
+            <AlertDescription>
+              Al guardar se recalculará el saldo de la cuenta y la conciliación con el nuevo
+              saldo inicial y su fecha de corte. Los movimientos y pagos registrados no cambian.
+            </AlertDescription>
+          </Alert>
+        )}
       </FormDialogShell>
 
       <DialogTraspasoCuentas

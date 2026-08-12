@@ -17,9 +17,11 @@ type Controller = ReturnType<typeof useTesoreriaCuentasController>;
 export interface NuevaCuentaFormFieldsProps {
   form: Controller["form"];
   setField: Controller["setField"];
+  /** En edición, si la cuenta ya tiene movimientos no se permite cambiar moneda. */
+  monedaBloqueada?: boolean;
 }
 
-export function NuevaCuentaFormFields({ form, setField }: NuevaCuentaFormFieldsProps) {
+export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false }: NuevaCuentaFormFieldsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
