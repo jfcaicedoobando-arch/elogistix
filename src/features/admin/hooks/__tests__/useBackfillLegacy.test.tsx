@@ -46,7 +46,9 @@ describe("useBackfillLegacy", () => {
       await result.current.mutateAsync().catch(() => undefined);
     });
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
-    expect(toastError.mock.calls[0][0]).toBe("permission denied");
+    // notifyError() usa título fijo + el mensaje real como descripción.
+    expect(toastError.mock.calls[0][0]).toBe("No se pudo ejecutar el backfill");
+    expect(toastError.mock.calls[0][1]).toMatchObject({ description: "permission denied" });
     expect(onSuccess).not.toHaveBeenCalled();
   });
 });
