@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.544.2] - 2026-08-12
+- CxP: se corrigió el error que tumbaba el modal "Capturar factura de proveedor" al abrirlo desde /compras/facturas (aviso de cambios sin guardar incompatible con el router de la app).
+- El aviso "¿Salir sin guardar?" ahora funciona en todos los formularios largos (CxP, conceptos de factura y wizard de embarques) al hacer clic en enlaces internos o cerrar la pestaña.
+
+
 ## [13.544.1] - 2026-08-12
 - Arquitectura: se dividieron el listado de embarques y el modal de traspasos en componentes más chicos (tarjeta móvil y selector de cuenta) para respetar el límite de 200 líneas por archivo; sin cambios visibles para el usuario.
 
