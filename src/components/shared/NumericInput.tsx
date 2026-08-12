@@ -45,12 +45,13 @@ const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
     return (
       <Input
         ref={ref}
+        {...rest}
         type="text"
         inputMode={decimals ? "decimal" : "numeric"}
         value={text}
         disabled={disabled}
         placeholder={placeholder ?? "0"}
-        aria-label={rest["aria-label"]}
+
         onFocus={(e) => e.currentTarget.select()}
         onChange={(e) => {
           const v = e.target.value;
