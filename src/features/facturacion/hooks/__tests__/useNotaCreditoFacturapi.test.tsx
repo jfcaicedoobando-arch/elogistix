@@ -67,7 +67,7 @@ describe("useTimbrarNotaCredito", () => {
     result.current.mutate("nc-2");
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(notifyError.mock.calls[0]![1].title).toContain("nc fail");
+    expect(notifyError.mock.calls[0]![1].description).toContain("nc fail");
     qc.clear();
   });
 });
@@ -96,7 +96,7 @@ describe("useCancelarNotaCredito", () => {
     result.current.mutate({ notaCreditoId: "nc-10", motivo: "01", sustituyeUuid: "u-old" });
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(notifyError.mock.calls[0]![1].title).toContain("cancel fail");
+    expect(notifyError.mock.calls[0]![1].description).toContain("cancel fail");
     qc.clear();
   });
 });

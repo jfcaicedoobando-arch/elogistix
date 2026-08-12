@@ -123,19 +123,19 @@ describe("cotizacion.extra — calcularFechaVigencia extra cases", () => {
   });
 
   it("default 15 días desde fecha base fija", () => {
-    expect(calcularFechaVigencia(new Date("2026-01-01T00:00:00Z"))).toBe("2026-01-16");
+    expect(calcularFechaVigencia(new Date("2026-01-01T00:00:00"))).toBe("2026-01-16");
   });
 
   it("vigenciaDias null → usa 15 días", () => {
-    expect(calcularFechaVigencia(new Date("2026-03-01T00:00:00Z"), null)).toBe("2026-03-16");
+    expect(calcularFechaVigencia(new Date("2026-03-01T00:00:00"), null)).toBe("2026-03-16");
   });
 
   it("vigenciaDias 30 → 30 días después", () => {
-    expect(calcularFechaVigencia(new Date("2026-01-01T00:00:00Z"), 30)).toBe("2026-01-31");
+    expect(calcularFechaVigencia(new Date("2026-01-01T00:00:00"), 30)).toBe("2026-01-31");
   });
 
   it("vigenciaDias 0 → misma fecha", () => {
-    expect(calcularFechaVigencia(new Date("2026-06-01T00:00:00Z"), 0)).toBe("2026-06-01");
+    expect(calcularFechaVigencia(new Date("2026-06-01T00:00:00"), 0)).toBe("2026-06-01");
   });
 
   it("resultado en formato YYYY-MM-DD", () => {

@@ -13,6 +13,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 
 import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { usePermissions } from "@/hooks/shared";
+import { useDirtyGuard } from "@/hooks/shared/useDirtyGuard";
 import { DialogFacturaProveedorSinPermiso } from "@/features/cxp/components/DialogFacturaProveedorSinPermiso";
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
@@ -83,6 +84,12 @@ function DialogNuevaFacturaProveedorForm({
   const ret = Number(ctl.values.retenciones) || 0;
   const moneda = ctl.values.moneda;
 
+  // FE-11: si ya hay captura, avisamos antes de navegar o cerrar la pestaña.
+  const hayCaptura =
+    Boolean(ctl.values.provId) || sub > 0 ||
+    Boolean(ctl.values.folio) || ctl.conceptosManuales.conceptos.length > 0;
+  const { guardDialog } = useDirtyGuard(open && hayCaptura && !ctl.isPending);
+
   const { conceptosParaCuadre, cuadre, keyRenglonSospechoso } = useCuadreCaptura({
     subtotal: sub,
     cfdiConceptos: ctl.cfdiConceptos,
@@ -120,6 +127,8 @@ function DialogNuevaFacturaProveedorForm({
   );
 
   return (
+    <>
+    {guardDialog}
     <FormDialogShell
         open={open}
         onOpenChange={(o) => { if (!o) ctl.reset(); onOpenChange(o); }}
@@ -183,6 +192,7 @@ function DialogNuevaFacturaProveedorForm({
           </div>
         </div>
     </FormDialogShell>
+    </>
   );
 }
 

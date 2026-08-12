@@ -138,7 +138,7 @@ describe("useCancelarFactura", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     expect(notifyError).toHaveBeenCalledTimes(1);
-    expect(notifyError.mock.calls[0]![1].title).toContain("no se pudo");
+    expect(notifyError.mock.calls[0]![1].description).toContain("no se pudo");
     qc.clear();
   });
 });

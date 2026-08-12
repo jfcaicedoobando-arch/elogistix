@@ -155,22 +155,22 @@ describe("mapCostosACostosEmbarque", () => {
 
 describe("calcularFechaVigencia", () => {
   it("suma vigenciaDias a la fecha base y devuelve YYYY-MM-DD", () => {
-    const base = new Date("2026-01-10T00:00:00Z");
+    const base = new Date("2026-01-10T00:00:00");
     expect(calcularFechaVigencia(base, 15)).toBe("2026-01-25");
   });
 
   it("usa default de 15 días cuando vigenciaDias es null", () => {
-    const base = new Date("2026-01-01T00:00:00Z");
+    const base = new Date("2026-01-01T00:00:00");
     expect(calcularFechaVigencia(base, null)).toBe("2026-01-16");
   });
 
   it("usa default de 15 días cuando vigenciaDias es undefined", () => {
-    const base = new Date("2026-02-01T00:00:00Z");
+    const base = new Date("2026-02-01T00:00:00");
     expect(calcularFechaVigencia(base, undefined)).toBe("2026-02-16");
   });
 
   it("acepta vigencias de 0 días (mismo día)", () => {
-    const base = new Date("2026-03-15T00:00:00Z");
+    const base = new Date("2026-03-15T00:00:00");
     expect(calcularFechaVigencia(base, 0)).toBe("2026-03-15");
   });
 });

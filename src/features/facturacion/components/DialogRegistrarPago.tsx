@@ -7,7 +7,7 @@
  * (Recibo Electrónico de Pago) vía `emitirRep`. La lógica de submit + auto-REP
  * vive en `useRegistrarPagoSubmit` para mantener este componente delgado.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDownToLine } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useExchangeRates } from "@/features/catalogos/hooks";
@@ -30,6 +30,8 @@ interface Factura {
   metodoPago?: string | null;
   /** UUID fiscal del CFDI emitido. Sin él no se puede timbrar REP. */
   uuidFiscal?: string | null;
+  /** Fecha de emisión (ISO corto). FE-03: cota inferior para la fecha del pago. */
+  fechaEmision?: string | null;
 }
 
 interface Props {
@@ -52,6 +54,18 @@ function convertirAMonedaFactura(
 
 const today = () => todayLocalISO();
 
+/** FE-03 / UIA-06: misma regla y mensajes que `validarFechas` de CxP. */
+export function validarFechaPago(
+  fecha: string, hoy: string, fechaEmision?: string | null,
+): string | null {
+  if (!fecha) return "Captura la fecha del pago";
+  if (fecha > hoy) return "La fecha del pago no puede ser futura";
+  if (fechaEmision && fecha < fechaEmision) {
+    return "La fecha del pago no puede ser anterior a la fecha de emisión de la factura";
+  }
+  return null;
+}
+
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: rates } = useExchangeRates();
   const { data: cuentas = [] } = useCuentasBancarias();
@@ -70,15 +84,23 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
   });
 
+  // FE-02: inicializar una sola vez por apertura (open + factura.id). Antes las
+  // deps vivas (objeto factura nuevo en cada refetch, saldo derivado de queries)
+  // re-ejecutaban el efecto y borraban lo que el usuario ya había capturado.
+  const initializedForRef = useRef<string | null>(null);
   useEffect(() => {
-    if (open && factura) {
-      setValues({
-        fecha: today(),
-        monto: saldo > 0 ? saldo.toFixed(2) : "",
-        moneda: factura.moneda,
-        formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
-      });
+    if (!open || !factura) {
+      initializedForRef.current = null;
+      return;
     }
+    if (initializedForRef.current === factura.id) return;
+    initializedForRef.current = factura.id;
+    setValues({
+      fecha: today(),
+      monto: saldo > 0 ? saldo.toFixed(2) : "",
+      moneda: factura.moneda,
+      formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
+    });
   }, [open, factura, saldo]);
 
   if (!factura) return null;
@@ -93,7 +115,9 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const tcBloqueado = factorEntreMonedas(values.moneda, factura.moneda, {
     usd: rates?.usdMxn, eur: rates?.eurMxn,
   }) === null;
-  const invalido = montoNum <= 0 || excede || tcBloqueado;
+  // FE-03 / UIA-06: fecha futura o anterior a la emisión distorsiona REP y aging.
+  const errorFecha = validarFechaPago(values.fecha, today(), factura.fechaEmision);
+  const invalido = montoNum <= 0 || excede || tcBloqueado || errorFecha !== null;
   const esPpdTimbrada = factura.metodoPago === "PPD" && !!factura.uuidFiscal;
 
   const handleChange = <K extends keyof PagoFormValues>(k: K, v: PagoFormValues[K]) =>
@@ -105,20 +129,23 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       ...(k === "moneda" ? { cuentaBancariaId: "" } : null),
     }));
 
-  const handleGuardar = () => submit({
-    facturaId: factura.id,
-    facturaNumero: factura.numero,
-    fecha: values.fecha,
-    monto: montoNum,
-    moneda: values.moneda as "MXN" | "USD" | "EUR",
-    tipoCambio,
-    montoAplicado,
-    formaPago: values.formaPago,
-    referencia: values.referencia,
-    notas: values.notas,
-    cuentaBancariaId: values.cuentaBancariaId || null,
-    esPpdTimbrada,
-  });
+  const handleGuardar = () => {
+    if (invalido) return; // FE-03: defensa en el handler, no sólo botón deshabilitado
+    submit({
+      facturaId: factura.id,
+      facturaNumero: factura.numero,
+      fecha: values.fecha,
+      monto: montoNum,
+      moneda: values.moneda as "MXN" | "USD" | "EUR",
+      tipoCambio,
+      montoAplicado,
+      formaPago: values.formaPago,
+      referencia: values.referencia,
+      notas: values.notas,
+      cuentaBancariaId: values.cuentaBancariaId || null,
+      esPpdTimbrada,
+    });
+  };
 
   const headerAside = (
     <ResumenSaldo total={factura.total} pagado={totalPagado} saldo={saldo} moneda={factura.moneda} />
@@ -157,6 +184,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
         excede={excede}
         saldo={saldo}
         tcBloqueado={tcBloqueado}
+        errorFecha={errorFecha}
       />
 
     </FormDialogShell>

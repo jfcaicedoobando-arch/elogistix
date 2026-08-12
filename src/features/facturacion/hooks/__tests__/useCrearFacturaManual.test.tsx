@@ -82,7 +82,7 @@ describe("useCrearFacturaManual", () => {
     result.current.mutate({ input: fakeInput, timbrarAlGuardar: true });
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(notifyError.mock.calls[0]![1].title).toContain("no devolvió folio fiscal");
+    expect(notifyError.mock.calls[0]![1].description).toContain("no devolvió folio fiscal");
     expect(toastSuccess).not.toHaveBeenCalled();
     qc.clear();
   });
@@ -95,7 +95,7 @@ describe("useCrearFacturaManual", () => {
     result.current.mutate({ input: fakeInput, timbrarAlGuardar: false });
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(notifyError.mock.calls[0]![1].title).toContain("crear fail");
+    expect(notifyError.mock.calls[0]![1].description).toContain("crear fail");
     qc.clear();
   });
 
@@ -108,7 +108,7 @@ describe("useCrearFacturaManual", () => {
     result.current.mutate({ input: fakeInput, timbrarAlGuardar: true });
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(notifyError.mock.calls[0]![1].title).toContain("timbrado fail");
+    expect(notifyError.mock.calls[0]![1].description).toContain("timbrado fail");
     qc.clear();
   });
 });

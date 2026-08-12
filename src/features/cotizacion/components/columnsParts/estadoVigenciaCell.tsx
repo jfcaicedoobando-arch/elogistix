@@ -12,7 +12,9 @@ import { todayLocalISO } from "@/lib/date/today";
 function buildVigenciaNode(fechaVigencia: string, estado: string): ReactNode {
   const fechaStr = formatDate(fechaVigencia);
   const esEnviada = estado.toLowerCase() === "enviada";
-  const fecha = new Date(fechaVigencia);
+  // FE-04: un date-only ("YYYY-MM-DD") se parsea como medianoche UTC; con
+  // "T00:00:00" es medianoche LOCAL y el badge deja de adelantarse medio día.
+  const fecha = new Date(`${fechaVigencia}T00:00:00`);
   const diffDias = Math.ceil((fecha.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
   // v13.223.0 · Capa 3 Tranche A · 3.3: la fila de "Vence" ya no aparece

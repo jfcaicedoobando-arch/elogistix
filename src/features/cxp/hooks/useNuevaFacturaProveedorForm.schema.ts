@@ -59,11 +59,43 @@ export function buildFacturaFormSchema(ctx: FacturaFormValidationContext) {
       if (!values.categoriaId) {
         refCtx.addIssue({ code: "custom", path: ["categoriaId"], message: "Selecciona una categoría contable" });
       }
+      // FE-06a: componentes no negativos. Sin esto, subtotal = -100 e iva = 200
+      // dan total = 100 y pasaban la única validación existente (total > 0).
+      const componentes: Array<[keyof typeof values, string, string]> = [
+        ["subtotal", values.subtotal, "El subtotal no puede ser negativo"],
+        ["iva", values.iva, "El IVA no puede ser negativo"],
+        ["ieps", values.ieps, "El IEPS no puede ser negativo"],
+        ["retenciones", values.retenciones, "Las retenciones no pueden ser negativas"],
+      ];
+      for (const [campo, texto, mensaje] of componentes) {
+        if (texto.trim() !== "" && Number(texto) < 0) {
+          refCtx.addIssue({ code: "custom", path: [campo], message: mensaje });
+        }
+      }
+      // FE-06b: aging coherente — el vencimiento no puede ser anterior a la emisión.
+      if (
+        values.emision.trim() && values.vencimiento.trim() &&
+        values.vencimiento < values.emision
+      ) {
+        refCtx.addIssue({
+          code: "custom",
+          path: ["vencimiento"],
+          message: "La fecha de vencimiento no puede ser anterior a la fecha de emisión",
+        });
+      }
       if (ctx.total <= 0) {
         refCtx.addIssue({ code: "custom", path: ["subtotal"], message: "El total debe ser mayor a 0" });
       }
       if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
         refCtx.addIssue({ code: "custom", path: ["tc"], message: "Captura el tipo de cambio" });
+      }
+      // FE-06c: mismo tope que el módulo de pagos CxP (TC_MAX = 1000).
+      if (Number(values.tc) > 1000) {
+        refCtx.addIssue({
+          code: "custom",
+          path: ["tc"],
+          message: "El tipo de cambio no puede ser mayor a 1000",
+        });
       }
     });
 }

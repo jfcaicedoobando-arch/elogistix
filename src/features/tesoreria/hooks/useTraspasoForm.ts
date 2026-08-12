@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 type Cuenta = Tables<"cuentas_bancarias">;
 
@@ -61,7 +62,9 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     if (!state.montoOrigen || state.montoOrigen <= 0) return 0;
     if (mismoMoneda) return state.montoOrigen;
     if (!state.tipoCambio || state.tipoCambio <= 0) return 0;
-    return state.montoOrigen * state.tipoCambio;
+    // FE-07: la RPC redondea con ROUND(monto*tc, 2); el preview debe coincidir
+    // centavo a centavo con el abono real.
+    return roundMoney(state.montoOrigen * state.tipoCambio);
   }, [state.montoOrigen, mismoMoneda, state.tipoCambio]);
 
   const error = useMemo(() => {
@@ -69,6 +72,9 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     if (state.origenId === state.destinoId) return "La cuenta origen y destino deben ser distintas.";
     if (!state.montoOrigen || state.montoOrigen <= 0) return "El monto debe ser mayor a cero.";
     if (!origen?.activa || !destino?.activa) return "Ambas cuentas deben estar activas.";
+    // FE-07: fecha del traspaso obligatoria y nunca futura.
+    if (!state.fecha) return "Captura la fecha del traspaso.";
+    if (state.fecha > hoyIso()) return "La fecha del traspaso no puede ser futura.";
     if (!mismoMoneda && (!state.tipoCambio || state.tipoCambio <= 0)) {
       return "Captura el tipo de cambio para cuentas de distinta moneda.";
     }

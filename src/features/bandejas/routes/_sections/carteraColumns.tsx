@@ -11,6 +11,7 @@ import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBui
 import { formatDate } from "@/lib/formatters";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { buildCarteraSelectionColumns } from "./carteraColumns.selection";
+import { diasVencidoCartera } from "./carteraDias";
 import type { CarteraRow } from "./carteraColumns.types";
 
 export type { CarteraRow };
@@ -52,11 +53,13 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
     {
       id: "dias",
       header: "Días vencido",
-      accessorFn: (r) => r.dias_vencido,
+      accessorFn: (r) => diasVencidoCartera(r.fecha_vencimiento, r.dias_vencido),
       enableSorting: true,
       meta: { width: COL_W.monto, align: "center", className: "whitespace-nowrap" },
       cell: ({ row }) => {
-        const d = row.original.dias_vencido;
+        // UIA-07: recalculado en cliente (la RPC desplegada puede ser pre-N9 y
+        // clampear a 0, mostrando "Vence hoy" en facturas por vencer).
+        const d = diasVencidoCartera(row.original.fecha_vencimiento, row.original.dias_vencido);
         if (d > 0) return <Badge variant="destructive">Vencida {d}d</Badge>;
         // B-019 (v13.320.42): antes decíamos "Por vencer 0d" cuando vence hoy —
         // era ambiguo (¿ya venció? ¿faltan 0 días?). Ahora "Vence hoy" es literal.
