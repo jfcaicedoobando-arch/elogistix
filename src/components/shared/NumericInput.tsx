@@ -9,8 +9,13 @@ interface NumericInputProps {
   className?: string;
   disabled?: boolean;
   placeholder?: string;
+  /** Necesario para ligar la etiqueta (`Label htmlFor`) y la navegación por teclado. */
+  id?: string;
+  name?: string;
   "aria-label"?: string;
+  "aria-describedby"?: string;
 }
+
 
 /**
  * Input numérico amigable:
