@@ -78,6 +78,12 @@ function isSustitutaViva(f: FacturaFlagsInput): boolean {
   if (!f.sustituida_por) return false;
   return !isEstadoCanceladoOSustituido(f.sustituida_por_ref?.estado);
 }
+/**
+ * Estados de factura que admiten registrar un cobro. Espeja la guardia de BD
+ * `assert_factura_viva_para_pago`, que sólo rechaza Cancelada/Sustituida/Borrador.
+ */
+const ESTADOS_COBRABLES = new Set(["Emitida", "Vencida", "Parcialmente pagada"]);
+
 
 function deriveActionFlags(
   f: FacturaFlagsInput,
@@ -98,7 +104,12 @@ function deriveActionFlags(
     f.cancellation_status === "pending" || f.cancellation_status === "verifying";
   const puedeCancelarCfdi = timbradaVigente && canEdit && !enTramiteCancelacion;
   const saldo = ctx.saldo ?? 0;
-  const vigenteCobrable = f.estado === "Emitida" && !estaCancelada;
+  // v13.547.0: antes sólo el estado "Emitida" habilitaba el cobro, así que una
+  // factura "Vencida" o "Parcialmente pagada" con saldo escondía el botón
+  // "Registrar pago" aunque la BD sí acepta el pago (assert_factura_viva_para_pago
+  // sólo rechaza Cancelada/Sustituida/Borrador). Mismo criterio aquí.
+  const vigenteCobrable = ESTADOS_COBRABLES.has(f.estado ?? "") && !estaCancelada;
+
   return {
     sinTimbrar,
     esBorrador,
