@@ -97,7 +97,8 @@ describe("useTimbrarRep", () => {
     expect(notifyError.mock.calls[0]![1].description).toContain("rep fail");
     qc.clear();
   });
-});
+
+
 
   it("409 ya timbrado: avisa en tono informativo y refresca en lugar de alertar", async () => {
     emitirRep.mockRejectedValue(new RepYaTimbradoErrorMock("Este pago ya tiene REP timbrado."));
