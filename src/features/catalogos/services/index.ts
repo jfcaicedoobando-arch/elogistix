@@ -169,17 +169,26 @@ export async function fetchExchangeRates(fecha?: string): Promise<ExchangeRates>
     reportCaughtError(error, { feature: "exchange_rates", op: "edge_invoke" });
     throw error;
   }
+  return mapExchangeRates(data);
+}
+
+/**
+ * Normaliza la respuesta 200 de la edge `exchange-rates` al contrato camelCase.
+ * FIX-10: la edge usa snake_case (`es_fallback`).
+ * RG18 (Ola 3): si el cuerpo viene sin `usdMxn`, estamos mostrando el fallback
+ * aunque la edge no lo haya marcado; hay que declararlo.
+ * EF-04: igual para el EUR (`eur_es_fallback` o `eurMxn: null`) — en ambos casos
+ * el valor mostrado (18.5) es estimado, no un TC real.
+ */
+function mapExchangeRates(data: Record<string, unknown> | null | undefined): ExchangeRates {
+  const usd = (data?.usdMxn ?? null) as number | null;
+  const eur = (data?.eurMxn ?? null) as number | null;
   return {
-    usdMxn: data?.usdMxn ?? EXCHANGE_RATES_FALLBACK.usdMxn,
-    eurMxn: data?.eurMxn ?? EXCHANGE_RATES_FALLBACK.eurMxn,
-    fechaAplicada: data?.fechaAplicada,
-    // FIX-10: la edge usa snake_case (`es_fallback`), el cliente camelCase.
-    // RG18 (Ola 3): si el cuerpo 200 viene sin `usdMxn`, estamos mostrando el
-    // fallback aunque la edge no lo haya marcado; hay que declararlo.
-    esFallback: data?.es_fallback === true || data?.usdMxn == null,
-    // EF-04: igual para el EUR — la edge lo declara con `eur_es_fallback` o
-    // con `eurMxn: null`; en ambos casos el valor mostrado (18.5) es estimado.
-    eurEsFallback: data?.eur_es_fallback === true || data?.eurMxn == null,
+    usdMxn: usd ?? EXCHANGE_RATES_FALLBACK.usdMxn,
+    eurMxn: eur ?? EXCHANGE_RATES_FALLBACK.eurMxn,
+    fechaAplicada: data?.fechaAplicada as string | undefined,
+    esFallback: data?.es_fallback === true || usd == null,
+    eurEsFallback: data?.eur_es_fallback === true || eur == null,
   };
 }
 
