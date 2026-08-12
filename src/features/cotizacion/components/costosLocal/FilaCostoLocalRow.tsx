@@ -35,10 +35,15 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
   const profit = calcularUtilidad(ventaTotal, costoTotal);
   const pct = calcularMargen(ventaTotal, costoTotal);
 
+  // B-081: renglón con importes y sin concepto → se descartaría al generar la
+  // venta y la cotización saldría en $0.00. Se marca y bloquea el avance.
+  const conceptoFaltante = filaCostoInvalida(fila);
+
   return (
-    <div className="border-b border-border last:border-b-0 py-3 px-3 space-y-1">
+    <div className={`border-b border-border last:border-b-0 py-3 px-3 space-y-1 ${conceptoFaltante ? "bg-destructive/5" : ""}`}>
       <div className="flex items-center gap-2">
         <div className="min-w-[220px] flex-1">
+
           {/* Combobox estricto contra `catalogo_claves_sat` — mismo origen que el paso 3. */}
           <ProductoServicioSelect
             value={fila.concepto}
