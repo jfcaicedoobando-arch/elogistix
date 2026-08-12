@@ -448,3 +448,24 @@ Adoptado en v8.143.0. Inspirado en las "Power of 10 Rules" de la NASA, adaptado 
 - **Fase 2:** Baseline read-only (script `scripts/audit-power10.ts`) con conteos por dominio.
 - **Fase 3:** Endurecimiento de `eslint.config.js` (`no-explicit-any`, `exhaustive-deps`, `max-lines-per-function: 200` con overrides). Violaciones legacy se silencian con `// eslint-disable-next-line` + TODO; PRs nuevos no pueden agregar.
 - **Fase 4:** Limpieza por dominio (auditoría → embarque → cotización → cliente → resto), un PR por dominio.
+
+---
+
+## 21. Fix packs de auditoría (v13.523.1)
+
+Paquetes de correcciones derivados de la auditoría integral sobre `main @ 1ef05ce9`.
+Cada archivo contiene, por hallazgo: severidad, archivos afectados, problema, instrucción y diff.
+
+| Documento | Alcance |
+|---|---|
+| [`FIXES_LOVABLE_COMPLETO.md`](./docs/audit-fixes/FIXES_LOVABLE_COMPLETO.md) | Consolidado de los 88 hallazgos, con índice por Wave de aplicación (Wave 0 = bloqueantes) |
+| [`fixes_BL.md`](./docs/audit-fixes/fixes_BL.md) | Business logic y base de datos (BL-01…BL-11): soft-delete CRM, traspasos, bitácora |
+| [`fixes_FE.md`](./docs/audit-fixes/fixes_FE.md) | Frontend, lógica de negocio y edge cases (FE-01…FE-12) |
+| [`fixes_UIA.md`](./docs/audit-fixes/fixes_UIA.md) | UI dinámica interna (UIA-01…UIA-17) |
+| [`fixes_UIB.md`](./docs/audit-fixes/fixes_UIB.md) | UI dinámica de portales públicos y landing (UIB-01…UIB-15) |
+| [`fixes_UX.md`](./docs/audit-fixes/fixes_UX.md) | UI/UX estática (UX-01…UX-14): confirmaciones destructivas, mensajes es-MX |
+| [`fixes_TC_N.md`](./docs/audit-fixes/fixes_TC_N.md) | Toolchain/tests (TC-01…TC-04) y verificación API/RLS (N1, N2) |
+| [`fixes_EF.md`](./docs/edge-functions/fixes_EF.md) | Edge Functions (EF-01…EF-13): timbrado REP, idempotencia, tipos de cambio |
+
+> Orden de aplicación: seguir el índice por Wave de `FIXES_LOVABLE_COMPLETO.md`.
+> Las migraciones de estos packs son archivos **nuevos**; nunca se editan migraciones existentes.
