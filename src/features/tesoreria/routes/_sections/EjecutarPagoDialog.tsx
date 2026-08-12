@@ -91,32 +91,31 @@ export function EjecutarPagoDialog({
         <DatePickerMx id="pago-fecha" value={form.fecha} onChange={(v) => setField("fecha", v)} className="w-full" />
       </div>
 
-        <div>
-          <Label htmlFor="pago-monto">Monto *</Label>
-          <MoneyInput
-            id="pago-monto"
-            value={form.monto}
-            onChange={(n: number) => setField("monto", n)}
-            currency={facturaPago?.moneda}
-            aria-invalid={form.monto <= 0}
-          />
-        </div>
-        <div>
-          <Label htmlFor="pago-metodo">Método de pago</Label>
-          <Select value={form.metodoPago} onValueChange={(v) => setField("metodoPago", v)}>
-            <SelectTrigger id="pago-metodo"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Transferencia">Transferencia</SelectItem>
-              <SelectItem value="Cheque">Cheque</SelectItem>
-              <SelectItem value="Efectivo">Efectivo</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="pago-referencia">Referencia</Label>
-          <Input id="pago-referencia" value={form.referencia} onChange={(e) => setField("referencia", e.target.value)} />
-        </div>
+      <div>
+        <Label htmlFor="pago-monto">Monto *</Label>
+        <MoneyInput
+          id="pago-monto"
+          value={form.monto}
+          onChange={(n: number) => setField("monto", n)}
+          currency={facturaPago?.moneda}
+          aria-invalid={form.monto <= 0}
+        />
       </div>
+      <div>
+        <Label htmlFor="pago-metodo">Método de pago</Label>
+        <Select value={form.metodoPago} onValueChange={(v) => setField("metodoPago", v)}>
+          <SelectTrigger id="pago-metodo"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Transferencia">Transferencia</SelectItem>
+            <SelectItem value="Cheque">Cheque</SelectItem>
+            <SelectItem value="Efectivo">Efectivo</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="pago-referencia">Referencia</Label>
+        <Input id="pago-referencia" value={form.referencia} onChange={(e) => setField("referencia", e.target.value)} />
+        </div>
     </FormDialogShell>
   );
 }
