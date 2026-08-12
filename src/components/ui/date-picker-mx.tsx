@@ -99,7 +99,8 @@ export function DatePickerMx({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled || readOnly) return;
-    const masked = applyMask(e.target.value);
+    // Máscara tolerante: respeta los separadores tecleados (`1/3/2026`).
+    const masked = applyMaskTyping(e.target.value);
     setText(masked);
     if (invalid) setInvalid(false);
     if (masked.length === 10) {
@@ -109,6 +110,7 @@ export function DatePickerMx({
       onChange("");
     }
   };
+
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     if (disabled || readOnly) return;
