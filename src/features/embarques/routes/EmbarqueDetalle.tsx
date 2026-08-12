@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useState } from "react";
 
-import { usePermissions, useTabsParam } from "@/hooks/shared";
+import { usePermissions, useTabsParam, useDocumentTitle } from "@/hooks/shared";
 import {
   calcularEstadoEmbarque,
   getSiguienteEstado,
