@@ -109,6 +109,7 @@ export function usePagoClienteLoteState(a: Args) {
     moneda: a.moneda,
   });
   const sinAsignar = round2(totalNum - totalRepartido);
+  const erroresRenglon = erroresPorRenglon(a.facturas, renglones);
   const repRequeridos = renglones.filter(
     (r) => r.monto > 0 && idsConRep.includes(r.factura_id),
   ).length;
@@ -123,6 +124,22 @@ export function usePagoClienteLoteState(a: Args) {
       prev.map((r) => (r.factura_id === facturaId ? { ...r, monto: round2(monto) } : r)),
     );
   };
+
+  const repartirFifoAhora = () => recalcular(totalNum);
+
+  const liquidarTodo = () => {
+    setTotal(String(saldoTotal));
+    setRenglones(repartirTodo(a.facturas));
+  };
+
+  const limpiarReparto = () => setRenglones(repartirCero(a.facturas));
+
+  const asignarSobrante = () =>
+    setRenglones((prev) => asignarSobranteFifo(a.facturas, prev, sinAsignar));
+
+  const asignarSaldo = (facturaId: string) =>
+    setRenglones((prev) => asignarSaldoFactura(a.facturas, prev, facturaId, sinAsignar));
+
 
   const submit = async () => {
     if (error) return;
