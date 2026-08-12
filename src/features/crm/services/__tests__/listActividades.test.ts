@@ -9,10 +9,10 @@ const state: {
   order: [string, { ascending: boolean; nullsFirst: boolean }] | null;
   eqs: Array<[string, string]>;
   ilike: [string, string] | null;
-  isNull: [string, null] | null;
+  isNull: Array<[string, unknown]>;
   notNull: [string, string, null] | null;
   range: [number, number] | null;
-} = { order: null, eqs: [], ilike: null, isNull: null, notNull: null, range: null };
+} = { order: null, eqs: [], ilike: null, isNull: [], notNull: null, range: null };
 
 const builder: Record<string, unknown> = {
   select: vi.fn().mockReturnThis(),
@@ -29,7 +29,7 @@ const builder: Record<string, unknown> = {
     return builder;
   }),
   is: vi.fn((col: string, v: null) => {
-    state.isNull = [col, v];
+    state.isNull.push([col, v]);
     return builder;
   }),
   not: vi.fn((col: string, op: string, v: null) => {
@@ -50,7 +50,7 @@ beforeEach(() => {
   state.order = null;
   state.eqs = [];
   state.ilike = null;
-  state.isNull = null;
+  state.isNull = [];
   state.notNull = null;
   state.range = null;
 });
@@ -72,14 +72,14 @@ describe("listActividades — contrato server-side", () => {
 
   it("estado=pendientes usa is(fecha_completada, null)", async () => {
     await listActividades({ ...base, estado: "pendientes" });
-    expect(state.isNull).toEqual(["fecha_completada", null]);
+    expect(state.isNull).toContainEqual(["fecha_completada", null]);
     expect(state.notNull).toBeNull();
   });
 
   it("estado=completadas usa not(fecha_completada, is, null)", async () => {
     await listActividades({ ...base, estado: "completadas" });
     expect(state.notNull).toEqual(["fecha_completada", "is", null]);
-    expect(state.isNull).toBeNull();
+    expect(state.isNull.find(([k]) => k === "fecha_completada")).toBeUndefined();
   });
 
   it("responsable=mias con userId agrega eq(responsable_id, userId)", async () => {
