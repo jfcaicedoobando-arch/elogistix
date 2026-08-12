@@ -26,14 +26,29 @@ const INITIAL_FORM = {
   fechaSaldoInicial: todayLocalISO(),
 };
 
+export interface CuentaEditable {
+  id: string;
+  alias: string;
+  banco: string;
+  moneda: string;
+  numero_cuenta: string | null;
+  clabe: string | null;
+  saldo_inicial: number | string;
+  fecha_saldo_inicial: string;
+}
+
 export function useTesoreriaCuentasController() {
   const { data: cuentas = [], isLoading, isError, refetch } = useCuentasBancarias(false);
   const crear = useCrearCuenta();
+  const actualizar = useActualizarCuenta();
   const eliminar = useEliminarCuenta();
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
+  const [editTarget, setEditTarget] = useState<CuentaEditable | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; alias: string } | null>(null);
+  const { data: tieneMovimientos = false } = useTieneMovimientosCuenta(editTarget?.id ?? null);
+
 
   const setField = <K extends keyof typeof INITIAL_FORM>(key: K, value: (typeof INITIAL_FORM)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
