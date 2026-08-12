@@ -2,12 +2,9 @@ name: E2E (Playwright)
 
 # Corridas automáticas de la suite Playwright contra staging.
 #
-# Triggers:
+# Triggers (CI simplificado):
 #   - workflow_dispatch  → manual (con opción de override de E2E_BASE_URL).
-#   - schedule diario    → 12:30 UTC (06:30 CDMX), después de post-deploy-smoke.
-#   - workflow_run       → tras el smoke diario si terminó ok.
-#   - pull_request       → SOLO cuando el PR toca specs, config o helpers de E2E,
-#                          para no bloquear PRs de UI con la suite completa.
+#   - schedule diario    → 12:30 UTC (06:30 CDMX).
 #
 # Estrategia:
 #   - `internal-shard` (matrix 1..3): specs read-only del project `chromium-internal`
@@ -34,14 +31,6 @@ on:
         type: string
   schedule:
     - cron: "30 12 * * *"
-  workflow_run:
-    workflows: ["post-deploy-smoke"]
-    types: [completed]
-  pull_request:
-    paths:
-      - "e2e/**"
-      - "playwright.config.ts"
-      - ".github/workflows/e2e.yml"
 
 permissions:
   contents: read
