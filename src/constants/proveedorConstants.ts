@@ -1,7 +1,6 @@
 import type { Enums } from "@/integrations/supabase/types";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Moneda = Enums<'moneda'>;
-type CategoriaProveedor = Enums<'categoria_proveedor'>;
 type SubtipoGasto = Enums<'subtipo_gasto_operativo'>;
 
 export const TIPOS_PROVEEDOR: TipoProveedor[] = [
