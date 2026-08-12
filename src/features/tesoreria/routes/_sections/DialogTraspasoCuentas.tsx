@@ -5,12 +5,13 @@
  * comisión opcional en `bbva_movimientos`, todos auto-conciliados.
  */
 import { ArrowRightLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TraspasoCuentaSelect } from "./TraspasoCuentaSelect";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
