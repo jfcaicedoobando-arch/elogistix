@@ -37,18 +37,27 @@ export function DocumentoTabs({ tabs, param = "tab", className }: Props) {
 
   return (
     <Tabs value={activo} onValueChange={onChange} className={cn("w-full", className)}>
-      <TabsList className="flex h-auto w-full max-w-full justify-start gap-1 overflow-x-auto whitespace-nowrap">
-        {tabs.map((t) => (
-          <TabsTrigger key={t.id} value={t.id} className="gap-1.5">
-            {t.label}
-            {typeof t.count === "number" && t.count > 0 ? (
-              <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums text-muted-foreground">
-                {t.count}
-              </span>
-            ) : null}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      {/* v13.548.0: cuando las pestañas no caben, el degradado del borde
+          derecho avisa que hay más secciones a las que se puede desplazar. */}
+      <div className="relative">
+        <TabsList className="flex h-auto w-full max-w-full justify-start gap-1 overflow-x-auto whitespace-nowrap">
+          {tabs.map((t) => (
+            <TabsTrigger key={t.id} value={t.id} className="shrink-0 gap-1.5">
+              {t.label}
+              {typeof t.count === "number" && t.count > 0 ? (
+                <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums text-muted-foreground">
+                  {t.count}
+                </span>
+              ) : null}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-md bg-gradient-to-l from-background to-transparent"
+        />
+      </div>
+
       {tabs.map((t) => (
         <TabsContent key={t.id} value={t.id} className="mt-4 space-y-4">
           {t.content}

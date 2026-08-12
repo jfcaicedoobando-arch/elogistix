@@ -20,7 +20,11 @@ export function DocumentoLayout({ children, rail, className }: Props) {
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-4 lg:grid-cols-[1fr_19rem] xl:grid-cols-[1fr_21rem]",
+        // v13.548.0: el riel se coloca al costado desde `xl` (1280). En `lg`
+        // dejaba la columna principal en ~380px y la tabla de conceptos se
+        // cortaba; ahora debajo de 1280 el historial se apila al final.
+        "grid grid-cols-1 gap-4 xl:grid-cols-[1fr_19rem] 2xl:grid-cols-[1fr_21rem]",
+
         className,
       )}
     >

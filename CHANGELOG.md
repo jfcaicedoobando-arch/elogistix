@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.548.0] - 2026-08-12
+- Detalle de factura (y las 23 pantallas de detalle que comparten el encabezado): se corrigió el acomodo entre **1024 y 1280 px** de ancho —el rango del preview y de muchas laptops—, donde la barra de acciones aplastaba la columna del título y el folio quedaba invisible o cortado detrás de los botones.
+- La barra de acciones ahora baja a su propio renglón completo debajo de 1280 px y el título conserva un ancho mínimo legible; con esto también desaparece el hueco vertical vacío que se formaba antes de la cinta de totales.
+- El riel de **Historial y actividad** se coloca al costado sólo desde 1280 px; debajo se apila al final, para que la tabla de conceptos no se corte en una columna angosta.
+- Las pestañas del documento muestran un degradado en el borde derecho cuando hay más secciones a las que desplazarse.
+- La tabla de conceptos usa la vista de tarjetas hasta 1024 px, evitando columnas de IVA e importe comprimidas.
+
 ## [13.547.0] - 2026-08-12
 - Facturación: el botón **"Registrar pago"** ya aparece en facturas **Vencidas** y **Parcialmente pagadas** con saldo. Antes sólo se mostraba en estado "Emitida", así que una factura vencida no se podía cobrar desde su detalle aunque la base de datos sí lo permitía.
 - Los estados Cancelada, Sustituida, Borrador, Por timbrar y Pagada siguen sin permitir cobros.
