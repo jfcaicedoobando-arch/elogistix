@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.523.0] - 2026-08-12
+- Tests (limpieza) — borrados 7 tests triviales sin valor: 3 tests de barrel que sólo hacían `expect(fn).toBeDefined()` (`auditoria`, `cxp`, `presupuesto` en `services/__tests__/index.test.ts`) y 4 tests de constantes literales (`useTasaIVA.test.tsx`, `embarqueConstants.test.ts`, `constantsSmoke.test.ts`, `pdf/theme/tokens.test.ts`). Los otros 16 tests de barrels sí ejercitan Supabase/RPCs y se conservan; `estados-embarque-sync.test.ts` se conserva como guardrail de la máquina de estados.
+- Config — eliminado el script `test:shards:serial` de `package.json` (sin uso). Removida de `src/test/setup.ts` la instrumentación de debug `[shard-trace]` FILE_START/FILE_END (y el import `beforeAll` que quedó sin uso). Corregido el comentario de thresholds en `vitest.config.ts`: decía `@vitest/coverage-v8 v4.1.9` cuando la versión instalada es `3.2.4`; los valores de los umbrales quedan idénticos.
+- Verificación: `lint`, `typecheck` y suite completa en verde (1016 archivos / 6805 tests).
+
+
 ## [13.522.1] - 2026-08-12
 - CI (fix) — `deno test` del job `edge-functions` regresa a `--no-check`. Al activar el typecheck completo en v13.521.0 aparecieron 43 falsos positivos propios del checker de Deno (directivas `@ts-expect-error` marcadas como "sin usar" para globals de `Deno`, y desajustes entre los tipos generados de Supabase y `SupabaseClient`), que bloqueaban el CI sin representar bugs reales. El typecheck de la app sigue cubierto por el job `typecheck`.
 
