@@ -2,7 +2,7 @@
  * Helpers puros del resumen de tesorería (extraídos de `./resumen.ts` para
  * respetar el límite de 200 líneas · Power of 10).
  */
-import type { CobranzaRow, CxpRow, FlujoMes, TopItem } from "./resumenTipos";
+import type { CobranzaRow, CxpRow, FlujoMes, TopItem } from "./resumen.types";
 
 export function calcularFlujo(
   cobranza: CobranzaRow[],
