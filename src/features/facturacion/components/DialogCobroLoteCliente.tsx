@@ -12,7 +12,9 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { formatCurrency } from "@/lib/formatters";
 import { usePagoClienteLoteState } from "@/features/facturacion/hooks/usePagoClienteLoteState";
+import { DialogCobroLoteAcciones } from "./DialogCobroLoteAcciones";
 import { DialogCobroLoteDatos } from "./DialogCobroLoteDatos";
+
 import { DialogCobroLoteRenglones } from "./DialogCobroLoteRenglones";
 import { DialogCobroLoteResumen } from "./DialogCobroLoteResumen";
 import type { FacturaCobroCandidata } from "@/features/facturacion/services/pagoClienteLote";
