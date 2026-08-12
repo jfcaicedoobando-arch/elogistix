@@ -7,9 +7,10 @@ import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
 import {
-  listarCuentas, crearCuenta, eliminarCuenta, fetchSaldosCuentas,
+  listarCuentas, crearCuenta, actualizarCuenta, eliminarCuenta, fetchSaldosCuentas,
+  cuentaTieneMovimientos,
 } from "@/features/tesoreria/services";
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
