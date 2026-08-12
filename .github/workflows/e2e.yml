@@ -113,7 +113,6 @@ jobs:
           done
           scheduled=0
           [ "$EVENT_NAME" = "schedule" ] && scheduled=1
-          [ "$EVENT_NAME" = "workflow_run" ] && scheduled=1
           if [ -n "$core_missing" ]; then
             if [ "$scheduled" = "1" ]; then
               echo "::error::E2E secrets ausentes en corrida agendada:$core_missing — la suite NO corrió (verde vacío prohibido)."
@@ -425,7 +424,7 @@ jobs:
         run: |
           if [ -z "${E2E_MT_A_EMAIL}" ] || [ -z "${E2E_MT_A_PASSWORD}" ] || \
              [ -z "${E2E_MT_B_EMAIL}" ] || [ -z "${E2E_MT_B_PASSWORD}" ]; then
-            if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_run" ]; then
+            if [ "$EVENT_NAME" = "schedule" ]; then
               echo "::error::E2E_MT_* secrets ausentes en corrida agendada — el job multi-tenant NO corrió."
               exit 1
             fi
@@ -491,9 +490,9 @@ jobs:
       - uses: ./.github/actions/setup-bun
 
       - name: Gate global anti-skip (corridas agendadas)
-        # v13.x (GHA-audit A1/M8) — en schedule/workflow_run ningún job de tests
+        # v13.x (GHA-audit A1/M8) — en corridas agendadas ningún job de tests
         # puede quedar `skipped`: sería un verde sin cobertura real.
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_run'
+        if: github.event_name == 'schedule'
         env:
           R_INTERNAL: ${{ needs.internal-shard.result }}
           R_MUTATORS: ${{ needs.mutators.result }}
@@ -545,8 +544,8 @@ jobs:
   notify-failure:
     name: Notificar regresión E2E (issue)
     needs: [merge-reports]
-    # Solo en runs agendados / workflow_run (no en PRs, ni en dispatch).
-    if: ${{ failure() && (github.event_name == 'schedule' || github.event_name == 'workflow_run') }}
+    # Solo en runs agendados (no en dispatch manual).
+    if: ${{ failure() && github.event_name == 'schedule' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
