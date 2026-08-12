@@ -8,13 +8,22 @@ import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { usePagoClienteLote } from "@/features/facturacion/hooks/usePagoClienteLote";
 import { todayLocalISO } from "@/lib/date/today";
 import {
+  erroresPorRenglon,
   obtenerFacturasConRep,
+  repartirCero,
   repartirFifo,
+  repartirTodo,
   round2,
   validarCobroLote,
   type FacturaCobroCandidata,
   type RenglonCobro,
 } from "@/features/facturacion/services/pagoClienteLote";
+import {
+  asignarSaldoFactura,
+  asignarSobrante as asignarSobranteFifo,
+} from "@/features/facturacion/services/cobroLoteAtajos";
+
+
 
 interface Args {
   open: boolean;
@@ -105,6 +114,7 @@ export function usePagoClienteLoteState(a: Args) {
     moneda: a.moneda,
   });
   const sinAsignar = round2(totalNum - totalRepartido);
+  const erroresRenglon = erroresPorRenglon(a.facturas, renglones);
   const repRequeridos = renglones.filter(
     (r) => r.monto > 0 && idsConRep.includes(r.factura_id),
   ).length;
@@ -119,6 +129,22 @@ export function usePagoClienteLoteState(a: Args) {
       prev.map((r) => (r.factura_id === facturaId ? { ...r, monto: round2(monto) } : r)),
     );
   };
+
+  const repartirFifoAhora = () => recalcular(totalNum);
+
+  const liquidarTodo = () => {
+    setTotal(String(saldoTotal));
+    setRenglones(repartirTodo(a.facturas));
+  };
+
+  const limpiarReparto = () => setRenglones(repartirCero(a.facturas));
+
+  const asignarSobrante = () =>
+    setRenglones((prev) => asignarSobranteFifo(a.facturas, prev, sinAsignar));
+
+  const asignarSaldo = (facturaId: string) =>
+    setRenglones((prev) => asignarSaldoFactura(a.facturas, prev, facturaId, sinAsignar));
+
 
   const submit = async () => {
     if (error) return;
@@ -145,8 +171,11 @@ export function usePagoClienteLoteState(a: Args) {
   return {
     fecha, setFecha, total, formaPago, setFormaPago, referencia, setReferencia,
     cuentaId, setCuentaId, notas, setNotas, renglones,
-    saldoTotal, tcDof, tcAplicable, cuentasMoneda,
-    error, sinAsignar, totalRepartido, repRequeridos, recalcular, setMonto, submit,
+    saldoTotal, tcDof, tcAplicable, cuentasMoneda, totalNum, idsConRep,
+    error, erroresRenglon, sinAsignar, totalRepartido, repRequeridos,
+    recalcular, setMonto, repartirFifoAhora, liquidarTodo, limpiarReparto,
+    asignarSobrante, asignarSaldo, submit,
     guardando: registrar.isPending,
   };
+
 }

@@ -12,7 +12,9 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { formatCurrency } from "@/lib/formatters";
 import { usePagoClienteLoteState } from "@/features/facturacion/hooks/usePagoClienteLoteState";
+import { DialogCobroLoteAcciones } from "./DialogCobroLoteAcciones";
 import { DialogCobroLoteDatos } from "./DialogCobroLoteDatos";
+
 import { DialogCobroLoteRenglones } from "./DialogCobroLoteRenglones";
 import { DialogCobroLoteResumen } from "./DialogCobroLoteResumen";
 import type { FacturaCobroCandidata } from "@/features/facturacion/services/pagoClienteLote";
@@ -71,10 +73,12 @@ export function DialogCobroLoteCliente(p: Props) {
           facturas={p.facturas}
           renglones={s.renglones}
           moneda={p.moneda}
+          recibido={s.totalNum}
           totalRepartido={s.totalRepartido}
           sinAsignar={s.sinAsignar}
           error={s.error}
           repRequeridos={s.repRequeridos}
+          onAsignarSobrante={s.asignarSobrante}
         />
       }
       footer={footer}
@@ -99,15 +103,27 @@ export function DialogCobroLoteCliente(p: Props) {
       <FormDialogSection
         flat
         title="Reparto entre facturas"
-        description="Se aplica primero lo que vence antes. Puedes ajustar cada importe."
+        description="Se aplica primero lo que vence antes. Puedes ajustar cada importe o usar los atajos."
       >
-        <DialogCobroLoteRenglones
-          facturas={p.facturas}
-          renglones={s.renglones}
-          moneda={p.moneda}
-          onMontoChange={s.setMonto}
-        />
+        <div className="space-y-3">
+          <DialogCobroLoteAcciones
+            onFifo={s.repartirFifoAhora}
+            onLiquidarTodo={s.liquidarTodo}
+            onLimpiar={s.limpiarReparto}
+            disabled={s.guardando}
+          />
+          <DialogCobroLoteRenglones
+            facturas={p.facturas}
+            renglones={s.renglones}
+            moneda={p.moneda}
+            erroresRenglon={s.erroresRenglon}
+            idsConRep={s.idsConRep}
+            onMontoChange={s.setMonto}
+            onAsignarSaldo={s.asignarSaldo}
+          />
+        </div>
       </FormDialogSection>
+
 
       <FormDialogSection flat>
         <div className="space-y-1.5">

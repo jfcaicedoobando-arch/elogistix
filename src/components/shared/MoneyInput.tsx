@@ -35,6 +35,9 @@ export interface MoneyInputProps {
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
   onBlur?: () => void;
+  /** Foco inicial (p. ej. el importe recibido al abrir un diálogo). */
+  autoFocus?: boolean;
+
 }
 
 const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(

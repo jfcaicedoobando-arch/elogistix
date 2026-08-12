@@ -81,6 +81,19 @@ export function repartirFifo(
   return { renglones, sobrante: restante };
 }
 
+/** Asigna a cada factura su saldo completo (atajo "Liquidar todo"). */
+export function repartirTodo(facturas: FacturaCobroCandidata[]): RenglonCobro[] {
+  return facturas.map((f) => ({ factura_id: f.factura_id, monto: round2(f.saldo) }));
+}
+
+/** Deja el reparto en ceros (atajo "Limpiar reparto"). */
+export function repartirCero(facturas: FacturaCobroCandidata[]): RenglonCobro[] {
+  return facturas.map((f) => ({ factura_id: f.factura_id, monto: 0 }));
+}
+
+export { erroresPorRenglon } from "./cobroLoteValidaciones";
+
+
 export interface ValidacionCobroLote {
   error: string | null;
   totalRepartido: number;
