@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.543.3] - 2026-08-12
+- Observabilidad: los rechazos de sesión (401 "No autorizado" / "Token inválido") ya no se reportan como error en Sentry; siguen quedando en los logs de la función. Cierra JAVASCRIPT-REACT-50.
+
 ## [13.543.2] - 2026-08-12
 - Calidad de código: los correos de autenticación, el timbrado de REP y la recuperación de timbrados se dividieron en módulos más chicos (sin cambios funcionales) para que el CI pase el lint estricto.
 - Cobros: la validación de la fecha del pago vive en su propio archivo; mismas reglas y mensajes que antes.

@@ -10,7 +10,7 @@ import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
-import { captureEdgeException, wrapEdgeHandler } from "../_shared/sentry.ts";
+import { captureEdgeException, debeReportarStatus, wrapEdgeHandler } from "../_shared/sentry.ts";
 import {
   callGeminiExtract,
   mapGeminiToCfdiShape,
@@ -92,7 +92,7 @@ Deno.serve(wrapEdgeHandler("parse-invoice-pdf", async (req) => {
     const [code, ...rest] = message.split(":");
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
     log.error("parse-invoice-pdf falló", { status_code: status, payload: { error: message } });
-    if (status >= 400) await captureEdgeException(e, { fn: "parse-invoice-pdf", status_code: status });
+    if (debeReportarStatus(status)) await captureEdgeException(e, { fn: "parse-invoice-pdf", status_code: status });
     return errorResponse(rest.join(":") || message, status, cors);
   }
 }));

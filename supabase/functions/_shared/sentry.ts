@@ -146,6 +146,20 @@ function truncatedExtra(extra: Record<string, unknown>): Record<string, unknown>
 }
 
 /**
+ * 13.543.3 — ¿Vale la pena reportar este status a Sentry?
+ *
+ * Analogía: el guardia de la puerta rechazando a alguien sin credencial NO es
+ * una falla del edificio; es su trabajo. Los 401 (falta token / token inválido
+ * o expirado) son rechazos ESPERADOS y sólo generan ruido que esconde bugs
+ * reales. Se siguen registrando en los logs de la función (`log.finish`).
+ */
+export function debeReportarStatus(status: number): boolean {
+  if (status === 401) return false;
+  return status >= 400;
+}
+
+
+/**
  * Captura un error en Sentry con tags estructurados y hace flush para garantizar
  * el envío antes de que el isolate termine. No relanza — el caller decide.
  */

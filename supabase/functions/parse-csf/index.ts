@@ -16,7 +16,7 @@ import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
-import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import { initSentryEdge, captureEdgeException, debeReportarStatus } from "../_shared/sentry.ts";
 
 initSentryEdge("parse-csf");
 import { validateFile } from "./validate.ts";
@@ -166,7 +166,7 @@ serve(async (req) => {
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
     log.error("parse-csf falló", { status_code: status, payload: { error: message } });
     // 13.114.20: capturar también 4xx inesperados (consistencia con 13.114.19).
-    if (status >= 400) await captureEdgeException(error, { fn: "parse-csf", status_code: status });
+    if (debeReportarStatus(status)) await captureEdgeException(error, { fn: "parse-csf", status_code: status });
     return errorResponse(rest.join(":") || message, status, cors);
   }
 });
