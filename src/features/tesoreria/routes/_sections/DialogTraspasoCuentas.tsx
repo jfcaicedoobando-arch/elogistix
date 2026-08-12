@@ -30,19 +30,23 @@ interface DialogTraspasoCuentasProps {
 
 export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTraspasoCuentasProps) {
   const {
-    state, setField, origen, destino, mismoMoneda, montoDestino, error,
+    state, setField, origen, destino, mismoMoneda, montoDestino, error, fechaTcDof,
   } = useTraspasoForm(open, cuentas);
   const { mutate: registrar, isPending } = useRegistrarTraspaso();
 
+  // BL-04: sólo se manda 1 cuando ambas cuentas comparten moneda. Si difieren,
+  // el TC capturado es obligatorio (la validación ya bloquea el botón).
+  const tipoCambioFinal = mismoMoneda ? 1 : state.tipoCambio;
+
   const handleSubmit = () => {
-    if (error || isPending) return;
+    if (error || isPending || !(tipoCambioFinal > 0)) return;
     registrar(
       {
         cuentaOrigenId: state.origenId,
         cuentaDestinoId: state.destinoId,
         fecha: state.fecha,
         montoOrigen: state.montoOrigen,
-        tipoCambio: mismoMoneda ? 1 : state.tipoCambio,
+        tipoCambio: tipoCambioFinal,
         comision: state.comision,
         concepto: state.concepto.trim() || "Traspaso entre cuentas propias",
         referencia: state.referencia.trim(),
