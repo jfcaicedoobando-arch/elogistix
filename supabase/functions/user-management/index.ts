@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
     log.finish(status, "unhandled_error", { payload: { error: msg } });
     // 13.114.19: capturar también 4xx inesperados (antes sólo >=500). Esto
     // expone bugs de validación/permisos en `handlers` que se enmascaraban.
-    if (status >= 400) await captureEdgeException(err, { fn: "user-management", status_code: status });
+    if (debeReportarStatus(status)) await captureEdgeException(err, { fn: "user-management", status_code: status });
     return errorResponse(rest.join(":") || msg, status, cors);
   }
 });

@@ -189,7 +189,7 @@ Deno.serve(wrapEdgeHandler("parse-cfdi-xml", async (req) => {
     log.error("parse-cfdi-xml falló", { status_code: status, payload: { error: message } });
     // 13.114.20: capturar también 4xx inesperados (consistente con
     // user-management / auditoria-explicar-hallazgo desde 13.114.19).
-    if (status >= 400) await captureEdgeException(e, { fn: "parse-cfdi-xml", status_code: status });
+    if (debeReportarStatus(status)) await captureEdgeException(e, { fn: "parse-cfdi-xml", status_code: status });
     return errorResponse(rest.join(":") || message, status, cors);
   }
 }));

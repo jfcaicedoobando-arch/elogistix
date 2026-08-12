@@ -187,7 +187,7 @@ serve(async (req) => {
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
     log.error("auditoria-explicar-hallazgo falló", { status_code: status, payload: { error: message } });
     // 13.114.19: capturar también 4xx inesperados (antes sólo >=500).
-    if (status >= 400) await captureEdgeException(error, { fn: "auditoria-explicar-hallazgo", status_code: status });
+    if (debeReportarStatus(status)) await captureEdgeException(error, { fn: "auditoria-explicar-hallazgo", status_code: status });
     return errorResponse(rest.join(":") || message, status, cors);
   }
 });
