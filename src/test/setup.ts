@@ -1,30 +1,8 @@
 import "@testing-library/jest-dom";
-import { afterEach, afterAll, beforeAll, beforeEach, vi } from "vitest";
+import { afterEach, afterAll, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
-/**
- * v13.137.25 — Instrumentación CI para localizar el archivo que cuelga el
- * shard 2. Imprime, antes de cada archivo de test, su ruta y un timestamp.
- * Si CI vuelve a hacer timeout >20min, el último FILE_START sin FILE_END
- * señala al culpable. Activado sólo cuando `CI=true` para no ensuciar local.
- */
-if (process.env.CI) {
-  // `expect.getState().testPath` es estable entre versiones de vitest.
-  beforeAll(() => {
-    try {
-      const path = (globalThis as { expect?: { getState?: () => { testPath?: string } } })
-        .expect?.getState?.()?.testPath;
-      console.log(`[shard-trace] FILE_START ${path ?? "?"} @ ${new Date().toISOString()}`);
-    } catch { /* noop */ }
-  });
-  afterAll(() => {
-    try {
-      const path = (globalThis as { expect?: { getState?: () => { testPath?: string } } })
-        .expect?.getState?.()?.testPath;
-      console.log(`[shard-trace] FILE_END   ${path ?? "?"} @ ${new Date().toISOString()}`);
-    } catch { /* noop */ }
-  });
-}
+
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
