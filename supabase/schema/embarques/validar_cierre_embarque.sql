@@ -153,14 +153,22 @@ BEGIN
     'regla','venta_conceptos_facturados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_venta_pendientes, 'en_proforma', v_venta_en_proforma)));
 
+  -- v13.545.2 — CxC: una factura con estado 'Pagada' se considera saldo 0 aunque
+  -- no tenga pagos capturados (facturas históricas conciliadas fuera del sistema).
+  SELECT COUNT(*) INTO v_cxc_pagadas_sin_pago
+    FROM facturas f
+   WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL AND f.estado='Pagada'
+     AND public.saldo_factura(f.id) > 0.01;
+
   WITH agg AS (
     SELECT COALESCE(f.moneda,'MXN') AS moneda, COALESCE(SUM(f.total),0) AS total,
-      COALESCE(SUM(public.saldo_factura(f.id)),0) AS saldo,
+      COALESCE(SUM(CASE WHEN f.estado='Pagada' THEN 0
+                        ELSE public.saldo_factura(f.id) END),0) AS saldo,
       COALESCE(SUM((SELECT COALESCE(SUM(pf.monto_aplicado_factura),0) FROM pagos_factura pf
         WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL)),0) AS pagado,
       COALESCE(SUM((SELECT COALESCE(SUM(nc.monto),0) FROM factura_notas_credito nc
         WHERE nc.factura_id=f.id AND nc.deleted_at IS NULL AND nc.estado='Aplicada')),0) AS notas_credito,
-      COUNT(*) FILTER (WHERE public.saldo_factura(f.id) > 0.01) AS facturas_pendientes
+      COUNT(*) FILTER (WHERE f.estado<>'Pagada' AND public.saldo_factura(f.id) > 0.01) AS facturas_pendientes
     FROM facturas f
     WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL
       AND f.estado NOT IN ('Cancelada','Sustituida','Borrador')
@@ -173,7 +181,9 @@ BEGIN
   v_ok := (v_cxc_saldo <= 0.01); v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxc_cobrada','ok',v_ok,
-    'detalle', jsonb_build_object('por_moneda', v_cxc_por_moneda, 'saldo_total', v_cxc_saldo)));
+    'detalle', jsonb_build_object('por_moneda', v_cxc_por_moneda, 'saldo_total', v_cxc_saldo,
+      'pagadas_sin_pago_registrado', v_cxc_pagadas_sin_pago)));
+
 
   SELECT COUNT(*), COALESCE(array_agg(pf.id), ARRAY[]::uuid[]) INTO v_rep_pendientes, v_rep_ids
     FROM pagos_factura pf JOIN facturas f ON f.id=pf.factura_id
