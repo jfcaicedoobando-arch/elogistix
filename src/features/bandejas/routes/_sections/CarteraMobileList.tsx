@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { handleRowClick, handleRowKeyDown } from "@/components/shared/dataTable/rowNav";
+import { diasVencidoCartera } from "./carteraDias";
 import type { CarteraRow } from "./carteraColumns";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
