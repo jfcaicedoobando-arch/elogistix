@@ -306,3 +306,19 @@ BEGIN
     'conceptos_liberados', v_liberados
   );
 END $function$;
+-- ============================================================================
+-- H6: permisos explícitos (idempotentes) para cada SECURITY DEFINER tocado.
+-- CREATE OR REPLACE preserva los ACL previos; se re-declaran tal cual estaban,
+-- incluido anon (son las 4 RPCs públicas del portal/tracking/logging).
+-- ============================================================================
+REVOKE ALL ON FUNCTION public.log_client_error_v1(text, text, text, text, text, text, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.log_client_error_v1(text, text, text, text, text, text, uuid) TO anon, authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.get_tracking_public(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_tracking_public(text) TO anon, authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.portal_obtener_proforma_por_token(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.portal_obtener_proforma_por_token(uuid) TO anon, authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.portal_responder_por_token(uuid, text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.portal_responder_por_token(uuid, text, text) TO anon, authenticated, service_role;
