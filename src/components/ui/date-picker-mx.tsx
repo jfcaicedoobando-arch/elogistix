@@ -26,6 +26,9 @@ interface DatePickerMxProps {
   errorText?: string | null;
   id?: string;
   name?: string;
+  /** Enfoca el campo al montar (primer campo de un modal, p. ej.). */
+  autoFocus?: boolean;
+  "aria-label"?: string;
 }
 
 function isoInRange(iso: string, min?: string, max?: string): boolean {
@@ -36,13 +39,16 @@ function isoInRange(iso: string, min?: string, max?: string): boolean {
 
 /**
  * DatePicker localizado para México (formato DD/MM/YYYY visible, valor ISO).
- * Permite capturar la fecha con teclado (máscara), pegar formatos flexibles
- * (D/M/YYYY, ISO, "13 de marzo de 2026") o seleccionarla del calendario.
+ * Permite capturar la fecha con teclado (máscara tolerante a separadores),
+ * pegar formatos flexibles (D/M/YYYY, ISO, "13 de marzo de 2026") o
+ * seleccionarla del calendario (`Alt+Flecha abajo` / `F4`).
  */
 export function DatePickerMx({
   value, onChange, placeholder = PLACEHOLDER_FECHA, className, title,
   disabled = false, readOnly = false, min, max, errorText, id, name,
+  autoFocus = false, "aria-label": ariaLabel,
 }: DatePickerMxProps) {
+
   const [text, setText] = useState<string>(() => isoToDisplay(value));
   const [invalid, setInvalid] = useState(false);
   const [open, setOpen] = useState(false);
