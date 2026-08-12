@@ -106,5 +106,24 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     mismoMoneda,
     montoDestino,
     error,
+    tcSugerido,
+    fechaTcDof: tcDof?.fecha ?? null,
   };
+}
+
+type Moneda = Cuenta["moneda"];
+
+/** Convierte el TC DOF (base MXN) al par origen→destino del traspaso. */
+function sugerirTc(
+  tc: { usdMxn: number; eurMxn: number | null } | null | undefined,
+  origen?: Moneda,
+  destino?: Moneda,
+): number | null {
+  if (!tc || !origen || !destino || origen === destino) return null;
+  const aMxn = (m: Moneda): number | null =>
+    m === "MXN" ? 1 : m === "USD" ? tc.usdMxn : tc.eurMxn;
+  const o = aMxn(origen);
+  const d = aMxn(destino);
+  if (!o || !d || o <= 0 || d <= 0) return null;
+  return roundMoney(o / d, 4);
 }
