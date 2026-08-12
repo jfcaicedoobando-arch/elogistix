@@ -814,8 +814,8 @@ jobs:
       # rompe). Todo lo posterior DEBE aplicar sobre una base limpia.
       #
       # v13.514.0 — El valor ya NO se escribe aquí: vive en
-      # `supabase/tests/rls/drift-corte.env`, que también lee el `radar-drift`
-      # de `deploy-gate.yml`. Antes había dos literales que podían divergir.
+      # `supabase/tests/rls/drift-corte.env` como fuente única, para que no haya
+      # dos literales que puedan divergir.
       - name: Cargar corte de drift (fuente única)
         run: grep -E '^[A-Za-z_][A-Za-z0-9_]*=' supabase/tests/rls/drift-corte.env >> "$GITHUB_ENV"
 
