@@ -20,8 +20,6 @@ export type {
 import { aMxn } from "@/lib/financial/convertir";
 import type {
   ResumenCuenta,
-  FlujoMes,
-  TopItem,
   ResumenTesoreria,
   CobranzaRow,
   CxpRow,
