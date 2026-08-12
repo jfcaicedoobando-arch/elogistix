@@ -155,7 +155,12 @@ export function TabPnl({ embarqueId }: Props) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Tipos de cambio del embarque: USD {data.tipo_cambio_usd?.toFixed(4) ?? "—"} · EUR {data.tipo_cambio_eur?.toFixed(4) ?? "—"}
+        {/* UIA-10: el servicio normaliza el TC ausente a 0; 0 se muestra como "—". */}
+        Tipos de cambio del embarque: USD{" "}
+        {data.tipo_cambio_usd && data.tipo_cambio_usd > 0 ? data.tipo_cambio_usd.toFixed(4) : "—"} ·
+        EUR{" "}
+        {data.tipo_cambio_eur && data.tipo_cambio_eur > 0 ? data.tipo_cambio_eur.toFixed(4) : "—"}
+
       </p>
     </div>
   );
