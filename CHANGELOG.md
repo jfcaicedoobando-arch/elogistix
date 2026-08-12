@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.540.0] - 2026-08-12
+- Design system: badges y encabezados de tablas de reparto usan los tokens `text-2xs` y `text-table-head`; cifras KPI de Cartera, Dirección, Operaciones y P&L migradas al token `text-kpi` (UX-12, UX-09).
+- Accesibilidad: 8 botones solo-icono y 15 interruptores de catálogos/CRM/Admin ahora tienen nombre accesible en español; el botón de la barra lateral se anuncia en es-MX (UX-06, UX-07).
+- Botones: 56 formularios dejan de reimplementar el spinner y usan la prop `loading` del botón (spinner + deshabilitado + `aria-busy`) (UX-11).
+- Móvil: los diálogos de formulario pasan a una sola columna en pantallas angostas (`grid-cols-1 sm:grid-cols-2`) (UX-13).
+- Mensajes: montos visibles en avisos de CxP y alertas ejecutivas usan separador de miles y la fecha de conciliación muestra el año completo (UX-10).
+- Arquitectura: nuevo guardrail que congela la deuda de tablas `<table>` crudas y falla si se agrega una nueva (UX-03).
+- Nuevo cascarón compartido `LoteRenglonesTable` para las tablas de pago/cobro en lote (UX-12).
+
 ## [13.539.0] - 2026-08-12
 - P&L del embarque: los tipos de cambio ausentes muestran "—" en lugar de "0.0000" y el margen real dice "n/a" cuando aún no hay venta real (UIA-10).
 - P&L del embarque: nota que explica por qué el desglose por concepto (subtotales) puede diferir del KPI "Costo real" (con impuestos y notas de crédito) (UIA-10).
