@@ -122,7 +122,8 @@ export function DetailHeader({
           de los botones. Ahora las acciones bajan a su propio renglón. */}
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
 
-        <div className="flex min-w-0 flex-1 items-start gap-2">
+        <div className="flex min-w-0 flex-1 items-start gap-2 xl:min-w-[18rem]">
+
           {icon ? <span className="mt-0.5 shrink-0 leading-none">{icon}</span> : null}
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
