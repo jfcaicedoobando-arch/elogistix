@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.538.0] - 2026-08-12
+- Cobro en lote de cliente: nuevos atajos "Repartir FIFO", "Liquidar todo" y "Limpiar reparto", más un botón para asignar el sobrante automáticamente.
+- Cobro en lote de cliente: cada renglón muestra chip de vencimiento, aviso de complemento de pago (REP) y botón para aplicar el saldo de esa factura.
+- Cobro en lote de cliente: los excesos de saldo se marcan en el renglón exacto y el resumen compara Recibido / Repartido / Sin asignar. El foco inicia en "Importe recibido".
+
+
+
 ## [13.537.0] - 2026-08-12
 - Cobranza: el rol **tesorero** ya puede registrar cobros de facturas de cliente (individuales y en lote). La base de datos siempre se lo permitía, pero la interfaz le escondía el botón (FE-10).
 
