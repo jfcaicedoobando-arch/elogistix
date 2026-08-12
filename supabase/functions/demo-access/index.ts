@@ -30,6 +30,37 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    // EF-09: rate limit persistente fail-CLOSED (patrón client-error-log N51).
+    // El endpoint es público por diseño; sin esto cada request re-sembraba
+    // destructivamente la org demo (costo/DoS y carreras de seed).
+    const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim()
+      || req.headers.get("cf-connecting-ip")
+      || "unknown";
+    const { data: rl, error: rlErr } = await admin.rpc("check_ratelimit", {
+      p_key: `demo-access:${ip}`,
+      p_window_seconds: 60,
+      p_max: 5,
+    });
+    if (rlErr) {
+      console.error("demo-access ratelimit rpc failed:", rlErr.message);
+      await captureEdgeException(new Error(`check_ratelimit failed: ${rlErr.message}`), {
+        fn: "demo-access",
+        status_code: 503,
+      });
+      return new Response(JSON.stringify({ error: "rate_limit_unavailable" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "30" },
+        status: 503,
+      });
+    }
+    const rlResult = rl as { ok?: boolean; retry_after?: number } | null;
+    if (rlResult && rlResult.ok === false) {
+      return new Response(JSON.stringify({ error: "rate_limited" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(rlResult.retry_after ?? 60) },
+        status: 429,
+      });
+    }
+
+
     // 1) Buscar usuario por email; crear si no existe.
     let userId: string | null = null;
     const { data: list, error: listErr } = await admin.auth.admin.listUsers({
