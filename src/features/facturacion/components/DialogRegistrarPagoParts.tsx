@@ -35,7 +35,7 @@ export function FooterAcciones({
 }
 
 export function NotasPago({
-  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado,
+  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado, errorFecha,
 }: {
   esPpdTimbrada: boolean;
   monedaPago: string;
@@ -47,6 +47,8 @@ export function NotasPago({
   saldo: number;
   /** FE-01 / UIA-01: cross-moneda sin tipo de cambio confiable. */
   tcBloqueado?: boolean;
+  /** FE-03 / UIA-06: fecha de pago inválida (futura o previa a la emisión). */
+  errorFecha?: string | null;
 }) {
   const mostrarConversion = monedaPago !== monedaFactura && montoNum > 0;
   return (
@@ -72,6 +74,9 @@ export function NotasPago({
             segundos; si el problema persiste, contacta a soporte.
           </AlertDescription>
         </Alert>
+      )}
+      {errorFecha && (
+        <p className="text-xs text-destructive" role="alert">{errorFecha}</p>
       )}
       {excede && (
         <p className="text-xs text-destructive">

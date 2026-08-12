@@ -41,6 +41,7 @@ export function FacturaDetalleModales(props: Props) {
           moneda: factura.moneda,
           metodoPago: factura.metodo_pago ?? null,
           uuidFiscal: factura.uuid_fiscal ?? null,
+          fechaEmision: factura.fecha_emision ?? null,
         }}
       />
       <DialogTimbrarFactura

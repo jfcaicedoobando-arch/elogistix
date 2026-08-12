@@ -115,6 +115,10 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
                 ? `Estimado con el TC capturado: ${origen.moneda} → ${destino.moneda}: ${formatCurrency(montoDestino, destino.moneda)}`
                 : `Captura el tipo de cambio para ver el equivalente en ${destino.moneda}.`}
             </p>
+            <p className="text-xs text-muted-foreground">
+              El tipo de cambio multiplica: 1 {origen.moneda} = {state.tipoCambio || "?"} {destino.moneda}.
+              Si tu referencia viene expresada al revés, divídela antes de capturarla.
+            </p>
           </div>
         )}
         <div className="space-y-1.5">

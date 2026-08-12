@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from '@/features/cotizacion/types';
 import type { CotizacionFormValues } from '@/features/cotizacion/types';
 
@@ -15,7 +16,7 @@ function toIsoDateString(v: unknown): string | null {
   if (!v) return null;
   const d = v instanceof Date ? v : new Date(v as string);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toISOString().split("T")[0];
+  return format(d, "yyyy-MM-dd"); // FE-04: día local, no UTC
 }
 
 interface PesoVolumen { peso: number; volumen: number; piezas: number }

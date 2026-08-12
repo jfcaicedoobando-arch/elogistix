@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 /**
  * Cálculos de cartera y KPIs de cabecera/pulso del Dashboard Dirección.
  * Extraído de `calculos.ts` para respetar el límite de 200 líneas por archivo.
@@ -83,8 +84,10 @@ export function calcularPulso(
       // hoy quedaba fuera de "arribos 7d" y cualquier ETA de hoy contaba como
       // demora desde la medianoche (comparación instante vs. medianoche).
       const etaDia = r.eta.slice(0, 10);
-      const hoyDia = hoy.toISOString().slice(0, 10);
-      const en7dDia = en7d.toISOString().slice(0, 10);
+      // FE-04: día local MX; con `toISOString()` los KPIs cambiaban de día a
+      // las 18:00 (UTC−6).
+      const hoyDia = format(hoy, "yyyy-MM-dd");
+      const en7dDia = format(en7d, "yyyy-MM-dd");
       if (etaDia >= hoyDia && etaDia <= en7dDia) arribos_7d += 1;
       const diasRetraso = Math.floor(
         (Date.parse(`${hoyDia}T00:00:00Z`) - Date.parse(`${etaDia}T00:00:00Z`)) / 86_400_000,

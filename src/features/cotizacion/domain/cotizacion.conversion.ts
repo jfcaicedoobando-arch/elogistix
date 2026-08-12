@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 /**
  * Reglas para conversión cotización → embarques, y vigencia.
  * Extraído de `cotizacion.ts` (Power-of-10).
@@ -67,5 +68,7 @@ export function calcularFechaVigencia(
   const dias = vigenciaDias ?? 15;
   const fecha = new Date(desde);
   fecha.setDate(fecha.getDate() + dias);
-  return fecha.toISOString().split("T")[0];
+  // FE-04: día en hora LOCAL (canon `todayLocalISO`); `toISOString()` devuelve
+  // el día UTC y entre 18:00-23:59 (UTC−6) adelantaba la vigencia un día.
+  return format(fecha, "yyyy-MM-dd");
 }

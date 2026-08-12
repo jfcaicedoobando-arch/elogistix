@@ -43,7 +43,11 @@ export async function fetchCotizaciones(organizationId: string | null) {
   let query = supabase
     .from("cotizaciones")
     .select(COTIZACION_LIST_COLUMNS)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    // FE-05: límite explícito defensivo — PostgREST capa en ~1000 filas sin
+    // avisar y las cotizaciones más viejas desaparecían del listado.
+    // TODO post-freeze: paginación server-side (`embarques/services/paginados.ts`).
+    .limit(1000);
   if (organizationId) query = query.eq("organization_id", organizationId);
   const data = await unwrap(query);
   // Aplanamos `cotizacion_costos: [{count: N}]` → `cotizacion_costos_count: N`
@@ -75,7 +79,8 @@ export async function fetchCotizacionesAceptadas(organizationId: string | null) 
     .from("cotizaciones")
     .select(COTIZACION_ACEPTADA_COLUMNS)
     .in("estado", ["Aceptada", "En operación"])
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(1000); // FE-05: mismo cap defensivo que `fetchCotizaciones`
   if (organizationId) query = query.eq("organization_id", organizationId);
   const data = await unwrap(query);
   return fromDbChecked<CotizacionRow[]>(data, cotizacionRowsDbSchema);

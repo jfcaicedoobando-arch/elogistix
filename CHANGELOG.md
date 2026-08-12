@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.526.0] - 2026-08-12
+- Auditoría Wave 1 (P2) — Sub-ola 2/6 (Tesorería / pagos, frontend): FE-02 (el diálogo de cobro CxC ya no borra lo capturado cuando un refetch invalida las queries: inicialización una sola vez por apertura/factura), FE-03 + UIA-06 (validación de fecha del cobro: no futura y no anterior a la emisión, con mensaje inline y guard en el handler; facturas legacy sin `fecha_emision` sólo validan futuro), FE-06 (captura CxP rechaza componentes negativos, vencimiento anterior a la emisión y tipo de cambio mayor a 1000) y FE-07 (traspasos: preview redondeado con `roundMoney` para coincidir centavo a centavo con la RPC, fecha obligatoria y no futura, y aclaración de la dirección del tipo de cambio).
+- Tests — 5 casos nuevos para `validarFechaPago` y 5 para las reglas FE-06 del schema de CxP. Corregidas 6 aserciones de pruebas de facturación que seguían leyendo el detalle técnico del error en `title` cuando UX-02 lo movió a `description`.
+
 ## [13.525.0] - 2026-08-12
 - Auditoría Wave 1 (P2) — Sub-ola 1/6 cerrada: BL-03 (guard de membresía en `siguiente_folio_proveedor` para evitar quema de folios FP- ajenos), BL-05 (`calcular_comision_pago` ya no aborta el pago cuando faltan tipos de cambio del embarque; la comisión queda en 0 y se recalcula después), BL-06 (lecturas de notas de crédito CxC/CxP ahora excluyen soft-borradas, consistente con los guards de saldo), BL-07 (`dependenciasFinancieras` de embarques ya no cuenta facturas/pagos/NCs soft-borradas), BL-08 (re-asegurado `search_path` y grants de funciones `email_infra`) y BL-09 (folio de traspasos bancarios migrado de `MAX()+1` a `folio_secuencias` para evitar carreras). BL-04 ya estaba corregido en Wave 0.
 
