@@ -11,7 +11,6 @@ import { respaldarXmlTimbrado, type RespaldoResult } from "../_shared/respaldarX
 
 export { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
 import { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
-void ((): UserIdentity | undefined => undefined);
 
 // Ola 5 · RG4-4: la misma recuperación aplica a notas de crédito (claim
 // PENDING:<uuid> + external_id desde Ola 4 · N1).
