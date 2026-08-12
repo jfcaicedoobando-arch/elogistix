@@ -61,13 +61,24 @@ export function CuentaBancariaCard({
             <p className="text-xs text-muted-foreground">{c.banco} · {c.moneda}</p>
           </div>
           {canAdmin && (
-            <Button
-              variant="ghost" size="icon"
-              aria-label={`Eliminar cuenta ${c.alias}`}
-              onClick={(e) => { e.stopPropagation(); onEliminar(c.id, c.alias); }}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            <div className="flex items-center gap-1">
+              {onEditar && (
+                <Button
+                  variant="ghost" size="icon"
+                  aria-label={`Editar cuenta ${c.alias}`}
+                  onClick={(e) => { e.stopPropagation(); onEditar(c); }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost" size="icon"
+                aria-label={`Eliminar cuenta ${c.alias}`}
+                onClick={(e) => { e.stopPropagation(); onEliminar(c.id, c.alias); }}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           )}
         </div>
         {c.numero_cuenta && <p className="text-xs">Cuenta: <span className="font-mono">{c.numero_cuenta}</span></p>}
