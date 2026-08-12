@@ -94,7 +94,14 @@ export default defineConfig(({ mode }) => {
     // 'hidden' genera .map sin agregar // sourceMappingURL en los .js, así los
     // browsers no los descargan aunque queden en dist. El plugin de Sentry los
     // sube y luego los borra (filesToDeleteAfterUpload).
-    sourcemap: mode === "production" ? "hidden" : true,
+    // TC-02: 'hidden' + terser en ~291 chunks requiere >4 GB de RAM. En
+    // entornos con poca memoria usar `BUILD_SOURCEMAPS=false` (script
+    // `build:low-mem`): el bundle queda idéntico pero sin .map ni upload a
+    // Sentry. Default sin cambios para CI/producción.
+    sourcemap:
+      mode === "production"
+        ? (process.env.BUILD_SOURCEMAPS === "false" ? false : "hidden")
+        : true,
     minify: "terser",
     terserOptions: {
       compress: {

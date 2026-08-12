@@ -30,7 +30,8 @@ export const publicRoutes = (
     <Route path="/portal/login" element={<Navigate to="/login" replace />} />
     <Route path="/tracking/:token" element={<TrackingPublico />} />
     <Route path="/unsubscribe" element={<Unsubscribe />} />
-    <Route path="/logo-preview" element={<LogoPreview />} />
+    {/* UIB-07: vista QA del logo — sólo en dev; en producción cae al 404. */}
+    {import.meta.env.DEV && <Route path="/logo-preview" element={<LogoPreview />} />}
     <Route path="/legal/privacidad" element={<Privacidad />} />
     <Route path="/legal/terminos" element={<Terminos />} />
     <Route path="/legal/seguridad" element={<Seguridad />} />

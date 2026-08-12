@@ -160,12 +160,17 @@ function errorResponse(err: unknown) {
   const isTimeout = (err as Error)?.message === "facturapi_timeout";
   console.error("[facturapi-test-conexion] facturapi-call-error", { status, isTimeout });
   const isAuthError = status === 401 || status === 403;
+  // EF-11: propagar el status HTTP real — con 200 los clientes que sólo
+  // evalúan response.ok trataban los errores de FacturApi como éxito.
+  const httpStatus = isTimeout
+    ? 504
+    : (Number.isInteger(status) && status >= 400 && status < 600 ? status : 502);
   return jsonResponse({
     ok: false,
-    status: isTimeout ? 504 : status,
+    status: httpStatus,
     detail: isTimeout ? { message: "Tiempo de espera agotado al contactar FacturApi (15s)." } : detail,
     message: isAuthError ? "La API key de FacturApi no es válida para este ambiente." : undefined,
-  }, 200);
+  }, httpStatus);
 }
 
 async function runTest(body: Body, sbAdmin: ReturnType<typeof createClient>) {

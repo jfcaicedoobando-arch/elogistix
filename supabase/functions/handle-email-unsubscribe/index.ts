@@ -47,7 +47,8 @@ Deno.serve(wrapEdgeHandler("handle-email-unsubscribe", async (req) => {
     .maybeSingle()
 
   if (updateError) {
-    console.error('Failed to mark token as used', { error: updateError, token })
+    // EF-13: nunca loguear el token completo — es reutilizable hasta que se marca usado.
+    console.error('Failed to mark token as used', { error: updateError, token_prefix: token.slice(0, 8) })
     return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
   }
   if (!updated) return jsonResponse({ success: false, reason: 'already_unsubscribed' })
