@@ -11,6 +11,7 @@ import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalo
 import type { FilaCostoLocal } from "../SeccionCostosInternosPLUnificado";
 import { parseCantidad, cantidadFueraDeRango, CANTIDAD_LIMITE_SANIDAD } from "../../utils/parseInputNumero";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
+import { filaCostoInvalida } from "@/features/cotizacion/domain/cotizacionVentaSync";
 
 interface Props {
   fila: FilaCostoLocal;
