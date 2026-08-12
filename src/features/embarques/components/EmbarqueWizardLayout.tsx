@@ -4,6 +4,7 @@
  */
 import { ReactNode, useCallback } from "react";
 import { WizardShell } from "@/components/shared/WizardShell";
+import { useDirtyGuard } from "@/hooks/shared/useDirtyGuard";
 
 interface Step {
   title: string;
@@ -23,6 +24,8 @@ interface EmbarqueWizardLayoutProps {
   onFinish: () => void;
   /** Optional validation before advancing from a specific step. Return false to block. */
   validateStep?: (step: number) => boolean;
+  /** FE-11: cuando hay captura sin guardar, avisa antes de salir del wizard. */
+  isDirty?: boolean;
   children: ReactNode;
 }
 
