@@ -9,10 +9,14 @@ interface Props {
   exportandoCsv: boolean;
   onExport: () => void;
   onNuevo: () => void;
+  /** UIA-16: alta guiada desde cotización cuando el alta directa está bloqueada. */
+  onNuevoDesdeCotizacion?: () => void;
 }
 
 /** Acciones del header de la página de Embarques (extraídas para bajar complejidad). */
-export function EmbarquesHeaderActions({ canEdit, exportandoCsv, onExport, onNuevo }: Props) {
+export function EmbarquesHeaderActions({
+  canEdit, exportandoCsv, onExport, onNuevo, onNuevoDesdeCotizacion,
+}: Props) {
   const exportLabel = exportandoCsv ? "Exportando..." : "Exportar CSV";
   return (
     <>
@@ -24,6 +28,12 @@ export function EmbarquesHeaderActions({ canEdit, exportandoCsv, onExport, onNue
           <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
         </Button>
       ) : null}
+      {!canEdit && onNuevoDesdeCotizacion ? (
+        <Button onClick={onNuevoDesdeCotizacion} className="hidden md:inline-flex">
+          <Plus className="h-4 w-4 mr-2" /> Nuevo embarque
+        </Button>
+      ) : null}
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="md:hidden" aria-label="Más acciones">
