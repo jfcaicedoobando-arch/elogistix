@@ -103,6 +103,13 @@ export function usePortalClienteName() {
   });
 }
 
+export function usePortalContactoNombre() {
+  return useQuery({
+    queryKey: queryKeys.portal.contactoName,
+    queryFn: fetchPortalContactoNombre,
+  });
+}
+
 export function usePortalOrgName() {
   return useQuery({
     queryKey: queryKeys.portal.orgName,

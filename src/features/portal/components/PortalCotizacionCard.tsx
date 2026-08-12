@@ -124,7 +124,12 @@ export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
             </div>
           </div>
           <p className="text-sm font-bold tabular-nums shrink-0 text-right min-w-[110px]">
-            {formatCurrency(totalLista, c.moneda)}
+            {/* UIB-13: una solicitud sin conceptos no vale "MXN 0.00" — está por cotizar. */}
+            {totalLista > 0 ? (
+              formatCurrency(totalLista, c.moneda)
+            ) : (
+              <span className="text-xs font-medium text-muted-foreground">Por cotizar</span>
+            )}
           </p>
         </CardContent>
       </Link>

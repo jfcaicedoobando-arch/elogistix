@@ -9,6 +9,7 @@ import {
   usePortalCotizaciones,
   usePortalClientUsers,
   usePortalClienteName,
+  usePortalContactoNombre,
   usePortalOrgName,
 } from "@/features/portal/hooks";
 import { usePortalDashboardKpis } from "@/features/portal/hooks";
@@ -27,6 +28,7 @@ export default function PortalDashboard() {
   const [solicitudAbierta, setSolicitudAbierta] = useState(false);
   const { data: clientUsers = [] } = usePortalClientUsers();
   const { data: clienteName } = usePortalClienteName();
+  const { data: contactoName } = usePortalContactoNombre();
   const { data: orgName } = usePortalOrgName();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
   const { data: embarques = [], isLoading: loadingEmb } = usePortalEmbarques(clienteIds);
@@ -53,7 +55,7 @@ export default function PortalDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
-          <PortalWelcomeCard clienteName={clienteName} orgName={orgName} />
+          <PortalWelcomeCard clienteName={clienteName} contactoName={contactoName} orgName={orgName} />
         </div>
         <Button className="sm:self-stretch" onClick={() => setSolicitudAbierta(true)}>
           <Plus className="h-4 w-4 mr-1" aria-hidden /> Solicitar cotización
