@@ -48,6 +48,7 @@ export async function listarNotasCreditoPorFactura(facturaId: string): Promise<N
       .from("factura_notas_credito")
       .select("*")
       .eq("factura_id", facturaId)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(200),
     [],
@@ -81,6 +82,7 @@ export async function listarNotasCreditoRecientes(
       *,
       facturas!inner(numero, cliente_id, cliente_nombre)
     `)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (filtros.cliente_id) query = query.eq("facturas.cliente_id", filtros.cliente_id);
