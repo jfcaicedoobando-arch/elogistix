@@ -11,6 +11,8 @@ import { useTrackingPublicoPage } from "@/features/embarques/services/tracking/u
 import { TrackingPublicoErrorCard } from "@/features/embarques/components/tracking/TrackingPublicoErrorCard";
 import { TrackingPublicoLoading } from "@/features/embarques/components/tracking/TrackingPublicoLoading";
 import { TrackingPublicoTimeline } from "@/features/embarques/components/tracking/TrackingPublicoTimeline";
+import { TrackingPublicoEstatus } from "@/features/embarques/components/tracking/TrackingPublicoEstatus";
+import { TrackingPublicoDocumentos } from "@/features/embarques/components/tracking/TrackingPublicoDocumentos";
 import { Seo } from "@/components/shared/Seo";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { COPY_PIE } from "@/lib/copy/publicoCopy";
@@ -31,6 +33,8 @@ export default function TrackingPublico() {
   if (error || !data) return <TrackingPublicoErrorCard message={(error as Error)?.message} />;
 
   const { embarque: e, eventos, organizacion } = data;
+  const documentos = data.documentos ?? [];
+  const docsRecibidos = documentos.filter((d) => d.recibido).length;
   const orgNombre = organizacion?.nombre || COPY_PIE.seguimientoTitulo;
 
   return (
@@ -63,6 +67,14 @@ export default function TrackingPublico() {
         />
 
 
+        <TrackingPublicoEstatus
+          estado={e.estado}
+          etd={e.etd}
+          eta={e.eta}
+          documentosRecibidos={docsRecibidos}
+          documentosTotales={documentos.length}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-2"><CardTitle>Ruta</CardTitle></CardHeader>
@@ -82,6 +94,8 @@ export default function TrackingPublico() {
             </CardContent>
           </Card>
         </div>
+
+        <TrackingPublicoDocumentos documentos={documentos} />
 
         <TrackingPublicoTimeline eventos={eventos} />
       </main>
