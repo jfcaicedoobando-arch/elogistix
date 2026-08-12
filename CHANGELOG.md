@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.528.0] - 2026-08-12
+- Auditoría Wave 1 (P2) — Sub-ola 4/6 (Edge Functions): EF-05 (timeout de 12 s en la consulta al SAT y tope de 50 facturas por corrida en `verificar-sat-lote`, para que el lote quepa en el tiempo máximo de la función; las 3 cancelaciones — factura, REP y nota de crédito — envuelven `invoices.cancel` con timeout y devuelven 504 con bitácora en lugar de colgarse).
+- EF-06 — Webhook de facturación a prueba de eventos fuera de orden: un `receipt.status_updated(valid)` tardío ya no resucita un REP cancelado y un `cancellation_status_updated(pending)` retrasado ya no regresa una cancelación aceptada.
+- EF-07 — Deduplicación atómica del webhook (INSERT-first sobre el único `organization_id + event_id`): dos entregas simultáneas del mismo evento ya no se procesan doble; si el procesamiento falla se libera la reserva para que el reintento funcione.
+- EF-08 — El respaldo del XML timbrado tiene timeout de 12 s: si Facturapi cuelga, la factura/NC/REP sí se persiste (respaldo marcado como error) en vez de dejar un CFDI huérfano.
+- EF-09 — `demo-access`: rate limit persistente (5 por minuto por IP, fail-closed) y nueva tabla interna `demo_seed_state` para no re-sembrar los datos demo si ya se sembraron hace menos de 10 minutos.
+
+
 ## [13.527.0] - 2026-08-12
 - Auditoría Wave 1 (P2) — Sub-ola 3/6 (fechas y listados): FE-04 (las fechas-calendario se calculan en hora local con `format(d, "yyyy-MM-dd")`: la vigencia de cotización ya no se adelanta un día cuando se cotiza después de las 18:00, el badge "Vence en Nd" de la tabla deja de correrse medio día y los KPIs de arribos/demoras del dashboard de Dirección no cambian de día a las 18:00), FE-05 (`limit(1000)` explícito en los listados de cotizaciones para que el corte silencioso de PostgREST sea visible), UIA-07 (los días vencido de Cartera se recalculan en el cliente desde `fecha_vencimiento`, así una factura que vence en 10 días muestra "Vence en 10d" y no "Vence hoy" aunque la función de base de datos devuelva 0) y UIA-08 (el fallo del servicio de tipo de cambio ya no dispara el aviso global "No pudimos cargar la información": degrada en silencio porque la UI ya indica "TC no disponible").
 - FE-11 — Nuevo `useDirtyGuard`: la captura de factura de proveedor avisa "¿Salir sin guardar?" antes de navegar a otra pantalla y muestra el aviso nativo del navegador al cerrar o recargar la pestaña con datos capturados.
