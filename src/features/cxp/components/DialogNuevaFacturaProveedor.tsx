@@ -86,7 +86,7 @@ function DialogNuevaFacturaProveedorForm({
 
   // FE-11: si ya hay captura, avisamos antes de navegar o cerrar la pestaña.
   const hayCaptura =
-    Boolean(ctl.values.proveedor_id) || sub > 0 ||
+    Boolean(ctl.values.provId) || sub > 0 ||
     Boolean(ctl.values.folio) || ctl.conceptosManuales.conceptos.length > 0;
   const { guardDialog } = useDirtyGuard(open && hayCaptura && !ctl.isPending);
 
