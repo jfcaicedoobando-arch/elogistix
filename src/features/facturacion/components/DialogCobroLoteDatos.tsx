@@ -57,10 +57,12 @@ export function DialogCobroLoteDatos(p: Props) {
           <Label htmlFor="cobro-lote-total">Importe recibido</Label>
           <MoneyInput
             id="cobro-lote-total"
+            autoFocus
             value={p.total === "" ? null : Number(p.total)}
             currency={p.moneda}
             onChange={(n: number) => p.onTotal(round2(n))}
           />
+
           <p className="truncate text-xs text-muted-foreground">
             Saldo {formatCurrency(p.saldoTotal, p.moneda)}
             {hintTc}
