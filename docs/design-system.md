@@ -165,7 +165,8 @@ Todos los controles comparten tokens de `field.tokens.ts`:
   `FIELD_STATE_WITHIN_CLASS` (contenedores con input adentro),
   `FIELD_FOCUS_RING_COMPACT_CLASS` (checkbox, radio, switch).
 - Error inline: `FIELD_ERROR_CLASS` (`text-xs text-destructive`).
-- Etiquetas: componente `<Label>` sin clases extra (no `text-xs text-muted-foreground`).
+- Etiquetas: componente `<Label>` sin clases extra (no `text-xs text-muted-foreground`). Para formularios densos usa la variante `size="sm"` (equivale a `text-xs`), nunca `className="text-xs"`.
+- Campos: `<FormField>` genera el `id` del control y liga el `Label` con `htmlFor` + el error con `aria-describedby`. Pasa `htmlFor` sólo si necesitas un id fijo.
 - Fechas: siempre `DatePickerMx`. Selects de Radix nunca con `value=""` (usar
   `"todos"`).
 
