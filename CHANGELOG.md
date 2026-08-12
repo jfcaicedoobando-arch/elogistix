@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.550.0] - 2026-08-12
+- Captura de fechas con teclado: el campo de fecha ya acepta `1/3/2026` y lo completa solo a `01/03/2026` (antes se descolocaba a `13/20/26`). También se puede abrir el calendario con `Alt+Flecha abajo` o `F4` y cerrarlo con `Esc`.
+- Orden de tabulación del campo de fecha: el primer `Tab` cae directo en el input; los botones de calendario y de limpiar salieron del recorrido de tabulación.
+- Modal **Registrar pago**: ahora es un formulario real —el foco inicia en la fecha, `Enter` guarda desde cualquier campo y todas las etiquetas quedaron ligadas a su control para lectores de pantalla.
+
+
 ## [13.549.0] - 2026-08-12
 - Facturación · REP: al registrar un pago de una factura PPD, el timbrado automático del REP ya refresca el historial de pagos, la bandeja **REP pendientes** y la factura. Antes la pantalla quedaba con el estado previo y el botón **"Timbrar REP"** seguía visible aunque el REP ya existía (caso F977).
 - Si alguien vuelve a presionar **"Timbrar REP"** en un pago que ya tiene REP, ahora se muestra un aviso informativo ("Este pago ya tenía su REP timbrado") y la pantalla se actualiza con el folio real, en lugar del error genérico *"El servicio en la nube rechazó la solicitud"*.
