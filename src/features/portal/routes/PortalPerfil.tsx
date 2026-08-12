@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Pencil, KeyRound, User as UserIcon, Building2 } from "lucide-react";
+import { Pencil, KeyRound, User as UserIcon, Building2 } from "lucide-react";
 import { usePortalPerfil } from "@/features/portal/hooks";
 import { EditarContactoDialog } from "@/features/portal/components/perfil/EditarContactoDialog";
 import { CambiarPasswordDialog } from "@/features/portal/components/perfil/CambiarPasswordDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PerfilAsyncFallback } from "@/features/portal/components/perfil/PerfilAsyncFallback";
 import { useDocumentTitle } from "@/hooks/shared";
 
 function Field({ label, value }: { label: string; value?: string | null }) {
@@ -21,23 +22,19 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 
 export default function PortalPerfil() {
   useDocumentTitle('Mi perfil');
-  const { data, isLoading, isError } = usePortalPerfil();
+  const { data, isLoading, isError, refetch } = usePortalPerfil();
   const [editContacto, setEditContacto] = useState(false);
   const [cambiarPass, setCambiarPass] = useState(false);
 
-  if (isLoading) {
+  // UX-05 / UIB-05: patrón canónico AsyncBoundary (skeleton + Reintentar).
+  const sinDatos = !data;
+  if (isLoading || isError || sinDatos) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (isError || !data) {
-    return (
-      <div className="py-20 text-center text-sm text-muted-foreground">
-        No se pudo cargar tu perfil.
-      </div>
+      <PerfilAsyncFallback
+        isLoading={isLoading}
+        isError={isError || sinDatos}
+        onRetry={() => void refetch()}
+      />
     );
   }
 

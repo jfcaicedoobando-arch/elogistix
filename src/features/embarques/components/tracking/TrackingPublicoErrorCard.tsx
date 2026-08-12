@@ -1,6 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { Link } from "react-router-dom";
+import { mensajeTrackingAmigable } from "./trackingErrorCopy";
 
 export function TrackingPublicoErrorCard({ message }: { message?: string }) {
   return (
@@ -10,8 +12,11 @@ export function TrackingPublicoErrorCard({ message }: { message?: string }) {
           <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
           <SectionHeading as="h2" className="mb-2">Enlace no disponible</SectionHeading>
           <p className="text-sm text-muted-foreground text-center">
-            {message || "Este enlace de tracking no existe o ha expirado."}
+            {mensajeTrackingAmigable(message)}
           </p>
+          <Link to="/" className="mt-4 text-sm font-medium text-accent hover:underline">
+            Volver al inicio
+          </Link>
         </CardContent>
       </Card>
     </div>

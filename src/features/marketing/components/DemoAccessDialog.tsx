@@ -33,6 +33,29 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * UIB-01: nunca mostrar `err.message` crudo en la landing pública — los errores
+ * de `functions.invoke` llegan en inglés ("Edge Function returned a non-2xx
+ * status code"). El mensaje técnico sigue yendo a "Ver detalles"/Sentry vía
+ * `error: err`.
+ */
+function mensajeAmigableDemo(err: unknown): string {
+  const raw = err instanceof Error ? err.message : "";
+  const m = raw.toLowerCase();
+  if (m.includes("non-2xx") || m.includes("failed to fetch") || m.includes("network")) {
+    return "No pudimos abrir la demo en este momento. Intenta de nuevo en unos minutos.";
+  }
+  if (m.includes("permission denied") || m.includes("row-level security")) {
+    return "No pudimos registrar tus datos. Intenta de nuevo o escríbenos a contacto@librecarga.com.";
+  }
+  const traducido = getErrorMessage(err);
+  // Si el helper central no tradujo (devolvió el crudo), usar copy propio.
+  if (!traducido || traducido === raw) {
+    return "No pudimos abrir la demo. Intenta de nuevo en un momento.";
+  }
+  return traducido;
+}
+
 export function DemoAccessDialog({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -79,7 +102,7 @@ export function DemoAccessDialog({ open, onOpenChange }: Props) {
       onOpenChange(false);
       navigate(ROUTES.INICIO, { replace: true });
     } catch (err) {
-      const msg = getErrorMessage(err);
+      const msg = mensajeAmigableDemo(err);
       setError(msg);
       notifyError(undefined, {
         title: "No pudimos abrir la demo",

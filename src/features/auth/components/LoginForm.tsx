@@ -9,6 +9,10 @@ import { Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { resolveDeepLinkDestino } from "@/features/auth/utils/deepLink";
 
+// UIB-03: formato mínimo de email (no RFC completo — sólo evitar mandar basura
+// al servidor y recibir el genérico "credenciales incorrectas").
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 interface Props {
   onForgotPassword: () => void;
   onEmailChange?: (email: string) => void;
@@ -26,8 +30,18 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setLoginError(null);
+    // UIB-02: validar en cliente antes de pegarle al servidor (evita el error
+    // crudo en inglés de Supabase Auth con campos vacíos).
+    if (!email.trim() || !password) {
+      setLoginError("Ingresa tu email y tu contraseña.");
+      return;
+    }
+    if (!EMAIL_RE.test(email.trim())) {
+      setLoginError("Escribe un email válido (ej. usuario@empresa.com).");
+      return;
+    }
+    setLoading(true);
     try {
       const { role } = await signInWithEmail(email, password);
       // B-104: si el guard del portal mandó al login desde un deep-link,

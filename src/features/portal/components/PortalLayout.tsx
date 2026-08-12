@@ -12,6 +12,7 @@ import { getActiveSectionLabel } from "./layout/portalNav";
 import { ROUTES } from "@/constants/routes";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function PortalLayout() {
   const { signOut, user } = useAuth();
@@ -19,8 +20,16 @@ export default function PortalLayout() {
   const navigate = useNavigate();
   const { data: clienteName } = usePortalClienteName();
   const { data: orgName } = usePortalOrgName();
-  const { data: clientUsers, isLoading: cargandoVinculo } = usePortalClientUsers();
-  const sinClienteVinculado = !cargandoVinculo && (clientUsers?.length ?? 0) === 0;
+  const {
+    data: clientUsers,
+    isLoading: cargandoVinculo,
+    isError: errorVinculo,
+    refetch: reintentarVinculo,
+  } = usePortalClientUsers();
+  // UIB-09: "sin empresa" sólo cuando la consulta SÍ respondió con 0 filas;
+  // un error de red no puede disfrazarse de cuenta no vinculada.
+  const sinClienteVinculado =
+    !cargandoVinculo && !errorVinculo && (clientUsers?.length ?? 0) === 0;
   const labels = useBreadcrumbLabels();
   const breadcrumbs = usePortalBreadcrumbs(location.pathname, labels);
   const activeSection = getActiveSectionLabel(location.pathname);
@@ -54,6 +63,13 @@ export default function PortalLayout() {
         <PageContainer noSpacing>
           {cargandoVinculo ? (
             <ListSkeleton rows={6} />
+          ) : errorVinculo ? (
+            <ErrorState
+              title="No pudimos cargar tu cuenta"
+              description="Revisa tu conexión e intenta de nuevo. Si el problema persiste, contacta a tu ejecutivo."
+              onRetry={() => void reintentarVinculo()}
+              className="my-10"
+            />
           ) : sinClienteVinculado ? (
             <PortalSinCliente email={user?.email} onSignOut={handleSignOut} />
           ) : (

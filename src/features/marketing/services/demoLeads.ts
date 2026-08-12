@@ -30,5 +30,9 @@ export async function createDemoLead(input: DemoLeadInput): Promise<void> {
     landing_path: attribution.landing_path,
     user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
   });
-  if (error) throw new Error(error.message);
+  // UIB-15: el crudo de PostgREST (p.ej. "permission denied for table
+  // demo_leads") va como `cause` para diagnóstico, no al usuario.
+  if (error) {
+    throw new Error("No pudimos registrar tus datos de contacto.", { cause: error });
+  }
 }
