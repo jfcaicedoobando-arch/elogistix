@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, useCallback, useId } from "react";
+import { useId } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  isoToDisplay, applyMaskTyping, parseDisplay, parseFlexible,
-} from "./date-picker-mx-helpers";
+import { isoToDisplay } from "./date-picker-mx-helpers";
+import { useDatePickerMxValor } from "./date-picker-mx-valor";
 
 import { DatePickerMxCalendar } from "./date-picker-mx-calendar";
 import { manejarTeclaFecha } from "./date-picker-mx-keys";
@@ -11,6 +10,7 @@ import {
   MENSAJE_FECHA_INVALIDA, PLACEHOLDER_FECHA, pickerClearClass, pickerClearIconClass,
   pickerErrorClass, pickerRootClass, pickerTriggerClass,
 } from "@/components/ui/picker-mx-shell";
+
 
 
 interface DatePickerMxProps {
