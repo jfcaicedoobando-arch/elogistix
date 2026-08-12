@@ -44,6 +44,12 @@ export function EmbarquesHeaderActions({
           <DropdownMenuItem onClick={onExport} disabled={exportandoCsv}>
             <Download className="h-4 w-4 mr-2" /> {exportLabel}
           </DropdownMenuItem>
+          {!canEdit && onNuevoDesdeCotizacion ? (
+            <DropdownMenuItem onClick={onNuevoDesdeCotizacion}>
+              <Plus className="h-4 w-4 mr-2" /> Nuevo embarque
+            </DropdownMenuItem>
+          ) : null}
+
         </DropdownMenuContent>
       </DropdownMenu>
     </>
