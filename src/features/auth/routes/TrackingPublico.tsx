@@ -13,6 +13,7 @@ import { TrackingPublicoLoading } from "@/features/embarques/components/tracking
 import { TrackingPublicoTimeline } from "@/features/embarques/components/tracking/TrackingPublicoTimeline";
 import { Seo } from "@/components/shared/Seo";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { COPY_PIE } from "@/lib/copy/publicoCopy";
 
 
 function transporteLabel(e: TrackingPublicoData["embarque"]): string {
@@ -30,7 +31,7 @@ export default function TrackingPublico() {
   if (error || !data) return <TrackingPublicoErrorCard message={(error as Error)?.message} />;
 
   const { embarque: e, eventos, organizacion } = data;
-  const orgNombre = organizacion?.nombre || "Tracking de Embarque";
+  const orgNombre = organizacion?.nombre || COPY_PIE.seguimientoTitulo;
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,7 +48,7 @@ export default function TrackingPublico() {
           <Ship className="h-6 w-6 text-accent" />
           <div>
             <p className="font-semibold text-foreground">{orgNombre}</p>
-            <p className="text-xs text-muted-foreground">Seguimiento en tiempo real</p>
+            <p className="text-xs text-muted-foreground">{COPY_PIE.seguimientoSubtitulo}</p>
           </div>
         </div>
       </header>
