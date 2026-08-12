@@ -71,8 +71,9 @@ export function DatePickerMxCalendar({
           onSelect={(d) => {
             if (!d) onClear();
             else onPick(dateToIso(d));
-            setOpen(false);
+            cerrar();
           }}
+
           autoFocus
           locale={es}
           captionLayout="dropdown"
