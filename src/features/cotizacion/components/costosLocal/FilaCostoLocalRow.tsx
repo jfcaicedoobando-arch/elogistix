@@ -11,6 +11,7 @@ import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalo
 import type { FilaCostoLocal } from "../SeccionCostosInternosPLUnificado";
 import { parseCantidad, cantidadFueraDeRango, CANTIDAD_LIMITE_SANIDAD } from "../../utils/parseInputNumero";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
+import { filaCostoInvalida } from "@/features/cotizacion/domain/cotizacionVentaSync";
 
 interface Props {
   fila: FilaCostoLocal;
@@ -35,10 +36,15 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
   const profit = calcularUtilidad(ventaTotal, costoTotal);
   const pct = calcularMargen(ventaTotal, costoTotal);
 
+  // B-081: renglón con importes y sin concepto → se descartaría al generar la
+  // venta y la cotización saldría en $0.00. Se marca y bloquea el avance.
+  const conceptoFaltante = filaCostoInvalida(fila);
+
   return (
-    <div className="border-b border-border last:border-b-0 py-3 px-3 space-y-1">
+    <div className={`border-b border-border last:border-b-0 py-3 px-3 space-y-1 ${conceptoFaltante ? "bg-destructive/5" : ""}`}>
       <div className="flex items-center gap-2">
         <div className="min-w-[220px] flex-1">
+
           {/* Combobox estricto contra `catalogo_claves_sat` — mismo origen que el paso 3. */}
           <ProductoServicioSelect
             value={fila.concepto}
@@ -69,6 +75,14 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
               data-testid={`concepto-libre-aviso-${gi}`}
             >
               <PenLine className="h-3 w-3" /> Concepto libre: se pedirá la clave SAT al facturar.
+            </p>
+          )}
+          {conceptoFaltante && (
+            <p
+              className="mt-0.5 text-2xs text-destructive"
+              data-testid={`concepto-faltante-aviso-${gi}`}
+            >
+              Selecciona el concepto de este renglón; sin nombre no se genera el concepto de venta.
             </p>
           )}
         </div>

@@ -4,6 +4,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
 import { usePaso1Handlers } from "./usePaso1Handlers";
+import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { firmaCostos, type WizardStepsDeps as Deps } from "./wizardStepsTypes";
 
 /**
@@ -47,6 +48,17 @@ export function useCotizacionWizardSteps({
       });
       return;
     }
+    // B-081: un renglón con importes y sin concepto se descartaba en silencio y
+    // la cotización terminaba en $0.00 (PDF vacío). Ahora bloquea el avance.
+    const sinConcepto = costosSinConcepto(costosInternos);
+    if (sinConcepto.length > 0) {
+      notifyError(undefined, {
+        title: "Hay renglones de costo sin concepto",
+        description: `Selecciona el concepto de ${sinConcepto.length === 1 ? "1 renglón" : `${sinConcepto.length} renglones`} con importes capturados; sin nombre no se genera el concepto de venta.`,
+      });
+      return;
+    }
+
     try {
       if (cotizacionId) {
         await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
@@ -130,6 +142,17 @@ export function useCotizacionWizardSteps({
         });
         return;
       }
+      // B-081: si algún renglón con venta quedó fuera por no tener concepto, no
+      // damos por buena la cotización (terminaría con importes incompletos).
+      const descartados = costosSinConcepto(costosInternos);
+      if (descartados.length > 0) {
+        notifyError(undefined, {
+          title: "Renglones de costo sin concepto",
+          description: `${descartados.length === 1 ? "1 renglón tiene" : `${descartados.length} renglones tienen`} importes sin concepto y no se incluirían en la venta. Regresa al paso 2 y captura el concepto.`,
+        });
+        return;
+      }
+
       await savePasoFinal({
         cotizacionId, isEditMode, estadoActual: estadoInicial,
         mutations: { updateCotizacion },

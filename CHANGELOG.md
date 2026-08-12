@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.546.0] - 2026-08-12
+- Cotizaciones: se corrigió el PDF que salía con importes en **$0.00**. La causa era que un renglón de costos con precio de venta pero **sin concepto** se descartaba en silencio al generar los conceptos de venta.
+- El paso 2 del wizard ahora marca en rojo esos renglones y bloquea avanzar o guardar hasta capturar el concepto.
+- El detalle muestra un aviso con el botón **"Sincronizar conceptos de venta desde costos"** cuando la venta guardada quedó en cero.
+- Al editar costos desde el detalle ya no se pierde el precio de venta guardado.
+- La descarga de PDF avisa y se detiene si la cotización suma $0.00, para no enviar documentos vacíos al cliente.
+
+
 ## [13.545.2] - 2026-08-12
 - Embarques (cierre): las facturas al cliente con estado **Pagada** ya se consideran cobradas en el checklist de cierre, aunque el pago no esté capturado en tesorería (facturas históricas). Antes bloqueaban el cierre con "1 factura por cobrar".
 - El detalle del check indica cuántas facturas se dan por cobradas sólo por su estado.
