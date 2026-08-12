@@ -1,4 +1,3 @@
-"use memo";
 import { useParams } from "react-router-dom";
 import ClienteSummaryCards from "@/features/cliente/components/ClienteSummaryCards";
 import { ClienteDetalleDialogs } from "@/features/cliente/components/detalle/ClienteDetalleDialogs";

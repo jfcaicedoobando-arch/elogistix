@@ -2,7 +2,6 @@
  * CotizacionPlantillas — Gestión de plantillas de cotización (P2 cierre v13.296.0).
  * Refactor v13.297.4: tabla y dialog extraídos a `components/plantillas/*`.
  */
-"use memo";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { notifySuccess } from "@/lib/ui/appFeedback";

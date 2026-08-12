@@ -1,4 +1,3 @@
-"use memo";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

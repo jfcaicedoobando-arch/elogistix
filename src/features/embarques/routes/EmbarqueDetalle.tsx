@@ -1,4 +1,3 @@
-"use memo";
 import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useState } from "react";

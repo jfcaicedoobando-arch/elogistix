@@ -41,7 +41,10 @@ Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en Méxi
 
 ## Desarrollo local
 
-Requisitos: Node.js 20+ y `npm` o `bun`.
+Requisitos: Node.js 22+ y `npm` o `bun`.
+> Node 20 NO es compatible: `@supabase/realtime-js` requiere `WebSocket`
+> nativo global (estable desde Node 22). Bajo Node 20 varias suites del
+> proyecto `node` de Vitest fallan en collect. CI corre con Bun.
 
 Build de producción: `npm run build` con sourcemaps requiere ~8 GB de RAM
 (runners de CI: 16 GB). En entornos con ≤4 GB usar `npm run build:low-mem`
