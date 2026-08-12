@@ -1,4 +1,5 @@
 import { aMxn } from "@/lib/financial/convertir";
+import { sumarSubtotales, subtotalLinea, calcularIVA, roundMoney } from "@/lib/financial/financialUtils";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 
 export interface TotalFacturaMxn {
