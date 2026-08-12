@@ -1,21 +1,19 @@
 name: post-deploy-smoke
 
-# Smoke test diario que verifica que los edge functions críticos en producción
+# Smoke test semanal que verifica que los edge functions críticos en producción
 # (https://elogistix.lovable.app + https://librecarga.com) respondan con el
 # contrato esperado. Cubre:
 #   - user-management (smoke_test.ts con login real)
 #   - exchange-rates (HTTP smoke vía curl)
 #   - tracking-public (HTTP smoke vía curl)
+#
+# CI simplificado: sólo schedule semanal (lunes) + dispatch manual.
 
 on:
   schedule:
-    # 13:00 UTC = 07:00 CDMX (UTC-6)
-    - cron: "0 13 * * *"
+    # Lunes 13:00 UTC = 07:00 CDMX (UTC-6)
+    - cron: "0 13 * * 1"
   workflow_dispatch:
-  # v13.x (GHA-audit C2) — Lovable dispara este evento tras cada publish, así el
-  # smoke corre en minutos y no en la siguiente corrida del cron.
-  repository_dispatch:
-    types: [lovable-deployed]
 
 permissions:
   contents: read
