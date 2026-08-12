@@ -9536,6 +9536,7 @@ export type Database = {
       }
       siguiente_folio_cotizacion: { Args: never; Returns: string }
       siguiente_folio_proveedor: { Args: { p_org_id: string }; Returns: string }
+      siguiente_folio_traspaso: { Args: { p_org_id: string }; Returns: string }
       sincronizar_contenedores_embarque: {
         Args: { p_contenedores: Json; p_embarque_id: string }
         Returns: {
