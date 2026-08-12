@@ -19,7 +19,10 @@ import { useEmbarquesPageController, calcularEstadoEmbarque } from "@/features/e
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { notifyInfo } from "@/lib/ui/appFeedback";
+import { EmbarquesTablaVacia } from "@/features/embarques/components/EmbarquesTablaVacia";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+
 
 function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
   const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
