@@ -1,21 +1,10 @@
 name: CodeQL
 
 # Análisis estático de seguridad con CodeQL para JS/TS.
-# Corre en push/PR a main y semanalmente los lunes 06:00 UTC.
+# Corre semanalmente los lunes 06:00 UTC (o manualmente): se quitaron los
+# triggers de push/PR para simplificar el CI.
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
-      - ".github/ISSUE_TEMPLATE/**"
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
-      - ".github/ISSUE_TEMPLATE/**"
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:

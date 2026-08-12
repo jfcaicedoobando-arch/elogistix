@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.521.0] - 2026-08-12
+- CI (simplificación) — se eliminaron 4 workflows sin valor real: `deploy-gate` (el deploy es manual vía Lovable), `release-compatibility` (no hacemos releases versionados; también se borraron `scripts/db/release-manifest.ts`, los scripts `db:release-manifest:*` de `package.json` y `docs/ops/release-manifest.md`; `supabase/releases/` queda como histórico), `install-canary` y `deno-typecheck`.
+- CI — el job `edge-functions` de `ci.yml` ahora corre `deno test` **con** typecheck completo (se quitó `--no-check`), absorbiendo el workflow eliminado.
+- CI — `codeql.yml` queda sólo con `schedule` semanal + `workflow_dispatch` (sin push/PR). `e2e.yml` queda sólo con `schedule` nocturno + `workflow_dispatch` (se eliminaron `workflow_run`, `pull_request` y el job `guard-workflow-run`). `post-deploy-smoke.yml` conserva sus smoke tests pero pasa a `schedule` semanal (lunes) + `workflow_dispatch`, sin `repository_dispatch`.
+- Fix — se restauró `src/constants/appVersion.ts`, que había quedado vacío y rompía el build/typecheck en 14 archivos.
+
+
 ## [13.520.1] - 2026-08-11
 - CI (`audit:migrations` H6) — la migración de rate-limit de RPCs anónimas ahora declara permisos explícitos (`REVOKE ALL ... FROM PUBLIC` + `GRANT EXECUTE` a `anon`, `authenticated`, `service_role`) para las 4 funciones `SECURITY DEFINER` que reemplaza. Los permisos re-declarados son idénticos a los ya vigentes en la base de datos; sin cambio funcional.
 

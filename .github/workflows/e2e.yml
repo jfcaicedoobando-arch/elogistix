@@ -2,12 +2,9 @@ name: E2E (Playwright)
 
 # Corridas automáticas de la suite Playwright contra staging.
 #
-# Triggers:
+# Triggers (CI simplificado):
 #   - workflow_dispatch  → manual (con opción de override de E2E_BASE_URL).
-#   - schedule diario    → 12:30 UTC (06:30 CDMX), después de post-deploy-smoke.
-#   - workflow_run       → tras el smoke diario si terminó ok.
-#   - pull_request       → SOLO cuando el PR toca specs, config o helpers de E2E,
-#                          para no bloquear PRs de UI con la suite completa.
+#   - schedule diario    → 12:30 UTC (06:30 CDMX).
 #
 # Estrategia:
 #   - `internal-shard` (matrix 1..3): specs read-only del project `chromium-internal`
@@ -34,14 +31,6 @@ on:
         type: string
   schedule:
     - cron: "30 12 * * *"
-  workflow_run:
-    workflows: ["post-deploy-smoke"]
-    types: [completed]
-  pull_request:
-    paths:
-      - "e2e/**"
-      - "playwright.config.ts"
-      - ".github/workflows/e2e.yml"
 
 permissions:
   contents: read
@@ -88,25 +77,11 @@ env:
   E2E_STRICT_FIXTURES: ${{ github.event.inputs.strict_fixtures || '' }}
 
 jobs:
-  # Solo corre la suite si post-deploy-smoke finalizó "success"; si el smoke
-  # falla no tiene sentido gastar minutos en la suite completa — abrirá su
-  # propio issue.
-  guard-workflow-run:
-    name: Guard (workflow_run success)
-    runs-on: ubuntu-24.04
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - run: echo "ok"
-
   guard-secrets:
     name: Guard (E2E secrets)
-    needs: [guard-workflow-run]
     runs-on: ubuntu-24.04
-    # v13.518.1 (GHA-audit seguridad) — los secrets del environment e2e-staging
-    # NO se exponen a PRs de forks: un PR que edite un spec podría exfiltrarlos.
-    # Sólo corre en PRs de ramas internas del propio repo (o en dispatch/
-    # schedule/workflow_run, donde head.repo es nulo y la condición se cumple).
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    # El workflow sólo corre por schedule o dispatch manual (ramas internas),
+    # así que los secrets del environment e2e-staging nunca se exponen a forks.
     # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
     # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
     environment: e2e-staging
@@ -138,7 +113,6 @@ jobs:
           done
           scheduled=0
           [ "$EVENT_NAME" = "schedule" ] && scheduled=1
-          [ "$EVENT_NAME" = "workflow_run" ] && scheduled=1
           if [ -n "$core_missing" ]; then
             if [ "$scheduled" = "1" ]; then
               echo "::error::E2E secrets ausentes en corrida agendada:$core_missing — la suite NO corrió (verde vacío prohibido)."
@@ -450,7 +424,7 @@ jobs:
         run: |
           if [ -z "${E2E_MT_A_EMAIL}" ] || [ -z "${E2E_MT_A_PASSWORD}" ] || \
              [ -z "${E2E_MT_B_EMAIL}" ] || [ -z "${E2E_MT_B_PASSWORD}" ]; then
-            if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_run" ]; then
+            if [ "$EVENT_NAME" = "schedule" ]; then
               echo "::error::E2E_MT_* secrets ausentes en corrida agendada — el job multi-tenant NO corrió."
               exit 1
             fi
@@ -516,9 +490,9 @@ jobs:
       - uses: ./.github/actions/setup-bun
 
       - name: Gate global anti-skip (corridas agendadas)
-        # v13.x (GHA-audit A1/M8) — en schedule/workflow_run ningún job de tests
+        # v13.x (GHA-audit A1/M8) — en corridas agendadas ningún job de tests
         # puede quedar `skipped`: sería un verde sin cobertura real.
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_run'
+        if: github.event_name == 'schedule'
         env:
           R_INTERNAL: ${{ needs.internal-shard.result }}
           R_MUTATORS: ${{ needs.mutators.result }}
@@ -570,8 +544,8 @@ jobs:
   notify-failure:
     name: Notificar regresión E2E (issue)
     needs: [merge-reports]
-    # Solo en runs agendados / workflow_run (no en PRs, ni en dispatch).
-    if: ${{ failure() && (github.event_name == 'schedule' || github.event_name == 'workflow_run') }}
+    # Solo en runs agendados (no en dispatch manual).
+    if: ${{ failure() && github.event_name == 'schedule' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:

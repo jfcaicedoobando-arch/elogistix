@@ -347,18 +347,14 @@ jobs:
 
       - name: Run Deno tests (excluding smoke)
         if: steps.changes.outputs.run == 'true'
-        # --no-check: el ecosistema Deno+esm.sh emite muchos errores TS2578
-        # ("Unused @ts-expect-error") cuando los tipos de `Deno.*` y de los
-        # @supabase/* remotos se resuelven completamente. Mantenemos los
-        # @ts-expect-error porque en el bundle web (vitest/tsc) sí son
-        # necesarios. El typecheck de Deno se hace en `deno test` localmente.
+        # Corre CON typecheck completo (sin `--no-check`): este paso es el único
+        # chequeo de tipos de los edge functions en el CI simplificado.
         run: |
           readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
           deno test \
             --allow-env \
             --allow-net \
             --allow-read \
-            --no-check \
             "${tests[@]}"
 
   # ---------------------------------------------------------------------
