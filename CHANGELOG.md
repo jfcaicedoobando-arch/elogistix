@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.545.2] - 2026-08-12
+- Embarques (cierre): las facturas al cliente con estado **Pagada** ya se consideran cobradas en el checklist de cierre, aunque el pago no esté capturado en tesorería (facturas históricas). Antes bloqueaban el cierre con "1 factura por cobrar".
+- El detalle del check indica cuántas facturas se dan por cobradas sólo por su estado.
+- Mismo criterio en el resumen de pendientes administrativos y en las alertas de Cierre operativo / Cierre administrativo.
+
 ## [13.545.1] - 2026-08-12
 - Tesorería: se corrigió el error "No tienes permisos... folio secuencias" al registrar un traspaso entre cuentas propias; el folio TR- ahora se asigna con una función interna que valida la organización.
 
