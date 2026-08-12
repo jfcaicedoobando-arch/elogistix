@@ -17,12 +17,14 @@ interface Props {
   setOpen: (o: boolean) => void;
   onPick: (iso: string) => void;
   onClear: () => void;
+  /** Se invoca al cerrar el popover para devolver el foco al input. */
+  onCerrar?: () => void;
 }
 
 /** Botón + popover con Calendar embebido, extraído para respetar el
  *  límite Power-of-10 (≤200 líneas por archivo). */
 export function DatePickerMxCalendar({
-  value, min, max, open, disabled, setOpen, onPick, onClear,
+  value, min, max, open, disabled, setOpen, onPick, onClear, onCerrar,
 }: Props) {
   const selectedDate = isoToDate(value);
   const minDate = min ? isoToDate(min) : undefined;
@@ -31,18 +33,33 @@ export function DatePickerMxCalendar({
   if (minDate) dayDisabled.push({ before: minDate });
   if (maxDate) dayDisabled.push({ after: maxDate });
 
+  const cerrar = () => {
+    setOpen(false);
+    onCerrar?.();
+  };
+
   return (
-    <Popover open={open} onOpenChange={(o) => { if (!disabled) setOpen(o); }}>
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        if (disabled) return;
+        setOpen(o);
+        if (!o) onCerrar?.();
+      }}
+    >
       <PopoverTrigger asChild>
         <button
           type="button"
+          tabIndex={-1}
           disabled={disabled}
           aria-label="Abrir calendario"
+          title="Abrir calendario (Alt + Flecha abajo)"
           className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
         >
           <CalendarIcon className={pickerIconClass} />
         </button>
       </PopoverTrigger>
+
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
