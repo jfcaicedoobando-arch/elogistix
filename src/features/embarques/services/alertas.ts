@@ -7,11 +7,14 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export type AlertaEmbarqueTipo = "demora" | "garantia" | "admin_pendiente";
+export type AlertaEmbarqueTipo = "demora" | "garantia" | "cierre_operativo" | "admin_pendiente";
 
 export interface EmbarquesAlertasIds {
   demora: Set<string>;
   garantia: Set<string>;
+  /** v13.545.0 — Entregado / EIR con pendientes (cierre operativo). */
+  cierre_operativo: Set<string>;
+  /** Por liquidar con pendientes (cierre administrativo). */
   admin_pendiente: Set<string>;
 }
 
@@ -19,10 +22,21 @@ export interface EmbarquesAlertasResumen extends EmbarquesAlertasIds {
   total: number;
 }
 
-const TIPOS: readonly AlertaEmbarqueTipo[] = ["demora", "garantia", "admin_pendiente"] as const;
+const TIPOS: readonly AlertaEmbarqueTipo[] = [
+  "demora",
+  "garantia",
+  "cierre_operativo",
+  "admin_pendiente",
+] as const;
 
 function emptyResumen(): EmbarquesAlertasResumen {
-  return { demora: new Set(), garantia: new Set(), admin_pendiente: new Set(), total: 0 };
+  return {
+    demora: new Set(),
+    garantia: new Set(),
+    cierre_operativo: new Set(),
+    admin_pendiente: new Set(),
+    total: 0,
+  };
 }
 
 export async function fetchEmbarquesAlertasResumen(): Promise<EmbarquesAlertasResumen> {
@@ -38,6 +52,7 @@ export async function fetchEmbarquesAlertasResumen(): Promise<EmbarquesAlertasRe
     if (!TIPOS.includes(tipo)) continue;
     acc[tipo].add(r.embarque_id);
   }
-  acc.total = acc.demora.size + acc.garantia.size + acc.admin_pendiente.size;
+  acc.total =
+    acc.demora.size + acc.garantia.size + acc.cierre_operativo.size + acc.admin_pendiente.size;
   return acc;
 }
