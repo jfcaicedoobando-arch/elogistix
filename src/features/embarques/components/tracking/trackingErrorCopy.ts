@@ -1,8 +1,10 @@
 /**
  * UIB-06: la edge `tracking-public` devuelve códigos técnicos en `body.error`
  * (p.ej. `edge_functions_unavailable`). Nunca mostrarlos crudos al destinatario
- * externo del tracking.
+ * externo del tracking: se traducen al copy público único (`publicoCopy`).
  */
+import { COPY_ENLACE } from "@/lib/copy/publicoCopy";
+
 export function mensajeTrackingAmigable(raw?: string): string {
   const m = (raw ?? "").toLowerCase();
   if (
@@ -12,7 +14,7 @@ export function mensajeTrackingAmigable(raw?: string): string {
     m.includes("not found") ||
     m.includes("token")
   ) {
-    return "Este enlace de tracking no existe o ha expirado.";
+    return COPY_ENLACE.invalido;
   }
-  return "El servicio de seguimiento no está disponible en este momento. Intenta de nuevo en unos minutos.";
+  return COPY_ENLACE.noDisponible;
 }
