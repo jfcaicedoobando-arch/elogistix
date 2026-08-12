@@ -40,7 +40,7 @@ interface ViewProps {
 
 export function ConceptosMobileList({ conceptos, moneda, inferirTipoIva }: ViewProps) {
   return (
-    <div className="md:hidden space-y-2">
+    <div className="lg:hidden space-y-2">
       {conceptos.map((c, i) => {
         const descripcion = c.descripcion ?? c.concepto ?? "—";
         const importe = c.importe ?? c.total ?? 0;
@@ -74,7 +74,7 @@ export function ConceptosMobileList({ conceptos, moneda, inferirTipoIva }: ViewP
 
 export function ConceptosDesktopTable({ conceptos, moneda, mostrarEmbarque, inferirTipoIva }: ViewProps) {
   return (
-    <div className="hidden md:block overflow-x-auto">
+    <div className="hidden lg:block overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
