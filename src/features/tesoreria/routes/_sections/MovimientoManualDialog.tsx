@@ -86,51 +86,51 @@ export function MovimientoManualDialog({
         />
       </div>
 
-        <div>
-          <Label htmlFor="mov-tipo">Tipo *</Label>
-          <Select
-            value={manualForm.tipo ?? "cargo"}
-            onValueChange={(v) => setManualField("tipo", v as "cargo" | "abono")}
-          >
-            <SelectTrigger id="mov-tipo"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cargo">Cargo</SelectItem>
-              <SelectItem value="abono">Abono</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="sm:col-span-2">
-          <Label htmlFor="mov-concepto">Concepto *</Label>
-          <Input
-            id="mov-concepto"
-            value={manualForm.concepto ?? ""}
-            onChange={(e) => setManualField("concepto", e.target.value)}
-          />
-        </div>
-        <div>
-          <Label htmlFor="mov-referencia">Referencia</Label>
-          <Input
-            id="mov-referencia"
-            value={manualForm.referencia ?? ""}
-            onChange={(e) => setManualField("referencia", e.target.value)}
-          />
-        </div>
-        <div>
-          <Label htmlFor="mov-importe">Importe *</Label>
-          <MoneyInput
-            id="mov-importe"
-            value={manualForm.monto ?? null}
-            onChange={(n: number) => setManualField("monto", n)}
-            currency={monedaCuenta}
-            aria-invalid={!!erroresManual.monto}
-            aria-describedby={erroresManual.monto ? "mov-importe-error" : undefined}
-          />
-          {erroresManual.monto && (
-            <p id="mov-importe-error" className="mt-1 text-xs text-destructive">
-              {erroresManual.monto}
-            </p>
-          )}
+      <div>
+        <Label htmlFor="mov-tipo">Tipo *</Label>
+        <Select
+          value={manualForm.tipo ?? "cargo"}
+          onValueChange={(v) => setManualField("tipo", v as "cargo" | "abono")}
+        >
+          <SelectTrigger id="mov-tipo"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="cargo">Cargo</SelectItem>
+            <SelectItem value="abono">Abono</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+      <div className="sm:col-span-2">
+        <Label htmlFor="mov-concepto">Concepto *</Label>
+        <Input
+          id="mov-concepto"
+          value={manualForm.concepto ?? ""}
+          onChange={(e) => setManualField("concepto", e.target.value)}
+        />
+      </div>
+      <div>
+        <Label htmlFor="mov-referencia">Referencia</Label>
+        <Input
+          id="mov-referencia"
+          value={manualForm.referencia ?? ""}
+          onChange={(e) => setManualField("referencia", e.target.value)}
+        />
+      </div>
+      <div>
+        <Label htmlFor="mov-importe">Importe *</Label>
+        <MoneyInput
+          id="mov-importe"
+          value={manualForm.monto ?? null}
+          onChange={(n: number) => setManualField("monto", n)}
+          currency={monedaCuenta}
+          aria-invalid={!!erroresManual.monto}
+          aria-describedby={erroresManual.monto ? "mov-importe-error" : undefined}
+        />
+        {erroresManual.monto && (
+          <p id="mov-importe-error" className="mt-1 text-xs text-destructive">
+            {erroresManual.monto}
+          </p>
+        )}
+    </div>
     </FormDialogShell>
 
   );
