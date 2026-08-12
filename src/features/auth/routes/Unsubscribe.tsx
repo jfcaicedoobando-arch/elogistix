@@ -48,7 +48,9 @@ export default function Unsubscribe() {
         setStatus("error");
       }
     } catch (e) {
-      setErrorMsg((e as Error).message);
+      // UIB-15 (UX-02): superficie pública — nunca error.message crudo.
+      console.error("[unsubscribe]", e);
+      setErrorMsg("No pudimos procesar la baja. Intenta de nuevo en unos minutos.");
       setStatus("error");
     }
   };

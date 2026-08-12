@@ -26,7 +26,7 @@ import { createDemoLead } from "@/features/marketing/services/demoLeads";
 import { enterDemoMode } from "@/features/marketing/services/demoAccess";
 import { demoAccessSchema } from "@/features/marketing/lib/demoAccessSchema";
 import { ROUTES } from "@/constants/routes";
-import { getErrorMessage } from "@/lib/errors";
+import { mensajeAmigableDemo } from "@/features/marketing/services/demoErrorCopy";
 
 interface Props {
   open: boolean;
@@ -79,7 +79,7 @@ export function DemoAccessDialog({ open, onOpenChange }: Props) {
       onOpenChange(false);
       navigate(ROUTES.INICIO, { replace: true });
     } catch (err) {
-      const msg = getErrorMessage(err);
+      const msg = mensajeAmigableDemo(err);
       setError(msg);
       notifyError(undefined, {
         title: "No pudimos abrir la demo",

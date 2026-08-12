@@ -35,8 +35,10 @@ describe("translateAuthError", () => {
     expect(translateAuthError("INVALID LOGIN CREDENTIALS")).toMatch(/incorrectos/i);
   });
 
-  it("devuelve el mensaje original cuando no hay match", () => {
+  it("UIB-15: nunca devuelve el mensaje crudo cuando no hay match", () => {
     const raw = "Some other backend error xyz";
-    expect(translateAuthError(raw)).toBe(raw);
+    const out = translateAuthError(raw);
+    expect(out).not.toContain("xyz");
+    expect(out).toMatch(/inesperado/i);
   });
 });

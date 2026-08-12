@@ -122,8 +122,10 @@ describe("translateAuthError · token y usuario", () => {
     );
   });
 
-  it("devuelve el mensaje original si no hay traducción", () => {
+  it("UIB-15: devuelve un genérico es-MX si no hay traducción (nunca el crudo)", () => {
     const msg = "Unexpected server error 500";
-    expect(translateAuthError(msg)).toBe(msg);
+    const out = translateAuthError(msg);
+    expect(out).not.toBe(msg);
+    expect(out).toBe("Ocurrió un error inesperado. Intenta de nuevo.");
   });
 });
