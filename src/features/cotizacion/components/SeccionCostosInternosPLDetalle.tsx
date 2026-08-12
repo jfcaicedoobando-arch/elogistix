@@ -14,6 +14,9 @@ import { calcTotalsPL, type FilaCostoDetalle } from "./costosPLTypes";
 // O3: match costos↔conceptos centralizado. OJO: por nombre normalizado con
 // fallback posicional — ver comentario de riesgo en matchConceptoVenta.ts.
 import { matchConceptoVenta } from "@/features/cotizacion/utils/matchConceptoVenta";
+import { useTasaIVA } from "@/features/catalogos/hooks";
+import { requiereSincronizarVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
+import { AvisoSincronizarConceptosVenta } from "./AvisoSincronizarConceptosVenta";
 
 interface Props {
   cotizacionId: string;
