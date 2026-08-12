@@ -122,6 +122,7 @@ export default function EditarEmbarque() {
         saveLabel="Guardar Cambios"
         onBack={() => navigate(`/embarques/${id}`)}
         onFinish={handleSave}
+        isDirty={currentStep > 1}
       >
         {currentStep === 1 && (
           <StepDatosGenerales

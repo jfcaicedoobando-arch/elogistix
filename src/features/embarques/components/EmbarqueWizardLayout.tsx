@@ -4,6 +4,7 @@
  */
 import { ReactNode, useCallback } from "react";
 import { WizardShell } from "@/components/shared/WizardShell";
+import { useDirtyGuard } from "@/hooks/shared/useDirtyGuard";
 
 interface Step {
   title: string;
@@ -23,6 +24,8 @@ interface EmbarqueWizardLayoutProps {
   onFinish: () => void;
   /** Optional validation before advancing from a specific step. Return false to block. */
   validateStep?: (step: number) => boolean;
+  /** FE-11: cuando hay captura sin guardar, avisa antes de salir del wizard. */
+  isDirty?: boolean;
   children: ReactNode;
 }
 
@@ -38,8 +41,13 @@ export function EmbarqueWizardLayout({
   onBack,
   onFinish,
   validateStep,
+  isDirty = false,
   children,
 }: EmbarqueWizardLayoutProps) {
+  // FE-11: durante el guardado no se bloquea la navegación (el redirect es
+  // intencional); sólo cuando hay captura pendiente.
+  const { guardDialog } = useDirtyGuard(isDirty && !isPending);
+
   const handleNext = useCallback(() => {
     if (validateStep && !validateStep(currentStep)) return;
     if (currentStep < totalSteps) setCurrentStep((p: number) => p + 1);
@@ -67,6 +75,7 @@ export function EmbarqueWizardLayout({
         saveLabel,
       }}
     >
+      {guardDialog}
       {children}
     </WizardShell>
   );

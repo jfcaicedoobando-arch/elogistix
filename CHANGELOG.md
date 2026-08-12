@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.542.0] - 2026-08-12
+- Tesorería: los traspasos entre cuentas de distinta moneda exigen tipo de cambio; el servicio ya no envía 1 por omisión y se sugiere el TC DOF de la fecha del traspaso (BL-04).
+- Facturación: al fallar la descarga de PDF/XML se muestra un mensaje accionable en español; el detalle técnico queda sólo en el log (UIA-13).
+- Accesibilidad: `FormField` liga la etiqueta al control con `htmlFor`/`id` y anuncia el error con `aria-describedby` (UX-04).
+- Design system: `Label` gana la variante `size="sm"` para formularios densos, documentada en `docs/design-system.md` (UX-08).
+- Formularios: el aviso de "cambios sin guardar" se extiende al wizard de embarques y al editor de conceptos de factura (FE-11).
+
+
 ## [13.541.0] - 2026-08-12
 - Comisiones: el alta de vendedora valida el porcentaje (0-100) igual que la edición y el campo acepta sólo ese rango (FE-08).
 - Facturación manual: el total en MXN que valida el límite de crédito se calcula con el canon de dinero (redondeo por línea), evitando diferencias de centavos contra el total timbrado (FE-12).

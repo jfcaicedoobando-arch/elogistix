@@ -53,6 +53,7 @@ export default function NuevoEmbarque() {
         onBack={() => navigate("/embarques")}
         onFinish={w.handleFinish}
         validateStep={(step) => w.validateStep(step)}
+        isDirty={w.currentStep > 1}
       >
         <AsyncBoundary
           isLoading={w.catalogosCargando}

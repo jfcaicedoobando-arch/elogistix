@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 
 type Cuenta = Tables<"cuentas_bancarias">;
 
@@ -58,6 +59,22 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   const destino = useMemo(() => cuentas.find((c) => c.id === state.destinoId), [cuentas, state.destinoId]);
   const mismoMoneda = origen && destino && origen.moneda === destino.moneda;
 
+  // BL-04: cuando las monedas difieren sugerimos el TC DOF de la fecha del
+  // traspaso. Es sólo una sugerencia editable; si el usuario lo borra, la
+  // validación vuelve a exigirlo (nunca se asume 1).
+  const requiereTc = !!origen && !!destino && !mismoMoneda;
+  const { data: tcDof } = useTcDofPorFecha(state.fecha, requiereTc);
+  const tcSugerido = useMemo(
+    () => sugerirTc(tcDof, origen?.moneda, destino?.moneda),
+    [tcDof, origen?.moneda, destino?.moneda],
+  );
+
+  useEffect(() => {
+    if (!requiereTc || !tcSugerido) return;
+    setState((prev) => (prev.tipoCambio > 0 ? prev : { ...prev, tipoCambio: tcSugerido }));
+  }, [requiereTc, tcSugerido]);
+
+
   const montoDestino = useMemo(() => {
     if (!state.montoOrigen || state.montoOrigen <= 0) return 0;
     if (mismoMoneda) return state.montoOrigen;
@@ -89,5 +106,24 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     mismoMoneda,
     montoDestino,
     error,
+    tcSugerido,
+    fechaTcDof: tcDof?.fecha ?? null,
   };
+}
+
+type Moneda = Cuenta["moneda"];
+
+/** Convierte el TC DOF (base MXN) al par origen→destino del traspaso. */
+function sugerirTc(
+  tc: { usdMxn: number; eurMxn: number | null } | null | undefined,
+  origen?: Moneda,
+  destino?: Moneda,
+): number | null {
+  if (!tc || !origen || !destino || origen === destino) return null;
+  const aMxn = (m: Moneda): number | null =>
+    m === "MXN" ? 1 : m === "USD" ? tc.usdMxn : tc.eurMxn;
+  const o = aMxn(origen);
+  const d = aMxn(destino);
+  if (!o || !d || o <= 0 || d <= 0) return null;
+  return Math.round((o / d) * 10000) / 10000;
 }

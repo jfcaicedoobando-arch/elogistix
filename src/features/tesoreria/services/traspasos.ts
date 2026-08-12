@@ -16,7 +16,12 @@ export interface RegistrarTraspasoInput {
   cuentaDestinoId: string;
   fecha: string;
   montoOrigen: number;
-  tipoCambio?: number;
+  /**
+   * BL-04: obligatorio. Para traspasos de la misma moneda el llamador manda 1
+   * explícitamente; nunca se asume 1 por omisión, porque eso convertía USD a
+   * MXN al tipo 1:1 sin aviso.
+   */
+  tipoCambio: number;
   comision?: number;
   concepto?: string;
   referencia?: string;
@@ -25,12 +30,15 @@ export interface RegistrarTraspasoInput {
 export async function registrarTraspaso(
   input: RegistrarTraspasoInput,
 ): Promise<string> {
+  if (!Number.isFinite(input.tipoCambio) || input.tipoCambio <= 0) {
+    throw new Error("Captura el tipo de cambio del traspaso.");
+  }
   const { data, error } = await supabase.rpc("registrar_traspaso_bancario", {
     p_cuenta_origen_id: input.cuentaOrigenId,
     p_cuenta_destino_id: input.cuentaDestinoId,
     p_fecha: input.fecha,
     p_monto_origen: input.montoOrigen,
-    p_tipo_cambio: input.tipoCambio ?? 1,
+    p_tipo_cambio: input.tipoCambio,
     p_comision: input.comision ?? 0,
     p_concepto: input.concepto ?? "",
     p_referencia: input.referencia ?? "",

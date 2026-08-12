@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFacturaConceptosEditorController } from "@/features/facturacion/hooks/useFacturaConceptosEditorController";
+import { useDirtyGuard } from "@/hooks/shared/useDirtyGuard";
 import { ConceptoRow, NuevoRow } from "./FacturaConceptosEditorRows";
 import type { ConceptoFacturaRow } from "@/features/facturacion/services/conceptosFacturaCrud";
 import type { Database } from "@/integrations/supabase/types";
@@ -37,8 +38,13 @@ export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conc
     EMPTY,
   } = useFacturaConceptosEditorController({ facturaId, organizationId, moneda });
 
+  // FE-11: si hay un renglón abierto (nuevo o en edición) sin guardar, avisa
+  // antes de salir de la pantalla o cerrar la pestaña.
+  const { guardDialog } = useDirtyGuard(showNew || editingId !== null);
+
   return (
     <Card>
+      {guardDialog}
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Editar conceptos del borrador</CardTitle>
         <Button
