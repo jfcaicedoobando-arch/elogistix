@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { COPY_ENLACE, COPY_VALIDACION } from "@/lib/copy/publicoCopy";
+import { COPY_ENLACE, COPY_PASOS, COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 
 interface Props {
   submitting: boolean;
@@ -99,7 +99,16 @@ export function PortalProformaAcciones({ submitting, onResponder, error }: Props
         )}
 
         {(localError || error) && (
-          <p className="text-sm text-destructive">{localError ?? error}</p>
+          <div className="space-y-1">
+            <p className="text-sm text-destructive">{localError ?? error}</p>
+            {(localError ?? error) === COPY_ENLACE.noDisponible && (
+              <ul className="list-disc pl-5 text-xs text-muted-foreground space-y-0.5">
+                {COPY_PASOS.servicioNoDisponible.map((paso) => (
+                  <li key={paso}>{paso}</li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

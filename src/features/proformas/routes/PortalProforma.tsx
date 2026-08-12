@@ -15,6 +15,8 @@ import { PortalProformaAcciones } from "@/features/proformas/components/portal/P
 
 import { formatFechaHora } from "@/lib/formatters";
 import { LoadingState } from "@/components/shared/states/LoadingState";
+import { AvisoAccionable } from "@/components/shared/states/AvisoAccionable";
+import { COPY_ENLACE, COPY_PASOS } from "@/lib/copy/publicoCopy";
 
 function fechaMx(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -52,25 +54,24 @@ function ContenidoPortal({ state }: { state: PortalState }) {
 
   if (error || data?.estado_link === "token_invalido") {
     return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Enlace inválido</AlertTitle>
-        <AlertDescription>
-          El enlace no es válido o fue revocado. Solicita uno nuevo a tu ejecutivo de cuenta.
-        </AlertDescription>
-      </Alert>
+      <AvisoAccionable
+        tono="error"
+        icon={<AlertTriangle className="h-5 w-5" />}
+        titulo="No pudimos abrir esta proforma"
+        descripcion={COPY_ENLACE.invalido}
+        pasos={COPY_PASOS.enlaceInvalido}
+      />
     );
   }
 
   if (data?.proforma && data.estado_link === "expirado") {
     return (
-      <Alert>
-        <Clock className="h-4 w-4" />
-        <AlertTitle>Enlace expirado</AlertTitle>
-        <AlertDescription>
-          Este enlace expiró el {fechaMx(data.proforma.token_expira_at)}. Solicita uno nuevo a tu ejecutivo.
-        </AlertDescription>
-      </Alert>
+      <AvisoAccionable
+        icon={<Clock className="h-5 w-5" />}
+        titulo="Este enlace ya venció"
+        descripcion={`El enlace de tu proforma venció el ${fechaMx(data.proforma.token_expira_at)}.`}
+        pasos={COPY_PASOS.enlaceVencido}
+      />
     );
   }
 
