@@ -10,11 +10,12 @@ type TrackingRpcResult = {
   error?: string;
   embarque?: unknown;
   eventos?: unknown;
+  documentos?: unknown;
   organizacion?: unknown;
 } | null;
 
 export type TrackingOutcome =
-  | { ok: true; embarque: unknown; eventos: unknown; organizacion: unknown }
+  | { ok: true; embarque: unknown; eventos: unknown; documentos: unknown; organizacion: unknown }
   | { ok: false; status: 400 | 404 | 410; error: string };
 
 /** Pure helper: maps the RPC result to a typed outcome (no network). */
@@ -34,6 +35,7 @@ export function classifyTrackingResult(
     ok: true,
     embarque: r.embarque,
     eventos: r.eventos ?? [],
+    documentos: r.documentos ?? [],
     organizacion: r.organizacion ?? null,
   };
 }
@@ -82,6 +84,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       embarque: outcome.embarque,
       eventos: outcome.eventos,
+      documentos: outcome.documentos,
       organizacion: outcome.organizacion,
     });
   } catch (err) {

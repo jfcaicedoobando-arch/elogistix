@@ -33,7 +33,18 @@ export interface TrackingPublicoData {
     ubicacion: string;
     fecha: string;
   }[];
+  /** Avance documental visible al cliente (sin archivos ni notas internas). */
+  documentos: TrackingPublicoDocumento[];
   organizacion: { nombre: string; logo_url: string | null } | null;
+}
+
+/** Documento del expediente tal como se muestra en el tracking público. */
+export interface TrackingPublicoDocumento {
+  nombre: string;
+  estado: string;
+  /** `true` si la etapa actual del embarque lo exige. */
+  requerido: boolean;
+  recibido: boolean;
 }
 
 /**
