@@ -143,6 +143,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-tsc-
 
+      # v13.522.0 — Mismo guard que en `build`: si appVersion.ts está vacío,
+      # tsc falla con errores en cascada poco claros. Abortar temprano.
+      - name: Verify appVersion.ts integrity
+        run: |
+          set -euo pipefail
+          FILE="src/constants/appVersion.ts"
+          if [ ! -s "$FILE" ]; then
+            echo "::error::$FILE está vacío o no existe."
+            exit 1
+          fi
+          if ! grep -qE "export\s+const\s+APP_VERSION\s*=" "$FILE"; then
+            echo "::error::$FILE no exporta APP_VERSION."
+            cat "$FILE"
+            exit 1
+          fi
+
       - name: TypeScript typecheck (incremental)
         run: bun run typecheck
 
