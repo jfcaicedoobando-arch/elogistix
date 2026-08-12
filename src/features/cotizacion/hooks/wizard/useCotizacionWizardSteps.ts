@@ -4,6 +4,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
 import { usePaso1Handlers } from "./usePaso1Handlers";
+import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { firmaCostos, type WizardStepsDeps as Deps } from "./wizardStepsTypes";
 
 /**
