@@ -2,7 +2,6 @@
  * Card con el formulario de edición de datos básicos del lead.
  * Extraído de `pages/crm/LeadDetalle.tsx`.
  */
-import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

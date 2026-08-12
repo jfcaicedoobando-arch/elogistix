@@ -1,6 +1,5 @@
 /** Sub-componentes presentacionales del modal de registrar pago.
  *  Extraídos para que `DialogRegistrarPago` cumpla el límite de complejidad. */
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
