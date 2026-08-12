@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CalendarClock, CalendarCheck2 } from "lucide-react";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { formatFecha } from "@/lib/formatters";
+import { formatFechaEs } from "@/lib/formatters";
 
 interface Props {
   estado: string;
@@ -19,7 +19,7 @@ interface Props {
 
 function fecha(iso: string | null): string {
   if (!iso) return "Por confirmar";
-  const f = formatFecha(iso);
+  const f = formatFechaEs(iso);
   return f === "-" ? "Por confirmar" : f;
 }
 
