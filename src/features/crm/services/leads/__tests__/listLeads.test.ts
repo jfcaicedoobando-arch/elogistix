@@ -82,4 +82,10 @@ describe("listLeads — contrato server-side", () => {
     expect(state.ors[0]).toContain("contacto.ilike.%acme%");
     expect(state.ors[0]).toContain("email.ilike.%acme%");
   });
+
+  it("excluye leads con borrado lógico (deleted_at)", async () => {
+    await listLeads({ page: 0, pageSize: 25 });
+    expect(state.is).toContainEqual(["deleted_at", null]);
+  });
 });
+
