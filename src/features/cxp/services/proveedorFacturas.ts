@@ -18,7 +18,6 @@ import type { FacturaCxP, FetchCxPFiltros } from "./proveedorFacturas.types";
 
 export type {
   ProveedorFacturaRow,
-  EstadoProveedorFactura,
   EstatusCxP,
   FacturaCxP,
   FetchCxPFiltros,
