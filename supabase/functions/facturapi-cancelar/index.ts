@@ -9,7 +9,7 @@
  *   04 = Operación nominativa relacionada en una factura global
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
@@ -17,7 +17,7 @@ import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
 import {
   handleCancelFailure,
   resolveSustitutaSnapshot,
@@ -37,18 +37,21 @@ void Deno.env.get("FACTURAPI_KEY");
 void resolveFacturapiKey;
 
 Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
   const { data: userData, error: uErr } = await supabase.auth.getUser();
-  if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+  if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const rawBody = (await req.json().catch(() => ({}))) as CancelacionInput & {
     sustituida_por_factura_id?: string;
@@ -60,7 +63,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   // formato PDF (además del XML). Aquí lo streameamos como binario al
   // navegador sin guardarlo en BD (el XML sigue siendo la fuente de verdad).
   if (rawBody.solo_descargar_acuse_pdf === true) {
-    if (!rawBody.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
+    if (!rawBody.factura_id) return json({ error: "factura_id_required" }, 400);
     return await handleDescargarAcusePdf(supabase, userData.user.id, rawBody.factura_id);
   }
 
@@ -68,7 +71,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   // necesitamos volver a preguntarle al SAT por el acuse (útil cuando la
   // primera cancelación quedó con `acuse_cancelacion_status = 'pending'`).
   if (rawBody.solo_descargar_acuse === true) {
-    if (!rawBody.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
+    if (!rawBody.factura_id) return json({ error: "factura_id_required" }, 400);
     return await handleDescargarAcuseXml(supabase, userData.user.id, rawBody.factura_id);
   }
 
@@ -82,7 +85,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   if (sustituidaPorFacturaId) {
     const snap = await resolveSustitutaSnapshot(supabase, sustituidaPorFacturaId);
     if (!snap.ok) {
-      return jsonResponse({ error: "sustituta_sin_uuid", message: "La factura sustituta aún no está timbrada." }, 422);
+      return json({ error: "sustituta_sin_uuid", message: "La factura sustituta aún no está timbrada." }, 422);
     }
     sustituyeUuidResuelto = snap.uuid;
     sustituyeFacturapiId = snap.facturapiId;
@@ -91,7 +94,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
 
   const validated = validateCancelacionInput({ ...rawBody, sustituye_uuid: sustituyeUuidResuelto });
   if (!validated.ok) {
-    return jsonResponse({ error: validated.error, ...(validated.message ? { message: validated.message } : {}) }, 400);
+    return json({ error: validated.error, ...(validated.message ? { message: validated.message } : {}) }, 400);
   }
   const { factura_id, motivo, sustituye_uuid } = validated.data;
 
@@ -100,20 +103,20 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .select("id, facturapi_id, organization_id, estado")
     .eq("id", factura_id)
     .maybeSingle();
-  if (fErr || !factura) return jsonResponse({ error: "factura_not_found" }, 404);
-  if (!factura.facturapi_id) return jsonResponse({ error: "no_timbrada" }, 409);
+  if (fErr || !factura) return json({ error: "factura_not_found" }, 404);
+  if (!factura.facturapi_id) return json({ error: "no_timbrada" }, 409);
   // Ola 4 · N38: la sustituta debe pertenecer a la MISMA organización que la
   // factura a cancelar — sin este guard se grababa `sustituida_por`
   // cross-tenant y el pre-flight consultaba un ObjectId ajeno.
   if (sustitutaOrgId && sustitutaOrgId !== factura.organization_id) {
-    return jsonResponse({ error: "sustituta_otra_org", message: "La factura sustituta pertenece a otra organización." }, 422);
+    return json({ error: "sustituta_otra_org", message: "La factura sustituta pertenece a otra organización." }, 422);
   }
   if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
-    return jsonResponse({ error: "forbidden" }, 403);
+    return json({ error: "forbidden" }, 403);
   }
 
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
-  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
   // Pre-flight motivo 01: verificar related_documents relación 04.
@@ -148,7 +151,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     ) as FapiCancelResponse;
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
-      return jsonResponse(
+      return json(
         { error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message },
         504,
       );

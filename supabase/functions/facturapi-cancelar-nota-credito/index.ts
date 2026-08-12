@@ -5,12 +5,12 @@
  * Entrada: { nota_credito_id, motivo: '01'|'02'|'03'|'04', sustituye_uuid? }
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
 import { preloadCancelContext, validateRequest, type ReqBody } from "./contexto.ts";
 import { handleCancelOutcome, type FapiCancelResponse } from "./terminales.ts";
 
@@ -22,17 +22,20 @@ void resolveFacturapiKey;
 export { validateRequest };
 
 Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const json = makeJson(req);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
   const { data: userData, error: uErr } = await supabase.auth.getUser();
-  if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
+  if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
   const invalid = validateRequest(req, body);
@@ -43,7 +46,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
   const { nc, sustituyeFacturapiId } = ctxResult;
 
   const resolved = await getFacturapiClient(supabase, nc.organization_id);
-  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
   let cancelResp: FapiCancelResponse;
@@ -65,7 +68,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
         entidadId: body.nota_credito_id,
         detalles: { op: err.op, timeout_ms: err.timeoutMs },
       });
-      return jsonResponse({ error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message }, 504);
+      return json({ error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message }, 504);
     }
     const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
@@ -78,7 +81,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
       detalles: { status, response: detail },
     });
     const message = extractFacturapiMessage(detail, status);
-    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
+    return json({ error: "facturapi_error", status, detail, message }, 502);
   }
 
   return handleCancelOutcome(supabase, {
