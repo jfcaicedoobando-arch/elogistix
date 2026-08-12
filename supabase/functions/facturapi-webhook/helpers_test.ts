@@ -213,31 +213,28 @@ Deno.test("invoice.canceled marca preserva_sustituida=true", () => {
   assertEquals(r!.preserva_sustituida, true);
 });
 
-// ── Ola 4 · N2/N3: invariantes estructurales del orden de dedupe en index.ts ──
-// El dedupe (`facturapi_webhook_eventos`) debe insertarse SÓLO después de
-// procesar el evento con éxito; si el handler falla (5xx) no se registra,
-// para que los reintentos de FacturAPI puedan reprocesar el evento.
+// ── EF-07: invariantes estructurales del dedupe ATÓMICO (INSERT-first) ──────
+// El evento se reserva con un INSERT antes de procesar (23505 = duplicado);
+// si el procesamiento falla se borra la reserva para que el reintento de
+// FacturAPI pueda reprocesar el evento.
 const webhookIndexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
 
-Deno.test("index.ts: el insert de dedupe ocurre DESPUÉS de procesar el evento, no antes", () => {
+Deno.test("index.ts: el dedupe es INSERT-first (reserva antes de procesar)", () => {
+  const idxInsert = webhookIndexSource.indexOf('.from("facturapi_webhook_eventos")');
   const idxProcesar = webhookIndexSource.indexOf("await despacharEvento(supabase, orgId, event)");
-  const idxDedupeCheck = webhookIndexSource.indexOf('.eq("event_id", eventKey)');
-  const idxDedupeRegistro = webhookIndexSource.indexOf("await registrarDedupe(supabase, orgId, eventKey, event)");
-  assert(
-    idxDedupeCheck >= 0 && idxProcesar >= 0 && idxDedupeRegistro >= 0,
-    "deben existir las tres etapas",
-  );
-  // El chequeo de duplicado va antes de procesar; el registro va después.
-  assert(idxDedupeCheck < idxProcesar, "el chequeo de dedupe debe ser previo al procesamiento");
-  assert(idxProcesar < idxDedupeRegistro, "el registro de dedupe debe ser posterior al procesamiento");
+  assert(idxInsert >= 0 && idxProcesar >= 0, "deben existir la reserva y el procesamiento");
+  assert(idxInsert < idxProcesar, "la reserva de dedupe debe ser previa al procesamiento");
+  assertStringIncludes(webhookIndexSource, '?.code === "23505"');
+  assert(!webhookIndexSource.includes("registrarDedupe"), "registrarDedupe quedó sin uso (EF-07)");
 });
 
-Deno.test("index.ts: si el procesamiento falla (result.ok=false) se retorna ANTES de insertar el dedupe", () => {
-  assertStringIncludes(webhookIndexSource, "if (!result.ok) return result;");
-  const idxGuard = webhookIndexSource.lastIndexOf("if (!result.ok) return result;");
-  const idxRegistro = webhookIndexSource.indexOf("await registrarDedupe(supabase, orgId, eventKey, event)");
-  assert(idxGuard >= 0 && idxRegistro >= 0 && idxGuard < idxRegistro);
+Deno.test("index.ts: si el procesamiento falla se libera la reserva de dedupe", () => {
+  assertStringIncludes(webhookIndexSource, "if (!result.ok) {");
+  const idxGuard = webhookIndexSource.indexOf("if (!result.ok) {");
+  const idxDelete = webhookIndexSource.indexOf(".delete()", idxGuard);
+  assert(idxDelete > idxGuard, "el borrado de la reserva debe ir dentro del guard de fallo");
 });
+
 
 Deno.test("index.ts: 'Emitida' es el único estado usado para invoice.status_updated valid (nunca 'Timbrada')", () => {
   assert(!webhookIndexSource.includes('"Timbrada"'), "index.ts no debe usar el literal 'Timbrada'");
