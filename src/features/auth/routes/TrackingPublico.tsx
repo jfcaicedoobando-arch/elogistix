@@ -87,7 +87,7 @@ export default function TrackingPublico() {
 
       <footer className="border-t bg-card mt-12">
         <div className="max-w-3xl mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
-          Powered by {organizacion?.nombre || "Libre Carga"}
+          {COPY_PIE.tecnologia} {organizacion?.nombre || "Libre Carga"}
         </div>
       </footer>
     </div>
