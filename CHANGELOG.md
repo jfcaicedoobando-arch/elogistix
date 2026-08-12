@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.534.0] - 2026-08-12
+- Portal público: los errores de enlace ahora explican qué falta y cómo corregirlo (abrir el enlace más reciente, pegar la dirección completa, pedir uno nuevo) mediante el nuevo componente `AvisoAccionable`.
+- Tracking público: enlace inválido/servicio no disponible y la línea de tiempo sin eventos muestran pasos concretos en vez de un texto seco.
+- Portal de proformas: enlace inválido y enlace vencido usan el aviso accionable; si falla la respuesta se listan los pasos de reintento.
+- Baja de correos: enlace inválido y falla al procesar incluyen alternativas (reintentar o responder al correo).
+- Nuevos textos centralizados `COPY_PASOS` y `COPY_VACIO` en `src/lib/copy/publicoCopy.ts`.
+
 ## [13.533.0] - 2026-08-12
 - Copy único para superficies públicas en `src/lib/copy/publicoCopy.ts`: enlaces vencidos, validaciones, pie de página, baja de correos y avisos legales usan la misma redacción en español mexicano.
 - Tracking público: se elimina "Powered by" (ahora "Con tecnología de") y el título de respaldo es "Seguimiento de embarque".

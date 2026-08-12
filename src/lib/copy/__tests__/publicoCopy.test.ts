@@ -4,6 +4,8 @@ import {
   COPY_ENLACE,
   COPY_LEGAL,
   COPY_PIE,
+  COPY_PASOS,
+  COPY_VACIO,
   COPY_VALIDACION,
 } from "@/lib/copy/publicoCopy";
 import { mensajeTrackingAmigable } from "@/features/embarques/components/tracking/trackingErrorCopy";
@@ -36,5 +38,30 @@ describe("publicoCopy", () => {
     expect(mensajeTrackingAmigable("token expired")).toBe(COPY_ENLACE.invalido);
     expect(mensajeTrackingAmigable(undefined)).toBe(COPY_ENLACE.invalido);
     expect(mensajeTrackingAmigable("edge_functions_unavailable")).toBe(COPY_ENLACE.noDisponible);
+  });
+});
+
+describe("copy accionable", () => {
+  const pasos = [
+    ...Object.values(COPY_PASOS).flat(),
+    ...COPY_VACIO.eventosTracking.pasos,
+  ];
+
+  it("cada paso está en español y termina en punto", () => {
+    for (const paso of pasos) {
+      expect(paso).not.toMatch(INGLES);
+      expect(paso.trim().endsWith(".")).toBe(true);
+    }
+  });
+
+  it("todo grupo de pasos indica al menos dos alternativas", () => {
+    for (const grupo of Object.values(COPY_PASOS)) {
+      expect(grupo.length).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("el estado vacío del tracking explica qué falta", () => {
+    expect(COPY_VACIO.eventosTracking.titulo).toContain("movimientos");
+    expect(COPY_VACIO.eventosTracking.descripcion).toContain("evento");
   });
 });
