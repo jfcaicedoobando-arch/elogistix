@@ -72,12 +72,20 @@ export function FormDialogShell({
   totalSteps,
   stepLabels,
   footer,
+  formId,
+  onSubmit,
+  autoFocusFirstField,
   stickyTop,
   stickyBottom,
   bodyClassName,
   children,
 }: Props) {
   const showStepper = typeof step === "number" && typeof totalSteps === "number" && totalSteps > 1;
+  const enfocar = autoFocusFirstField ?? Boolean(formId);
+  const bodyRef = useAutoFocusPrimerCampo(open, enfocar);
+  const bodyClass = cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName);
+
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
