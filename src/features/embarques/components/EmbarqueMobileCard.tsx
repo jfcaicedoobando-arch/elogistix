@@ -17,6 +17,12 @@ export interface EmbarqueMobileCardData {
   fecha_llegada_real: Parameters<typeof calcularEstadoEmbarque>[5];
   expediente: string;
   cliente_nombre: string | null;
+  puerto_origen?: string | null;
+  aeropuerto_origen?: string | null;
+  ciudad_origen?: string | null;
+  puerto_destino?: string | null;
+  aeropuerto_destino?: string | null;
+  ciudad_destino?: string | null;
 }
 
 export function EmbarqueMobileCard({ embarque: e }: { embarque: EmbarqueMobileCardData }) {
