@@ -42,7 +42,7 @@ export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false 
       </div>
       <div>
         <Label>Moneda</Label>
-        <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as Moneda)}>
+        <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as Moneda)} disabled={monedaBloqueada}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="MXN">MXN</SelectItem>
