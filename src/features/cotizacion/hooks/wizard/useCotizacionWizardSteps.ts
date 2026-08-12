@@ -142,6 +142,17 @@ export function useCotizacionWizardSteps({
         });
         return;
       }
+      // B-081: si algún renglón con venta quedó fuera por no tener concepto, no
+      // damos por buena la cotización (terminaría con importes incompletos).
+      const descartados = costosSinConcepto(costosInternos);
+      if (descartados.length > 0) {
+        notifyError(undefined, {
+          title: "Renglones de costo sin concepto",
+          description: `${descartados.length === 1 ? "1 renglón tiene" : `${descartados.length} renglones tienen`} importes sin concepto y no se incluirían en la venta. Regresa al paso 2 y captura el concepto.`,
+        });
+        return;
+      }
+
       await savePasoFinal({
         cotizacionId, isEditMode, estadoActual: estadoInicial,
         mutations: { updateCotizacion },
