@@ -150,7 +150,7 @@ function StepperCompleto({ fases, enRiesgo }: { fases: FaseEmbarque[]; enRiesgo:
       </div>
 
       {/* Móvil: vertical */}
-      <div className="md:hidden relative">
+      <div className="md:hidden relative" aria-hidden="true">
         <div className="absolute left-[17px] top-2 bottom-2 w-0.5 bg-border" />
         <div className="space-y-4">
           {fases.map((fase) => (
