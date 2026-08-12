@@ -124,9 +124,22 @@ export function FormDialogShell({
           <div className="border-b bg-muted/30 px-6 py-3">{stickyTop}</div>
         )}
 
-        <div className={cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName)}>
-          {children}
-        </div>
+        {formId ? (
+          <form
+            id={formId}
+            onSubmit={onSubmit}
+            noValidate
+            ref={bodyRef as React.Ref<HTMLFormElement>}
+            className={bodyClass}
+          >
+            {children}
+          </form>
+        ) : (
+          <div ref={bodyRef as React.Ref<HTMLDivElement>} className={bodyClass}>
+            {children}
+          </div>
+        )}
+
 
         {stickyBottom && (
           <div className="border-t bg-muted/30 px-6 py-3">{stickyBottom}</div>
