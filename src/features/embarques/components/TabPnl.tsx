@@ -84,8 +84,10 @@ export function TabPnl({ embarqueId }: Props) {
         />
         <KpiCard
           label="Margen real"
-          value={pctPnl(margenReal)}
+          // UIA-10: sin venta real el margen no es 0%, es indeterminado.
+          value={ventaReal > 0 ? pctPnl(margenReal) : "n/a"}
           delta={`Presup. ${pctPnl(margenPresup)}`}
+
           variant={
             utilidadReal < 0 || margenReal < 0
               ? "destructive"
