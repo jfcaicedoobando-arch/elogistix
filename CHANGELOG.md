@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.532.0] - 2026-08-12
+- Portal del cliente (Sub-ola 7): las navieras se muestran con nombre comercial ("Maersk (MAEU)") en tarjetas de embarque, resumen y tracking público; si el código no está mapeado se muestra tal cual.
+- El contador del tab "Tracking" ahora cuenta los mismos hitos que se ven en la línea de tiempo (ya no incluye eventos internos).
+- Una cotización sin importe todavía muestra "Por cotizar" en vez de "MXN 0.00".
+- `/agente/tarifas`: la vigencia se muestra en formato dd/MM/yy en vez de ISO crudo.
+- El dashboard del portal saluda a la persona de contacto ("¡Hola, Juan!") y sólo usa la razón social como respaldo.
+
 ## [13.531.0] - 2026-08-20
 - Portales públicos (Sub-ola 6): Aviso de Privacidad y Términos quedan tras la bandera `LEGAL_CONTENT_APPROVED` mostrando un aviso neutral "en revisión" mientras no haya validación legal.
 - Tracking público, demo, login, portal del cliente y baja de correos ya no muestran errores técnicos en inglés: se traducen a copy es-MX y el detalle crudo va sólo a consola/Sentry.
