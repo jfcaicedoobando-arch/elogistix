@@ -2,7 +2,6 @@ import { useDeferredValue } from "react";
 import { useDocumentTitle } from "@/hooks/shared";
 import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -14,10 +13,8 @@ import { EmbarquesAlertasPanel } from "@/features/embarques/components/Embarques
 import { EmbarquesEmptyState } from "@/features/embarques/components/EmbarquesEmptyState";
 import { EmbarquesSortIndicator } from "@/features/embarques/components/EmbarquesSortIndicator";
 import { EmbarquesHeaderActions } from "@/features/embarques/components/EmbarquesHeaderActions";
-import { useEmbarquesPageController, calcularEstadoEmbarque } from "@/features/embarques/hooks";
-import { ModoIcon } from "@/components/shared/ModoIcon";
-import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { useEmbarquesPageController } from "@/features/embarques/hooks";
+import { EmbarqueMobileCard } from "@/features/embarques/components/EmbarqueMobileCard";
 import { notifyInfo } from "@/lib/ui/appFeedback";
 import { EmbarquesTablaVacia } from "@/features/embarques/components/EmbarquesTablaVacia";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -162,27 +159,7 @@ export default function Embarques() {
                 onSortChange={handleSortChange}
                 density={TABLE_DENSITY.listado}
                 className="pb-24 sm:pb-0"
-                mobileCard={(e) => {
-                  const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
-                  return (
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 font-semibold text-sm">
-                          <ModoIcon modo={e.modo} size={14} />
-                          <span className="truncate">{e.expediente}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate mt-0.5">
-                          {toTitleCase(e.cliente_nombre)}
-                        </div>
-                        <div className="text-label text-muted-foreground truncate mt-0.5">
-                          {shortName(getOrigen(e))} → {shortName(getDestino(e))}
-                          {e.eta ? ` · ETA ${formatDate(e.eta)}` : ""}
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className={`text-2xs whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>
-                    </div>
-                  );
-                }}
+                mobileCard={(e) => <EmbarqueMobileCard embarque={e} />}
                 pagination={{
                   page,
                   totalPages,
