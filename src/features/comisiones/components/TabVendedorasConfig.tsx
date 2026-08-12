@@ -41,10 +41,16 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
   // Aquí sólo se conserva el reset de inputs en onSuccess.
   const agregar = () => {
     if (!nuevaVendedora || !organizationId) return;
+    // FE-08: mismo rango que la edición (guardarPct). Antes se podía dar de
+    // alta una vendedora con 150% o -5%.
+    const pct = Number(nuevoPct);
+    if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+      return notifyError(undefined, { title: "% inválido", method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_1" });
+    }
     upsert.mutate({
       organization_id: organizationId,
       user_id: nuevaVendedora,
-      porcentaje_default: Number(nuevoPct) || 0,
+      porcentaje_default: pct,
       activa: true,
     }, {
       onSuccess: () => {
