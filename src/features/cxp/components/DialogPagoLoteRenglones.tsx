@@ -7,6 +7,7 @@ import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { LoteRenglonesTable } from "@/components/shared/LoteRenglonesTable";
 import type { FacturaLoteCandidata, RenglonLote } from "@/features/cxp/services/pagoProveedorLote";
 
 interface Props {
@@ -20,18 +21,8 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
   const montoDe = (id: string) => renglones.find((r) => r.factura_id === id)?.monto ?? 0;
 
   return (
-    <div className="overflow-x-auto rounded-md border">
-      <table className="w-full min-w-[620px] text-sm">
-        <thead className="bg-muted/50 text-xs text-muted-foreground">
-          <tr>
-            <th className="w-[18%] px-3 py-2 text-left font-medium">Factura</th>
-            <th className="w-[16%] px-3 py-2 text-left font-medium">Vence</th>
-            <th className="w-[20%] px-3 py-2 text-right font-medium">Saldo</th>
-            <th className="w-[22%] px-3 py-2 text-right font-medium">Se aplica</th>
-            <th className="w-[24%] px-3 py-2 text-right font-medium">Queda</th>
-          </tr>
-        </thead>
-        <tbody>
+    <LoteRenglonesTable minWidthClassName="min-w-[620px]">
+
           {facturas.map((f, i) => {
             const monto = montoDe(f.factura_id);
             const queda = Math.max(0, Math.round((f.saldo - monto) * 100) / 100);
@@ -73,8 +64,6 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
               </tr>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+    </LoteRenglonesTable>
   );
 }
