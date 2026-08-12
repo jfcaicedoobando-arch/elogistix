@@ -50,3 +50,49 @@ export const COPY_LEGAL = {
   enRevision: "Este documento está en revisión legal y se publicará próximamente.",
   contacto: "Si tienes dudas sobre el tratamiento de tus datos personales, escríbenos a",
 } as const;
+
+/**
+ * Pasos accionables ("qué falta y cómo corregirlo") para los errores de las
+ * superficies públicas. Se muestran como lista debajo del mensaje.
+ */
+export const COPY_PASOS = {
+  enlaceInvalido: [
+    "Abre el enlace más reciente que te enviamos por correo; los anteriores dejan de funcionar.",
+    "Copia y pega la dirección completa: algunos correos la cortan a la mitad.",
+    "Si sigue sin abrir, pide un enlace nuevo a tu ejecutivo de cuenta.",
+  ],
+  enlaceVencido: [
+    "Los enlaces vencen por seguridad después de unos días.",
+    "Pide a tu ejecutivo de cuenta que te reenvíe el enlace actualizado.",
+  ],
+  servicioNoDisponible: [
+    "Espera un par de minutos y vuelve a cargar la página.",
+    "Revisa tu conexión a internet.",
+    "Si el problema continúa, avísale a tu ejecutivo de cuenta.",
+  ],
+  bajaCorreosFalla: [
+    "Vuelve a intentar en unos minutos con el mismo enlace.",
+    "Si no funciona, responde al correo pidiendo la baja y la aplicamos manualmente.",
+  ],
+  faltanCampos: [
+    "Revisa los campos marcados con * en este paso.",
+    "Los campos con mensaje en rojo son los que faltan por capturar.",
+  ],
+} as const;
+
+/**
+ * Estados vacíos de las superficies públicas: qué significa que no haya datos
+ * y qué se espera que pase después.
+ */
+export const COPY_VACIO = {
+  eventosTracking: {
+    titulo: "Todavía no hay movimientos registrados",
+    descripcion:
+      "Tu embarque ya está dado de alta, pero aún no recibimos el primer evento de la naviera o del transportista.",
+    pasos: [
+      "Los movimientos se publican aquí en automático, sin que tengas que hacer nada.",
+      "Vuelve a consultar este enlace más adelante para ver los avances.",
+      "Si necesitas un dato antes, escríbele a tu ejecutivo de cuenta.",
+    ],
+  },
+} as const;
