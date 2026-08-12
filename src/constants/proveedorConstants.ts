@@ -41,14 +41,9 @@ export const PAISES_PROVEEDOR = [
 ];
 
 /**
- * Categorías y subtipos de proveedor.
- * - `Logistico`: usa el enum `tipo` (Naviera, Aerolínea, etc.).
- * - `GastoOperativo`: usa `subtipo_gasto` para clasificar gastos administrativos del ERP.
+ * Subtipos de gasto operativo: clasifican gastos administrativos del ERP
+ * para proveedores con `categoria = 'GastoOperativo'`.
  */
-export const CATEGORIAS_PROVEEDOR: { value: CategoriaProveedor; label: string }[] = [
-  { value: 'Logistico', label: 'Logístico' },
-  { value: 'GastoOperativo', label: 'Gasto de administración' },
-];
 
 export const SUBTIPOS_GASTO_OPERATIVO: { value: SubtipoGasto; label: string }[] = [
   { value: 'Renta', label: 'Renta' },
