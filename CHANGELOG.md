@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.547.0] - 2026-08-12
+- Facturación: el botón **"Registrar pago"** ya aparece en facturas **Vencidas** y **Parcialmente pagadas** con saldo. Antes sólo se mostraba en estado "Emitida", así que una factura vencida no se podía cobrar desde su detalle aunque la base de datos sí lo permitía.
+- Los estados Cancelada, Sustituida, Borrador, Por timbrar y Pagada siguen sin permitir cobros.
+
+
 ## [13.546.0] - 2026-08-12
 - Cotizaciones: se corrigió el PDF que salía con importes en **$0.00**. La causa era que un renglón de costos con precio de venta pero **sin concepto** se descartaba en silencio al generar los conceptos de venta.
 - El paso 2 del wizard ahora marca en rojo esos renglones y bloquea avanzar o guardar hasta capturar el concepto.
