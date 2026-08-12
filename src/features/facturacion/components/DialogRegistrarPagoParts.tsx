@@ -17,20 +17,23 @@ export function ResumenSaldo({
 }
 
 export function FooterAcciones({
-  ocupado, timbrandoRep, invalido, onCancel, onGuardar,
+  ocupado, timbrandoRep, invalido, onCancel, formId,
 }: {
   ocupado: boolean; timbrandoRep: boolean; invalido: boolean;
-  onCancel: () => void; onGuardar: () => void;
+  onCancel: () => void;
+  /** id del `<form>` del cuerpo: permite enviar con Enter y con este botón. */
+  formId: string;
 }) {
   return (
     <>
-      <Button variant="outline" onClick={onCancel} disabled={ocupado}>Cancelar</Button>
-      <Button onClick={onGuardar} disabled={invalido} loading={ocupado}>
+      <Button type="button" variant="outline" onClick={onCancel} disabled={ocupado}>Cancelar</Button>
+      <Button type="submit" form={formId} disabled={invalido} loading={ocupado}>
         {timbrandoRep ? "Timbrando REP…" : "Registrar pago"}
       </Button>
     </>
   );
 }
+
 
 export function NotasPago({
   esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado, errorFecha,

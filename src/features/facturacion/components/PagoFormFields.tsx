@@ -46,13 +46,20 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="space-y-1">
-        <Label>Fecha de pago</Label>
-        <DatePickerMx value={values.fecha} onChange={(v) => onChange("fecha", v)} className="w-full" />
+        <Label htmlFor="pago-fecha">Fecha de pago</Label>
+        <DatePickerMx
+          id="pago-fecha"
+          autoFocus
+          title="Fecha de pago"
+          value={values.fecha}
+          onChange={(v) => onChange("fecha", v)}
+          className="w-full"
+        />
       </div>
       <div className="space-y-1">
-        <Label>Forma de pago</Label>
+        <Label htmlFor="pago-forma">Forma de pago</Label>
         <Select value={values.formaPago} onValueChange={(v) => onChange("formaPago", v)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger id="pago-forma"><SelectValue /></SelectTrigger>
           <SelectContent>
             {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
           </SelectContent>
@@ -61,6 +68,7 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
       <div className="space-y-1">
         <Label htmlFor="pago-monto">Monto</Label>
         <NumericInput
+          id="pago-monto"
           aria-label="Monto del pago"
           decimals
           value={Number(values.monto) || 0}
@@ -69,9 +77,9 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Moneda</Label>
+        <Label htmlFor="pago-moneda">Moneda</Label>
         <Select value={values.moneda} onValueChange={(v) => onChange("moneda", v)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger id="pago-moneda"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="MXN">MXN</SelectItem>
             <SelectItem value="USD">USD</SelectItem>
@@ -79,6 +87,7 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
           </SelectContent>
         </Select>
       </div>
+
       <div className="sm:col-span-2 space-y-1">
         <Label htmlFor="cobro-cuenta">Cuenta donde entró el dinero (opcional)</Label>
         <Select
@@ -115,14 +124,24 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
         />
       </div>
       <div className="sm:col-span-2 space-y-1">
-        <Label>Referencia</Label>
-        <Input value={values.referencia} onChange={(e) => onChange("referencia", e.target.value)}
-          placeholder="Folio SPEI, cheque..." />
+        <Label htmlFor="pago-referencia">Referencia</Label>
+        <Input
+          id="pago-referencia"
+          value={values.referencia}
+          onChange={(e) => onChange("referencia", e.target.value)}
+          placeholder="Folio SPEI, cheque..."
+        />
       </div>
       <div className="sm:col-span-2 space-y-1">
-        <Label>Notas</Label>
-        <Textarea value={values.notas} onChange={(e) => onChange("notas", e.target.value)} rows={2} />
+        <Label htmlFor="pago-notas">Notas</Label>
+        <Textarea
+          id="pago-notas"
+          value={values.notas}
+          onChange={(e) => onChange("notas", e.target.value)}
+          rows={2}
+        />
       </div>
+
     </div>
   );
 }

@@ -55,6 +55,10 @@ function convertirAMonedaFactura(
 
 const today = () => todayLocalISO();
 
+/** id del formulario del cuerpo, usado por el botón submit del footer. */
+const FORM_ID = "form-registrar-pago";
+
+
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: rates } = useExchangeRates();
   const { data: cuentas = [] } = useCuentasBancarias();
@@ -118,7 +122,8 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       ...(k === "moneda" ? { cuentaBancariaId: "" } : null),
     }));
 
-  const handleGuardar = () => {
+  const handleGuardar = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (invalido) return; // FE-03: defensa en el handler, no sólo botón deshabilitado
     submit({
       facturaId: factura.id,
@@ -147,7 +152,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       timbrandoRep={timbrandoRep}
       invalido={invalido}
       onCancel={() => onOpenChange(false)}
-      onGuardar={handleGuardar}
+      formId={FORM_ID}
     />
   );
 
@@ -162,20 +167,24 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       size="md"
       footer={footer}
     >
-      <PagoFormFields values={values} onChange={handleChange} cuentas={cuentas} />
-      <NotasPago
-        esPpdTimbrada={esPpdTimbrada}
-        monedaPago={values.moneda}
-        monedaFactura={factura.moneda}
-        montoNum={montoNum}
-        montoAplicado={montoAplicado}
-        tipoCambio={tipoCambio}
-        excede={excede}
-        saldo={saldo}
-        tcBloqueado={tcBloqueado}
-        errorFecha={errorFecha}
-      />
-
+      {/* v13.550.0 — `<form>` real: Enter en cualquier campo guarda el pago
+          (el botón del footer envía este formulario vía `form={FORM_ID}`). */}
+      <form id={FORM_ID} onSubmit={handleGuardar} className="space-y-5">
+        <PagoFormFields values={values} onChange={handleChange} cuentas={cuentas} />
+        <NotasPago
+          esPpdTimbrada={esPpdTimbrada}
+          monedaPago={values.moneda}
+          monedaFactura={factura.moneda}
+          montoNum={montoNum}
+          montoAplicado={montoAplicado}
+          tipoCambio={tipoCambio}
+          excede={excede}
+          saldo={saldo}
+          tcBloqueado={tcBloqueado}
+          errorFecha={errorFecha}
+        />
+      </form>
     </FormDialogShell>
   );
 }
+
