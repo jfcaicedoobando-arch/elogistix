@@ -5,10 +5,10 @@
 export {
   useCuentasBancarias,
   useCrearCuenta,
+  useActualizarCuenta,
   useEliminarCuenta,
   useSaldosCuentas,
-
-  
+  useTieneMovimientosCuenta,
 } from "./useTesoreriaCuentas";
 export {
   useMovimientos,

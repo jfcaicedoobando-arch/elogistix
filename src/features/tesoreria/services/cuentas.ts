@@ -59,6 +59,20 @@ export async function actualizarCuenta(id: string, patch: TablesUpdate<"cuentas_
   return cuenta;
 }
 
+/**
+ * ¿La cuenta ya tiene movimientos bancarios registrados?
+ * Se usa para bloquear el cambio de moneda al editar (evita mezclar divisas
+ * en saldos ya conciliados).
+ */
+export async function cuentaTieneMovimientos(id: string): Promise<boolean> {
+  const { count, error } = await supabase
+    .from("bbva_movimientos")
+    .select("id", { count: "exact", head: true })
+    .eq("cuenta_bancaria_id", id);
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
 export async function eliminarCuenta(id: string, userId: string | null) {
   await run(
     supabase
