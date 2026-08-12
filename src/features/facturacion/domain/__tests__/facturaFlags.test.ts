@@ -156,7 +156,38 @@ describe("deriveFacturaFlags", () => {
     expect(r.puedeSustituirCfdi).toBe(false);
     expect(r.puedeTimbrarDesdeSistema).toBe(false);
   });
+
+  it("Vencida con saldo → puedeRegistrarPago true (v13.547.0)", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Vencida", uuid_fiscal: "UUID-1", fecha_emision: POST },
+      true,
+      { saldo: 638 },
+    );
+    expect(r.puedeRegistrarPago).toBe(true);
+  });
+
+  it("Parcialmente pagada con saldo → puedeRegistrarPago true", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Parcialmente pagada", uuid_fiscal: "UUID-1", fecha_emision: POST },
+      true,
+      { saldo: 100 },
+    );
+    expect(r.puedeRegistrarPago).toBe(true);
+  });
+
+  it.each(["Cancelada", "Sustituida", "Borrador", "Pagada", "Por timbrar"])(
+    "estado %s nunca habilita registrar pago",
+    (estado) => {
+      const r = deriveFacturaFlags(
+        { estado, uuid_fiscal: "UUID-1", fecha_emision: POST },
+        true,
+        { saldo: 500 },
+      );
+      expect(r.puedeRegistrarPago).toBe(false);
+    },
+  );
 });
+
 
 describe("esCreadaConCapacidadTimbrado", () => {
   it("fecha nula → false", () => {
