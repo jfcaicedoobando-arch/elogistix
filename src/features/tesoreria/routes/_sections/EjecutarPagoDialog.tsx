@@ -33,11 +33,19 @@ interface Props {
   isPending: boolean;
 }
 
+const FORM_ID = "form-ejecutar-pago";
+
 export function EjecutarPagoDialog({
   facturaPago, onClose, cuentasCompatibles, form, setField, onEjecutar, isPending,
 }: Props) {
   const puedeEjecutar =
     !!facturaPago && !!form.cuentaBancariaId && !!form.fecha && form.monto > 0;
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!puedeEjecutar || isPending) return;
+    onEjecutar();
+  };
 
   return (
     <FormDialogShell
@@ -50,45 +58,39 @@ export function EjecutarPagoDialog({
           ? `${facturaPago.proveedor_nombre ?? "Proveedor"} · Saldo ${formatCurrency(facturaPago.saldo, facturaPago.moneda)}`
           : undefined
       }
+      formId={FORM_ID}
+      onSubmit={handleSubmit}
+      bodyClassName="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:space-y-0"
       footer={
-        <>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={onEjecutar} disabled={!puedeEjecutar || isPending}>
-            {isPending ? "Ejecutando..." : "Ejecutar pago"}
-          </Button>
-        </>
+        <FormDialogFooter
+          formId={FORM_ID}
+          onCancel={onClose}
+          confirmLabel="Ejecutar pago"
+          loadingLabel="Ejecutando..."
+          loading={isPending}
+          disabled={!puedeEjecutar || isPending}
+        />
       }
     >
-      <div
-        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey && puedeEjecutar && !isPending) {
-            const t = e.target as HTMLElement;
-            if (t.tagName === "INPUT") {
-              e.preventDefault();
-              onEjecutar();
+      <div className="sm:col-span-2">
+        <Label htmlFor="pago-cuenta">Cuenta bancaria *</Label>
+        <Select value={form.cuentaBancariaId} onValueChange={(v) => setField("cuentaBancariaId", v)}>
+          <SelectTrigger id="pago-cuenta"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
+          <SelectContent>
+            {cuentasCompatibles.length === 0
+              ? <SelectItem value="__sin" disabled>Sin cuentas en {facturaPago?.moneda}</SelectItem>
+              : cuentasCompatibles.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.banco} · {c.alias} ({c.moneda})</SelectItem>
+              ))
             }
-          }
-        }}
-      >
-        <div className="sm:col-span-2">
-          <Label htmlFor="pago-cuenta">Cuenta bancaria *</Label>
-          <Select value={form.cuentaBancariaId} onValueChange={(v) => setField("cuentaBancariaId", v)}>
-            <SelectTrigger id="pago-cuenta"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
-            <SelectContent>
-              {cuentasCompatibles.length === 0
-                ? <SelectItem value="__sin" disabled>Sin cuentas en {facturaPago?.moneda}</SelectItem>
-                : cuentasCompatibles.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.banco} · {c.alias} ({c.moneda})</SelectItem>
-                ))
-              }
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="pago-fecha">Fecha *</Label>
-          <DatePickerMx value={form.fecha} onChange={(v) => setField("fecha", v)} className="w-full" />
-        </div>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="pago-fecha">Fecha *</Label>
+        <DatePickerMx id="pago-fecha" value={form.fecha} onChange={(v) => setField("fecha", v)} className="w-full" />
+      </div>
+
         <div>
           <Label htmlFor="pago-monto">Monto *</Label>
           <MoneyInput
