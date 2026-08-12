@@ -47,6 +47,17 @@ export function useCotizacionWizardSteps({
       });
       return;
     }
+    // B-081: un renglón con importes y sin concepto se descartaba en silencio y
+    // la cotización terminaba en $0.00 (PDF vacío). Ahora bloquea el avance.
+    const sinConcepto = costosSinConcepto(costosInternos);
+    if (sinConcepto.length > 0) {
+      notifyError(undefined, {
+        title: "Hay renglones de costo sin concepto",
+        description: `Selecciona el concepto de ${sinConcepto.length === 1 ? "1 renglón" : `${sinConcepto.length} renglones`} con importes capturados; sin nombre no se genera el concepto de venta.`,
+      });
+      return;
+    }
+
     try {
       if (cotizacionId) {
         await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
