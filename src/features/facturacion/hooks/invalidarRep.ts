@@ -8,15 +8,15 @@
  */
 import type { QueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
 export function invalidarTrasRep(qc: QueryClient, facturaId?: string): void {
   if (facturaId) {
     qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
+    qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(facturaId) });
   } else {
     qc.invalidateQueries({ queryKey: queryKeys.facturas.pagosAll });
   }
   qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
   qc.invalidateQueries({ queryKey: queryKeys.facturacion.repPendientes });
-  invalidateProfitDependencies(qc);
+  qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
 }
