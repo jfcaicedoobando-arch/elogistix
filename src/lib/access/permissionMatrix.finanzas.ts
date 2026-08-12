@@ -40,14 +40,20 @@ export const APROBAR_FACTURA_PROVEEDOR: readonly AppRole[] = [
 ];
 
 // v13.213.40 — auxiliar_contable NO registra cobros (separación de responsabilidades):
-// sólo captura facturas de proveedor. Cobros los registran contador + ejecutivo_cobranza.
+// sólo captura facturas de proveedor.
+// FE-10 (v13.537.0) — el tesorero SÍ aplica pagos: la política de la base
+// (`es_escritor_financiero`) lo autoriza a escribir en `pagos_factura`, así que
+// la UI ya no le esconde el botón (antes veía la factura pendiente sin poder
+// registrar el cobro que sí podía ejecutar).
 export const REGISTRAR_COBRO: readonly AppRole[] = [
   "super_admin",
   "admin_org",
   "admin",
   "contador",
+  "tesorero",
   "ejecutivo_cobranza",
 ];
+
 
 /**
  * Alta/edición/baja de cuentas bancarias.
