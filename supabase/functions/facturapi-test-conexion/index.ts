@@ -8,7 +8,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { basicAuthHeader, FACTURAPI_BASE, resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
-import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
+import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 
 interface Body {
