@@ -66,7 +66,6 @@ export function EjecutarPagoDialog({
           formId={FORM_ID}
           onCancel={onClose}
           confirmLabel="Ejecutar pago"
-          loadingLabel="Ejecutando..."
           loading={isPending}
           disabled={!puedeEjecutar || isPending}
         />
