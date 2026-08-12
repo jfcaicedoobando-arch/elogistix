@@ -43,6 +43,31 @@ export function applyMask(raw: string): string {
   return `${dd}/${mm}/${yyyy}`;
 }
 
+/**
+ * Máscara tolerante para captura con teclado: respeta los separadores que el
+ * usuario teclea (`/`, `-`, `.`) y completa día/mes con cero a la izquierda en
+ * cuanto el segmento se cierra con un separador.
+ *
+ *  - `1/3/2026`  → `01/03/2026`
+ *  - `1/`        → `01/`
+ *  - `01/1`      → `01/1` (aún puede volverse `01/12`)
+ *  - `01032026`  → `01/03/2026` (captura corrida, delega en `applyMask`)
+ */
+export function applyMaskTyping(raw: string): string {
+  const limpio = raw.replace(/[^\d/.-]/g, "");
+  if (!/[/.-]/.test(limpio)) return applyMask(limpio);
+  const trailing = /[/.-]$/.test(limpio);
+  const partes = limpio.split(/[/.-]+/).slice(0, 3);
+  const cerradas = trailing ? partes.length : partes.length - 1;
+  const out = partes.map((p, i) => {
+    const v = p.slice(0, i === 2 ? 4 : 2);
+    return i < 2 && i < cerradas ? v.padStart(2, "0") : v;
+  });
+  const res = out.join("/") + (trailing && out.length < 3 ? "/" : "");
+  return res.slice(0, 10);
+}
+
+
 /** Parsea DD/MM/YYYY → ISO YYYY-MM-DD, o `null` si es inválido. */
 export function parseDisplay(text: string): string | null {
   const m = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
