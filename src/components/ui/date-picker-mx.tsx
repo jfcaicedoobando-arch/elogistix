@@ -2,13 +2,15 @@ import { useEffect, useRef, useState, useCallback, useId } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  isoToDisplay, applyMask, parseDisplay, parseFlexible,
+  isoToDisplay, applyMask, applyMaskTyping, parseDisplay, parseFlexible,
 } from "./date-picker-mx-helpers";
 import { DatePickerMxCalendar } from "./date-picker-mx-calendar";
+import { manejarTeclaFecha } from "./date-picker-mx-keys";
 import {
   MENSAJE_FECHA_INVALIDA, PLACEHOLDER_FECHA, pickerClearClass, pickerClearIconClass,
   pickerErrorClass, pickerRootClass, pickerTriggerClass,
 } from "@/components/ui/picker-mx-shell";
+
 
 interface DatePickerMxProps {
   /** ISO date string YYYY-MM-DD (o vacío) */
