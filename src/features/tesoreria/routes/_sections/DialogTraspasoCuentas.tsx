@@ -27,6 +27,8 @@ interface DialogTraspasoCuentasProps {
   cuentas: Cuenta[];
 }
 
+const FORM_ID = "form-traspaso-cuentas";
+
 export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTraspasoCuentasProps) {
   const {
     state, setField, origen, destino, mismoMoneda, montoDestino, error, fechaTcDof,
@@ -36,9 +38,11 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
   // BL-04: sólo se manda 1 cuando ambas cuentas comparten moneda. Si difieren,
   // el TC capturado es obligatorio (la validación ya bloquea el botón).
   const tipoCambioFinal = mismoMoneda ? 1 : state.tipoCambio;
+  const bloqueado = !!error || isPending || !(tipoCambioFinal > 0);
 
-  const handleSubmit = () => {
-    if (error || isPending || !(tipoCambioFinal > 0)) return;
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (bloqueado) return;
     registrar(
       {
         cuentaOrigenId: state.origenId,
@@ -62,18 +66,20 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
       title="Traspaso entre cuentas propias"
       description="Registra un movimiento entre tus cuentas del mismo tenant. Se generan los movimientos bancarios conciliados automáticamente."
       size="lg"
+      formId={FORM_ID}
+      onSubmit={handleSubmit}
       footer={
-        <>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit} disabled={!!error || isPending || !(tipoCambioFinal > 0)}>
-            Registrar traspaso
-          </Button>
-        </>
+        <FormDialogFooter
+          formId={FORM_ID}
+          onCancel={() => onOpenChange(false)}
+          confirmLabel="Registrar traspaso"
+          loading={isPending}
+          disabled={bloqueado}
+        />
       }
     >
       <FormDialogSection title="Cuentas" description="Selecciona la cuenta de origen y destino.">
+
         <TraspasoCuentaSelect
           id="traspaso-origen"
           label="Cuenta origen"
