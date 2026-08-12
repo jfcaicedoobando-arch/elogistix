@@ -147,7 +147,7 @@ export default function Embarques() {
                 columns={columns}
                 data={deferredFiltered}
                 isLoading={isLoading}
-                emptyMessage="No se encontraron embarques"
+                emptyState={<EmbarquesTablaVacia onLimpiar={limpiarFiltros} />}
                 getRowHref={(e) => `/embarques/${e.id}`}
                 onRowMouseEnter={(e) => prefetchEmbarque(e.id)}
                 rowKey={(e) => e.id}
