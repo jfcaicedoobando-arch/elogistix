@@ -11,6 +11,8 @@ export interface DatePickerKeyHandlers {
   open: boolean;
   setOpen: (o: boolean) => void;
   commit: () => void;
+  /** El texto capturado aún no está reflejado en el valor confirmado. */
+  pendiente: boolean;
   disabled?: boolean;
   readOnly?: boolean;
 }
@@ -18,7 +20,7 @@ export interface DatePickerKeyHandlers {
 /** Devuelve `true` si el evento fue consumido por el picker. */
 export function manejarTeclaFecha(
   e: React.KeyboardEvent<HTMLInputElement>,
-  { open, setOpen, commit, disabled, readOnly }: DatePickerKeyHandlers,
+  { open, setOpen, commit, pendiente, disabled, readOnly }: DatePickerKeyHandlers,
 ): boolean {
   if (disabled) return false;
 
@@ -36,11 +38,13 @@ export function manejarTeclaFecha(
   }
 
   if (e.key === "Enter") {
-    // Confirma la fecha capturada. No se hace `preventDefault` para que el
-    // formulario contenedor pueda enviarse con Enter (navegación por teclado).
     commit();
+    // Si había texto sin confirmar, el primer Enter sólo confirma la fecha;
+    // el segundo ya envía el formulario contenedor.
+    if (pendiente) e.preventDefault();
     return true;
   }
 
   return false;
 }
+
