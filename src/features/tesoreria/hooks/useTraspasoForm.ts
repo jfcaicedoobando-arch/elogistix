@@ -125,5 +125,5 @@ function sugerirTc(
   const o = aMxn(origen);
   const d = aMxn(destino);
   if (!o || !d || o <= 0 || d <= 0) return null;
-  return roundMoney(o / d, 4);
+  return Math.round((o / d) * 10000) / 10000;
 }
