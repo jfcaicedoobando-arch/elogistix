@@ -27,16 +27,9 @@ export default function PortalPerfil() {
   const [cambiarPass, setCambiarPass] = useState(false);
 
   // UX-05 / UIB-05: patrón canónico AsyncBoundary (skeleton + Reintentar).
-  const sinDatos = !data;
-  if (isLoading || isError || sinDatos) {
-    return (
-      <PerfilAsyncFallback
-        isLoading={isLoading}
-        isError={isError || sinDatos}
-        onRetry={() => void refetch()}
-      />
-    );
-  }
+  const falla = isError || !data;
+  if (isLoading) return <PerfilAsyncFallback isLoading onRetry={() => void refetch()} />;
+  if (falla) return <PerfilAsyncFallback isError onRetry={() => void refetch()} />;
 
   const { email, cliente } = data;
 

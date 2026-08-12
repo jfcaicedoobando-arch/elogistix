@@ -7,14 +7,14 @@ export function PerfilAsyncFallback({
   isError,
   onRetry,
 }: {
-  isLoading: boolean;
-  isError: boolean;
+  isLoading?: boolean;
+  isError?: boolean;
   onRetry: () => void;
 }) {
   return (
     <AsyncBoundary
-      isLoading={isLoading}
-      isError={isError}
+      isLoading={isLoading ?? false}
+      isError={isError ?? false}
       onRetry={onRetry}
       skeleton={<PageSkeleton />}
       errorTitle="No se pudo cargar tu perfil"
