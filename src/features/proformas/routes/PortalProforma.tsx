@@ -15,6 +15,8 @@ import { PortalProformaAcciones } from "@/features/proformas/components/portal/P
 
 import { formatFechaHora } from "@/lib/formatters";
 import { LoadingState } from "@/components/shared/states/LoadingState";
+import { AvisoAccionable } from "@/components/shared/states/AvisoAccionable";
+import { COPY_ENLACE, COPY_PASOS } from "@/lib/copy/publicoCopy";
 
 function fechaMx(iso: string | null | undefined): string {
   if (!iso) return "—";
