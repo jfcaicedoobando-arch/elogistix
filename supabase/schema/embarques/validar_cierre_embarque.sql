@@ -12,6 +12,8 @@ DECLARE
   v_emb embarques%ROWTYPE;
   v_checks jsonb := '[]'::jsonb; v_puede boolean := true; v_ok boolean;
   v_cxc_saldo numeric := 0; v_cxc_por_moneda jsonb := '[]'::jsonb;
+  v_cxc_pagadas_sin_pago int := 0;
+
   v_cxp_saldo numeric := 0; v_cxp_por_moneda jsonb := '[]'::jsonb;
   v_docs_faltantes int;
   v_utilidad_mxn numeric; v_venta_mxn numeric; v_margen_min numeric; v_margen_pct numeric;
