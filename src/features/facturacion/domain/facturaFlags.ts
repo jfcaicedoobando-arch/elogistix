@@ -78,6 +78,12 @@ function isSustitutaViva(f: FacturaFlagsInput): boolean {
   if (!f.sustituida_por) return false;
   return !isEstadoCanceladoOSustituido(f.sustituida_por_ref?.estado);
 }
+/**
+ * Estados de factura que admiten registrar un cobro. Espeja la guardia de BD
+ * `assert_factura_viva_para_pago`, que sólo rechaza Cancelada/Sustituida/Borrador.
+ */
+const ESTADOS_COBRABLES = new Set(["Emitida", "Vencida", "Parcialmente pagada"]);
+
 
 function deriveActionFlags(
   f: FacturaFlagsInput,
