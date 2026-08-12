@@ -44,7 +44,10 @@ export function FormField({
   children,
 }: FormFieldProps) {
   const autoId = useId();
-  const controlId = htmlFor ?? `field-${autoId}`;
+  const primero = Children.toArray(children)[0];
+  const idHijo =
+    isValidElement<ControlProps>(primero) ? primero.props.id : undefined;
+  const controlId = htmlFor ?? idHijo ?? `field-${autoId}`;
   const errorId = `${controlId}-error`;
 
   const spanClass =
