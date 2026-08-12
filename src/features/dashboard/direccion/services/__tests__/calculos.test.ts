@@ -278,7 +278,9 @@ describe("calcularHero", () => {
 });
 
 describe("calcularPulso", () => {
-  const hoy = new Date(Date.UTC(2026, 1, 1));
+  // FE-04: los KPIs se calculan por DÍA LOCAL, así que el fixture usa mediodía
+  // local (no UTC medianoche) para que el día no cambie según la zona del CI.
+  const hoy = new Date(2026, 1, 1, 12, 0, 0);
 
   it("cuenta arribos en 7 días y demoras en aduana (Ola 4 · N21: demora sólo >7 días)", () => {
     const activos: EmbarqueEstadoRow[] = [
