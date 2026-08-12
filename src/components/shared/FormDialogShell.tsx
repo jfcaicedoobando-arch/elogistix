@@ -11,7 +11,7 @@
  * No introduce nuevos tokens de color: usa `bg-primary/10`, `text-primary`, `border`.
  */
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { useAutoFocusPrimerCampo } from "@/components/shared/utils/useAutoFocusPrimerCampo";
 import { FormDialogStepper } from "./FormDialogStepper";
 
 type Size = keyof typeof dialogSize;
@@ -40,6 +41,15 @@ interface Props {
   totalSteps?: number;
   stepLabels?: string[];
   footer: ReactNode;
+  /**
+   * Cuando se pasan `formId` + `onSubmit`, el cuerpo scrolleable se renderiza
+   * como `<form id={formId}>` real: Enter guarda y el botón del footer sticky
+   * envía con `type="submit" form={formId}` (ver `FormDialogFooter`).
+   */
+  formId?: string;
+  onSubmit?: (e: FormEvent<HTMLFormElement>) => void;
+  /** Enfoca el primer campo útil al abrir (default: true si hay `formId`). */
+  autoFocusFirstField?: boolean;
   /** Banda fija bajo el header, fuera del área scrolleable (KPIs, avisos). */
   stickyTop?: ReactNode;
   /** Banda fija sobre el footer, fuera del área scrolleable (semáforos). */
@@ -48,6 +58,7 @@ interface Props {
   bodyClassName?: string;
   children: ReactNode;
 }
+
 
 export function FormDialogShell({
   open,
