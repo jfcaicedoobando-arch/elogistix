@@ -1,7 +1,6 @@
--- Fuente canónica de public.validar_cierre_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
--- v13.381.1: paso 1 incluye costos sin proveedor; paso 2 falla con buzón vacío + costos sin factura.
+-- v13.545.2 — El checklist de cierre trata las facturas con estado 'Pagada'
+-- como saldo 0 (facturas legacy marcadas pagadas sin pago capturado).
+
 CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -13,7 +12,6 @@ DECLARE
   v_checks jsonb := '[]'::jsonb; v_puede boolean := true; v_ok boolean;
   v_cxc_saldo numeric := 0; v_cxc_por_moneda jsonb := '[]'::jsonb;
   v_cxc_pagadas_sin_pago int := 0;
-
   v_cxp_saldo numeric := 0; v_cxp_por_moneda jsonb := '[]'::jsonb;
   v_docs_faltantes int;
   v_utilidad_mxn numeric; v_venta_mxn numeric; v_margen_min numeric; v_margen_pct numeric;
@@ -103,7 +101,6 @@ BEGIN
   SELECT COUNT(*), COALESCE(array_agg(nombre ORDER BY nombre), ARRAY[]::text[])
     INTO v_prov_sin_evidencia, v_prov_nombres
     FROM (
-      -- a) Proveedores identificados con costos y sin ningun archivo en el buzon.
       SELECT DISTINCT COALESCE(NULLIF(cc.proveedor_nombre,''), 'Proveedor sin nombre') AS nombre
         FROM conceptos_costo cc
        WHERE cc.embarque_id=p_embarque_id AND cc.deleted_at IS NULL
@@ -114,7 +111,6 @@ BEGIN
               AND efe.proveedor_id=cc.proveedor_id
               AND COALESCE(efe.estado,'por_capturar')<>'rechazada')
       UNION
-      -- b) Costos sin proveedor asignado: imposible acreditar evidencia.
       SELECT 'Costos sin proveedor asignado' AS nombre
        WHERE EXISTS (
          SELECT 1 FROM conceptos_costo cc2
@@ -155,8 +151,8 @@ BEGIN
     'regla','venta_conceptos_facturados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_venta_pendientes, 'en_proforma', v_venta_en_proforma)));
 
-  -- v13.545.2 — CxC: una factura con estado 'Pagada' se considera saldo 0 aunque
-  -- no tenga pagos capturados (facturas históricas conciliadas fuera del sistema).
+  -- CxC: una factura con estado 'Pagada' se considera saldo 0 aunque no tenga
+  -- pagos capturados (facturas históricas conciliadas fuera del sistema).
   SELECT COUNT(*) INTO v_cxc_pagadas_sin_pago
     FROM facturas f
    WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL AND f.estado='Pagada'
@@ -185,7 +181,6 @@ BEGIN
     'regla','cxc_cobrada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxc_por_moneda, 'saldo_total', v_cxc_saldo,
       'pagadas_sin_pago_registrado', v_cxc_pagadas_sin_pago)));
-
 
   SELECT COUNT(*), COALESCE(array_agg(pf.id), ARRAY[]::uuid[]) INTO v_rep_pendientes, v_rep_ids
     FROM pagos_factura pf JOIN facturas f ON f.id=pf.factura_id
@@ -228,6 +223,220 @@ BEGIN
       'margen_pct', v_margen_pct, 'minimo_pct', v_margen_min)));
 
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
-END $function$
+END $function$;
 
-;
+-- Resumen de pendientes administrativos: mismo criterio para CxC.
+CREATE OR REPLACE FUNCTION public.embarque_admin_pendientes_resumen(p_embarque_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_cxc_pendiente numeric := 0;
+  v_cxp_pendiente numeric := 0;
+  v_docs_faltantes int := 0;
+  v_venta_no_facturada numeric := 0;
+  v_pendientes int := 0;
+BEGIN
+  SELECT COALESCE(SUM(f.total),0) - COALESCE((
+    SELECT SUM(pf.monto)
+    FROM pagos_factura pf
+    JOIN facturas fi ON fi.id = pf.factura_id
+    WHERE fi.embarque_id = p_embarque_id AND fi.deleted_at IS NULL
+      AND fi.estado NOT IN ('Cancelada','Pagada')
+  ),0)
+  INTO v_cxc_pendiente
+  FROM facturas f
+  WHERE f.embarque_id = p_embarque_id AND f.deleted_at IS NULL
+    AND f.estado NOT IN ('Cancelada','Pagada');
+
+  SELECT COALESCE(SUM(pf.total),0) - COALESCE((
+    SELECT SUM(pp.monto)
+    FROM pagos_proveedor pp
+    JOIN proveedor_facturas pfx ON pfx.id = pp.proveedor_factura_id
+    WHERE pfx.embarque_id = p_embarque_id AND pfx.deleted_at IS NULL AND pfx.estado <> 'Cancelada'
+  ),0)
+  INTO v_cxp_pendiente
+  FROM proveedor_facturas pf
+  WHERE pf.embarque_id = p_embarque_id AND pf.deleted_at IS NULL AND pf.estado <> 'Cancelada';
+
+  SELECT COUNT(*) INTO v_docs_faltantes
+  FROM documentos_embarque
+  WHERE embarque_id = p_embarque_id
+    AND deleted_at IS NULL
+    AND (archivo IS NULL OR archivo = '')
+    AND estado <> 'No aplica';
+
+  SELECT GREATEST(
+    COALESCE((SELECT SUM(total) FROM conceptos_venta WHERE embarque_id = p_embarque_id AND deleted_at IS NULL),0)
+    - COALESCE((SELECT SUM(total) FROM facturas WHERE embarque_id = p_embarque_id AND deleted_at IS NULL AND estado <> 'Cancelada'),0),
+  0)
+  INTO v_venta_no_facturada;
+
+  v_pendientes :=
+    (CASE WHEN v_cxc_pendiente > 0.01 THEN 1 ELSE 0 END) +
+    (CASE WHEN v_cxp_pendiente > 0.01 THEN 1 ELSE 0 END) +
+    (CASE WHEN v_docs_faltantes > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN v_venta_no_facturada > 0.01 THEN 1 ELSE 0 END);
+
+  RETURN jsonb_build_object(
+    'pendientes', v_pendientes,
+    'cxc_pendiente', GREATEST(v_cxc_pendiente, 0),
+    'cxp_pendiente', v_cxp_pendiente,
+    'docs_faltantes', v_docs_faltantes,
+    'venta_no_facturada', v_venta_no_facturada
+  );
+END;
+$function$;
+
+-- Conteo global de pendientes administrativos: mismo criterio para CxC.
+CREATE OR REPLACE FUNCTION public.embarques_admin_pendientes_count()
+ RETURNS integer
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_org uuid;
+  v_count int := 0;
+BEGIN
+  v_org := public.current_user_org_id();
+
+  IF v_org IS NULL THEN
+    RETURN 0;
+  END IF;
+
+  SELECT COUNT(*) INTO v_count
+  FROM embarques e
+  WHERE e.organization_id = v_org
+    AND e.estado IN ('Entregado', 'EIR', 'Por liquidar')
+    AND e.deleted_at IS NULL
+    AND (
+      EXISTS (
+        SELECT 1 FROM facturas f
+        WHERE f.embarque_id = e.id AND f.deleted_at IS NULL
+          AND f.estado NOT IN ('Cancelada','Pagada')
+        GROUP BY f.embarque_id
+        HAVING SUM(f.total) > COALESCE((
+          SELECT SUM(pf.monto) FROM pagos_factura pf
+          JOIN facturas fi ON fi.id = pf.factura_id
+          WHERE fi.embarque_id = e.id AND fi.deleted_at IS NULL
+            AND fi.estado NOT IN ('Cancelada','Pagada')
+        ),0) + 0.01
+      )
+      OR EXISTS (
+        SELECT 1 FROM proveedor_facturas pf
+        WHERE pf.embarque_id = e.id AND pf.deleted_at IS NULL AND pf.estado <> 'Cancelada'
+        GROUP BY pf.embarque_id
+        HAVING SUM(pf.total) > COALESCE((
+          SELECT SUM(pp.monto) FROM pagos_proveedor pp
+          JOIN proveedor_facturas pfx ON pfx.id = pp.proveedor_factura_id
+          WHERE pfx.embarque_id = e.id AND pfx.deleted_at IS NULL AND pfx.estado <> 'Cancelada'
+        ),0) + 0.01
+      )
+      OR EXISTS (
+        SELECT 1 FROM documentos_embarque de
+        WHERE de.embarque_id = e.id AND de.deleted_at IS NULL
+          AND (de.archivo IS NULL OR de.archivo = '')
+          AND de.estado <> 'No aplica'
+      )
+      OR (
+        COALESCE((SELECT SUM(total) FROM conceptos_venta WHERE embarque_id = e.id AND deleted_at IS NULL),0)
+        > COALESCE((SELECT SUM(total) FROM facturas WHERE embarque_id = e.id AND deleted_at IS NULL AND estado <> 'Cancelada'),0) + 0.01
+      )
+    );
+
+  RETURN v_count;
+END;
+$function$;
+
+-- Alertas de cierre operativo / administrativo: mismo criterio para CxC.
+CREATE OR REPLACE FUNCTION public.embarques_alertas_ids()
+ RETURNS TABLE(embarque_id uuid, tipo text)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  SELECT e.id, 'demora'::text AS tipo
+  FROM embarques e
+  WHERE e.deleted_at IS NULL
+    AND e.eta IS NOT NULL
+    AND (current_date - e.eta) >= 7
+    AND CASE
+       WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
+       WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
+            AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
+         CASE
+           WHEN current_date < e.etd THEN 'Confirmado'
+           WHEN current_date >= e.etd AND current_date < e.eta THEN 'En Tránsito'
+           WHEN current_date >= e.eta THEN 'Arribo'
+           ELSE e.estado::text
+         END
+       ELSE e.estado::text
+     END = 'Arribo'
+    AND (e.organization_id = public.org_scope())
+
+  UNION ALL
+
+  SELECT DISTINCT e.id, 'garantia'::text
+  FROM embarque_garantias_contenedor g
+  JOIN embarques e ON e.id = g.embarque_id
+  WHERE g.estado = 'depositado'
+    AND g.fecha_deposito IS NOT NULL
+    AND (current_date - g.fecha_deposito) > 30
+    AND e.deleted_at IS NULL
+    AND (e.organization_id = public.org_scope())
+
+  UNION ALL
+
+  SELECT e.id,
+         CASE WHEN e.estado = 'Por liquidar' THEN 'admin_pendiente' ELSE 'cierre_operativo' END::text
+  FROM embarques e
+  WHERE e.deleted_at IS NULL
+    AND e.estado IN ('Entregado', 'EIR', 'Por liquidar')
+    AND (e.organization_id = public.org_scope())
+    AND (
+      EXISTS (
+        SELECT 1 FROM facturas f
+        WHERE f.embarque_id = e.id AND f.deleted_at IS NULL
+          AND f.estado NOT IN ('Cancelada','Pagada')
+        GROUP BY f.embarque_id
+        HAVING SUM(f.total) > COALESCE((
+          SELECT SUM(pf.monto) FROM pagos_factura pf
+          JOIN facturas fi ON fi.id = pf.factura_id
+          WHERE fi.embarque_id = e.id AND fi.deleted_at IS NULL
+            AND fi.estado NOT IN ('Cancelada','Pagada')
+        ),0) + 0.01
+      )
+      OR EXISTS (
+        SELECT 1 FROM proveedor_facturas pf
+        WHERE pf.embarque_id = e.id AND pf.deleted_at IS NULL AND pf.estado <> 'Cancelada'
+        GROUP BY pf.embarque_id
+        HAVING SUM(pf.total) > COALESCE((
+          SELECT SUM(pp.monto) FROM pagos_proveedor pp
+          JOIN proveedor_facturas pfx ON pfx.id = pp.proveedor_factura_id
+          WHERE pfx.embarque_id = e.id AND pfx.deleted_at IS NULL AND pfx.estado <> 'Cancelada'
+        ),0) + 0.01
+      )
+      OR EXISTS (
+        SELECT 1 FROM documentos_embarque de
+        WHERE de.embarque_id = e.id AND de.deleted_at IS NULL
+          AND (de.archivo IS NULL OR de.archivo = '')
+          AND de.estado <> 'No aplica'
+      )
+      OR (
+        COALESCE((SELECT SUM(total) FROM conceptos_venta WHERE embarque_id = e.id AND deleted_at IS NULL),0)
+        > COALESCE((SELECT SUM(total) FROM facturas WHERE embarque_id = e.id AND deleted_at IS NULL AND estado <> 'Cancelada'),0) + 0.01
+      )
+    );
+$function$;
+
+REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.validar_cierre_embarque(uuid) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.embarque_admin_pendientes_resumen(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.embarque_admin_pendientes_resumen(uuid) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.embarques_admin_pendientes_count() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.embarques_admin_pendientes_count() TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.embarques_alertas_ids() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.embarques_alertas_ids() TO authenticated, service_role;

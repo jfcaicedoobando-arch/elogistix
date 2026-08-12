@@ -30,7 +30,18 @@ function fmtSaldoPorMoneda(rows: SaldoPorMoneda[]): string | null {
   return partes.length > 0 ? partes.join(" + ") : null;
 }
 
+/**
+ * v13.545.2 — Nota informativa: facturas marcadas como "Pagada" que no tienen
+ * el pago capturado en tesorería (histórico conciliado fuera del sistema).
+ */
+function notaPagadasSinPago(d: unknown): string | null {
+  const n = Number(pick(d, "pagadas_sin_pago_registrado") ?? 0);
+  if (n <= 0) return null;
+  return `${n} factura(s) se dan por cobradas por su estado "Pagada" (sin pago capturado)`;
+}
+
 export const fmtCxc = (d: unknown): string | null => {
+  const nota = notaPagadasSinPago(d);
   const rows = readPorMoneda(d);
   if (rows) {
     const pendientes = rows.reduce((n, r) => n + Number(r.facturas_pendientes ?? 0), 0);
@@ -38,8 +49,10 @@ export const fmtCxc = (d: unknown): string | null => {
     const partes: string[] = [];
     if (pendientes > 0) partes.push(`${pendientes} factura(s) por cobrar`);
     if (saldoTxt) partes.push(`saldo ${saldoTxt}`);
+    if (nota) partes.push(nota);
     return partes.length > 0 ? partes.join(" · ") : null;
   }
+
   // Legacy shape (retrocompat con caché): asume MXN.
   const total = Number(pick(d, "total") ?? 0);
   const pagado = Number(pick(d, "pagado") ?? 0);
