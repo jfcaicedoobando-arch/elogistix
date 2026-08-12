@@ -116,7 +116,12 @@ export function DetailHeader({
 
 
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      {/* v13.548.0: el corte horizontal vive en `xl` (1280) y no en `lg` (1024).
+          Entre 1024 y 1279 la barra de acciones (≈640px fija) dejaba la columna
+          del título en 0px de ancho, así que el folio quedaba invisible detrás
+          de los botones. Ahora las acciones bajan a su propio renglón. */}
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+
         <div className="flex min-w-0 flex-1 items-start gap-2">
           {icon ? <span className="mt-0.5 shrink-0 leading-none">{icon}</span> : null}
           <div className="min-w-0 flex-1">
