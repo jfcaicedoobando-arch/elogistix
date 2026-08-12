@@ -171,8 +171,11 @@ export function usePagoClienteLoteState(a: Args) {
   return {
     fecha, setFecha, total, formaPago, setFormaPago, referencia, setReferencia,
     cuentaId, setCuentaId, notas, setNotas, renglones,
-    saldoTotal, tcDof, tcAplicable, cuentasMoneda,
-    error, sinAsignar, totalRepartido, repRequeridos, recalcular, setMonto, submit,
+    saldoTotal, tcDof, tcAplicable, cuentasMoneda, totalNum, idsConRep,
+    error, erroresRenglon, sinAsignar, totalRepartido, repRequeridos,
+    recalcular, setMonto, repartirFifoAhora, liquidarTodo, limpiarReparto,
+    asignarSobrante, asignarSaldo, submit,
     guardando: registrar.isPending,
   };
+
 }
