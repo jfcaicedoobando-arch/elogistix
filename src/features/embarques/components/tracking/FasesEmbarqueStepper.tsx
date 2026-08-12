@@ -117,7 +117,10 @@ function StepperCompleto({ fases, enRiesgo }: { fases: FaseEmbarque[]; enRiesgo:
   return (
     <div data-testid="fases-stepper" data-variant="completa">
       {/* Escritorio: horizontal, con scroll contenido si el ancho aprieta */}
-      <div className="hidden md:block overflow-x-auto">
+      {/* UIA-17: ambas variantes visuales son aria-hidden; el canal accesible
+          canónico es el role="progressbar" sr-only de arriba (antes el stepper
+          se anunciaba dos veces: escritorio + móvil). */}
+      <div className="hidden md:block overflow-x-auto" aria-hidden="true">
         <div className="flex items-start min-w-[640px]">
           {fases.map((fase, i) => (
             <div key={fase.id} className="flex items-start flex-1 last:flex-none">
