@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.528.1] - 2026-08-12
+- CI verde: se actualizaron 10 pruebas que seguían esperando el contrato anterior a las Olas 3 y 4 (filtro `deleted_at` en leads/actividades de CRM, campos nuevos `esFallback`/`fechaAplicada` del tipo de cambio, título fijo de `notifyError` en el backfill legacy y fixture de fecha LOCAL en los KPIs de Dirección tras FE-04).
+- ESLint: el canon de "días vencido" de facturas se promovió a `src/lib/domain/facturaDiasVencido.ts` (las bandejas ya no importan `facturacion/domain`) y la captura de factura de proveedor bajó su complejidad extrayendo derivados puros a `_sections/capturaDerivados.ts`.
+- Auditoría H6: `siguiente_folio_proveedor` ahora revoca el acceso público antes de otorgar permisos a usuarios autenticados y procesos internos.
+
 ## [13.528.0] - 2026-08-12
 - Auditoría Wave 1 (P2) — Sub-ola 4/6 (Edge Functions): EF-05 (timeout de 12 s en la consulta al SAT y tope de 50 facturas por corrida en `verificar-sat-lote`, para que el lote quepa en el tiempo máximo de la función; las 3 cancelaciones — factura, REP y nota de crédito — envuelven `invoices.cancel` con timeout y devuelven 504 con bitácora en lugar de colgarse).
 - EF-06 — Webhook de facturación a prueba de eventos fuera de orden: un `receipt.status_updated(valid)` tardío ya no resucita un REP cancelado y un `cancellation_status_updated(pending)` retrasado ya no regresa una cancelación aceptada.
