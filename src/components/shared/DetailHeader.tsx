@@ -142,7 +142,7 @@ export function DetailHeader({
           </div>
         </div>
         {trailing ? (
-          <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:flex-nowrap lg:justify-end">
+          <div className="flex w-full flex-wrap items-center gap-2 xl:w-auto xl:justify-end">
             {trailing}
           </div>
         ) : null}
