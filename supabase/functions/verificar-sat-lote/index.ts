@@ -30,8 +30,12 @@ import { authenticate, authorizeOrgMembership } from "../_shared/auth.ts";
 import { consultarSat, normalizarRfc, type EstatusSat } from "../_shared/satConsulta.ts";
 
 const PAUSA_MS = 350;
-const LIMITE_DEFAULT = 200;
-const LIMITE_MAX = 500;
+// EF-05: con 200/500 el lote no cabe en el wall-clock de la edge (~150 s):
+// 500 pausas solas = 175 s; 200 × ~2.4 s ≈ 8 min. Tope efectivo 50 por
+// corrida; el cliente puede auto-reinvocar con solo_sin_verificar=true para
+// drenar el backlog (el progreso parcial ya persiste por fila).
+const LIMITE_DEFAULT = 50;
+const LIMITE_MAX = 50;
 
 interface FilaFactura {
   id: string;

@@ -64,24 +64,42 @@ export interface DatosConsultaSat {
   uuid: string;
 }
 
+/** EF-05: timeout defensivo — un fetch SAT colgado bloqueaba todo el lote de
+ * verificar-sat-lote hasta que Deno mataba la edge (~150 s). */
+const SAT_FETCH_TIMEOUT_MS = 12_000;
+
 async function consultarSatVariante(
   datos: DatosConsultaSat,
   variant: AmpersandVariant,
 ): Promise<ResultadoSat> {
   const envelope = buildSoapEnvelope(datos, variant);
-  const res = await fetch(SAT_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/xml; charset=utf-8",
-      "SOAPAction": "http://tempuri.org/IConsultaCFDIService/Consulta",
-    },
-    body: envelope,
-  });
-  const xml = await res.text();
-  if (!res.ok) return { estatus: "Error", raw: xml.slice(0, 500) };
-  const { estado, codigo } = parseSatResponse(xml);
-  return { estatus: mapEstatus(estado, codigo), raw: `${codigo} | ${estado}` };
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), SAT_FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(SAT_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        "SOAPAction": "http://tempuri.org/IConsultaCFDIService/Consulta",
+      },
+      body: envelope,
+      signal: ctrl.signal,
+    });
+    const xml = await res.text();
+    if (!res.ok) return { estatus: "Error", raw: xml.slice(0, 500) };
+    const { estado, codigo } = parseSatResponse(xml);
+    return { estatus: mapEstatus(estado, codigo), raw: `${codigo} | ${estado}` };
+  } catch (e) {
+    // EF-05: timeout/abort ⇒ la fila queda como Error y el lote continúa.
+    if ((e as Error).name === "AbortError") {
+      return { estatus: "Error", raw: `sat_timeout_${SAT_FETCH_TIMEOUT_MS}ms` };
+    }
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 }
+
 
 /** Consulta con reintentos por variante de ampersand (RFCs con `&`). */
 export async function consultarSat(
