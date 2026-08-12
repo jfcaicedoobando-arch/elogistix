@@ -9,6 +9,7 @@ import { notifyError } from '@/lib/ui/appFeedback';
 
 export type { CostoCotizacion } from '@/features/cotizacion/types';
 import type { CostoCotizacion } from '@/features/cotizacion/types';
+import { getErrorMessage } from "@/lib/errors";
 
 export function useCotizacionCostos(cotizacionId: string | undefined) {
   return useQuery({
@@ -27,7 +28,7 @@ export function useUpsertCotizacionCostos() {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al guardar costos: ${error.message}`, error, method: "UPSERT_COTIZACION_COSTOS" });
+      notifyError(undefined, { title: "No se pudo guardar costos", description: getErrorMessage(error), error, method: "UPSERT_COTIZACION_COSTOS" });
     },
   });
 }

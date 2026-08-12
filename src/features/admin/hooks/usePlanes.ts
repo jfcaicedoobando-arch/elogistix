@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { fetchPlanes, updatePlan, type Plan } from "@/features/admin/services/planes";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { Plan };
 
@@ -24,7 +25,7 @@ export function useUpdatePlan() {
       notifySuccess(undefined, { title: "Plan actualizado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "Error al actualizar plan", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al actualizar plan", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 }

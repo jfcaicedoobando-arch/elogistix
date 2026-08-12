@@ -14,6 +14,7 @@ import type { ContenedorBorrador } from '@/features/embarques/types/contenedor';
 import { newRequestId } from '@/lib/idempotency';
 import { notifyError } from '@/lib/ui/appFeedback';
 import { invalidateProfitDependencies } from '@/features/profit/hooks/invalidateProfitDependencies';
+import { getErrorMessage } from "@/lib/errors";
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -52,7 +53,7 @@ export function useUpdateEmbarque() {
       // con una descripción más específica; evitamos duplicar aquí.
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar embarque: ${error.message}`, error, method: "UPDATE_EMBARQUE" });
+      notifyError(undefined, { title: "No se pudo actualizar embarque", description: getErrorMessage(error), error, method: "UPDATE_EMBARQUE" });
     },
   });
 }

@@ -3,6 +3,7 @@ import { cancelarFacturaProveedor } from "@/features/cxp/services/cancelarFactur
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
+import { getErrorMessage } from "@/lib/errors";
 
 /**
  * Hook para cancelar una factura de proveedor.
@@ -29,7 +30,7 @@ export function useCancelarFacturaProveedor() {
     },
     onError: (err: Error) =>
       notifyError(undefined, {
-        title: `No se pudo cancelar la factura: ${err.message}`,
+        title: "No se pudo cancelar la factura", description: getErrorMessage(err),
         error: err,
         method: "FEATURES_CXP_HOOKS_USECANCELARFACTURAPROVEEDOR",
       }),

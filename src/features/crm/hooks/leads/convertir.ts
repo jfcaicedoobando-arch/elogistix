@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import { convertirLead, type ConvertirLeadParams } from "@/features/crm/services/leads";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 /**
  * Convierte un lead en (opcional) cliente y oportunidad nueva.
@@ -20,7 +21,7 @@ export function useConvertirLead() {
       notifySuccess(undefined, { title: "Lead convertido en oportunidad" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al convertir lead: ${error.message}`, error, method: "CONVERT_LEAD" });
+      notifyError(undefined, { title: "No se pudo convertir lead", description: getErrorMessage(error), error, method: "CONVERT_LEAD" });
     },
   });
 }

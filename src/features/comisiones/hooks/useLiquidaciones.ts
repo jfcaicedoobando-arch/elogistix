@@ -11,6 +11,7 @@ import {
   type RegistrarPagoLiquidacionParams,
 } from "@/features/comisiones/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useLiquidaciones() {
   return useQuery({
@@ -29,7 +30,7 @@ export function useGenerarLiquidacion() {
       notifySuccess(undefined, { title: "Liquidación generada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al generar liquidación: ${error.message}`, error, method: "GENERATE_LIQUIDACION" });
+      notifyError(undefined, { title: "No se pudo generar liquidación", description: getErrorMessage(error), error, method: "GENERATE_LIQUIDACION" });
     },
   });
 }
@@ -43,7 +44,7 @@ export function useRegistrarPagoLiquidacion() {
       notifySuccess(undefined, { title: "Pago de liquidación registrado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al registrar pago: ${error.message}`, error, method: "REGISTER_LIQUIDACION_PAYMENT" });
+      notifyError(undefined, { title: "No se pudo registrar pago", description: getErrorMessage(error), error, method: "REGISTER_LIQUIDACION_PAYMENT" });
     },
   });
 }

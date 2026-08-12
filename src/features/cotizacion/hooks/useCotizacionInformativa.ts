@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/query";
 import { crearCotizacionInformativa } from "@/features/cotizacion/services/informativa";
 import type { CotizacionInformativaInput } from "@/features/cotizacion/types";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useCreateCotizacionInformativa() {
   const qc = useQueryClient();
@@ -16,7 +17,7 @@ export function useCreateCotizacionInformativa() {
       notifySuccess(undefined, { title: "Cotización informativa creada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear cotización informativa: ${error.message}`, error, method: "CREATE_COTIZACION_INFORMATIVA" });
+      notifyError(undefined, { title: "No se pudo crear cotización informativa", description: getErrorMessage(error), error, method: "CREATE_COTIZACION_INFORMATIVA" });
     },
   });
 }

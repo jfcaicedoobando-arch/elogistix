@@ -19,6 +19,7 @@ import {
   type OportunidadInput as ServiceOportunidadInput,
 } from "@/features/crm/services/oportunidades";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { CrmOportunidadRow, Moneda } from "@/features/crm/services/oportunidades";
 export type OportunidadInput = ServiceOportunidadInput;
@@ -60,7 +61,7 @@ export function useCrearOportunidad() {
       notifySuccess(undefined, { title: "Oportunidad creada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear oportunidad: ${error.message}`, error, method: "CREATE_OPORTUNIDAD" });
+      notifyError(undefined, { title: "No se pudo crear oportunidad", description: getErrorMessage(error), error, method: "CREATE_OPORTUNIDAD" });
     },
   });
 }
@@ -75,7 +76,7 @@ export function useActualizarOportunidad() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar oportunidad: ${error.message}`, error, method: "UPDATE_OPORTUNIDAD" });
+      notifyError(undefined, { title: "No se pudo actualizar oportunidad", description: getErrorMessage(error), error, method: "UPDATE_OPORTUNIDAD" });
     },
   });
 }
@@ -90,7 +91,7 @@ export function useEliminarOportunidad() {
       notifySuccess(undefined, { title: "Oportunidad eliminada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar oportunidad: ${error.message}`, error, method: "DELETE_OPORTUNIDAD" });
+      notifyError(undefined, { title: "No se pudo eliminar oportunidad", description: getErrorMessage(error), error, method: "DELETE_OPORTUNIDAD" });
     },
   });
 }

@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { getErrorMessage } from "@/lib/errors";
 export function useAdminOrgInfo(id: string | undefined) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ export function useAdminOrgInfo(id: string | undefined) {
       setEditing(false);
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "Error al actualizar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "No se pudo actualizar la organización", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -61,7 +62,7 @@ export function useAdminOrgInfo(id: string | undefined) {
       notifySuccess(undefined, { title: activo ? "Organización activada" : "Organización desactivada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "Error", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "No se pudo cambiar el estado de la organización", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -73,7 +74,7 @@ export function useAdminOrgInfo(id: string | undefined) {
       navigate("/admin/organizaciones");
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "No se pudo eliminar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "No se pudo eliminar la organización", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 

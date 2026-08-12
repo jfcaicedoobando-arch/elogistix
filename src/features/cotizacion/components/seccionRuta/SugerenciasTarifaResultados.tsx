@@ -6,6 +6,7 @@ import { CardSkeleton } from "@/components/shared/skeletons";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
 import type { TopTarifaRow } from "@/features/costeo/types";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Props {
   isFetching: boolean;
@@ -30,7 +31,7 @@ export function SugerenciasTarifaResultados({ isFetching, error, isRefetching, t
   if (error) {
     return (
       <ErrorStateInline
-        message={error instanceof Error ? error.message : "Error desconocido al consultar tarifas."}
+        message={getErrorMessage(error)}
         onRetry={onRetry}
         retrying={isRefetching}
       />

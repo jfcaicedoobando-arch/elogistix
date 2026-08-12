@@ -11,6 +11,7 @@ import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
+import { getErrorMessage } from "@/lib/errors";
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -46,7 +47,7 @@ export function useCreateEmbarque() {
       notifySuccess(undefined, { title: "Embarque creado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear embarque: ${error.message}`, error, method: "CREATE_EMBARQUE" });
+      notifyError(undefined, { title: "No se pudo crear embarque", description: getErrorMessage(error), error, method: "CREATE_EMBARQUE" });
     },
   });
 }
@@ -77,7 +78,7 @@ export function useDuplicarEmbarque() {
       notifySuccess(undefined, { title: "Embarque duplicado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al duplicar embarque: ${error.message}`, error, method: "DUPLICATE_EMBARQUE" });
+      notifyError(undefined, { title: "No se pudo duplicar embarque", description: getErrorMessage(error), error, method: "DUPLICATE_EMBARQUE" });
     },
   });
 }

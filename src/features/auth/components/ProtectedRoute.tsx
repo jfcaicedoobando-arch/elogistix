@@ -71,7 +71,17 @@ export function ProtectedRoute({ children, allowedRoles, inline = false }: Prote
 
   if (sinAcceso) {
     // RG1: antes íbamos a "/" y HomeRoute rebotaba a "/inicio" → bucle infinito.
-    return <Navigate to="/sin-acceso" replace />;
+    // UIA-04: distinguimos "sin rol/org" de "rol sin permiso para este módulo".
+    return (
+      <Navigate
+        to="/sin-acceso"
+        replace
+        state={{
+          motivo: effectiveRole ? "permiso-modulo" : "sin-rol-org",
+          from: location.pathname,
+        }}
+      />
+    );
   }
 
   return <>{children}</>;

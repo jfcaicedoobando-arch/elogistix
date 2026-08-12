@@ -16,6 +16,7 @@ import { diagnosticoColumns } from "@/features/admin/components/DiagnosticoColum
 import { useDebounce, useDocumentTitle } from "@/hooks/shared";
 import { formatNumber } from "@/lib/formatters";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { getErrorMessage } from "@/lib/errors";
 
 const DIAGNOSTICO_PAGE_SIZE = 50;
 
@@ -92,7 +93,7 @@ export default function Diagnostico() {
           {error && (
             <ErrorState
               title="No se pudieron cargar los registros"
-              description={error.message}
+              description={getErrorMessage(error)}
               onRetry={() => refetch()}
             />
           )}

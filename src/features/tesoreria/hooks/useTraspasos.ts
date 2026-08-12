@@ -4,6 +4,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import {
   registrarTraspaso,
   type RegistrarTraspasoInput,
@@ -20,7 +21,7 @@ export function useRegistrarTraspaso() {
     },
     onError: (error: Error) => {
       notifyError(undefined, {
-        title: `Error al registrar traspaso: ${error.message}`,
+        title: "No se pudo registrar traspaso", description: getErrorMessage(error),
         error,
         method: "REGISTRAR_TRASPASO",
       });

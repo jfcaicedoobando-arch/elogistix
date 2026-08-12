@@ -12,6 +12,7 @@ import {
   type PlantillaMensajeRow,
 } from "@/features/crm/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { PlantillaCanal, PlantillaMensajeRow,  };
 
@@ -32,7 +33,7 @@ export function useCrearPlantilla() {
       notifySuccess(undefined, { title: "Plantilla creada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear plantilla: ${error.message}`, error, method: "CREATE_PLANTILLA" });
+      notifyError(undefined, { title: "No se pudo crear plantilla", description: getErrorMessage(error), error, method: "CREATE_PLANTILLA" });
     },
   });
 }
@@ -46,7 +47,7 @@ export function useActualizarPlantilla() {
       notifySuccess(undefined, { title: "Plantilla actualizada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar plantilla: ${error.message}`, error, method: "UPDATE_PLANTILLA" });
+      notifyError(undefined, { title: "No se pudo actualizar plantilla", description: getErrorMessage(error), error, method: "UPDATE_PLANTILLA" });
     },
   });
 }
@@ -60,7 +61,7 @@ export function useEliminarPlantilla() {
       notifySuccess(undefined, { title: "Plantilla eliminada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar plantilla: ${error.message}`, error, method: "DELETE_PLANTILLA" });
+      notifyError(undefined, { title: "No se pudo eliminar plantilla", description: getErrorMessage(error), error, method: "DELETE_PLANTILLA" });
     },
   });
 }

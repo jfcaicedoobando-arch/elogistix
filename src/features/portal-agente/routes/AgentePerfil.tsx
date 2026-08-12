@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { User as UserIcon } from "lucide-react";
 import { actualizarPasswordAgente } from "@/features/portal-agente/services/perfil";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 
@@ -29,8 +30,7 @@ export default function AgentePerfil() {
       notifySuccess(undefined, { title: "Contraseña actualizada" });
       setPassword("");
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      notifyError(undefined, { title: `Error al cambiar contraseña: ${message}`, error, method: "AGENTE_CHANGE_PASSWORD" });
+      notifyError(undefined, { title: "No se pudo cambiar la contraseña", description: getErrorMessage(error), error, method: "AGENTE_CHANGE_PASSWORD" });
     } finally {
       setPending(false);
     }

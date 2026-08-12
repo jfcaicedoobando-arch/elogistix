@@ -36,6 +36,7 @@ export async function fetchLeaderboardRaw(
     supabase
       .from("crm_oportunidades")
       .select("vendedor_email, valor_real, monto_estimado, etapa_id, fecha_cierre_real")
+      .is("deleted_at", null)
       .gte("fecha_cierre_real", inicioMesISO)
       .limit(LIMITE_OPS_MES), // defensivo: oportunidades cerradas del mes por org
     supabase.from("crm_etapas_pipeline").select("id, tipo"),

@@ -13,6 +13,7 @@ import { useTabProyeccionController } from "@/features/facturacion/hooks";
 import { ProyeccionCierreSection } from "./proyeccion/ProyeccionCierreSection";
 import { proyeccionColumns } from "./proyeccionColumns";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { getErrorMessage } from "@/lib/errors";
 
 export function TabProyeccion() {
   const c = useTabProyeccionController();
@@ -74,7 +75,7 @@ export function TabProyeccion() {
 
       {c.error && (
         <ErrorStateInline
-          message={c.error.message}
+          message={getErrorMessage(c.error)}
           onRetry={() => { void c.refetch(); }}
           retrying={c.isFetching}
         />

@@ -4,6 +4,7 @@ import { queryKeys } from "@/lib/query";
 import { createLead, updateLead, softDeleteLead } from "@/features/crm/services/leads";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { LeadInput } from "./constants";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useCrearLead() {
   const qc = useQueryClient();
@@ -17,7 +18,7 @@ export function useCrearLead() {
       notifySuccess(undefined, { title: "Lead creado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear lead: ${error.message}`, error, method: "CREATE_LEAD" });
+      notifyError(undefined, { title: "No se pudo crear lead", description: getErrorMessage(error), error, method: "CREATE_LEAD" });
     },
   });
 }
@@ -32,7 +33,7 @@ export function useActualizarLead() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar lead: ${error.message}`, error, method: "UPDATE_LEAD" });
+      notifyError(undefined, { title: "No se pudo actualizar lead", description: getErrorMessage(error), error, method: "UPDATE_LEAD" });
     },
   });
 }
@@ -48,7 +49,7 @@ export function useEliminarLead() {
       notifySuccess(undefined, { title: "Lead eliminado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar lead: ${error.message}`, error, method: "DELETE_LEAD" });
+      notifyError(undefined, { title: "No se pudo eliminar lead", description: getErrorMessage(error), error, method: "DELETE_LEAD" });
     },
   });
 }

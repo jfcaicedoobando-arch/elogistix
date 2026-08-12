@@ -16,6 +16,7 @@ import {
   crearEmbarqueBorradorConDecision,
 } from "@/features/cotizacion/services/revalidacion";
 import type { DecisionTarifa } from "@/features/cotizacion/domain/revalidacionTarifa";
+import { getErrorMessage } from "@/lib/errors";
 
 
 export function useSolicitarReaprobacion() {
@@ -30,7 +31,7 @@ export function useSolicitarReaprobacion() {
     },
     onError: (error: Error) => {
       notifyError(undefined, {
-        title: `No se pudo solicitar re-aprobación: ${error.message}`,
+        title: "No se pudo solicitar la re-aprobación", description: getErrorMessage(error),
         error,
         method: "REVALIDACION_SOLICITAR_REAPROBACION",
       });
@@ -61,7 +62,7 @@ export function useResolverReaprobacion() {
     },
     onError: (error: Error) => {
       notifyError(undefined, {
-        title: `Error al resolver re-aprobación: ${error.message}`,
+        title: "No se pudo resolver re-aprobación", description: getErrorMessage(error),
         error,
         method: "REVALIDACION_RESOLVER_REAPROBACION",
       });
@@ -91,7 +92,7 @@ export function useCrearEmbarqueBorradorConDecision() {
     },
     onError: (error: Error) => {
       notifyError(undefined, {
-        title: `Error al crear embarque: ${error.message}`,
+        title: "No se pudo crear embarque", description: getErrorMessage(error),
         error,
         method: "REVALIDACION_CREAR_EMBARQUE",
       });

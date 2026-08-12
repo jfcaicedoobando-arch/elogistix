@@ -8,6 +8,7 @@ import { generarFolioCotizacion } from "@/features/cotizacion/services/queries";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 interface UseCrearCotizacionDesdeOpInput {
   oportunidad: CrearCotizacionDesdeOpInput["oportunidad"] & {
@@ -56,7 +57,7 @@ export function useCrearCotizacionDesdeOportunidad() {
       notifySuccess(undefined, { title: `Cotización ${data.folio} creada` });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear cotización desde oportunidad: ${error.message}`, error, method: "CREATE_COTIZACION_FROM_OP" });
+      notifyError(undefined, { title: "No se pudo crear cotización desde oportunidad", description: getErrorMessage(error), error, method: "CREATE_COTIZACION_FROM_OP" });
     },
   });
 }

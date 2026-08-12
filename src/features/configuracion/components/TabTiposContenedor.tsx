@@ -9,15 +9,21 @@ import { useAllTiposContenedor, useAdminTiposContenedor } from "@/features/catal
 import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
+import { usePermissions } from "@/hooks/shared";
 
 type TipoContenedor = { id: string; code: string; name: string; activo: boolean };
 
 export default function TabTiposContenedor() {
   const { data: tipos = [], isLoading } = useAllTiposContenedor();
   const { agregarTipo, toggleActivo, eliminarTipo } = useAdminTiposContenedor();
+  const { canAdminTenant } = usePermissions();
   const [busqueda, setBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
+  // UX-01/UIA-05: eliminar exige confirmación de doble paso y sólo se ofrece
+  // a quien puede administrar el tenant.
+  const [tipoAEliminar, setTipoAEliminar] = useState<TipoContenedor | null>(null);
 
   const handleAgregar = () => {
     if (!nuevoCode.trim() || !nuevoName.trim()) return;
@@ -44,11 +50,12 @@ export default function TabTiposContenedor() {
     {
       id: "eliminar", header: "",
       meta: { headerClassName: "w-12" },
-      cell: ({ row }) => (
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarTipo.mutate(row.original.id)} aria-label={`Eliminar tipo ${row.original.name}`}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      ),
+      cell: ({ row }) =>
+        canAdminTenant ? (
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setTipoAEliminar(row.original)} aria-label={`Eliminar tipo ${row.original.name}`}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        ) : null,
     },
   ]);
 
@@ -88,6 +95,16 @@ export default function TabTiposContenedor() {
         </div>
         <p className="text-xs text-muted-foreground">{tipos.length} tipos en total · {tipos.filter(t => t.activo).length} activos</p>
       </CardContent>
+      <DeleteConfirmDialog
+        open={!!tipoAEliminar}
+        onOpenChange={(open) => { if (!open) setTipoAEliminar(null); }}
+        entityName={tipoAEliminar ? `el tipo de contenedor "${tipoAEliminar.name}"` : "este tipo de contenedor"}
+        description="El tipo de contenedor dejará de estar disponible en cotizaciones y embarques nuevos."
+        isPending={eliminarTipo.isPending}
+        onConfirm={() => {
+          if (tipoAEliminar) eliminarTipo.mutate(tipoAEliminar.id);
+        }}
+      />
     </Card>
   );
 }

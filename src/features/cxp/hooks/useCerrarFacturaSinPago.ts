@@ -5,6 +5,7 @@ import {
 } from "@/features/cxp/services/cerrarFacturaSinPago";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { getErrorMessage } from "@/lib/errors";
 
 /**
  * Hook para cerrar una factura de proveedor sin pago real (compensación, quita,
@@ -45,7 +46,7 @@ export function useCerrarFacturaProveedorSinPago() {
         return;
       }
       notifyError(undefined, {
-        title: `No se pudo cerrar la factura: ${err.message}`,
+        title: "No se pudo cerrar la factura", description: getErrorMessage(err),
         error: err,
         method: "FEATURES_CXP_HOOKS_USECERRARFACTURASINPAGO",
       });

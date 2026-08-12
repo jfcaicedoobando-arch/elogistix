@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.524.0] - 2026-08-12
+- Auditoría Wave 0 (bloqueantes) — validados y corregidos: BL-01 (soft-delete de CRM ahora filtrado en 11 servicios de lectura + guardrail `crm-soft-delete-reads`), BL-02 (`registrar_bitacora` con guard de organización/identidad), BL-04 (tipo de cambio obligatorio en traspasos cross-moneda: `LC_TRASPASO_TC_REQUERIDO`), N1 (eliminada sobrecarga ambigua de `log_client_error_v1`), EF-01 (timbrado de REP idempotente con `facturapi_rep_claim_at` y `liberar_claim_rep_huerfano`), EF-03 (acuse SAT de cancelación en notas de crédito), EF-04 (el fallback EUR 18.5 ya no se presenta como TC real y no se precarga en anticipos) y UX-02 (mensajes de error en es-MX).
+
 ## [13.523.2] - 2026-08-12
 - Documentación — agregados al repo los 7 fix packs de la auditoría integral v13.523.1 en `docs/audit-fixes/` (`FIXES_LOVABLE_COMPLETO.md`, `fixes_BL.md`, `fixes_FE.md`, `fixes_UIA.md`, `fixes_UIB.md`, `fixes_UX.md`, `fixes_TC_N.md`) y enlazados desde `ARCHITECTURE.md` §21 junto al pack existente de Edge Functions. Sin cambios de código.
 

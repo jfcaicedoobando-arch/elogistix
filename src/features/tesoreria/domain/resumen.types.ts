@@ -25,6 +25,8 @@ export interface FlujoMes {
    */
   por_cobrar_total_mxn: number;
   por_pagar_total_mxn: number;
+  /** UIA-03: `true` cuando hay saldos USD excluidos del total por falta de TC confiable. */
+  flujo_incompleto: boolean;
 }
 
 export interface TopItem {

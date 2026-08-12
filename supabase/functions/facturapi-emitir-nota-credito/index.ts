@@ -38,13 +38,15 @@ async function createNcInvoice(
 ): Promise<{ ok: true; invoice: FapiInvoice } | { ok: false; body: unknown; status: number }> {
   try {
     // Ola 4 · N1: timeout defensivo (patrón FIX-04/32 de facturapi-emitir):
-    // si FacturAPI cuelga, liberamos el claim y devolvemos 504.
+    // si FacturAPI cuelga, devolvemos 504.
     const invoice = await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
     return { ok: true, invoice };
   } catch (err) {
-    // Ola 4 · N1: liberar el claim para que el usuario pueda reintentar.
-    await releaseClaim();
     if (err instanceof FacturapiTimeoutError) {
+      // EF-02 (auditoría): en timeout NO liberamos el claim — si FacturAPI sí
+      // timbró, recuperar-claim lo promueve por external_id; si no timbró, lo
+      // libera pasado el umbral (MIN_EDAD_MINUTOS). Liberarlo aquí perdía la
+      // correlación y el reintento duplicaba la NC.
       await registrarBitacoraEdge(supabase, {
         organizationId: meta.organizationId,
         usuarioId: meta.userId,
@@ -54,8 +56,10 @@ async function createNcInvoice(
         entidadId: meta.notaCreditoId,
         detalles: { op: err.op, timeout_ms: err.timeoutMs },
       });
-      return { ok: false, body: { error: "facturapi_timeout", message: err.message, timeout_ms: err.timeoutMs }, status: 504 };
+      return { ok: false, body: { error: "facturapi_timeout", message: `${err.message}. Espera ~3 min y usa 'Recuperar timbrado' — no reintentes el timbrado directamente.`, timeout_ms: err.timeoutMs }, status: 504 };
     }
+    // Error definitivo de FacturAPI (no timbró): liberar el claim para reintentar.
+    await releaseClaim();
     const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
       organizationId: meta.organizationId,

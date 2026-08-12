@@ -13,10 +13,12 @@ import { jsonResponse } from "../_shared/response.ts";
 import {
   descargarAcuse,
   resolveNextAction,
+  resolveNextActionNc,
   agruparPorOrg,
   nuevoResumen,
   acumularOutcome,
   type FacturaPendiente,
+  type NotaCreditoPendiente,
   type FapiInvoiceStatus,
   type Resumen,
 } from "./reconcile.ts";
@@ -132,6 +134,74 @@ async function reconcileOne(ctx: ReconcileCtx, factura: FacturaPendiente): Promi
   }
 }
 
+
+/** EF-03: cierra una NC cuya cancelación el SAT aceptó asíncronamente (acuse + bitácora). */
+async function applyAcceptedNc(
+  supabase: SupabaseClient,
+  nc: NotaCreditoPendiente,
+  patchBase: Record<string, unknown>,
+  apiKey: string,
+  orgId: string,
+): Promise<boolean> {
+  const acuse = await descargarAcuse(nc.facturapi_id, apiKey);
+  const patch = {
+    ...patchBase,
+    acuse_cancelacion_xml: acuse.xml,
+    acuse_cancelacion_fecha: acuse.xml ? new Date().toISOString() : null,
+    acuse_cancelacion_status: acuse.status,
+  };
+  const { error: upErr } = await supabase.from("factura_notas_credito").update(patch).eq("id", nc.id);
+  if (upErr) return false;
+
+  await registrarBitacoraEdge(supabase, {
+    organizationId: orgId,
+    usuarioId: null,
+    modulo: "facturacion",
+    accion: "facturapi_nc_cancelada_async",
+    entidadId: nc.id,
+    detalles: { via: "cron_reconciliacion", cancellation_status: "accepted" },
+  });
+  return true;
+}
+
+/** EF-03: espejo de reconcileOne para factura_notas_credito. */
+async function reconcileOneNc(ctx: ReconcileCtx, nc: NotaCreditoPendiente): Promise<void> {
+  const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
+  resumen.revisadas++;
+  try {
+    const remote = await facturapi.invoices.retrieve(nc.facturapi_id) as FapiInvoiceStatus;
+    const decision = resolveNextActionNc(remote, nc, new Date().toISOString());
+
+    if (decision.outcome === "no_change") {
+      resumen.sin_cambio++;
+      return;
+    }
+
+    if (decision.outcome === "accepted") {
+      const ok = await applyAcceptedNc(supabase, nc, decision.patch, apiKey, orgId);
+      if (!ok) { resumen.errores++; return; }
+      resumen.aceptadas++;
+      return;
+    }
+
+    // rejected / expired / transition
+    await supabase.from("factura_notas_credito").update(decision.patch).eq("id", nc.id);
+    if (decision.outcome === "rejected" || decision.outcome === "expired") {
+      await registrarBitacoraEdge(supabase, {
+        organizationId: orgId,
+        usuarioId: null,
+        modulo: "facturacion",
+        accion: "facturapi_nc_cancelacion_no_aceptada",
+        entidadId: nc.id,
+        detalles: { via: "cron_reconciliacion", cancellation_status: decision.outcome },
+      });
+    }
+    acumularOutcome(resumen, decision.outcome);
+  } catch (_err) {
+    resumen.errores++;
+  }
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST" && req.method !== "GET") {
@@ -156,14 +226,32 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
 
   if (fetchErr) return jsonResponse({ error: "db_fetch_failed", detail: fetchErr.message }, 500);
 
+  // EF-03: las cancelaciones asíncronas de NC también se reconcilian aquí —
+  // el webhook no las resuelve (factura_not_found → ignored) y sin este
+  // barrido quedaban 'pending' para siempre tras el silencio positivo de 72 h.
+  const { data: ncPendientes, error: ncFetchErr } = await supabase
+    .from("factura_notas_credito")
+    .select("id, organization_id, facturapi_id, cancellation_status")
+    .in("cancellation_status", ["pending", "verifying"])
+    .not("facturapi_id", "is", null)
+    .limit(200);
+
+  if (ncFetchErr) return jsonResponse({ error: "db_fetch_failed", detail: ncFetchErr.message }, 500);
+
   const facturas = (pendientes ?? []) as FacturaPendiente[];
+  const notasCredito = (ncPendientes ?? []) as NotaCreditoPendiente[];
   const resumen = nuevoResumen();
   const porOrg = agruparPorOrg(facturas);
+  const ncPorOrg = agruparPorOrg(notasCredito as unknown as FacturaPendiente[]);
+  // Unir las llaves de ambos mapas para resolver el cliente una sola vez por org.
+  const orgIds = new Set<string>([...porOrg.keys(), ...ncPorOrg.keys()]);
 
-  for (const [orgId, lote] of porOrg) {
+  for (const orgId of orgIds) {
+    const lote = porOrg.get(orgId) ?? [];
+    const loteNc = (ncPorOrg.get(orgId) ?? []) as unknown as NotaCreditoPendiente[];
     const resolved = await getFacturapiClient(supabase, orgId);
     if (!resolved.ok) {
-      resumen.errores += lote.length;
+      resumen.errores += lote.length + loteNc.length;
       continue;
     }
     const ctx: ReconcileCtx = {
@@ -171,6 +259,9 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
     };
     for (const factura of lote) {
       await reconcileOne(ctx, factura);
+    }
+    for (const nc of loteNc) {
+      await reconcileOneNc(ctx, nc);
     }
   }
 

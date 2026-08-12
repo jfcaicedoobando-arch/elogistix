@@ -7,6 +7,7 @@ import {
   type ConfigGlobalItem,
 } from "@/features/configuracion/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { ConfigGlobalItem };
 
@@ -39,7 +40,7 @@ export function useUpdateConfiguracionGlobal() {
       notifySuccess(undefined, { title: "Configuración global guardada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "Error al guardar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al guardar", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 }

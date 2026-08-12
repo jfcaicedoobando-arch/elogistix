@@ -56,6 +56,19 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
   };
 
   const submit = async (args: SubmitArgs) => {
+    // FE-01: guarda de dominio (no sólo UI). El CHECK de BD exige
+    // tipo_cambio > 0 y monto_aplicado_factura > 0; con misma moneda estos
+    // valores siempre son > 0, así que este guard no afecta el flujo normal.
+    if (!(args.tipoCambio > 0) || !(args.montoAplicado > 0)) {
+      notifyError(undefined, {
+        title: "No hay tipo de cambio disponible",
+        description:
+          "No se pudo obtener el tipo de cambio para convertir el pago a la moneda de la factura. Espera unos segundos y vuelve a intentar.",
+        method: "ON_ERROR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+      return;
+    }
     try {
       const { pagoId, movimientoBancario } = await registrar.mutateAsync({
         factura_id: args.facturaId,

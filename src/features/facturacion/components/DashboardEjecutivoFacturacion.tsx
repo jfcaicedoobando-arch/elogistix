@@ -27,6 +27,11 @@ function mesEnCurso(): string {
   return formatFechaEs(new Date().toISOString(), { month: "long" });
 }
 
+/** UIA-03: sublabel con la porción en USD (excluida del total MXN sin TC). */
+function sublabelUsd(montoUsd: number): string | undefined {
+  return montoUsd > 0 ? `+ ${formatCurrencyCompact(montoUsd, "USD")} en USD` : undefined;
+}
+
 function buildFacturadoUi(facturasSinTc: number, mes: string): FacturadoUi {
   const sinTc = facturasSinTc > 0;
   const base = `Facturado en ${mes}`;
@@ -84,12 +89,14 @@ export function DashboardEjecutivoFacturacion() {
         <KpiCard
           label="Saldo por cobrar"
           value={formatCurrencyCompact(porCobrar, "MXN")}
-          valueTooltip="Saldo total pendiente de cobro de todas las facturas vivas (no sólo del mes en curso). Es el mismo universo de la pestaña 'Por cobrar'."
+          sublabel={sublabelUsd(cob.total_usd)}
+          valueTooltip="Saldo total pendiente de cobro de todas las facturas vivas (no sólo del mes en curso). Las facturas en USD se muestran aparte para no mezclar monedas sin tipo de cambio."
         />
 
         <KpiCard
           label={`Vencido (${cob.facturas_vencidas})`}
           value={formatCurrencyCompact(vencido, "MXN")}
+          sublabel={sublabelUsd(cob.vencido_usd)}
           variant="destructive"
         />
       </div>

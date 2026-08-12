@@ -13,7 +13,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey, FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
-import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
 import { calcularParcialidad, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
@@ -56,7 +56,16 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .eq("id", body.pago_id)
     .maybeSingle();
   if (pErr || !pago) return jsonResponse({ error: "pago_not_found", detail: pErr?.message }, 404);
-  if (pago.facturapi_rep_id) return jsonResponse({ error: "ya_timbrado_rep", message: "Este pago ya tiene REP timbrado." }, 409);
+  if (pago.facturapi_rep_id) {
+    const esClaim = String(pago.facturapi_rep_id).startsWith("PENDING:");
+    return jsonResponse({
+      error: "ya_timbrado_rep",
+      message: esClaim
+        ? "Hay un timbrado de REP en curso o interrumpido. Espera ~3 min y usa 'Recuperar timbrado'."
+        : "Este pago ya tiene REP timbrado.",
+      claim_pendiente: esClaim,
+    }, 409);
+  }
   if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
@@ -155,13 +164,59 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     return jsonResponse({ error: "validation_failed", issues }, 422);
   }
 
+  // EF-01 (auditoría): claim atómico ANTES de timbrar — mismo patrón que
+  // claimFactura (facturapi-emitir) y claimNotaCredito. Se toma DESPUÉS de
+  // validar para no liberarlo en el 422. El tag viaja como external_id a
+  // Facturapi para recuperar el REP si la edge muere entre timbrar y persistir.
+  const claimTag = `PENDING:${crypto.randomUUID()}`;
+  const claimAt = new Date().toISOString();
+  const { data: claimed, error: claimErr } = await supabase
+    .from("pagos_factura")
+    .update({ facturapi_rep_id: claimTag, facturapi_rep_claim_at: claimAt, rep_error: null })
+    .eq("id", pago.id)
+    .is("facturapi_rep_id", null)
+    .select("id")
+    .maybeSingle();
+  if (claimErr) return jsonResponse({ error: "claim_failed", detail: claimErr.message }, 500);
+  if (!claimed) return jsonResponse({ error: "ya_timbrado_rep", message: "Otro proceso ya está timbrando este REP." }, 409);
+  const releaseClaim = async () => {
+    await supabase.from("pagos_factura")
+      .update({ facturapi_rep_id: null, facturapi_rep_claim_at: null })
+      .eq("id", pago.id)
+      .eq("facturapi_rep_id", claimTag);
+  };
+
   const payload = buildRepPayload(ctx);
+  // EF-01: correlación del claim para facturapi-recuperar-claim (Facturapi NO
+  // deduplica por external_id; es sólo un campo de búsqueda).
+  payload.external_id = claimTag;
 
   interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
   let invoice: FapiInvoice;
   try {
-    invoice = await facturapi.invoices.create(payload) as FapiInvoice;
+    // EF-01/EF-02: timeout defensivo. En timeout NO se libera el claim: si
+    // Facturapi sí timbró, el tag es la única correlación para recuperarlo.
+    invoice = await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
   } catch (err) {
+    if (err instanceof FacturapiTimeoutError) {
+      await registrarBitacoraEdge(supabase, {
+        organizationId: pago.organization_id,
+        usuarioId: userData.user.id,
+        usuarioEmail: userData.user.email,
+        modulo: "facturacion",
+        accion: "facturapi_rep_emitir_timeout",
+        entidadId: pago.id,
+        detalles: { op: err.op, timeout_ms: err.timeoutMs, external_id: claimTag },
+      });
+      return jsonResponse({
+        error: "facturapi_timeout",
+        message: `${err.message}. Espera ~3 min y usa 'Recuperar timbrado' — el REP pudo haberse timbrado; no reintentes directamente.`,
+        timeout_ms: err.timeoutMs,
+        external_id: claimTag,
+      }, 504);
+    }
+    // Error definitivo de Facturapi (no timbró): liberar el claim para reintentar.
+    await releaseClaim();
     const { status, detail } = describeFacturapiError(err);
     const errMsg = typeof detail === "object" && detail !== null
       ? JSON.stringify(detail).slice(0, 500)
@@ -200,10 +255,11 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     folder: "rep",
   });
 
-  const { error: updErr } = await supabase
+  const { error: updErr, data: updRow } = await supabase
     .from("pagos_factura")
     .update({
       facturapi_rep_id: facturapiId,
+      facturapi_rep_claim_at: null,
       uuid_rep: uuid,
       folio_rep: folio,
       serie_rep: serieTimbrada,
@@ -216,8 +272,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       timbrado_rep_por: userData.user.id,
       rep_error: null,
     })
-    .eq("id", pago.id);
+    .eq("id", pago.id)
+    // EF-01: persistir sólo si seguimos poseyendo el claim (patrón emitir/NC).
+    .eq("facturapi_rep_id", claimTag)
+    .select("id")
+    .maybeSingle();
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (!updRow) return jsonResponse({ error: "claim_perdido", message: "El claim de timbrado se perdió; usa 'Recuperar timbrado' con este pago.", facturapi_id: facturapiId, uuid }, 409);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: pago.organization_id,

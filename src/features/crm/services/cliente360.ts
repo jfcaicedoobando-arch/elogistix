@@ -34,6 +34,7 @@ export async function fetchCliente360(clienteId: string): Promise<Cliente360Resu
         "id, nombre, etapa_id, monto_estimado, valor_real, moneda, probabilidad, fecha_estimada_cierre, created_at, vendedor_email",
       )
       .eq("cliente_id", clienteId)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(50),
     supabase

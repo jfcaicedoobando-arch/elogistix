@@ -10,6 +10,7 @@ import { actualizarDemorasContenedor } from "@/features/embarques/services/conte
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import type { DraftPatch, EditableRow } from "@/features/embarques/components/_sections/tabDemorasColumns";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useTabDemorasController(embarqueId: string) {
   const { data: contenedores = [], isLoading } = useContenedoresEmbarque(embarqueId);
@@ -37,7 +38,7 @@ export function useTabDemorasController(embarqueId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
     },
     onError: (err: Error) => notifyError(undefined, {
-      title: err.message, error: err,
+      title: "No se pudieron actualizar las demoras", description: getErrorMessage(err), error: err,
       method: "FEATURES_EMBARQUES_COMPONENTS_TABDEMORAS_1",
     }),
   });

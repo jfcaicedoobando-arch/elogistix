@@ -24,6 +24,7 @@ export async function listLeads(filtros: LeadFiltros): Promise<LeadsResultado> {
   let q = supabase
     .from("crm_leads")
     .select(LEAD_COLUMNS, { count: "exact" })
+    .is("deleted_at", null)
     .order(sortKey, { ascending: sortDir === "asc" });
 
   if (search.trim()) {

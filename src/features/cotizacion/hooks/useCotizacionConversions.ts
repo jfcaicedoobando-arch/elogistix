@@ -8,6 +8,7 @@ import {
 } from '@/features/cotizacion/services';
 import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
 import { RevalidacionRequeridaError } from '@/features/cotizacion/domain/revalidacionTarifa';
+import { getErrorMessage } from "@/lib/errors";
 
 
 /** Convierte un prospecto en cliente y actualiza la cotización */
@@ -27,7 +28,7 @@ export function useConvertirProspectoACliente() {
       notifySuccess(undefined, { title: "Prospecto convertido a cliente" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al convertir prospecto: ${error.message}`, error, method: "CONVERT_PROSPECTO_CLIENTE" });
+      notifyError(undefined, { title: "No se pudo convertir prospecto", description: getErrorMessage(error), error, method: "CONVERT_PROSPECTO_CLIENTE" });
     },
   });
 }
@@ -57,7 +58,7 @@ export function useCrearEmbarqueBorrador() {
       // La revalidación de tarifa la comunica el handler con su propio aviso
       // guiado (mantener/refrescar/sustituir); no duplicamos toast aquí.
       if (error instanceof RevalidacionRequeridaError) return;
-      notifyError(undefined, { title: `Error al crear embarque borrador: ${error.message}`, error, method: "CREATE_EMBARQUE_BORRADOR" });
+      notifyError(undefined, { title: "No se pudo crear embarque borrador", description: getErrorMessage(error), error, method: "CREATE_EMBARQUE_BORRADOR" });
     },
   });
 }

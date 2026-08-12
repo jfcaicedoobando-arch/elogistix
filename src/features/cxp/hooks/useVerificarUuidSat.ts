@@ -8,6 +8,7 @@ import {
 import { notifyError } from "@/lib/ui/appFeedback";
 import { notificarNoVerificable } from "./satNoVerificable";
 import { queryKeys } from "@/lib/query";
+import { getErrorMessage } from "@/lib/errors";
 
 const METHOD = "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT";
 
@@ -59,7 +60,7 @@ export function useVerificarUuidSat() {
     },
     onError: (err: Error) =>
       notifyError(undefined, {
-        title: `No se pudo consultar SAT: ${err.message}`,
+        title: "No se pudo consultar el SAT", description: getErrorMessage(err),
         error: err,
         method: METHOD,
       }),

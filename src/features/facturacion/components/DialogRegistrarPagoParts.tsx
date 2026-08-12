@@ -35,7 +35,7 @@ export function FooterAcciones({
 }
 
 export function NotasPago({
-  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo,
+  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado,
 }: {
   esPpdTimbrada: boolean;
   monedaPago: string;
@@ -45,6 +45,8 @@ export function NotasPago({
   tipoCambio: number;
   excede: boolean;
   saldo: number;
+  /** FE-01 / UIA-01: cross-moneda sin tipo de cambio confiable. */
+  tcBloqueado?: boolean;
 }) {
   const mostrarConversion = monedaPago !== monedaFactura && montoNum > 0;
   return (
@@ -57,10 +59,19 @@ export function NotasPago({
           </AlertDescription>
         </Alert>
       )}
-      {mostrarConversion && (
+      {mostrarConversion && !tcBloqueado && (
         <p className="text-xs text-muted-foreground">
           Equivalente: {formatCurrency(montoAplicado, monedaFactura)} (TC: {tipoCambio.toFixed(4)})
         </p>
+      )}
+      {mostrarConversion && tcBloqueado && (
+        <Alert className="border-warning/40 bg-warning/5">
+          <AlertDescription className="text-xs">
+            Esperando tipo de cambio… No se puede registrar un cobro en {monedaPago} para una
+            factura en {monedaFactura} sin un tipo de cambio disponible. Intenta de nuevo en unos
+            segundos; si el problema persiste, contacta a soporte.
+          </AlertDescription>
+        </Alert>
       )}
       {excede && (
         <p className="text-xs text-destructive">

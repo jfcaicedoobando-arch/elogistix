@@ -6,6 +6,7 @@ import {
 } from "@/features/cxp/services/aprobacionFactura";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Vars {
   id: string;
@@ -54,7 +55,7 @@ export function useAprobarFactura() {
         title: vars.aprobar
           ? "No se pudo aprobar la factura"
           : "No se pudo rechazar la factura",
-        description: error.message,
+        description: getErrorMessage(error),
         error,
         errorCode: code,
         method: "APROBAR_FACTURA_PROVEEDOR",

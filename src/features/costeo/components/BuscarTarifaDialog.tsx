@@ -19,6 +19,7 @@ import { TarifaResultCard } from "./TarifaResultCard";
 import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import { todayLocalISO } from "@/lib/date/today";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Props {
   open: boolean;
@@ -60,7 +61,7 @@ function ResultadosBody({
   if (error) {
     return (
       <ErrorStateInline
-        message={error instanceof Error ? error.message : "Error desconocido al consultar tarifas."}
+        message={getErrorMessage(error)}
         onRetry={onRetry}
         retrying={isRefetching}
       />

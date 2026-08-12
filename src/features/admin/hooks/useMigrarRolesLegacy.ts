@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { getErrorMessage } from "@/lib/errors";
 import {
   migrarRolesLegacyDryRun,
   migrarRolesLegacyEjecutar,
@@ -42,7 +43,8 @@ export function useMigrarRolesLegacy(options: UseMigrarRolesLegacyOptions = {}) 
     },
     onError: (err) => {
       notifyError(undefined, {
-        title: err instanceof Error ? err.message : "Error al migrar roles legacy",
+        title: "No se pudo migrar los roles legacy",
+        description: getErrorMessage(err),
         error: err,
         method: "USE_MIGRAR_ROLES_LEGACY",
       });

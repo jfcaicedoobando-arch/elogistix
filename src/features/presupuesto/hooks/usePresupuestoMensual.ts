@@ -6,6 +6,7 @@ import {
 } from "@/features/presupuesto/services";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export function usePresupuestoMensualAnio(anio: number) {
   const { organizationId } = useOrganization();
@@ -25,7 +26,7 @@ export function useUpsertCeldaPresupuesto() {
     mutationFn: (p: UpsertCeldaParams) => upsertCeldaPresupuesto(p),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.presupuesto.all }),
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al guardar presupuesto: ${error.message}`, error, method: "UPSERT_PRESUPUESTO_CELDA" });
+      notifyError(undefined, { title: "No se pudo guardar presupuesto", description: getErrorMessage(error), error, method: "UPSERT_PRESUPUESTO_CELDA" });
     },
   });
 }

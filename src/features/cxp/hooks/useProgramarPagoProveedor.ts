@@ -3,6 +3,7 @@ import { programarPagoProveedor } from "@/features/cxp/services/programarPagoPro
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
+import { getErrorMessage } from "@/lib/errors";
 
 /**
  * Hook para programar (o desprogramar) el pago de una factura de proveedor.
@@ -25,7 +26,7 @@ export function useProgramarPagoProveedor() {
     },
     onError: (err: Error) =>
       notifyError(undefined, {
-        title: `No se pudo programar el pago: ${err.message}`,
+        title: "No se pudo programar el pago", description: getErrorMessage(err),
         error: err,
         method: "FEATURES_CXP_HOOKS_USEPROGRAMARPAGOPROVEEDOR",
       }),

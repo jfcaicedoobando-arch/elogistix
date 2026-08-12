@@ -12,6 +12,7 @@ import {
 } from "@/features/admin/services";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 export default function TabExportar() {
   const { organizationId, organization } = useOrganization();
   const [progress, setProgress] = useState<ExportProgress | null>(null);
@@ -28,8 +29,7 @@ export default function TabExportar() {
       await exportOrganizationZip(organizationId, organization.nombre, setProgress);
       notifySuccess(undefined, { title: "Export generado y descargado" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(undefined, { title: `Falló el export: ${msg}`, error: err, method: "FEATURES_ADMIN_COMPONENTS_TABEXPORTAR_2" });
+      notifyError(undefined, { title: "Falló el export", description: getErrorMessage(err), error: err, method: "FEATURES_ADMIN_COMPONENTS_TABEXPORTAR_2" });
     } finally {
       setRunning(false);
       setTimeout(() => setProgress(null), 2000);

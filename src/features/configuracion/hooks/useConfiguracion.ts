@@ -8,6 +8,7 @@ import {
 } from "@/features/configuracion/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
+import { getErrorMessage } from "@/lib/errors";
 
 export type { ConfigItem };
 
@@ -57,7 +58,7 @@ export function useUpdateConfiguracion() {
       notifySuccess(undefined, { title: "Configuración guardada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: "Error al guardar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(undefined, { title: "Error al guardar", description: getErrorMessage(error), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 }

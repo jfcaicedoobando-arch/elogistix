@@ -9,6 +9,7 @@ import type { MotivoCancelacionSat } from "@/features/facturacion/services/factu
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { queryKeys } from "@/lib/query";
 import { tituloTimbrado } from "@/features/facturacion/utils/uuidCorto";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useTimbrarNotaCredito(facturaId: string) {
   const qc = useQueryClient();
@@ -22,7 +23,7 @@ export function useTimbrarNotaCredito(facturaId: string) {
     },
     onError: (err: Error) =>
       notifyError(undefined, {
-        title: `No se pudo timbrar la nota de crédito: ${err.message}`,
+        title: "No se pudo timbrar la nota de crédito", description: getErrorMessage(err),
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USENOTACREDITOFACTURAPI_1",
       }),
@@ -46,7 +47,7 @@ export function useCancelarNotaCredito(facturaId: string) {
     },
     onError: (err: Error) =>
       notifyError(undefined, {
-        title: `No se pudo cancelar la nota de crédito: ${err.message}`,
+        title: "No se pudo cancelar la nota de crédito", description: getErrorMessage(err),
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USENOTACREDITOFACTURAPI_2",
       }),

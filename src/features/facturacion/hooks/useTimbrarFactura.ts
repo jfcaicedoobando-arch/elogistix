@@ -6,6 +6,7 @@ import { useMutationWithFeedback } from "@/hooks/shared";
 import { notifySuccess, notifyError, notifyInfo, notifyWarning } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
+import { getErrorMessage } from "@/lib/errors";
 
 /**
  * Timbrado. Usa `useMutationWithFeedback` para el error (traducido por
@@ -73,7 +74,7 @@ export function useCancelarFactura() {
       if (err instanceof FacturapiError && err.transient) {
         notifyWarning(undefined, {
           title: "Servicio SAT no disponible",
-          description: err.message,
+          description: getErrorMessage(err),
           duration: 15000,
           method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_TRANSIENT",
           action: {
@@ -92,14 +93,14 @@ export function useCancelarFactura() {
                   invalidateHuecoFacturacion(qc);
                 })
                 .catch((e: Error) => {
-                  notifyError(undefined, { title: `No se pudo cancelar: ${e.message}`, error: e, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_RETRY" });
+                  notifyError(undefined, { title: "No se pudo cancelar la factura", description: getErrorMessage(e), error: e, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_RETRY" });
                 });
             },
           },
         });
         return;
       }
-      notifyError(undefined, { title: `No se pudo cancelar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_2" });
+      notifyError(undefined, { title: "No se pudo cancelar la factura", description: getErrorMessage(err), error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_2" });
     },
   });
 }

@@ -9,6 +9,7 @@ import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
 import type { NuevoProveedorForm } from "./useNuevoProveedorController.constants";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 export type CsfPatch = Partial<
   Pick<
     NuevoProveedorForm,
@@ -34,8 +35,7 @@ export async function procesarCsfUpload(file: File): Promise<CsfPatch | null> {
     notifySuccess(undefined, { title: "CSF procesada. Verifica los datos extraídos." });
     return buildCsfPatch(data);
   } catch (err) {
-    const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
-    notifyError(undefined, { title: mensaje, error: err, method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER.CSF_1" });
+    notifyError(undefined, { title: "No se pudo procesar la CSF", description: getErrorMessage(err), error: err, method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER.CSF_1" });
     return null;
   }
 }

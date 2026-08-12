@@ -9,6 +9,7 @@ import {
   type OrgRow,
 } from '@/features/admin/services';
 import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
+import { getErrorMessage } from "@/lib/errors";
 
 export type {     OrgRow };
 
@@ -56,7 +57,7 @@ export function useCreateOrganization() {
       notifySuccess(undefined, { title: "Organización creada" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear organización: ${error.message}`, error, method: "CREATE_ORGANIZATION" });
+      notifyError(undefined, { title: "No se pudo crear organización", description: getErrorMessage(error), error, method: "CREATE_ORGANIZATION" });
     },
   });
 }

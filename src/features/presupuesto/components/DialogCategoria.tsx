@@ -17,6 +17,7 @@ import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import type { Enums } from "@/integrations/supabase/types";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 type TipoContable = Enums<"tipo_contable_categoria">;
 
@@ -63,8 +64,7 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
       }
       onOpenChange(false);
     } catch (e) {
-      const err = e as { message?: string };
-      notifyError(undefined, { title: err.message ?? "Error al guardar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_2" });
+      notifyError(undefined, { title: "No se pudo guardar la categoría", description: getErrorMessage(e), error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_2" });
     }
   };
 

@@ -18,6 +18,7 @@ import { descargarBlob } from "@/lib/downloadBlob";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
+import { getErrorMessage } from "@/lib/errors";
 
 function nombreArchivoBase(factura: Pick<FacturaDetalle, "numero">): string {
   const safe = factura.numero.replace(/[^A-Za-z0-9._-]+/g, "_");
@@ -47,7 +48,7 @@ export function useAcuseCancelacion(factura: FacturaDetalle | null | undefined) 
     },
     onError: (err: Error) =>
       notifyError(undefined, {
-        title: `No se pudo descargar el acuse: ${err.message}`,
+        title: "No se pudo descargar el acuse", description: getErrorMessage(err),
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USEACUSECANCELACION",
       }),

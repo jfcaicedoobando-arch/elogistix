@@ -17,6 +17,7 @@ import {
   aprenderAliasProveedorSafe,
 } from "./useNuevaFacturaProveedorForm.sideEffects";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
+import { getErrorMessage } from "@/lib/errors";
 
 /** Acción "Ver factura" del toast de CFDI duplicado (v13.368.0). */
 function accionVerFactura(f: FacturaExistentePorUuid) {
@@ -65,12 +66,12 @@ export async function handleSubmitError(e: unknown, uuidFiscal?: string | null) 
       method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_FOLIO",
     });
   } else if (err.code === "23505") {
-    notifyError(undefined, { title: "Registro duplicado", description: err.message ?? undefined, method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP2" });
+    notifyError(undefined, { title: "Registro duplicado", description: getErrorMessage(err), method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP2" });
   } else {
     // P0-2 (R5): fallback genérico — nunca reutilizar un toast de negocio.
     notifyError(undefined, {
       title: "No se pudo capturar la factura",
-      description: err.message ?? undefined,
+      description: getErrorMessage(err),
       method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2",
     });
   }

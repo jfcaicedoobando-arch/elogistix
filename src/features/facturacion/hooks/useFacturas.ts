@@ -9,6 +9,7 @@ import {
 } from "@/features/facturacion/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { invalidateSidebarAlerts } from "@/hooks/layout/useSidebarAlerts";
+import { getErrorMessage } from "@/lib/errors";
 
 ;
 
@@ -81,7 +82,7 @@ export function useMarcarCostoPagado() {
       notifySuccess(undefined, { title: "Costo marcado como pagado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al marcar costo pagado: ${error.message}`, error, method: "MARK_COST_PAID" });
+      notifyError(undefined, { title: "No se pudo marcar costo pagado", description: getErrorMessage(error), error, method: "MARK_COST_PAID" });
     },
   });
 }
