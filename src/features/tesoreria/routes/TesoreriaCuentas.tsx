@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Landmark, Plus, ArrowRightLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
@@ -19,6 +20,7 @@ import { DialogTraspasoCuentas } from "./_sections/DialogTraspasoCuentas";
 export default function TesoreriaCuentas() {
   const {
     cuentas, isLoading, isError, refetch, open, setOpen, form, setField, submit, submitting,
+    editTarget, solicitarEditar, monedaBloqueada, avisoRecalculo,
     deleteTarget, solicitarEliminar, cancelarEliminar, confirmarEliminar, eliminando,
   } = useTesoreriaCuentasController();
   // Sentry JAVASCRIPT-REACT-3S/3T: sólo administradores y tesorero pueden
@@ -75,6 +77,7 @@ export default function TesoreriaCuentas() {
               cuenta={c}
               saldoActual={saldos.find((s) => s.id === c.id)?.saldo}
               canAdmin={canAdminCuentasBancarias}
+              onEditar={canAdminCuentasBancarias ? solicitarEditar : undefined}
               onEliminar={solicitarEliminar}
             />
           ))}
@@ -85,17 +88,29 @@ export default function TesoreriaCuentas() {
         open={open}
         onOpenChange={setOpen}
         icon={Landmark}
-        title="Nueva cuenta bancaria"
-        description="Captura los datos de la nueva cuenta bancaria para conciliación."
+        title={editTarget ? `Editar cuenta · ${editTarget.alias}` : "Nueva cuenta bancaria"}
+        description={
+          editTarget
+            ? "Corrige los datos de la cuenta. El saldo inicial y su fecha de corte afectan los saldos y la conciliación."
+            : "Captura los datos de la nueva cuenta bancaria para conciliación."
+        }
         size="lg"
         footer={
           <>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={submit} disabled={submitting}>Guardar</Button>
+            <Button onClick={submit} loading={submitting}>Guardar</Button>
           </>
         }
       >
-        <NuevaCuentaFormFields form={form} setField={setField} />
+        <NuevaCuentaFormFields form={form} setField={setField} monedaBloqueada={monedaBloqueada} />
+        {avisoRecalculo && (
+          <Alert>
+            <AlertDescription>
+              Al guardar se recalculará el saldo de la cuenta y la conciliación con el nuevo
+              saldo inicial y su fecha de corte. Los movimientos y pagos registrados no cambian.
+            </AlertDescription>
+          </Alert>
+        )}
       </FormDialogShell>
 
       <DialogTraspasoCuentas

@@ -17,9 +17,11 @@ type Controller = ReturnType<typeof useTesoreriaCuentasController>;
 export interface NuevaCuentaFormFieldsProps {
   form: Controller["form"];
   setField: Controller["setField"];
+  /** En edición, si la cuenta ya tiene movimientos no se permite cambiar moneda. */
+  monedaBloqueada?: boolean;
 }
 
-export function NuevaCuentaFormFields({ form, setField }: NuevaCuentaFormFieldsProps) {
+export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false }: NuevaCuentaFormFieldsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
@@ -40,7 +42,7 @@ export function NuevaCuentaFormFields({ form, setField }: NuevaCuentaFormFieldsP
       </div>
       <div>
         <Label>Moneda</Label>
-        <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as Moneda)}>
+        <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as Moneda)} disabled={monedaBloqueada}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="MXN">MXN</SelectItem>
@@ -48,6 +50,11 @@ export function NuevaCuentaFormFields({ form, setField }: NuevaCuentaFormFieldsP
             <SelectItem value="EUR">EUR</SelectItem>
           </SelectContent>
         </Select>
+        {monedaBloqueada && (
+          <p className="text-xs text-muted-foreground pt-1">
+            La cuenta ya tiene movimientos: la moneda no se puede cambiar.
+          </p>
+        )}
       </div>
       <div>
         <Label htmlFor="cuenta-saldo-inicial">Saldo inicial</Label>

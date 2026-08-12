@@ -4,7 +4,9 @@ import { renderHook, act } from "@testing-library/react";
 vi.mock("@/features/tesoreria/hooks", () => ({
   useCuentasBancarias: () => ({ data: [], isLoading: false }),
   useCrearCuenta: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useActualizarCuenta: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useEliminarCuenta: () => ({ mutate: vi.fn(), isPending: false }),
+  useTieneMovimientosCuenta: () => ({ data: false }),
 }));
 vi.mock("@/lib/ui/appFeedback", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
 vi.mock("@/lib/observability/reportCaughtError", () => ({ reportCaughtError: vi.fn() }));

@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.544.0] - 2026-08-12
+- Tesorería: nueva edición de cuentas bancarias (botón de lápiz en cada tarjeta) para corregir banco, alias, número, CLABE, saldo inicial y fecha de corte; el cambio queda en la bitácora.
+- Tesorería: al modificar el saldo inicial o su fecha de corte se muestra un aviso de que se recalculan saldos y conciliación; la moneda no se puede cambiar si la cuenta ya tiene movimientos.
+- Datos: se corrigió el saldo inicial de la cuenta BBVA MXN (467,788.69 → 535,548.69) al corte del 06/08/2026.
+
+
 ## [13.543.3] - 2026-08-12
 - Observabilidad: los rechazos de sesión (401 "No autorizado" / "Token inválido") ya no se reportan como error en Sentry; siguen quedando en los logs de la función. Cierra JAVASCRIPT-REACT-50.
 

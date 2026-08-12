@@ -7,9 +7,10 @@ import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
 import {
-  listarCuentas, crearCuenta, eliminarCuenta, fetchSaldosCuentas,
+  listarCuentas, crearCuenta, actualizarCuenta, eliminarCuenta, fetchSaldosCuentas,
+  cuentaTieneMovimientos,
 } from "@/features/tesoreria/services";
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -32,6 +33,31 @@ export function useCrearCuenta() {
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo crear cuenta", description: getErrorMessage(error), error, method: "CREATE_CUENTA_BANCARIA" });
     },
+  });
+}
+
+export function useActualizarCuenta() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; patch: TablesUpdate<"cuentas_bancarias"> }) =>
+      actualizarCuenta(vars.id, vars.patch),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      notifySuccess(undefined, { title: "Cuenta bancaria actualizada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: "No se pudo actualizar la cuenta", description: getErrorMessage(error), error, method: "UPDATE_CUENTA_BANCARIA" });
+    },
+  });
+}
+
+/** Indica si la cuenta ya tiene movimientos (bloquea el cambio de moneda). */
+export function useTieneMovimientosCuenta(cuentaId: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.tesoreria.all, "tiene-movimientos", cuentaId],
+    queryFn: () => cuentaTieneMovimientos(cuentaId as string),
+    enabled: !!cuentaId,
+    staleTime: 60_000,
   });
 }
 

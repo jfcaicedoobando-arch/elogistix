@@ -2,27 +2,30 @@
  * Tarjeta de cuenta bancaria del listado de Tesorería › Cuentas.
  * Extraída de `TesoreriaCuentas` para respetar el límite Power-of-10 (≤200 líneas).
  */
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { ROUTES } from "@/constants/routes";
 
+export interface CuentaBancariaCardData {
+  id: string;
+  alias: string;
+  banco: string;
+  moneda: string;
+  numero_cuenta: string | null;
+  clabe: string | null;
+  saldo_inicial: number | string;
+  fecha_saldo_inicial: string;
+  activa: boolean;
+}
+
 export interface CuentaBancariaCardProps {
-  cuenta: {
-    id: string;
-    alias: string;
-    banco: string;
-    moneda: string;
-    numero_cuenta: string | null;
-    clabe: string | null;
-    saldo_inicial: number | string;
-    fecha_saldo_inicial: string;
-    activa: boolean;
-  };
+  cuenta: CuentaBancariaCardData;
   saldoActual?: number;
   canAdmin: boolean;
+  onEditar?: (cuenta: CuentaBancariaCardData) => void;
   onEliminar: (id: string, alias: string) => void;
 }
 
@@ -30,6 +33,7 @@ export function CuentaBancariaCard({
   cuenta: c,
   saldoActual,
   canAdmin,
+  onEditar,
   onEliminar,
 }: CuentaBancariaCardProps) {
   const navigate = useNavigate();
@@ -57,13 +61,24 @@ export function CuentaBancariaCard({
             <p className="text-xs text-muted-foreground">{c.banco} · {c.moneda}</p>
           </div>
           {canAdmin && (
-            <Button
-              variant="ghost" size="icon"
-              aria-label={`Eliminar cuenta ${c.alias}`}
-              onClick={(e) => { e.stopPropagation(); onEliminar(c.id, c.alias); }}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            <div className="flex items-center gap-1">
+              {onEditar && (
+                <Button
+                  variant="ghost" size="icon"
+                  aria-label={`Editar cuenta ${c.alias}`}
+                  onClick={(e) => { e.stopPropagation(); onEditar(c); }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost" size="icon"
+                aria-label={`Eliminar cuenta ${c.alias}`}
+                onClick={(e) => { e.stopPropagation(); onEliminar(c.id, c.alias); }}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           )}
         </div>
         {c.numero_cuenta && <p className="text-xs">Cuenta: <span className="font-mono">{c.numero_cuenta}</span></p>}
