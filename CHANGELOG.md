@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.523.1] - 2026-08-12
+- Deuda (código muerto) — `knip --strict` quedó rojo tras borrar los tests triviales: esos tests eran los únicos consumidores de varios símbolos. Eliminado el código sin uso real: archivo `src/constants/cache.ts`; `CONCEPTOS_COSTO_USD` y `CONCEPTOS_COSTO_MXN` (`cotizacionConstants.ts`, reemplazados hace tiempo por el selector dinámico de conceptos); `CATEGORIAS_PROVEEDOR` y `labelSubtipoGasto` (`proveedorConstants.ts`); hooks `useTraspasos` y `useCancelarTraspaso` (sólo `useRegistrarTraspaso` está en uso); y re-exports muertos de barrel (`EXTENSIONES_ENTRANTES`, `ParejaArchivosEntrantes` en `facturasEntrantes.ts`, `EstadoProveedorFactura` en `proveedorFacturas.ts`). 0 cambios en lógica de negocio; `lint`, `lint:unused:strict`, `typecheck` y la suite completa (1016 archivos / 6805 tests) en verde.
+
 ## [13.523.0] - 2026-08-12
 - Tests (limpieza) — borrados 7 tests triviales sin valor: 3 tests de barrel que sólo hacían `expect(fn).toBeDefined()` (`auditoria`, `cxp`, `presupuesto` en `services/__tests__/index.test.ts`) y 4 tests de constantes literales (`useTasaIVA.test.tsx`, `embarqueConstants.test.ts`, `constantsSmoke.test.ts`, `pdf/theme/tokens.test.ts`). Los otros 16 tests de barrels sí ejercitan Supabase/RPCs y se conservan; `estados-embarque-sync.test.ts` se conserva como guardrail de la máquina de estados.
 - Config — eliminado el script `test:shards:serial` de `package.json` (sin uso). Removida de `src/test/setup.ts` la instrumentación de debug `[shard-trace]` FILE_START/FILE_END (y el import `beforeAll` que quedó sin uso). Corregido el comentario de thresholds en `vitest.config.ts`: decía `@vitest/coverage-v8 v4.1.9` cuando la versión instalada es `3.2.4`; los valores de los umbrales quedan idénticos.

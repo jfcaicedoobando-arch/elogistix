@@ -113,7 +113,6 @@ import type { TipoArchivoEntrante } from "@/lib/domain/facturasEntrantesArchivos
 // `facturasEntrantesArchivos.ts`; se re-exporta para no romper importadores.
 
 export {
-  EXTENSIONES_ENTRANTES,
   TAMANO_MAX_ENTRANTE_MB,
   emparejarArchivosEntrantes,
   rutaArchivoEntrante,
@@ -122,7 +121,6 @@ export {
   validarParejaEntrante,
 } from "@/lib/domain/facturasEntrantesArchivos";
 export type {
-  ParejaArchivosEntrantes,
   TipoArchivoEntrante,
 } from "@/lib/domain/facturasEntrantesArchivos";
 

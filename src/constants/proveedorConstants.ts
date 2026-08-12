@@ -1,7 +1,6 @@
 import type { Enums } from "@/integrations/supabase/types";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Moneda = Enums<'moneda'>;
-type CategoriaProveedor = Enums<'categoria_proveedor'>;
 type SubtipoGasto = Enums<'subtipo_gasto_operativo'>;
 
 export const TIPOS_PROVEEDOR: TipoProveedor[] = [
@@ -41,14 +40,9 @@ export const PAISES_PROVEEDOR = [
 ];
 
 /**
- * Categorías y subtipos de proveedor.
- * - `Logistico`: usa el enum `tipo` (Naviera, Aerolínea, etc.).
- * - `GastoOperativo`: usa `subtipo_gasto` para clasificar gastos administrativos del ERP.
+ * Subtipos de gasto operativo: clasifican gastos administrativos del ERP
+ * para proveedores con `categoria = 'GastoOperativo'`.
  */
-export const CATEGORIAS_PROVEEDOR: { value: CategoriaProveedor; label: string }[] = [
-  { value: 'Logistico', label: 'Logístico' },
-  { value: 'GastoOperativo', label: 'Gasto de administración' },
-];
 
 export const SUBTIPOS_GASTO_OPERATIVO: { value: SubtipoGasto; label: string }[] = [
   { value: 'Renta', label: 'Renta' },
@@ -62,9 +56,4 @@ export const SUBTIPOS_GASTO_OPERATIVO: { value: SubtipoGasto; label: string }[] 
   { value: 'Otros', label: 'Otros' },
 ];
 
-
-export function labelSubtipoGasto(s: SubtipoGasto | null | undefined): string {
-  if (!s) return '—';
-  return SUBTIPOS_GASTO_OPERATIVO.find((x) => x.value === s)?.label ?? s;
-}
 
