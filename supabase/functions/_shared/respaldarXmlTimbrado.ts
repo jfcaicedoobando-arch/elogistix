@@ -31,6 +31,11 @@ export interface RespaldoResult {
   error?: string;
 }
 
+/** EF-08: timeout defensivo — este fetch va ENTRE el timbrado y el persist.
+ *  Si cuelga, Deno mata la edge (~150 s) y el CFDI queda huérfano. Best-effort
+ *  por diseño: preferimos status "error" a bloquear el camino crítico. */
+const XML_FETCH_TIMEOUT_MS = 12_000;
+
 export async function respaldarXmlTimbrado(params: {
   supabase: StorageClient;
   apiKey: string;
@@ -40,9 +45,17 @@ export async function respaldarXmlTimbrado(params: {
   folder: XmlBackupFolder;
 }): Promise<RespaldoResult> {
   try {
-    const res = await fetch(`${FACTURAPI_BASE}/invoices/${params.facturapiId}/xml`, {
-      headers: { Authorization: basicAuthHeader(params.apiKey) },
-    });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), XML_FETCH_TIMEOUT_MS);
+    let res: Response;
+    try {
+      res = await fetch(`${FACTURAPI_BASE}/invoices/${params.facturapiId}/xml`, {
+        headers: { Authorization: basicAuthHeader(params.apiKey) },
+        signal: ctrl.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!res.ok) {
       return { path: null, status: "error", error: `facturapi_${res.status}` };
     }

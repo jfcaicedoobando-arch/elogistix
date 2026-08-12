@@ -3244,6 +3244,21 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_seed_state: {
+        Row: {
+          id: boolean
+          last_seeded_at: string
+        }
+        Insert: {
+          id?: boolean
+          last_seeded_at?: string
+        }
+        Update: {
+          id?: boolean
+          last_seeded_at?: string
+        }
+        Relationships: []
+      }
       documentos_embarque: {
         Row: {
           archivo: string | null

@@ -32,15 +32,32 @@ async function handleReceiptEvent(
 ): Promise<Response> {
   const { data: pago } = await supabase
     .from("pagos_factura")
-    .select("id, organization_id")
+    .select("id, organization_id, estado_rep, rep_cancellation_status")
     .eq("facturapi_rep_id", receipt.facturapi_rep_id)
     .eq("organization_id", orgId)
     .maybeSingle();
   if (!pago) return jsonResponse({ ok: true, ignored: "pago_not_found" });
 
+  // EF-06 (guard N3 para REP): eventos fuera de orden no deben resucitar un
+  // REP cancelado (receipt.status_updated(valid) tardío tras receipt.canceled)
+  // ni regresar rep_cancellation_status accepted → pending/verifying.
+  const patch: Record<string, unknown> = { ...receipt.patch };
+  if (pago.estado_rep === "Cancelado" && patch.estado_rep === "Timbrado") {
+    delete patch.estado_rep;
+    delete patch.timbrado_rep_en;
+  }
+  if (
+    pago.rep_cancellation_status === "accepted" &&
+    typeof patch.rep_cancellation_status === "string" &&
+    patch.rep_cancellation_status !== "accepted"
+  ) {
+    delete patch.rep_cancellation_status;
+  }
+  if (Object.keys(patch).length === 0) return jsonResponse({ ok: true, ignored: "estado_ya_avanzado" });
+
   const { error: updErr } = await supabase
     .from("pagos_factura")
-    .update(receipt.patch)
+    .update(patch)
     .eq("id", pago.id);
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
@@ -63,7 +80,7 @@ async function handleFacturaEvent(
 
   const { data: factura } = await supabase
     .from("facturas")
-    .select("id, organization_id, estado, sustituida_por")
+    .select("id, organization_id, estado, sustituida_por, cancellation_status")
     .eq("facturapi_id", mapped.facturapi_id)
     .eq("organization_id", orgId)
     .maybeSingle();
@@ -72,7 +89,7 @@ async function handleFacturaEvent(
   // Si el evento cancela pero la factura fue sustitución, NO sobrescribimos
   // `estado` — el cron de reconciliación lo fija a "Sustituida" al descargar
   // el acuse. Sí conservamos el resto del patch.
-  const patch = { ...mapped.patch };
+  const patch: Record<string, unknown> = { ...mapped.patch };
   if (mapped.preserva_sustituida && (factura.estado === "Sustituida" || factura.sustituida_por)) {
     delete patch.estado;
   }
@@ -83,6 +100,18 @@ async function handleFacturaEvent(
   const ESTADOS_HASTA_EMISION = new Set(["Borrador", "Por timbrar", "Emitida"]);
   if (patch.estado === "Emitida" && (!factura.estado || !ESTADOS_HASTA_EMISION.has(factura.estado))) {
     delete patch.estado;
+  }
+
+  // EF-06: un cancellation_status_updated(pending/verifying) retrasado no debe
+  // regresar una cancelación ya aceptada (retries/reordenamiento de Facturapi).
+  if (
+    factura.cancellation_status === "accepted" &&
+    typeof patch.cancellation_status === "string" &&
+    patch.cancellation_status !== "accepted"
+  ) {
+    delete patch.cancellation_status;
+    delete patch.cancelacion_solicitada_en;
+    delete patch.cancelacion_vence_en;
   }
   if (Object.keys(patch).length === 0) return jsonResponse({ ok: true, ignored: "estado_ya_avanzado" });
 
@@ -125,29 +154,6 @@ async function despacharEvento(
   return handleReceiptEvent(supabase, orgId, event, receipt);
 }
 
-/** Registra el evento para dedupe; nunca falla el request por esto. */
-async function registrarDedupe(
-  supabase: SB, orgId: string, eventKey: string, event: FacturapiWebhookEvent,
-): Promise<void> {
-  const { error: dupErr } = await supabase
-    .from("facturapi_webhook_eventos")
-    .insert({
-      organization_id: orgId,
-      event_id: eventKey,
-      event_type: event.type,
-      payload: event as unknown as Record<string, unknown>,
-    });
-  // 23505 = carrera con una entrega concurrente del mismo evento (patches
-  // idempotentes). Otros errores sólo se alertan: devolver 5xx provocaría un
-  // reintento y reproceso innecesario de un evento YA procesado.
-  if (dupErr && (dupErr as { code?: string }).code !== "23505") {
-    await captureEdgeMessage("facturapi_webhook_dedupe_insert_failed", "warning", {
-      fn: "facturapi-webhook",
-      organization_id: orgId,
-      extra: { event_id: eventKey, event_type: event.type, detail: dupErr.message },
-    });
-  }
-}
 
 /** Verifica firma y parsea el evento. Devuelve Response en caso de rechazo. */
 async function validarEvento(
@@ -187,17 +193,20 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   );
   if (event instanceof Response) return event;
 
-  // FIX-22 + Ola 4 · N2 · Dedupe: (1) chequeo de dedupe, (2) procesar,
-  // (3) registrar dedupe SÓLO si el procesamiento fue 2xx (así los reintentos
-  // de FacturAPI tras un 500 no se pierden por choque de unique).
+  // EF-07 + FIX-22 + Ola 4 · N2 · Dedupe ATÓMICO (INSERT-first): el constraint
+  // UNIQUE (organization_id, event_id) convierte el 23505 en "ya procesado/en
+  // progreso" — dos entregas concurrentes ya no pasan ambas el SELECT. Si el
+  // procesamiento falla (no-2xx) se borra la fila para que el retry reprocese.
   const eventKey = await computeEventKey(rawBody, event);
-  const { data: eventoPrevio } = await supabase
+  const { error: dedupeErr } = await supabase
     .from("facturapi_webhook_eventos")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("event_id", eventKey)
-    .maybeSingle();
-  if (eventoPrevio) {
+    .insert({
+      organization_id: orgId,
+      event_id: eventKey,
+      event_type: event.type,
+      payload: event as unknown as Record<string, unknown>,
+    });
+  if ((dedupeErr as { code?: string } | null)?.code === "23505") {
     // Fase 7 · Alerta suave: FacturAPI reintenta ante 5xx, así que algunos
     // duplicados son esperados; se envían como `info` para dashboard.
     await captureEdgeMessage("facturapi_webhook_duplicate", "info", {
@@ -207,10 +216,26 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     });
     return jsonResponse({ ok: true, ignored: "duplicate_event", event_id: eventKey });
   }
+  if (dedupeErr) {
+    // Sin la tabla de dedupe no podemos garantizar at-most-once: mejor 503
+    // (FacturAPI reintentará) que procesar sin protección.
+    await captureEdgeMessage("facturapi_webhook_dedupe_insert_failed", "warning", {
+      fn: "facturapi-webhook",
+      organization_id: orgId,
+      extra: { event_id: eventKey, event_type: event.type, detail: dedupeErr.message },
+    });
+    return jsonResponse({ error: "dedupe_unavailable" }, 503);
+  }
 
   const result = await despacharEvento(supabase, orgId, event);
-  if (!result.ok) return result;
-
-  await registrarDedupe(supabase, orgId, eventKey, event);
+  if (!result.ok) {
+    // Liberar la reserva: el retry de FacturAPI debe poder reprocesar el evento.
+    await supabase
+      .from("facturapi_webhook_eventos")
+      .delete()
+      .eq("organization_id", orgId)
+      .eq("event_id", eventKey);
+    return result;
+  }
   return result;
 }));

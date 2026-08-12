@@ -10,7 +10,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
-import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 
@@ -91,8 +91,21 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     // Ola 4 · N5: `substitution` lleva el ObjectId del sustituto, no el UUID.
     const cancelPayload: { motive: string; substitution?: string } = { motive: body.motivo };
     if (sustituyeFacturapiId) cancelPayload.substitution = sustituyeFacturapiId;
-    cancelResp = await facturapi.invoices.cancel(pago.facturapi_rep_id, cancelPayload) as FapiCancelResponse;
+    // EF-05: timeout defensivo — el webhook/cron reconcilian el estado real.
+    cancelResp = await withFacturapiTimeout("invoices.cancel", facturapi.invoices.cancel(pago.facturapi_rep_id, cancelPayload)) as FapiCancelResponse;
   } catch (err) {
+    if (err instanceof FacturapiTimeoutError) {
+      await registrarBitacoraEdge(supabase, {
+        organizationId: pago.organization_id,
+        usuarioId: userData.user.id,
+        usuarioEmail: userData.user.email,
+        modulo: "facturacion",
+        accion: "facturapi_rep_cancelar_timeout",
+        entidadId: pago.id,
+        detalles: { op: err.op, timeout_ms: err.timeoutMs },
+      });
+      return jsonResponse({ error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message }, 504);
+    }
     const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
       organizationId: pago.organization_id,

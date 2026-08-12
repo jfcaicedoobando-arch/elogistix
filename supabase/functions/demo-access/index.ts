@@ -30,6 +30,37 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    // EF-09: rate limit persistente fail-CLOSED (patrón client-error-log N51).
+    // El endpoint es público por diseño; sin esto cada request re-sembraba
+    // destructivamente la org demo (costo/DoS y carreras de seed).
+    const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim()
+      || req.headers.get("cf-connecting-ip")
+      || "unknown";
+    const { data: rl, error: rlErr } = await admin.rpc("check_ratelimit", {
+      p_key: `demo-access:${ip}`,
+      p_window_seconds: 60,
+      p_max: 5,
+    });
+    if (rlErr) {
+      console.error("demo-access ratelimit rpc failed:", rlErr.message);
+      await captureEdgeException(new Error(`check_ratelimit failed: ${rlErr.message}`), {
+        fn: "demo-access",
+        status_code: 503,
+      });
+      return new Response(JSON.stringify({ error: "rate_limit_unavailable" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "30" },
+        status: 503,
+      });
+    }
+    const rlResult = rl as { ok?: boolean; retry_after?: number } | null;
+    if (rlResult && rlResult.ok === false) {
+      return new Response(JSON.stringify({ error: "rate_limited" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(rlResult.retry_after ?? 60) },
+        status: 429,
+      });
+    }
+
+
     // 1) Buscar usuario por email; crear si no existe.
     let userId: string | null = null;
     const { data: list, error: listErr } = await admin.auth.admin.listUsers({
@@ -63,9 +94,23 @@ Deno.serve(async (req) => {
     const { error: memErr } = await admin.rpc("ensure_demo_membership", { _user_id: userId });
     if (memErr) throw memErr;
 
-    // 3) Re-sembrar datos de ejemplo.
-    const { error: seedErr } = await admin.rpc("seed_demo_organization");
-    if (seedErr) throw seedErr;
+    // 3) Re-sembrar datos de ejemplo — EF-09: omitir si se sembró hace
+    // <10 min (cada llamada re-sembraba destructivamente).
+    const SEED_SKIP_MS = 10 * 60_000;
+    const { data: seedState } = await admin
+      .from("demo_seed_state")
+      .select("last_seeded_at")
+      .eq("id", true)
+      .maybeSingle();
+    const seededRecientemente = seedState?.last_seeded_at
+      && (Date.now() - new Date(seedState.last_seeded_at as string).getTime()) < SEED_SKIP_MS;
+    if (!seededRecientemente) {
+      const { error: seedErr } = await admin.rpc("seed_demo_organization");
+      if (seedErr) throw seedErr;
+      await admin
+        .from("demo_seed_state")
+        .upsert({ id: true, last_seeded_at: new Date().toISOString() });
+    }
 
     return new Response(
       JSON.stringify({ email: DEMO_EMAIL, password: DEMO_PASSWORD }),

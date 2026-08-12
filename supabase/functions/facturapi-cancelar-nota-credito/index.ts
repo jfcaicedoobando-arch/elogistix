@@ -8,7 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
-import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { preloadCancelContext, validateRequest, type ReqBody } from "./contexto.ts";
@@ -51,8 +51,22 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
     // Ola 4 · N4: `substitution` lleva el ObjectId de la sustituta, no el UUID.
     const cancelPayload: { motive: string; substitution?: string } = { motive: body.motivo! };
     if (sustituyeFacturapiId) cancelPayload.substitution = sustituyeFacturapiId;
-    cancelResp = await facturapi.invoices.cancel(nc.facturapi_id, cancelPayload) as FapiCancelResponse;
+    // EF-05: timeout defensivo — el cron reconciliar-cancelaciones (EF-03)
+    // sincroniza el estado real de la NC.
+    cancelResp = await withFacturapiTimeout("invoices.cancel", facturapi.invoices.cancel(nc.facturapi_id, cancelPayload)) as FapiCancelResponse;
   } catch (err) {
+    if (err instanceof FacturapiTimeoutError) {
+      await registrarBitacoraEdge(supabase, {
+        organizationId: nc.organization_id,
+        usuarioId: userData.user.id,
+        usuarioEmail: userData.user.email,
+        modulo: "facturacion",
+        accion: "facturapi_nc_cancelar_timeout",
+        entidadId: body.nota_credito_id,
+        detalles: { op: err.op, timeout_ms: err.timeoutMs },
+      });
+      return jsonResponse({ error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message }, 504);
+    }
     const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
       organizationId: nc.organization_id,
