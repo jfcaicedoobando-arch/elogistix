@@ -16,6 +16,7 @@ export const portal = {
   notasCreditoFactura: (id: string) => ['portal', 'notas_credito_factura', id] as const,
   clientUsers: ['portal', 'client_users'] as const,
   clienteName: ['portal', 'cliente_nombre'] as const,
+  contactoName: ['portal', 'contacto_nombre'] as const,
   orgName: ['portal', 'org_name'] as const,
   perfil: ['portal', 'perfil'] as const,
 } as const;

@@ -10,6 +10,7 @@ import { MapPin, CalendarClock } from "lucide-react";
 import { differenceInCalendarDays } from "date-fns";
 import { parseDateOnlyLocal } from "@/lib/date/dateOnly";
 import { cn } from "@/lib/utils";
+import { labelNaviera } from "@/lib/formatters/carrierLabels";
 
 export interface EmbarqueCardData {
   id: string;
@@ -51,7 +52,8 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
   const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
   const origen = getOrigen(e);
   const destino = getDestino(e);
-  const carrier = e.naviera || e.aerolinea || e.transportista;
+  // UIB-11: nombre comercial de la naviera en vez del SCAC crudo.
+  const carrier = e.naviera ? labelNaviera(e.naviera) : (e.aerolinea || e.transportista);
   const tipoLabel = e.tipo_servicio
     ? `${e.tipo_servicio}${e.tipo_contenedor ? ` ${e.tipo_contenedor}` : ""}`
     : e.modo === "Aéreo" ? "Aéreo" : null;

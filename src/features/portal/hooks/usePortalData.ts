@@ -13,6 +13,7 @@ import {
   fetchPortalNotasCreditoFactura,
   fetchPortalClientUsers,
   fetchPortalClienteName,
+  fetchPortalContactoNombre,
   fetchPortalOrgName,
 } from "@/features/portal/services";
 
@@ -100,6 +101,13 @@ export function usePortalClienteName() {
   return useQuery({
     queryKey: queryKeys.portal.clienteName,
     queryFn: fetchPortalClienteName,
+  });
+}
+
+export function usePortalContactoNombre() {
+  return useQuery({
+    queryKey: queryKeys.portal.contactoName,
+    queryFn: fetchPortalContactoNombre,
   });
 }
 

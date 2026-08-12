@@ -28,6 +28,22 @@ export async function fetchPortalClienteName(): Promise<string | null> {
   return clientes?.nombre ?? null;
 }
 
+/** UIB-10: nombre de la persona de contacto para el saludo del dashboard. */
+export async function fetchPortalContactoNombre(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const data = await unwrap(
+    supabase
+      .from("client_users")
+      .select("cliente_id, clientes(contacto)")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle(),
+  );
+  const clientes = fromDb<{ contacto: string | null } | null>(data?.clientes);
+  return clientes?.contacto ?? null;
+}
+
 export async function fetchPortalOrgName(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

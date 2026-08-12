@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { getOrigen, getDestino } from "@/lib/formatters";
+import { labelNaviera } from "@/lib/formatters/carrierLabels";
 import { Ship } from "lucide-react";
 import { type TrackingPublicoData } from "@/features/embarques/services/tracking";
 import { useTrackingPublicoPage } from "@/features/embarques/services/tracking/useTrackingPublicoPage";
@@ -15,7 +16,9 @@ import { DetailHeader } from "@/components/shared/DetailHeader";
 
 
 function transporteLabel(e: TrackingPublicoData["embarque"]): string {
-  return e.naviera || e.aerolinea || e.transportista || "—";
+  // UIB-11: SCAC crudo ("MAEU") → "Maersk (MAEU)"; aéreo/terrestre ya son texto libre.
+  if (e.naviera) return labelNaviera(e.naviera);
+  return e.aerolinea || e.transportista || "—";
 }
 
 export default function TrackingPublico() {
