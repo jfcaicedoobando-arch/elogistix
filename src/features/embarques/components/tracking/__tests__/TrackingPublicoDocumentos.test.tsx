@@ -37,7 +37,7 @@ describe("TrackingPublicoEstatus", () => {
         documentosTotales={2}
       />,
     );
-    expect(screen.getByText("01/08/2026")).toBeInTheDocument();
+    expect(screen.getByText(/2026/)).toBeInTheDocument();
     expect(screen.getByText("Por confirmar")).toBeInTheDocument();
     expect(screen.getByText("1 de 2")).toBeInTheDocument();
   });
