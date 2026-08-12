@@ -184,14 +184,14 @@ export default defineConfig({
       // 13.87.2 — lines/statements 35→38.
       // 13.135.69 — Revertido intento de bajar a 37 (ratchet).
       // 13.137.38 — Thresholds sólo en modo merge.
-      // 13.141.3 — RECALIBRACIÓN por cambio de herramienta: tras subir a
-      // vitest + @vitest/coverage-v8 v4.1.9 (v13.138.1), la métrica v8 v4
-      // (AST-aware remapping, PR vitest #8064) cuenta callbacks/arrow-fns y
-      // branches implícitas distinto a v2/v3. Sin que prod ni tests
+      // 13.141.3 — RECALIBRACIÓN por cambio de herramienta: con
+      // vitest + @vitest/coverage-v8 v3.2.4 (versión instalada), la métrica v8
+      // (AST-aware remapping) cuenta callbacks/arrow-fns y
+      // branches implícitas distinto a versiones previas. Sin que prod ni tests
       // cambiaran, los reales cayeron Functions 56→32% y Branches 73→37%,
       // mientras Lines SUBIÓ 40→43%. Pisos a (real − 2 pts).
       //
-      // 13.141.4 — PLAN DE RATCHET POST-V4 (acordado, ver
+      // 13.141.4 — PLAN DE RATCHET (acordado, ver
       // mem://principles/coverage-threshold):
       //   • Meta Q3 2026: functions 45 / branches 50.
       //   • Meta Q1 2027: functions 55 / branches 60.
