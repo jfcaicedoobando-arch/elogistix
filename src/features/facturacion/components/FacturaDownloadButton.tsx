@@ -35,8 +35,17 @@ export function FacturaDownloadButton({ stored, kind, size = "icon", className, 
         throw new Error("Archivo no disponible");
       }
     } catch (err) {
-      notifyError(undefined, { title: "No se pudo abrir el archivo",
-        description: (err as Error).message, error: err, method: "FEATURES_FACTURACION_COMPONENTS_FACTURADOWNLOADBUTTON_1" });
+      // UIA-13: el detalle técnico ("Failed to fetch") va al log/Sentry; al
+      // usuario se le dice qué hacer, en español.
+      const esFaltante = (err as Error)?.message === "Archivo no disponible";
+      notifyError(undefined, {
+        title: kind === "pdf" ? "No se pudo abrir el PDF" : "No se pudo abrir el XML",
+        description: esFaltante
+          ? "Este comprobante todavía no tiene archivo disponible. Vuelve a intentarlo cuando esté timbrado."
+          : "Revisa tu conexión a internet e inténtalo de nuevo. Si continúa, avisa a soporte.",
+        error: err,
+        method: "FEATURES_FACTURACION_COMPONENTS_FACTURADOWNLOADBUTTON_1",
+      });
     }
   };
 
