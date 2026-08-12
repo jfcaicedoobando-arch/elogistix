@@ -7,7 +7,8 @@ import {
   validateUnsubscribeToken,
   confirmUnsubscribe,
 } from "@/features/auth/services/unsubscribeService";
-import { COPY_BAJA_CORREOS, COPY_ENLACE } from "@/lib/copy/publicoCopy";
+import { COPY_BAJA_CORREOS, COPY_ENLACE, COPY_PASOS } from "@/lib/copy/publicoCopy";
+import { AvisoAccionable } from "@/components/shared/states/AvisoAccionable";
 
 type Status = "loading" | "valid" | "invalid" | "already" | "confirming" | "success" | "error";
 
@@ -72,9 +73,14 @@ export default function Unsubscribe() {
             </p>
           )}
           {status === "invalid" && (
-            <p className="flex items-center gap-2 text-destructive">
-              <XCircle className="h-4 w-4" /> {COPY_ENLACE.invalido}
-            </p>
+            <AvisoAccionable
+              tono="error"
+              icon={<XCircle className="h-5 w-5" />}
+              titulo="No pudimos validar tu enlace"
+              descripcion={COPY_ENLACE.invalido}
+              pasos={COPY_PASOS.enlaceInvalido}
+              className="border-0 p-0"
+            />
           )}
           {status === "already" && (
             <p className="flex items-center gap-2 text-muted-foreground">
@@ -102,9 +108,14 @@ export default function Unsubscribe() {
             </p>
           )}
           {status === "error" && (
-            <p className="flex items-center gap-2 text-destructive">
-              <XCircle className="h-4 w-4" /> {errorMsg}
-            </p>
+            <AvisoAccionable
+              tono="error"
+              icon={<XCircle className="h-5 w-5" />}
+              titulo="No pudimos aplicar tu baja"
+              descripcion={errorMsg}
+              pasos={COPY_PASOS.bajaCorreosFalla}
+              className="border-0 p-0"
+            />
           )}
         </CardContent>
       </Card>
