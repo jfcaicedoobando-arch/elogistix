@@ -87,7 +87,9 @@ export default function Embarques() {
               exportandoCsv={exportandoCsv}
               onExport={exportarCsv}
               onNuevo={goNuevo}
+              onNuevoDesdeCotizacion={goNuevoDesdeCotizacion}
             />
+
           )
         }
       />
