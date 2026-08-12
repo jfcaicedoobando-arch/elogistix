@@ -90,7 +90,13 @@ const SENTRY_EXEMPT = new Set<string>([
   // e2e-provision-multi-tenant: mismo patrón que e2e-provision-users (CI-only,
   // errores propagados al workflow con logs completos).
   "supabase/functions/e2e-provision-multi-tenant/index.ts",
+  // auth-email-hook: webhook scaffolded por la plataforma (firma verificada +
+  // encolado en email_send_log). Cada fallo ya queda registrado en
+  // `email_send_log` con `status: failed`, que es la fuente de verdad para
+  // soporte; envolverlo en Sentry sólo duplicaría el mismo evento.
+  "supabase/functions/auth-email-hook/index.ts",
 ]);
+
 
 describe("Edge functions con manejo manual de Sentry", () => {
   it.each(MANUAL_COVERAGE)("%s importa y llama captureEdgeException", (rel) => {
