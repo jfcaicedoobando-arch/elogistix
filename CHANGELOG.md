@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.543.0] - 2026-08-12
+- Correos de acceso: los correos de autenticación (invitación, confirmación, restablecimiento, enlace mágico, cambio de correo y código de verificación) ya salen por el dominio del proyecto con la identidad visual de Libre Carga y en español mexicano. Antes la invitación se creaba en la plataforma pero el correo nunca se entregaba.
+- Usuarios: al dar de alta un usuario el aviso explica que la invitación puede tardar y cómo reenviar el acceso con "Restablecer contraseña".
+
+
 ## [13.542.0] - 2026-08-12
 - Tesorería: los traspasos entre cuentas de distinta moneda exigen tipo de cambio; el servicio ya no envía 1 por omisión y se sugiere el TC DOF de la fecha del traspaso (BL-04).
 - Facturación: al fallar la descarga de PDF/XML se muestra un mensaje accionable en español; el detalle técnico queda sólo en el log (UIA-13).
