@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.535.0] - 2026-08-12
+- Tracking público: nueva tarjeta "Estatus del embarque" con etapa actual, ETD y ETA (o "Por confirmar" si aún no hay fecha) y barra de avance documental.
+- Nueva sección "Documentos del expediente" que separa recibidos y faltantes según la etapa y el modo de transporte, e indica enviar los faltantes al ejecutivo de cuenta.
+- `get_tracking_public` ahora devuelve el avance documental (sólo nombre, estado y si ya se recibió): no se exponen archivos ni notas internas.
+
 ## [13.534.0] - 2026-08-12
 - Portal público: los errores de enlace ahora explican qué falta y cómo corregirlo (abrir el enlace más reciente, pegar la dirección completa, pedir uno nuevo) mediante el nuevo componente `AvisoAccionable`.
 - Tracking público: enlace inválido/servicio no disponible y la línea de tiempo sin eventos muestran pasos concretos en vez de un texto seco.
