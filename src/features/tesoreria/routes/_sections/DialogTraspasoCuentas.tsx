@@ -68,7 +68,7 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={!!error || isPending}>
+          <Button onClick={handleSubmit} disabled={!!error || isPending || !(tipoCambioFinal > 0)}>
             Registrar traspaso
           </Button>
         </>
