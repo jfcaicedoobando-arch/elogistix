@@ -3,13 +3,14 @@
  * Extraído de `TesoreriaConciliacion` para bajar su complejidad y tamaño.
  */
 import { Landmark } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import {
   validarMovimientoManual,
   type MovimientoManualInput,
