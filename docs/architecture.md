@@ -147,3 +147,9 @@ preferibles cuando la división natural es por feature, no por verbo.
 - `mem://technical/architecture-and-standards`
 - `mem://technical/storage-rls-paths`
 - `mem://audit/pendings`
+
+## 10. Fix packs y runbooks
+
+Documentación técnica de correcciones puntuales y procedimientos de recuperación:
+
+- [`Fix Pack — Edge Functions (EF-01..EF-13)`](./edge-functions/fixes_EF.md): idempotencia en timbrado de REP, cancelación de notas de crédito, manejo de demo seed y demás correcciones retrocompatibles en edge functions.
