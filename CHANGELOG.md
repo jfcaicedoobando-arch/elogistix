@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.536.0] - 2026-08-12
+- Embarques: cuando la búsqueda o los filtros no devuelven resultados, la tabla muestra un aviso con el botón "Limpiar filtros" (UIA-15).
+- Embarques: se restauró el botón "Nuevo embarque" para todos los roles; si el alta directa no aplica, explica que los expedientes nacen de una cotización aceptada y lleva a Cotizaciones (UIA-16).
+- Embarques: el encabezado dice "N embarques" cuando no hay filtro de estado (antes decía "contenedores" con el total de expedientes) (UIA-09).
+- Cotizaciones: la vigencia también se muestra en cotizaciones aceptadas y el detalle ya no imprime "7 días (-)" cuando falta la fecha (UIA-14).
+- Detalle de embarque y de factura: la pestaña del navegador ahora muestra el folio (UIA-12).
+
 ## [13.535.0] - 2026-08-12
 - Tracking público: nueva tarjeta "Estatus del embarque" con etapa actual, ETD y ETA (o "Por confirmar" si aún no hay fecha) y barra de avance documental.
 - Nueva sección "Documentos del expediente" que separa recibidos y faltantes según la etapa y el modo de transporte, e indica enviar los faltantes al ejecutivo de cuenta.
