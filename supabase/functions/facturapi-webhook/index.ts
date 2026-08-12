@@ -80,7 +80,7 @@ async function handleFacturaEvent(
 
   const { data: factura } = await supabase
     .from("facturas")
-    .select("id, organization_id, estado, sustituida_por")
+    .select("id, organization_id, estado, sustituida_por, cancellation_status")
     .eq("facturapi_id", mapped.facturapi_id)
     .eq("organization_id", orgId)
     .maybeSingle();
@@ -89,7 +89,7 @@ async function handleFacturaEvent(
   // Si el evento cancela pero la factura fue sustitución, NO sobrescribimos
   // `estado` — el cron de reconciliación lo fija a "Sustituida" al descargar
   // el acuse. Sí conservamos el resto del patch.
-  const patch = { ...mapped.patch };
+  const patch: Record<string, unknown> = { ...mapped.patch };
   if (mapped.preserva_sustituida && (factura.estado === "Sustituida" || factura.sustituida_por)) {
     delete patch.estado;
   }
@@ -100,6 +100,18 @@ async function handleFacturaEvent(
   const ESTADOS_HASTA_EMISION = new Set(["Borrador", "Por timbrar", "Emitida"]);
   if (patch.estado === "Emitida" && (!factura.estado || !ESTADOS_HASTA_EMISION.has(factura.estado))) {
     delete patch.estado;
+  }
+
+  // EF-06: un cancellation_status_updated(pending/verifying) retrasado no debe
+  // regresar una cancelación ya aceptada (retries/reordenamiento de Facturapi).
+  if (
+    factura.cancellation_status === "accepted" &&
+    typeof patch.cancellation_status === "string" &&
+    patch.cancellation_status !== "accepted"
+  ) {
+    delete patch.cancellation_status;
+    delete patch.cancelacion_solicitada_en;
+    delete patch.cancelacion_vence_en;
   }
   if (Object.keys(patch).length === 0) return jsonResponse({ ok: true, ignored: "estado_ya_avanzado" });
 
