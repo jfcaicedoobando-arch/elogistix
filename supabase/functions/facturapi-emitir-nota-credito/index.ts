@@ -15,7 +15,7 @@ import { buildNcPayload, validateNcContext } from "./helpers.ts";
 import { preloadNcContext, buildNcContextFromRows, claimNotaCredito } from "./data.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
+import { jsonResponse, makeJson } from "../_shared/response.ts";
 
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

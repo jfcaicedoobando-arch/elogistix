@@ -17,7 +17,7 @@ import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
-import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
+import { jsonResponse, makeJson } from "../_shared/response.ts";
 import {
   handleCancelFailure,
   resolveSustitutaSnapshot,

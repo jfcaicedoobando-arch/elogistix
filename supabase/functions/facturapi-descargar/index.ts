@@ -20,7 +20,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, authorizePortalCliente, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
 import { extractFacturapiMessage } from "../_shared/facturapiClient.ts";
-import { jsonResponse, makeJson, makeJson } from "../_shared/response.ts";
+import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { buildFilename, type CfdiTipoDoc } from "../_shared/facturaFilename.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
