@@ -7,7 +7,7 @@ import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { FACTURAPI_BASE } from "../facturapi-emitir/helpers.ts";
 import { respaldarXmlTimbrado, type RespaldoResult } from "../_shared/respaldarXmlTimbrado.ts";
-import { MIN_EDAD_MINUTOS, type FapiInvoice, type UserIdentity } from "./recuperar.ts";
+import { MIN_EDAD_MINUTOS, type FapiInvoice, type UserIdentity } from "./recuperar.tipos.ts";
 
 /* ── EF-01 — recuperación de claims en REPs (pagos_factura) ──────────────
  * facturapi-emitir-rep reclama la fila con PENDING:<uuid> y envía ese tag

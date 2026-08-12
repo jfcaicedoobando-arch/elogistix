@@ -9,7 +9,9 @@ import { FACTURAPI_BASE } from "../facturapi-emitir/helpers.ts";
 import { withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { respaldarXmlTimbrado, type RespaldoResult } from "../_shared/respaldarXmlTimbrado.ts";
 
-export const MIN_EDAD_MINUTOS = 3;
+export { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
+import { MIN_EDAD_MINUTOS, type UserIdentity, type FapiInvoice } from "./recuperar.tipos.ts";
+void ((): UserIdentity | undefined => undefined);
 
 // Ola 5 · RG4-4: la misma recuperación aplica a notas de crédito (claim
 // PENDING:<uuid> + external_id desde Ola 4 · N1).
@@ -22,17 +24,7 @@ export interface FacturaRow {
   serie: string | null;
   numero: string | null;
 }
-export interface UserIdentity { id: string; email?: string | null }
 
-export interface FapiInvoice {
-  id?: string;
-  uuid?: string;
-  folio_number?: number;
-  series?: string;
-  external_id?: string;
-  status?: string;
-  date?: string;
-}
 interface FapiListResponse { data?: FapiInvoice[]; total_pages?: number; page?: number }
 export interface FapiClient { invoices: { list: (params: Record<string, unknown>) => Promise<FapiListResponse> } }
 
