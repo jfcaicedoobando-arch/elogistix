@@ -15,6 +15,7 @@ import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detall
 import { useHistorialEnviosCotizacion } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
 import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
 import { usePdfExport } from "@/hooks/shared/usePdfExport";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
 const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generators/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {
