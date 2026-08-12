@@ -64,7 +64,7 @@ function EditorBody({ factura, ctl, categorias }: EditorBodyProps) {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
         <Kpi label="Subtotal" value={formatCurrency(sub, moneda)} />
         <Kpi label="IVA" value={formatCurrency(iva, moneda)} />
         <Kpi label="Retenciones" value={formatCurrency(ret, moneda)} />

@@ -73,7 +73,7 @@ export function NuevaNotaCreditoFormFields({
           <CargaXmlNcSection parsed={parsedCfdi} onParsed={onCfdiParsed} />
         )}
 
-        <div className="grid grid-cols-2 gap-3 mt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
           <div className="space-y-1.5">
             <Label htmlFor="nc-folio">Folio NC *</Label>
             <Input id="nc-folio" value={folio} onChange={(e) => onFolioChange(e.target.value)} placeholder="NC-001" />

@@ -56,7 +56,7 @@ export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCread
         <Label htmlFor="cci-nombre" className="text-2xs">Nombre</Label>
         <Input id="cci-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} className="h-8 text-sm" />
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label htmlFor="cci-sat" className="text-2xs">Clave SAT</Label>
           <Input id="cci-sat" value={claveSat} onChange={(e) => setClaveSat(e.target.value)} placeholder="78101800" className="h-8 text-sm" />

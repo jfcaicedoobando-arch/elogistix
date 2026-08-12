@@ -138,7 +138,7 @@ export function BuscarTarifaDialog({
         </Button>
       }
     >
-      <div role="search" aria-label="Filtros de búsqueda de tarifa" className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div role="search" aria-label="Filtros de búsqueda de tarifa" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <div>
           <Label htmlFor="td-origen">Puerto origen (CN)</Label>
           <Select value={origen} onValueChange={setOrigen}>

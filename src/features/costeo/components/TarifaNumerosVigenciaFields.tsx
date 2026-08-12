@@ -62,7 +62,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
 
 export function VigenciaFields({ form, setForm, errores }: NumerosProps) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
         <Label htmlFor="tarifa-vig-desde">{rangoLabel("Vigencia", "desde")} *</Label>
         <DatePickerMx

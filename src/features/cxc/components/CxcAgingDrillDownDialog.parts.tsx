@@ -71,7 +71,7 @@ export function CxcAgingKpiRow({ cliente }: { cliente: CxcAgingRow }) {
   const m = cliente.moneda;
   const vencido = cliente.d_1_30 + cliente.d_31_60 + cliente.d_61_90;
   return (
-    <div className="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-3 border-b bg-background">
+    <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 border-b bg-background">
       <Kpi label={`Saldo total (${m})`} value={formatCurrency(cliente.saldo_total, m)} />
       <Kpi label="Vigente" value={formatCurrency(cliente.vigente, m)} />
       <Kpi

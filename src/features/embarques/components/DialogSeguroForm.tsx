@@ -118,7 +118,7 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label>Aseguradora *</Label>
           <Input value={form.aseguradora} onChange={(e) => setField("aseguradora", e.target.value)} />
@@ -171,7 +171,7 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
             onChange={(e) => setField("deducible", Number(e.target.value))} />
         </div>
 
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <Label>Cobertura</Label>
           <Textarea rows={2} value={form.cobertura_descripcion ?? ""}
             onChange={(e) => setField("cobertura_descripcion", e.target.value || null)} />
@@ -187,7 +187,7 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
           <Input value={form.contacto ?? ""} onChange={(e) => setField("contacto", e.target.value || null)} />
         </div>
 
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <Label>Notas</Label>
           <Textarea rows={2} value={form.notas ?? ""}
             onChange={(e) => setField("notas", e.target.value || null)} />

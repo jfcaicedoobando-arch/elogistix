@@ -99,7 +99,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       footer={footer}
     >
       {!defaultEntidad && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label>Tipo de entidad</Label>
             <Select value={entidadTipo} onValueChange={(v) => { setEntidadTipo(v as CrmEntidadTipo); setEntidadId(""); }}>
@@ -127,7 +127,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       {defaultEntidad?.label && (
         <div className="text-xs text-muted-foreground">Para: <span className="font-medium text-foreground">{defaultEntidad.label}</span></div>
       )}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label>Tipo</Label>
           <Select value={tipo} onValueChange={(v) => setTipo(v as CrmActividadTipo)}>

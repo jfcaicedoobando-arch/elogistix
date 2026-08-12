@@ -55,7 +55,7 @@ export function DialogRegistrarPagoLiquidacion({
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label>Fecha</Label>
           <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
