@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.520.1] - 2026-08-11
+- CI (`audit:migrations` H6) — la migración de rate-limit de RPCs anónimas ahora declara permisos explícitos (`REVOKE ALL ... FROM PUBLIC` + `GRANT EXECUTE` a `anon`, `authenticated`, `service_role`) para las 4 funciones `SECURITY DEFINER` que reemplaza. Los permisos re-declarados son idénticos a los ya vigentes en la base de datos; sin cambio funcional.
+
 ## [13.520.0] - 2026-08-11
 - Fix (facturación) — las facturas borradas lógicamente ya no aparecen como pendientes de pago. La bandeja "Vencidas" mostraba 6 duplicados legacy con `deleted_at` (726-DUP-*, 755-DUP-fe48bee7, 848, 900-DUP-c741c8c7) porque `fetchCobranza` filtraba por estado pero no por borrado lógico. Se agregó `.is("deleted_at", null)` en cobranza, conteos y listados de bandejas (`bandejas.ts`), estado de cuenta, exportaciones de cartera/Aging (`exports.ts`), financieros del cliente, portal del cliente, hueco de facturación y EERR devengado. Sin migración ni cambio de datos.
 - Guardrail — nuevo test de arquitectura `facturas-soft-delete-reads` que falla si alguna lectura de `facturas` omite el filtro de borrado lógico (con lista de exentos para lecturas por id intencionales).
