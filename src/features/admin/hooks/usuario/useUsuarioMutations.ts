@@ -20,6 +20,8 @@ export function useCreateUser() {
     invalidate: queryKeys.usuarios.all,
     // U-04: el copy ya no promete un correo que no siempre se envía.
     successTitle: "Usuario dado de alta",
+    successDescription:
+      "Si lo diste de alta por invitación, el correo puede tardar unos minutos. Si no llega, usa “Restablecer contraseña” en la fila del usuario para reenviar el acceso.",
     errorTitle: "Error al crear usuario",
     errorMethod: "CREATE_USER",
   });
