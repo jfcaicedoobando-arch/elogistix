@@ -19,6 +19,7 @@ import { DialogTraspasoCuentas } from "./_sections/DialogTraspasoCuentas";
 export default function TesoreriaCuentas() {
   const {
     cuentas, isLoading, isError, refetch, open, setOpen, form, setField, submit, submitting,
+    editTarget, solicitarEditar, monedaBloqueada, avisoRecalculo,
     deleteTarget, solicitarEliminar, cancelarEliminar, confirmarEliminar, eliminando,
   } = useTesoreriaCuentasController();
   // Sentry JAVASCRIPT-REACT-3S/3T: sólo administradores y tesorero pueden
@@ -75,6 +76,7 @@ export default function TesoreriaCuentas() {
               cuenta={c}
               saldoActual={saldos.find((s) => s.id === c.id)?.saldo}
               canAdmin={canAdminCuentasBancarias}
+              onEditar={canAdminCuentasBancarias ? solicitarEditar : undefined}
               onEliminar={solicitarEliminar}
             />
           ))}
