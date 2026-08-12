@@ -50,6 +50,11 @@ export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false 
             <SelectItem value="EUR">EUR</SelectItem>
           </SelectContent>
         </Select>
+        {monedaBloqueada && (
+          <p className="text-xs text-muted-foreground pt-1">
+            La cuenta ya tiene movimientos: la moneda no se puede cambiar.
+          </p>
+        )}
       </div>
       <div>
         <Label htmlFor="cuenta-saldo-inicial">Saldo inicial</Label>
