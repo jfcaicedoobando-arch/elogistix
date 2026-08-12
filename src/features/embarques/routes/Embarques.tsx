@@ -46,13 +46,24 @@ export default function Embarques() {
     fechaDesde, fechaHasta, page, pageSize,
     sortKey, sortDir, handleSortChange,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterAlerta,
-    setFechaDesde, setFechaHasta, setPage, setPageSize,
+    setFechaDesde, setFechaHasta, setPage, setPageSize, limpiarFiltros,
     filtered, expedientesCount, contenedoresCount, totalPages, totalCount, alertasResumen,
   } = state;
 
 
   const goNuevo = () => navigate("/embarques/nuevo");
+  // UIA-16: el alta directa está bloqueada por la política tarifa-first. En vez
+  // de esconder la puerta de entrada, explicamos el prerrequisito y llevamos a
+  // Cotizaciones (navegación proactiva, no un error después del hecho).
+  const goNuevoDesdeCotizacion = () => {
+    notifyInfo(undefined, {
+      title: "Los embarques se crean desde una cotización",
+      description: "Abre la cotización aceptada del cliente y usa \"Crear embarque\" para generar el expediente.",
+    });
+    navigate("/cotizaciones");
+  };
   const headerDescription = buildDescription(contenedoresCount, expedientesCount, filterEstado !== "todos");
+
 
   // Diferimos las filas visibles del listado para que al cambiar filtros/página
   // el re-render pesado de la tabla no bloquee inputs ni interacciones (React 18).
