@@ -84,8 +84,10 @@ export function TabPnl({ embarqueId }: Props) {
         />
         <KpiCard
           label="Margen real"
-          value={pctPnl(margenReal)}
+          // UIA-10: sin venta real el margen no es 0%, es indeterminado.
+          value={ventaReal > 0 ? pctPnl(margenReal) : "n/a"}
           delta={`Presup. ${pctPnl(margenPresup)}`}
+
           variant={
             utilidadReal < 0 || margenReal < 0
               ? "destructive"
@@ -147,13 +149,27 @@ export function TabPnl({ embarqueId }: Props) {
         rows={data.por_concepto_costo}
         invertirAlerta
       />
+      <p className="text-xs text-muted-foreground">
+        {/* UIA-10 (3): el desglose por concepto suma subtotales de las facturas;
+            el KPI "Costo real" usa el total con impuestos y ya descuenta notas de
+            crédito, por eso puede ser mayor que la suma de esta tabla. */}
+        El desglose por concepto usa subtotales (sin impuestos). El KPI "Costo real" incluye
+        impuestos y descuenta notas de crédito aplicadas, por lo que ambos importes pueden
+        diferir.
+      </p>
+
 
       <div ref={registerRef("comision")} data-focus="comision">
         <PnlProveedoresTable proveedores={data.por_proveedor} />
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Tipos de cambio del embarque: USD {data.tipo_cambio_usd?.toFixed(4) ?? "—"} · EUR {data.tipo_cambio_eur?.toFixed(4) ?? "—"}
+        {/* UIA-10: el servicio normaliza el TC ausente a 0; 0 se muestra como "—". */}
+        Tipos de cambio del embarque: USD{" "}
+        {data.tipo_cambio_usd && data.tipo_cambio_usd > 0 ? data.tipo_cambio_usd.toFixed(4) : "—"} ·
+        EUR{" "}
+        {data.tipo_cambio_eur && data.tipo_cambio_eur > 0 ? data.tipo_cambio_eur.toFixed(4) : "—"}
+
       </p>
     </div>
   );

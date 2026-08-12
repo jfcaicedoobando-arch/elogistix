@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.539.0] - 2026-08-12
+- P&L del embarque: los tipos de cambio ausentes muestran "—" en lugar de "0.0000" y el margen real dice "n/a" cuando aún no hay venta real (UIA-10).
+- P&L del embarque: nota que explica por qué el desglose por concepto (subtotales) puede diferir del KPI "Costo real" (con impuestos y notas de crédito) (UIA-10).
+- Tracking: el stepper de fases ya no se anuncia dos veces con lector de pantalla; el canal accesible es la barra de progreso (UIA-17).
+- Catálogos (navieras, puertos, tipos de contenedor): el botón de eliminar se deshabilita durante el borrado para evitar dobles envíos (FE-09).
+
+
+
 ## [13.538.0] - 2026-08-12
 - Cobro en lote de cliente: nuevos atajos "Repartir FIFO", "Liquidar todo" y "Limpiar reparto", más un botón para asignar el sobrante automáticamente.
 - Cobro en lote de cliente: cada renglón muestra chip de vencimiento, aviso de complemento de pago (REP) y botón para aplicar el saldo de esa factura.

@@ -59,7 +59,7 @@ export default function TabNavieras() {
             <Pencil className="h-4 w-4" />
           </Button>
           {canAdminTenant && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setNavieraAEliminar(row.original)} aria-label={`Eliminar naviera ${row.original.name}`}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" disabled={eliminarNaviera.isPending} onClick={() => setNavieraAEliminar(row.original)} aria-label={`Eliminar naviera ${row.original.name}`}>
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
