@@ -124,14 +124,24 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
         />
       </div>
       <div className="sm:col-span-2 space-y-1">
-        <Label>Referencia</Label>
-        <Input value={values.referencia} onChange={(e) => onChange("referencia", e.target.value)}
-          placeholder="Folio SPEI, cheque..." />
+        <Label htmlFor="pago-referencia">Referencia</Label>
+        <Input
+          id="pago-referencia"
+          value={values.referencia}
+          onChange={(e) => onChange("referencia", e.target.value)}
+          placeholder="Folio SPEI, cheque..."
+        />
       </div>
       <div className="sm:col-span-2 space-y-1">
-        <Label>Notas</Label>
-        <Textarea value={values.notas} onChange={(e) => onChange("notas", e.target.value)} rows={2} />
+        <Label htmlFor="pago-notas">Notas</Label>
+        <Textarea
+          id="pago-notas"
+          value={values.notas}
+          onChange={(e) => onChange("notas", e.target.value)}
+          rows={2}
+        />
       </div>
+
     </div>
   );
 }
