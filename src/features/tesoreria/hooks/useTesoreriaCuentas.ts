@@ -36,6 +36,31 @@ export function useCrearCuenta() {
   });
 }
 
+export function useActualizarCuenta() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; patch: TablesUpdate<"cuentas_bancarias"> }) =>
+      actualizarCuenta(vars.id, vars.patch),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      notifySuccess(undefined, { title: "Cuenta bancaria actualizada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: "No se pudo actualizar la cuenta", description: getErrorMessage(error), error, method: "UPDATE_CUENTA_BANCARIA" });
+    },
+  });
+}
+
+/** Indica si la cuenta ya tiene movimientos (bloquea el cambio de moneda). */
+export function useTieneMovimientosCuenta(cuentaId: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.tesoreria.all, "tiene-movimientos", cuentaId],
+    queryFn: () => cuentaTieneMovimientos(cuentaId as string),
+    enabled: !!cuentaId,
+    staleTime: 60_000,
+  });
+}
+
 export function useEliminarCuenta() {
   const qc = useQueryClient();
   const { user } = useAuth();
