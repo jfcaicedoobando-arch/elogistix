@@ -130,9 +130,8 @@ export function MovimientoManualDialog({
               {erroresManual.monto}
             </p>
           )}
-        </div>
       </div>
-
     </FormDialogShell>
+
   );
 }
