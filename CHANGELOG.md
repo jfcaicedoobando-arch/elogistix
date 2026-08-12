@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.533.0] - 2026-08-12
+- Copy único para superficies públicas en `src/lib/copy/publicoCopy.ts`: enlaces vencidos, validaciones, pie de página, baja de correos y avisos legales usan la misma redacción en español mexicano.
+- Tracking público: se elimina "Powered by" (ahora "Con tecnología de") y el título de respaldo es "Seguimiento de embarque".
+- Baja de correos (`/unsubscribe`): todos los estados (validando, inválido, ya dado de baja, procesando, éxito, falla) toman el copy centralizado.
+- Portal de proformas: al fallar la respuesta ya no se muestra `error.message` crudo y el motivo de rechazo pide "al menos 3 caracteres".
+- Solicitar cotización (portal): origen y destino muestran ayuda de campo obligatorio y el formulario indica qué falta para poder enviar.
+
 ## [13.532.0] - 2026-08-12
 - Portal del cliente (Sub-ola 7): las navieras se muestran con nombre comercial ("Maersk (MAEU)") en tarjetas de embarque, resumen y tracking público; si el código no está mapeado se muestra tal cual.
 - El contador del tab "Tracking" ahora cuenta los mismos hitos que se ven en la línea de tiempo (ya no incluye eventos internos).
