@@ -149,6 +149,15 @@ export function TabPnl({ embarqueId }: Props) {
         rows={data.por_concepto_costo}
         invertirAlerta
       />
+      <p className="text-xs text-muted-foreground">
+        {/* UIA-10 (3): el desglose por concepto suma subtotales de las facturas;
+            el KPI "Costo real" usa el total con impuestos y ya descuenta notas de
+            crédito, por eso puede ser mayor que la suma de esta tabla. */}
+        El desglose por concepto usa subtotales (sin impuestos). El KPI "Costo real" incluye
+        impuestos y descuenta notas de crédito aplicadas, por lo que ambos importes pueden
+        diferir.
+      </p>
+
 
       <div ref={registerRef("comision")} data-focus="comision">
         <PnlProveedoresTable proveedores={data.por_proveedor} />
