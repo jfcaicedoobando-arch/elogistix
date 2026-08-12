@@ -10,6 +10,8 @@ import { DetailSkeleton } from "@/components/shared/skeletons";
 import { PageContainer } from "@/components/shared/PageContainer";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { useDocumentTitle } from "@/hooks/shared";
+
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
 import { useVolverAFacturaOriginal } from "@/features/facturacion/hooks/useVolverAFacturaOriginal";
 import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
@@ -40,6 +42,9 @@ export default function FacturaDetalle() {
   const controller = useFacturaDetalleController(idValido ? id : undefined);
   const { canEdit, factura, isLoading, error, refetch, flags } = controller;
   useRegisterBreadcrumbLabel(id, factura?.numero);
+  // UIA-12: título de pestaña por folio de factura.
+  useDocumentTitle(factura?.numero ? `Factura ${factura.numero}` : "Factura");
+
   const dialogs = useFacturaDetalleDialogs();
   const { puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => dialogs.setTimbrarOpen(true));

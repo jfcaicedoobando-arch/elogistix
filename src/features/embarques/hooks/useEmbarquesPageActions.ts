@@ -10,6 +10,7 @@ interface BuildActionsArgs<A> {
   DEFAULT_PAGE_SIZE: number;
   setFilter: SetFilter;
   setAlerta: (v: A) => void;
+  setSearch: (v: string) => void;
   setPageRaw: (v: number | null) => void;
   setPageSizeRaw: (v: number | null) => void;
   setSortKeyRaw: (v: string | null) => void;
@@ -18,7 +19,7 @@ interface BuildActionsArgs<A> {
 
 export function buildEmbarquesPageActions<A>(args: BuildActionsArgs<A>) {
   const {
-    DEFAULT_PAGE_SIZE, setFilter, setAlerta,
+    DEFAULT_PAGE_SIZE, setFilter, setAlerta, setSearch,
     setPageRaw, setPageSizeRaw, setSortKeyRaw, setSortDirRaw,
   } = args;
   return {
@@ -29,6 +30,21 @@ export function buildEmbarquesPageActions<A>(args: BuildActionsArgs<A>) {
     setFilterAlerta: setAlerta,
     setFechaDesde: (v: string) => setFilter("fechaDesde", v, ""),
     setFechaHasta: (v: string) => setFilter("fechaHasta", v, ""),
+    /**
+     * UIA-15: regresa búsqueda + filtros a sus valores por defecto para que el
+     * estado vacío "no se encontraron embarques" tenga una salida de un clic.
+     */
+    limpiarFiltros: () => {
+      setSearch("");
+      setFilter("modo", "todos", "todos");
+      setFilter("estado", "todos", "todos");
+      setFilter("cliente", "todos", "todos");
+      setFilter("operador", "todos", "todos");
+      setFilter("fechaDesde", "", "");
+      setFilter("fechaHasta", "", "");
+      setAlerta("todos" as A);
+      setPageRaw(null);
+    },
     setPage: (p: number) => setPageRaw(p === 0 ? null : p),
     setPageSize: (s: number) => {
       setPageSizeRaw(s === DEFAULT_PAGE_SIZE ? null : s);
@@ -41,3 +57,4 @@ export function buildEmbarquesPageActions<A>(args: BuildActionsArgs<A>) {
     },
   };
 }
+

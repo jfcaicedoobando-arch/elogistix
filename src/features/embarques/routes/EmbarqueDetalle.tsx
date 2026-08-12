@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useState } from "react";
 
-import { usePermissions, useTabsParam } from "@/hooks/shared";
+import { usePermissions, useTabsParam, useDocumentTitle } from "@/hooks/shared";
 import {
   calcularEstadoEmbarque,
   getSiguienteEstado,
@@ -50,6 +50,9 @@ export default function EmbarqueDetalle() {
 
   const { embarque, isLoading, error, refetch } = useEmbarqueDetalleData(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
+  // UIA-12: la pestaña se distingue por folio (antes quedaba el título del landing).
+  useDocumentTitle(embarque?.expediente ? `Embarque ${embarque.expediente}` : "Embarque");
+
 
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);

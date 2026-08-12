@@ -168,7 +168,9 @@ export function useEmbarquesPageState() {
     DEFAULT_PAGE_SIZE,
     setFilter,
     setAlerta,
+    setSearch,
     setPageRaw,
+
     setPageSizeRaw,
     setSortKeyRaw,
     setSortDirRaw,

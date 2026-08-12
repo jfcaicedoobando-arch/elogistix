@@ -21,7 +21,11 @@ function buildVigenciaNode(fechaVigencia: string, estado: string): ReactNode {
   // siempre. Sólo se muestra si la cotización está en proceso ("enviada")
   // o si el vencimiento está próximo/expirado (≤ 7 días). Reduce densidad
   // visual en la tabla sin ocultar los casos que requieren acción.
-  if (!esEnviada && diffDias > 7) return null;
+  // UIA-14: la vigencia también importa en "aceptada" (revalidación de tarifa);
+  // sólo se oculta fuera de enviada/aceptada y con vencimiento lejano.
+  const esAceptada = estado.toLowerCase() === "aceptada";
+  if (!esEnviada && !esAceptada && diffDias > 7) return null;
+
 
   if (diffDias < 0) {
     return <span className="text-destructive font-medium">Vencida · {fechaStr}</span>;

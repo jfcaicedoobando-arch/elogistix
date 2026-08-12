@@ -19,14 +19,23 @@ import { useEmbarquesPageController, calcularEstadoEmbarque } from "@/features/e
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { notifyInfo } from "@/lib/ui/appFeedback";
+import { EmbarquesTablaVacia } from "@/features/embarques/components/EmbarquesTablaVacia";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
+
 function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
+  if (!estadoActivo) {
+    // UIA-09: sin filtro de estado el contador viene del total server-side de
+    // EMBARQUES (computeCounts → totalCountServer), no de contenedores; llamarlo
+    // "contenedores" descuadraba contra el detalle del expediente.
+    return `${contenedoresCount} ${contenedoresCount === 1 ? "embarque" : "embarques"}`;
+  }
   const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
-  if (!estadoActivo) return cont;
   const exp = `${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`;
   return `${cont} en ${exp}`;
 }
+
 
 export default function Embarques() {
   useDocumentTitle("Embarques");
@@ -46,13 +55,24 @@ export default function Embarques() {
     fechaDesde, fechaHasta, page, pageSize,
     sortKey, sortDir, handleSortChange,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterAlerta,
-    setFechaDesde, setFechaHasta, setPage, setPageSize,
+    setFechaDesde, setFechaHasta, setPage, setPageSize, limpiarFiltros,
     filtered, expedientesCount, contenedoresCount, totalPages, totalCount, alertasResumen,
   } = state;
 
 
   const goNuevo = () => navigate("/embarques/nuevo");
+  // UIA-16: el alta directa está bloqueada por la política tarifa-first. En vez
+  // de esconder la puerta de entrada, explicamos el prerrequisito y llevamos a
+  // Cotizaciones (navegación proactiva, no un error después del hecho).
+  const goNuevoDesdeCotizacion = () => {
+    notifyInfo(undefined, {
+      title: "Los embarques se crean desde una cotización",
+      description: "Abre la cotización aceptada del cliente y usa \"Crear embarque\" para generar el expediente.",
+    });
+    navigate("/cotizaciones");
+  };
   const headerDescription = buildDescription(contenedoresCount, expedientesCount, filterEstado !== "todos");
+
 
   // Diferimos las filas visibles del listado para que al cambiar filtros/página
   // el re-render pesado de la tabla no bloquee inputs ni interacciones (React 18).
@@ -73,7 +93,9 @@ export default function Embarques() {
               exportandoCsv={exportandoCsv}
               onExport={exportarCsv}
               onNuevo={goNuevo}
+              onNuevoDesdeCotizacion={goNuevoDesdeCotizacion}
             />
+
           )
         }
       />
@@ -131,7 +153,7 @@ export default function Embarques() {
                 columns={columns}
                 data={deferredFiltered}
                 isLoading={isLoading}
-                emptyMessage="No se encontraron embarques"
+                emptyState={<EmbarquesTablaVacia onLimpiar={limpiarFiltros} />}
                 getRowHref={(e) => `/embarques/${e.id}`}
                 onRowMouseEnter={(e) => prefetchEmbarque(e.id)}
                 rowKey={(e) => e.id}

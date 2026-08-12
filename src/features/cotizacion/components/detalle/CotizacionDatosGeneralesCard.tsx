@@ -37,7 +37,14 @@ function baseRows(c: Cotizacion): Row[] {
     { label: "Incoterm", value: c.incoterm, title: c.incoterm },
     { label: "Origen", value: c.origen || "-", title: c.origen || "" },
     { label: "Destino", value: c.destino || "-", title: c.destino || "" },
-    { label: "Vigencia", value: `${c.vigencia_dias} días (${c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "-"})` },
+    // UIA-14: sin fecha no se imprime el paréntesis vacío ("7 días (-)" lucía roto).
+    {
+      label: "Vigencia",
+      value: c.fecha_vigencia
+        ? `${c.vigencia_dias} días (hasta ${formatDate(c.fecha_vigencia)})`
+        : `${c.vigencia_dias} días`,
+    },
+
     { label: "Operador", value: c.operador ? nombreDesdeEmail(c.operador) : "-", title: c.operador || "" },
   ];
 }
