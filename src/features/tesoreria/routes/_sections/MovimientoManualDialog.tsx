@@ -27,12 +27,20 @@ interface Props {
   isPending: boolean;
 }
 
+const FORM_ID = "form-movimiento-manual";
+
 export function MovimientoManualDialog({
   open, onOpenChange, cuentas, manualForm, setManualField, onGuardar, isPending,
 }: Props) {
   const erroresManual = validarMovimientoManual(manualForm);
   const manualEsValido = Object.keys(erroresManual).length === 0;
   const monedaCuenta = cuentas.find((c) => c.id === manualForm.cuentaBancariaId)?.moneda;
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!manualEsValido || isPending) return;
+    onGuardar();
+  };
 
   return (
     <FormDialogShell
@@ -41,50 +49,43 @@ export function MovimientoManualDialog({
       icon={Landmark}
       title="Registrar movimiento manual"
       description="Captura fuera del importador (ajustes, comisiones, depósitos manuales)."
+      formId={FORM_ID}
+      onSubmit={handleSubmit}
+      bodyClassName="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:space-y-0"
       footer={
-        <>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={onGuardar} disabled={!manualEsValido || isPending}>
-            {isPending ? "Guardando..." : "Guardar"}
-          </Button>
-        </>
+        <FormDialogFooter
+          formId={FORM_ID}
+          onCancel={() => onOpenChange(false)}
+          confirmLabel="Guardar"
+          loading={isPending}
+          disabled={!manualEsValido || isPending}
+        />
       }
     >
-      <div
-        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-        onKeyDown={(e) => {
-          // Enter en cualquier campo guarda (sin cerrar el modal a ciegas).
-          if (e.key === "Enter" && !e.shiftKey && manualEsValido && !isPending) {
-            const t = e.target as HTMLElement;
-            if (t.tagName === "INPUT") {
-              e.preventDefault();
-              onGuardar();
-            }
-          }
-        }}
-      >
-        <div className="sm:col-span-2">
-          <Label htmlFor="mov-cuenta">Cuenta bancaria *</Label>
-          <Select
-            value={manualForm.cuentaBancariaId ?? ""}
-            onValueChange={(v) => setManualField("cuentaBancariaId", v)}
-          >
-            <SelectTrigger id="mov-cuenta"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
-            <SelectContent>
-              {cuentas.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.banco} · {c.alias} ({c.moneda})</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="mov-fecha">Fecha *</Label>
-          <DatePickerMx
-            value={manualForm.fecha ?? ""}
-            onChange={(v) => setManualField("fecha", v)}
-            className="w-full"
-          />
-        </div>
+      <div className="sm:col-span-2">
+        <Label htmlFor="mov-cuenta">Cuenta bancaria *</Label>
+        <Select
+          value={manualForm.cuentaBancariaId ?? ""}
+          onValueChange={(v) => setManualField("cuentaBancariaId", v)}
+        >
+          <SelectTrigger id="mov-cuenta"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
+          <SelectContent>
+            {cuentas.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.banco} · {c.alias} ({c.moneda})</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="mov-fecha">Fecha *</Label>
+        <DatePickerMx
+          id="mov-fecha"
+          value={manualForm.fecha ?? ""}
+          onChange={(v) => setManualField("fecha", v)}
+          className="w-full"
+        />
+      </div>
+
         <div>
           <Label htmlFor="mov-tipo">Tipo *</Label>
           <Select
