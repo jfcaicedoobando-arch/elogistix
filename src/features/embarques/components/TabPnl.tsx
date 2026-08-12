@@ -126,7 +126,7 @@ export function TabPnl({ embarqueId }: Props) {
             <CardTitle>Pendiente de cobro a cliente</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-semibold">{fmtPnl(data.venta.pdte_cobro_mxn)}</div>
+            <div className="text-kpi">{fmtPnl(data.venta.pdte_cobro_mxn)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -134,7 +134,7 @@ export function TabPnl({ embarqueId }: Props) {
             <CardTitle>Pendiente de pago a proveedores</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-semibold">{fmtPnl(data.costo.pdte_pago_mxn)}</div>
+            <div className="text-kpi">{fmtPnl(data.costo.pdte_pago_mxn)}</div>
           </CardContent>
         </Card>
       </div>

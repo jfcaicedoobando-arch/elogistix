@@ -106,15 +106,15 @@ export default function Operaciones() {
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="rounded-xl bg-kpi-info-soft p-3 text-center">
               <p className="text-xs text-kpi-info font-medium">ETD este mes</p>
-              <p className="text-xl font-bold text-kpi-info">{creadasEsteMes}</p>
+              <p className="text-kpi text-kpi-info">{creadasEsteMes}</p>
             </div>
             <div className="rounded-xl bg-kpi-success-soft p-3 text-center">
               <p className="text-xs text-kpi-success font-medium">Llegadas este mes</p>
-              <p className="text-xl font-bold text-kpi-success">{llegadasEsteMes}</p>
+              <p className="text-kpi text-kpi-success">{llegadasEsteMes}</p>
             </div>
             <div className="rounded-xl bg-kpi-accent p-3 text-center">
               <p className="text-xs text-primary-foreground/80 font-medium">Activas hoy</p>
-              <p className="text-xl font-bold text-primary-foreground">{global.activasHoy}</p>
+              <p className="text-kpi text-primary-foreground">{global.activasHoy}</p>
             </div>
           </div>
 
