@@ -3,54 +3,25 @@
  * el badge "Embarques · N" del sidebar. Cada tarjeta aplica un filtro
  * `?alerta=` al listado para que el usuario pueda atender los pendientes
  * sin adivinar qué embarques están detrás del conteo.
+ *
+ * v13.545.0 — Se separaron "Cierre operativo" (Entregado / EIR) y "Cierre
+ * administrativo" (Por liquidar). Las definiciones de tarjeta viven en
+ * `constants/alertasTiles.ts`.
  */
-import { AlertTriangle, Clock, ShieldAlert, FileWarning } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { EmbarqueAlertaFiltro } from "@/features/embarques/hooks/useEmbarquesFilters";
 import type { EmbarquesAlertasResumen } from "@/features/embarques/services/alertas";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { ALERTAS_TILES } from "@/features/embarques/constants/alertasTiles";
 
 interface Props {
   resumen: EmbarquesAlertasResumen;
   activeAlerta: EmbarqueAlertaFiltro;
   onSelect: (alerta: EmbarqueAlertaFiltro) => void;
 }
-
-type TileDef = {
-  key: Exclude<EmbarqueAlertaFiltro, "todos">;
-  titulo: string;
-  descripcion: string;
-  Icon: typeof Clock;
-  color: string;
-};
-
-// v13.223.0 · Capa 3 Tranche A · 2.1: colores unificados a tokens semánticos
-// (`warning` / `destructive`) en vez de escalas Tailwind hardcodeadas.
-const TILES: readonly TileDef[] = [
-  {
-    key: "demora",
-    titulo: "Demoras",
-    descripcion: "Embarques en puerto con +7 días sin liberación.",
-    Icon: Clock,
-    color: "text-warning bg-warning/15",
-  },
-  {
-    key: "garantia",
-    titulo: "Garantías atoradas",
-    descripcion: "Depósitos de contenedor con +30 días sin liberar.",
-    Icon: ShieldAlert,
-    color: "text-warning bg-warning/15",
-  },
-  {
-    key: "admin_pendiente",
-    titulo: "Cierre administrativo",
-    descripcion: "Entregado / EIR / Por liquidar con CxC, CxP, docs o facturación pendientes.",
-    Icon: FileWarning,
-    color: "text-destructive bg-destructive/10",
-  },
-];
 
 export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props) {
   if (resumen.total === 0) return null;
@@ -77,8 +48,9 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        {TILES.map(({ key, titulo, descripcion, Icon, color }) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        {ALERTAS_TILES.map(({ key, titulo, descripcion, Icon, color }) => {
+
           const count = resumen[key].size;
           const active = activeAlerta === key;
           // v13.223.0 · Capa 3 Tranche A · 2.2: ocultar tiles con count = 0
