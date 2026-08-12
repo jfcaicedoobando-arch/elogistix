@@ -54,6 +54,11 @@ export default function PortalEmbarqueDetalle() {
     );
   }
 
+  // UIB-12: el badge del tab debe contar lo mismo que la línea de tiempo
+  // muestra (hitos visibles para el cliente), no los eventos crudos.
+  const eventosVisiblesCount = filtrarEventosVisiblesCliente(eventos).length;
+
+
   return (
     <div className="space-y-6">
       <DetailHeader
