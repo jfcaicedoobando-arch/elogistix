@@ -8,7 +8,7 @@
  * convención de signo: positivo = vencida, 0 = vence hoy, negativo = por vencer)
  * y sólo caemos al valor de la RPC cuando no hay fecha de vencimiento.
  */
-import { calcularDiasVencidoFactura } from "@/features/facturacion/domain/facturaAging";
+import { calcularDiasVencidoFactura } from "@/lib/domain/facturaDiasVencido";
 
 export function diasVencidoCartera(
   fechaVencimiento: string | null | undefined,

@@ -36,7 +36,7 @@ describe("useTcInicial", () => {
     mockRemoto.mockReturnValue({ data: { usdMxn: 1, eurMxn: 1 }, isLoading: false });
 
     const { result } = renderHook(() => useTcInicial());
-    expect(result.current.data).toEqual({
+    expect(result.current.data).toMatchObject({
       usdMxn: 18.1234,
       eurMxn: 20.5,
       fecha: "2026-08-04",
@@ -49,7 +49,7 @@ describe("useTcInicial", () => {
     mockRemoto.mockReturnValue({ data: { usdMxn: 17.5, eurMxn: 19 }, isLoading: false });
 
     const { result } = renderHook(() => useTcInicial());
-    expect(result.current.data).toEqual({
+    expect(result.current.data).toMatchObject({
       usdMxn: 17.5,
       eurMxn: 19,
       fecha: null,

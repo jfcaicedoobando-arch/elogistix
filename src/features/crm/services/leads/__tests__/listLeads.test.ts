@@ -10,11 +10,16 @@ const state: {
   order: [string, { ascending: boolean }] | null;
   ors: string[];
   eqs: Array<[string, string]>;
+  is: Array<[string, unknown]>;
   range: [number, number] | null;
-} = { order: null, ors: [], eqs: [], range: null };
+} = { order: null, ors: [], eqs: [], is: [], range: null };
 
 const builder: Record<string, unknown> = {
   select: vi.fn().mockReturnThis(),
+  is: vi.fn((col: string, v: unknown) => {
+    state.is.push([col, v]);
+    return builder;
+  }),
   order: vi.fn((col: string, opts: { ascending: boolean }) => {
     state.order = [col, opts];
     return builder;
@@ -41,8 +46,10 @@ beforeEach(() => {
   state.order = null;
   state.ors = [];
   state.eqs = [];
+  state.is = [];
   state.range = null;
 });
+
 
 describe("listLeads — contrato server-side", () => {
   it("aplica orden por default created_at desc y range de la página", async () => {
@@ -75,4 +82,10 @@ describe("listLeads — contrato server-side", () => {
     expect(state.ors[0]).toContain("contacto.ilike.%acme%");
     expect(state.ors[0]).toContain("email.ilike.%acme%");
   });
+
+  it("excluye leads con borrado lógico (deleted_at)", async () => {
+    await listLeads({ page: 0, pageSize: 25 });
+    expect(state.is).toContainEqual(["deleted_at", null]);
+  });
 });
+

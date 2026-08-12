@@ -25,8 +25,9 @@ import {
 
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
 import { useModoBuzonWiring } from "@/features/cxp/hooks/useModoBuzonWiring";
-import { abrirFacturaEntrante } from "@/features/cxp/services/facturasEntrantes";
-import { notifyError } from "@/lib/ui/appFeedback";
+import {
+  derivarMontos, hayCapturaFactura, verArchivoBuzon,
+} from "./_sections/capturaDerivados";
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
 
@@ -66,28 +67,16 @@ function DialogNuevaFacturaProveedorForm({
     ctl, categorias: cats.data ?? [], entrante, abierto: open,
   });
 
-  const verArchivoBuzon = async (path: string, nombre: string) => {
-    try {
-      await abrirFacturaEntrante(path, nombre);
-    } catch (error) {
-      notifyError(undefined, {
-        title: "No se pudo abrir el archivo del buzón",
-        error,
-        method: "ABRIR_FACTURA_ENTRANTE_CAPTURA",
-      });
-    }
-  };
-
-  const sub = Number(ctl.values.subtotal) || 0;
-  const iva = Number(ctl.values.iva) || 0;
-  const ieps = Number(ctl.values.ieps) || 0;
-  const ret = Number(ctl.values.retenciones) || 0;
+  const { sub, iva, ieps, ret } = derivarMontos(ctl.values);
   const moneda = ctl.values.moneda;
 
   // FE-11: si ya hay captura, avisamos antes de navegar o cerrar la pestaña.
-  const hayCaptura =
-    Boolean(ctl.values.provId) || sub > 0 ||
-    Boolean(ctl.values.folio) || ctl.conceptosManuales.conceptos.length > 0;
+  const hayCaptura = hayCapturaFactura({
+    provId: ctl.values.provId,
+    folio: ctl.values.folio,
+    subtotal: sub,
+    conceptos: ctl.conceptosManuales.conceptos.length,
+  });
   const { guardDialog } = useDirtyGuard(open && hayCaptura && !ctl.isPending);
 
   const { conceptosParaCuadre, cuadre, keyRenglonSospechoso } = useCuadreCaptura({

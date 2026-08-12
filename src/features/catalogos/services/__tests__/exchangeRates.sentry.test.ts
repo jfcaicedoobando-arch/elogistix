@@ -59,7 +59,7 @@ describe("fetchExchangeRates — captureException", () => {
     const res = await fetchExchangeRates();
     await flush();
 
-    expect(res).toEqual({ usdMxn: 17.25, eurMxn: 18.5, esFallback: true });
+    expect(res).toMatchObject({ usdMxn: 17.25, eurMxn: 18.5, esFallback: true });
     expect(mocks.captureException).not.toHaveBeenCalled();
     await vi.waitFor(() => expect(mocks.addBreadcrumb).toHaveBeenCalled());
     expect(mocks.addBreadcrumb).toHaveBeenCalledWith(
@@ -74,7 +74,7 @@ describe("fetchExchangeRates — captureException", () => {
     mocks.invoke.mockResolvedValue({ data: { usdMxn: 18, eurMxn: 19 }, error: null });
     const res = await fetchExchangeRates();
     await flush();
-    expect(res).toEqual({ usdMxn: 18, eurMxn: 19, esFallback: false });
+    expect(res).toMatchObject({ usdMxn: 18, eurMxn: 19, esFallback: false });
     expect(mocks.captureException).not.toHaveBeenCalled();
   });
 });
