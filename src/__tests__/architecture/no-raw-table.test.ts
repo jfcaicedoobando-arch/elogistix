@@ -154,6 +154,8 @@ describe("architecture — no raw @/components/ui/table imports", () => {
       excludeDirs: ["__tests__", "node_modules"],
       excludeFileRe: /\.(test|spec)\.tsx?$/,
     })) {
+      // Sólo componentes: los generadores de HTML/PDF (.ts) no son JSX.
+      if (!f.endsWith(".tsx")) continue;
       const src = readFileSync(f, "utf8");
       if (!RAW_TABLE_JSX.test(src)) continue;
       const rel = relPath(ROOT, f);
