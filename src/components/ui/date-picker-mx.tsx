@@ -32,11 +32,8 @@ interface DatePickerMxProps {
   "aria-label"?: string;
 }
 
-function isoInRange(iso: string, min?: string, max?: string): boolean {
-  if (min && iso < min) return false;
-  if (max && iso > max) return false;
-  return true;
-}
+
+
 
 /**
  * DatePicker localizado para México (formato DD/MM/YYYY visible, valor ISO).
