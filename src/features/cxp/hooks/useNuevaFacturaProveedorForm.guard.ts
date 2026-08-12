@@ -23,6 +23,7 @@ export function puedeContinuarSubmit(
   manuales: ConceptosManualesLike,
   cuadreManual: ResultadoCuadre,
   subtotal: number,
+  moneda: string = "MXN",
 ): boolean {
   if (cfdiConceptos.length > 0 || hayVinculos) return true;
 
@@ -37,7 +38,7 @@ export function puedeContinuarSubmit(
   if (!cuadreManual.puedeAprobar) {
     notifyError(undefined, {
       title: "Los conceptos no cuadran con el subtotal",
-      description: `Suma de conceptos ${cuadreManual.suma.toFixed(2)} vs subtotal ${subtotal.toFixed(2)}. Ajusta la diferencia (tolerancia 0.01).`,
+      description: `Suma de conceptos ${formatCurrency(cuadreManual.suma, moneda)} vs subtotal ${formatCurrency(subtotal, moneda)}. Ajusta la diferencia (tolerancia 0.01).`,
       method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DESCUADRE",
     });
     return false;

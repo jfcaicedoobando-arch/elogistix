@@ -7,6 +7,7 @@
  *
  * Módulo puro (sin Supabase) para poder cubrirlo con pruebas unitarias.
  */
+import { formatCurrency } from "@/lib/formatters";
 
 export interface CuentaPagoInfo {
   id: string;
@@ -179,7 +180,7 @@ export function calcularAvisosPago(a: ValidarPagoInput): string[] {
   const descuadre = descuadreTotalesFactura(f);
   if (descuadre !== 0) {
     avisos.push(
-      `Los totales de la factura no cuadran: subtotal + IVA + IEPS − retenciones difiere del total en ${descuadre.toFixed(2)} ${f.moneda}. Revisa la captura antes de pagar.`,
+      `Los totales de la factura no cuadran: subtotal + IVA + IEPS − retenciones difiere del total en ${formatCurrency(descuadre, f.moneda)}. Revisa la captura antes de pagar.`,
     );
   }
   if (f.subtotal > 0 && f.iva > 0) {

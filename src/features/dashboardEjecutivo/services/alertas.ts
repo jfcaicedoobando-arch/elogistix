@@ -8,6 +8,7 @@ import type {
 import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenTesoreria } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
+import { formatCurrency } from "@/lib/formatters";
 
 export interface AlertasInput {
   flujo: FlujoProyectado;
@@ -30,7 +31,7 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
       id: `flujo-negativo-${primera.semana_iso}`,
       severidad: "critica",
       titulo: "Saldo proyectado negativo",
-      descripcion: `Semana ${primera.semana_iso}: saldo estimado ${primera.saldo_proyectado_mxn.toFixed(0)} MXN`,
+      descripcion: `Semana ${primera.semana_iso}: saldo estimado ${formatCurrency(primera.saldo_proyectado_mxn, "MXN")}`,
       url: "/tesoreria/flujo",
     });
   }
@@ -45,7 +46,7 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
       severidad: "warning",
       titulo: `${deudoresVencidosCount} cliente(s) con cartera vencida`,
       descripcion: top
-        ? `Top: ${top.nombre} (${top.saldo.toFixed(0)} ${top.moneda})`
+        ? `Top: ${top.nombre} (${formatCurrency(top.saldo, top.moneda)})`
         : "Ver detalle en Facturación",
       url: "/facturacion",
     });
@@ -60,7 +61,7 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
       severidad: "warning",
       titulo: `${acreedoresVencidosCount} proveedor(es) con pagos vencidos`,
       descripcion: top
-        ? `Top: ${top.nombre} (${top.saldo.toFixed(0)} ${top.moneda})`
+        ? `Top: ${top.nombre} (${formatCurrency(top.saldo, top.moneda)})`
         : "Ver detalle en Compras",
       url: "/compras/facturas",
     });
