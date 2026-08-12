@@ -36,11 +36,13 @@ async function fetchFacturasLigadas(embarqueId: string): Promise<{ cxc: FacturaL
       .from('facturas')
       .select('id, numero, estado', { count: 'exact' })
       .eq('embarque_id', embarqueId)
+      .is('deleted_at', null)
       .limit(MAX_FOLIOS),
     supabase
       .from('proveedor_facturas')
       .select('id, folio_proveedor, estado', { count: 'exact' })
       .eq('embarque_id', embarqueId)
+      .is('deleted_at', null)
       .limit(MAX_FOLIOS),
   ]);
 
@@ -61,16 +63,16 @@ async function fetchNotasYPagos(cxcIds: string[], cxpIds: string[]): Promise<{ n
   const empty: CountResult = { count: 0, error: null };
   const [ncCxcRes, ncCxpRes, pagosCxcRes, pagosCxpRes] = await Promise.all<CountResult>([
     cxcIds.length
-      ? supabase.from('factura_notas_credito').select('id', { count: 'exact', head: true }).in('factura_id', cxcIds)
+      ? supabase.from('factura_notas_credito').select('id', { count: 'exact', head: true }).in('factura_id', cxcIds).is('deleted_at', null)
       : Promise.resolve(empty),
     cxpIds.length
-      ? supabase.from('proveedor_notas_credito').select('id', { count: 'exact', head: true }).in('factura_id', cxpIds)
+      ? supabase.from('proveedor_notas_credito').select('id', { count: 'exact', head: true }).in('factura_id', cxpIds).is('deleted_at', null)
       : Promise.resolve(empty),
     cxcIds.length
-      ? supabase.from('pagos_factura').select('id', { count: 'exact', head: true }).in('factura_id', cxcIds)
+      ? supabase.from('pagos_factura').select('id', { count: 'exact', head: true }).in('factura_id', cxcIds).is('deleted_at', null)
       : Promise.resolve(empty),
     cxpIds.length
-      ? supabase.from('pagos_proveedor').select('id', { count: 'exact', head: true }).in('factura_id', cxpIds)
+      ? supabase.from('pagos_proveedor').select('id', { count: 'exact', head: true }).in('factura_id', cxpIds).is('deleted_at', null)
       : Promise.resolve(empty),
   ]);
 

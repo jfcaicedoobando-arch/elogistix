@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.525.0] - 2026-08-12
+- Auditoría Wave 1 (P2) — Sub-ola 1/6 cerrada: BL-03 (guard de membresía en `siguiente_folio_proveedor` para evitar quema de folios FP- ajenos), BL-05 (`calcular_comision_pago` ya no aborta el pago cuando faltan tipos de cambio del embarque; la comisión queda en 0 y se recalcula después), BL-06 (lecturas de notas de crédito CxC/CxP ahora excluyen soft-borradas, consistente con los guards de saldo), BL-07 (`dependenciasFinancieras` de embarques ya no cuenta facturas/pagos/NCs soft-borradas), BL-08 (re-asegurado `search_path` y grants de funciones `email_infra`) y BL-09 (folio de traspasos bancarios migrado de `MAX()+1` a `folio_secuencias` para evitar carreras). BL-04 ya estaba corregido en Wave 0.
+
 ## [13.524.0] - 2026-08-12
 - Auditoría Wave 0 (bloqueantes) — validados y corregidos: BL-01 (soft-delete de CRM ahora filtrado en 11 servicios de lectura + guardrail `crm-soft-delete-reads`), BL-02 (`registrar_bitacora` con guard de organización/identidad), BL-04 (tipo de cambio obligatorio en traspasos cross-moneda: `LC_TRASPASO_TC_REQUERIDO`), N1 (eliminada sobrecarga ambigua de `log_client_error_v1`), EF-01 (timbrado de REP idempotente con `facturapi_rep_claim_at` y `liberar_claim_rep_huerfano`), EF-03 (acuse SAT de cancelación en notas de crédito), EF-04 (el fallback EUR 18.5 ya no se presenta como TC real y no se precarga en anticipos) y UX-02 (mensajes de error en es-MX).
 

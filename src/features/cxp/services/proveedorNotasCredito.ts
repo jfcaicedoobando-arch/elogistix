@@ -52,6 +52,7 @@ export async function fetchNotasCreditoFactura(
       .from("proveedor_notas_credito")
       .select("*")
       .eq("proveedor_factura_id", facturaId)
+      .is("deleted_at", null)
       .order("fecha", { ascending: false }),
     [],
   );
