@@ -347,9 +347,8 @@ jobs:
 
       - name: Run Deno tests (excluding smoke)
         if: steps.changes.outputs.run == 'true'
-        # Corre CON typecheck completo (sin `--no-check`): este paso absorbe el
-        # antiguo workflow `deno-typecheck.yml`, que se eliminó para simplificar
-        # el CI. Si el typecheck falla, el job falla.
+        # Corre CON typecheck completo (sin `--no-check`): este paso es el único
+        # chequeo de tipos de los edge functions en el CI simplificado.
         run: |
           readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
           deno test \
