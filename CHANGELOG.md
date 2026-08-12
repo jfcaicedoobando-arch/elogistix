@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.523.2] - 2026-08-12
+- Documentación — agregados al repo los 7 fix packs de la auditoría integral v13.523.1 en `docs/audit-fixes/` (`FIXES_LOVABLE_COMPLETO.md`, `fixes_BL.md`, `fixes_FE.md`, `fixes_UIA.md`, `fixes_UIB.md`, `fixes_UX.md`, `fixes_TC_N.md`) y enlazados desde `ARCHITECTURE.md` §21 junto al pack existente de Edge Functions. Sin cambios de código.
+
 ## [13.523.1] - 2026-08-12
 - Deuda (código muerto) — `knip --strict` quedó rojo tras borrar los tests triviales: esos tests eran los únicos consumidores de varios símbolos. Eliminado el código sin uso real: archivo `src/constants/cache.ts`; `CONCEPTOS_COSTO_USD` y `CONCEPTOS_COSTO_MXN` (`cotizacionConstants.ts`, reemplazados hace tiempo por el selector dinámico de conceptos); `CATEGORIAS_PROVEEDOR` y `labelSubtipoGasto` (`proveedorConstants.ts`); hooks `useTraspasos` y `useCancelarTraspaso` (sólo `useRegistrarTraspaso` está en uso); y re-exports muertos de barrel (`EXTENSIONES_ENTRANTES`, `ParejaArchivosEntrantes` en `facturasEntrantes.ts`, `EstadoProveedorFactura` en `proveedorFacturas.ts`). 0 cambios en lógica de negocio; `lint`, `lint:unused:strict`, `typecheck` y la suite completa (1016 archivos / 6805 tests) en verde.
 
