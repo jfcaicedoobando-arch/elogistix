@@ -4,7 +4,10 @@
  * (Auditoría Paso 6: separar lógica de presentación).
  */
 import { useState } from "react";
-import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/features/tesoreria/hooks";
+import {
+  useCuentasBancarias, useCrearCuenta, useActualizarCuenta, useEliminarCuenta,
+  useTieneMovimientosCuenta,
+} from "@/features/tesoreria/hooks";
 import type { Database } from "@/integrations/supabase/types";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { todayLocalISO } from "@/lib/date/today";
