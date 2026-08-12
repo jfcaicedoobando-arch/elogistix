@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.528.2] - 2026-08-12
+- Cobertura RLS: la tabla interna `demo_seed_state` (creada en EF-09) tenía la protección activada pero sin ninguna regla escrita, lo que el verificador de CI marcaba como hueco. Ahora tiene una regla explícita de "nadie puede leer ni escribir" para usuarios de la app; sólo los procesos internos la usan.
+
 ## [13.528.1] - 2026-08-12
 - CI verde: se actualizaron 10 pruebas que seguían esperando el contrato anterior a las Olas 3 y 4 (filtro `deleted_at` en leads/actividades de CRM, campos nuevos `esFallback`/`fechaAplicada` del tipo de cambio, título fijo de `notifyError` en el backfill legacy y fixture de fecha LOCAL en los KPIs de Dirección tras FE-04).
 - ESLint: el canon de "días vencido" de facturas se promovió a `src/lib/domain/facturaDiasVencido.ts` (las bandejas ya no importan `facturacion/domain`) y la captura de factura de proveedor bajó su complejidad extrayendo derivados puros a `_sections/capturaDerivados.ts`.
