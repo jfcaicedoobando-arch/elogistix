@@ -59,6 +59,22 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   const destino = useMemo(() => cuentas.find((c) => c.id === state.destinoId), [cuentas, state.destinoId]);
   const mismoMoneda = origen && destino && origen.moneda === destino.moneda;
 
+  // BL-04: cuando las monedas difieren sugerimos el TC DOF de la fecha del
+  // traspaso. Es sólo una sugerencia editable; si el usuario lo borra, la
+  // validación vuelve a exigirlo (nunca se asume 1).
+  const requiereTc = !!origen && !!destino && !mismoMoneda;
+  const { data: tcDof } = useTcDofPorFecha(state.fecha, requiereTc);
+  const tcSugerido = useMemo(
+    () => sugerirTc(tcDof, origen?.moneda, destino?.moneda),
+    [tcDof, origen?.moneda, destino?.moneda],
+  );
+
+  useEffect(() => {
+    if (!requiereTc || !tcSugerido) return;
+    setState((prev) => (prev.tipoCambio > 0 ? prev : { ...prev, tipoCambio: tcSugerido }));
+  }, [requiereTc, tcSugerido]);
+
+
   const montoDestino = useMemo(() => {
     if (!state.montoOrigen || state.montoOrigen <= 0) return 0;
     if (mismoMoneda) return state.montoOrigen;
