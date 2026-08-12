@@ -56,7 +56,7 @@ export default function TabPuertos() {
       // (antes el usuario lo descubría con un toast de error tras el clic).
       cell: ({ row }) =>
         canAdminTenant ? (
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setPuertoAEliminar(row.original)} aria-label={`Eliminar puerto ${row.original.name}`}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" disabled={eliminarPuerto.isPending} onClick={() => setPuertoAEliminar(row.original)} aria-label={`Eliminar puerto ${row.original.name}`}>
             <Trash2 className="h-4 w-4" />
           </Button>
         ) : null,
