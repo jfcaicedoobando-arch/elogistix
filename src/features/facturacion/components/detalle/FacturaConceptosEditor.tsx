@@ -37,8 +37,13 @@ export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conc
     EMPTY,
   } = useFacturaConceptosEditorController({ facturaId, organizationId, moneda });
 
+  // FE-11: si hay un renglón abierto (nuevo o en edición) sin guardar, avisa
+  // antes de salir de la pantalla o cerrar la pestaña.
+  const { guardDialog } = useDirtyGuard(showNew || editingId !== null);
+
   return (
     <Card>
+      {guardDialog}
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Editar conceptos del borrador</CardTitle>
         <Button
