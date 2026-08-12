@@ -94,9 +94,23 @@ Deno.serve(async (req) => {
     const { error: memErr } = await admin.rpc("ensure_demo_membership", { _user_id: userId });
     if (memErr) throw memErr;
 
-    // 3) Re-sembrar datos de ejemplo.
-    const { error: seedErr } = await admin.rpc("seed_demo_organization");
-    if (seedErr) throw seedErr;
+    // 3) Re-sembrar datos de ejemplo — EF-09: omitir si se sembró hace
+    // <10 min (cada llamada re-sembraba destructivamente).
+    const SEED_SKIP_MS = 10 * 60_000;
+    const { data: seedState } = await admin
+      .from("demo_seed_state")
+      .select("last_seeded_at")
+      .eq("id", true)
+      .maybeSingle();
+    const seededRecientemente = seedState?.last_seeded_at
+      && (Date.now() - new Date(seedState.last_seeded_at as string).getTime()) < SEED_SKIP_MS;
+    if (!seededRecientemente) {
+      const { error: seedErr } = await admin.rpc("seed_demo_organization");
+      if (seedErr) throw seedErr;
+      await admin
+        .from("demo_seed_state")
+        .upsert({ id: true, last_seeded_at: new Date().toISOString() });
+    }
 
     return new Response(
       JSON.stringify({ email: DEMO_EMAIL, password: DEMO_PASSWORD }),
