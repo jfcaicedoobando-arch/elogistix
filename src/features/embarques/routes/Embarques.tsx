@@ -25,11 +25,17 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 
 function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
+  if (!estadoActivo) {
+    // UIA-09: sin filtro de estado el contador viene del total server-side de
+    // EMBARQUES (computeCounts → totalCountServer), no de contenedores; llamarlo
+    // "contenedores" descuadraba contra el detalle del expediente.
+    return `${contenedoresCount} ${contenedoresCount === 1 ? "embarque" : "embarques"}`;
+  }
   const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
-  if (!estadoActivo) return cont;
   const exp = `${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`;
   return `${cont} en ${exp}`;
 }
+
 
 export default function Embarques() {
   useDocumentTitle("Embarques");
