@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const notifySuccess = vi.fn();
 const notifyError = vi.fn();
 const notifyWarning = vi.fn();
+const notifyInfo = vi.fn();
 const emitirRep = vi.fn();
 const mutateAsync = vi.fn();
 const registrarActividadMutate = vi.fn();
@@ -12,9 +15,14 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: (...a: unknown[]) => notifySuccess(...a),
   notifyError: (...a: unknown[]) => notifyError(...a),
   notifyWarning: (...a: unknown[]) => notifyWarning(...a),
+  notifyInfo: (...a: unknown[]) => notifyInfo(...a),
 }));
+class RepYaTimbradoErrorMock extends Error {
+  readonly code = "ya_timbrado_rep";
+}
 vi.mock("@/features/facturacion/services/repFacturapi", () => ({
   emitirRep: (...a: unknown[]) => emitirRep(...a),
+  esRepYaTimbrado: (e: unknown) => e instanceof RepYaTimbradoErrorMock,
 }));
 vi.mock("@/features/facturacion/hooks", () => ({
   useRegistrarPagoFactura: () => ({ mutateAsync, isPending: false }),
@@ -28,6 +36,19 @@ vi.mock("@/lib/formatters", () => ({
 }));
 
 import { useRegistrarPagoSubmit } from "../useRegistrarPagoSubmit";
+
+const invalidateSpy = vi.fn();
+let qc: QueryClient;
+function wrapper({ children }: { children: ReactNode }) {
+  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+}
+beforeEach(() => {
+  qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  qc.invalidateQueries = ((args: unknown) => {
+    invalidateSpy(args);
+    return Promise.resolve();
+  }) as QueryClient["invalidateQueries"];
+});
 
 const baseArgs = {
   facturaId: "fac-1",
@@ -47,6 +68,8 @@ beforeEach(() => {
   notifySuccess.mockReset();
   notifyError.mockReset();
   notifyWarning.mockReset();
+  notifyInfo.mockReset();
+  invalidateSpy.mockReset();
   emitirRep.mockReset();
   mutateAsync.mockReset();
   registrarActividadMutate.mockReset();
@@ -56,7 +79,7 @@ describe("useRegistrarPagoSubmit", () => {
   it("happy path PUE: registra pago, registra actividad y llama onSuccess sin timbrar REP", async () => {
     mutateAsync.mockResolvedValue({ pagoId: "pago-1", movimientoBancario: "no_aplica" });
     const onSuccess = vi.fn();
-    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess));
+    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess), { wrapper });
 
     await act(async () => {
       await result.current.submit(baseArgs);
@@ -83,7 +106,7 @@ describe("useRegistrarPagoSubmit", () => {
     mutateAsync.mockResolvedValue({ pagoId: "pago-2", movimientoBancario: "no_aplica" });
     emitirRep.mockResolvedValue(undefined);
     const onSuccess = vi.fn();
-    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess));
+    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess), { wrapper });
 
     await act(async () => {
       await result.current.submit({ ...baseArgs, esPpdTimbrada: true });
@@ -100,7 +123,7 @@ describe("useRegistrarPagoSubmit", () => {
     mutateAsync.mockResolvedValue({ pagoId: "pago-3", movimientoBancario: "no_aplica" });
     emitirRep.mockRejectedValue(new Error("SAT down"));
     const onSuccess = vi.fn();
-    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess));
+    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess), { wrapper });
 
     await act(async () => {
       await result.current.submit({ ...baseArgs, esPpdTimbrada: true });
@@ -117,7 +140,7 @@ describe("useRegistrarPagoSubmit", () => {
   it("PPD timbrada sin pagoId: no intenta timbrar REP", async () => {
     mutateAsync.mockResolvedValue({ pagoId: null, movimientoBancario: "no_aplica" });
     const onSuccess = vi.fn();
-    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess));
+    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess), { wrapper });
 
     await act(async () => {
       await result.current.submit({ ...baseArgs, esPpdTimbrada: true });
@@ -130,7 +153,7 @@ describe("useRegistrarPagoSubmit", () => {
   it("error al registrar pago: notifica error y NO llama onSuccess ni actividad", async () => {
     mutateAsync.mockRejectedValue(new Error("Saldo inválido"));
     const onSuccess = vi.fn();
-    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess));
+    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess), { wrapper });
 
     await act(async () => {
       await result.current.submit(baseArgs);
@@ -149,7 +172,7 @@ describe("useRegistrarPagoSubmit", () => {
     mutateAsync.mockResolvedValue({ pagoId: "pago-4", movimientoBancario: "no_aplica" });
     let resolveRep: () => void = () => {};
     emitirRep.mockImplementation(() => new Promise<void>((r) => { resolveRep = r; }));
-    const { result } = renderHook(() => useRegistrarPagoSubmit(vi.fn()));
+    const { result } = renderHook(() => useRegistrarPagoSubmit(vi.fn()), { wrapper });
 
     let submitPromise!: Promise<void>;
     await act(async () => {
@@ -163,5 +186,37 @@ describe("useRegistrarPagoSubmit", () => {
       await submitPromise;
     });
     expect(result.current.timbrandoRep).toBe(false);
+  });
+
+  it("PPD timbrada: tras el auto-REP invalida el historial de pagos (el botón Timbrar REP debe desaparecer)", async () => {
+    mutateAsync.mockResolvedValue({ pagoId: "pago-9", movimientoBancario: "no_aplica" });
+    emitirRep.mockResolvedValue(undefined);
+    const onSuccess = vi.fn();
+    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess), { wrapper });
+
+    await act(async () => {
+      await result.current.submit({ ...baseArgs, esPpdTimbrada: true });
+    });
+
+    const claves = invalidateSpy.mock.calls.map((c) => JSON.stringify(c[0]));
+    expect(claves.some((k) => k.includes("pagos_factura") && k.includes("fac-1"))).toBe(true);
+    expect(claves.some((k) => k.includes("rep_pendientes"))).toBe(true);
+  });
+
+  it("PPD timbrada: si el pago ya tenía REP, avisa en tono informativo y refresca", async () => {
+    mutateAsync.mockResolvedValue({ pagoId: "pago-10", movimientoBancario: "no_aplica" });
+    emitirRep.mockRejectedValue(new RepYaTimbradoErrorMock("Este pago ya tiene REP timbrado."));
+    const onSuccess = vi.fn();
+    const { result } = renderHook(() => useRegistrarPagoSubmit(onSuccess), { wrapper });
+
+    await act(async () => {
+      await result.current.submit({ ...baseArgs, esPpdTimbrada: true });
+    });
+
+    expect(notifyInfo).toHaveBeenCalledWith(undefined, expect.objectContaining({
+      title: "Este pago ya tenía su REP timbrado",
+    }));
+    expect(notifyError).not.toHaveBeenCalled();
+    expect(invalidateSpy).toHaveBeenCalled();
   });
 });

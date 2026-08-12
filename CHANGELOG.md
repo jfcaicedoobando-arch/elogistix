@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.549.0] - 2026-08-12
+- Facturación · REP: al registrar un pago de una factura PPD, el timbrado automático del REP ya refresca el historial de pagos, la bandeja **REP pendientes** y la factura. Antes la pantalla quedaba con el estado previo y el botón **"Timbrar REP"** seguía visible aunque el REP ya existía (caso F977).
+- Si alguien vuelve a presionar **"Timbrar REP"** en un pago que ya tiene REP, ahora se muestra un aviso informativo ("Este pago ya tenía su REP timbrado") y la pantalla se actualiza con el folio real, en lugar del error genérico *"El servicio en la nube rechazó la solicitud"*.
+- Los errores de timbrado y cancelación de REP ahora muestran el mensaje real en español que devuelve el servicio (incluidas las validaciones fiscales detalladas) en vez del texto genérico del SDK. (Sentry JAVASCRIPT-REACT-52)
+
 ## [13.548.0] - 2026-08-12
 - Detalle de factura (y las 23 pantallas de detalle que comparten el encabezado): se corrigió el acomodo entre **1024 y 1280 px** de ancho —el rango del preview y de muchas laptops—, donde la barra de acciones aplastaba la columna del título y el folio quedaba invisible o cortado detrás de los botones.
 - La barra de acciones ahora baja a su propio renglón completo debajo de 1280 px y el título conserva un ancho mínimo legible; con esto también desaparece el hueco vertical vacío que se formaba antes de la cinta de totales.

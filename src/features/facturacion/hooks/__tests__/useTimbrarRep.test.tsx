@@ -13,6 +13,11 @@ const emitirRep = vi.fn();
 const cancelarRep = vi.fn();
 const toastSuccess = vi.fn();
 const notifyError = vi.fn();
+const notifyInfo = vi.fn();
+
+class RepYaTimbradoErrorMock extends Error {
+  readonly code = "ya_timbrado_rep";
+}
 
 vi.mock("sonner", () => ({
   toast: { success: (...a: unknown[]) => toastSuccess(...a) },
@@ -20,6 +25,7 @@ vi.mock("sonner", () => ({
 vi.mock("@/features/facturacion/services/repFacturapi", () => ({
   emitirRep: (...a: unknown[]) => emitirRep(...a),
   cancelarRep: (...a: unknown[]) => cancelarRep(...a),
+  esRepYaTimbrado: (e: unknown) => e instanceof RepYaTimbradoErrorMock,
 }));
 vi.mock("@/features/facturacion/services/repAutoEmail", () => ({
   autoEnviarRepPorCorreo: vi.fn().mockResolvedValue(undefined),
@@ -30,7 +36,7 @@ vi.mock("@/features/profit/hooks/invalidateProfitDependencies", () => ({
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
   notifySuccess: (_t: unknown, opts: { title: string }) => toastSuccess(opts.title),
-  notifyInfo: vi.fn(),
+  notifyInfo: (...a: unknown[]) => notifyInfo(...a),
 }));
 
 import { useTimbrarRep, useCancelarRep } from "../useTimbrarRep";
@@ -46,6 +52,7 @@ beforeEach(() => {
   cancelarRep.mockReset();
   toastSuccess.mockReset();
   notifyError.mockReset();
+  notifyInfo.mockReset();
 });
 
 describe("useTimbrarRep", () => {
@@ -88,6 +95,25 @@ describe("useTimbrarRep", () => {
 
     expect(notifyError).toHaveBeenCalledTimes(1);
     expect(notifyError.mock.calls[0]![1].description).toContain("rep fail");
+    qc.clear();
+  });
+
+
+
+  it("409 ya timbrado: avisa en tono informativo y refresca en lugar de alertar", async () => {
+    emitirRep.mockRejectedValue(new RepYaTimbradoErrorMock("Este pago ya tiene REP timbrado."));
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const spy = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useTimbrarRep("fac-1"), { wrapper: wrapper(qc) });
+
+    result.current.mutate("pago-4");
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(notifyError).not.toHaveBeenCalled();
+    expect(notifyInfo).toHaveBeenCalledWith(undefined, expect.objectContaining({
+      title: "Este pago ya tenía su REP timbrado",
+    }));
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["pagos_factura", "fac-1"] });
     qc.clear();
   });
 });

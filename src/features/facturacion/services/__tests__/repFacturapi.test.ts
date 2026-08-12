@@ -3,7 +3,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { functions: { invoke } } }));
 
-import { emitirRep, cancelarRep } from "../repFacturapi";
+import { emitirRep, cancelarRep, esRepYaTimbrado } from "../repFacturapi";
+
+/** Simula lo que hace `supabase.functions.invoke` con status ≠ 2xx. */
+function httpError(status: number, body: unknown) {
+  return {
+    message: "Edge Function returned a non-2xx status code",
+    context: new Response(JSON.stringify(body), { status }),
+  };
+}
 
 describe("repFacturapi service", () => {
   beforeEach(() => invoke.mockReset());
@@ -46,5 +54,37 @@ describe("repFacturapi service", () => {
     await expect(cancelarRep("p1", "02")).rejects.toThrow("x");
     invoke.mockResolvedValueOnce({ data: { error: "NO" }, error: null });
     await expect(cancelarRep("p1", "02")).rejects.toThrow("NO");
+  });
+
+  it("emitirRep traduce el 409 ya_timbrado_rep a mensaje en español (no el genérico del SDK)", async () => {
+    invoke.mockResolvedValueOnce({
+      data: null,
+      error: httpError(409, { error: "ya_timbrado_rep", message: "Este pago ya tiene REP timbrado." }),
+    });
+    const err = await emitirRep("p1").catch((e: unknown) => e);
+    expect(esRepYaTimbrado(err)).toBe(true);
+    expect((err as Error).message).toBe("Este pago ya tiene REP timbrado.");
+  });
+
+  it("emitirRep lee el cuerpo del 422 con las validaciones fiscales", async () => {
+    invoke.mockResolvedValueOnce({
+      data: null,
+      error: httpError(422, {
+        error: "validacion",
+        message: "Datos fiscales incompletos",
+        issues: [{ field: "regimen_fiscal", message: "régimen fiscal requerido" }],
+      }),
+    });
+    const err = await emitirRep("p1").catch((e: unknown) => e);
+    expect(esRepYaTimbrado(err)).toBe(false);
+    expect((err as Error).message).toBe("Datos fiscales incompletos: régimen fiscal requerido");
+  });
+
+  it("cancelarRep también expone el mensaje real del backend", async () => {
+    invoke.mockResolvedValueOnce({
+      data: null,
+      error: httpError(409, { error: "ya_cancelado", message: "El REP ya estaba cancelado." }),
+    });
+    await expect(cancelarRep("p1", "02")).rejects.toThrow("El REP ya estaba cancelado.");
   });
 });
