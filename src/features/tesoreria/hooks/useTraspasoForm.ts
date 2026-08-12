@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 
 type Cuenta = Tables<"cuentas_bancarias">;
 
