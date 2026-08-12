@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.545.0] - 2026-08-12
+- Embarques: el panel de alertas ahora separa **Cierre operativo** (embarques Entregado o EIR con documentos, cobros o pagos pendientes) de **Cierre administrativo** (embarques Por liquidar).
+- Cada tarjeta sigue filtrando el listado al hacer clic; el total del badge del sidebar no cambia.
+
+
 ## [13.544.2] - 2026-08-12
 - CxP: se corrigió el error que tumbaba el modal "Capturar factura de proveedor" al abrirlo desde /compras/facturas (aviso de cambios sin guardar incompatible con el router de la app).
 - El aviso "¿Salir sin guardar?" ahora funciona en todos los formularios largos (CxP, conceptos de factura y wizard de embarques) al hacer clic en enlaces internos o cerrar la pestaña.
