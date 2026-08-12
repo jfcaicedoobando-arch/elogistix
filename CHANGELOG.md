@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.537.0] - 2026-08-12
+- Cobranza: el rol **tesorero** ya puede registrar cobros de facturas de cliente (individuales y en lote). La base de datos siempre se lo permitía, pero la interfaz le escondía el botón (FE-10).
+
 ## [13.536.0] - 2026-08-12
 - Embarques: cuando la búsqueda o los filtros no devuelven resultados, la tabla muestra un aviso con el botón "Limpiar filtros" (UIA-15).
 - Embarques: se restauró el botón "Nuevo embarque" para todos los roles; si el alta directa no aplica, explica que los expedientes nacen de una cotización aceptada y lleva a Cotizaciones (UIA-16).

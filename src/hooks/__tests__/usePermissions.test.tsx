@@ -85,14 +85,17 @@ describe("usePermissions", () => {
     expect(result.current.canSubirFacturaEntranteEmbarque).toBe(false);
   });
 
-  it("tesorero → sólo paga proveedores", () => {
+  it("tesorero → paga proveedores y aplica cobros, no factura ni captura CxP", () => {
     mockUseAuth.mockReturnValue({ role: "tesorero", effectiveRole: "tesorero" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
     const { result } = renderHook(() => usePermissions());
     expect(result.current.canPagarProveedor).toBe(true);
+    // FE-10: espejo de `es_escritor_financiero` en la base, que autoriza al
+    // tesorero a escribir pagos de facturas de cliente.
+    expect(result.current.canRegistrarCobro).toBe(true);
     expect(result.current.canEmitirFactura).toBe(false);
     expect(result.current.canCapturarFacturaProveedor).toBe(false);
-    expect(result.current.canRegistrarCobro).toBe(false);
   });
+
 
   it("ejecutivo_cobranza → sólo registra cobros", () => {
     mockUseAuth.mockReturnValue({ role: "ejecutivo_cobranza", effectiveRole: "ejecutivo_cobranza" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
