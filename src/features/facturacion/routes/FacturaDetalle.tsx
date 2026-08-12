@@ -40,6 +40,9 @@ export default function FacturaDetalle() {
   const controller = useFacturaDetalleController(idValido ? id : undefined);
   const { canEdit, factura, isLoading, error, refetch, flags } = controller;
   useRegisterBreadcrumbLabel(id, factura?.numero);
+  // UIA-12: título de pestaña por folio de factura.
+  useDocumentTitle(factura?.numero ? `Factura ${factura.numero}` : "Factura");
+
   const dialogs = useFacturaDetalleDialogs();
   const { puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => dialogs.setTimbrarOpen(true));
