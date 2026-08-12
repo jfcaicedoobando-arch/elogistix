@@ -8,13 +8,17 @@ import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { usePagoClienteLote } from "@/features/facturacion/hooks/usePagoClienteLote";
 import { todayLocalISO } from "@/lib/date/today";
 import {
+  erroresPorRenglon,
   obtenerFacturasConRep,
+  repartirCero,
   repartirFifo,
+  repartirTodo,
   round2,
   validarCobroLote,
   type FacturaCobroCandidata,
   type RenglonCobro,
 } from "@/features/facturacion/services/pagoClienteLote";
+
 
 interface Args {
   open: boolean;
