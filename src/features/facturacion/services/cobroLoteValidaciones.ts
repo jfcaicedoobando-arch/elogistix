@@ -73,3 +73,23 @@ export function errorMonedaCuenta(opts: {
   }
   return null;
 }
+
+/**
+ * Error puntual por renglón (para resaltar la fila en la tabla), derivado de
+ * las mismas reglas que `validarCobroLote`: sólo el tope por saldo aplica a un
+ * renglón aislado.
+ */
+export function erroresPorRenglon(
+  facturas: FacturaCobroCandidata[],
+  renglones: RenglonCobro[],
+): Record<string, string> {
+  const errores: Record<string, string> = {};
+  for (const r of renglones) {
+    if (r.monto <= 0) continue;
+    const f = facturas.find((x) => x.factura_id === r.factura_id);
+    if (f && r.monto > round2(f.saldo) + TOLERANCIA_CENTAVOS) {
+      errores[r.factura_id] = "El importe excede el saldo de esta factura.";
+    }
+  }
+  return errores;
+}
