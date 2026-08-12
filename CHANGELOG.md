@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.544.1] - 2026-08-12
+- Arquitectura: se dividieron el listado de embarques y el modal de traspasos en componentes más chicos (tarjeta móvil y selector de cuenta) para respetar el límite de 200 líneas por archivo; sin cambios visibles para el usuario.
+
+
 ## [13.544.0] - 2026-08-12
 - Tesorería: nueva edición de cuentas bancarias (botón de lápiz en cada tarjeta) para corregir banco, alias, número, CLABE, saldo inicial y fecha de corte; el cambio queda en la bitácora.
 - Tesorería: al modificar el saldo inicial o su fecha de corte se muestra un aviso de que se recalculan saldos y conciliación; la moneda no se puede cambiar si la cuenta ya tiene movimientos.
