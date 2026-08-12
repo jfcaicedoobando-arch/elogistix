@@ -20,7 +20,8 @@ function etiquetaCuentaBitacora(cuenta: Pick<CuentaBancaria, "banco" | "alias" |
 }
 
 export async function listarCuentas(activas = true): Promise<CuentaBancaria[]> {
-  let q = supabase.from("cuentas_bancarias").select(CUENTA_BANCARIA_COLUMNS).order("alias", { ascending: true });
+  // FIX BL-10: las cuentas eliminadas nunca se listan aquí; `activas` es filtro adicional.
+  let q = supabase.from("cuentas_bancarias").select(CUENTA_BANCARIA_COLUMNS).is("deleted_at", null).order("alias", { ascending: true });
   if (activas) q = q.eq("activa", true);
   return unwrapOr(q, [] as CuentaBancaria[]) as Promise<CuentaBancaria[]>;
 }
