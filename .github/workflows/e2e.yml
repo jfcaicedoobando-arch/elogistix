@@ -77,25 +77,11 @@ env:
   E2E_STRICT_FIXTURES: ${{ github.event.inputs.strict_fixtures || '' }}
 
 jobs:
-  # Solo corre la suite si post-deploy-smoke finalizó "success"; si el smoke
-  # falla no tiene sentido gastar minutos en la suite completa — abrirá su
-  # propio issue.
-  guard-workflow-run:
-    name: Guard (workflow_run success)
-    runs-on: ubuntu-24.04
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - run: echo "ok"
-
   guard-secrets:
     name: Guard (E2E secrets)
-    needs: [guard-workflow-run]
     runs-on: ubuntu-24.04
-    # v13.518.1 (GHA-audit seguridad) — los secrets del environment e2e-staging
-    # NO se exponen a PRs de forks: un PR que edite un spec podría exfiltrarlos.
-    # Sólo corre en PRs de ramas internas del propio repo (o en dispatch/
-    # schedule/workflow_run, donde head.repo es nulo y la condición se cumple).
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    # El workflow sólo corre por schedule o dispatch manual (ramas internas),
+    # así que los secrets del environment e2e-staging nunca se exponen a forks.
     # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
     # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
     environment: e2e-staging
