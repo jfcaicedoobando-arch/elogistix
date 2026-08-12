@@ -143,6 +143,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-tsc-
 
+      # v13.522.0 — Mismo guard que en `build`: si appVersion.ts está vacío,
+      # tsc falla con errores en cascada poco claros. Abortar temprano.
+      - name: Verify appVersion.ts integrity
+        run: |
+          set -euo pipefail
+          FILE="src/constants/appVersion.ts"
+          if [ ! -s "$FILE" ]; then
+            echo "::error::$FILE está vacío o no existe."
+            exit 1
+          fi
+          if ! grep -qE "export\s+const\s+APP_VERSION\s*=" "$FILE"; then
+            echo "::error::$FILE no exporta APP_VERSION."
+            cat "$FILE"
+            exit 1
+          fi
+
       - name: TypeScript typecheck (incremental)
         run: bun run typecheck
 
@@ -268,6 +284,25 @@ jobs:
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
+
+      # v13.522.0 — Guard preventivo: si appVersion.ts queda vacío o sin
+      # exportar APP_VERSION (regresión observada en v13.521.0), el build de
+      # Rollup falla con un error críptico. Verificamos antes para dar un
+      # mensaje claro y abortar temprano.
+      - name: Verify appVersion.ts integrity
+        run: |
+          set -euo pipefail
+          FILE="src/constants/appVersion.ts"
+          if [ ! -s "$FILE" ]; then
+            echo "::error::$FILE está vacío o no existe. Restaura: export const APP_VERSION = \"X.Y.Z\""
+            exit 1
+          fi
+          if ! grep -qE "export\s+const\s+APP_VERSION\s*=" "$FILE"; then
+            echo "::error::$FILE no exporta APP_VERSION. Contenido actual:"
+            cat "$FILE"
+            exit 1
+          fi
+          echo "✅ $FILE OK: $(grep APP_VERSION "$FILE")"
 
       # v13.303.5 — `ANALYZE=true` (rollup-plugin-visualizer) es costoso.
       # Sólo lo activamos en push a `main` para tener el snapshot histórico.

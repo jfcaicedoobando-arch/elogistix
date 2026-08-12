@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.522.0] - 2026-08-12
+- CI (guard preventivo) — los jobs `typecheck` y `build` de `ci.yml` ahora verifican que `src/constants/appVersion.ts` no esté vacío y que exporte `APP_VERSION` antes de correr. Si falla, aborta con un mensaje claro (`::error::`) en lugar del error críptico de Rollup/tsc en cascada. Previene la recurrencia de la regresión de v13.521.0 donde el archivo quedó vacío.
+
 ## [13.521.0] - 2026-08-12
 - CI (simplificación) — se eliminaron 4 workflows sin valor real: `deploy-gate` (el deploy es manual vía Lovable), `release-compatibility` (no hacemos releases versionados; también se borraron `scripts/db/release-manifest.ts`, los scripts `db:release-manifest:*` de `package.json` y `docs/ops/release-manifest.md`; `supabase/releases/` queda como histórico), `install-canary` y `deno-typecheck`.
 - CI — el job `edge-functions` de `ci.yml` ahora corre `deno test` **con** typecheck completo (se quitó `--no-check`), absorbiendo el workflow eliminado.
