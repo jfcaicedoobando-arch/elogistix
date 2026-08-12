@@ -26,6 +26,7 @@ import {
   guardarSolicitudPreferencias,
   leerSolicitudPreferencias,
 } from "@/features/portal/domain/solicitudPreferencias";
+import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 
 interface Props {
   open: boolean;
@@ -148,12 +149,18 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
         <div className="space-y-1.5">
           <Label htmlFor="solicitud-origen">Origen <span className="text-destructive">*</span></Label>
           <Input id="solicitud-origen" value={origen} onChange={(e) => setOrigen(e.target.value)}
-            placeholder="Shanghái, China" />
+            placeholder="Shanghái, China" aria-invalid={origen.trim() === ""} />
+          {origen.trim() === "" && (
+            <p className="text-xs text-muted-foreground">{COPY_VALIDACION.requerido("el origen")}</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="solicitud-destino">Destino <span className="text-destructive">*</span></Label>
           <Input id="solicitud-destino" value={destino} onChange={(e) => setDestino(e.target.value)}
-            placeholder="Manzanillo, México" />
+            placeholder="Manzanillo, México" aria-invalid={destino.trim() === ""} />
+          {destino.trim() === "" && (
+            <p className="text-xs text-muted-foreground">{COPY_VALIDACION.requerido("el destino")}</p>
+          )}
         </div>
       </FormDialogSection>
 
@@ -169,6 +176,10 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
             rows={3} placeholder="Fechas estimadas, número de contenedores, requerimientos especiales…" />
         </div>
       </FormDialogSection>
+
+      {!puedeEnviar && (
+        <p className="text-xs text-muted-foreground">{COPY_VALIDACION.camposObligatorios}</p>
+      )}
     </FormDialogShell>
   );
 }
