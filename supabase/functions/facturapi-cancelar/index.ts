@@ -14,7 +14,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
-import { getFacturapiClient } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -139,11 +139,20 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   try {
     const cancelPayload: { motive: string; substitution?: string } = { motive: motivo };
     if (sustituyeFacturapiId) cancelPayload.substitution = sustituyeFacturapiId;
-    cancelResp = await facturapi.invoices.cancel(
-      factura.facturapi_id,
-      cancelPayload,
+    // EF-05: timeout defensivo (guía facturapiClient.ts "Envuelve TODA llamada
+    // al SDK"). En timeout el cron reconciliar-cancelaciones sincroniza el
+    // estado real de la factura.
+    cancelResp = await withFacturapiTimeout(
+      "invoices.cancel",
+      facturapi.invoices.cancel(factura.facturapi_id, cancelPayload),
     ) as FapiCancelResponse;
   } catch (err) {
+    if (err instanceof FacturapiTimeoutError) {
+      return jsonResponse(
+        { error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message },
+        504,
+      );
+    }
     return await handleCancelFailure({
       err,
       supabase,
