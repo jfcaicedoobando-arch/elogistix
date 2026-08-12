@@ -1,36 +1,25 @@
-// @ts-nocheck — Deno test runtime (URLs https://deno.land/...). Vitest lo ignora vía glob.
-/**
- * Plan C (audit Sentry): smoke test del wrapper `wrapEdgeHandler`.
- *  - Devuelve la respuesta del handler en happy path.
- *  - Re-lanza el error original cuando el handler tira (sin DSN no se intenta
- *    enviar a Sentry, así que la prueba no necesita red).
- */
-import { assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { wrapEdgeHandler } from "./sentry.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { scrubExceptionMessage } from "./sentry.ts";
 
-Deno.test("wrapEdgeHandler — propaga la respuesta del handler", async () => {
-  const handler = wrapEdgeHandler("test-fn-ok", () => new Response("ok", { status: 200 }));
-  const res = await handler(new Request("http://x/test"));
-  assertEquals(res.status, 200);
-  assertEquals(await res.text(), "ok");
-});
-
-Deno.test("wrapEdgeHandler — re-lanza el error original del handler", async () => {
-  const boom = new Error("handler-explota");
-  const handler = wrapEdgeHandler("test-fn-fail", () => {
-    throw boom;
-  });
-  await assertRejects(
-    () => handler(new Request("http://x/test")),
-    Error,
-    "handler-explota",
+Deno.test("scrubExceptionMessage redacta query params sensibles", () => {
+  assertEquals(
+    scrubExceptionMessage("GET https://api.ejemplo.com/x?token=SECRET123 falló"),
+    "GET https://api.ejemplo.com/x?token=[Filtered] falló",
+  );
+  assertEquals(
+    scrubExceptionMessage("fetch /v1?a=1&api_key=abc123&b=2 timeout"),
+    "fetch /v1?a=1&api_key=[Filtered]&b=2 timeout",
   );
 });
 
-Deno.test("wrapEdgeHandler — es idempotente (mismo nombre, dos invocaciones)", async () => {
-  const handler = wrapEdgeHandler("test-fn-idem", () => new Response("a"));
-  const r1 = await handler(new Request("http://x/1"));
-  const r2 = await handler(new Request("http://x/2"));
-  assertEquals(await r1.text(), "a");
-  assertEquals(await r2.text(), "a");
+Deno.test("scrubExceptionMessage redacta credenciales Bearer", () => {
+  assertEquals(
+    scrubExceptionMessage("401 con header Bearer eyJhbGciOiJIUzI1NiJ9.abc.def"),
+    "401 con header Bearer [Filtered]",
+  );
+});
+
+Deno.test("scrubExceptionMessage no altera mensajes sin secretos", () => {
+  const msg = "No se pudo timbrar la factura F-000123 (SAT 504)";
+  assertEquals(scrubExceptionMessage(msg), msg);
 });
