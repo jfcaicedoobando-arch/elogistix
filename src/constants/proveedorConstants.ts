@@ -57,8 +57,3 @@ export const SUBTIPOS_GASTO_OPERATIVO: { value: SubtipoGasto; label: string }[] 
 ];
 
 
-export function labelSubtipoGasto(s: SubtipoGasto | null | undefined): string {
-  if (!s) return '—';
-  return SUBTIPOS_GASTO_OPERATIVO.find((x) => x.value === s)?.label ?? s;
-}
-
