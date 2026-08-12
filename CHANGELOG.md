@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.545.1] - 2026-08-12
+- Tesorería: se corrigió el error "No tienes permisos... folio secuencias" al registrar un traspaso entre cuentas propias; el folio TR- ahora se asigna con una función interna que valida la organización.
+
 ## [13.545.0] - 2026-08-12
 - Embarques: el panel de alertas ahora separa **Cierre operativo** (embarques Entregado o EIR con documentos, cobros o pagos pendientes) de **Cierre administrativo** (embarques Por liquidar).
 - Cada tarjeta sigue filtrando el listado al hacer clic; el total del badge del sidebar no cambia.
