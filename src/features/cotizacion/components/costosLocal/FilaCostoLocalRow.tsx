@@ -77,6 +77,14 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
               <PenLine className="h-3 w-3" /> Concepto libre: se pedirá la clave SAT al facturar.
             </p>
           )}
+          {conceptoFaltante && (
+            <p
+              className="mt-0.5 text-2xs text-destructive"
+              data-testid={`concepto-faltante-aviso-${gi}`}
+            >
+              Selecciona el concepto de este renglón; sin nombre no se genera el concepto de venta.
+            </p>
+          )}
         </div>
         <Input value={fila.proveedor} onChange={e => onUpdate(gi, "proveedor", e.target.value)} className="h-9 text-sm w-[120px]" placeholder="Proveedor" />
         <div className="w-[130px]">
