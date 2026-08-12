@@ -15,8 +15,7 @@ export interface FapiInvoice {
 }
 
 interface TimbrarDeps {
-  // deno-lint-ignore no-explicit-any
-  facturapi: { invoices: { create: (payload: unknown) => Promise<any> } };
+  facturapi: { invoices: { create: (payload: unknown) => Promise<unknown> } };
   payload: Record<string, unknown>;
   supabase: SupabaseClient;
   pagoId: string;
