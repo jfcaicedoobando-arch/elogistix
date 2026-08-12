@@ -88,7 +88,7 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
           </div>
           <div className="space-y-1 w-24">
             <Label>%</Label>
-            <Input type="number" step="0.1" value={nuevoPct} onChange={(e) => setNuevoPct(e.target.value)} />
+            <Input type="number" step="0.1" min="0" max="100" value={nuevoPct} onChange={(e) => setNuevoPct(e.target.value)} />
           </div>
           <Button onClick={agregar} disabled={!nuevaVendedora || upsert.isPending}>
             <Plus className="h-4 w-4 mr-1" /> Agregar
