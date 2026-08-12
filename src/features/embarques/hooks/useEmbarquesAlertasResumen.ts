@@ -14,6 +14,7 @@ import { queryKeys } from "@/lib/query";
 const EMPTY: EmbarquesAlertasResumen = {
   demora: new Set<string>(),
   garantia: new Set<string>(),
+  cierre_operativo: new Set<string>(),
   admin_pendiente: new Set<string>(),
   total: 0,
 };
