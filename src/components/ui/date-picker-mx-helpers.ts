@@ -58,7 +58,9 @@ export function applyMaskTyping(raw: string): string {
   if (!/[/.-]/.test(limpio)) return applyMask(limpio);
   const trailing = /[/.-]$/.test(limpio);
   const partes = limpio.split(/[/.-]+/).slice(0, 3);
+  while (partes.length > 1 && partes[partes.length - 1] === "") partes.pop();
   const cerradas = trailing ? partes.length : partes.length - 1;
+
   const out = partes.map((p, i) => {
     const v = p.slice(0, i === 2 ? 4 : 2);
     return i < 2 && i < cerradas ? v.padStart(2, "0") : v;
