@@ -50,6 +50,7 @@ export async function fetchFacturasPorTimbrar(orgId: string): Promise<FilaPorTim
     .eq("organization_id", orgId)
     .eq("estado", "Borrador")
     .is("facturapi_id", null)
+    .is("deleted_at", null)
     .gte("fecha_emision", FECHA_INICIO_TIMBRADO_SISTEMA.slice(0, 10))
     .order("fecha_emision", { ascending: false })
     .limit(500);
@@ -71,6 +72,7 @@ export async function fetchFacturasPorEnviar(orgId: string): Promise<FilaPorEnvi
       .eq("organization_id", orgId)
       .not("uuid_fiscal", "is", null)
       .in("estado", ["Emitida", "Parcialmente pagada", "Pagada"])
+      .is("deleted_at", null)
       .order("fecha_emision", { ascending: false })
       .limit(1000),
     supabase
@@ -137,13 +139,15 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .eq("organization_id", orgId)
       .eq("estado", "Borrador")
       .is("facturapi_id", null)
+      .is("deleted_at", null)
       .gte("fecha_emision", FECHA_INICIO_TIMBRADO_SISTEMA.slice(0, 10)),
     supabase
       .from("facturas")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId)
       .not("uuid_fiscal", "is", null)
-      .in("estado", ["Emitida", "Parcialmente pagada", "Pagada"]),
+      .in("estado", ["Emitida", "Parcialmente pagada", "Pagada"])
+      .is("deleted_at", null),
     supabase
       .from("factura_envios")
       .select("factura_id", { count: "exact", head: true })
@@ -154,12 +158,14 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId)
       .in("estado", ["Emitida", "Parcialmente pagada"])
+      .is("deleted_at", null)
       .gte("fecha_vencimiento", hoy),
     supabase
       .from("facturas")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId)
       .in("estado", ["Emitida", "Parcialmente pagada"])
+      .is("deleted_at", null)
       .lt("fecha_vencimiento", hoy),
     supabase
       .from("pagos_factura")

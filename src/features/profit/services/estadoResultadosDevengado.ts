@@ -80,7 +80,8 @@ async function fetchFacturasMes(orgId: string | null, desde: string, hasta: stri
     .lte("fecha_emision", hasta)
     // Excluye Cancelada y Sustituida: ambas dejan de ser CFDI vigentes y no
     // deben sumar en el EERR devengado. Ref: FACTURA_ESTADOS_VIVOS.
-    .in("estado", [...FACTURA_ESTADOS_VIVOS]);
+    .in("estado", [...FACTURA_ESTADOS_VIVOS])
+    .is("deleted_at", null);
   if (orgId) q = q.eq("organization_id", orgId);
   return mapFacturaRows(await unwrapOr(q, []));
 }

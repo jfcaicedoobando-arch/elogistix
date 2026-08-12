@@ -64,6 +64,7 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
     `)
     .in("cliente_id", filters.clienteIds)
     .in("estado", [...ESTADOS_ACTIVOS])
+    .is("deleted_at", null)
     .order("fecha_emision", { ascending: false })
     .limit(LIMITE_ESTADO_CUENTA);
 

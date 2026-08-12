@@ -130,7 +130,8 @@ export async function fetchExpedientesConFacturaVivaLegacy(
     .select("expediente")
     .in("expediente", expedientes)
     .in("estado", FACTURA_ESTADOS_VIVOS_HUECO)
-    .not("factura_pdf_url", "is", null);
+    .not("factura_pdf_url", "is", null)
+    .is("deleted_at", null);
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;
   if (error) throw error;

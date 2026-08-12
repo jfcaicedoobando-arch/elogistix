@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.520.0] - 2026-08-11
+- Fix (facturación) — las facturas borradas lógicamente ya no aparecen como pendientes de pago. La bandeja "Vencidas" mostraba 6 duplicados legacy con `deleted_at` (726-DUP-*, 755-DUP-fe48bee7, 848, 900-DUP-c741c8c7) porque `fetchCobranza` filtraba por estado pero no por borrado lógico. Se agregó `.is("deleted_at", null)` en cobranza, conteos y listados de bandejas (`bandejas.ts`), estado de cuenta, exportaciones de cartera/Aging (`exports.ts`), financieros del cliente, portal del cliente, hueco de facturación y EERR devengado. Sin migración ni cambio de datos.
+- Guardrail — nuevo test de arquitectura `facturas-soft-delete-reads` que falla si alguna lectura de `facturas` omite el filtro de borrado lógico (con lista de exentos para lecturas por id intencionales).
+
 ## [13.519.1] - 2026-08-11
 - Datos (corrección manual) — se marcaron como **Pagada** las 25 facturas legacy (número sin prefijo `F`, emitidas fuera del sistema) que estaban en `Vencida`/`Borrador`: 18 de Elogistix (103,194.10 USD + 86,420 MXN) y 8 de la organización demo. Se agregó la nota `[Legacy] Cobrada en sistema anterior; pago no registrado en la app.` en las 31 facturas legacy sin pago registrado. No se crearon pagos (sin impacto en flujo de caja, conciliación ni REPs) y no se tocaron montos, monedas, fechas ni clientes. Total legacy: 133, todas en Pagada.
 

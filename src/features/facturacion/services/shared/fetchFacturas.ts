@@ -24,7 +24,8 @@ export async function fetchFacturasPorExpedientes(
     .from("facturas")
     .select("expediente, factura_pdf_url")
     .in("expediente", expedientes)
-    .not("factura_pdf_url", "is", null);
+    .not("factura_pdf_url", "is", null)
+    .is("deleted_at", null);
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;
   if (error) throw error;
