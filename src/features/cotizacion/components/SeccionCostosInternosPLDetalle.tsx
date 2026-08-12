@@ -32,6 +32,14 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
   const { canEdit } = usePermissions();
   const { data: costosGuardados, isLoading } = useCotizacionCostos(cotizacionId);
   const upsert = useUpsertCotizacionCostos();
+  const tasaIva = useTasaIVA();
+  // B-081: venta ya persistida en `conceptos_venta`; si suma 0 y los costos sí
+  // traen venta, ofrecemos re-sincronizar.
+  const totalVentaGuardada = useMemo(
+    () => [...conceptosUSD, ...conceptosMXN]
+      .reduce((s, c) => s + (Number(c.cantidad) || 0) * (Number(c.precio_unitario) || 0), 0),
+    [conceptosUSD, conceptosMXN],
+  );
 
   const [filas, setFilas] = useState<FilaCostoDetalle[]>([]);
   const [initialized, setInitialized] = useState(false);
