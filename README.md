@@ -43,6 +43,10 @@ Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en Méxi
 
 Requisitos: Node.js 20+ y `npm` o `bun`.
 
+Build de producción: `npm run build` con sourcemaps requiere ~8 GB de RAM
+(runners de CI: 16 GB). En entornos con ≤4 GB usar `npm run build:low-mem`
+(sin sourcemaps; el bundle es funcionalmente idéntico).
+
 ```sh
 git clone <repo-url>
 cd librecarga
