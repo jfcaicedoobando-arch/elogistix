@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.543.2] - 2026-08-12
+- Calidad de código: los correos de autenticación, el timbrado de REP y la recuperación de timbrados se dividieron en módulos más chicos (sin cambios funcionales) para que el CI pase el lint estricto.
+- Cobros: la validación de la fecha del pago vive en su propio archivo; mismas reglas y mensajes que antes.
+
 ## [13.543.1] - 2026-08-12
 - Rastreo público: se re-aplicaron los permisos de ejecución de la función del enlace público (auditoría H6-15); sin cambios funcionales.
 - Portal de clientes: los datos de cliente, contacto y organización se validan en el boundary (adopción de zod, ratchet en 0).
