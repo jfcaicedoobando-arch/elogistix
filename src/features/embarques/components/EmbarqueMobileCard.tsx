@@ -15,7 +15,7 @@ export interface EmbarqueMobileCardData {
   eta: Parameters<typeof calcularEstadoEmbarque>[3];
   estado: Parameters<typeof calcularEstadoEmbarque>[4];
   fecha_llegada_real: Parameters<typeof calcularEstadoEmbarque>[5];
-  expediente: string;
+  expediente: string | null;
   cliente_nombre: string | null;
   puerto_origen?: string | null;
   aeropuerto_origen?: string | null;
