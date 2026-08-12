@@ -14,6 +14,7 @@ import { PortalEmbarqueTimeline } from "@/features/portal/components/PortalEmbar
 import { PortalEmbarqueDocumentos } from "@/features/portal/components/PortalEmbarqueDocumentos";
 import { PortalEmbarqueResumenTab } from "@/features/portal/components/embarqueDetalle/PortalEmbarqueResumenTab";
 import { PortalEmbarqueStepper } from "@/features/portal/components/embarqueDetalle/PortalEmbarqueStepper";
+import { filtrarEventosVisiblesCliente } from "@/features/portal/domain/eventosVisiblesCliente";
 
 
 import { usePortalEmbarqueDetalleController } from "@/features/embarques/hooks";
@@ -115,8 +116,8 @@ export default function PortalEmbarqueDetalle() {
           <TabsTrigger value="resumen">Resumen</TabsTrigger>
           <TabsTrigger value="tracking" className="relative">
             Tracking
-            {eventos.length > 0 && (
-              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-2xs px-1.5 font-bold">{eventos.length}</span>
+            {eventosVisiblesCount > 0 && (
+              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-2xs px-1.5 font-bold">{eventosVisiblesCount}</span>
             )}
           </TabsTrigger>
           <TabsTrigger value="documentos" className="relative">

@@ -13,6 +13,7 @@ import { MoreHorizontal } from "lucide-react";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
 import type { AgenteTarifaRow } from "@/features/portal-agente/services";
 import { formatNumber } from "@/lib/formatters/numbers";
+import { formatDate } from "@/lib/formatters";
 
 export function EstadoBadge({ estado }: { estado: string }) {
   // Capitaliza estado ("vigente" → "Vigente") para casar con DOMAIN_STATUSES.tarifa_maritima.
@@ -114,7 +115,9 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       sortingFn: sortByDate((t) => t.vigente_desde),
       enableSorting: true,
       meta: { className: "text-xs text-muted-foreground" },
-      cell: ({ row }) => `${row.original.vigente_desde} → ${row.original.vigente_hasta}`,
+      // UIB-14: mismo formato corto que el resto de la app (dd/MM/yy), no ISO crudo.
+      cell: ({ row }) =>
+        `${formatDate(row.original.vigente_desde, "dd/MM/yy")} → ${formatDate(row.original.vigente_hasta, "dd/MM/yy")}`,
     },
     {
       id: "estado",

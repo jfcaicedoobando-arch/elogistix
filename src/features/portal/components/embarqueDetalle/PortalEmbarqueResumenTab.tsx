@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatNumber, getOrigen, getDestino } from "@/lib/formatters";
+import { labelNaviera } from "@/lib/formatters/carrierLabels";
 
 /** Fila `dt`/`dd` que sólo se pinta cuando hay valor. */
 function Dato({ label, value }: { label: string; value: string | null }) {
@@ -70,7 +71,7 @@ export function PortalEmbarqueResumenTab({ embarque }: Props) {
             <dd className="font-medium">{embarque.eta ? formatDate(embarque.eta) : "—"}</dd>
             {embarque.naviera && <>
               <dt className="text-muted-foreground">Naviera</dt>
-              <dd className="font-medium">{embarque.naviera}</dd>
+              <dd className="font-medium">{labelNaviera(embarque.naviera)}</dd>
             </>}
             {embarque.aerolinea && <>
               <dt className="text-muted-foreground">Aerolínea</dt>
