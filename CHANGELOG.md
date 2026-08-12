@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.530.0] - 2026-08-12
+- Auditoría Wave 1 — Sub-ola 5 (robustez fiscal y financiera residual). Los puntos EF-05 a EF-08 (timeouts SAT/cancelaciones, respaldo de XML, dedupe atómico del webhook y guardas de eventos fuera de orden) ya venían aplicados en versiones anteriores; se verificaron y quedan cerrados.
+- BL-10 — Las cuentas bancarias eliminadas ya no reaparecen en los selectores de bitácora de tesorería ni en el listado de cuentas: el listado siempre ignora cuentas borradas. Las cuentas sólo inactivas (no borradas) siguen visibles cuando se piden.
+- BL-11 — Dashboard ejecutivo: los gastos de proveedor en euros sin embarque ligado (típicos de Venta y Administración) ya se convierten a pesos con el tipo de cambio del DOF vigente a la fecha de la factura, en vez de quedar fuera del indicador de gastos operativos. Los gastos en dólares y los euros con embarque no cambian.
+
 ## [13.529.0] - 2026-08-12
 - Auditoría Wave 1 — Sub-ola 4 (exposición pública y fugas): EF-10 (las 11 funciones fiscales autenticadas ya responden con la lista blanca de dominios en vez de permitir a cualquier sitio; un sitio ajeno recibe `null`), EF-11 (la prueba de conexión con FacturApi devuelve el código de error real —401/403/504— en vez de un "éxito" con el error escondido en el cuerpo; la pantalla de Configuración sigue mostrando el mensaje amigable).
 - EF-12 — El proceso automático que reconcilia cancelaciones ya no se traga los errores: cada fallo queda en consola y en Sentry con el id de la factura o nota de crédito, y si el lote llega al tope de 200 avisa que hay rezago acumulado.
