@@ -17,14 +17,18 @@ interface ConceptosManualesLike {
  * Devuelve `true` si el submit puede continuar; en caso de bloqueo notifica
  * el error correspondiente y devuelve `false`.
  */
-export function puedeContinuarSubmit(
-  cfdiConceptos: ReadonlyArray<CfdiConceptoParsed>,
-  hayVinculos: boolean,
-  manuales: ConceptosManualesLike,
-  cuadreManual: ResultadoCuadre,
-  subtotal: number,
-  moneda: string = "MXN",
-): boolean {
+export interface ArgsSubmitGuard {
+  cfdiConceptos: ReadonlyArray<CfdiConceptoParsed>;
+  hayVinculos: boolean;
+  manuales: ConceptosManualesLike;
+  cuadreManual: ResultadoCuadre;
+  subtotal: number;
+  moneda?: string;
+}
+
+export function puedeContinuarSubmit(args: ArgsSubmitGuard): boolean {
+  const { cfdiConceptos, hayVinculos, manuales, cuadreManual, subtotal } = args;
+  const moneda = args.moneda ?? "MXN";
   if (cfdiConceptos.length > 0 || hayVinculos) return true;
 
   if (manuales.conceptos.length === 0) {

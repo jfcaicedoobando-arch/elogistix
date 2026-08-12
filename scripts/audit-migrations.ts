@@ -125,8 +125,15 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `REVOKE ALL … FROM PUBLIC`. La migración correctiva `20260812184448`
  *    re-aplica el bloque canónico; el archivo original queda como legacy
  *    auditado.
+ *  - `20260812205800` — post-FIX-H6-15: `20260812192954` recreó
+ *    `get_tracking_public(text)` (SECURITY DEFINER) sin el bloque
+ *    REVOKE/GRANT en el mismo archivo. La migración correctiva
+ *    `20260812205800` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC` +
+ *    `GRANT EXECUTE … TO anon, authenticated, service_role`; el enlace
+ *    público de rastreo requiere ejecución por `anon`); el archivo original
+ *    queda como legacy auditado.
  */
-const BASELINE = "20260812184448";
+const BASELINE = "20260812205800";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;

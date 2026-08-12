@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
-// Schema reutilizable para joins anidados { nombre } | null — valida en runtime.
+// Schemas reutilizables para joins anidados — validan el shape en runtime.
 const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
+const contactoNullableSchema = z.object({ contacto: z.string().nullable() }).nullable();
 
 const PORTAL_LIST_MAX = 500;
 
@@ -23,8 +24,7 @@ export async function fetchPortalClienteName(): Promise<string | null> {
       .limit(1)
       .maybeSingle(),
   );
-  nombreNullableSchema.parse(data?.clientes ?? null); // valida shape en runtime
-  const clientes = fromDb<{ nombre: string } | null>(data?.clientes);
+  const clientes = fromDb(data?.clientes ?? null, nombreNullableSchema);
   return clientes?.nombre ?? null;
 }
 
@@ -40,7 +40,7 @@ export async function fetchPortalContactoNombre(): Promise<string | null> {
       .limit(1)
       .maybeSingle(),
   );
-  const clientes = fromDb<{ contacto: string | null } | null>(data?.clientes);
+  const clientes = fromDb(data?.clientes ?? null, contactoNullableSchema);
   return clientes?.contacto ?? null;
 }
 
@@ -55,7 +55,6 @@ export async function fetchPortalOrgName(): Promise<string | null> {
       .limit(1)
       .maybeSingle(),
   );
-  nombreNullableSchema.parse(data?.organizations ?? null); // valida shape en runtime
-  const org = fromDb<{ nombre: string } | null>(data?.organizations);
+  const org = fromDb(data?.organizations ?? null, nombreNullableSchema);
   return org?.nombre ?? null;
 }

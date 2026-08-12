@@ -13,7 +13,8 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey, FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
-import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient } from "../_shared/facturapiClient.ts";
+import { timbrarRep } from "./timbrar.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
 import { calcularParcialidad, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
@@ -194,52 +195,21 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // deduplica por external_id; es sólo un campo de búsqueda).
   payload.external_id = claimTag;
 
-  interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
-  let invoice: FapiInvoice;
-  try {
-    // EF-01/EF-02: timeout defensivo. En timeout NO se libera el claim: si
-    // Facturapi sí timbró, el tag es la única correlación para recuperarlo.
-    invoice = await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
-  } catch (err) {
-    if (err instanceof FacturapiTimeoutError) {
-      await registrarBitacoraEdge(supabase, {
-        organizationId: pago.organization_id,
-        usuarioId: userData.user.id,
-        usuarioEmail: userData.user.email,
-        modulo: "facturacion",
-        accion: "facturapi_rep_emitir_timeout",
-        entidadId: pago.id,
-        detalles: { op: err.op, timeout_ms: err.timeoutMs, external_id: claimTag },
-      });
-      return json({
-        error: "facturapi_timeout",
-        message: `${err.message}. Espera ~3 min y usa 'Recuperar timbrado' — el REP pudo haberse timbrado; no reintentes directamente.`,
-        timeout_ms: err.timeoutMs,
-        external_id: claimTag,
-      }, 504);
-    }
-    // Error definitivo de Facturapi (no timbró): liberar el claim para reintentar.
-    await releaseClaim();
-    const { status, detail } = describeFacturapiError(err);
-    const errMsg = typeof detail === "object" && detail !== null
-      ? JSON.stringify(detail).slice(0, 500)
-      : "Facturapi error";
-    await supabase.from("pagos_factura")
-      .update({ estado_rep: "Error", rep_error: errMsg })
-      .eq("id", pago.id);
-    await registrarBitacoraEdge(supabase, {
-      organizationId: pago.organization_id,
-      usuarioId: userData.user.id,
-      usuarioEmail: userData.user.email,
-      modulo: "facturacion",
-      accion: "facturapi_rep_emitir_failed",
-      entidadId: pago.id,
-      detalles: { status, response: detail },
-    });
-    const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    return json({ error: "facturapi_error", status, detail, message }, 502);
-  }
-  const fapiJson = invoice;
+  const resultado = await timbrarRep({
+    facturapi,
+    payload: payload as unknown as Record<string, unknown>,
+    supabase,
+    pagoId: pago.id,
+    organizationId: pago.organization_id,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    claimTag,
+    releaseClaim,
+    json,
+  });
+  if (!resultado.ok) return resultado.response;
+  const fapiJson = resultado.invoice;
+
 
   const facturapiId: string = fapiJson.id;
   const uuid: string = fapiJson.uuid;

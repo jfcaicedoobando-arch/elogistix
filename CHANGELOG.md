@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.543.2] - 2026-08-12
+- Calidad de código: los correos de autenticación, el timbrado de REP y la recuperación de timbrados se dividieron en módulos más chicos (sin cambios funcionales) para que el CI pase el lint estricto.
+- Cobros: la validación de la fecha del pago vive en su propio archivo; mismas reglas y mensajes que antes.
+
+## [13.543.1] - 2026-08-12
+- Rastreo público: se re-aplicaron los permisos de ejecución de la función del enlace público (auditoría H6-15); sin cambios funcionales.
+- Portal de clientes: los datos de cliente, contacto y organización se validan en el boundary (adopción de zod, ratchet en 0).
+- Calidad de código: se dividieron los manejadores de `demo-access` y `facturapi-reconciliar-cancelaciones` en funciones auxiliares para bajar la complejidad y pasar ESLint.
+
 ## [13.543.0] - 2026-08-12
 - Correos de acceso: los correos de autenticación (invitación, confirmación, restablecimiento, enlace mágico, cambio de correo y código de verificación) ya salen por el dominio del proyecto con la identidad visual de Libre Carga y en español mexicano. Antes la invitación se creaba en la plataforma pero el correo nunca se entregaba.
 - Usuarios: al dar de alta un usuario el aviso explica que la invitación puede tardar y cómo reenviar el acceso con "Restablecer contraseña".
