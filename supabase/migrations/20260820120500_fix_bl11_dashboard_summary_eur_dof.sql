@@ -1,8 +1,8 @@
--- Fuente canónica de public.dashboard_summary() (Ola 6 · O6-SCHEMA).
--- 1:1 con supabase/migrations/20260820120500_fix_bl11_dashboard_summary_eur_dof.sql.
--- FIX BL-11: fallback EUR → tipos_cambio_dof cuando no hay TC de embarque.
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
+-- FIX BL-11 (auditoría BL/BD): en dashboard_summary() los gastos operativos en
+-- EUR se convertían SOLO con el TC del embarque ligado (eb.tipo_cambio_eur);
+-- los gastos EUR sin embarque (lo normal en Venta/Administración) caían fuera
+-- del KPI gastosOperativosMXN. Se añade fallback al TC DOF vigente a la fecha
+-- de emisión (tipos_cambio_dof), alineando el tratamiento EUR con el de USD.
 CREATE OR REPLACE FUNCTION public.dashboard_summary()
  RETURNS jsonb
  LANGUAGE plpgsql
