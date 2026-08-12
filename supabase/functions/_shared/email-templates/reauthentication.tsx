@@ -12,22 +12,33 @@ import {
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
+import { brand, code, container, footer, h1, main, text } from './styles.ts'
+
 interface ReauthenticationEmailProps {
+  siteName: string
+  siteUrl: string
   token: string
 }
 
-export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
+export const ReauthenticationEmail = ({
+  siteName,
+  token,
+}: ReauthenticationEmailProps) => (
+  <Html lang="es-MX" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>Tu código de verificación de {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
-        <Text style={codeStyle}>{token}</Text>
+        <Text style={brand}>{siteName}</Text>
+        <Heading style={h1}>Tu código de verificación</Heading>
+        <Text style={text}>
+          Captura este código en <strong>{siteName}</strong> para confirmar la
+          operación:
+        </Text>
+        <Text style={code}>{token}</Text>
         <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+          El código vence en unos minutos. Si no lo solicitaste, ignora este
+          correo y cambia tu contraseña.
         </Text>
       </Container>
     </Body>
@@ -35,26 +46,3 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 )
 
 export default ReauthenticationEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
