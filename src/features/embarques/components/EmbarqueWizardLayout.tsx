@@ -41,8 +41,13 @@ export function EmbarqueWizardLayout({
   onBack,
   onFinish,
   validateStep,
+  isDirty = false,
   children,
 }: EmbarqueWizardLayoutProps) {
+  // FE-11: durante el guardado no se bloquea la navegación (el redirect es
+  // intencional); sólo cuando hay captura pendiente.
+  const { guardDialog } = useDirtyGuard(isDirty && !isPending);
+
   const handleNext = useCallback(() => {
     if (validateStep && !validateStep(currentStep)) return;
     if (currentStep < totalSteps) setCurrentStep((p: number) => p + 1);
@@ -70,6 +75,7 @@ export function EmbarqueWizardLayout({
         saveLabel,
       }}
     >
+      {guardDialog}
       {children}
     </WizardShell>
   );
