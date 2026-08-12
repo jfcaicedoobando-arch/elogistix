@@ -3,14 +3,15 @@
  * Extraído de `TesoreriaPagosProgramados` para bajar su tamaño/complejidad.
  */
 import { Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { formatCurrency } from "@/lib/formatters";
+
 import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
 import type { CuentaBancaria } from "@/features/tesoreria/services";
 
