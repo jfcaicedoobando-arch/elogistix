@@ -8,9 +8,7 @@ import { ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { TraspasoCuentaSelect } from "./TraspasoCuentaSelect";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
@@ -75,14 +73,14 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
       }
     >
       <FormDialogSection title="Cuentas" description="Selecciona la cuenta de origen y destino.">
-        <CuentaSelect
+        <TraspasoCuentaSelect
           id="traspaso-origen"
           label="Cuenta origen"
           cuentas={cuentas}
           value={state.origenId}
           onChange={(v) => setField("origenId", v)}
         />
-        <CuentaSelect
+        <TraspasoCuentaSelect
           id="traspaso-destino"
           label="Cuenta destino"
           cuentas={cuentas}
@@ -171,33 +169,5 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         )}
       </FormDialogSection>
     </FormDialogShell>
-  );
-}
-
-function CuentaSelect({
-  id, label, cuentas, value, onChange,
-}: {
-  id: string;
-  label: string;
-  cuentas: Cuenta[];
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger id={id}>
-          <SelectValue placeholder={`Selecciona ${label.toLowerCase()}`} />
-        </SelectTrigger>
-        <SelectContent>
-          {cuentas.map((c) => (
-            <SelectItem key={c.id} value={c.id}>
-              {c.banco} {c.alias} ({c.moneda})
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
   );
 }
