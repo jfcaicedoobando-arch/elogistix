@@ -170,7 +170,7 @@ export function useNuevaFacturaProveedorForm(
     if (!puedeContinuarTope(topeVinculacion, Number(values.subtotal) || 0, values.moneda)) {
       return;
     }
-    if (!puedeContinuarSubmit(cfdiConceptos, hayVinculos, manuales, cuadreManual, Number(values.subtotal) || 0, values.moneda)) {
+    if (!puedeContinuarSubmit({ cfdiConceptos, hayVinculos, manuales, cuadreManual, subtotal: Number(values.subtotal) || 0, moneda: values.moneda })) {
       return;
     }
 

@@ -20,6 +20,7 @@ import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
 import { factorEntreMonedas } from "@/lib/financial/convertir";
+import { validarFechaPago } from "./validarFechaPago";
 
 interface Factura {
   id: string;
@@ -53,18 +54,6 @@ function convertirAMonedaFactura(
 }
 
 const today = () => todayLocalISO();
-
-/** FE-03 / UIA-06: misma regla y mensajes que `validarFechas` de CxP. */
-export function validarFechaPago(
-  fecha: string, hoy: string, fechaEmision?: string | null,
-): string | null {
-  if (!fecha) return "Captura la fecha del pago";
-  if (fecha > hoy) return "La fecha del pago no puede ser futura";
-  if (fechaEmision && fecha < fechaEmision) {
-    return "La fecha del pago no puede ser anterior a la fecha de emisión de la factura";
-  }
-  return null;
-}
 
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: rates } = useExchangeRates();

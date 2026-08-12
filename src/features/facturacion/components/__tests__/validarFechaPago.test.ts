@@ -1,6 +1,6 @@
 /** FE-03 / UIA-06: reglas de fecha del cobro CxC. */
 import { describe, it, expect } from "vitest";
-import { validarFechaPago } from "../DialogRegistrarPago";
+import { validarFechaPago } from "../validarFechaPago";
 
 describe("validarFechaPago", () => {
   it("exige capturar la fecha", () => {

@@ -5,11 +5,11 @@
  * Idempotente y seguro de reintentar.
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "../_shared/cors.ts";
-import { wrapEdgeHandler, captureEdgeException, captureEdgeMessage } from "../_shared/sentry.ts";
+import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import { validarRequest, cargarPendientes, type Pendientes } from "./entrada.ts";
 import {
   descargarAcuse,
   resolveNextAction,
@@ -226,56 +226,14 @@ async function reconcileOneNc(ctx: ReconcileCtx, nc: NotaCreditoPendiente): Prom
   }
 }
 
-Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST" && req.method !== "GET") {
-    return jsonResponse({ error: "method_not_allowed" }, 405);
-  }
-
-  // M8: endpoint cron-only — mismo patrón que rep-retry-nocturno.
-  if (!CRON_SECRET || req.headers.get("X-Cron-Secret") !== CRON_SECRET) {
-    return jsonResponse({ error: "unauthorized" }, 401);
-  }
 
 
 
-  const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-
-  const { data: pendientes, error: fetchErr } = await supabase
-    .from("facturas")
-    .select("id, organization_id, facturapi_id, cancellation_status, sustituida_por")
-    .in("cancellation_status", ["pending", "verifying"])
-    .not("facturapi_id", "is", null)
-    .limit(200);
-
-  if (fetchErr) return jsonResponse({ error: "db_fetch_failed", detail: fetchErr.message }, 500);
-
-  // EF-12: si el lote llega al tope de 200 probablemente hay backlog que tarda
-  // horas en drenar a 200/30 min — dejar señal en Sentry para operación.
-  if ((pendientes ?? []).length === 200) {
-    await captureEdgeMessage("facturapi_reconciliar_backlog", "warning", {
-      fn: "facturapi-reconciliar-cancelaciones",
-      extra: { pendientes: 200 },
-    });
-  }
-
-  // EF-03: las cancelaciones asíncronas de NC también se reconcilian aquí —
-  // el webhook no las resuelve (factura_not_found → ignored) y sin este
-  // barrido quedaban 'pending' para siempre tras el silencio positivo de 72 h.
-  const { data: ncPendientes, error: ncFetchErr } = await supabase
-    .from("factura_notas_credito")
-    .select("id, organization_id, facturapi_id, cancellation_status")
-    .in("cancellation_status", ["pending", "verifying"])
-    .not("facturapi_id", "is", null)
-    .limit(200);
-
-  if (ncFetchErr) return jsonResponse({ error: "db_fetch_failed", detail: ncFetchErr.message }, 500);
-
-  const facturas = (pendientes ?? []) as FacturaPendiente[];
-  const notasCredito = (ncPendientes ?? []) as NotaCreditoPendiente[];
+/** Reconcilia lote por lote agrupando por organización (un cliente FacturApi por org). */
+async function reconciliarPorOrg(supabase: SupabaseClient, pendientes: Pendientes): Promise<Resumen> {
   const resumen = nuevoResumen();
-  const porOrg = agruparPorOrg(facturas);
-  const ncPorOrg = agruparPorOrg(notasCredito as unknown as FacturaPendiente[]);
+  const porOrg = agruparPorOrg(pendientes.facturas);
+  const ncPorOrg = agruparPorOrg(pendientes.notasCredito as unknown as FacturaPendiente[]);
   // Unir las llaves de ambos mapas para resolver el cliente una sola vez por org.
   const orgIds = new Set<string>([...porOrg.keys(), ...ncPorOrg.keys()]);
 
@@ -297,6 +255,19 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
       await reconcileOneNc(ctx, nc);
     }
   }
+  return resumen;
+}
 
+Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) => {
+  const corte = validarRequest(req, CRON_SECRET);
+  if (corte) return corte;
+
+  const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+
+  const pendientes = await cargarPendientes(supabase);
+  if (!pendientes.ok) return pendientes.res;
+
+  const resumen = await reconciliarPorOrg(supabase, pendientes.data);
   return jsonResponse({ ok: true, resumen });
 }));
+
