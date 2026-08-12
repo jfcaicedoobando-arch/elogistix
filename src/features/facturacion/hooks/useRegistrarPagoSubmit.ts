@@ -4,10 +4,12 @@
  * del componente por debajo del límite del linter.
  */
 import { useState } from "react";
-import { notifySuccess, notifyError, notifyWarning } from "@/lib/ui/appFeedback";
+import { useQueryClient } from "@tanstack/react-query";
+import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
-import { emitirRep } from "@/features/facturacion/services/repFacturapi";
+import { emitirRep, esRepYaTimbrado } from "@/features/facturacion/services/repFacturapi";
+import { invalidarTrasRep } from "./invalidarRep";
 import { useRegistrarPagoFactura } from "@/features/facturacion/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { formatCurrency } from "@/lib/formatters";
@@ -31,11 +33,12 @@ interface SubmitArgs {
 }
 
 export function useRegistrarPagoSubmit(onSuccess: () => void) {
+  const qc = useQueryClient();
   const registrar = useRegistrarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [timbrandoRep, setTimbrandoRep] = useState(false);
 
-  const intentarTimbrarRep = async (pagoId: string) => {
+  const intentarTimbrarRep = async (pagoId: string, facturaId: string) => {
     setTimbrandoRep(true);
     try {
       await emitirRep(pagoId);
@@ -44,14 +47,24 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
         description: "Se generó el Recibo Electrónico de Pago.",
       });
     } catch (err) {
-      notifyError(undefined, {
-        title: "Pago registrado, pero el REP falló",
-        description: `${getErrorMessage(err)}. Puedes reintentar desde el historial de pagos.`,
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
+      if (esRepYaTimbrado(err)) {
+        notifyInfo(undefined, {
+          title: "Este pago ya tenía su REP timbrado",
+          description: "Se actualizó la pantalla con el folio real del REP.",
+        });
+      } else {
+        notifyError(undefined, {
+          title: "Pago registrado, pero el REP falló",
+          description: `${getErrorMessage(err)}. Puedes reintentar desde el historial de pagos.`,
+          method: "ON_ERROR",
+          errorCode: ERROR_CODES.VALIDATION_FAILED,
+        });
+      }
     } finally {
       setTimbrandoRep(false);
+      // v13.549.0: sin esto el historial de pagos quedaba con el estado previo
+      // ("REP pendiente") y el botón "Timbrar REP" seguía visible.
+      invalidarTrasRep(qc, facturaId);
     }
   };
 
@@ -99,7 +112,7 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
             "La cuenta destino es de otra moneda y no hay tipo de cambio oficial, o el abono falló. Registra el movimiento manualmente en Tesorería.",
         });
       }
-      if (args.esPpdTimbrada && pagoId) await intentarTimbrarRep(pagoId);
+      if (args.esPpdTimbrada && pagoId) await intentarTimbrarRep(pagoId, args.facturaId);
       onSuccess();
     } catch (err) {
       notifyError(undefined, {
