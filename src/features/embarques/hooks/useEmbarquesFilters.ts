@@ -21,10 +21,16 @@ const ALERTA_PARSER = parseAsStringLiteral([
   "todos",
   "demora",
   "garantia",
+  "cierre_operativo",
   "admin_pendiente",
 ] as const).withDefault("todos");
 
-export type EmbarqueAlertaFiltro = "todos" | "demora" | "garantia" | "admin_pendiente";
+export type EmbarqueAlertaFiltro =
+  | "todos"
+  | "demora"
+  | "garantia"
+  | "cierre_operativo"
+  | "admin_pendiente";
 
 export function useEmbarquesFilters() {
   const [search, setSearchRaw] = useQueryState("q", parseAsString.withDefault(""));
