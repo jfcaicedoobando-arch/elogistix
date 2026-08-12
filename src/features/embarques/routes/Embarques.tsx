@@ -1,4 +1,3 @@
-"use memo";
 import { useDeferredValue } from "react";
 import { useDocumentTitle } from "@/hooks/shared";
 import { Plus } from "lucide-react";

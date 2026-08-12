@@ -41,10 +41,16 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
   // Aquí sólo se conserva el reset de inputs en onSuccess.
   const agregar = () => {
     if (!nuevaVendedora || !organizationId) return;
+    // FE-08: mismo rango que la edición (guardarPct). Antes se podía dar de
+    // alta una vendedora con 150% o -5%.
+    const pct = Number(nuevoPct);
+    if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+      return notifyError(undefined, { title: "% inválido", method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_1" });
+    }
     upsert.mutate({
       organization_id: organizationId,
       user_id: nuevaVendedora,
-      porcentaje_default: Number(nuevoPct) || 0,
+      porcentaje_default: pct,
       activa: true,
     }, {
       onSuccess: () => {
@@ -82,7 +88,7 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
           </div>
           <div className="space-y-1 w-24">
             <Label>%</Label>
-            <Input type="number" step="0.1" value={nuevoPct} onChange={(e) => setNuevoPct(e.target.value)} />
+            <Input type="number" step="0.1" min="0" max="100" value={nuevoPct} onChange={(e) => setNuevoPct(e.target.value)} />
           </div>
           <Button onClick={agregar} disabled={!nuevaVendedora || upsert.isPending}>
             <Plus className="h-4 w-4 mr-1" /> Agregar

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.541.0] - 2026-08-12
+- Comisiones: el alta de vendedora valida el porcentaje (0-100) igual que la edición y el campo acepta sólo ese rango (FE-08).
+- Facturación manual: el total en MXN que valida el límite de crédito se calcula con el canon de dinero (redondeo por línea), evitando diferencias de centavos contra el total timbrado (FE-12).
+- Herramientas: README y `package.json` declaran Node 22+ como requisito real (Node 20 rompe las pruebas por falta de WebSocket nativo) (TC-01).
+- Limpieza: se eliminó la directiva muerta `"use memo"` de 9 rutas; ya no genera ruido en el build (TC-03).
+- Build: documentada la excepción conocida del chunk `react-pdf.browser` en `vite.config.ts` (TC-04).
+
 ## [13.540.0] - 2026-08-12
 - Design system: badges y encabezados de tablas de reparto usan los tokens `text-2xs` y `text-table-head`; cifras KPI de Cartera, Dirección, Operaciones y P&L migradas al token `text-kpi` (UX-12, UX-09).
 - Accesibilidad: 8 botones solo-icono y 15 interruptores de catálogos/CRM/Admin ahora tienen nombre accesible en español; el botón de la barra lateral se anuncia en es-MX (UX-06, UX-07).

@@ -1,4 +1,3 @@
-"use memo";
 /**
  * /crm — Resumen ejecutivo del CRM.
  * Sólo KPIs y gráficas de lectura rápida (totales, embudo, forecast mensual,

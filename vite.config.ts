@@ -112,6 +112,12 @@ export default defineConfig(({ mode }) => {
     // Bajar de 500 → 350 kB fuerza disciplina de split. Si un chunk supera
     // este umbral, Vite emite warning en build (no rompe el CI, pero queda
     // visible en logs y en el bundle-size gate del workflow).
+    // TC-04 · Excepción conocida: `react-pdf.browser-*.js` (~1.3 MB sin
+    // comprimir) SIEMPRE supera este umbral. Es esperado: @react-pdf/renderer
+    // es intrínsecamente grande, sólo se carga lazy (dynamic imports) y el
+    // gate real por chunk es scripts/check-bundle-size.sh en CI (budget gzip
+    // 500 KB para react-pdf*). NO "arreglar" subiendo este límite ni
+    // reintroduciendo manualChunks (ver NOTA abajo: rompe producción).
     chunkSizeWarningLimit: 350,
     // NOTA: se eliminó `rollupOptions.output.manualChunks` por completo.
     // Agrupar paquetes con imports circulares internos (recharts, @react-pdf,

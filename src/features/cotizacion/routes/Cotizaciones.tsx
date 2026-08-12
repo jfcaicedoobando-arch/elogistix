@@ -1,4 +1,3 @@
-"use memo";
 import { useMemo, useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDuplicarCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";

@@ -1,4 +1,5 @@
 import { aMxn } from "@/lib/financial/convertir";
+import { sumarSubtotales, subtotalLinea, calcularIVA, roundMoney } from "@/lib/financial/financialUtils";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 
 export interface TotalFacturaMxn {
@@ -19,18 +20,20 @@ export function calcularTotalMxn(
   tipoCambio: number,
   tasaIva: number,
 ): TotalFacturaMxn {
-  const subtotal = conceptos.reduce((acc, c) => {
-    const cant = Number(c.cantidad) || 0;
-    const precio = Number(c.precio_unitario) || 0;
-    return acc + cant * precio;
-  }, 0);
-  const conIva = conceptos.reduce((acc, c) => {
-    const cant = Number(c.cantidad) || 0;
-    const precio = Number(c.precio_unitario) || 0;
-    const base = cant * precio;
-    const iva = c.tipo_iva === "gravado_16" ? base * tasaIva : 0;
-    return acc + base + iva;
-  }, 0);
+  // FE-12: canon currency.js — subtotal por línea redondeado antes de acumular
+  // e IVA por línea con el mismo redondeo, para que la validación de crédito
+  // coincida centavo a centavo con el total que se persiste/timbra.
+  const subtotal = sumarSubtotales(conceptos, (c) => ({
+    cantidad: Number(c.cantidad) || 0,
+    precioUnitario: Number(c.precio_unitario) || 0,
+  }));
+  const conIva = roundMoney(
+    conceptos.reduce((acc, c) => {
+      const base = subtotalLinea(Number(c.cantidad) || 0, Number(c.precio_unitario) || 0);
+      const iva = c.tipo_iva === "gravado_16" ? calcularIVA(base, tasaIva) : 0;
+      return acc + base + iva;
+    }, 0),
+  );
   const total = conIva || subtotal;
   const conv = aMxn(total, moneda, tipoCambio);
   return { mxn: conv.monto, tcFaltante: !conv.completo };
