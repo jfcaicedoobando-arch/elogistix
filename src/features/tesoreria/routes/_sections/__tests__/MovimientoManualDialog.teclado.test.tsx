@@ -42,17 +42,25 @@ describe("<MovimientoManualDialog /> teclado y dinero", () => {
     expect(screen.getByText("USD")).toBeInTheDocument();
   });
 
-  it("Enter en un campo guarda cuando el formulario es válido", () => {
+  it("el botón principal envía el formulario del cuerpo", () => {
+    renderDialog();
+    const boton = screen.getByRole("button", { name: "Guardar" });
+    expect(boton).toHaveAttribute("type", "submit");
+    expect(boton).toHaveAttribute("form", "form-movimiento-manual");
+  });
+
+  it("enviar el formulario guarda cuando es válido", () => {
     const { onGuardar } = renderDialog();
-    fireEvent.keyDown(screen.getByLabelText("Concepto *"), { key: "Enter" });
+    fireEvent.submit(screen.getByLabelText("Concepto *").closest("form")!);
     expect(onGuardar).toHaveBeenCalledTimes(1);
   });
 
-  it("Enter no guarda si el formulario es inválido", () => {
+  it("enviar el formulario no guarda si es inválido", () => {
     const { onGuardar } = renderDialog({ manualForm: { ...formValido, monto: 0 } });
-    fireEvent.keyDown(screen.getByLabelText("Concepto *"), { key: "Enter" });
+    fireEvent.submit(screen.getByLabelText("Concepto *").closest("form")!);
     expect(onGuardar).not.toHaveBeenCalled();
   });
+
 
   it("todas las etiquetas están asociadas a su control", () => {
     renderDialog();
