@@ -129,8 +129,9 @@ async function handle(req: Request): Promise<Response> {
   }
 
   return json({
-    ok: true,
+    ok: errorGuardado === null,
     actualizado,
+    error_guardado: errorGuardado,
     outcome: decision.outcome,
     remoto: {
       status: (remote.status ?? "").toLowerCase() || null,
