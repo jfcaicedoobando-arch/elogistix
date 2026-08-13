@@ -1,6 +1,12 @@
 # Changelog
 
+## [13.551.0] - 2026-08-12
+- Modales de Tesorería y CxP con teclado (Ola A): **Movimiento manual**, **Ejecutar pago programado**, **Traspaso entre cuentas propias** y **Programar pago** ya son formularios reales: `Enter` guarda desde cualquier campo, el botón principal muestra su estado de carga y no permite dobles clics.
+- Todas las etiquetas de esos modales quedaron ligadas a su control (incluido el campo de fecha) para lectores de pantalla.
+- Nuevos componentes compartidos `FormDialogFooter` y soporte de `formId`/`onSubmit` en `FormDialogShell`, para que el resto de los modales adopten el mismo estándar sin repetir código.
+
 ## [13.550.0] - 2026-08-12
+
 - Captura de fechas con teclado: el campo de fecha ya acepta `1/3/2026` y lo completa solo a `01/03/2026` (antes se descolocaba a `13/20/26`). También se puede abrir el calendario con `Alt+Flecha abajo` o `F4` y cerrarlo con `Esc`.
 - Orden de tabulación del campo de fecha: el primer `Tab` cae directo en el input; los botones de calendario y de limpiar salieron del recorrido de tabulación.
 - Modal **Registrar pago**: ahora es un formulario real —el foco inicia en la fecha, `Enter` guarda desde cualquier campo y todas las etiquetas quedaron ligadas a su control para lectores de pantalla.

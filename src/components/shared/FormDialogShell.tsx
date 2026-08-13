@@ -11,7 +11,7 @@
  * No introduce nuevos tokens de color: usa `bg-primary/10`, `text-primary`, `border`.
  */
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { useAutoFocusPrimerCampo } from "@/components/shared/utils/useAutoFocusPrimerCampo";
 import { FormDialogStepper } from "./FormDialogStepper";
 
 type Size = keyof typeof dialogSize;
@@ -40,6 +41,15 @@ interface Props {
   totalSteps?: number;
   stepLabels?: string[];
   footer: ReactNode;
+  /**
+   * Cuando se pasan `formId` + `onSubmit`, el cuerpo scrolleable se renderiza
+   * como `<form id={formId}>` real: Enter guarda y el botón del footer sticky
+   * envía con `type="submit" form={formId}` (ver `FormDialogFooter`).
+   */
+  formId?: string;
+  onSubmit?: (e: FormEvent<HTMLFormElement>) => void;
+  /** Enfoca el primer campo útil al abrir (default: true si hay `formId`). */
+  autoFocusFirstField?: boolean;
   /** Banda fija bajo el header, fuera del área scrolleable (KPIs, avisos). */
   stickyTop?: ReactNode;
   /** Banda fija sobre el footer, fuera del área scrolleable (semáforos). */
@@ -48,6 +58,7 @@ interface Props {
   bodyClassName?: string;
   children: ReactNode;
 }
+
 
 export function FormDialogShell({
   open,
@@ -61,12 +72,20 @@ export function FormDialogShell({
   totalSteps,
   stepLabels,
   footer,
+  formId,
+  onSubmit,
+  autoFocusFirstField,
   stickyTop,
   stickyBottom,
   bodyClassName,
   children,
 }: Props) {
   const showStepper = typeof step === "number" && typeof totalSteps === "number" && totalSteps > 1;
+  const enfocar = autoFocusFirstField ?? Boolean(formId);
+  const bodyRef = useAutoFocusPrimerCampo(open, enfocar);
+  const bodyClass = cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName);
+
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -105,9 +124,22 @@ export function FormDialogShell({
           <div className="border-b bg-muted/30 px-6 py-3">{stickyTop}</div>
         )}
 
-        <div className={cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName)}>
-          {children}
-        </div>
+        {formId ? (
+          <form
+            id={formId}
+            onSubmit={onSubmit}
+            noValidate
+            ref={bodyRef as React.Ref<HTMLFormElement>}
+            className={bodyClass}
+          >
+            {children}
+          </form>
+        ) : (
+          <div ref={bodyRef as React.Ref<HTMLDivElement>} className={bodyClass}>
+            {children}
+          </div>
+        )}
+
 
         {stickyBottom && (
           <div className="border-t bg-muted/30 px-6 py-3">{stickyBottom}</div>

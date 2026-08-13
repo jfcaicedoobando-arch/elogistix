@@ -54,15 +54,16 @@ describe("<EjecutarPagoDialog /> teclado y dinero", () => {
     expect(input).toHaveValue("");
   });
 
-  it("Enter ejecuta el pago cuando los datos están completos", () => {
+  it("enviar el formulario ejecuta el pago cuando los datos están completos", () => {
     const { onEjecutar } = renderDialog();
-    fireEvent.keyDown(screen.getByLabelText("Referencia"), { key: "Enter" });
+    fireEvent.submit(screen.getByLabelText("Referencia").closest("form")!);
     expect(onEjecutar).toHaveBeenCalledTimes(1);
   });
 
-  it("Enter no ejecuta el pago si el monto es cero", () => {
+  it("enviar el formulario no ejecuta el pago si el monto es cero", () => {
     const { onEjecutar } = renderDialog({ monto: 0 });
-    fireEvent.keyDown(screen.getByLabelText("Referencia"), { key: "Enter" });
+    fireEvent.submit(screen.getByLabelText("Referencia").closest("form")!);
     expect(onEjecutar).not.toHaveBeenCalled();
   });
+
 });
