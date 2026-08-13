@@ -71,6 +71,7 @@ export function useRefacturacion(facturaId: string | null, open: boolean) {
   const refrescar = useCallback(() => {
     qc.invalidateQueries({ queryKey: REFACT_KEY(facturaId) });
     qc.invalidateQueries({ queryKey: ["refacturacion", "factura"] });
+    qc.invalidateQueries({ queryKey: ["refacturacion", "simulacion"] });
     qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
     if (facturaId) qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
   }, [qc, facturaId]);
