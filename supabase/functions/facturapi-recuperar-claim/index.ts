@@ -20,6 +20,20 @@ import {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+/**
+ * REF-09: si la búsqueda en FacturAPI quedó truncada (>250 CFDIs en la ventana
+ * o total_pages ausente), NO liberamos el claim — liberarlo con el CFDI
+ * posiblemente timbrado habilitaba un doble timbrado al reintentar (FacturAPI
+ * no deduplica por external_id). El usuario reintenta más tarde.
+ */
+function respuestaBusquedaIncompleta(): Response {
+  return jsonResponse({
+    outcome: "sin_cambios",
+    busqueda_incompleta: true,
+    message: "La búsqueda en FacturAPI quedó incompleta (muchas facturas recientes). Por seguridad no se liberó el claim; reintenta en unos minutos.",
+  }, 409);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SB = any;
 type Usuario = { id: string; email?: string };
@@ -49,13 +63,14 @@ async function recuperarNotaCredito(supabase: SB, user: Usuario, ncId: string): 
     );
   }
 
-  const match = await buscarCfdiPorExternalId(
+  const busqueda = await buscarCfdiPorExternalId(
     resolved.data.client as FapiClient, claimTag, nc.facturapi_claim_at,
   );
-  if (match instanceof Response) return match;
-  if (match?.id && match.uuid) {
+  if (busqueda instanceof Response) return busqueda;
+  if (busqueda.kind === "incierto") return respuestaBusquedaIncompleta();
+  if (busqueda.kind === "encontrado" && busqueda.invoice.id && busqueda.invoice.uuid) {
     return promoverNc({
-      supabase, nc, match, claimTag, user,
+      supabase, nc, match: busqueda.invoice, claimTag, user,
       apiKey: resolved.data.apiKey, ambiente: resolved.data.ambiente,
     });
   }
@@ -81,13 +96,14 @@ async function recuperarFactura(supabase: SB, user: Usuario, facturaId: string):
     );
   }
 
-  const match = await buscarCfdiPorExternalId(
+  const busqueda = await buscarCfdiPorExternalId(
     resolved.data.client as FapiClient, claimTag, factura.facturapi_claim_at,
   );
-  if (match instanceof Response) return match;
-  if (match?.id && match.uuid) {
+  if (busqueda instanceof Response) return busqueda;
+  if (busqueda.kind === "incierto") return respuestaBusquedaIncompleta();
+  if (busqueda.kind === "encontrado" && busqueda.invoice.id && busqueda.invoice.uuid) {
     return promoverFactura({
-      supabase, factura, match, claimTag, user, ambiente: resolved.data.ambiente,
+      supabase, factura, match: busqueda.invoice, claimTag, user, ambiente: resolved.data.ambiente,
     });
   }
   return liberarClaim(supabase, factura, claimTag, edadMin, user);
@@ -122,13 +138,14 @@ async function recuperarPago(supabase: SB, user: Usuario, pagoId: string): Promi
     );
   }
 
-  const match = await buscarCfdiPorExternalId(
+  const busqueda = await buscarCfdiPorExternalId(
     resolved.data.client as FapiClient, claimTag, pago.facturapi_rep_claim_at,
   );
-  if (match instanceof Response) return match;
-  if (match?.id && match.uuid) {
+  if (busqueda instanceof Response) return busqueda;
+  if (busqueda.kind === "incierto") return respuestaBusquedaIncompleta();
+  if (busqueda.kind === "encontrado" && busqueda.invoice.id && busqueda.invoice.uuid) {
     return promoverPago({
-      supabase, pago, match, claimTag, user,
+      supabase, pago, match: busqueda.invoice, claimTag, user,
       apiKey: resolved.data.apiKey, ambiente: resolved.data.ambiente,
     });
   }

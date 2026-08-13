@@ -27,6 +27,18 @@ export interface FacturaRow {
 interface FapiListResponse { data?: FapiInvoice[]; total_pages?: number; page?: number }
 export interface FapiClient { invoices: { list: (params: Record<string, unknown>) => Promise<FapiListResponse> } }
 
+/**
+ * REF-09: resultado tri-estado de la búsqueda por external_id.
+ * - "encontrado": el CFDI existe en FacturAPI → promover.
+ * - "no_encontrado": se agotaron TODAS las páginas → seguro liberar.
+ * - "incierto": la búsqueda quedó truncada (tope de páginas o total_pages
+ *   ausente con página llena) → NUNCA liberar; devolver sin_cambios.
+ */
+export type BusquedaCfdi =
+  | { kind: "encontrado"; invoice: FapiInvoice }
+  | { kind: "no_encontrado" }
+  | { kind: "incierto"; paginasRevisadas: number };
+
 export async function loadFactura(supabase: SupabaseClient, facturaId: string): Promise<FacturaRow | Response> {
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
@@ -60,7 +72,7 @@ export function validarClaim(row: ClaimRow, entidad = "factura"): { claimTag: st
   return { claimTag, edadMin };
 }
 
-export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: string, claimAt: string | null): Promise<FapiInvoice | null | Response> {
+export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: string, claimAt: string | null): Promise<BusquedaCfdi | Response> {
   try {
     const desde = claimAt
       ? new Date(new Date(claimAt).getTime() - 5 * 60_000).toISOString()
@@ -75,11 +87,16 @@ export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: stri
       );
       const items = res.data ?? [];
       const match = items.find((inv) => inv.external_id === claimTag) ?? null;
-      if (match) return match;
-      if (!res.total_pages || page >= (res.total_pages ?? 1)) break;
+      if (match) return { kind: "encontrado", invoice: match };
+      // REF-09: sólo "no_encontrado" si tenemos certeza de que no hay más
+      // páginas. Con total_pages ausente, una página llena (50) es señal de que
+      // puede haber más → incierto.
+      const hayMasPaginas = res.total_pages ? page < res.total_pages : items.length === 50;
+      if (!hayMasPaginas) return { kind: "no_encontrado" };
       page += 1;
     }
-    return null;
+    // Se llegó al tope con páginas pendientes: no sabemos si el CFDI existe.
+    return { kind: "incierto", paginasRevisadas: maxPages };
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
       return jsonResponse({ error: "facturapi_timeout", message: err.message, timeout_ms: err.timeoutMs }, 504);
