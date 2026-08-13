@@ -53,7 +53,10 @@ export default function NuevoEmbarque() {
         onBack={() => navigate("/embarques")}
         onFinish={w.handleFinish}
         validateStep={(step) => w.validateStep(step)}
-        isDirty={w.currentStep > 1}
+        // RFE-06 (Ola 11): dirty real de react-hook-form — capturar el paso 1
+        // y salir ahora SÍ avisa. La heurística por paso se conserva como red
+        // para el contenido fuera de RHF (documentos paso 3, conceptos paso 4).
+        isDirty={w.methods.formState.isDirty || w.currentStep > 1}
       >
         <AsyncBoundary
           isLoading={w.catalogosCargando}

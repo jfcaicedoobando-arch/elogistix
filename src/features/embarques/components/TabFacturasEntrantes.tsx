@@ -46,7 +46,7 @@ interface Props {
 export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   const { organizationId } = useOrgFilter();
   const { user } = useAuth();
-  const { isAdmin, canSubirFacturaEntranteEmbarque } = usePermissions();
+  const { isAdmin, canSubirFacturaEntranteEmbarque, canAdjuntarXmlFacturaEntrante } = usePermissions();
   const { data, isLoading } = useFacturasEntrantes(embarqueId);
   // v13.347.0 — deep-link desde el checklist de cierre (?tab=costos&focus=facturas-entrantes).
   const { registerRef } = useFocusSection();
@@ -69,7 +69,10 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   // v13.489.0 — Segregación de funciones: operaciones entrega los archivos del
   // agente; contabilidad sólo los consulta y captura la factura desde CxP.
   const puedeSubir = canEdit && canSubirFacturaEntranteEmbarque && Boolean(organizationId);
-  const puedeAdjuntar = canEdit && Boolean(organizationId);
+  // RNF-08 (Ola 11): la RPC `adjuntar_xml_factura_entrante` admite operaciones
+  // y contabilidad (matriz ADJUNTAR_XML_FACTURA_ENTRANTE); la UI ofrece el
+  // botón exactamente a esos roles — nunca una acción que la base rechaza.
+  const puedeAdjuntar = canAdjuntarXmlFacturaEntrante && Boolean(organizationId);
 
   const abrirArchivo = async (path: string, nombre: string) => {
     try {

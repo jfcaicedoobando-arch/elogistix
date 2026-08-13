@@ -25,6 +25,7 @@ import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarCol
 import { useProgramarPagoLote } from "@/features/cxp/hooks/useProgramarPagoLote";
 import { todayLocalISO } from "@/lib/date/today";
 import { CxpPorPagarFiltersBar } from "@/features/bandejas/components/CxpPorPagarFiltersBar";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import {
   CXP_FILTERS_DEFAULTS,
   CXP_SORTERS,
@@ -45,6 +46,10 @@ export default function CxpPorPagar() {
 
   const [fechaProgramada, setFechaProgramada] = useState(todayLocalISO());
   const { programar, isRunning, progreso } = useProgramarPagoLote();
+  // RFE-04 (Ola 11): /compras/por-pagar admite gerentes de sólo lectura;
+  // `registrar_pago_proveedor_lote` rechaza con 42501 (LC_LOTE_SIN_ROL) a
+  // quien no está en PAGAR_PROVEEDOR. Mismo gate que el pago individual.
+  const { canPagarProveedor } = usePermissions();
 
   const monedas = useMemo(
     () => Array.from(new Set(data.map((r) => r.moneda).filter(Boolean))).sort(),
@@ -87,7 +92,7 @@ export default function CxpPorPagar() {
         title="CxP — Por pagar"
         description="Facturas de proveedor vigentes con saldo. Programa y registra los pagos."
         actions={
-          hasSelection && (
+          canPagarProveedor && hasSelection && (
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => setIsDialogOpen(true)} variant="outline">
                 <CalendarCheck className="h-4 w-4 mr-2" />
@@ -159,9 +164,9 @@ export default function CxpPorPagar() {
             emptyIcon={Inbox}
             emptyMessage="Sin facturas pendientes de pago"
             emptyHint="Cuando ingreses una factura de proveedor, aparecerá aquí."
-            rowSelection={rowSelection}
-            onRowSelectionChange={setRowSelection}
-            enableRowSelection
+            rowSelection={canPagarProveedor ? rowSelection : undefined}
+            onRowSelectionChange={canPagarProveedor ? setRowSelection : undefined}
+            enableRowSelection={canPagarProveedor}
           />
         </CardContent>
       </Card>

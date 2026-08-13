@@ -78,3 +78,20 @@ export const SUBIR_FACTURA_ENTRANTE_EMBARQUE: readonly AppRole[] = [
   "coordinador_logistico",
   "gerente_operaciones",
 ];
+
+/**
+ * RNF-08 (Ola 11) — Adjuntar el XML faltante a un documento ya subido al buzón.
+ * El plan de permisos contables lo conserva para contabilidad, así que la
+ * capacidad es la unión de quien sube (operaciones) y quien captura
+ * (contabilidad). Espejo de la RPC `adjuntar_xml_factura_entrante`.
+ */
+export const ADJUNTAR_XML_FACTURA_ENTRANTE: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "operador",
+  "coordinador_logistico",
+  "gerente_operaciones",
+  "contador",
+  "auxiliar_contable",
+];

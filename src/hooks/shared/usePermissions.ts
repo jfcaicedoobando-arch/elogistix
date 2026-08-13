@@ -20,6 +20,7 @@ import {
   RESPONDER_PROFORMA_MANUAL,
   SALES,
   SUBIR_FACTURA_ENTRANTE_EMBARQUE,
+  ADJUNTAR_XML_FACTURA_ENTRANTE,
   TENANT_ADMINS,
   hasRole as has,
 } from "./permissionMatrix";
@@ -54,6 +55,7 @@ export function usePermissions() {
   const canEmitirFactura = has(EMITIR_FACTURA_CLIENTE, roleStr);
   const canCapturarFacturaProveedor = has(CAPTURAR_FACTURA_PROVEEDOR, roleStr);
   const canSubirFacturaEntranteEmbarque = has(SUBIR_FACTURA_ENTRANTE_EMBARQUE, roleStr);
+  const canAdjuntarXmlFacturaEntrante = has(ADJUNTAR_XML_FACTURA_ENTRANTE, roleStr);
   const canAprobarFacturaProveedor = has(APROBAR_FACTURA_PROVEEDOR, roleStr);
   const canPagarProveedor = has(PAGAR_PROVEEDOR, roleStr);
   const canRegistrarCobro = has(REGISTRAR_COBRO, roleStr);
@@ -88,6 +90,7 @@ export function usePermissions() {
     canEmitirFactura,
     canCapturarFacturaProveedor,
     canSubirFacturaEntranteEmbarque,
+    canAdjuntarXmlFacturaEntrante,
     canAprobarFacturaProveedor,
     canPagarProveedor,
     canRegistrarCobro,
