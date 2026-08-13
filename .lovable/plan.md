@@ -1,44 +1,42 @@
-# React Compiler: evaluar si reactivarlo o mantenerlo retirado
+# Auditoría de versiones de dependencias
 
-## Estado actual
-- El **plugin de build** de React Compiler se retiró en `v13.569.0` (RTC-02).
-- Razones documentadas:
-  - Quedó en **0 archivos con la directiva `"use memo"`** tras la limpieza TC-03.
-  - El plugin cargaba **Babel en cada build sin compilar nada** (costo de tiempo/memoria sin beneficio).
-  - Las directivas muertas generaban warnings de Vite (`"use memo" was ignored`).
-- Lo que **sí se conserva**:
-  - `eslint-plugin-react-compiler` en `package.json`.
-  - Regla `react-compiler/react-compiler: "warn"` en `eslint.config.js`.
-  - Eso actúa como guardia estática de "Rules of React" sin afectar el bundle.
+Sin vulnerabilidades altas ni críticas hoy (npm audit limpio). La actualización es de mantenimiento, no de emergencia.
 
-## ¿Fue buena idea?
+## Ola A — Seguras (parches, sin riesgo)
+Actualizar a la última versión de parche:
 
-### Sí, a corto plazo
-- Elimina dependencia/build muerta.
-- Reduce tiempo y memoria de build.
-- Evita warnings falsos de directivas ignoradas.
-- Mantiene las guardias de calidad vía ESLint.
+`@playwright/test`, `@react-pdf/types`, `@tanstack/react-virtual`, `eslint`, `libphonenumber-js`, `nuqs`, `postcss`, `sonner`, `tsx`
 
-### Riesgo a mediano plazo
-- React 19.2 soporta el Compiler nativamente; al no tenerlo activo perdemos **memoización automática** en rutas calientes.
-- Sin `"use memo"` no hay señal de qué componentes están listos para compilar.
-- Las 3 violaciones históricas (`useSafeNavigate`, `sidebar`, `PlantillaSelector`) deben resolverse antes de volver a encenderlo.
+Riesgo: mínimo. Validación: `lint` + `test` + `build`.
 
-## Propuesta
+## Ola B — Menores (compatibles, revisar tras aplicar)
+`@react-pdf/renderer` 4.5→4.6, `@sentry/react` 10.68→10.70, `@supabase/supabase-js` 2.110→2.112, `@types/node` 26.1→26.2, `globals` 17.8→17.11, `knip` 6.29→6.32, `lucide-react` 1.27→1.31, `react-hook-form` 7.83→7.85, `terser` 5.49→5.50, `typescript-eslint` 8.65→8.67
 
-### Opción A — Mantener retirado (recomendada por ahora)
-1. Dejar el plugin fuera de `vite.config.ts`.
-2. Mantener `eslint-plugin-react-compiler` como `warn`.
-3. Crear un test/auditoría que falle si alguien agrega `"use memo"` sin haber reinstalado el plugin (evita directivas muertas).
-4. Revisar mensualmente si vale la pena reactivar según estabilidad de React Compiler y madurez del código.
+Puntos de atención:
+- `@react-pdf/renderer`: correr las pruebas de PDF (canary de 200 renders y contrato multi-página).
+- `knip` y `typescript-eslint`: pueden reportar hallazgos nuevos en CI; se resuelven en el mismo cambio.
+- `react-hook-form`: validar wizards de cotización/embarque.
 
-### Opción B — Reactivar con enfoque phased
-1. Reinstalar `babel-plugin-react-compiler` y cablearlo en `vite.config.ts` en modo `annotation`.
-2. Resolver las 3 violaciones históricas que hoy están silenciadas.
-3. Activar `"use memo"` en 1-2 rutas calientes de prueba (por ejemplo, `Embarques` o `Cotizaciones`).
-4. Medir impacto en tiempo de build y bundle size.
-5. Si es estable, expandir progresivamente a otras rutas.
+## Ola C — Mayores permitidos (uno por vez, cada uno con su verificación)
+1. `@hookform/resolvers` 3.10 → 5.x — cambia la firma del resolver de Zod (ya usamos Zod 4, lo cual favorece la subida).
+2. `@testing-library/jest-dom` 6 → 7 — solo pruebas.
+3. `jsdom` 29 → 30 — entorno de pruebas.
+4. `vitest` + `@vitest/coverage-v8` 3.2.4 → 4.x — cambios en configuración/reporteo de cobertura y en `--merge-reports`; afecta los shards y umbrales de CI. Es el más costoso; hacerlo aislado.
+5. `date-fns` 3.6 → 4.x — nuevo manejo de zonas horarias; revisar utilidades UTC de fechas.
+6. `@tanstack/react-table` 8 → 9 — afecta todas las tablas (`DataTable`); alto impacto visual.
+7. `recharts` 2.15 → 3.x — gráficas de dashboard y cartera.
+8. `zod-validation-error` 4 → 5 — hay `overrides`/`resolutions` que también deben moverse.
+9. `eslint-plugin-react-refresh` 0.5.3 → 0.5.4.
 
-## Pregunta para decidir
+## No actualizar (bloqueados por la plataforma Lovable)
+`vite` (5), `tailwindcss` (3), `typescript` (5), `react-router-dom` (6), `@vitejs/plugin-react-swc` (3), `tailwind-merge` (ya en 3 por decisión previa; no subir más allá de lo permitido).
 
-¿Quieres que preparemos un plan detallado para **Opción A** (mantenerlo fuera y blindar la decisión) o **Opción B** (reactivarlo de forma controlada en 2-3 rutas)?
+Subirlos rompe el build de Lovable, así que quedan fuera del alcance.
+
+## Recomendación de ejecución
+Sugiero aplicar **Ola A + Ola B en un solo cambio** (bajo riesgo, beneficio inmediato) y dejar la Ola C como cambios separados, elegidos por prioridad. Cada ola cierra con `lint`, `typecheck`, `test` y `build`, más entrada en `CHANGELOG.md` y bump de `APP_VERSION`.
+
+## Detalles técnicos
+- Comando por paquete: `bun add <pkg>@<version>` (no `ncu -u` masivo, para poder atribuir fallos).
+- Tras subir `zod-validation-error` hay que sincronizar los bloques `overrides` y `resolutions` de `package.json`.
+- Tras `vitest` 4 revisar `vitest.config.ts`, `vitest.perf.config.ts` y los scripts de shard/merge de cobertura.
