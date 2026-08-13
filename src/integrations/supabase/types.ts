@@ -9206,6 +9206,10 @@ export type Database = {
         Args: { p_embarque_id: string }
         Returns: boolean
       }
+      proveedor_estado_cuenta: {
+        Args: { p_proveedor_id: string }
+        Returns: Json
+      }
       proveedor_salud: { Args: { p_proveedor_id: string }; Returns: Json }
       proveedores_listado: {
         Args: {
