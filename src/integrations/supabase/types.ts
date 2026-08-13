@@ -5366,6 +5366,8 @@ export type Database = {
           organization_id: string
           referencia: string
           rep_cancelado_en: string | null
+          rep_cancelado_facturapi_id: string | null
+          rep_cancelado_uuid: string | null
           rep_cancellation_status: string
           rep_error: string | null
           rep_motivo_cancel: string | null
@@ -5406,6 +5408,8 @@ export type Database = {
           organization_id?: string
           referencia?: string
           rep_cancelado_en?: string | null
+          rep_cancelado_facturapi_id?: string | null
+          rep_cancelado_uuid?: string | null
           rep_cancellation_status?: string
           rep_error?: string | null
           rep_motivo_cancel?: string | null
@@ -5446,6 +5450,8 @@ export type Database = {
           organization_id?: string
           referencia?: string
           rep_cancelado_en?: string | null
+          rep_cancelado_facturapi_id?: string | null
+          rep_cancelado_uuid?: string | null
           rep_cancellation_status?: string
           rep_error?: string | null
           rep_motivo_cancel?: string | null
