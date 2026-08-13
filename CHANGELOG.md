@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.583.2] - 2026-08-13
+- **Lectura de facturas en PDF más tolerante.** Si la petición llegaba sin el formato de archivo esperado, la función fallaba con un error interno (500) y se reportaba como falla del sistema; ahora responde con un aviso claro (400) y ya no ensucia el monitoreo. Cierra JAVASCRIPT-REACT-57.
+- **Confirmado el cierre de JAVASCRIPT-REACT-56** (`getClaims is not a function`): los eventos provenían de la versión anterior de la función; con el despliegue actual ya procesa PDFs sin error.
+
 ## [13.583.1] - 2026-08-13
 - **Mensajes claros en pagos en lote.** Se agregaron los avisos amigables para dos validaciones que antes se mostraban con su código técnico: falta de tipo de cambio y facturas en otra moneda dentro del lote.
 
