@@ -64,14 +64,26 @@ export async function emitirRep(pagoId: string): Promise<RepTimbradoResult> {
 
 export type MotivoCancelacionSat = "01" | "02" | "03" | "04";
 
+export interface CancelarRepResult {
+  ok: boolean;
+  pending: boolean;
+  cancellation_status: string;
+  message: string | null;
+}
+
 export async function cancelarRep(
   pagoId: string,
   motivo: MotivoCancelacionSat,
   sustituyeUuid?: string,
   /** Ola 12 · R3P-21: cancela el REP archivado (motivo 01) sustituyéndolo por el vigente. */
   cancelarRepAnterior?: boolean,
-): Promise<void> {
-  const { data, error } = await supabase.functions.invoke<{ ok?: boolean } & EdgeErrorBody>(
+): Promise<CancelarRepResult> {
+  const { data, error } = await supabase.functions.invoke<{
+    ok?: boolean;
+    pending?: boolean;
+    cancellation_status?: string;
+    message?: string;
+  } & EdgeErrorBody>(
     "facturapi-cancelar-rep",
     { body: { pago_id: pagoId, motivo, sustituye_uuid: sustituyeUuid, cancelar_rep_anterior: cancelarRepAnterior } },
   );
@@ -81,4 +93,10 @@ export async function cancelarRep(
   if (data?.error) {
     lanzarErrorRep(data, null, "No se pudo cancelar el REP.");
   }
+  return {
+    ok: data?.ok === true,
+    pending: data?.pending === true,
+    cancellation_status: data?.cancellation_status ?? "accepted",
+    message: data?.message ?? null,
+  };
 }

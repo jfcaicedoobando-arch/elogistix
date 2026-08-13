@@ -25,6 +25,7 @@ export interface PagoRefacturacion {
   uuid_rep: string | null;
   estado_rep: string | null;
   rep_cancelado_en: string | null;
+  rep_cancellation_status: string | null;
 }
 
 export interface FacturaRefacturacion {
@@ -90,6 +91,12 @@ function bloqueoPaso1(ctx: ContextoPasos): string | null {
 function bloqueoPaso2(ctx: ContextoPasos): string | null {
   const vivos = pagosConRepVivo(ctx.pagos);
   if (vivos.length === 0) return null;
+  const enVerificacion = vivos.filter((p) =>
+    ["pending", "verifying"].includes(p.rep_cancellation_status ?? ""),
+  );
+  if (enVerificacion.length > 0) {
+    return "La solicitud de cancelación del REP está en verificación con el SAT. Esta pantalla se actualizará automáticamente al recibir la respuesta.";
+  }
   return vivos.length === 1
     ? "Cancela el complemento de pago (REP) del pago recibido antes de continuar."
     : `Cancela los ${vivos.length} complementos de pago (REP) vivos antes de continuar.`;

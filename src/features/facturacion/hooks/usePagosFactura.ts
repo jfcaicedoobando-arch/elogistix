@@ -10,11 +10,24 @@ import {
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
-export function usePagosFactura(facturaId: string | undefined) {
+interface PagosFacturaOptions {
+  refetchWhileRepPending?: boolean;
+}
+
+export function usePagosFactura(facturaId: string | undefined, options: PagosFacturaOptions = {}) {
   return useQuery({
     queryKey: queryKeys.facturas.pagos(facturaId ?? ""),
     queryFn: () => listarPagosFactura(facturaId!),
     enabled: !!facturaId,
+    refetchInterval: options.refetchWhileRepPending
+      ? (query) => {
+          const pagos = query.state.data ?? [];
+          const pendiente = pagos.some((p) =>
+            ["pending", "verifying"].includes(p.rep_cancellation_status ?? ""),
+          );
+          return pendiente ? 15_000 : false;
+        }
+      : false,
   });
 }
 

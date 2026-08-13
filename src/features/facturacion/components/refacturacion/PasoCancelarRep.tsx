@@ -2,7 +2,7 @@
  * Paso 2 — Cancelar el complemento de pago (REP) del pago recibido.
  * El pago sólo puede moverse a otra factura cuando su REP está cancelado.
  */
-import { Ban, CheckCircle2 } from "lucide-react";
+import { Ban, CheckCircle2, Clock3, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
@@ -42,6 +42,9 @@ export function PasoCancelarRep({
       <ul className="space-y-2">
         {conRep.map((p) => {
           const vivo = tieneRepVivo(p);
+          const estadoCancelacion = p.rep_cancellation_status ?? "";
+          const verificando = vivo && ["pending", "verifying"].includes(estadoCancelacion);
+          const noAceptada = vivo && ["rejected", "expired"].includes(estadoCancelacion);
           return (
             <li
               key={p.id}
@@ -57,10 +60,14 @@ export function PasoCancelarRep({
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Badge variant={vivo ? "outline" : "secondary"}>
-                  {vivo ? "REP vigente" : "REP cancelado"}
+                <Badge variant={noAceptada ? "destructive" : vivo ? "outline" : "secondary"}>
+                  {verificando
+                    ? "Cancelación en verificación"
+                    : noAceptada
+                      ? "Cancelación no aceptada"
+                      : vivo ? "REP vigente" : "REP cancelado"}
                 </Badge>
-                {vivo && (
+                {vivo && !verificando && (
                   <Button
                     size="sm"
                     variant="destructive"
@@ -72,6 +79,18 @@ export function PasoCancelarRep({
                   </Button>
                 )}
               </div>
+              {verificando && (
+                <p className="basis-full flex items-start gap-2 text-xs text-muted-foreground">
+                  <Clock3 className="h-4 w-4 shrink-0" />
+                  El SAT está verificando la solicitud. El estado se actualizará automáticamente.
+                </p>
+              )}
+              {noAceptada && (
+                <p className="basis-full flex items-start gap-2 text-xs text-destructive">
+                  <TriangleAlert className="h-4 w-4 shrink-0" />
+                  La solicitud fue rechazada o expiró. Puedes enviarla nuevamente.
+                </p>
+              )}
             </li>
           );
         })}

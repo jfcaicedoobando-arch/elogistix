@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.589.6] - 2026-08-13
+- **F1026 ya muestra correctamente la cancelación asíncrona de su REP.** El SAT recibió la solicitud pero la dejó en verificación; antes la pantalla decía incorrectamente “REP cancelado” y seguía mostrando el botón como si nada hubiera ocurrido.
+- El asistente ahora distingue “solicitud enviada” de “cancelación aceptada”, muestra el estado de verificación, bloquea reintentos duplicados y refresca automáticamente hasta recibir una respuesta fiscal terminal.
+
 ## [13.589.5] - 2026-08-13
 - **"Refacturar a otro receptor" vuelve a aparecer en facturas ya cobradas.** La opción se ocultaba en cuanto la factura pasaba a "Pagada" (por ejemplo F1026), aunque la base de datos sí permite abrir el caso.
 - Ahora la opción se muestra en cualquier CFDI timbrado y vivo (Emitida, Pagada, Parcialmente pagada o Vencida) sin factura sustituta vigente, con los mismos permisos por rol contable/administración.
