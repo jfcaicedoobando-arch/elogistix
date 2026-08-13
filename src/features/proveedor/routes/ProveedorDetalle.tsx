@@ -1,16 +1,8 @@
 import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
-import {
-  Truck, Pencil, Trash2, PackageX, MoreHorizontal,
-} from "lucide-react";
+import { PackageX } from "lucide-react";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { toTitleCase } from "@/lib/formatters";
@@ -21,12 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
 import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
 import { ProveedorBrechaCard } from "../components/ProveedorBrechaCard";
-import { ProveedorCsfUpdateButton } from "../components/ProveedorCsfUpdateButton";
+import { ProveedorDetalleHeader } from "../components/ProveedorDetalleHeader";
 import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancariosCard";
 import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneralesCard";
 import { ProveedorResumenCards } from "../components/ProveedorResumenCards";
 import { ProveedorSaludTab } from "../components/ProveedorSaludTab";
 import { ProveedorEstadoCuentaTab } from "../components/ProveedorEstadoCuentaTab";
+import { ProveedorDocumentosTab } from "../components/ProveedorDocumentosTab";
 import { ProveedorAnticiposCard } from "@/features/anticipos-proveedor/components/ProveedorAnticiposCard";
 
 export default function ProveedorDetalle() {
@@ -56,7 +49,6 @@ export default function ProveedorDetalle() {
     );
   }
 
-
   const nombreFmt = toTitleCase(proveedor.nombre);
   const rfcFmt = (proveedor.rfc || "").toUpperCase();
   const esNacional = proveedor.origen_proveedor === "Nacional";
@@ -66,48 +58,19 @@ export default function ProveedorDetalle() {
 
   return (
     <PageContainer>
-      <DetailHeader
-        backTo={volver}
-        backLabel="Volver a Proveedores"
-        icon={<Truck className="h-6 w-6 text-accent shrink-0" />}
-        title={nombreFmt}
-        subtitle={rfcFmt ? `RFC / Tax ID · ${rfcFmt}` : undefined}
-        badge={
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{categoriaLabel}</Badge>
-            <Badge variant="outline" className="font-normal">
-              {esNacional ? "Nacional" : "Extranjero"}
-            </Badge>
-          </div>
-        }
-        trailing={canEdit ? (
-          <>
-            <Button size="sm" onClick={() => setEditOpen(true)}>
-              <Pencil className="mr-2 h-4 w-4" /> Editar
-            </Button>
-            {esNacional && (
-              <ProveedorCsfUpdateButton proveedor={proveedor} onUpdate={handleUpdate} />
-            )}
-            {isAdmin && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" aria-label={`Más acciones del proveedor ${nombreFmt}`}>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem
-                    onClick={() => setDeleteOpen(true)}
-                    disabled={isDeleting}
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </>
-        ) : undefined}
+      <ProveedorDetalleHeader
+        proveedor={proveedor}
+        nombreFmt={nombreFmt}
+        rfcFmt={rfcFmt}
+        esNacional={esNacional}
+        categoriaLabel={categoriaLabel}
+        volver={volver}
+        canEdit={canEdit}
+        isAdmin={isAdmin}
+        isDeleting={isDeleting}
+        onEditar={() => setEditOpen(true)}
+        onEliminar={() => setDeleteOpen(true)}
+        onUpdate={handleUpdate}
       />
 
       <ProveedorResumenCards
@@ -152,7 +115,6 @@ export default function ProveedorDetalle() {
         canEdit={canEdit}
       />
 
-
       <ProveedorBrechaCard brecha={brecha} huerfanas={huerfanas} proveedorNombre={nombreFmt} />
 
       <Tabs defaultValue="operaciones">
@@ -167,6 +129,7 @@ export default function ProveedorDetalle() {
             )}
           </TabsTrigger>
           <TabsTrigger value="estado_cuenta">Estado de cuenta</TabsTrigger>
+          <TabsTrigger value="documentos">Documentos</TabsTrigger>
           <TabsTrigger value="salud">Salud</TabsTrigger>
         </TabsList>
         <TabsContent value="operaciones" className="mt-4">
@@ -199,6 +162,14 @@ export default function ProveedorDetalle() {
             proveedorId={proveedor.id}
             proveedorNombre={nombreFmt}
             rfc={proveedor.rfc}
+          />
+        </TabsContent>
+        <TabsContent value="documentos" className="mt-4">
+          <ProveedorDocumentosTab
+            proveedorId={proveedor.id}
+            organizationId={proveedor.organization_id ?? ""}
+            esNacional={esNacional}
+            canEdit={canEdit}
           />
         </TabsContent>
         <TabsContent value="salud" className="mt-4">

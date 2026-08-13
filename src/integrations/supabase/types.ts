@@ -6178,6 +6178,71 @@ export type Database = {
           },
         ]
       }
+      proveedor_documentos: {
+        Row: {
+          archivo: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          fecha_documento: string | null
+          fecha_vencimiento: string | null
+          id: string
+          mime_type: string | null
+          nombre: string
+          notas: string | null
+          organization_id: string
+          proveedor_id: string
+          tamano_bytes: number | null
+          tipo: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          archivo: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_documento?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          mime_type?: string | null
+          nombre: string
+          notas?: string | null
+          organization_id: string
+          proveedor_id: string
+          tamano_bytes?: number | null
+          tipo: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          archivo?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_documento?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          mime_type?: string | null
+          nombre?: string
+          notas?: string | null
+          organization_id?: string
+          proveedor_id?: string
+          tamano_bytes?: number | null
+          tipo?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proveedor_documentos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proveedor_facturas: {
         Row: {
           aprobada_at: string | null

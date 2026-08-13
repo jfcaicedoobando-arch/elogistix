@@ -3,6 +3,7 @@
  * Lógica pura: no toca el DOM ni la red.
  */
 import { toCsv } from "@/lib/csv/serializeCsv";
+import { roundMoney } from "@/lib/financial/financialUtils";
 import { formatDate } from "@/lib/formatters";
 import {
   ETIQUETAS_BUCKET_PROVEEDOR,
@@ -24,7 +25,7 @@ export interface FilaMovimientoExport {
   saldo: string;
 }
 
-const num = (n: number): string => (Number(n) || 0).toFixed(2);
+const num = (n: number): string => roundMoney(Number(n) || 0).toFixed(2);
 
 export function filasMovimientosExport(
   movimientos: readonly MovimientoConSaldo[],
@@ -80,7 +81,7 @@ export function estadoCuentaACsv(
     ]),
   );
   const totales = toCsv(
-    ["Moneda", "Cargos", "Abonos", "Saldo final"],
+    ["Moneda", "Cargos", "Abonos", "Saldo del periodo"],
     saldos.map((s) => [s.moneda, s.cargos, s.abonos, s.saldo]),
   );
   const encabezado = toCsv(
