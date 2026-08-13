@@ -1,6 +1,6 @@
 -- Canonical schema para public.saldo_factura_proveedor (Ola 12 · R3P-01, migración 20260823100100).
 -- Saldo de una factura de proveedor en su propia moneda; NC sólo 'Aplicada'
--- (regla única R3P-08) y pagos convertidos con monto_pago_en_moneda_factura.
+-- y pagos convertidos con monto_pago_en_moneda_factura.
 CREATE OR REPLACE FUNCTION public.saldo_factura_proveedor(p_factura_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql

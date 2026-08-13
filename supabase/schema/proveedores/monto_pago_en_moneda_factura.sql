@@ -1,7 +1,7 @@
 -- Canonical schema para public.monto_pago_en_moneda_factura (Ola 12 · R3P-01, migración 20260823100100).
 -- Convierte un pago a la moneda de la factura. Sin tipo de cambio con monedas
 -- distintas devuelve NULL: el llamador excluye el pago del saldo y marca
--- flujo_incompleto (nunca 1:1 silencioso, clase BL-04/RBD-07).
+-- flujo_incompleto (nunca 1:1 silencioso).
 CREATE OR REPLACE FUNCTION public.monto_pago_en_moneda_factura(
   p_monto numeric,
   p_moneda_pago text,
