@@ -18,7 +18,7 @@ interface Props {
   rfcFmt: string;
   esNacional: boolean;
   categoriaLabel: string;
-  volver: string;
+  volver: string | number | null | (() => void);
   canEdit: boolean;
   isAdmin: boolean;
   isDeleting: boolean;
