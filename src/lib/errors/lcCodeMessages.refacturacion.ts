@@ -26,6 +26,8 @@ export const LC_CODE_MESSAGES_REFACTURACION: Record<string, string> = {
     "Al nuevo receptor le faltan datos fiscales (razón social, régimen fiscal o código postal).",
   LC_REFACT_RFC_INVALIDO:
     "El RFC no tiene formato válido del SAT (12 o 13 caracteres) o es un RFC genérico.",
+  LC_REFACT_MONEDA:
+    "La moneda del pago no coincide con la moneda de la factura destino.",
   LC_REFACT_MONEDA_INCONSISTENTE:
     "La moneda del pago o de la nueva factura no coincide con la factura original.",
   LC_REFACT_IMPUESTOS_INCONSISTENTES:
