@@ -40,7 +40,8 @@ describe("useDirtyGuard", () => {
     );
     expect(screen.queryByText("¿Salir sin guardar?")).not.toBeInTheDocument();
   });
-}
+
+
   it("RFE-05: sin cambios, confirmarSalida ejecuta la acción sin diálogo", async () => {
     const accion = vi.fn();
     render(
