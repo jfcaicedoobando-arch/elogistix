@@ -1,11 +1,28 @@
--- Canonical schema para public.proveedor_inteligencia
--- Capturado 1:1 desde la base y actualizado en 13.577.0
--- (Ola 12 · Sprint 05 · R3P-17: dias_facturacion_prom sin colapso a 0).
+-- ============================================================
+-- Ola 12 · Sprint 09 · R3P-15 + R3P-14 (proveedor_inteligencia):
+--  * R3P-15: las alertas de saldo vencido/por vencer ignoraban las NC y
+--    los pagos en otra moneda (factura cubierta al 100% por NC seguía
+--    alertando; factura USD pagada en MXN daba saldo negativo y
+--    desaparecía de las alertas). Ahora se restan NC 'Aplicada' y los
+--    pagos se convierten a la moneda de la factura con
+--    pagos_proveedor.tipo_cambio_usd; sin TC el pago no se descuenta
+--    (degrada, nunca 1:1 silencioso — patrón RBD-07).
+--  * R3P-14: origen_proveedor NULL se trata como 'Nacional' de forma
+--    explícita (COALESCE), alineado con la UI (documentosProveedor.
+--    esNacionalOrigen). Comportamiento idéntico al ELSE anterior; el
+--    cambio es de intención documentada, no de resultado.
+-- ACUMULATIVA sobre 20260823051200 (Sprint 05 · R3P-17): conserva el
+-- COALESCE de primera_emision con pf.created_at y la exclusión de
+-- diferencias negativas en dias_facturacion_prom. NO partir de la vigente
+-- 20260813013122: se perdería ese fix. Sin cambio de firma.
+-- Espejo 1:1 obligatorio: supabase/schema/proveedores/proveedor_inteligencia.sql
+-- ============================================================
+
 CREATE OR REPLACE FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid)
- RETURNS jsonb
- LANGUAGE plpgsql
- STABLE SECURITY DEFINER
- SET search_path TO 'public'
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
 AS $function$
 DECLARE
   v_oid uuid := public.current_user_org_id();
@@ -48,6 +65,9 @@ BEGIN
   fact AS (
     SELECT pfc.concepto_costo_id,
            SUM(pfc.monto) AS facturado,
+           -- Sprint 05 · R3P-17: COALESCE defensivo con la fecha de captura
+           -- de la factura (el default CURRENT_DATE de la columna no protege
+           -- contra imports legados con fecha vacía).
            MIN(COALESCE(pf.fecha_emision, pf.created_at::date)) AS primera_emision,
            MIN(pf.moneda::text) AS moneda_factura
     FROM public.proveedor_facturas_conceptos pfc
@@ -93,8 +113,13 @@ BEGIN
     'facturado_mxn', (SELECT ROUND(COALESCE(SUM(facturado_mxn), 0), 2) FROM part WHERE facturado IS NOT NULL),
     'comprometido_ligado_mxn', (SELECT ROUND(COALESCE(SUM(monto_mxn), 0), 2) FROM part WHERE facturado IS NOT NULL),
     'dias_facturacion_prom', (
+      -- Sprint 05 · R3P-17: antes GREATEST(...,0) colapsaba a 0 las facturas
+      -- emitidas ANTES del alta del concepto, sesgando el promedio a la baja.
+      -- Filtro documentado: las diferencias negativas se EXCLUYEN del
+      -- promedio (captura tardía o re-etiquetado, no rezago medible).
       SELECT ROUND(AVG(primera_emision - created_at::date)::numeric, 1)
-      FROM part WHERE primera_emision IS NOT NULL
+      FROM part
+      WHERE primera_emision IS NOT NULL
         AND primera_emision >= created_at::date
     ),
     'facturas_count', (SELECT n FROM facs),
@@ -200,10 +225,26 @@ BEGIN
       )
   ),
   saldos AS (
+    -- R3P-15: pagos convertidos a la moneda de la factura con el TC del
+    -- pago (sin TC ⇒ el pago NO se descuenta) y NC sólo 'Aplicada'.
     SELECT pf.id, pf.fecha_vencimiento,
            (pf.total - COALESCE((
-             SELECT SUM(pp.monto) FROM public.pagos_proveedor pp
+             SELECT SUM(
+               CASE
+                 WHEN pp.moneda::text = pf.moneda::text THEN pp.monto
+                 WHEN COALESCE(pp.tipo_cambio_usd, 0) <= 0 THEN 0
+                 WHEN pp.moneda::text = 'MXN' THEN pp.monto / pp.tipo_cambio_usd
+                 WHEN pf.moneda::text = 'MXN' THEN pp.monto * pp.tipo_cambio_usd
+                 ELSE 0 -- cruce USD↔EUR no soportado: se excluye
+               END
+             )
+             FROM public.pagos_proveedor pp
              WHERE pp.proveedor_factura_id = pf.id AND pp.deleted_at IS NULL
+           ), 0)
+           - COALESCE((
+             SELECT SUM(nc.monto) FROM public.proveedor_notas_credito nc
+             WHERE nc.proveedor_factura_id = pf.id AND nc.deleted_at IS NULL
+               AND nc.estado = 'Aplicada'
            ), 0)) * COALESCE(CASE pf.moneda::text WHEN 'USD' THEN v_usd WHEN 'EUR' THEN v_eur ELSE 1 END, 0) AS saldo_mxn
     FROM public.proveedor_facturas pf
     WHERE pf.proveedor_id = p_proveedor_id AND pf.organization_id = v_oid
@@ -238,7 +279,9 @@ BEGIN
     ),
     'saldo_pendiente_mxn', (SELECT ROUND(COALESCE(SUM(saldo_mxn), 0), 2) FROM saldos WHERE saldo_mxn > 0.005),
     'bancarios_incompletos', (
-      SELECT CASE WHEN b.origen = 'Extranjero' THEN (b.sin_ruta_intl OR b.sin_beneficiario)
+      -- R3P-14: una sola fuente de verdad — NULL = Nacional hasta que se
+      -- capture lo contrario (idéntico criterio en la UI).
+      SELECT CASE WHEN COALESCE(b.origen, 'Nacional') = 'Extranjero' THEN (b.sin_ruta_intl OR b.sin_beneficiario)
                   ELSE (b.sin_banco OR b.sin_clabe) END
       FROM banco b
     ),
