@@ -77,6 +77,29 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     [receptorDestino],
   );
 
+  // El ordenante real del depósito es el receptor de la factura viva (la nueva):
+  // la original y su REP se cancelaron para sustituirse. Se siembra una vez y
+  // el usuario puede corregirlo.
+  const ordenanteAuto = useMemo(
+    () => ordenanteSugerido(s.facturaNueva, receptorDestino),
+    [s.facturaNueva, receptorDestino],
+  );
+
+  useEffect(() => {
+    if (!open || ordenanteTocado || !ordenanteAuto) return;
+    setOrdenanteNombre(ordenanteAuto.nombre);
+    setOrdenanteRfc(ordenanteAuto.rfc);
+  }, [open, ordenanteTocado, ordenanteAuto]);
+
+  const cambiarOrdenanteNombre = (v: string) => {
+    setOrdenanteTocado(true);
+    setOrdenanteNombre(v);
+  };
+  const cambiarOrdenanteRfc = (v: string) => {
+    setOrdenanteTocado(true);
+    setOrdenanteRfc(v);
+  };
+
   const consistenciaQuery = useRefacturacionConsistencia(
     s.caso?.id ?? null,
     open && Boolean(s.caso?.factura_nueva_id) && s.paso >= 3,
