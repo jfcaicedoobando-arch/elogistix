@@ -16,7 +16,7 @@ import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { timbrarRep } from "./timbrar.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
-import { calcularParcialidad, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
+import { calcularParcialidad, factorIvaFacturaOriginal, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
@@ -93,6 +93,18 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // α.1 — Tasa IVA efectiva de la factura original (extraída a context.ts).
   const tasaIvaFactura = tasaIvaFacturaOriginal(Number(factura.subtotal ?? 0), Number(factura.iva ?? 0));
 
+  // α.2 (v13.559.1) — Facturas sin IVA: distinguir exentas de tasa 0% para que
+  // el REP siempre lleve el desglose de impuestos que exige el SAT/Facturapi.
+  const { data: conceptosIva } = await supabase
+    .from("conceptos_factura")
+    .select("tipo_iva")
+    .eq("factura_id", factura.id)
+    .is("deleted_at", null);
+  const factorIvaFactura = factorIvaFacturaOriginal(
+    tasaIvaFactura,
+    (conceptosIva ?? []).map((c) => (c as { tipo_iva?: string | null }).tipo_iva),
+  );
+
   // 3) Cliente
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")
@@ -156,6 +168,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       imp_saldo_insoluto: saldoInsoluto,
       metodo_pago: "PPD",
       tasa_iva: tasaIvaFactura,
+      factor_iva: factorIvaFactura,
     },
     referencias: refs,
   };
