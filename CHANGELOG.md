@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.562.0] - 2026-08-13
+- **Cobro y pago en lote con las mismas reglas (Sprint 3 · paridad de lotes)**: ambos módulos ahora validan igual la fecha (nunca futura ni anterior a la emisión de una factura del lote), exigen tipo de cambio cuando el lote es en dólares o euros, y obligan a que el reparto cuadre al centavo con el importe realmente recibido o transferido (ya no se acepta sobrante sin asignar).
+- **Sin facturas repetidas en el reparto**: si una factura aparece dos veces en un lote, el sistema lo detecta y lo explica antes de guardar.
+- **Cobros en lote a prueba de doble clic**: cada envío lleva una llave única; si se reintenta, se devuelve el resultado original en lugar de duplicar el cobro, y si aún está en proceso avisa con un mensaje claro.
+- **Comisiones y reportes en pesos más exactos**: los pagos individuales de un cobro en lote en dólares o euros ya guardan el tipo de cambio del lote (antes se registraba 1, lo que subestimaba los montos convertidos a pesos).
+
+
 ## [13.561.0] - 2026-08-13
 - **Cancelaciones fiscales que no se quedan a medias (REF-01)**: si el timbrador tarda demasiado en responder una cancelación, la factura queda marcada como "en verificación" con su bitácora, de modo que el proceso automático la revisa después y refleja el estado real ante el SAT.
 - **Los complementos de pago (REP) ya entran al proceso automático de cancelación (REF-02)**: antes sólo se cerraban si llegaba el aviso del timbrador; ahora el barrido periódico también los revisa y los deja como Cancelado (o rechazado/expirado) con su registro en bitácora.
