@@ -10,6 +10,7 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { captureEdgeException } from "../_shared/sentry.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { withFacturapiTimeout } from "../_shared/facturapiClient.ts";
 import {
   acumularOutcome,
   resolveNextActionRep,
@@ -53,7 +54,12 @@ export async function reconcileOneRep(ctx: RepCtx, rep: RepPendiente): Promise<v
   const { supabase, facturapi, orgId, resumen } = ctx;
   resumen.revisadas++;
   try {
-    const remote = await facturapi.invoices.retrieve(rep.facturapi_rep_id) as FapiInvoiceStatus;
+    // R3EF-02 (Ola 12): 15 s — igual que las familias factura/NC en index.ts.
+    const remote = await withFacturapiTimeout(
+      "invoices.retrieve",
+      facturapi.invoices.retrieve(rep.facturapi_rep_id),
+      15_000,
+    ) as FapiInvoiceStatus;
     const decision = resolveNextActionRep(remote, rep, new Date().toISOString());
 
     if (decision.outcome === "no_change") {

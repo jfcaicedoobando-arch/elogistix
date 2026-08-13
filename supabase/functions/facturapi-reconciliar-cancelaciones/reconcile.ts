@@ -36,12 +36,19 @@ export async function descargarAcuse(
   try {
     const res = await fetchFn(`${FACTURAPI_BASE}/invoices/${facturapiId}/cancellation_receipt/xml`, {
       headers: { Authorization: basicAuthHeader(apiKey) },
+      // R3EF-02 (Ola 12): un socket colgado no disparaba el catch y consumía
+      // el wall-clock de la edge. Patrón AbortSignal.timeout (test-conexion),
+      // 12 s como respaldarXmlTimbrado (EF-08).
+      signal: AbortSignal.timeout(12_000),
     });
     if (res.status === 200) return { xml: await res.text(), status: "accepted" };
     if (res.status === 404 || res.status === 425) return { xml: null, status: "pending" };
     return { xml: null, status: `error_${res.status}` };
-  } catch {
-    return { xml: null, status: "error_network" };
+  } catch (e) {
+    const esTimeout = e instanceof DOMException &&
+      (e.name === "TimeoutError" || e.name === "AbortError");
+    // Reintentable: el acuse queda en null y la próxima corrida lo reintenta.
+    return { xml: null, status: esTimeout ? "error_timeout" : "error_network" };
   }
 }
 

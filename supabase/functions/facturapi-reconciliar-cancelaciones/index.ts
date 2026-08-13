@@ -6,7 +6,7 @@
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
-import { getFacturapiClient } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, withFacturapiTimeout } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { validarRequest, cargarPendientes, type Pendientes } from "./entrada.ts";
@@ -28,6 +28,14 @@ import {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
+
+/**
+ * R3EF-02 (Ola 12): timeout por llamada al SDK en el barrido del cron.
+ * 15 s (no los 30 s default de `withFacturapiTimeout`): con cientos de
+ * pendientes por corrida, un retrieve colgado truncaría el lote entero.
+ * El catch EF-12 deja la fila en pending/verifying → reintento en 30 min.
+ */
+const CRON_RETRIEVE_TIMEOUT_MS = 15_000;
 
 
 /**
@@ -103,7 +111,11 @@ async function reconcileOne(ctx: ReconcileCtx, factura: FacturaPendiente): Promi
   const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
   resumen.revisadas++;
   try {
-    const remote = await facturapi.invoices.retrieve(factura.facturapi_id) as FapiInvoiceStatus;
+    const remote = await withFacturapiTimeout(
+      "invoices.retrieve",
+      facturapi.invoices.retrieve(factura.facturapi_id),
+      CRON_RETRIEVE_TIMEOUT_MS,
+    ) as FapiInvoiceStatus;
     const decision = resolveNextAction(remote, factura, new Date().toISOString());
 
     if (decision.outcome === "no_change") {
@@ -183,7 +195,11 @@ async function reconcileOneNc(ctx: ReconcileCtx, nc: NotaCreditoPendiente): Prom
   const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
   resumen.revisadas++;
   try {
-    const remote = await facturapi.invoices.retrieve(nc.facturapi_id) as FapiInvoiceStatus;
+    const remote = await withFacturapiTimeout(
+      "invoices.retrieve",
+      facturapi.invoices.retrieve(nc.facturapi_id),
+      CRON_RETRIEVE_TIMEOUT_MS,
+    ) as FapiInvoiceStatus;
     const decision = resolveNextActionNc(remote, nc, new Date().toISOString());
 
     if (decision.outcome === "no_change") {
