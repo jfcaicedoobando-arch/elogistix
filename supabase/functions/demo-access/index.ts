@@ -27,6 +27,10 @@ function jsonRes(body: unknown, status: number, extraHeaders: Record<string, str
 }
 
 function ipDeRequest(req: Request): string {
+  // REF-05 · limitación conocida: la plataforma edge no garantiza que
+  // x-forwarded-for / cf-connecting-ip vengan fijados por el proxy; un cliente
+  // puede rotarlos y evadir el límite por IP. Mitigación: tope global por hora
+  // en limitarPeticiones (independiente de la IP).
   return (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim()
     || req.headers.get("cf-connecting-ip")
     || "unknown";
@@ -55,6 +59,27 @@ async function limitarPeticiones(admin: SupabaseClient, req: Request): Promise<R
   const rlResult = rl as { ok?: boolean; retry_after?: number } | null;
   if (rlResult?.ok === false) {
     return jsonRes({ error: "rate_limited" }, 429, { "Retry-After": String(rlResult.retry_after ?? 60) });
+  }
+
+  // REF-05: tope global por hora, independiente de la IP (el límite por IP es
+  // evadible rotando XFF — ver nota en ipDeRequest). 30 seeds/hora es holgado
+  // para uso legítimo del botón "Ver demo" y acota el abuso.
+  const { data: gl, error: glErr } = await admin.rpc("check_ratelimit", {
+    p_key: "demo-access:global",
+    p_window_seconds: 3600,
+    p_max: 30,
+  });
+  if (glErr) {
+    console.error("demo-access global ratelimit rpc failed:", glErr.message);
+    await captureEdgeException(new Error(`check_ratelimit failed: ${glErr.message}`), {
+      fn: "demo-access",
+      status_code: 503,
+    });
+    return jsonRes({ error: "rate_limit_unavailable" }, 503, { "Retry-After": "30" });
+  }
+  const glResult = gl as { ok?: boolean; retry_after?: number } | null;
+  if (glResult?.ok === false) {
+    return jsonRes({ error: "rate_limited" }, 429, { "Retry-After": String(glResult.retry_after ?? 300) });
   }
   return null;
 }
@@ -91,18 +116,17 @@ async function asegurarUsuarioDemo(admin: SupabaseClient): Promise<string> {
  * (cada llamada re-sembraba destructivamente).
  */
 async function resembrarSiHaceFalta(admin: SupabaseClient): Promise<void> {
-  const { data: seedState } = await admin
-    .from("demo_seed_state")
-    .select("last_seeded_at")
-    .eq("id", true)
-    .maybeSingle();
-  const ultimo = seedState?.last_seeded_at as string | null | undefined;
-  const seededRecientemente = !!ultimo && (Date.now() - new Date(ultimo).getTime()) < SEED_SKIP_MS;
-  if (seededRecientemente) return;
-
-  const { error: seedErr } = await admin.rpc("seed_demo_organization");
+  // REF-05: la verificación de edad + seed + upsert del marcador ocurren en UNA
+  // transacción serializada (pg_advisory_xact_lock) dentro de la RPC — el
+  // chequeo previo en cliente era check-then-act y dos requests concurrentes
+  // dentro de la ventana re-sembraban en paralelo.
+  const { data: sembrada, error: seedErr } = await admin.rpc("seed_demo_organization_guarded", {
+    p_skip_ms: SEED_SKIP_MS,
+  });
   if (seedErr) throw seedErr;
-  await admin.from("demo_seed_state").upsert({ id: true, last_seeded_at: new Date().toISOString() });
+  if (sembrada === false) {
+    console.log("demo-access: seed omitido (sembrado hace <10 min)");
+  }
 }
 
 function mensajeError(err: unknown): string {
@@ -136,9 +160,10 @@ Deno.serve(async (req) => {
 
     return jsonRes({ email: DEMO_EMAIL, password: DEMO_PASSWORD }, 200);
   } catch (err) {
-    const message = mensajeError(err);
-    console.error("demo-access error:", message, err);
+    console.error("demo-access error:", mensajeError(err), err);
     await captureEdgeException(err, { fn: "demo-access", status_code: 500 });
-    return jsonRes({ error: message }, 500);
+    // REF-05: endpoint público — no filtrar err.message (huella interna).
+    // El detalle queda en logs de plataforma y en Sentry.
+    return jsonRes({ error: "demo_access_failed" }, 500);
   }
 });
