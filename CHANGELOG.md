@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.577.0] - 2026-08-13
+- **Ola 12 · Sprint 05 — Estado de cuenta del proveedor (4 correcciones P3).**
+  - Los saldos por moneda ahora son **globales** (todo el historial, no sólo el periodo filtrado), así cuadran contra la antigüedad de saldos; la tarjeta se llama "Saldos por moneda" y aclara que es saldo global.
+  - La antigüedad de saldos (Vigente, 1-30, 31-60, 61-90, 90+) se calcula con la fecha local de la Ciudad de México, ya no con la fecha del servidor: por las tardes los rangos dejan de "adelantar un día".
+  - Ya se puede exportar el estado de cuenta (CSV y PDF) cuando el periodo no tiene movimientos pero el proveedor sí tiene saldo vencido; el CSV incluye ahora una sección de "Antigüedad".
+  - El promedio de días de facturación deja de contar como 0 las facturas emitidas antes del alta del costo (se excluyen del promedio) y usa la fecha de captura si faltara la de emisión.
+  - Se agregaron los espejos declarativos de `proveedor_estado_cuenta_movimientos` y `proveedor_inteligencia` en `supabase/schema/proveedores/`.
+
 ## [13.576.0] - 2026-08-13
 - **Ola 4 — Cierre de la homologación Cliente ↔ Proveedor: contactos múltiples y expediente documental.**
   - Nueva pestaña **Contactos** en la ficha del proveedor: varias personas por proveedor (tráfico, cobranza, facturación) con un único contacto principal, alta/edición en modal estándar y baja lógica que conserva el histórico.
