@@ -23,6 +23,7 @@ import {
 } from "@/features/facturacion/domain/refacturacionValidaciones";
 import { useRefacturacionConsistencia } from "@/features/facturacion/hooks/useRefacturacionConsistencia";
 import type { RutaFiscalRefacturacion } from "@/features/facturacion/services/refacturacion";
+import type { AppRole } from "@/types/appRole";
 
 export function useRefacturarWizard(facturaId: string | null, open: boolean, onClose: () => void) {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
   const { role } = usePermissions();
   // Espejo del guard `_assert_refacturador`: sólo roles contables y de
   // administración operan; los demás quedan en modo consulta.
-  const bloqueoPermiso = motivoBloqueoRefacturacion(role as never);
+  const bloqueoPermiso = motivoBloqueoRefacturacion(role as AppRole | null);
   const puedeOperar = !bloqueoPermiso;
   const s = useRefacturacion(facturaId, open);
   const clientesQuery = useClientesFiscalOpts(organizationId ?? null, open);
