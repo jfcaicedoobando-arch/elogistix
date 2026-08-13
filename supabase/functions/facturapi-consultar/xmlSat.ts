@@ -145,14 +145,18 @@ export interface RepComparable {
 
 /**
  * Diferencias del XML de un REP. El `Comprobante@Total` de un REP es 0 por
- * norma (Anexo 20), así que el monto se compara contra el importe del pago
- * declarado en el complemento (`Pago@Monto`).
+ * norma (Anexo 20), así que el monto y la moneda se comparan contra los datos
+ * del complemento de pagos (`Pago@Monto`, `Pago@MonedaP`).
  */
-export function compararRepXml(meta: CfdiMeta, montoPagoXml: number | null, bd: RepComparable): string[] {
+export function compararRepXml(
+  meta: CfdiMeta,
+  pago: { monto: number | null; moneda: string | null },
+  bd: RepComparable,
+): string[] {
   return [
     difTexto("XML UUID", meta.uuid, bd.uuid_rep),
-    difImporte("XML monto del pago", montoPagoXml, bd.monto),
-    difTexto("XML moneda del pago", meta.moneda ?? null, null),
+    difImporte("XML monto del pago", pago.monto, bd.monto),
+    difTexto("XML moneda del pago", pago.moneda, bd.moneda),
   ].filter((d): d is string => d !== null);
 }
 
