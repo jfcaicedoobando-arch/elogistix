@@ -59,6 +59,23 @@ export function originalFueraDeCirculacion(factura: FacturaRefacturacion | null)
   return ["Cancelada", "Sustituida"].includes(factura.estado);
 }
 
+/** La cancelación del CFDI original ya se solicitó y está en manos del SAT. */
+export function cancelacionOriginalEnTramite(factura: FacturaRefacturacion | null): boolean {
+  if (!factura) return false;
+  if (originalFueraDeCirculacion(factura)) return false;
+  return ["pending", "verifying"].includes(factura.cancellation_status ?? "");
+}
+
+/** El SAT rechazó (o dejó expirar) la solicitud de cancelación del original. */
+export function cancelacionOriginalRechazada(factura: FacturaRefacturacion | null): boolean {
+  if (!factura) return false;
+  if (originalFueraDeCirculacion(factura)) return false;
+  return ["rejected", "expired"].includes(factura.cancellation_status ?? "");
+}
+
+export const AVISO_ORIGINAL_EN_VERIFICACION =
+  "La cancelación del CFDI original está en verificación con el SAT. Puedes reasignar el pago porque el REP anterior ya está cancelado; la factura original quedará cancelada en automático cuando el SAT responda.";
+
 export interface ContextoPasos {
   casoAbierto: boolean;
   clienteDestinoId: string | null;
