@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.557.0] - 2026-08-13
+- **Nueva pestaña "Expediente" en el detalle de proveedor** (Ola 3): resguardo de constancia de situación fiscal, opinión de cumplimiento, comprobante de datos bancarios, contratos y actas, con carga de archivos, fecha del documento y fecha de vencimiento.
+- **Semáforo de completitud del expediente**: indica documentos faltantes, por vencer (30 días) y vencidos; los proveedores extranjeros sólo requieren el comprobante bancario.
+- Descarga con **ligas firmadas temporales** y eliminación con doble confirmación; los archivos viven en `proveedores/{id}` con acceso restringido a la organización dueña.
+- Nueva tabla `public.proveedor_documentos` con RLS por organización y permisos canónicos.
+- Pruebas nuevas de vigencia, completitud del expediente y del servicio de carga (limpia el archivo si falla el registro).
+
 ## [13.556.0] - 2026-08-13
 - **Nueva pestaña "Estado de cuenta" en el detalle de proveedor** (Ola 2): movimientos en orden cronológico con las facturas del proveedor como cargo y los pagos, notas de crédito y anticipos aplicados como abono, con **saldo corrido por moneda** (nunca se suman pesos con dólares).
 - **Antigüedad de saldos por pagar** por moneda: Por vencer, 1 a 30, 31 a 60, 61 a 90 y más de 90 días, con conteo de facturas y total vencido.
