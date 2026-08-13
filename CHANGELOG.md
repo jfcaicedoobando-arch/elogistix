@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.565.0] - 2026-08-13
+- **Enlaces de seguimiento vencidos ya dicen la verdad (Sprint 6 · páginas públicas)**: si el enlace no existe o venció, el cliente ve "este enlace ya no es válido o venció" con los pasos a seguir, en lugar del genérico "el servicio no está disponible" que lo invitaba a reintentar en vano.
+- **Los enlaces personales ya no se publican en buscadores**: las páginas de seguimiento, proformas y baja de correos piden a Google que no las indexe y la dirección "oficial" que declaran ya no incluye el token del cliente.
+- **Fechas del seguimiento en formato mexicano**: el ETD y ETA de la tarjeta "Ruta" se muestran como 21/08/2026, igual que el resto de la app (antes salía la fecha cruda 2026-08-21).
+- **Botones de carga consistentes**: "Solicitar cotización" y "Aceptar proforma" usan el spinner estándar, sin ícono duplicado.
+- **Formularios que no regañan antes de tiempo**: en "Solicitar cotización", los avisos de campo obligatorio aparecen sólo después de intentar enviar, no al abrir el diálogo.
+- **Modo demo con promesa realista**: el aviso de bienvenida ya no dice "se reinician en cada acceso"; los datos de ejemplo se restablecen de forma periódica.
+- **Baja de correos accesible y con reintento**: los cambios de estado se anuncian a lectores de pantalla y, si algo falla, hay botón "Reintentar".
+- **Proforma sin pantalla en blanco**: si el enlace devuelve un estado inesperado, se muestra un aviso con pasos en vez de una página vacía.
+
 ## [13.564.0] - 2026-08-13
 - **Ya no ofrecemos botones que la base va a rechazar (Sprint 5 · permisos)**: en Cartera y en CxP "Por pagar", los roles de sólo consulta (gerentes) ya no ven las casillas de selección ni los botones de cobro/pago en lote; antes capturaban todo el lote y el sistema lo rechazaba al final.
 - **Contabilidad ya puede adjuntar el XML faltante**: el botón que la app ofrecía ahora sí funciona (antes el archivo se subía y el guardado se rechazaba, dejando basura en el almacén). La autorización se valida en la base con la misma matriz de roles.
