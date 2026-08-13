@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.582.0] - 2026-08-13
+- **Ola 12 · Sprint 10 — Multi-moneda y fiscal SAT (P1).**
+  - **Saldos que ya no mezclan divisas:** el estado de cuenta del proveedor convierte cada pago a la moneda de la factura con el tipo de cambio del pago. Si el pago fue en otra moneda y no hay tipo de cambio, el movimiento se marca "SIN TC (excluido del saldo)" en lugar de sumarse como si un dólar valiera un peso.
+  - **Indicadores de salud del proveedor en pesos:** monto de 12 meses, saldo actual, notas de crédito y la gráfica mensual se valúan a MXN con el tipo de cambio del DOF; si falta el tipo de cambio, la pantalla lo avisa y los importes en divisa quedan fuera.
+  - **Nuevas reglas centrales de conversión:** una sola función calcula el saldo de cada factura de proveedor (total − pagos − notas de crédito aplicadas) en su propia moneda, para que todos los reportes den el mismo número.
+  - **Complemento de pago (REP) conforme al SAT:** la base del documento relacionado ahora se declara **sin IVA** (antes se enviaba el importe con impuesto) y se incluyen las **retenciones** de la factura relacionada. Si la factura tiene retenciones con más de una tasa por impuesto, el timbrado se detiene con un mensaje claro en vez de emitir un comprobante incorrecto.
+  - **Re-timbrado de un REP cancelado:** un complemento cancelado ya no deja el pago sin salida. Se puede volver a timbrar desde el listado de pagos, el REP anterior se archiva y la cancelación por sustitución (motivo 01) lo relaciona correctamente.
+
 ## [13.581.0] - 2026-08-13
 - **Ola 12 · Sprint 09 — Seguridad y control de pagos en lote (8 correcciones).**
   - **Expediente del proveedor protegido:** subir, editar o borrar documentos (CSF, opinión de cumplimiento, comprobante bancario) ahora exige rol de escritura de compras; los perfiles de sólo consulta ya no pueden modificarlos, aunque siguen viéndolos.
