@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { todayLocalISO } from "@/lib/date/today";
 import { repartirFifo, validarLote, round2 } from "../pagoProveedorLote";
 
 const F = [
