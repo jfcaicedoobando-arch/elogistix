@@ -132,8 +132,14 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `GRANT EXECUTE … TO anon, authenticated, service_role`; el enlace
  *    público de rastreo requiere ejecución por `anon`); el archivo original
  *    queda como legacy auditado.
+ *  - `20260813003652` — post-FIX-H6-16: `20260813002242` recreó
+ *    `pnl_financiero_embarque(uuid)` (SECURITY DEFINER) sin el bloque
+ *    REVOKE/GRANT en el mismo archivo. La migración correctiva
+ *    `20260813003652` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC` +
+ *    `GRANT EXECUTE … TO authenticated, service_role`); el archivo original
+ *    queda como legacy auditado.
  */
-const BASELINE = "20260812205800";
+const BASELINE = "20260813003652";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
