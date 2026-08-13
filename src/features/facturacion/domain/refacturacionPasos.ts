@@ -33,6 +33,8 @@ export interface FacturaRefacturacion {
   numero: string;
   estado: string;
   uuid_fiscal: string | null;
+  /** Estatus del trámite de cancelación ante el SAT (FacturApi). */
+  cancellation_status?: string | null;
 }
 
 /** El pago tiene complemento de pago (REP) timbrado y sin cancelar. */
@@ -56,6 +58,23 @@ export function originalFueraDeCirculacion(factura: FacturaRefacturacion | null)
   if (!factura) return false;
   return ["Cancelada", "Sustituida"].includes(factura.estado);
 }
+
+/** La cancelación del CFDI original ya se solicitó y está en manos del SAT. */
+export function cancelacionOriginalEnTramite(factura: FacturaRefacturacion | null): boolean {
+  if (!factura) return false;
+  if (originalFueraDeCirculacion(factura)) return false;
+  return ["pending", "verifying"].includes(factura.cancellation_status ?? "");
+}
+
+/** El SAT rechazó (o dejó expirar) la solicitud de cancelación del original. */
+export function cancelacionOriginalRechazada(factura: FacturaRefacturacion | null): boolean {
+  if (!factura) return false;
+  if (originalFueraDeCirculacion(factura)) return false;
+  return ["rejected", "expired"].includes(factura.cancellation_status ?? "");
+}
+
+export const AVISO_ORIGINAL_EN_VERIFICACION =
+  "La cancelación del CFDI original está en verificación con el SAT. Puedes reasignar el pago porque el REP anterior ya está cancelado; la factura original quedará cancelada en automático cuando el SAT responda.";
 
 export interface ContextoPasos {
   casoAbierto: boolean;
@@ -118,6 +137,17 @@ function bloqueoPaso3(ctx: ContextoPasos): string | null {
   return null;
 }
 
+function bloqueoPaso4(ctx: ContextoPasos): string | null {
+  if (originalFueraDeCirculacion(ctx.original)) return null;
+  // Con la solicitud en trámite el REP anterior ya quedó cancelado: el pago
+  // puede moverse aunque el SAT tarde en liberar la cancelación (sólo se avisa).
+  if (cancelacionOriginalEnTramite(ctx.original)) return null;
+  if (cancelacionOriginalRechazada(ctx.original)) {
+    return "El SAT no aceptó la cancelación del CFDI original: vuelve a solicitarla antes de continuar.";
+  }
+  return "Solicita la cancelación del CFDI original antes de reasignar el pago.";
+}
+
 function bloqueoPaso5(ctx: ContextoPasos): string | null {
   if (ctx.pagoYaReasignado) return null;
   const vivos = pagosConRepVivo(ctx.pagos);
@@ -141,11 +171,7 @@ export function bloqueoPaso(paso: number, ctx: ContextoPasos): string | null {
 
   if (paso === 2) return bloqueoPaso2(ctx);
   if (paso === 3) return bloqueoPaso3(ctx);
-  if (paso === 4) {
-    return originalFueraDeCirculacion(ctx.original)
-      ? null
-      : "Cancela el CFDI original (o espera la aceptación del SAT) antes de reasignar el pago.";
-  }
+  if (paso === 4) return bloqueoPaso4(ctx);
   if (paso === 5) return bloqueoPaso5(ctx);
   return null;
 }
@@ -156,6 +182,9 @@ export function bloqueoPaso(paso: number, ctx: ContextoPasos): string | null {
 export function avisoPaso(paso: number, ctx: ContextoPasos): string | null {
   if (paso >= 2 && paso <= 4 && repsEnVerificacion(ctx.pagos).length > 0) {
     return AVISO_REP_EN_VERIFICACION;
+  }
+  if (paso >= 4 && cancelacionOriginalEnTramite(ctx.original)) {
+    return AVISO_ORIGINAL_EN_VERIFICACION;
   }
   return null;
 }

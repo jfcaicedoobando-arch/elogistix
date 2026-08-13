@@ -123,6 +123,7 @@ export interface FacturaRefacturacionEstado {
   rfc_cliente: string | null;
   total: number | null;
   moneda: string;
+  cancellation_status: string | null;
 }
 
 /** Estado mínimo de la factura nueva (para validar el avance del asistente). */
@@ -131,7 +132,9 @@ export async function obtenerEstadoFacturaRefacturacion(
 ): Promise<FacturaRefacturacionEstado | null> {
   const { data, error } = await supabase
     .from("facturas")
-    .select("id, numero, estado, uuid_fiscal, cliente_nombre, rfc_cliente, total, moneda")
+    .select(
+      "id, numero, estado, uuid_fiscal, cliente_nombre, rfc_cliente, total, moneda, cancellation_status",
+    )
     .eq("id", facturaId)
     .maybeSingle();
   if (error) throw error;
