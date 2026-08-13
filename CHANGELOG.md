@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.587.0] - 2026-08-13
+- **Validaciones fiscales reforzadas en la refacturación.** Antes de abrir el caso, el asistente muestra un semáforo del nuevo receptor: avisa si le falta razón social, RFC válido (ya no acepta RFC genéricos), régimen fiscal o código postal, con acceso directo al expediente del cliente.
+- **Comparativo original vs. nueva factura** en el paso 3: moneda, subtotal, IVA, retenciones y total lado a lado, más los hallazgos de inconsistencia detectados por el sistema. Si algo no cuadra, no se puede avanzar.
+- **La empresa que depositó ahora es obligatoria** al reasignar el pago, y su RFC se valida en pantalla con el formato del SAT.
+- **Mensajes claros** para todos los avisos del proceso de refacturación (moneda, impuestos, sustitución, cierre inconsistente).
+
+
 ## [13.586.0] - 2026-08-13
 - **Trazabilidad de la refacturación (Etapa 3).** Nueva sección en el detalle de la factura con el expediente del caso: receptor original y correcto, ruta fiscal, motivo, factura original y nueva, expediente del embarque y pagos involucrados (con la empresa que realmente depositó).
 - **Línea de tiempo de movimientos** con quién y cuándo ejecutó cada paso: apertura del caso, cancelación del complemento de pago (REP), borrador y timbrado de la nueva factura, cancelación del CFDI original, reasignación del pago, timbrado del nuevo REP y cierre del caso.
