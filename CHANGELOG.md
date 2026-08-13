@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.570.1] - 2026-08-13
+- **CI en verde otra vez**: se renombró un test de pago en lote de CxP que tenía el mismo título que su gemelo de CxC (dos cajas con la misma etiqueta confunden al almacén), se registró en el manifest la última migración aplicada y se ajustó el presupuesto del paquete de PDF a 560 KB, acorde a la versión fija 4.5.1.
+
 ## [13.570.0] - 2026-08-13
+
 - **Actualización de librerías (mantenimiento)**: se subieron a su última versión compatible los parches y menores de 19 dependencias (base de datos, Sentry, iconos, formularios, PDF de tipos, herramientas de lint y pruebas). Como cambiarle el aceite al camión: no se nota al manejar, pero evita fallas.
 - **`@react-pdf/renderer` se queda fijo en 4.5.1**: la versión 4.6.0 provoca una fuga de memoria (128 MB tras 200 PDFs contra 12 MB actuales), detectada por la prueba canario. Queda anclada hasta que el proveedor lo corrija.
 - Sin vulnerabilidades altas ni críticas en dependencias al momento de la revisión.
