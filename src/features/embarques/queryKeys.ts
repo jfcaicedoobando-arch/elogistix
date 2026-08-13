@@ -41,6 +41,8 @@ export const embarques = {
   alertasResumen: () => ['embarques', 'alertas-ids'] as const,
   garantias: (embarqueId?: string) => ['garantias-embarque', embarqueId] as const,
   pnlFinanciero: (embarqueId?: string) => ['embarque', embarqueId, 'pnl-financiero'] as const,
+  /** v13.553.0 — Contexto DOF del tipo de cambio guardado en el embarque. */
+  tcContexto: (embarqueId?: string) => ['embarque', embarqueId, 'tc-contexto'] as const,
   reconciliacion3Columnas: (embarqueId?: string, umbrales?: unknown) =>
     ['embarques', 'reconciliacion3c', embarqueId, umbrales] as const,
   reconciliacion: (embarqueId?: string) => ['embarques', 'reconciliacion', embarqueId] as const,
