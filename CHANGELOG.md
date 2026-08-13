@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.560.1] - 2026-08-13
+- **CI en verde otra vez**: la prueba de aislamiento financiero preparaba su escenario aprobando una factura de proveedor "a mano", algo que el nuevo candado de aprobaciones (13.560.0) ya no permite. Ahora la prueba usa el canal oficial y se agregó una prueba dedicada que verifica que la aprobación o rechazo directo siga bloqueado.
+
 ## [13.560.0] - 2026-08-13
 - **Pago en lote a proveedor con el tipo de cambio correcto (RFE-01)**: un lote en EUR ya guarda la paridad EUR/MXN del DOF (antes guardaba la del dólar). Si el DOF de la fecha no está disponible, el pago queda bloqueado con un aviso claro en lugar de registrarse sin tipo de cambio.
 - **Seguridad de aprobaciones en Cuentas por Pagar (RNF-07)**: aprobar o rechazar una factura de proveedor sólo es posible por el proceso oficial (valida rol, evita que quien capturó apruebe y deja bitácora). Se cerró el atajo que permitía cambiar el estado de aprobación directamente.
