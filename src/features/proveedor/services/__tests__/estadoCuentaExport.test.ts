@@ -61,11 +61,41 @@ describe("estadoCuentaACsv", () => {
       "2026-01-31",
       filasMovimientosExport([movimiento]),
       filasSaldosExport([{ moneda: "usd", cargos: 1000, abonos: 0, saldo: 1000 }]),
+      filasAgingExport([
+        {
+          moneda: "USD",
+          buckets: { Vigente: 0, "1-30": 600, "31-60": 0, "61-90": 0, "90+": 0 },
+          conteo: 1,
+          total: 600,
+          vencido: 600,
+        },
+      ]),
     );
     expect(csv).toContain("Proveedor");
-    expect(csv).toContain("Saldo del periodo");
+    expect(csv).toContain("Saldo global");
     expect(csv).toContain("'=SUM(A1)");
-    expect(csv.split("\n\n")).toHaveLength(3);
+    expect(csv).toContain("Antigüedad");
+    expect(csv.split("\n\n")).toHaveLength(4);
+  });
+
+  it("soporta estado de cuenta sólo-antigüedad (sin movimientos)", () => {
+    const csv = estadoCuentaACsv(
+      "HK LS Limited",
+      "2026-01-01",
+      "2026-01-31",
+      [],
+      [],
+      filasAgingExport([
+        {
+          moneda: "MXN",
+          buckets: { Vigente: 0, "1-30": 0, "31-60": 0, "61-90": 0, "90+": 5000 },
+          conteo: 1,
+          total: 5000,
+          vencido: 5000,
+        },
+      ]),
+    );
+    expect(csv).toContain("5000.00");
   });
 });
 
