@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { FilePlus2, FolderOpen } from "lucide-react";
-import { toast } from "sonner";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,8 +60,13 @@ export function ProveedorDocumentosTab({
     try {
       const url = await urlDocumentoProveedor(doc.archivo);
       window.open(url, "_blank", "noopener,noreferrer");
-    } catch {
-      toast.error("No se pudo generar la liga de descarga del documento");
+    } catch (e) {
+      notifyError(undefined, {
+        title: "No se pudo generar la liga de descarga",
+        description: "Vuelve a intentarlo; si persiste, el archivo pudo haberse movido.",
+        error: e,
+        method: "DOWNLOAD_PROVEEDOR_DOCUMENTO",
+      });
     }
   };
 
