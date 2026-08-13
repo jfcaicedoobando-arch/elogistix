@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.593.0] - 2026-08-13
+- **"Verificar estatus en FacturApi" ahora revisa los XML.** Descarga el XML timbrado de la factura y el de cada REP (incluidos los cancelados) y compara UUID, RFCs, importes y moneda contra la base de datos.
+- Cada documento muestra su estatus real consultado al SAT (Vigente / Cancelado / No encontrado).
+- Si un REP aparece cancelado en el SAT pero vigente en el sistema, se reconcilia automáticamente.
+- Las diferencias encontradas se listan en el mismo diálogo, ahora más amplio.
+
+
+
 ## [13.592.0] - 2026-08-13
 - **Una factura con cancelación en trámite ante el SAT ya no admite cobros.** Mientras la solicitud esté pendiente o en verificación, el sistema rechaza cualquier pago (individual o en lote) con un mensaje claro.
 - El detalle de la factura muestra un aviso explicando el bloqueo y el botón "Registrar pago" queda deshabilitado.
