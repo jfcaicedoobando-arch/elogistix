@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.564.0] - 2026-08-13
+- **Ya no ofrecemos botones que la base va a rechazar (Sprint 5 · permisos)**: en Cartera y en CxP "Por pagar", los roles de sólo consulta (gerentes) ya no ven las casillas de selección ni los botones de cobro/pago en lote; antes capturaban todo el lote y el sistema lo rechazaba al final.
+- **Contabilidad ya puede adjuntar el XML faltante**: el botón que la app ofrecía ahora sí funciona (antes el archivo se subía y el guardado se rechazaba, dejando basura en el almacén). La autorización se valida en la base con la misma matriz de roles.
+- **Aviso al salir del alta de embarques más fiel**: el botón "Atrás" del asistente ahora también pregunta antes de perder la captura, y el aviso se basa en lo que realmente escribiste (no en el paso en que estás).
+- **Las sugerencias de conceptos del buzón ya no se pierden en silencio**: si el guardado falla se reintenta y, si no se logra, aparece un aviso explicando que el documento sí quedó subido y cómo repararlo, con registro en bitácora.
+- **Badge del buzón por organización**: un super admin sin organización seleccionada ya no ve la suma de todas las empresas; el contador respeta la organización activa.
+
 ## [13.563.0] - 2026-08-13
 - **Movimientos borrados ya no bloquean para siempre (Sprint 4 · tesorería)**: si mandas un movimiento bancario a la papelera, ahora puedes volver a importarlo o regenerarlo; antes el sistema lo consideraba duplicado y quedaba en un callejón sin salida.
 - **La moneda de una cuenta con movimientos queda protegida en la base**: aunque se intente desde fuera de la app, no se puede cambiar la moneda de una cuenta que ya tiene movimientos (vigentes o en papelera), para no mezclar divisas en el saldo.
