@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/appRole";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
+import { errorDeEdgeFunction } from "./mutaciones.errores";
 
 export {
   createUserViaEdgeFunction,
@@ -35,7 +36,7 @@ export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown
   const { data, error } = await supabase.functions.invoke("user-management", {
     body: { action: "delete", user_id: userId },
   });
-  if (error) throw error;
+  if (error) throw await errorDeEdgeFunction(error, "No se pudo eliminar el usuario. Reintenta en unos minutos.");
   if (data?.error) throw new Error(data.error);
   await registrarActividad({
     modulo: "usuarios",
@@ -51,7 +52,7 @@ export async function deleteUserViaEdgeFunctionAuth(userId: string): Promise<unk
     body: { action: "delete", user_id: userId },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
-  if (res.error) throw new Error(res.error.message || "Error al eliminar usuario");
+  if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo eliminar el usuario. Reintenta en unos minutos.");
   const body = res.data as { error?: string };
   if (body?.error) throw new Error(body.error);
   return body;
@@ -87,7 +88,7 @@ export async function enviarResetPassword(userId: string): Promise<void> {
     },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
-  if (res.error) throw new Error(res.error.message || "Error al enviar el correo");
+  if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo enviar el correo. Reintenta en unos minutos.");
   const body = res.data as { error?: string };
   if (body?.error) throw new Error(body.error);
   await registrarActividad({

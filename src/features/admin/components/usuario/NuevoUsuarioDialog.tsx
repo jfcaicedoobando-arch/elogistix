@@ -11,9 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSection";
 import { NuevoUsuarioAccesoSection } from "./NuevoUsuarioAccesoSection";
-// Ola 8 · B2: el mínimo de contraseña vive en un solo módulo compartido.
 import { PASSWORD_MIN } from "@/lib/passwords/policy";
-
+import { esEmailValido, normalizarEmail } from "./emailUsuario";
 
 interface Props {
   open: boolean;
@@ -23,7 +22,7 @@ interface Props {
 }
 
 const DEFAULT_ROLE: AppRole = "customer_service";
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 
 
 export default function NuevoUsuarioDialog({
@@ -46,7 +45,10 @@ export default function NuevoUsuarioDialog({
   const { data: orgs = [] } = useOrganizationsList(open && showOrgSelector);
 
   const emailError = useMemo(
-    () => (touched.email && email && !EMAIL_REGEX.test(email) ? "Email no válido" : null),
+    () =>
+      touched.email && email && !esEmailValido(email)
+        ? "Correo no válido"
+        : null,
     [email, touched.email],
   );
   const passwordError = useMemo(
@@ -69,8 +71,9 @@ export default function NuevoUsuarioDialog({
 
   const handleSubmit = async () => {
     setTouched({ email: true, password: true });
-    if (!email) return;
-    if (!EMAIL_REGEX.test(email)) return;
+    const emailNormalizado = normalizarEmail(email);
+    if (!emailNormalizado) return;
+    if (!esEmailValido(emailNormalizado)) return;
     if (!porInvitacion && password.length < PASSWORD_MIN) {
       notifyError(undefined, {
         title: "Error",
@@ -92,7 +95,7 @@ export default function NuevoUsuarioDialog({
 
     createUser.mutate(
       {
-        email,
+        email: emailNormalizado,
         password: porInvitacion ? undefined : password,
         role,
         orgId: showOrgSelector ? orgId : undefined,
