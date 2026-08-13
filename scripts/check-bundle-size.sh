@@ -51,10 +51,13 @@ for f in "$DIST_DIR"/*.js; do
     budget="$VENDOR_BUDGET_KB"
     label="vendor"
   elif echo "$name" | grep -qE '^react-pdf'; then
-    # @react-pdf/renderer es intrínsecamente grande (~465 KB gz) y ya es lazy
-    # vía dynamic import en PdfPreview/descargarPdf. No tiene split razonable.
-    budget="${REACT_PDF_BUDGET_KB:-500}"
+    # @react-pdf/renderer es intrínsecamente grande (~540 KB gz con fontkit +
+    # yoga-layout) y ya es lazy vía dynamic import en PdfPreview/descargarPdf.
+    # No tiene split razonable: es un solo grafo de módulos del renderer.
+    # Budget alineado al pin 4.5.1 (ver CHANGELOG v13.570.0, fuga de memoria en 4.6.0).
+    budget="${REACT_PDF_BUDGET_KB:-560}"
     label="lazy(react-pdf)"
+
   else
     budget="$LAZY_BUDGET_KB"
     label="lazy"
