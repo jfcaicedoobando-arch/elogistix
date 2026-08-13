@@ -88,18 +88,26 @@ function bloqueoPaso1(ctx: ContextoPasos): string | null {
   return null;
 }
 
+/** REPs vivos cuya cancelación está en verificación con el SAT. */
+export function repsEnVerificacion(pagos: PagoRefacturacion[]): PagoRefacturacion[] {
+  return pagosConRepVivo(pagos).filter((p) =>
+    ["pending", "verifying"].includes(p.rep_cancellation_status ?? ""),
+  );
+}
+
+export const AVISO_REP_EN_VERIFICACION =
+  "La cancelación del REP está en verificación con el SAT. Puedes emitir la factura del nuevo receptor mientras tanto; el nuevo REP se timbra cuando el SAT libere la cancelación.";
+
 function bloqueoPaso2(ctx: ContextoPasos): string | null {
   const vivos = pagosConRepVivo(ctx.pagos);
   if (vivos.length === 0) return null;
-  const enVerificacion = vivos.filter((p) =>
-    ["pending", "verifying"].includes(p.rep_cancellation_status ?? ""),
-  );
-  if (enVerificacion.length > 0) {
-    return "La solicitud de cancelación del REP está en verificación con el SAT. Esta pantalla se actualizará automáticamente al recibir la respuesta.";
-  }
-  return vivos.length === 1
+  // Con solicitud en verificación el trámite ya está en manos del SAT: se puede
+  // adelantar la emisión de la factura del nuevo receptor (sólo se avisa).
+  const sinSolicitud = vivos.length - repsEnVerificacion(ctx.pagos).length;
+  if (sinSolicitud === 0) return null;
+  return sinSolicitud === 1
     ? "Cancela el complemento de pago (REP) del pago recibido antes de continuar."
-    : `Cancela los ${vivos.length} complementos de pago (REP) vivos antes de continuar.`;
+    : `Cancela los ${sinSolicitud} complementos de pago (REP) vivos antes de continuar.`;
 }
 
 function bloqueoPaso3(ctx: ContextoPasos): string | null {
@@ -112,11 +120,16 @@ function bloqueoPaso3(ctx: ContextoPasos): string | null {
 
 function bloqueoPaso5(ctx: ContextoPasos): string | null {
   if (ctx.pagoYaReasignado) return null;
+  const vivos = pagosConRepVivo(ctx.pagos);
+  if (vivos.length > 0) {
+    return "El REP anterior sigue vigente ante el SAT: reasignar el pago ahora reportaría el mismo depósito dos veces. Espera la aceptación de la cancelación.";
+  }
   if (!ctx.pagoSeleccionadoId) return "Selecciona el pago que debe moverse a la nueva factura.";
   if (!facturaNuevaLista(ctx.facturaNueva)) return "La nueva factura debe estar timbrada.";
   if (ctx.bloqueoOrdenante) return ctx.bloqueoOrdenante;
   return null;
 }
+
 
 /**
  * Motivo por el que el paso indicado NO puede completarse todavía.
