@@ -202,6 +202,14 @@ export default function ProveedorDetalle() {
             rfc={proveedor.rfc}
           />
         </TabsContent>
+        <TabsContent value="documentos" className="mt-4">
+          <ProveedorDocumentosTab
+            proveedorId={proveedor.id}
+            organizationId={proveedor.organization_id ?? ""}
+            esNacional={esNacional}
+            canEdit={canEdit}
+          />
+        </TabsContent>
         <TabsContent value="salud" className="mt-4">
           <ProveedorSaludTab proveedorId={proveedor.id} />
         </TabsContent>
