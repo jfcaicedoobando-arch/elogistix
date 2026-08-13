@@ -15,7 +15,6 @@ import { NuevoUsuarioAccesoSection } from "./NuevoUsuarioAccesoSection";
 import { PASSWORD_MIN } from "@/lib/passwords/policy";
 import { esEmailValido, normalizarEmail } from "./emailUsuario";
 
-
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -24,6 +23,7 @@ interface Props {
 }
 
 const DEFAULT_ROLE: AppRole = "customer_service";
+
 
 
 export default function NuevoUsuarioDialog({
