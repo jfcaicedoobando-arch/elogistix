@@ -38,6 +38,10 @@ export const LC_CODE_MESSAGES_REFACTURACION: Record<string, string> = {
   LC_REFACT_SUSTITUCION_FALTANTE:
     "La ruta de sustitución requiere relacionar la nueva factura con el CFDI original.",
   LC_REFACT_SIN_FACTURA_NUEVA: "Todavía no se ha generado la nueva factura del caso.",
+  LC_REFACT_NUEVA_NO_TIMBRADA:
+    "La nueva factura aún está en borrador o cancelada: tímbrala antes de continuar.",
+  LC_REFACT_ORIGINAL_YA_CANCELADA:
+    "La factura original ya está cancelada o sustituida: esta etapa ya quedó cubierta.",
   LC_REFACT_ORDENANTE_REQUERIDO:
     "Captura el nombre de la empresa desde la que se recibió el depósito.",
   LC_REFACT_CIERRE_INCONSISTENTE:
