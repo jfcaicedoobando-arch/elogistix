@@ -11,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type { useTesoreriaCuentasController, Moneda } from "@/features/tesoreria/hooks/useTesoreriaCuentasController";
+import { validarDatosBancarios } from "@/features/proveedor/domain/datosBancarios";
 
 type Controller = ReturnType<typeof useTesoreriaCuentasController>;
 
@@ -22,6 +23,10 @@ export interface NuevaCuentaFormFieldsProps {
 }
 
 export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false }: NuevaCuentaFormFieldsProps) {
+  // Ola 11 · RFE-07: aviso inline con la misma regla/mensajes que proveedores.
+  const errorClabe = form.clabe
+    ? validarDatosBancarios({ esExtranjero: false, clabe: form.clabe, swiftBic: null })?.mensaje ?? null
+    : null;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
