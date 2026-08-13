@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.589.1] - 2026-08-13
+- **Arreglos de CI en el asistente de refacturación.** El asistente ahora lee la organización activa con `useOrgActiva()` (antes usaba `useAuth().organizationId`, que es nulo para el super admin con tenant seleccionado).
+- Se dividió la lógica del asistente en dos módulos puros (`refacturarWizardAvance.ts` y `refacturarWizardDerivados.ts`) para cumplir el límite de complejidad.
+- Se regeneró `migration-manifest.json` con las 4 migraciones nuevas.
+
 ## [13.589.0] - 2026-08-13
 - **Vista previa antes de confirmar cada etapa de la refacturación.** El asistente ahora muestra una tarjeta con qué se cancela (REP, factura original), qué se crea (nueva factura, nuevo REP) y cómo se reasigna el pago, con el ordenante del depósito.
 - **Tabla de saldos "antes → después"** de la factura original y de la nueva, calculada con los saldos reales del sistema. La simulación es de sólo lectura: no guarda nada hasta que confirmas.
