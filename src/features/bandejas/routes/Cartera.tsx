@@ -28,12 +28,17 @@ import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 import { DialogCobroLoteCliente } from "@/features/facturacion/components/DialogCobroLoteCliente";
 import { derivarLoteCobro } from "./_sections/carteraLote";
 import { CarteraSelectionBar } from "./_sections/CarteraSelectionBar";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 
 export default function Cartera() {
   const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [loteOpen, setLoteOpen] = useState(false);
+  // RFE-04 (Ola 11): /cartera admite gerentes de sólo lectura, pero la RPC
+  // `registrar_pago_cliente_lote` rechaza con 42501 a quien no está en
+  // REGISTRAR_COBRO. No ofrecer selección ni botón a esos roles (patrón FE-10).
+  const { canRegistrarCobro } = usePermissions();
   const {
     data,
     paged,
