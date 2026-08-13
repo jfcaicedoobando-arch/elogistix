@@ -33,6 +33,8 @@ export interface RegistrarPagoLoteInput {
   referencia: string;
   cuenta_bancaria_id: string | null;
   notas?: string;
+  /** Ola 11 · RNF-05 (espejo RG4-5): importe real de la transferencia; debe cuadrar exacto con el reparto. */
+  importe_recibido: number;
   renglones: RenglonLote[];
 }
 
