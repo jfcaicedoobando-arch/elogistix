@@ -39,6 +39,20 @@ export const APROBAR_FACTURA_PROVEEDOR: readonly AppRole[] = [
   "contador",
 ];
 
+/**
+ * v13.588.0 — Operar casos de refacturación (cambiar receptor del CFDI y
+ * reasignar el pago). Espejo de `public._assert_refacturador`: administradores
+ * del tenant y todos los roles contables (contador y auxiliar contable).
+ */
+export const OPERAR_REFACTURACION: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "contador",
+  "auxiliar_contable",
+];
+
+
 // v13.213.40 — auxiliar_contable NO registra cobros (separación de responsabilidades):
 // sólo captura facturas de proveedor.
 // FE-10 (v13.537.0) — el tesorero SÍ aplica pagos: la política de la base
