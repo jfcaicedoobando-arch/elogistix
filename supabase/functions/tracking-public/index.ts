@@ -72,13 +72,13 @@ Deno.serve(async (req) => {
         status_code: 500,
         extra: { phase: "rpc_get_tracking_public" },
       });
-      return errorResponse("Error consultando tracking", 500);
+      return jsonResponse({ error: "Error consultando tracking", code: "unavailable" }, 500);
     }
 
     const outcome = classifyTrackingResult(token, data as TrackingRpcResult);
     if (!outcome.ok) {
       log.finish(outcome.status, "tracking_classified");
-      return errorResponse(outcome.error, outcome.status);
+      return jsonResponse({ error: outcome.error, code: outcome.code }, outcome.status);
     }
 
     log.finish(200, "tracking_served");
