@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  avisoPaso,
   bloqueoPaso,
+  repsEnVerificacion,
   tieneRepVivo,
   type ContextoPasos,
+  type FacturaRefacturacion,
   type PagoRefacturacion,
 } from "../refacturacionPasos";
 
@@ -20,6 +23,13 @@ function pago(status: string | null, canceladoEn: string | null = null): PagoRef
   };
 }
 
+const facturaTimbrada: FacturaRefacturacion = {
+  id: "f-nueva",
+  numero: "F1026-RF",
+  estado: "Emitida",
+  uuid_fiscal: "ABC",
+};
+
 function contexto(pagos: PagoRefacturacion[]): ContextoPasos {
   return {
     casoAbierto: true,
@@ -34,8 +44,18 @@ function contexto(pagos: PagoRefacturacion[]): ContextoPasos {
 }
 
 describe("estado asíncrono del REP en refacturación", () => {
-  it.each(["pending", "verifying"])("mantiene bloqueado el paso para %s", (status) => {
-    expect(bloqueoPaso(2, contexto([pago(status)]))).toContain("en verificación");
+  it.each(["pending", "verifying"])(
+    "permite adelantar la factura del nuevo receptor con estado %s",
+    (status) => {
+      const ctx = contexto([pago(status)]);
+      expect(bloqueoPaso(2, ctx)).toBeNull();
+      expect(avisoPaso(2, ctx)).toContain("verificación");
+      expect(repsEnVerificacion(ctx.pagos)).toHaveLength(1);
+    },
+  );
+
+  it("bloquea el paso 2 cuando el REP vivo no tiene solicitud de cancelación", () => {
+    expect(bloqueoPaso(2, contexto([pago(null)]))).toContain("Cancela el complemento");
   });
 
   it.each(["rejected", "expired"])("permite reintentar después de %s", (status) => {
@@ -46,5 +66,25 @@ describe("estado asíncrono del REP en refacturación", () => {
     const cancelado = pago("accepted", "2026-08-13T22:30:00Z");
     expect(tieneRepVivo(cancelado)).toBe(false);
     expect(bloqueoPaso(2, contexto([cancelado]))).toBeNull();
+    expect(avisoPaso(2, contexto([cancelado]))).toBeNull();
+  });
+
+  it("mantiene bloqueada la reasignación del pago mientras el REP siga vigente", () => {
+    const ctx: ContextoPasos = {
+      ...contexto([pago("verifying")]),
+      facturaNueva: facturaTimbrada,
+      pagoSeleccionadoId: "p-1",
+    };
+    expect(bloqueoPaso(5, ctx)).toContain("dos veces");
+  });
+
+  it("permite reasignar cuando el REP quedó cancelado", () => {
+    const ctx: ContextoPasos = {
+      ...contexto([pago("accepted", "2026-08-13T22:30:00Z")]),
+      facturaNueva: facturaTimbrada,
+      pagoSeleccionadoId: "p-1",
+      ordenanteNombre: undefined,
+    } as ContextoPasos;
+    expect(bloqueoPaso(5, ctx)).toBeNull();
   });
 });
