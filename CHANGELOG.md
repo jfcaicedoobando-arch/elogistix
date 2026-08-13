@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.574.0] - 2026-08-13
+- **Ola 12 · Sprint 03 — Edge functions menores y policy de storage** (R3EF-02, R3EF-03, R3P-13): candados de tiempo y de seguridad en tareas de fondo.
+  - El cron de reconciliación de cancelaciones ahora corta cada consulta a FacturApi a 15 s y la descarga del acuse a 12 s, distinguiendo `error_timeout` de `error_network`; un lote grande ya no se trunca por una llamada colgada (R3EF-02).
+  - El hook de correos de auth es fail-closed: si no puede registrar el envío responde 500 sin encolar, y una fila `pending` de más de 10 min se trata como caída y se reintenta para no perder el correo (R3EF-03).
+  - Los documentos de proveedor en papelera ya no son descargables: la política de lectura del bucket excluye registros con borrado lógico (R3P-13).
+
 ## [13.573.0] - 2026-08-13
 - **Ola 12 · Sprint 02 — Accesibilidad y UX mecánica en Proveedor 360** (R3UX-03..07): pulido de "manijas y letreros" para que todos los usuarios, incluidos los que usan lector de pantalla, operen igual de rápido.
   - El modal de documentos del proveedor usa `DatePickerMx` (DD/MM/YYYY) en lugar de fechas nativas, con rango cruzado min/max (R3UX-03).
