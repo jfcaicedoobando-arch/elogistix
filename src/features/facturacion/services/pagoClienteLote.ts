@@ -112,13 +112,24 @@ export function validarCobroLote(
   facturas: FacturaCobroCandidata[],
   renglones: RenglonCobro[],
   total: number,
-  opts: { cuentaId: string | null; monedaCuenta: string | null; moneda: string },
+  opts: {
+    cuentaId: string | null;
+    monedaCuenta: string | null;
+    moneda: string;
+    fecha: string;
+    tcAplicable: number | null;
+  },
 ): ValidacionCobroLote {
   const conMonto = renglones.filter((r) => r.monto > 0);
   const totalRepartido = round2(conMonto.reduce((s, r) => s + r.monto, 0));
 
   if (facturas.length < 2) {
     return { error: "Selecciona al menos dos facturas para un cobro en lote.", totalRepartido };
+  }
+  // Ola 11 · RFE-02: la fecha del cobro no puede ser futura (espejo FE-03).
+  const errorFecha = errorFechaLote(opts.fecha);
+  if (errorFecha) {
+    return { error: errorFecha, totalRepartido };
   }
   if (round2(total) <= 0) {
     return { error: "Captura el importe total que recibiste del cliente.", totalRepartido };
@@ -131,7 +142,8 @@ export function validarCobroLote(
     errorFacturaDuplicada(facturas, conMonto) ??
     errorRenglonExcedeSaldo(facturas, conMonto) ??
     errorCuadre(total, totalRepartido) ??
-    errorMonedaCuenta(opts);
+    errorMonedaCuenta(opts) ??
+    errorTcLote(opts.moneda, opts.tcAplicable);
 
   return { error, totalRepartido };
 }
