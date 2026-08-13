@@ -9,7 +9,7 @@
  * - Si estaba en `failed`, el intento anterior murió antes de encolar → es un
  *   reintento legítimo: la misma fila vuelve a `pending`.
  */
-import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.45.0'
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
 export async function registrarPendiente(
   supabase: SupabaseClient,

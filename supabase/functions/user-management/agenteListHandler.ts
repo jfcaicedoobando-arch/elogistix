@@ -2,7 +2,7 @@
  * Handler para listar usuarios vinculados a un agente de carga.
  * Extraído de `agenteHandlers.ts` para respetar el límite de líneas.
  */
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx } from "./handlers.ts";
 

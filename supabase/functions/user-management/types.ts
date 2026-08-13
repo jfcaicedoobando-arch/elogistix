@@ -2,7 +2,7 @@
  * Tipos compartidos entre handlers de `user-management`.
  * Extraído de `handlers.ts` para respetar el límite Power-of-10 (<200 líneas).
  */
-import { SupabaseClient } from "npm:@supabase/supabase-js@2.45.0";
+import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 export interface HandlerCtx {
   req: Request;

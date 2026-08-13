@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
 import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
-import { createClient } from 'npm:@supabase/supabase-js@2.45.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import { initSentryEdge, captureEdgeException } from '../_shared/sentry.ts'
 import {
   EMAIL_SUBJECTS,

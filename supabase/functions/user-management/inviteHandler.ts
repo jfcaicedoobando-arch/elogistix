@@ -6,7 +6,7 @@
  * Ambos exigen `authenticate` + `checkAdminAccess` en el router y bloquean la
  * auto-modificación cuando aplica.
  */
-import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 import { VALID_ROLES, ASSIGNABLE_BY_ORG_ADMIN } from "./types.ts";
