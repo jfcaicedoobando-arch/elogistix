@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { desviacionTcPct } from "../StepCostosTcAviso";
+import { desviacionTcPct } from "../../domain/tcDesviacion";
 
 describe("desviacionTcPct", () => {
   it("devuelve null cuando falta el capturado o la referencia", () => {
