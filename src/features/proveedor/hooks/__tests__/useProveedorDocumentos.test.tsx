@@ -10,8 +10,8 @@ const svc = vi.hoisted(() => ({
 }));
 vi.mock("@/features/proveedor/services/proveedorDocumentos", () => svc);
 
-const toastMock = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
-vi.mock("sonner", () => ({ toast: toastMock }));
+const feedback = vi.hoisted(() => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
+vi.mock("@/lib/ui/appFeedback", () => feedback);
 
 import {
   useProveedorDocumentos,
@@ -31,8 +31,8 @@ function setup() {
 beforeEach(() => {
   svc.fetchProveedorDocumentos.mockClear();
   svc.eliminarDocumentoProveedor.mockClear();
-  toastMock.success.mockClear();
-  toastMock.error.mockClear();
+  feedback.notifySuccess.mockClear();
+  feedback.notifyError.mockClear();
 });
 
 describe("useProveedorDocumentos", () => {
@@ -62,7 +62,7 @@ describe("mutaciones del expediente", () => {
       archivo: new File(["x"], "c.pdf", { type: "application/pdf" }),
     });
     expect(spy).toHaveBeenCalledWith({ queryKey: proveedores.documentos("p1") });
-    expect(toastMock.success).toHaveBeenCalled();
+    expect(feedback.notifySuccess).toHaveBeenCalled();
   });
 
   it("invalida la caché tras eliminar", async () => {
@@ -81,6 +81,9 @@ describe("mutaciones del expediente", () => {
     await expect(
       result.current.mutateAsync({ id: "d1", archivo: "a" }),
     ).rejects.toBeTruthy();
-    expect(toastMock.error).toHaveBeenCalledWith("RLS bloqueó");
+    expect(feedback.notifyError).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ description: "RLS bloqueó" }),
+    );
   });
 });
