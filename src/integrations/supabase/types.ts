@@ -7746,6 +7746,21 @@ export type Database = {
         Args: { _embarque_id: string; _fecha?: string }
         Returns: Json
       }
+      adjuntar_xml_factura_entrante: {
+        Args: {
+          p_documento_id: string
+          p_fecha_emision?: string
+          p_folio_serie?: string
+          p_moneda_detectada?: string
+          p_rfc_emisor?: string
+          p_total_detectado?: number
+          p_uuid_fiscal?: string
+          p_xml_hash: string
+          p_xml_nombre: string
+          p_xml_path: string
+        }
+        Returns: undefined
+      }
       agente_aprobar_tarifa: {
         Args: { _estado: string; _motivo?: string; _tarifa_id: string }
         Returns: undefined
