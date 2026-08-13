@@ -15,6 +15,11 @@ import {
   TOTAL_PASOS_REFACTURACION,
   type PagoRefacturacion,
 } from "@/features/facturacion/domain/refacturacionPasos";
+import {
+  bloqueoOrdenante as calcularBloqueoOrdenante,
+  pendientesReceptorFiscal,
+} from "@/features/facturacion/domain/refacturacionValidaciones";
+import { useRefacturacionConsistencia } from "@/features/facturacion/hooks/useRefacturacionConsistencia";
 import type { RutaFiscalRefacturacion } from "@/features/facturacion/services/refacturacion";
 
 export function useRefacturarWizard(facturaId: string | null, open: boolean, onClose: () => void) {
@@ -56,6 +61,29 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     [s.pagos],
   );
 
+  const receptorDestino = useMemo(() => {
+    const c = clientesQuery.data?.find((x) => x.id === clienteDestinoId);
+    if (!c) return null;
+    return {
+      nombre: c.nombre,
+      rfc: c.rfc,
+      regimen_fiscal: c.regimen_fiscal,
+      codigo_postal: c.codigo_postal,
+    };
+  }, [clientesQuery.data, clienteDestinoId]);
+
+  const receptorPendientes = useMemo(
+    () => (receptorDestino ? pendientesReceptorFiscal(receptorDestino) : []),
+    [receptorDestino],
+  );
+
+  const consistenciaQuery = useRefacturacionConsistencia(
+    s.caso?.id ?? null,
+    open && Boolean(s.caso?.factura_nueva_id) && s.paso >= 3,
+  );
+  const consistencia = consistenciaQuery.data ?? null;
+  const consistenciaHallazgos = (consistencia?.hallazgos ?? []).map((h) => h.mensaje);
+
   const yaReasignado = Boolean(s.caso?.pago_nuevo_id);
   const bloqueo = bloqueoPaso(s.paso, {
     casoAbierto: Boolean(s.caso),
@@ -66,6 +94,9 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     original: s.original,
     pagoSeleccionadoId,
     pagoYaReasignado: yaReasignado,
+    receptorPendientes,
+    consistenciaHallazgos,
+    bloqueoOrdenante: calcularBloqueoOrdenante(ordenanteNombre, ordenanteRfc),
   });
 
   const clienteDestinoNombre =
@@ -134,6 +165,9 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     clientes: clientesQuery.data ?? [],
     clienteDestinoId, setClienteDestinoId,
     clienteDestinoNombre,
+    receptorDestino,
+    consistencia,
+    consistenciaCargando: consistenciaQuery.isFetching,
     rutaFiscal, setRutaFiscal,
     motivo, setMotivo,
     pagos,
