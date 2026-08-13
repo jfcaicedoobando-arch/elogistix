@@ -9,6 +9,7 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useTcInicial, type TcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { useCostosPreciosCalc } from "@/features/embarques/hooks/useCostosPreciosCalc";
 import { CostosCard, VentasCard } from "./StepCostosPreciosCards";
+import { StepCostosTcAviso } from "./StepCostosTcAviso";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
@@ -138,7 +139,7 @@ export function StepCostosPrecios(props: Props) {
           filasMixtasCount={ventaCalc.filasMixtas.length}
         />
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-4 space-y-3">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-xs text-muted-foreground">Tipo de Cambio USD</p>
@@ -161,6 +162,7 @@ export function StepCostosPrecios(props: Props) {
                 </p>
               </div>
             </div>
+            <StepCostosTcAviso tcInicial={tcInicial} tcUsdCapturado={tcUSD} />
           </CardContent>
         </Card>
       </div>
