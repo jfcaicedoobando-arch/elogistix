@@ -72,6 +72,7 @@ export async function obtenerExpedienteRefacturacion(
     p_caso_id: casoId,
   });
   if (error) throw error;
+  // SAFE-CAST: la RPC devuelve jsonb; su forma la garantiza el contrato SQL.
   return data as unknown as RefacturacionExpediente;
 }
 
