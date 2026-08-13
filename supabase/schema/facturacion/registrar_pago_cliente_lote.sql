@@ -1,7 +1,15 @@
--- Fuente canónica de public.registrar_pago_cliente_lote(jsonb) (Ola 6 · O6-SCHEMA).
--- 1:1 con supabase/migrations/20260818110000_ola5_rg45_rg46_cobro_lote_validaciones.sql.
--- Ola 5 · RG4-5/RG4-6: cuadre exacto y validaciones del cobro en lote.
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+-- ============================================================
+-- Ola 11 · RBD-08: los pagos individuales del cobro en lote se insertaban
+-- con pagos_factura.tipo_cambio = 1 duro aunque el lote capturaba TC. En
+-- USD/EUR eso subestima monto_cobrado_mxn en calcular_comision_pago (rama
+-- v_tc_pago = 1 ⇒ monto extranjero contado como MXN). Ahora se guarda el
+-- TC del lote (v_tc) cuando la moneda es extranjera; en MXN se conserva 1.
+-- Es seguro porque desde RFE-03 (20260821030200) la RPC exige v_tc > 0
+-- para moneda extranjera (LC_COBRO_LOTE_TC_REQUERIDO).
+-- ACUMULATIVA: incluye RFE-02/RNF-03 (fecha), RFE-03 (TC requerido),
+-- RNF-01 (idempotencia) y RNF-02 (cuadre exacto). Sincroniza la fuente
+-- canónica (1:1). Sin backfill de históricos en esta migración.
+-- ============================================================
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb)
 RETURNS jsonb
@@ -23,6 +31,10 @@ DECLARE
   v_referencia text := COALESCE(NULLIF(TRIM(p_payload->>'referencia'), ''), '');
   v_cuenta_id uuid := NULLIF(p_payload->>'cuenta_bancaria_id','')::uuid;
   v_notas text := COALESCE(p_payload->>'notas','');
+  -- Ola 11 · RNF-01: llave de idempotencia del cliente (opcional).
+  v_request_id uuid := NULLIF(p_payload->>'request_id','')::uuid;
+  v_cached jsonb;
+  v_resp jsonb;
   v_cuenta public.cuentas_bancarias;
   v_cliente_nombre text;
   v_total numeric := 0;
@@ -31,6 +43,7 @@ DECLARE
   v_factura_id uuid;
   v_monto numeric;
   v_saldo numeric;
+  v_fecha_emision date;
   v_pago_id uuid;
   v_n int := 0;
   v_pagos jsonb := '[]'::jsonb;
@@ -38,6 +51,17 @@ DECLARE
 BEGIN
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'No autenticado' USING ERRCODE = '42501';
+  END IF;
+
+  -- Ola 11 · RNF-01: reclamo atómico de la llave. Reintento del mismo
+  -- submit → respuesta almacenada; ejecución aún en vuelo → rechazo claro.
+  v_cached := public.idempotency_claim(v_request_id, 'registrar_pago_cliente_lote');
+  IF v_cached IS NOT NULL THEN
+    IF COALESCE((v_cached->>'__idempotency_pending')::boolean, false) THEN
+      RAISE EXCEPTION 'LC_COBRO_LOTE_EN_PROCESO: Este cobro en lote ya está en proceso; espera unos segundos y verifica el historial antes de reintentar.'
+        USING ERRCODE = '42501';
+    END IF;
+    RETURN v_cached;
   END IF;
 
   SELECT EXISTS (
@@ -61,6 +85,18 @@ BEGIN
   IF v_org <> public.current_user_org_id()
      AND NOT public.has_role(v_uid,'super_admin'::app_role) THEN
     RAISE EXCEPTION 'LC_COBRO_LOTE_CLIENTE_OTRA_ORG: El cliente pertenece a otra organización.';
+  END IF;
+
+  -- Ola 11 · RFE-02/RNF-03: misma regla que el cobro individual (FE-03).
+  IF v_fecha > CURRENT_DATE THEN
+    RAISE EXCEPTION 'LC_COBRO_LOTE_FECHA_FUTURA: La fecha del cobro no puede ser futura.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  -- Ola 11 · RFE-03 (patrón FE-01): lote extranjero sin TC no se registra.
+  IF v_moneda <> 'MXN'::public.moneda AND (v_tc IS NULL OR v_tc <= 0) THEN
+    RAISE EXCEPTION 'LC_COBRO_LOTE_TC_REQUERIDO: No hay tipo de cambio disponible para un cobro en %; reintenta cuando el servicio de tipos de cambio responda.', v_moneda
+      USING ERRCODE = '42501';
   END IF;
 
   IF v_cuenta_id IS NOT NULL THEN
@@ -103,8 +139,9 @@ BEGIN
       - COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
                    WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL), 0)
       - COALESCE((SELECT SUM(nc.monto) FROM public.factura_notas_credito nc
-                   WHERE nc.factura_id = f.id AND nc.estado = 'Aplicada' AND nc.deleted_at IS NULL), 0)
-      INTO v_saldo
+                   WHERE nc.factura_id = f.id AND nc.estado = 'Aplicada' AND nc.deleted_at IS NULL), 0),
+      f.fecha_emision
+      INTO v_saldo, v_fecha_emision
     FROM public.facturas f
     WHERE f.id = v_factura_id
       AND f.deleted_at IS NULL
@@ -115,6 +152,12 @@ BEGIN
 
     IF v_saldo IS NULL THEN
       RAISE EXCEPTION 'LC_COBRO_LOTE_FACTURA_INVALIDA: Una de las facturas no existe, no es del cliente seleccionado o está en otra moneda.';
+    END IF;
+
+    -- Ola 11 · RFE-02/RNF-03: no cobros anteriores a la emisión (aging/REP).
+    IF v_fecha < v_fecha_emision THEN
+      RAISE EXCEPTION 'LC_COBRO_LOTE_FECHA_PREVIA_EMISION: La fecha del cobro es anterior a la emisión de una de las facturas del lote.'
+        USING ERRCODE = '42501';
     END IF;
 
     IF v_monto > ROUND(v_saldo, 2) + 0.009 THEN
@@ -134,7 +177,9 @@ BEGIN
     RAISE EXCEPTION 'LC_COBRO_LOTE_IMPORTE_REQUERIDO: Captura el importe recibido del cliente.'
       USING ERRCODE = '42501';
   END IF;
-  IF ABS(v_importe - v_total) > 0.01 THEN
+  -- Ola 11 · RNF-02: exacto tras ROUND a 2 decimales (antes tolerancia 0.01,
+  -- discrepante con los 0.009 del cliente y con el mensaje "EXACTO").
+  IF ROUND(v_importe, 2) IS DISTINCT FROM ROUND(v_total, 2) THEN
     RAISE EXCEPTION 'LC_COBRO_LOTE_IMPORTE_NO_CUADRA: El reparto (%) no cuadra con el importe recibido (%); no se permite sobrante sin asignar.', v_total, v_importe
       USING ERRCODE = '42501';
   END IF;
@@ -155,7 +200,11 @@ BEGIN
       (organization_id, factura_id, fecha_pago, monto, moneda, tipo_cambio,
        monto_aplicado_factura, forma_pago, referencia, notas, created_by, lote_id)
     VALUES
-      (v_org, v_factura_id, v_fecha, v_monto, v_moneda, 1,
+      -- Ola 11 · RBD-08: el pago individual guarda el TC del lote en moneda
+      -- extranjera (garantizado > 0 por LC_COBRO_LOTE_TC_REQUERIDO); en MXN
+      -- se conserva 1 como antes.
+      (v_org, v_factura_id, v_fecha, v_monto, v_moneda,
+       CASE WHEN v_moneda = 'MXN'::public.moneda THEN 1 ELSE v_tc END,
        v_monto, v_forma, v_referencia, v_notas, v_uid, v_lote_id)
     RETURNING id INTO v_pago_id;
 
@@ -188,7 +237,11 @@ BEGIN
     RAISE WARNING 'bitacora insert failed en registrar_pago_cliente_lote: % %', SQLSTATE, SQLERRM;
   END;
 
-  RETURN jsonb_build_object('lote_id', v_lote_id, 'monto_total', v_total, 'pagos', v_pagos);
+  v_resp := jsonb_build_object('lote_id', v_lote_id, 'monto_total', v_total, 'pagos', v_pagos);
+  -- Ola 11 · RNF-01: almacena la respuesta para los reintentos con la
+  -- misma llave (no-op cuando request_id viene NULL).
+  PERFORM public.idempotency_store(v_request_id, v_resp);
+  RETURN v_resp;
 END;
 $function$;
 
@@ -196,4 +249,12 @@ $function$;
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM anon;
 GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO service_role;-- ============================================================
+-- Ola 11 · RNF-06 (espejo RG4-6 de CxC): una misma factura no puede
+-- aparecer dos veces en el reparto del lote CxP — dos renglones a la
+-- misma factura pasaban el chequeo individual y podían sobre-aplicar el
+-- pago (sólo fallaban si la suma excedía el saldo). Mismo chequeo que
+-- LC_COBRO_LOTE_FACTURA_DUPLICADA. El guard RG4-12 (lote duplicado en
+-- 10 min) es del lado cliente (pagoProveedorLote.ts), igual que en CxC.
+-- ACUMULATIVA: incluye RFE-02/RNF-03 (fecha) y RNF-05 (importe + cuadre).
+-- Sin cambio de firma: (p_payload jsonb).
