@@ -43,14 +43,15 @@ export interface SupabaseLike {
   from: (table: string) => {
     select: (cols: string) => {
       eq: (col: string, val: string) => {
-        maybeSingle: () => Promise<{ data: FacturapiCredencialRow | null; error: unknown }>;
+        // RTC-01: thenable de PostgREST (no `Promise` nominal).
+        maybeSingle: () => PromiseLike<{ data: FacturapiCredencialRow | null; error: unknown }>;
       };
     };
   };
   rpc?: (
     fn: string,
     args: Record<string, unknown>,
-  ) => Promise<{ data: string | null; error: unknown }>;
+  ) => PromiseLike<{ data: string | null; error: unknown }>;
 }
 
 export type FacturapiAmbiente = "sandbox" | "live";

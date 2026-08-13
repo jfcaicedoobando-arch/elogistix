@@ -9,7 +9,9 @@
  * `console.warn` pero no rompe el flujo del edge function.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SupabaseLike = { from(table: string): { insert(row: any): Promise<{ error: unknown }> } };
+// RTC-01: `PromiseLike` — el builder de PostgREST es thenable pero no un
+// `Promise` real, así que el cliente concreto no encajaba en la firma.
+type SupabaseLike = { from(table: string): { insert(row: any): PromiseLike<{ error: unknown }> } };
 
 export interface EdgeBitacoraInput {
   organizationId: string | null;

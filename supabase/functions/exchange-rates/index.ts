@@ -12,7 +12,6 @@
  *
  * Contrato de respuesta invariante: `{ usdMxn, eurMxn|null, eur_es_fallback? }`.
  */
-// @ts-expect-error Deno remote import
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -52,6 +51,9 @@ export function rangoUltimosDias(hoy: Date, dias?: number) {
 
 
 interface Rates {
+  // RTC-01: index signature para poder pasar el objeto como `payload`
+  // (Record<string, unknown>) del logger sin castear en cada callsite.
+  [k: string]: unknown;
   usdMxn: number;
   // EF-04: null cuando la fuente no trae EUR — nunca el fallback 18.5
   // disfrazado de TC real (contrato FIX-10).
@@ -116,9 +118,7 @@ export function msHastaMedianocheMx(now: Date): number {
  */
 export async function leerTcDeTabla(fechaIso: string): Promise<Rates | null> {
   try {
-    // @ts-expect-error Deno global
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    // @ts-expect-error Deno global
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !serviceKey) return null;
     const admin = createClient(supabaseUrl, serviceKey);
@@ -189,7 +189,6 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
   }
 
   // 2) Banxico en vivo.
-  // @ts-expect-error Deno global
   const token = Deno.env.get("BANXICO_SIE_TOKEN");
   if (!token) {
     console.warn("exchange-rates: BANXICO_SIE_TOKEN no configurado — usando fallback");

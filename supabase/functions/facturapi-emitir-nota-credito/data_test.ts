@@ -19,9 +19,12 @@ import { claimNotaCredito, preloadNcContext, type SupabaseLike } from "./data.ts
 /** Simula una tabla en memoria con soporte de `.update().eq().is().select().maybeSingle()`. */
 function makeFakeSupabase(row: { id: string; facturapi_id: string | null }): SupabaseLike {
   const state = { ...row };
+  // RTC-01: sin la aserción sobre el literal, `this` queda bien inferido y
+  // `_patch` se declara explícitamente (antes `this` colapsaba a `{}`).
   const builder = {
     _matchesId: true,
     _matchesIsNull: true,
+    _patch: null as Record<string, unknown> | null,
     update(patch: Record<string, unknown>) {
       this._patch = patch;
       return this;
@@ -48,7 +51,7 @@ function makeFakeSupabase(row: { id: string; facturapi_id: string | null }): Sup
     from() {
       return this;
     },
-  } as unknown as SupabaseLike;
+  };
   return {
     from: () => builder,
   } as unknown as SupabaseLike;

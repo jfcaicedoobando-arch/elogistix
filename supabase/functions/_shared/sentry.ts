@@ -24,12 +24,18 @@
 
 type SentryMod = typeof import("npm:@sentry/deno@8");
 
+/** RTC-01: forma mínima del scope de Sentry que usan estos helpers. */
+interface ScopeMin {
+  setTag: (k: string, v: string) => void;
+  setUser: (u: { id: string }) => void;
+  setExtra: (k: string, v: unknown) => void;
+  setContext: (k: string, v: Record<string, unknown>) => void;
+}
+
 let sentryPromise: Promise<SentryMod | null> | null = null;
 let initializedFor: string | null = null;
 
-// @ts-expect-error Deno global
 const DSN = Deno.env.get("SENTRY_DSN_EDGE");
-// @ts-expect-error Deno global
 const ENV = Deno.env.get("DENO_ENV") ?? Deno.env.get("SUPABASE_ENV") ?? "production";
 
 async function loadSentry(): Promise<SentryMod | null> {
@@ -206,7 +212,12 @@ export async function captureEdgeMessage(
   const Sentry = await loadSentry();
   if (!Sentry) return;
   try {
-    Sentry.withScope((scope: { setTag: (k: string, v: string) => void; setUser: (u: { id: string }) => void; setExtra: (k: string, v: unknown) => void; setContext: (k: string, v: Record<string, unknown>) => void; setLevel: (l: string) => void }) => {
+    // RTC-01: `setLevel` del SDK exige el union `SeverityLevel`; el callback se
+    // describe con la forma mínima que usamos y se adapta al tipo del SDK.
+    const withScopeLevel = Sentry.withScope as unknown as (
+      cb: (scope: ScopeMin & { setLevel: (l: string) => void }) => void,
+    ) => void;
+    withScopeLevel((scope) => {
       scope.setLevel(level);
       scope.setTag("fn", ctx.fn);
       if (ctx.request_id) scope.setTag("request_id", ctx.request_id);

@@ -50,7 +50,8 @@ export async function loadFactura(admin: ReturnType<typeof createClient>, id: st
     .from('facturas')
     .select('id, numero, organization_id, cliente_id, cliente_nombre, total, moneda, uuid_fiscal, folio_fiscal, serie, metodo_pago, forma_pago, fecha_emision, facturapi_id')
     .eq('id', id)
-    .maybeSingle();
+    // RTC-01: sin genérico el cliente sin tipos infiere `never`.
+    .maybeSingle<FacturaCtx>();
   if (error || !data) return { err: 'Factura no encontrada', status: 404 };
   if (!data.facturapi_id || !data.uuid_fiscal) {
     return { err: 'La factura no está timbrada aún', status: 400 };
@@ -62,7 +63,7 @@ export async function loadFactura(admin: ReturnType<typeof createClient>, id: st
     .eq('user_id', userId)
     .maybeSingle();
   if (!membership) return { err: 'No tienes acceso a esta factura', status: 403 };
-  return { factura: data as FacturaCtx };
+  return { factura: data };
 }
 
 export async function fetchFacturapiFile(apiKey: string, facturapiId: string, tipo: 'pdf' | 'xml'): Promise<Uint8Array> {
@@ -227,7 +228,7 @@ export async function prepareAttachments(
   await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
   // Se mantiene la carga de orgSlug por compatibilidad con otros consumidores
   // aunque ya no se prefija al nombre descargable.
-  await fetchOrgSlug(admin, factura.organization_id);
+  await fetchOrgSlug(admin as unknown as Parameters<typeof fetchOrgSlug>[0], factura.organization_id);
   const folioSerie = factura.numero || `${factura.serie ?? ''}${factura.folio_fiscal ?? ''}`;
   const [pdfLink, xmlLink] = await Promise.all([
     signUrl(admin, pdfPath, buildFilename({

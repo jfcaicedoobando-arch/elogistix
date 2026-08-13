@@ -30,7 +30,16 @@ export async function authenticate(req: Request, log?: Logger): Promise<AuthCont
   });
 
   const token = authHeader.replace("Bearer ", "");
-  const { data, error } = await anonClient.auth.getClaims(token);
+  // RTC-01: `getClaims` existe en el runtime de Supabase Auth pero no en los
+  // tipos de supabase-js 2.45 (se agregó después). Se estrecha con un tipo
+  // explícito en lugar de silenciar el archivo completo.
+  const authWithClaims = anonClient.auth as unknown as {
+    getClaims: (t: string) => Promise<{
+      data: { claims?: { sub?: string } } | null;
+      error: unknown;
+    }>;
+  };
+  const { data, error } = await authWithClaims.getClaims(token);
   if (error || !data?.claims?.sub) {
     throw new Error("401:Token inválido");
   }

@@ -205,7 +205,9 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
     return json({ error: "tipo_invalido", message: "tipo debe ser 'pdf' o 'xml'" }, 400);
   }
 
-  const target = await resolveTarget(supabase, body);
+  // RTC-01: los genéricos por defecto de `createClient` difieren entre el
+  // callsite y la firma del helper; se alinea el tipo sin cambiar el runtime.
+  const target = await resolveTarget(supabase as Parameters<typeof resolveTarget>[0], body);
   if (!target.ok) return json(target.body, target.status);
   const autorizado =
     (await authorizeOrgRole(supabase, userData.user.id, target.data.organizationId, ROLES_CONSULTA_FISCAL)) ||
@@ -221,7 +223,10 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   // para clientes del portal y roles operativos. La autorización del
   // documento ya se validó arriba.
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-  const resolved = await resolveFacturapiKey(adminClient, target.data.organizationId);
+  const resolved = await resolveFacturapiKey(
+    adminClient as unknown as Parameters<typeof resolveFacturapiKey>[0],
+    target.data.organizationId,
+  );
   if (!resolved.ok) {
     return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   }
