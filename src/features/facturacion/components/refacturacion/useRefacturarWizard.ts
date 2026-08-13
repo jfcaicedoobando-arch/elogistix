@@ -6,6 +6,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { usePermissions } from "@/hooks/shared/usePermissions";
+import { motivoBloqueoRefacturacion } from "@/features/facturacion/domain/refacturacionPermisos";
 import { useRefacturacion } from "@/features/facturacion/hooks/useRefacturacion";
 import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
@@ -25,6 +27,11 @@ import type { RutaFiscalRefacturacion } from "@/features/facturacion/services/re
 export function useRefacturarWizard(facturaId: string | null, open: boolean, onClose: () => void) {
   const navigate = useNavigate();
   const { organizationId } = useAuth();
+  const { role } = usePermissions();
+  // Espejo del guard `_assert_refacturador`: sólo roles contables y de
+  // administración operan; los demás quedan en modo consulta.
+  const bloqueoPermiso = motivoBloqueoRefacturacion(role as never);
+  const puedeOperar = !bloqueoPermiso;
   const s = useRefacturacion(facturaId, open);
   const clientesQuery = useClientesFiscalOpts(organizationId ?? null, open);
   const cancelarFactura = useCancelarFactura();
@@ -98,12 +105,14 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     receptorPendientes,
     consistenciaHallazgos,
     bloqueoOrdenante: bloqueoOrdenanteActual,
+    bloqueoPermiso,
   });
 
   const clienteDestinoNombre =
     clientesQuery.data?.find((c) => c.id === clienteDestinoId)?.nombre ?? "el cliente destino";
 
   const handleCancelarRep = (pagoId: string) => {
+    if (!puedeOperar) return;
     setRepEnCurso(pagoId);
     cancelarRep.mutate({ pagoId, motivo: "02" }, {
       onSettled: () => { setRepEnCurso(null); s.refrescar(); },
@@ -111,7 +120,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
   };
 
   const handleCancelarOriginal = () => {
-    if (!facturaId) return;
+    if (!facturaId || !puedeOperar) return;
     const usarSustitucion = rutaFiscal === "01" && Boolean(s.caso?.factura_nueva_id);
     cancelarFactura.mutate(
       usarSustitucion
@@ -176,6 +185,8 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     ordenanteNombre, setOrdenanteNombre,
     ordenanteRfc, setOrdenanteRfc,
     bloqueo,
+    bloqueoPermiso,
+    puedeOperar,
     bloqueoOrdenanteActual,
     yaReasignado,
     repEnCurso,
