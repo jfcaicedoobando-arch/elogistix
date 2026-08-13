@@ -62,11 +62,40 @@ export async function resolverReferenciasEmbarque(
   return refs;
 }
 
+/**
+ * Tasas del catálogo SAT c_TasaOCuota aplicables a traslado de IVA.
+ * El factor "Exento" no lleva tasa: lo resuelve `factorIvaFacturaOriginal`.
+ */
+const TASAS_IVA_SAT: readonly number[] = [0, 0.08, 0.16];
+
+/**
+ * Tasa de IVA del CFDI relacionado, derivada de la proporción impuesto/base y
+ * anclada al catálogo c_TasaOCuota del SAT (R3P-20). El CFDI original ya está
+ * timbrado, así que su tasa efectiva sólo puede estar a centavos de una tasa
+ * del catálogo: se elige la MÁS CERCANA en vez de umbrales fijos (que mandaban
+ * p.ej. 0.1199 → 8% siendo 16% por redondeo de centavos). Desempate hacia la
+ * tasa mayor (punto medio 0.12 → 16%, conservando el comportamiento anterior).
+ *
+ * Limitación documentada: con mezcla de tasas/exentos en la misma factura la
+ * tasa efectiva es un promedio ponderado (p.ej. 0.10) y se ancla a la del
+ * catálogo más cercana (0.08); el desglose por renglón requiere agrupar
+ * `conceptos_factura` por `tipo_iva/tasa_iva_aplicada` (pendiente R3P-18/19).
+ */
 export function tasaIvaFacturaOriginal(subtotal: number, iva: number): number {
-  const tasa = subtotal > 0 ? iva / subtotal : 0;
-  if (tasa < 0.02) return 0;
-  if (tasa < 0.12) return 0.08;
-  return 0.16;
+  if (!(subtotal > 0) || !(iva > 0)) return 0;
+  const efectiva = iva / subtotal;
+  let mejor = 0;
+  let distancia = Number.POSITIVE_INFINITY;
+  for (const tasa of TASAS_IVA_SAT) {
+    const d = Math.abs(efectiva - tasa);
+    // Tolerancia por aritmética de punto flotante: en el punto medio exacto
+    // (0.12) el desempate debe ir hacia la tasa mayor (16%).
+    if (d <= distancia + 1e-9) {
+      distancia = d;
+      mejor = tasa;
+    }
+  }
+  return mejor;
 }
 
 /**
