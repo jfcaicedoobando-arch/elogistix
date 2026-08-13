@@ -1,8 +1,13 @@
 -- Fuente canónica de public.regenerar_movimiento_pago_proveedor(uuid) (Ola 6 · O6-SCHEMA).
--- 1:1 con supabase/migrations/20260819090000_ola6_rg51_regenerar_movimiento_fail_closed.sql.
+-- 1:1 con la migración Ola 11 · RBD-07 (20260821040300_ola11_rbd07_regenerar_movimiento_tc).
 -- Ola 6 · RG5-1: fail-closed — sin organización resuelta se niega (LC_SIN_ORG).
+-- Ola 11 · RBD-07: la rama cross-moneda exige el TC registrado en el pago
+--   (LC_PAGO_TC_REQUERIDO); nunca conversión 1:1 silenciosa (clase BL-04).
+-- Ola 11 · RBD-04: se restauró el encabezado CREATE OR REPLACE FUNCTION
+--   (el archivo canónico empezaba en `RETURNS uuid` y no era SQL válido).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
+CREATE OR REPLACE FUNCTION public.regenerar_movimiento_pago_proveedor(p_pago_id uuid)
 RETURNS uuid
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -69,8 +74,13 @@ BEGIN
 
   -- El movimiento SIEMPRE se registra en la moneda de la cuenta.
   v_cargo := v_pago.monto;
-  IF v_cuenta_mon IS DISTINCT FROM v_pago.moneda::text
-     AND COALESCE(v_pago.tipo_cambio_usd, 0) > 0 THEN
+  IF v_cuenta_mon IS DISTINCT FROM v_pago.moneda::text THEN
+    -- Ola 11 · RBD-07 (clase BL-04): nunca 1:1 silencioso cross-moneda.
+    IF COALESCE(v_pago.tipo_cambio_usd, 0) <= 0 THEN
+      RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: el pago es en % y la cuenta en %, pero el pago no tiene tipo de cambio registrado; captura el TC en el pago antes de regenerar el movimiento',
+        v_pago.moneda, v_cuenta_mon
+        USING ERRCODE = 'P0001';
+    END IF;
     IF v_pago.moneda::text = 'USD' AND v_cuenta_mon = 'MXN' THEN
       v_cargo := v_pago.monto * v_pago.tipo_cambio_usd;
     ELSIF v_pago.moneda::text = 'MXN' AND v_cuenta_mon = 'USD' THEN
