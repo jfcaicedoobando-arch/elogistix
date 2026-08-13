@@ -59,8 +59,13 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
   LC_LOTE_CUENTA_OTRA_ORG: "La cuenta bancaria pertenece a otra organización.",
   LC_LOTE_CUENTA_DIVISA:
     "La moneda de la cuenta no coincide con la del pago en lote.",
+  LC_LOTE_TC_REQUERIDO:
+    "Falta el tipo de cambio para el pago en lote. Inténtalo de nuevo en unos minutos o captúralo manualmente.",
+  LC_LOTE_FACTURA_MONEDA:
+    "Una factura del lote está en otra moneda. Captura el tipo de cambio o retírala del lote.",
   LC_MOVIMIENTO_LOTE_INEXISTENTE:
     "No se encontró el movimiento bancario del pago en lote.",
+
 
   // ── Estado de cuenta bancario ──────────────────────────────────────────
   LC_CUENTA_NO_ENCONTRADA: "La cuenta bancaria no existe o fue eliminada.",
