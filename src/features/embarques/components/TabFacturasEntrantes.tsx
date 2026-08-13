@@ -7,11 +7,9 @@
  * v13.360.0 — Un documento agrupa PDF + XML del mismo CFDI.
  */
 import { useState } from "react";
-import { Inbox, Upload } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EntrantesCardHeader } from "@/features/embarques/components/entrantes/EntrantesCardHeader";
 import { EntrantesConfirmDialogs } from "@/features/embarques/components/entrantes/EntrantesConfirmDialogs";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -97,35 +95,13 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
   return (
     <>
       <Card ref={registerRef("facturas-entrantes")} data-focus="facturas-entrantes">
-        <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
-              <Inbox className="h-4 w-4 text-muted-foreground" />
-              Facturas de proveedor recibidas
-            </CardTitle>
-            <CardDescription>
-              Sube el PDF y el XML de la factura en un mismo documento. No creas la factura: contabilidad la captura.
-            </CardDescription>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Badge variant="warning" size="sm">{resumen.porCapturar} por capturar</Badge>
-              <Badge variant="success" size="sm">{resumen.capturadas} capturadas</Badge>
-              {resumen.rechazadas > 0 && (
-                <Badge variant="destructive" size="sm">{resumen.rechazadas} rechazadas</Badge>
-              )}
-              {sinXml > 0 && <Badge variant="warning" size="sm">{sinXml} sin XML</Badge>}
-            </div>
-          </div>
-          {puedeSubir && (
-            <Button size="sm" onClick={() => setSubirOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" /> Subir factura
-            </Button>
-          )}
-          {!puedeSubir && canEdit && (
-            <p className="max-w-[14rem] text-right text-xs text-muted-foreground">
-              La entrega de archivos la hace operaciones; tú capturas la factura en Cuentas por pagar.
-            </p>
-          )}
-        </CardHeader>
+        <EntrantesCardHeader
+          resumen={resumen}
+          sinXml={sinXml}
+          puedeSubir={puedeSubir}
+          canEdit={canEdit}
+          onSubir={() => setSubirOpen(true)}
+        />
         <CardContent className="space-y-2">
           {isLoading && <Skeleton className="h-24 w-full" />}
           {!isLoading && filas.length === 0 && (

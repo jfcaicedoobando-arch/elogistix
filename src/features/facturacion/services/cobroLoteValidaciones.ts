@@ -6,7 +6,7 @@
  */
 import { round2 } from "@/features/cxp/services/pagoProveedorLote";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
-import { validarFechaPago } from "@/features/facturacion/components/validarFechaPago";
+import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 import { todayLocalISO } from "@/lib/date/today";
 
 /**
