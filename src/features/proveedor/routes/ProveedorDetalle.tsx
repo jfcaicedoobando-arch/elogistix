@@ -17,6 +17,8 @@ import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneral
 import { ProveedorResumenCards } from "../components/ProveedorResumenCards";
 import { ProveedorAnticiposCard } from "@/features/anticipos-proveedor/components/ProveedorAnticiposCard";
 import { ProveedorDetalleTabs } from "./_sections/ProveedorDetalleTabs";
+import { esNacionalOrigen } from "@/features/proveedor/domain/documentosProveedor";
+
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -68,7 +70,8 @@ export default function ProveedorDetalle() {
 
   const nombreFmt = toTitleCase(proveedor.nombre);
   const rfcFmt = (proveedor.rfc || "").toUpperCase();
-  const esNacional = proveedor.origen_proveedor === "Nacional";
+  // R3P-14: NULL = Nacional (fuente única: esNacionalOrigen).
+  const esNacional = esNacionalOrigen(proveedor.origen_proveedor);
   const categoriaLabel = proveedor.categoria === "GastoOperativo"
     ? (proveedor.subtipo_gasto ?? "Gasto de administración")
     : (proveedor.tipo ?? "—");

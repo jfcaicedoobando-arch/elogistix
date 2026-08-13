@@ -27,9 +27,6 @@ export function traducirErrorCobroLote(error: Error): string {
   if (m.includes("LC_COBRO_LOTE_IMPORTE_NO_CUADRA") || m.includes("LC_COBRO_LOTE_IMPORTE_REQUERIDO")) {
     return "El reparto no cuadra con el importe recibido: no se permite sobrante sin asignar.";
   }
-  if (m.includes("LC_COBRO_LOTE_DUPLICADO_RECIENTE")) {
-    return "Ya registraste un cobro en lote idéntico hace unos minutos (mismo cliente, fecha e importe). Verifica el historial de pagos antes de reintentar.";
-  }
   if (m.includes("LC_COBRO_LOTE_FECHA_FUTURA")) {
     return "La fecha del cobro no puede ser futura.";
   }

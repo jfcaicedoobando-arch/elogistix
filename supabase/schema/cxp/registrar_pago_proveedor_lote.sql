@@ -64,6 +64,15 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
+  -- Ola 12 · R3BD-02 (espejo del guard CxC LC_COBRO_LOTE_TC_REQUERIDO de
+  -- RFE-03, 20260821030800:97-100): un lote en USD/EUR sin tipo de cambio NO
+  -- se registra. Antes el payload con tipo_cambio_usd NULL pasaba y la
+  -- reportería MXN hacía COALESCE(pp.tipo_cambio_usd, 1) → 1:1 silencioso.
+  IF v_moneda <> 'MXN'::public.moneda AND (v_tc IS NULL OR v_tc <= 0) THEN
+    RAISE EXCEPTION 'LC_LOTE_TC_REQUERIDO: No hay tipo de cambio disponible para un pago en lote en %; reintenta cuando el servicio de tipos de cambio responda.', v_moneda
+      USING ERRCODE = '42501';
+  END IF;
+
   IF v_cuenta_id IS NULL AND v_metodo <> 'Efectivo' THEN
     RAISE EXCEPTION 'LC_LOTE_CUENTA_REQUERIDA: Selecciona la cuenta bancaria de donde sale el pago (sólo Efectivo puede omitirla).';
   END IF;

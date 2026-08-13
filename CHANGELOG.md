@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.581.0] - 2026-08-13
+- **Ola 12 · Sprint 09 — Seguridad y control de pagos en lote (8 correcciones).**
+  - **Expediente del proveedor protegido:** subir, editar o borrar documentos (CSF, opinión de cumplimiento, comprobante bancario) ahora exige rol de escritura de compras; los perfiles de sólo consulta ya no pueden modificarlos, aunque siguen viéndolos.
+  - **Pago en lote en moneda extranjera:** el servidor rechaza el lote si no hay tipo de cambio, con mensaje en español, en lugar de guardarlo y reportarlo como si fuera 1 a 1.
+  - **Cancelaciones que tardan:** si el timbrado tarda demasiado al cancelar una nota de crédito o un complemento de pago, el documento queda marcado "en verificación" y el proceso automático lo concilia después.
+  - **Anticipos en el estado de cuenta:** el anticipo entregado aparece con su importe real como abono y su aplicación posterior queda como renglón informativo, sin contar el dinero dos veces.
+  - **Notas de crédito:** sólo las **aplicadas** descuentan saldo en el estado de cuenta y en la antigüedad, igual que en el resto de cuentas por pagar.
+  - **Alertas del proveedor:** ya consideran las notas de crédito aplicadas y convierten los pagos hechos en otra moneda con su tipo de cambio; sin tipo de cambio el pago no se descuenta (nunca se asume paridad 1 a 1).
+  - **Proveedores sin origen capturado:** se tratan como nacionales en toda la app (expediente, salud y encabezado), igual que en el servidor.
+  - **Cobro y pago en lote:** un error de la operación muestra un solo aviso y el diálogo permanece abierto para reintentar; se retiró el bloqueo de 10 minutos que rechazaba lotes legítimos idénticos (la protección real contra duplicados vive en el servidor).
+
 ## [13.580.0] - 2026-08-13
 - **Ola 12 · Sprint 08 — Frontend, datos y tooling (7 correcciones P2/P3).**
   - **Saldo inicial en el estado de cuenta del proveedor:** la consulta ahora devuelve el saldo previo al periodo por moneda y la tabla lo muestra como "Saldo inicial", así el saldo corrido ya no arranca en cero y cuadra con el saldo global.

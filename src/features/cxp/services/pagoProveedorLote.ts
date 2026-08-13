@@ -172,22 +172,9 @@ export async function registrarPagoProveedorLote(input: RegistrarPagoLoteInput):
     tipo_cambio_usd: input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null,
     renglones: input.renglones.filter((r) => r.monto > 0).map((r) => ({ ...r, monto: round2(r.monto) })),
   };
-  // Ola 11 · RNF-06 (espejo RG4-12 de CxC): guard de idempotencia contra un
-  // lote idéntico (mismo proveedor, fecha y total) de los últimos 10 min.
-  const totalRenglones = round2(payload.renglones.reduce((s, r) => s + r.monto, 0));
-  const { data: previos, error: errorPrevios } = await supabase
-    .from("pagos_proveedor_lote")
-    .select("id")
-    .eq("proveedor_id", input.proveedor_id)
-    .eq("fecha_pago", input.fecha_pago)
-    .eq("monto_total", totalRenglones)
-    .is("deleted_at", null)
-    .gte("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString())
-    .limit(1);
-  if (errorPrevios) throw errorPrevios;
-  if ((previos ?? []).length > 0) {
-    throw new Error("LC_LOTE_DUPLICADO_RECIENTE");
-  }
+  // Ola 12 · RFE-08: se retira el guard de 10 minutos (espejo RG4-12). Ver
+  // pagoClienteLote.ts: la deduplicación real es la idempotencia server-side
+  // de la RPC (RNF-01); el guard rechazaba lotes legítimos.
   const { data, error } = await supabase.rpc("registrar_pago_proveedor_lote", {
     p_payload: payload as never,
   });
