@@ -39,6 +39,8 @@ function destinoInterno(e: MouseEvent): string | null {
 export function useDirtyGuard(isDirty: boolean) {
   const navigate = useNavigate();
   const [destino, setDestino] = useState<string | null>(null);
+  // RFE-05: salida programática en espera de confirmación (no pasa por un <a>).
+  const [accionPendiente, setAccionPendiente] = useState<(() => void) | null>(null);
 
   // 1) Cierre o recarga de la pestaña: diálogo nativo del navegador.
   useEffect(() => {
@@ -67,20 +69,45 @@ export function useDirtyGuard(isDirty: boolean) {
 
   // Si el formulario deja de estar sucio, no dejamos el diálogo abierto.
   useEffect(() => {
-    if (!isDirty) setDestino(null);
+    if (!isDirty) {
+      setDestino(null);
+      setAccionPendiente(null);
+    }
   }, [isDirty]);
 
   const confirmar = useCallback(() => {
     const href = destino;
+    const accion = accionPendiente;
     setDestino(null);
-    if (href) navigate(href);
-  }, [destino, navigate]);
+    setAccionPendiente(null);
+    if (accion) accion();
+    else if (href) navigate(href);
+  }, [destino, accionPendiente, navigate]);
+
+  /**
+   * RFE-05 — Envuelve una salida programática: con el formulario sucio muestra
+   * el mismo ConfirmActionDialog y sólo ejecuta la acción al confirmar; sin
+   * cambios, la ejecuta de inmediato.
+   */
+  const confirmarSalida = useCallback(
+    (accion: () => void) => {
+      if (!isDirty) {
+        accion();
+        return;
+      }
+      setAccionPendiente(() => accion);
+    },
+    [isDirty],
+  );
 
   const guardDialog = (
     <ConfirmActionDialog
-      open={destino !== null}
+      open={destino !== null || accionPendiente !== null}
       onOpenChange={(open) => {
-        if (!open) setDestino(null);
+        if (!open) {
+          setDestino(null);
+          setAccionPendiente(null);
+        }
       }}
       title="¿Salir sin guardar?"
       description="Tienes cambios sin guardar en este formulario. Si sales ahora, se perderá lo capturado."
@@ -91,5 +118,5 @@ export function useDirtyGuard(isDirty: boolean) {
     />
   );
 
-  return { guardDialog };
+  return { guardDialog, confirmarSalida };
 }

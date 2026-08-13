@@ -4,10 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import {
-  rutaArchivoEntrante,
-  validarParejaEntrante,
-} from "@/lib/domain/facturasEntrantes";
+import { validarParejaEntrante } from "@/lib/domain/facturasEntrantes";
 import type { CfdiXmlMeta } from "@/lib/domain/cfdiXmlMeta";
 import {
   columnasMetaEntrante,
@@ -27,31 +24,8 @@ import {
 import { guardarConceptosSugeridos } from "@/features/cxp/services/facturasEntrantesConceptos";
 import {
   calcularHash,
-  mensajeErrorStorage,
+  subirArchivoEntrante as subirArchivo,
 } from "@/features/cxp/services/facturasEntrantesUploadHelpers";
-
-async function subirArchivo(
-  file: File,
-  input: Pick<SubirFacturaEntranteInput, "organizationId" | "embarqueId">,
-  hashPrevio?: string,
-): Promise<ArchivoSubido> {
-  const hash = hashPrevio ?? (await calcularHash(file));
-  const path = rutaArchivoEntrante({
-    organizationId: input.organizationId,
-    embarqueId: input.embarqueId,
-    hash,
-    nombreArchivo: file.name,
-  });
-  const { error } = await supabase.storage
-    .from(BUCKET_CXP_INBOX)
-    .upload(path, file, { upsert: true, contentType: file.type || undefined });
-  if (error) {
-    const amable = mensajeErrorStorage(error);
-    throw amable ? new Error(amable) : error;
-  }
-  return { path, hash, nombre: file.name };
-}
-
 
 /** Arma el renglón a insertar; aísla el mapeo para mantener baja la complejidad. */
 function filaEntranteAInsertar(params: {
@@ -137,7 +111,17 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
       input.organizationId,
     );
   }
-  await guardarConceptosSugeridos(data.id, input);
+  const sugerenciasOk = await guardarConceptosSugeridos(data.id, input);
+  if (!sugerenciasOk) {
+    // RNF-09: rastro auditable del fallo; el usuario ya recibió el aviso y el
+    // documento queda subido de todos modos.
+    await registrarActividad({
+      modulo: "cxp",
+      accion: "conceptos_sugeridos_no_guardados",
+      entidadId: data.id,
+      entidadNombre: archivoPrincipal.name,
+    });
+  }
   await registrarActividad({
     modulo: "cxp",
     accion: "subir_factura_entrante",
@@ -163,20 +147,22 @@ export async function adjuntarXmlFacturaEntrante(params: {
     embarqueId: params.embarqueId,
     organizationId: params.organizationId,
   }, hashXml);
-  const { error } = await supabase
-    .from("embarque_facturas_entrantes")
-    .update({
-      xml_path: subido.path,
-      xml_nombre: subido.nombre,
-      xml_hash: subido.hash,
-      uuid_fiscal: params.meta?.uuid ?? null,
-      rfc_emisor: params.meta?.rfcEmisor ?? null,
-      folio_serie: params.meta?.folioSerie ?? null,
-      fecha_emision: params.meta?.fechaEmision ?? null,
-      total_detectado: params.meta?.total ?? null,
-      moneda_detectada: params.meta?.moneda ?? null,
-    })
-    .eq("id", params.id);
+  // RNF-08 (Ola 11): el UPDATE directo lo rechazaba la RLS para contabilidad
+  // (la política exige subido_por = uid o admin) y el XML ya subido quedaba
+  // huérfano en el bucket. La RPC valida rol, organización y estado
+  // server-side con la matriz del plan de permisos contables.
+  const { error } = await supabase.rpc("adjuntar_xml_factura_entrante", {
+    p_documento_id: params.id,
+    p_xml_path: subido.path,
+    p_xml_nombre: subido.nombre,
+    p_xml_hash: subido.hash,
+    p_uuid_fiscal: params.meta?.uuid ?? undefined,
+    p_rfc_emisor: params.meta?.rfcEmisor ?? undefined,
+    p_folio_serie: params.meta?.folioSerie ?? undefined,
+    p_fecha_emision: params.meta?.fechaEmision ?? undefined,
+    p_total_detectado: params.meta?.total ?? undefined,
+    p_moneda_detectada: params.meta?.moneda ?? undefined,
+  });
   if (error) {
     // Ola 5 · RG4-7: mismo criterio que subirFacturaEntrante.
     throw await errorGuardadoEntrante(error, [subido.path], params.organizationId);

@@ -34,20 +34,26 @@ describe("fetchEntrantesPorCapturarCount", () => {
   });
 
   it("cuenta sólo documentos por capturar y no eliminados", async () => {
-    await expect(fetchEntrantesPorCapturarCount()).resolves.toBe(3);
+    await expect(fetchEntrantesPorCapturarCount("org-1")).resolves.toBe(3);
     expect(llamadas).toContain("from:embarque_facturas_entrantes");
     expect(llamadas.some((c) => c.includes('"count":"exact"') && c.includes('"head":true'))).toBe(true);
     expect(llamadas).toContain('eq:["estado","por_capturar"]');
     expect(llamadas).toContain('is:["deleted_at",null]');
+    expect(llamadas).toContain('eq:["organization_id","org-1"]');
   });
 
   it("devuelve 0 cuando el count viene nulo", async () => {
     respuesta = { count: null, error: null };
-    await expect(fetchEntrantesPorCapturarCount()).resolves.toBe(0);
+    await expect(fetchEntrantesPorCapturarCount("org-1")).resolves.toBe(0);
+  });
+
+  it("sin organización activa devuelve 0 sin consultar (fail-closed)", async () => {
+    await expect(fetchEntrantesPorCapturarCount(null)).resolves.toBe(0);
+    expect(llamadas).toHaveLength(0);
   });
 
   it("propaga el error de la consulta", async () => {
     respuesta = { count: null, error: new Error("boom") };
-    await expect(fetchEntrantesPorCapturarCount()).rejects.toThrow("boom");
+    await expect(fetchEntrantesPorCapturarCount("org-1")).rejects.toThrow("boom");
   });
 });

@@ -46,7 +46,13 @@ export function EmbarqueWizardLayout({
 }: EmbarqueWizardLayoutProps) {
   // FE-11: durante el guardado no se bloquea la navegación (el redirect es
   // intencional); sólo cuando hay captura pendiente.
-  const { guardDialog } = useDirtyGuard(isDirty && !isPending);
+  const { guardDialog, confirmarSalida } = useDirtyGuard(isDirty && !isPending);
+
+  // RFE-05 (Ola 11): el "Atrás" del shell sale con navigate() directo y se
+  // saltaba el aviso; se canaliza por la misma confirmación del dirty guard.
+  const handleBack = useCallback(() => {
+    confirmarSalida(onBack);
+  }, [confirmarSalida, onBack]);
 
   const handleNext = useCallback(() => {
     if (validateStep && !validateStep(currentStep)) return;
@@ -56,8 +62,8 @@ export function EmbarqueWizardLayout({
 
   const handlePrev = useCallback(() => {
     if (currentStep > 1) setCurrentStep((p: number) => p - 1);
-    else onBack();
-  }, [currentStep, setCurrentStep, onBack]);
+    else handleBack();
+  }, [currentStep, setCurrentStep, handleBack]);
 
   return (
     <WizardShell
@@ -66,7 +72,7 @@ export function EmbarqueWizardLayout({
       steps={steps}
       currentStep={currentStep}
       onStepClick={(s) => setCurrentStep(s)}
-      onBack={onBack}
+      onBack={handleBack}
       isBusy={isPending}
       defaultFooter={{
         onPrev: handlePrev,
