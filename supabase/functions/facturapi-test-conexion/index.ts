@@ -63,11 +63,15 @@ async function authorizeRequest(req: Request, url: string, anon: string, organiz
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) return { ok: false as const, status: 401, error: "unauthorized" };
   const sbUser = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
-  const { data: claims, error } = await sbUser.auth.getClaims(authHeader.replace("Bearer ", ""));
-  if (error || !claims?.claims?.sub) return { ok: false as const, status: 401, error: "unauthorized" };
+  // `getClaims` no existe en el runtime de supabase-js 2.45: se verifica el
+  // token con `getUser`, que sí está disponible en todas las versiones.
+  const { data: userData, error } = await sbUser.auth.getUser(authHeader.replace("Bearer ", ""));
+  const userId = userData?.user?.id;
+  if (error || !userId) return { ok: false as const, status: 401, error: "unauthorized" };
   // FIX C2 (S5-02): probar la API key fiscal exige rol emisor fiscal.
   const sbAdmin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const allowed = await authorizeOrgRole(sbAdmin, claims.claims.sub, organizationId, ROLES_EMISOR_FISCAL);
+  const allowed = await authorizeOrgRole(sbAdmin, userId, organizationId, ROLES_EMISOR_FISCAL);
+
   if (!allowed) return { ok: false as const, status: 403, error: "forbidden" };
   return { ok: true as const };
 }

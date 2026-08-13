@@ -30,22 +30,29 @@ export async function authenticate(req: Request, log?: Logger): Promise<AuthCont
   });
 
   const token = authHeader.replace("Bearer ", "");
-  // RTC-01: `getClaims` existe en el runtime de Supabase Auth pero no en los
-  // tipos de supabase-js 2.45 (se agregó después). Se estrecha con un tipo
-  // explícito en lugar de silenciar el archivo completo.
-  const authWithClaims = anonClient.auth as unknown as {
-    getClaims: (t: string) => Promise<{
+  // RTC-01: `getClaims` sólo existe en versiones recientes de supabase-js; en
+  // 2.45 no está ni en tipos ni en runtime. Se usa cuando está disponible y se
+  // cae a `getUser(token)` (verificación remota) cuando no lo está.
+  const authApi = anonClient.auth as unknown as {
+    getClaims?: (t: string) => Promise<{
       data: { claims?: { sub?: string } } | null;
       error: unknown;
     }>;
   };
-  const { data, error } = await authWithClaims.getClaims(token);
-  if (error || !data?.claims?.sub) {
-    throw new Error("401:Token inválido");
+
+  let userId: string | undefined;
+  if (typeof authApi.getClaims === "function") {
+    const { data, error } = await authApi.getClaims(token);
+    if (error || !data?.claims?.sub) throw new Error("401:Token inválido");
+    userId = data.claims.sub;
+  } else {
+    const { data, error } = await anonClient.auth.getUser(token);
+    if (error || !data?.user?.id) throw new Error("401:Token inválido");
+    userId = data.user.id;
   }
 
-  const userId = data.claims.sub;
   log?.setUserId(userId);
+
 
   const adminClient = createClient(supabaseUrl, serviceRoleKey);
   return { userId, authHeader, anonClient, adminClient };
