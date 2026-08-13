@@ -9279,6 +9279,10 @@ export type Database = {
         Args: { p_desde?: string; p_hasta?: string; p_proveedor_id: string }
         Returns: Json
       }
+      proveedor_inteligencia: {
+        Args: { p_proveedor_id: string }
+        Returns: Json
+      }
       proveedor_salud: { Args: { p_proveedor_id: string }; Returns: Json }
       proveedores_listado: {
         Args: {

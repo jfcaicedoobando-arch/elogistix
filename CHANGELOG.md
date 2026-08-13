@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.559.0] - 2026-08-13
+- **Ola 4 — Inteligencia del proveedor**: la pestaña "Salud" ahora es un tablero completo con alertas proactivas, desempeño de facturación, tendencia de 12 meses y comparativo contra otros proveedores del mismo tipo.
+- **Alertas proactivas** ordenadas por severidad: facturas vencidas, datos bancarios incompletos cuando hay saldo por pagar, partidas de embarques cerrados que el proveedor nunca facturó, documentos vencidos y facturas o documentos por vencer.
+- **Desempeño de facturación**: días promedio en facturar, desviación entre lo presupuestado y lo facturado (medida sólo sobre partidas ya facturadas), ticket promedio, % de partidas facturadas y top de conceptos y rutas por gasto.
+- **Gráfica comprometido vs facturado vs pagado** por mes, en pesos, para ver el rezago del proveedor al facturar y el nuestro al pagar.
+- **Comparativo de precios** por concepto contra otros proveedores del mismo tipo, con etiquetas Más caro / En línea / Más barato; sólo se publica con al menos 3 operaciones de cada lado.
+- Aviso cuando falta el tipo de cambio del DOF, porque en ese caso los montos en dólares y euros no entran a los totales en pesos.
+- Tests nuevos: dominio de semáforos, desviación, comparativo y alertas; mapeo de la RPC `proveedor_inteligencia` (incluye payload vacío y error); render de la tarjeta de alertas. Suite del módulo: 178 pruebas en verde.
+
+
+
 ## [13.558.0] - 2026-08-13
 - **Corrección de KPIs del proveedor**: "Pagado" y "Pendiente" del detalle ya usan el pago real conciliado por partida (Ola 1) en lugar del estado antiguo todo-o-nada; antes una factura pagada a la mitad se veía como no pagada y, al cerrarse, como pagada al 100%.
 - El **expediente documental** ahora distingue "falló la carga" de "no hay documentos": muestra alerta con el motivo y botón Reintentar.

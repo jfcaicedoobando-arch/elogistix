@@ -8,6 +8,7 @@ export const proveedores = {
   estadoCuenta: (id: string) => ['proveedores', 'estado-cuenta', id] as const,
   movimientos: (id: string) => ['proveedores', 'movimientos', id] as const,
   documentos: (id: string) => ['proveedores', 'documentos', id] as const,
+  inteligencia: (id: string) => ['proveedores', 'inteligencia', id] as const,
   lite: (organizationId?: string | null) => ['proveedores', 'lite', organizationId] as const,
   rfcCheck: (rfc: string, organizationId?: string | null) =>
     ['proveedores', 'rfc-check', organizationId, rfc] as const,
