@@ -75,7 +75,6 @@ export function DatePickerMx({
           type="text"
           inputMode="numeric"
           autoComplete="off"
-          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus={autoFocus}
           value={text}
           onChange={handleChange}
