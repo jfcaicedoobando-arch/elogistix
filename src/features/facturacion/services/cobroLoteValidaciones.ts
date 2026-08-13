@@ -76,13 +76,15 @@ export function errorRenglonExcedeSaldo(
 /**
  * Ola 5 · RG4-5: el reparto debe cuadrar EXACTO con el importe recibido; el
  * sobrante ya no es advertencia, es error.
+ * Ola 11 · RNF-02: exacto de verdad — comparación tras round2, sin tolerancia
+ * (antes 0.009 aquí y 0.01 en la RPC: discrepancia explotable).
  */
 export function errorCuadre(total: number, totalRepartido: number): string | null {
   const recibido = round2(total);
-  if (totalRepartido > recibido + TOLERANCIA_CENTAVOS) {
+  if (totalRepartido > recibido) {
     return "La suma repartida no puede exceder el importe recibido.";
   }
-  if (recibido - totalRepartido > TOLERANCIA_CENTAVOS) {
+  if (recibido - totalRepartido > 0) {
     return "El reparto debe cubrir exactamente el importe recibido: ajusta el importe o los importes por factura hasta que no quede sobrante sin asignar.";
   }
   return null;
