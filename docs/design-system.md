@@ -125,6 +125,32 @@ Reglas:
 
 ---
 
+## 4b. Anatomía de una ficha de detalle
+
+Todas las fichas (Cliente, Proveedor y las que vengan) siguen el mismo orden:
+
+```text
+PageContainer
+ └─ DetailHeader        título + subtítulo (RFC/Tax ID) + badges + acciones
+ └─ KpiStrip            franja de KPIs (KpiCard, iconVariant="chip")
+ └─ grid de cards       datos generales / bancarios / crédito
+ └─ Tabs
+     └─ TabsTrigger     <DetailTabLabel count={n}>Etiqueta</DetailTabLabel>
+     └─ TabsContent     className="mt-4"
+         └─ DetailTabSection title="…" count={n}   (tabla al ras)
+```
+
+Reglas:
+
+- Acciones del encabezado: **una** acción primaria sólida (Editar) y el resto
+  dentro del menú "Más acciones" (`MoreHorizontal`).
+- Contadores de pestaña siempre con `DetailTabLabel`; `tone="warning"` sólo
+  cuando el número representa pendientes por atender.
+- Carga: `PageContainer` + `DetailSkeleton`. Nunca un spinner suelto.
+- Vacío/error por pestaña: `EmptyState` / `ErrorStateInline`, no texto plano.
+
+---
+
 ## 5. Tablas
 
 Dos presets de densidad, sin excepciones (`tableTokens.ts`):
