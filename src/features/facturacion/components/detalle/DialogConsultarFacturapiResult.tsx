@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useLimpiarPendingVerificado } from "@/features/facturacion/hooks/useLimpiarPendingVerificado";
 import type { ConsultarFacturapiResult } from "@/features/facturacion/services/facturapi";
+import { ConsultaXmlCard } from "./ConsultaXmlCard";
+import { ConsultaRepsTable } from "./ConsultaRepsTable";
 
 function fmt(v: string | null | undefined): string {
   return v ? v : "—";
@@ -138,6 +140,8 @@ export function DialogConsultarFacturapiResult({ data, facturaId }: Props) {
         <RemotoCard r={data.remoto} />
         <LocalCard l={data.local} />
       </div>
+      <ConsultaXmlCard xml={data.xml} />
+      <ConsultaRepsTable reps={data.reps} />
       <DivergenciasAlert items={data.divergencias} />
       <LimpiarPendingCta data={data} facturaId={facturaId} />
       <RelacionadosList docs={data.remoto.related_documents} />
