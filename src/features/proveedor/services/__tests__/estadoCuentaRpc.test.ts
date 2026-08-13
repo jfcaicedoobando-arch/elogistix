@@ -55,8 +55,8 @@ describe("fetchProveedorMovimientos", () => {
     const res = await fetchProveedorMovimientos("p1");
     expect(mock.rpcCalls[0].args).toEqual({
       p_proveedor_id: "p1",
-      p_desde: null,
-      p_hasta: null,
+      p_desde: undefined,
+      p_hasta: undefined,
     });
     expect(res).toEqual({ movimientos: [], aging: [], saldos: [] });
   });

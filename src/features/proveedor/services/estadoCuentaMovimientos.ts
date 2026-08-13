@@ -16,8 +16,8 @@ export async function fetchProveedorMovimientos(
   if (!proveedorId) return VACIO;
   const { data, error } = await supabase.rpc("proveedor_estado_cuenta_movimientos", {
     p_proveedor_id: proveedorId,
-    p_desde: desde || null,
-    p_hasta: hasta || null,
+    p_desde: desde || undefined,
+    p_hasta: hasta || undefined,
   });
   if (error) throw error;
   const parsed = fromDb<EstadoCuentaMovimientos | null>(data);
