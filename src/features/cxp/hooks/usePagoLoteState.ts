@@ -57,19 +57,29 @@ export function usePagoLoteState(a: Args) {
   const pedirTc = a.open && esExtranjera;
   const { data: tcDofRaw } = useTcDofPorFecha(pedirTc ? fecha : null, pedirTc);
   const tcDof = esExtranjera ? tcDofRaw ?? null : null;
+  // Ola 11 · RFE-01/RNF-04: el T/C guardado es el de la MONEDA DEL LOTE (espejo
+  // de useTcLote en CxC). Sin T/C disponible el envío se bloquea.
+  const tcAplicable = esExtranjera
+    ? (a.moneda === "EUR" ? tcDof?.eurMxn : tcDof?.usdMxn) ?? null
+    : null;
+  const tcBloqueado = esExtranjera && !tcAplicable;
 
   const totalNum = round2(Number(total) || 0);
   const cuentasMoneda = cuentas.filter((c) => c.moneda === a.moneda);
   const cuenta = cuentas.find((c) => c.id === cuentaId) ?? null;
   const requiereCuenta = metodo !== "Efectivo";
 
-  const { error, totalRepartido } = validarLote(a.facturas, renglones, totalNum, {
+  const { error: errorLote, totalRepartido } = validarLote(a.facturas, renglones, totalNum, {
     requiereCuenta,
     cuentaId: cuentaId || null,
     monedaCuenta: cuenta?.moneda ?? null,
     moneda: a.moneda,
   });
+  const error = tcBloqueado
+    ? `Sin tipo de cambio DOF ${a.moneda}/MXN para esta fecha: no se puede registrar el pago en lote.`
+    : errorLote;
   const sinAsignar = round2(totalNum - totalRepartido);
+
 
   const recalcular = (nuevoTotal: number) => {
     setTotal(nuevoTotal === 0 ? "" : String(nuevoTotal));
