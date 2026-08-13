@@ -13,7 +13,6 @@ DECLARE
   v_checks jsonb := '[]'::jsonb; v_puede boolean := true; v_ok boolean;
   v_cxc_saldo numeric := 0; v_cxc_por_moneda jsonb := '[]'::jsonb;
   v_cxc_pagadas_sin_pago int := 0;
-
   v_cxp_saldo numeric := 0; v_cxp_por_moneda jsonb := '[]'::jsonb;
   v_docs_faltantes int;
   v_utilidad_mxn numeric; v_venta_mxn numeric; v_margen_min numeric; v_margen_pct numeric;
@@ -103,7 +102,6 @@ BEGIN
   SELECT COUNT(*), COALESCE(array_agg(nombre ORDER BY nombre), ARRAY[]::text[])
     INTO v_prov_sin_evidencia, v_prov_nombres
     FROM (
-      -- a) Proveedores identificados con costos y sin ningun archivo en el buzon.
       SELECT DISTINCT COALESCE(NULLIF(cc.proveedor_nombre,''), 'Proveedor sin nombre') AS nombre
         FROM conceptos_costo cc
        WHERE cc.embarque_id=p_embarque_id AND cc.deleted_at IS NULL
@@ -114,7 +112,6 @@ BEGIN
               AND efe.proveedor_id=cc.proveedor_id
               AND COALESCE(efe.estado,'por_capturar')<>'rechazada')
       UNION
-      -- b) Costos sin proveedor asignado: imposible acreditar evidencia.
       SELECT 'Costos sin proveedor asignado' AS nombre
        WHERE EXISTS (
          SELECT 1 FROM conceptos_costo cc2
@@ -155,8 +152,8 @@ BEGIN
     'regla','venta_conceptos_facturados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_venta_pendientes, 'en_proforma', v_venta_en_proforma)));
 
-  -- v13.545.2 — CxC: una factura con estado 'Pagada' se considera saldo 0 aunque
-  -- no tenga pagos capturados (facturas históricas conciliadas fuera del sistema).
+  -- CxC: una factura con estado 'Pagada' se considera saldo 0 aunque no tenga
+  -- pagos capturados (facturas históricas conciliadas fuera del sistema).
   SELECT COUNT(*) INTO v_cxc_pagadas_sin_pago
     FROM facturas f
    WHERE f.embarque_id=p_embarque_id AND f.deleted_at IS NULL AND f.estado='Pagada'
@@ -185,7 +182,6 @@ BEGIN
     'regla','cxc_cobrada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxc_por_moneda, 'saldo_total', v_cxc_saldo,
       'pagadas_sin_pago_registrado', v_cxc_pagadas_sin_pago)));
-
 
   SELECT COUNT(*), COALESCE(array_agg(pf.id), ARRAY[]::uuid[]) INTO v_rep_pendientes, v_rep_ids
     FROM pagos_factura pf JOIN facturas f ON f.id=pf.factura_id
@@ -228,6 +224,4 @@ BEGIN
       'margen_pct', v_margen_pct, 'minimo_pct', v_margen_min)));
 
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
-END $function$
-
-;
+END $function$;

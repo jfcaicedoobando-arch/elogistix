@@ -210,6 +210,10 @@ jobs:
       # v13.322.1 (GHA-audit A2) — `audit:rpc-sync`, `audit:rpc-columns` y
       # `audit:sonner` existían en package.json pero NINGÚN workflow los
       # invocaba: guardrails muertos. Se cablean aquí, en paralelo.
+      # v13.572.0 (R3TC-04) — `audit:rpc-columns` sale de este job: requiere BD
+      # viva (PG*) y este workflow no la tiene, así que era un no-op silencioso.
+      # El script ahora FALLA si corre con CI=true sin PGHOST; ejecútalo donde
+      # haya BD (local con Supabase levantado, o un job nightly con Postgres).
       - name: Audits en paralelo (arch + casts + tests + schema + migrations + rpc + sonner)
         run: |
           set -e
@@ -229,8 +233,6 @@ jobs:
           V=$!
           bun run audit:rpc-sync    > /tmp/audit-rpc-sync.log    2>&1 &
           R=$!
-          bun run audit:rpc-columns > /tmp/audit-rpc-columns.log 2>&1 &
-          K=$!
           bun run audit:sonner      > /tmp/audit-sonner.log      2>&1 &
           N=$!
           fail=0
@@ -242,7 +244,6 @@ jobs:
           wait $F || { echo '❌ audit:schema-functions'; cat /tmp/audit-schema-functions.log; fail=1; }
           wait $V || { echo '❌ audit:manifest';   cat /tmp/audit-manifest.log;   fail=1; }
           wait $R || { echo '❌ audit:rpc-sync';    cat /tmp/audit-rpc-sync.log;    fail=1; }
-          wait $K || { echo '❌ audit:rpc-columns'; cat /tmp/audit-rpc-columns.log; fail=1; }
           wait $N || { echo '❌ audit:sonner';      cat /tmp/audit-sonner.log;      fail=1; }
           exit $fail
 

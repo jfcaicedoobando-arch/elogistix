@@ -1,7 +1,7 @@
 import * as React from 'npm:react@18.3.1'
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts"
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { corsHeaders } from "../_shared/cors.ts"
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 import { isAuthorized, resolveSubject } from './helpers.ts'
 
