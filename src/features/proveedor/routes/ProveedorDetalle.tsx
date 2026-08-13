@@ -167,6 +167,7 @@ export default function ProveedorDetalle() {
             )}
           </TabsTrigger>
           <TabsTrigger value="estado_cuenta">Estado de cuenta</TabsTrigger>
+          <TabsTrigger value="documentos">Documentos</TabsTrigger>
           <TabsTrigger value="salud">Salud</TabsTrigger>
         </TabsList>
         <TabsContent value="operaciones" className="mt-4">
