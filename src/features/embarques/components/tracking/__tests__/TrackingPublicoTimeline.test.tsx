@@ -25,6 +25,6 @@ describe("TrackingPublicoTimeline", () => {
   it("muestra el estado vacío cuando todos los eventos son internos", () => {
     render(<TrackingPublicoTimeline eventos={[eventos[1], eventos[2]]} />);
     expect(screen.queryByText("revisión interna de patio")).not.toBeInTheDocument();
-    expect(screen.getByText(/todavía|sin eventos|aún/i)).toBeInTheDocument();
+    expect(screen.getByText("Todavía no hay movimientos registrados")).toBeInTheDocument();
   });
 });
