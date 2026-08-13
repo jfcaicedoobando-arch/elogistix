@@ -39,7 +39,7 @@ describe("fetchProveedorEstadoCuenta", () => {
 describe("fetchProveedorMovimientos", () => {
   it("envía el rango de fechas al servidor", async () => {
     mock.setRpcResult("proveedor_estado_cuenta_movimientos", {
-      data: { movimientos: [], aging: [], saldos: [] },
+      data: { movimientos: [], saldo_apertura: [], aging: [], saldos: [] },
       error: null,
     });
     await fetchProveedorMovimientos("p1", "2026-01-01", "2026-01-31");
@@ -63,7 +63,7 @@ describe("fetchProveedorMovimientos", () => {
       p_offset: 0,
     });
     expect(res).toEqual({
-      movimientos: [], aging: [], saldos: [], total_movimientos: 0, hay_mas: false,
+      movimientos: [], saldo_apertura: [], aging: [], saldos: [], total_movimientos: 0, hay_mas: false,
     });
   });
 
