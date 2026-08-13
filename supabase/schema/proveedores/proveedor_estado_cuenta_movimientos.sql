@@ -1,8 +1,15 @@
--- Canonical schema para public.proveedor_estado_cuenta_movimientos
--- Capturado 1:1 desde la base y actualizado en 13.577.0
--- (Sprint 04 · R3FE-04: paginación server-side; Ola 12 · Sprint 05 · R3P-09:
---  saldos globales; R3P-10: fecha de corte CDMX en el aging).
-CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta_movimientos(p_proveedor_id uuid, p_desde date DEFAULT NULL::date, p_hasta date DEFAULT NULL::date, p_limite integer DEFAULT 1000, p_offset integer DEFAULT 0)
+-- Canónico: proveedor_estado_cuenta_movimientos
+-- Migración vigente: 20260813183128 (Ola 12 · Sprint 08 · R3FE-03)
+-- (acumulativa: conserva R3FE-04 paginación, R3P-09 saldos globales,
+--  R3P-10 fecha de corte CDMX y R3BD-04 'Pagada' => saldo 0).
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta_movimientos(
+  p_proveedor_id uuid,
+  p_desde date DEFAULT NULL,
+  p_hasta date DEFAULT NULL,
+  p_limite integer DEFAULT 1000,
+  p_offset integer DEFAULT 0
+)
  RETURNS jsonb
  LANGUAGE plpgsql
  STABLE SECURITY DEFINER
@@ -11,8 +18,9 @@ AS $function$
 DECLARE
   v_oid uuid := public.current_user_org_id();
   v_todos jsonb;
-  v_movs jsonb;
   v_movs_full jsonb;
+  v_movs jsonb;
+  v_apertura jsonb;
   v_aging jsonb;
   v_saldos jsonb;
   v_total integer;
@@ -20,14 +28,12 @@ DECLARE
   v_desde date := COALESCE(p_desde, '1900-01-01'::date);
   v_hasta date := COALESCE(p_hasta, '2999-12-31'::date);
   v_limite integer := LEAST(GREATEST(COALESCE(p_limite, 1000), 1), 5000);
-  -- R3P-10: fecha de negocio en America/Mexico_City.
   v_hoy_mx date := (now() AT TIME ZONE 'America/Mexico_City')::date;
 BEGIN
   IF v_oid IS NULL THEN
     RAISE EXCEPTION 'LC_ORG_SIN_CONTEXTO: no hay organización activa' USING ERRCODE = '42501';
   END IF;
 
-  -- Universo COMPLETO de movimientos (sin filtro de periodo).
   WITH facturas AS (
     SELECT pf.id, pf.folio_interno, pf.folio_proveedor, pf.fecha_emision,
            pf.fecha_vencimiento, pf.moneda::text AS moneda, pf.total,
@@ -96,7 +102,6 @@ BEGIN
   INTO v_todos
   FROM movs m;
 
-  -- Detalle del periodo: filtro en memoria sobre el universo completo.
   SELECT COALESCE(jsonb_agg(m ORDER BY m->>'fecha', m->>'tipo', m->>'folio'), '[]'::jsonb)
   INTO v_movs_full
   FROM jsonb_array_elements(v_todos) m
@@ -115,11 +120,21 @@ BEGIN
     LIMIT v_limite
   ) pag;
 
-  -- Aging global con fecha de corte CDMX (R3P-10).
+  -- Ola 12 · R3FE-03: saldo de apertura por moneda.
+  SELECT COALESCE(jsonb_agg(row_to_json(a) ORDER BY a.moneda), '[]'::jsonb)
+  INTO v_apertura
+  FROM (
+    SELECT m->>'moneda' AS moneda,
+           SUM((m->>'cargo')::numeric) - SUM((m->>'abono')::numeric) AS saldo
+    FROM jsonb_array_elements(v_todos) m
+    WHERE (m->>'fecha')::date < v_desde
+      AND m->>'moneda' IS NOT NULL
+    GROUP BY m->>'moneda'
+  ) a;
+
   WITH facturas AS (
     SELECT pf.id, pf.folio_interno, pf.folio_proveedor, pf.fecha_vencimiento,
            pf.moneda::text AS moneda, COALESCE(pf.total, 0) AS total,
-           -- Ola 12 · R3BD-04: se necesita el estado para la regla 'Pagada'.
            pf.estado::text AS estado
     FROM public.proveedor_facturas pf
     WHERE pf.proveedor_id = p_proveedor_id
@@ -129,8 +144,6 @@ BEGIN
   ),
   saldo_factura AS (
     SELECT f.id, f.moneda, f.fecha_vencimiento,
-           -- Ola 12 · R3BD-04: factura marcada 'Pagada' (legacy, sin pagos
-           -- capturados) => saldo 0. Misma regla que proveedor_inteligencia.
            CASE WHEN f.estado = 'Pagada' THEN 0::numeric
                 ELSE f.total
                   - COALESCE((SELECT SUM(pp.monto) FROM public.pagos_proveedor pp
@@ -161,7 +174,6 @@ BEGIN
     GROUP BY c.moneda, c.bucket
   ) a;
 
-  -- Saldos GLOBALES por moneda (R3P-09): universo completo, igual que el aging.
   SELECT COALESCE(jsonb_agg(row_to_json(s) ORDER BY s.moneda), '[]'::jsonb)
   INTO v_saldos
   FROM (
@@ -176,6 +188,7 @@ BEGIN
 
   RETURN jsonb_build_object(
     'movimientos', v_movs,
+    'saldo_apertura', v_apertura,
     'aging', v_aging,
     'saldos', v_saldos,
     'total_movimientos', v_total,
