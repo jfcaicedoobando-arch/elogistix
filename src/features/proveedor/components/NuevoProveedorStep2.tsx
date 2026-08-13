@@ -30,9 +30,9 @@ function Step2Nacional({ c }: { c: Controller }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div className="space-y-2">
-        <Label>Banco</Label>
+        <Label htmlFor="nprov-banco">Banco</Label>
         <Select value={c.form.banco || undefined} onValueChange={(v) => c.setField("banco", v)}>
-          <SelectTrigger><SelectValue placeholder="Selecciona un banco" /></SelectTrigger>
+          <SelectTrigger id="nprov-banco"><SelectValue placeholder="Selecciona un banco" /></SelectTrigger>
           <SelectContent>
             {BANCOS_MEXICO.map((b) => (
               <SelectItem key={b} value={b}>{b}</SelectItem>
@@ -41,8 +41,8 @@ function Step2Nacional({ c }: { c: Controller }) {
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>CLABE interbancaria</Label>
-        <Input
+        <Label htmlFor="nprov-clabe">CLABE interbancaria</Label>
+        <Input id="nprov-clabe"
           inputMode="numeric"
           maxLength={18}
           placeholder="18 dígitos"
@@ -69,24 +69,24 @@ function Step2Internacional({ c }: { c: Controller }) {
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label>Beneficiario</Label>
-          <Input
+          <Label htmlFor="nprov-beneficiario">Beneficiario</Label>
+          <Input id="nprov-beneficiario"
             value={c.form.beneficiario}
             placeholder={c.form.nombre || "Nombre legal del beneficiario"}
             onChange={(e) => c.setField("beneficiario", e.target.value)}
           />
         </div>
         <div className="space-y-2">
-          <Label>Nombre del banco</Label>
-          <Input value={c.form.banco} onChange={(e) => c.setField("banco", e.target.value)} />
+          <Label htmlFor="nprov-banco-nombre">Nombre del banco</Label>
+          <Input id="nprov-banco-nombre" value={c.form.banco} onChange={(e) => c.setField("banco", e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label>País del banco</Label>
-          <Input value={c.form.banco_pais} onChange={(e) => c.setField("banco_pais", e.target.value)} />
+          <Label htmlFor="nprov-banco-pais">País del banco</Label>
+          <Input id="nprov-banco-pais" value={c.form.banco_pais} onChange={(e) => c.setField("banco_pais", e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label>SWIFT / BIC</Label>
-          <Input
+          <Label htmlFor="nprov-swift">SWIFT / BIC</Label>
+          <Input id="nprov-swift"
             value={c.form.swift_bic}
             placeholder="8 u 11 caracteres"
             maxLength={11}
@@ -97,36 +97,36 @@ function Step2Internacional({ c }: { c: Controller }) {
           )}
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label>IBAN o número de cuenta</Label>
-          <Input value={c.form.iban} onChange={(e) => c.setField("iban", e.target.value)} />
+          <Label htmlFor="nprov-iban">IBAN o número de cuenta</Label>
+          <Input id="nprov-iban" value={c.form.iban} onChange={(e) => c.setField("iban", e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label>ABA / Routing (EE.UU.)</Label>
-          <Input value={c.form.aba_routing} onChange={(e) => c.setField("aba_routing", e.target.value)} />
+          <Label htmlFor="nprov-aba">ABA / Routing (EE.UU.)</Label>
+          <Input id="nprov-aba" value={c.form.aba_routing} onChange={(e) => c.setField("aba_routing", e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label>Banco intermediario</Label>
-          <Input value={c.form.banco_intermediario} onChange={(e) => c.setField("banco_intermediario", e.target.value)} />
+          <Label htmlFor="nprov-intermediario">Banco intermediario</Label>
+          <Input id="nprov-intermediario" value={c.form.banco_intermediario} onChange={(e) => c.setField("banco_intermediario", e.target.value)} />
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label>SWIFT del intermediario</Label>
-          <Input
+          <Label htmlFor="nprov-swift-intermediario">SWIFT del intermediario</Label>
+          <Input id="nprov-swift-intermediario"
             value={c.form.banco_intermediario_swift}
             maxLength={11}
             onChange={(e) => c.setField("banco_intermediario_swift", e.target.value.toUpperCase())}
           />
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label>Dirección del banco</Label>
-          <Textarea
+          <Label htmlFor="nprov-banco-direccion">Dirección del banco</Label>
+          <Textarea id="nprov-banco-direccion"
             rows={2}
             value={c.form.banco_direccion}
             onChange={(e) => c.setField("banco_direccion", e.target.value)}
           />
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label>Referencia / notas para el pago</Label>
-          <Textarea
+          <Label htmlFor="nprov-referencia">Referencia / notas para el pago</Label>
+          <Textarea id="nprov-referencia"
             rows={2}
             value={c.form.referencia_pago}
             onChange={(e) => c.setField("referencia_pago", e.target.value)}

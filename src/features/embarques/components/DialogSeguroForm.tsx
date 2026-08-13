@@ -120,30 +120,30 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label>Aseguradora *</Label>
-          <Input value={form.aseguradora} onChange={(e) => setField("aseguradora", e.target.value)} />
+          <Label htmlFor="seguro-aseguradora">Aseguradora *</Label>
+          <Input id="seguro-aseguradora" value={form.aseguradora} onChange={(e) => setField("aseguradora", e.target.value)} />
         </div>
         <div>
-          <Label>Número de póliza *</Label>
-          <Input value={form.numero_poliza} onChange={(e) => setField("numero_poliza", e.target.value)} />
+          <Label htmlFor="seguro-poliza">Número de póliza *</Label>
+          <Input id="seguro-poliza" value={form.numero_poliza} onChange={(e) => setField("numero_poliza", e.target.value)} />
         </div>
 
         <div>
-          <Label>Vigencia desde *</Label>
-          <DatePickerMx value={form.vigencia_desde} onChange={(v) => setField("vigencia_desde", v)} className="w-full" />
+          <Label htmlFor="seguro-vigencia-desde">Vigencia desde *</Label>
+          <DatePickerMx id="seguro-vigencia-desde" value={form.vigencia_desde} onChange={(v) => setField("vigencia_desde", v)} className="w-full" />
         </div>
         <div>
-          <Label>Vigencia hasta *</Label>
-          <DatePickerMx value={form.vigencia_hasta} onChange={(v) => setField("vigencia_hasta", v)} className="w-full" />
+          <Label htmlFor="seguro-vigencia-hasta">Vigencia hasta *</Label>
+          <DatePickerMx id="seguro-vigencia-hasta" value={form.vigencia_hasta} onChange={(v) => setField("vigencia_hasta", v)} className="w-full" />
           {form.vigencia_hasta < form.vigencia_desde && (
             <p className="text-xs text-destructive mt-1">La vigencia final es anterior a la inicial.</p>
           )}
         </div>
 
         <div>
-          <Label>Moneda</Label>
+          <Label htmlFor="seguro-moneda">Moneda</Label>
           <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as MonedaSeguro)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger id="seguro-moneda"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="MXN">MXN</SelectItem>
               <SelectItem value="USD">USD</SelectItem>
@@ -152,8 +152,8 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
           </Select>
         </div>
         <div>
-          <Label>Prima (costo) *</Label>
-          <Input type="number" min={0} step={0.01} value={form.prima}
+          <Label htmlFor="seguro-prima">Prima (costo) *</Label>
+          <Input id="seguro-prima" type="number" min={0} step={0.01} value={form.prima}
             onChange={(e) => setField("prima", Number(e.target.value))} />
           {form.prima < 0 && (
             <p className="text-xs text-destructive mt-1">La prima no puede ser negativa.</p>
@@ -161,35 +161,35 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
         </div>
 
         <div>
-          <Label>Suma asegurada</Label>
-          <Input type="number" min={0} step={0.01} value={form.suma_asegurada}
+          <Label htmlFor="seguro-suma">Suma asegurada</Label>
+          <Input id="seguro-suma" type="number" min={0} step={0.01} value={form.suma_asegurada}
             onChange={(e) => setField("suma_asegurada", Number(e.target.value))} />
         </div>
         <div>
-          <Label>Deducible</Label>
-          <Input type="number" min={0} step={0.01} value={form.deducible}
+          <Label htmlFor="seguro-deducible">Deducible</Label>
+          <Input id="seguro-deducible" type="number" min={0} step={0.01} value={form.deducible}
             onChange={(e) => setField("deducible", Number(e.target.value))} />
         </div>
 
         <div className="sm:col-span-2">
-          <Label>Cobertura</Label>
-          <Textarea rows={2} value={form.cobertura_descripcion ?? ""}
+          <Label htmlFor="seguro-cobertura">Cobertura</Label>
+          <Textarea id="seguro-cobertura" rows={2} value={form.cobertura_descripcion ?? ""}
             onChange={(e) => setField("cobertura_descripcion", e.target.value || null)} />
         </div>
 
         <div>
-          <Label>Certificado (URL)</Label>
-          <Input value={form.certificado_url ?? ""}
+          <Label htmlFor="seguro-certificado">Certificado (URL)</Label>
+          <Input id="seguro-certificado" value={form.certificado_url ?? ""}
             onChange={(e) => setField("certificado_url", e.target.value || null)} />
         </div>
         <div>
-          <Label>Contacto</Label>
-          <Input value={form.contacto ?? ""} onChange={(e) => setField("contacto", e.target.value || null)} />
+          <Label htmlFor="seguro-contacto">Contacto</Label>
+          <Input id="seguro-contacto" value={form.contacto ?? ""} onChange={(e) => setField("contacto", e.target.value || null)} />
         </div>
 
         <div className="sm:col-span-2">
-          <Label>Notas</Label>
-          <Textarea rows={2} value={form.notas ?? ""}
+          <Label htmlFor="seguro-notas">Notas</Label>
+          <Textarea id="seguro-notas" rows={2} value={form.notas ?? ""}
             onChange={(e) => setField("notas", e.target.value || null)} />
         </div>
       </div>
