@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.589.8] - 2026-08-13
+- **Corregido el bloqueo al crear el borrador sustituto en el paso 3.** La copia reutilizaba el vínculo directo de la proforma y activaba incorrectamente la protección contra facturas duplicadas (`uq_facturas_proforma_moneda_viva`).
+- La factura sustituta conserva la trazabilidad mediante el caso de refacturación, sus conceptos y el embarque; el identificador de la proforma original queda registrado en la bitácora sin competir con la factura vigente.
+
 ## [13.589.7] - 2026-08-13
 - **Cancelar un REP por segunda vez ya no genera un error.** Si la solicitud ya está pendiente o en verificación ante el SAT, la función responde de forma idempotente, conserva el proceso existente y evita enviar una cancelación duplicada al proveedor fiscal.
 - La pantalla refresca el estado y muestra un aviso informativo para que el usuario espere la resolución, en lugar de registrar “No se pudo cancelar el REP”.
