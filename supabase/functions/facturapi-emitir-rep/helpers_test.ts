@@ -1,6 +1,6 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { buildRepPayload, validateRepContext, normalizarFormaPago, type PagoContext } from "./helpers.ts";
-import { factorIvaFacturaOriginal } from "./context.ts";
+import { factorIvaFacturaOriginal, tasaIvaFacturaOriginal } from "./context.ts";
 
 const validCtx: PagoContext = {
   receptor: {
@@ -130,6 +130,20 @@ Deno.test("factorIvaFacturaOriginal distingue exento, tasa 0 y mezcla", () => {
   assertEquals(factorIvaFacturaOriginal(0, []), "Tasa");
   assertEquals(factorIvaFacturaOriginal(0, null), "Tasa");
   assertEquals(factorIvaFacturaOriginal(0, [null, undefined, "exento"]), "Exento");
+});
+
+Deno.test("tasaIvaFacturaOriginal ancla a c_TasaOCuota (R3P-20)", () => {
+  assertEquals(tasaIvaFacturaOriginal(1000, 160), 0.16);
+  assertEquals(tasaIvaFacturaOriginal(1000, 80), 0.08);
+  assertEquals(tasaIvaFacturaOriginal(1000, 0), 0);
+  assertEquals(tasaIvaFacturaOriginal(1000, 159.99), 0.16);
+  assertEquals(tasaIvaFacturaOriginal(1000, 79.99), 0.08);
+  assertEquals(tasaIvaFacturaOriginal(1000, 1.99), 0);
+  assertEquals(tasaIvaFacturaOriginal(1000, 120), 0.16);
+  assertEquals(tasaIvaFacturaOriginal(1000, 119.99), 0.08);
+  assertEquals(tasaIvaFacturaOriginal(0, 0), 0);
+  assertEquals(tasaIvaFacturaOriginal(0, 160), 0);
+  assertEquals(tasaIvaFacturaOriginal(1000, 100), 0.08);
 });
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.578.0] - 2026-08-13
+- **Ola 12 · Sprint 06 — Fiscal y prorrata (3 correcciones P3).**
+  - Una partida de costo ya pagada cuya factura de proveedor se cancela o elimina conserva el estado **Pagado**: deja de reaparecer en "Por facturar" y de inflar la tarjeta "Comprometido sin factura".
+  - El pago de una factura ahora se reparte entre sus partidas usando la **misma base con IVA** (proporción contra el subtotal), así se distribuye el 100% del pagado y el pendiente ya no queda inflado ~13.8%.
+  - En el REP, la tasa de IVA del CFDI relacionado se **ancla a la tasa más cercana del catálogo SAT** (16%, 8%, 0%) en vez de umbrales fijos: los redondeos de centavos ya no timbran con la tasa equivocada.
+  - Se agregó el espejo declarativo `supabase/schema/proveedores/proveedor_estado_cuenta.sql`.
+
 ## [13.577.0] - 2026-08-13
 - **Ola 12 · Sprint 05 — Estado de cuenta del proveedor (4 correcciones P3).**
   - Los saldos por moneda ahora son **globales** (todo el historial, no sólo el periodo filtrado), así cuadran contra la antigüedad de saldos; la tarjeta se llama "Saldos por moneda" y aclara que es saldo global.
