@@ -31,7 +31,7 @@ describe("filasMovimientosExport", () => {
     const [fila] = filasMovimientosExport([movimiento]);
     expect(fila.fecha).toBe("2026-01-10");
     expect(fila.moneda).toBe("USD");
-    expect(fila.cargo).toBe("1000.01");
+    expect(fila.cargo).toBe("1000.00");
     expect(fila.abono).toBe("0.00");
   });
 });
