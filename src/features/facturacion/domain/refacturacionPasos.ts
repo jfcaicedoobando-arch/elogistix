@@ -33,6 +33,8 @@ export interface FacturaRefacturacion {
   numero: string;
   estado: string;
   uuid_fiscal: string | null;
+  /** Estatus del trámite de cancelación ante el SAT (FacturApi). */
+  cancellation_status?: string | null;
 }
 
 /** El pago tiene complemento de pago (REP) timbrado y sin cancelar. */
