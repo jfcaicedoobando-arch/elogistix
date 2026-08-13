@@ -28,6 +28,7 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
         motivo={w.motivo}
         onMotivo={w.setMotivo}
         bloqueado={Boolean(s.caso)}
+        receptorDestino={w.receptorDestino}
       />
     );
   }
@@ -53,6 +54,8 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
         onDuplicar={() => s.duplicar.mutate()}
         onIrABorrador={w.handleIrABorrador}
         onRefrescar={s.refrescar}
+        consistencia={w.consistencia}
+        consistenciaCargando={w.consistenciaCargando}
       />
     );
   }
@@ -79,6 +82,7 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
       onOrdenanteNombre={w.setOrdenanteNombre}
       ordenanteRfc={w.ordenanteRfc}
       onOrdenanteRfc={w.setOrdenanteRfc}
+      bloqueoOrdenante={w.bloqueoOrdenanteActual}
       yaReasignado={w.yaReasignado}
     />
   );

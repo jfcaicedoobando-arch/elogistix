@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { facturaNuevaLista } from "@/features/facturacion/domain/refacturacionPasos";
 import type { FacturaRefacturacionEstado } from "@/features/facturacion/services/refacturacion";
+import type { ConsistenciaRefacturacion } from "@/features/facturacion/services/refacturacionConsistencia";
+import { ComparativoConsistencia } from "./ComparativoConsistencia";
 
 interface Props {
   facturaNueva: FacturaRefacturacionEstado | null;
@@ -17,6 +19,8 @@ interface Props {
   onDuplicar: () => void;
   onIrABorrador: (facturaId: string) => void;
   onRefrescar: () => void;
+  consistencia: ConsistenciaRefacturacion | null;
+  consistenciaCargando: boolean;
 }
 
 export function PasoFacturaNueva(props: Props) {
@@ -69,6 +73,11 @@ export function PasoFacturaNueva(props: Props) {
               Abre el borrador, revisa los datos fiscales y tímbralo. Al volver, este
               asistente retoma en este mismo paso.
             </div>
+          )}
+
+          {props.consistencia && <ComparativoConsistencia data={props.consistencia} />}
+          {!props.consistencia && props.consistenciaCargando && (
+            <p className="text-xs text-muted-foreground">Validando consistencia fiscal…</p>
           )}
 
           <div className="flex flex-wrap gap-2">

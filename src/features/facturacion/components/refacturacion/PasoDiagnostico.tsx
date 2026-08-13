@@ -12,6 +12,8 @@ import {
 import { formatCurrency } from "@/lib/formatters";
 import type { ClienteFiscalOpt } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import type { RutaFiscalRefacturacion } from "@/features/facturacion/services/refacturacion";
+import type { ReceptorFiscal } from "@/features/facturacion/domain/refacturacionValidaciones";
+import { ReceptorFiscalSemaforo } from "./ReceptorFiscalSemaforo";
 
 interface Props {
   numeroOriginal: string;
@@ -27,6 +29,7 @@ interface Props {
   motivo: string;
   onMotivo: (v: string) => void;
   bloqueado: boolean;
+  receptorDestino: ReceptorFiscal | null;
 }
 
 export function PasoDiagnostico(props: Props) {
@@ -83,6 +86,12 @@ export function PasoDiagnostico(props: Props) {
         <div className="space-y-1">
           <Label className="text-label" htmlFor="refact-rfc-destino">RFC destino</Label>
           <Input id="refact-rfc-destino" value={destino?.rfc ?? "—"} readOnly />
+        </div>
+        <div className="md:col-span-2">
+          <ReceptorFiscalSemaforo
+            clienteId={props.clienteDestinoId}
+            receptor={props.receptorDestino}
+          />
         </div>
       </FormDialogSection>
 
