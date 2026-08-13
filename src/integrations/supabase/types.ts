@@ -5363,7 +5363,11 @@ export type Database = {
           monto: number
           monto_aplicado_factura: number
           notas: string
+          ordenante_distinto: boolean
+          ordenante_nombre: string | null
+          ordenante_rfc: string | null
           organization_id: string
+          refacturacion_id: string | null
           referencia: string
           rep_cancelado_en: string | null
           rep_cancelado_facturapi_id: string | null
@@ -5405,7 +5409,11 @@ export type Database = {
           monto: number
           monto_aplicado_factura: number
           notas?: string
+          ordenante_distinto?: boolean
+          ordenante_nombre?: string | null
+          ordenante_rfc?: string | null
           organization_id?: string
+          refacturacion_id?: string | null
           referencia?: string
           rep_cancelado_en?: string | null
           rep_cancelado_facturapi_id?: string | null
@@ -5447,7 +5455,11 @@ export type Database = {
           monto?: number
           monto_aplicado_factura?: number
           notas?: string
+          ordenante_distinto?: boolean
+          ordenante_nombre?: string | null
+          ordenante_rfc?: string | null
           organization_id?: string
+          refacturacion_id?: string | null
           referencia?: string
           rep_cancelado_en?: string | null
           rep_cancelado_facturapi_id?: string | null
@@ -6941,6 +6953,81 @@ export type Database = {
         }
         Relationships: []
       }
+      refacturaciones: {
+        Row: {
+          cerrado_at: string | null
+          cliente_destino_id: string
+          cliente_origen_id: string | null
+          created_at: string
+          created_by: string | null
+          embarque_id: string | null
+          estado: string
+          factura_nueva_id: string | null
+          factura_original_id: string
+          id: string
+          motivo: string
+          organization_id: string
+          pago_nuevo_id: string | null
+          pago_original_id: string | null
+          paso_actual: number
+          ruta_fiscal: string
+          updated_at: string
+        }
+        Insert: {
+          cerrado_at?: string | null
+          cliente_destino_id: string
+          cliente_origen_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          embarque_id?: string | null
+          estado?: string
+          factura_nueva_id?: string | null
+          factura_original_id: string
+          id?: string
+          motivo?: string
+          organization_id: string
+          pago_nuevo_id?: string | null
+          pago_original_id?: string | null
+          paso_actual?: number
+          ruta_fiscal?: string
+          updated_at?: string
+        }
+        Update: {
+          cerrado_at?: string | null
+          cliente_destino_id?: string
+          cliente_origen_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          embarque_id?: string | null
+          estado?: string
+          factura_nueva_id?: string | null
+          factura_original_id?: string
+          id?: string
+          motivo?: string
+          organization_id?: string
+          pago_nuevo_id?: string | null
+          pago_original_id?: string | null
+          paso_actual?: number
+          ruta_fiscal?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refacturaciones_factura_nueva_id_fkey"
+            columns: ["factura_nueva_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refacturaciones_factura_original_id_fkey"
+            columns: ["factura_original_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_change_log: {
         Row: {
           changed_by: string | null
@@ -7739,6 +7826,7 @@ export type Database = {
         Returns: undefined
       }
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
+      _assert_refacturador: { Args: { p_org: string }; Returns: undefined }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
       _assert_writer_cotizacion: { Args: { p_org: string }; Returns: undefined }
       _audit_costos_repetidos: {
@@ -7843,6 +7931,15 @@ export type Database = {
           p_usd_mxn: number
         }
         Returns: number
+      }
+      abrir_caso_refacturacion: {
+        Args: {
+          p_cliente_destino_id: string
+          p_factura_id: string
+          p_motivo?: string
+          p_ruta_fiscal?: string
+        }
+        Returns: string
       }
       aceptar_cotizacion_version: {
         Args: { p_cotizacion_id: string }
@@ -8264,6 +8361,10 @@ export type Database = {
           total: number
           ultimo_contacto: string
         }[]
+      }
+      cerrar_caso_refacturacion: {
+        Args: { p_cancelar?: boolean; p_caso_id: string }
+        Returns: undefined
       }
       cerrar_embarque: { Args: { p_embarque_id: string }; Returns: Json }
       cerrar_factura_proveedor_sin_pago: {
@@ -8777,6 +8878,10 @@ export type Database = {
           p_request_id?: string
         }
         Returns: Json
+      }
+      duplicar_factura_para_refacturacion: {
+        Args: { p_caso_id: string }
+        Returns: string
       }
       duplicar_factura_para_sustitucion: {
         Args: { p_factura_id: string }
@@ -9540,6 +9645,16 @@ export type Database = {
           read_ct: number
         }[]
       }
+      reasignar_pago_factura: {
+        Args: {
+          p_caso_id?: string
+          p_factura_destino_id: string
+          p_ordenante_nombre?: string
+          p_ordenante_rfc?: string
+          p_pago_id: string
+        }
+        Returns: string
+      }
       recalc_factura_retenciones: {
         Args: { p_factura_id: string }
         Returns: undefined
@@ -9588,6 +9703,10 @@ export type Database = {
       reemplazar_conceptos_entrante: {
         Args: { p_conceptos: Json; p_documento_id: string }
         Returns: number
+      }
+      refacturacion_set_paso: {
+        Args: { p_caso_id: string; p_paso: number }
+        Returns: undefined
       }
       refrescar_garantia_desde_tarifa: {
         Args: { p_embarque_id: string }
