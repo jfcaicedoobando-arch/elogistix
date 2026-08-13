@@ -22,6 +22,7 @@ import {
 } from "@/features/facturacion/domain/refacturacionPasos";
 import { useRefacturarWizard } from "./useRefacturarWizard";
 import { RefacturarPasoActual } from "./RefacturarPasoActual";
+import { RefacturacionTrazabilidadCard } from "./RefacturacionTrazabilidadCard";
 
 interface Props {
   facturaId: string | null;
@@ -88,6 +89,17 @@ export function DialogRefacturarReceptor({ facturaId, open, onOpenChange }: Prop
       }
     >
       <RefacturarPasoActual w={w} />
+
+      {s.caso && (
+        <details className="mt-6 rounded-md border p-3">
+          <summary className="cursor-pointer text-sm font-medium">
+            Trazabilidad del caso (expediente y movimientos)
+          </summary>
+          <div className="pt-3">
+            <RefacturacionTrazabilidadCard casoId={s.caso.id} embebido />
+          </div>
+        </details>
+      )}
     </FormDialogShell>
   );
 }

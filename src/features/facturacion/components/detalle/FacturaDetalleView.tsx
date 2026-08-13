@@ -8,6 +8,7 @@ import { FacturaDetalleBody } from "@/features/facturacion/components/detalle/Fa
 import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
 import { ClaimPendingBanner } from "@/features/facturacion/components/detalle/ClaimPendingBanner";
 import { DocumentoDetalleShell } from "@/components/shared/documento/DocumentoDetalleShell";
+import { RefacturacionTrazabilidadSection } from "@/features/facturacion/components/refacturacion/RefacturacionTrazabilidadSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
 
 import { calcularDiasVencidoFactura } from "@/features/facturacion/domain/facturaAging";
@@ -143,6 +144,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
           canEnviarRecordatorio={canEdit}
           onEnviarRecordatorio={() => setRecordatorioOpen(true)}
         />
+        <RefacturacionTrazabilidadSection facturaId={factura.id} />
       </DocumentoDetalleShell>
 
       <FacturaDetalleModales
