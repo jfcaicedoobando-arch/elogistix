@@ -29,10 +29,31 @@ Top 10 funciones más redefinidas — capturadas 1:1 desde la BD el 2026-07-23:
 | `dashboard_details` | `dashboards/` | `20260818090000` (RG4-2) |
 | `cartera_pendiente` | `facturacion/` | `20260818090100` (RG4-13) |
 | `direccion_totales` | `facturacion/` | `20260818090100` (N23) |
-| `registrar_pago_cliente_lote` | `facturacion/` | `20260818110000` (RG4-5/RG4-6) |
+| `registrar_pago_cliente_lote` | `facturacion/` | `20260821030800_ola11_lotes_paridad` (Ola 11 · RFE-02/03, RNF-01/02, RBD-08; acumulativa) |
 | `_cxp_desvincular_por_rechazo` | `cxp/` | `20260819090100` (RG5-3) |
 | `retirar_factura_entrante` + `reactivar_factura_entrante` | `cxp/` | `20260819090100` (RG5-4) |
-| `regenerar_movimiento_pago_proveedor` | `cxp/` | `20260819090000` (RG5-1) |
+| `regenerar_movimiento_pago_proveedor` | `cxp/` | `20260813025053_b5b00098-bfa3-4be4-b352-9a049d381f70` (Ola 11 · RBD-07: TC requerido cross-moneda) |
+
+## Altas Ola 11 (Proveedor 360 y paridad de lotes)
+
+| Función | Archivo | Migración canónica |
+| --- | --- | --- |
+| `registrar_pago_proveedor_lote(jsonb)` | `cxp/registrar_pago_proveedor_lote.sql` | `20260821030800_ola11_lotes_paridad` |
+| `adjuntar_xml_factura_entrante(...)` | `cxp/adjuntar_xml_factura_entrante.sql` | `20260813031300_1f4a2b81-412f-49fb-b8dc-5fa802409b9b` |
+
+Otras fuentes canónicas presentes en el directorio (agregadas en olas
+anteriores y no listadas arriba): `auditoria/costos_repetidos.sql`,
+`cotizaciones/trg_notificar_cotizacion_enviada.sql`,
+`cxp/cancelar_factura_proveedor.sql`, `cxp/guard_pago_proveedor.sql`,
+`embarques/_calcular_demoras_montos_contenedor.sql`,
+`embarques/_crear_embarque_replicar_conceptos.sql`,
+`embarques/calcular_demoras_embarque.sql`,
+`facturacion/facturas_set_fecha_vencimiento.sql`,
+`operaciones/operaciones_stats.sql`,
+`portal/portal_obtener_proforma_por_token.sql`,
+`proformas/_convertir_proformas_insertar_conceptos.sql`,
+`proveedores/proveedor_salud.sql`. Total en disco: 32 archivos `.sql`
+(lo verifica `audit:schema-functions`).
 
 **`cartera_pendiente` — firma congelada:** 14 columnas de salida
 (`factura_id … ultimo_contacto, estado`). Renombrarlas aborta la migración con
