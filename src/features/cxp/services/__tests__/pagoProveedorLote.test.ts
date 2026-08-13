@@ -67,7 +67,7 @@ describe("validarLote", () => {
     expect(res.error).toMatch(/cuenta bancaria/);
   });
 
-  it("rechaza fecha futura (Ola 11 · RFE-02)", () => {
+  it("CxP: rechaza fecha de pago futura (Ola 11 · RFE-02)", () => {
     const { renglones } = repartirFifo(F, 400);
     const manana = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
     const res = validarLote(F, renglones, 400, { ...opts, fecha: manana });
