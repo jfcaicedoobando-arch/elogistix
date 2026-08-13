@@ -127,6 +127,7 @@ function deriveActionFlags(
     puedeTimbrarDesdeSistema: sinTimbrar && esCreadaConCapacidadTimbrado(f.fecha_emision),
     puedeCancelarCfdi,
     puedeSustituirCfdi,
+    puedeRefacturarReceptor,
     puedeRegistrarPago: vigenteCobrable && canRegistrarCobro && saldo > 0.01,
     repPendiente: (ctx.pagosRepPendientes ?? 0) > 0,
     estaCancelada,
