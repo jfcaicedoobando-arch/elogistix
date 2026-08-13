@@ -76,7 +76,14 @@ export function mapearEvento(raw: RefacturacionEventoRaw): EventoRefacturacion {
     titulo: regla?.titulo ?? tituloGenerico(raw.accion),
     paso: regla?.paso ?? null,
     severidad: regla?.severidad ?? "ok",
-    usuarioEmail: raw.usuarioEmailFallback(),
+    usuarioEmail: raw.usuario_email || "Sistema",
     referencia: raw.entidad_nombre ?? "",
-  } as EventoRefacturacion;
+  };
+}
+
+/** Eventos ordenados del más antiguo al más reciente. */
+export function mapearEventos(raws: RefacturacionEventoRaw[]): EventoRefacturacion[] {
+  return [...(raws ?? [])]
+    .map(mapearEvento)
+    .sort((a, b) => a.ts.localeCompare(b.ts));
 }
