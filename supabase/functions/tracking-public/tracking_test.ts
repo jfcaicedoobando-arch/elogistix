@@ -69,3 +69,22 @@ Deno.test("classifyTrackingResult: missing organizacion → defaults to null", (
   assertEquals(out.ok, true);
   if (out.ok) assertEquals(out.organizacion, null);
 });
+
+// ── RUX-02: códigos estables en el outcome ───────────────────
+
+Deno.test("classifyTrackingResult: expone code estable por cada fallo", () => {
+  const sinToken = classifyTrackingResult(null, null);
+  if (!sinToken.ok) assertEquals(sinToken.code, "token_required");
+
+  const noExiste = classifyTrackingResult("tok123", { error: "not_found" });
+  if (!noExiste.ok) {
+    assertEquals(noExiste.code, "not_found");
+    assertEquals(noExiste.status, 404);
+  }
+
+  const vencido = classifyTrackingResult("tok123", { error: "expired" });
+  if (!vencido.ok) {
+    assertEquals(vencido.code, "expired");
+    assertEquals(vencido.status, 410);
+  }
+});

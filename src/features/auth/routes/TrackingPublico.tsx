@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import { getOrigen, getDestino } from "@/lib/formatters";
+import { getOrigen, getDestino, formatFechaEs } from "@/lib/formatters";
 import { labelNaviera } from "@/lib/formatters/carrierLabels";
 import { Ship } from "lucide-react";
 import { type TrackingPublicoData } from "@/features/embarques/services/tracking";
@@ -24,6 +24,13 @@ function transporteLabel(e: TrackingPublicoData["embarque"]): string {
   return e.aerolinea || e.transportista || "—";
 }
 
+// RUX-04: canon de fecha de la app (dd/MM/yyyy), anclado a mediodía UTC.
+function fechaDia(iso: string | null): string {
+  if (!iso) return "—";
+  const f = formatFechaEs(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
+  return f === "-" ? "—" : f;
+}
+
 export default function TrackingPublico() {
   const { token } = useParams<{ token: string }>();
 
@@ -42,10 +49,11 @@ export default function TrackingPublico() {
       <Seo
         title={`Seguimiento ${e.expediente} · Libre Carga`}
         description={`Consulta el estatus en tiempo real del embarque ${e.expediente} con Libre Carga.`}
-        canonical={`https://librecarga.com/tracking/${token}`}
+        canonical="https://librecarga.com/tracking"
         ogTitle={`Seguimiento ${e.expediente} · Libre Carga`}
         ogDescription="Estatus en tiempo real de tu embarque con Libre Carga."
-        ogUrl={`https://librecarga.com/tracking/${token}`}
+        ogUrl="https://librecarga.com/tracking"
+        noIndex
       />
       <header className="border-b bg-card">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
@@ -81,8 +89,8 @@ export default function TrackingPublico() {
             <CardContent className="text-sm space-y-1">
               <p><strong>Origen:</strong> {getOrigen(e)}</p>
               <p><strong>Destino:</strong> {getDestino(e)}</p>
-              <p><strong>ETD:</strong> {e.etd || "—"}</p>
-              <p><strong>ETA:</strong> {e.eta || "—"}</p>
+              <p><strong>ETD:</strong> {fechaDia(e.etd)}</p>
+              <p><strong>ETA:</strong> {fechaDia(e.eta)}</p>
             </CardContent>
           </Card>
           <Card>

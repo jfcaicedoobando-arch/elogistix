@@ -17,6 +17,12 @@ interface SeoProps {
   ogType?: "website" | "article";
   /** URL absoluta (https) de la imagen de previsualización social. */
   ogImage?: string;
+  /**
+   * RUX-03: páginas con token personal (tracking, proformas, baja de correos).
+   * Emite <meta name="robots" content="noindex, nofollow"> y la retira al
+   * desmontar para no heredarla al resto de la SPA.
+   */
+  noIndex?: boolean;
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
@@ -50,6 +56,7 @@ export function Seo({
   ogUrl,
   ogType = "website",
   ogImage,
+  noIndex,
   jsonLd,
 }: SeoProps) {
   useEffect(() => {
@@ -66,6 +73,7 @@ export function Seo({
     }
     if (ogTitle) upsertMeta("name", "twitter:title", ogTitle);
     if (ogDescription) upsertMeta("name", "twitter:description", ogDescription);
+    if (noIndex) upsertMeta("name", "robots", "noindex, nofollow");
 
     let script: HTMLScriptElement | null = null;
     if (jsonLd) {
@@ -79,8 +87,10 @@ export function Seo({
       if (script && script.parentNode) script.parentNode.removeChild(script);
       // Restaurar el tipo por defecto del sitio al salir de una página "article".
       if (ogType !== "website") upsertMeta("property", "og:type", "website");
+      // La meta robots es de página: se retira al salir para no heredarla.
+      if (noIndex) document.head.querySelector('meta[name="robots"]')?.remove();
     };
-  }, [title, description, canonical, ogTitle, ogDescription, ogUrl, ogType, ogImage, jsonLd]);
+  }, [title, description, canonical, ogTitle, ogDescription, ogUrl, ogType, ogImage, noIndex, jsonLd]);
 
 
   return null;

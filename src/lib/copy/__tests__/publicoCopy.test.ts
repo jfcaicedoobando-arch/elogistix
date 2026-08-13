@@ -39,6 +39,16 @@ describe("publicoCopy", () => {
     expect(mensajeTrackingAmigable(undefined)).toBe(COPY_ENLACE.invalido);
     expect(mensajeTrackingAmigable("edge_functions_unavailable")).toBe(COPY_ENLACE.noDisponible);
   });
+
+  it("RUX-02: traduce los códigos estables de la edge y los literales en español", () => {
+    expect(mensajeTrackingAmigable("not_found")).toBe(COPY_ENLACE.invalido);
+    expect(mensajeTrackingAmigable("expired")).toBe(COPY_ENLACE.invalido);
+    expect(mensajeTrackingAmigable("token_required")).toBe(COPY_ENLACE.invalido);
+    expect(mensajeTrackingAmigable("unavailable")).toBe(COPY_ENLACE.noDisponible);
+    expect(mensajeTrackingAmigable("Enlace de tracking no encontrado")).toBe(COPY_ENLACE.invalido);
+    expect(mensajeTrackingAmigable("Este enlace de tracking ha expirado")).toBe(COPY_ENLACE.invalido);
+    expect(mensajeTrackingAmigable("Error consultando tracking")).toBe(COPY_ENLACE.noDisponible);
+  });
 });
 
 describe("copy accionable", () => {
