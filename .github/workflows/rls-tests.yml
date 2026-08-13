@@ -418,6 +418,10 @@ jobs:
       - name: CxP guard - tests conductuales de sobrepago (FIX-R3-01)
         run: $PSQL -f supabase/tests/cxp_guard_sobrepago.sql
 
+      - name: CxP guard - aprobación directa bloqueada (RNF-07)
+        run: $PSQL -f supabase/tests/cxp_guard_aprobacion_directa.sql
+
+
       - name: FIX-45 - whitelist de EXECUTE para anon
         run: $PSQL -f supabase/tests/fix45_anon_execute_whitelist.sql
 

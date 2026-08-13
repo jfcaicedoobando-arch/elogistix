@@ -197,9 +197,14 @@ BEGIN
   -- TEST 7: pagos_proveedor aislamiento
   -- =========================================================================
   -- v13.103.2: el trigger tg_pagos_proveedor_requiere_aprobacion exige factura aprobada.
+  -- v13.560.1 (RNF-07): trg_guard_aprobacion_proveedor_factura bloquea el UPDATE
+  -- directo de estado_aprobacion; el fixture declara la marca de sesión que usa
+  -- aprobar_factura_proveedor() (aquí no se prueba SoD, sólo aislamiento RLS).
+  PERFORM set_config('app.aprobando_cxp', '1', true);
   UPDATE public.proveedor_facturas
      SET estado_aprobacion = 'aprobada', aprobada_at = now()
    WHERE id = pf_a;
+  PERFORM set_config('app.aprobando_cxp', '0', true);
 
   INSERT INTO public.pagos_proveedor(
     id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd,
