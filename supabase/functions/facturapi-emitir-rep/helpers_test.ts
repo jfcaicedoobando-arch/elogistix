@@ -1,5 +1,6 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { buildRepPayload, validateRepContext, normalizarFormaPago, type PagoContext } from "./helpers.ts";
+import { factorIvaFacturaOriginal } from "./context.ts";
 
 const validCtx: PagoContext = {
   receptor: {
