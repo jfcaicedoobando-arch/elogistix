@@ -14,6 +14,7 @@ describe("deriveFacturaFlags", () => {
       puedeTimbrarDesdeSistema: false,
       puedeCancelarCfdi: false,
       puedeSustituirCfdi: false,
+      puedeRefacturarReceptor: false,
       puedeRegistrarPago: false,
       repPendiente: false,
       estaCancelada: false,
@@ -35,6 +36,7 @@ describe("deriveFacturaFlags", () => {
       puedeTimbrarDesdeSistema: true,
       puedeCancelarCfdi: false,
       puedeSustituirCfdi: false,
+      puedeRefacturarReceptor: false,
       puedeRegistrarPago: false,
       repPendiente: false,
       estaCancelada: false,
@@ -202,5 +204,45 @@ describe("esCreadaConCapacidadTimbrado", () => {
   });
   it("constante de corte apunta a 01/07/2026", () => {
     expect(FECHA_INICIO_TIMBRADO_SISTEMA.startsWith("2026-07-01")).toBe(true);
+  });
+});
+
+describe("puedeRefacturarReceptor", () => {
+  it.each(["Emitida", "Pagada", "Parcialmente pagada", "Vencida"])(
+    "estado %s timbrado habilita refacturar",
+    (estado) => {
+      const r = deriveFacturaFlags({ estado, uuid_fiscal: "UUID-1", fecha_emision: POST }, true);
+      expect(r.puedeRefacturarReceptor).toBe(true);
+    },
+  );
+
+  it.each(["Cancelada", "Sustituida", "Borrador"])("estado %s bloquea refacturar", (estado) => {
+    const r = deriveFacturaFlags({ estado, uuid_fiscal: "UUID-1", fecha_emision: POST }, true);
+    expect(r.puedeRefacturarReceptor).toBe(false);
+  });
+
+  it("sin timbrar o sin permiso de edición bloquea refacturar", () => {
+    expect(
+      deriveFacturaFlags({ estado: "Pagada", uuid_fiscal: null, fecha_emision: POST }, true)
+        .puedeRefacturarReceptor,
+    ).toBe(false);
+    expect(
+      deriveFacturaFlags({ estado: "Pagada", uuid_fiscal: "UUID-1", fecha_emision: POST }, false)
+        .puedeRefacturarReceptor,
+    ).toBe(false);
+  });
+
+  it("con sustituta viva bloquea refacturar", () => {
+    const r = deriveFacturaFlags(
+      {
+        estado: "Pagada",
+        uuid_fiscal: "UUID-1",
+        fecha_emision: POST,
+        sustituida_por: "otra-id",
+        sustituida_por_ref: { estado: "Emitida" },
+      },
+      true,
+    );
+    expect(r.puedeRefacturarReceptor).toBe(false);
   });
 });

@@ -139,14 +139,15 @@ function buildMore(
 
   if (flags.puedeSustituirCfdi) {
     items.push({ id: "sustituir", label: "Sustituir CFDI", icon: Replace, onClick: props.onSustituir });
-    // Ola 12 — refacturación a otro receptor (cliente pagó desde otra empresa).
-    // Sólo roles contables y de administración (espejo de `_assert_refacturador`).
-    if (puedeRefacturar) {
-      items.push({
-        id: "refacturar", label: "Refacturar a otro receptor", icon: Users,
-        onClick: props.onRefacturar,
-      });
-    }
+  }
+  // Ola 12 — refacturación a otro receptor (cliente pagó desde otra empresa).
+  // Aplica a cualquier CFDI timbrado y vivo, incluso ya cobrado ("Pagada").
+  // Sólo roles contables y de administración (espejo de `_assert_refacturador`).
+  if (flags.puedeRefacturarReceptor && puedeRefacturar) {
+    items.push({
+      id: "refacturar", label: "Refacturar a otro receptor", icon: Users,
+      onClick: props.onRefacturar,
+    });
   }
   if (flags.puedeCancelarCfdi) {
     items.push({

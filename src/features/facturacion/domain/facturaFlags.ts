@@ -49,6 +49,8 @@ export interface FacturaFlags {
   puedeCancelarCfdi: boolean;
   /** Igual que cancelar: sólo se puede sustituir una CFDI vigente. */
   puedeSustituirCfdi: boolean;
+  /** Timbrada y viva (aunque ya esté cobrada): admite abrir un caso de refacturación. */
+  puedeRefacturarReceptor: boolean;
   /** Timbrada, no cancelada y con saldo > 0. Habilita "Registrar pago" arriba. */
   puedeRegistrarPago: boolean;
   /** Existe al menos 1 pago con estado_rep Pendiente/Error. */
@@ -65,6 +67,7 @@ const EMPTY_FLAGS: FacturaFlags = {
   puedeTimbrarDesdeSistema: false,
   puedeCancelarCfdi: false,
   puedeSustituirCfdi: false,
+  puedeRefacturarReceptor: false,
   puedeRegistrarPago: false,
   repPendiente: false,
   estaCancelada: false,
@@ -98,6 +101,12 @@ function deriveActionFlags(
   const timbradaVigente = !sinTimbrar && f.estado === "Emitida";
   // Sustituir requiere que NO exista ya una sustituta viva (no se sustituye dos veces).
   const puedeSustituirCfdi = timbradaVigente && canEdit && !isSustitutaViva(f);
+  // v13.589.5: refacturar a otro receptor sólo exige que el CFDI esté timbrado y
+  // vivo (espejo de `abrir_caso_refacturacion`, que sólo rechaza
+  // Cancelada/Sustituida/Borrador). Antes se reusaba `puedeSustituirCfdi`, así que
+  // una factura ya cobrada ("Pagada") escondía la opción aunque la base la acepta.
+  const timbradaViva = !sinTimbrar && !estaCancelada && f.estado !== "Borrador";
+  const puedeRefacturarReceptor = timbradaViva && canEdit && !isSustitutaViva(f);
   // Cancelar sólo requiere que la factura esté vigente y no en trámite de cancelación.
   // Tener sustituta viva NO bloquea: el flujo SAT motivo 01 es emitir sustituta → cancelar original.
   const enTramiteCancelacion =
@@ -118,6 +127,7 @@ function deriveActionFlags(
     puedeTimbrarDesdeSistema: sinTimbrar && esCreadaConCapacidadTimbrado(f.fecha_emision),
     puedeCancelarCfdi,
     puedeSustituirCfdi,
+    puedeRefacturarReceptor,
     puedeRegistrarPago: vigenteCobrable && canRegistrarCobro && saldo > 0.01,
     repPendiente: (ctx.pagosRepPendientes ?? 0) > 0,
     estaCancelada,
