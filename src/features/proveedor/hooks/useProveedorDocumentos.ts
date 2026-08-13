@@ -9,7 +9,11 @@ import {
   eliminarDocumentoProveedor,
   type SubirDocumentoInput,
 } from "@/features/proveedor/services/proveedorDocumentos";
-import { handleSupabaseError } from "@/lib/errors/handleSupabaseError";
+
+function mensajeError(e: unknown, fallback: string): string {
+  const msg = (e as { message?: string } | null)?.message;
+  return msg && msg.trim().length > 0 ? msg : fallback;
+}
 
 const claveDocumentos = (proveedorId: string) =>
   ["proveedores", "documentos", proveedorId] as const;
@@ -31,7 +35,7 @@ export function useSubirDocumentoProveedor(proveedorId: string) {
       toast.success("Documento agregado al expediente");
       void qc.invalidateQueries({ queryKey: claveDocumentos(proveedorId) });
     },
-    onError: (e: unknown) => handleSupabaseError(e, "No se pudo subir el documento"),
+    onError: (e: unknown) => toast.error(mensajeError(e, "No se pudo subir el documento")),
   });
 }
 
@@ -43,6 +47,6 @@ export function useEliminarDocumentoProveedor(proveedorId: string) {
       toast.success("Documento eliminado del expediente");
       void qc.invalidateQueries({ queryKey: claveDocumentos(proveedorId) });
     },
-    onError: (e: unknown) => handleSupabaseError(e, "No se pudo eliminar el documento"),
+    onError: (e: unknown) => toast.error(mensajeError(e, "No se pudo eliminar el documento")),
   });
 }
