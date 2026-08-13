@@ -1,5 +1,6 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { buildRepPayload, validateRepContext, normalizarFormaPago, type PagoContext } from "./helpers.ts";
+import { factorIvaFacturaOriginal } from "./context.ts";
 
 const validCtx: PagoContext = {
   receptor: {
@@ -84,19 +85,53 @@ Deno.test("buildRepPayload incluye numOperacion cuando hay referencia", () => {
   assertEquals(p.complements[0].data[0].numOperacion, "REF-001");
 });
 
-Deno.test("buildRepPayload omite taxes cuando tasa_iva = 0", () => {
+Deno.test("buildRepPayload siempre envia taxes: tasa 0% cuando no hay IVA", () => {
   const p = buildRepPayload({
     ...validCtx,
     documento_relacionado: { ...validCtx.documento_relacionado, tasa_iva: 0 },
   });
-  assertEquals(p.complements[0].data[0].related_documents[0].taxes, undefined);
+  const tax = p.complements[0].data[0].related_documents[0].taxes[0];
+  assertEquals(tax.rate, 0);
+  assertEquals(tax.factor, "Tasa");
+  assertEquals(tax.type, "IVA");
+});
+
+Deno.test("buildRepPayload declara factor Exento en facturas exentas", () => {
+  const p = buildRepPayload({
+    ...validCtx,
+    documento_relacionado: { ...validCtx.documento_relacionado, tasa_iva: 0, factor_iva: "Exento" },
+  });
+  const tax = p.complements[0].data[0].related_documents[0].taxes[0];
+  assertEquals(tax.factor, "Exento");
+  assertEquals(tax.rate, 0);
+  assertEquals(tax.base, validCtx.documento_relacionado.imp_pagado);
+});
+
+Deno.test("buildRepPayload ignora factor_iva cuando la factura si trae IVA", () => {
+  const p = buildRepPayload({
+    ...validCtx,
+    documento_relacionado: { ...validCtx.documento_relacionado, factor_iva: "Exento" },
+  });
+  const tax = p.complements[0].data[0].related_documents[0].taxes[0];
+  assertEquals(tax.factor, "Tasa");
+  assertEquals(tax.rate, 0.16);
 });
 
 Deno.test("buildRepPayload incluye base en taxes de documento relacionado", () => {
   const p = buildRepPayload(validCtx);
-  const tax = p.complements[0].data[0].related_documents[0].taxes![0];
+  const tax = p.complements[0].data[0].related_documents[0].taxes[0];
   assertEquals(tax.base, 1160);
 });
+
+Deno.test("factorIvaFacturaOriginal distingue exento, tasa 0 y mezcla", () => {
+  assertEquals(factorIvaFacturaOriginal(0.16, ["exento"]), "Tasa");
+  assertEquals(factorIvaFacturaOriginal(0, ["exento", "Exento"]), "Exento");
+  assertEquals(factorIvaFacturaOriginal(0, ["exento", "tasa0"]), "Tasa");
+  assertEquals(factorIvaFacturaOriginal(0, []), "Tasa");
+  assertEquals(factorIvaFacturaOriginal(0, null), "Tasa");
+  assertEquals(factorIvaFacturaOriginal(0, [null, undefined, "exento"]), "Exento");
+});
+
 
 Deno.test("normalizarFormaPago conserva codigos SAT de 2 digitos", () => {
   assertEquals(normalizarFormaPago("03"), "03");

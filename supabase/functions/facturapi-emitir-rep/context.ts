@@ -68,3 +68,20 @@ export function tasaIvaFacturaOriginal(subtotal: number, iva: number): number {
   if (tasa < 0.12) return 0.08;
   return 0.16;
 }
+
+/**
+ * Factor de IVA del CFDI original. Si la factura trae IVA > 0 es `Tasa`.
+ * Si no trae IVA, se revisa el `tipo_iva` de sus conceptos: cuando todos son
+ * exentos se declara `Exento`; en cualquier otro caso `Tasa` (0%).
+ */
+export function factorIvaFacturaOriginal(
+  tasaIva: number,
+  tiposIvaConceptos: Array<string | null | undefined> | null | undefined,
+): "Tasa" | "Exento" {
+  if (tasaIva > 0) return "Tasa";
+  const tipos = (tiposIvaConceptos ?? [])
+    .map((t) => String(t ?? "").trim().toLowerCase())
+    .filter((t) => t.length > 0);
+  if (tipos.length === 0) return "Tasa";
+  return tipos.every((t) => t === "exento") ? "Exento" : "Tasa";
+}
