@@ -13,6 +13,7 @@ import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSecti
 import { NuevoUsuarioAccesoSection } from "./NuevoUsuarioAccesoSection";
 // Ola 8 · B2: el mínimo de contraseña vive en un solo módulo compartido.
 import { PASSWORD_MIN } from "@/lib/passwords/policy";
+import { esEmailValido, normalizarEmail } from "./emailUsuario";
 
 
 interface Props {
@@ -23,14 +24,6 @@ interface Props {
 }
 
 const DEFAULT_ROLE: AppRole = "customer_service";
-// Alineado con lo que acepta el servicio de identidad: sólo ASCII, sin puntos
-// consecutivos ni al final, y dominio con extensión de 2+ letras. La regex laxa
-// anterior dejaba pasar correos que el proveedor rechazaba al guardar.
-const EMAIL_REGEX =
-  /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
-
-/** Normaliza igual que el backend (recorta espacios y baja a minúsculas). */
-const normalizarEmail = (valor: string): string => valor.trim().toLowerCase();
 
 
 export default function NuevoUsuarioDialog({
@@ -54,7 +47,7 @@ export default function NuevoUsuarioDialog({
 
   const emailError = useMemo(
     () =>
-      touched.email && email && !EMAIL_REGEX.test(normalizarEmail(email))
+      touched.email && email && !esEmailValido(email)
         ? "Correo no válido"
         : null,
     [email, touched.email],
@@ -81,7 +74,7 @@ export default function NuevoUsuarioDialog({
     setTouched({ email: true, password: true });
     const emailNormalizado = normalizarEmail(email);
     if (!emailNormalizado) return;
-    if (!EMAIL_REGEX.test(emailNormalizado)) return;
+    if (!esEmailValido(emailNormalizado)) return;
     if (!porInvitacion && password.length < PASSWORD_MIN) {
       notifyError(undefined, {
         title: "Error",
