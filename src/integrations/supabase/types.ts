@@ -9717,6 +9717,10 @@ export type Database = {
         Args: { p_caso_id: string; p_paso: number }
         Returns: undefined
       }
+      refacturacion_simular_paso: {
+        Args: { p_caso_id: string; p_paso: number }
+        Returns: Json
+      }
       refacturacion_validar_consistencia: {
         Args: { p_caso_id: string }
         Returns: Json
