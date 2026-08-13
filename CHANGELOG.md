@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.576.0] - 2026-08-13
+- **Ola 4 — Cierre de la homologación Cliente ↔ Proveedor: contactos múltiples y expediente documental.**
+  - Nueva pestaña **Contactos** en la ficha del proveedor: varias personas por proveedor (tráfico, cobranza, facturación) con un único contacto principal, alta/edición en modal estándar y baja lógica que conserva el histórico.
+  - Nueva pestaña **Documentos** en la ficha del cliente: expediente con constancia fiscal, comprobante de domicilio, contrato y soporte de crédito, con el mismo semáforo de completitud, control de vigencia, descarga con liga firmada y borrado con reversa que ya tenía el proveedor.
+  - Si el cliente opera a crédito, el expediente exige además la solicitud de crédito.
+  - Módulo compartido `features/expediente`: reglas de vigencia, semáforo, tabla y modal de carga ahora son los mismos para cliente y proveedor (el detalle de proveedor pasó a usarlos como envoltorio), de modo que ambas fichas se ven y se comportan idéntico.
+  - Pruebas nuevas del dominio compartido, del expediente de cliente y de los contactos de proveedor.
+
 ## [13.575.0] - 2026-08-13
 - **Ola 12 · Sprint 04 — Estados de error y guardas de captura en Proveedor 360** (R3FE-04..09): la ficha del proveedor deja de "mentir" cuando algo falla.
   - Estado de cuenta paginado en servidor: la RPC acepta `p_limite`/`p_offset`, calcula saldos sobre todo el periodo y avisa en pantalla cuando el rango está truncado (R3FE-04).
