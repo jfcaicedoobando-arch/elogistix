@@ -84,7 +84,13 @@ export function validarLote(
   facturas: FacturaLoteCandidata[],
   renglones: RenglonLote[],
   total: number,
-  opts: { requiereCuenta: boolean; cuentaId: string | null; monedaCuenta: string | null; moneda: string },
+  opts: {
+    requiereCuenta: boolean;
+    cuentaId: string | null;
+    monedaCuenta: string | null;
+    moneda: string;
+    fecha: string;
+  },
 ): ValidacionLote {
   const conMonto = renglones.filter((r) => r.monto > 0);
   const totalRepartido = round2(conMonto.reduce((s, r) => s + r.monto, 0));
@@ -92,11 +98,30 @@ export function validarLote(
   if (facturas.length < 2) {
     return { error: "Selecciona al menos dos facturas para un pago en lote.", totalRepartido };
   }
+  // Ola 11 · RFE-02/RNF-03: la fecha del pago no puede ser futura.
+  const errorFecha = errorFechaLote(opts.fecha);
+  if (errorFecha) {
+    return { error: errorFecha, totalRepartido };
+  }
   if (round2(total) <= 0) {
     return { error: "Captura el importe total de la transferencia.", totalRepartido };
   }
   if (conMonto.length < 2) {
     return { error: "El importe debe alcanzar para al menos dos facturas.", totalRepartido };
+  }
+  // Ola 11 · RNF-06 (espejo RG4-6 de CxC): una misma factura no puede
+  // aparecer dos veces en el reparto.
+  const vistos = new Set<string>();
+  for (const r of conMonto) {
+    if (vistos.has(r.factura_id)) {
+      const folio = facturas.find((x) => x.factura_id === r.factura_id)?.folio_proveedor;
+      const etiqueta = folio ? `La factura ${folio}` : "Una de las facturas";
+      return {
+        error: `${etiqueta} aparece más de una vez en el reparto: deja un solo renglón por factura.`,
+        totalRepartido,
+      };
+    }
+    vistos.add(r.factura_id);
   }
   for (const r of conMonto) {
     const f = facturas.find((x) => x.factura_id === r.factura_id);
@@ -107,8 +132,18 @@ export function validarLote(
       };
     }
   }
-  if (totalRepartido > round2(total) + 0.009) {
+  // Ola 11 · RNF-02: cuadre exacto tras round2 (canon de dinero, sin tolerancia).
+  if (totalRepartido > round2(total)) {
     return { error: "La suma repartida no puede exceder el importe de la transferencia.", totalRepartido };
+  }
+  // Ola 11 · RNF-05 (espejo RG4-5 de CxC): el sobrante ya no es advertencia,
+  // es error — lo que no se reparte no se registra en ninguna parte.
+  if (round2(total) - totalRepartido > 0) {
+    return {
+      error:
+        "El reparto debe cubrir exactamente el importe de la transferencia: ajusta el importe o los importes por factura hasta que no quede sobrante sin asignar.",
+      totalRepartido,
+    };
   }
   if (opts.requiereCuenta && !opts.cuentaId) {
     return { error: "Selecciona la cuenta bancaria de donde sale el pago.", totalRepartido };
@@ -126,9 +161,27 @@ export function validarLote(
 export async function registrarPagoProveedorLote(input: RegistrarPagoLoteInput): Promise<string> {
   const payload = {
     ...input,
+    // Ola 11 · RNF-05: la RPC valida que el reparto cuadre con la transferencia.
+    importe_recibido: round2(input.importe_recibido),
     tipo_cambio_usd: input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null,
     renglones: input.renglones.filter((r) => r.monto > 0).map((r) => ({ ...r, monto: round2(r.monto) })),
   };
+  // Ola 11 · RNF-06 (espejo RG4-12 de CxC): guard de idempotencia contra un
+  // lote idéntico (mismo proveedor, fecha y total) de los últimos 10 min.
+  const totalRenglones = round2(payload.renglones.reduce((s, r) => s + r.monto, 0));
+  const { data: previos, error: errorPrevios } = await supabase
+    .from("pagos_proveedor_lote")
+    .select("id")
+    .eq("proveedor_id", input.proveedor_id)
+    .eq("fecha_pago", input.fecha_pago)
+    .eq("monto_total", totalRenglones)
+    .is("deleted_at", null)
+    .gte("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString())
+    .limit(1);
+  if (errorPrevios) throw errorPrevios;
+  if ((previos ?? []).length > 0) {
+    throw new Error("LC_LOTE_DUPLICADO_RECIENTE");
+  }
   const { data, error } = await supabase.rpc("registrar_pago_proveedor_lote", {
     p_payload: payload as never,
   });
