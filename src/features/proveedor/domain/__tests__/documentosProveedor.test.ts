@@ -5,6 +5,7 @@ import {
   calcularExpediente,
   ultimoPorTipo,
   formatTamano,
+  validarVigenciaDocumento,
   type DocumentoProveedor,
 } from "../documentosProveedor";
 
@@ -109,5 +110,35 @@ describe("formatTamano", () => {
     expect(formatTamano(512)).toBe("512 B");
     expect(formatTamano(2048)).toBe("2 KB");
     expect(formatTamano(3 * 1024 * 1024)).toBe("3.0 MB");
+  });
+});
+
+describe("validarVigenciaDocumento (R3FE-07)", () => {
+  const HOY_V = "2026-08-13";
+
+  it("exige vigencia en los tipos que caducan", () => {
+    expect(validarVigenciaDocumento("Opinión de cumplimiento", null, null, HOY_V))
+      .toMatch(/obligatoria/);
+    expect(validarVigenciaDocumento("Comprobante de datos bancarios", null, null, HOY_V))
+      .toMatch(/obligatoria/);
+  });
+
+  it("permite otros tipos sin vigencia", () => {
+    expect(validarVigenciaDocumento("Constancia de situación fiscal", null, null, HOY_V))
+      .toBeNull();
+  });
+
+  it("rechaza vigencia vencida, invertida o absurda", () => {
+    expect(validarVigenciaDocumento("Contrato", null, "2026-08-12", HOY_V))
+      .toMatch(/ya venció/);
+    expect(validarVigenciaDocumento("Contrato", "2026-09-01", "2026-08-20", HOY_V))
+      .toMatch(/anterior a la fecha del documento/);
+    expect(validarVigenciaDocumento("Contrato", null, "2040-01-01", HOY_V))
+      .toMatch(/10 años/);
+  });
+
+  it("acepta una vigencia válida", () => {
+    expect(validarVigenciaDocumento("Opinión de cumplimiento", "2026-08-01", "2026-12-31", HOY_V))
+      .toBeNull();
   });
 });

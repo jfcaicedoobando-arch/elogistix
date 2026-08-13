@@ -8,6 +8,7 @@ import { toTitleCase } from "@/lib/formatters";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
 import { ProveedorBrechaCard } from "../components/ProveedorBrechaCard";
 import { ProveedorDetalleHeader } from "../components/ProveedorDetalleHeader";
@@ -25,6 +26,8 @@ export default function ProveedorDetalle() {
     totalFacturado, totalPagado, totalPendiente, agregados,
     canEdit, isAdmin, editOpen, setEditOpen,
     deleteOpen, setDeleteOpen, handleUpdate, handleDelete,
+    isErrorProveedor, errorProveedor, refetchProveedor,
+    isErrorEstadoCuenta, errorEstadoCuenta, refetchEstadoCuenta, isFetchingEstadoCuenta,
   } = useProveedorDetalleController();
   useRegisterBreadcrumbLabel(id, proveedor?.nombre);
 
@@ -38,6 +41,20 @@ export default function ProveedorDetalle() {
   }
 
   if (!proveedor) {
+    // R3FE-05 (Ola 12): un fallo de carga NO es "proveedor no encontrado".
+    if (isErrorProveedor) {
+      return (
+        <PageContainer>
+          <ErrorStateInline
+            title="No pudimos cargar el proveedor"
+            message={errorProveedor instanceof Error
+              ? errorProveedor.message
+              : "Error desconocido al consultar la información."}
+            onRetry={() => void refetchProveedor()}
+          />
+        </PageContainer>
+      );
+    }
     return (
       <DetailNotFound
         icon={PackageX}
@@ -126,6 +143,10 @@ export default function ProveedorDetalle() {
         canEdit={canEdit}
         partidas={partidas}
         partidasPendientes={brecha.partidasPendientes}
+        isErrorEstadoCuenta={isErrorEstadoCuenta}
+        errorEstadoCuenta={errorEstadoCuenta}
+        refetchEstadoCuenta={refetchEstadoCuenta}
+        isFetchingEstadoCuenta={isFetchingEstadoCuenta}
       />
 
       <EditarProveedorDialog

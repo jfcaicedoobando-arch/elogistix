@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import {
   TIPOS_DOCUMENTO_PROVEEDOR,
+  TIPOS_CON_VENCIMIENTO,
+  validarVigenciaDocumento,
   type TipoDocumentoProveedor,
 } from "@/features/proveedor/domain/documentosProveedor";
 import { useSubirDocumentoProveedor } from "@/features/proveedor/hooks/useProveedorDocumentos";
@@ -58,6 +60,12 @@ export function SubirDocumentoProveedorDialog({
     if (archivo.size > MAX_MB * 1024 * 1024) {
       setError(`El archivo supera los ${MAX_MB} MB permitidos.`); return;
     }
+    // R3FE-07 (Ola 12): vigencia mínima — obligatoria en docs que caducan,
+    // nunca en el pasado, nunca absurda (>10 años) ni antes del documento.
+    const errorVigencia = validarVigenciaDocumento(
+      tipo, fechaDocumento || null, fechaVencimiento || null,
+    );
+    if (errorVigencia) { setError(errorVigencia); return; }
     setError(null);
     subir.mutate(
       {
@@ -128,7 +136,9 @@ export function SubirDocumentoProveedorDialog({
               aria-label="Fecha del documento" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="doc-vence">Vigente hasta (opcional)</Label>
+            <Label htmlFor="doc-vence">
+              Vigente hasta {TIPOS_CON_VENCIMIENTO.includes(tipo) ? "(obligatoria)" : "(opcional)"}
+            </Label>
             <DatePickerMx id="doc-vence" value={fechaVencimiento}
               onChange={setFechaVencimiento} min={fechaDocumento || undefined}
               aria-label="Vigente hasta" />

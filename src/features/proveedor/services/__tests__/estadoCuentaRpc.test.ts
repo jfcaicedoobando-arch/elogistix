@@ -47,6 +47,8 @@ describe("fetchProveedorMovimientos", () => {
       p_proveedor_id: "p1",
       p_desde: "2026-01-01",
       p_hasta: "2026-01-31",
+      p_limite: 1000,
+      p_offset: 0,
     });
   });
 
@@ -57,8 +59,12 @@ describe("fetchProveedorMovimientos", () => {
       p_proveedor_id: "p1",
       p_desde: undefined,
       p_hasta: undefined,
+      p_limite: 1000,
+      p_offset: 0,
     });
-    expect(res).toEqual({ movimientos: [], aging: [], saldos: [] });
+    expect(res).toEqual({
+      movimientos: [], aging: [], saldos: [], total_movimientos: 0, hay_mas: false,
+    });
   });
 
   it("propaga el error de la base al pedir los movimientos", async () => {

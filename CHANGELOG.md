@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.575.0] - 2026-08-13
+- **Ola 12 · Sprint 04 — Estados de error y guardas de captura en Proveedor 360** (R3FE-04..09): la ficha del proveedor deja de "mentir" cuando algo falla.
+  - Estado de cuenta paginado en servidor: la RPC acepta `p_limite`/`p_offset`, calcula saldos sobre todo el periodo y avisa en pantalla cuando el rango está truncado (R3FE-04).
+  - Un fallo de carga ya no se pinta como "sin datos" ni como "proveedor no encontrado": detalle, operaciones, por facturar y estado de cuenta muestran error con botón de reintentar (R3FE-05, R3FE-06).
+  - Vigencia de documentos validada al capturar: obligatoria en opinión de cumplimiento y datos bancarios, nunca vencida, nunca anterior al documento ni a más de 10 años (R3FE-07).
+  - Borrar un documento ya no se traga el error de almacenamiento: si falla se revierte el borrado lógico, se deja rastro en bitácora y se avisa al usuario (R3FE-09).
+
 ## [13.574.0] - 2026-08-13
 - **Ola 12 · Sprint 03 — Edge functions menores y policy de storage** (R3EF-02, R3EF-03, R3P-13): candados de tiempo y de seguridad en tareas de fondo.
   - El cron de reconciliación de cancelaciones ahora corta cada consulta a FacturApi a 15 s y la descarga del acuse a 12 s, distinguiendo `error_timeout` de `error_network`; un lote grande ya no se trunca por una llamada colgada (R3EF-02).

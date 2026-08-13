@@ -9,10 +9,15 @@ export function useProveedorMovimientos(
   proveedorId: string | undefined,
   desde?: string,
   hasta?: string,
+  limite?: number,
+  offset?: number,
 ) {
   return useQuery({
-    queryKey: [...queryKeys.proveedores.movimientos(proveedorId ?? ""), desde ?? "", hasta ?? ""],
-    queryFn: () => fetchProveedorMovimientos(proveedorId!, desde, hasta),
+    queryKey: [
+      ...queryKeys.proveedores.movimientos(proveedorId ?? ""),
+      desde ?? "", hasta ?? "", limite ?? "", offset ?? "",
+    ],
+    queryFn: () => fetchProveedorMovimientos(proveedorId!, desde, hasta, limite, offset),
     enabled: Boolean(proveedorId),
     staleTime: 30_000,
   });

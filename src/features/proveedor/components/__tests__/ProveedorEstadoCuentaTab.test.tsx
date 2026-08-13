@@ -41,6 +41,8 @@ const datos: EstadoCuentaMovimientos = {
   ],
   aging: [{ moneda: "USD", bucket: "1-30", saldo: 600, conteo: 1 }],
   saldos: [{ moneda: "USD", cargos: 1000, abonos: 400, saldo: 600 }],
+  total_movimientos: 2,
+  hay_mas: false,
 };
 
 const renderTab = () =>

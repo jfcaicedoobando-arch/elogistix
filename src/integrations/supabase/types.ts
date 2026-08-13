@@ -9291,7 +9291,13 @@ export type Database = {
         Returns: Json
       }
       proveedor_estado_cuenta_movimientos: {
-        Args: { p_desde?: string; p_hasta?: string; p_proveedor_id: string }
+        Args: {
+          p_desde?: string
+          p_hasta?: string
+          p_limite?: number
+          p_offset?: number
+          p_proveedor_id: string
+        }
         Returns: Json
       }
       proveedor_inteligencia: {
