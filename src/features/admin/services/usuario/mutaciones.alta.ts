@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fallóDirectorioUsuarios, fetchUsuariosOrganizacion } from "./listado";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
+import { errorDeEdgeFunction } from "./mutaciones.errores";
 
 export interface CreateUserParams {
   email: string;
@@ -83,7 +84,8 @@ export async function createUserViaEdgeFunction(
     },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
-  if (res.error) throw new Error(res.error.message || "Error al crear usuario");
+  // El motivo real (p. ej. correo inválido) viaja en el cuerpo de la respuesta.
+  if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo crear el usuario. Reintenta en unos minutos.");
   const body = res.data as CreateUserResponse;
   if (body?.error) throw new Error(body.error);
 
