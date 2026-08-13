@@ -150,6 +150,18 @@ export function bloqueoPaso(paso: number, ctx: ContextoPasos): string | null {
   return null;
 }
 
+/**
+ * Aviso informativo del paso (no bloquea el avance). `null` = sin aviso.
+ */
+export function avisoPaso(paso: number, ctx: ContextoPasos): string | null {
+  if (paso >= 2 && paso <= 4 && repsEnVerificacion(ctx.pagos).length > 0) {
+    return AVISO_REP_EN_VERIFICACION;
+  }
+  return null;
+}
+
+
+
 /** Texto de la acción principal por paso. */
 export function etiquetaAccionPaso(paso: number, casoAbierto: boolean): string {
   if (paso === 1) return casoAbierto ? "Continuar" : "Abrir caso y continuar";
