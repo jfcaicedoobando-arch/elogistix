@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.567.0] - 2026-08-13
+- **Etiquetas de formulario accesibles (Sprint 9 · UX-04)**: en los diálogos de contacto de cliente, datos bancarios de proveedor (alta y edición) y seguro del embarque, al hacer clic en el texto de la etiqueta se enfoca su campo y los lectores de pantalla ya lo anuncian.
+- **Tamaños de etiqueta uniformes (UX-08)**: se migraron 100 etiquetas que traían un tamaño "a mano" a la variante oficial del diseño; los formularios se ven consistentes y las filas de conceptos/contenedores conservan su etiqueta chica. Se agregó una prueba que impide reintroducir el atajo.
+- **Fecha de corte del estado de cuenta correcta de noche (RFE-11)**: entre 18:00 y 23:59 mostraba la fecha de mañana; ahora usa el día local.
+- **Sin alarmas redundantes por el tipo de cambio DOF (RFE-09)**: si el servicio del DOF falla, ya no salta el aviso global; la pantalla sigue avisando y bloqueando como siempre.
+- **Retiro del buzón de facturas sin archivos huérfanos silenciosos (RFE-10)**: si el borrado del archivo falla, se reintenta con la limpieza segura (que respeta archivos compartidos por otro documento) y queda registro en bitácora.
+
 ## [13.566.0] - 2026-08-13
 - **Los "planos" de la base vuelven a coincidir con la obra (Sprint 8 · higiene de esquema)**: dos funciones clave de embarques tenían su copia de referencia desactualizada; se regeneraron 1:1 con la versión que realmente corre (incluye el candado que evita que un nombre vacío borre al proveedor y el reparto exacto de costos entre contenedores).
 - **Nuevo guardián de archivos canónicos**: si un archivo de referencia queda truncado o inválido, la compilación falla en lugar de pasar desapercibido.
