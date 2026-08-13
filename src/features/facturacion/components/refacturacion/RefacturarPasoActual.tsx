@@ -88,6 +88,7 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
       ordenanteRfc={w.ordenanteRfc}
       onOrdenanteRfc={w.setOrdenanteRfc}
       bloqueoOrdenante={w.bloqueoOrdenanteActual}
+      ordenanteAuto={w.ordenanteAuto}
       yaReasignado={w.yaReasignado}
     />
   );
