@@ -119,6 +119,7 @@ export function PasoReasignarPago(props: Props) {
             placeholder="XAXX010101000"
           />
         </div>
+        <NotaOrigenOrdenante auto={props.ordenanteAuto} />
         {props.bloqueoOrdenante && (
           <p className="md:col-span-2 text-xs text-destructive">{props.bloqueoOrdenante}</p>
         )}
