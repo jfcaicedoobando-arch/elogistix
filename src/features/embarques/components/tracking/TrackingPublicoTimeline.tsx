@@ -4,7 +4,7 @@ import type { TrackingPublicoData } from "@/features/embarques/services/tracking
 import { AvisoAccionable } from "@/components/shared/states/AvisoAccionable";
 import { COPY_VACIO } from "@/lib/copy/publicoCopy";
 import { TimelineLista } from "./TimelineLista";
-import { filtrarEventosVisiblesCliente } from "@/features/portal/domain/eventosVisiblesCliente";
+import { filtrarEventosVisiblesCliente } from "@/lib/domain/eventosVisiblesCliente";
 
 type Evento = TrackingPublicoData["eventos"][number];
 

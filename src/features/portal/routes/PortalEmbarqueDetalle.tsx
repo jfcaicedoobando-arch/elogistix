@@ -14,7 +14,7 @@ import { PortalEmbarqueTimeline } from "@/features/portal/components/PortalEmbar
 import { PortalEmbarqueDocumentos } from "@/features/portal/components/PortalEmbarqueDocumentos";
 import { PortalEmbarqueResumenTab } from "@/features/portal/components/embarqueDetalle/PortalEmbarqueResumenTab";
 import { PortalEmbarqueStepper } from "@/features/portal/components/embarqueDetalle/PortalEmbarqueStepper";
-import { filtrarEventosVisiblesCliente } from "@/features/portal/domain/eventosVisiblesCliente";
+import { filtrarEventosVisiblesCliente } from "@/lib/domain/eventosVisiblesCliente";
 
 
 import { usePortalEmbarqueDetalleController } from "@/features/embarques/hooks";
