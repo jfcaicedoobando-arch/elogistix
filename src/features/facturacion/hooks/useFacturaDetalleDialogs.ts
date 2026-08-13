@@ -14,6 +14,7 @@ export function useFacturaDetalleDialogs() {
   const [eliminarOpen, setEliminarOpen] = useState(false);
   const [consultarOpen, setConsultarOpen] = useState(false);
   const [recordatorioOpen, setRecordatorioOpen] = useState(false);
+  const [refacturarOpen, setRefacturarOpen] = useState(false);
 
   return {
     pagoOpen, setPagoOpen,
@@ -24,6 +25,7 @@ export function useFacturaDetalleDialogs() {
     eliminarOpen, setEliminarOpen,
     consultarOpen, setConsultarOpen,
     recordatorioOpen, setRecordatorioOpen,
+    refacturarOpen, setRefacturarOpen,
     openPago: () => setPagoOpen(true),
     openTimbrar: () => setTimbrarOpen(true),
     openEnviar: () => setEnviarOpen(true),
@@ -32,6 +34,7 @@ export function useFacturaDetalleDialogs() {
     openEliminar: () => setEliminarOpen(true),
     openConsultar: () => setConsultarOpen(true),
     openRecordatorio: () => setRecordatorioOpen(true),
+    openRefacturar: () => setRefacturarOpen(true),
   };
 }
 
