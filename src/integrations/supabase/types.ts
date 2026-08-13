@@ -7829,6 +7829,15 @@ export type Database = {
         Args: { p_nombre: string; p_org: string }
         Returns: string
       }
+      a_mxn: {
+        Args: {
+          p_eur_mxn: number
+          p_moneda: string
+          p_monto: number
+          p_usd_mxn: number
+        }
+        Returns: number
+      }
       aceptar_cotizacion_version: {
         Args: { p_cotizacion_id: string }
         Returns: Json
@@ -9292,6 +9301,15 @@ export type Database = {
       }
       migrar_roles_legacy_dry_run: { Args: never; Returns: Json }
       migrar_roles_legacy_ejecutar: { Args: never; Returns: Json }
+      monto_pago_en_moneda_factura: {
+        Args: {
+          p_moneda_factura: string
+          p_moneda_pago: string
+          p_monto: number
+          p_tc_pago: number
+        }
+        Returns: number
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -9728,6 +9746,7 @@ export type Database = {
       run_auditoria_backfill_legacy: { Args: never; Returns: Json }
       saldo_factura: { Args: { p_factura_id: string }; Returns: number }
       saldo_factura_bruto: { Args: { p_factura_id: string }; Returns: number }
+      saldo_factura_proveedor: { Args: { p_factura_id: string }; Returns: Json }
       seed_demo_organization: { Args: never; Returns: undefined }
       seed_demo_organization_core: { Args: never; Returns: undefined }
       seed_demo_organization_guarded: {
