@@ -63,6 +63,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_PAGO_NO_ENCONTRADO: "El pago no existe o fue eliminado.",
   LC_PAGO_FACTURA_INEXISTENTE: "La factura del pago no existe.",
   LC_PAGO_FACTURA_NO_VIVA: "La factura no está en un estado que admita pagos.",
+  LC_FACTURA_EN_CANCELACION:
+    "La factura tiene una cancelación en trámite ante el SAT: no se pueden registrar cobros hasta que el SAT resuelva la solicitud.",
   LC_PAGO_CXP_NO_VIVA: "La factura de proveedor no admite pagos en su estado actual.",
   LC_PAGO_PROV_NO_VIVA: "La factura de proveedor no admite pagos en su estado actual.",
   LC_PAGO_PROV_SOBREPAGO:
