@@ -101,7 +101,7 @@ export function usePagoLoteState(a: Args) {
       metodo_pago: metodo,
       referencia,
       cuenta_bancaria_id: cuentaId || null,
-      tipo_cambio_usd: tcDof?.usdMxn ?? null,
+      tipo_cambio_usd: tcAplicable,
       notas,
       renglones,
     });
@@ -112,7 +112,7 @@ export function usePagoLoteState(a: Args) {
   return {
     fecha, setFecha, total, metodo, setMetodo, referencia, setReferencia,
     cuentaId, setCuentaId, notas, setNotas, renglones,
-    saldoTotal, tcDof, cuentasMoneda, requiereCuenta,
+    saldoTotal, tcDof, tcAplicable, tcBloqueado, cuentasMoneda, requiereCuenta,
     error, sinAsignar, totalRepartido, recalcular, setMonto, submit,
     guardando: registrar.isPending,
   };
