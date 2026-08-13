@@ -2,6 +2,8 @@
  * Tabla comparativa "antes → después" de los saldos que deja la etapa.
  */
 import { ArrowRight } from "lucide-react";
+import { Table, TableBody, TableHeader, TableCell } from "@/components/ui/table";
+import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters";
 import type { SaldoSimulado } from "@/features/facturacion/services/refacturacionSimulacion";
 
@@ -10,34 +12,34 @@ export function RefacturacionPreviewSaldos({ saldos }: { saldos: SaldoSimulado[]
 
   return (
     <div className="overflow-x-auto rounded-md border">
-      <table className="w-full text-xs">
-        <thead className="bg-muted/50">
-          <tr>
-            <th className="p-2 text-left font-medium">Documento</th>
-            <th className="p-2 text-right font-medium">Saldo antes</th>
-            <th className="p-2 text-right font-medium">Saldo después</th>
-          </tr>
-        </thead>
-        <tbody>
-          {saldos.map((s, i) => (
-            <tr key={s.concepto} className={i % 2 === 0 ? "border-t bg-muted/20" : "border-t"}>
-              <td className="p-2">
+      <Table>
+        <TableHeader>
+          <DetailTableRow hoverable={false}>
+            <DetailTableHead>Documento</DetailTableHead>
+            <DetailTableHead className="text-right">Saldo antes</DetailTableHead>
+            <DetailTableHead className="text-right">Saldo después</DetailTableHead>
+          </DetailTableRow>
+        </TableHeader>
+        <TableBody>
+          {saldos.map((s) => (
+            <DetailTableRow key={s.concepto}>
+              <TableCell>
                 <span className="font-medium">{s.concepto}</span>
                 {s.nota && <p className="text-muted-foreground">{s.nota}</p>}
-              </td>
-              <td className="p-2 text-right tabular-nums">
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
                 {formatCurrency(Number(s.antes ?? 0), s.moneda)}
-              </td>
-              <td className="p-2 text-right tabular-nums font-medium">
+              </TableCell>
+              <TableCell className="text-right tabular-nums font-medium">
                 <span className="inline-flex items-center gap-1">
                   <ArrowRight className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                   {formatCurrency(Number(s.despues ?? 0), s.moneda)}
                 </span>
-              </td>
-            </tr>
+              </TableCell>
+            </DetailTableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
