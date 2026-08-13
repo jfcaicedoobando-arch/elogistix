@@ -26,7 +26,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 import { DialogCobroLoteCliente } from "@/features/facturacion/components/DialogCobroLoteCliente";
-import { derivarLoteCobro } from "./_sections/carteraLote";
+import { derivarLoteCobro, hayEnTramiteCancelacion } from "./_sections/carteraLote";
 import { CarteraSelectionBar } from "./_sections/CarteraSelectionBar";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 
@@ -61,6 +61,7 @@ export default function Cartera() {
     [data, selectedIds],
   );
   const lote = useMemo(() => derivarLoteCobro(seleccionadas), [seleccionadas]);
+  const hayEnCancelacion = useMemo(() => hayEnTramiteCancelacion(seleccionadas), [seleccionadas]);
 
   return (
     <PageContainer>
@@ -72,6 +73,7 @@ export default function Cartera() {
         <CarteraSelectionBar
           total={selectedIds.length}
           lote={lote}
+          hayEnCancelacion={hayEnCancelacion}
           onCobroLote={() => setLoteOpen(true)}
           onLimpiar={() => setRowSelection({})}
         />
