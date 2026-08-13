@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 import type { PagoRefacturacion } from "@/features/facturacion/domain/refacturacionPasos";
+import type { OrdenanteSugerido } from "@/features/facturacion/domain/refacturarWizardDerivados";
 import type { FacturaRefacturacionEstado } from "@/features/facturacion/services/refacturacion";
 
 interface Props {
@@ -22,6 +23,22 @@ interface Props {
   onOrdenanteRfc: (v: string) => void;
   yaReasignado: boolean;
   bloqueoOrdenante: string | null;
+  ordenanteAuto: OrdenanteSugerido | null;
+}
+
+/** Nota que explica de dónde se tomó el ordenante precargado. */
+function NotaOrigenOrdenante({ auto }: { auto: OrdenanteSugerido | null }) {
+  if (!auto) return null;
+  const fuente =
+    auto.origen === "factura_nueva"
+      ? `la factura viva ${auto.numeroFactura ?? ""}`.trim()
+      : "el cliente destino elegido";
+  return (
+    <p className="md:col-span-2 text-xs text-muted-foreground">
+      Tomado de {fuente}: <strong>{auto.nombre}</strong>
+      {auto.rfc ? ` · ${auto.rfc}` : ""}. Edítalo sólo si el depósito llegó de otra empresa.
+    </p>
+  );
 }
 
 export function PasoReasignarPago(props: Props) {
@@ -102,6 +119,7 @@ export function PasoReasignarPago(props: Props) {
             placeholder="XAXX010101000"
           />
         </div>
+        <NotaOrigenOrdenante auto={props.ordenanteAuto} />
         {props.bloqueoOrdenante && (
           <p className="md:col-span-2 text-xs text-destructive">{props.bloqueoOrdenante}</p>
         )}

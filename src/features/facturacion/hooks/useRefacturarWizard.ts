@@ -17,6 +17,7 @@ import { decidirAvance } from "@/features/facturacion/domain/refacturarWizardAva
 import {
   mapearPagos,
   nombreClienteDestino,
+  ordenanteSugerido,
   receptorDesdeClientes,
 } from "@/features/facturacion/domain/refacturarWizardDerivados";
 import {
@@ -53,6 +54,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
   const [pagoSeleccionadoId, setPagoSeleccionadoId] = useState<string | null>(null);
   const [ordenanteNombre, setOrdenanteNombre] = useState("");
   const [ordenanteRfc, setOrdenanteRfc] = useState("");
+  const [ordenanteTocado, setOrdenanteTocado] = useState(false);
   const [repEnCurso, setRepEnCurso] = useState<string | null>(null);
 
   // Al reabrir con un caso vivo, el formulario refleja lo ya decidido.
@@ -75,6 +77,29 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     () => (receptorDestino ? pendientesReceptorFiscal(receptorDestino) : []),
     [receptorDestino],
   );
+
+  // El ordenante real del depósito es el receptor de la factura viva (la nueva):
+  // la original y su REP se cancelaron para sustituirse. Se siembra una vez y
+  // el usuario puede corregirlo.
+  const ordenanteAuto = useMemo(
+    () => ordenanteSugerido(s.facturaNueva, receptorDestino),
+    [s.facturaNueva, receptorDestino],
+  );
+
+  useEffect(() => {
+    if (!open || ordenanteTocado || !ordenanteAuto) return;
+    setOrdenanteNombre(ordenanteAuto.nombre);
+    setOrdenanteRfc(ordenanteAuto.rfc);
+  }, [open, ordenanteTocado, ordenanteAuto]);
+
+  const cambiarOrdenanteNombre = (v: string) => {
+    setOrdenanteTocado(true);
+    setOrdenanteNombre(v);
+  };
+  const cambiarOrdenanteRfc = (v: string) => {
+    setOrdenanteTocado(true);
+    setOrdenanteRfc(v);
+  };
 
   const consistenciaQuery = useRefacturacionConsistencia(
     s.caso?.id ?? null,
@@ -190,8 +215,9 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     motivo, setMotivo,
     pagos,
     pagoSeleccionadoId, setPagoSeleccionadoId,
-    ordenanteNombre, setOrdenanteNombre,
-    ordenanteRfc, setOrdenanteRfc,
+    ordenanteNombre, setOrdenanteNombre: cambiarOrdenanteNombre,
+    ordenanteRfc, setOrdenanteRfc: cambiarOrdenanteRfc,
+    ordenanteAuto,
     bloqueo,
     aviso,
     bloqueoPermiso,
