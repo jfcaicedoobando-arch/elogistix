@@ -137,6 +137,17 @@ function bloqueoPaso3(ctx: ContextoPasos): string | null {
   return null;
 }
 
+function bloqueoPaso4(ctx: ContextoPasos): string | null {
+  if (originalFueraDeCirculacion(ctx.original)) return null;
+  // Con la solicitud en trámite el REP anterior ya quedó cancelado: el pago
+  // puede moverse aunque el SAT tarde en liberar la cancelación (sólo se avisa).
+  if (cancelacionOriginalEnTramite(ctx.original)) return null;
+  if (cancelacionOriginalRechazada(ctx.original)) {
+    return "El SAT no aceptó la cancelación del CFDI original: vuelve a solicitarla antes de continuar.";
+  }
+  return "Solicita la cancelación del CFDI original antes de reasignar el pago.";
+}
+
 function bloqueoPaso5(ctx: ContextoPasos): string | null {
   if (ctx.pagoYaReasignado) return null;
   const vivos = pagosConRepVivo(ctx.pagos);
