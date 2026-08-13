@@ -43,7 +43,7 @@ export function ProveedorDocumentosTab({
   const [tipoSugerido, setTipoSugerido] = useState<TipoDocumentoProveedor | undefined>();
   const [porBorrar, setPorBorrar] = useState<DocumentoProveedor | null>(null);
 
-  const documentos = data ?? [];
+  const documentos = useMemo(() => data ?? [], [data]);
   const resumen = useMemo(
     () => calcularExpediente(documentos, esNacional),
     [documentos, esNacional],

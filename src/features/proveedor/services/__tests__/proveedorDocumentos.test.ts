@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 const storage = vi.hoisted(() => ({
-  uploadFile: vi.fn(async () => ({ path: "ok" })),
+  uploadFile: vi.fn(async (_path: string, _file: File) => ({ path: "ok" })),
   getSignedUrl: vi.fn(async () => "https://firmada.example/doc.pdf"),
   deleteFile: vi.fn(async () => undefined),
 }));
