@@ -12,6 +12,9 @@ const insertSingle = vi.fn();
 const insertChain = { select: vi.fn().mockReturnThis(), single: insertSingle };
 const insertMock = vi.fn().mockReturnValue(insertChain);
 const eqUpdate = vi.fn();
+// RNF-08 (Ola 11): el adjuntar XML ya no hace UPDATE directo, usa la RPC
+// `adjuntar_xml_factura_entrante` (autorización server-side).
+const rpcMock = vi.fn();
 const updateMock = vi.fn().mockReturnValue({ eq: eqUpdate });
 const selectChain = {
   select: vi.fn().mockReturnThis(),
@@ -25,6 +28,7 @@ vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     storage: { from: () => ({ upload, remove }) },
     from: () => ({ ...selectChain, insert: insertMock, update: updateMock }),
+    rpc: (...args: unknown[]) => rpcMock(...args),
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } } }) },
   },
 }));
@@ -168,7 +172,7 @@ describe("adjuntarXmlFacturaEntrante", () => {
   it("RG4-7 (Ola 5): si el update falla con error NO de unicidad, limpia el XML subido", async () => {
     selectChain.limit.mockResolvedValue({ data: [], error: null });
     upload.mockResolvedValue({ error: null });
-    eqUpdate.mockResolvedValue({ error: { message: "connection reset" } });
+    rpcMock.mockResolvedValue({ error: { message: "connection reset" } });
     remove.mockResolvedValue({ error: null });
 
     await expect(
@@ -187,7 +191,7 @@ describe("adjuntarXmlFacturaEntrante", () => {
   it("RG4-7 (Ola 5): con 23505 en el update NO borra el XML (otra fila viva lo referencia)", async () => {
     selectChain.limit.mockResolvedValue({ data: [], error: null });
     upload.mockResolvedValue({ error: null });
-    eqUpdate.mockResolvedValue({
+    rpcMock.mockResolvedValue({
       error: {
         code: "23505",
         message: 'duplicate key value violates unique constraint "uq_efe_org_xml_hash_vivo"',
@@ -210,7 +214,7 @@ describe("adjuntarXmlFacturaEntrante", () => {
   it("RG4-7 (Ola 5): con error no-unicidad pero path referenciado por fila viva, tampoco borra", async () => {
     selectChain.limit.mockResolvedValue({ data: [], error: null });
     upload.mockResolvedValue({ error: null });
-    eqUpdate.mockResolvedValue({ error: { message: "connection reset" } });
+    rpcMock.mockResolvedValue({ error: { message: "connection reset" } });
     // La verificación del cleanup seguro encuentra el path referenciado.
     selectChain.in.mockImplementation((_col: string, paths: string[]) =>
       Promise.resolve({ data: paths.map((p) => ({ [_col]: p })), error: null }),
@@ -232,7 +236,7 @@ describe("adjuntarXmlFacturaEntrante", () => {
   it("adjunta el XML exitosamente sin llamar a cleanup", async () => {
     selectChain.limit.mockResolvedValue({ data: [], error: null });
     upload.mockResolvedValue({ error: null });
-    eqUpdate.mockResolvedValue({ error: null });
+    rpcMock.mockResolvedValue({ error: null });
 
     await expect(
       adjuntarXmlFacturaEntrante({
