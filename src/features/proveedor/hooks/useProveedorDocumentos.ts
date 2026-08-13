@@ -9,14 +9,15 @@ import {
   eliminarDocumentoProveedor,
   type SubirDocumentoInput,
 } from "@/features/proveedor/services/proveedorDocumentos";
+import { proveedores } from "@/features/proveedor/queryKeys";
 
 function mensajeError(e: unknown, fallback: string): string {
   const msg = (e as { message?: string } | null)?.message;
   return msg && msg.trim().length > 0 ? msg : fallback;
 }
 
-const claveDocumentos = (proveedorId: string) =>
-  ["proveedores", "documentos", proveedorId] as const;
+/** Clave única del catálogo central: evita invalidaciones que no pegan. */
+const claveDocumentos = (proveedorId: string) => proveedores.documentos(proveedorId);
 
 export function useProveedorDocumentos(proveedorId: string | undefined) {
   return useQuery({
