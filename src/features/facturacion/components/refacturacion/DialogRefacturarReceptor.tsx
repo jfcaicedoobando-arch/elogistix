@@ -20,7 +20,7 @@ import {
   TOTAL_PASOS_REFACTURACION,
   etiquetaAccionPaso,
 } from "@/features/facturacion/domain/refacturacionPasos";
-import { useRefacturarWizard } from "./useRefacturarWizard";
+import { useRefacturarWizard } from "@/features/facturacion/hooks/useRefacturarWizard";
 import { RefacturarPasoActual } from "./RefacturarPasoActual";
 import { RefacturacionTrazabilidadCard } from "./RefacturacionTrazabilidadCard";
 import { RefacturacionPreviewPaso } from "./RefacturacionPreviewPaso";

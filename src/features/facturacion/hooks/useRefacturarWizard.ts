@@ -12,12 +12,12 @@ import { useRefacturacion } from "@/features/facturacion/hooks/useRefacturacion"
 import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { useCancelarRep } from "@/features/facturacion/hooks/useTimbrarRep";
-import { decidirAvance } from "./refacturarWizardAvance";
+import { decidirAvance } from "@/features/facturacion/domain/refacturarWizardAvance";
 import {
   mapearPagos,
   nombreClienteDestino,
   receptorDesdeClientes,
-} from "./refacturarWizardDerivados";
+} from "@/features/facturacion/domain/refacturarWizardDerivados";
 import {
   bloqueoPaso,
   type PagoRefacturacion,
