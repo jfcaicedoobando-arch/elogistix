@@ -102,7 +102,7 @@ export function movimientosProveedorColumns<T extends MovimientoConSaldo>(): Col
       header: "Cargo",
       accessorFn: (m) => m.cargo,
       enableSorting: true,
-      meta: { width: COL_W.money, align: "right" },
+      meta: { width: COL_W.monto, align: "right" },
       cell: ({ row }) => (
         <span className="tabular-nums">
           {row.original.cargo > 0 ? formatCurrency(row.original.cargo, row.original.moneda) : "—"}
@@ -114,7 +114,7 @@ export function movimientosProveedorColumns<T extends MovimientoConSaldo>(): Col
       header: "Abono",
       accessorFn: (m) => m.abono,
       enableSorting: true,
-      meta: { width: COL_W.money, align: "right" },
+      meta: { width: COL_W.monto, align: "right" },
       cell: ({ row }) => (
         <span className="tabular-nums text-success">
           {row.original.abono > 0 ? formatCurrency(row.original.abono, row.original.moneda) : "—"}
@@ -125,7 +125,7 @@ export function movimientosProveedorColumns<T extends MovimientoConSaldo>(): Col
       id: "saldo",
       header: "Saldo",
       accessorFn: (m) => m.saldo,
-      meta: { width: COL_W.money, align: "right", className: "font-medium" },
+      meta: { width: COL_W.monto, align: "right", className: "font-medium" },
       cell: ({ row }) => (
         <span className="tabular-nums">
           {formatCurrency(row.original.saldo, row.original.moneda)}
