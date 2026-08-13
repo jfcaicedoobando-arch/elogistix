@@ -54,7 +54,7 @@ describe("filasAgingExport", () => {
 });
 
 describe("estadoCuentaACsv", () => {
-  it("neutraliza fórmulas y arma tres bloques", () => {
+  it("neutraliza fórmulas y arma cuatro bloques", () => {
     const csv = estadoCuentaACsv(
       "HK LS Limited",
       "2026-01-01",

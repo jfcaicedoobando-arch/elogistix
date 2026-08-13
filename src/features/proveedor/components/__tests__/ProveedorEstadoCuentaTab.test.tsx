@@ -56,14 +56,14 @@ describe("ProveedorEstadoCuentaTab", () => {
   it("muestra el esqueleto mientras carga", () => {
     h.useProveedorMovimientos.mockReturnValue({ data: undefined, isLoading: true });
     renderTab();
-    expect(screen.queryByText("Movimientos del periodo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Saldos por moneda")).not.toBeInTheDocument();
   });
 
   it("pinta antigüedad, resumen y movimientos con saldo corrido", () => {
     h.useProveedorMovimientos.mockReturnValue({ data: datos, isLoading: false });
     renderTab();
     expect(screen.getByText("Antigüedad de saldos por pagar")).toBeInTheDocument();
-    expect(screen.getByText("Movimientos del periodo")).toBeInTheDocument();
+    expect(screen.getByText("Saldos por moneda")).toBeInTheDocument();
     expect(screen.getAllByText("FP-000001").length).toBe(2);
     expect(screen.getAllByText(/600/).length).toBeGreaterThan(0);
   });

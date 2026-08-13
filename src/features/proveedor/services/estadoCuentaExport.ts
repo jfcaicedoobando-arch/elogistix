@@ -73,6 +73,7 @@ export function estadoCuentaACsv(
   hasta: string,
   movimientos: readonly FilaMovimientoExport[],
   saldos: readonly { moneda: string; cargos: string; abonos: string; saldo: string }[],
+  aging: readonly { moneda: string; etiqueta: string; saldo: string }[] = [],
 ): string {
   const detalle = toCsv(
     ["Fecha", "Movimiento", "Folio", "Expediente", "Referencia", "Moneda", "Cargo", "Abono", "Saldo"],
@@ -81,14 +82,20 @@ export function estadoCuentaACsv(
     ]),
   );
   const totales = toCsv(
-    ["Moneda", "Cargos", "Abonos", "Saldo del periodo"],
+    ["Moneda", "Cargos", "Abonos", "Saldo global"],
     saldos.map((s) => [s.moneda, s.cargos, s.abonos, s.saldo]),
+  );
+  // R3P-11: la antigüedad viaja en el CSV para soportar estados de cuenta sin
+  // movimientos en el periodo (sólo saldo vencido).
+  const antiguedad = toCsv(
+    ["Moneda", "Antigüedad", "Saldo"],
+    aging.map((a) => [a.moneda, a.etiqueta, a.saldo]),
   );
   const encabezado = toCsv(
     ["Proveedor", "Desde", "Hasta"],
     [[proveedorNombre, formatDate(desde), formatDate(hasta)]],
   );
-  return `${encabezado}\n\n${detalle}\n\n${totales}`;
+  return `${encabezado}\n\n${detalle}\n\n${totales}\n\n${antiguedad}`;
 }
 
 export function nombreArchivoEstadoCuenta(
