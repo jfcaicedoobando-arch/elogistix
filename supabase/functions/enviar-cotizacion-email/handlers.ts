@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { captureEdgeException } from '../_shared/sentry.ts';
 import { fetchOrgSlug } from '../_shared/orgSlug.ts';
 import { DESTINATARIO_NO_PERMITIDO, emailsPermitidosCliente } from '../_shared/destinatarioCliente.ts';

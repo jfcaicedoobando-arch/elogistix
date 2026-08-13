@@ -2,7 +2,7 @@
 // Orquesta el envío de una cotización por correo en 2 pasos: prepare + send.
 // La lógica pesada vive en `handlers.ts`; este archivo solo valida JWT,
 // carga la cotización y enruta a `handlePrepare` o `handleSend`.
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { handlePrepare, handleSend } from './handlers.ts';

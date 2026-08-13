@@ -20,7 +20,7 @@
  *   }
  */
 // deno-lint-ignore-file no-explicit-any
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 type Level = "info" | "warn" | "error";
 
