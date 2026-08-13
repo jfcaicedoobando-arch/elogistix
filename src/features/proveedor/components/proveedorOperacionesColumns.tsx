@@ -8,6 +8,7 @@ import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { moneyColumn, dateColumn, statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { toTitleCase } from "@/lib/formatters";
 import type { PartidaEstadoCuenta } from "@/features/proveedor/domain/estadoCuentaProveedor";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ProveedorFacturasCell } from "./ProveedorFacturasCell";
 
 export function partidasOperacionesColumns<T extends PartidaEstadoCuenta>(): ColumnDef<T, unknown>[] {
@@ -83,6 +84,18 @@ export function partidasOperacionesColumns<T extends PartidaEstadoCuenta>(): Col
         accessor: (o) => o.estado_conciliacion,
       }),
       meta: { width: COL_W.estado },
+      // Ola 12 · R3FE-10: explica la marca "Moneda mixta" (porción sin TC que
+      // NO se compara — nunca se asume paridad 1:1).
+      cell: ({ row }) => (
+        <div className="flex flex-col gap-0.5">
+          <StatusBadge domain="conciliacion_costo" status={row.original.estado_conciliacion} />
+          {row.original.moneda_mixta_sin_tc ? (
+            <span className="text-2xs leading-snug text-warning">
+              Factura en otra moneda sin tipo de cambio: esa porción no se compara.
+            </span>
+          ) : null}
+        </div>
+      ),
     },
     dateColumn<T>({
       id: "vencimiento",
