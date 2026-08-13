@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.560.0] - 2026-08-13
+- **Pago en lote a proveedor con el tipo de cambio correcto (RFE-01)**: un lote en EUR ya guarda la paridad EUR/MXN del DOF (antes guardaba la del dólar). Si el DOF de la fecha no está disponible, el pago queda bloqueado con un aviso claro en lugar de registrarse sin tipo de cambio.
+- **Seguridad de aprobaciones en Cuentas por Pagar (RNF-07)**: aprobar o rechazar una factura de proveedor sólo es posible por el proceso oficial (valida rol, evita que quien capturó apruebe y deja bitácora). Se cerró el atajo que permitía cambiar el estado de aprobación directamente.
+- **Rastreo público sin ruido interno (RUX-01)**: el enlace público sólo muestra hitos de la operación; los eventos internos, de semilla o de pruebas ya no se entregan ni se pintan.
+
 ## [13.559.3] - 2026-08-13
 - Ajustes internos de tamaño de archivo exigidos por la auditoría de calidad: la construcción de alertas del proveedor y la persistencia del REP timbrado se separaron en módulos propios. Sin cambios de comportamiento visible.
 

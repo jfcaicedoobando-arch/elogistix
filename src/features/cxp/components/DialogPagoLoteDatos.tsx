@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { metodosFor, referenciaHint, type OrigenProveedor } from "./pagoProveedorHelpers";
 import { round2 } from "@/features/cxp/services/pagoProveedorLote";
 
@@ -27,7 +27,11 @@ interface Props {
   total: string;
   onTotal: (v: number) => void;
   saldoTotal: number;
-  tcDof: { usdMxn: number; fecha: string } | null;
+  tcDof: { usdMxn: number; eurMxn?: number | null; fecha: string } | null;
+  /** T/C DOF de la moneda del lote (null si no hay publicación). */
+  tcAplicable?: number | null;
+  /** Lote extranjero sin T/C: el envío queda bloqueado. */
+  tcBloqueado?: boolean;
   metodo: string;
   onMetodo: (v: string) => void;
   cuentaId: string;
@@ -46,6 +50,7 @@ function etiqueta(c: CuentaLote) {
 }
 
 export function DialogPagoLoteDatos(p: Props) {
+  const tcValor = p.tcAplicable ?? null;
   return (
     <FormDialogSection flat title="Datos de la transferencia">
       <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 md:grid-cols-3">
@@ -63,8 +68,14 @@ export function DialogPagoLoteDatos(p: Props) {
           />
           <p className="truncate text-xs text-muted-foreground">
             Saldo {formatCurrency(p.saldoTotal, p.moneda)}
-            {p.tcDof ? ` · TC DOF ${p.tcDof.usdMxn}` : ""}
+            {p.tcDof && tcValor ? ` · TC DOF ${p.moneda} ${tcValor} (${formatDate(p.tcDof.fecha)})` : ""}
           </p>
+          {p.tcBloqueado && (
+            <p className="text-xs font-medium text-warning">
+              Sin tipo de cambio DOF {p.moneda}/MXN para esta fecha: el pago en lote queda bloqueado
+              hasta que el T/C esté disponible.
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label>Método de pago</Label>
