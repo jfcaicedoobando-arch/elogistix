@@ -25,7 +25,7 @@
         "@radix-ui/react-tabs": "^1.1.21",
         "@radix-ui/react-toggle-group": "^1.1.19",
         "@radix-ui/react-tooltip": "^1.2.16",
-        "@react-pdf/renderer": "^4.6.0",
+        "@react-pdf/renderer": "4.5.1",
         "@sentry/react": "^10.70.0",
         "@supabase/supabase-js": "^2.112.3",
         "@tanstack/query-sync-storage-persister": "^5.101.4",
@@ -500,7 +500,7 @@
 
     "@react-pdf/layout": ["@react-pdf/layout@4.7.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@react-pdf/layout/-/layout-4.7.0.tgz", { "dependencies": { "@react-pdf/fns": "3.1.3", "@react-pdf/image": "^3.1.1", "@react-pdf/primitives": "^4.3.0", "@react-pdf/stylesheet": "^6.2.2", "@react-pdf/textkit": "^6.4.0", "@react-pdf/types": "^2.11.2", "emoji-regex-xs": "^1.0.0", "queue": "^6.0.1", "yoga-layout": "^3.2.1" } }, "sha512-snTm+6TLPz5U/PDeTu4id5ZuUBD+o7F3W/iHSFuS1Ue10aXpt05bcJICFwsaUZOyCHL1JZazAgqyI/gLW6iqkQ=="],
 
-    "@react-pdf/pdfkit": ["@react-pdf/pdfkit@6.0.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@react-pdf/pdfkit/-/pdfkit-6.0.0.tgz", { "dependencies": { "@babel/runtime": "^7.20.13", "@noble/ciphers": "^1.0.0", "@noble/hashes": "^1.6.0", "browserify-zlib": "^0.2.0", "fontkit": "^2.0.2", "js-md5": "^0.8.3", "linebreak": "^1.1.0", "pako": "^1.0.11", "png-js": "^2.0.0", "vite-compatible-readable-stream": "^3.6.1" } }, "sha512-VG4L83leBinqnBKIdWSm3REdtEpMh38zcj09kOgqP+w6kNW+mIWSBhAtgOPjKJYWnbh5vSipZ9RIspyRXZV/5Q=="],
+    "@react-pdf/pdfkit": ["@react-pdf/pdfkit@5.1.1", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@react-pdf/pdfkit/-/pdfkit-5.1.1.tgz", { "dependencies": { "@babel/runtime": "^7.20.13", "@noble/ciphers": "^1.0.0", "@noble/hashes": "^1.6.0", "browserify-zlib": "^0.2.0", "fontkit": "^2.0.2", "jay-peg": "^1.1.1", "js-md5": "^0.8.3", "linebreak": "^1.1.0", "png-js": "^2.0.0", "vite-compatible-readable-stream": "^3.6.1" } }, "sha512-wNcdSsNlNYyGHGAgIdt453egBF7fiF9UxpRlklUfVvu8OWCrUppG9xiUrPLVoKiqWet5tMi0w6LmuFUJuYqjEg=="],
 
     "@react-pdf/primitives": ["@react-pdf/primitives@4.3.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@react-pdf/primitives/-/primitives-4.3.0.tgz", {}, "sha512-nYXoZ36pvwNzbc54+DbL8RCn15jU7woJ9D/svnh5tpUXekJ+CbI4mZLo6boSv24CvJgychOu6h7gxX03B4ps0A=="],
 
@@ -508,7 +508,7 @@
 
     "@react-pdf/render": ["@react-pdf/render@4.6.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@react-pdf/render/-/render-4.6.0.tgz", { "dependencies": { "@babel/runtime": "^7.20.13", "@react-pdf/fns": "3.1.3", "@react-pdf/primitives": "^4.3.0", "@react-pdf/textkit": "^6.4.0", "@react-pdf/types": "^2.11.2", "abs-svg-path": "^0.1.1", "color-string": "^2.1.4", "normalize-svg-path": "^1.1.0", "parse-svg-path": "^0.1.2", "svg-arc-to-cubic-bezier": "^3.2.0" } }, "sha512-ZDT7CZWOplU7vI4TfrD1PHHgz6F20G0yeORt+qyBzgADMBzjaKLkhr10rkYn3IlRhUhosXLxWyg/R56z/AFAzw=="],
 
-    "@react-pdf/renderer": ["@react-pdf/renderer@4.6.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@react-pdf/renderer/-/renderer-4.6.0.tgz", { "dependencies": { "@babel/runtime": "^7.20.13", "@react-pdf/fns": "3.1.3", "@react-pdf/font": "^4.0.9", "@react-pdf/layout": "^4.7.0", "@react-pdf/pdfkit": "^6.0.0", "@react-pdf/primitives": "^4.3.0", "@react-pdf/reconciler": "^2.0.0", "@react-pdf/render": "^4.6.0", "@react-pdf/types": "^2.11.2", "events": "^3.3.0", "object-assign": "^4.1.1", "prop-types": "^15.6.2", "queue": "^6.0.1" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-6dgzuO/46I2jySQjfmzagCJSrjKAOjpihca0BNqFrrP/HK1jg7+/UTTukI0BlZMIkBUm2b0mapoRZTrtF0Uv4w=="],
+    "@react-pdf/renderer": ["@react-pdf/renderer@4.5.1", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@react-pdf/renderer/-/renderer-4.5.1.tgz", { "dependencies": { "@babel/runtime": "^7.20.13", "@react-pdf/fns": "3.1.3", "@react-pdf/font": "^4.0.8", "@react-pdf/layout": "^4.6.1", "@react-pdf/pdfkit": "^5.1.1", "@react-pdf/primitives": "^4.3.0", "@react-pdf/reconciler": "^2.0.0", "@react-pdf/render": "^4.5.1", "@react-pdf/types": "^2.11.1", "events": "^3.3.0", "object-assign": "^4.1.1", "prop-types": "^15.6.2", "queue": "^6.0.1" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-5r1VQrE6FRLXX5wWUxwZzM24E2BJMo6g8AQWuS8WyPs9ugu5yMnb2g8/RpPYka/Z6J+RUEWc32wty2NoUJF42Q=="],
 
     "@react-pdf/stylesheet": ["@react-pdf/stylesheet@6.2.2", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@react-pdf/stylesheet/-/stylesheet-6.2.2.tgz", { "dependencies": { "@react-pdf/fns": "3.1.3", "@react-pdf/types": "^2.11.2", "color-string": "^2.1.4", "hsl-to-hex": "^1.0.0", "media-engine": "^1.0.3", "postcss-value-parser": "^4.1.0" } }, "sha512-w0BY4WCHhEfLuQQU7fAwdZcaVnWMviO4bIiC+F2rhGYVcQsIin0FtO92W3PQE6QVKeG9jGmATPiKuSSx7NP+MA=="],
 
@@ -1701,6 +1701,8 @@
     "@isaacs/cliui/string-width": ["string-width@5.1.2", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/string-width/-/string-width-5.1.2.tgz", { "dependencies": { "eastasianwidth": "^0.2.0", "emoji-regex": "^9.2.2", "strip-ansi": "^7.0.1" } }, "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA=="],
 
     "@isaacs/cliui/wrap-ansi": ["wrap-ansi@8.1.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/wrap-ansi/-/wrap-ansi-8.1.0.tgz", { "dependencies": { "ansi-styles": "^6.1.0", "string-width": "^5.0.1", "strip-ansi": "^7.0.1" } }, "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ=="],
+
+    "@react-pdf/font/@react-pdf/pdfkit": ["@react-pdf/pdfkit@6.0.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@react-pdf/pdfkit/-/pdfkit-6.0.0.tgz", { "dependencies": { "@babel/runtime": "^7.20.13", "@noble/ciphers": "^1.0.0", "@noble/hashes": "^1.6.0", "browserify-zlib": "^0.2.0", "fontkit": "^2.0.2", "js-md5": "^0.8.3", "linebreak": "^1.1.0", "pako": "^1.0.11", "png-js": "^2.0.0", "vite-compatible-readable-stream": "^3.6.1" } }, "sha512-VG4L83leBinqnBKIdWSm3REdtEpMh38zcj09kOgqP+w6kNW+mIWSBhAtgOPjKJYWnbh5vSipZ9RIspyRXZV/5Q=="],
 
     "@react-pdf/reconciler/scheduler": ["scheduler@0.25.0-rc-603e6108-20241029", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/scheduler/-/scheduler-0.25.0-rc-603e6108-20241029.tgz", {}, "sha512-pFwF6H1XrSdYYNLfOcGlM28/j8CGLu8IvdrxqhjWULe2bPcKiKW4CV+OWqR/9fT52mywx65l7ysNkjLKBda7eA=="],
 
