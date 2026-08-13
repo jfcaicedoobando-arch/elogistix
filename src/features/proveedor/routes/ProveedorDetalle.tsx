@@ -67,48 +67,19 @@ export default function ProveedorDetalle() {
 
   return (
     <PageContainer>
-      <DetailHeader
-        backTo={volver}
-        backLabel="Volver a Proveedores"
-        icon={<Truck className="h-6 w-6 text-accent shrink-0" />}
-        title={nombreFmt}
-        subtitle={rfcFmt ? `RFC / Tax ID · ${rfcFmt}` : undefined}
-        badge={
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{categoriaLabel}</Badge>
-            <Badge variant="outline" className="font-normal">
-              {esNacional ? "Nacional" : "Extranjero"}
-            </Badge>
-          </div>
-        }
-        trailing={canEdit ? (
-          <>
-            <Button size="sm" onClick={() => setEditOpen(true)}>
-              <Pencil className="mr-2 h-4 w-4" /> Editar
-            </Button>
-            {esNacional && (
-              <ProveedorCsfUpdateButton proveedor={proveedor} onUpdate={handleUpdate} />
-            )}
-            {isAdmin && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" aria-label={`Más acciones del proveedor ${nombreFmt}`}>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem
-                    onClick={() => setDeleteOpen(true)}
-                    disabled={isDeleting}
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </>
-        ) : undefined}
+      <ProveedorDetalleHeader
+        proveedor={proveedor}
+        nombreFmt={nombreFmt}
+        rfcFmt={rfcFmt}
+        esNacional={esNacional}
+        categoriaLabel={categoriaLabel}
+        volver={volver}
+        canEdit={canEdit}
+        isAdmin={isAdmin}
+        isDeleting={isDeleting}
+        onEditar={() => setEditOpen(true)}
+        onEliminar={() => setDeleteOpen(true)}
+        onUpdate={handleUpdate}
       />
 
       <ProveedorResumenCards
