@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.553.0] - 2026-08-13
+- Trazabilidad del tipo de cambio en el detalle del embarque: la pestaña P&L ahora indica que el T/C quedó congelado al capturarlo, muestra el DOF de esa fecha y marca con un aviso si el valor fue capturado a mano y se aparta más de 0.5 % del DOF.
+- Nueva acción **"Usar el del DOF"** en el P&L: alinea el T/C del embarque al DOF de su fecha, sólo en embarques abiertos y con registro en la bitácora (nunca automática, para no mover utilidades históricas).
+- El wizard de embarques avisa en el paso de Costos y Precios cuando el T/C teclado se desvía del DOF sugerido, con un botón para adoptarlo.
+- Corregida la nota del desglose de costos, que seguía diciendo que el KPI incluía impuestos.
+
+
+
 ## [13.552.0] - 2026-08-13
 - Corregido el cálculo de utilidad por embarque: el costo real sumaba el **total con IVA** de las facturas de proveedor mientras la venta se comparaba sin IVA, lo que generaba márgenes falsos negativos (el expediente ELIMP00300 mostraba −246.50 en lugar de +10,287.50 MXN).
 - El costo real ahora usa la base gravable (subtotal, o total menos IVA más retenciones en registros antiguos) y las notas de crédito de proveedor se descuentan en proporción a esa base.
