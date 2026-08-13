@@ -47,7 +47,7 @@ export function DialogRefacturarReceptor({ facturaId, open, onOpenChange }: Prop
       open={open}
       onOpenChange={onOpenChange}
       icon={Replace}
-      size="xl"
+      size="4xl"
       title={`Refacturar a otro receptor · ${s.original?.numero ?? ""}`}
       description="Corrige el receptor del CFDI conservando el pago y la trazabilidad del embarque."
       step={s.paso}
