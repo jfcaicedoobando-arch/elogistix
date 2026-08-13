@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.570.2] - 2026-08-13
+- **Orden de la casa (Power of 10)**: se dividieron 4 archivos que rebasaron las 200 líneas — el catálogo de mensajes `LC_*` (nuevo `lcCodeMessages.tesoreria.ts`), el cobro en lote de cliente (nuevo `cobroLoteReparto.ts`), el buzón de CxP (nuevo `facturasEntrantesCaptura.ts`) y el tab de facturas recibidas (nuevo `EntrantesCardHeader.tsx`).
+- **Capas respetadas**: `validarFechaPago` se movió de `components/` a `facturacion/domain/`, para que el servicio del cobro en lote ya no importe desde la capa de UI.
+
 ## [13.570.1] - 2026-08-13
 - **CI en verde otra vez**: se renombró un test de pago en lote de CxP que tenía el mismo título que su gemelo de CxC (dos cajas con la misma etiqueta confunden al almacén), se registró en el manifest la última migración aplicada y se ajustó el presupuesto del paquete de PDF a 560 KB, acorde a la versión fija 4.5.1.
 
