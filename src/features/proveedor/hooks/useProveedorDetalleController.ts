@@ -1,7 +1,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/features/proveedor/hooks/useProveedores";
+import { useProveedor, useProveedorMutations } from "@/features/proveedor/hooks/useProveedores";
+import { useProveedorEstadoCuenta } from "@/features/proveedor/hooks/useProveedorEstadoCuenta";
 import { calcularAgregadosProveedor } from "@/features/proveedor/domain/agregadosProveedor";
+import { calcularBrechaFacturacion } from "@/features/proveedor/domain/estadoCuentaProveedor";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/features/auditoria/hooks/useBitacora";
@@ -11,6 +13,10 @@ import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFie
 /**
  * Controller para la página de detalle de proveedor.
  * Encapsula carga, mutaciones, totales, dialogs y handlers.
+ *
+ * v13.555.0 — la fuente del historial ya no es sólo `conceptos_costo`: la RPC
+ * `proveedor_estado_cuenta` entrega cada partida costeada conciliada contra las
+ * facturas reales del proveedor y sus pagos.
  */
 export function useProveedorDetalleController() {
   const { id } = useParams<{ id: string }>();
@@ -22,15 +28,26 @@ export function useProveedorDetalleController() {
   const { canEdit, isAdmin } = usePermissions();
   const registrarActividad = useRegistrarActividad();
 
-  const { data: operaciones = [] } = useProveedorOperaciones(id);
+  const { data: estadoCuenta, isLoading: isLoadingEstadoCuenta } = useProveedorEstadoCuenta(id);
+  const partidas = useMemo(() => estadoCuenta?.partidas ?? [], [estadoCuenta]);
+  const huerfanas = useMemo(() => estadoCuenta?.facturas_huerfanas ?? [], [estadoCuenta]);
   const { data: rates } = useExchangeRates();
 
   // FIX 9.1 — Los conceptos vienen en moneda nativa: se agregan por moneda y se
   // convierten a un único equivalente MXN (nunca se suman USD como si fueran MXN).
+  const operaciones = useMemo(
+    () => partidas.map((p) => ({
+      monto: p.comprometido,
+      moneda: p.moneda,
+      estadoLiquidacion: p.estado_liquidacion,
+    })),
+    [partidas],
+  );
   const agregados = useMemo(
     () => calcularAgregadosProveedor(operaciones, rates?.usdMxn ?? 0),
     [operaciones, rates?.usdMxn],
   );
+  const brecha = useMemo(() => calcularBrechaFacturacion(partidas), [partidas]);
   const { totalFacturado, totalPagado, totalPendiente } = agregados;
 
   // NOTA (v13.320.63): los toasts de éxito/error de update y delete los emite
