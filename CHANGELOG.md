@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.559.3] - 2026-08-13
+- Ajustes internos de tamaño de archivo exigidos por la auditoría de calidad: la construcción de alertas del proveedor y la persistencia del REP timbrado se separaron en módulos propios. Sin cambios de comportamiento visible.
+
 ## [13.559.2] - 2026-08-13
 - **Calidad interna del detalle de proveedor (Olas 1–4)**: las notificaciones del expediente ahora usan el sistema central de avisos, las tablas navegan por fila (sin ligas sueltas en las columnas) y las respuestas del estado de cuenta y sus movimientos se validan con esquemas antes de calcular totales.
 - Se agregaron mensajes en español para los errores `LC_ORG_SIN_CONTEXTO` y `LC_PROVEEDOR_INEXISTENTE`.
