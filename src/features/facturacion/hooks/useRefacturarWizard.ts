@@ -12,6 +12,7 @@ import { useRefacturacion } from "@/features/facturacion/hooks/useRefacturacion"
 import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { useCancelarRep } from "@/features/facturacion/hooks/useTimbrarRep";
+import { useConsultarRep } from "@/features/facturacion/hooks/useConsultarRep";
 import { decidirAvance } from "@/features/facturacion/domain/refacturarWizardAvance";
 import {
   mapearPagos,
@@ -44,6 +45,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
   const clientesQuery = useClientesFiscalOpts(organizationId ?? null, open);
   const cancelarFactura = useCancelarFactura();
   const cancelarRep = useCancelarRep(facturaId ?? undefined);
+  const consultarRep = useConsultarRep(facturaId ?? undefined);
 
   const [clienteDestinoId, setClienteDestinoId] = useState<string | null>(null);
   const [rutaFiscal, setRutaFiscal] = useState<RutaFiscalRefacturacion>("02");
@@ -107,6 +109,14 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     if (!puedeOperar) return;
     setRepEnCurso(pagoId);
     cancelarRep.mutate({ pagoId, motivo: "02" }, {
+      onSettled: () => { setRepEnCurso(null); s.refrescar(); },
+    });
+  };
+
+  /** Refresco manual del estatus del REP ante el SAT (sin esperar el cron). */
+  const handleConsultarRep = (pagoId: string) => {
+    setRepEnCurso(pagoId);
+    consultarRep.mutate(pagoId, {
       onSettled: () => { setRepEnCurso(null); s.refrescar(); },
     });
   };
@@ -192,6 +202,8 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     cancelandoFactura: cancelarFactura.isPending,
     accionPendiente,
     handleCancelarRep,
+    handleConsultarRep,
+    consultandoRep: consultarRep.isPending,
     handleCancelarOriginal,
     handleIrABorrador,
     handleContinuar,

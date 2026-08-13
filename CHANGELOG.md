@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.591.0] - 2026-08-13
+- **Nuevo botón "Actualizar estado" del REP.** En el paso 2 del asistente de refacturación se puede consultar en vivo al SAT/FacturApi el estatus de la cancelación del complemento de pago y sincronizarlo al instante, sin esperar los 30 minutos del proceso automático.
+
 ## [13.590.0] - 2026-08-13
 - **El asistente de refacturación ya no se detiene esperando la cancelación del REP.** Con la solicitud en verificación ante el SAT se puede emitir la factura del nuevo receptor y cancelar el CFDI original; el paso mostrará un aviso informativo en lugar de un bloqueo.
 - **Se refuerza el candado de la reasignación del pago:** mientras el REP anterior siga vigente no se permite mover el depósito ni timbrar el nuevo complemento, para no reportar el mismo pago dos veces al SAT.
