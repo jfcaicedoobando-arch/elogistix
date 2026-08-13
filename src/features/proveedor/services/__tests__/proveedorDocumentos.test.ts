@@ -9,7 +9,11 @@ vi.mock("@/services/storage", () => storage);
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
-  return createSupabaseMock();
+  const m = createSupabaseMock();
+  (m.supabase as unknown as Record<string, unknown>).auth = {
+    getUser: async () => ({ data: { user: { id: "u1" } }, error: null }),
+  };
+  return m;
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
@@ -42,13 +46,13 @@ describe("subirDocumentoProveedor", () => {
       tipo: "Constancia de situación fiscal",
       archivo,
     }).catch(() => undefined);
-    const path = storage.uploadFile.mock.calls[0]?.[0] as string;
+    const path = String(storage.uploadFile.mock.calls[0]?.[0] ?? "");
     expect(path.startsWith("proveedores/p1/")).toBe(true);
     expect(path.endsWith("csf.pdf")).toBe(true);
   });
 
   it("borra el archivo si falla el registro en la base", async () => {
-    mock.setTableResult?.("proveedor_documentos", { data: null, error: { message: "rls" } });
+    mock.setTableResult("proveedor_documentos", { data: null, error: { message: "rls" } });
     await expect(
       subirDocumentoProveedor({
         proveedorId: "p1",
