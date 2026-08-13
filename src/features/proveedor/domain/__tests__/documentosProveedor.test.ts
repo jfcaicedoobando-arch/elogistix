@@ -6,6 +6,7 @@ import {
   ultimoPorTipo,
   formatTamano,
   validarVigenciaDocumento,
+  esNacionalOrigen,
   type DocumentoProveedor,
 } from "../documentosProveedor";
 
@@ -140,5 +141,14 @@ describe("validarVigenciaDocumento (R3FE-07)", () => {
   it("acepta una vigencia válida", () => {
     expect(validarVigenciaDocumento("Opinión de cumplimiento", "2026-08-01", "2026-12-31", HOY_V))
       .toBeNull();
+  });
+});
+
+describe("esNacionalOrigen (Ola 12 · R3P-14)", () => {
+  it("trata NULL/vacío como nacional y sólo 'Extranjero' como extranjero", () => {
+    expect(esNacionalOrigen(null)).toBe(true);
+    expect(esNacionalOrigen(undefined)).toBe(true);
+    expect(esNacionalOrigen("Nacional")).toBe(true);
+    expect(esNacionalOrigen("Extranjero")).toBe(false);
   });
 });
