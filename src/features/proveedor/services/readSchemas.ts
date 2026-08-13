@@ -101,5 +101,8 @@ export const estadoCuentaMovimientosSchema = z
     movimientos: z.array(movimientoSchema).nullish(),
     aging: z.array(agingFilaSchema).nullish(),
     saldos: z.array(saldoMonedaSchema).nullish(),
+    // R3FE-04 (Ola 12): metadata de la paginación server-side.
+    total_movimientos: z.coerce.number().int().nullish(),
+    hay_mas: z.boolean().nullish(),
   })
   .nullable();

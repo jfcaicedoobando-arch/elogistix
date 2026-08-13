@@ -21,14 +21,24 @@ import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFie
 export function useProveedorDetalleController() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: proveedor, isLoading } = useProveedor(id);
+  const {
+    data: proveedor, isLoading,
+    isError: isErrorProveedor, error: errorProveedor, refetch: refetchProveedor,
+  } = useProveedor(id);
   const { updateProveedor, deleteProveedor, isDeleting } = useProveedorMutations();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { canEdit, isAdmin } = usePermissions();
   const registrarActividad = useRegistrarActividad();
 
-  const { data: estadoCuenta, isLoading: isLoadingEstadoCuenta } = useProveedorEstadoCuenta(id);
+  const {
+    data: estadoCuenta,
+    isLoading: isLoadingEstadoCuenta,
+    isError: isErrorEstadoCuenta,
+    error: errorEstadoCuenta,
+    refetch: refetchEstadoCuenta,
+    isFetching: isFetchingEstadoCuenta,
+  } = useProveedorEstadoCuenta(id);
   const partidas = useMemo(() => estadoCuenta?.partidas ?? [], [estadoCuenta]);
   const huerfanas = useMemo(() => estadoCuenta?.facturas_huerfanas ?? [], [estadoCuenta]);
   const { data: rates } = useExchangeRates();
@@ -95,12 +105,19 @@ export function useProveedorDetalleController() {
   return {
     proveedor,
     isLoading,
+    isErrorProveedor,
+    errorProveedor,
+    refetchProveedor,
     isDeleting,
     operaciones,
     partidas,
     huerfanas,
     brecha,
     isLoadingEstadoCuenta,
+    isErrorEstadoCuenta,
+    errorEstadoCuenta,
+    refetchEstadoCuenta,
+    isFetchingEstadoCuenta,
     totalFacturado,
     totalPagado,
     totalPendiente,

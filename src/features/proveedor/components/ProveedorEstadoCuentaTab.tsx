@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { CardSkeleton } from "@/components/shared/skeletons";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { formatCurrency } from "@/lib/formatters";
 import { useProveedorMovimientos } from "@/features/proveedor/hooks/useProveedorMovimientos";
 import {
@@ -39,7 +40,8 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
   const [desde, setDesde] = useState(isoHaceUnAnio);
   const [hasta, setHasta] = useState(isoHoy);
   const [descargando, setDescargando] = useState(false);
-  const { data, isLoading } = useProveedorMovimientos(proveedorId, desde, hasta);
+  const { data, isLoading, isError, error, refetch, isFetching } =
+    useProveedorMovimientos(proveedorId, desde, hasta);
 
   const movimientos = useMemo(
     () => conSaldoCorrido(filtrarPorRango(data?.movimientos ?? [], desde, hasta)),
@@ -60,6 +62,18 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
   };
 
   if (isLoading) return <CardSkeleton />;
+
+  // R3FE-05 (Ola 12): un fallo de la RPC NO debe pintarse como "sin movimientos".
+  if (isError) {
+    return (
+      <ErrorStateInline
+        title="No pudimos cargar el estado de cuenta"
+        message={error instanceof Error ? error.message : "Error desconocido al consultar la información."}
+        onRetry={() => void refetch()}
+        retrying={isFetching}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -128,6 +142,12 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
           </CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
+          {data?.hay_mas && (
+            <p className="px-4 pt-3 text-xs text-warning">
+              Mostrando los {movimientos.length} movimientos más recientes del periodo
+              (total: {data.total_movimientos}). Acota el rango de fechas para ver el resto.
+            </p>
+          )}
           <ProveedorMovimientosTable movimientos={movimientos} />
         </CardContent>
       </Card>

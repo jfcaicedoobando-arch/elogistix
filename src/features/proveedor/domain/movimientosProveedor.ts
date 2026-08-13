@@ -72,6 +72,10 @@ export interface EstadoCuentaMovimientos {
   movimientos: MovimientoProveedor[];
   aging: AgingFilaProveedor[];
   saldos: SaldoMonedaProveedor[];
+  /** Total de movimientos del periodo ANTES del límite server-side (R3FE-04). */
+  total_movimientos: number;
+  /** true = el periodo tiene más movimientos de los devueltos (truncado). */
+  hay_mas: boolean;
 }
 
 /** Antigüedad de una moneda, ya distribuida en cubetas y con su total. */

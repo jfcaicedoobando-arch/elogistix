@@ -144,3 +144,46 @@ export function formatTamano(bytes: number | null | undefined): string {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+/**
+ * R3FE-07 (Ola 12): tipos cuya vigencia caduca — la fecha de vencimiento es
+ * obligatoria para ellos (opinión de cumplimiento y cartas bancarias caducan).
+ */
+export const TIPOS_CON_VENCIMIENTO: readonly TipoDocumentoProveedor[] = [
+  "Opinión de cumplimiento",
+  "Comprobante de datos bancarios",
+];
+
+/** Vigencia máxima plausible; más allá es casi seguro un error de captura. */
+export const MAX_VIGENCIA_ANIOS = 10;
+
+/**
+ * R3FE-07: validaciones mínimas de vigencia al capturar un documento.
+ * Devuelve el mensaje de error (bloqueante) o `null` si es válido.
+ */
+export function validarVigenciaDocumento(
+  tipo: TipoDocumentoProveedor,
+  fechaDocumento: string | null | undefined,
+  fechaVencimiento: string | null | undefined,
+  hoy: string = hoyMx(),
+): string | null {
+  const venc = fechaVencimiento?.slice(0, 10) || null;
+  if (!venc) {
+    return TIPOS_CON_VENCIMIENTO.includes(tipo)
+      ? `La fecha de vencimiento es obligatoria para "${tipo}".`
+      : null;
+  }
+  if (venc < hoy) {
+    return "La vigencia ya venció: captura el documento renovado o corrige la fecha.";
+  }
+  const doc = fechaDocumento?.slice(0, 10) || null;
+  if (doc && venc < doc) {
+    return "La vigencia no puede ser anterior a la fecha del documento.";
+  }
+  const limite = parseLocalMx(hoy);
+  limite.setUTCFullYear(limite.getUTCFullYear() + MAX_VIGENCIA_ANIOS);
+  if (parseLocalMx(venc).getTime() > limite.getTime()) {
+    return `La vigencia no puede ser mayor a ${MAX_VIGENCIA_ANIOS} años; revisa la fecha capturada.`;
+  }
+  return null;
+}
