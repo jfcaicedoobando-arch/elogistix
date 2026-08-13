@@ -9,6 +9,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { errorFechaLote } from "@/features/facturacion/services/cobroLoteValidaciones";
 
 
 export interface FacturaLoteCandidata {
