@@ -48,6 +48,12 @@ export interface RegistrarCobroLoteInput {
   /** Ola 5 · RG4-5: importe real recibido; debe ser exactamente el reparto. */
   importe_recibido: number;
   renglones: RenglonCobro[];
+  /**
+   * Ola 11 · RNF-01: llave de idempotencia generada al abrir el diálogo.
+   * La RPC la reclama con `idempotency_claim`: un reintento del MISMO submit
+   * devuelve la respuesta original en vez de duplicar el lote.
+   */
+  request_id: string;
 }
 
 export interface CobroLoteResultado {
