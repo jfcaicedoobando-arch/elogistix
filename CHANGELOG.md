@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.568.0] - 2026-08-13
+- **Prueba de conexión con FacturApi que sí se corta a tiempo (Sprint 7 · REF-08)**: antes el aviso de "tardó demasiado" salía a los 15 segundos pero la llamada seguía abierta por detrás; ahora la conexión se aborta de verdad. Si guardar el identificador de la organización falla, queda registrado en lugar de perderse en silencio.
+- **Nunca más doble timbrado al recuperar una factura atorada (REF-09)**: al reconciliar contra FacturApi, si la búsqueda queda incompleta (demasiadas facturas recientes), el sistema ya no asume "no existe" ni libera el candado; avisa y pide reintentar en unos minutos. Aplica a facturas, notas de crédito y REP.
+
 ## [13.567.0] - 2026-08-13
 - **Etiquetas de formulario accesibles (Sprint 9 · UX-04)**: en los diálogos de contacto de cliente, datos bancarios de proveedor (alta y edición) y seguro del embarque, al hacer clic en el texto de la etiqueta se enfoca su campo y los lectores de pantalla ya lo anuncian.
 - **Tamaños de etiqueta uniformes (UX-08)**: se migraron 100 etiquetas que traían un tamaño "a mano" a la variante oficial del diseño; los formularios se ven consistentes y las filas de conceptos/contenedores conservan su etiqueta chica. Se agregó una prueba que impide reintroducir el atajo.

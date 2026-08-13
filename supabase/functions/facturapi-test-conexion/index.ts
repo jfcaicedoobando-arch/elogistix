@@ -89,17 +89,18 @@ function toFacturapiError(res: Response, detail: unknown): FacturapiHttpError {
   return err;
 }
 
-async function fetchFacturapiOrg(apiKey: string, facturapiOrgId: string | null): Promise<FacturapiOrg> {
+async function fetchFacturapiOrg(apiKey: string, facturapiOrgId: string | null, signal: AbortSignal): Promise<FacturapiOrg> {
   const orgId = facturapiOrgId ?? "me";
   const res = await fetch(`${FACTURAPI_BASE}/organizations/${encodeURIComponent(orgId)}`, {
     headers: { Authorization: basicAuthHeader(apiKey), Accept: "application/json" },
+    signal,
   });
 
   if (!res.ok) {
     const detail = await readFacturapiDetail(res);
     if (res.status === 404 && facturapiOrgId) {
       console.warn("[facturapi-test-conexion] saved-org-id-not-found; retrying-me");
-      return fetchFacturapiOrg(apiKey, null);
+      return fetchFacturapiOrg(apiKey, null, signal);
     }
     throw toFacturapiError(res, detail);
   }
@@ -107,29 +108,10 @@ async function fetchFacturapiOrg(apiKey: string, facturapiOrgId: string | null):
   return await res.json() as FacturapiOrg;
 }
 
-/**
-  * Envuelve la llamada HTTP con un timeout duro. Si FacturApi tarda más de
- * `ms`, rechazamos con un error semántico (`facturapi_timeout`) en vez de
- * dejar que el cliente Supabase corte ciegamente.
- */
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      const err = new Error("facturapi_timeout") as Error & { status?: number };
-      err.status = 504;
-      reject(err);
-    }, ms);
-    promise
-      .then((value) => {
-        clearTimeout(timer);
-        resolve(value);
-      })
-      .catch((err) => {
-        clearTimeout(timer);
-        reject(err);
-      });
-  });
-}
+// REF-08: se eliminó `withTimeout` (rechazaba la promesa a los 15 s pero el
+// fetch seguía vivo sin AbortSignal). Ahora el timeout es real:
+// `AbortSignal.timeout(15_000)` en runTest aborta la conexión y el
+// DOMException resultante se mapea a 504 en errorResponse.
 
 async function loadCredentials(sbAdmin: ReturnType<typeof createClient>, organizationId: string) {
   const { data } = await sbAdmin
@@ -147,17 +129,24 @@ async function persistOrgId(
   currentOrgId: string | null,
 ) {
   if (!meId || currentOrgId) return;
-  await sbAdmin
+  const { error } = await sbAdmin
     .from("facturapi_credenciales")
     .update({ facturapi_org_id: meId })
     .eq("organization_id", organizationId);
+  // REF-08: no fallar la prueba por esto (es best-effort), pero dejar rastro en
+  // logs — antes se ignoraba el error del UPDATE en silencio.
+  if (error) console.warn("[facturapi-test-conexion] persist-org-id-failed", { message: error.message });
 }
 
 function errorResponse(err: unknown) {
   const e = (err ?? {}) as FacturapiHttpError;
   const status = e.status ?? 502;
   const detail = e.detail ?? { message: e.message ?? String(err) };
-  const isTimeout = (err as Error)?.message === "facturapi_timeout";
+  // REF-08: AbortSignal.timeout arroja DOMException TimeoutError (AbortError
+  // por robustez); ambos significan "FacturApi no respondió a tiempo".
+  const isTimeout =
+    (err as Error)?.message === "facturapi_timeout" ||
+    (err instanceof DOMException && (err.name === "TimeoutError" || err.name === "AbortError"));
   console.error("[facturapi-test-conexion] facturapi-call-error", { status, isTimeout });
   const isAuthError = status === 401 || status === 403;
   // EF-11: propagar el status HTTP real — con 200 los clientes que sólo
@@ -184,9 +173,12 @@ async function runTest(body: Body, sbAdmin: ReturnType<typeof createClient>) {
 
   try {
     console.log("[facturapi-test-conexion] facturapi-call-start");
-    const me = await withTimeout(
-      fetchFacturapiOrg(resolved.data.apiKey, resolved.data.facturapiOrgId),
-      15_000,
+    // REF-08: AbortSignal.timeout aborta el fetch de verdad (patrón de
+    // _shared/satConsulta.ts y _shared/respaldarXmlTimbrado.ts).
+    const me = await fetchFacturapiOrg(
+      resolved.data.apiKey,
+      resolved.data.facturapiOrgId,
+      AbortSignal.timeout(15_000),
     );
     console.log("[facturapi-test-conexion] facturapi-call-ok", { id: me?.id });
     await persistOrgId(sbAdmin, body.organization_id, me?.id, resolved.data.facturapiOrgId);

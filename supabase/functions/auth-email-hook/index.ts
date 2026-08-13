@@ -3,6 +3,7 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
 import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { initSentryEdge, captureEdgeException } from '../_shared/sentry.ts'
 import {
   EMAIL_SUBJECTS,
   EMAIL_TEMPLATES,
@@ -14,10 +15,19 @@ import {
 import { handlePreview } from './preview.ts'
 import { registrarPendiente } from './dedupe.ts'
 
+initSentryEdge('auth-email-hook')
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+}
+
+/** REF-04: nunca loguear el email completo (PII). Conserva el dominio para diagnóstico. */
+function enmascararEmail(email: string): string {
+  const at = email.indexOf('@')
+  if (at <= 0) return '***'
+  return `***@${email.slice(at + 1)}`
 }
 
 /** Payload del hook de correos de auth (v1). */
@@ -113,7 +123,7 @@ async function handleWebhook(req: Request): Promise<Response> {
   // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
   // payload.type is the hook event type ("auth")
   const emailType = payload.data.action_type
-  console.log('Received auth event', { emailType, email: payload.data.email, run_id })
+  console.log('Received auth event', { emailType, email: enmascararEmail(payload.data.email), run_id })
 
   const EmailTemplate = EMAIL_TEMPLATES[emailType]
   if (!EmailTemplate) {
@@ -197,7 +207,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     })
   }
 
-  console.log('Auth email enqueued', { emailType, email: payload.data.email, run_id })
+  console.log('Auth email enqueued', { emailType, email: enmascararEmail(payload.data.email), run_id })
 
   return new Response(
     JSON.stringify({ success: true, queued: true }),
@@ -223,8 +233,10 @@ Deno.serve(async (req) => {
     return await handleWebhook(req)
   } catch (error) {
     console.error('Webhook handler error:', error)
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: message }), {
+    // REF-04: reportar a Sentry y NO filtrar error.message al llamante (el
+    // mensaje crudo también termina en los logs de plataforma de Supabase Auth).
+    await captureEdgeException(error, { fn: 'auth-email-hook', status_code: 500 })
+    return new Response(JSON.stringify({ error: 'auth_email_hook_failed' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

@@ -56,6 +56,16 @@ function previewJson(body: unknown, status: number): Response {
   })
 }
 
+/** REF-04: comparación constante en tiempo (patrón process-email-queue/queueAuth.ts). */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return diff === 0
+}
+
 export async function handlePreview(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: previewCorsHeaders })
@@ -63,7 +73,10 @@ export async function handlePreview(req: Request): Promise<Response> {
 
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
   const authHeader = req.headers.get('Authorization')
-  if (!apiKey || authHeader !== `Bearer ${apiKey}`) {
+  const provided = authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : ''
+  // REF-04: comparación constant-time de la llave de preview (antes `!==`
+  // directo — timing attack teórico sobre LOVABLE_API_KEY).
+  if (!apiKey || !provided || !timingSafeEqual(provided, apiKey)) {
     return previewJson({ error: 'Unauthorized' }, 401)
   }
 

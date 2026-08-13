@@ -4,10 +4,14 @@
  *
  * Entrada (POST, JSON opcional):
  *   {
- *     limite?: number,               // default 200, máx 500
+ *     limite?: number,               // default 50, máx 50 (EF-05: el lote no
+ *                                    // cabe en el wall-clock de la edge)
  *     solo_sin_verificar?: boolean,  // default false (revisa también las ya verificadas)
  *     organization_id?: string       // default: la organización del usuario
  *   }
+ *
+ * REF-07: rate limit 1 corrida/min por organización (check_ratelimit) — cada
+ * corrida dispara hasta 50 consultas SOAP al SAT.
  *
  * Salida:
  *   {
@@ -190,6 +194,30 @@ Deno.serve(wrapEdgeHandler("verificar-sat-lote", async (req) => {
   if (!orgId) return jsonResponse({ error: "organizacion_no_encontrada" }, 422, cors);
   const permitido = await authorizeOrgMembership(admin, ctx.userId, orgId);
   if (!permitido) return jsonResponse({ error: "forbidden" }, 403, cors);
+
+  // REF-07: throttle por organización (fail-CLOSED, patrón demo-access EF-09).
+  // Sin esto, cualquier miembro podía invocar en bucle y provocar throttling o
+  // bloqueo del RFC de la organización por parte del SAT.
+  const { data: rl, error: rlErr } = await admin.rpc("check_ratelimit", {
+    p_key: `verificar-sat-lote:${orgId}`,
+    p_window_seconds: 60,
+    p_max: 1,
+  });
+  if (rlErr) {
+    await captureEdgeException(new Error(`check_ratelimit failed: ${rlErr.message}`), {
+      fn: "verificar-sat-lote",
+      status_code: 503,
+    });
+    return jsonResponse({ error: "rate_limit_unavailable" }, 503, cors);
+  }
+  const rlResult = rl as { ok?: boolean; retry_after?: number } | null;
+  if (rlResult?.ok === false) {
+    return jsonResponse(
+      { error: "rate_limited", message: "El barrido SAT ya corrió hace menos de 1 minuto; espera e intenta de nuevo." },
+      429,
+      { ...cors, "Retry-After": String(rlResult.retry_after ?? 60) },
+    );
+  }
 
   const rfcReceptor = await rfcOrganizacion(admin, orgId);
   if (!rfcReceptor) return jsonResponse({ error: "rfc_organizacion_faltante" }, 422, cors);

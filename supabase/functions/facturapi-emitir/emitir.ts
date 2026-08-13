@@ -78,15 +78,17 @@ export async function claimFactura(supabase: SupabaseClient, facturaId: string):
   return { claimTag, claimAt, release };
 }
 
-export async function resolverSustitucion(supabase: SupabaseClient, factura: FacturaRow, release: () => Promise<void>): Promise<string | Response | null> {
+export async function resolverSustitucion(supabase: SupabaseClient, factura: FacturaRow): Promise<string | Response | null> {
   if (!factura.sustituye_a) return null;
   const { data: prev } = await supabase.from("facturas").select("uuid_fiscal").eq("id", factura.sustituye_a).maybeSingle();
-  if (!prev?.uuid_fiscal) { await release(); return jsonResponse({ error: "sustituida_sin_uuid", message: "La factura sustituida no tiene UUID fiscal." }, 422); }
+  // REF-06: ya no se libera claim aquí — el claim se toma DESPUÉS de esta
+  // validación (ver index.ts), así que no hay nada que liberar en el 422.
+  if (!prev?.uuid_fiscal) return jsonResponse({ error: "sustituida_sin_uuid", message: "La factura sustituida no tiene UUID fiscal." }, 422);
   return prev.uuid_fiscal as string;
 }
 
 export async function cargarContexto(
-  supabase: SupabaseClient, facturaId: string, factura: FacturaRow, sustituyeUuid: string | null, claimTag: string,
+  supabase: SupabaseClient, facturaId: string, factura: FacturaRow, sustituyeUuid: string | null,
 ): Promise<FacturaContext | Response> {
   const base = await cargarBaseContexto(supabase, facturaId, factura);
   if (base instanceof Response) return base;
@@ -102,7 +104,10 @@ export async function cargarContexto(
     conceptos: base.conceptos,
     sustituye_uuid: sustituyeUuid,
     referencias: refs,
-    external_id: claimTag,
+    // REF-06: se asigna en index.ts DESPUÉS de tomar el claim (el claim ya no
+    // existe al construir el contexto; así las validaciones 422 no necesitan
+    // liberarlo).
+    external_id: null,
   };
 
   const issues = validateContext(ctx);
