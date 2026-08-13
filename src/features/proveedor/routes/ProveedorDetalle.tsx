@@ -20,6 +20,7 @@ import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
 import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
+import { ProveedorBrechaCard } from "../components/ProveedorBrechaCard";
 import { ProveedorCsfUpdateButton } from "../components/ProveedorCsfUpdateButton";
 import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancariosCard";
 import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneralesCard";
@@ -31,7 +32,7 @@ export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const volver = useVolver("/compras/proveedores");
   const {
-    proveedor, isLoading, isDeleting, operaciones,
+    proveedor, isLoading, isDeleting, partidas, brecha, huerfanas,
     totalFacturado, totalPagado, totalPendiente, agregados,
     canEdit, isAdmin, editOpen, setEditOpen,
     deleteOpen, setDeleteOpen, handleUpdate, handleDelete,
@@ -115,7 +116,7 @@ export default function ProveedorDetalle() {
         moneda="MXN"
         porMoneda={agregados.porMoneda}
         monedasSinTc={agregados.monedasSinTc}
-        operacionesCount={operaciones.length}
+        operacionesCount={partidas.length}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -151,9 +152,19 @@ export default function ProveedorDetalle() {
       />
 
 
+      <ProveedorBrechaCard brecha={brecha} huerfanas={huerfanas} proveedorNombre={nombreFmt} />
+
       <Tabs defaultValue="operaciones">
         <TabsList>
           <TabsTrigger value="operaciones">Operaciones</TabsTrigger>
+          <TabsTrigger value="por_facturar">
+            Por facturar
+            {brecha.partidasPendientes > 0 && (
+              <span className="ml-2 rounded-full bg-warning/15 px-1.5 text-2xs font-medium text-warning tabular-nums">
+                {brecha.partidasPendientes}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="salud">Salud</TabsTrigger>
         </TabsList>
         <TabsContent value="operaciones" className="mt-4">
@@ -162,12 +173,22 @@ export default function ProveedorDetalle() {
               <CardTitle>
                 Historial de operaciones
                 <span className="ml-2 font-normal text-muted-foreground tabular-nums">
-                  {operaciones.length}
+                  {partidas.length}
                 </span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
-              <ProveedorOperacionesTable operaciones={operaciones} />
+              <ProveedorOperacionesTable partidas={partidas} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="por_facturar" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Costeado sin factura del proveedor</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 overflow-x-auto">
+              <ProveedorOperacionesTable partidas={partidas} filtro="por_facturar" />
             </CardContent>
           </Card>
         </TabsContent>

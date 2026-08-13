@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.555.0] - 2026-08-13
+- **Detalle de proveedor conciliado**: el "Historial de operaciones" ya no muestra sólo lo costeado en el expediente; ahora cada partida trae el monto facturado por el proveedor, el saldo por facturar, el folio de la factura ligada y su estado real (Por facturar / Facturado parcial / Facturado / Pagado / Sobrefacturado).
+- Nueva tarjeta **"Comprometido sin factura del proveedor"** con el pendiente agrupado por moneda nativa (nunca se mezclan divisas), conteo de partidas sin respaldo y accesos directos a "Por capturar" y "Facturas".
+- Aviso de **facturas con partidas sin vincular** a ningún costo, con liga directa a la factura para corregir la vinculación.
+- Nueva pestaña **"Por facturar"** con contador, para dar seguimiento sólo a lo que falta que el proveedor facture.
+
 ## [13.554.1] - 2026-08-13
 - Corregidos los fallos de CI: permisos canónicos (REVOKE/GRANT) para la función de utilidad por embarque, aviso de tipo de cambio separado en un módulo puro y nota de T/C del P&L dividida en componentes más simples.
 
