@@ -3,6 +3,8 @@
  * Los hallazgos vienen de la RPC `refacturacion_validar_consistencia`.
  */
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Table, TableBody, TableHeader, TableCell } from "@/components/ui/table";
+import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters";
 import type { ConsistenciaRefacturacion } from "@/features/facturacion/services/refacturacionConsistencia";
 
