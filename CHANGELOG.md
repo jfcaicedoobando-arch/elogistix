@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.594.3] - 2026-08-13
+- **Auditoría de la refacturación F1026 / F1027: se cierran dos huecos de trazabilidad.**
+- La proforma vuelve a apuntar a la factura viva al completar una refacturación (antes seguía ligada a la factura cancelada). Se corrigió PRO-2026-1018 → F1035.
+- El aging de clientes ya no suma facturas en trámite de cancelación, sustituidas o con refacturación completada: evitaba duplicar 95,120 MXN en la cartera de INDIMEX TRADING.
+
 ## [13.594.2] - 2026-08-13
 - **Se corrige la divergencia "REP cancelado en el SAT pero vigente en Libre Carga".** El candado de cancelación bloqueaba también las actualizaciones documentales del pago, por lo que el acuse del SAT nunca se guardaba.
 - Ahora un pago puede actualizar sólo sus datos fiscales (estatus del REP, archivos, acuses) aunque la factura esté cancelada o en trámite; sigue prohibido registrar o modificar cobros en facturas no vivas.
