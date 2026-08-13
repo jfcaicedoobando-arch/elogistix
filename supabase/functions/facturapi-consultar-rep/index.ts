@@ -108,9 +108,13 @@ async function handle(req: Request): Promise<Response> {
 
   const decision = resolverPatchRep(remote, pago, new Date().toISOString());
   let actualizado = false;
+  let errorGuardado: string | null = null;
   if (decision.outcome !== "no_change" && Object.keys(decision.patch).length > 0) {
     const { error: upErr } = await supabase.from("pagos_factura").update(decision.patch).eq("id", pago.id);
-    if (!upErr) {
+    if (upErr) {
+      // No silenciar: si un candado de BD impide sincronizar, el contador debe verlo.
+      errorGuardado = upErr.message;
+    } else {
       actualizado = true;
       await registrarBitacoraEdge(supabase, {
         organizationId: pago.organization_id,
@@ -125,8 +129,9 @@ async function handle(req: Request): Promise<Response> {
   }
 
   return json({
-    ok: true,
+    ok: errorGuardado === null,
     actualizado,
+    error_guardado: errorGuardado,
     outcome: decision.outcome,
     remoto: {
       status: (remote.status ?? "").toLowerCase() || null,
