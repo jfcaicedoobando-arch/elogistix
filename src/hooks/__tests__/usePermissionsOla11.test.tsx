@@ -42,9 +42,16 @@ describe("RFE-04 · gates de cobro y pago en lote", () => {
     },
   );
 
-  it.each(["contador", "admin"])("%s sí puede cobrar y pagar en lote", (rol) => {
-    const r = conRol(rol);
-    expect(r.current.canRegistrarCobro).toBe(true);
-    expect(r.current.canPagarProveedor).toBe(true);
+  // Segregación de funciones (Q-04): contabilidad cobra; el tesorero paga.
+  it.each(["contador", "auxiliar_contable", "admin"])("%s sí puede cobrar en lote", (rol) => {
+    expect(conRol(rol).current.canRegistrarCobro).toBe(true);
+  });
+
+  it.each(["tesorero", "admin"])("%s sí puede pagar en lote", (rol) => {
+    expect(conRol(rol).current.canPagarProveedor).toBe(true);
+  });
+
+  it("contador NO paga en lote (SoD: sólo tesorería dispersa)", () => {
+    expect(conRol("contador").current.canPagarProveedor).toBe(false);
   });
 });
