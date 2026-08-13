@@ -11,7 +11,7 @@
  * petición), límite de tamaño de body ANTES de parsear (413) y llave de
  * rate-limit compuesta IP + x-client-info (evita mezclar clientes tras NAT).
  */
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
 
 initSentryEdge("client-error-log");

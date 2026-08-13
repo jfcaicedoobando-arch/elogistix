@@ -2,7 +2,7 @@
  * Handler `create`: alta de usuario por admin_org o super_admin global.
  * Extraído de `handlers.ts` para respetar Power-of-10.
  */
-import { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { SupabaseClient } from "npm:@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 import { VALID_ROLES, ASSIGNABLE_BY_ORG_ADMIN } from "./types.ts";
