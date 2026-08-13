@@ -62,7 +62,7 @@ describe("ProveedorEstadoCuentaTab", () => {
     renderTab();
     expect(screen.getByText("Antigüedad de saldos por pagar")).toBeInTheDocument();
     expect(screen.getByText("Movimientos del periodo")).toBeInTheDocument();
-    expect(screen.getByText("FP-000001")).toBeInTheDocument();
+    expect(screen.getAllByText("FP-000001").length).toBe(2);
     expect(screen.getAllByText(/600/).length).toBeGreaterThan(0);
   });
 
