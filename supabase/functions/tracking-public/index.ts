@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     const token = url.searchParams.get("token");
     if (!token) {
       log.finish(400, "missing_token");
-      return errorResponse("Token requerido", 400);
+      return jsonResponse({ error: "Token requerido", code: "token_required" }, 400);
     }
 
     const supabase = createClient(
