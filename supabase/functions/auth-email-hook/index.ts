@@ -183,6 +183,7 @@ async function handleWebhook(req: Request): Promise<Response> {
   if (dedupe.logError) {
     await captureEdgeException(new Error('email_send_log upsert failed'), {
       fn: 'auth-email-hook',
+      status_code: 500,
       extra: { emailType, run_id },
     })
     return new Response(
