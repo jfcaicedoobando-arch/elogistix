@@ -75,6 +75,23 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   // Ola 11 · RNF-10
   LC_CUENTA_MONEDA_CON_MOVIMIENTOS:
     "La cuenta ya tiene movimientos registrados: la moneda no se puede cambiar.",
+  // Ola 11 · lotes (CxC / CxP)
+  LC_COBRO_LOTE_EN_PROCESO:
+    "El cobro en lote aún se está procesando. Espera unos segundos antes de reintentar.",
+  LC_COBRO_LOTE_FECHA_FUTURA: "La fecha del cobro no puede ser futura.",
+  LC_COBRO_LOTE_FECHA_PREVIA_EMISION:
+    "La fecha del cobro es anterior a la emisión de una de las facturas del lote.",
+  LC_COBRO_LOTE_TC_REQUERIDO:
+    "Captura el tipo de cambio del lote para cobros en dólares o euros.",
+  LC_CXP_APROBACION_DIRECTA:
+    "La aprobación de facturas de proveedor sólo puede cambiarse desde el flujo de aprobación.",
+  LC_LOTE_FACTURA_DUPLICADA: "Una factura aparece repetida en el lote. Revisa la selección.",
+  LC_LOTE_FECHA_FUTURA: "La fecha del pago no puede ser futura.",
+  LC_LOTE_FECHA_PREVIA_EMISION:
+    "La fecha del pago es anterior a la emisión de una de las facturas del lote.",
+  LC_LOTE_IMPORTE_NO_CUADRA:
+    "El reparto no cuadra con el importe transferido: no se permite sobrante sin asignar.",
+  LC_LOTE_IMPORTE_REQUERIDO: "Captura el importe total del lote antes de guardar.",
   LC_PAGO_SIN_APROBACION: "El pago requiere aprobación previa.",
   LC_PAGO_SIN_PERMISO: "No tienes permisos para registrar este pago.",
   LC_PAGO_CRUCE_NO_SOPORTADO:
