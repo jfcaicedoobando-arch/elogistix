@@ -9238,6 +9238,10 @@ export type Database = {
         Args: { p_nombre: string; p_owner_user_id: string; p_rfc: string }
         Returns: string
       }
+      puede_escribir_cotizaciones: {
+        Args: { _user_id?: string }
+        Returns: boolean
+      }
       purgar_embarque_cascade: {
         Args: { p_embarque_id: string }
         Returns: undefined
