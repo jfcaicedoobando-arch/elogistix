@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
 import { FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { round2 } from "@/features/facturacion/services/pagoClienteLote";
