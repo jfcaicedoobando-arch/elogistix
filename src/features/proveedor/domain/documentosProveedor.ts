@@ -1,10 +1,30 @@
 /**
- * Ola 3 — Expediente documental del proveedor (lógica pura, sin red ni UI).
+ * Ola 3 / Ola 4 — Expediente documental del proveedor (lógica pura).
  *
- * Analogía: es la "carpeta física" del proveedor. Aquí sólo decidimos qué
- * documentos debe traer, si están vigentes y cuánto le falta al expediente.
+ * Analogía: es la "carpeta física" del proveedor. Las reglas de vigencia y
+ * completitud viven en `@/features/expediente/domain/expediente` (compartidas
+ * con el cliente); aquí sólo definimos el catálogo propio del proveedor.
  */
-import { hoyMx, parseLocalMx } from "@/lib/date/mx";
+import { hoyMx } from "@/lib/date/mx";
+import {
+  calcularExpedienteDesde,
+  validarVigencia,
+  type DocumentoExpediente,
+} from "@/features/expediente/domain/expediente";
+
+export {
+  DIAS_AVISO_VENCIMIENTO,
+  MAX_VIGENCIA_ANIOS,
+  diasParaVencer,
+  estadoVigencia,
+  formatTamano,
+  ultimoPorTipo,
+} from "@/features/expediente/domain/expediente";
+export type {
+  EstadoVigencia,
+  RenglonExpediente,
+  ResumenExpediente,
+} from "@/features/expediente/domain/expediente";
 
 export const TIPOS_DOCUMENTO_PROVEEDOR = [
   "Constancia de situación fiscal",
@@ -19,24 +39,10 @@ export const TIPOS_DOCUMENTO_PROVEEDOR = [
 
 export type TipoDocumentoProveedor = (typeof TIPOS_DOCUMENTO_PROVEEDOR)[number];
 
-export interface DocumentoProveedor {
-  id: string;
+export interface DocumentoProveedor extends DocumentoExpediente {
   proveedor_id: string;
   tipo: TipoDocumentoProveedor;
-  nombre: string;
-  archivo: string;
-  mime_type: string | null;
-  tamano_bytes: number | null;
-  fecha_documento: string | null;
-  fecha_vencimiento: string | null;
-  notas: string | null;
-  created_at: string;
 }
-
-export type EstadoVigencia = "Sin vigencia" | "Vigente" | "Por vencer" | "Vencido";
-
-/** Días de anticipación con los que avisamos que un documento va a vencer. */
-export const DIAS_AVISO_VENCIMIENTO = 30;
 
 /** Documentos que un proveedor nacional debe tener en el expediente. */
 export const DOCUMENTOS_OBLIGATORIOS_NACIONAL: TipoDocumentoProveedor[] = [
@@ -50,112 +56,26 @@ export const DOCUMENTOS_OBLIGATORIOS_EXTRANJERO: TipoDocumentoProveedor[] = [
   "Comprobante de datos bancarios",
 ];
 
-export function diasParaVencer(
-  fechaVencimiento: string | null | undefined,
-  hoy: string = hoyMx(),
-): number | null {
-  if (!fechaVencimiento) return null;
-  const venc = parseLocalMx(fechaVencimiento.slice(0, 10)).getTime();
-  const base = parseLocalMx(hoy).getTime();
-  return Math.round((venc - base) / 86_400_000);
-}
-
-export function estadoVigencia(
-  fechaVencimiento: string | null | undefined,
-  hoy: string = hoyMx(),
-): EstadoVigencia {
-  const dias = diasParaVencer(fechaVencimiento, hoy);
-  if (dias === null) return "Sin vigencia";
-  if (dias < 0) return "Vencido";
-  if (dias <= DIAS_AVISO_VENCIMIENTO) return "Por vencer";
-  return "Vigente";
-}
-
-export interface RenglonExpediente {
-  tipo: TipoDocumentoProveedor;
-  documento: DocumentoProveedor | null;
-  estado: EstadoVigencia | "Faltante";
-}
-
-export interface ResumenExpediente {
-  renglones: RenglonExpediente[];
-  requeridos: number;
-  cubiertos: number;
-  vencidos: number;
-  porVencer: number;
-  completitud: number;
-}
-
-/** Documento más reciente de cada tipo (por fecha del documento, luego captura). */
-export function ultimoPorTipo(
-  documentos: DocumentoProveedor[],
-  tipo: TipoDocumentoProveedor,
-): DocumentoProveedor | null {
-  const delTipo = documentos
-    .filter((d) => d.tipo === tipo)
-    .sort((a, b) => {
-      const fa = a.fecha_documento ?? a.created_at.slice(0, 10);
-      const fb = b.fecha_documento ?? b.created_at.slice(0, 10);
-      if (fa === fb) return b.created_at.localeCompare(a.created_at);
-      return fb.localeCompare(fa);
-    });
-  return delTipo[0] ?? null;
-}
-
-export function calcularExpediente(
-  documentos: DocumentoProveedor[],
-  esNacional: boolean,
-  hoy: string = hoyMx(),
-): ResumenExpediente {
-  const requeridosTipos = esNacional
-    ? DOCUMENTOS_OBLIGATORIOS_NACIONAL
-    : DOCUMENTOS_OBLIGATORIOS_EXTRANJERO;
-
-  const renglones: RenglonExpediente[] = requeridosTipos.map((tipo) => {
-    const documento = ultimoPorTipo(documentos, tipo);
-    return {
-      tipo,
-      documento,
-      estado: documento ? estadoVigencia(documento.fecha_vencimiento, hoy) : "Faltante",
-    };
-  });
-
-  const cubiertos = renglones.filter(
-    (r) => r.documento !== null && r.estado !== "Vencido",
-  ).length;
-  const vencidos = renglones.filter((r) => r.estado === "Vencido").length;
-  const porVencer = renglones.filter((r) => r.estado === "Por vencer").length;
-  const requeridos = renglones.length;
-
-  return {
-    renglones,
-    requeridos,
-    cubiertos,
-    vencidos,
-    porVencer,
-    completitud: requeridos === 0 ? 100 : Math.round((cubiertos / requeridos) * 100),
-  };
-}
-
-/** Nombre legible del tamaño del archivo. */
-export function formatTamano(bytes: number | null | undefined): string {
-  if (!bytes || bytes <= 0) return "—";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 /**
- * R3FE-07 (Ola 12): tipos cuya vigencia caduca — la fecha de vencimiento es
- * obligatoria para ellos (opinión de cumplimiento y cartas bancarias caducan).
+ * R3FE-07: tipos cuya vigencia caduca — la fecha de vencimiento es obligatoria
+ * (la opinión de cumplimiento y las cartas bancarias caducan).
  */
 export const TIPOS_CON_VENCIMIENTO: readonly TipoDocumentoProveedor[] = [
   "Opinión de cumplimiento",
   "Comprobante de datos bancarios",
 ];
 
-/** Vigencia máxima plausible; más allá es casi seguro un error de captura. */
-export const MAX_VIGENCIA_ANIOS = 10;
+export function calcularExpediente(
+  documentos: DocumentoProveedor[],
+  esNacional: boolean,
+  hoy: string = hoyMx(),
+) {
+  return calcularExpedienteDesde(
+    documentos,
+    esNacional ? DOCUMENTOS_OBLIGATORIOS_NACIONAL : DOCUMENTOS_OBLIGATORIOS_EXTRANJERO,
+    hoy,
+  );
+}
 
 /**
  * R3FE-07: validaciones mínimas de vigencia al capturar un documento.
@@ -167,23 +87,5 @@ export function validarVigenciaDocumento(
   fechaVencimiento: string | null | undefined,
   hoy: string = hoyMx(),
 ): string | null {
-  const venc = fechaVencimiento?.slice(0, 10) || null;
-  if (!venc) {
-    return TIPOS_CON_VENCIMIENTO.includes(tipo)
-      ? `La fecha de vencimiento es obligatoria para "${tipo}".`
-      : null;
-  }
-  if (venc < hoy) {
-    return "La vigencia ya venció: captura el documento renovado o corrige la fecha.";
-  }
-  const doc = fechaDocumento?.slice(0, 10) || null;
-  if (doc && venc < doc) {
-    return "La vigencia no puede ser anterior a la fecha del documento.";
-  }
-  const limite = parseLocalMx(hoy);
-  limite.setUTCFullYear(limite.getUTCFullYear() + MAX_VIGENCIA_ANIOS);
-  if (parseLocalMx(venc).getTime() > limite.getTime()) {
-    return `La vigencia no puede ser mayor a ${MAX_VIGENCIA_ANIOS} años; revisa la fecha capturada.`;
-  }
-  return null;
+  return validarVigencia(tipo, fechaDocumento, fechaVencimiento, TIPOS_CON_VENCIMIENTO, hoy);
 }

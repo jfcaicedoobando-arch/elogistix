@@ -5,6 +5,7 @@ export const clientes = {
   select: ['clientes', 'select'] as const,
   selectByOrg: (organizationId?: string | null) => ['clientes', 'select', organizationId] as const,
   contactos: (id: string) => ['contactos_cliente', id] as const,
+  documentos: (id: string) => ['clientes', 'documentos', id] as const,
   clientUsers: (id: string) => ['client_users', id] as const,
   embarques: (id: string) => ['clientes', 'embarques', id] as const,
   cotizaciones: (id: string) => ['clientes', 'cotizaciones', id] as const,
