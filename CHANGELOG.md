@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.582.2] - 2026-08-13
+- **Menos ruido en el monitoreo de errores.** El aviso "este archivo ya fue capturado como factura de proveedor" es una validación esperada y ya no se reporta como falla. Cuando la base de datos está momentáneamente inaccesible, el registro de errores del cliente ya no envía la página de error del proveedor de red al monitoreo (sólo la deja en la bitácora del servidor).
+
 ## [13.582.1] - 2026-08-13
 - **Corrección: funciones del servidor devolvían error 500 al validar la sesión.** La verificación del token usaba un método (`getClaims`) que no existe en la versión de la librería instalada, por lo que procesos como la lectura de facturas en PDF fallaban con "authWithClaims.getClaims is not a function". Ahora se valida la sesión con `getUser`, disponible en todas las versiones.
 
