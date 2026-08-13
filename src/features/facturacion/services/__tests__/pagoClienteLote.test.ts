@@ -49,7 +49,14 @@ describe("repartirFifo", () => {
 });
 
 describe("validarCobroLote", () => {
-  const opts = { cuentaId: "c1", monedaCuenta: "MXN", moneda: "MXN" };
+  const hoy = todayLocalISO();
+  const opts = {
+    cuentaId: "c1",
+    monedaCuenta: "MXN",
+    moneda: "MXN",
+    fecha: hoy,
+    tcAplicable: null,
+  };
 
   it("acepta un reparto válido", () => {
     const { renglones } = repartirFifo(facturas, 1200);
