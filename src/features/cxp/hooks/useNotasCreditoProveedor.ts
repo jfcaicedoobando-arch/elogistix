@@ -36,7 +36,8 @@ export function useCrearNotaCredito(facturaId: string | undefined) {
   return useMutationWithFeedback({
     mutationFn: (payload: TablesInsert<"proveedor_notas_credito">) =>
       crearNotaCreditoProveedor(payload),
-    invalidate: queryKeys.cxp.all,
+    // Ola 12 · R3P-02: la NC descuenta saldo en el proveedor 360.
+    invalidate: [queryKeys.cxp.all, queryKeys.proveedores.all],
     successTitle: "Nota de crédito registrada",
     errorTitle: "No se pudo registrar la NC",
     errorMethod: "CREAR_NC_PROVEEDOR",
@@ -48,7 +49,8 @@ export function useAplicarNotaCredito(facturaId: string | undefined) {
   const invalidateNc = useInvalidateNc(facturaId);
   return useMutationWithFeedback({
     mutationFn: (id: string) => aplicarNotaCredito(id),
-    invalidate: queryKeys.cxp.all,
+    // Ola 12 · R3P-02: la NC descuenta saldo en el proveedor 360.
+    invalidate: [queryKeys.cxp.all, queryKeys.proveedores.all],
     successTitle: "Nota de crédito aplicada",
     errorTitle: "No se pudo aplicar la NC",
     errorMethod: "APLICAR_NC_PROVEEDOR",
@@ -60,7 +62,8 @@ export function useAprobarNotaCredito(facturaId: string | undefined) {
   const invalidateNc = useInvalidateNc(facturaId);
   return useMutationWithFeedback({
     mutationFn: (id: string) => aprobarNotaCredito(id),
-    invalidate: queryKeys.cxp.all,
+    // Ola 12 · R3P-02: la NC descuenta saldo en el proveedor 360.
+    invalidate: [queryKeys.cxp.all, queryKeys.proveedores.all],
     successTitle: "Nota de crédito aprobada",
     errorTitle: "No se pudo aprobar la NC",
     errorMethod: "APROBAR_NC_PROVEEDOR",
@@ -72,7 +75,8 @@ export function useCancelarNotaCredito(facturaId: string | undefined) {
   const invalidateNc = useInvalidateNc(facturaId);
   return useMutationWithFeedback({
     mutationFn: (id: string) => cancelarNotaCredito(id),
-    invalidate: queryKeys.cxp.all,
+    // Ola 12 · R3P-02: la NC descuenta saldo en el proveedor 360.
+    invalidate: [queryKeys.cxp.all, queryKeys.proveedores.all],
     successTitle: "Nota de crédito cancelada",
     errorTitle: "No se pudo cancelar la NC",
     errorMethod: "CANCELAR_NC_PROVEEDOR",

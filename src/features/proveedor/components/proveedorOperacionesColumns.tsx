@@ -54,7 +54,10 @@ export function partidasOperacionesColumns<T extends PartidaEstadoCuenta>(): Col
     moneyColumn<T>({
       id: "facturado",
       header: "Facturado",
-      headerTooltip: "Monto ya respaldado con factura del proveedor",
+      headerTooltip:
+        "Monto ya respaldado con factura del proveedor, en la moneda del costo " +
+        "(convertido con el tipo de cambio de la factura o el DOF cuando la " +
+        "factura viene en otra divisa)",
       accessor: (o) => o.facturado,
       currencyAccessor: (o) => o.moneda,
     }),

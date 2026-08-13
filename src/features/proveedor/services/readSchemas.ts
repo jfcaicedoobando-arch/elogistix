@@ -100,10 +100,17 @@ const saldoMonedaSchema = z.object({
   saldo: monto,
 });
 
+/** Ola 12 · R3FE-03: saldo de apertura por moneda (previo al periodo). */
+const saldoAperturaSchema = z.object({
+  moneda: z.string(),
+  saldo: monto,
+});
+
 /** Payload completo de `proveedor_estado_cuenta_movimientos`. */
 export const estadoCuentaMovimientosSchema = z
   .object({
     movimientos: z.array(movimientoSchema).nullish(),
+    saldo_apertura: z.array(saldoAperturaSchema).nullish(),
     aging: z.array(agingFilaSchema).nullish(),
     saldos: z.array(saldoMonedaSchema).nullish(),
     // R3FE-04 (Ola 12): metadata de la paginación server-side.

@@ -18,6 +18,8 @@ export function useCrearFacturaProveedor() {
     mutationFn: (payload: NuevaFacturaProveedorPayload) => crearFacturaProveedor(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.
+      qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       // El toast de éxito lo emite `useNuevaFacturaProveedorForm.submit` al
       // terminar todo el flujo (insert + storage + vínculos), para evitar el
       // doble toast reportado en 13.218.1 (Karol, captura de factura).
@@ -35,6 +37,8 @@ export function useEliminarFacturaProveedor() {
     mutationFn: (id: string) => softDeleteFacturaProveedor(id, user?.id ?? null),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.
+      qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       notifySuccess(undefined, { title: "Factura de proveedor eliminada" });
     },
     onError: (error: Error) => {
@@ -42,6 +46,8 @@ export function useEliminarFacturaProveedor() {
       // responde LC_FACTURA_PROVEEDOR_NOT_FOUND porque ya estaba borrada.
       if (/LC_FACTURA_PROVEEDOR_NOT_FOUND/.test(error.message)) {
         qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.
+      qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
         notifyError(undefined, {
           title: "Esta factura ya había sido eliminada. Actualizamos la lista.",
           error,
@@ -61,6 +67,8 @@ export function useActualizarFacturaProveedor() {
       actualizarFacturaProveedor(id, payload),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.
+      qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.factura(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.historial(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });

@@ -8,7 +8,7 @@ import type { EstadoCuentaMovimientos } from "@/features/proveedor/domain/movimi
 import { estadoCuentaMovimientosSchema } from "./readSchemas";
 
 const VACIO: EstadoCuentaMovimientos = {
-  movimientos: [], aging: [], saldos: [], total_movimientos: 0, hay_mas: false,
+  movimientos: [], saldo_apertura: [], aging: [], saldos: [], total_movimientos: 0, hay_mas: false,
 };
 
 /** R3FE-04: tope defensivo por consulta (el server capea en 5000). */
@@ -21,6 +21,7 @@ function normalizar(parsed: unknown): EstadoCuentaMovimientos {
   const movimientos = p.movimientos ?? [];
   return {
     movimientos,
+    saldo_apertura: p.saldo_apertura ?? [],
     aging: p.aging ?? [],
     saldos: p.saldos ?? [],
     total_movimientos: p.total_movimientos ?? movimientos.length,

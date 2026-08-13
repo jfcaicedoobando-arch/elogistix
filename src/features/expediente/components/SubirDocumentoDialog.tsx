@@ -2,7 +2,7 @@
  * Ola 4 — Modal compartido para agregar un documento al expediente
  * (cliente o proveedor). Usa el shell estándar de modales tipo formulario.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FileUp } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
@@ -51,10 +51,18 @@ export function SubirDocumentoDialog({
   const [notas, setNotas] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  // Ola 12 · R3FE-06: el diálogo NO se desmonta entre aperturas — sin esto el
+  // tipo sugerido sólo aplicaba en el primer montaje.
+  useEffect(() => {
+    if (open && tipoSugerido) setTipo(tipoSugerido);
+  }, [open, tipoSugerido]);
+
   const cerrar = (v: boolean) => {
     if (!v) {
       setArchivo(null); setFechaDocumento(""); setFechaVencimiento("");
       setNotas(""); setError(null);
+      // La próxima apertura genérica no debe heredar el tipo anterior.
+      setTipo(tipoSugerido ?? tipos[0]);
     }
     onOpenChange(v);
   };
