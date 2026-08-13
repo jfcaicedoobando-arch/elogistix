@@ -11,6 +11,7 @@ vi.mock("@/features/proveedor/hooks/useProveedorMovimientos", () => ({
 import { ProveedorEstadoCuentaTab } from "@/features/proveedor/components/ProveedorEstadoCuentaTab";
 
 const datos: EstadoCuentaMovimientos = {
+  saldo_apertura: [],
   movimientos: [
     {
       fecha: "2026-01-10",

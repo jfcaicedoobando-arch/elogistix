@@ -68,8 +68,15 @@ export interface SaldoMonedaProveedor {
   saldo: number;
 }
 
+/** Ola 12 · R3FE-03: saldo de apertura de una moneda (previo al periodo). */
+export interface SaldoAperturaProveedor {
+  moneda: string;
+  saldo: number;
+}
+
 export interface EstadoCuentaMovimientos {
   movimientos: MovimientoProveedor[];
+  saldo_apertura: SaldoAperturaProveedor[];
   aging: AgingFilaProveedor[];
   saldos: SaldoMonedaProveedor[];
   /** Total de movimientos del periodo ANTES del límite server-side (R3FE-04). */
@@ -97,12 +104,18 @@ const vacio = (): Record<BucketAgingProveedor, number> => ({
 
 /**
  * Saldo corrido por moneda, respetando el orden cronológico recibido.
- * No mezcla divisas: cada moneda arranca su propio acumulado en cero.
+ * No mezcla divisas: cada moneda arranca su propio acumulado en el saldo de
+ * apertura del periodo (Ola 12 · R3FE-03; cero si la RPC no lo trae).
  */
 export function conSaldoCorrido(
   movimientos: readonly MovimientoProveedor[],
+  apertura: readonly SaldoAperturaProveedor[] = [],
 ): MovimientoConSaldo[] {
   const acumulado = new Map<string, number>();
+  for (const a of apertura) {
+    const moneda = (a.moneda || "MXN").toUpperCase();
+    acumulado.set(moneda, roundMoney(Number(a.saldo) || 0));
+  }
   return movimientos.map((m) => {
     const moneda = (m.moneda || "MXN").toUpperCase();
     const previo = acumulado.get(moneda) ?? 0;

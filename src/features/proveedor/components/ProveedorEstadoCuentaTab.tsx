@@ -10,6 +10,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { formatCurrency } from "@/lib/formatters";
+import { todayLocalISO } from "@/lib/date/today";
 import { useProveedorMovimientos } from "@/features/proveedor/hooks/useProveedorMovimientos";
 import {
   agingPorMoneda, conSaldoCorrido, filtrarPorRango,
@@ -26,14 +27,15 @@ interface Props {
   rfc?: string | null;
 }
 
+// Ola 12 · R3FE-02: defaults en fecha LOCAL (America/Mexico_City), no UTC.
 function isoHoy(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocalISO();
 }
 
 function isoHaceUnAnio(): string {
   const d = new Date();
-  d.setUTCFullYear(d.getUTCFullYear() - 1);
-  return d.toISOString().slice(0, 10);
+  d.setFullYear(d.getFullYear() - 1);
+  return todayLocalISO(d);
 }
 
 export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: Props) {
@@ -44,11 +46,15 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
     useProveedorMovimientos(proveedorId, desde, hasta);
 
   const movimientos = useMemo(
-    () => conSaldoCorrido(filtrarPorRango(data?.movimientos ?? [], desde, hasta)),
-    [data?.movimientos, desde, hasta],
+    () => conSaldoCorrido(
+      filtrarPorRango(data?.movimientos ?? [], desde, hasta),
+      data?.saldo_apertura ?? [],
+    ),
+    [data?.movimientos, data?.saldo_apertura, desde, hasta],
   );
   const aging = useMemo(() => agingPorMoneda(data?.aging ?? []), [data?.aging]);
   const saldos = data?.saldos ?? [];
+  const apertura = data?.saldo_apertura ?? [];
 
   const datosExport = { proveedorNombre, rfc, desde, hasta, movimientos, aging, saldos };
 
@@ -147,6 +153,18 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
           </CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
+          {apertura.length > 0 && (
+            <div className="flex flex-wrap gap-x-6 gap-y-1 border-b px-4 py-3">
+              {apertura.map((a) => (
+                <p key={a.moneda} className="text-xs text-muted-foreground">
+                  Saldo inicial {a.moneda} (antes del {desde}):{" "}
+                  <span className="font-semibold tabular-nums text-foreground">
+                    {formatCurrency(a.saldo, a.moneda)}
+                  </span>
+                </p>
+              ))}
+            </div>
+          )}
           {data?.hay_mas && (
             <p className="px-4 pt-3 text-xs text-warning">
               Mostrando los {movimientos.length} movimientos más recientes del periodo

@@ -32,6 +32,8 @@ export function useRegistrarPagoProveedor() {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       // R6-N1: el pago genera un movimiento bancario → refrescar saldos y conciliación.
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      // Ola 12 · R3P-02: el detalle 360 del proveedor lee las mismas tablas.
+      qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       // Los toasts de éxito y error los emite `DialogRegistrarPagoProveedor`
       // (única vía UI actual). Se omiten aquí para evitar el doble toast
       // reportado en 13.218.2 (Karol, registro de pago).
@@ -48,6 +50,8 @@ export function useEliminarPagoProveedor(facturaId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pagos(facturaId) });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      // Ola 12 · R3P-02: el detalle 360 del proveedor lee las mismas tablas.
+      qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       notifySuccess(undefined, { title: "Pago a proveedor eliminado" });
     },
     onError: (error: Error) => {
@@ -70,6 +74,8 @@ export function useActualizarPagoProveedor(facturaId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pagos(facturaId) });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      // Ola 12 · R3P-02: el detalle 360 del proveedor lee las mismas tablas.
+      qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       qc.invalidateQueries({ queryKey: queryKeys.bitacora.all });
     },
     onError: (error: Error) => {

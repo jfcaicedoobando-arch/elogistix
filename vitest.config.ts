@@ -69,14 +69,21 @@ const COMMON_TEST = {
   // El sandbox tiene 16 vCPU / 125 GB, así que 8 forks × 4 GB heap = 32 GB.
   // CI se mantiene EXACTAMENTE igual (2 forks @ 8 GB, ya validado en los
   // runners ubuntu-24.04 de 4 vCPU/16 GB).
-  singleFork: false,
-  maxForks: process.env.CI ? 2 : LOCAL_FORKS,
-  minForks: process.env.CI ? 1 : 2,
   isolate: true,
-  execArgv: process.env.CI
-    ? ["--max-old-space-size=8192", "--expose-gc"]
-    : ["--max-old-space-size=4096", "--expose-gc"],
   fileParallelism: true,
+  // Ola 12 · R3TC-01: vitest 3.2.4 sólo honra estas claves dentro de
+  // `poolOptions.forks` (a primer nivel las ignoraba en silencio y
+  // `--expose-gc` nunca llegaba a los workers).
+  poolOptions: {
+    forks: {
+      singleFork: false,
+      maxForks: process.env.CI ? 2 : LOCAL_FORKS,
+      minForks: process.env.CI ? 1 : 2,
+      execArgv: process.env.CI
+        ? ["--max-old-space-size=8192", "--expose-gc"]
+        : ["--max-old-space-size=4096", "--expose-gc"],
+    },
+  },
   sequence: { shuffle: false },
 };
 

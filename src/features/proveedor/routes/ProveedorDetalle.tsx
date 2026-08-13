@@ -90,15 +90,26 @@ export default function ProveedorDetalle() {
         onUpdate={handleUpdate}
       />
 
-      <ProveedorResumenCards
-        totalFacturado={totalFacturado}
-        totalPagado={totalPagado}
-        totalPendiente={totalPendiente}
-        moneda="MXN"
-        porMoneda={agregados.porMoneda}
-        monedasSinTc={agregados.monedasSinTc}
-        operacionesCount={partidas.length}
-      />
+      {isErrorEstadoCuenta ? (
+        <ErrorStateInline
+          title="No pudimos cargar las operaciones del proveedor"
+          message={errorEstadoCuenta instanceof Error
+            ? errorEstadoCuenta.message
+            : "Error desconocido al consultar la conciliación."}
+          onRetry={() => void refetchEstadoCuenta()}
+          retrying={isFetchingEstadoCuenta}
+        />
+      ) : (
+        <ProveedorResumenCards
+          totalFacturado={totalFacturado}
+          totalPagado={totalPagado}
+          totalPendiente={totalPendiente}
+          moneda="MXN"
+          porMoneda={agregados.porMoneda}
+          monedasSinTc={agregados.monedasSinTc}
+          operacionesCount={partidas.length}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ProveedorDatosGeneralesCard
@@ -132,7 +143,9 @@ export default function ProveedorDetalle() {
         canEdit={canEdit}
       />
 
-      <ProveedorBrechaCard brecha={brecha} huerfanas={huerfanas} proveedorNombre={nombreFmt} />
+      {!isErrorEstadoCuenta && (
+        <ProveedorBrechaCard brecha={brecha} huerfanas={huerfanas} proveedorNombre={nombreFmt} />
+      )}
 
       <ProveedorDetalleTabs
         proveedorId={proveedor.id}

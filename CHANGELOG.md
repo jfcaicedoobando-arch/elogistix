@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.580.0] - 2026-08-13
+- **Ola 12 · Sprint 08 — Frontend, datos y tooling (7 correcciones P2/P3).**
+  - **Saldo inicial en el estado de cuenta del proveedor:** la consulta ahora devuelve el saldo previo al periodo por moneda y la tabla lo muestra como "Saldo inicial", así el saldo corrido ya no arranca en cero y cuadra con el saldo global.
+  - **Fechas por defecto en hora de México:** el rango del estado de cuenta abre con el día local, no con el día UTC (antes, después de las 18:00, filtraba con la fecha corrida).
+  - **Agregar documento:** al abrir el modal desde un documento faltante ya llega seleccionado ese tipo, y al reabrirlo en genérico vuelve al tipo por defecto.
+  - **Conciliación multi-moneda:** la tabla de operaciones explica la marca "Moneda mixta" y el encabezado "Facturado" aclara que el importe viene convertido con el tipo de cambio de la factura o del DOF.
+  - **Actualización inmediata:** registrar, editar o borrar pagos, facturas, notas de crédito y anticipos de proveedor refresca de inmediato el detalle 360 del proveedor.
+  - **Errores visibles:** si falla la consulta de conciliación, el detalle muestra un aviso con botón "Reintentar" en lugar de aparentar "proveedor sin operaciones".
+  - **Pruebas:** las opciones del pool de Vitest se movieron a `poolOptions.forks` para que `--expose-gc` llegue a los workers y el canario de fugas de PDF mida memoria real.
+
 ## [13.579.0] - 2026-08-13
 - **Ola 12 · Sprint 07 — Lotes CxP y conciliación (4 correcciones P3 de base de datos).**
   - **Pago en lote a proveedor:** si una factura del lote está en otra moneda y no se capturó tipo de cambio, el lote se rechaza con un mensaje claro (`LC_LOTE_FACTURA_MONEDA`) antes de guardar nada, igual que ya hacía el cobro en lote de clientes.

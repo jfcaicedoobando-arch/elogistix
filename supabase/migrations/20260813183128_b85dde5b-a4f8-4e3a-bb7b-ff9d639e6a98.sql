@@ -1,8 +1,8 @@
--- Canónico: proveedor_estado_cuenta_movimientos
--- Migración vigente: 20260813183128 (Ola 12 · Sprint 08 · R3FE-03)
--- (acumulativa: conserva R3FE-04 paginación, R3P-09 saldos globales,
---  R3P-10 fecha de corte CDMX y R3BD-04 'Pagada' => saldo 0).
--- ============================================================
+-- Ola 12 · Sprint 08 · R3FE-03 (ACUMULATIVA sobre 20260823070200, que a su
+-- vez acumula 20260823051100 → 20260823040000: conserva R3FE-04 paginación
+-- server-side + metadata de truncamiento, R3P-09 saldos globales desde
+-- v_todos, R3P-10 fecha de corte CDMX y R3BD-04 'Pagada' => saldo 0).
+-- Cambio propio: expone `saldo_apertura` por moneda.
 CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta_movimientos(
   p_proveedor_id uuid,
   p_desde date DEFAULT NULL,
@@ -196,3 +196,8 @@ BEGIN
   );
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM anon;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO service_role;
