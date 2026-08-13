@@ -2,7 +2,7 @@
  * Paso 2 — Cancelar el complemento de pago (REP) del pago recibido.
  * El pago sólo puede moverse a otra factura cuando su REP está cancelado.
  */
-import { Ban, CheckCircle2, Clock3, TriangleAlert } from "lucide-react";
+import { Ban, CheckCircle2, Clock3, RefreshCw, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
@@ -19,11 +19,14 @@ interface Props {
   cargando: boolean;
   cancelandoId: string | null;
   onCancelarRep: (pagoId: string) => void;
+  /** Refresco manual del estatus de cancelación ante el SAT. */
+  onConsultarRep?: (pagoId: string) => void;
+  consultando?: boolean;
   puedeOperar?: boolean;
 }
 
 export function PasoCancelarRep({
-  pagos, cargando, cancelandoId, onCancelarRep, puedeOperar = true,
+  pagos, cargando, cancelandoId, onCancelarRep, onConsultarRep, consultando = false, puedeOperar = true,
 }: Props) {
   const conRep = pagos.filter((p) => p.uuid_rep);
   const enVerificacion = repsEnVerificacion(pagos).length > 0;
@@ -80,6 +83,18 @@ export function PasoCancelarRep({
                       ? "Cancelación no aceptada"
                       : vivo ? "REP vigente" : "REP cancelado"}
                 </Badge>
+                {vivo && onConsultarRep && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    loading={consultando && cancelandoId === p.id}
+                    onClick={() => onConsultarRep(p.id)}
+                    aria-label="Actualizar estado del REP ante el SAT"
+                  >
+                    <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                    Actualizar estado
+                  </Button>
+                )}
                 {vivo && !verificando && (
                   <Button
                     size="sm"
