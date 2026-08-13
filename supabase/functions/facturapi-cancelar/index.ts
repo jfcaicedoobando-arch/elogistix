@@ -18,11 +18,13 @@ import { getFacturapiClient, withFacturapiTimeout, FacturapiTimeoutError } from 
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
+import { marcarTimeoutCancelacion } from "./timeoutCancelacion.ts";
 import {
   handleCancelFailure,
   resolveSustitutaSnapshot,
   runPreflightSustitucion,
 } from "./cancelacion.ts";
+
 import {
   handleAceptada,
   handleEstadoDesconocido,
