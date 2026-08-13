@@ -39,7 +39,7 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
   const [desde, setDesde] = useState(isoHaceUnAnio);
   const [hasta, setHasta] = useState(isoHoy);
   const [descargando, setDescargando] = useState(false);
-  const { data, isLoading } = useProveedorMovimientos(proveedorId);
+  const { data, isLoading } = useProveedorMovimientos(proveedorId, desde, hasta);
 
   const movimientos = useMemo(
     () => conSaldoCorrido(filtrarPorRango(data?.movimientos ?? [], desde, hasta)),
@@ -100,7 +100,7 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
       {saldos.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Resumen del periodo</CardTitle>
+            <CardTitle className="text-base">Movimientos del periodo</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-6">
             {saldos.map((s) => (

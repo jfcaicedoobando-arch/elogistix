@@ -80,7 +80,7 @@ export function estadoCuentaACsv(
     ]),
   );
   const totales = toCsv(
-    ["Moneda", "Cargos", "Abonos", "Saldo final"],
+    ["Moneda", "Cargos", "Abonos", "Saldo del periodo"],
     saldos.map((s) => [s.moneda, s.cargos, s.abonos, s.saldo]),
   );
   const encabezado = toCsv(
