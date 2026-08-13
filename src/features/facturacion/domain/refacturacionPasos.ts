@@ -160,11 +160,7 @@ export function bloqueoPaso(paso: number, ctx: ContextoPasos): string | null {
 
   if (paso === 2) return bloqueoPaso2(ctx);
   if (paso === 3) return bloqueoPaso3(ctx);
-  if (paso === 4) {
-    return originalFueraDeCirculacion(ctx.original)
-      ? null
-      : "Cancela el CFDI original (o espera la aceptación del SAT) antes de reasignar el pago.";
-  }
+  if (paso === 4) return bloqueoPaso4(ctx);
   if (paso === 5) return bloqueoPaso5(ctx);
   return null;
 }
@@ -175,6 +171,9 @@ export function bloqueoPaso(paso: number, ctx: ContextoPasos): string | null {
 export function avisoPaso(paso: number, ctx: ContextoPasos): string | null {
   if (paso >= 2 && paso <= 4 && repsEnVerificacion(ctx.pagos).length > 0) {
     return AVISO_REP_EN_VERIFICACION;
+  }
+  if (paso >= 4 && cancelacionOriginalEnTramite(ctx.original)) {
+    return AVISO_ORIGINAL_EN_VERIFICACION;
   }
   return null;
 }
