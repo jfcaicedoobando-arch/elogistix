@@ -146,25 +146,10 @@ export async function registrarPagoClienteLote(
       .filter((r) => r.monto > 0)
       .map((r) => ({ ...r, monto: round2(r.monto) })),
   };
-  // Ola 5 · RG4-12: guard de idempotencia. El botón ya se deshabilita
-  // mientras la mutación está en vuelo, pero un timeout ambiguo o un
-  // segundo diálogo idéntico creaban un lote duplicado completo (el
-  // hash_dedupe del movimiento es por lote nuevo). Se bloquea un lote
-  // idéntico (mismo cliente, fecha y total) creado en los últimos 10 min.
-  const totalRenglones = round2(payload.renglones.reduce((s, r) => s + r.monto, 0));
-  const { data: previos, error: errorPrevios } = await supabase
-    .from("pagos_factura_lote")
-    .select("id")
-    .eq("cliente_id", input.cliente_id)
-    .eq("fecha_pago", input.fecha_pago)
-    .eq("monto_total", totalRenglones)
-    .is("deleted_at", null)
-    .gte("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString())
-    .limit(1);
-  if (errorPrevios) throw errorPrevios;
-  if ((previos ?? []).length > 0) {
-    throw new Error("LC_COBRO_LOTE_DUPLICADO_RECIENTE");
-  }
+  // Ola 12 · RFE-08: se retira el guard de 10 minutos de RG4-12. Rechazaba
+  // lotes legítimos idénticos el mismo día sin vía de override, y el caso que
+  // protegía (reintento del MISMO submit tras timeout) ya lo deduplica la RPC
+  // con idempotency_claim/store vía request_id (RNF-01).
   const { data, error } = await supabase.rpc("registrar_pago_cliente_lote", {
     p_payload: payload as never,
   });
