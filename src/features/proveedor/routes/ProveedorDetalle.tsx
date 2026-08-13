@@ -31,7 +31,7 @@ export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const volver = useVolver("/compras/proveedores");
   const {
-    proveedor, isLoading, isDeleting, operaciones,
+    proveedor, isLoading, isDeleting, partidas, brecha, huerfanas,
     totalFacturado, totalPagado, totalPendiente, agregados,
     canEdit, isAdmin, editOpen, setEditOpen,
     deleteOpen, setDeleteOpen, handleUpdate, handleDelete,
