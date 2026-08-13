@@ -28,7 +28,7 @@ import type { AppRole } from "@/types/appRole";
 
 export function useRefacturarWizard(facturaId: string | null, open: boolean, onClose: () => void) {
   const navigate = useNavigate();
-  const { organizationId } = useAuth();
+  const { organizationId } = useOrgActiva();
   const { role } = usePermissions();
   // Espejo del guard `_assert_refacturador`: sólo roles contables y de
   // administración operan; los demás quedan en modo consulta.
