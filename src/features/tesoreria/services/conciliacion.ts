@@ -67,17 +67,31 @@ export async function importarMovimientos(
     hash_dedupe: m.hash_dedupe,
     importado_por: userId,
   }));
-  // upsert: si ya existe por (cuenta_bancaria_id, hash_dedupe), ignora
-  const data = await unwrapOr(
+  // Ola 11 · RNF-11: el UNIQUE pasó a índice parcial (sólo vivos,
+  // uq_bbva_movimientos_hash_dedupe_vivo) y un índice parcial no sirve de
+  // árbitro para ON CONFLICT vía PostgREST. Se deduplica contra los hashes
+  // VIVOS y se inserta el resto; un hash en papelera ya NO bloquea la
+  // re-importación. Una carrera entre importaciones simultáneas sigue
+  // protegida por el índice (23505 → error visible, no duplicado silencioso).
+  const hashes = payload.map((p) => p.hash_dedupe as string);
+  const existentes = await unwrapOr(
     supabase
       .from("bbva_movimientos")
-      .upsert(payload, {
-        onConflict: "cuenta_bancaria_id,hash_dedupe",
-        ignoreDuplicates: true,
-      })
-      .select("id"),
-    [] as { id: string }[],
+      .select("hash_dedupe")
+      .eq("cuenta_bancaria_id", cuentaBancariaId)
+      .is("deleted_at", null)
+      .in("hash_dedupe", hashes),
+    [] as { hash_dedupe: string }[],
   );
+  const vistos = new Set(existentes.map((e) => e.hash_dedupe));
+  const nuevosPayload = payload.filter((p) => !vistos.has(p.hash_dedupe as string));
+  const data =
+    nuevosPayload.length === 0
+      ? []
+      : await unwrapOr(
+          supabase.from("bbva_movimientos").insert(nuevosPayload).select("id"),
+          [] as { id: string }[],
+        );
   const nuevos = data.length;
   const duplicados = movimientos.length - nuevos;
   await bitacoraImportarMovimientos(cuentaBancariaId, movimientos.length, nuevos, duplicados);

@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.563.0] - 2026-08-13
+- **Movimientos borrados ya no bloquean para siempre (Sprint 4 · tesorería)**: si mandas un movimiento bancario a la papelera, ahora puedes volver a importarlo o regenerarlo; antes el sistema lo consideraba duplicado y quedaba en un callejón sin salida.
+- **La moneda de una cuenta con movimientos queda protegida en la base**: aunque se intente desde fuera de la app, no se puede cambiar la moneda de una cuenta que ya tiene movimientos (vigentes o en papelera), para no mezclar divisas en el saldo.
+- **Altas y ediciones de cuenta más seguras**: la fecha de corte no puede ser futura y la CLABE se valida a 18 dígitos con dígito verificador, con aviso en rojo en el propio campo.
+- **Nunca más conversiones 1 a 1 silenciosas**: al regenerar el movimiento de un pago en moneda distinta a la cuenta, el sistema exige el tipo de cambio del pago y explica qué capturar.
+
 ## [13.562.0] - 2026-08-13
 - **Cobro y pago en lote con las mismas reglas (Sprint 3 · paridad de lotes)**: ambos módulos ahora validan igual la fecha (nunca futura ni anterior a la emisión de una factura del lote), exigen tipo de cambio cuando el lote es en dólares o euros, y obligan a que el reparto cuadre al centavo con el importe realmente recibido o transferido (ya no se acepta sobrante sin asignar).
 - **Sin facturas repetidas en el reparto**: si una factura aparece dos veces en un lote, el sistema lo detecta y lo explica antes de guardar.

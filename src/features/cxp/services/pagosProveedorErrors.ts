@@ -40,6 +40,10 @@ const REGLAS: Regla[] = [
       ? "Ya registraste un pago en lote idéntico hace unos minutos (mismo proveedor, fecha e importe). Verifica el historial de pagos antes de reintentar."
       : null,
   (e) =>
+    e.message && e.message.includes("LC_PAGO_TC_REQUERIDO")
+      ? "El pago está en una moneda distinta a la de la cuenta y no tiene tipo de cambio registrado. Edita el pago, captura el TC y vuelve a regenerar el movimiento."
+      : null,
+  (e) =>
     e.code === "LC_PAGO_SIN_APROBACION" || (e.message && e.message.includes("LC_PAGO_SIN_APROBACION"))
       ? "La factura debe estar aprobada antes de registrar pagos."
       : null,

@@ -1,12 +1,8 @@
--- Fuente canónica de public.regenerar_movimiento_pago_proveedor(uuid) (Ola 6 · O6-SCHEMA).
--- 1:1 con la migración Ola 11 · RBD-07 (20260821040300_ola11_rbd07_regenerar_movimiento_tc).
--- Ola 6 · RG5-1: fail-closed — sin organización resuelta se niega (LC_SIN_ORG).
--- Ola 11 · RBD-07: la rama cross-moneda exige el TC registrado en el pago
---   (LC_PAGO_TC_REQUERIDO); nunca conversión 1:1 silenciosa (clase BL-04).
--- Ola 11 · RBD-04: se restauró el encabezado CREATE OR REPLACE FUNCTION
---   (el archivo canónico empezaba en `RETURNS uuid` y no era SQL válido).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
+-- Ola 11 · RBD-07 (clase BL-04, "nunca 1:1 silencioso"):
+-- regenerar_movimiento_pago_proveedor posteaba v_cargo = v_pago.monto tal cual
+-- cuando la moneda del pago difería de la de la cuenta y el pago no tenía
+-- tipo_cambio_usd. Ahora la rama cross-moneda EXIGE el TC registrado en el
+-- pago o aborta con LC_PAGO_TC_REQUERIDO. Se conserva el fail-closed RG5-1.
 CREATE OR REPLACE FUNCTION public.regenerar_movimiento_pago_proveedor(p_pago_id uuid)
 RETURNS uuid
 LANGUAGE plpgsql
