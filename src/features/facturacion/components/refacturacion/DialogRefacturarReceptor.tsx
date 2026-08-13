@@ -23,6 +23,7 @@ import {
 import { useRefacturarWizard } from "./useRefacturarWizard";
 import { RefacturarPasoActual } from "./RefacturarPasoActual";
 import { RefacturacionTrazabilidadCard } from "./RefacturacionTrazabilidadCard";
+import { RefacturacionPreviewPaso } from "./RefacturacionPreviewPaso";
 
 interface Props {
   facturaId: string | null;
