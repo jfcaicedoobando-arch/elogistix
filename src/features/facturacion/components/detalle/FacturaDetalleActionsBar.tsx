@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import type { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
 import type { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
