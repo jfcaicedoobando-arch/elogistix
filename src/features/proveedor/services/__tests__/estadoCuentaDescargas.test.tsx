@@ -1,12 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-const descargarBlob = vi.fn();
-const notifyWarning = vi.fn();
-const notifySuccess = vi.fn();
-const notifyError = vi.fn();
+const h = vi.hoisted(() => ({
+  descargarBlob: vi.fn(),
+  notifyWarning: vi.fn(),
+  notifySuccess: vi.fn(),
+  notifyError: vi.fn(),
+}));
+const { descargarBlob, notifyWarning, notifySuccess, notifyError } = h;
 
-vi.mock("@/lib/downloadBlob", () => ({ descargarBlob }));
-vi.mock("@/lib/ui/appFeedback", () => ({ notifyWarning, notifySuccess, notifyError }));
+vi.mock("@/lib/downloadBlob", () => ({ descargarBlob: h.descargarBlob }));
+vi.mock("@/lib/ui/appFeedback", () => ({
+  notifyWarning: h.notifyWarning,
+  notifySuccess: h.notifySuccess,
+  notifyError: h.notifyError,
+}));
 
 import {
   descargarEstadoCuentaCsv,
