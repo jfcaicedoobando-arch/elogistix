@@ -52,7 +52,9 @@ export function CarteraSelectionBar({
           {lote.moneda}
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">{motivoInvalido(total)}</p>
+        <p className="text-sm text-muted-foreground">
+          {motivoInvalido(total, hayEnCancelacion)}
+        </p>
       )}
       <p className="hidden text-xs text-muted-foreground lg:block">
         Modo selección: al hacer clic en una fila se marca o desmarca. Usa el folio para abrir el

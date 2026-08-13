@@ -6,6 +6,7 @@ import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
 import { FacturaDetalleBody } from "@/features/facturacion/components/detalle/FacturaDetalleBody";
 import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
+import { CancelacionEnTramiteBanner } from "@/features/facturacion/components/detalle/CancelacionEnTramiteBanner";
 import { ClaimPendingBanner } from "@/features/facturacion/components/detalle/ClaimPendingBanner";
 import { DocumentoDetalleShell } from "@/components/shared/documento/DocumentoDetalleShell";
 import { RefacturacionTrazabilidadSection } from "@/features/facturacion/components/refacturacion/RefacturacionTrazabilidadSection";
