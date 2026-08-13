@@ -49,6 +49,8 @@ describe("fetchProveedorSalud", () => {
       notas_credito_monto: 0,
       embarques_activos: 0,
       mensual: [],
+      // Ola 12 · R3FE-01: sin TC en el payload, los KPIs no se pueden valuar.
+      tc: { usd_mxn: null, eur_mxn: null, faltante: false },
     });
   });
 
