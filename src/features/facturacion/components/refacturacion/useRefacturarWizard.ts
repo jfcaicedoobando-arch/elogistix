@@ -84,6 +84,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
   const consistencia = consistenciaQuery.data ?? null;
   const consistenciaHallazgos = (consistencia?.hallazgos ?? []).map((h) => h.mensaje);
 
+  const bloqueoOrdenanteActual = calcularBloqueoOrdenante(ordenanteNombre, ordenanteRfc);
   const yaReasignado = Boolean(s.caso?.pago_nuevo_id);
   const bloqueo = bloqueoPaso(s.paso, {
     casoAbierto: Boolean(s.caso),
@@ -96,7 +97,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     pagoYaReasignado: yaReasignado,
     receptorPendientes,
     consistenciaHallazgos,
-    bloqueoOrdenante: calcularBloqueoOrdenante(ordenanteNombre, ordenanteRfc),
+    bloqueoOrdenante: bloqueoOrdenanteActual,
   });
 
   const clienteDestinoNombre =
@@ -175,6 +176,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     ordenanteNombre, setOrdenanteNombre,
     ordenanteRfc, setOrdenanteRfc,
     bloqueo,
+    bloqueoOrdenanteActual,
     yaReasignado,
     repEnCurso,
     cancelandoFactura: cancelarFactura.isPending,
