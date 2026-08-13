@@ -63,3 +63,41 @@ export function nombreClienteDestino(
 ): string {
   return receptorDesdeClientes(clientes, clienteDestinoId)?.nombre ?? "el cliente destino";
 }
+
+export type OrdenanteSugerido = {
+  nombre: string;
+  rfc: string;
+  /** De dónde salió la sugerencia, para explicarlo en la UI. */
+  origen: "factura_nueva" | "cliente_destino";
+  /** Folio de la factura viva cuando el origen es la factura nueva. */
+  numeroFactura: string | null;
+};
+
+/**
+ * Ordenante real del depósito: es el receptor de la factura viva (la nueva),
+ * porque la original y su REP se cancelaron para ser sustituidos.
+ */
+export function ordenanteSugerido(
+  facturaNueva: { numero: string; cliente_nombre: string | null; rfc_cliente: string | null } | null,
+  receptorDestino: ReceptorDestino | null,
+): OrdenanteSugerido | null {
+  const nombreFactura = (facturaNueva?.cliente_nombre ?? "").trim();
+  if (nombreFactura) {
+    return {
+      nombre: nombreFactura,
+      rfc: (facturaNueva?.rfc_cliente ?? "").trim().toUpperCase(),
+      origen: "factura_nueva",
+      numeroFactura: facturaNueva?.numero ?? null,
+    };
+  }
+  const nombreDestino = (receptorDestino?.nombre ?? "").trim();
+  if (nombreDestino) {
+    return {
+      nombre: nombreDestino,
+      rfc: (receptorDestino?.rfc ?? "").trim().toUpperCase(),
+      origen: "cliente_destino",
+      numeroFactura: null,
+    };
+  }
+  return null;
+}
