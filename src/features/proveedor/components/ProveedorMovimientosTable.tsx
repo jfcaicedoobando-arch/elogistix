@@ -45,6 +45,13 @@ export function ProveedorMovimientosTable({ movimientos }: Props) {
       columns={cols}
       data={pageItems}
       rowKey={(m) => `${m.tipo}-${m.ref_id}-${m.__idx}`}
+      getRowHref={(m) =>
+        m.tipo === "Factura"
+          ? `/compras/facturas/${m.ref_id}`
+          : m.embarque_id
+            ? `/embarques/${m.embarque_id}`
+            : null
+      }
       density={TABLE_DENSITY.embebida}
       pagination={{
         page: pageIndex,
