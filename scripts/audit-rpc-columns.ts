@@ -209,8 +209,17 @@ function findingKey(f: Finding): string {
 // ---------- 6. Main ----------
 async function main() {
   if (!process.env.PGHOST) {
+    // R3TC-04: un guardrail que no puede ejecutarse en CI debe ser visible como
+    // fallo, no como éxito silencioso. En local se conserva el SKIP.
+    if (process.env.CI === "true") {
+      console.error(
+        "audit:rpc-columns — ERROR: PGHOST no está definido en CI. " +
+          "El guardrail no puede ejecutarse sin BD; NO se permite omitirlo en silencio (R3TC-04).",
+      );
+      process.exit(1);
+    }
     console.warn(
-      "audit:rpc-columns — PGHOST no está definido (sin acceso psql); auditoría omitida.",
+      "audit:rpc-columns — SKIP: PGHOST no está definido (sin acceso psql); auditoría omitida en local.",
     );
     process.exit(0);
   }
