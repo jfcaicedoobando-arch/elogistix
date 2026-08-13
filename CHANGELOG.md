@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.571.0] - 2026-08-13
+- **Fichas de Cliente y Proveedor homologadas (Olas 1–3)**: ahora las dos pantallas se ven salidas del mismo molde. Como uniformar dos sucursales: mismos mostradores, mismos letreros.
+  - Nuevo envoltorio compartido de pestañas (`DetailTabSection`) y contador en pill idéntico en todas las pestañas (`DetailTabLabel`); se eliminó el duplicado `ClienteTabSection` y las cards armadas a mano en proveedor.
+  - Mismo estado de carga (esqueleto dentro del contenedor de página) en ambas fichas; estados vacíos con ícono y explicación en Embarques y Cotizaciones del cliente.
+  - Franja de KPIs del cliente migrada a `KpiStrip` (carrusel en celular, 3 columnas en escritorio) con textos de apoyo.
+  - Encabezado del cliente homologado: botón primario **Editar** + menú "Más acciones" y badges de régimen, días y límite de crédito.
+  - **Cliente gana pestaña "Estado de cuenta"** dentro de la ficha (la ruta dedicada sigue disponible desde el menú).
+  - Estado de conciliación del proveedor ahora usa el badge canónico (`StatusBadge`, dominio `conciliacion_costo`) como el resto del ERP.
+  - `ProveedorDetalle.tsx` se dividió (`_sections/ProveedorDetalleTabs.tsx`) para respetar el límite de 200 líneas.
+  - Pendiente por confirmar: pestaña de contactos múltiples para proveedores (requiere tabla nueva) y expediente documental del cliente.
+
 ## [13.570.2] - 2026-08-13
 - **Orden de la casa (Power of 10)**: se dividieron 4 archivos que rebasaron las 200 líneas — el catálogo de mensajes `LC_*` (nuevo `lcCodeMessages.tesoreria.ts`), el cobro en lote de cliente (nuevo `cobroLoteReparto.ts`), el buzón de CxP (nuevo `facturasEntrantesCaptura.ts`) y el tab de facturas recibidas (nuevo `EntrantesCardHeader.tsx`).
 - **Capas respetadas**: `validarFechaPago` se movió de `components/` a `facturacion/domain/`, para que el servicio del cobro en lote ya no importe desde la capa de UI.

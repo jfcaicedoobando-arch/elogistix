@@ -2,25 +2,20 @@ import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PackageX } from "lucide-react";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { toTitleCase } from "@/lib/formatters";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
-import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
 import { ProveedorBrechaCard } from "../components/ProveedorBrechaCard";
 import { ProveedorDetalleHeader } from "../components/ProveedorDetalleHeader";
 import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancariosCard";
 import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneralesCard";
 import { ProveedorResumenCards } from "../components/ProveedorResumenCards";
-import { ProveedorSaludTab } from "../components/ProveedorSaludTab";
-import { ProveedorEstadoCuentaTab } from "../components/ProveedorEstadoCuentaTab";
-import { ProveedorDocumentosTab } from "../components/ProveedorDocumentosTab";
 import { ProveedorAnticiposCard } from "@/features/anticipos-proveedor/components/ProveedorAnticiposCard";
+import { ProveedorDetalleTabs } from "./_sections/ProveedorDetalleTabs";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -33,8 +28,13 @@ export default function ProveedorDetalle() {
   } = useProveedorDetalleController();
   useRegisterBreadcrumbLabel(id, proveedor?.nombre);
 
+  // Mismo estado de carga que el detalle de cliente (PageContainer + skeleton).
   if (isLoading) {
-    return <div className="p-8"><DetailSkeleton /></div>;
+    return (
+      <PageContainer>
+        <DetailSkeleton />
+      </PageContainer>
+    );
   }
 
   if (!proveedor) {
@@ -117,65 +117,16 @@ export default function ProveedorDetalle() {
 
       <ProveedorBrechaCard brecha={brecha} huerfanas={huerfanas} proveedorNombre={nombreFmt} />
 
-      <Tabs defaultValue="operaciones">
-        <TabsList>
-          <TabsTrigger value="operaciones">Operaciones</TabsTrigger>
-          <TabsTrigger value="por_facturar">
-            Por facturar
-            {brecha.partidasPendientes > 0 && (
-              <span className="ml-2 rounded-full bg-warning/15 px-1.5 text-2xs font-medium text-warning tabular-nums">
-                {brecha.partidasPendientes}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="estado_cuenta">Estado de cuenta</TabsTrigger>
-          <TabsTrigger value="documentos">Documentos</TabsTrigger>
-          <TabsTrigger value="salud">Salud</TabsTrigger>
-        </TabsList>
-        <TabsContent value="operaciones" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Historial de operaciones
-                <span className="ml-2 font-normal text-muted-foreground tabular-nums">
-                  {partidas.length}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 overflow-x-auto">
-              <ProveedorOperacionesTable partidas={partidas} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="por_facturar" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Costeado sin factura del proveedor</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 overflow-x-auto">
-              <ProveedorOperacionesTable partidas={partidas} filtro="por_facturar" />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="estado_cuenta" className="mt-4">
-          <ProveedorEstadoCuentaTab
-            proveedorId={proveedor.id}
-            proveedorNombre={nombreFmt}
-            rfc={proveedor.rfc}
-          />
-        </TabsContent>
-        <TabsContent value="documentos" className="mt-4">
-          <ProveedorDocumentosTab
-            proveedorId={proveedor.id}
-            organizationId={proveedor.organization_id ?? ""}
-            esNacional={esNacional}
-            canEdit={canEdit}
-          />
-        </TabsContent>
-        <TabsContent value="salud" className="mt-4">
-          <ProveedorSaludTab proveedorId={proveedor.id} />
-        </TabsContent>
-      </Tabs>
+      <ProveedorDetalleTabs
+        proveedorId={proveedor.id}
+        organizationId={proveedor.organization_id ?? ""}
+        nombreFmt={nombreFmt}
+        rfc={proveedor.rfc}
+        esNacional={esNacional}
+        canEdit={canEdit}
+        partidas={partidas}
+        partidasPendientes={brecha.partidasPendientes}
+      />
 
       <EditarProveedorDialog
         proveedor={proveedor}
@@ -196,4 +147,3 @@ export default function ProveedorDetalle() {
     </PageContainer>
   );
 }
-

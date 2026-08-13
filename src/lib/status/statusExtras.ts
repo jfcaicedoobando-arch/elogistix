@@ -56,6 +56,10 @@ export const EXTRA_STATUS_BADGES: Record<string, EstadoVisual["badge"]> = {
   "Sin tarifa": "bg-destructive/15 text-destructive border border-destructive/30",
   // Liquidación
   Pagado: "bg-success/15 text-success border border-success/30",
+  // Conciliación costo ↔ factura del proveedor (v13.571.0)
+  Facturado: "bg-accent/15 text-accent border border-accent/30",
+  "Facturado parcial": "bg-warning/15 text-warning border border-warning/30",
+  Sobrefacturado: "bg-destructive/15 text-destructive border border-destructive/30",
   // Factura — estados derivados del ciclo SAT
   "En cancelación": "bg-warning/15 text-warning border border-warning/30",
   Sustituida: "bg-destructive/10 text-destructive border border-destructive/30",
