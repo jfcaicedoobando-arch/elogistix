@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.583.0] - 2026-08-13
+- **Alta de usuarios: ahora se dice el motivo real del error.** Antes cualquier rechazo mostraba "el servicio en la nube rechazó la solicitud, intenta más tarde"; ahora se muestra el motivo (por ejemplo, correo con formato inválido). Aplica también a invitar, eliminar y restablecer contraseña.
+- **Validación de correo más estricta en el diálogo de alta**, alineada con lo que acepta el servicio de identidad, y normalización (espacios y minúsculas) antes de validar.
+
 ## [13.582.2] - 2026-08-13
 - **Menos ruido en el monitoreo de errores.** El aviso "este archivo ya fue capturado como factura de proveedor" es una validación esperada y ya no se reporta como falla. Cuando la base de datos está momentáneamente inaccesible, el registro de errores del cliente ya no envía la página de error del proveedor de red al monitoreo (sólo la deja en la bitácora del servidor).
 
