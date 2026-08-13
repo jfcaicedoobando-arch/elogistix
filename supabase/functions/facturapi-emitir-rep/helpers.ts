@@ -51,6 +51,17 @@ export interface PagoContext {
      * internacionales, etc.). Default `"Tasa"`.
      */
     factor_iva?: FactorIva;
+    /**
+     * Ola 12 · R3P-19 — retenciones del CFDI original (tasa 0..1 por impuesto,
+     * p. ej. IVA 4% ⇒ 0.04). Se emiten como RetencionesDR con la misma BaseDR
+     * del traslado. Si la factura mezcla más de una tasa por impuesto,
+     * index.ts bloquea el timbrado con LC_REP_RETENCIONES_NO_SOPORTADAS.
+     */
+    retenciones?: Array<{ tipo: "IVA" | "ISR"; tasa: number }>;
+    /** Subtotal del CFDI original; requerido para la BaseDR cuando hay retenciones. */
+    subtotal_factura?: number;
+    /** Total del CFDI original; requerido para la BaseDR cuando hay retenciones. */
+    total_factura?: number;
   };
   serie?: string | null;           // Serie del REP (si se usa serie distinta a las facturas)
   /** v13.208.0 — Expediente y BLs del embarque asociado. */
@@ -92,7 +103,8 @@ export interface FacturapiRepPayload {
          * SAT/Facturapi exigen SIEMPRE el desglose de impuestos del documento
          * relacionado, incluso cuando la factura es exenta o tasa 0%.
          */
-        taxes: Array<{ type: "IVA"; rate: number; factor: FactorIva; withholding: false; base: number }>;
+        // Ola 12 · R3P-19: admite retenciones (withholding: true, IVA/ISR).
+        taxes: Array<{ type: "IVA" | "ISR"; rate: number; factor: FactorIva; withholding: boolean; base: number }>;
       }>;
     }>;
   }>;
@@ -223,11 +235,40 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
  * declara factor `Exento` con tasa 0.
  */
 export function buildTaxesDr(
-  dr: Pick<PagoContext["documento_relacionado"], "tasa_iva" | "imp_pagado" | "factor_iva">,
+  dr: Pick<PagoContext["documento_relacionado"], "tasa_iva" | "imp_pagado" | "factor_iva" | "retenciones" | "subtotal_factura" | "total_factura">,
 ): FacturapiRepPayload["complements"][0]["data"][0]["related_documents"][0]["taxes"] {
   const tasa = dr.tasa_iva > 0 ? dr.tasa_iva : 0;
   const factor: FactorIva = tasa > 0 ? "Tasa" : (dr.factor_iva ?? "Tasa");
-  return [{ type: "IVA", rate: tasa, factor, withholding: false, base: round2(dr.imp_pagado) }];
+  // Ola 12 · R3P-18 (guía de llenado SAT, complemento de pagos 2.0): la BaseDR
+  // es SIN IVA. Con tasa 0 / exento la base es el pago completo (v13.559.1).
+  const base = tasa > 0 ? baseDrSinIva(dr) : round2(dr.imp_pagado);
+  const taxes: FacturapiRepPayload["complements"][0]["data"][0]["related_documents"][0]["taxes"] =
+    [{ type: "IVA", rate: tasa, factor, withholding: false, base }];
+  // Ola 12 · R3P-19: RetencionesDR con la misma BaseDR (el PAC calcula
+  // ImporteDR = base × tasa y los totales TotalRetenciones*).
+  for (const ret of dr.retenciones ?? []) {
+    if (ret.tasa > 0) {
+      taxes.push({ type: ret.tipo, rate: ret.tasa, factor: "Tasa", withholding: true, base });
+    }
+  }
+  return taxes;
+}
+
+/**
+ * R3P-18: BaseDR sin IVA. Sin retenciones: imp_pagado/(1+tasa). Con
+ * retenciones el total del CFDI no es subtotal·(1+tasa), así que se usa la
+ * proporción subtotal/total del documento original.
+ */
+function baseDrSinIva(
+  dr: Pick<PagoContext["documento_relacionado"], "tasa_iva" | "imp_pagado" | "retenciones" | "subtotal_factura" | "total_factura">,
+): number {
+  const hayRetenciones = (dr.retenciones ?? []).some((r) => r.tasa > 0);
+  const sub = Number(dr.subtotal_factura ?? 0);
+  const tot = Number(dr.total_factura ?? 0);
+  if (hayRetenciones && sub > 0 && tot > 0) {
+    return round2((dr.imp_pagado * sub) / tot);
+  }
+  return round2(dr.imp_pagado / (1 + dr.tasa_iva));
 }
 
 function round2(n: number): number {
