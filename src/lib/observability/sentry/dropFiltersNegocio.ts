@@ -95,7 +95,10 @@ const NOMBRES_ERROR_NEGOCIO = new Set([
   "AprobacionFacturaError",
   "CreditLimitError",
   "ValidationError",
+  // JAVASCRIPT-REACT-55: archivo ya capturado en el buzón; la UI lo explica.
+  "BuzonDuplicadoError",
 ]);
+
 
 export function isValidacionNegocioPorMensaje(
   event: Sentry.ErrorEvent,
