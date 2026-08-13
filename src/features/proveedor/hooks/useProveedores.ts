@@ -8,7 +8,6 @@ import {
   insertProveedor,
   updateProveedor as svcUpdate,
   deleteProveedor as svcDelete,
-  fetchProveedorOperaciones,
   fetchProveedoresLite,
   type ProveedorListItem,
 } from "@/features/proveedor/services";
@@ -100,14 +99,6 @@ export function useProveedor(id: string | undefined) {
     queryKey: queryKeys.proveedores.detail(id!),
     enabled: !!id,
     queryFn: () => fetchProveedor(id!),
-  });
-}
-
-export function useProveedorOperaciones(proveedorId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.proveedores.operaciones(proveedorId!),
-    enabled: !!proveedorId,
-    queryFn: () => fetchProveedorOperaciones(proveedorId!),
   });
 }
 

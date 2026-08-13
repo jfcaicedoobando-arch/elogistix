@@ -19,7 +19,7 @@ export interface RepTimbradoResult {
   xml_url: string;
 }
 
-export interface ValidationIssue { field: string; message: string }
+interface ValidationIssue { field: string; message: string }
 
 /**
  * El pago ya tenía REP (o hay un timbrado en curso). No es un fallo del
