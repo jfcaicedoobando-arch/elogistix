@@ -120,7 +120,7 @@ describe("useTimbrarRep", () => {
 
 describe("useCancelarRep", () => {
   it("con facturaId: invalida pagos_factura del id", async () => {
-    cancelarRep.mockResolvedValue({ ok: true });
+    cancelarRep.mockResolvedValue({ ok: true, pending: false, cancellation_status: "accepted" });
     const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     const spy = vi.spyOn(qc, "invalidateQueries");
     const { result } = renderHook(() => useCancelarRep("fac-1"), { wrapper: wrapper(qc) });
@@ -134,8 +134,29 @@ describe("useCancelarRep", () => {
     qc.clear();
   });
 
+  it("avisa cuando la cancelación sólo quedó en verificación", async () => {
+    cancelarRep.mockResolvedValue({
+      ok: true,
+      pending: true,
+      cancellation_status: "verifying",
+      message: "El SAT está verificando.",
+    });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useCancelarRep("fac-1"), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ pagoId: "p-pending", motivo: "02" });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(notifyInfo).toHaveBeenCalledWith(undefined, expect.objectContaining({
+      title: "Solicitud de cancelación enviada",
+      description: "El SAT está verificando.",
+    }));
+    qc.clear();
+  });
+
   it("sin facturaId: invalida ['pagos_factura'] (rama else)", async () => {
-    cancelarRep.mockResolvedValue({ ok: true });
+    cancelarRep.mockResolvedValue({ ok: true, pending: false, cancellation_status: "accepted" });
     const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     const spy = vi.spyOn(qc, "invalidateQueries");
     const { result } = renderHook(() => useCancelarRep(), { wrapper: wrapper(qc) });

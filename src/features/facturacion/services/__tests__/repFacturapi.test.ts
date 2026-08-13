@@ -43,9 +43,32 @@ describe("repFacturapi service", () => {
 
   it("cancelarRep envía motivo y sustituye_uuid", async () => {
     invoke.mockResolvedValueOnce({ data: { ok: true }, error: null });
-    await expect(cancelarRep("p1", "01", "UUID")).resolves.toBeUndefined();
+    await expect(cancelarRep("p1", "01", "UUID")).resolves.toEqual({
+      ok: true,
+      pending: false,
+      cancellation_status: "accepted",
+      message: null,
+    });
     expect(invoke).toHaveBeenCalledWith("facturapi-cancelar-rep", {
       body: { pago_id: "p1", motivo: "01", sustituye_uuid: "UUID" },
+    });
+  });
+
+  it("cancelarRep conserva el estado asíncrono de verificación", async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        ok: true,
+        pending: true,
+        cancellation_status: "verifying",
+        message: "Cancelación enviada al SAT.",
+      },
+      error: null,
+    });
+    await expect(cancelarRep("p1", "02")).resolves.toEqual({
+      ok: true,
+      pending: true,
+      cancellation_status: "verifying",
+      message: "Cancelación enviada al SAT.",
     });
   });
 

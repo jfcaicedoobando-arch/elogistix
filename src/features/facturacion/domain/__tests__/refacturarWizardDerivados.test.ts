@@ -30,6 +30,7 @@ describe("mapearPagos", () => {
     expect(pago.monto_aplicado_factura).toBe(1000);
     expect(pago.uuid_rep).toBeNull();
     expect(pago.estado_rep).toBeNull();
+    expect(pago.rep_cancellation_status).toBeNull();
   });
 
   it("conserva null en el monto aplicado cuando no hay aplicación", () => {
@@ -42,10 +43,12 @@ describe("mapearPagos", () => {
         monto_aplicado_factura: null,
         uuid_rep: "uuid-1",
         estado_rep: "vigente",
+        rep_cancellation_status: "verifying",
       },
     ]);
     expect(pago.monto_aplicado_factura).toBeNull();
     expect(pago.uuid_rep).toBe("uuid-1");
+    expect(pago.rep_cancellation_status).toBe("verifying");
   });
 });
 

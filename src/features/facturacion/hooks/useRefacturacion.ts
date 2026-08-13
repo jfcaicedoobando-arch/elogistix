@@ -60,7 +60,9 @@ export function useRefacturacion(facturaId: string | null, open: boolean) {
     enabled: open && !!facturaId,
   });
 
-  const pagosQuery = usePagosFactura(open && facturaId ? facturaId : undefined);
+  const pagosQuery = usePagosFactura(open && facturaId ? facturaId : undefined, {
+    refetchWhileRepPending: open,
+  });
 
   // El caso manda: al reabrir el modal el usuario retoma donde se quedó.
   useEffect(() => {

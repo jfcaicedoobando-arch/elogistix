@@ -13,6 +13,7 @@ type PagoCrudo = {
   uuid_rep?: string | null;
   estado_rep?: string | null;
   rep_cancelado_en?: string | null;
+  rep_cancellation_status?: string | null;
 };
 
 export type ReceptorDestino = {
@@ -36,6 +37,7 @@ export function mapearPagos(pagos: PagoCrudo[]): PagoRefacturacion[] {
     uuid_rep: p.uuid_rep ?? null,
     estado_rep: p.estado_rep ?? null,
     rep_cancelado_en: p.rep_cancelado_en ?? null,
+    rep_cancellation_status: p.rep_cancellation_status ?? null,
   })) as PagoRefacturacion[];
 }
 

@@ -68,8 +68,15 @@ export function useCancelarRep(facturaId?: string) {
     mutationKey: queryKeys.facturacion.cancelarRep,
     mutationFn: (vars: { pagoId: string; motivo: MotivoCancelacionSat; sustituyeUuid?: string }) =>
       cancelarRep(vars.pagoId, vars.motivo, vars.sustituyeUuid),
-    onSuccess: () => {
-      notifySuccess(undefined, { title: "REP cancelado" });
+    onSuccess: (resultado) => {
+      if (resultado.pending || ["pending", "verifying"].includes(resultado.cancellation_status)) {
+        notifyInfo(undefined, {
+          title: "Solicitud de cancelación enviada",
+          description: resultado.message ?? "El SAT está verificando la cancelación del REP.",
+        });
+      } else {
+        notifySuccess(undefined, { title: "REP cancelado" });
+      }
       invalidarTrasRep(qc, facturaId);
     },
     onError: (err: Error) => notifyError(undefined, {
