@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.552.0] - 2026-08-13
+- Corregido el cálculo de utilidad por embarque: el costo real sumaba el **total con IVA** de las facturas de proveedor mientras la venta se comparaba sin IVA, lo que generaba márgenes falsos negativos (el expediente ELIMP00300 mostraba −246.50 en lugar de +10,287.50 MXN).
+- El costo real ahora usa la base gravable (subtotal, o total menos IVA más retenciones en registros antiguos) y las notas de crédito de proveedor se descuentan en proporción a esa base.
+- El monto pendiente de pago sigue calculándose con IVA, porque el flujo de efectivo se paga completo.
+- Efecto: los checklists de cierre dejan de bloquear embarques por márgenes negativos inexistentes.
+
+
+
 ## [13.551.0] - 2026-08-12
 - Modales de Tesorería y CxP con teclado (Ola A): **Movimiento manual**, **Ejecutar pago programado**, **Traspaso entre cuentas propias** y **Programar pago** ya son formularios reales: `Enter` guarda desde cualquier campo, el botón principal muestra su estado de carga y no permite dobles clics.
 - Todas las etiquetas de esos modales quedaron ligadas a su control (incluido el campo de fecha) para lectores de pantalla.
