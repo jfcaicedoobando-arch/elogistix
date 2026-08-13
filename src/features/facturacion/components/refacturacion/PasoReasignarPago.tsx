@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 import type { PagoRefacturacion } from "@/features/facturacion/domain/refacturacionPasos";
+import type { OrdenanteSugerido } from "@/features/facturacion/domain/refacturarWizardDerivados";
 import type { FacturaRefacturacionEstado } from "@/features/facturacion/services/refacturacion";
 
 interface Props {
