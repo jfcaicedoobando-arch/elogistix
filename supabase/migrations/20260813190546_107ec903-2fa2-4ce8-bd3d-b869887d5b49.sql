@@ -643,4 +643,7 @@ GRANT EXECUTE ON FUNCTION public.monto_pago_en_moneda_factura(numeric, text, num
 REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta(uuid) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta(uuid) FROM anon;
 REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM anon;
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM anon;GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO service_role;
