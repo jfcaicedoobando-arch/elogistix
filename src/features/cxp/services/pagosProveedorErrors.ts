@@ -36,8 +36,8 @@ const REGLAS: Regla[] = [
       ? "Una factura aparece repetida en el lote. Revisa la selección."
       : null,
   (e) =>
-    e.message && e.message.includes("LC_LOTE_DUPLICADO_RECIENTE")
-      ? "Ya registraste un pago en lote idéntico hace unos minutos (mismo proveedor, fecha e importe). Verifica el historial de pagos antes de reintentar."
+    e.message && e.message.includes("LC_LOTE_TC_REQUERIDO")
+      ? "No hay tipo de cambio disponible para un pago en lote en moneda extranjera. Reintenta en unos segundos."
       : null,
   (e) =>
     e.message && e.message.includes("LC_PAGO_TC_REQUERIDO")
