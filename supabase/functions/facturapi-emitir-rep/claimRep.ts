@@ -9,8 +9,15 @@
  * con motivo 01 (sustitución). Si el re-timbrado falla, se restaura.
  */
 
-// SAFE-CAST: el cliente de Supabase en edge no está tipado con la BD.
-type Db = { from: (t: string) => any };
+/** Constructor mínimo de queries que usamos del cliente de Supabase. */
+interface UpdateQuery {
+  eq: (col: string, val: string) => UpdateQuery;
+  is: (col: string, val: null) => UpdateQuery;
+  select: (cols: string) => { maybeSingle: () => Promise<{ data: unknown; error: { message: string } | null }> };
+}
+type Db = {
+  from: (t: string) => { update: (patch: Record<string, unknown>) => UpdateQuery };
+};
 
 export interface PagoClaimRow {
   id: string;
