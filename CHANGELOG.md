@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.584.0] - 2026-08-13
+- **Refacturar a otro receptor (Etapa 1: base de datos).** Cuando un cliente paga desde una empresa equivocada, el ERP ya guarda el caso completo: factura original, cliente destino, ruta fiscal (01 sustitución o 02 factura nueva), motivo, embarque y avance del proceso.
+- **Se registra el ordenante real del depósito** (nombre y RFC) cuando el pago viene de una empresa distinta a la que se factura.
+- **Duplicado de factura hacia otro cliente**: copia conceptos y vínculos del embarque, pero toma RFC, régimen y uso de CFDI del cliente nuevo.
+- **Reasignación de pago sin perder trazabilidad**: el pago se da de baja en la factura vieja, se recrea en la nueva y el movimiento bancario conciliado se traslada solo. Se valida que el complemento de pago (REP) esté cancelado, que la factura destino esté timbrada y vigente, que la moneda coincida y que no haya sobrepago.
+
 ## [13.583.2] - 2026-08-13
 - **Lectura de facturas en PDF más tolerante.** Si la petición llegaba sin el formato de archivo esperado, la función fallaba con un error interno (500) y se reportaba como falla del sistema; ahora responde con un aviso claro (400) y ya no ensucia el monitoreo. Cierra JAVASCRIPT-REACT-57.
 - **Confirmado el cierre de JAVASCRIPT-REACT-56** (`getClaims is not a function`): los eventos provenían de la versión anterior de la función; con el despliegue actual ya procesa PDFs sin error.
