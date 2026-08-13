@@ -98,14 +98,23 @@ export async function handleClientErrorLog(
   // N51 (Ola 4): fail-CLOSED — antes un error de la RPC dejaba pasar la
   // petición (rate limit decorativo justo cuando la BD está en problemas).
   if (rlError) {
-    console.error("client-error-log ratelimit rpc failed:", rlError.message);
-    await captureEdgeException(new Error(`check_ratelimit failed: ${rlError.message}`), {
-      fn: "client-error-log",
-      status_code: 503,
-      request_id: requestId,
-    });
+    const detalle = (rlError.message ?? "").slice(0, 200);
+    console.error("client-error-log ratelimit rpc failed:", detalle);
+    // JAVASCRIPT-REACT-54: cuando la BD/gateway responde 5xx con una página
+    // HTML (Cloudflare 502/522/523), es indisponibilidad transitoria de
+    // infraestructura, no un bug: se registra en consola pero no se envía a
+    // Sentry para no ahogar el proyecto con HTML sin valor de diagnóstico.
+    const esInfraTransitoria = /^\s*<(!doctype|html)/i.test(rlError.message ?? "");
+    if (!esInfraTransitoria) {
+      await captureEdgeException(new Error(`check_ratelimit failed: ${detalle}`), {
+        fn: "client-error-log",
+        status_code: 503,
+        request_id: requestId,
+      });
+    }
     return jsonResponse({ error: "rate_limit_unavailable" }, 503, { "Retry-After": "30" });
   }
+
   const rlResult = rl as { ok?: boolean; retry_after?: number } | null;
   if (rlResult && rlResult.ok === false) {
     return jsonResponse(
