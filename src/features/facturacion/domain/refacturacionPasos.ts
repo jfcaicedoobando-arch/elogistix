@@ -71,7 +71,10 @@ export interface ContextoPasos {
   consistenciaHallazgos?: string[];
   /** Motivo por el que el ordenante del depósito no es válido. */
   bloqueoOrdenante?: string | null;
+  /** El rol del usuario no puede operar casos de refacturación (sólo consulta). */
+  bloqueoPermiso?: string | null;
 }
+
 
 function bloqueoPaso1(ctx: ContextoPasos): string | null {
   if (ctx.casoAbierto) return null;
