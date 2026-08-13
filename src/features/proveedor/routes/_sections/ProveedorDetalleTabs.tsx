@@ -6,6 +6,7 @@ import { ProveedorOperacionesTable } from "../../components/ProveedorOperaciones
 import { ProveedorSaludTab } from "../../components/ProveedorSaludTab";
 import { ProveedorEstadoCuentaTab } from "../../components/ProveedorEstadoCuentaTab";
 import { ProveedorDocumentosTab } from "../../components/ProveedorDocumentosTab";
+import { ProveedorContactosCard } from "../../components/ProveedorContactosCard";
 import type { PartidaEstadoCuenta } from "@/features/proveedor/domain/estadoCuentaProveedor";
 
 interface Props {
@@ -55,6 +56,7 @@ export function ProveedorDetalleTabs({
           <DetailTabLabel count={partidasPendientes} tone="warning">Por facturar</DetailTabLabel>
         </TabsTrigger>
         <TabsTrigger value="estado_cuenta">Estado de cuenta</TabsTrigger>
+        <TabsTrigger value="contactos">Contactos</TabsTrigger>
         <TabsTrigger value="documentos">Documentos</TabsTrigger>
         <TabsTrigger value="salud">Salud</TabsTrigger>
       </TabsList>
@@ -83,6 +85,15 @@ export function ProveedorDetalleTabs({
           proveedorId={proveedorId}
           proveedorNombre={nombreFmt}
           rfc={rfc}
+        />
+      </TabsContent>
+
+      {/* Ola 4 — contactos múltiples, espejo de la tabla de contactos de cliente. */}
+      <TabsContent value="contactos" className="mt-4">
+        <ProveedorContactosCard
+          proveedorId={proveedorId}
+          organizationId={organizationId}
+          canEdit={canEdit}
         />
       </TabsContent>
 

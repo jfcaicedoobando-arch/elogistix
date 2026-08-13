@@ -11,6 +11,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { EstadoCuentaModule } from "@/features/facturacion/estadoCuenta/components/EstadoCuentaModule";
 import { embarqueColumns, cotizacionColumns } from "@/features/cliente/components/clienteColumns";
 import TablaContactos from "@/features/cliente/components/TablaContactos";
+import { ClienteDocumentosTab } from "@/features/cliente/components/ClienteDocumentosTab";
 import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
 import { ClienteCreditoCard } from "@/features/cliente/components/detalle/ClienteCreditoCard";
 import type { EmbarqueCliente, CotizacionCliente } from "@/features/cliente/components/clienteColumns";
@@ -28,6 +29,8 @@ interface ClienteTabsData {
   contacto: string;
   email: string;
   telefono: string;
+  /** Con crédito exigimos además la solicitud de crédito en el expediente. */
+  dias_credito?: number | null;
 }
 
 interface Props {
@@ -69,6 +72,7 @@ export function ClienteDetalleTabs({
           <DetailTabLabel count={cotizacionesCliente.length}>Cotizaciones</DetailTabLabel>
         </TabsTrigger>
         <TabsTrigger value="estado_cuenta">Estado de cuenta</TabsTrigger>
+        <TabsTrigger value="documentos">Documentos</TabsTrigger>
         <TabsTrigger value="crm">CRM</TabsTrigger>
         <TabsTrigger value="portal">Portal</TabsTrigger>
       </TabsList>
@@ -161,6 +165,16 @@ export function ClienteDetalleTabs({
           además de conservar su ruta dedicada para impresión/compartir. */}
       <TabsContent value="estado_cuenta" className="mt-4">
         <EstadoCuentaModule clienteIds={[cliente.id]} facturaHrefBase="/facturacion" />
+      </TabsContent>
+
+      {/* Ola 4 — expediente documental del cliente, espejo del de proveedor. */}
+      <TabsContent value="documentos" className="mt-4">
+        <ClienteDocumentosTab
+          clienteId={cliente.id}
+          organizationId={cliente.organization_id}
+          conCredito={(cliente.dias_credito ?? 0) > 0}
+          canEdit={canEdit}
+        />
       </TabsContent>
 
       <TabsContent value="crm" className="mt-4">
