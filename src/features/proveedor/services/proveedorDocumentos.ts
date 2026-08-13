@@ -7,6 +7,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { uploadFile, getSignedUrl, deleteFile } from "@/services/storage";
+import { logClientError } from "@/services/observability/logClientError";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import type {
   DocumentoProveedor,
   TipoDocumentoProveedor,
@@ -103,5 +105,31 @@ export async function eliminarDocumentoProveedor(doc: {
       })
       .eq("id", doc.id),
   );
-  await deleteFile(doc.archivo).catch(() => undefined);
+  // R3FE-09 (Ola 12, clase RFE-10): el remove ya no se traga en silencio.
+  // Si storage falla se revierte el borrado lógico (la fila NO sale de la UI),
+  // se deja rastro y se propaga el error para que el hook notifique.
+  try {
+    await deleteFile(doc.archivo);
+  } catch (e) {
+    // Reversa best-effort: si también falla, la policy de lectura R3P-13
+    // (Sprint 03) ya excluye archivos de documentos con deleted_at.
+    await run(
+      supabase
+        .from("proveedor_documentos")
+        .update({ deleted_at: null, deleted_by: null })
+        .eq("id", doc.id),
+    ).catch(() => undefined);
+    logClientError({
+      message: `Expediente proveedor: fallo al borrar el archivo ${doc.archivo} (doc ${doc.id}); se revirtió el borrado lógico.`,
+    });
+    await registrarActividad({
+      modulo: "proveedores",
+      accion: "eliminar_documento_proveedor_storage_fallido",
+      entidadId: doc.id,
+      entidadNombre: doc.archivo,
+    });
+    throw e instanceof Error
+      ? e
+      : new Error("No se pudo borrar el archivo del almacenamiento.");
+  }
 }

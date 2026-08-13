@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailTabSection } from "@/components/shared/DetailTabSection";
 import { DetailTabLabel } from "@/components/shared/DetailTabLabel";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { ProveedorOperacionesTable } from "../../components/ProveedorOperacionesTable";
 import { ProveedorSaludTab } from "../../components/ProveedorSaludTab";
 import { ProveedorEstadoCuentaTab } from "../../components/ProveedorEstadoCuentaTab";
@@ -16,6 +17,11 @@ interface Props {
   canEdit: boolean;
   partidas: PartidaEstadoCuenta[];
   partidasPendientes: number;
+  /** R3FE-05: un fallo de `proveedor_estado_cuenta` no debe verse como "0". */
+  isErrorEstadoCuenta?: boolean;
+  errorEstadoCuenta?: unknown;
+  refetchEstadoCuenta?: () => void;
+  isFetchingEstadoCuenta?: boolean;
 }
 
 /**
@@ -26,7 +32,19 @@ interface Props {
 export function ProveedorDetalleTabs({
   proveedorId, organizationId, nombreFmt, rfc, esNacional, canEdit,
   partidas, partidasPendientes,
+  isErrorEstadoCuenta, errorEstadoCuenta, refetchEstadoCuenta, isFetchingEstadoCuenta,
 }: Props) {
+  const errorOperaciones = (
+    <ErrorStateInline
+      title="No pudimos cargar las operaciones del proveedor"
+      message={errorEstadoCuenta instanceof Error
+        ? errorEstadoCuenta.message
+        : "Error desconocido al consultar la información."}
+      onRetry={() => refetchEstadoCuenta?.()}
+      retrying={isFetchingEstadoCuenta}
+      className="m-6"
+    />
+  );
   return (
     <Tabs defaultValue="operaciones">
       <TabsList>
@@ -43,7 +61,9 @@ export function ProveedorDetalleTabs({
 
       <TabsContent value="operaciones" className="mt-4">
         <DetailTabSection title="Historial de operaciones" count={partidas.length}>
-          <ProveedorOperacionesTable partidas={partidas} />
+          {isErrorEstadoCuenta ? errorOperaciones : (
+            <ProveedorOperacionesTable partidas={partidas} />
+          )}
         </DetailTabSection>
       </TabsContent>
 
@@ -52,7 +72,9 @@ export function ProveedorDetalleTabs({
           title="Costeado sin factura del proveedor"
           count={partidasPendientes}
         >
-          <ProveedorOperacionesTable partidas={partidas} filtro="por_facturar" />
+          {isErrorEstadoCuenta ? errorOperaciones : (
+            <ProveedorOperacionesTable partidas={partidas} filtro="por_facturar" />
+          )}
         </DetailTabSection>
       </TabsContent>
 
