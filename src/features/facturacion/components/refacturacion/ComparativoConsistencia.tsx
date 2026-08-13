@@ -24,33 +24,35 @@ export function ComparativoConsistencia({ data }: { data: ConsistenciaRefacturac
     <div className="space-y-3">
       {orig && nueva && (
         <div className="overflow-x-auto rounded-md border">
-          <table className="w-full text-xs">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="p-2 text-left font-medium">Concepto</th>
-                <th className="p-2 text-right font-medium">{orig.numero ?? "Original"}</th>
-                <th className="p-2 text-right font-medium">{nueva.numero ?? "Nueva"}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-t">
-                <td className="p-2">Moneda</td>
-                <td className="p-2 text-right">{orig.moneda}</td>
-                <td className="p-2 text-right">{nueva.moneda}</td>
-              </tr>
-              {FILAS.map((f, i) => (
-                <tr key={f.key} className={i % 2 === 0 ? "border-t bg-muted/20" : "border-t"}>
-                  <td className="p-2">{f.campo}</td>
-                  <td className="p-2 text-right">
+          <Table>
+            <TableHeader>
+              <DetailTableRow hoverable={false}>
+                <DetailTableHead>Concepto</DetailTableHead>
+                <DetailTableHead className="text-right">
+                  {orig.numero ?? "Original"}
+                </DetailTableHead>
+                <DetailTableHead className="text-right">{nueva.numero ?? "Nueva"}</DetailTableHead>
+              </DetailTableRow>
+            </TableHeader>
+            <TableBody>
+              <DetailTableRow>
+                <TableCell>Moneda</TableCell>
+                <TableCell className="text-right">{orig.moneda}</TableCell>
+                <TableCell className="text-right">{nueva.moneda}</TableCell>
+              </DetailTableRow>
+              {FILAS.map((f) => (
+                <DetailTableRow key={f.key}>
+                  <TableCell>{f.campo}</TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {formatCurrency(Number(orig[f.key] ?? 0), orig.moneda)}
-                  </td>
-                  <td className="p-2 text-right">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {formatCurrency(Number(nueva[f.key] ?? 0), nueva.moneda)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </DetailTableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 
