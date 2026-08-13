@@ -182,12 +182,12 @@ export async function adjuntarXmlFacturaEntrante(params: {
     p_xml_path: subido.path,
     p_xml_nombre: subido.nombre,
     p_xml_hash: subido.hash,
-    p_uuid_fiscal: params.meta?.uuid ?? null,
-    p_rfc_emisor: params.meta?.rfcEmisor ?? null,
-    p_folio_serie: params.meta?.folioSerie ?? null,
-    p_fecha_emision: params.meta?.fechaEmision ?? null,
-    p_total_detectado: params.meta?.total ?? null,
-    p_moneda_detectada: params.meta?.moneda ?? null,
+    p_uuid_fiscal: params.meta?.uuid ?? undefined,
+    p_rfc_emisor: params.meta?.rfcEmisor ?? undefined,
+    p_folio_serie: params.meta?.folioSerie ?? undefined,
+    p_fecha_emision: params.meta?.fechaEmision ?? undefined,
+    p_total_detectado: params.meta?.total ?? undefined,
+    p_moneda_detectada: params.meta?.moneda ?? undefined,
   });
   if (error) {
     // Ola 5 · RG4-7: mismo criterio que subirFacturaEntrante.
