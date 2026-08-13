@@ -32,16 +32,20 @@ const TABLAS = [
  * análogo a los EXENTOS de `facturas-soft-delete-reads.test.ts`.
  */
 const EXENTOS = new Set<string>([
-  // Detalle por id: análogo a `detail.ts` en facturas — ver un registro
-  // borrado al abrirlo directamente (deep-link, edición en curso) es
-  // intencional; las vistas de listado sí quedan cubiertas por el guardrail.
-  "src/features/crm/services/oportunidades.ts",
-  "src/features/crm/services/leads/queries.ts",
   "src/features/crm/services/vincularCotizacion/propagarConversion.ts",
   "src/features/crm/services/automatizacionesEtapa.ts",
   "src/features/crm/services/lineage.ts",
   "src/features/crm/services/prospectoSearch.ts",
 ]);
+
+/**
+ * RBD-06: la exención de "detalle por id" es por BLOQUE, no por archivo —
+ * análogo a `detail.ts` en facturas: abrir un registro borrado por deep-link
+ * (`.eq("id", …).maybeSingle()`) es intencional. Así `oportunidades.ts` y
+ * `leads/queries.ts` (los archivos del bug original BL-01) vuelven a quedar
+ * cubiertos por el guardrail en sus lecturas de LISTA.
+ */
+const ES_DETALLE_POR_ID = /\.eq\(\s*"id"\s*,[^)]*\)\s*\.maybeSingle\(\)/;
 
 function listarArchivos(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -84,6 +88,7 @@ describe("lecturas de tablas CRM excluyen borradas lógicamente", () => {
       if (EXENTOS.has(rel)) continue;
       const src = readFileSync(path.join(ROOT, rel), "utf-8");
       for (const bloque of bloquesDeLectura(src, tabla)) {
+        if (ES_DETALLE_POR_ID.test(bloque)) continue; // detalle por id (RBD-06)
         if (!/\.is\(\s*"deleted_at"\s*,\s*null\s*\)/.test(bloque)) {
           infractores.push(rel);
           break;
@@ -94,5 +99,18 @@ describe("lecturas de tablas CRM excluyen borradas lógicamente", () => {
       infractores,
       `Agrega .is("deleted_at", null) o registra el archivo en EXENTOS: ${infractores.join(", ")}`,
     ).toEqual([]);
+  });
+
+  // RBD-06: ancla explícita — las listas donde vivía BL-01 nunca más sin filtro.
+  it.each([
+    ["src/features/crm/services/oportunidades.ts", "crm_oportunidades"],
+    ["src/features/crm/services/leads/queries.ts", "crm_leads"],
+  ] as const)("la lista principal de %s conserva el filtro de borrado", (rel, tabla) => {
+    const src = readFileSync(path.join(ROOT, rel), "utf-8");
+    const listas = bloquesDeLectura(src, tabla).filter((b) => b.includes('count: "exact"'));
+    expect(listas.length, `${rel} debería tener una lectura de lista paginada`).toBeGreaterThan(0);
+    for (const bloque of listas) {
+      expect(bloque).toMatch(/\.is\(\s*"deleted_at"\s*,\s*null\s*\)/);
+    }
   });
 });
