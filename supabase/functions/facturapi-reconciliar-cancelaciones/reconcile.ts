@@ -194,3 +194,51 @@ export function resolveNextActionNc(
 
   return { outcome: "no_change", patch: {} };
 }
+
+
+/** REF-02: fila de pago con cancelación de REP asíncrona pendiente. */
+export interface RepPendiente {
+  id: string;
+  organization_id: string;
+  facturapi_rep_id: string;
+  rep_cancellation_status: string;
+}
+
+/**
+ * REF-02: espejo de resolveNextActionNc para REPs (pagos_factura). El REP no
+ * tiene flujo de sustitución vía cron, así que el estado terminal siempre es
+ * estado_rep='Cancelado' con rep_cancellation_status='accepted' — el mismo
+ * patch de la rama aceptada de facturapi-cancelar-rep.
+ */
+export function resolveNextActionRep(
+  remote: FapiInvoiceStatus,
+  local: RepPendiente,
+  nowIso: string,
+): ResolvedPatch {
+  const cs = (remote.cancellation_status ?? "").toLowerCase();
+
+  if (cs === "accepted" || remote.status === "canceled") {
+    return {
+      outcome: "accepted",
+      patch: {
+        estado_rep: "Cancelado",
+        rep_cancellation_status: "accepted",
+        rep_cancelado_en: nowIso,
+      },
+    };
+  }
+
+  if (cs === local.rep_cancellation_status) {
+    return { outcome: "no_change", patch: {} };
+  }
+
+  if (cs === "rejected" || cs === "expired") {
+    return { outcome: cs, patch: { rep_cancellation_status: cs } };
+  }
+
+  if (cs && cs !== local.rep_cancellation_status) {
+    return { outcome: "transition", patch: { rep_cancellation_status: cs } };
+  }
+
+  return { outcome: "no_change", patch: {} };
+}
