@@ -49,6 +49,11 @@ export const FINANCE_VIEWERS: readonly AppRole[] = [
   "vendedor",
 ];
 
+/**
+ * Roles de ventas. Espejo en la base de datos:
+ * `public.puede_escribir_cotizaciones()` (v13.554.0) — al cambiar esta lista,
+ * actualizar también esa función para no desincronizar UI y RLS.
+ */
 export const SALES: readonly AppRole[] = [
   "super_admin",
   "admin_org",
