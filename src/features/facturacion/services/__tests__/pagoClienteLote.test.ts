@@ -3,6 +3,7 @@
  * reparto FIFO por vencimiento y validaciones de negocio.
  */
 import { describe, it, expect } from "vitest";
+import { todayLocalISO } from "@/lib/date/today";
 import {
   repartirFifo,
   validarCobroLote,
