@@ -77,7 +77,11 @@ BEGIN
       AND nc.estado = 'Aplicada'
   ),
   pagos AS (
-    SELECT pp.id, pp.fecha_pago, pp.monto, pp.moneda::text AS moneda,
+    -- Ola 12 · R3P-06: el abono se convierte a la moneda de la factura; NULL = sin TC.
+    SELECT pp.id, pp.fecha_pago,
+           pp.monto AS monto_pago, pp.moneda::text AS moneda_pago,
+           public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda) AS monto_factura,
+           f.moneda AS moneda_factura,
            pp.referencia, pp.metodo_pago, pp.es_anticipo_aplicado,
            pp.proveedor_factura_id, f.folio_interno, f.expediente, f.embarque_id
     FROM public.pagos_proveedor pp
@@ -111,14 +115,22 @@ BEGIN
     SELECT p.fecha_pago,
            CASE WHEN p.es_anticipo_aplicado THEN 'Anticipo aplicado' ELSE 'Pago' END,
            p.id, COALESCE(p.folio_interno, 'Pago'), p.referencia,
-           COALESCE(p.expediente, ''), p.embarque_id, p.moneda,
+           COALESCE(p.expediente, ''), p.embarque_id,
+           -- R3P-06: el abono se expresa en la moneda del cargo (factura).
+           p.moneda_factura AS moneda,
            0::numeric,
            -- R3P-07: la aplicación de un anticipo es informativa (0/0); el
            -- abono ya se contó en la fila "Anticipo" al entregarlo.
-           CASE WHEN p.es_anticipo_aplicado THEN 0::numeric ELSE COALESCE(p.monto, 0) END,
-           CASE WHEN p.es_anticipo_aplicado
-                 THEN COALESCE(p.metodo_pago, '') || ' · anticipo ya contado al entregarse'
-                 ELSE p.metodo_pago END
+           CASE WHEN p.es_anticipo_aplicado THEN 0::numeric ELSE COALESCE(p.monto_factura, 0) END,
+           CASE
+             WHEN p.es_anticipo_aplicado
+               THEN COALESCE(p.metodo_pago, '') || ' · anticipo ya contado al entregarse'
+             WHEN p.moneda_pago <> p.moneda_factura AND p.monto_factura IS NULL
+               THEN COALESCE(p.metodo_pago, '') || ' · pagado en ' || p.moneda_pago || ' SIN TC (excluido del saldo)'
+             WHEN p.moneda_pago <> p.moneda_factura
+               THEN COALESCE(p.metodo_pago, '') || ' · pagado en ' || p.moneda_pago
+             ELSE p.metodo_pago
+           END
     FROM pagos p
     UNION ALL
     SELECT a.fecha_anticipo, 'Anticipo', a.id, 'Anticipo', a.referencia,
@@ -188,7 +200,9 @@ BEGIN
            -- capturados) => saldo 0. Misma regla que proveedor_inteligencia.
            CASE WHEN f.estado = 'Pagada' THEN 0::numeric
                 ELSE f.total
-                  - COALESCE((SELECT SUM(pp.monto) FROM public.pagos_proveedor pp
+                  -- R3P-06: pagos convertidos a la moneda de la factura.
+                  - COALESCE((SELECT SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, f.moneda))
+                              FROM public.pagos_proveedor pp
                               WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL), 0)
                   -- R3P-08: sólo NC 'Aplicada' (regla única del módulo).
                   - COALESCE((SELECT SUM(nc.monto) FROM public.proveedor_notas_credito nc

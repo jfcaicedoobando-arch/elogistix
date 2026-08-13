@@ -1,5 +1,6 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { buildRepPayload, validateRepContext, normalizarFormaPago, type PagoContext } from "./helpers.ts";
+import { calcularRetencionesDr } from "./retencionesDr.ts";
 import { factorIvaFacturaOriginal, tasaIvaFacturaOriginal } from "./context.ts";
 
 const validCtx: PagoContext = {
@@ -117,10 +118,52 @@ Deno.test("buildRepPayload ignora factor_iva cuando la factura si trae IVA", () 
   assertEquals(tax.rate, 0.16);
 });
 
-Deno.test("buildRepPayload incluye base en taxes de documento relacionado", () => {
+Deno.test("buildRepPayload incluye base SIN IVA en taxes de documento relacionado", () => {
   const p = buildRepPayload(validCtx);
   const tax = p.complements[0].data[0].related_documents[0].taxes[0];
-  assertEquals(tax.base, 1160);
+  // Ola 12 · R3P-18: BaseDR sin IVA → 1160/1.16 = 1000 (ImporteDR = 160.00).
+  assertEquals(tax.base, 1000);
+  assertEquals(tax.rate, 0.16);
+});
+
+Deno.test("buildRepPayload mantiene base = imp_pagado para tasa 0", () => {
+  const p = buildRepPayload({
+    ...validCtx,
+    documento_relacionado: { ...validCtx.documento_relacionado, tasa_iva: 0 },
+  });
+  const tax = p.complements[0].data[0].related_documents[0].taxes[0];
+  assertEquals(tax.base, validCtx.documento_relacionado.imp_pagado);
+});
+
+Deno.test("buildRepPayload emite RetencionesDR con la misma BaseDR del traslado", () => {
+  // Factura 1,000 + IVA 160 − retención IVA 40 = total 1,120, liquidada.
+  const p = buildRepPayload({
+    ...validCtx,
+    documento_relacionado: {
+      ...validCtx.documento_relacionado,
+      imp_saldo_ant: 1120,
+      imp_pagado: 1120,
+      retenciones: [{ tipo: "IVA", tasa: 0.04 }],
+      subtotal_factura: 1000,
+      total_factura: 1120,
+    },
+  });
+  const taxes = p.complements[0].data[0].related_documents[0].taxes;
+  const traslado = taxes.find((t) => !t.withholding)!;
+  const ret = taxes.find((t) => t.withholding)!;
+  assertEquals(traslado.base, 1000);
+  assertEquals(ret.type, "IVA");
+  assertEquals(ret.rate, 0.04);
+  assertEquals(ret.base, 1000);
+});
+
+Deno.test("calcularRetencionesDr agrupa una tasa por impuesto y bloquea mezclas", () => {
+  assertEquals(calcularRetencionesDr([{ tasa_ret_iva: 0.04 }, { tasa_ret_iva: 0.04 }]), [
+    { tipo: "IVA", tasa: 0.04 },
+  ]);
+  assertEquals(calcularRetencionesDr([{ tasa_ret_isr: 0.0125 }]), [{ tipo: "ISR", tasa: 0.0125 }]);
+  assertEquals(calcularRetencionesDr([]), []);
+  assertEquals(calcularRetencionesDr([{ tasa_ret_iva: 0.04 }, { tasa_ret_iva: 0.16 }]), null);
 });
 
 Deno.test("factorIvaFacturaOriginal distingue exento, tasa 0 y mezcla", () => {

@@ -20,6 +20,8 @@ export interface SaludProveedor {
   notas_credito_monto: number;
   embarques_activos: number;
   mensual: SaludProveedorMensual[];
+  /** R3FE-01: TC DOF usado para valuar los montos a MXN; faltante=true ⇒ los montos USD/EUR quedaron fuera. */
+  tc: { usd_mxn: number | null; eur_mxn: number | null; faltante: boolean };
 }
 
 export async function fetchProveedorSalud(proveedorId: string): Promise<SaludProveedor> {
@@ -38,6 +40,15 @@ export async function fetchProveedorSalud(proveedorId: string): Promise<SaludPro
     notas_credito_count: Number(raw.notas_credito_count ?? 0),
     notas_credito_monto: Number(raw.notas_credito_monto ?? 0),
     embarques_activos: Number(raw.embarques_activos ?? 0),
+    tc: (() => {
+      // SAFE-CAST: llave nueva del payload jsonb (R3FE-01).
+      const t = (raw.tc ?? {}) as Record<string, unknown>;
+      return {
+        usd_mxn: t.usd_mxn == null ? null : Number(t.usd_mxn),
+        eur_mxn: t.eur_mxn == null ? null : Number(t.eur_mxn),
+        faltante: t.faltante === true,
+      };
+    })(),
     mensual: Array.isArray(raw.mensual)
       ? (raw.mensual as Array<Record<string, unknown>>).map((m) => ({
           mes: String(m.mes ?? ""),

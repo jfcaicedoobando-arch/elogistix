@@ -19,6 +19,8 @@ import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers
 import { calcularParcialidad, factorIvaFacturaOriginal, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
 import { persistirRepTimbrado } from "./persistir.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
+import { calcularRetencionesDr, MSG_RETENCIONES_NO_SOPORTADAS } from "./retencionesDr.ts";
+import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -55,11 +57,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // 1) Pago
   const { data: pago, error: pErr } = await supabase
     .from("pagos_factura")
-    .select("id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago, referencia, estado_rep, facturapi_rep_id, monto_aplicado_factura")
+    .select("id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago, referencia, estado_rep, facturapi_rep_id, uuid_rep, rep_cancelado_facturapi_id, monto_aplicado_factura")
     .eq("id", body.pago_id)
     .maybeSingle();
   if (pErr || !pago) return json({ error: "pago_not_found", detail: pErr?.message }, 404);
-  if (pago.facturapi_rep_id) {
+  // Ola 12 · R3P-21: un REP cancelado no es un candado — el pago puede
+  // re-timbrar y el REP anterior se archiva para la sustitución motivo 01.
+  if (pago.facturapi_rep_id && !esReTimbradoPermitido(pago)) {
     const esClaim = String(pago.facturapi_rep_id).startsWith("PENDING:");
     return json({
       error: "ya_timbrado_rep",
@@ -96,13 +100,23 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // el REP siempre lleve el desglose de impuestos que exige el SAT/Facturapi.
   const { data: conceptosIva } = await supabase
     .from("conceptos_factura")
-    .select("tipo_iva")
+    .select("tipo_iva, tasa_ret_isr, tasa_ret_iva")
     .eq("factura_id", factura.id)
     .is("deleted_at", null);
   const factorIvaFactura = factorIvaFacturaOriginal(
     tasaIvaFactura,
     (conceptosIva ?? []).map((c) => (c as { tipo_iva?: string | null }).tipo_iva),
   );
+
+  // Ola 12 · R3P-19 — retenciones del CFDI relacionado. Mezcla de tasas por
+  // impuesto ⇒ bloqueo claro ANTES del claim (reintentable tras corregir).
+  const retencionesDr = calcularRetencionesDr(conceptosIva);
+  if (retencionesDr === null) {
+    await supabase.from("pagos_factura")
+      .update({ estado_rep: "Error", rep_error: MSG_RETENCIONES_NO_SOPORTADAS })
+      .eq("id", pago.id);
+    return json({ error: "retenciones_no_soportadas", message: MSG_RETENCIONES_NO_SOPORTADAS }, 422);
+  }
 
   // 3) Cliente
   const { data: cliente, error: cErr } = await supabase
@@ -168,6 +182,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       metodo_pago: "PPD",
       tasa_iva: tasaIvaFactura,
       factor_iva: factorIvaFactura,
+      retenciones: retencionesDr,
+      subtotal_factura: Number(factura.subtotal ?? 0),
+      total_factura: Number(factura.total ?? 0),
     },
     referencias: refs,
   };
@@ -186,21 +203,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // Facturapi para recuperar el REP si la edge muere entre timbrar y persistir.
   const claimTag = `PENDING:${crypto.randomUUID()}`;
   const claimAt = new Date().toISOString();
-  const { data: claimed, error: claimErr } = await supabase
-    .from("pagos_factura")
-    .update({ facturapi_rep_id: claimTag, facturapi_rep_claim_at: claimAt, rep_error: null })
-    .eq("id", pago.id)
-    .is("facturapi_rep_id", null)
-    .select("id")
-    .maybeSingle();
-  if (claimErr) return json({ error: "claim_failed", detail: claimErr.message }, 500);
-  if (!claimed) return json({ error: "ya_timbrado_rep", message: "Otro proceso ya está timbrando este REP." }, 409);
-  const releaseClaim = async () => {
-    await supabase.from("pagos_factura")
-      .update({ facturapi_rep_id: null, facturapi_rep_claim_at: null })
-      .eq("id", pago.id)
-      .eq("facturapi_rep_id", claimTag);
-  };
+  const claim = await tomarClaimRep(supabase, pago, claimTag, claimAt);
+  if (!claim.ok && claim.error) return json({ error: "claim_failed", detail: claim.error }, 500);
+  if (!claim.ok) return json({ error: "ya_timbrado_rep", message: "Otro proceso ya está timbrando este REP." }, 409);
+  const releaseClaim = claim.releaseClaim;
 
   const payload = buildRepPayload(ctx);
   // EF-01: correlación del claim para facturapi-recuperar-claim (Facturapi NO
