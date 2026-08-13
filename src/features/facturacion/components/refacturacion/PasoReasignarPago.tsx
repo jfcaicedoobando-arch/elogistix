@@ -21,6 +21,7 @@ interface Props {
   ordenanteRfc: string;
   onOrdenanteRfc: (v: string) => void;
   yaReasignado: boolean;
+  bloqueoOrdenante: string | null;
 }
 
 export function PasoReasignarPago(props: Props) {
@@ -80,7 +81,7 @@ export function PasoReasignarPago(props: Props) {
 
       <FormDialogSection
         title="Ordenante real del depósito"
-        description="Opcional. Úsalo cuando el dinero llegó desde una empresa distinta a la que se factura."
+        description="Obligatorio: deja constancia de la empresa desde la que llegó el dinero."
         cols={2}
       >
         <div className="space-y-1">
@@ -101,6 +102,9 @@ export function PasoReasignarPago(props: Props) {
             placeholder="XAXX010101000"
           />
         </div>
+        {props.bloqueoOrdenante && (
+          <p className="md:col-span-2 text-xs text-destructive">{props.bloqueoOrdenante}</p>
+        )}
       </FormDialogSection>
 
       <div className="rounded-md border border-info/30 bg-info/5 p-3 text-xs">
