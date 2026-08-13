@@ -2,7 +2,8 @@
  * Encabezado del expediente: caso, ruta fiscal, facturas y pagos involucrados.
  */
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatFechaEs, formatFechaHoraTexto } from "@/lib/formatters";
+import { formatFechaEs, formatFechaHoraTexto } from "@/lib/formatters";
+import { RefacturacionPagosLista } from "./RefacturacionPagosLista";
 import type { RefacturacionExpediente } from "@/features/facturacion/services/refacturacionExpediente";
 
 const ESTADO_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {
@@ -52,23 +53,7 @@ export function RefacturacionExpedienteResumen({ exp }: { exp: RefacturacionExpe
         <Dato label="Motivo">{caso.motivo || "—"}</Dato>
       </div>
 
-      {exp.pagos.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">Pagos involucrados</p>
-          <ul className="space-y-1">
-            {exp.pagos.map((p) => (
-              <li key={p.id} className="rounded-md border p-2 text-xs">
-                <span className="font-medium">{formatCurrency(Number(p.monto), p.moneda)}</span>
-                {" · "}{formatFechaEs(p.fecha_pago)}
-                {" · "}{p.es_nuevo ? "aplicado a la factura nueva" : "pago original"}
-                {p.deleted_at ? " · dado de baja" : ""}
-                {p.uuid_rep ? (p.rep_cancelado_en ? " · REP cancelado" : " · REP vigente") : " · sin REP"}
-                {p.ordenante_nombre ? ` · pagó ${p.ordenante_nombre}` : ""}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <RefacturacionPagosLista pagos={exp.pagos} />
     </div>
   );
 }
