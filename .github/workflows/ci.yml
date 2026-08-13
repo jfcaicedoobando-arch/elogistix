@@ -223,6 +223,10 @@ jobs:
           S=$!
           bun run audit:migrations > /tmp/audit-migrations.log 2>&1 &
           M=$!
+          bun run audit:schema-functions > /tmp/audit-schema-functions.log 2>&1 &
+          F=$!
+          bun run audit:manifest   > /tmp/audit-manifest.log   2>&1 &
+          V=$!
           bun run audit:rpc-sync    > /tmp/audit-rpc-sync.log    2>&1 &
           R=$!
           bun run audit:rpc-columns > /tmp/audit-rpc-columns.log 2>&1 &
@@ -235,6 +239,8 @@ jobs:
           wait $T || { echo '❌ audit:tests';      cat /tmp/audit-tests.log;      fail=1; }
           wait $S || { echo '❌ audit:schema';     cat /tmp/audit-schema.log;     fail=1; }
           wait $M || { echo '❌ audit:migrations'; cat /tmp/audit-migrations.log; fail=1; }
+          wait $F || { echo '❌ audit:schema-functions'; cat /tmp/audit-schema-functions.log; fail=1; }
+          wait $V || { echo '❌ audit:manifest';   cat /tmp/audit-manifest.log;   fail=1; }
           wait $R || { echo '❌ audit:rpc-sync';    cat /tmp/audit-rpc-sync.log;    fail=1; }
           wait $K || { echo '❌ audit:rpc-columns'; cat /tmp/audit-rpc-columns.log; fail=1; }
           wait $N || { echo '❌ audit:sonner';      cat /tmp/audit-sonner.log;      fail=1; }
