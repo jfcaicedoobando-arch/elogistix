@@ -74,6 +74,7 @@ export function usePagoLoteState(a: Args) {
     cuentaId: cuentaId || null,
     monedaCuenta: cuenta?.moneda ?? null,
     moneda: a.moneda,
+    fecha,
   });
   const error = tcBloqueado
     ? `Sin tipo de cambio DOF ${a.moneda}/MXN para esta fecha: no se puede registrar el pago en lote.`
@@ -103,6 +104,9 @@ export function usePagoLoteState(a: Args) {
       cuenta_bancaria_id: cuentaId || null,
       tipo_cambio_usd: tcAplicable,
       notas,
+      // Ola 11 · RNF-05 (espejo RG4-5): el importe de la transferencia viaja a
+      // la RPC; la validación exacta también vive en la función.
+      importe_recibido: totalNum,
       renglones,
     });
     a.onOpenChange(false);

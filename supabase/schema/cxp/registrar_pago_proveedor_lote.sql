@@ -1,0 +1,190 @@
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.registrar_pago_proveedor_lote(p_payload jsonb)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_org uuid;
+  v_autorizado boolean;
+  v_proveedor_id uuid := (p_payload->>'proveedor_id')::uuid;
+  v_fecha date := COALESCE((p_payload->>'fecha_pago')::date, CURRENT_DATE);
+  v_moneda public.moneda := (p_payload->>'moneda')::public.moneda;
+  v_tc numeric := NULLIF(p_payload->>'tipo_cambio_usd','')::numeric;
+  -- Ola 11 · RNF-05: importe real de la transferencia (nuevo en el payload).
+  v_importe numeric := NULLIF(p_payload->>'importe_recibido','')::numeric;
+  v_metodo text := COALESCE(NULLIF(TRIM(p_payload->>'metodo_pago'), ''), 'Transferencia');
+  v_referencia text := COALESCE(NULLIF(TRIM(p_payload->>'referencia'), ''), '');
+  v_cuenta_id uuid := NULLIF(p_payload->>'cuenta_bancaria_id','')::uuid;
+  v_notas text := COALESCE(p_payload->>'notas','');
+  v_cuenta public.cuentas_bancarias;
+  v_proveedor_nombre text;
+  v_total numeric := 0;
+  v_lote_id uuid;
+  v_renglon jsonb;
+  v_fecha_emision date;
+  v_n int := 0;
+  v_email text;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'No autenticado' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles ur
+    WHERE ur.user_id = v_uid
+      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','contador','tesorero'])
+  ) INTO v_autorizado;
+
+  IF NOT v_autorizado THEN
+    RAISE EXCEPTION 'LC_LOTE_SIN_ROL: Sólo administración, contabilidad o tesorería pueden registrar pagos en lote.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  SELECT organization_id, nombre INTO v_org, v_proveedor_nombre
+  FROM public.proveedores WHERE id = v_proveedor_id;
+
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'LC_LOTE_PROVEEDOR_NO_EXISTE: El proveedor no existe.';
+  END IF;
+
+  IF v_org <> public.current_user_org_id()
+     AND NOT public.has_role(v_uid,'super_admin'::app_role) THEN
+    RAISE EXCEPTION 'LC_LOTE_PROVEEDOR_OTRA_ORG: El proveedor pertenece a otra organización.';
+  END IF;
+
+  -- Ola 11 · RFE-02/RNF-03: misma regla que el pago individual.
+  IF v_fecha > CURRENT_DATE THEN
+    RAISE EXCEPTION 'LC_LOTE_FECHA_FUTURA: La fecha del pago no puede ser futura.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_cuenta_id IS NULL AND v_metodo <> 'Efectivo' THEN
+    RAISE EXCEPTION 'LC_LOTE_CUENTA_REQUERIDA: Selecciona la cuenta bancaria de donde sale el pago (sólo Efectivo puede omitirla).';
+  END IF;
+
+  IF v_cuenta_id IS NOT NULL THEN
+    SELECT * INTO v_cuenta FROM public.cuentas_bancarias
+    WHERE id = v_cuenta_id AND deleted_at IS NULL;
+
+    IF v_cuenta.id IS NULL THEN
+      RAISE EXCEPTION 'LC_LOTE_CUENTA_INVALIDA: La cuenta bancaria no existe o está dada de baja.';
+    END IF;
+    IF v_cuenta.organization_id <> v_org THEN
+      RAISE EXCEPTION 'LC_LOTE_CUENTA_OTRA_ORG: La cuenta bancaria pertenece a otra organización.';
+    END IF;
+    IF v_cuenta.moneda <> v_moneda THEN
+      RAISE EXCEPTION 'LC_LOTE_CUENTA_DIVISA: La cuenta está en % y el pago en %.', v_cuenta.moneda, v_moneda;
+    END IF;
+  END IF;
+
+  -- Ola 11 · RNF-06 (espejo RG4-6): una misma factura no puede aparecer dos veces.
+  IF EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(COALESCE(p_payload->'renglones','[]'::jsonb)) AS r
+    GROUP BY (r->>'factura_id')
+    HAVING count(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'LC_LOTE_FACTURA_DUPLICADA: Hay facturas repetidas en el lote; cada factura sólo puede aparecer una vez.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  -- Validar renglones y calcular total.
+  FOR v_renglon IN SELECT * FROM jsonb_array_elements(COALESCE(p_payload->'renglones','[]'::jsonb)) LOOP
+    IF COALESCE((v_renglon->>'monto')::numeric, 0) <= 0 THEN
+      RAISE EXCEPTION 'LC_LOTE_MONTO_INVALIDO: Cada factura del lote debe tener un importe mayor a cero.';
+    END IF;
+
+    -- Ola 11 · RFE-02/RNF-03: el SELECT sirve doble — valida que la factura
+    -- exista/sea del proveedor y trae fecha_emision para el guard de fecha.
+    SELECT pf.fecha_emision INTO v_fecha_emision
+    FROM public.proveedor_facturas pf
+    WHERE pf.id = (v_renglon->>'factura_id')::uuid
+      AND pf.deleted_at IS NULL
+      AND pf.organization_id = v_org
+      AND pf.proveedor_id = v_proveedor_id;
+
+    IF v_fecha_emision IS NULL THEN
+      RAISE EXCEPTION 'LC_LOTE_FACTURA_INVALIDA: Una de las facturas no existe o no pertenece al proveedor seleccionado.';
+    END IF;
+
+    IF v_fecha < v_fecha_emision THEN
+      RAISE EXCEPTION 'LC_LOTE_FECHA_PREVIA_EMISION: La fecha del pago es anterior a la emisión de una de las facturas del lote.'
+        USING ERRCODE = '42501';
+    END IF;
+
+    v_total := v_total + ROUND((v_renglon->>'monto')::numeric, 2);
+    v_n := v_n + 1;
+  END LOOP;
+
+  IF v_n < 2 THEN
+    RAISE EXCEPTION 'LC_LOTE_MINIMO_FACTURAS: Un pago en lote requiere al menos dos facturas.';
+  END IF;
+
+  -- Ola 11 · RNF-05 (espejo RG4-5): el reparto debe cuadrar EXACTAMENTE con
+  -- la transferencia. Canon RNF-02: comparación exacta tras ROUND a 2
+  -- decimales (sin tolerancia), igual que promete el mensaje.
+  IF v_importe IS NULL OR v_importe <= 0 THEN
+    RAISE EXCEPTION 'LC_LOTE_IMPORTE_REQUERIDO: Captura el importe total de la transferencia.'
+      USING ERRCODE = '42501';
+  END IF;
+  IF ROUND(v_importe, 2) IS DISTINCT FROM ROUND(v_total, 2) THEN
+    RAISE EXCEPTION 'LC_LOTE_IMPORTE_NO_CUADRA: El reparto (%) no cuadra con el importe de la transferencia (%); no se permite sobrante sin asignar.', v_total, v_importe
+      USING ERRCODE = '42501';
+  END IF;
+
+  INSERT INTO public.pagos_proveedor_lote
+    (organization_id, proveedor_id, fecha_pago, moneda, monto_total, tipo_cambio_usd,
+     metodo_pago, referencia, cuenta_bancaria_id, notas, created_by)
+  VALUES
+    (v_org, v_proveedor_id, v_fecha, v_moneda, v_total, v_tc,
+     v_metodo, v_referencia, v_cuenta_id, v_notas, v_uid)
+  RETURNING id INTO v_lote_id;
+
+  FOR v_renglon IN SELECT * FROM jsonb_array_elements(COALESCE(p_payload->'renglones','[]'::jsonb)) LOOP
+    INSERT INTO public.pagos_proveedor
+      (organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd,
+       metodo_pago, referencia, cuenta_bancaria_id, notas, created_by, lote_id)
+    VALUES
+      (v_org, (v_renglon->>'factura_id')::uuid, v_fecha,
+       ROUND((v_renglon->>'monto')::numeric, 2), v_moneda, v_tc,
+       v_metodo, v_referencia, v_cuenta_id, v_notas, v_uid, v_lote_id);
+  END LOOP;
+
+  IF v_cuenta_id IS NOT NULL THEN
+    INSERT INTO public.bbva_movimientos
+      (organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
+       cargo, abono, hash_dedupe, estado_conciliacion,
+       pago_proveedor_lote_id, conciliado_por, conciliado_at, importado_por)
+    VALUES
+      (v_org, v_cuenta_id, v_fecha,
+       'Pago en lote (' || v_n || ' facturas) — ' || COALESCE(v_proveedor_nombre, 'proveedor'),
+       v_referencia, v_total, 0, 'lote-' || v_lote_id::text, 'Conciliado',
+       v_lote_id, v_uid, now(), v_uid);
+  END IF;
+
+  BEGIN
+    SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
+    INSERT INTO public.bitacora_actividad
+      (organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles)
+    VALUES (v_org, v_uid, COALESCE(v_email,''), 'registrar_pago_proveedor_lote', 'cxp',
+            v_lote_id, 'Pago en lote ' || v_lote_id::text,
+            jsonb_build_object('proveedor_id', v_proveedor_id, 'monto_total', v_total,
+                               'importe_recibido', v_importe,
+                               'moneda', v_moneda, 'facturas', v_n,
+                               'cuenta_bancaria_id', v_cuenta_id, 'referencia', v_referencia));
+  EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'bitacora insert failed en registrar_pago_proveedor_lote: % %', SQLSTATE, SQLERRM;
+  END;
+
+  RETURN v_lote_id;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) FROM anon;
+GRANT EXECUTE ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) TO service_role;

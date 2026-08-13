@@ -6,9 +6,35 @@
  */
 import { round2 } from "@/features/cxp/services/pagoProveedorLote";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
+import { validarFechaPago } from "@/features/facturacion/components/validarFechaPago";
+import { todayLocalISO } from "@/lib/date/today";
 
-/** Tolerancia de centavos usada en todas las comparaciones del lote. */
+/**
+ * Tolerancia de centavos usada en las comparaciones contra SALDO (cálculo
+ * flotante). Ola 11 · RNF-02: el CUADRE importe/reparto ya no usa
+ * tolerancia — es exacto tras round2, igual que la RPC.
+ */
 export const TOLERANCIA_CENTAVOS = 0.009;
+
+/**
+ * Ola 11 · RFE-02/RNF-03: misma regla de fecha que el cobro individual
+ * (FE-03 / `validarFechaPago`): no futura. La regla "no anterior a la
+ * emisión" se valida por factura en la RPC.
+ */
+export function errorFechaLote(fecha: string): string | null {
+  return validarFechaPago(fecha, todayLocalISO());
+}
+
+/**
+ * Ola 11 · RFE-03 (patrón FE-01): un lote en USD/EUR sin TC disponible se
+ * bloquea en vez de guardarse con tipo_cambio NULL (paridad degradada).
+ */
+export function errorTcLote(moneda: string, tcAplicable: number | null): string | null {
+  if (moneda !== "MXN" && !(tcAplicable && tcAplicable > 0)) {
+    return `No hay tipo de cambio ${moneda}/MXN disponible para la fecha elegida. Intenta de nuevo en unos segundos; si el problema persiste, contacta a soporte.`;
+  }
+  return null;
+}
 
 /**
  * Ola 6 · RG4-6: dos renglones a la misma factura pasaban el chequeo de saldo
@@ -50,13 +76,15 @@ export function errorRenglonExcedeSaldo(
 /**
  * Ola 5 · RG4-5: el reparto debe cuadrar EXACTO con el importe recibido; el
  * sobrante ya no es advertencia, es error.
+ * Ola 11 · RNF-02: exacto de verdad — comparación tras round2, sin tolerancia
+ * (antes 0.009 aquí y 0.01 en la RPC: discrepancia explotable).
  */
 export function errorCuadre(total: number, totalRepartido: number): string | null {
   const recibido = round2(total);
-  if (totalRepartido > recibido + TOLERANCIA_CENTAVOS) {
+  if (totalRepartido > recibido) {
     return "La suma repartida no puede exceder el importe recibido.";
   }
-  if (recibido - totalRepartido > TOLERANCIA_CENTAVOS) {
+  if (recibido - totalRepartido > 0) {
     return "El reparto debe cubrir exactamente el importe recibido: ajusta el importe o los importes por factura hasta que no quede sobrante sin asignar.";
   }
   return null;

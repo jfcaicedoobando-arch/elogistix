@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
 import { FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { round2 } from "@/features/facturacion/services/pagoClienteLote";
@@ -46,8 +47,19 @@ export function DialogCobroLoteDatos(p: Props) {
   // Ola 5 · RG4-11: el hint nombra la moneda real del TC mostrado.
   const tcValor = p.moneda === "EUR" ? p.tcDof?.eurMxn : p.tcDof?.usdMxn;
   const hintTc = p.tcDof && tcValor ? ` · TC DOF ${p.moneda} ${tcValor} (${p.tcDof.fecha})` : "";
+  // Ola 11 · RFE-03 (patrón FE-01): lote extranjero sin TC → aviso explícito.
+  const tcFaltante = p.moneda !== "MXN" && !tcValor;
   return (
     <FormDialogSection flat title="Datos del depósito">
+      {tcFaltante && (
+        <Alert className="border-warning/40 bg-warning/5 mb-3">
+          <AlertDescription className="text-xs">
+            Esperando tipo de cambio… No se puede registrar un cobro en {p.moneda} sin un tipo de
+            cambio disponible. Intenta de nuevo en unos segundos; si el problema persiste, contacta
+            a soporte.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 md:grid-cols-3">
         <div className="space-y-1.5">
           <Label>Fecha del cobro</Label>

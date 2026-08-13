@@ -30,5 +30,17 @@ export function traducirErrorCobroLote(error: Error): string {
   if (m.includes("LC_COBRO_LOTE_DUPLICADO_RECIENTE")) {
     return "Ya registraste un cobro en lote idéntico hace unos minutos (mismo cliente, fecha e importe). Verifica el historial de pagos antes de reintentar.";
   }
+  if (m.includes("LC_COBRO_LOTE_FECHA_FUTURA")) {
+    return "La fecha del cobro no puede ser futura.";
+  }
+  if (m.includes("LC_COBRO_LOTE_FECHA_PREVIA_EMISION")) {
+    return "La fecha del cobro es anterior a la emisión de una de las facturas del lote.";
+  }
+  if (m.includes("LC_COBRO_LOTE_TC_REQUERIDO")) {
+    return "No hay tipo de cambio disponible para un cobro en moneda extranjera. Reintenta en unos segundos.";
+  }
+  if (m.includes("LC_COBRO_LOTE_EN_PROCESO")) {
+    return "Este cobro en lote ya está en proceso. Espera unos segundos y verifica el historial de pagos antes de reintentar.";
+  }
   return "No se pudo registrar el cobro en lote.";
 }

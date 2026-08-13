@@ -88,6 +88,10 @@ export function usePagoClienteLoteState(a: Args) {
   const [cuentaId, setCuentaId] = useState("");
   const [notas, setNotas] = useState("");
   const [renglones, setRenglones] = useState<RenglonCobro[]>([]);
+  // Ola 11 · RNF-01: una llave por apertura del diálogo; los reintentos del
+  // mismo submit (timeout ambiguo, doble clic) la reutilizan y la RPC los
+  // deduplica server-side.
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
 
   // Al abrir: importe sugerido = saldo total, reparto FIFO por vencimiento.
   useEffect(() => {
@@ -99,6 +103,7 @@ export function usePagoClienteLoteState(a: Args) {
     setCuentaId("");
     setNotas("");
     setRenglones(repartirFifo(a.facturas, saldoTotal).renglones);
+    setRequestId(crypto.randomUUID());
   }, [a.open, a.facturas, saldoTotal]);
 
   const idsConRep = useIdsConRep(a.open, a.facturas);
@@ -112,6 +117,8 @@ export function usePagoClienteLoteState(a: Args) {
     cuentaId: cuentaId || null,
     monedaCuenta: cuenta?.moneda ?? null,
     moneda: a.moneda,
+    fecha,
+    tcAplicable,
   });
   const sinAsignar = round2(totalNum - totalRepartido);
   const erroresRenglon = erroresPorRenglon(a.facturas, renglones);
@@ -161,6 +168,7 @@ export function usePagoClienteLoteState(a: Args) {
       // Ola 5 · RG4-5: el importe recibido viaja a la RPC (defensa en
       // profundidad: la validación exacta también vive en la función).
       importe_recibido: totalNum,
+      request_id: requestId,
       renglones,
       facturasConRep: await obtenerFacturasConRep(aplicadas),
     });

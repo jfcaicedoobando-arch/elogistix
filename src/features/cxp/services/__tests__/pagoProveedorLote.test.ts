@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { todayLocalISO } from "@/lib/date/today";
 import { repartirFifo, validarLote, round2 } from "../pagoProveedorLote";
 
 const F = [
@@ -26,7 +27,13 @@ describe("repartirFifo (CxP · pago proveedor en lote)", () => {
 });
 
 describe("validarLote", () => {
-  const opts = { requiereCuenta: true, cuentaId: "c1", monedaCuenta: "USD", moneda: "USD" };
+  const opts = {
+    requiereCuenta: true,
+    cuentaId: "c1",
+    monedaCuenta: "USD",
+    moneda: "USD",
+    fecha: todayLocalISO(),
+  };
 
   it("acepta un reparto válido de pago a proveedor", () => {
     const { renglones } = repartirFifo(F, 400);
@@ -58,5 +65,34 @@ describe("validarLote", () => {
     const { renglones } = repartirFifo(F, 400);
     const res = validarLote(F, renglones, 400, { ...opts, cuentaId: null });
     expect(res.error).toMatch(/cuenta bancaria/);
+  });
+
+  it("rechaza fecha futura (Ola 11 · RFE-02)", () => {
+    const { renglones } = repartirFifo(F, 400);
+    const manana = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    const res = validarLote(F, renglones, 400, { ...opts, fecha: manana });
+    expect(res.error).toMatch(/no puede ser futura/i);
+  });
+
+  it("rechaza sobrante sin asignar (Ola 11 · RNF-05)", () => {
+    const { renglones } = repartirFifo(F, 400);
+    const res = validarLote(F, renglones, 500, opts);
+    expect(res.error).toMatch(/exactamente el importe de la transferencia/i);
+  });
+
+  it("rechaza factura repetida en el reparto (Ola 11 · RNF-06)", () => {
+    const res = validarLote(
+      F,
+      [{ factura_id: "a", monto: 150 }, { factura_id: "a", monto: 150 }],
+      300,
+      opts,
+    );
+    expect(res.error).toMatch(/más de una vez/i);
+  });
+
+  it("rechaza diferencia de un centavo (Ola 11 · RNF-02)", () => {
+    const { renglones } = repartirFifo(F, 400);
+    const res = validarLote(F, renglones, 400.01, opts);
+    expect(res.error).toMatch(/exactamente el importe de la transferencia/i);
   });
 });
