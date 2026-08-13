@@ -94,6 +94,26 @@ export function useTesoreriaCuentasController() {
       notifyError(undefined, { title: "Captura un alias", method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_1" });
       return;
     }
+    // Ola 11 · RFE-07: un corte futuro congela el saldo en saldo_inicial
+    // (los movimientos anteriores al corte no afectan el saldo).
+    if (form.fechaSaldoInicial > todayLocalISO()) {
+      notifyError(undefined, {
+        title: "La fecha de corte no puede ser futura",
+        description: "El saldo inicial debe corresponder a hoy o a un día anterior.",
+        method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_3",
+      });
+      return;
+    }
+    // Ola 11 · RFE-07: misma validación CLABE que proveedores (18 dígitos +
+    // dígito verificador Banxico). CLABE vacía sigue siendo opcional.
+    const errorBancario = validarDatosBancarios({ esExtranjero: false, clabe: form.clabe, swiftBic: null });
+    if (errorBancario) {
+      notifyError(undefined, {
+        title: errorBancario.mensaje,
+        method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_4",
+      });
+      return;
+    }
     if (editTarget && tieneMovimientos && form.moneda !== editTarget.moneda) {
       notifyError(undefined, {
         title: "No se puede cambiar la moneda",
