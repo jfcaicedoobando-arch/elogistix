@@ -165,13 +165,13 @@ export default function Cartera() {
             emptyIcon={Inbox}
             emptyMessage="Sin cartera pendiente"
             emptyHint="¡Todo cobrado!"
-            rowSelection={rowSelection}
-            onRowSelectionChange={setRowSelection}
+            rowSelection={canRegistrarCobro ? rowSelection : undefined}
+            onRowSelectionChange={canRegistrarCobro ? setRowSelection : undefined}
           />
         </CardContent>
       </Card>
 
-      {lote && (
+      {lote && canRegistrarCobro && (
         <DialogCobroLoteCliente
           open={loteOpen}
           onOpenChange={setLoteOpen}
