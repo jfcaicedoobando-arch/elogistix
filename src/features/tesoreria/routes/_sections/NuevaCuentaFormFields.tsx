@@ -38,7 +38,16 @@ export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false 
       </div>
       <div>
         <Label>CLABE</Label>
-        <Input value={form.clabe} onChange={(e) => setField("clabe", e.target.value)} />
+        <Input
+          value={form.clabe}
+          onChange={(e) => setField("clabe", e.target.value.replace(/\D/g, "").slice(0, 18))}
+          inputMode="numeric"
+          maxLength={18}
+          placeholder="18 dígitos"
+        />
+        {errorClabe && (
+          <p className="text-xs text-destructive pt-1" role="alert">{errorClabe}</p>
+        )}
       </div>
       <div>
         <Label>Moneda</Label>
