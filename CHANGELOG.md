@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.566.0] - 2026-08-13
+- **Los "planos" de la base vuelven a coincidir con la obra (Sprint 8 · higiene de esquema)**: dos funciones clave de embarques tenían su copia de referencia desactualizada; se regeneraron 1:1 con la versión que realmente corre (incluye el candado que evita que un nombre vacío borre al proveedor y el reparto exacto de costos entre contenedores).
+- **Nuevo guardián de archivos canónicos**: si un archivo de referencia queda truncado o inválido, la compilación falla en lugar de pasar desapercibido.
+- **Inventario de migraciones al día**: el listado de versiones de base de datos volvió a cuadrar con lo que hay en disco (905 archivos) y ahora se verifica automáticamente en cada revisión.
+- **Guardián de registros borrados más fino**: en oportunidades y leads ya no se exime el archivo completo; sólo la consulta de detalle por enlace directo. Las listas quedan protegidas otra vez contra el bug de mostrar registros eliminados.
+
 ## [13.565.0] - 2026-08-13
 - **Enlaces de seguimiento vencidos ya dicen la verdad (Sprint 6 · páginas públicas)**: si el enlace no existe o venció, el cliente ve "este enlace ya no es válido o venció" con los pasos a seguir, en lugar del genérico "el servicio no está disponible" que lo invitaba a reintentar en vano.
 - **Los enlaces personales ya no se publican en buscadores**: las páginas de seguimiento, proformas y baja de correos piden a Google que no las indexe y la dirección "oficial" que declaran ya no incluye el token del cliente.

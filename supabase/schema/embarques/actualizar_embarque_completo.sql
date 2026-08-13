@@ -1,5 +1,8 @@
 -- Fuente canónica de public.actualizar_embarque_completo
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
+-- Regenerada 1:1 con supabase/migrations/20260819100000_fix_proveedor_conceptos_costo.sql
+-- (incluye el guard v13.509.0 de proveedor_nombre: un nombre vacío ya no borra
+-- el proveedor existente).
+-- Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
 
 CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone)
@@ -80,6 +83,9 @@ BEGIN
     carta_porte = CASE WHEN p_embarque ? 'carta_porte' THEN p_embarque->>'carta_porte' ELSE carta_porte END,
     etd = CASE WHEN p_embarque ? 'etd' THEN (p_embarque->>'etd')::date ELSE etd END,
     eta = CASE WHEN p_embarque ? 'eta' THEN (p_embarque->>'eta')::date ELSE eta END,
+    -- 13.334.6 · Blindaje `embarques_tc_{usd,eur}_pos`: un TC vacío o 0 se
+    -- trata como "sin dato" y conserva el valor previo, en vez de intentar
+    -- escribir 0 y reventar con 23514.
     tipo_cambio_usd = COALESCE(NULLIF(NULLIF(p_embarque->>'tipo_cambio_usd','')::numeric, 0), tipo_cambio_usd),
     tipo_cambio_eur = COALESCE(NULLIF(NULLIF(p_embarque->>'tipo_cambio_eur','')::numeric, 0), tipo_cambio_eur),
     msds_archivo = CASE WHEN p_embarque ? 'msds_archivo' THEN p_embarque->>'msds_archivo' ELSE msds_archivo END,
@@ -135,7 +141,13 @@ BEGIN
     IF cc ? 'id' AND cc->>'id' IS NOT NULL AND cc->>'id' <> '' THEN
       UPDATE conceptos_costo SET
         concepto = COALESCE(cc->>'concepto', concepto),
-        proveedor_nombre = COALESCE(cc->>'proveedor_nombre', proveedor_nombre),
+        -- v13.509.0 · un nombre vacío ya NO borra el proveedor existente:
+        -- solo se reemplaza cuando el payload manda un nombre real.
+        proveedor_nombre = CASE
+          WHEN cc ? 'proveedor_nombre' AND COALESCE(btrim(cc->>'proveedor_nombre'), '') <> ''
+            THEN cc->>'proveedor_nombre'
+          ELSE proveedor_nombre
+        END,
         proveedor_id = CASE
           WHEN cc ? 'proveedor_id' AND cc->>'proveedor_id' IS NOT NULL AND cc->>'proveedor_id' <> ''
             THEN (cc->>'proveedor_id')::uuid
@@ -172,5 +184,8 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$
- name:actualizar_embarque_completo schema:public;
+$function$;
+
+-- Permisos (1:1 con la migración 20260819100000):
+REVOKE ALL ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) TO authenticated, service_role;
