@@ -61,11 +61,11 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
     <div className="space-y-3 w-80">
       <SectionHeading as="h3">Nueva actividad</SectionHeading>
       <div className="space-y-1">
-        <Label className="text-xs">Asunto *</Label>
+        <Label>Asunto *</Label>
         <Input autoFocus value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Oportunidad *</Label>
+        <Label>Oportunidad *</Label>
         <Select value={entidadId || undefined} onValueChange={setEntidadId}>
           <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
           <SelectContent>
@@ -75,7 +75,7 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Fecha</Label>
+        <Label>Fecha</Label>
         <DateTimePickerMx value={fecha} onChange={setFecha} />
       </div>
       <div className="flex items-center justify-between pt-1">

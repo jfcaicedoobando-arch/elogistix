@@ -36,7 +36,7 @@ export default function AlertasSistemaPanel() {
         </div>
         <div className="flex items-center gap-2">
           <Switch id="alertas-include-ack" checked={includeAck} onCheckedChange={setIncludeAck} />
-          <Label htmlFor="alertas-include-ack" className="text-xs">Incluir reconocidas</Label>
+          <Label htmlFor="alertas-include-ack">Incluir reconocidas</Label>
         </div>
       </CardHeader>
       <CardContent>

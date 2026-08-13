@@ -61,7 +61,7 @@ export function CancelarFacturaProveedorDialog({
       }
     >
       <div className="space-y-1.5">
-        <Label htmlFor="cxp-cancel-motivo" className="text-xs">
+        <Label htmlFor="cxp-cancel-motivo">
           Motivo de cancelación <span className="text-destructive">*</span>
         </Label>
         <Textarea
@@ -74,7 +74,7 @@ export function CancelarFacturaProveedorDialog({
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="cxp-cancel-confirm" className="text-xs">
+        <Label htmlFor="cxp-cancel-confirm">
           Escribe <span className="font-mono font-semibold">CANCELAR</span> para confirmar
         </Label>
         <Input

@@ -84,7 +84,7 @@ export default function ReportesCartera() {
       <Card>
         <CardContent className="flex flex-wrap items-end gap-4 p-4">
           <div className="space-y-1">
-            <Label htmlFor="cartera-corte" className="text-xs">Fecha de corte</Label>
+            <Label htmlFor="cartera-corte">Fecha de corte</Label>
             <DatePickerMx
               id="cartera-corte"
               value={fechaCorte}
@@ -97,7 +97,7 @@ export default function ReportesCartera() {
             </p>
           </div>
           <div className="min-w-[220px] flex-1 space-y-1">
-            <Label htmlFor="cartera-buscar" className="text-xs">Cliente, proveedor, folio o expediente</Label>
+            <Label htmlFor="cartera-buscar">Cliente, proveedor, folio o expediente</Label>
             <Input
               id="cartera-buscar"
               value={busqueda}

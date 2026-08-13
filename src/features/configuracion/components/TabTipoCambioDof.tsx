@@ -106,15 +106,15 @@ export default function TabTipoCambioDof() {
 
         <div className="flex flex-wrap items-end gap-2 rounded-md border border-dashed p-3">
           <div className="space-y-1">
-            <Label className="text-xs">Fecha</Label>
+            <Label>Fecha</Label>
             <DatePickerMx className="w-40" value={fecha} onChange={setFecha} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">USD / MXN</Label>
+            <Label>USD / MXN</Label>
             <Input className="w-32" inputMode="decimal" placeholder="17.4312" value={usd} onChange={(e) => setUsd(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">EUR / MXN (opcional)</Label>
+            <Label>EUR / MXN (opcional)</Label>
             <Input className="w-32" inputMode="decimal" placeholder="19.9389" value={eur} onChange={(e) => setEur(e.target.value)} />
           </div>
           <Button size="sm" onClick={handleGuardar} disabled={upsert.isPending || !usd}>

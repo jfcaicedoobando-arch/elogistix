@@ -116,15 +116,15 @@ export default function ComprasNotasCredito() {
       <Card>
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="nc-desde" className="text-xs">{RANGO_DESDE_LABEL}</Label>
+            <Label htmlFor="nc-desde">{RANGO_DESDE_LABEL}</Label>
             <DatePickerMx value={desde} onChange={setDesde} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="nc-hasta" className="text-xs">{RANGO_HASTA_LABEL}</Label>
+            <Label htmlFor="nc-hasta">{RANGO_HASTA_LABEL}</Label>
             <DatePickerMx value={hasta} onChange={setHasta} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Moneda</Label>
+            <Label>Moneda</Label>
             <Select value={moneda} onValueChange={(v) => setMoneda(v as MonedaFiltro)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -135,7 +135,7 @@ export default function ComprasNotasCredito() {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Estado</Label>
+            <Label>Estado</Label>
             <Select value={estado} onValueChange={(v) => setEstado(v as EstadoFiltro)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -147,7 +147,7 @@ export default function ComprasNotasCredito() {
             </Select>
           </div>
           <div className="space-y-1 sm:col-span-2 lg:col-span-1">
-            <Label className="text-xs">Buscar</Label>
+            <Label>Buscar</Label>
             <SearchInput value={search} onChange={setSearch} placeholder="Folio NC o factura…" />
           </div>
         </CardContent>

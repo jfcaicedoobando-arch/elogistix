@@ -72,15 +72,15 @@ export default function TabPuertos() {
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2 items-end">
           <div className="space-y-1">
-            <Label className="text-xs">Código</Label>
+            <Label>Código</Label>
             <Input className="w-28" placeholder="MXZLO" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Nombre</Label>
+            <Label>Nombre</Label>
             <Input className="w-48" placeholder="Manzanillo" value={nuevoName} onChange={(e) => setNuevoName(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">País</Label>
+            <Label>País</Label>
             <Input className="w-40" placeholder="México" value={nuevoCountry} onChange={(e) => setNuevoCountry(e.target.value)} />
           </div>
           <Button size="sm" onClick={handleAgregarPuerto} disabled={agregarPuerto.isPending}>

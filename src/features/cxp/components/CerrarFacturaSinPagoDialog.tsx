@@ -85,7 +85,7 @@ export function CerrarFacturaSinPagoDialog({
       }
     >
       <div className="space-y-1.5">
-        <Label htmlFor="cxp-cerrar-motivo" className="text-xs">
+        <Label htmlFor="cxp-cerrar-motivo">
           Motivo <span className="text-destructive">*</span>
         </Label>
         <Select
@@ -108,7 +108,7 @@ export function CerrarFacturaSinPagoDialog({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="cxp-cerrar-comentario" className="text-xs">
+        <Label htmlFor="cxp-cerrar-comentario">
           Comentario adicional (opcional)
         </Label>
         <Textarea
@@ -123,7 +123,7 @@ export function CerrarFacturaSinPagoDialog({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="cxp-cerrar-confirm" className="text-xs">
+        <Label htmlFor="cxp-cerrar-confirm">
           Escribe <span className="font-mono font-semibold">CERRAR</span> para confirmar
         </Label>
         <Input

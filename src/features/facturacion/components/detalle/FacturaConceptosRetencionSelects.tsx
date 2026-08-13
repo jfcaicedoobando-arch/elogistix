@@ -25,7 +25,7 @@ export function RetencionSelects({ tasaIsr, tasaIva, onChange }: Props) {
   return (
     <>
       <div className="col-span-2">
-        <Label className="text-xs">Ret. ISR</Label>
+        <Label size="sm">Ret. ISR</Label>
         <Select
           value={isrKey}
           onValueChange={(v) => onChange({ tasa_ret_isr: tasaFromIsrKey(v as RetencionIsrKey) })}
@@ -39,7 +39,7 @@ export function RetencionSelects({ tasaIsr, tasaIva, onChange }: Props) {
         </Select>
       </div>
       <div className="col-span-2">
-        <Label className="text-xs">Ret. IVA</Label>
+        <Label size="sm">Ret. IVA</Label>
         <Select
           value={ivaKey}
           onValueChange={(v) => onChange({ tasa_ret_iva: tasaFromIvaKey(v as RetencionIvaKey) })}

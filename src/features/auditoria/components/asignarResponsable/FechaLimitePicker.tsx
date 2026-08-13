@@ -15,7 +15,7 @@ interface Props {
 export function FechaLimitePicker({ fechaLimite, onChange }: Props) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs">Fecha límite (opcional)</Label>
+      <Label>Fecha límite (opcional)</Label>
       <Popover>
         <PopoverTrigger asChild>
           <Button

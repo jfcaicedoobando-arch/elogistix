@@ -55,7 +55,7 @@ function TextField({
 }: { label: string; field: FieldKey; form: ClienteData; setForm: (f: (p: ClienteData) => ClienteData) => void; full?: boolean; required?: boolean }) {
   return (
     <div className={full ? "md:col-span-2" : undefined}>
-      <Label className="text-xs">
+      <Label>
         {label}{required && <span className="text-destructive ml-0.5">*</span>}
       </Label>
       <Input
@@ -157,7 +157,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
         <TextField label="RFC" field="rfc" form={form} setForm={setForm} />
         <TextField label="Código Postal" field="cp" form={form} setForm={setForm} />
         <div>
-          <Label className="text-xs">Régimen Fiscal SAT<span className="text-destructive ml-0.5">*</span></Label>
+          <Label>Régimen Fiscal SAT<span className="text-destructive ml-0.5">*</span></Label>
           <Select value={form.regimen_fiscal || undefined} onValueChange={(v) => setForm((p) => ({ ...p, regimen_fiscal: v }))}>
             <SelectTrigger className="mt-1"><SelectValue placeholder="Selecciona régimen" /></SelectTrigger>
             <SelectContent>
@@ -168,7 +168,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
           </Select>
         </div>
         <div>
-          <Label className="text-xs">Uso CFDI por defecto</Label>
+          <Label>Uso CFDI por defecto</Label>
           <Select value={form.uso_cfdi_default || undefined} onValueChange={(v) => setForm((p) => ({ ...p, uso_cfdi_default: v }))}>
             <SelectTrigger className="mt-1"><SelectValue placeholder="Selecciona uso CFDI" /></SelectTrigger>
             <SelectContent>

@@ -58,11 +58,11 @@ export default function QuickCreateOportunidadPopover({ onCreated, onMore, onClo
     <div className="space-y-3 w-80">
       <SectionHeading as="h3">Nueva oportunidad</SectionHeading>
       <div className="space-y-1">
-        <Label className="text-xs">Nombre *</Label>
+        <Label>Nombre *</Label>
         <Input autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Importación China Q1" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Cliente</Label>
+        <Label>Cliente</Label>
         <Select value={clienteId} onValueChange={setClienteId}>
           <SelectTrigger><SelectValue placeholder="Sin cliente" /></SelectTrigger>
           <SelectContent>

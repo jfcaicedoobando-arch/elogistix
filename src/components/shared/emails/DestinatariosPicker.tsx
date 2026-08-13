@@ -60,7 +60,7 @@ export function DestinatariosPicker({
 
   return (
     <div className="space-y-1">
-      <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+      <Label size="sm" className="uppercase tracking-wide text-muted-foreground">
         Contactos del cliente
       </Label>
       <div className="rounded-md border bg-muted/20 p-1 max-h-48 overflow-auto">

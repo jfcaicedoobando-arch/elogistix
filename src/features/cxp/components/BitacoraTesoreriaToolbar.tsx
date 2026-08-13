@@ -33,7 +33,7 @@ export function BitacoraTesoreriaToolbar({ filtros, onChange, usuarios }: Props)
   return (
     <div className="grid gap-3 rounded-md border bg-muted/30 p-3 sm:grid-cols-2 lg:grid-cols-5">
       <div className="space-y-1">
-        <Label className="text-xs" htmlFor="bitacora-tes-desde">{rangoLabel("Pago", "desde")}</Label>
+        <Label htmlFor="bitacora-tes-desde">{rangoLabel("Pago", "desde")}</Label>
         <DatePickerMx
           id="bitacora-tes-desde"
           value={filtros.desde}
@@ -42,7 +42,7 @@ export function BitacoraTesoreriaToolbar({ filtros, onChange, usuarios }: Props)
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs" htmlFor="bitacora-tes-hasta">{rangoLabel("Pago", "hasta")}</Label>
+        <Label htmlFor="bitacora-tes-hasta">{rangoLabel("Pago", "hasta")}</Label>
         <DatePickerMx
           id="bitacora-tes-hasta"
           value={filtros.hasta}
@@ -51,7 +51,7 @@ export function BitacoraTesoreriaToolbar({ filtros, onChange, usuarios }: Props)
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs" htmlFor="bitacora-tes-tipo">Tipo de movimiento</Label>
+        <Label htmlFor="bitacora-tes-tipo">Tipo de movimiento</Label>
         <Select
           value={filtros.tipo}
           onValueChange={(v) => set("tipo", v as TipoMovimientoBitacora)}
@@ -68,7 +68,7 @@ export function BitacoraTesoreriaToolbar({ filtros, onChange, usuarios }: Props)
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs" htmlFor="bitacora-tes-usuario">Usuario / operador</Label>
+        <Label htmlFor="bitacora-tes-usuario">Usuario / operador</Label>
         <Select value={filtros.usuario} onValueChange={(v) => set("usuario", v)}>
           <SelectTrigger id="bitacora-tes-usuario" className="h-9">
             <SelectValue />
@@ -83,7 +83,7 @@ export function BitacoraTesoreriaToolbar({ filtros, onChange, usuarios }: Props)
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs" htmlFor="bitacora-tes-orden">Ordenar por fecha</Label>
+        <Label htmlFor="bitacora-tes-orden">Ordenar por fecha</Label>
         <Select
           value={filtros.orden}
           onValueChange={(v) => set("orden", v as OrdenBitacora)}

@@ -140,7 +140,7 @@ export function DialogEnviarCfdi({
 
         {clienteId && (
           <div className="space-y-2">
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+            <Label size="sm" className="uppercase tracking-wide text-muted-foreground">
               Contactos del cliente
             </Label>
             <ContactosClienteList

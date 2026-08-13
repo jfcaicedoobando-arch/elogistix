@@ -61,7 +61,7 @@ export function InvitarAgenteCredencialesView({ email, password, onClose }: Prop
     >
       <div className="space-y-3">
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Email</Label>
+          <Label size="sm" className="text-muted-foreground">Email</Label>
           <div className="flex gap-2">
             <Input readOnly value={email} className="font-mono text-sm" />
             <Button
@@ -75,7 +75,7 @@ export function InvitarAgenteCredencialesView({ email, password, onClose }: Prop
           </div>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Contraseña</Label>
+          <Label size="sm" className="text-muted-foreground">Contraseña</Label>
           <div className="flex gap-2">
             <Input readOnly value={password} className="font-mono text-sm" />
             <Button

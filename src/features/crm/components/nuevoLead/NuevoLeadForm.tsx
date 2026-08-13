@@ -111,7 +111,7 @@ export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad }
           checked={autoActividad}
           onCheckedChange={(v) => setAutoActividad(v === true)}
         />
-        <Label htmlFor="auto-act-lead" className="text-xs cursor-pointer">
+        <Label size="sm" htmlFor="auto-act-lead" className="cursor-pointer">
           Crear actividad de seguimiento (llamada, mañana 9:00)
         </Label>
       </div>

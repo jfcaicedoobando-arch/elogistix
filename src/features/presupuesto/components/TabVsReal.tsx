@@ -95,7 +95,7 @@ export function TabVsReal() {
     <div className="space-y-3">
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <Label className="text-xs">Periodo</Label>
+          <Label>Periodo</Label>
           <PeriodoMensualToolbar
             mesActual={mesActual}
             mesesDisponibles={periodoCtl.mesesDisponibles}
@@ -108,7 +108,7 @@ export function TabVsReal() {
         </div>
         <div className="flex items-center gap-2">
           <Switch id="solo-excesos" checked={soloExcesos} onCheckedChange={setSoloExcesos} />
-          <Label htmlFor="solo-excesos" className="text-xs">Solo excesos</Label>
+          <Label htmlFor="solo-excesos">Solo excesos</Label>
         </div>
         <Button variant="outline" onClick={handlePdf} disabled={!data || generandoPdf}>
           {generandoPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}

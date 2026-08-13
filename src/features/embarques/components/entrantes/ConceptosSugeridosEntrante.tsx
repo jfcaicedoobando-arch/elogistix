@@ -118,7 +118,7 @@ export function ConceptosSugeridosEntrante({
           checked={sinCostoCapturado}
           onCheckedChange={(v) => onSinCosto(!!v)}
         />
-        <Label htmlFor="entrante-sin-costo" className="text-xs font-normal leading-tight">
+        <Label size="sm" htmlFor="entrante-sin-costo" className="font-normal leading-tight">
           Este documento no corresponde a un costo ya capturado
           {disponibles.length === 0 && lista.length === 0
             ? " (marcado por no haber conceptos pendientes)"

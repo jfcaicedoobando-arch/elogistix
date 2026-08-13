@@ -68,11 +68,11 @@ export default function TabTiposContenedor() {
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2 items-end">
           <div className="space-y-1">
-            <Label className="text-xs">Código</Label>
+            <Label>Código</Label>
             <Input className="w-28" placeholder="40HC" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Nombre</Label>
+            <Label>Nombre</Label>
             <Input className="w-64" placeholder="40' High Cube" value={nuevoName} onChange={(e) => setNuevoName(e.target.value)} />
           </div>
           <Button size="sm" onClick={handleAgregar} disabled={agregarTipo.isPending}>

@@ -39,7 +39,7 @@ export function AvisoTcRequerido({ tcSugerido, guardando, onGuardarYReintentar }
         </p>
         <div className="flex flex-wrap items-end gap-2">
           <div className="space-y-1">
-            <Label htmlFor="tc-usd-proforma" className="text-xs">
+            <Label htmlFor="tc-usd-proforma">
               Tipo de cambio USD → MXN
             </Label>
             <Input

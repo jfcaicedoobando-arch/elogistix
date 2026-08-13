@@ -104,7 +104,7 @@ export function AsignarResponsableDialog({
     >
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">Responsable</Label>
+          <Label>Responsable</Label>
           <Select
             value={ctrl.responsableId}
             onValueChange={ctrl.setResponsableId}

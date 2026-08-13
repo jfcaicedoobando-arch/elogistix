@@ -24,7 +24,7 @@ export function ComisionClienteSection<T extends Value>({ form, setForm }: Props
     >
       <div className="md:col-span-2 flex items-start justify-between gap-4 rounded-md border border-border p-3">
         <div className="space-y-1">
-          <Label htmlFor="cliente-sin-comision" className="text-xs">
+          <Label htmlFor="cliente-sin-comision">
             Cuenta directa (sin comisión)
           </Label>
           <p className="text-xs text-muted-foreground">

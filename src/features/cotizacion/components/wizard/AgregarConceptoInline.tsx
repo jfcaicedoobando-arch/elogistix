@@ -125,7 +125,7 @@ export function AgregarConceptoInline({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="aci-cant" className="text-xs">Cantidad</Label>
+            <Label htmlFor="aci-cant">Cantidad</Label>
             <Input
               id="aci-cant"
               type="number"
@@ -136,7 +136,7 @@ export function AgregarConceptoInline({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="aci-precio" className="text-xs">
+            <Label htmlFor="aci-precio">
               Precio unitario {variante === "costo" ? "(costo)" : ""}
             </Label>
             <MoneyInput

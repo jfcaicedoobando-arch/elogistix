@@ -60,7 +60,7 @@ export function CondicionesCreditoSection<T extends Value>({ form, setForm }: Pr
       description="Fuente única de verdad. Aplica a proformas y facturas emitidas al cliente."
     >
       <div>
-        <Label className="text-xs">Días de crédito</Label>
+        <Label>Días de crédito</Label>
         <Input
           type="number" inputMode="numeric" min={0} max={365}
           value={dias.value}
@@ -70,7 +70,7 @@ export function CondicionesCreditoSection<T extends Value>({ form, setForm }: Pr
         />
       </div>
       <div>
-        <Label className="text-xs">Límite de crédito (MXN)</Label>
+        <Label>Límite de crédito (MXN)</Label>
         <Input
           type="number" inputMode="decimal" min={0} step="0.01"
           value={limite.value}
