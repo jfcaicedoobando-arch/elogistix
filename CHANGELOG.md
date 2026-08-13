@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.570.0] - 2026-08-13
+- **Actualización de librerías (mantenimiento)**: se subieron a su última versión compatible los parches y menores de 19 dependencias (base de datos, Sentry, iconos, formularios, PDF de tipos, herramientas de lint y pruebas). Como cambiarle el aceite al camión: no se nota al manejar, pero evita fallas.
+- **`@react-pdf/renderer` se queda fijo en 4.5.1**: la versión 4.6.0 provoca una fuga de memoria (128 MB tras 200 PDFs contra 12 MB actuales), detectada por la prueba canario. Queda anclada hasta que el proveedor lo corrija.
+- Sin vulnerabilidades altas ni críticas en dependencias al momento de la revisión.
+
+
+
 ## [13.569.0] - 2026-08-13
 - **Chequeo de tipos restaurado en las funciones de servidor (Sprint 10 · RTC-01)**: CI vuelve a revisar los tipos de las edge functions (se corrigieron 45 errores históricos y se fijó una sola versión del cliente de base de datos). Como pasar la ortografía de todo el correo antes de enviarlo, en lugar de mandarlo a ciegas.
 - **Retiro del React Compiler (RTC-02)**: se quitaron plugins y dependencias que ya nadie usaba; la regla que impide volver a activarlo se queda como guardia.
