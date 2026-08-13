@@ -188,5 +188,10 @@ export async function duplicarFacturaParaSustitucion(facturaId: string): Promise
 }
 
 // consultarEstadoFacturapi() vive en ./facturapiConsultar.ts (split Power-of-10).
-export type {  ConsultarFacturapiResult } from "./facturapiConsultar";
+export type {
+  ConsultarFacturapiResult,
+  ConsultarFacturapiRep,
+  ConsultarFacturapiXml,
+  EstatusSatConsulta,
+} from "./facturapiConsultar";
 export { consultarEstadoFacturapi } from "./facturapiConsultar";
