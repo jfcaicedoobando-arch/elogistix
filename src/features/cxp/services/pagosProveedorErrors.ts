@@ -19,6 +19,27 @@ type Regla = (e: ErrorLike) => string | null;
 
 const REGLAS: Regla[] = [
   (e) =>
+    e.message && e.message.includes("LC_LOTE_FECHA_FUTURA")
+      ? "La fecha del pago no puede ser futura."
+      : null,
+  (e) =>
+    e.message && e.message.includes("LC_LOTE_FECHA_PREVIA_EMISION")
+      ? "La fecha del pago es anterior a la emisión de una de las facturas del lote."
+      : null,
+  (e) =>
+    e.message &&
+    (e.message.includes("LC_LOTE_IMPORTE_NO_CUADRA") || e.message.includes("LC_LOTE_IMPORTE_REQUERIDO"))
+      ? "El reparto no cuadra con el importe de la transferencia: no se permite sobrante sin asignar."
+      : null,
+  (e) =>
+    e.message && e.message.includes("LC_LOTE_FACTURA_DUPLICADA")
+      ? "Una factura aparece repetida en el lote. Revisa la selección."
+      : null,
+  (e) =>
+    e.message && e.message.includes("LC_LOTE_DUPLICADO_RECIENTE")
+      ? "Ya registraste un pago en lote idéntico hace unos minutos (mismo proveedor, fecha e importe). Verifica el historial de pagos antes de reintentar."
+      : null,
+  (e) =>
     e.code === "LC_PAGO_SIN_APROBACION" || (e.message && e.message.includes("LC_PAGO_SIN_APROBACION"))
       ? "La factura debe estar aprobada antes de registrar pagos."
       : null,
