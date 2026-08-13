@@ -1,16 +1,8 @@
 import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/shared/PageContainer";
-import {
-  Truck, Pencil, Trash2, PackageX, MoreHorizontal,
-} from "lucide-react";
+import { PackageX } from "lucide-react";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { toTitleCase } from "@/lib/formatters";
@@ -21,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
 import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
 import { ProveedorBrechaCard } from "../components/ProveedorBrechaCard";
-import { ProveedorCsfUpdateButton } from "../components/ProveedorCsfUpdateButton";
+import { ProveedorDetalleHeader } from "../components/ProveedorDetalleHeader";
 import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancariosCard";
 import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneralesCard";
 import { ProveedorResumenCards } from "../components/ProveedorResumenCards";
