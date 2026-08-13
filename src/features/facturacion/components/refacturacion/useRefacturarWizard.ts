@@ -56,30 +56,12 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     setPagoSeleccionadoId((prev) => prev ?? s.caso!.pago_original_id);
   }, [open, s.caso]);
 
-  const pagos: PagoRefacturacion[] = useMemo(
-    () => s.pagos.map((p) => ({
-      id: p.id,
-      fecha_pago: p.fecha_pago,
-      monto: Number(p.monto),
-      moneda: p.moneda,
-      monto_aplicado_factura: p.monto_aplicado_factura === null ? null : Number(p.monto_aplicado_factura),
-      uuid_rep: p.uuid_rep ?? null,
-      estado_rep: p.estado_rep ?? null,
-      rep_cancelado_en: p.rep_cancelado_en ?? null,
-    })),
-    [s.pagos],
-  );
+  const pagos: PagoRefacturacion[] = useMemo(() => mapearPagos(s.pagos), [s.pagos]);
 
-  const receptorDestino = useMemo(() => {
-    const c = clientesQuery.data?.find((x) => x.id === clienteDestinoId);
-    if (!c) return null;
-    return {
-      nombre: c.nombre,
-      rfc: c.rfc,
-      regimen_fiscal: c.regimen_fiscal,
-      codigo_postal: c.codigo_postal,
-    };
-  }, [clientesQuery.data, clienteDestinoId]);
+  const receptorDestino = useMemo(
+    () => receptorDesdeClientes(clientesQuery.data, clienteDestinoId),
+    [clientesQuery.data, clienteDestinoId],
+  );
 
   const receptorPendientes = useMemo(
     () => (receptorDestino ? pendientesReceptorFiscal(receptorDestino) : []),
@@ -110,8 +92,8 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     bloqueoPermiso,
   });
 
-  const clienteDestinoNombre =
-    clientesQuery.data?.find((c) => c.id === clienteDestinoId)?.nombre ?? "el cliente destino";
+  const clienteDestinoNombre = nombreClienteDestino(clientesQuery.data, clienteDestinoId);
+
 
   const handleCancelarRep = (pagoId: string) => {
     if (!puedeOperar) return;
