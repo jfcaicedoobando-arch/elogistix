@@ -40,6 +40,8 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
         cargando={s.pagosCargando}
         cancelandoId={w.repEnCurso}
         onCancelarRep={w.handleCancelarRep}
+        onConsultarRep={w.handleConsultarRep}
+        consultando={w.consultandoRep}
         puedeOperar={w.puedeOperar}
       />
     );
