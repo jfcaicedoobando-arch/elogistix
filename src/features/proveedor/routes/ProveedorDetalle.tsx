@@ -27,6 +27,7 @@ import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneral
 import { ProveedorResumenCards } from "../components/ProveedorResumenCards";
 import { ProveedorSaludTab } from "../components/ProveedorSaludTab";
 import { ProveedorEstadoCuentaTab } from "../components/ProveedorEstadoCuentaTab";
+import { ProveedorDocumentosTab } from "../components/ProveedorDocumentosTab";
 import { ProveedorAnticiposCard } from "@/features/anticipos-proveedor/components/ProveedorAnticiposCard";
 
 export default function ProveedorDetalle() {
