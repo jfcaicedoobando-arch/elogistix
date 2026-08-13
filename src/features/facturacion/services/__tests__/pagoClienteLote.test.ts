@@ -124,11 +124,33 @@ describe("validarCobroLote", () => {
   it("rechaza cuenta bancaria en otra moneda", () => {
     const { renglones } = repartirFifo(facturas, 1200);
     const res = validarCobroLote(facturas, renglones, 1200, {
-      cuentaId: "c1",
+      ...opts,
       monedaCuenta: "USD",
-      moneda: "MXN",
     });
     expect(res.error).toMatch(/misma moneda/i);
   });
 
+  it("rechaza fecha futura (Ola 11 · RFE-02)", () => {
+    const { renglones } = repartirFifo(facturas, 1200);
+    const manana = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    const res = validarCobroLote(facturas, renglones, 1200, { ...opts, fecha: manana });
+    expect(res.error).toMatch(/no puede ser futura/i);
+  });
+
+  it("rechaza lote en USD sin tipo de cambio (Ola 11 · RFE-03)", () => {
+    const { renglones } = repartirFifo(facturas, 1200);
+    const res = validarCobroLote(facturas, renglones, 1200, {
+      ...opts,
+      moneda: "USD",
+      monedaCuenta: "USD",
+      tcAplicable: null,
+    });
+    expect(res.error).toMatch(/tipo de cambio/i);
+  });
+
+  it("rechaza cuadre con un centavo de diferencia (Ola 11 · RNF-02)", () => {
+    const { renglones } = repartirFifo(facturas, 1200);
+    const res = validarCobroLote(facturas, renglones, 1200.01, opts);
+    expect(res.error).toMatch(/exactamente el importe recibido/i);
+  });
 });
