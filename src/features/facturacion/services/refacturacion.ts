@@ -99,8 +99,8 @@ export async function reasignarPagoFactura(input: ReasignarPagoInput): Promise<s
     p_pago_id: input.pagoId,
     p_factura_destino_id: input.facturaDestinoId,
     p_caso_id: input.casoId,
-    p_ordenante_nombre: input.ordenanteNombre?.trim() || null,
-    p_ordenante_rfc: input.ordenanteRfc?.trim() || null,
+    p_ordenante_nombre: input.ordenanteNombre?.trim() || undefined,
+    p_ordenante_rfc: input.ordenanteRfc?.trim() || undefined,
   });
   if (error) throw error;
   return data as string;
