@@ -88,6 +88,50 @@ function isSustitutaViva(f: FacturaFlagsInput): boolean {
 const ESTADOS_COBRABLES = new Set(["Emitida", "Vencida", "Parcialmente pagada"]);
 
 
+function enTramiteCancelacion(f: FacturaFlagsInput): boolean {
+  return f.cancellation_status === "pending" || f.cancellation_status === "verifying";
+}
+
+type FiscalFlags = Pick<
+  FacturaFlags,
+  "puedeCancelarCfdi" | "puedeSustituirCfdi" | "puedeRefacturarReceptor"
+>;
+
+/**
+ * Acciones fiscales (cancelar / sustituir / refacturar receptor). Espejan las
+ * guardias de BD: sólo CFDI timbrados y vivos, sin sustituta viva ni trámite
+ * de cancelación en curso.
+ */
+function deriveFiscalFlags(
+  f: FacturaFlagsInput,
+  canEdit: boolean,
+  sinTimbrar: boolean,
+  estaCancelada: boolean,
+): FiscalFlags {
+  const timbradaVigente = !sinTimbrar && f.estado === "Emitida";
+  const sinSustitutaViva = !isSustitutaViva(f);
+  // v13.589.5: refacturar sólo exige CFDI timbrado y vivo (espejo de
+  // `abrir_caso_refacturacion`), por eso no reusa `puedeSustituirCfdi`.
+  const timbradaViva = !sinTimbrar && !estaCancelada && f.estado !== "Borrador";
+  return {
+    puedeCancelarCfdi: timbradaVigente && canEdit && !enTramiteCancelacion(f),
+    puedeSustituirCfdi: timbradaVigente && canEdit && sinSustitutaViva,
+    puedeRefacturarReceptor: timbradaViva && canEdit && sinSustitutaViva,
+  };
+}
+
+function puedeCobrarse(
+  f: FacturaFlagsInput,
+  ctx: FacturaFlagsContext,
+  canRegistrarCobro: boolean,
+  estaCancelada: boolean,
+): boolean {
+  // v13.547.0: "Vencida"/"Parcialmente pagada" también admiten cobro (espejo de
+  // assert_factura_viva_para_pago).
+  const vigenteCobrable = ESTADOS_COBRABLES.has(f.estado ?? "") && !estaCancelada;
+  return vigenteCobrable && canRegistrarCobro && (ctx.saldo ?? 0) > 0.01;
+}
+
 function deriveActionFlags(
   f: FacturaFlagsInput,
   canEdit: boolean,
@@ -98,26 +142,6 @@ function deriveActionFlags(
   const esBorrador = f.estado === "Borrador" && !f.facturapi_id;
   const puedeEditarBorrador = esBorrador && canEdit;
   const estaCancelada = isEstadoCanceladoOSustituido(f.estado);
-  const timbradaVigente = !sinTimbrar && f.estado === "Emitida";
-  // Sustituir requiere que NO exista ya una sustituta viva (no se sustituye dos veces).
-  const puedeSustituirCfdi = timbradaVigente && canEdit && !isSustitutaViva(f);
-  // v13.589.5: refacturar a otro receptor sólo exige que el CFDI esté timbrado y
-  // vivo (espejo de `abrir_caso_refacturacion`, que sólo rechaza
-  // Cancelada/Sustituida/Borrador). Antes se reusaba `puedeSustituirCfdi`, así que
-  // una factura ya cobrada ("Pagada") escondía la opción aunque la base la acepta.
-  const timbradaViva = !sinTimbrar && !estaCancelada && f.estado !== "Borrador";
-  const puedeRefacturarReceptor = timbradaViva && canEdit && !isSustitutaViva(f);
-  // Cancelar sólo requiere que la factura esté vigente y no en trámite de cancelación.
-  // Tener sustituta viva NO bloquea: el flujo SAT motivo 01 es emitir sustituta → cancelar original.
-  const enTramiteCancelacion =
-    f.cancellation_status === "pending" || f.cancellation_status === "verifying";
-  const puedeCancelarCfdi = timbradaVigente && canEdit && !enTramiteCancelacion;
-  const saldo = ctx.saldo ?? 0;
-  // v13.547.0: antes sólo el estado "Emitida" habilitaba el cobro, así que una
-  // factura "Vencida" o "Parcialmente pagada" con saldo escondía el botón
-  // "Registrar pago" aunque la BD sí acepta el pago (assert_factura_viva_para_pago
-  // sólo rechaza Cancelada/Sustituida/Borrador). Mismo criterio aquí.
-  const vigenteCobrable = ESTADOS_COBRABLES.has(f.estado ?? "") && !estaCancelada;
 
   return {
     sinTimbrar,
@@ -125,14 +149,13 @@ function deriveActionFlags(
     puedeEditarBorrador,
     puedeEliminarBorrador: puedeEditarBorrador,
     puedeTimbrarDesdeSistema: sinTimbrar && esCreadaConCapacidadTimbrado(f.fecha_emision),
-    puedeCancelarCfdi,
-    puedeSustituirCfdi,
-    puedeRefacturarReceptor,
-    puedeRegistrarPago: vigenteCobrable && canRegistrarCobro && saldo > 0.01,
+    ...deriveFiscalFlags(f, canEdit, sinTimbrar, estaCancelada),
+    puedeRegistrarPago: puedeCobrarse(f, ctx, canRegistrarCobro, estaCancelada),
     repPendiente: (ctx.pagosRepPendientes ?? 0) > 0,
     estaCancelada,
   };
 }
+
 
 export function deriveFacturaFlags(
   factura: FacturaFlagsInput | null | undefined,
