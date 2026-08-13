@@ -16,20 +16,21 @@ type TrackingRpcResult = {
 
 export type TrackingOutcome =
   | { ok: true; embarque: unknown; eventos: unknown; documentos: unknown; organizacion: unknown }
-  | { ok: false; status: 400 | 404 | 410; error: string };
+  // RUX-02: `code` estable para que el frontend traduzca por código, no por literal.
+  | { ok: false; status: 400 | 404 | 410; error: string; code: "token_required" | "not_found" | "expired" };
 
 /** Pure helper: maps the RPC result to a typed outcome (no network). */
 export function classifyTrackingResult(
   token: string | null,
   result: TrackingRpcResult,
 ): TrackingOutcome {
-  if (!token) return { ok: false, status: 400, error: "Token requerido" };
+  if (!token) return { ok: false, status: 400, error: "Token requerido", code: "token_required" };
   const r = result;
   if (!r || r.error === "not_found") {
-    return { ok: false, status: 404, error: "Enlace de tracking no encontrado" };
+    return { ok: false, status: 404, error: "Enlace de tracking no encontrado", code: "not_found" };
   }
   if (r.error === "expired") {
-    return { ok: false, status: 410, error: "Este enlace de tracking ha expirado" };
+    return { ok: false, status: 410, error: "Este enlace de tracking ha expirado", code: "expired" };
   }
   return {
     ok: true,
