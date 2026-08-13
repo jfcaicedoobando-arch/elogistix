@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.583.1] - 2026-08-13
+- **Mensajes claros en pagos en lote.** Se agregaron los avisos amigables para dos validaciones que antes se mostraban con su código técnico: falta de tipo de cambio y facturas en otra moneda dentro del lote.
+
 ## [13.583.0] - 2026-08-13
 - **Alta de usuarios: ahora se dice el motivo real del error.** Antes cualquier rechazo mostraba "el servicio en la nube rechazó la solicitud, intenta más tarde"; ahora se muestra el motivo (por ejemplo, correo con formato inválido). Aplica también a invitar, eliminar y restablecer contraseña.
 - **Validación de correo más estricta en el diálogo de alta**, alineada con lo que acepta el servicio de identidad, y normalización (espacios y minúsculas) antes de validar.
