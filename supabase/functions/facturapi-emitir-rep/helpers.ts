@@ -12,6 +12,9 @@ import {
 export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
 
 
+/** Factor del impuesto trasladado (c_TipoFactor del SAT). */
+export type FactorIva = "Tasa" | "Exento";
+
 export interface PagoContext {
   // Receptor (mismo del CFDI original)
   receptor: {
@@ -42,6 +45,12 @@ export interface PagoContext {
     metodo_pago: "PPD";            // siempre PPD para REP
     /** Tasa principal (0.16, 0). Se asume IVA tasa única por simplicidad. */
     tasa_iva: number;
+    /**
+     * Factor del impuesto trasladado del CFDI original.
+     * `"Exento"` cuando la factura se emitió sin IVA por exención (fletes
+     * internacionales, etc.). Default `"Tasa"`.
+     */
+    factor_iva?: FactorIva;
   };
   serie?: string | null;           // Serie del REP (si se usa serie distinta a las facturas)
   /** v13.208.0 — Expediente y BLs del embarque asociado. */
@@ -79,7 +88,11 @@ export interface FacturapiRepPayload {
         installment: number;
         last_balance: number;
         amount: number;
-        taxes?: Array<{ type: "IVA"; rate: number; factor: "Tasa"; withholding: false; base: number }>;
+        /**
+         * SAT/Facturapi exigen SIEMPRE el desglose de impuestos del documento
+         * relacionado, incluso cuando la factura es exenta o tasa 0%.
+         */
+        taxes: Array<{ type: "IVA"; rate: number; factor: FactorIva; withholding: false; base: number }>;
       }>;
     }>;
   }>;
@@ -172,9 +185,7 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
                 installment: dr.num_parcialidad,
                 last_balance: round2(dr.imp_saldo_ant),
                 amount: round2(dr.imp_pagado),
-                taxes: dr.tasa_iva > 0
-                  ? [{ type: "IVA", rate: dr.tasa_iva, factor: "Tasa", withholding: false, base: round2(dr.imp_pagado) }]
-                  : undefined,
+                taxes: buildTaxesDr(dr),
               },
             ],
           },
@@ -203,6 +214,20 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
   if (pdfSection) payload.pdf_custom_section = pdfSection;
 
   return payload;
+}
+
+/**
+ * Impuestos del documento relacionado. Nunca se omite el arreglo: Facturapi
+ * rechaza el REP con `complements.0.data.0.related_documents.0.taxes es
+ * requerido` cuando la factura original no trae IVA. Para facturas exentas se
+ * declara factor `Exento` con tasa 0.
+ */
+export function buildTaxesDr(
+  dr: Pick<PagoContext["documento_relacionado"], "tasa_iva" | "imp_pagado" | "factor_iva">,
+): FacturapiRepPayload["complements"][0]["data"][0]["related_documents"][0]["taxes"] {
+  const tasa = dr.tasa_iva > 0 ? dr.tasa_iva : 0;
+  const factor: FactorIva = tasa > 0 ? "Tasa" : (dr.factor_iva ?? "Tasa");
+  return [{ type: "IVA", rate: tasa, factor, withholding: false, base: round2(dr.imp_pagado) }];
 }
 
 function round2(n: number): number {
