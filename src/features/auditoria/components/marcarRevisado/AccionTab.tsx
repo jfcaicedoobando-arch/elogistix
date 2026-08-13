@@ -14,7 +14,7 @@ interface Props {
 export function AccionTab({ ctrl, revisionExistente }: Props) {
   return (
     <TabsContent value="accion" className="space-y-2 mt-2">
-      <Label htmlFor="accion-tomada" className="text-xs">
+      <Label htmlFor="accion-tomada">
         Acción tomada <span className="text-destructive">*</span>
       </Label>
       <Textarea

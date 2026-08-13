@@ -33,7 +33,7 @@ export function NotaCreditoConceptosEditor(props: Props) {
         {conceptos.map((c, i) => (
           <div key={i} className="grid grid-cols-12 gap-2 items-end border rounded-md p-2">
             <div className="col-span-12 sm:col-span-5 space-y-1">
-              <Label className="text-xs">Descripción</Label>
+              <Label size="sm">Descripción</Label>
               <Input
                 value={c.descripcion}
                 onChange={(e) => onUpdate(i, { descripcion: e.target.value })}
@@ -41,7 +41,7 @@ export function NotaCreditoConceptosEditor(props: Props) {
               />
             </div>
             <div className="col-span-3 sm:col-span-2 space-y-1">
-              <Label className="text-xs">Cant.</Label>
+              <Label size="sm">Cant.</Label>
               <NumericInput
                 aria-label="Cantidad"
                 decimals
@@ -51,7 +51,7 @@ export function NotaCreditoConceptosEditor(props: Props) {
               />
             </div>
             <div className="col-span-5 sm:col-span-2 space-y-1">
-              <Label className="text-xs">P. Unitario</Label>
+              <Label size="sm">P. Unitario</Label>
               <NumericInput
                 aria-label="Precio unitario"
                 decimals
@@ -61,7 +61,7 @@ export function NotaCreditoConceptosEditor(props: Props) {
               />
             </div>
             <div className="col-span-3 sm:col-span-2 space-y-1">
-              <Label className="text-xs">Clave SAT</Label>
+              <Label size="sm">Clave SAT</Label>
               <Input
                 value={c.clave_sat ?? ""}
                 onChange={(e) => onUpdate(i, { clave_sat: e.target.value })}

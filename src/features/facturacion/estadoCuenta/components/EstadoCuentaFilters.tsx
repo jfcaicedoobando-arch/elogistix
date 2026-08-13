@@ -64,7 +64,7 @@ export function EstadoCuentaFilters({
         </div>
 
         <div className="flex items-center gap-2">
-          <Label htmlFor="ec-moneda" className="text-xs text-muted-foreground">
+          <Label size="sm" htmlFor="ec-moneda" className="text-muted-foreground">
             Moneda
           </Label>
           <Select value={moneda} onValueChange={(v) => onMonedaChange(v as "MXN" | "USD" | "todas")}>
@@ -85,7 +85,7 @@ export function EstadoCuentaFilters({
             checked={soloConSaldo}
             onCheckedChange={onSoloConSaldoChange}
           />
-          <Label htmlFor="ec-solo-saldo" className="cursor-pointer text-xs">
+          <Label size="sm" htmlFor="ec-solo-saldo" className="cursor-pointer">
             Sólo con saldo
           </Label>
         </div>

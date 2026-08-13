@@ -66,7 +66,7 @@ export function SugerirEmbarqueBlock({
           </Button>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Descripción del concepto a crear</Label>
+          <Label>Descripción del concepto a crear</Label>
           <Input
             value={seleccionado.concepto}
             onChange={(e) => onSeleccionar({ ...seleccionado, concepto: e.target.value })}

@@ -49,7 +49,7 @@ export function DiagnosticoFilters({
   return (
     <div className="grid grid-cols-1 gap-3 rounded-md border bg-card p-4 md:grid-cols-6">
       <div className="md:col-span-2">
-        <Label htmlFor="diag-search" className="text-xs">Buscar en mensaje</Label>
+        <Label htmlFor="diag-search">Buscar en mensaje</Label>
         <Input
           id="diag-search"
           value={search}
@@ -58,7 +58,7 @@ export function DiagnosticoFilters({
         />
       </div>
       <div>
-        <Label className="text-xs">Nivel</Label>
+        <Label>Nivel</Label>
         <Select value={level} onValueChange={(v) => onLevelChange(v as AppLogLevel | "todos")}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -70,7 +70,7 @@ export function DiagnosticoFilters({
         </Select>
       </div>
       <div>
-        <Label className="text-xs">Función</Label>
+        <Label>Función</Label>
         <Select value={fn} onValueChange={onFnChange}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -82,7 +82,7 @@ export function DiagnosticoFilters({
         </Select>
       </div>
       <div>
-        <Label htmlFor="diag-from" className="text-xs">{RANGO_DESDE_LABEL}</Label>
+        <Label htmlFor="diag-from">{RANGO_DESDE_LABEL}</Label>
         <DatePickerMx
           value={from ?? ""}
           onChange={(v) => onFromChange(v || null)}
@@ -90,7 +90,7 @@ export function DiagnosticoFilters({
         />
       </div>
       <div>
-        <Label htmlFor="diag-to" className="text-xs">{RANGO_HASTA_LABEL}</Label>
+        <Label htmlFor="diag-to">{RANGO_HASTA_LABEL}</Label>
         <DatePickerMx
           value={to ?? ""}
           onChange={(v) => onToChange(v || null)}

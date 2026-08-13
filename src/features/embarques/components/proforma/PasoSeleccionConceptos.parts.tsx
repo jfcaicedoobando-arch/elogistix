@@ -57,7 +57,7 @@ export function ConceptoRow({
           <Badge variant="secondary" className="text-xs">IVA 16% incluido</Badge>
         ) : (
           <div className="flex items-center gap-2">
-            <Label htmlFor={`iva-${c.id}`} className="text-xs text-muted-foreground cursor-pointer">
+            <Label size="sm" htmlFor={`iva-${c.id}`} className="text-muted-foreground cursor-pointer">
               IVA
             </Label>
             <Switch

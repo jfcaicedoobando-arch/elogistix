@@ -154,7 +154,7 @@ export default function Bitacora() {
               checked={mostrarLogins}
               onCheckedChange={(v) => { setMostrarLogins(v); setPagina(0); }}
             />
-            <Label htmlFor="mostrar-logins" className="text-xs text-muted-foreground cursor-pointer">
+            <Label size="sm" htmlFor="mostrar-logins" className="text-muted-foreground cursor-pointer">
               Incluir logins
             </Label>
           </div>

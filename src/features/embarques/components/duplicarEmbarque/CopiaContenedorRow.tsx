@@ -32,7 +32,7 @@ export function CopiaContenedorRow({
   return (
     <div className="rounded-md border p-3 space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="text-xs text-muted-foreground">Copia {idx + 1}</Label>
+        <Label size="sm" className="text-muted-foreground">Copia {idx + 1}</Label>
         {canRemove && (
           <Button
             type="button" variant="ghost" size="icon"
@@ -44,7 +44,7 @@ export function CopiaContenedorRow({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_100px_100px_80px] gap-2">
         <div className="space-y-1">
-          <Label htmlFor={`num-${idx}`} className="text-xs">Número de contenedor</Label>
+          <Label size="sm" htmlFor={`num-${idx}`}>Número de contenedor</Label>
           <Input
             id={`num-${idx}`} value={copia.num_contenedor}
             onChange={(e) => onChange("num_contenedor", e.target.value)}
@@ -52,7 +52,7 @@ export function CopiaContenedorRow({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Tipo</Label>
+          <Label size="sm">Tipo</Label>
           <Select
             value={copia.tipo_contenedor || undefined}
             onValueChange={(v) => onChange("tipo_contenedor", v)}
@@ -70,21 +70,21 @@ export function CopiaContenedorRow({
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Peso (kg)</Label>
+          <Label size="sm">Peso (kg)</Label>
           <NumericInput
             value={copia.peso_kg} onChange={(n) => onChange("peso_kg", n)}
             decimals aria-label="Peso en kilogramos"
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Volumen (m³)</Label>
+          <Label size="sm">Volumen (m³)</Label>
           <NumericInput
             value={copia.volumen_m3} onChange={(n) => onChange("volumen_m3", n)}
             decimals aria-label="Volumen en metros cúbicos"
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Piezas</Label>
+          <Label size="sm">Piezas</Label>
           <NumericInput
             value={copia.piezas} onChange={(n) => onChange("piezas", n)}
             aria-label="Piezas"

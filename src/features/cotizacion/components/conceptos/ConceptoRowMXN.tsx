@@ -18,7 +18,7 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
   return (
     <div className="grid grid-cols-12 gap-2 items-end">
       <div className="col-span-2">
-        {i === 0 && <Label className="text-xs">Concepto</Label>}
+        {i === 0 && <Label size="sm">Concepto</Label>}
         <ProductoServicioSelect
           value={c.descripcion}
           onSelect={(p) => {
@@ -31,11 +31,11 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
         />
       </div>
       <div className="col-span-1">
-        {i === 0 && <Label className="text-xs">Unidad</Label>}
+        {i === 0 && <Label size="sm">Unidad</Label>}
         <UnidadMedidaSelect value={c.unidad_medida} onChange={v => actualizar(i, 'unidad_medida', v)} />
       </div>
       <div className="col-span-1">
-        {i === 0 && <Label className="text-xs">Cant.</Label>}
+        {i === 0 && <Label size="sm">Cant.</Label>}
         <Input
           type="text" inputMode="numeric"
           value={c.cantidad === 0 ? '' : c.cantidad}
@@ -49,7 +49,7 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
         />
       </div>
       <div className="col-span-2">
-        {i === 0 && <Label className="text-xs">P. Unitario</Label>}
+        {i === 0 && <Label size="sm">P. Unitario</Label>}
         <Input
           type="text" inputMode="decimal"
           value={c.precio_unitario === 0 ? '' : c.precio_unitario}
@@ -63,11 +63,11 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
         />
       </div>
       <div className="col-span-1">
-        {i === 0 && <Label className="text-xs">Subtotal</Label>}
+        {i === 0 && <Label size="sm">Subtotal</Label>}
         <Input value={formatCurrency(subtotal, 'MXN')} readOnly className="bg-muted" />
       </div>
       <div className="col-span-2">
-        {i === 0 && <Label className="text-xs">Tasa IVA</Label>}
+        {i === 0 && <Label size="sm">Tasa IVA</Label>}
         <Select
           value={String(tasaFila)}
           onValueChange={(v) => actualizar(i, 'tasa_iva_aplicada', Number(v))}
@@ -83,11 +83,11 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
         </Select>
       </div>
       <div className="col-span-1">
-        {i === 0 && <Label className="text-xs">IVA</Label>}
+        {i === 0 && <Label size="sm">IVA</Label>}
         <Input value={formatCurrency(iva, 'MXN')} readOnly className="bg-muted" />
       </div>
       <div className="col-span-1">
-        {i === 0 && <Label className="text-xs">Total</Label>}
+        {i === 0 && <Label size="sm">Total</Label>}
         <Input value={formatCurrency(c.total, 'MXN')} readOnly className="bg-muted" />
       </div>
       <div className="col-span-1">

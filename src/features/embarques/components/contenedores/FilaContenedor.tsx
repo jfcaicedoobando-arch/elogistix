@@ -98,7 +98,7 @@ export function FilaContenedor({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label htmlFor={`${uid}-num`} className="text-xs">Número *</Label>
+          <Label size="sm" htmlFor={`${uid}-num`}>Número *</Label>
           <Input
             id={`${uid}-num`}
             placeholder="MSCU1234567"
@@ -123,7 +123,7 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor={`${uid}-tipo`} className="text-xs">Tipo *</Label>
+          <Label size="sm" htmlFor={`${uid}-tipo`}>Tipo *</Label>
           <Select
             value={value.tipo_contenedor || undefined}
             onValueChange={(v) => onChange({ tipo_contenedor: v })}
@@ -145,7 +145,7 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1 md:col-span-2">
-          <Label htmlFor={`${uid}-blhouse`} className="text-xs">BL House (opcional)</Label>
+          <Label size="sm" htmlFor={`${uid}-blhouse`}>BL House (opcional)</Label>
           <Input
             id={`${uid}-blhouse`}
             placeholder="Número BL House"
@@ -156,7 +156,7 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs">Peso (kg)</Label>
+          <Label size="sm">Peso (kg)</Label>
           <NumericInput
             value={value.peso_kg}
             onChange={(n: number) => onChange({ peso_kg: n })}
@@ -166,7 +166,7 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs">Volumen (m³)</Label>
+          <Label size="sm">Volumen (m³)</Label>
           <NumericInput
             value={value.volumen_m3}
             onChange={(n: number) => onChange({ volumen_m3: n })}
@@ -176,7 +176,7 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs">Piezas</Label>
+          <Label size="sm">Piezas</Label>
           <NumericInput
             value={value.piezas}
             onChange={(n: number) => onChange({ piezas: n })}

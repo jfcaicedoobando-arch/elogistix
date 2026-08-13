@@ -85,7 +85,7 @@ export default function ComprasConciliacion() {
         <CardContent className="pt-4 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Estado conciliación</Label>
+              <Label>Estado conciliación</Label>
               <Select value={estado} onValueChange={(v) => setEstado(v as EstadoFiltro)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -97,7 +97,7 @@ export default function ComprasConciliacion() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Moneda</Label>
+              <Label>Moneda</Label>
               <Select value={moneda} onValueChange={(v) => setMoneda(v as MonedaFiltro)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -108,7 +108,7 @@ export default function ComprasConciliacion() {
               </Select>
             </div>
             <div className="md:col-span-2 space-y-1">
-              <Label className="text-xs">Buscar</Label>
+              <Label>Buscar</Label>
               <SearchInput
                 value={search}
                 onChange={setSearch}

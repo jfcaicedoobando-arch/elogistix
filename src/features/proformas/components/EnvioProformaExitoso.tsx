@@ -20,7 +20,7 @@ export function EnvioProformaExitoso({ estado, enlacePortal, onCopiar }: Props) 
         <span className="font-semibold">Correo {estado}</span>
       </div>
       <div>
-        <Label className="text-xs uppercase text-muted-foreground">Enlace del portal</Label>
+        <Label size="sm" className="uppercase text-muted-foreground">Enlace del portal</Label>
         <div className="flex gap-2 mt-1">
           <Input readOnly value={enlacePortal} className="text-xs" />
           <Button variant="outline" size="icon" onClick={() => onCopiar(enlacePortal)} aria-label="Copiar enlace">

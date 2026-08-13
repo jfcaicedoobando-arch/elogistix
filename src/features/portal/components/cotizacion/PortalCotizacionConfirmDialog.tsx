@@ -40,7 +40,7 @@ export default function PortalCotizacionConfirmDialog({
       onConfirm={onConfirm}
     >
       <div className="space-y-1.5">
-        <Label htmlFor="portal-cotizacion-comentario" className="text-xs">
+        <Label htmlFor="portal-cotizacion-comentario">
           {isAceptar ? "¿Algún comentario? (opcional)" : "¿Motivo del rechazo? (opcional)"}
         </Label>
         <Textarea

@@ -184,6 +184,8 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
             id: aEliminar.id,
             archivo_path: aEliminar.archivo_path,
             xml_path: aEliminar.xml_path,
+            // RFE-10: requerido para la limpieza segura de storage.
+            organization_id: aEliminar.organization_id,
           });
           setAEliminar(null);
         }}

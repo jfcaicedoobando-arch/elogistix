@@ -123,7 +123,7 @@ export default function PlantillasMensajeEditor() {
                     />
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Label className="text-xs flex items-center gap-1">
+                    <Label size="sm" className="flex items-center gap-1">
                       <Switch checked={p.activa} onCheckedChange={() => toggleActiva(p.id, p.activa)} aria-label={p.activa ? `Desactivar plantilla ${p.nombre}` : `Activar plantilla ${p.nombre}`} />
                       Activa
                     </Label>

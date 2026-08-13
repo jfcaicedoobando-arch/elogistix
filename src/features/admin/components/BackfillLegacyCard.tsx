@@ -84,7 +84,7 @@ export function BackfillLegacyCard() {
           }
         >
           <div className="space-y-1.5">
-            <Label htmlFor="backfill-confirm" className="text-xs">
+            <Label htmlFor="backfill-confirm">
               Escribe <span className="font-mono font-semibold">EJECUTAR</span> para confirmar
             </Label>
             <Input

@@ -19,7 +19,7 @@ export function SnoozeTab({ ctrl }: Props) {
       </p>
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label htmlFor="snooze-hasta" className="text-xs">
+          <Label htmlFor="snooze-hasta">
             Silenciar hasta <span className="text-destructive">*</span>
           </Label>
           <DatePickerMx
@@ -30,7 +30,7 @@ export function SnoozeTab({ ctrl }: Props) {
         </div>
       </div>
       <div className="space-y-1">
-        <Label htmlFor="snooze-motivo" className="text-xs">
+        <Label htmlFor="snooze-motivo">
           Motivo <span className="text-destructive">*</span>
         </Label>
         <Textarea

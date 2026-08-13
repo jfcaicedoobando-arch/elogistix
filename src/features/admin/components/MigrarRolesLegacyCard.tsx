@@ -144,7 +144,7 @@ export function MigrarRolesLegacyCard() {
           }
         >
           <div className="space-y-1.5">
-            <Label htmlFor="migrar-confirm" className="text-xs">
+            <Label htmlFor="migrar-confirm">
               Escribe <span className="font-mono font-semibold">MIGRAR</span> para confirmar
             </Label>
             <Input

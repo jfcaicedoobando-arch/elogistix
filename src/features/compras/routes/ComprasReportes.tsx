@@ -131,11 +131,11 @@ export default function ComprasReportes() {
       <Card>
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="rep-desde" className="text-xs">{RANGO_DESDE_LABEL}</Label>
+            <Label htmlFor="rep-desde">{RANGO_DESDE_LABEL}</Label>
             <DatePickerMx value={desde} onChange={setDesde} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="rep-hasta" className="text-xs">{RANGO_HASTA_LABEL}</Label>
+            <Label htmlFor="rep-hasta">{RANGO_HASTA_LABEL}</Label>
             <DatePickerMx value={hasta} onChange={setHasta} />
           </div>
         </CardContent>

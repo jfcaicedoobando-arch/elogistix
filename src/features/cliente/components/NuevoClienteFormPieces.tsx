@@ -130,7 +130,7 @@ export function ClienteField({
   const errorMsg = value && validate ? validate(value) : null;
   return (
     <div className={className}>
-      <Label className="text-xs flex items-center">
+      <Label size="sm" className="flex items-center">
         {label}
         {required && <span className="text-destructive ml-0.5">*</span>}
         {prefilledFromCsf && value && <PrellenadoBadge />}
@@ -157,7 +157,7 @@ export function ClienteFiscalSelects({ form, onChange, prefilledRegimen }: Selec
   return (
     <>
       <div>
-        <Label className="text-xs flex items-center">
+        <Label size="sm" className="flex items-center">
           Régimen Fiscal SAT<span className="text-destructive ml-0.5">*</span>
           {prefilledRegimen && form.regimen_fiscal && <PrellenadoBadge />}
         </Label>
@@ -171,7 +171,7 @@ export function ClienteFiscalSelects({ form, onChange, prefilledRegimen }: Selec
         </Select>
       </div>
       <div>
-        <Label className="text-xs">Uso CFDI por defecto</Label>
+        <Label>Uso CFDI por defecto</Label>
         <Select value={form.uso_cfdi_default || undefined} onValueChange={(v) => onChange("uso_cfdi_default", v)}>
           <SelectTrigger className="mt-1"><SelectValue placeholder="Selecciona uso CFDI" /></SelectTrigger>
           <SelectContent>

@@ -107,23 +107,23 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
   return (
     <div className="grid grid-cols-12 gap-2 items-end border rounded-md p-2 bg-muted/30">
       <div className="col-span-6">
-        <Label className="text-xs">Descripción</Label>
+        <Label size="sm">Descripción</Label>
         <Input value={draft.descripcion} onChange={(e) => patch({ descripcion: e.target.value })} />
       </div>
       <div className="col-span-2">
-        <Label className="text-xs">Clave SAT</Label>
+        <Label size="sm">Clave SAT</Label>
         <Input value={draft.clave_sat ?? ""} onChange={(e) => patch({ clave_sat: e.target.value })} />
       </div>
       <div className="col-span-1">
-        <Label className="text-xs">Cant.</Label>
+        <Label size="sm">Cant.</Label>
         <NumericInput aria-label="Cantidad" value={draft.cantidad || 0} onChange={(n) => patch({ cantidad: n || 1 })} className="h-10" />
       </div>
       <div className="col-span-3">
-        <Label className="text-xs">P. unitario</Label>
+        <Label size="sm">P. unitario</Label>
         <NumericInput aria-label="Precio unitario" decimals value={draft.precio_unitario || 0} onChange={(n) => patch({ precio_unitario: n })} className="h-10" />
       </div>
       <div className="col-span-2">
-        <Label className="text-xs">IVA</Label>
+        <Label size="sm">IVA</Label>
         <Select value={tipoIva} onValueChange={(v) => patch({ tipo_iva: v as TipoIvaConcepto })}>
           <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
           <SelectContent>

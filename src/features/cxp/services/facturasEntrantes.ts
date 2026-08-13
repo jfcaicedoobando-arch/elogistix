@@ -15,6 +15,8 @@ import {
   type FacturaEntranteRow,
 } from "@/features/cxp/services/facturasEntrantes.types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { logClientError } from "@/services/observability/logClientError";
+import { limpiarArchivosHuerfanosSeguro } from "@/features/cxp/services/facturasEntrantesDedupe";
 
 export type {
   FacturaEntranteRow,
@@ -123,14 +125,31 @@ export async function urlPreviaFacturaEntrante(path: string): Promise<string> {
  * documento no esté capturado.
  */
 export async function eliminarFacturaEntrante(
-  row: Pick<FacturaEntranteRow, "id" | "archivo_path" | "xml_path">,
+  row: Pick<FacturaEntranteRow, "id" | "archivo_path" | "xml_path" | "organization_id">,
 ) {
   const { error } = await supabase.rpc("retirar_factura_entrante", {
     p_documento_id: row.id,
   });
   if (error) throw error;
   const paths = [row.archivo_path, row.xml_path].filter((p): p is string => Boolean(p));
-  await supabase.storage.from(BUCKET_CXP_INBOX).remove(paths);
+  if (paths.length === 0) return;
+  // RFE-10 (Ola 11): el remove antes se ignoraba; si falla, reintenta con la
+  // limpieza SEGURA existente (verifica que ninguna fila viva referencie el
+  // path — los paths por hash pueden estar compartidos) y deja rastro.
+  const { error: errorStorage } = await supabase.storage
+    .from(BUCKET_CXP_INBOX)
+    .remove(paths);
+  if (!errorStorage) return;
+  await limpiarArchivosHuerfanosSeguro(paths, row.organization_id);
+  logClientError({
+    message: `Retiro del buzón ${row.id}: fallo al borrar archivos de storage (${errorStorage.message}); se intentó la limpieza segura.`,
+  });
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "retiro_factura_entrante_storage_pendiente",
+    entidadId: row.id,
+    entidadNombre: row.archivo_path,
+  });
 }
 
 

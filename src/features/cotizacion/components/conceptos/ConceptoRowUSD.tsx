@@ -26,15 +26,15 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
   return (
     <div className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${aplicaIva ? 'bg-warning/5' : ''}`}>
       <div className="col-span-3">
-        {i === 0 && <Label className="text-xs">Concepto</Label>}
+        {i === 0 && <Label size="sm">Concepto</Label>}
         <ConceptoDescripcionSelector descripcion={c.descripcion} index={i} actualizar={actualizar} />
       </div>
       <div className="col-span-1">
-        {i === 0 && <Label className="text-xs">Unidad</Label>}
+        {i === 0 && <Label size="sm">Unidad</Label>}
         <UnidadMedidaSelect value={c.unidad_medida} onChange={v => actualizar(i, 'unidad_medida', v)} />
       </div>
       <div className="col-span-1">
-        {i === 0 && <Label className="text-xs">Cant.</Label>}
+        {i === 0 && <Label size="sm">Cant.</Label>}
         <Input
           type="text" inputMode="numeric"
           value={c.cantidad === 0 ? '' : c.cantidad}
@@ -48,7 +48,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
         />
       </div>
       <div className="col-span-2">
-        {i === 0 && <Label className="text-xs">P. Unitario (USD)</Label>}
+        {i === 0 && <Label size="sm">P. Unitario (USD)</Label>}
         <Input
           type="text" inputMode="decimal"
           value={c.precio_unitario === 0 ? '' : c.precio_unitario}
@@ -62,7 +62,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
         />
       </div>
       <div className="col-span-1">
-        {i === 0 && <Label className="text-xs">IVA</Label>}
+        {i === 0 && <Label size="sm">IVA</Label>}
         {puedeIva ? (
           <Select
             value={String(tasaFila)}
@@ -82,11 +82,11 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
         )}
       </div>
       <div className="col-span-2">
-        {i === 0 && <Label className="text-xs">Total (USD)</Label>}
+        {i === 0 && <Label size="sm">Total (USD)</Label>}
         <Input value={formatCurrency(c.total, 'USD')} readOnly className="bg-muted" />
       </div>
       <div className="col-span-1">
-        {i === 0 && <Label className="text-xs">&nbsp;</Label>}
+        {i === 0 && <Label size="sm">&nbsp;</Label>}
         <Button variant="ghost" size="icon" onClick={() => eliminar(i)} disabled={total <= 1} aria-label="Eliminar concepto">
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>

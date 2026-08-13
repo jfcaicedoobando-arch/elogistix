@@ -49,7 +49,7 @@ export function ComisionEmbarqueCard({ embarqueId }: { embarqueId: string }) {
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start text-sm">
         <div className="space-y-1">
-          <Label className="text-xs">Regla de este embarque</Label>
+          <Label>Regla de este embarque</Label>
           <Select
             value={overrideToValor(data.override)}
             onValueChange={(v) =>

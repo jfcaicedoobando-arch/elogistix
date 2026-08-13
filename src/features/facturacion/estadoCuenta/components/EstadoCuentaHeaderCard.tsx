@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Building2 } from "lucide-react";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
   nombre?: string | null;
@@ -37,7 +38,8 @@ export function EstadoCuentaHeaderCard({
 }: Props) {
   const periodo =
     desde && hasta ? `${formatDate(desde)} – ${formatDate(hasta)}` : "Histórico completo";
-  const corte = formatDate(hasta ?? new Date().toISOString().slice(0, 10));
+  // RFE-11 (Ola 11): fecha de corte en día LOCAL, no UTC (clase FE-04).
+  const corte = formatDate(hasta ?? todayLocalISO());
 
   return (
     <Card className="p-4">

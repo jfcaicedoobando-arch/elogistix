@@ -34,7 +34,7 @@ export default function OportunidadesFiltersBar({ etapas, vendedores, value, onC
   return (
     <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
       <div className="space-y-1">
-        <Label className="text-xs">Etapa</Label>
+        <Label>Etapa</Label>
         <Select value={value.etapaId} onValueChange={(v) => set("etapaId", v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -44,7 +44,7 @@ export default function OportunidadesFiltersBar({ etapas, vendedores, value, onC
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Vendedor</Label>
+        <Label>Vendedor</Label>
         <Select value={value.vendedorId} onValueChange={(v) => set("vendedorId", v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -54,15 +54,15 @@ export default function OportunidadesFiltersBar({ etapas, vendedores, value, onC
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">{rangoLabel("Cierre", "desde")}</Label>
+        <Label>{rangoLabel("Cierre", "desde")}</Label>
         <DatePickerMx value={value.cierreDesde} onChange={(v) => set("cierreDesde", v)} className="w-full" />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">{rangoLabel("Cierre", "hasta")}</Label>
+        <Label>{rangoLabel("Cierre", "hasta")}</Label>
         <DatePickerMx value={value.cierreHasta} onChange={(v) => set("cierreHasta", v)} className="w-full" />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Monto mínimo</Label>
+        <Label>Monto mínimo</Label>
         <Input
           type="number" min={0} inputMode="numeric"
           value={value.montoMin}

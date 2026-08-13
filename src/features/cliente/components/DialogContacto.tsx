@@ -67,23 +67,23 @@ export default function DialogContacto({ open, onOpenChange, contacto, onSave, i
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
-          <Label className="text-xs">Nombre<span className="text-destructive ml-0.5">*</span></Label>
-          <Input value={form.nombre} onChange={e => handleChange('nombre', e.target.value)} className="mt-1" />
+          <Label htmlFor="contacto-nombre">Nombre<span className="text-destructive ml-0.5">*</span></Label>
+          <Input id="contacto-nombre" value={form.nombre} onChange={e => handleChange('nombre', e.target.value)} className="mt-1" />
         </div>
         <div>
-          <Label className="text-xs">Tipo</Label>
+          <Label htmlFor="contacto-tipo">Tipo</Label>
           <Select value={form.tipo} onValueChange={v => handleChange('tipo', v)}>
-            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+            <SelectTrigger id="contacto-tipo" className="mt-1"><SelectValue /></SelectTrigger>
             <SelectContent>{TIPOS_CONTACTO.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div><Label className="text-xs">Tax ID</Label><Input value={form.rfc} onChange={e => handleChange('rfc', e.target.value)} className="mt-1" /></div>
-        <div><Label className="text-xs">País</Label><Input value={form.pais} onChange={e => handleChange('pais', e.target.value)} className="mt-1" /></div>
-        <div><Label className="text-xs">Ciudad</Label><Input value={form.ciudad} onChange={e => handleChange('ciudad', e.target.value)} className="mt-1" /></div>
-        <div className="sm:col-span-2"><Label className="text-xs">Dirección</Label><Input value={form.direccion} onChange={e => handleChange('direccion', e.target.value)} className="mt-1" /></div>
-        <div><Label className="text-xs">Contacto</Label><Input value={form.contacto} onChange={e => handleChange('contacto', e.target.value)} className="mt-1" /></div>
-        <div><Label className="text-xs">Email</Label><Input value={form.email} onChange={e => handleChange('email', e.target.value)} className="mt-1" /></div>
-        <div><Label className="text-xs">Teléfono</Label><Input value={form.telefono} onChange={e => handleChange('telefono', e.target.value)} className="mt-1" /></div>
+        <div><Label htmlFor="contacto-rfc">Tax ID</Label><Input id="contacto-rfc" value={form.rfc} onChange={e => handleChange('rfc', e.target.value)} className="mt-1" /></div>
+        <div><Label htmlFor="contacto-pais">País</Label><Input id="contacto-pais" value={form.pais} onChange={e => handleChange('pais', e.target.value)} className="mt-1" /></div>
+        <div><Label htmlFor="contacto-ciudad">Ciudad</Label><Input id="contacto-ciudad" value={form.ciudad} onChange={e => handleChange('ciudad', e.target.value)} className="mt-1" /></div>
+        <div className="sm:col-span-2"><Label htmlFor="contacto-direccion">Dirección</Label><Input id="contacto-direccion" value={form.direccion} onChange={e => handleChange('direccion', e.target.value)} className="mt-1" /></div>
+        <div><Label htmlFor="contacto-contacto">Contacto</Label><Input id="contacto-contacto" value={form.contacto} onChange={e => handleChange('contacto', e.target.value)} className="mt-1" /></div>
+        <div><Label htmlFor="contacto-email">Email</Label><Input id="contacto-email" value={form.email} onChange={e => handleChange('email', e.target.value)} className="mt-1" /></div>
+        <div><Label htmlFor="contacto-telefono">Teléfono</Label><Input id="contacto-telefono" value={form.telefono} onChange={e => handleChange('telefono', e.target.value)} className="mt-1" /></div>
       </div>
     </FormDialogShell>
   );
