@@ -80,7 +80,7 @@ describe("mutaciones del expediente", () => {
     const { result } = renderHook(() => useEliminarDocumentoProveedor("p1"), { wrapper });
     await expect(
       result.current.mutateAsync({ id: "d1", archivo: "a" }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/RLS bloqueó/);
     expect(feedback.notifyError).toHaveBeenCalledWith(
       undefined,
       expect.objectContaining({ description: "RLS bloqueó" }),
