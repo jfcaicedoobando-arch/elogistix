@@ -138,7 +138,7 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `20260813003652` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC` +
  *    `GRANT EXECUTE … TO authenticated, service_role`); el archivo original
  *    queda como legacy auditado.
- *  - `20260813031718` — post-FIX-H6-17: `20260813025018` (Sprint 04, guardia
+ *  - `20260813025019` — post-FIX-H6-17: `20260813025018` (Sprint 04, guardia
  *    de moneda de cuentas bancarias) creó `guard_cuenta_bancaria_moneda()`
  *    (SECURITY DEFINER, función de trigger) sin el bloque REVOKE/GRANT en el
  *    mismo archivo. La migración correctiva `20260813031718` re-aplica los
@@ -146,7 +146,7 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    authenticated, service_role`); el archivo original queda como legacy
  *    auditado.
  */
-const BASELINE = "20260813031718";
+const BASELINE = "20260813025019";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
