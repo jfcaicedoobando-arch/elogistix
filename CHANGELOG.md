@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.556.0] - 2026-08-13
+- **Nueva pestaña "Estado de cuenta" en el detalle de proveedor** (Ola 2): movimientos en orden cronológico con las facturas del proveedor como cargo y los pagos, notas de crédito y anticipos aplicados como abono, con **saldo corrido por moneda** (nunca se suman pesos con dólares).
+- **Antigüedad de saldos por pagar** por moneda: Por vencer, 1 a 30, 31 a 60, 61 a 90 y más de 90 días, con conteo de facturas y total vencido.
+- **Filtro por periodo** (desde / hasta, por omisión los últimos 12 meses) y **exportación a CSV y PDF** con resumen por moneda, antigüedad y detalle de movimientos, listos para conciliar con el proveedor.
+- Nueva función de lectura `public.proveedor_estado_cuenta_movimientos` con permisos canónicos (sólo usuarios autenticados de la organización activa).
+
 ## [13.555.0] - 2026-08-13
 - **Detalle de proveedor conciliado**: el "Historial de operaciones" ya no muestra sólo lo costeado en el expediente; ahora cada partida trae el monto facturado por el proveedor, el saldo por facturar, el folio de la factura ligada y su estado real (Por facturar / Facturado parcial / Facturado / Pagado / Sobrefacturado).
 - Nueva tarjeta **"Comprometido sin factura del proveedor"** con el pendiente agrupado por moneda nativa (nunca se mezclan divisas), conteo de partidas sin respaldo y accesos directos a "Por capturar" y "Facturas".
