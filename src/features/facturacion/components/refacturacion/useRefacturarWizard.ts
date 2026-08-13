@@ -14,6 +14,11 @@ import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactu
 import { useCancelarRep } from "@/features/facturacion/hooks/useTimbrarRep";
 import { decidirAvance } from "./refacturarWizardAvance";
 import {
+  mapearPagos,
+  nombreClienteDestino,
+  receptorDesdeClientes,
+} from "./refacturarWizardDerivados";
+import {
   bloqueoPaso,
   type PagoRefacturacion,
 } from "@/features/facturacion/domain/refacturacionPasos";
