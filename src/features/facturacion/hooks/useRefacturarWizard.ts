@@ -53,6 +53,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
   const [pagoSeleccionadoId, setPagoSeleccionadoId] = useState<string | null>(null);
   const [ordenanteNombre, setOrdenanteNombre] = useState("");
   const [ordenanteRfc, setOrdenanteRfc] = useState("");
+  const [ordenanteTocado, setOrdenanteTocado] = useState(false);
   const [repEnCurso, setRepEnCurso] = useState<string | null>(null);
 
   // Al reabrir con un caso vivo, el formulario refleja lo ya decidido.
