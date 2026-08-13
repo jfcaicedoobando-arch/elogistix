@@ -34,22 +34,29 @@ function sinDatos(): void {
   });
 }
 
+/** R3P-11: un estado de cuenta sin movimientos del periodo pero con saldo en
+ * antigüedad SÍ se puede exportar: es el documento que se usa para conciliar. */
+function tieneAging(datos: DatosEstadoCuenta): boolean {
+  return datos.aging.some((a) => (Number(a.total) || 0) > 0.005);
+}
+
 export function descargarEstadoCuentaCsv(datos: DatosEstadoCuenta): void {
   const movs = filasMovimientosExport(datos.movimientos);
-  if (movs.length === 0) return sinDatos();
+  const aging = filasAgingExport(datos.aging);
+  if (movs.length === 0 && !tieneAging(datos)) return sinDatos();
   try {
     const csv = estadoCuentaACsv(
       datos.proveedorNombre,
-      datos.desde,
-      datos.hasta,
+      { desde: datos.desde, hasta: datos.hasta },
       movs,
       filasSaldosExport(datos.saldos),
+      aging,
     );
     const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
     descargarBlob(blob, nombreArchivoEstadoCuenta(datos.proveedorNombre, datos.hasta, "csv"));
     notifySuccess(undefined, {
       title: "Estado de cuenta descargado en CSV",
-      description: `${movs.length} movimiento(s)`,
+      description: movs.length > 0 ? `${movs.length} movimiento(s)` : "Sólo antigüedad de saldos",
     });
   } catch (error) {
     notifyError(undefined, {
@@ -62,7 +69,7 @@ export function descargarEstadoCuentaCsv(datos: DatosEstadoCuenta): void {
 
 export async function descargarEstadoCuentaPdf(datos: DatosEstadoCuenta): Promise<void> {
   const movs = filasMovimientosExport(datos.movimientos);
-  if (movs.length === 0) return sinDatos();
+  if (movs.length === 0 && !tieneAging(datos)) return sinDatos();
   try {
     const [{ descargarPdf }, { EstadoCuentaProveedorDocument }] = await Promise.all([
       import("@/pdf/render/descargarPdf"),

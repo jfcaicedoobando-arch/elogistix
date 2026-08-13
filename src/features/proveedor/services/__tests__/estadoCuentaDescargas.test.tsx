@@ -57,6 +57,25 @@ describe("descargarEstadoCuentaCsv", () => {
     expect(notifyWarning).toHaveBeenCalled();
   });
 
+  it("descarga aunque no haya movimientos cuando la antigüedad tiene saldo (R3P-11)", () => {
+    const soloAging: DatosEstadoCuenta = {
+      ...datos([]),
+      aging: [
+        {
+          moneda: "MXN",
+          buckets: { Vigente: 0, "1-30": 0, "31-60": 0, "61-90": 0, "90+": 5000 },
+          conteo: 1,
+          total: 5000,
+          vencido: 5000,
+        },
+      ],
+    };
+    descargarEstadoCuentaCsv(soloAging);
+    expect(descargarBlob).toHaveBeenCalledTimes(1);
+    expect(notifyWarning).not.toHaveBeenCalled();
+    expect(notifySuccess).toHaveBeenCalled();
+  });
+
   it("descarga un CSV con BOM y nombre de archivo derivado del proveedor", () => {
     descargarEstadoCuentaCsv(datos([movimiento]));
     expect(descargarBlob).toHaveBeenCalledTimes(1);

@@ -114,13 +114,14 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
       {saldos.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Movimientos del periodo</CardTitle>
+            <CardTitle className="text-base">Saldos por moneda</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-6">
             {saldos.map((s) => (
               <div key={s.moneda}>
                 <p className="text-xs text-muted-foreground">
-                  {s.moneda} · cargos {formatCurrency(s.cargos, s.moneda)} · abonos{" "}
+                  {s.moneda} · saldo global · cargos {formatCurrency(s.cargos, s.moneda)} ·{" "}
+                  abonos{" "}
                   {formatCurrency(s.abonos, s.moneda)}
                 </p>
                 <p className="text-kpi font-semibold tabular-nums">
@@ -128,6 +129,10 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
                 </p>
               </div>
             ))}
+            <p className="w-full text-xs text-muted-foreground">
+              Saldo global al día de hoy (sin filtro de periodo); cuadra contra la antigüedad de
+              saldos.
+            </p>
           </CardContent>
         </Card>
       )}
