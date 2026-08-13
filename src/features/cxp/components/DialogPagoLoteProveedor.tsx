@@ -90,6 +90,8 @@ export function DialogPagoLoteProveedor(p: Props) {
         onTotal={s.recalcular}
         saldoTotal={s.saldoTotal}
         tcDof={s.tcDof}
+        tcAplicable={s.tcAplicable}
+        tcBloqueado={s.tcBloqueado}
         metodo={s.metodo}
         onMetodo={s.setMetodo}
         cuentaId={s.cuentaId}
