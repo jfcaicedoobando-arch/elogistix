@@ -3,7 +3,7 @@
  * misma moneda y al menos dos facturas.
  */
 import { describe, it, expect } from "vitest";
-import { derivarLoteCobro } from "../carteraLote";
+import { derivarLoteCobro, hayEnTramiteCancelacion } from "../carteraLote";
 import type { CarteraRow } from "../carteraColumns";
 
 function row(over: Partial<CarteraRow>): CarteraRow {
