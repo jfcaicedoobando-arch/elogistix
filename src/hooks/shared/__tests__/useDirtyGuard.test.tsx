@@ -3,8 +3,7 @@
  * routers de datos. Bajo `<BrowserRouter>` lanzaba excepción y tumbaba el modal
  * de captura de facturas de proveedor.
  */
-import { render, screen } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { useDirtyGuard } from "../useDirtyGuard";
@@ -49,7 +48,7 @@ describe("useDirtyGuard", () => {
         <Sujeto dirty={false} accion={accion} />
       </BrowserRouter>,
     );
-    await userEvent.click(screen.getByRole("button", { name: "Atrás" }));
+    fireEvent.click(screen.getByRole("button", { name: "Atrás" }));
     expect(accion).toHaveBeenCalledTimes(1);
     expect(screen.queryByText("¿Salir sin guardar?")).not.toBeInTheDocument();
   });
@@ -61,10 +60,10 @@ describe("useDirtyGuard", () => {
         <Sujeto dirty accion={accion} />
       </BrowserRouter>,
     );
-    await userEvent.click(screen.getByRole("button", { name: "Atrás" }));
-    expect(await screen.findByText("¿Salir sin guardar?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Atrás" }));
+    await waitFor(() => expect(screen.getByText("¿Salir sin guardar?")).toBeInTheDocument());
     expect(accion).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole("button", { name: "Salir sin guardar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Salir sin guardar" }));
     expect(accion).toHaveBeenCalledTimes(1);
   });
 
@@ -75,8 +74,8 @@ describe("useDirtyGuard", () => {
         <Sujeto dirty accion={accion} />
       </BrowserRouter>,
     );
-    await userEvent.click(screen.getByRole("button", { name: "Atrás" }));
-    await userEvent.click(screen.getByRole("button", { name: "Seguir capturando" }));
+    fireEvent.click(screen.getByRole("button", { name: "Atrás" }));
+    fireEvent.click(screen.getByRole("button", { name: "Seguir capturando" }));
     expect(accion).not.toHaveBeenCalled();
   });
 });
