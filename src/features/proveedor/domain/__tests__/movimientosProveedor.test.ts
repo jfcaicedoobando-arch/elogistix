@@ -41,10 +41,19 @@ describe("conSaldoCorrido", () => {
     expect(res[1].saldo).toBe(100);
   });
 
+  it("arranca cada moneda en su saldo de apertura (Ola 12 · R3FE-03)", () => {
+    const res = conSaldoCorrido(
+      [mov({ ref_id: "p", tipo: "Pago", abono: 10000 })],
+      [{ moneda: "mxn", saldo: 50000 }],
+    );
+    expect(res[0].saldo).toBe(40000);
+  });
+
   it("devuelve arreglo vacío sin movimientos", () => {
     expect(conSaldoCorrido([])).toEqual([]);
   });
 });
+
 
 describe("agingPorMoneda", () => {
   const filas: AgingFilaProveedor[] = [
