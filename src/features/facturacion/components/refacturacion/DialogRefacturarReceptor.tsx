@@ -55,7 +55,7 @@ export function DialogRefacturarReceptor({ facturaId, open, onOpenChange }: Prop
         w.bloqueo ? (
           <p className="text-xs text-destructive">{w.bloqueo}</p>
         ) : w.aviso ? (
-          <p className="text-xs text-warning-foreground">{w.aviso}</p>
+          <p className="text-xs text-warning">{w.aviso}</p>
         ) : (
           <p className="text-xs text-muted-foreground">
             Paso {s.paso} de {TOTAL_PASOS_REFACTURACION} validado. Puedes continuar.
