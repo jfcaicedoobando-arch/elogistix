@@ -36,7 +36,7 @@ function useTcLotePago(open: boolean, moneda: string, fecha: string) {
   const tcAplicable = esExtranjera
     ? (moneda === "EUR" ? tcDof?.eurMxn : tcDof?.usdMxn) ?? null
     : null;
-  return { esExtranjera, tcAplicable, tcBloqueado: esExtranjera && !tcAplicable };
+  return { esExtranjera, tcDof, tcAplicable, tcBloqueado: esExtranjera && !tcAplicable };
 }
 
 export function usePagoLoteState(a: Args) {
@@ -68,7 +68,7 @@ export function usePagoLoteState(a: Args) {
     setRenglones(repartirFifo(a.facturas, saldoTotal).renglones);
   }, [a.open, a.facturas, a.proveedorOrigen, saldoTotal]);
 
-  const { tcAplicable, tcBloqueado } = useTcLotePago(a.open, a.moneda, fecha);
+  const { tcDof, tcAplicable, tcBloqueado } = useTcLotePago(a.open, a.moneda, fecha);
 
   const totalNum = round2(Number(total) || 0);
   const cuentasMoneda = cuentas.filter((c) => c.moneda === a.moneda);
