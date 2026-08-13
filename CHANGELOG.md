@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.594.2] - 2026-08-13
+- **Se corrige la divergencia "REP cancelado en el SAT pero vigente en Libre Carga".** El candado de cancelación bloqueaba también las actualizaciones documentales del pago, por lo que el acuse del SAT nunca se guardaba.
+- Ahora un pago puede actualizar sólo sus datos fiscales (estatus del REP, archivos, acuses) aunque la factura esté cancelada o en trámite; sigue prohibido registrar o modificar cobros en facturas no vivas.
+- La consulta manual de REP ahora reporta el motivo si el guardado falla, en lugar de responder "sin cambios" en silencio.
+- REP P7 (factura F1026) quedó sincronizado como cancelado/aceptado.
+
+
 ## [13.594.1] - 2026-08-13
 - **Refacturación paso 5: el ordenante del depósito ya viene precargado.** Se toma la razón social y el RFC del receptor de la factura viva (la nueva) y, si aún no los tiene, del cliente destino elegido.
 - Se muestra una nota con el origen del dato y los campos siguen siendo editables si el depósito llegó de otra empresa.
