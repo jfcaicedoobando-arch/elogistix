@@ -5,6 +5,7 @@
   - **Pago en lote a proveedor:** si una factura del lote está en otra moneda y no se capturó tipo de cambio, el lote se rechaza con un mensaje claro (`LC_LOTE_FACTURA_MONEDA`) antes de guardar nada, igual que ya hacía el cobro en lote de clientes.
   - **Antigüedad de saldos:** las facturas antiguas marcadas como "Pagada" sin pagos capturados dejan de mostrar saldo pendiente (sólo cambia el cálculo, no se tocó ningún dato).
   - **Conciliación comprometido vs facturado:** cuando el costo y la factura están en monedas distintas, el importe se convierte con el tipo de cambio del documento o el del DOF; si no hay tipo de cambio confiable, la partida se marca **Moneda mixta** y ese importe se excluye de la comparación (nunca se asume 1:1).
+  - **CI:** la migración de contactos de proveedor y expediente de cliente se volvió re-ejecutable (índices con `IF NOT EXISTS` y `DROP POLICY IF EXISTS` previo) y se regeneró `migration-manifest.json`.
   - Se actualizaron los espejos declarativos de `registrar_pago_proveedor_lote`, `proveedor_estado_cuenta` y `proveedor_estado_cuenta_movimientos`, y la tabla de altas del README de esquemas.
 
 ## [13.578.0] - 2026-08-13

@@ -33,6 +33,7 @@ GRANT ALL ON public.proveedor_contactos TO service_role;
 
 ALTER TABLE public.proveedor_contactos ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Org puede ver contactos de proveedor" ON public.proveedor_contactos;
 CREATE POLICY "Org puede ver contactos de proveedor"
   ON public.proveedor_contactos FOR SELECT TO authenticated
   USING (
@@ -40,6 +41,7 @@ CREATE POLICY "Org puede ver contactos de proveedor"
     OR public.has_role(auth.uid(), 'super_admin'::public.app_role)
   );
 
+DROP POLICY IF EXISTS "Compras puede insertar contactos de proveedor" ON public.proveedor_contactos;
 CREATE POLICY "Compras puede insertar contactos de proveedor"
   ON public.proveedor_contactos FOR INSERT TO authenticated
   WITH CHECK (
@@ -51,25 +53,27 @@ CREATE POLICY "Compras puede insertar contactos de proveedor"
     )
   );
 
+DROP POLICY IF EXISTS "Compras puede actualizar contactos de proveedor" ON public.proveedor_contactos;
 CREATE POLICY "Compras puede actualizar contactos de proveedor"
   ON public.proveedor_contactos FOR UPDATE TO authenticated
   USING (organization_id = public.current_user_org_id())
   WITH CHECK (organization_id = public.current_user_org_id());
 
+DROP POLICY IF EXISTS "Compras puede borrar contactos de proveedor" ON public.proveedor_contactos;
 CREATE POLICY "Compras puede borrar contactos de proveedor"
   ON public.proveedor_contactos FOR DELETE TO authenticated
   USING (organization_id = public.current_user_org_id());
 
-CREATE INDEX idx_proveedor_contactos_proveedor
+CREATE INDEX IF NOT EXISTS idx_proveedor_contactos_proveedor
   ON public.proveedor_contactos (proveedor_id, es_principal DESC, nombre)
   WHERE deleted_at IS NULL;
 
-CREATE INDEX idx_proveedor_contactos_org
+CREATE INDEX IF NOT EXISTS idx_proveedor_contactos_org
   ON public.proveedor_contactos (organization_id)
   WHERE deleted_at IS NULL;
 
 -- Un solo contacto principal vivo por proveedor.
-CREATE UNIQUE INDEX uq_proveedor_contactos_principal
+CREATE UNIQUE INDEX IF NOT EXISTS uq_proveedor_contactos_principal
   ON public.proveedor_contactos (proveedor_id)
   WHERE es_principal AND deleted_at IS NULL;
 
@@ -153,6 +157,7 @@ GRANT ALL ON public.cliente_documentos TO service_role;
 
 ALTER TABLE public.cliente_documentos ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Org puede ver documentos de cliente" ON public.cliente_documentos;
 CREATE POLICY "Org puede ver documentos de cliente"
   ON public.cliente_documentos FOR SELECT TO authenticated
   USING (
@@ -160,6 +165,7 @@ CREATE POLICY "Org puede ver documentos de cliente"
     OR public.has_role(auth.uid(), 'super_admin'::public.app_role)
   );
 
+DROP POLICY IF EXISTS "Org puede insertar documentos de cliente" ON public.cliente_documentos;
 CREATE POLICY "Org puede insertar documentos de cliente"
   ON public.cliente_documentos FOR INSERT TO authenticated
   WITH CHECK (
@@ -171,20 +177,22 @@ CREATE POLICY "Org puede insertar documentos de cliente"
     )
   );
 
+DROP POLICY IF EXISTS "Org puede actualizar documentos de cliente" ON public.cliente_documentos;
 CREATE POLICY "Org puede actualizar documentos de cliente"
   ON public.cliente_documentos FOR UPDATE TO authenticated
   USING (organization_id = public.current_user_org_id())
   WITH CHECK (organization_id = public.current_user_org_id());
 
+DROP POLICY IF EXISTS "Org puede borrar documentos de cliente" ON public.cliente_documentos;
 CREATE POLICY "Org puede borrar documentos de cliente"
   ON public.cliente_documentos FOR DELETE TO authenticated
   USING (organization_id = public.current_user_org_id());
 
-CREATE INDEX idx_cliente_documentos_cliente
+CREATE INDEX IF NOT EXISTS idx_cliente_documentos_cliente
   ON public.cliente_documentos (cliente_id, created_at DESC)
   WHERE deleted_at IS NULL;
 
-CREATE INDEX idx_cliente_documentos_org
+CREATE INDEX IF NOT EXISTS idx_cliente_documentos_org
   ON public.cliente_documentos (organization_id)
   WHERE deleted_at IS NULL;
 
@@ -193,6 +201,7 @@ CREATE TRIGGER trg_cliente_documentos_updated_at
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Storage: prefijo `clientes/{cliente_id}/` del bucket privado `documentos`.
+DROP POLICY IF EXISTS "Cliente docs upload" ON storage.objects;
 CREATE POLICY "Cliente docs upload"
   ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (
@@ -205,6 +214,7 @@ CREATE POLICY "Cliente docs upload"
     )
   );
 
+DROP POLICY IF EXISTS "Cliente docs read" ON storage.objects;
 CREATE POLICY "Cliente docs read"
   ON storage.objects FOR SELECT TO authenticated
   USING (
@@ -218,6 +228,7 @@ CREATE POLICY "Cliente docs read"
     )
   );
 
+DROP POLICY IF EXISTS "Cliente docs delete" ON storage.objects;
 CREATE POLICY "Cliente docs delete"
   ON storage.objects FOR DELETE TO authenticated
   USING (
