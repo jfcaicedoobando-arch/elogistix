@@ -21,11 +21,7 @@ import {
   etiquetaAccionPaso,
 } from "@/features/facturacion/domain/refacturacionPasos";
 import { useRefacturarWizard } from "./useRefacturarWizard";
-import { PasoDiagnostico } from "./PasoDiagnostico";
-import { PasoCancelarRep } from "./PasoCancelarRep";
-import { PasoFacturaNueva } from "./PasoFacturaNueva";
-import { PasoCancelarOriginal } from "./PasoCancelarOriginal";
-import { PasoReasignarPago } from "./PasoReasignarPago";
+import { RefacturarPasoActual } from "./RefacturarPasoActual";
 
 interface Props {
   facturaId: string | null;
@@ -91,68 +87,7 @@ export function DialogRefacturarReceptor({ facturaId, open, onOpenChange }: Prop
         />
       }
     >
-      {s.paso === 1 && (
-        <PasoDiagnostico
-          numeroOriginal={s.original?.numero ?? ""}
-          clienteOriginal={s.original?.cliente_nombre ?? ""}
-          rfcOriginal={s.original?.rfc_cliente ?? null}
-          total={s.original?.total ?? null}
-          moneda={s.original?.moneda ?? "MXN"}
-          clientes={w.clientes}
-          clienteDestinoId={w.clienteDestinoId}
-          onClienteDestino={w.setClienteDestinoId}
-          rutaFiscal={w.rutaFiscal}
-          onRutaFiscal={w.setRutaFiscal}
-          motivo={w.motivo}
-          onMotivo={w.setMotivo}
-          bloqueado={Boolean(s.caso)}
-        />
-      )}
-
-      {s.paso === 2 && (
-        <PasoCancelarRep
-          pagos={w.pagos}
-          cargando={s.pagosCargando}
-          cancelandoId={w.repEnCurso}
-          onCancelarRep={w.handleCancelarRep}
-        />
-      )}
-
-      {s.paso === 3 && (
-        <PasoFacturaNueva
-          facturaNueva={s.facturaNueva}
-          clienteDestinoNombre={w.clienteDestinoNombre}
-          duplicando={s.duplicar.isPending}
-          consultando={s.facturaNuevaCargando}
-          onDuplicar={() => s.duplicar.mutate()}
-          onIrABorrador={w.handleIrABorrador}
-          onRefrescar={s.refrescar}
-        />
-      )}
-
-      {s.paso === 4 && (
-        <PasoCancelarOriginal
-          original={s.original}
-          rutaFiscal={w.rutaFiscal}
-          cancelando={w.cancelandoFactura}
-          onCancelar={w.handleCancelarOriginal}
-          onRefrescar={s.refrescar}
-        />
-      )}
-
-      {s.paso === 5 && (
-        <PasoReasignarPago
-          pagos={w.pagos}
-          pagoSeleccionadoId={w.pagoSeleccionadoId}
-          onSeleccionarPago={w.setPagoSeleccionadoId}
-          facturaNueva={s.facturaNueva}
-          ordenanteNombre={w.ordenanteNombre}
-          onOrdenanteNombre={w.setOrdenanteNombre}
-          ordenanteRfc={w.ordenanteRfc}
-          onOrdenanteRfc={w.setOrdenanteRfc}
-          yaReasignado={w.yaReasignado}
-        />
-      )}
+      <RefacturarPasoActual w={w} />
     </FormDialogShell>
   );
 }
