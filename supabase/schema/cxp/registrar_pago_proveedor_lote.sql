@@ -26,6 +26,8 @@ DECLARE
   v_lote_id uuid;
   v_renglon jsonb;
   v_fecha_emision date;
+  -- Ola 12 · R3BD-03: moneda de la factura para el guard de paridad.
+  v_moneda_factura public.moneda;
   v_n int := 0;
   v_email text;
 BEGIN
@@ -100,7 +102,8 @@ BEGIN
 
     -- Ola 11 · RFE-02/RNF-03: el SELECT sirve doble — valida que la factura
     -- exista/sea del proveedor y trae fecha_emision para el guard de fecha.
-    SELECT pf.fecha_emision INTO v_fecha_emision
+    -- Ola 12 · R3BD-03: también trae la moneda para el guard de paridad.
+    SELECT pf.fecha_emision, pf.moneda INTO v_fecha_emision, v_moneda_factura
     FROM public.proveedor_facturas pf
     WHERE pf.id = (v_renglon->>'factura_id')::uuid
       AND pf.deleted_at IS NULL
@@ -109,6 +112,14 @@ BEGIN
 
     IF v_fecha_emision IS NULL THEN
       RAISE EXCEPTION 'LC_LOTE_FACTURA_INVALIDA: Una de las facturas no existe o no pertenece al proveedor seleccionado.';
+    END IF;
+
+    -- Ola 12 · R3BD-03 (paridad CxC): la factura debe ser de la moneda del
+    -- lote. Excepción: cruce de monedas permitido sólo con TC válido, porque
+    -- el trigger convertir_monto_pago_a_factura convierte con ese TC.
+    IF v_moneda_factura <> v_moneda AND (v_tc IS NULL OR v_tc <= 0) THEN
+      RAISE EXCEPTION 'LC_LOTE_FACTURA_MONEDA: La factura está en % y el lote en %; captura el tipo de cambio o retira la factura del lote.', v_moneda_factura, v_moneda
+        USING ERRCODE = '42501';
     END IF;
 
     IF v_fecha < v_fecha_emision THEN
