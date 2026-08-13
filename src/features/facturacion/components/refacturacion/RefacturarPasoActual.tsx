@@ -7,7 +7,7 @@ import { PasoCancelarRep } from "./PasoCancelarRep";
 import { PasoFacturaNueva } from "./PasoFacturaNueva";
 import { PasoCancelarOriginal } from "./PasoCancelarOriginal";
 import { PasoReasignarPago } from "./PasoReasignarPago";
-import type { RefacturarWizard } from "./useRefacturarWizard";
+import type { RefacturarWizard } from "@/features/facturacion/hooks/useRefacturarWizard";
 
 export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
   const { s } = w;

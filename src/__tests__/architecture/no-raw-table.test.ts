@@ -108,6 +108,9 @@ const ALLOWLIST: readonly string[] = [
   "src/features/tesoreria/components/DetallePagoAplicaciones.tsx",
   // Tabla estática de 2 renglones (flujo por moneda) en dashboard de tesorería.
   "src/features/tesoreria/routes/_sections/TesoreriaFlujoMonedas.tsx",
+  // Refacturación: comparativos estáticos read-only dentro del asistente.
+  "src/features/facturacion/components/refacturacion/ComparativoConsistencia.tsx",
+  "src/features/facturacion/components/refacturacion/RefacturacionPreviewSaldos.tsx",
 ];
 
 describe("architecture — no raw @/components/ui/table imports", () => {

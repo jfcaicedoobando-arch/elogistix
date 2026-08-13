@@ -35,7 +35,7 @@ describe("simularPasoRefacturacion", () => {
     expect(sim).toMatchObject({ paso: 2, cancela: [], crea: [], reasigna: null, saldos: [], bloqueos: [] });
   });
 
-  it("propaga el error de la RPC", async () => {
+  it("propaga el error de la RPC de simulación de refacturación", async () => {
     rpc.mockResolvedValue({ data: null, error: new Error("LC_REFACT_FORBIDDEN") });
     await expect(simularPasoRefacturacion("caso-1", 2)).rejects.toThrow("LC_REFACT_FORBIDDEN");
   });

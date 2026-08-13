@@ -29,6 +29,8 @@ const EXENTOS = new Set<string>([
   "src/features/facturacion/services/masivas.ts",
   "src/features/facturacion/services/datosFiscalesCliente.ts",
   "src/features/facturacion/services/historialFactura.ts",
+  // Refacturación: el asistente debe poder leer la factura original ya cancelada.
+  "src/features/facturacion/services/refacturacion.ts",
   "src/features/proformas/services/facturar.ts",
   "src/services/storage/facturas.ts",
 ]);

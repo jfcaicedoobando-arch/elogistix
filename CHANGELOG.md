@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.589.2] - 2026-08-13
+- **Arreglos de CI.** Las tablas comparativas del asistente de refacturación (consistencia y saldos) usan el contrato visual estándar de tablas de detalle.
+- El controlador del asistente se movió a `hooks/` y sus módulos puros a `domain/`, como manda la arquitectura del proyecto.
+- Se agregaron pruebas de los módulos de avance y derivados del asistente, y se corrigió un título de prueba duplicado.
+
+
 ## [13.589.1] - 2026-08-13
 - **Arreglos de CI en el asistente de refacturación.** El asistente ahora lee la organización activa con `useOrgActiva()` (antes usaba `useAuth().organizationId`, que es nulo para el super admin con tenant seleccionado).
 - Se dividió la lógica del asistente en dos módulos puros (`refacturarWizardAvance.ts` y `refacturarWizardDerivados.ts`) para cumplir el límite de complejidad.
