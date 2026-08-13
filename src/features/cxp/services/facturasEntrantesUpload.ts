@@ -12,7 +12,6 @@ import {
   type ArchivoSubido,
 } from "@/features/cxp/services/facturasEntrantesFila";
 import {
-  BUCKET_CXP_INBOX,
   mensajeDuplicadoEntrante,
   type SubirFacturaEntranteInput,
 } from "@/features/cxp/services/facturasEntrantes.types";
