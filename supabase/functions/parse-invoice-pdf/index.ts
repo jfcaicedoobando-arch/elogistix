@@ -30,7 +30,7 @@ async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof cr
   // `req.formData()` lanza "Missing content type" y se reportaba como 500.
   const contentType = req.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().includes("multipart/form-data")) {
-    return errorResponse("400:Envía el PDF como multipart/form-data", 400, cors);
+    return errorResponse("Envía el PDF como multipart/form-data", 400, cors);
   }
 
   let form: FormData;
