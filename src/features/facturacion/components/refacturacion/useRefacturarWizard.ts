@@ -5,18 +5,19 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { motivoBloqueoRefacturacion } from "@/features/facturacion/domain/refacturacionPermisos";
 import { useRefacturacion } from "@/features/facturacion/hooks/useRefacturacion";
 import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { useCancelarRep } from "@/features/facturacion/hooks/useTimbrarRep";
+import { decidirAvance } from "./refacturarWizardAvance";
 import {
   bloqueoPaso,
-  TOTAL_PASOS_REFACTURACION,
   type PagoRefacturacion,
 } from "@/features/facturacion/domain/refacturacionPasos";
+
 import {
   bloqueoOrdenante as calcularBloqueoOrdenante,
   pendientesReceptorFiscal,
