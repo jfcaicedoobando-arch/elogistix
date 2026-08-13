@@ -68,12 +68,14 @@ export default function Cartera() {
         title="Cartera"
         description="Facturas vencidas y por vencer en los próximos 7 días. Cambia el filtro de urgencia para ver toda la cartera."
       />
-      <CarteraSelectionBar
-        total={selectedIds.length}
-        lote={lote}
-        onCobroLote={() => setLoteOpen(true)}
-        onLimpiar={() => setRowSelection({})}
-      />
+      {canRegistrarCobro && (
+        <CarteraSelectionBar
+          total={selectedIds.length}
+          lote={lote}
+          onCobroLote={() => setLoteOpen(true)}
+          onLimpiar={() => setRowSelection({})}
+        />
+      )}
       <CarteraKpis
         totalFacturas={scoped.length}
         saldosNativos={saldosNativos}
