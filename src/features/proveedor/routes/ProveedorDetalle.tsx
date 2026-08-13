@@ -26,6 +26,7 @@ import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancari
 import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneralesCard";
 import { ProveedorResumenCards } from "../components/ProveedorResumenCards";
 import { ProveedorSaludTab } from "../components/ProveedorSaludTab";
+import { ProveedorEstadoCuentaTab } from "../components/ProveedorEstadoCuentaTab";
 import { ProveedorAnticiposCard } from "@/features/anticipos-proveedor/components/ProveedorAnticiposCard";
 
 export default function ProveedorDetalle() {
@@ -165,6 +166,7 @@ export default function ProveedorDetalle() {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="estado_cuenta">Estado de cuenta</TabsTrigger>
           <TabsTrigger value="salud">Salud</TabsTrigger>
         </TabsList>
         <TabsContent value="operaciones" className="mt-4">
@@ -191,6 +193,13 @@ export default function ProveedorDetalle() {
               <ProveedorOperacionesTable partidas={partidas} filtro="por_facturar" />
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="estado_cuenta" className="mt-4">
+          <ProveedorEstadoCuentaTab
+            proveedorId={proveedor.id}
+            proveedorNombre={nombreFmt}
+            rfc={proveedor.rfc}
+          />
         </TabsContent>
         <TabsContent value="salud" className="mt-4">
           <ProveedorSaludTab proveedorId={proveedor.id} />
