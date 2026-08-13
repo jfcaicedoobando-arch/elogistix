@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.594.1] - 2026-08-13
+- **Refacturación paso 5: el ordenante del depósito ya viene precargado.** Se toma la razón social y el RFC del receptor de la factura viva (la nueva) y, si aún no los tiene, del cliente destino elegido.
+- Se muestra una nota con el origen del dato y los campos siguen siendo editables si el depósito llegó de otra empresa.
+
+
 ## [13.594.0] - 2026-08-13
 - **Refacturación: el paso 4 ya no obliga a esperar al SAT.** Si la cancelación del CFDI original ya está solicitada (pendiente o en verificación), se puede continuar y reasignar el pago a la nueva factura.
 - Se muestra el estatus del trámite con distintivo ("Cancelación en verificación" / "Cancelación rechazada") y aviso informativo en los pasos 4 y 5.
