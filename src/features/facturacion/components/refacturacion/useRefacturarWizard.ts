@@ -5,18 +5,24 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { motivoBloqueoRefacturacion } from "@/features/facturacion/domain/refacturacionPermisos";
 import { useRefacturacion } from "@/features/facturacion/hooks/useRefacturacion";
 import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { useCancelarRep } from "@/features/facturacion/hooks/useTimbrarRep";
+import { decidirAvance } from "./refacturarWizardAvance";
+import {
+  mapearPagos,
+  nombreClienteDestino,
+  receptorDesdeClientes,
+} from "./refacturarWizardDerivados";
 import {
   bloqueoPaso,
-  TOTAL_PASOS_REFACTURACION,
   type PagoRefacturacion,
 } from "@/features/facturacion/domain/refacturacionPasos";
+
 import {
   bloqueoOrdenante as calcularBloqueoOrdenante,
   pendientesReceptorFiscal,
@@ -27,7 +33,7 @@ import type { AppRole } from "@/types/appRole";
 
 export function useRefacturarWizard(facturaId: string | null, open: boolean, onClose: () => void) {
   const navigate = useNavigate();
-  const { organizationId } = useAuth();
+  const { organizationId } = useOrgActiva();
   const { role } = usePermissions();
   // Espejo del guard `_assert_refacturador`: sólo roles contables y de
   // administración operan; los demás quedan en modo consulta.
@@ -55,30 +61,12 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     setPagoSeleccionadoId((prev) => prev ?? s.caso!.pago_original_id);
   }, [open, s.caso]);
 
-  const pagos: PagoRefacturacion[] = useMemo(
-    () => s.pagos.map((p) => ({
-      id: p.id,
-      fecha_pago: p.fecha_pago,
-      monto: Number(p.monto),
-      moneda: p.moneda,
-      monto_aplicado_factura: p.monto_aplicado_factura === null ? null : Number(p.monto_aplicado_factura),
-      uuid_rep: p.uuid_rep ?? null,
-      estado_rep: p.estado_rep ?? null,
-      rep_cancelado_en: p.rep_cancelado_en ?? null,
-    })),
-    [s.pagos],
-  );
+  const pagos: PagoRefacturacion[] = useMemo(() => mapearPagos(s.pagos), [s.pagos]);
 
-  const receptorDestino = useMemo(() => {
-    const c = clientesQuery.data?.find((x) => x.id === clienteDestinoId);
-    if (!c) return null;
-    return {
-      nombre: c.nombre,
-      rfc: c.rfc,
-      regimen_fiscal: c.regimen_fiscal,
-      codigo_postal: c.codigo_postal,
-    };
-  }, [clientesQuery.data, clienteDestinoId]);
+  const receptorDestino = useMemo(
+    () => receptorDesdeClientes(clientesQuery.data, clienteDestinoId),
+    [clientesQuery.data, clienteDestinoId],
+  );
 
   const receptorPendientes = useMemo(
     () => (receptorDestino ? pendientesReceptorFiscal(receptorDestino) : []),
@@ -109,8 +97,8 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     bloqueoPermiso,
   });
 
-  const clienteDestinoNombre =
-    clientesQuery.data?.find((c) => c.id === clienteDestinoId)?.nombre ?? "el cliente destino";
+  const clienteDestinoNombre = nombreClienteDestino(clientesQuery.data, clienteDestinoId);
+
 
   const handleCancelarRep = (pagoId: string) => {
     if (!puedeOperar) return;
@@ -138,35 +126,41 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
 
   const handleContinuar = () => {
     if (bloqueo) return;
-    if (s.paso === 1) {
-      if (!s.caso) {
-        if (!facturaId || !clienteDestinoId) return;
-        s.abrir.mutate({ facturaId, clienteDestinoId, rutaFiscal, motivo });
-        return;
-      }
-      s.avanzar.mutate(2);
+    const accion = decidirAvance({
+      paso: s.paso,
+      facturaId,
+      casoId: s.caso?.id ?? null,
+      facturaNuevaId: s.caso?.factura_nueva_id ?? null,
+      clienteDestinoId,
+      pagoSeleccionadoId,
+      yaReasignado,
+    });
+    if (accion.tipo === "abrir") {
+      s.abrir.mutate({ facturaId: facturaId!, clienteDestinoId: clienteDestinoId!, rutaFiscal, motivo });
       return;
     }
-    if (s.paso === TOTAL_PASOS_REFACTURACION) {
-      if (yaReasignado) {
-        s.cerrar.mutate(false, { onSuccess: onClose });
-        return;
-      }
-      if (!pagoSeleccionadoId || !s.caso?.factura_nueva_id) return;
+    if (accion.tipo === "avanzar") {
+      s.avanzar.mutate(accion.paso);
+      return;
+    }
+    if (accion.tipo === "cerrar") {
+      s.cerrar.mutate(false, { onSuccess: onClose });
+      return;
+    }
+    if (accion.tipo === "reasignar") {
       s.reasignar.mutate(
         {
-          pagoId: pagoSeleccionadoId,
-          facturaDestinoId: s.caso.factura_nueva_id,
-          casoId: s.caso.id,
+          pagoId: accion.pagoId,
+          facturaDestinoId: accion.facturaDestinoId,
+          casoId: accion.casoId,
           ordenanteNombre,
           ordenanteRfc,
         },
         { onSuccess: () => s.cerrar.mutate(false, { onSuccess: onClose }) },
       );
-      return;
     }
-    s.avanzar.mutate(s.paso + 1);
   };
+
 
   const accionPendiente =
     s.abrir.isPending || s.avanzar.isPending || s.reasignar.isPending || s.cerrar.isPending;
