@@ -24,7 +24,7 @@ interface Props {
   isDeleting: boolean;
   onEditar: () => void;
   onEliminar: () => void;
-  onUpdate: (patch: Partial<Tables<"proveedores">>) => void;
+  onUpdate: (id: string, patch: Record<string, string>) => Promise<unknown>;
 }
 
 export function ProveedorDetalleHeader({
