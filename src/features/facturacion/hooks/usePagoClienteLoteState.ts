@@ -88,6 +88,10 @@ export function usePagoClienteLoteState(a: Args) {
   const [cuentaId, setCuentaId] = useState("");
   const [notas, setNotas] = useState("");
   const [renglones, setRenglones] = useState<RenglonCobro[]>([]);
+  // Ola 11 · RNF-01: una llave por apertura del diálogo; los reintentos del
+  // mismo submit (timeout ambiguo, doble clic) la reutilizan y la RPC los
+  // deduplica server-side.
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
 
   // Al abrir: importe sugerido = saldo total, reparto FIFO por vencimiento.
   useEffect(() => {
@@ -99,6 +103,7 @@ export function usePagoClienteLoteState(a: Args) {
     setCuentaId("");
     setNotas("");
     setRenglones(repartirFifo(a.facturas, saldoTotal).renglones);
+    setRequestId(crypto.randomUUID());
   }, [a.open, a.facturas, saldoTotal]);
 
   const idsConRep = useIdsConRep(a.open, a.facturas);
