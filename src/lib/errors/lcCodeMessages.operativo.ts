@@ -23,6 +23,8 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
   LC_ORG_SCOPE_PENDIENTE:
     "Selecciona una organización activa antes de continuar.",
   LC_ORG_INEXISTENTE: "La organización seleccionada ya no existe.",
+  LC_ORG_SIN_CONTEXTO:
+    "No hay una organización activa en tu sesión. Selecciona la organización y vuelve a intentarlo.",
   LC_SIN_ORG:
     "Tu usuario no tiene una organización asignada. Contacta al administrador.",
   LC_TENANT_MISMATCH: "El recurso no pertenece a tu organización.",
