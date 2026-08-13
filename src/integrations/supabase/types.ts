@@ -7677,6 +7677,10 @@ export type Database = {
         Args: { p_id: string; p_recargos: Json; p_tarifa: Json }
         Returns: undefined
       }
+      actualizar_tc_embarque_dof: {
+        Args: { _embarque_id: string; _fecha?: string }
+        Returns: Json
+      }
       agente_aprobar_tarifa: {
         Args: { _estado: string; _motivo?: string; _tarifa_id: string }
         Returns: undefined

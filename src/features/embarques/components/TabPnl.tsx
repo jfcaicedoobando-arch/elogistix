@@ -15,6 +15,7 @@ import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { PnlComparativaTable } from "./pnl/PnlComparativaTable";
 import { PnlProveedoresTable } from "./pnl/PnlProveedoresTable";
+import { PnlTipoCambioNota } from "./pnl/PnlTipoCambioNota";
 
 interface Props {
   embarqueId: string;
@@ -150,12 +151,11 @@ export function TabPnl({ embarqueId }: Props) {
         invertirAlerta
       />
       <p className="text-xs text-muted-foreground">
-        {/* UIA-10 (3): el desglose por concepto suma subtotales de las facturas;
-            el KPI "Costo real" usa el total con impuestos y ya descuenta notas de
-            crédito, por eso puede ser mayor que la suma de esta tabla. */}
-        El desglose por concepto usa subtotales (sin impuestos). El KPI "Costo real" incluye
-        impuestos y descuenta notas de crédito aplicadas, por lo que ambos importes pueden
-        diferir.
+        {/* v13.552.0: el KPI "Costo real" ya usa la base gravable (sin IVA) y
+            descuenta notas de crédito prorrateadas, igual que el desglose. La
+            diferencia restante viene de facturas sin conceptos capturados. */}
+        El desglose por concepto y el KPI "Costo real" usan importes sin impuestos. Si una factura de
+        proveedor no tiene conceptos capturados, su importe aparece como "(factura completa)".
       </p>
 
 
@@ -163,14 +163,11 @@ export function TabPnl({ embarqueId }: Props) {
         <PnlProveedoresTable proveedores={data.por_proveedor} />
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {/* UIA-10: el servicio normaliza el TC ausente a 0; 0 se muestra como "—". */}
-        Tipos de cambio del embarque: USD{" "}
-        {data.tipo_cambio_usd && data.tipo_cambio_usd > 0 ? data.tipo_cambio_usd.toFixed(4) : "—"} ·
-        EUR{" "}
-        {data.tipo_cambio_eur && data.tipo_cambio_eur > 0 ? data.tipo_cambio_eur.toFixed(4) : "—"}
-
-      </p>
+      <PnlTipoCambioNota
+        embarqueId={embarqueId}
+        tcUsd={data.tipo_cambio_usd}
+        tcEur={data.tipo_cambio_eur}
+      />
     </div>
   );
 }
