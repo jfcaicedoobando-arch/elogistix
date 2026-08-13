@@ -388,14 +388,13 @@ jobs:
 
       - name: Run Deno tests (excluding smoke)
         if: steps.changes.outputs.run == 'true'
-        # `--no-check`: los edge functions usan globals de Deno y tipos remotos que
-        # el checker de Deno resuelve distinto al de la app (43 falsos positivos:
-        # `@ts-expect-error` "sin usar" y desajustes de los tipos generados de
-        # Supabase). El typecheck real de la app vive en el job `typecheck`.
+        # RTC-01 · plan `simplificar-el-ci-a-lo-esencial-2026-08-12` §2: este
+        # paso sustituye al workflow eliminado `deno-typecheck.yml`. SIN
+        # `--no-check`, `deno test` vuelve a validar los tipos de las edge
+        # functions en CI (el typecheck de la app vive en el job `typecheck`).
         run: |
           readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
           deno test \
-            --no-check \
             --allow-env \
             --allow-net \
             --allow-read \

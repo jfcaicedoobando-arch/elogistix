@@ -253,9 +253,10 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // 13.274.0 — Estándares React 19 (con Compiler habilitado):
-      // React 19.2 + `"use memo"` opt-in. `react-compiler` en modo warn para
-      // no explotar CI con las 3 violaciones históricas conocidas (ver
+      // 13.274.0 — Estándares React 19. RTC-02: el plugin de build del
+      // Compiler se retiró (Ola 11); esta regla queda sólo como guardia
+      // estática de "rules of react", en modo warn para no explotar CI con
+      // las 3 violaciones históricas conocidas (ver
       // `useSafeNavigate`, `sidebar`, `PlantillaSelector`), pero visibles en
       // cada `bun run lint` para presión progresiva.
       "react-compiler/react-compiler": "warn",

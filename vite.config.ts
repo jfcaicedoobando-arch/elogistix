@@ -6,7 +6,6 @@ import { componentTagger } from "lovable-tagger";
 import { visualizer } from "rollup-plugin-visualizer";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { APP_VERSION } from "./src/constants/appVersion";
-import { reactCompilerPlugin } from "./vite-plugins/reactCompilerPlugin";
 
 /**
  * Verifica que `dist/index.html` contenga el bundle JS antes de terminar el
@@ -60,9 +59,10 @@ export default defineConfig(({ mode }) => {
   },
   plugins: [
     react(),
-    // Fase 3 — React Compiler en modo `annotation` (opt-in por archivo con
-    // `"use memo"`). Ver vite-plugins/reactCompilerPlugin.ts.
-    reactCompilerPlugin(),
+    // RTC-02 · el plugin del React Compiler (modo annotation, Fase 3) se
+    // retiró: tras TC-03 hay 0 archivos con "use memo" y el plugin cargaba
+    // Babel en cada build sin compilar nada. La guardia estática vive en
+    // eslint-plugin-react-compiler (regla warn, eslint.config.js).
     mode === "development" && componentTagger(),
     process.env.ANALYZE === "true" && visualizer({
       filename: "dist/bundle-stats.html",
