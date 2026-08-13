@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.572.0] - 2026-08-13
+- **Ola 12 · Sprint 01 — Toolchain y documentación** (R3TC-02/03/04, R3BD-07/08): limpieza de "herramientas del taller", sin cambios visibles para el usuario. Como afilar las sierras y ordenar el manual antes de la siguiente obra.
+  - `audit:all` ahora corre 11 guardarraíles: se sumaron `audit:schema-functions` y `audit:manifest`, que sólo estaban cableados en CI (R3TC-02).
+  - Los 4 imports de CORS en funciones de correo apuntan al módulo compartido `_shared/cors.ts` (antes usaban un paquete sin versión fijada) (R3TC-03).
+  - `audit:rpc-columns` ya no finge éxito: en CI sin base de datos falla con mensaje explícito; en local sigue omitiéndose con aviso `SKIP:`. Se retiró del job `audits` (que corre sin BD) (R3TC-04).
+  - `supabase/schema/README.md` actualizado con las altas de la Ola 11 y las migraciones reales de `registrar_pago_cliente_lote` y `regenerar_movimiento_pago_proveedor` (R3BD-07).
+  - `validar_cierre_embarque.sql` canónico alineado 1:1 con su migración vigente (sólo comentarios y espacios; cero cambios ejecutables) (R3BD-08).
+
+
+
 ## [13.571.0] - 2026-08-13
 - **Fichas de Cliente y Proveedor homologadas (Olas 1–3)**: ahora las dos pantallas se ven salidas del mismo molde. Como uniformar dos sucursales: mismos mostradores, mismos letreros.
   - Nuevo envoltorio compartido de pestañas (`DetailTabSection`) y contador en pill idéntico en todas las pestañas (`DetailTabLabel`); se eliminó el duplicado `ClienteTabSection` y las cards armadas a mano en proveedor.
