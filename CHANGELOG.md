@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.558.0] - 2026-08-13
+- **Corrección de KPIs del proveedor**: "Pagado" y "Pendiente" del detalle ya usan el pago real conciliado por partida (Ola 1) en lugar del estado antiguo todo-o-nada; antes una factura pagada a la mitad se veía como no pagada y, al cerrarse, como pagada al 100%.
+- El **expediente documental** ahora distingue "falló la carga" de "no hay documentos": muestra alerta con el motivo y botón Reintentar.
+- Las tablas de **operaciones** y de **estado de cuenta** regresan a la primera página al cambiar de filtro o de rango de fechas (antes podía quedarse en una página inexistente).
+- La caché del expediente usa la clave central de proveedores, para que las invalidaciones siempre surtan efecto.
+- Tests nuevos: pagos parciales en los KPIs, hooks del expediente (invalidación y mensajes de error), borrado de documento, falla de almacenamiento y estado de error de la pestaña. Suite del módulo: 156 pruebas en verde.
+
 ## [13.557.0] - 2026-08-13
 - **Nueva pestaña "Expediente" en el detalle de proveedor** (Ola 3): resguardo de constancia de situación fiscal, opinión de cumplimiento, comprobante de datos bancarios, contratos y actas, con carga de archivos, fecha del documento y fecha de vencimiento.
 - **Semáforo de completitud del expediente**: indica documentos faltantes, por vencer (30 días) y vencidos; los proveedores extranjeros sólo requieren el comprobante bancario.
