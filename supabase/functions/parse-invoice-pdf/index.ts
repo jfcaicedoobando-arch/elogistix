@@ -26,9 +26,22 @@ async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof cr
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) return errorResponse("Falta LOVABLE_API_KEY en el servidor", 500, cors);
 
-  const form = await req.formData();
+  // Sentry JAVASCRIPT-REACT-57: sin `content-type: multipart/form-data`,
+  // `req.formData()` lanza "Missing content type" y se reportaba como 500.
+  const contentType = req.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().includes("multipart/form-data")) {
+    return errorResponse("Envía el PDF como multipart/form-data", 400, cors);
+  }
+
+  let form: FormData;
+  try {
+    form = await req.formData();
+  } catch {
+    return errorResponse("No se pudo leer el archivo enviado", 400, cors);
+  }
   const file = form.get("file") as File | null;
   const categoriasJson = form.get("categorias") as string | null;
+
 
   if (!file) return errorResponse("Falta archivo PDF", 400, cors);
   if (file.size > MAX_BYTES) return errorResponse("El PDF excede 10 MB", 413, cors);
