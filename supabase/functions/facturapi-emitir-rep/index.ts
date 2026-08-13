@@ -11,14 +11,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
-import { resolveFacturapiKey, FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
+import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { timbrarRep } from "./timbrar.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
 import { calcularParcialidad, factorIvaFacturaOriginal, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
-import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
-import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { persistirRepTimbrado } from "./persistir.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
