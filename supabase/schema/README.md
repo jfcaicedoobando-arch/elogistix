@@ -52,7 +52,7 @@ anteriores y no listadas arriba): `auditoria/costos_repetidos.sql`,
 `operaciones/operaciones_stats.sql`,
 `portal/portal_obtener_proforma_por_token.sql`,
 `proformas/_convertir_proformas_insertar_conceptos.sql`,
-`proveedores/proveedor_salud.sql`. Total en disco: 32 archivos `.sql`
+`proveedores/proveedor_salud.sql`. Total en disco: 38 archivos `.sql`
 (lo verifica `audit:schema-functions`).
 
 **`cartera_pendiente` — firma congelada:** 14 columnas de salida
@@ -67,6 +67,10 @@ anteriores y no listadas arriba): `auditoria/costos_repetidos.sql`,
 | `proveedor_estado_cuenta` | `proveedores/` | Sprint 07 (R3BD-05/R3BD-06, acumulativa sobre S06) |
 | `proveedor_inteligencia` | `proveedores/` | Sprint 05 (R3P-17) |
 | `registrar_pago_proveedor_lote` | `cxp/` | Sprint 07 (R3BD-03) |
+| `a_mxn` | `proveedores/` | Sprint 10 (R3FE-01) |
+| `monto_pago_en_moneda_factura` | `proveedores/` | Sprint 10 (R3P-01/R3P-06) |
+| `saldo_factura_proveedor` | `proveedores/` | Sprint 10 (R3P-01) |
+| `proveedor_salud` | `proveedores/` | Sprint 10 (R3FE-01, KPIs valuados a MXN) |
 
 ## Flujo obligatorio a partir de 2026-07-23
 
