@@ -177,6 +177,30 @@ describe("deriveFacturaFlags", () => {
     expect(r.puedeRegistrarPago).toBe(true);
   });
 
+  it.each(["pending", "verifying"])(
+    "cancellation_status=%s bloquea registrar pago (v13.592.0)",
+    (cancellation_status) => {
+      const r = deriveFacturaFlags(
+        { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, cancellation_status },
+        true,
+        { saldo: 500 },
+      );
+      expect(r.puedeRegistrarPago).toBe(false);
+    },
+  );
+
+  it.each(["none", "rejected", null])(
+    "cancellation_status=%s sigue permitiendo registrar pago",
+    (cancellation_status) => {
+      const r = deriveFacturaFlags(
+        { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, cancellation_status },
+        true,
+        { saldo: 500 },
+      );
+      expect(r.puedeRegistrarPago).toBe(true);
+    },
+  );
+
   it.each(["Cancelada", "Sustituida", "Borrador", "Pagada", "Por timbrar"])(
     "estado %s nunca habilita registrar pago",
     (estado) => {

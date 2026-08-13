@@ -34,6 +34,24 @@ describe("derivarLoteCobro", () => {
     expect(res).toBeNull();
   });
 
+  it.each(["pending", "verifying"])(
+    "devuelve null si alguna tiene cancelación en trámite (%s)",
+    (cancellation_status) => {
+      const res = derivarLoteCobro([
+        row({}),
+        row({ factura_id: "f2", cancellation_status } as Partial<CarteraRow>),
+      ]);
+      expect(res).toBeNull();
+    },
+  );
+
+  it("hayEnTramiteCancelacion detecta la factura en trámite", () => {
+    expect(hayEnTramiteCancelacion([row({})])).toBe(false);
+    expect(
+      hayEnTramiteCancelacion([row({ cancellation_status: "verifying" } as Partial<CarteraRow>)]),
+    ).toBe(true);
+  });
+
   it("arma el lote con las facturas seleccionadas", () => {
     const res = derivarLoteCobro([
       row({}),
