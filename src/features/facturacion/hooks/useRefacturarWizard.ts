@@ -19,6 +19,7 @@ import {
   receptorDesdeClientes,
 } from "@/features/facturacion/domain/refacturarWizardDerivados";
 import {
+  avisoPaso,
   bloqueoPaso,
   type PagoRefacturacion,
 } from "@/features/facturacion/domain/refacturacionPasos";
@@ -82,7 +83,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
 
   const bloqueoOrdenanteActual = calcularBloqueoOrdenante(ordenanteNombre, ordenanteRfc);
   const yaReasignado = Boolean(s.caso?.pago_nuevo_id);
-  const bloqueo = bloqueoPaso(s.paso, {
+  const ctxPasos = {
     casoAbierto: Boolean(s.caso),
     clienteDestinoId,
     motivo,
@@ -95,7 +96,9 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     consistenciaHallazgos,
     bloqueoOrdenante: bloqueoOrdenanteActual,
     bloqueoPermiso,
-  });
+  };
+  const bloqueo = bloqueoPaso(s.paso, ctxPasos);
+  const aviso = avisoPaso(s.paso, ctxPasos);
 
   const clienteDestinoNombre = nombreClienteDestino(clientesQuery.data, clienteDestinoId);
 
@@ -180,6 +183,7 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
     ordenanteNombre, setOrdenanteNombre,
     ordenanteRfc, setOrdenanteRfc,
     bloqueo,
+    aviso,
     bloqueoPermiso,
     puedeOperar,
     bloqueoOrdenanteActual,
