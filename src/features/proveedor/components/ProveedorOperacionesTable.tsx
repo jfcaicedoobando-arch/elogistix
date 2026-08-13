@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileX } from "lucide-react";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
@@ -27,6 +27,10 @@ export function ProveedorOperacionesTable({ partidas, filtro = "todas" }: Props)
   type Op = PartidaEstadoCuenta & { __idx?: number };
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // Al cambiar de filtro la lista se acorta: volver a la primera página evita
+  // que el usuario quede parado en una página que ya no existe.
+  useEffect(() => { setPage(0); }, [filtro]);
 
   const filtradas: Op[] = useMemo(() => {
     const base = partidas.filter((p) => {

@@ -21,6 +21,7 @@ import {
   slugArchivo,
   subirDocumentoProveedor,
   urlDocumentoProveedor,
+  eliminarDocumentoProveedor,
 } from "@/features/proveedor/services/proveedorDocumentos";
 
 beforeEach(() => {
@@ -70,5 +71,31 @@ describe("urlDocumentoProveedor", () => {
     const url = await urlDocumentoProveedor("proveedores/p1/csf.pdf");
     expect(url).toContain("https://");
     expect(storage.getSignedUrl).toHaveBeenCalledWith("proveedores/p1/csf.pdf", 300);
+  });
+});
+
+describe("subirDocumentoProveedor — falla el almacenamiento", () => {
+  it("no registra en la base si la subida del archivo falla", async () => {
+    storage.uploadFile.mockRejectedValueOnce(new Error("storage caído"));
+    await expect(
+      subirDocumentoProveedor({
+        proveedorId: "p1",
+        organizationId: "o1",
+        tipo: "Contrato",
+        archivo: new File(["x"], "c.pdf", { type: "application/pdf" }),
+      }),
+    ).rejects.toMatchObject({ message: "storage caído" });
+    expect(storage.deleteFile).not.toHaveBeenCalled();
+  });
+});
+
+describe("eliminarDocumentoProveedor", () => {
+  it("marca el borrado lógico y quita el archivo del almacenamiento", async () => {
+    mock.setTableResult("proveedor_documentos", { data: null, error: null });
+    await eliminarDocumentoProveedor({ id: "d1", archivo: "proveedores/p1/c.pdf" });
+    expect(mock.getMutationPayload("proveedor_documentos", "update")).toMatchObject({
+      deleted_by: "u1",
+    });
+    expect(storage.deleteFile).toHaveBeenCalledWith("proveedores/p1/c.pdf");
   });
 });

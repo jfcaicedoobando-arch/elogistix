@@ -14,6 +14,12 @@ export interface OperacionMonto {
   monto: number;
   moneda?: string | null;
   estadoLiquidacion?: string | null;
+  /**
+   * v13.558.0 — Monto realmente pagado de la partida (Ola 1: viene conciliado
+   * contra los pagos de la factura del proveedor). Cuando se proporciona manda
+   * sobre `estadoLiquidacion`, que es todo-o-nada y no ve pagos parciales.
+   */
+  montoPagado?: number | null;
 }
 
 export interface AgregadosProveedor {
@@ -34,6 +40,18 @@ function normalizaMoneda(moneda?: string | null): string {
   return m === "" ? "MXN" : m;
 }
 
+/**
+ * Pagado de una partida: el conciliado real si existe, o el legado todo-o-nada.
+ * Nunca excede el monto costeado para no inventar saldos negativos.
+ */
+function montoPagadoDe(op: OperacionMonto, monto: number): number {
+  const conciliado = Number(op.montoPagado);
+  if (op.montoPagado !== null && op.montoPagado !== undefined && Number.isFinite(conciliado)) {
+    return Math.min(Math.max(conciliado, 0), Math.max(monto, 0));
+  }
+  return op.estadoLiquidacion === "Pagado" ? monto : 0;
+}
+
 export function calcularAgregadosProveedor(
   operaciones: readonly OperacionMonto[],
   tcUsdMxn: number,
@@ -45,8 +63,9 @@ export function calcularAgregadosProveedor(
     const moneda = normalizaMoneda(op.moneda);
     const monto = Number.isFinite(op.monto) ? Number(op.monto) : 0;
     porMoneda[moneda] = money((porMoneda[moneda] ?? 0) + monto);
-    if (op.estadoLiquidacion === "Pagado") {
-      pagadoPorMoneda[moneda] = money((pagadoPorMoneda[moneda] ?? 0) + monto);
+    const pagado = montoPagadoDe(op, monto);
+    if (pagado !== 0) {
+      pagadoPorMoneda[moneda] = money((pagadoPorMoneda[moneda] ?? 0) + pagado);
     }
   }
 

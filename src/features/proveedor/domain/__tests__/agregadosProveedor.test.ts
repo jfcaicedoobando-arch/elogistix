@@ -47,3 +47,49 @@ describe("proveedor/domain/agregadosProveedor", () => {
     expect(r.porMoneda).toEqual({ MXN: 250 });
   });
 });
+
+describe("calcularAgregadosProveedor — pagos parciales conciliados (Ola 1)", () => {
+  it("usa el monto pagado real en vez del estado legado todo-o-nada", () => {
+    const r = calcularAgregadosProveedor(
+      [{ monto: 1000, moneda: "MXN", estadoLiquidacion: "Pendiente", montoPagado: 600 }],
+      18,
+    );
+    expect(r.totalFacturado).toBe(1000);
+    expect(r.totalPagado).toBe(600);
+    expect(r.totalPendiente).toBe(400);
+  });
+
+  it("no permite que el pagado exceda lo costeado", () => {
+    const r = calcularAgregadosProveedor(
+      [{ monto: 500, moneda: "MXN", montoPagado: 900 }],
+      18,
+    );
+    expect(r.totalPagado).toBe(500);
+    expect(r.totalPendiente).toBe(0);
+  });
+
+  it("ignora montos pagados negativos o inválidos", () => {
+    const r = calcularAgregadosProveedor(
+      [{ monto: 500, moneda: "MXN", montoPagado: -50 }],
+      18,
+    );
+    expect(r.totalPagado).toBe(0);
+  });
+
+  it("mantiene el estado legado cuando no hay monto conciliado", () => {
+    const r = calcularAgregadosProveedor(
+      [{ monto: 300, moneda: "MXN", estadoLiquidacion: "Pagado" }],
+      18,
+    );
+    expect(r.totalPagado).toBe(300);
+  });
+
+  it("convierte el pagado en USD con el tipo de cambio del día", () => {
+    const r = calcularAgregadosProveedor(
+      [{ monto: 100, moneda: "USD", montoPagado: 25 }],
+      18,
+    );
+    expect(r.totalFacturado).toBe(1800);
+    expect(r.totalPagado).toBe(450);
+  });
+});

@@ -40,6 +40,7 @@ export function useProveedorDetalleController() {
       monto: p.comprometido,
       moneda: p.moneda,
       estadoLiquidacion: p.estado_liquidacion,
+      montoPagado: p.pagado,
     })),
     [partidas],
   );

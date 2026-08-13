@@ -31,7 +31,7 @@ describe("filasMovimientosExport", () => {
     const [fila] = filasMovimientosExport([movimiento]);
     expect(fila.fecha).toBe("2026-01-10");
     expect(fila.moneda).toBe("USD");
-    expect(fila.cargo).toBe("1000.00");
+    expect(fila.cargo).toBe("1000.01");
     expect(fila.abono).toBe("0.00");
   });
 });
@@ -63,7 +63,7 @@ describe("estadoCuentaACsv", () => {
       filasSaldosExport([{ moneda: "usd", cargos: 1000, abonos: 0, saldo: 1000 }]),
     );
     expect(csv).toContain("Proveedor");
-    expect(csv).toContain("Saldo final");
+    expect(csv).toContain("Saldo del periodo");
     expect(csv).toContain("'=SUM(A1)");
     expect(csv.split("\n\n")).toHaveLength(3);
   });

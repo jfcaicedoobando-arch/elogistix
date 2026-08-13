@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react";
 import { FilePlus2, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/shared/skeletons";
@@ -37,7 +38,8 @@ interface Props {
 export function ProveedorDocumentosTab({
   proveedorId, organizationId, esNacional, canEdit,
 }: Props) {
-  const { data, isLoading } = useProveedorDocumentos(proveedorId);
+  const { data, isLoading, isError, error, refetch, isFetching } =
+    useProveedorDocumentos(proveedorId);
   const eliminar = useEliminarDocumentoProveedor(proveedorId);
   const [subirOpen, setSubirOpen] = useState(false);
   const [tipoSugerido, setTipoSugerido] = useState<TipoDocumentoProveedor | undefined>();
@@ -71,6 +73,19 @@ export function ProveedorDocumentosTab({
   );
 
   if (isLoading) return <CardSkeleton />;
+
+  // Un error de carga NO debe verse como "expediente vacío": el usuario tiene
+  // que saber que falló la consulta y poder reintentar.
+  if (isError) {
+    return (
+      <ErrorStateInline
+        title="No pudimos cargar el expediente del proveedor"
+        message={error instanceof Error ? error.message : "Error desconocido"}
+        onRetry={() => void refetch()}
+        retrying={isFetching}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
