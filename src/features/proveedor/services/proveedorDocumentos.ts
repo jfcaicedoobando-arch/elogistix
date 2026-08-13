@@ -9,6 +9,7 @@ import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { uploadFile, getSignedUrl, deleteFile } from "@/services/storage";
 import { logClientError } from "@/services/observability/logClientError";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { slugArchivo } from "@/features/expediente/domain/expediente";
 import type {
   DocumentoProveedor,
   TipoDocumentoProveedor,
@@ -32,15 +33,8 @@ export async function fetchProveedorDocumentos(
   return (filas ?? []) as DocumentoProveedor[];
 }
 
-/** Limpia el nombre del archivo para que sea seguro como llave de storage. */
-export function slugArchivo(nombre: string): string {
-  return nombre
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9._-]+/g, "-")
-    .replace(/-+/g, "-")
-    .slice(-120);
-}
+/** Reexportado: la limpieza del nombre vive en el dominio compartido. */
+export { slugArchivo } from "@/features/expediente/domain/expediente";
 
 export interface SubirDocumentoInput {
   proveedorId: string;
