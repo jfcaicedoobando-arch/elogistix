@@ -65,12 +65,22 @@ export interface ContextoPasos {
   original: FacturaRefacturacion | null;
   pagoSeleccionadoId: string | null;
   pagoYaReasignado: boolean;
+  /** Datos fiscales faltantes del nuevo receptor (CFDI 4.0). */
+  receptorPendientes?: string[];
+  /** Hallazgos de `refacturacion_validar_consistencia` sobre la nueva factura. */
+  consistenciaHallazgos?: string[];
+  /** Motivo por el que el ordenante del depósito no es válido. */
+  bloqueoOrdenante?: string | null;
 }
 
 function bloqueoPaso1(ctx: ContextoPasos): string | null {
   if (ctx.casoAbierto) return null;
   if (!ctx.clienteDestinoId) return "Selecciona el cliente que debe recibir la factura.";
   if (!ctx.motivo.trim()) return "Describe el motivo de la refacturación.";
+  const faltan = ctx.receptorPendientes ?? [];
+  if (faltan.length > 0) {
+    return `Completa los datos fiscales del receptor antes de abrir el caso: ${faltan.join(", ")}.`;
+  }
   return null;
 }
 
@@ -85,6 +95,8 @@ function bloqueoPaso2(ctx: ContextoPasos): string | null {
 function bloqueoPaso3(ctx: ContextoPasos): string | null {
   if (!ctx.facturaNueva) return "Crea el borrador para el cliente destino.";
   if (!facturaNuevaLista(ctx.facturaNueva)) return "Timbra la nueva factura antes de continuar.";
+  const hallazgos = ctx.consistenciaHallazgos ?? [];
+  if (hallazgos.length > 0) return hallazgos[0];
   return null;
 }
 
@@ -92,6 +104,7 @@ function bloqueoPaso5(ctx: ContextoPasos): string | null {
   if (ctx.pagoYaReasignado) return null;
   if (!ctx.pagoSeleccionadoId) return "Selecciona el pago que debe moverse a la nueva factura.";
   if (!facturaNuevaLista(ctx.facturaNueva)) return "La nueva factura debe estar timbrada.";
+  if (ctx.bloqueoOrdenante) return ctx.bloqueoOrdenante;
   return null;
 }
 
