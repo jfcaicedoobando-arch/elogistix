@@ -22,6 +22,22 @@ interface Props {
   onOrdenanteRfc: (v: string) => void;
   yaReasignado: boolean;
   bloqueoOrdenante: string | null;
+  ordenanteAuto: OrdenanteSugerido | null;
+}
+
+/** Nota que explica de dónde se tomó el ordenante precargado. */
+function NotaOrigenOrdenante({ auto }: { auto: OrdenanteSugerido | null }) {
+  if (!auto) return null;
+  const fuente =
+    auto.origen === "factura_nueva"
+      ? `la factura viva ${auto.numeroFactura ?? ""}`.trim()
+      : "el cliente destino elegido";
+  return (
+    <p className="md:col-span-2 text-xs text-muted-foreground">
+      Tomado de {fuente}: <strong>{auto.nombre}</strong>
+      {auto.rfc ? ` · ${auto.rfc}` : ""}. Edítalo sólo si el depósito llegó de otra empresa.
+    </p>
+  );
 }
 
 export function PasoReasignarPago(props: Props) {
