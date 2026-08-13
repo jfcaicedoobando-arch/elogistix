@@ -15,11 +15,26 @@ vi.mock("@/features/proveedor/hooks/useProveedores", () => ({
     deleteProveedor: vi.fn(),
     isDeleting: false,
   })),
-  useProveedorOperaciones: vi.fn(() => ({
-    data: [
-      { id: "op1", monto: 1000, estadoLiquidacion: "Pagado" },
-      { id: "op2", monto: 500, estadoLiquidacion: "Pendiente" },
-    ],
+}));
+
+vi.mock("@/features/proveedor/hooks/useProveedorEstadoCuenta", () => ({
+  useProveedorEstadoCuenta: vi.fn(() => ({
+    isLoading: false,
+    data: {
+      partidas: [
+        {
+          concepto_costo_id: "op1", comprometido: 1000, moneda: "MXN",
+          estado_liquidacion: "Pagado", facturado: 1000, pagado: 1000,
+          por_facturar: 0, facturas: [], estado_conciliacion: "Pagado",
+        },
+        {
+          concepto_costo_id: "op2", comprometido: 500, moneda: "MXN",
+          estado_liquidacion: "Pendiente", facturado: 0, pagado: 0,
+          por_facturar: 500, facturas: [], estado_conciliacion: "Por facturar",
+        },
+      ],
+      facturas_huerfanas: [],
+    },
   })),
 }));
 
