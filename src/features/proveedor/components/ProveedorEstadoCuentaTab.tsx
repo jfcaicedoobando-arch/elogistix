@@ -7,7 +7,7 @@ import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { TableSkeleton } from "@/components/shared/skeletons";
+import { CardSkeleton } from "@/components/shared/skeletons";
 import { formatCurrency } from "@/lib/formatters";
 import { useProveedorMovimientos } from "@/features/proveedor/hooks/useProveedorMovimientos";
 import {
@@ -59,7 +59,7 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
     }
   };
 
-  if (isLoading) return <TableSkeleton />;
+  if (isLoading) return <CardSkeleton />;
 
   return (
     <div className="space-y-4">
