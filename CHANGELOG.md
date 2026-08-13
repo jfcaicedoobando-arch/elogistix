@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.589.0] - 2026-08-13
+- **Vista previa antes de confirmar cada etapa de la refacturación.** El asistente ahora muestra una tarjeta con qué se cancela (REP, factura original), qué se crea (nueva factura, nuevo REP) y cómo se reasigna el pago, con el ordenante del depósito.
+- **Tabla de saldos "antes → después"** de la factura original y de la nueva, calculada con los saldos reales del sistema. La simulación es de sólo lectura: no guarda nada hasta que confirmas.
+- **Los bloqueos se explican en español** dentro de la vista previa (por ejemplo, REP vivo o nueva factura sin timbrar), con los mensajes `LC_REFACT_*`.
+
 ## [13.588.0] - 2026-08-13
 - **Permisos de refacturación para todos los roles contables.** Además de los administradores de la organización y el contador, ahora el auxiliar contable puede operar los casos de refacturación (tanto en la base como en la pantalla).
 - **La opción "Refacturar a otro receptor" sólo aparece** para quien realmente puede ejecutarla; los demás roles ya no entran al asistente para fallar al final.
