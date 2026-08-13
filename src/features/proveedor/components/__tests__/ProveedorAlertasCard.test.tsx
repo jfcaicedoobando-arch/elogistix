@@ -26,7 +26,7 @@ describe("ProveedorAlertasCard", () => {
         alertas={{ ...base, facturasVencidas: { count: 2, montoMxn: 12345.67 } }}
       />,
     );
-    const alertas = screen.getAllByRole("alert");
+    const alertas = screen.getAllByRole("status");
     expect(alertas).toHaveLength(1);
     expect(alertas[0]).toHaveTextContent("2 facturas vencidas");
     expect(alertas[0].textContent).toMatch(/12,345\.67/);
@@ -34,7 +34,7 @@ describe("ProveedorAlertasCard", () => {
 
   it("omite el monto cuando la alerta no tiene importe", () => {
     render(<ProveedorAlertasCard alertas={{ ...base, documentosVencidos: 1 }} />);
-    const alerta = screen.getByRole("alert");
+    const alerta = screen.getByRole("status");
     expect(alerta).toHaveTextContent("1 documento vencido");
     expect(alerta.textContent).not.toMatch(/\$/);
   });
