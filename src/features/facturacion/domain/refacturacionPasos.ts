@@ -67,45 +67,48 @@ export interface ContextoPasos {
   pagoYaReasignado: boolean;
 }
 
+function bloqueoPaso1(ctx: ContextoPasos): string | null {
+  if (ctx.casoAbierto) return null;
+  if (!ctx.clienteDestinoId) return "Selecciona el cliente que debe recibir la factura.";
+  if (!ctx.motivo.trim()) return "Describe el motivo de la refacturación.";
+  return null;
+}
+
+function bloqueoPaso2(ctx: ContextoPasos): string | null {
+  const vivos = pagosConRepVivo(ctx.pagos);
+  if (vivos.length === 0) return null;
+  return vivos.length === 1
+    ? "Cancela el complemento de pago (REP) del pago recibido antes de continuar."
+    : `Cancela los ${vivos.length} complementos de pago (REP) vivos antes de continuar.`;
+}
+
+function bloqueoPaso3(ctx: ContextoPasos): string | null {
+  if (!ctx.facturaNueva) return "Crea el borrador para el cliente destino.";
+  if (!facturaNuevaLista(ctx.facturaNueva)) return "Timbra la nueva factura antes de continuar.";
+  return null;
+}
+
+function bloqueoPaso5(ctx: ContextoPasos): string | null {
+  if (ctx.pagoYaReasignado) return null;
+  if (!ctx.pagoSeleccionadoId) return "Selecciona el pago que debe moverse a la nueva factura.";
+  if (!facturaNuevaLista(ctx.facturaNueva)) return "La nueva factura debe estar timbrada.";
+  return null;
+}
+
 /**
  * Motivo por el que el paso indicado NO puede completarse todavía.
  * `null` significa "listo para continuar".
  */
 export function bloqueoPaso(paso: number, ctx: ContextoPasos): string | null {
-  if (paso === 1) {
-    if (ctx.casoAbierto) return null;
-    if (!ctx.clienteDestinoId) return "Selecciona el cliente que debe recibir la factura.";
-    if (!ctx.motivo.trim()) return "Describe el motivo de la refacturación.";
-    return null;
-  }
-  if (paso === 2) {
-    const vivos = pagosConRepVivo(ctx.pagos);
-    if (vivos.length > 0) {
-      return vivos.length === 1
-        ? "Cancela el complemento de pago (REP) del pago recibido antes de continuar."
-        : `Cancela los ${vivos.length} complementos de pago (REP) vivos antes de continuar.`;
-    }
-    return null;
-  }
-  if (paso === 3) {
-    if (!ctx.facturaNueva) return "Crea el borrador para el cliente destino.";
-    if (!facturaNuevaLista(ctx.facturaNueva)) {
-      return "Timbra la nueva factura antes de continuar.";
-    }
-    return null;
-  }
+  if (paso === 1) return bloqueoPaso1(ctx);
+  if (paso === 2) return bloqueoPaso2(ctx);
+  if (paso === 3) return bloqueoPaso3(ctx);
   if (paso === 4) {
-    if (!originalFueraDeCirculacion(ctx.original)) {
-      return "Cancela el CFDI original (o espera la aceptación del SAT) antes de reasignar el pago.";
-    }
-    return null;
+    return originalFueraDeCirculacion(ctx.original)
+      ? null
+      : "Cancela el CFDI original (o espera la aceptación del SAT) antes de reasignar el pago.";
   }
-  if (paso === 5) {
-    if (ctx.pagoYaReasignado) return null;
-    if (!ctx.pagoSeleccionadoId) return "Selecciona el pago que debe moverse a la nueva factura.";
-    if (!facturaNuevaLista(ctx.facturaNueva)) return "La nueva factura debe estar timbrada.";
-    return null;
-  }
+  if (paso === 5) return bloqueoPaso5(ctx);
   return null;
 }
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.586.0] - 2026-08-13
+- **Trazabilidad de la refacturación (Etapa 3).** Nueva sección en el detalle de la factura con el expediente del caso: receptor original y correcto, ruta fiscal, motivo, factura original y nueva, expediente del embarque y pagos involucrados (con la empresa que realmente depositó).
+- **Línea de tiempo de movimientos** con quién y cuándo ejecutó cada paso: apertura del caso, cancelación del complemento de pago (REP), borrador y timbrado de la nueva factura, cancelación del CFDI original, reasignación del pago, timbrado del nuevo REP y cierre del caso.
+- **Los trámites en curso y los errores se distinguen a simple vista** (solicitado al SAT, aceptado, rechazado o con error).
+- **La misma trazabilidad se puede consultar dentro del asistente**, en la sección desplegable al pie del modal.
+
 ## [13.585.0] - 2026-08-13
 - **Asistente visual "Refacturar a otro receptor" (Etapa 2).** Desde el detalle de la factura, en "Más acciones", ahora hay un asistente de 5 pasos que guía todo el caso cuando el cliente pagó desde la empresa equivocada.
 - **Los 5 pasos**: 1) diagnóstico (cliente destino, ruta fiscal 01/02 y motivo), 2) cancelar el complemento de pago (REP), 3) crear y timbrar la factura al receptor correcto, 4) cancelar el CFDI original, 5) reasignar el pago registrando la empresa que realmente depositó.
