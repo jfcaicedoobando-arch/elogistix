@@ -12,6 +12,7 @@ import {
   FROM_DOMAIN,
 } from './templates.ts'
 import { handlePreview } from './preview.ts'
+import { registrarPendiente } from './dedupe.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
