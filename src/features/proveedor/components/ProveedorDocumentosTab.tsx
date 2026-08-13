@@ -125,9 +125,9 @@ export function ProveedorDocumentosTab({
       <DoubleConfirmDeleteDialog
         open={porBorrar !== null}
         onOpenChange={(v) => { if (!v) setPorBorrar(null); }}
-        entityLabel="documento"
         entityName={porBorrar?.nombre ?? ""}
-        isDeleting={eliminar.isPending}
+        description="Se quitará este documento del expediente del proveedor y se borrará el archivo del almacenamiento."
+        isPending={eliminar.isPending}
         onConfirm={() => {
           if (!porBorrar) return;
           eliminar.mutate(
