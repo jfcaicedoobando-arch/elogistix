@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.589.5] - 2026-08-13
+- **"Refacturar a otro receptor" vuelve a aparecer en facturas ya cobradas.** La opción se ocultaba en cuanto la factura pasaba a "Pagada" (por ejemplo F1026), aunque la base de datos sí permite abrir el caso.
+- Ahora la opción se muestra en cualquier CFDI timbrado y vivo (Emitida, Pagada, Parcialmente pagada o Vencida) sin factura sustituta vigente, con los mismos permisos por rol contable/administración.
+
+
+
 ## [13.589.4] - 2026-08-13
 - **Arreglo en el asistente de sustitución de facturas.** La vista previa de los pasos 3 (nueva factura) y 5 (reasignación de pago) fallaba con "No pudimos cargar la información": la simulación mezclaba la moneda de la factura con un texto y la base de datos rechazaba la consulta.
 - Ahora la moneda se convierte siempre a texto antes de compararse, así que la vista previa carga y el aviso de moneda inconsistente sigue funcionando.
