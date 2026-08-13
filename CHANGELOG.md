@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.582.1] - 2026-08-13
+- **Corrección: funciones del servidor devolvían error 500 al validar la sesión.** La verificación del token usaba un método (`getClaims`) que no existe en la versión de la librería instalada, por lo que procesos como la lectura de facturas en PDF fallaban con "authWithClaims.getClaims is not a function". Ahora se valida la sesión con `getUser`, disponible en todas las versiones.
+
 ## [13.582.0] - 2026-08-13
 - **Ola 12 · Sprint 10 — Multi-moneda y fiscal SAT (P1).**
   - **Saldos que ya no mezclan divisas:** el estado de cuenta del proveedor convierte cada pago a la moneda de la factura con el tipo de cambio del pago. Si el pago fue en otra moneda y no hay tipo de cambio, el movimiento se marca "SIN TC (excluido del saldo)" en lugar de sumarse como si un dólar valiera un peso.
