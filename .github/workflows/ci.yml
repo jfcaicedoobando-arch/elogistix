@@ -210,7 +210,7 @@ jobs:
       # v13.322.1 (GHA-audit A2) — `audit:rpc-sync`, `audit:rpc-columns` y
       # `audit:sonner` existían en package.json pero NINGÚN workflow los
       # invocaba: guardrails muertos. Se cablean aquí, en paralelo.
-      # v13.571.1 (R3TC-04) — `audit:rpc-columns` sale de este job: requiere BD
+      # v13.572.0 (R3TC-04) — `audit:rpc-columns` sale de este job: requiere BD
       # viva (PG*) y este workflow no la tiene, así que era un no-op silencioso.
       # El script ahora FALLA si corre con CI=true sin PGHOST; ejecútalo donde
       # haya BD (local con Supabase levantado, o un job nightly con Postgres).
