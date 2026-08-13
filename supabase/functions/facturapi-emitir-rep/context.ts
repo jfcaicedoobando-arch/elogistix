@@ -88,7 +88,9 @@ export function tasaIvaFacturaOriginal(subtotal: number, iva: number): number {
   let distancia = Number.POSITIVE_INFINITY;
   for (const tasa of TASAS_IVA_SAT) {
     const d = Math.abs(efectiva - tasa);
-    if (d <= distancia) {
+    // Tolerancia por aritmética de punto flotante: en el punto medio exacto
+    // (0.12) el desempate debe ir hacia la tasa mayor (16%).
+    if (d <= distancia + 1e-9) {
       distancia = d;
       mejor = tasa;
     }
