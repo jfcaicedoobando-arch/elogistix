@@ -3,7 +3,7 @@
  * Semáforos, desviación presupuesto vs factura, clasificación del comparativo
  * y orden de severidad de alertas. Sin dependencias de red.
  */
-import { roundMoney } from "@/lib/financialUtils";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export type Semaforo = "good" | "warn" | "bad" | "neutral";
 
