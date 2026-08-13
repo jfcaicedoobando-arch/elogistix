@@ -12,6 +12,7 @@ import {
   FROM_DOMAIN,
 } from './templates.ts'
 import { handlePreview } from './preview.ts'
+import { registrarPendiente } from './dedupe.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -147,15 +148,24 @@ async function handleWebhook(req: Request): Promise<Response> {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  const messageId = crypto.randomUUID()
+  // REF-03: message_id determinista por run_id — el reintento del hook de
+  // Supabase Auth reutiliza el mismo run_id y NO debe re-encolar el correo ni
+  // duplicar filas en email_send_log (índice uq_email_send_log_message_id).
+  const messageId = `auth-${run_id}`
 
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: emailType,
-    recipient_email: payload.data.email,
-    status: 'pending',
+  const dedupe = await registrarPendiente(supabase, {
+    messageId,
+    emailType,
+    recipient: payload.data.email,
+    runId: run_id,
   })
+  if (dedupe.deduplicated) {
+    console.log('Auth email hook deduplicated', { emailType, run_id })
+    return new Response(
+      JSON.stringify({ success: true, queued: true, deduplicated: true }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
 
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
     queue_name: 'auth_emails',
@@ -176,13 +186,11 @@ async function handleWebhook(req: Request): Promise<Response> {
 
   if (enqueueError) {
     console.error('Failed to enqueue auth email', { error: enqueueError, run_id, emailType })
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: emailType,
-      recipient_email: payload.data.email,
-      status: 'failed',
-      error_message: 'Failed to enqueue email',
-    })
+    // REF-03: marcar la MISMA fila como failed (antes se insertaba una segunda
+    // fila y la 'pending' quedaba huérfana para siempre).
+    await supabase.from('email_send_log')
+      .update({ status: 'failed', error_message: 'Failed to enqueue email' })
+      .eq('message_id', messageId)
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

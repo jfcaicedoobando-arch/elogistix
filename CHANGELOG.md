@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.561.0] - 2026-08-13
+- **Cancelaciones fiscales que no se quedan a medias (REF-01)**: si el timbrador tarda demasiado en responder una cancelación, la factura queda marcada como "en verificación" con su bitácora, de modo que el proceso automático la revisa después y refleja el estado real ante el SAT.
+- **Los complementos de pago (REP) ya entran al proceso automático de cancelación (REF-02)**: antes sólo se cerraban si llegaba el aviso del timbrador; ahora el barrido periódico también los revisa y los deja como Cancelado (o rechazado/expirado) con su registro en bitácora.
+- **Correos de autenticación sin duplicados (REF-03)**: los reintentos del sistema de correo ya no generan dos correos ni registros de envío huérfanos; se reutiliza el mismo registro y se limpiaron los duplicados históricos.
+
 ## [13.560.1] - 2026-08-13
 - **CI en verde otra vez**: la prueba de aislamiento financiero preparaba su escenario aprobando una factura de proveedor "a mano", algo que el nuevo candado de aprobaciones (13.560.0) ya no permite. Ahora la prueba usa el canal oficial y se agregó una prueba dedicada que verifica que la aprobación o rechazo directo siga bloqueado.
 
