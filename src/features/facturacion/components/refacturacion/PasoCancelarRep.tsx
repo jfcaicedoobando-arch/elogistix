@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
-import { tieneRepVivo, type PagoRefacturacion } from "@/features/facturacion/domain/refacturacionPasos";
+import {
+  AVISO_REP_EN_VERIFICACION,
+  repsEnVerificacion,
+  tieneRepVivo,
+  type PagoRefacturacion,
+} from "@/features/facturacion/domain/refacturacionPasos";
 
 interface Props {
   pagos: PagoRefacturacion[];
@@ -21,6 +26,7 @@ export function PasoCancelarRep({
   pagos, cargando, cancelandoId, onCancelarRep, puedeOperar = true,
 }: Props) {
   const conRep = pagos.filter((p) => p.uuid_rep);
+  const enVerificacion = repsEnVerificacion(pagos).length > 0;
 
   return (
     <FormDialogSection
@@ -36,6 +42,13 @@ export function PasoCancelarRep({
           <span>
             El pago recibido no tiene complemento de pago timbrado. Puedes continuar.
           </span>
+        </div>
+      )}
+
+      {enVerificacion && (
+        <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-sm flex items-start gap-2">
+          <Clock3 className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+          <span>{AVISO_REP_EN_VERIFICACION}</span>
         </div>
       )}
 
