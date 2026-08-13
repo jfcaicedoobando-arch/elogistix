@@ -16,6 +16,14 @@ import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { authorizeOrgRole, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
+import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import {
+  divergenciasDocumentales,
+  verificarReps,
+  verificarXmlFactura,
+  type RepVerificado,
+  type XmlVerificado,
+} from "./verificacion.ts";
 
 interface FapiInvoiceStatus {
   status?: string;
@@ -88,6 +96,9 @@ interface LocalFactura {
   cancellation_status: string | null;
   uuid_fiscal: string | null;
   sustituida_por: string | null;
+  total: number | null;
+  moneda: string | null;
+  rfc_cliente: string | null;
 }
 
 type SBClient = ReturnType<typeof createClient>;
@@ -97,7 +108,7 @@ async function loadFactura(supabase: SBClient, facturaId: string): Promise<
 > {
   const { data, error } = await supabase
     .from("facturas")
-    .select("id, facturapi_id, organization_id, estado, cancellation_status, uuid_fiscal, sustituida_por")
+    .select("id, facturapi_id, organization_id, estado, cancellation_status, uuid_fiscal, sustituida_por, total, moneda, rfc_cliente")
     .eq("id", facturaId)
     .maybeSingle();
   if (error || !data) return { ok: false, res: jsonResponse({ error: "factura_not_found" }, 404) };
@@ -221,7 +232,17 @@ async function handle(req: Request): Promise<Response> {
     email: userData.user.email,
   });
 
-  return json(buildResponse(factura, remote, divergencias, reconciliada));
+  const documental = await verificarDocumentos(supabase, factura, {
+    id: userData.user.id,
+    email: userData.user.email,
+  });
+  const todas = [...divergencias, ...documental.divergencias];
+
+  return json({
+    ...buildResponse(factura, remote, todas, reconciliada),
+    xml: documental.xml,
+    reps: documental.reps,
+  });
 }
 
 function buildResponse(
@@ -249,6 +270,54 @@ function buildResponse(
       uuid_fiscal: factura.uuid_fiscal ?? null,
     },
   };
+}
+
+interface Documental {
+  xml: XmlVerificado | null;
+  reps: RepVerificado[];
+  divergencias: string[];
+}
+
+/**
+ * Verificación documental: XML de la factura + XML de cada REP timbrado y su
+ * estatus real en el SAT. Nunca tumba la respuesta: si FacturApi no entrega la
+ * API key o el XML, se devuelve `xml: null` y la lista de REPs vacía.
+ */
+async function verificarDocumentos(
+  supabase: SBClient,
+  factura: LocalFactura,
+  user: { id: string; email?: string },
+): Promise<Documental> {
+  const resolved = await resolveFacturapiKey(
+    supabase as unknown as Parameters<typeof resolveFacturapiKey>[0],
+    factura.organization_id,
+  );
+  if (!resolved.ok) return { xml: null, reps: [], divergencias: [] };
+  const apiKey = resolved.data.apiKey;
+  const sb = supabase as unknown as Parameters<typeof verificarReps>[0];
+  const xml = await verificarXmlFactura(apiKey, factura.facturapi_id, {
+    uuid_fiscal: factura.uuid_fiscal,
+    total: factura.total,
+    moneda: factura.moneda,
+    rfc_cliente: factura.rfc_cliente,
+  });
+  const reps = await verificarReps(sb, apiKey, factura.id, factura.organization_id);
+  const divergencias = divergenciasDocumentales(xml, reps);
+  await registrarBitacoraEdge(supabase, {
+    organizationId: factura.organization_id,
+    usuarioId: user.id,
+    usuarioEmail: user.email,
+    modulo: "facturacion",
+    accion: "facturapi_consulta_xml_sat",
+    entidadId: factura.id,
+    detalles: {
+      estatus_sat_factura: xml.estatus_sat,
+      reps_verificados: reps.length,
+      reps_reconciliados: reps.filter((r) => r.reconciliado).length,
+      divergencias,
+    },
+  });
+  return { xml, reps, divergencias };
 }
 
 Deno.serve(wrapEdgeHandler("facturapi-consultar", handle));
