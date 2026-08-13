@@ -12,8 +12,10 @@ import { round2 } from "@/features/cxp/services/pagoProveedorLote";
 import {
   errorCuadre,
   errorFacturaDuplicada,
+  errorFechaLote,
   errorMonedaCuenta,
   errorRenglonExcedeSaldo,
+  errorTcLote,
 } from "./cobroLoteValidaciones";
 
 
