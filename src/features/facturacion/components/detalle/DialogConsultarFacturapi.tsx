@@ -28,18 +28,18 @@ export function DialogConsultarFacturapi({ facturaId, numero, open, onOpenChange
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Estatus en FacturApi · {numero}</DialogTitle>
           <DialogDescription>
-            Consulta en vivo lo que FacturApi/SAT reportan hoy. Si hay diferencias con la base de datos, se reconcilian automáticamente.
+            Consulta en vivo el XML de la factura y de cada REP timbrado, además del estatus en el SAT. Si hay diferencias con la base de datos, se reconcilian automáticamente.
           </DialogDescription>
         </DialogHeader>
 
         {isPending && (
           <div className="flex items-center gap-2 py-8 text-muted-foreground justify-center">
             <RefreshCw className="h-4 w-4 animate-spin" />
-            Consultando FacturApi…
+            Verificando XML de la factura, REPs y estatus en el SAT…
           </div>
         )}
 
