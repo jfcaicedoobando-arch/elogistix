@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.554.0] - 2026-08-13
+- El rol **Gerente Comercial** ya tiene escritura real en cotizaciones y en sus costos: antes la interfaz mostraba las acciones (enviar, aceptar, rechazar) pero la base de datos las rechazaba con "Permisos insuficientes".
+- Nueva función `public.puede_escribir_cotizaciones()` como única fuente de verdad de los roles con escritura (Administrador, Administrador de organización, Operador y sus herederos, Ejecutivo de Pricing, Gerente Comercial y Super Admin); las políticas de `cotizaciones`, `cotizacion_costos` y la guardia `_assert_writer_cotizacion` ahora la usan.
+- Se mantiene intacto el aislamiento por organización, la lectura de consultores/portal de clientes y la segregación de funciones (quien crea una cotización no la acepta).
+- Nota en `permissionMatrix.ts` para que el grupo `SALES` y la función de base de datos se actualicen siempre juntos.
+
+
+
 ## [13.553.0] - 2026-08-13
 - Trazabilidad del tipo de cambio en el detalle del embarque: la pestaña P&L ahora indica que el T/C quedó congelado al capturarlo, muestra el DOF de esa fecha y marca con un aviso si el valor fue capturado a mano y se aparta más de 0.5 % del DOF.
 - Nueva acción **"Usar el del DOF"** en el P&L: alinea el T/C del embarque al DOF de su fecha, sólo en embarques abiertos y con registro en la bitácora (nunca automática, para no mover utilidades históricas).
