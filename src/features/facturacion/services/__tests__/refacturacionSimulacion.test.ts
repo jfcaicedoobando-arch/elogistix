@@ -40,6 +40,25 @@ describe("simularPasoRefacturacion", () => {
     await expect(simularPasoRefacturacion("caso-1", 2)).rejects.toThrow("LC_REFACT_FORBIDDEN");
   });
 
+  it("el paso 3 conserva la moneda de la nueva factura en acciones y saldos", async () => {
+    rpc.mockResolvedValue({
+      data: {
+        paso: 3,
+        cancela: [],
+        crea: [{ tipo: "factura", etiqueta: "Factura FA-2", detalle: "Pendiente de timbrar", monto: 5000, moneda: "USD" }],
+        reasigna: null,
+        saldos: [{ concepto: "Factura FA-2", antes: 0, despues: 5000, moneda: "USD", nota: null }],
+        bloqueos: ["LC_REFACT_NUEVA_NO_TIMBRADA"],
+      },
+      error: null,
+    });
+
+    const sim = await simularPasoRefacturacion("caso-1", 3);
+    expect(sim.crea[0].moneda).toBe("USD");
+    expect(sim.saldos[0].moneda).toBe("USD");
+    expect(sim.bloqueos).toContain("LC_REFACT_NUEVA_NO_TIMBRADA");
+  });
+
   it("los bloqueos llegan con su código LC para traducirse en la UI", async () => {
     rpc.mockResolvedValue({ data: { bloqueos: ["LC_REFACT_REP_VIVO"], saldos: [] }, error: null });
     const sim = await simularPasoRefacturacion("caso-1", 4);

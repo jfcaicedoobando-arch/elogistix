@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.589.4] - 2026-08-13
+- **Arreglo en el asistente de sustitución de facturas.** La vista previa de los pasos 3 (nueva factura) y 5 (reasignación de pago) fallaba con "No pudimos cargar la información": la simulación mezclaba la moneda de la factura con un texto y la base de datos rechazaba la consulta.
+- Ahora la moneda se convierte siempre a texto antes de compararse, así que la vista previa carga y el aviso de moneda inconsistente sigue funcionando.
+
 ## [13.589.3] - 2026-08-13
 - **Regularización de saldo con HK LS LIMITED.** Se registraron como pagadas 12 facturas históricas del proveedor (102,824.60 USD) que ya no aparecen en su estado de cuenta del 11/08/2026: el pago se hizo en una versión anterior del ERP y nunca se capturó.
 - Cada pago se registró con la fecha de emisión de su factura, marcado como ajuste histórico, sin cuenta bancaria, sin movimiento en bancos y sin REP (proveedor extranjero).
