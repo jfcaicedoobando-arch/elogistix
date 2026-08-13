@@ -168,6 +168,7 @@ export function usePagoClienteLoteState(a: Args) {
       // Ola 5 · RG4-5: el importe recibido viaja a la RPC (defensa en
       // profundidad: la validación exacta también vive en la función).
       importe_recibido: totalNum,
+      request_id: requestId,
       renglones,
       facturasConRep: await obtenerFacturasConRep(aplicadas),
     });
