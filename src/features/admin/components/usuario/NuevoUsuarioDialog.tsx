@@ -23,7 +23,14 @@ interface Props {
 }
 
 const DEFAULT_ROLE: AppRole = "customer_service";
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Alineado con lo que acepta el servicio de identidad: sólo ASCII, sin puntos
+// consecutivos ni al final, y dominio con extensión de 2+ letras. La regex laxa
+// anterior dejaba pasar correos que el proveedor rechazaba al guardar.
+const EMAIL_REGEX =
+  /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
+
+/** Normaliza igual que el backend (recorta espacios y baja a minúsculas). */
+const normalizarEmail = (valor: string): string => valor.trim().toLowerCase();
 
 
 export default function NuevoUsuarioDialog({
@@ -46,7 +53,10 @@ export default function NuevoUsuarioDialog({
   const { data: orgs = [] } = useOrganizationsList(open && showOrgSelector);
 
   const emailError = useMemo(
-    () => (touched.email && email && !EMAIL_REGEX.test(email) ? "Email no válido" : null),
+    () =>
+      touched.email && email && !EMAIL_REGEX.test(normalizarEmail(email))
+        ? "Correo no válido"
+        : null,
     [email, touched.email],
   );
   const passwordError = useMemo(
@@ -69,8 +79,9 @@ export default function NuevoUsuarioDialog({
 
   const handleSubmit = async () => {
     setTouched({ email: true, password: true });
-    if (!email) return;
-    if (!EMAIL_REGEX.test(email)) return;
+    const emailNormalizado = normalizarEmail(email);
+    if (!emailNormalizado) return;
+    if (!EMAIL_REGEX.test(emailNormalizado)) return;
     if (!porInvitacion && password.length < PASSWORD_MIN) {
       notifyError(undefined, {
         title: "Error",
@@ -92,7 +103,7 @@ export default function NuevoUsuarioDialog({
 
     createUser.mutate(
       {
-        email,
+        email: emailNormalizado,
         password: porInvitacion ? undefined : password,
         role,
         orgId: showOrgSelector ? orgId : undefined,
