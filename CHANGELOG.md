@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.554.1] - 2026-08-13
+- Corregidos los fallos de CI: permisos canónicos (REVOKE/GRANT) para la función de utilidad por embarque, aviso de tipo de cambio separado en un módulo puro y nota de T/C del P&L dividida en componentes más simples.
+
+
 ## [13.554.0] - 2026-08-13
 - El rol **Gerente Comercial** ya tiene escritura real en cotizaciones y en sus costos: antes la interfaz mostraba las acciones (enviar, aceptar, rechazar) pero la base de datos las rechazaba con "Permisos insuficientes".
 - Nueva función `public.puede_escribir_cotizaciones()` como única fuente de verdad de los roles con escritura (Administrador, Administrador de organización, Operador y sus herederos, Ejecutivo de Pricing, Gerente Comercial y Super Admin); las políticas de `cotizaciones`, `cotizacion_costos` y la guardia `_assert_writer_cotizacion` ahora la usan.
