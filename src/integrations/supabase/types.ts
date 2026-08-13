@@ -7826,6 +7826,10 @@ export type Database = {
         Returns: undefined
       }
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
+      _assert_receptor_fiscal_valido: {
+        Args: { p_cliente_id: string }
+        Returns: undefined
+      }
       _assert_refacturador: { Args: { p_org: string }; Returns: undefined }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
       _assert_writer_cotizacion: { Args: { p_org: string }; Returns: undefined }
@@ -7922,6 +7926,10 @@ export type Database = {
       _resolver_proveedor_por_nombre: {
         Args: { p_nombre: string; p_org: string }
         Returns: string
+      }
+      _rfc_valido: {
+        Args: { p_permitir_generico?: boolean; p_rfc: string }
+        Returns: boolean
       }
       a_mxn: {
         Args: {
@@ -9708,6 +9716,10 @@ export type Database = {
       refacturacion_set_paso: {
         Args: { p_caso_id: string; p_paso: number }
         Returns: undefined
+      }
+      refacturacion_validar_consistencia: {
+        Args: { p_caso_id: string }
+        Returns: Json
       }
       refrescar_garantia_desde_tarifa: {
         Args: { p_embarque_id: string }
