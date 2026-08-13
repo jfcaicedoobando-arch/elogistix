@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.590.0] - 2026-08-13
+- **El asistente de refacturación ya no se detiene esperando la cancelación del REP.** Con la solicitud en verificación ante el SAT se puede emitir la factura del nuevo receptor y cancelar el CFDI original; el paso mostrará un aviso informativo en lugar de un bloqueo.
+- **Se refuerza el candado de la reasignación del pago:** mientras el REP anterior siga vigente no se permite mover el depósito ni timbrar el nuevo complemento, para no reportar el mismo pago dos veces al SAT.
+- Si el REP vivo no tiene solicitud de cancelación, el asistente sigue exigiendo cancelarlo antes de continuar.
+
 ## [13.589.9] - 2026-08-13
 - Correcciones internas de calidad: se simplificó el cálculo de acciones disponibles en la pantalla de facturas (sin cambios de comportamiento) y se sincronizó el inventario de cambios de base de datos.
 
