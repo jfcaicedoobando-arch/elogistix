@@ -249,7 +249,9 @@ $function$;
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM anon;
 GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO service_role;-- ============================================================
+GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO service_role;
+
+-- ============================================================
 -- Ola 11 · RNF-06 (espejo RG4-6 de CxC): una misma factura no puede
 -- aparecer dos veces en el reparto del lote CxP — dos renglones a la
 -- misma factura pasaban el chequeo individual y podían sobre-aplicar el
