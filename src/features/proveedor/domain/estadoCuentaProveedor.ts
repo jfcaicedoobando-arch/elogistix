@@ -13,7 +13,9 @@ export type EstadoConciliacionPartida =
   | "Facturado parcial"
   | "Facturado"
   | "Pagado"
-  | "Sobrefacturado";
+  | "Sobrefacturado"
+  // Ola 12 · R3BD-06: factura en otra moneda sin TC — montos excluidos de la comparación.
+  | "Moneda mixta";
 
 export interface FacturaVinculada {
   factura_id: string;
@@ -43,6 +45,10 @@ export interface PartidaEstadoCuenta {
   por_facturar: number;
   facturas: FacturaVinculada[];
   estado_conciliacion: EstadoConciliacionPartida;
+  /** Ola 12 · R3BD-06: true cuando parte de lo facturado no pudo convertirse a la moneda del concepto. */
+  moneda_mixta_sin_tc?: boolean | null;
+  /** Ola 12 · R3BD-06: monto (en moneda de la factura) excluido de la comparación por falta de TC. */
+  monto_sin_tc?: number | null;
 }
 
 export interface FacturaHuerfana {
@@ -108,6 +114,8 @@ export function toneEstadoConciliacion(estado: EstadoConciliacionPartida): strin
       return "bg-warning/15 text-warning border-warning/30";
     case "Sobrefacturado":
       return "bg-destructive/15 text-destructive border-destructive/30";
+    case "Moneda mixta":
+      return "bg-warning/15 text-warning border-warning/30";
     default:
       return "bg-muted text-muted-foreground border-border";
   }

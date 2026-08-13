@@ -118,7 +118,9 @@ BEGIN
   -- Aging global con fecha de corte CDMX (R3P-10).
   WITH facturas AS (
     SELECT pf.id, pf.folio_interno, pf.folio_proveedor, pf.fecha_vencimiento,
-           pf.moneda::text AS moneda, COALESCE(pf.total, 0) AS total
+           pf.moneda::text AS moneda, COALESCE(pf.total, 0) AS total,
+           -- Ola 12 · R3BD-04: se necesita el estado para la regla 'Pagada'.
+           pf.estado::text AS estado
     FROM public.proveedor_facturas pf
     WHERE pf.proveedor_id = p_proveedor_id
       AND pf.organization_id = v_oid
@@ -127,12 +129,16 @@ BEGIN
   ),
   saldo_factura AS (
     SELECT f.id, f.moneda, f.fecha_vencimiento,
-           f.total
-             - COALESCE((SELECT SUM(pp.monto) FROM public.pagos_proveedor pp
-                         WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL), 0)
-             - COALESCE((SELECT SUM(nc.monto) FROM public.proveedor_notas_credito nc
-                         WHERE nc.proveedor_factura_id = f.id AND nc.deleted_at IS NULL
-                           AND nc.estado IN ('Aprobada','Aplicada')), 0) AS saldo
+           -- Ola 12 · R3BD-04: factura marcada 'Pagada' (legacy, sin pagos
+           -- capturados) => saldo 0. Misma regla que proveedor_inteligencia.
+           CASE WHEN f.estado = 'Pagada' THEN 0::numeric
+                ELSE f.total
+                  - COALESCE((SELECT SUM(pp.monto) FROM public.pagos_proveedor pp
+                              WHERE pp.proveedor_factura_id = f.id AND pp.deleted_at IS NULL), 0)
+                  - COALESCE((SELECT SUM(nc.monto) FROM public.proveedor_notas_credito nc
+                              WHERE nc.proveedor_factura_id = f.id AND nc.deleted_at IS NULL
+                                AND nc.estado IN ('Aprobada','Aplicada')), 0)
+           END AS saldo
     FROM facturas f
   ),
   clasificado AS (

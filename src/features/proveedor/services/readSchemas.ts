@@ -46,7 +46,12 @@ const partidaSchema = z.object({
     "Facturado",
     "Pagado",
     "Sobrefacturado",
+    // Ola 12 · R3BD-06: monedas distintas sin TC — comparación excluida.
+    "Moneda mixta",
   ]),
+  // Ola 12 · R3BD-06: banderas de exclusión multi-moneda.
+  moneda_mixta_sin_tc: z.boolean().nullish(),
+  monto_sin_tc: montoNullable.nullish(),
 });
 
 const facturaHuerfanaSchema = z.object({

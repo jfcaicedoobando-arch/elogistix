@@ -1,7 +1,7 @@
--- Canonical schema para public.proveedor_estado_cuenta
--- Capturado 1:1 desde la migración 20260813011102 y actualizado en 13.578.0
--- (Ola 12 · Sprint 06 · R3P-04: partida pagada sin factura vigente conserva
---  'Pagado'; R3P-05: prorrata de pagado con base unificada CON IVA).
+-- Canónico: proveedor_estado_cuenta
+-- Migración vigente: Ola 12 · Sprint 07 (R3BD-05 + R3BD-06), acumulativa
+-- sobre el Sprint 06 (R3P-04 + R3P-05).
+-- ============================================================
 CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta(p_proveedor_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -12,10 +12,15 @@ DECLARE
   v_oid uuid := public.current_user_org_id();
   v_partidas jsonb;
   v_huerfanas jsonb;
+  -- Ola 12 · R3BD-06: TC DOF vigente (patrón proveedor_inteligencia).
+  v_usd numeric;
+  v_eur numeric;
 BEGIN
   IF v_oid IS NULL THEN
     RAISE EXCEPTION 'LC_ORG_SIN_CONTEXTO: no hay organización activa' USING ERRCODE = '42501';
   END IF;
+
+  SELECT t.usd_mxn, t.eur_mxn INTO v_usd, v_eur FROM public.tc_dof_vigente(CURRENT_DATE) t;
 
   WITH cc AS (
     SELECT c.id, c.concepto, c.monto, c.moneda::text AS moneda,
@@ -28,27 +33,66 @@ BEGIN
       AND c.organization_id = v_oid
       AND c.deleted_at IS NULL
   ),
-  fact AS (
+  pfc_conv AS (
     SELECT pfc.concepto_costo_id,
-           SUM(pfc.monto) AS monto_facturado,
-           jsonb_agg(DISTINCT jsonb_build_object(
-             'factura_id', pf.id,
-             'folio_interno', pf.folio_interno,
-             'folio_proveedor', pf.folio_proveedor,
-             'estado', pf.estado::text,
-             'estado_aprobacion', pf.estado_aprobacion::text,
-             'fecha_emision', pf.fecha_emision,
-             'fecha_vencimiento', pf.fecha_vencimiento,
-             'moneda', pf.moneda::text,
-             'total', pf.total
-           )) AS facturas
+           pfc.monto,
+           pf.id AS factura_id, pf.folio_interno, pf.folio_proveedor,
+           pf.estado::text AS estado, pf.estado_aprobacion::text AS estado_aprobacion,
+           pf.fecha_emision, pf.fecha_vencimiento, pf.moneda::text AS moneda,
+           pf.total,
+           cc2.moneda::text AS moneda_concepto,
+           CASE pf.moneda::text
+             WHEN 'MXN' THEN 1::numeric
+             WHEN 'USD' THEN COALESCE(NULLIF(pf.tipo_cambio_usd, 0), v_usd)
+             WHEN 'EUR' THEN v_eur
+             ELSE NULL
+           END AS tc_factura,
+           CASE cc2.moneda::text
+             WHEN 'MXN' THEN 1::numeric
+             WHEN 'USD' THEN v_usd
+             WHEN 'EUR' THEN v_eur
+             ELSE NULL
+           END AS tc_concepto
     FROM public.proveedor_facturas_conceptos pfc
     JOIN public.proveedor_facturas pf ON pf.id = pfc.proveedor_factura_id
+    JOIN public.conceptos_costo cc2
+      ON cc2.id = pfc.concepto_costo_id AND cc2.deleted_at IS NULL
     WHERE pf.proveedor_id = p_proveedor_id
       AND pf.organization_id = v_oid
       AND pf.deleted_at IS NULL
       AND pf.estado <> 'Cancelada'
-    GROUP BY pfc.concepto_costo_id
+  ),
+  fact AS (
+    SELECT c.concepto_costo_id,
+           SUM(CASE
+                 WHEN c.moneda = c.moneda_concepto THEN c.monto
+                 WHEN c.tc_factura IS NOT NULL AND c.tc_concepto IS NOT NULL
+                      AND c.tc_concepto > 0
+                   THEN c.monto * c.tc_factura / c.tc_concepto
+                 ELSE NULL
+               END) AS monto_facturado,
+           COALESCE(bool_or(
+             c.moneda <> c.moneda_concepto
+             AND (c.tc_factura IS NULL OR c.tc_concepto IS NULL OR c.tc_concepto <= 0)
+           ), false) AS moneda_mixta_sin_tc,
+           SUM(CASE
+                 WHEN c.moneda <> c.moneda_concepto
+                      AND (c.tc_factura IS NULL OR c.tc_concepto IS NULL OR c.tc_concepto <= 0)
+                 THEN c.monto
+               END) AS monto_sin_tc,
+           jsonb_agg(DISTINCT jsonb_build_object(
+             'factura_id', c.factura_id,
+             'folio_interno', c.folio_interno,
+             'folio_proveedor', c.folio_proveedor,
+             'estado', c.estado,
+             'estado_aprobacion', c.estado_aprobacion,
+             'fecha_emision', c.fecha_emision,
+             'fecha_vencimiento', c.fecha_vencimiento,
+             'moneda', c.moneda,
+             'total', c.total
+           )) AS facturas
+    FROM pfc_conv c
+    GROUP BY c.concepto_costo_id
   ),
   pagos_por_factura AS (
     SELECT pp.proveedor_factura_id, SUM(pp.monto) AS pagado
@@ -66,9 +110,6 @@ BEGIN
            SUM(
              COALESCE(ppf.pagado, 0)
              * CASE
-                 -- R3P-05: base unificada CON IVA. pfc.monto es SIN IVA; la
-                 -- proporción contra pf.subtotal equivale a repartir el pagado
-                 -- (que sí incluye IVA) sobre la misma base.
                  WHEN COALESCE(pf.subtotal, 0) > 0
                    THEN LEAST(COALESCE(pfc.monto, 0) / pf.subtotal, 1)
                  WHEN COALESCE(pf.total, 0) > 0
@@ -97,14 +138,15 @@ BEGIN
            COALESCE(f.facturas, '[]'::jsonb) AS facturas,
            ROUND(COALESCE(p.pagado_factura, 0), 2) AS pagado,
            CASE
-             -- R3P-04: partida pagada cuya factura fue cancelada/eliminada:
-             -- nada queda por facturar (el pago ya se aplicó).
              WHEN COALESCE(f.monto_facturado,0) <= 0 AND cc.estado_liquidacion = 'Pagado'
                THEN 0::numeric
              ELSE GREATEST(cc.monto - COALESCE(f.monto_facturado,0), 0)
            END AS por_facturar,
+           COALESCE(f.moneda_mixta_sin_tc, false) AS moneda_mixta_sin_tc,
+           ROUND(COALESCE(f.monto_sin_tc, 0), 2) AS monto_sin_tc,
            CASE
              WHEN COALESCE(f.monto_facturado,0) <= 0 AND cc.estado_liquidacion = 'Pagado' THEN 'Pagado'
+             WHEN COALESCE(f.moneda_mixta_sin_tc, false) THEN 'Moneda mixta'
              WHEN COALESCE(f.monto_facturado,0) <= 0 THEN 'Por facturar'
              WHEN COALESCE(f.monto_facturado,0) > cc.monto * 1.01 THEN 'Sobrefacturado'
              WHEN COALESCE(f.monto_facturado,0) < cc.monto * 0.99 THEN 'Facturado parcial'

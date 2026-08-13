@@ -59,6 +59,15 @@ anteriores y no listadas arriba): `auditoria/costos_repetidos.sql`,
 (`factura_id … ultimo_contacto, estado`). Renombrarlas aborta la migración con
 42P13 (fue la causa de que `20260812090000` quedara como no-op, Ola 6 · RG4-1).
 
+## Altas Ola 12 — capturadas 1:1 desde las migraciones 2026-08-13
+
+| Función | Dominio | Migración canónica |
+| --- | --- | --- |
+| `proveedor_estado_cuenta_movimientos` | `proveedores/` | Sprint 07 (R3BD-04, acumulativa sobre S04/S05) |
+| `proveedor_estado_cuenta` | `proveedores/` | Sprint 07 (R3BD-05/R3BD-06, acumulativa sobre S06) |
+| `proveedor_inteligencia` | `proveedores/` | Sprint 05 (R3P-17) |
+| `registrar_pago_proveedor_lote` | `cxp/` | Sprint 07 (R3BD-03) |
+
 ## Flujo obligatorio a partir de 2026-07-23
 
 Cualquier PR que modifique una función listada aquí:
