@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.589.7] - 2026-08-13
+- **Cancelar un REP por segunda vez ya no genera un error.** Si la solicitud ya está pendiente o en verificación ante el SAT, la función responde de forma idempotente, conserva el proceso existente y evita enviar una cancelación duplicada al proveedor fiscal.
+- La pantalla refresca el estado y muestra un aviso informativo para que el usuario espere la resolución, en lugar de registrar “No se pudo cancelar el REP”.
+
 ## [13.589.6] - 2026-08-13
 - **F1026 ya muestra correctamente la cancelación asíncrona de su REP.** El SAT recibió la solicitud pero la dejó en verificación; antes la pantalla decía incorrectamente “REP cancelado” y seguía mostrando el botón como si nada hubiera ocurrido.
 - El asistente ahora distingue “solicitud enviada” de “cancelación aceptada”, muestra el estado de verificación, bloquea reintentos duplicados y refresca automáticamente hasta recibir una respuesta fiscal terminal.

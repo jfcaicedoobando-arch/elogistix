@@ -54,7 +54,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
 
   const { data: pago, error: pErr } = await supabase
     .from("pagos_factura")
-    .select("id, organization_id, facturapi_rep_id, estado_rep, uuid_rep, rep_cancelado_facturapi_id, rep_cancelado_uuid")
+    .select("id, organization_id, facturapi_rep_id, estado_rep, uuid_rep, rep_cancelado_facturapi_id, rep_cancelado_uuid, rep_cancellation_status")
     .eq("id", body.pago_id)
     .maybeSingle();
   if (pErr || !pago) return json({ error: "pago_not_found" }, 404);
@@ -73,6 +73,16 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   }
   if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
     return json({ error: "forbidden" }, 403);
+  }
+  // Idempotencia: una pantalla desactualizada puede permitir un segundo clic.
+  // No se vuelve a llamar al proveedor fiscal ni se reporta como error.
+  if (["pending", "verifying"].includes((pago.rep_cancellation_status ?? "").toLowerCase())) {
+    return json({
+      ok: true,
+      pending: true,
+      cancellation_status: pago.rep_cancellation_status,
+      message: "La solicitud de cancelación del REP ya está en verificación ante el SAT.",
+    });
   }
 
   // Ola 4 · N5: FacturAPI espera el facturapi_id (ObjectId) del REP
