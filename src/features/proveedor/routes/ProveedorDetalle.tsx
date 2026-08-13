@@ -49,7 +49,6 @@ export default function ProveedorDetalle() {
     );
   }
 
-
   const nombreFmt = toTitleCase(proveedor.nombre);
   const rfcFmt = (proveedor.rfc || "").toUpperCase();
   const esNacional = proveedor.origen_proveedor === "Nacional";
@@ -115,7 +114,6 @@ export default function ProveedorDetalle() {
         proveedorNombre={proveedor.nombre}
         canEdit={canEdit}
       />
-
 
       <ProveedorBrechaCard brecha={brecha} huerfanas={huerfanas} proveedorNombre={nombreFmt} />
 
