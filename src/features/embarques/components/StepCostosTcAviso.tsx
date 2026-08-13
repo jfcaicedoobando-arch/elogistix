@@ -6,6 +6,7 @@ import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { formatFechaEs } from "@/lib/formatters";
 import { TC_DESVIACION_UMBRAL_PCT } from "@/features/embarques/services/tcEmbarqueDof";
+import { desviacionTcPct } from "@/features/embarques/domain/tcDesviacion";
 import type { TcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
@@ -14,12 +15,6 @@ interface Props {
   tcInicial: TcInicial | null | undefined;
   /** T/C USD capturado en el formulario (0 cuando falta). */
   tcUsdCapturado: number;
-}
-
-/** Desviación porcentual del valor capturado respecto a la referencia. */
-export function desviacionTcPct(capturado: number, referencia: number): number | null {
-  if (!(capturado > 0) || !(referencia > 0)) return null;
-  return ((capturado - referencia) / referencia) * 100;
 }
 
 export function StepCostosTcAviso({ tcInicial, tcUsdCapturado }: Props) {
