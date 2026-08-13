@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.592.0] - 2026-08-13
+- **Una factura con cancelación en trámite ante el SAT ya no admite cobros.** Mientras la solicitud esté pendiente o en verificación, el sistema rechaza cualquier pago (individual o en lote) con un mensaje claro.
+- El detalle de la factura muestra un aviso explicando el bloqueo y el botón "Registrar pago" queda deshabilitado.
+- En Cartera, seleccionar una factura en trámite de cancelación impide el cobro en lote e indica el motivo.
+- Si el SAT rechaza la cancelación, la factura vuelve a admitir cobros automáticamente.
+
+
 ## [13.591.0] - 2026-08-13
 - **Nuevo botón "Actualizar estado" del REP.** En el paso 2 del asistente de refacturación se puede consultar en vivo al SAT/FacturApi el estatus de la cancelación del complemento de pago y sincronizarlo al instante, sin esperar los 30 minutos del proceso automático.
 
