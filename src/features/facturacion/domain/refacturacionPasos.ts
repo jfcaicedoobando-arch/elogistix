@@ -116,7 +116,9 @@ function bloqueoPaso5(ctx: ContextoPasos): string | null {
  * `null` significa "listo para continuar".
  */
 export function bloqueoPaso(paso: number, ctx: ContextoPasos): string | null {
+  if (ctx.bloqueoPermiso) return ctx.bloqueoPermiso;
   if (paso === 1) return bloqueoPaso1(ctx);
+
   if (paso === 2) return bloqueoPaso2(ctx);
   if (paso === 3) return bloqueoPaso3(ctx);
   if (paso === 4) {
