@@ -730,6 +730,8 @@ export default tseslint.config(
       "src/features/tesoreria/components/DetallePagoAplicaciones.tsx",
       // Tabla estática de 2 renglones (flujo por moneda) en dashboard de tesorería.
       "src/features/tesoreria/routes/_sections/TesoreriaFlujoMonedas.tsx",
+      "src/features/facturacion/components/refacturacion/ComparativoConsistencia.tsx",
+      "src/features/facturacion/components/refacturacion/RefacturacionPreviewSaldos.tsx",
       // Tests pueden importar primitivas para renders aislados.
       "**/__tests__/**",
       "**/*.test.ts",
