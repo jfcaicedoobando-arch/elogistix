@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.594.0] - 2026-08-13
+- **Refacturación: el paso 4 ya no obliga a esperar al SAT.** Si la cancelación del CFDI original ya está solicitada (pendiente o en verificación), se puede continuar y reasignar el pago a la nueva factura.
+- Se muestra el estatus del trámite con distintivo ("Cancelación en verificación" / "Cancelación rechazada") y aviso informativo en los pasos 4 y 5.
+- Si el SAT rechaza o deja expirar la solicitud, el paso vuelve a bloquear y pide solicitarla de nuevo.
+- Se conservan los candados fiscales duros: REP anterior cancelado, factura destino timbrada, misma moneda y sin sobrepago.
+
+
 ## [13.593.0] - 2026-08-13
 - **"Verificar estatus en FacturApi" ahora revisa los XML.** Descarga el XML timbrado de la factura y el de cada REP (incluidos los cancelados) y compara UUID, RFCs, importes y moneda contra la base de datos.
 - Cada documento muestra su estatus real consultado al SAT (Vigente / Cancelado / No encontrado).
