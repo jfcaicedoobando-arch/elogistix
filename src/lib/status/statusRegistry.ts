@@ -34,7 +34,8 @@ export type StatusDomain =
   | "garantia_naviera"    // Ciclo de vida de garantía por contenedor
   | "ruta_maritima"       // Salud de ruta (Activa/Por vencer/Sin tarifa)
   | "liquidacion"         // Pago de operación de proveedor
-  | "anticipo_proveedor"; // QW6 — Anticipos a proveedores
+  | "anticipo_proveedor"  // QW6 — Anticipos a proveedores
+  | "conciliacion_costo"; // v13.571.0 — Costeado vs facturado por el proveedor
 
 export interface StatusVisual {
   label: string;
@@ -122,6 +123,7 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   ruta_maritima: ["Activa", "Por vencer", "Sin tarifa"],
   liquidacion: ["Pagado", "Pendiente"],
   anticipo_proveedor: ["disponible", "aplicado_parcial", "aplicado_total", "cancelado"],
+  conciliacion_costo: ["Pendiente", "Facturado parcial", "Facturado", "Sobrefacturado", "Pagado"],
 };
 
 /** Overrides por dominio cuando el mismo string necesita otro label. */

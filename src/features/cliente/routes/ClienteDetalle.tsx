@@ -72,6 +72,9 @@ export default function ClienteDetalle() {
           direccion: cliente.direccion,
           ciudad: cliente.ciudad,
           estado: cliente.estado,
+          regimen_fiscal: cliente.regimen_fiscal,
+          dias_credito: cliente.dias_credito,
+          limite_credito_mxn: cliente.limite_credito_mxn,
         }}
         canEdit={canEdit}
         onBack={() => navigate("/clientes")}

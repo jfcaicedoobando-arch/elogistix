@@ -5,11 +5,9 @@
  */
 import type { ColumnDef } from "@/components/shared/DataTable";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
-import { moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
-import { Badge } from "@/components/ui/badge";
+import { moneyColumn, dateColumn, statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { toTitleCase } from "@/lib/formatters";
 import type { PartidaEstadoCuenta } from "@/features/proveedor/domain/estadoCuentaProveedor";
-import { toneEstadoConciliacion } from "@/features/proveedor/domain/estadoCuentaProveedor";
 import { ProveedorFacturasCell } from "./ProveedorFacturasCell";
 
 export function partidasOperacionesColumns<T extends PartidaEstadoCuenta>(): ColumnDef<T, unknown>[] {
@@ -75,16 +73,13 @@ export function partidasOperacionesColumns<T extends PartidaEstadoCuenta>(): Col
       cell: ({ row }) => <ProveedorFacturasCell partida={row.original} />,
     },
     {
-      id: "conciliacion",
-      header: "Estado",
-      accessorFn: (o) => o.estado_conciliacion,
-      enableSorting: true,
+      ...statusColumn<T>({
+        id: "conciliacion",
+        header: "Estado",
+        domain: "conciliacion_costo",
+        accessor: (o) => o.estado_conciliacion,
+      }),
       meta: { width: COL_W.estado },
-      cell: ({ row }) => (
-        <Badge variant="outline" className={toneEstadoConciliacion(row.original.estado_conciliacion)}>
-          {row.original.estado_conciliacion}
-        </Badge>
-      ),
     },
     dateColumn<T>({
       id: "vencimiento",

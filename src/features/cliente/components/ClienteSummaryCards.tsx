@@ -1,5 +1,6 @@
 import { Ship, ClipboardList, Users, DollarSign, AlertCircle, TrendingUp, type LucideIcon } from "lucide-react";
 import { KpiCard, type KpiVariant } from "@/components/shared/KpiCard";
+import { KpiStrip } from "@/components/shared/KpiStrip";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 
 interface Props {
@@ -18,15 +19,25 @@ interface Props {
  * mediante `valueTooltip`.
  *
  * v13.302.3: migrado al `KpiCard` canónico (`iconVariant="chip"`).
+ * v13.571.0: migrado a `KpiStrip` (carrusel en móvil, 3 columnas en desktop)
+ * para que la franja se comporte igual que la del detalle de proveedor.
  */
 export default function ClienteSummaryCards({ embarques, cotizaciones, contactos, facturadoUSD, pendienteUSD, profitUSD }: Props) {
-  const items: Array<{ label: string; value: string; tooltip?: string; icon: LucideIcon; variant: KpiVariant }> = [
-    { label: "Embarques", value: String(embarques), icon: Ship, variant: "info" },
-    { label: "Cotizaciones", value: String(cotizaciones), icon: ClipboardList, variant: "accent" },
-    { label: "Contactos", value: String(contactos), icon: Users, variant: "success" },
+  const items: Array<{
+    label: string;
+    value: string;
+    sublabel?: string;
+    tooltip?: string;
+    icon: LucideIcon;
+    variant: KpiVariant;
+  }> = [
+    { label: "Embarques", value: String(embarques), sublabel: "Operaciones del cliente", icon: Ship, variant: "info" },
+    { label: "Cotizaciones", value: String(cotizaciones), sublabel: "Histórico comercial", icon: ClipboardList, variant: "accent" },
+    { label: "Contactos", value: String(contactos), sublabel: "Exportadores / importadores", icon: Users, variant: "success" },
     {
       label: "Facturado",
       value: formatCurrencyCompact(facturadoUSD, "USD"),
+      sublabel: "Total emitido (USD)",
       tooltip: formatCurrency(facturadoUSD, "USD"),
       icon: DollarSign,
       variant: "secondary",
@@ -34,6 +45,7 @@ export default function ClienteSummaryCards({ embarques, cotizaciones, contactos
     {
       label: "Por cobrar",
       value: formatCurrencyCompact(pendienteUSD, "USD"),
+      sublabel: "Saldo pendiente (USD)",
       tooltip: formatCurrency(pendienteUSD, "USD"),
       icon: AlertCircle,
       variant: "warning",
@@ -41,27 +53,27 @@ export default function ClienteSummaryCards({ embarques, cotizaciones, contactos
     {
       label: "Profit",
       value: formatCurrencyCompact(profitUSD, "USD"),
+      sublabel: "Utilidad acumulada (USD)",
       tooltip: formatCurrency(profitUSD, "USD"),
       icon: TrendingUp,
       variant: "success",
     },
   ];
 
-  // v13.370.0: máx. 4 por fila — con 6 columnas las etiquetas y los importes
-  // se truncaban ("Embarq…", "U…") en pantallas de 1366 px.
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4">
+    <KpiStrip desktopCols={3}>
       {items.map((it) => (
         <KpiCard
           key={it.label}
           label={it.label}
           value={it.value}
+          sublabel={it.sublabel}
           valueTooltip={it.tooltip}
           icon={it.icon}
           variant={it.variant}
           iconVariant="chip"
         />
       ))}
-    </div>
+    </KpiStrip>
   );
 }

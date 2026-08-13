@@ -1,10 +1,16 @@
-import { Pencil, FileText, Loader2, Users } from "lucide-react";
+import { Pencil, FileText, Users, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DetailHeader } from "@/components/shared/DetailHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { DetailSkeleton } from "@/components/shared/skeletons";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
-import { toTitleCase } from "@/lib/formatters";
+import { toTitleCase, formatCurrency } from "@/lib/formatters";
 
 interface Cliente {
   id: string;
@@ -13,6 +19,9 @@ interface Cliente {
   direccion: string;
   ciudad: string;
   estado: string;
+  regimen_fiscal?: string | null;
+  dias_credito?: number | null;
+  limite_credito_mxn?: number | null;
 }
 
 interface Props {
@@ -22,9 +31,21 @@ interface Props {
   onEdit: () => void;
 }
 
+/**
+ * Encabezado del detalle de cliente. v13.571.0 — homologado con proveedor:
+ * acción primaria sólida (Editar) + menú "Más acciones", y badges de identidad
+ * fiscal/crediticia junto al título.
+ */
 export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
   const navigate = useNavigate();
   const volver = useVolver("/clientes");
+  const badges: string[] = [];
+  if (cliente.regimen_fiscal) badges.push(`Régimen ${cliente.regimen_fiscal}`);
+  if (typeof cliente.dias_credito === "number") badges.push(`${cliente.dias_credito} días de crédito`);
+  if (typeof cliente.limite_credito_mxn === "number" && cliente.limite_credito_mxn > 0) {
+    badges.push(`Límite ${formatCurrency(cliente.limite_credito_mxn, "MXN")}`);
+  }
+
   return (
     <DetailHeader
       backTo={volver}
@@ -33,24 +54,45 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
       title={toTitleCase(cliente.nombre)}
       subtitle={
         cliente.rfc ? (
-          <span className="font-mono text-xs tracking-wide">{cliente.rfc}</span>
+          <span className="font-mono text-xs tracking-wide">RFC / Tax ID · {cliente.rfc}</span>
         ) : undefined
       }
-
+      badge={
+        badges.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {badges.map((b, i) => (
+              <Badge key={b} variant={i === 0 ? "secondary" : "outline"} className="font-normal">
+                {b}
+              </Badge>
+            ))}
+          </div>
+        ) : undefined
+      }
       trailing={
         <>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(`/clientes/${cliente.id}/estado-de-cuenta`)}
-          >
-            <FileText className="h-4 w-4 mr-1" /> Estado de cuenta
-          </Button>
           {canEdit && (
-            <Button variant="outline" size="sm" onClick={onEdit}>
-              <Pencil className="h-4 w-4 mr-1" /> Editar
+            <Button size="sm" onClick={onEdit}>
+              <Pencil className="mr-2 h-4 w-4" /> Editar
             </Button>
           )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label={`Más acciones del cliente ${toTitleCase(cliente.nombre)}`}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem
+                onClick={() => navigate(`/clientes/${cliente.id}/estado-de-cuenta`)}
+              >
+                <FileText className="mr-2 h-4 w-4" /> Estado de cuenta completo
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </>
       }
     />
@@ -60,9 +102,9 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
 
 export function ClienteLoadingState() {
   return (
-    <div className="flex items-center justify-center py-20">
-      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-    </div>
+    <PageContainer>
+      <DetailSkeleton />
+    </PageContainer>
   );
 }
 
@@ -78,4 +120,3 @@ export function ClienteNotFoundState() {
     />
   );
 }
-
