@@ -20,6 +20,7 @@ import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
 import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
+import { ProveedorBrechaCard } from "../components/ProveedorBrechaCard";
 import { ProveedorCsfUpdateButton } from "../components/ProveedorCsfUpdateButton";
 import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancariosCard";
 import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneralesCard";
@@ -115,7 +116,7 @@ export default function ProveedorDetalle() {
         moneda="MXN"
         porMoneda={agregados.porMoneda}
         monedasSinTc={agregados.monedasSinTc}
-        operacionesCount={operaciones.length}
+        operacionesCount={partidas.length}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
