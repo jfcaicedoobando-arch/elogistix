@@ -21,6 +21,7 @@ interface Props {
   onRefrescar: () => void;
   consistencia: ConsistenciaRefacturacion | null;
   consistenciaCargando: boolean;
+  puedeOperar?: boolean;
 }
 
 export function PasoFacturaNueva(props: Props) {
@@ -39,7 +40,11 @@ export function PasoFacturaNueva(props: Props) {
             Se creará un borrador a nombre de <strong>{props.clienteDestinoNombre}</strong> con
             los mismos conceptos e importes de la factura original.
           </p>
-          <Button onClick={props.onDuplicar} loading={props.duplicando}>
+          <Button
+            onClick={props.onDuplicar}
+            loading={props.duplicando}
+            disabled={props.puedeOperar === false}
+          >
             <Copy className="h-4 w-4 mr-1" /> Crear borrador
           </Button>
         </div>

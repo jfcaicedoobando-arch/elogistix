@@ -17,6 +17,7 @@ interface Props {
   cancelando: boolean;
   onCancelar: () => void;
   onRefrescar: () => void;
+  puedeOperar?: boolean;
 }
 
 export function PasoCancelarOriginal(props: Props) {
@@ -56,7 +57,12 @@ export function PasoCancelarOriginal(props: Props) {
             asistente permitirá continuar cuando la cancelación quede firme.
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="destructive" onClick={props.onCancelar} loading={props.cancelando}>
+            <Button
+              variant="destructive"
+              onClick={props.onCancelar}
+              loading={props.cancelando}
+              disabled={props.puedeOperar === false}
+            >
               <Ban className="h-4 w-4 mr-1" /> Cancelar factura original
             </Button>
             <Button variant="outline" onClick={props.onRefrescar}>Actualizar estado</Button>

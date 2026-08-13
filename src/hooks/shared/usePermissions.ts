@@ -10,6 +10,7 @@ import {
   COTIZAR_SIN_DESGLOSE,
   ELIMINAR_EMBARQUE,
   EMITIR_FACTURA_CLIENTE,
+  OPERAR_REFACTURACION,
   FINANCE,
   FINANCE_VIEWERS,
   HANDOFF_COTIZACION,
@@ -59,6 +60,7 @@ export function usePermissions() {
   const canAprobarFacturaProveedor = has(APROBAR_FACTURA_PROVEEDOR, roleStr);
   const canPagarProveedor = has(PAGAR_PROVEEDOR, roleStr);
   const canRegistrarCobro = has(REGISTRAR_COBRO, roleStr);
+  const canOperarRefacturacion = has(OPERAR_REFACTURACION, roleStr);
   const canCerrarEmbarque = has(CERRAR_EMBARQUE, roleStr);
   const canHandoffCotizacion = has(HANDOFF_COTIZACION, roleStr);
   const canResponderProformaManual = has(RESPONDER_PROFORMA_MANUAL, roleStr);
@@ -94,6 +96,7 @@ export function usePermissions() {
     canAprobarFacturaProveedor,
     canPagarProveedor,
     canRegistrarCobro,
+    canOperarRefacturacion,
     canCerrarEmbarque,
     canHandoffCotizacion,
     canResponderProformaManual,

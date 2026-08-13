@@ -40,6 +40,7 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
         cargando={s.pagosCargando}
         cancelandoId={w.repEnCurso}
         onCancelarRep={w.handleCancelarRep}
+        puedeOperar={w.puedeOperar}
       />
     );
   }
@@ -56,6 +57,7 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
         onRefrescar={s.refrescar}
         consistencia={w.consistencia}
         consistenciaCargando={w.consistenciaCargando}
+        puedeOperar={w.puedeOperar}
       />
     );
   }
@@ -67,6 +69,7 @@ export function RefacturarPasoActual({ w }: { w: RefacturarWizard }) {
         rutaFiscal={w.rutaFiscal}
         cancelando={w.cancelandoFactura}
         onCancelar={w.handleCancelarOriginal}
+        puedeOperar={w.puedeOperar}
         onRefrescar={s.refrescar}
       />
     );

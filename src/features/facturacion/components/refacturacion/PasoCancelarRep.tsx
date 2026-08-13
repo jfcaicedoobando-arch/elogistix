@@ -14,9 +14,12 @@ interface Props {
   cargando: boolean;
   cancelandoId: string | null;
   onCancelarRep: (pagoId: string) => void;
+  puedeOperar?: boolean;
 }
 
-export function PasoCancelarRep({ pagos, cargando, cancelandoId, onCancelarRep }: Props) {
+export function PasoCancelarRep({
+  pagos, cargando, cancelandoId, onCancelarRep, puedeOperar = true,
+}: Props) {
   const conRep = pagos.filter((p) => p.uuid_rep);
 
   return (
@@ -62,6 +65,7 @@ export function PasoCancelarRep({ pagos, cargando, cancelandoId, onCancelarRep }
                     size="sm"
                     variant="destructive"
                     loading={cancelandoId === p.id}
+                    disabled={!puedeOperar}
                     onClick={() => onCancelarRep(p.id)}
                   >
                     <Ban className="h-4 w-4 mr-1" /> Cancelar REP

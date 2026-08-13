@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import type { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
 import type { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
@@ -103,7 +104,11 @@ function buildSecondary(props: Props, primaryId: string | null): DetalleActionIt
   return items;
 }
 
-function buildMore(props: Props, primaryId: string | null): DetalleActionItem[] {
+function buildMore(
+  props: Props,
+  primaryId: string | null,
+  puedeRefacturar: boolean,
+): DetalleActionItem[] {
   const { factura, flags, acuse, canEdit } = props;
   const items: DetalleActionItem[] = [];
   // B-002 (v13.320.32): si el primary es "Registrar pago" pero hay REP pendiente,
@@ -135,10 +140,13 @@ function buildMore(props: Props, primaryId: string | null): DetalleActionItem[] 
   if (flags.puedeSustituirCfdi) {
     items.push({ id: "sustituir", label: "Sustituir CFDI", icon: Replace, onClick: props.onSustituir });
     // Ola 12 — refacturación a otro receptor (cliente pagó desde otra empresa).
-    items.push({
-      id: "refacturar", label: "Refacturar a otro receptor", icon: Users,
-      onClick: props.onRefacturar,
-    });
+    // Sólo roles contables y de administración (espejo de `_assert_refacturador`).
+    if (puedeRefacturar) {
+      items.push({
+        id: "refacturar", label: "Refacturar a otro receptor", icon: Users,
+        onClick: props.onRefacturar,
+      });
+    }
   }
   if (flags.puedeCancelarCfdi) {
     items.push({
@@ -155,9 +163,10 @@ function buildMore(props: Props, primaryId: string | null): DetalleActionItem[] 
 }
 
 export function FacturaDetalleActionsBar(props: Props) {
+  const { canOperarRefacturacion } = usePermissions();
   const primary = buildPrimary(props);
   const secondary = buildSecondary(props, primary?.id ?? null);
-  const more = buildMore(props, primary?.id ?? null);
+  const more = buildMore(props, primary?.id ?? null, canOperarRefacturacion);
   const destructive: DetalleActionItem | null = props.puedeEliminarBorrador
     ? {
         id: "eliminar-borrador", label: "Eliminar borrador", icon: Trash2,

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.588.0] - 2026-08-13
+- **Permisos de refacturación para todos los roles contables.** Además de los administradores de la organización y el contador, ahora el auxiliar contable puede operar los casos de refacturación (tanto en la base como en la pantalla).
+- **La opción "Refacturar a otro receptor" sólo aparece** para quien realmente puede ejecutarla; los demás roles ya no entran al asistente para fallar al final.
+- **Cada etapa exige el permiso**: los botones de cancelar REP, crear borrador y cancelar la factura original quedan deshabilitados y el pie del asistente explica en español qué rol se necesita.
+
+
+
 ## [13.587.0] - 2026-08-13
 - **Validaciones fiscales reforzadas en la refacturación.** Antes de abrir el caso, el asistente muestra un semáforo del nuevo receptor: avisa si le falta razón social, RFC válido (ya no acepta RFC genéricos), régimen fiscal o código postal, con acceso directo al expediente del cliente.
 - **Comparativo original vs. nueva factura** en el paso 3: moneda, subtotal, IVA, retenciones y total lado a lado, más los hallazgos de inconsistencia detectados por el sistema. Si algo no cuadra, no se puede avanzar.
