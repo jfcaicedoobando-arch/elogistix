@@ -52,6 +52,11 @@ export function ProveedorMovimientosTable({ movimientos }: Props) {
             ? `/embarques/${m.embarque_id}`
             : null
       }
+      getRowAriaLabel={(m) =>
+        m.tipo === "Factura"
+          ? `Ver factura ${m.folio}`
+          : `Ver embarque ${m.expediente}: ${m.tipo} ${m.folio}`
+      }
       density={TABLE_DENSITY.embebida}
       pagination={{
         page: pageIndex,
