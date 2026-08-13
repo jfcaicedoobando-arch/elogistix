@@ -151,11 +151,23 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     ) as FapiCancelResponse;
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
+      // REF-01: dejar la fila en `verifying` para que el cron la reconcilie.
+      await marcarTimeoutCancelacion({
+        supabase,
+        facturaId: factura_id,
+        organizationId: factura.organization_id,
+        usuarioId: userData.user.id,
+        usuarioEmail: userData.user.email,
+        motivo,
+        op: err.op,
+        timeoutMs: err.timeoutMs,
+      });
       return json(
         { error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message },
         504,
       );
     }
+
     return await handleCancelFailure({
       err,
       supabase,
