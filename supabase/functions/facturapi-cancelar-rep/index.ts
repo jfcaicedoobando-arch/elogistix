@@ -23,7 +23,7 @@ void resolveFacturapiKey;
 
 const MOTIVOS_VALIDOS = new Set(["01", "02", "03", "04"]);
 
-interface ReqBody { pago_id?: string; motivo?: string; sustituye_uuid?: string }
+interface ReqBody { pago_id?: string; motivo?: string; sustituye_uuid?: string; cancelar_rep_anterior?: boolean }
 
 // eslint-disable-next-line complexity
 Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
@@ -54,12 +54,23 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
 
   const { data: pago, error: pErr } = await supabase
     .from("pagos_factura")
-    .select("id, organization_id, facturapi_rep_id, estado_rep")
+    .select("id, organization_id, facturapi_rep_id, estado_rep, uuid_rep, rep_cancelado_facturapi_id, rep_cancelado_uuid")
     .eq("id", body.pago_id)
     .maybeSingle();
   if (pErr || !pago) return json({ error: "pago_not_found" }, 404);
   if (!pago.facturapi_rep_id) return json({ error: "no_timbrado_rep" }, 409);
-  if (pago.estado_rep === "Cancelado") return json({ error: "ya_cancelado" }, 409);
+  // Ola 12 · R3P-21: con cancelar_rep_anterior=true se cancela el REP ARCHIVADO
+  // (cancelado antes con motivo 02) sustituyéndolo por el REP vigente.
+  const cancelarAnterior = body.cancelar_rep_anterior === true;
+  if (pago.estado_rep === "Cancelado" && !cancelarAnterior) return json({ error: "ya_cancelado" }, 409);
+  if (cancelarAnterior) {
+    if (!pago.rep_cancelado_facturapi_id) {
+      return json({ error: "sin_rep_anterior", message: "No hay un REP cancelado archivado para sustituir." }, 409);
+    }
+    if (body.motivo !== "01") {
+      return json({ error: "motivo_invalido", message: "La sustitución de un REP cancelado requiere motivo 01." }, 400);
+    }
+  }
   if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
     return json({ error: "forbidden" }, 403);
   }
@@ -69,7 +80,12 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   // resolveSustitutaSnapshot de facturapi-cancelar). La UI captura el UUID;
   // aquí lo resolvemos al REP timbrado de ESTA organización.
   let sustituyeFacturapiId: string | undefined;
-  if (body.motivo === "01") {
+  let objetivoFacturapiId: string = pago.facturapi_rep_id as string;
+  if (cancelarAnterior) {
+    // R3P-21: objetivo = REP cancelado archivado; sustituto = REP vigente.
+    objetivoFacturapiId = pago.rep_cancelado_facturapi_id as string;
+    sustituyeFacturapiId = pago.facturapi_rep_id as string;
+  } else if (body.motivo === "01") {
     const { data: sustituto } = await supabase
       .from("pagos_factura")
       .select("id, facturapi_rep_id")
@@ -96,7 +112,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     const cancelPayload: { motive: string; substitution?: string } = { motive: body.motivo };
     if (sustituyeFacturapiId) cancelPayload.substitution = sustituyeFacturapiId;
     // EF-05: timeout defensivo — el webhook/cron reconcilian el estado real.
-    cancelResp = await withFacturapiTimeout("invoices.cancel", facturapi.invoices.cancel(pago.facturapi_rep_id, cancelPayload)) as FapiCancelResponse;
+    cancelResp = await withFacturapiTimeout("invoices.cancel", facturapi.invoices.cancel(objetivoFacturapiId, cancelPayload)) as FapiCancelResponse;
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
       // R3EF-01: marcar verifying para que el cron adopte la fila (patrón REF-01).
@@ -201,12 +217,16 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   // Aceptada (inmediata o silencio positivo ya resuelto por FacturAPI).
   const { error: updErr } = await supabase
     .from("pagos_factura")
-    .update({
-      estado_rep: "Cancelado",
-      rep_cancellation_status: "accepted",
-      rep_cancelado_en: nowIso,
-      rep_motivo_cancel: body.motivo,
-    })
+    .update(cancelarAnterior
+      // R3P-21: sustitución 01 consumada — el archivo se limpia y el REP
+      // vigente queda como único REP del pago.
+      ? { rep_cancelado_facturapi_id: null, rep_cancelado_uuid: null }
+      : {
+          estado_rep: "Cancelado",
+          rep_cancellation_status: "accepted",
+          rep_cancelado_en: nowIso,
+          rep_motivo_cancel: body.motivo,
+        })
     .eq("id", pago.id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 

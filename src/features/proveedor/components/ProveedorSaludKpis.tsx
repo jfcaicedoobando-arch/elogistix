@@ -42,10 +42,10 @@ export function ProveedorSaludKpis({ data }: { data: SaludProveedor }) {
           label="Facturas últimos 12m"
           value={formatCurrencyCompact(data.monto_12m, "MXN")}
           valueTooltip={formatCurrency(data.monto_12m, "MXN")}
-          sublabel={`${data.facturas_12m} factura${data.facturas_12m === 1 ? "" : "s"}`}
+          sublabel={`${data.facturas_12m} factura${data.facturas_12m === 1 ? "" : "s"} · convertido a MXN (TC DOF)`}
         />
         <KpiCard
-          label="Saldo actual"
+          label="Saldo actual (MXN)"
           value={formatCurrency(data.saldo_actual, "MXN")}
           variant={data.saldo_actual > 0 ? "warning" : "success"}
         />

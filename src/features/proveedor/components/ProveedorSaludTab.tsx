@@ -47,7 +47,7 @@ export function ProveedorSaludTab({ proveedorId }: { proveedorId: string }) {
     <div className="space-y-5">
       <ProveedorAlertasCard alertas={alertas} />
 
-      {tc.faltante && (
+      {(tc.faltante || salud.data.tc.faltante) && (
         <p className="text-xs text-warning">
           Falta el tipo de cambio del DOF: los montos en dólares o euros no están incluidos en los totales en pesos.
         </p>

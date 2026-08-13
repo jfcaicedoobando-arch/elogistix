@@ -41,7 +41,23 @@ export function PagoRepCell({ pagoId, facturaId, estadoRep, serieRep, folioRep, 
       </div>
     );
   }
-  if (repCancelado) return <CfdiEstadoBadge tono="cancelada">REP cancelado</CfdiEstadoBadge>;
+  if (repCancelado) {
+    // Ola 12 · R3P-21: el pago puede re-timbrar su REP; el cancelado queda
+    // archivado para la relación de sustitución (motivo 01).
+    return (
+      <div className="flex items-center gap-1.5">
+        <CfdiEstadoBadge tono="cancelada">REP cancelado</CfdiEstadoBadge>
+        <Button
+          variant="outline" size="icon" className="h-6 w-6"
+          title="Re-timbrar REP (sustituye al cancelado)" aria-label="Re-timbrar REP (sustituye al cancelado)"
+          disabled={timbrar.isPending}
+          onClick={(e) => { e.stopPropagation(); timbrar.mutate(pagoId); }}
+        >
+          <RotateCw className={`h-3 w-3 ${timbrar.isPending ? "animate-spin" : ""}`} />
+        </Button>
+      </div>
+    );
+  }
   if (repError) {
     return (
       <div className="flex items-center gap-1.5">

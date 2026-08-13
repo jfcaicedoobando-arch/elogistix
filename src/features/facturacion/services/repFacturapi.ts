@@ -68,10 +68,12 @@ export async function cancelarRep(
   pagoId: string,
   motivo: MotivoCancelacionSat,
   sustituyeUuid?: string,
+  /** Ola 12 · R3P-21: cancela el REP archivado (motivo 01) sustituyéndolo por el vigente. */
+  cancelarRepAnterior?: boolean,
 ): Promise<void> {
   const { data, error } = await supabase.functions.invoke<{ ok?: boolean } & EdgeErrorBody>(
     "facturapi-cancelar-rep",
-    { body: { pago_id: pagoId, motivo, sustituye_uuid: sustituyeUuid } },
+    { body: { pago_id: pagoId, motivo, sustituye_uuid: sustituyeUuid, cancelar_rep_anterior: cancelarRepAnterior } },
   );
   if (error) {
     lanzarErrorRep(await parseFunctionError(error), error, "No se pudo cancelar el REP.");
