@@ -4,10 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import {
-  rutaArchivoEntrante,
-  validarParejaEntrante,
-} from "@/lib/domain/facturasEntrantes";
+import { validarParejaEntrante } from "@/lib/domain/facturasEntrantes";
 import type { CfdiXmlMeta } from "@/lib/domain/cfdiXmlMeta";
 import {
   columnasMetaEntrante,
@@ -27,31 +24,8 @@ import {
 import { guardarConceptosSugeridos } from "@/features/cxp/services/facturasEntrantesConceptos";
 import {
   calcularHash,
-  mensajeErrorStorage,
+  subirArchivoEntrante as subirArchivo,
 } from "@/features/cxp/services/facturasEntrantesUploadHelpers";
-
-async function subirArchivo(
-  file: File,
-  input: Pick<SubirFacturaEntranteInput, "organizationId" | "embarqueId">,
-  hashPrevio?: string,
-): Promise<ArchivoSubido> {
-  const hash = hashPrevio ?? (await calcularHash(file));
-  const path = rutaArchivoEntrante({
-    organizationId: input.organizationId,
-    embarqueId: input.embarqueId,
-    hash,
-    nombreArchivo: file.name,
-  });
-  const { error } = await supabase.storage
-    .from(BUCKET_CXP_INBOX)
-    .upload(path, file, { upsert: true, contentType: file.type || undefined });
-  if (error) {
-    const amable = mensajeErrorStorage(error);
-    throw amable ? new Error(amable) : error;
-  }
-  return { path, hash, nombre: file.name };
-}
-
 
 /** Arma el renglón a insertar; aísla el mapeo para mantener baja la complejidad. */
 function filaEntranteAInsertar(params: {
