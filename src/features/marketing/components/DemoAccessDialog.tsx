@@ -74,7 +74,9 @@ export function DemoAccessDialog({ open, onOpenChange }: Props) {
       await enterDemoMode();
       toast({
         title: "Bienvenido al modo demo",
-        description: "Estás explorando datos de ejemplo. Se reinician en cada acceso.",
+        // RUX-08: la re-siembra real es periódica (demo_seed_state; la edge
+        // demo-access omite si se sembró hace <10 min, EF-09), no "en cada acceso".
+        description: "Estás explorando datos de ejemplo. Se restablecen de forma periódica.",
       });
       onOpenChange(false);
       navigate(ROUTES.INICIO, { replace: true });

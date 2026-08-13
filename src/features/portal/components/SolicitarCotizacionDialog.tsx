@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Loader2, Send } from "lucide-react";
+import { FileText, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,9 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
   const [destino, setDestino] = useState("");
   const [mercancia, setMercancia] = useState("");
   const [notas, setNotas] = useState("");
+  // RUX-07: los errores/hints de obligatoriedad sólo se muestran tras el
+  // primer intento de envío, nunca en campos vírgenes.
+  const [intentoEnvio, setIntentoEnvio] = useState(false);
 
   const puedeEnviar = Boolean(clienteId) && origen.trim().length > 0 && destino.trim().length > 0;
 
@@ -62,6 +65,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
     setDestino("");
     setMercancia("");
     setNotas("");
+    setIntentoEnvio(false);
   };
 
   const handleSubmit = async () => {
@@ -106,10 +110,8 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={!puedeEnviar || solicitar.isPending}>
-            {solicitar.isPending
-              ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
-              : <Send className="h-4 w-4 mr-1" />}
+          <Button onClick={handleSubmit} disabled={!puedeEnviar} loading={solicitar.isPending}>
+            {!solicitar.isPending && <Send className="h-4 w-4 mr-1" />}
             {solicitar.isPending ? "Enviando…" : "Enviar solicitud"}
           </Button>
         </>
@@ -149,16 +151,16 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
         <div className="space-y-1.5">
           <Label htmlFor="solicitud-origen">Origen <span className="text-destructive">*</span></Label>
           <Input id="solicitud-origen" value={origen} onChange={(e) => setOrigen(e.target.value)}
-            placeholder="Shanghái, China" aria-invalid={origen.trim() === ""} />
-          {origen.trim() === "" && (
+            placeholder="Shanghái, China" aria-invalid={intentoEnvio && origen.trim() === ""} />
+          {intentoEnvio && origen.trim() === "" && (
             <p className="text-xs text-muted-foreground">{COPY_VALIDACION.requerido("el origen")}</p>
           )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="solicitud-destino">Destino <span className="text-destructive">*</span></Label>
           <Input id="solicitud-destino" value={destino} onChange={(e) => setDestino(e.target.value)}
-            placeholder="Manzanillo, México" aria-invalid={destino.trim() === ""} />
-          {destino.trim() === "" && (
+            placeholder="Manzanillo, México" aria-invalid={intentoEnvio && destino.trim() === ""} />
+          {intentoEnvio && destino.trim() === "" && (
             <p className="text-xs text-muted-foreground">{COPY_VALIDACION.requerido("el destino")}</p>
           )}
         </div>
@@ -177,7 +179,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
         </div>
       </FormDialogSection>
 
-      {!puedeEnviar && (
+      {intentoEnvio && !puedeEnviar && (
         <p className="text-xs text-muted-foreground">{COPY_VALIDACION.camposObligatorios}</p>
       )}
     </FormDialogShell>
