@@ -57,6 +57,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
   const {
     pagoOpen, setPagoOpen, timbrarOpen, setTimbrarOpen,
     enviarOpen, setEnviarOpen, sustituirOpen, setSustituirOpen,
+    refacturarOpen, setRefacturarOpen,
     cancelarOpen, setCancelarOpen, eliminarOpen, setEliminarOpen,
     consultarOpen, setConsultarOpen,
     recordatorioOpen, setRecordatorioOpen,
@@ -105,6 +106,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
                 onRegistrarPago={() => setPagoOpen(true)}
                 onTimbrarRep={handleTimbrarRep}
                 onSustituir={() => setSustituirOpen(true)}
+                onRefacturar={() => setRefacturarOpen(true)}
                 onCancelar={() => setCancelarOpen(true)}
                 onEliminar={() => setEliminarOpen(true)}
                 onConsultar={() => setConsultarOpen(true)}
@@ -150,6 +152,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         enviarOpen={enviarOpen} setEnviarOpen={setEnviarOpen}
         sustituirOpen={sustituirOpen} setSustituirOpen={setSustituirOpen}
         cancelarOpen={cancelarOpen} setCancelarOpen={setCancelarOpen}
+        refacturarOpen={refacturarOpen} setRefacturarOpen={setRefacturarOpen}
       />
 
       <FacturaDetalleFooterDialogs

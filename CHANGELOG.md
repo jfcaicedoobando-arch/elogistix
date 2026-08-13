@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.585.0] - 2026-08-13
+- **Asistente visual "Refacturar a otro receptor" (Etapa 2).** Desde el detalle de la factura, en "Más acciones", ahora hay un asistente de 5 pasos que guía todo el caso cuando el cliente pagó desde la empresa equivocada.
+- **Los 5 pasos**: 1) diagnóstico (cliente destino, ruta fiscal 01/02 y motivo), 2) cancelar el complemento de pago (REP), 3) crear y timbrar la factura al receptor correcto, 4) cancelar el CFDI original, 5) reasignar el pago registrando la empresa que realmente depositó.
+- **No se puede avanzar con pasos incompletos**: cada etapa avisa en el pie del modal qué falta (REP vivo, factura nueva sin timbrar, original aún vigente, pago sin seleccionar).
+- **El avance se guarda**: si sales del asistente para timbrar la factura nueva, al volver retomas en el mismo paso.
+
 ## [13.584.0] - 2026-08-13
 - **Refacturar a otro receptor (Etapa 1: base de datos).** Cuando un cliente paga desde una empresa equivocada, el ERP ya guarda el caso completo: factura original, cliente destino, ruta fiscal (01 sustitución o 02 factura nueva), motivo, embarque y avance del proceso.
 - **Se registra el ordenante real del depósito** (nombre y RFC) cuando el pago viene de una empresa distinta a la que se factura.

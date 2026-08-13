@@ -13,7 +13,7 @@
  */
 import {
   Stamp, Mail, FileText, FileCode2, Trash2, Replace, Ban,
-  FileArchive, RefreshCw, HandCoins, SearchCheck, ExternalLink,
+  FileArchive, RefreshCw, HandCoins, SearchCheck, ExternalLink, Users,
 } from "lucide-react";
 
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
@@ -37,6 +37,7 @@ interface Props {
   onRegistrarPago: () => void;
   onTimbrarRep: () => void;
   onSustituir: () => void;
+  onRefacturar: () => void;
   onCancelar: () => void;
   onEliminar: () => void;
   onConsultar: () => void;
@@ -133,6 +134,11 @@ function buildMore(props: Props, primaryId: string | null): DetalleActionItem[] 
 
   if (flags.puedeSustituirCfdi) {
     items.push({ id: "sustituir", label: "Sustituir CFDI", icon: Replace, onClick: props.onSustituir });
+    // Ola 12 — refacturación a otro receptor (cliente pagó desde otra empresa).
+    items.push({
+      id: "refacturar", label: "Refacturar a otro receptor", icon: Users,
+      onClick: props.onRefacturar,
+    });
   }
   if (flags.puedeCancelarCfdi) {
     items.push({
