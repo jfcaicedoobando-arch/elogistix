@@ -33,13 +33,16 @@ export function ProveedorAlertasCard({ alertas }: { alertas: AlertasProveedor })
   }
 
   return (
-    <div className="space-y-2">
+    <div
+      className="space-y-2"
+      role="status"
+      aria-label={`${items.length} ${items.length === 1 ? "alerta" : "alertas"} del proveedor`}
+    >
       {items.map((a) => {
         const Icono = a.severidad === "info" ? Info : AlertTriangle;
         return (
           <div
             key={a.id}
-            role="alert"
             className={cn("flex items-start gap-3 rounded-md border px-3 py-2.5", TONO[a.severidad])}
           >
             <Icono className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />

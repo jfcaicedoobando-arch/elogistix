@@ -8,6 +8,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -84,8 +85,8 @@ export function SubirDocumentoProveedorDialog({
           <Button type="button" variant="outline" onClick={() => cerrar(false)}>
             Cancelar
           </Button>
-          <Button type="submit" form={FORM_ID} disabled={subir.isPending}>
-            {subir.isPending ? "Subiendo…" : "Guardar documento"}
+          <Button type="submit" form={FORM_ID} loading={subir.isPending}>
+            Guardar documento
           </Button>
         </>
       }
@@ -122,21 +123,26 @@ export function SubirDocumentoProveedorDialog({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="doc-fecha">Fecha del documento</Label>
-            <Input id="doc-fecha" type="date" value={fechaDocumento}
-              onChange={(e) => setFechaDocumento(e.target.value)} />
+            <DatePickerMx id="doc-fecha" value={fechaDocumento}
+              onChange={setFechaDocumento} max={fechaVencimiento || undefined}
+              aria-label="Fecha del documento" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="doc-vence">Vigente hasta (opcional)</Label>
-            <Input id="doc-vence" type="date" value={fechaVencimiento}
-              onChange={(e) => setFechaVencimiento(e.target.value)} />
+            <DatePickerMx id="doc-vence" value={fechaVencimiento}
+              onChange={setFechaVencimiento} min={fechaDocumento || undefined}
+              aria-label="Vigente hasta" />
           </div>
         </div>
       </FormDialogSection>
 
       <FormDialogSection title="Notas">
-        <Textarea value={notas} onChange={(e) => setNotas(e.target.value)}
-          placeholder="Referencia interna, quién lo envió, etc." rows={3} />
-        {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+        <div className="space-y-2">
+          <Label htmlFor="doc-notas">Notas (opcional)</Label>
+          <Textarea id="doc-notas" value={notas} onChange={(e) => setNotas(e.target.value)}
+            placeholder="Referencia interna, quién lo envió, etc." rows={3} />
+        </div>
+        {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
       </FormDialogSection>
     </FormDialogShell>
   );

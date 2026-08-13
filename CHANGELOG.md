@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.573.0] - 2026-08-13
+- **Ola 12 · Sprint 02 — Accesibilidad y UX mecánica en Proveedor 360** (R3UX-03..07): pulido de "manijas y letreros" para que todos los usuarios, incluidos los que usan lector de pantalla, operen igual de rápido.
+  - El modal de documentos del proveedor usa `DatePickerMx` (DD/MM/YYYY) en lugar de fechas nativas, con rango cruzado min/max (R3UX-03).
+  - Notas del modal con etiqueta ligada, error anunciado con `role="alert"` y botón de guardar con spinner estándar (R3UX-04).
+  - La gráfica de tendencia toma sus colores de `chartTokens` y suma resumen accesible + detalle por mes para lectores de pantalla (R3UX-05).
+  - Las alertas de Salud dejan de anunciarse una por una: ahora hay una sola región `role="status"` con el conteo (R3UX-06).
+  - Las filas navegables de Operaciones y Movimientos anuncian a dónde llevan (`Ver embarque…` / `Ver factura…`) (R3UX-07).
+
 ## [13.572.0] - 2026-08-13
 - **Ola 12 · Sprint 01 — Toolchain y documentación** (R3TC-02/03/04, R3BD-07/08): limpieza de "herramientas del taller", sin cambios visibles para el usuario. Como afilar las sierras y ordenar el manual antes de la siguiente obra.
   - `audit:all` ahora corre 11 guardarraíles: se sumaron `audit:schema-functions` y `audit:manifest`, que sólo estaban cableados en CI (R3TC-02).
