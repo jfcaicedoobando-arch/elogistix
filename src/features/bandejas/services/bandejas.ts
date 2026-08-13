@@ -51,6 +51,8 @@ export interface CarteraPendienteRow {
   saldo: number;
   ultimo_contacto: string | null;
   estado: string;
+  /** v13.592.0: trámite de cancelación ante el SAT (none|pending|verifying|…). */
+  cancellation_status?: string | null;
 }
 
 export async function fetchCxpPorCapturar(): Promise<CxpPorCapturarRow[]> {
