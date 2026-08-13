@@ -13,6 +13,7 @@ import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
+import { marcarTimeoutCancelacionRep } from "./timeoutCancelacionRep.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -98,14 +99,16 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     cancelResp = await withFacturapiTimeout("invoices.cancel", facturapi.invoices.cancel(pago.facturapi_rep_id, cancelPayload)) as FapiCancelResponse;
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
-      await registrarBitacoraEdge(supabase, {
+      // R3EF-01: marcar verifying para que el cron adopte la fila (patrón REF-01).
+      await marcarTimeoutCancelacionRep({
+        supabase,
+        pagoId: pago.id,
         organizationId: pago.organization_id,
         usuarioId: userData.user.id,
         usuarioEmail: userData.user.email,
-        modulo: "facturacion",
-        accion: "facturapi_rep_cancelar_timeout",
-        entidadId: pago.id,
-        detalles: { op: err.op, timeout_ms: err.timeoutMs },
+        motivo: body.motivo,
+        op: err.op,
+        timeoutMs: err.timeoutMs,
       });
       return json({ error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message }, 504);
     }
