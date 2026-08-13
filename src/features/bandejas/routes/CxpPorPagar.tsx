@@ -35,8 +35,6 @@ import {
   type CxpFilters,
 } from "./_sections/cxpPorPagarList";
 
-
-
 export default function CxpPorPagar() {
   const { data = [], isLoading, isError, refetch } = useCxpPorPagar();
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
