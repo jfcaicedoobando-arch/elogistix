@@ -787,6 +787,78 @@ export type Database = {
           },
         ]
       }
+      cliente_documentos: {
+        Row: {
+          archivo: string
+          cliente_id: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          fecha_documento: string | null
+          fecha_vencimiento: string | null
+          id: string
+          mime_type: string | null
+          nombre: string
+          notas: string | null
+          organization_id: string
+          tamano_bytes: number | null
+          tipo: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          archivo: string
+          cliente_id: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_documento?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          mime_type?: string | null
+          nombre: string
+          notas?: string | null
+          organization_id: string
+          tamano_bytes?: number | null
+          tipo: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          archivo?: string
+          cliente_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_documento?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          mime_type?: string | null
+          nombre?: string
+          notas?: string | null
+          organization_id?: string
+          tamano_bytes?: number | null
+          tipo?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_documentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_documentos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           ciudad: string
@@ -6171,6 +6243,78 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "proveedor_alias_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proveedor_contactos: {
+        Row: {
+          area: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          email: string
+          es_principal: boolean
+          extension: string
+          id: string
+          nombre: string
+          notas: string | null
+          organization_id: string
+          proveedor_id: string
+          puesto: string
+          telefono: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email?: string
+          es_principal?: boolean
+          extension?: string
+          id?: string
+          nombre: string
+          notas?: string | null
+          organization_id: string
+          proveedor_id: string
+          puesto?: string
+          telefono?: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email?: string
+          es_principal?: boolean
+          extension?: string
+          id?: string
+          nombre?: string
+          notas?: string | null
+          organization_id?: string
+          proveedor_id?: string
+          puesto?: string
+          telefono?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proveedor_contactos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedor_contactos_proveedor_id_fkey"
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
