@@ -132,6 +132,6 @@ export function clasificarComparativo(filas: ComparativoConcepto[]): Comparativo
     .sort((a, b) => b.diffPct - a.diffPct);
 }
 
-export type { SeveridadAlerta, AlertaProveedor } from "./alertasProveedor";
+export type { SeveridadAlerta } from "./alertasProveedor";
 export { construirAlertas } from "./alertasProveedor";
 

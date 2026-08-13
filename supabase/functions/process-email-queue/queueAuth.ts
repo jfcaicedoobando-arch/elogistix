@@ -2,7 +2,7 @@
  * Helpers de auth, configuración y DLQ para process-email-queue.
  * Extraído del index.ts para reducir complejidad ciclomática.
  */
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
 declare const Deno: { env: { get(key: string): string | undefined } }
 

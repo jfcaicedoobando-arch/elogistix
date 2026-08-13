@@ -5,7 +5,7 @@
  * Multi-tenant: la key se resuelve por `_shared/facturapiAuth.ts` (vault o env).
  * No expone la key al cliente; sólo devuelve `{ ok, ambiente, facturapi_org_id, nombre }`.
  */
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { basicAuthHeader, FACTURAPI_BASE, resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";

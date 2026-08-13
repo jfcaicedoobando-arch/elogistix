@@ -4,7 +4,6 @@
  *
  * Auth: requiere header X-Cron-Secret == CRON_SECRET (cron-only).
  */
-// @ts-expect-error Deno remote import
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
@@ -27,7 +26,6 @@ Deno.serve(async (req) => {
 
   const log = createLogger(req, "auditoria-snapshot-daily");
 
-  // @ts-expect-error Deno global
   const cronSecret = Deno.env.get("CRON_SECRET");
   const headerSecret = req.headers.get("X-Cron-Secret");
   if (!checkCronSecret(cronSecret, headerSecret)) {
@@ -42,9 +40,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // @ts-expect-error Deno global
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    // @ts-expect-error Deno global
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(supabaseUrl, serviceKey);
 

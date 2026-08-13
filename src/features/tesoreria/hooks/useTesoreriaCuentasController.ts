@@ -11,7 +11,7 @@ import {
 import type { Database } from "@/integrations/supabase/types";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { todayLocalISO } from "@/lib/date/today";
-import { validarDatosBancarios } from "@/features/proveedor/domain/datosBancarios";
+import { validarDatosBancarios } from "@/lib/domain/datosBancarios";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 export type Moneda = Database["public"]["Enums"]["moneda"];

@@ -6,7 +6,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/formatters";
-import { filtrarEventosVisiblesCliente } from "@/features/portal/domain/eventosVisiblesCliente";
+import { filtrarEventosVisiblesCliente } from "@/lib/domain/eventosVisiblesCliente";
 import type { Tables } from "@/types/db";
 
 // v13.301.90 (Fase Q.1): portal no expone `deleted_at`/`deleted_by`.

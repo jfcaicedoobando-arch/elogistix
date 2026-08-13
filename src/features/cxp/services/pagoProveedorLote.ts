@@ -79,6 +79,31 @@ export interface ValidacionLote {
   totalRepartido: number;
 }
 
+/**
+ * RTC-01: reglas por renglón extraídas de `validarLote` (límite de complejidad).
+ * RNF-06 (espejo RG4-6 de CxC): una misma factura no puede aparecer dos veces,
+ * y ningún renglón puede exceder el saldo de su factura.
+ */
+function errorRenglonesLote(
+  facturas: FacturaLoteCandidata[],
+  conMonto: RenglonLote[],
+): string | null {
+  const vistos = new Set<string>();
+  for (const r of conMonto) {
+    if (vistos.has(r.factura_id)) {
+      const folio = facturas.find((x) => x.factura_id === r.factura_id)?.folio_proveedor;
+      const etiqueta = folio ? `La factura ${folio}` : "Una de las facturas";
+      return `${etiqueta} aparece más de una vez en el reparto: deja un solo renglón por factura.`;
+    }
+    vistos.add(r.factura_id);
+    const f = facturas.find((x) => x.factura_id === r.factura_id);
+    if (f && r.monto > round2(f.saldo) + 0.009) {
+      return `El importe asignado a la factura ${f.folio_proveedor ?? ""} excede su saldo.`;
+    }
+  }
+  return null;
+}
+
 /** Validaciones de negocio del lote, espejo de las del pago individual. */
 export function validarLote(
   facturas: FacturaLoteCandidata[],
@@ -109,28 +134,9 @@ export function validarLote(
   if (conMonto.length < 2) {
     return { error: "El importe debe alcanzar para al menos dos facturas.", totalRepartido };
   }
-  // Ola 11 · RNF-06 (espejo RG4-6 de CxC): una misma factura no puede
-  // aparecer dos veces en el reparto.
-  const vistos = new Set<string>();
-  for (const r of conMonto) {
-    if (vistos.has(r.factura_id)) {
-      const folio = facturas.find((x) => x.factura_id === r.factura_id)?.folio_proveedor;
-      const etiqueta = folio ? `La factura ${folio}` : "Una de las facturas";
-      return {
-        error: `${etiqueta} aparece más de una vez en el reparto: deja un solo renglón por factura.`,
-        totalRepartido,
-      };
-    }
-    vistos.add(r.factura_id);
-  }
-  for (const r of conMonto) {
-    const f = facturas.find((x) => x.factura_id === r.factura_id);
-    if (f && r.monto > round2(f.saldo) + 0.009) {
-      return {
-        error: `El importe asignado a la factura ${f.folio_proveedor ?? ""} excede su saldo.`,
-        totalRepartido,
-      };
-    }
+  const errorRenglones = errorRenglonesLote(facturas, conMonto);
+  if (errorRenglones) {
+    return { error: errorRenglones, totalRepartido };
   }
   // Ola 11 · RNF-02: cuadre exacto tras round2 (canon de dinero, sin tolerancia).
   if (totalRepartido > round2(total)) {

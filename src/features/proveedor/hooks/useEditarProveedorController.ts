@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { validarDatosBancarios } from "@/features/proveedor/domain/datosBancarios";
+import { validarDatosBancarios } from "@/lib/domain/datosBancarios";
 import type { Enums, Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 type TipoProveedor = Enums<"tipo_proveedor">;

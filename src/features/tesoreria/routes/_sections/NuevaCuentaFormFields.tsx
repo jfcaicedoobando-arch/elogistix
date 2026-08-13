@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type { useTesoreriaCuentasController, Moneda } from "@/features/tesoreria/hooks/useTesoreriaCuentasController";
-import { validarDatosBancarios } from "@/features/proveedor/domain/datosBancarios";
+import { validarDatosBancarios } from "@/lib/domain/datosBancarios";
 
 type Controller = ReturnType<typeof useTesoreriaCuentasController>;
 

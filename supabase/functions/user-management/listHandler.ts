@@ -2,7 +2,7 @@
  * Handler `list`: listado de usuarios con scope por organización.
  * Extraído de `handlers.ts` para respetar Power-of-10.
  */
-import { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 

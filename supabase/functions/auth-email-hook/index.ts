@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
 import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import { initSentryEdge, captureEdgeException } from '../_shared/sentry.ts'
 import {
   EMAIL_SUBJECTS,
@@ -46,6 +46,48 @@ interface AuthHookPayload {
 
 
 
+/**
+ * RTC-01: verificación + parseo del webhook extraídos del handler para bajar
+ * su complejidad ciclomática (límite 16). Devuelve el payload o la respuesta
+ * de error ya formada.
+ */
+async function verificarYParsear(
+  req: Request,
+  apiKey: string,
+): Promise<{ payload: AuthHookPayload } | Response> {
+  try {
+    const verified = await verifyWebhookRequest({
+      req,
+      secret: apiKey,
+      parser: parseEmailWebhookPayload,
+    })
+    return { payload: verified.payload as AuthHookPayload }
+  } catch (error) {
+    return respuestaErrorWebhook(error)
+  }
+}
+
+/** Traduce un fallo de verificación/parseo a la respuesta HTTP correspondiente. */
+function respuestaErrorWebhook(error: unknown): Response {
+  const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' }
+  if (error instanceof WebhookError) {
+    const esFirma = error.code === 'invalid_signature' ||
+      error.code === 'missing_timestamp' ||
+      error.code === 'invalid_timestamp' ||
+      error.code === 'stale_timestamp'
+    if (esFirma) {
+      console.error('Invalid webhook signature', { error: error.message })
+      return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 401, headers: jsonHeaders })
+    }
+    if (error.code === 'invalid_payload' || error.code === 'invalid_json') {
+      console.error('Invalid webhook payload', { error: error.message })
+      return new Response(JSON.stringify({ error: 'Invalid webhook payload' }), { status: 400, headers: jsonHeaders })
+    }
+  }
+  console.error('Webhook verification failed', { error })
+  return new Response(JSON.stringify({ error: 'Invalid webhook payload' }), { status: 400, headers: jsonHeaders })
+}
+
 // Webhook handler - verifies signature and sends email
 async function handleWebhook(req: Request): Promise<Response> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
@@ -58,45 +100,11 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Verify signature + timestamp, then parse payload.
-  let payload: AuthHookPayload
-  let run_id = ''
-  try {
-    const verified = await verifyWebhookRequest({
-      req,
-      secret: apiKey,
-      parser: parseEmailWebhookPayload,
-    })
-    payload = verified.payload as AuthHookPayload
-    run_id = payload.run_id ?? ''
-  } catch (error) {
-    if (error instanceof WebhookError) {
-      switch (error.code) {
-        case 'invalid_signature':
-        case 'missing_timestamp':
-        case 'invalid_timestamp':
-        case 'stale_timestamp':
-          console.error('Invalid webhook signature', { error: error.message })
-          return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-            status: 401,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        case 'invalid_payload':
-        case 'invalid_json':
-          console.error('Invalid webhook payload', { error: error.message })
-          return new Response(
-            JSON.stringify({ error: 'Invalid webhook payload' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-      }
-    }
-
-    console.error('Webhook verification failed', { error })
-    return new Response(
-      JSON.stringify({ error: 'Invalid webhook payload' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
+  // Verify signature + timestamp, then parse payload (ver verificarYParsear).
+  const verificado = await verificarYParsear(req, apiKey)
+  if (verificado instanceof Response) return verificado
+  const payload = verificado.payload
+  const run_id = payload.run_id ?? ''
 
   if (!run_id) {
     console.error('Webhook payload missing run_id')

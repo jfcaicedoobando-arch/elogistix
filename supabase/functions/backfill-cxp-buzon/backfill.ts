@@ -4,7 +4,7 @@
  * Idempotente: sólo toca lo que está vacío.
  */
 // @ts-expect-error Deno remote import
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { parseConceptosCfdi } from "./cfdiConceptos.ts";
 
 const BUCKET_INBOX = "cxp-inbox";

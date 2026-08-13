@@ -4,7 +4,7 @@
  * complejidad del handler principal.
  */
 import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
-import type { createClient } from 'npm:@supabase/supabase-js@2'
+import type { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import { MAX_RETRIES, moveToDlq } from './queueAuth.ts'
 
 type Supabase = ReturnType<typeof createClient>

@@ -5,7 +5,7 @@
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { NuevoProveedorForm } from "./useNuevoProveedorController.constants";
 // P2-1 (R5): validación bancaria compartida con el modal de edición.
-import { validarDatosBancarios } from "@/features/proveedor/domain/datosBancarios";
+import { validarDatosBancarios } from "@/lib/domain/datosBancarios";
 
 
 export interface PayloadValidado {

@@ -10,7 +10,7 @@
  * Regla: un destinatario explícito debe pertenecer al cliente — estar en
  * `contactos_cliente.email` o ser `clientes.email` (comparación case-insensitive).
  */
-import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 export const DESTINATARIO_NO_PERMITIDO = 'DESTINATARIO_NO_PERMITIDO';
 

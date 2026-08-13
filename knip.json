@@ -18,9 +18,6 @@
   ],
   "ignoreDependencies": [
     "react-helmet-async",
-    "@babel/core",
-    "@types/babel__core",
-    "babel-plugin-react-compiler",
     "zod-validation-error"
   ],
   "ignoreExportsUsedInFile": true,
