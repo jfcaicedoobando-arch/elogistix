@@ -23,6 +23,7 @@ import {
 import { useRefacturarWizard } from "./useRefacturarWizard";
 import { RefacturarPasoActual } from "./RefacturarPasoActual";
 import { RefacturacionTrazabilidadCard } from "./RefacturacionTrazabilidadCard";
+import { RefacturacionPreviewPaso } from "./RefacturacionPreviewPaso";
 
 interface Props {
   facturaId: string | null;
@@ -89,6 +90,8 @@ export function DialogRefacturarReceptor({ facturaId, open, onOpenChange }: Prop
       }
     >
       <RefacturarPasoActual w={w} />
+
+      <RefacturacionPreviewPaso casoId={s.caso?.id ?? null} paso={s.paso} activo={open} />
 
       {s.caso && (
         <details className="mt-6 rounded-md border p-3">
