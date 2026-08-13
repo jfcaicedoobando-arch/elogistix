@@ -117,6 +117,8 @@ export function usePagoClienteLoteState(a: Args) {
     cuentaId: cuentaId || null,
     monedaCuenta: cuenta?.moneda ?? null,
     moneda: a.moneda,
+    fecha,
+    tcAplicable,
   });
   const sinAsignar = round2(totalNum - totalRepartido);
   const erroresRenglon = erroresPorRenglon(a.facturas, renglones);
