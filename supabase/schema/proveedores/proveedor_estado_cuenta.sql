@@ -95,7 +95,10 @@ BEGIN
     GROUP BY c.concepto_costo_id
   ),
   pagos_por_factura AS (
-    SELECT pp.proveedor_factura_id, SUM(pp.monto) AS pagado
+    -- Ola 12 · R3P-01: pagos convertidos a la moneda de la factura con el TC
+    -- del pago; los cross-moneda sin TC quedan fuera (SUM ignora NULL).
+    SELECT pp.proveedor_factura_id,
+           SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text)) AS pagado
     FROM public.pagos_proveedor pp
     JOIN public.proveedor_facturas pf ON pf.id = pp.proveedor_factura_id
     WHERE pf.proveedor_id = p_proveedor_id
