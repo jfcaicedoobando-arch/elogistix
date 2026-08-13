@@ -123,6 +123,9 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
               facturapiId={factura.facturapi_id ?? null}
               facturapiClaimAt={factura.facturapi_claim_at ?? null}
             />
+            {(cancellationStatus === "pending" || cancellationStatus === "verifying") && (
+              <CancelacionEnTramiteBanner estado={cancellationStatus} />
+            )}
             {mostrarSustitutaCancelada && factura.sustituida_por && (
               <SustitutaCanceladaBanner
                 sustitutaId={factura.sustituida_por}

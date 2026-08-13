@@ -15,14 +15,25 @@ interface Props {
   lote: LoteCobroSeleccion | null;
   onCobroLote: () => void;
   onLimpiar: () => void;
+  /** v13.592.0: alguna seleccionada tiene cancelación en trámite ante el SAT. */
+  hayEnCancelacion?: boolean;
 }
 
-function motivoInvalido(total: number): string {
+function motivoInvalido(total: number, hayEnCancelacion: boolean): string {
   if (total < 2) return "Selecciona al menos 2 facturas para un cobro en lote.";
+  if (hayEnCancelacion) {
+    return "Hay facturas con cancelación en trámite ante el SAT: no admiten cobros hasta que se resuelva.";
+  }
   return "Las facturas seleccionadas deben ser del mismo cliente y la misma moneda.";
 }
 
-export function CarteraSelectionBar({ total, lote, onCobroLote, onLimpiar }: Props) {
+export function CarteraSelectionBar({
+  total,
+  lote,
+  onCobroLote,
+  onLimpiar,
+  hayEnCancelacion = false,
+}: Props) {
   if (total === 0) return null;
 
   return (
