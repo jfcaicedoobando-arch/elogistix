@@ -10,6 +10,7 @@ import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { validarRequest, cargarPendientes, type Pendientes } from "./entrada.ts";
+import { reconcileOneRep } from "./reps.ts";
 import {
   descargarAcuse,
   resolveNextAction,
@@ -19,6 +20,7 @@ import {
   acumularOutcome,
   type FacturaPendiente,
   type NotaCreditoPendiente,
+  type RepPendiente,
   type FapiInvoiceStatus,
   type Resumen,
 } from "./reconcile.ts";
@@ -234,15 +236,17 @@ async function reconciliarPorOrg(supabase: SupabaseClient, pendientes: Pendiente
   const resumen = nuevoResumen();
   const porOrg = agruparPorOrg(pendientes.facturas);
   const ncPorOrg = agruparPorOrg(pendientes.notasCredito as unknown as FacturaPendiente[]);
-  // Unir las llaves de ambos mapas para resolver el cliente una sola vez por org.
-  const orgIds = new Set<string>([...porOrg.keys(), ...ncPorOrg.keys()]);
+  const repPorOrg = agruparPorOrg(pendientes.reps as unknown as FacturaPendiente[]);
+  // Unir las llaves de los mapas para resolver el cliente una sola vez por org.
+  const orgIds = new Set<string>([...porOrg.keys(), ...ncPorOrg.keys(), ...repPorOrg.keys()]);
 
   for (const orgId of orgIds) {
     const lote = porOrg.get(orgId) ?? [];
     const loteNc = (ncPorOrg.get(orgId) ?? []) as unknown as NotaCreditoPendiente[];
+    const loteRep = (repPorOrg.get(orgId) ?? []) as unknown as RepPendiente[];
     const resolved = await getFacturapiClient(supabase, orgId);
     if (!resolved.ok) {
-      resumen.errores += lote.length + loteNc.length;
+      resumen.errores += lote.length + loteNc.length + loteRep.length;
       continue;
     }
     const ctx: ReconcileCtx = {
@@ -253,6 +257,9 @@ async function reconciliarPorOrg(supabase: SupabaseClient, pendientes: Pendiente
     }
     for (const nc of loteNc) {
       await reconcileOneNc(ctx, nc);
+    }
+    for (const rep of loteRep) {
+      await reconcileOneRep(ctx, rep);
     }
   }
   return resumen;

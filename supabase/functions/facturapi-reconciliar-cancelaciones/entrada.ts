@@ -7,11 +7,15 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { corsHeaders } from "../_shared/cors.ts";
 import { captureEdgeMessage } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";
-import type { FacturaPendiente, NotaCreditoPendiente } from "./reconcile.ts";
+import type { FacturaPendiente, NotaCreditoPendiente, RepPendiente } from "./reconcile.ts";
 
 const LOTE_MAX = 200;
 
-export type Pendientes = { facturas: FacturaPendiente[]; notasCredito: NotaCreditoPendiente[] };
+export type Pendientes = {
+  facturas: FacturaPendiente[];
+  notasCredito: NotaCreditoPendiente[];
+  reps: RepPendiente[];
+};
 
 /** Guard de método + secreto cron. Devuelve Response para cortar, o null para seguir. */
 export function validarRequest(req: Request, cronSecret: string | undefined): Response | null {
@@ -31,6 +35,8 @@ export function validarRequest(req: Request, cronSecret: string | undefined): Re
  * EF-03: las NC también se reconcilian aquí — el webhook no las resuelve
  * (factura_not_found → ignored) y sin este barrido quedaban 'pending' para
  * siempre tras el silencio positivo de 72 h.
+ * REF-02: mismo tratamiento para los REP (pagos_factura.rep_cancellation_status),
+ * cuya única vía de cierre era el webhook.
  */
 export async function cargarPendientes(
   supabase: SupabaseClient,
@@ -64,11 +70,25 @@ export async function cargarPendientes(
     return { ok: false, res: jsonResponse({ error: "db_fetch_failed", detail: ncFetchErr.message }, 500) };
   }
 
+  // REF-02 (espejo EF-03 para REP): se excluyen los claims PENDING:<uuid> de
+  // EF-01 (REP aún no timbrado; los resuelve facturapi-recuperar-claim).
+  const { data: repPendientes, error: repFetchErr } = await supabase
+    .from("pagos_factura")
+    .select("id, organization_id, facturapi_rep_id, rep_cancellation_status")
+    .in("rep_cancellation_status", ["pending", "verifying"])
+    .not("facturapi_rep_id", "is", null)
+    .not("facturapi_rep_id", "like", "PENDING:%")
+    .limit(LOTE_MAX);
+  if (repFetchErr) {
+    return { ok: false, res: jsonResponse({ error: "db_fetch_failed", detail: repFetchErr.message }, 500) };
+  }
+
   return {
     ok: true,
     data: {
       facturas: (pendientes ?? []) as FacturaPendiente[],
       notasCredito: (ncPendientes ?? []) as NotaCreditoPendiente[],
+      reps: (repPendientes ?? []) as RepPendiente[],
     },
   };
 }
