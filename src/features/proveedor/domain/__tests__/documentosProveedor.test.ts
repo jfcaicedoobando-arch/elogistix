@@ -5,6 +5,7 @@ import {
   calcularExpediente,
   ultimoPorTipo,
   formatTamano,
+  validarVigenciaDocumento,
   type DocumentoProveedor,
 } from "../documentosProveedor";
 
