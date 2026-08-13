@@ -17,6 +17,8 @@ import { ProveedorDatosGeneralesCard } from "../components/ProveedorDatosGeneral
 import { ProveedorResumenCards } from "../components/ProveedorResumenCards";
 import { ProveedorAnticiposCard } from "@/features/anticipos-proveedor/components/ProveedorAnticiposCard";
 import { ProveedorDetalleTabs } from "./_sections/ProveedorDetalleTabs";
+import { esNacionalOrigen } from "@/features/proveedor/domain/documentosProveedor";
+
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
