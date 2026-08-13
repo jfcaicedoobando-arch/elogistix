@@ -23,6 +23,22 @@ interface Args {
   onDone: () => void;
 }
 
+/**
+ * RTC-01: T/C del lote extraído del hook principal para respetar el límite de
+ * complejidad. Política: DOF de la fecha de pago, en la moneda del lote (espejo
+ * de `useTcLote` en CxC). Sin T/C disponible el envío se bloquea.
+ */
+function useTcLotePago(open: boolean, moneda: string, fecha: string) {
+  const esExtranjera = moneda !== "MXN";
+  const pedirTc = open && esExtranjera;
+  const { data: tcDofRaw } = useTcDofPorFecha(pedirTc ? fecha : null, pedirTc);
+  const tcDof = esExtranjera ? tcDofRaw ?? null : null;
+  const tcAplicable = esExtranjera
+    ? (moneda === "EUR" ? tcDof?.eurMxn : tcDof?.usdMxn) ?? null
+    : null;
+  return { esExtranjera, tcAplicable, tcBloqueado: esExtranjera && !tcAplicable };
+}
+
 export function usePagoLoteState(a: Args) {
   const { data: cuentas = [] } = useCuentasBancarias(true);
   const registrar = usePagoProveedorLote();
@@ -52,17 +68,7 @@ export function usePagoLoteState(a: Args) {
     setRenglones(repartirFifo(a.facturas, saldoTotal).renglones);
   }, [a.open, a.facturas, a.proveedorOrigen, saldoTotal]);
 
-  // TC del pago = DOF de la fecha de pago (misma política que el pago individual).
-  const esExtranjera = a.moneda !== "MXN";
-  const pedirTc = a.open && esExtranjera;
-  const { data: tcDofRaw } = useTcDofPorFecha(pedirTc ? fecha : null, pedirTc);
-  const tcDof = esExtranjera ? tcDofRaw ?? null : null;
-  // Ola 11 · RFE-01/RNF-04: el T/C guardado es el de la MONEDA DEL LOTE (espejo
-  // de useTcLote en CxC). Sin T/C disponible el envío se bloquea.
-  const tcAplicable = esExtranjera
-    ? (a.moneda === "EUR" ? tcDof?.eurMxn : tcDof?.usdMxn) ?? null
-    : null;
-  const tcBloqueado = esExtranjera && !tcAplicable;
+  const { tcAplicable, tcBloqueado } = useTcLotePago(a.open, a.moneda, fecha);
 
   const totalNum = round2(Number(total) || 0);
   const cuentasMoneda = cuentas.filter((c) => c.moneda === a.moneda);
