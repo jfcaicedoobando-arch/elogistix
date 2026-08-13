@@ -138,35 +138,41 @@ export function useRefacturarWizard(facturaId: string | null, open: boolean, onC
 
   const handleContinuar = () => {
     if (bloqueo) return;
-    if (s.paso === 1) {
-      if (!s.caso) {
-        if (!facturaId || !clienteDestinoId) return;
-        s.abrir.mutate({ facturaId, clienteDestinoId, rutaFiscal, motivo });
-        return;
-      }
-      s.avanzar.mutate(2);
+    const accion = decidirAvance({
+      paso: s.paso,
+      facturaId,
+      casoId: s.caso?.id ?? null,
+      facturaNuevaId: s.caso?.factura_nueva_id ?? null,
+      clienteDestinoId,
+      pagoSeleccionadoId,
+      yaReasignado,
+    });
+    if (accion.tipo === "abrir") {
+      s.abrir.mutate({ facturaId: facturaId!, clienteDestinoId: clienteDestinoId!, rutaFiscal, motivo });
       return;
     }
-    if (s.paso === TOTAL_PASOS_REFACTURACION) {
-      if (yaReasignado) {
-        s.cerrar.mutate(false, { onSuccess: onClose });
-        return;
-      }
-      if (!pagoSeleccionadoId || !s.caso?.factura_nueva_id) return;
+    if (accion.tipo === "avanzar") {
+      s.avanzar.mutate(accion.paso);
+      return;
+    }
+    if (accion.tipo === "cerrar") {
+      s.cerrar.mutate(false, { onSuccess: onClose });
+      return;
+    }
+    if (accion.tipo === "reasignar") {
       s.reasignar.mutate(
         {
-          pagoId: pagoSeleccionadoId,
-          facturaDestinoId: s.caso.factura_nueva_id,
-          casoId: s.caso.id,
+          pagoId: accion.pagoId,
+          facturaDestinoId: accion.facturaDestinoId,
+          casoId: accion.casoId,
           ordenanteNombre,
           ordenanteRfc,
         },
         { onSuccess: () => s.cerrar.mutate(false, { onSuccess: onClose }) },
       );
-      return;
     }
-    s.avanzar.mutate(s.paso + 1);
   };
+
 
   const accionPendiente =
     s.abrir.isPending || s.avanzar.isPending || s.reasignar.isPending || s.cerrar.isPending;
