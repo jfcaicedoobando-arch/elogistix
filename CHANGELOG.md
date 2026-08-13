@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.589.3] - 2026-08-13
+- **Regularización de saldo con HK LS LIMITED.** Se registraron como pagadas 12 facturas históricas del proveedor (102,824.60 USD) que ya no aparecen en su estado de cuenta del 11/08/2026: el pago se hizo en una versión anterior del ERP y nunca se capturó.
+- Cada pago se registró con la fecha de emisión de su factura, marcado como ajuste histórico, sin cuenta bancaria, sin movimiento en bancos y sin REP (proveedor extranjero).
+- El saldo por pagar a HK LS LIMITED en el ERP baja de 335,089.60 a 232,265.00 USD, que cuadra exactamente con las 19 facturas coincidentes del estado de cuenta; siguen pendientes de captura 17 facturas por 172,303.00 USD.
+
 ## [13.589.2] - 2026-08-13
 - **Arreglos de CI.** Las tablas comparativas del asistente de refacturación (consistencia y saldos) usan el contrato visual estándar de tablas de detalle.
 - El controlador del asistente se movió a `hooks/` y sus módulos puros a `domain/`, como manda la arquitectura del proyecto.
