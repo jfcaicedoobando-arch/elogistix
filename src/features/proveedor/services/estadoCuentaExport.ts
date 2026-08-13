@@ -69,8 +69,7 @@ export function filasSaldosExport(
 /** CSV contable: encabezado con proveedor y periodo, detalle y totales. */
 export function estadoCuentaACsv(
   proveedorNombre: string,
-  desde: string,
-  hasta: string,
+  periodo: { desde: string; hasta: string },
   movimientos: readonly FilaMovimientoExport[],
   saldos: readonly { moneda: string; cargos: string; abonos: string; saldo: string }[],
   aging: readonly { moneda: string; etiqueta: string; saldo: string }[] = [],
@@ -93,7 +92,7 @@ export function estadoCuentaACsv(
   );
   const encabezado = toCsv(
     ["Proveedor", "Desde", "Hasta"],
-    [[proveedorNombre, formatDate(desde), formatDate(hasta)]],
+    [[proveedorNombre, formatDate(periodo.desde), formatDate(periodo.hasta)]],
   );
   return `${encabezado}\n\n${detalle}\n\n${totales}\n\n${antiguedad}`;
 }

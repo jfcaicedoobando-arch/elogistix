@@ -57,8 +57,7 @@ describe("estadoCuentaACsv", () => {
   it("neutraliza fórmulas y arma cuatro bloques", () => {
     const csv = estadoCuentaACsv(
       "HK LS Limited",
-      "2026-01-01",
-      "2026-01-31",
+      { desde: "2026-01-01", hasta: "2026-01-31" },
       filasMovimientosExport([movimiento]),
       filasSaldosExport([{ moneda: "usd", cargos: 1000, abonos: 0, saldo: 1000 }]),
       filasAgingExport([
@@ -81,8 +80,7 @@ describe("estadoCuentaACsv", () => {
   it("soporta estado de cuenta sólo-antigüedad (sin movimientos)", () => {
     const csv = estadoCuentaACsv(
       "HK LS Limited",
-      "2026-01-01",
-      "2026-01-31",
+      { desde: "2026-01-01", hasta: "2026-01-31" },
       [],
       [],
       filasAgingExport([

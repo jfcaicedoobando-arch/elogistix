@@ -47,8 +47,7 @@ export function descargarEstadoCuentaCsv(datos: DatosEstadoCuenta): void {
   try {
     const csv = estadoCuentaACsv(
       datos.proveedorNombre,
-      datos.desde,
-      datos.hasta,
+      { desde: datos.desde, hasta: datos.hasta },
       movs,
       filasSaldosExport(datos.saldos),
       aging,
