@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileX } from "lucide-react";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
@@ -21,6 +21,10 @@ export function ProveedorMovimientosTable({ movimientos }: Props) {
   type Mov = MovimientoConSaldo & { __idx?: number };
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // El rango de fechas o los filtros cambian el total de movimientos: regresar
+  // a la primera página para no mostrar una página vacía o desfasada.
+  useEffect(() => { setPage(0); }, [movimientos]);
 
   const filas: Mov[] = useMemo(
     () => movimientos.map((m, i) => ({ ...m, __idx: i })),
