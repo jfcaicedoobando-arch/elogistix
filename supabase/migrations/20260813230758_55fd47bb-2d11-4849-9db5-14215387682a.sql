@@ -1,9 +1,6 @@
--- Fuente canónica de public.cartera_pendiente() (Ola 6 · O6-SCHEMA).
--- 1:1 con supabase/migrations/20260818090100_ola5_rg413_n23_cartera_direccion_canon.sql.
--- Firma vigente: 16 columnas (factura_id … cancellation_status). NO renombrar columnas de salida (42P13).
--- v13.592.0: se agregó cancellation_status para excluir del cobro en lote las
--- facturas con cancelación en trámite ante el SAT (LC_FACTURA_EN_CANCELACION).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+-- Se agrega la columna de salida cancellation_status a cartera_pendiente().
+-- Cambio de firma de retorno ⇒ requiere DROP + CREATE (42P13).
+DROP FUNCTION IF EXISTS public.cartera_pendiente();
 
 CREATE OR REPLACE FUNCTION public.cartera_pendiente()
 RETURNS TABLE(
@@ -52,8 +49,6 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
   LEFT JOIN public.clientes c ON c.id = b.cliente_id
   LEFT JOIN public.embarques e ON e.id = b.embarque_id
   WHERE (b.total - b.pagado - b.nc_aplicadas) > 0.005
-    -- Ola 5 · RG4-13: sin filtro ad-hoc por org del cliente; RLS (SECURITY
-    -- INVOKER) ya acota por la org de las filas, canon v3.
   ORDER BY b.fecha_vencimiento ASC NULLS LAST
   LIMIT 500
 $function$;

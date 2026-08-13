@@ -431,6 +431,9 @@ jobs:
       - name: CxC guard - tests conductuales de sobrepago
         run: $PSQL -f supabase/tests/cxc_guard_sobrepago.sql
 
+      - name: CxC guard - factura con cancelacion en tramite no admite cobros
+        run: $PSQL -f supabase/tests/cxc_guard_factura_en_cancelacion.sql
+
       - name: Conversion de moneda - convertir_monto_pago_a_factura
         run: $PSQL -f supabase/tests/convertir_monto_pago.sql
 

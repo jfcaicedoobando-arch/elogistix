@@ -3,7 +3,7 @@
  * misma moneda y al menos dos facturas.
  */
 import { describe, it, expect } from "vitest";
-import { derivarLoteCobro } from "../carteraLote";
+import { derivarLoteCobro, hayEnTramiteCancelacion } from "../carteraLote";
 import type { CarteraRow } from "../carteraColumns";
 
 function row(over: Partial<CarteraRow>): CarteraRow {
@@ -32,6 +32,24 @@ describe("derivarLoteCobro", () => {
   it("devuelve null si hay monedas distintas", () => {
     const res = derivarLoteCobro([row({}), row({ factura_id: "f2", moneda: "USD" })]);
     expect(res).toBeNull();
+  });
+
+  it.each(["pending", "verifying"])(
+    "devuelve null si alguna tiene cancelación en trámite (%s)",
+    (cancellation_status) => {
+      const res = derivarLoteCobro([
+        row({}),
+        row({ factura_id: "f2", cancellation_status } as Partial<CarteraRow>),
+      ]);
+      expect(res).toBeNull();
+    },
+  );
+
+  it("hayEnTramiteCancelacion detecta la factura en trámite", () => {
+    expect(hayEnTramiteCancelacion([row({})])).toBe(false);
+    expect(
+      hayEnTramiteCancelacion([row({ cancellation_status: "verifying" } as Partial<CarteraRow>)]),
+    ).toBe(true);
   });
 
   it("arma el lote con las facturas seleccionadas", () => {

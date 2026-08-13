@@ -128,7 +128,10 @@ function puedeCobrarse(
 ): boolean {
   // v13.547.0: "Vencida"/"Parcialmente pagada" también admiten cobro (espejo de
   // assert_factura_viva_para_pago).
-  const vigenteCobrable = ESTADOS_COBRABLES.has(f.estado ?? "") && !estaCancelada;
+  // v13.592.0: una factura con cancelación en trámite ante el SAT (pending/
+  // verifying) NO admite cobros — espejo del candado LC_FACTURA_EN_CANCELACION.
+  const vigenteCobrable =
+    ESTADOS_COBRABLES.has(f.estado ?? "") && !estaCancelada && !enTramiteCancelacion(f);
   return vigenteCobrable && canRegistrarCobro && (ctx.saldo ?? 0) > 0.01;
 }
 
