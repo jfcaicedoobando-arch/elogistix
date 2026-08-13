@@ -74,6 +74,7 @@ export function usePagoLoteState(a: Args) {
     cuentaId: cuentaId || null,
     monedaCuenta: cuenta?.moneda ?? null,
     moneda: a.moneda,
+    fecha,
   });
   const error = tcBloqueado
     ? `Sin tipo de cambio DOF ${a.moneda}/MXN para esta fecha: no se puede registrar el pago en lote.`
