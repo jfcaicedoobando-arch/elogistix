@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.569.0] - 2026-08-13
+- **Chequeo de tipos restaurado en las funciones de servidor (Sprint 10 · RTC-01)**: CI vuelve a revisar los tipos de las edge functions (se corrigieron 45 errores históricos y se fijó una sola versión del cliente de base de datos). Como pasar la ortografía de todo el correo antes de enviarlo, en lugar de mandarlo a ciegas.
+- **Retiro del React Compiler (RTC-02)**: se quitaron plugins y dependencias que ya nadie usaba; la regla que impide volver a activarlo se queda como guardia.
+- **Limpieza de calidad para cerrar la Ola 11**: se simplificaron el hook y las validaciones del pago en lote y el webhook de correos de acceso (menos ramas por función), se movieron a la capa compartida el filtro de eventos visibles al cliente y la validación de datos bancarios (ya no se cruzan módulos) y se eliminó código exportado sin uso.
+
 ## [13.568.0] - 2026-08-13
 - **Prueba de conexión con FacturApi que sí se corta a tiempo (Sprint 7 · REF-08)**: antes el aviso de "tardó demasiado" salía a los 15 segundos pero la llamada seguía abierta por detrás; ahora la conexión se aborta de verdad. Si guardar el identificador de la organización falla, queda registrado en lugar de perderse en silencio.
 - **Nunca más doble timbrado al recuperar una factura atorada (REF-09)**: al reconciliar contra FacturApi, si la búsqueda queda incompleta (demasiadas facturas recientes), el sistema ya no asume "no existe" ni libera el candado; avisa y pide reintentar en unos minutos. Aplica a facturas, notas de crédito y REP.
