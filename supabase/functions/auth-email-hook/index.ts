@@ -177,6 +177,19 @@ async function handleWebhook(req: Request): Promise<Response> {
     recipient: payload.data.email,
     runId: run_id,
   })
+  // R3EF-03(a): fail-closed — sin fila en email_send_log no se puede
+  // deduplicar el reintento ni registrar el fallo del enqueue. El hook de
+  // Supabase Auth reintenta con el mismo run_id, así que el 500 es seguro.
+  if (dedupe.logError) {
+    await captureEdgeException(new Error('email_send_log upsert failed'), {
+      fn: 'auth-email-hook',
+      extra: { emailType, run_id },
+    })
+    return new Response(
+      JSON.stringify({ error: 'auth_email_log_unavailable' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
   if (dedupe.deduplicated) {
     console.log('Auth email hook deduplicated', { emailType, run_id })
     return new Response(
