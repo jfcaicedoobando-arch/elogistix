@@ -156,22 +156,30 @@ export function usePagoClienteLoteState(a: Args) {
   const submit = async () => {
     if (error) return;
     const aplicadas = renglones.filter((r) => r.monto > 0).map((r) => r.factura_id);
-    await registrar.mutateAsync({
-      cliente_id: a.clienteId,
-      fecha_pago: fecha,
-      moneda: a.moneda,
-      forma_pago: formaPago,
-      referencia,
-      cuenta_bancaria_id: cuentaId || null,
-      tipo_cambio_usd: tcAplicable,
-      notas,
-      // Ola 5 · RG4-5: el importe recibido viaja a la RPC (defensa en
-      // profundidad: la validación exacta también vive en la función).
-      importe_recibido: totalNum,
-      request_id: requestId,
-      renglones,
-      facturasConRep: await obtenerFacturasConRep(aplicadas),
-    });
+    try {
+      await registrar.mutateAsync({
+        cliente_id: a.clienteId,
+        fecha_pago: fecha,
+        moneda: a.moneda,
+        forma_pago: formaPago,
+        referencia,
+        cuenta_bancaria_id: cuentaId || null,
+        tipo_cambio_usd: tcAplicable,
+        notas,
+        // Ola 5 · RG4-5: el importe recibido viaja a la RPC (defensa en
+        // profundidad: la validación exacta también vive en la función).
+        importe_recibido: totalNum,
+        request_id: requestId,
+        renglones,
+        facturasConRep: await obtenerFacturasConRep(aplicadas),
+      });
+    } catch {
+      // RFE-08 (Ola 12): el onError del mutation ya notificó con
+      // traducirErrorCobroLote + notifyError; aquí sólo se cierra el rechazo
+      // de promesa no manejado y el diálogo queda abierto para reintentar
+      // (la RPC deduplica por request_id — RNF-01).
+      return;
+    }
     a.onOpenChange(false);
     a.onDone();
   };

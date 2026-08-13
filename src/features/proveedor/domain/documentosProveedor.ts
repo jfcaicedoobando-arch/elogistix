@@ -57,6 +57,18 @@ export const DOCUMENTOS_OBLIGATORIOS_EXTRANJERO: TipoDocumentoProveedor[] = [
 ];
 
 /**
+ * Ola 12 · R3P-14 — fuente única de verdad del origen del proveedor:
+ * `origen_proveedor` NULL se trata como NACIONAL hasta que se capture lo
+ * contrario. Espejo del `COALESCE(origen,'Nacional')` de la RPC
+ * `proveedor_inteligencia`. Antes la UI lo trataba como extranjero y la RPC
+ * como nacional (expediente "completo" con sólo el comprobante bancario vs.
+ * CLABE exigida en Salud).
+ */
+export function esNacionalOrigen(origen: string | null | undefined): boolean {
+  return origen !== "Extranjero";
+}
+
+/**
  * R3FE-07: tipos cuya vigencia caduca — la fecha de vencimiento es obligatoria
  * (la opinión de cumplimiento y las cartas bancarias caducan).
  */

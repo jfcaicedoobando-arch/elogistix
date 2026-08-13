@@ -101,20 +101,27 @@ export function usePagoLoteState(a: Args) {
 
   const submit = async () => {
     if (error) return;
-    await registrar.mutateAsync({
-      proveedor_id: a.proveedorId,
-      fecha_pago: fecha,
-      moneda: a.moneda,
-      metodo_pago: metodo,
-      referencia,
-      cuenta_bancaria_id: cuentaId || null,
-      tipo_cambio_usd: tcAplicable,
-      notas,
-      // Ola 11 · RNF-05 (espejo RG4-5): el importe de la transferencia viaja a
-      // la RPC; la validación exacta también vive en la función.
-      importe_recibido: totalNum,
-      renglones,
-    });
+    try {
+      await registrar.mutateAsync({
+        proveedor_id: a.proveedorId,
+        fecha_pago: fecha,
+        moneda: a.moneda,
+        metodo_pago: metodo,
+        referencia,
+        cuenta_bancaria_id: cuentaId || null,
+        tipo_cambio_usd: tcAplicable,
+        notas,
+        // Ola 11 · RNF-05 (espejo RG4-5): el importe de la transferencia viaja a
+        // la RPC; la validación exacta también vive en la función.
+        importe_recibido: totalNum,
+        renglones,
+      });
+    } catch {
+      // RFE-08 (Ola 12): el onError del mutation ya notificó con
+      // traducirErrorPagoProveedor + notifyError; aquí sólo se cierra el
+      // rechazo de promesa no manejado y el diálogo queda abierto.
+      return;
+    }
     a.onOpenChange(false);
     a.onDone();
   };
