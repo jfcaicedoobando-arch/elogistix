@@ -96,3 +96,26 @@ describe("accionesCotizacionPermitidas", () => {
     expect(r.rechazar).toBe(false);
   });
 });
+
+/**
+ * v13.554.0 — La base de datos (public.puede_escribir_cotizaciones) y la UI
+ * comparten la misma lista de roles: gerente_comercial gestiona cotizaciones.
+ */
+describe("gerente_comercial (alineación UI ↔ BD)", () => {
+  it("puede aceptar una cotización Enviada que no creó", () => {
+    const acciones = accionesCotizacionPermitidas("Enviada", 1000, "gerente_comercial", {
+      creadaPor: "otro-usuario",
+      usuarioActual: "yo",
+    });
+    expect(acciones.aceptar).toBe(true);
+    expect(acciones.rechazar).toBe(true);
+  });
+
+  it("no puede aceptar la que él mismo creó (segregación de funciones)", () => {
+    const acciones = accionesCotizacionPermitidas("Enviada", 1000, "gerente_comercial", {
+      creadaPor: "yo",
+      usuarioActual: "yo",
+    });
+    expect(acciones.aceptar).toBe(false);
+  });
+});
