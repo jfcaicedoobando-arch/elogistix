@@ -8353,6 +8353,7 @@ export type Database = {
       cartera_pendiente: {
         Args: never
         Returns: {
+          cancellation_status: string
           cliente_id: string
           cliente_nombre: string
           dias_vencido: number
