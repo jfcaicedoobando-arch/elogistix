@@ -5,7 +5,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import { formatDateMx } from "@/lib/formatters/dates";
+import { formatDate } from "@/lib/formatters/dates";
 import type { ConsultarFacturapiRep } from "@/features/facturacion/services/facturapi";
 import { ConsultaSatBadge } from "./ConsultaSatBadge";
 
@@ -42,7 +42,7 @@ export function ConsultaRepsTable({ reps }: { reps: ConsultarFacturapiRep[] | un
                   <div className="font-mono text-[11px] text-muted-foreground">{rep.uuid}</div>
                 )}
               </TableCell>
-              <TableCell>{rep.fecha_pago ? formatDateMx(rep.fecha_pago) : "—"}</TableCell>
+              <TableCell>{rep.fecha_pago ? formatDate(rep.fecha_pago) : "—"}</TableCell>
               <TableCell className="text-right">
                 {rep.monto == null ? "—" : formatCurrency(rep.monto, rep.moneda ?? "MXN")}
               </TableCell>
