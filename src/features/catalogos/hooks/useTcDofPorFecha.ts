@@ -21,6 +21,10 @@ export function useTcDofPorFecha(fecha: string | null, enabled = true) {
     enabled: enabled && !!fecha,
     staleTime: 15 * 60 * 1000,
     retry: 1,
+    // RFE-09 (Ola 11): degradación silenciosa, mismo criterio que UIA-08 en
+    // useExchangeRates. Sin TC la UI ya avisa y bloquea (traspasos y lotes);
+    // un fallo de este servicio de apoyo no debe disparar el toast global.
+    meta: { silentError: true },
   });
 }
 

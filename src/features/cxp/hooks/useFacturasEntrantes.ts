@@ -100,7 +100,9 @@ export function useAdjuntarXmlFacturaEntrante() {
 export function useEliminarFacturaEntrante() {
   const invalidar = useInvalidarEntrantes();
   return useMutation({
-    mutationFn: (row: Pick<FacturaEntranteRow, "id" | "archivo_path" | "xml_path">) => eliminarFacturaEntrante(row),
+    // RFE-10: incluye organization_id para la limpieza segura de storage.
+    mutationFn: (row: Pick<FacturaEntranteRow, "id" | "archivo_path" | "xml_path" | "organization_id">) =>
+      eliminarFacturaEntrante(row),
     onSuccess: () => {
       invalidar();
       notifySuccess(undefined, { title: "Archivo retirado del buzón" });
