@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.559.1] - 2026-08-13
+- **Corrección: el REP fallaba en facturas sin IVA** (`taxes es requerido`). Ahora el complemento de pago siempre envía el desglose de impuestos del documento relacionado y distingue facturas **exentas** (por ejemplo flete marítimo internacional) de las de **tasa 0%**. Los pagos con REP en error pueden reintentarse desde el historial de pagos.
+
 ## [13.559.0] - 2026-08-13
 - **Ola 4 — Inteligencia del proveedor**: la pestaña "Salud" ahora es un tablero completo con alertas proactivas, desempeño de facturación, tendencia de 12 meses y comparativo contra otros proveedores del mismo tipo.
 - **Alertas proactivas** ordenadas por severidad: facturas vencidas, datos bancarios incompletos cuando hay saldo por pagar, partidas de embarques cerrados que el proveedor nunca facturó, documentos vencidos y facturas o documentos por vencer.
