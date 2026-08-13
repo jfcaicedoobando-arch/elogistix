@@ -6,6 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import type { EstadoCuentaProveedor } from "@/features/proveedor/domain/estadoCuentaProveedor";
+import { estadoCuentaProveedorSchema } from "./readSchemas";
 
 const VACIO: EstadoCuentaProveedor = { partidas: [], facturas_huerfanas: [] };
 
@@ -17,7 +18,7 @@ export async function fetchProveedorEstadoCuenta(
     p_proveedor_id: proveedorId,
   });
   if (error) throw error;
-  const parsed = fromDb<EstadoCuentaProveedor | null>(data);
+  const parsed = fromDb(data ?? null, estadoCuentaProveedorSchema);
   return {
     partidas: parsed?.partidas ?? [],
     facturas_huerfanas: parsed?.facturas_huerfanas ?? [],

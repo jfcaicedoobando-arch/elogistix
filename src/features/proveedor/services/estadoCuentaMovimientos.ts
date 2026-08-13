@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import type { EstadoCuentaMovimientos } from "@/features/proveedor/domain/movimientosProveedor";
+import { estadoCuentaMovimientosSchema } from "./readSchemas";
 
 const VACIO: EstadoCuentaMovimientos = { movimientos: [], aging: [], saldos: [] };
 
@@ -20,7 +21,7 @@ export async function fetchProveedorMovimientos(
     p_hasta: hasta || undefined,
   });
   if (error) throw error;
-  const parsed = fromDb<EstadoCuentaMovimientos | null>(data);
+  const parsed = fromDb(data ?? null, estadoCuentaMovimientosSchema);
   return {
     movimientos: parsed?.movimientos ?? [],
     aging: parsed?.aging ?? [],

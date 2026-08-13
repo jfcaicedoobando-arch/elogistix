@@ -77,7 +77,7 @@ describe("fetchProveedorInteligencia", () => {
     expect(r.tipoProveedor).toBeNull();
   });
 
-  it("propaga el error de la RPC", async () => {
+  it("propaga el error de la RPC de inteligencia del proveedor", async () => {
     mock.setRpcResult("proveedor_inteligencia", {
       data: null,
       error: { message: "LC_ORG_SIN_CONTEXTO: no hay organización activa" },

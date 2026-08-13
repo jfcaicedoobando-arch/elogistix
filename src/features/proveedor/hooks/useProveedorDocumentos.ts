@@ -2,7 +2,7 @@
  * Ola 3 — Expediente documental del proveedor: lectura + subida + borrado.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   fetchProveedorDocumentos,
   subirDocumentoProveedor,
@@ -33,10 +33,16 @@ export function useSubirDocumentoProveedor(proveedorId: string) {
   return useMutation({
     mutationFn: (input: SubirDocumentoInput) => subirDocumentoProveedor(input),
     onSuccess: () => {
-      toast.success("Documento agregado al expediente");
+      notifySuccess(undefined, { title: "Documento agregado al expediente" });
       void qc.invalidateQueries({ queryKey: claveDocumentos(proveedorId) });
     },
-    onError: (e: unknown) => toast.error(mensajeError(e, "No se pudo subir el documento")),
+    onError: (e: unknown) =>
+      notifyError(undefined, {
+        title: "No se pudo subir el documento",
+        description: mensajeError(e, "Intenta de nuevo o revisa el formato del archivo."),
+        error: e,
+        method: "UPLOAD_PROVEEDOR_DOCUMENTO",
+      }),
   });
 }
 
@@ -45,9 +51,15 @@ export function useEliminarDocumentoProveedor(proveedorId: string) {
   return useMutation({
     mutationFn: (doc: { id: string; archivo: string }) => eliminarDocumentoProveedor(doc),
     onSuccess: () => {
-      toast.success("Documento eliminado del expediente");
+      notifySuccess(undefined, { title: "Documento eliminado del expediente" });
       void qc.invalidateQueries({ queryKey: claveDocumentos(proveedorId) });
     },
-    onError: (e: unknown) => toast.error(mensajeError(e, "No se pudo eliminar el documento")),
+    onError: (e: unknown) =>
+      notifyError(undefined, {
+        title: "No se pudo eliminar el documento",
+        description: mensajeError(e, "Intenta de nuevo en unos segundos."),
+        error: e,
+        method: "DELETE_PROVEEDOR_DOCUMENTO",
+      }),
   });
 }

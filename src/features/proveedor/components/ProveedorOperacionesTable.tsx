@@ -55,6 +55,7 @@ export function ProveedorOperacionesTable({ partidas, filtro = "todas" }: Props)
       columns={opCols}
       data={pageItems}
       rowKey={(o) => `${o.concepto_costo_id}-${o.__idx}`}
+      getRowHref={(o) => (o.embarque_id ? `/embarques/${o.embarque_id}` : null)}
       density={TABLE_DENSITY.embebida}
       pagination={{
         page: pageIndex,

@@ -2,7 +2,6 @@
  * Ola 2 — Columnas del estado de cuenta cronológico del proveedor.
  * Vive aparte de la tabla para respetar el límite de 200 líneas.
  */
-import { Link } from "react-router-dom";
 import type { ColumnDef } from "@/components/shared/DataTable";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { Badge } from "@/components/ui/badge";
@@ -19,20 +18,6 @@ const TONO_TIPO: Record<TipoMovimientoProveedor, string> = {
   "Anticipo aplicado": "bg-success/15 text-success border-success/30",
   Anticipo: "bg-muted text-muted-foreground border-border",
 };
-
-function LigaFolio({ m }: { m: MovimientoConSaldo }) {
-  if (m.tipo === "Factura") {
-    return (
-      <Link
-        to={`/compras/facturas/${m.ref_id}`}
-        className="text-accent underline-offset-2 hover:underline"
-      >
-        {m.folio}
-      </Link>
-    );
-  }
-  return <span>{m.folio}</span>;
-}
 
 export function movimientosProveedorColumns<T extends MovimientoConSaldo>(): ColumnDef<T, unknown>[] {
   return [
@@ -62,7 +47,7 @@ export function movimientosProveedorColumns<T extends MovimientoConSaldo>(): Col
       accessorFn: (m) => m.folio,
       enableSorting: true,
       meta: { width: COL_W.short, className: "font-medium" },
-      cell: ({ row }) => <LigaFolio m={row.original} />,
+      cell: ({ row }) => <span>{row.original.folio}</span>,
     },
     {
       id: "expediente",
@@ -74,17 +59,7 @@ export function movimientosProveedorColumns<T extends MovimientoConSaldo>(): Col
         className: "hidden md:table-cell",
         headerClassName: "hidden md:table-cell",
       },
-      cell: ({ row }) =>
-        row.original.embarque_id ? (
-          <Link
-            to={`/embarques/${row.original.embarque_id}`}
-            className="text-accent underline-offset-2 hover:underline"
-          >
-            {row.original.expediente || "—"}
-          </Link>
-        ) : (
-          <span>{row.original.expediente || "—"}</span>
-        ),
+      cell: ({ row }) => <span>{row.original.expediente || "—"}</span>,
     },
     {
       id: "referencia",

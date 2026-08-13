@@ -61,7 +61,7 @@ describe("subirDocumentoProveedor", () => {
         tipo: "Contrato",
         archivo,
       }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/rls/);
     expect(storage.deleteFile).toHaveBeenCalled();
   });
 });

@@ -30,7 +30,7 @@ describe("fetchProveedorEstadoCuenta", () => {
     expect(res).toEqual({ partidas: [], facturas_huerfanas: [] });
   });
 
-  it("propaga el error de la base", async () => {
+  it("propaga el error de la base al pedir el estado de cuenta", async () => {
     mock.setRpcResult("proveedor_estado_cuenta", { data: null, error: { message: "boom" } });
     await expect(fetchProveedorEstadoCuenta("p1")).rejects.toMatchObject({ message: "boom" });
   });
@@ -61,7 +61,7 @@ describe("fetchProveedorMovimientos", () => {
     expect(res).toEqual({ movimientos: [], aging: [], saldos: [] });
   });
 
-  it("propaga el error de la base", async () => {
+  it("propaga el error de la base al pedir los movimientos", async () => {
     mock.setRpcResult("proveedor_estado_cuenta_movimientos", {
       data: null,
       error: { message: "sin org" },
