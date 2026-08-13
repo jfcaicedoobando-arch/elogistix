@@ -1,5 +1,5 @@
 -- Fuente canónica de public.regenerar_movimiento_pago_proveedor(uuid) (Ola 6 · O6-SCHEMA).
--- 1:1 con la migración Ola 11 · RBD-07 (20260821040300_ola11_rbd07_regenerar_movimiento_tc).
+-- 1:1 con la migración Ola 11 · RBD-07 (20260813025053_b5b00098-bfa3-4be4-b352-9a049d381f70).
 -- Ola 6 · RG5-1: fail-closed — sin organización resuelta se niega (LC_SIN_ORG).
 -- Ola 11 · RBD-07: la rama cross-moneda exige el TC registrado en el pago
 --   (LC_PAGO_TC_REQUERIDO); nunca conversión 1:1 silenciosa (clase BL-04).
