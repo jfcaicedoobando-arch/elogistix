@@ -61,17 +61,26 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const tcCheck = validarTipoCambio(factura);
   if (tcCheck) return tcCheck;
 
-  const claim = await claimFactura(supabase, body.factura_id);
-  if (claim instanceof Response) return claim;
-
-  const sustituyeUuid = await resolverSustitucion(supabase, factura, claim.release);
+  // REF-06: validar TODO antes de clamar (patrón facturapi-emitir-nota-credito).
+  // Antes el claim se tomaba aquí y las salidas de getFacturapiClient /
+  // validation_failed no lo liberaban → la factura quedaba PENDING: y
+  // respondía 409 ya_timbrada durante ≥3 min.
+  const sustituyeUuid = await resolverSustitucion(supabase, factura);
   if (sustituyeUuid instanceof Response) return sustituyeUuid;
 
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
-  const context = await cargarContexto(supabase, body.factura_id, factura, sustituyeUuid, claim.claimTag);
+  const context = await cargarContexto(supabase, body.factura_id, factura, sustituyeUuid);
   if (context instanceof Response) return context;
+
+  // Claim atómico DESPUÉS de validar (comentario espejo de la familia NC): se
+  // toma aquí para no tener que liberarlo en los 422/412 de arriba. El tag
+  // viaja como external_id a FacturAPI para recuperar el CFDI si la edge muere
+  // tras timbrar y antes de persistir.
+  const claim = await claimFactura(supabase, body.factura_id);
+  if (claim instanceof Response) return claim;
+  context.external_id = claim.claimTag;
 
   return emitirYActualizar({
     supabase,
