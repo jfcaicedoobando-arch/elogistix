@@ -75,7 +75,19 @@ function ContenidoPortal({ state }: { state: PortalState }) {
     );
   }
 
-  if (!data?.proforma) return null;
+  // RUX-10: estado no contemplado por la edge (data sin proforma, estado_link
+  // desconocido) — nunca pantalla en blanco; patrón AvisoAccionable (v13.534).
+  if (!data?.proforma) {
+    return (
+      <AvisoAccionable
+        tono="error"
+        icon={<AlertTriangle className="h-5 w-5" />}
+        titulo="No pudimos cargar esta proforma"
+        descripcion={COPY_ENLACE.noDisponible}
+        pasos={COPY_PASOS.servicioNoDisponible}
+      />
+    );
+  }
 
   return (
     <>
@@ -94,7 +106,7 @@ export default function PortalProforma() {
 
   return (
     <div className="min-h-screen bg-muted/30 py-8 px-4">
-      <Seo title="Proforma para revisión — Libre Carga" description="Portal de aprobación de proformas" />
+      <Seo title="Proforma para revisión — Libre Carga" description="Portal de aprobación de proformas" noIndex />
       <div className="max-w-2xl mx-auto space-y-4">
         <DetailHeader
           backTo={null}

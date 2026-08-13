@@ -59,7 +59,9 @@ export async function fetchTrackingPublico(token: string): Promise<TrackingPubli
   const res = await fetch(url);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Error al cargar tracking");
+    // RUX-02: la edge devuelve `code` estable (not_found/expired/…); se
+    // prioriza sobre el texto (español) para traducir por código, no por literal.
+    throw new Error(body.code || body.error || "Error al cargar tracking");
   }
   return res.json();
 }

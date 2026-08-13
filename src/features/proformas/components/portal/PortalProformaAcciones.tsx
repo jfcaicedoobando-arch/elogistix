@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { COPY_ENLACE, COPY_PASOS, COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 
 interface Props {
@@ -51,9 +51,9 @@ export function PortalProformaAcciones({ submitting, onResponder, error }: Props
               <Button
                 className="flex-1"
                 onClick={() => void ejecutar("aceptada")}
-                disabled={submitting}
+                loading={submitting}
               >
-                {submitting ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
+                {!submitting && <CheckCircle2 className="h-4 w-4 mr-1.5" />}
                 Aceptar proforma
               </Button>
               <Button

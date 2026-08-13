@@ -16,20 +16,21 @@ type TrackingRpcResult = {
 
 export type TrackingOutcome =
   | { ok: true; embarque: unknown; eventos: unknown; documentos: unknown; organizacion: unknown }
-  | { ok: false; status: 400 | 404 | 410; error: string };
+  // RUX-02: `code` estable para que el frontend traduzca por código, no por literal.
+  | { ok: false; status: 400 | 404 | 410; error: string; code: "token_required" | "not_found" | "expired" };
 
 /** Pure helper: maps the RPC result to a typed outcome (no network). */
 export function classifyTrackingResult(
   token: string | null,
   result: TrackingRpcResult,
 ): TrackingOutcome {
-  if (!token) return { ok: false, status: 400, error: "Token requerido" };
+  if (!token) return { ok: false, status: 400, error: "Token requerido", code: "token_required" };
   const r = result;
   if (!r || r.error === "not_found") {
-    return { ok: false, status: 404, error: "Enlace de tracking no encontrado" };
+    return { ok: false, status: 404, error: "Enlace de tracking no encontrado", code: "not_found" };
   }
   if (r.error === "expired") {
-    return { ok: false, status: 410, error: "Este enlace de tracking ha expirado" };
+    return { ok: false, status: 410, error: "Este enlace de tracking ha expirado", code: "expired" };
   }
   return {
     ok: true,
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
     const token = url.searchParams.get("token");
     if (!token) {
       log.finish(400, "missing_token");
-      return errorResponse("Token requerido", 400);
+      return jsonResponse({ error: "Token requerido", code: "token_required" }, 400);
     }
 
     const supabase = createClient(
@@ -71,13 +72,13 @@ Deno.serve(async (req) => {
         status_code: 500,
         extra: { phase: "rpc_get_tracking_public" },
       });
-      return errorResponse("Error consultando tracking", 500);
+      return jsonResponse({ error: "Error consultando tracking", code: "unavailable" }, 500);
     }
 
     const outcome = classifyTrackingResult(token, data as TrackingRpcResult);
     if (!outcome.ok) {
       log.finish(outcome.status, "tracking_classified");
-      return errorResponse(outcome.error, outcome.status);
+      return jsonResponse({ error: outcome.error, code: outcome.code }, outcome.status);
     }
 
     log.finish(200, "tracking_served");

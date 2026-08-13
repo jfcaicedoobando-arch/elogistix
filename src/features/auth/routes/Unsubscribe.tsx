@@ -9,6 +9,7 @@ import {
 } from "@/features/auth/services/unsubscribeService";
 import { COPY_BAJA_CORREOS, COPY_ENLACE, COPY_PASOS } from "@/lib/copy/publicoCopy";
 import { AvisoAccionable } from "@/components/shared/states/AvisoAccionable";
+import { Seo } from "@/components/shared/Seo";
 
 type Status = "loading" | "valid" | "invalid" | "already" | "confirming" | "success" | "error";
 
@@ -59,6 +60,7 @@ export default function Unsubscribe() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Seo title="Cancelar suscripción — Libre Carga" noIndex />
       <Card className="max-w-md w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -67,6 +69,8 @@ export default function Unsubscribe() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* RUX-09: los cambios de estado se anuncian a lectores de pantalla. */}
+          <div role="status" aria-live="polite" className="space-y-4">
           {status === "loading" && (
             <p className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> {COPY_BAJA_CORREOS.validando}
@@ -114,9 +118,15 @@ export default function Unsubscribe() {
               titulo="No pudimos aplicar tu baja"
               descripcion={errorMsg}
               pasos={COPY_PASOS.bajaCorreosFalla}
+              accion={
+                <Button variant="outline" onClick={handleConfirm}>
+                  Reintentar
+                </Button>
+              }
               className="border-0 p-0"
             />
           )}
+          </div>
         </CardContent>
       </Card>
     </div>
