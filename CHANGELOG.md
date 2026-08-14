@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.607.1] - 2026-08-14
+- Ola 14 · Sprint 05 (cobertura): nueva suite `supabase/tests/rls/test_rls_refacturaciones_matriz.sql` (9 aserciones) que blinda R5BD-04 y R5BD-05: tesorero y ejecutivo_cobranza sin INSERT/UPDATE directo en `refacturaciones`, auxiliar_contable con escritura, SELECT intacto, aislamiento cross-tenant, FK colgante rechazada (23503) y contrato de la FK (`ON DELETE RESTRICT` + `NOT VALID`).
+- Suite registrada en el grupo `financiero` de `.github/workflows/rls-tests.yml` (el guardrail de matriz falla si una suite nueva no queda declarada).
+
 ## [13.607.0] - 2026-08-14
 - Ola 14 · Sprint 05 (BD P3): FK `pagos_factura_refacturacion_fk` (`pagos_factura.refacturacion_id` → `refacturaciones.id`, `ON DELETE RESTRICT`, `NOT VALID` con VALIDATE diferido tras saneo manual) (R5BD-05).
 - Policies INSERT/UPDATE de `refacturaciones` alineadas al set de `_assert_refacturador` (admin_org, admin, contador, auxiliar_contable del tenant + super_admin): tesorero y ejecutivo_cobranza ya no pueden escribir directo saltándose las validaciones SAT; SELECT intacto (R5BD-04).

@@ -1,15 +1,15 @@
 {
-  "version": "13.600.0",
-  "generatedAt": "2026-08-14T04:39:06.838Z",
+  "version": "13.607.1",
+  "generatedAt": "2026-08-14T16:00:40.697Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": []
   },
   "casts": {
-    "total": 2997,
+    "total": 3001,
     "bySeverity": {
-      "SAFE": 892,
+      "SAFE": 896,
       "LOW": 147,
       "MEDIUM": 1958,
       "HIGH": 0,
