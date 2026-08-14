@@ -229,6 +229,9 @@ jobs:
           M=$!
           bun run audit:schema-functions > /tmp/audit-schema-functions.log 2>&1 &
           F=$!
+          # v13.600.0 (R4BD-01/R4BD-03) — espejo == migración de mayor timestamp.
+          bun run audit:replay-mirror > /tmp/audit-replay-mirror.log 2>&1 &
+          P=$!
           bun run audit:manifest   > /tmp/audit-manifest.log   2>&1 &
           V=$!
           bun run audit:rpc-sync    > /tmp/audit-rpc-sync.log    2>&1 &
@@ -242,6 +245,7 @@ jobs:
           wait $S || { echo '❌ audit:schema';     cat /tmp/audit-schema.log;     fail=1; }
           wait $M || { echo '❌ audit:migrations'; cat /tmp/audit-migrations.log; fail=1; }
           wait $F || { echo '❌ audit:schema-functions'; cat /tmp/audit-schema-functions.log; fail=1; }
+          wait $P || { echo '❌ audit:replay-mirror'; cat /tmp/audit-replay-mirror.log; fail=1; }
           wait $V || { echo '❌ audit:manifest';   cat /tmp/audit-manifest.log;   fail=1; }
           wait $R || { echo '❌ audit:rpc-sync';    cat /tmp/audit-rpc-sync.log;    fail=1; }
           wait $N || { echo '❌ audit:sonner';      cat /tmp/audit-sonner.log;      fail=1; }

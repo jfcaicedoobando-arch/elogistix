@@ -32,13 +32,13 @@ Top 10 funciones más redefinidas — capturadas 1:1 desde la BD el 2026-07-23:
 | `registrar_pago_cliente_lote` | `facturacion/` | `20260821030800_ola11_lotes_paridad` (Ola 11 · RFE-02/03, RNF-01/02, RBD-08; acumulativa) |
 | `_cxp_desvincular_por_rechazo` | `cxp/` | `20260819090100` (RG5-3) |
 | `retirar_factura_entrante` + `reactivar_factura_entrante` | `cxp/` | `20260819090100` (RG5-4) |
-| `regenerar_movimiento_pago_proveedor` | `cxp/` | `20260813025053_b5b00098-bfa3-4be4-b352-9a049d381f70` (Ola 11 · RBD-07: TC requerido cross-moneda) |
+| `regenerar_movimiento_pago_proveedor` | `cxp/` | `20260824060100_ola13_replay_rbd07` (Ola 13 · R4BD-03: re-emite RBD-07 con timestamp posterior a `20260819090000`; cuerpo idéntico a `20260813025053`) |
 
 ## Altas Ola 11 (Proveedor 360 y paridad de lotes)
 
 | Función | Archivo | Migración canónica |
 | --- | --- | --- |
-| `registrar_pago_proveedor_lote(jsonb)` | `cxp/registrar_pago_proveedor_lote.sql` | `20260821030800_ola11_lotes_paridad` |
+| `registrar_pago_proveedor_lote(jsonb)` | `cxp/registrar_pago_proveedor_lote.sql` | `20260824060000_ola13_replay_lotes` (Ola 13 · R4BD-01: re-emite la versión Ola 12 S09 con guards `LC_LOTE_*`; cuerpo idéntico a `20260813185523`) |
 | `adjuntar_xml_factura_entrante(...)` | `cxp/adjuntar_xml_factura_entrante.sql` | `20260813031300_1f4a2b81-412f-49fb-b8dc-5fa802409b9b` |
 
 Otras fuentes canónicas presentes en el directorio (agregadas en olas
@@ -66,7 +66,7 @@ anteriores y no listadas arriba): `auditoria/costos_repetidos.sql`,
 | `proveedor_estado_cuenta_movimientos` | `proveedores/` | `20260824040000_ola13_r4bd05_p_offset_desde_el_final` (Ola 13 · R4BD-05; re-emite la final `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` del Sprint 10) |
 | `proveedor_estado_cuenta` | `proveedores/` | `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` (Sprint 10, acumulativa final sobre S06/S07) |
 | `proveedor_inteligencia` | `proveedores/` | `20260813185523_e6bf7655-2ca8-4b9b-b5a3-2f2629662bea` (Sprint 09, final; conserva R3P-17) |
-| `registrar_pago_proveedor_lote` | `cxp/` | ⚠ Triple divergencia R4BD-01: este espejo = Sprint 09 (`20260813185523_e6bf7655-…`, con guards `LC_LOTE_TC_REQUERIDO`/`LC_LOTE_FACTURA_MONEDA`); el replay limpio produce `20260821030800_ola11_lotes_paridad` (timestamp posterior, SIN guards). **Fix de código en Sprint 06 (Ola 13); este renglón se actualiza ahí.** |
+| `registrar_pago_proveedor_lote` | `cxp/` | `20260824060000_ola13_replay_lotes` (Ola 13 · R4BD-01; acumulativa sobre Sprint 09 / `20260813185523`. Vigilado por `audit:replay-mirror`) |
 | `a_mxn` | `proveedores/` | `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` (Sprint 10, R3FE-01) |
 | `monto_pago_en_moneda_factura` | `proveedores/` | `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` (Sprint 10, R3P-01/R3P-06) |
 | `saldo_factura_proveedor` | `proveedores/` | `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` (Sprint 10, R3P-01; el org guard R4BD-02 se añade en Sprint 06) |

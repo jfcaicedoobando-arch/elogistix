@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.600.0] - 2026-08-14
+- **Ola 13 · Sprint 06 (re-aplicación de guards en replay + guardrail de CI).**
+- R4BD-01: nueva migración `20260824060000_ola13_replay_lotes.sql` re-emite `registrar_pago_proveedor_lote` con los guards `LC_LOTE_TC_REQUERIDO` y `LC_LOTE_FACTURA_MONEDA`, que se perdían en instalaciones limpias porque `20260821030800_ola11_lotes_paridad` tiene timestamp posterior.
+- R4BD-03: nueva migración `20260824060100_ola13_replay_rbd07.sql` re-emite `regenerar_movimiento_pago_proveedor` con el guard `LC_PAGO_TC_REQUERIDO` (evita conversión 1:1 silenciosa cross-moneda) por el mismo motivo de orden de timestamps. Sin cambio de comportamiento en la BD en vivo.
+- Nuevo guardrail `bun run audit:replay-mirror` (`scripts/audit-replay-mirror.ts`), cableado en `audit:all` y en el job de auditorías de CI: verifica que cada espejo de `supabase/schema/` coincida con la migración de MAYOR timestamp que lo define. Probado en negativo (rompiendo un mensaje de error a propósito → falla).
+- `scripts/audit-replay-mirror-baseline.json`: 14 divergencias preexistentes toleradas como deuda documentada, para que sólo falle el drift NUEVO.
+- `supabase/schema/README.md` apunta las dos funciones a sus migraciones canónicas nuevas.
+
+
+
 ## [13.599.0] - 2026-08-14
 - **Ola 13 · Sprint 05 (matriz de roles en expediente de cliente y contactos de proveedor).**
 - R4BD-04: las escrituras y borrados de `cliente_documentos`, `proveedor_contactos` y de la carpeta `clientes/` del bucket `documentos` ahora exigen la matriz `admin`/`admin_org`/`operador`/`contador`/`super_admin` (antes bastaba pertenecer a la organización). Lectura sin cambios: org-scoped, bypass `super_admin` y `deleted_at IS NULL` intactos.
