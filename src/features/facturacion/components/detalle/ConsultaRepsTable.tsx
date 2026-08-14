@@ -4,6 +4,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
 import type { ConsultarFacturapiRep } from "@/features/facturacion/services/facturapi";
@@ -78,7 +79,7 @@ export function ConsultaRepsTable({ reps }: { reps: ConsultarFacturapiRep[] | un
         columns={columnas}
         data={reps}
         rowKey={(rep) => rep.pago_id}
-        density="compact"
+        density={TABLE_DENSITY.embebida}
         tableClassName="w-full"
       />
     </div>
