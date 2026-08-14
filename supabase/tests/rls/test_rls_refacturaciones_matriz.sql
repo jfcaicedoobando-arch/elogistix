@@ -41,6 +41,9 @@ DECLARE
   v_count int;
   v_def text;
   v_valid boolean;
+  v_sim jsonb;
+  pago_a uuid := gen_random_uuid();
+
 BEGIN
   -- ── Seed (como postgres, bypass RLS) ─────────────────────────────────────
   BEGIN
