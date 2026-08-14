@@ -11,6 +11,8 @@ import type { CategoriaCogsBuzon } from "@/features/cxp/hooks/useCategoriaCogsBu
 import { SugerenciasOperacionesBanda } from "./SugerenciasOperacionesBanda";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
+import { embarqueIdUnico } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
+import { AvisoAnticipoEmbarque } from "@/features/anticipos-proveedor/components/AvisoAnticipoEmbarque";
 
 type Ctl = ReturnType<typeof useNuevaFacturaProveedorForm>;
 
@@ -29,6 +31,10 @@ interface DatosProps {
 export function ColumnaDatosFactura({
   ctl, categorias, herencia, sinCostoCapturado, entrante, categoriaCogs,
 }: DatosProps) {
+  // Embarque al que apunta la captura: el del buzón o el único vinculado.
+  const embarqueCruce = entrante?.embarqueId ?? embarqueIdUnico(ctl.vinculos);
+  const expedienteCruce = entrante?.expediente ?? null;
+
   return (
     <div className="space-y-5 min-w-0">
       <FacturaProveedorFormFields
@@ -41,6 +47,14 @@ export function ColumnaDatosFactura({
         sinFechasEImportes
         categoriaCogs={categoriaCogs}
       />
+
+      {ctl.values.provId && embarqueCruce && (
+        <AvisoAnticipoEmbarque
+          proveedorId={ctl.values.provId}
+          embarqueId={embarqueCruce}
+          expediente={expedienteCruce}
+        />
+      )}
 
       {herencia && ctl.values.provId && (
         <SugerenciasOperacionesBanda

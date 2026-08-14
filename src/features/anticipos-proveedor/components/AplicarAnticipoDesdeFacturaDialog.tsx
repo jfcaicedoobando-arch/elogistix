@@ -5,6 +5,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRightLeft, AlertTriangle } from "lucide-react";
 import { evaluarDesajusteEmbarque } from "@/features/anticipos-proveedor/domain/avisoEmbarqueAnticipo";
+import {
+  esMismoEmbarque,
+  ordenarAnticiposPorEmbarque,
+} from "@/features/anticipos-proveedor/domain/ordenAnticiposPorEmbarque";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,27 +45,32 @@ export function AplicarAnticipoDesdeFacturaDialog({
 }: Props) {
 
   const aplicar = useAplicarAnticipo();
+  // Los anticipos del mismo expediente se ofrecen primero (cruce natural).
+  const anticiposOrdenados = useMemo(
+    () => ordenarAnticiposPorEmbarque(anticipos, facturaEmbarqueId ?? null),
+    [anticipos, facturaEmbarqueId],
+  );
   const [anticipoId, setAnticipoId] = useState("");
   const [monto, setMonto] = useState("0");
   const [fecha, setFecha] = useState(todayLocalISO());
 
   const anticipo = useMemo(
-    () => anticipos.find((a) => a.id === anticipoId) ?? null,
-    [anticipos, anticipoId],
+    () => anticiposOrdenados.find((a) => a.id === anticipoId) ?? null,
+    [anticiposOrdenados, anticipoId],
   );
 
   // Al abrir (o cambiar de anticipo) sugiere el menor entre saldo a favor y saldo de factura.
   useEffect(() => {
     if (!open) return;
-    if (!anticipoId && anticipos.length > 0) {
-      setAnticipoId(anticipos[0].id);
+    if (!anticipoId && anticiposOrdenados.length > 0) {
+      setAnticipoId(anticiposOrdenados[0].id);
       return;
     }
     if (anticipo) {
       const sugerido = Math.min(anticipo.disponible, saldoFactura);
       setMonto(sugerido > 0 ? sugerido.toFixed(2) : "0");
     }
-  }, [open, anticipoId, anticipo, anticipos, saldoFactura]);
+  }, [open, anticipoId, anticipo, anticiposOrdenados, saldoFactura]);
 
   const handleOpenChange = (o: boolean) => {
     if (!o) { setAnticipoId(""); setMonto("0"); setFecha(todayLocalISO()); }
@@ -133,10 +142,13 @@ export function AplicarAnticipoDesdeFacturaDialog({
               <SelectValue placeholder="Selecciona un anticipo" />
             </SelectTrigger>
             <SelectContent>
-              {anticipos.map((a) => (
+              {anticiposOrdenados.map((a) => (
                 <SelectItem key={a.id} value={a.id}>
                   {formatDate(a.fecha_anticipo)} · {formatCurrency(a.disponible, a.moneda)} disponibles
                   {a.referencia ? ` · Ref. ${a.referencia}` : ""}
+                  {esMismoEmbarque(a.embarque_id, facturaEmbarqueId ?? null)
+                    ? " · Mismo expediente"
+                    : ""}
                 </SelectItem>
               ))}
             </SelectContent>

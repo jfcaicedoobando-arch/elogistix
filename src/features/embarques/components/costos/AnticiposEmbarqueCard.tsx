@@ -8,6 +8,7 @@ import { ToneBadge } from "@/components/shared/ToneBadge";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
 import { useAnticiposPorEmbarque } from "@/features/anticipos-proveedor/hooks/useAnticiposPorEmbarque";
+import { useAplicadoEnEmbarque } from "@/features/anticipos-proveedor/hooks/useAplicadoEnEmbarque";
 
 const ETIQUETA_ESTADO: Record<string, { texto: string; tone: "success" | "warning" | "neutral" | "destructive" }> = {
   disponible: { texto: "Pendiente de factura", tone: "warning" },
@@ -18,6 +19,7 @@ const ETIQUETA_ESTADO: Record<string, { texto: string; tone: "success" | "warnin
 
 export function AnticiposEmbarqueCard({ embarqueId }: { embarqueId?: string }) {
   const { data: anticipos, isLoading } = useAnticiposPorEmbarque(embarqueId);
+  const { data: aplicadoAqui } = useAplicadoEnEmbarque(embarqueId);
 
   if (!embarqueId || isLoading || anticipos.length === 0) return null;
 
@@ -51,6 +53,10 @@ export function AnticiposEmbarqueCard({ embarqueId }: { embarqueId?: string }) {
                   </p>
                   <p className="text-xs text-muted-foreground tabular-nums">
                     Sin aplicar: {formatCurrency(Number(a.saldo_disponible), a.moneda)}
+                  </p>
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    Cruzado con facturas de este embarque:{" "}
+                    {formatCurrency(Number(aplicadoAqui[a.id] ?? 0), a.moneda)}
                   </p>
                 </div>
                 <ToneBadge tone={et.tone}>{et.texto}</ToneBadge>
