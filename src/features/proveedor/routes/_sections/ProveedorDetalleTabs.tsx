@@ -16,7 +16,6 @@ interface Props {
   nombreFmt: string;
   rfc?: string | null;
   esNacional: boolean;
-  canEdit: boolean;
   partidas: PartidaEstadoCuenta[];
   partidasPendientes: number;
   /** R3FE-05: un fallo de `proveedor_estado_cuenta` no debe verse como "0". */
@@ -32,7 +31,7 @@ interface Props {
  * (`DetailTabLabel`) en todas las pestañas, no sólo en "Por facturar".
  */
 export function ProveedorDetalleTabs({
-  proveedorId, organizationId, nombreFmt, rfc, esNacional, canEdit,
+  proveedorId, organizationId, nombreFmt, rfc, esNacional,
   partidas, partidasPendientes,
   isErrorEstadoCuenta, errorEstadoCuenta, refetchEstadoCuenta, isFetchingEstadoCuenta,
 }: Props) {

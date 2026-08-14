@@ -156,7 +156,6 @@ export default function ProveedorDetalle() {
         nombreFmt={nombreFmt}
         rfc={proveedor.rfc}
         esNacional={esNacional}
-        canEdit={canEdit}
         partidas={partidas}
         partidasPendientes={brecha.partidasPendientes}
         isErrorEstadoCuenta={isErrorEstadoCuenta}
