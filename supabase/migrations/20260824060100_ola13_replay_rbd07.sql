@@ -12,10 +12,6 @@
 -- Idempotente: CREATE OR REPLACE, mismo nombre y firma, sin cambio de grants.
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION
---   (el archivo canónico empezaba en `RETURNS uuid` y no era SQL válido).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
 CREATE OR REPLACE FUNCTION public.regenerar_movimiento_pago_proveedor(p_pago_id uuid)
 RETURNS uuid
 LANGUAGE plpgsql
