@@ -60,8 +60,9 @@ BEGIN
   INSERT INTO public.clientes(id, organization_id, nombre)
   VALUES (cli_a, org_a, 'Cliente SoftDelete');
 
-  INSERT INTO public.proveedores(id, organization_id, nombre)
-  VALUES (prov_a, org_a, 'Proveedor SoftDelete');
+  -- `proveedores_categoria_check` exige tipo cuando la categoría es Logistico.
+  INSERT INTO public.proveedores(id, organization_id, nombre, categoria, tipo)
+  VALUES (prov_a, org_a, 'Proveedor SoftDelete', 'Logistico', 'Naviera');
 
   -- Embarque BORRADO: ningún reporte debe exponer su expediente ni su P&L.
   INSERT INTO public.embarques(id, organization_id, expediente, cliente_id, cliente_nombre, deleted_at)
