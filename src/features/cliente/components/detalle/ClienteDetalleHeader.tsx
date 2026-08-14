@@ -72,7 +72,7 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
       badge={
         badges.length > 0 || clienteDeCasa ? (
           <div className="flex flex-wrap items-center gap-2">
-            {clienteDeCasa && <BadgeClienteDeCasa tipo="cotizacion" />}
+            {clienteDeCasa && <BadgeClienteDeCasa tipo="cliente" />}
             {badges.map((b, i) => (
               <Badge key={b} variant={i === 0 ? "secondary" : "outline"} className="font-normal">
                 {b}
