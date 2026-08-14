@@ -1,5 +1,10 @@
 /**
  * Estadísticas globales y por organización para la consola super admin.
+ *
+ * Ola 16 · separación de planos: las tablas de negocio quedaron acotadas al
+ * tenant activo (política RESTRICTIVE + `org_scope()`), así que la telemetría
+ * de PLATAFORMA ya no puede leerlas directo. Se usa RPC `SECURITY DEFINER`
+ * fail-closed para super admin: `fn_admin_platform_stats` y `fn_admin_org_counts`.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -48,34 +53,41 @@ export async function fetchAdminRecentOrgs(limit = 5): Promise<AdminRecentOrg[]>
   return (data ?? []) as AdminRecentOrg[];
 }
 
+interface PlatformStatsRow {
+  total_orgs: number | string | null;
+  total_users: number | string | null;
+  total_embarques: number | string | null;
+  total_cotizaciones: number | string | null;
+}
+
+const num = (v: number | string | null | undefined): number => Number(v ?? 0) || 0;
+
 export async function fetchAdminDashboardStats(): Promise<AdminOrgStats> {
-  const [orgs, members, embarques, cotizaciones] = await Promise.all([
-    supabase.from("organizations").select("id", { count: "exact", head: true }),
-    supabase.from("organization_members").select("id", { count: "exact", head: true }),
-    supabase.from("embarques").select("id", { count: "exact", head: true }),
-    supabase.from("cotizaciones").select("id", { count: "exact", head: true }),
-  ]);
+  const { data, error } = await supabase.rpc("fn_admin_platform_stats");
+  if (error) throw error;
+  const row = ((data ?? []) as PlatformStatsRow[])[0];
   return {
-    totalOrgs: orgs.count ?? 0,
-    totalUsers: members.count ?? 0,
-    totalEmbarques: embarques.count ?? 0,
-    totalCotizaciones: cotizaciones.count ?? 0,
+    totalOrgs: num(row?.total_orgs),
+    totalUsers: num(row?.total_users),
+    totalEmbarques: num(row?.total_embarques),
+    totalCotizaciones: num(row?.total_cotizaciones),
   };
 }
 
-async function countByOrg(
-  table: "organization_members" | "embarques" | "clientes" | "cotizaciones",
-  orgId: string,
-): Promise<number> {
-  const { count, error } = await supabase
-    .from(table)
-    .select("id", { count: "exact", head: true })
-    .eq("organization_id", orgId);
-  if (error) throw error;
-  return count ?? 0;
+interface OrgCountsRow {
+  miembros: number | string | null;
+  embarques: number | string | null;
+  clientes: number | string | null;
+  cotizaciones: number | string | null;
 }
 
-export const countOrgMembers = (orgId: string) => countByOrg("organization_members", orgId);
-export const countOrgEmbarques = (orgId: string) => countByOrg("embarques", orgId);
-export const countOrgClientes = (orgId: string) => countByOrg("clientes", orgId);
-export const countOrgCotizaciones = (orgId: string) => countByOrg("cotizaciones", orgId);
+async function fetchOrgCounts(orgId: string): Promise<OrgCountsRow | undefined> {
+  const { data, error } = await supabase.rpc("fn_admin_org_counts", { _org: orgId });
+  if (error) throw error;
+  return ((data ?? []) as OrgCountsRow[])[0];
+}
+
+export const countOrgMembers = async (orgId: string) => num((await fetchOrgCounts(orgId))?.miembros);
+export const countOrgEmbarques = async (orgId: string) => num((await fetchOrgCounts(orgId))?.embarques);
+export const countOrgClientes = async (orgId: string) => num((await fetchOrgCounts(orgId))?.clientes);
+export const countOrgCotizaciones = async (orgId: string) => num((await fetchOrgCounts(orgId))?.cotizaciones);
