@@ -5,6 +5,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { esDiaInhabilMx } from "@/lib/date/festivosMx";
 import { pickerIconClass } from "@/components/ui/picker-mx-shell";
 import { dateToIso, isoToDate, isoToDisplay } from "./date-picker-mx-helpers";
 
@@ -14,12 +15,15 @@ interface Props {
   max?: string;
   open: boolean;
   disabled?: boolean;
+  /** Resalta (sin deshabilitar) fines de semana y festivos oficiales. */
+  marcarInhabiles?: boolean;
   setOpen: (o: boolean) => void;
   onPick: (iso: string) => void;
   onClear: () => void;
   /** Se invoca al cerrar el popover para devolver el foco al input. */
   onCerrar?: () => void;
 }
+
 
 /** Botón + popover con Calendar embebido, extraído para respetar el
  *  límite Power-of-10 (≤200 líneas por archivo). */
