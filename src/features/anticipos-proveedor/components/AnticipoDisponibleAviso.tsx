@@ -36,6 +36,12 @@ export function AnticipoDisponibleAviso({
     .map((m) => formatCurrency(m.disponible, m.moneda))
     .join(" · ");
 
+  // Cruce directo: anticipos ligados al mismo embarque que esta factura.
+  const delMismoEmbarque = anticipos.filter((a) =>
+    esMismoEmbarque(a.embarque_id, facturaEmbarqueId ?? null),
+  );
+  const expediente = facturaExpediente?.trim() || null;
+
   return (
     <>
       <Alert className="mb-4">
@@ -45,6 +51,18 @@ export function AnticipoDisponibleAviso({
           <span>
             Anticipos disponibles: <span className="font-medium">{resumen}</span>. Puedes aplicarlos a esta
             factura en lugar de registrar un pago nuevo.
+            {delMismoEmbarque.length > 0 && (
+              <>
+                {" "}
+                <span className="font-medium">
+                  {delMismoEmbarque.length === 1
+                    ? "1 anticipo corresponde"
+                    : `${delMismoEmbarque.length} anticipos corresponden`}{" "}
+                  {expediente ? `al expediente ${expediente}` : "a este mismo embarque"}
+                </span>
+                .
+              </>
+            )}
           </span>
           {canEdit && (
             <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
