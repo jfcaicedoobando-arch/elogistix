@@ -82,13 +82,19 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
   const [csfFileName, setCsfFileName] = useState<string | null>(null);
   const [parsingCsf, setParsingCsf] = useState(false);
 
+  // v13.624.1 — El formulario se reinicia SÓLO en el flanco de apertura del
+  // modal. Antes se reiniciaba también cuando llegaba un refetch del cliente,
+  // lo que hacía "parpadear" los interruptores con los valores anteriores.
+  const abiertoPrev = useRef(false);
   useEffect(() => {
-    if (open) {
+    if (open && !abiertoPrev.current) {
       setForm(cliente);
       setCsfFileName(null);
       setParsingCsf(false);
     }
+    abiertoPrev.current = open;
   }, [open, cliente]);
+
 
   const handleCsfFile = async (file: File | null) => {
     if (!file) return;
