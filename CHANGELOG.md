@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.609.0] - 2026-08-14
+- Borrado lógico estricto (Fase 2): el Estado de Resultados anual (fuente facturas) ya no resta notas de crédito de clientes ni de proveedores cuya factura fue eliminada.
+- Antigüedad de clientes y proveedores: se refuerza el filtro `deleted_at IS NULL` en los cálculos internos de pagos y notas de crédito.
+- Nuevo guardrail en `scripts/db/integrity-guard.sql` (`reporte_sin_filtro_soft_delete`) que detecta reportes financieros sin filtro de borrado lógico.
+- Suite `test_rls_soft_delete_reportes.sql` ampliada a 8 aserciones (aging CxC + EERR ingresos/costos).
+
 ## [13.608.0] - 2026-08-14
 - Filtros estrictos de borrado lógico (`deleted_at IS NULL`) en los reportes financieros y de antigüedad: `libro_pagos` (JOIN a `facturas` y `proveedor_facturas`), `cartera_pendiente` y `proveedor_estado_cuenta*` (JOIN a `embarques`), `pnl_financiero_embarque` (embarque borrado ⇒ error), `estado_cuenta_bancario` y `conciliacion_resumen` (JOIN a `cuentas_bancarias`).
 - Vistas alineadas con el mismo criterio, conservando `security_invoker = on`: `v_pagos_rep_pendientes`, `v_proforma_factura_link`, `v_saldos_cuentas_bancarias`.
