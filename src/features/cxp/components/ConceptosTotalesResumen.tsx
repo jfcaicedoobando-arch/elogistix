@@ -45,7 +45,7 @@ export function ConceptosTotalesResumen({ resumen, moneda }: Props) {
         )}
         <Fila label={`Total ${moneda}`} valor={resumen.total} moneda={moneda} fuerte />
         {!resumen.cuadra && (
-          <div className="flex items-start gap-2 bg-warning/10 px-3 py-2 text-2xs text-warning-foreground">
+          <div className="flex items-start gap-2 bg-warning/10 px-3 py-2 text-2xs text-warning">
             <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
             <span>
               Los conceptos suman {formatCurrency(resumen.totalCalculado, moneda)}; el total de la
