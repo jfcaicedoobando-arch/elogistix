@@ -10,7 +10,7 @@
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { handlePreflightStrict } from "../_shared/cors.ts";
-import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { getFacturapiClient, withFacturapiTimeout } from "../_shared/facturapiClient.ts";
 import { authorizeOrgRole, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
@@ -57,6 +57,48 @@ export function resolverPatchRep(
 
 type Json = (body: unknown, status?: number) => Response;
 type Supa = ReturnType<typeof createClient>;
+
+/**
+ * Ola 14 · R5EF-02: tope por organización para la consulta manual de estatus
+ * REP (patrón fail-closed REF-07 / R4EF-03). Cada clic pega a FacturApi; sin
+ * contador, un polling en bucle satura la API del PAC. 10/min por org permite
+ * refrescos manuales y corta automatización abusiva.
+ */
+const RL_CONSULTA_REP = { windowSeconds: 60, max: 10 } as const;
+
+/** Devuelve Response si hay que cortar (503/429); null si se puede continuar. */
+async function checkRateLimitConsultaRep(
+  json: Json,
+  supabase: Supa,
+  organizationId: string,
+): Promise<Response | null> {
+  const llave = `facturapi-consultar-rep:${organizationId}`;
+  const { data: rl, error: rlErr } = await supabase.rpc("check_ratelimit", {
+    p_key: llave,
+    p_window_seconds: RL_CONSULTA_REP.windowSeconds,
+    p_max: RL_CONSULTA_REP.max,
+  });
+  if (rlErr) {
+    // Fail-CLOSED: sin contador no hay forma de saber si hay abuso.
+    await captureEdgeException(new Error(`check_ratelimit failed: ${rlErr.message}`), {
+      fn: "facturapi-consultar-rep",
+      status_code: 503,
+      extra: { llave },
+    });
+    return json({ error: "rate_limit_unavailable" }, 503);
+  }
+  const rlResult = rl as { ok?: boolean; retry_after?: number } | null;
+  if (rlResult?.ok === false) {
+    return json(
+      {
+        error: "rate_limited",
+        message: "Demasiadas consultas de estatus seguidas. Espera un momento y vuelve a intentarlo.",
+      },
+      429,
+    );
+  }
+  return null;
+}
 
 /** Valida método/sesión/pago y autorización. Devuelve el pago o una respuesta. */
 async function resolverPago(
@@ -111,7 +153,20 @@ async function traerRepRemoto(
     return { remote };
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    return { resp: json({ error: "facturapi_error", message: detail }, 502) };
+    // Ola 14 · R5EF-03: detalle crudo sólo a log/Sentry; mensaje genérico al cliente.
+    console.error("facturapi-consultar-rep invoices.retrieve:", detail);
+    await captureEdgeException(err instanceof Error ? err : new Error(detail), {
+      fn: "facturapi-consultar-rep",
+      status_code: 502,
+      extra: { op: "invoices.retrieve" },
+    });
+    return {
+      resp: json({
+        error: "facturapi_error",
+        message:
+          "LC_FACTURAPI_NO_DISPONIBLE: No se pudo consultar el estatus del REP en el PAC. Intenta de nuevo en unos minutos.",
+      }, 502),
+    };
   }
 }
 
@@ -162,6 +217,10 @@ async function handle(req: Request): Promise<Response> {
   const resPago = await resolverPago(req, json, supabase, userData.user.id);
   if ("resp" in resPago) return resPago.resp;
   const { pago } = resPago;
+
+  // R5EF-02: rate limit DESPUÉS de auth+org y ANTES de pegarle a FacturApi.
+  const rlResp = await checkRateLimitConsultaRep(json, supabase, pago.organization_id);
+  if (rlResp) return rlResp;
 
   const resRemoto = await traerRepRemoto(json, supabase, pago);
   if ("resp" in resRemoto) return resRemoto.resp;
