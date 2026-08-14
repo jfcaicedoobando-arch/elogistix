@@ -32,37 +32,10 @@ import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutor
 import { useAprobarProformaInterna } from "@/features/proformas/hooks/useAprobarProformaInterna";
 import { BadgeClienteDeCasa } from "@/components/shared/BadgeClienteDeCasa";
 
-type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
-
-function readEstadoCliente(p: ProformaDetalleFull): EstadoCliente {
-  // SAFE-CAST: columna nueva; los tipos generados aún no la incluyen.
-  const raw = (p as unknown as { estado_cliente?: string }).estado_cliente;
-  if (raw === "aceptada" || raw === "rechazada") return raw;
-  return "pendiente";
-}
-
 interface Props {
   proforma: ProformaDetalleFull;
   downloadingId: string | null;
   onDescargar: () => void;
-}
-
-function computarFlags(
-  proforma: ProformaDetalleFull,
-  canEmitirFactura: boolean,
-  canResponderProformaManual: boolean,
-) {
-  const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
-  const estadoCliente = readEstadoCliente(proforma);
-  const clienteAcepto = estadoCliente === "aceptada";
-  return {
-    facturada,
-    puedeConvertir:
-      clienteAcepto && !facturada && !proforma.factura_id && canEmitirFactura,
-    puedeResponder:
-      !facturada && estadoCliente === "pendiente" && canResponderProformaManual,
-    mostrarHint: !clienteAcepto && !facturada,
-  };
 }
 
 export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props) {
