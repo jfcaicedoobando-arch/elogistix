@@ -18,6 +18,9 @@ export interface FilaBuzon {
   /** v13.398.0 — Importe leído del CFDI/PDF; sin él no se puede priorizar la captura. */
   total_detectado?: number | null;
   moneda_detectada?: string | null;
+  /** v13.618.0 — Importe que capturó operaciones al subir (documentos sin XML). */
+  monto_declarado?: number | null;
+  moneda_declarada?: string | null;
   embarques?: { expediente: string | null } | null;
   proveedores?: { nombre: string | null; origen_proveedor?: string | null } | null;
 }
