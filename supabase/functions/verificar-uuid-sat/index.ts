@@ -44,7 +44,13 @@ function respuestaErrorSat(cors: Record<string, string>, e: unknown): Response {
   if (esTimeout) {
     return json(cors, { error: "sat_timeout", timeout_ms: SAT_FETCH_TIMEOUT_MS }, 504);
   }
-  return json(cors, { error: "sat_unreachable", detail: (e as Error).message }, 502);
+  // Ola 14 · R5EF-03: el detalle de red va al log interno; al cliente sólo el
+  // código genérico (política R4EF-01/mensajeSeguro).
+  console.error("verificar-uuid-sat sat_unreachable:", (e as Error)?.message ?? e);
+  return json(cors, {
+    error: "sat_unreachable",
+    message: "LC_SAT_NO_DISPONIBLE: No se pudo contactar al SAT. Intenta de nuevo en unos minutos.",
+  }, 502);
 }
 
 // Alias local con firma (cors, body, status) para conservar los callsites de este handler.

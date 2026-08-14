@@ -5,6 +5,8 @@
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./handlers.ts";
+// Ola 14 · R5EF-01: mensaje seguro LC_* al cliente; crudo sólo al log.
+import { mensajeSeguro } from "./errores.ts";
 
 declare const Deno: { env: { get(key: string): string | undefined } };
 
@@ -120,7 +122,11 @@ export async function handleInviteClient(ctx: HandlerCtx, admin: AdminAccess): P
   const inviteResult = await inviteOrLinkUser(adminClient, email, redirectTo);
   if ("error" in inviteResult) {
     log.finish(500, "invite_email_failed", { organization_id, payload: { error: inviteResult.error } });
-    return errorResponse(`Error al invitar usuario: ${inviteResult.error}`, 500, cors);
+    return errorResponse(
+      mensajeSeguro(inviteResult.error, "Error al invitar usuario. Intenta de nuevo; si persiste, contacta a soporte."),
+      500,
+      cors,
+    );
   }
   const { userId, isNew } = inviteResult;
 
@@ -134,7 +140,14 @@ export async function handleInviteClient(ctx: HandlerCtx, admin: AdminAccess): P
     );
   if (linkError) {
     log.finish(500, "link_failed", { organization_id, payload: { user_id: userId, error: linkError.message } });
-    return errorResponse(`Error al vincular usuario: ${linkError.message}`, 500, cors);
+    return errorResponse(
+      mensajeSeguro(
+        linkError.message,
+        "LC_USUARIO_VINCULO_CLIENTE_FALLIDO: No se pudo vincular el usuario cliente. Intenta de nuevo; si persiste, contacta a soporte.",
+      ),
+      500,
+      cors,
+    );
   }
 
   log.finish(200, "client_user_invited", {

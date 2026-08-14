@@ -103,7 +103,9 @@ export async function verificarSat(meta: CfdiMeta): Promise<{ estatus: EstatusSa
   try {
     return await consultarSat(meta.rfc_emisor, meta.rfc_receptor, meta.total, meta.uuid);
   } catch (err) {
-    return { estatus: "Error", raw: err instanceof Error ? err.message : String(err) };
+    // Ola 14 · R5EF-03: el crudo (puede incluir slice de respuesta del PAC) sólo al log.
+    console.error("facturapi-consultar descargarXml:", err instanceof Error ? err.message : err);
+    return { estatus: "Error", raw: "" };
   }
 }
 
