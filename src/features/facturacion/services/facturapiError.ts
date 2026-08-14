@@ -38,6 +38,9 @@ const EXPECTED_FACTURAPI_PATTERNS: RegExp[] = [
   /r[eé]gimen fiscal.*no.*v[aá]lido/i,
   /c[oó]digo postal.*no.*coincide/i,
   /uso de cfdi.*no.*v[aá]lido/i,
+  // JAVASCRIPT-REACT-5A: el CFDI ya tiene un trámite de cancelación abierto en
+  // el SAT. La UI lo explica y ofrece "Actualizar estado": no es un bug.
+  /solicitud de cancelaci[oó]n pendiente/i,
 ];
 
 function isExpectedFacturapiMessage(message: string): boolean {
