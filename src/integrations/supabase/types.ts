@@ -7930,6 +7930,13 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: undefined
       }
+      _refact_reps_bloqueantes: {
+        Args: { p_factura_id: string }
+        Returns: {
+          bloqueantes: number
+          en_verificacion: number
+        }[]
+      }
       _resolver_proveedor_por_nombre: {
         Args: { p_nombre: string; p_org: string }
         Returns: string
