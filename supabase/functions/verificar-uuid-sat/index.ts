@@ -29,6 +29,24 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SAT_ENDPOINT = "https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaCFDIService.svc";
 
+/**
+ * R4EF-04: mismo tope que `_shared/satConsulta.ts` (EF-05, 12 s). Sin él, un
+ * socket colgado del SAT consumía el wall-clock de la edge (~150 s).
+ */
+const SAT_FETCH_TIMEOUT_MS = 12_000;
+
+/**
+ * R4EF-04: timeout del SAT ⇒ 504 dedicado; el resto de errores de red ⇒ 502.
+ */
+function respuestaErrorSat(cors: Record<string, string>, e: unknown): Response {
+  const esTimeout = e instanceof DOMException &&
+    (e.name === "TimeoutError" || e.name === "AbortError");
+  if (esTimeout) {
+    return json(cors, { error: "sat_timeout", timeout_ms: SAT_FETCH_TIMEOUT_MS }, 504);
+  }
+  return json(cors, { error: "sat_unreachable", detail: (e as Error).message }, 502);
+}
+
 // Alias local con firma (cors, body, status) para conservar los callsites de este handler.
 const json = (cors: Record<string, string>, body: unknown, status = 200): Response =>
   _jsonResponse(body, status, cors);
@@ -72,6 +90,8 @@ async function consultarSatVariante(
       "SOAPAction": "http://tempuri.org/IConsultaCFDIService/Consulta",
     },
     body: envelope,
+    // R4EF-04: AbortSignal.timeout, consistente con el resto de fetches al SAT.
+    signal: AbortSignal.timeout(SAT_FETCH_TIMEOUT_MS),
   });
   const xml = await res.text();
   if (!res.ok) return { estatus: "Error", raw: xml.slice(0, 500) };
@@ -262,7 +282,7 @@ async function processVerification(
     );
   } catch (e) {
     await captureEdgeException(e, { fn: "verificar-uuid-sat", extra: { id, tipo } });
-    return json(cors, { error: "sat_unreachable", detail: (e as Error).message }, 502);
+    return respuestaErrorSat(cors, e);
   }
 
   const targetTable = tipo === "cxc" ? "facturas" : tipo === "cxp_nc" ? "proveedor_notas_credito" : "proveedor_facturas";

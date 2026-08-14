@@ -6,6 +6,7 @@ import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 import { VALID_ROLES, ASSIGNABLE_BY_ORG_ADMIN } from "./types.ts";
+import { esCorreoDuplicado, mensajeSeguro, MENSAJE_CORREO_NO_DISPONIBLE } from "./errores.ts";
 
 /**
  * Ola 8 · B2 — Debe coincidir con `PASSWORD_MIN` de `src/lib/passwords/policy.ts`.
@@ -82,17 +83,19 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
   });
   if (createError) {
     // Q-05: mensaje claro para email duplicado (el proveedor devuelve textos variados).
-    const dup = /already|registered|exists|duplicate/i.test(createError.message);
+    const dup = esCorreoDuplicado(createError.message);
     if (dup) {
       log.finish(409, "duplicate_email", { user_id: callerId, organization_id: targetOrgId });
-      return errorResponse(`Ya existe una cuenta con el correo ${email}.`, 409, cors);
+      // R4EF-02: respuesta genérica — sin eco del correo ni confirmación de existencia.
+      return errorResponse(MENSAJE_CORREO_NO_DISPONIBLE, 409, cors);
     }
     log.finish(400, "auth_create_failed", {
       user_id: callerId,
       organization_id: targetOrgId,
       payload: { error: createError.message },
     });
-    return errorResponse(createError.message, 400, cors);
+    // R4EF-01: nunca propagar el mensaje crudo de GoTrue al cliente.
+    return errorResponse(mensajeSeguro(createError.message), 400, cors);
   }
 
   // Siempre persistir el rol seleccionado en user_roles (trigger crea uno default = viewer).
@@ -111,7 +114,15 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
         organization_id: targetOrgId,
         payload: { error: memberError.message },
       });
-      return errorResponse(memberError.message, 400, cors);
+      // R4EF-01: memberError.message es de Postgres (puede traer constraints).
+      return errorResponse(
+        mensajeSeguro(
+          memberError.message,
+          "LC_USUARIO_MEMBRESIA_FALLIDA: No se pudo registrar la membresía; la cuenta creada fue revertida.",
+        ),
+        400,
+        cors,
+      );
     }
   }
 

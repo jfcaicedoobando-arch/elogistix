@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.597.0] - 2026-08-14
+- **Ola 13 · Sprint 03 (hardening de edge functions).**
+- R4EF-01: nuevo catálogo `user-management/errores.ts` con mensajes seguros `LC_USUARIO_*`; los textos crudos de GoTrue/Postgres ya no llegan al cliente (siguen en el log interno).
+- R4EF-02: el 409 por correo duplicado responde `LC_USUARIO_CORREO_NO_DISPONIBLE` sin hacer eco del correo (evita enumeración de cuentas).
+- R4EF-03: `invite` (10/hora por organización) y `reset-password` (3/hora por usuario) pasan por `check_ratelimit` fail-closed (503 si la RPC falla, 429 con `Retry-After`).
+- R4EF-04: el fetch SOAP de `verificar-uuid-sat` usa `AbortSignal.timeout(12 s)` y responde 504 `sat_timeout` en lugar de colgar la función.
+- R4EF-05: nuevo `_shared/timingSafe.ts` como fuente única; `send-transactional-email` compara el service key en tiempo constante y se eliminan las dos copias locales.
+
 ## [13.596.0] - 2026-08-14
 - **Ola 13 · Sprint 02 (pulido UX/frontend, 5 ítems P3).**
 - R4UX-01: «Saldo inicial» del estado de cuenta de proveedor usa `formatDate` (dd/MM/yyyy) en lugar de la fecha ISO cruda, igual que la exportación CSV/PDF.
