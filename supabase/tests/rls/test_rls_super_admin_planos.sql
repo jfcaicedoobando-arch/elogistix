@@ -56,12 +56,16 @@ BEGIN
     (cli_a, 'CLI PLANOS A', 'XAXX010101010', 'pa@test.local', org_a),
     (cli_b, 'CLI PLANOS B', 'XAXX010101011', 'pb@test.local', org_b);
 
-  INSERT INTO public.embarques(id, expediente, cliente_id, organization_id, estado, modo, tipo)
-  VALUES
-    (emb_a, 'ELPLA00001', cli_a, org_a, 'Borrador', 'Marítimo', 'Importación'),
-    (emb_b, 'ELPLB00001', cli_b, org_b, 'Borrador', 'Marítimo', 'Importación');
+  INSERT INTO public.embarques(
+    id, expediente, cliente_id, cliente_nombre, organization_id,
+    modo, tipo, estado, incoterm, etd, eta
+  ) VALUES
+    (emb_a, 'ELPLA00001', cli_a, 'CLI PLANOS A', org_a,
+      'Marítimo', 'Importación', 'Confirmado', 'FOB', CURRENT_DATE + 5, CURRENT_DATE + 30),
+    (emb_b, 'ELPLB00001', cli_b, 'CLI PLANOS B', org_b,
+      'Marítimo', 'Importación', 'Confirmado', 'FOB', CURRENT_DATE + 5, CURRENT_DATE + 30);
 
-  INSERT INTO public.app_logs(organization_id, nivel, mensaje)
+  INSERT INTO public.app_logs(organization_id, level, msg)
   VALUES (org_a, 'error', 'log plano A'), (org_b, 'error', 'log plano B');
 
   -- ==========================================================================
