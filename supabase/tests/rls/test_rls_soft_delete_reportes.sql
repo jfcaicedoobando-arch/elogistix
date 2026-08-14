@@ -37,6 +37,7 @@ DECLARE
   pago_c_ok uuid := gen_random_uuid();
   pago_c_no uuid := gen_random_uuid();
   pago_p_no uuid := gen_random_uuid();
+  ncp_borr  uuid;
   v_libro   jsonb;
   v_count   int;
   v_exp     text;
@@ -56,16 +57,24 @@ BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS SoftDelete A');
   INSERT INTO public.organization_members(organization_id, user_id, role)
   VALUES (org_a, u_admin, 'admin_org');
+  -- Las políticas SELECT usan `has_any_role` (tabla legacy `user_roles`).
+  INSERT INTO public.user_roles(user_id, role) VALUES (u_admin, 'admin_org')
+  ON CONFLICT DO NOTHING;
 
   INSERT INTO public.clientes(id, organization_id, nombre)
   VALUES (cli_a, org_a, 'Cliente SoftDelete');
 
-  INSERT INTO public.proveedores(id, organization_id, nombre)
-  VALUES (prov_a, org_a, 'Proveedor SoftDelete');
+  -- `proveedores_categoria_check` exige tipo cuando la categoría es Logistico.
+  INSERT INTO public.proveedores(id, organization_id, nombre, categoria, tipo)
+  VALUES (prov_a, org_a, 'Proveedor SoftDelete', 'Logistico', 'Naviera');
 
   -- Embarque BORRADO: ningún reporte debe exponer su expediente ni su P&L.
-  INSERT INTO public.embarques(id, organization_id, expediente, cliente_id, cliente_nombre, deleted_at)
-  VALUES (emb_a, org_a, 'ELSDL00001', cli_a, 'Cliente SoftDelete', now());
+  -- `modo` y `tipo` son NOT NULL en base limpia (en prod traen valor
+  -- por migración posterior): se declaran explícitamente.
+  INSERT INTO public.embarques(id, organization_id, expediente, cliente_id, cliente_nombre,
+                              modo, tipo, estado, incoterm, deleted_at)
+  VALUES (emb_a, org_a, 'ELSDL00001', cli_a, 'Cliente SoftDelete',
+          'Marítimo', 'Importación', 'Confirmado', 'FOB', now());
 
   -- Factura viva con saldo (cartera) ligada al embarque borrado.
   INSERT INTO public.facturas(id, organization_id, cliente_id, cliente_nombre, embarque_id,
@@ -88,11 +97,18 @@ BEGIN
     (pago_c_no, org_a, fac_borr, v_hoy, 500, 500, 'MXN', 1, '03');
 
   -- Factura de proveedor BORRADA con pago vivo.
+  -- `categoria_presupuesto_id` es NOT NULL: sembramos el catálogo canónico.
+  PERFORM public.seed_presupuesto_categorias(org_a);
+
   INSERT INTO public.proveedor_facturas(id, organization_id, proveedor_id, proveedor_nombre,
                                         folio_proveedor, moneda, subtotal, total, estado,
-                                        fecha_emision, deleted_at)
+                                        fecha_emision, estado_aprobacion,
+                                        categoria_presupuesto_id, deleted_at)
   VALUES (pfac_borr, org_a, prov_a, 'Proveedor SoftDelete',
-          'SD-PF-BORRADA', 'MXN', 1000, 1160, 'Vigente', v_hoy, now());
+          'SD-PF-BORRADA', 'MXN', 1000, 1160, 'Vigente', v_hoy, 'aprobada',
+          (SELECT id FROM public.presupuesto_categorias
+            WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1),
+          now());
 
   INSERT INTO public.pagos_proveedor(id, organization_id, proveedor_factura_id, fecha_pago,
                                      monto, moneda, tipo_cambio_usd, metodo_pago)
@@ -178,9 +194,14 @@ BEGIN
   VALUES (org_a, fac_borr, 'SD-NC-1', 500, 'MXN', 'Aplicada', v_hoy);
 
   -- NC aplicada sobre la factura de proveedor BORRADA: no debe bajar costos.
+  -- El trigger de transición exige nacer en Borrador y avanzar por pasos.
   INSERT INTO public.proveedor_notas_credito(organization_id, proveedor_factura_id, folio_nc,
                                              fecha, monto, moneda, estado)
-  VALUES (org_a, pfac_borr, 'SD-NCP-1', v_hoy, 700, 'MXN', 'Aplicada');
+  VALUES (org_a, pfac_borr, 'SD-NCP-1', v_hoy, 700, 'MXN', 'Borrador')
+  RETURNING id INTO ncp_borr;
+
+  UPDATE public.proveedor_notas_credito SET estado = 'Aprobada' WHERE id = ncp_borr;
+  UPDATE public.proveedor_notas_credito SET estado = 'Aplicada' WHERE id = ncp_borr;
 
   PERFORM pg_temp.as_user(u_admin);
 

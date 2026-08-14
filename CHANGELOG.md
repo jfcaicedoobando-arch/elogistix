@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.611.1] - 2026-08-14
+- CI · Suites RLS `soft_delete_reportes` y `refacturaciones_matriz` en verde: los fixtures fallaban por reglas de negocio, no por los reportes.
+- `soft_delete_reportes`: el proveedor ahora nace con categoría/tipo válidos, el embarque con `modo`/`tipo`, la factura de proveedor con categoría de presupuesto y aprobada, la nota de crédito avanza Borrador → Aprobada → Aplicada y el admin recibe su rol legacy (las políticas de SELECT lo exigen).
+- `refacturaciones_matriz`: el caso de prueba del auxiliar contable usa una segunda factura, porque sólo puede haber un caso abierto por factura original.
+
 ## [13.611.0] - 2026-08-14
 - Ola 15 · Eliminación de pagos atómica: nuevas RPC `public.eliminar_pago_cliente` y `public.eliminar_pago_proveedor` que hacen la baja del pago, la del movimiento bancario, el recálculo de costos y la bitácora en una sola transacción.
 - Movimientos importados del estado de cuenta ya no se borran al eliminar un pago: se desvinculan y regresan a "Pendiente" de conciliar.
