@@ -39,7 +39,7 @@ describe("ordenarAnticiposPorEmbarque", () => {
     expect(orden).toEqual(["sin", "otro", "mismo-viejo", "mismo-nuevo"]);
   });
 
-  it("no muta el arreglo original", () => {
+  it("no muta el arreglo original de anticipos por embarque", () => {
     const copia = [...anticipos];
     ordenarAnticiposPorEmbarque(anticipos, EMB_A);
     expect(anticipos).toEqual(copia);
