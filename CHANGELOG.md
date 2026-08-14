@@ -4,6 +4,8 @@
 - **Ola 13 · Sprint 05 (matriz de roles en expediente de cliente y contactos de proveedor).**
 - R4BD-04: las escrituras y borrados de `cliente_documentos`, `proveedor_contactos` y de la carpeta `clientes/` del bucket `documentos` ahora exigen la matriz `admin`/`admin_org`/`operador`/`contador`/`super_admin` (antes bastaba pertenecer a la organización). Lectura sin cambios: org-scoped, bypass `super_admin` y `deleted_at IS NULL` intactos.
 - Nueva suite `supabase/tests/rls/test_rls_expediente_cliente.sql` registrada en el grupo `operaciones` de `rls-tests.yml`.
+- UI alineada con la BD: nuevo `EXPEDIENTE_ESCRITURA` / `canEditExpediente`; las pestañas de documentos de cliente/proveedor y contactos de proveedor sólo muestran acciones de escritura a los roles que la BD permite (antes se mostraban botones que hubieran fallado con error de permisos).
+
 
 ## [13.598.0] - 2026-08-14
 
