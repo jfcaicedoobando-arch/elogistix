@@ -190,9 +190,14 @@ BEGIN
   VALUES (org_a, fac_borr, 'SD-NC-1', 500, 'MXN', 'Aplicada', v_hoy);
 
   -- NC aplicada sobre la factura de proveedor BORRADA: no debe bajar costos.
+  -- El trigger de transición exige nacer en Borrador y avanzar por pasos.
   INSERT INTO public.proveedor_notas_credito(organization_id, proveedor_factura_id, folio_nc,
                                              fecha, monto, moneda, estado)
-  VALUES (org_a, pfac_borr, 'SD-NCP-1', v_hoy, 700, 'MXN', 'Aplicada');
+  VALUES (org_a, pfac_borr, 'SD-NCP-1', v_hoy, 700, 'MXN', 'Borrador')
+  RETURNING id INTO ncp_borr;
+
+  UPDATE public.proveedor_notas_credito SET estado = 'Aprobada' WHERE id = ncp_borr;
+  UPDATE public.proveedor_notas_credito SET estado = 'Aplicada' WHERE id = ncp_borr;
 
   PERFORM pg_temp.as_user(u_admin);
 
