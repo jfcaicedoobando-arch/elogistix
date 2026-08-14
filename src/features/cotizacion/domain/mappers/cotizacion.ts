@@ -1,6 +1,8 @@
 import { format } from "date-fns";
+import { hoyMx, parseLocalMx } from "@/lib/date/mx";
 import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from '@/features/cotizacion/types';
 import type { CotizacionFormValues } from '@/features/cotizacion/types';
+
 
 /**
  * Construye el payload de datos generales (Paso 1) para crear/actualizar una cotización.
