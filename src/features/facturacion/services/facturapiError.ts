@@ -3,6 +3,8 @@
  * Extraído de `facturapi.ts` (Power-of-10, ≤200 líneas).
  */
 
+import { interpretarErrorFacturapi } from "@/lib/errors/facturapiError";
+
 export interface ValidationIssue { field: string; message: string }
 
 export interface EdgeErrorBody {
@@ -10,6 +12,9 @@ export interface EdgeErrorBody {
   message?: string;
   issues?: ValidationIssue[];
   transient?: boolean;
+  /** Body estructurado de FacturApi/SAT (`describeFacturapiError` en backend). */
+  detail?: { code?: string; message?: string; path?: string; logId?: string; errors?: unknown };
+  status?: number;
 }
 
 /** Error enriquecido: expone si el fallo es transitorio (reintentable)
@@ -18,6 +23,10 @@ export interface EdgeErrorBody {
 export class FacturapiError extends Error {
   transient: boolean;
   expected: boolean;
+  /** Código SAT/FacturApi reconocido (301, 402, …) para "Ver detalles". */
+  codigoSat?: string | null;
+  /** Detalles técnicos copiables para soporte administrativo. */
+  detallesSat?: Record<string, unknown>;
   constructor(message: string, transient = false, expected = false) {
     super(message);
     this.name = "FacturapiError";
@@ -81,9 +90,19 @@ export function toReadableError(
     ?? (error as { message?: string } | null)?.message
     ?? fallback;
   const finalMessage = message + issues;
-  return new FacturapiError(
-    finalMessage,
+  // Ola 17 · si el backend mandó un rechazo estructurado del SAT/FacturApi,
+  // preferimos el mensaje de negocio traducido (ej. 402 → "RFC no inscrito en
+  // el padrón del SAT") y guardamos los datos técnicos para "Ver detalles".
+  const sat = interpretarErrorFacturapi(body);
+  const usarSat = sat?.codigo != null;
+  const err = new FacturapiError(
+    usarSat ? `${sat!.titulo}. ${sat!.descripcion}` : finalMessage,
     !!body.transient,
     isExpectedFacturapiMessage(finalMessage),
   );
+  if (sat) {
+    err.codigoSat = sat.codigo;
+    err.detallesSat = sat.detalles;
+  }
+  return err;
 }

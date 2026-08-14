@@ -10,6 +10,7 @@ import {
 import { COPY_BAJA_CORREOS, COPY_ENLACE, COPY_PASOS } from "@/lib/copy/publicoCopy";
 import { AvisoAccionable } from "@/components/shared/states/AvisoAccionable";
 import { Seo } from "@/components/shared/Seo";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 type Status = "loading" | "valid" | "invalid" | "already" | "confirming" | "success" | "error";
 
@@ -52,7 +53,8 @@ export default function Unsubscribe() {
       }
     } catch (e) {
       // UIB-15 (UX-02): superficie pública — nunca error.message crudo.
-      console.error("[unsubscribe]", e);
+      // Ola 17: diagnóstico a Sentry en lugar de `console.error` huérfano.
+      reportCaughtError(e, { feature: "auth", op: "unsubscribe_confirm" });
       setErrorMsg(COPY_BAJA_CORREOS.falla);
       setStatus("error");
     }

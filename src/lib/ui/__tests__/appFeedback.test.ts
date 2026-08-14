@@ -51,12 +51,27 @@ describe("appFeedback (sonner)", () => {
 
   it("notifyWarning emite sonner.warning", () => {
     notifyWarning(undefined, { title: "Aviso", description: "ok" });
-    expect(m.warning).toHaveBeenCalledWith("Aviso", { description: "ok" });
+    expect(m.warning).toHaveBeenCalledWith(
+      "Aviso",
+      expect.objectContaining({ description: "ok", id: "warn-Aviso" }),
+    );
   });
 
   it("notifySuccess emite sonner.success", () => {
     notifySuccess(undefined, { title: "Listo", description: "ok" });
-    expect(m.success).toHaveBeenCalledWith("Listo", { description: "ok" });
+    expect(m.success).toHaveBeenCalledWith(
+      "Listo",
+      expect.objectContaining({ description: "ok", id: "ok-Listo" }),
+    );
+  });
+
+  // Ola 17 · higiene de toasts: doble clic rápido no debe apilar dos éxitos.
+  it("notifySuccess deduplica por method (doble clic)", () => {
+    notifySuccess(undefined, { title: "Pago registrado", method: "registrar_pago" });
+    notifySuccess(undefined, { title: "Pago registrado", method: "registrar_pago" });
+    const ids = m.success.mock.calls.map((c: unknown[]) => (c[1] as { id?: string }).id);
+    expect(new Set(ids).size).toBe(1);
+    expect(ids[0]).toBe("ok-registrar_pago");
   });
 
   it("notifyWarning con persistent:true emite duration Infinity", () => {
