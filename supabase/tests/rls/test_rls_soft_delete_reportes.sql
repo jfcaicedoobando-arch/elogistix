@@ -93,11 +93,17 @@ BEGIN
     (pago_c_no, org_a, fac_borr, v_hoy, 500, 500, 'MXN', 1, '03');
 
   -- Factura de proveedor BORRADA con pago vivo.
+  -- `categoria_presupuesto_id` es NOT NULL: sembramos el catálogo canónico.
+  PERFORM public.seed_presupuesto_categorias(org_a);
+
   INSERT INTO public.proveedor_facturas(id, organization_id, proveedor_id, proveedor_nombre,
                                         folio_proveedor, moneda, subtotal, total, estado,
-                                        fecha_emision, deleted_at)
+                                        fecha_emision, categoria_presupuesto_id, deleted_at)
   VALUES (pfac_borr, org_a, prov_a, 'Proveedor SoftDelete',
-          'SD-PF-BORRADA', 'MXN', 1000, 1160, 'Vigente', v_hoy, now());
+          'SD-PF-BORRADA', 'MXN', 1000, 1160, 'Vigente', v_hoy,
+          (SELECT id FROM public.presupuesto_categorias
+            WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1),
+          now());
 
   INSERT INTO public.pagos_proveedor(id, organization_id, proveedor_factura_id, fecha_pago,
                                      monto, moneda, tipo_cambio_usd, metodo_pago)
