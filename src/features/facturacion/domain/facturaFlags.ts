@@ -116,7 +116,11 @@ function deriveFiscalFlags(
   return {
     puedeCancelarCfdi: timbradaVigente && canEdit && !enTramiteCancelacion(f),
     puedeSustituirCfdi: timbradaVigente && canEdit && sinSustitutaViva,
-    puedeRefacturarReceptor: timbradaViva && canEdit && sinSustitutaViva,
+    // Ola 14 · R5FE-01: refacturar tampoco se ofrece con cancelación en
+    // trámite (pending/verifying), alineado con cancelar y registrar pago.
+    // La RPC `abrir_caso_refacturacion` sigue siendo la autoridad final.
+    puedeRefacturarReceptor:
+      timbradaViva && canEdit && sinSustitutaViva && !enTramiteCancelacion(f),
   };
 }
 

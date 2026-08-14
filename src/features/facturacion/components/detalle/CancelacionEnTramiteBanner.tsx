@@ -17,7 +17,7 @@ export function CancelacionEnTramiteBanner({ estado }: Props) {
       ? "La solicitud de cancelación fue enviada al SAT."
       : "El SAT está verificando la cancelación.";
   return (
-    <Alert>
+    <Alert role="status" aria-live="polite">
       <AlertTriangle className="h-4 w-4" />
       <AlertTitle>Cancelación en trámite ante el SAT</AlertTitle>
       <AlertDescription>

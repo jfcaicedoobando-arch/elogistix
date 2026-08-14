@@ -201,6 +201,28 @@ describe("deriveFacturaFlags", () => {
     },
   );
 
+  it.each(["pending", "verifying"])(
+    "cancellation_status=%s bloquea refacturar receptor (Ola 14 · R5FE-01)",
+    (cancellation_status) => {
+      const r = deriveFacturaFlags(
+        { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, cancellation_status },
+        true,
+      );
+      expect(r.puedeRefacturarReceptor).toBe(false);
+    },
+  );
+
+  it.each(["none", "rejected", null])(
+    "cancellation_status=%s sigue permitiendo refacturar receptor",
+    (cancellation_status) => {
+      const r = deriveFacturaFlags(
+        { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, cancellation_status },
+        true,
+      );
+      expect(r.puedeRefacturarReceptor).toBe(true);
+    },
+  );
+
   it.each(["Cancelada", "Sustituida", "Borrador", "Pagada", "Por timbrar"])(
     "estado %s nunca habilita registrar pago",
     (estado) => {
