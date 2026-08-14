@@ -99,6 +99,8 @@ export const clienteInsertSchema = z.object({
     .optional(),
   regimen_fiscal: z.string().trim().max(10, "Régimen fiscal: máximo 10 caracteres.").optional().or(z.null()),
   uso_cfdi_default: z.string().trim().max(10, "Uso CFDI: máximo 10 caracteres.").optional().or(z.null()),
+  requiere_autorizacion_cotizacion: z.boolean().optional(),
+  requiere_autorizacion_proforma: z.boolean().optional(),
   organization_id: uuidSchema.nullable().optional(),
 }).passthrough(); // permite campos auxiliares no validados
 

@@ -120,6 +120,8 @@ export default function ClienteDetalle() {
           dias_credito: cliente.dias_credito ?? null,
           limite_credito_mxn: cliente.limite_credito_mxn ?? null,
           sin_comision: Boolean(cliente.sin_comision),
+          requiere_autorizacion_cotizacion: leerFlagAutorizacion(cliente, "requiere_autorizacion_cotizacion"),
+          requiere_autorizacion_proforma: leerFlagAutorizacion(cliente, "requiere_autorizacion_proforma"),
         }}
         contactDialogOpen={contactDialogOpen}
         setContactDialogOpen={setContactDialogOpen}
