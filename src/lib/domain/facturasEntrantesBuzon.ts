@@ -77,8 +77,23 @@ export function coincideBusquedaEntrante(row: FilaBuzon, termino: string): boole
  * para saber cuánto se debe: se marca y se puede filtrar.
  */
 export function entranteSinImporte(row: FilaBuzon): boolean {
-  const total = row.total_detectado;
-  return total === null || total === undefined || Number(total) <= 0;
+  return importeEntrante(row) === null;
+}
+
+/**
+ * v13.618.0 — Importe del documento con su origen. El CFDI manda; si el
+ * proveedor sólo mandó PDF, vale lo que capturó operaciones al subirlo.
+ */
+export function importeEntrante(
+  row: FilaBuzon,
+): { monto: number; moneda: string; fuente: "cfdi" | "declarado" } | null {
+  const cfdi = Number(row.total_detectado ?? 0);
+  if (cfdi > 0) return { monto: cfdi, moneda: row.moneda_detectada ?? "MXN", fuente: "cfdi" };
+  const declarado = Number(row.monto_declarado ?? 0);
+  if (declarado > 0) {
+    return { monto: declarado, moneda: row.moneda_declarada ?? "MXN", fuente: "declarado" };
+  }
+  return null;
 }
 
 export type ChipBuzon = "todos" | "sin_xml" | "sin_importe" | "atrasados" | "con_nota";
