@@ -8,6 +8,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { FacturapiError, parseFunctionError } from "../facturapi";
+import { toReadableError } from "../facturapiError";
 import { isExpectedFacturapiValidation } from "@/lib/ui/appFeedback";
 
 describe("FacturapiError.expected — validaciones SAT esperadas", () => {
@@ -17,6 +18,7 @@ describe("FacturapiError.expected — validaciones SAT esperadas", () => {
     "El régimen fiscal no es válido para el tipo de persona del RFC.",
     "El código postal no coincide con el domicilio fiscal del RFC.",
     "El uso de CFDI no es válido para el régimen fiscal del receptor.",
+    "La factura tiene una solicitud de cancelación pendiente.",
   ];
 
   const UNEXPECTED_MESSAGES = [
@@ -58,25 +60,9 @@ describe("FacturapiError.expected — validaciones SAT esperadas", () => {
 });
 
 /**
- * Helper local: replica lo que hace `toReadableError` (private) para probar
- * la clasificación sin exponer la función interna del módulo.
+ * Usa la implementación real (`toReadableError`) para que la whitelist no se
+ * duplique en el test: si el módulo cambia, la prueba lo detecta.
  */
 function buildFromEdgeBody(body: { message?: string; error?: string; transient?: boolean }): FacturapiError {
-  // Re-ejecutamos el flujo real: el mensaje pasa por la whitelist regex
-  // dentro del constructor de FacturapiError vía toReadableError. Como
-  // toReadableError no está exportado, invocamos parseFunctionError con un
-  // Response construido y luego emulamos manualmente lo que hace el módulo.
-  const message = body.message ?? body.error ?? "fallback";
-  // El módulo usa exactamente esta misma whitelist — la duplicamos aquí
-  // sólo para verificar acoplamiento; si diverge, el test lo detecta vía
-  // `expected`.
-  const patterns = [
-    /nombre del receptor.*pertenece.*rfc/i,
-    /rfc del receptor.*no.*registrado.*sat/i,
-    /r[eé]gimen fiscal.*no.*v[aá]lido/i,
-    /c[oó]digo postal.*no.*coincide/i,
-    /uso de cfdi.*no.*v[aá]lido/i,
-  ];
-  const expected = patterns.some((rx) => rx.test(message));
-  return new FacturapiError(message, !!body.transient, expected);
+  return toReadableError(null, body, "fallback") as FacturapiError;
 }
