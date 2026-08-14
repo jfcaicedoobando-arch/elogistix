@@ -65,12 +65,12 @@ BEGIN
   VALUES (prov_a, org_a, 'Proveedor SoftDelete', 'Logistico', 'Naviera');
 
   -- Embarque BORRADO: ningún reporte debe exponer su expediente ni su P&L.
-  -- `modo` / `tipo_operacion` son NOT NULL en base limpia (en prod traen valor
+  -- `modo` es NOT NULL en base limpia (en prod trae valor
   -- por migración posterior): se declaran explícitamente.
   INSERT INTO public.embarques(id, organization_id, expediente, cliente_id, cliente_nombre,
-                              modo, tipo_operacion, deleted_at)
+                              modo, deleted_at)
   VALUES (emb_a, org_a, 'ELSDL00001', cli_a, 'Cliente SoftDelete',
-          'Marítimo', 'Importación', now());
+          'Marítimo', now());
 
   -- Factura viva con saldo (cartera) ligada al embarque borrado.
   INSERT INTO public.facturas(id, organization_id, cliente_id, cliente_nombre, embarque_id,
