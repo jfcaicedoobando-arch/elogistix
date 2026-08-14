@@ -9139,6 +9139,15 @@ export type Database = {
           nombre: string
         }[]
       }
+      fn_admin_org_counts: {
+        Args: { _org: string }
+        Returns: {
+          clientes: number
+          cotizaciones: number
+          embarques: number
+          miembros: number
+        }[]
+      }
       fn_admin_platform_stats: {
         Args: never
         Returns: {
