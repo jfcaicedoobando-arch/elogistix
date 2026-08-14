@@ -31,6 +31,10 @@ import { resolverDiasCredito } from "@/features/proformas/domain/proformaDetalle
 import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
 import { useAprobarProformaInterna } from "@/features/proformas/hooks/useAprobarProformaInterna";
 import { BadgeClienteDeCasa } from "@/components/shared/BadgeClienteDeCasa";
+import {
+  computarFlags,
+  readEstadoCliente,
+} from "@/features/proformas/components/accionesProformaFlags";
 
 interface Props {
   proforma: ProformaDetalleFull;
