@@ -11,6 +11,8 @@ import type { CategoriaCogsBuzon } from "@/features/cxp/hooks/useCategoriaCogsBu
 import { SugerenciasOperacionesBanda } from "./SugerenciasOperacionesBanda";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
+import { embarqueIdUnico } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
+import { AvisoAnticipoEmbarque } from "@/features/anticipos-proveedor/components/AvisoAnticipoEmbarque";
 
 type Ctl = ReturnType<typeof useNuevaFacturaProveedorForm>;
 
