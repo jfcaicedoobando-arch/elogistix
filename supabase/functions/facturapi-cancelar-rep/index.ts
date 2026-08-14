@@ -23,9 +23,10 @@ void resolveFacturapiKey;
 
 const MOTIVOS_VALIDOS = new Set(["01", "02", "03", "04"]);
 
-// Ola 13 · R4P-01 (retiro): sin `cancelar_rep_anterior` — el SAT no admite
-// re-cancelar un CFDI cancelado; la trazabilidad del REP archivado la mantiene
-// facturapi-emitir-rep (claimRep) y el XML del REP nuevo.
+// Ola 13 · R4P-01 (retiro): se retiró la bandera de sustitución 01 del REP
+// archivado — el SAT no admite re-cancelar un CFDI cancelado. La trazabilidad
+// del REP archivado la mantiene facturapi-emitir-rep (claimRep) y el XML del
+// REP nuevo.
 interface ReqBody { pago_id?: string; motivo?: string; sustituye_uuid?: string }
 
 // eslint-disable-next-line complexity
