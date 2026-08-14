@@ -27,7 +27,10 @@ beforeEach(() => {
 describe("crmToast", () => {
   it("success usa duración 2s", () => {
     crmToast.success("Creado");
-    expect(toastFn.success).toHaveBeenCalledWith("Creado", { duration: 2000 });
+    expect(toastFn.success).toHaveBeenCalledWith(
+      "Creado",
+      expect.objectContaining({ duration: 2000, id: "ok-Creado" }),
+    );
   });
 
   it("error con Error usa message como descripción", () => {
@@ -57,7 +60,10 @@ describe("crmToast", () => {
 
   it("info dispara toast base 2s", () => {
     crmToast.info("hola");
-    expect(toastFn).toHaveBeenCalledWith("hola", { duration: 2000 });
+    expect(toastFn).toHaveBeenCalledWith(
+      "hola",
+      expect.objectContaining({ duration: 2000, id: "info-hola" }),
+    );
   });
 
   it("undo invoca el callback al hacer click", () => {
