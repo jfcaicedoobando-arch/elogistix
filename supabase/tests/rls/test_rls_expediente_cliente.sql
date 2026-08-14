@@ -58,8 +58,14 @@ BEGIN
     (cli_a, 'Cliente EXP A', 'XAXX010101E00', 'expa@test.local', org_a),
     (cli_b, 'Cliente EXP B', 'XAXX010101E01', 'expb@test.local', org_b);
 
+  -- v13.600.1: `tipo`/`categoria` son enums (tipo_proveedor / categoria_proveedor)
+  -- y `proveedores_categoria_check` exige la pareja válida
+  -- (categoria='Logistico' ⇒ tipo NOT NULL). La suite no valida esos campos,
+  -- pero deben ser labels reales del catálogo para pasar el CHECK.
   INSERT INTO public.proveedores(id, nombre, organization_id, tipo, categoria) VALUES
-    (prov_a, 'Proveedor EXP A', org_a, 'Nacional', 'General');
+    (prov_a, 'Proveedor EXP A', org_a, 'Agente Aduanal', 'Logistico');
+
+
 
   INSERT INTO public.cliente_documentos
     (id, organization_id, cliente_id, tipo, nombre, archivo) VALUES
