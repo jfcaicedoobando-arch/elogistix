@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { AlertCircle, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -21,25 +20,7 @@ import { ComisionClienteSection } from "./ComisionClienteSection";
 import { AutorizacionClienteSection } from "./AutorizacionClienteSection";
 import { usePermissions } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
-
-interface ClienteData {
-  nombre: string;
-  rfc: string;
-  direccion: string;
-  ciudad: string;
-  estado: string;
-  cp: string;
-  contacto: string;
-  email: string;
-  telefono: string;
-  regimen_fiscal: string;
-  uso_cfdi_default: string;
-  dias_credito: number | null;
-  limite_credito_mxn: number | null;
-  sin_comision: boolean;
-  requiere_autorizacion_cotizacion: boolean;
-  requiere_autorizacion_proforma: boolean;
-}
+import { TextField, type ClienteData } from "./DialogEditarClientePieces";
 
 interface Props {
   open: boolean;
@@ -47,33 +28,6 @@ interface Props {
   cliente: ClienteData;
   onSave: (data: ClienteData) => Promise<void>;
   isSaving: boolean;
-}
-
-type FieldKey = keyof Pick<
-  ClienteData,
-  "nombre" | "rfc" | "direccion" | "ciudad" | "estado" | "cp" | "contacto" | "email" | "telefono"
->;
-
-function TextField({
-  label, field, form, setForm, full, required,
-}: { label: string; field: FieldKey; form: ClienteData; setForm: (f: (p: ClienteData) => ClienteData) => void; full?: boolean; required?: boolean }) {
-  return (
-    <div className={full ? "md:col-span-2" : undefined}>
-      <Label>
-        {label}{required && <span className="text-destructive ml-0.5">*</span>}
-      </Label>
-      <Input
-        value={form[field]}
-        onChange={(e) =>
-          setForm((p) => ({
-            ...p,
-            [field]: field === "nombre" ? e.target.value.toLocaleUpperCase("es-MX") : e.target.value,
-          }))
-        }
-        className="mt-1"
-      />
-    </div>
-  );
 }
 
 export default function DialogEditarCliente({ open, onOpenChange, cliente, onSave, isSaving }: Props) {

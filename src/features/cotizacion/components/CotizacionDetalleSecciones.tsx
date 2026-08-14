@@ -1,70 +1,13 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { formatDate } from "@/lib/formatters";
 import { RecotizarModal } from "@/features/cotizacion/components/versionado/RecotizarModal";
 import { CrearEmbarqueConRevalidacion } from "@/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion";
 import { accionesCotizacionPermitidas } from "@/features/cotizacion/domain/cotizacion";
 import type { AppRole } from "@/types/appRole";
-import { BadgeClienteDeCasa } from "@/features/cliente/components/BadgeClienteDeCasa";
+import { BadgeClienteDeCasa } from "@/components/shared/BadgeClienteDeCasa";
 
-
-
-
-interface EmbarqueVinculado {
-  id: string;
-  expediente: string | null;
-  estado: string;
-  created_at: string;
-}
-
-interface Props {
-  embarques: EmbarqueVinculado[];
-  cotizacionEstado: string;
-}
-
-export function CotizacionDetalleEmbarques({ embarques, cotizacionEstado }: Props) {
-  const navigate = useNavigate();
-
-  // Mostrar la tarjeta cuando hay embarques vinculados, o cuando la cotización
-  // ya está "En operación" / "Cerrada" para indicar que debería haberlos.
-  const estadoSugiereEmbarque = cotizacionEstado === "En operación" || cotizacionEstado === "Cerrada";
-  if (embarques.length === 0 && !estadoSugiereEmbarque) return null;
-
-  return (
-    <Card>
-      <CardHeader><CardTitle>Embarques Generados</CardTitle></CardHeader>
-      <CardContent>
-        {embarques.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Esta cotización aparece como <strong>{cotizacionEstado}</strong>, pero no hay embarques vinculados.
-            Verifica con tu administrador o vuelve a generar el embarque desde el botón <em>Crear embarque</em>.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {embarques.map((emb) => (
-              <div
-                key={emb.id}
-                className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 cursor-pointer"
-                onClick={() => navigate(`/embarques/${emb.id}`)}
-              >
-                <span className="font-medium text-primary">{emb.expediente}</span>
-                <div className="flex items-center gap-3">
-                  <Badge className={getEstadoColor(emb.estado)}>{emb.estado}</Badge>
-                  <span className="text-sm text-muted-foreground">{formatDate(emb.created_at)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+export { CotizacionDetalleEmbarques } from "@/features/cotizacion/components/CotizacionDetalleEmbarques";
 
 interface AccionesProps {
   estado: string;
@@ -143,6 +86,34 @@ function AccionCrearEmbarque({ cotizacionId, numContenedores }: { cotizacionId: 
   );
 }
 
+/**
+ * Visibilidad de los botones del encabezado de cotización. Función pura para
+ * bajar la complejidad del componente (Power-of-10).
+ * Nota: sólo se puede re-cotizar si aún no hay embarque generado; con embarque
+ * vivo el flujo correcto es crear una nueva cotización.
+ */
+function visibilidadAcciones(params: {
+  estado: string;
+  esProspecto: boolean;
+  tieneEmbarquesVinculados: boolean;
+  puedeAceptar: boolean;
+  puedeRechazar: boolean;
+}) {
+  const { estado, esProspecto, tieneEmbarquesVinculados, puedeAceptar, puedeRechazar } = params;
+  const esAceptada = estado === "Aceptada";
+  const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
+  return {
+    esEnCaptura: estado === "Borrador" || estado === "Solicitada",
+    mostrarAceptarRechazar:
+      estado === "Borrador" || estado === "Enviada" ||
+      (estado === "Solicitada" && respuestaEnSolicitada),
+    esAceptada,
+    mostrarConvertirCliente: esAceptada && esProspecto,
+    mostrarCrearEmbarque: esAceptada && !esProspecto && !tieneEmbarquesVinculados,
+    mostrarRecotizar: esAceptada && !tieneEmbarquesVinculados,
+  };
+}
+
 export function CotizacionDetalleAcciones({
   estado, esProspecto, numContenedores, cotizacionId, version,
   tieneEmbarquesVinculados = false,
@@ -157,15 +128,16 @@ export function CotizacionDetalleAcciones({
     { creadaPor, usuarioActual },
     requiereAutorizacionCliente,
   );
-  const esEnCaptura = estado === "Borrador" || estado === "Solicitada";
-  const mostrarAceptarRechazar =
-    estado === "Borrador" || estado === "Enviada" ||
-    (estado === "Solicitada" && (acciones.aceptar || acciones.rechazar));
-  const esAceptada = estado === "Aceptada";
-  const mostrarCrearEmbarque = esAceptada && !esProspecto && !tieneEmbarquesVinculados;
-  // Fase J v13.301.81: sólo se puede re-cotizar si aún no hay embarque generado.
-  // Con embarque vivo, el flujo correcto es crear una nueva cotización.
-  const mostrarRecotizar = esAceptada && !tieneEmbarquesVinculados;
+  const {
+    esEnCaptura, mostrarAceptarRechazar, mostrarConvertirCliente,
+    mostrarCrearEmbarque, mostrarRecotizar,
+  } = visibilidadAcciones({
+    estado,
+    esProspecto,
+    tieneEmbarquesVinculados,
+    puedeAceptar: acciones.aceptar,
+    puedeRechazar: acciones.rechazar,
+  });
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -180,7 +152,7 @@ export function CotizacionDetalleAcciones({
         />
       )}
       {mostrarAceptarRechazar && <AccionesBorradorOEnviada onCambiarEstado={onCambiarEstado} puedeAceptar={acciones.aceptar} puedeRechazar={acciones.rechazar} />}
-      {esAceptada && esProspecto && (
+      {mostrarConvertirCliente && (
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
       {mostrarCrearEmbarque && <AccionCrearEmbarque cotizacionId={cotizacionId} numContenedores={numContenedores} />}
