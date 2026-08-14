@@ -166,7 +166,39 @@ BEGIN
   PERFORM pg_temp.assert(v_valid = false,
     'T9 la FK ya está VALIDATED: actualizar docs/ola14 y este test tras el saneo manual');
 
-  RAISE NOTICE 'OK — suite refacturaciones (matriz tabla-vs-RPC + FK) sin fallos';
+  -- ── T10 / T11. Vista previa: REP en verificación ante el SAT no bloquea ──
+  -- Un REP vivo cuya cancelación ya se solicitó es un PENDIENTE, no un bloqueo
+  -- (los pasos 2, 3 y 4 pueden avanzar mientras el SAT responde).
+  PERFORM pg_temp.as_postgres();
+  INSERT INTO public.pagos_factura
+    (id, organization_id, factura_id, fecha_pago, monto, monto_aplicado_factura,
+     moneda, uuid_rep, rep_cancellation_status)
+  VALUES (pago_a, org_a, fac_a, current_date, 1160, 1160, 'MXN',
+          gen_random_uuid()::text, 'verifying');
+
+  PERFORM pg_temp.as_user(u_auxiliar);
+  v_sim := public.refacturacion_simular_paso(caso_a, 2);
+  PERFORM pg_temp.assert(NOT (v_sim -> 'bloqueos' @> '["LC_REFACT_REP_VIVO"]'::jsonb),
+    format('T10 el REP en verificación se reportó como bloqueo: %s', v_sim -> 'bloqueos'));
+  PERFORM pg_temp.assert(v_sim -> 'pendientes' @> '["LC_REFACT_REP_EN_VERIFICACION"]'::jsonb,
+    format('T10 falta el pendiente LC_REFACT_REP_EN_VERIFICACION: %s', v_sim -> 'pendientes'));
+
+  v_sim := public.refacturacion_simular_paso(caso_a, 4);
+  PERFORM pg_temp.assert(NOT (v_sim -> 'bloqueos' @> '["LC_REFACT_REP_VIVO"]'::jsonb),
+    format('T11 el paso 4 bloqueó por un REP ya en verificación: %s', v_sim -> 'bloqueos'));
+  PERFORM pg_temp.assert(v_sim -> 'pendientes' @> '["LC_REFACT_REP_EN_VERIFICACION"]'::jsonb,
+    format('T11 el paso 4 no reportó el REP en verificación: %s', v_sim -> 'pendientes'));
+
+  -- T12. Sin solicitud de cancelación el REP sí bloquea.
+  PERFORM pg_temp.as_postgres();
+  UPDATE public.pagos_factura SET rep_cancellation_status = NULL WHERE id = pago_a;
+  PERFORM pg_temp.as_user(u_auxiliar);
+  v_sim := public.refacturacion_simular_paso(caso_a, 2);
+  PERFORM pg_temp.assert(v_sim -> 'bloqueos' @> '["LC_REFACT_REP_VIVO"]'::jsonb,
+    format('T12 un REP vivo sin solicitud NO bloqueó el paso 2: %s', v_sim -> 'bloqueos'));
+
+  RAISE NOTICE 'OK — suite refacturaciones (matriz tabla-vs-RPC + FK + vista previa) sin fallos';
+
 END $$;
 
 ROLLBACK;
