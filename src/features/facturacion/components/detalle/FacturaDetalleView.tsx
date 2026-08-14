@@ -117,24 +117,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
             }
           />
         }
-        banners={
-          <>
-            <ClaimPendingBanner
-              facturaId={factura.id}
-              facturapiId={factura.facturapi_id ?? null}
-              facturapiClaimAt={factura.facturapi_claim_at ?? null}
-            />
-            {(cancellationStatus === "pending" || cancellationStatus === "verifying") && (
-              <CancelacionEnTramiteBanner estado={cancellationStatus} />
-            )}
-            {mostrarSustitutaCancelada && factura.sustituida_por && (
-              <SustitutaCanceladaBanner
-                sustitutaId={factura.sustituida_por}
-                sustitutaNumero={factura.sustituida_por_ref?.numero ?? null}
-              />
-            )}
-          </>
-        }
+        banners={<FacturaDetalleBanners factura={factura} />}
         rail={<FacturaBitacoraCard facturaId={factura.id} />}
       >
         <FacturaDetalleBody
