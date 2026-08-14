@@ -9,7 +9,7 @@ import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks/useEmbarqu
 import { useDocsFaltantesParaEstado } from "@/features/embarques/hooks/useDocsFaltantesParaEstado";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { useState, useCallback } from "react";
 import {
