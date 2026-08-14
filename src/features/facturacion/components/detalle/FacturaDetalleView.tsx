@@ -66,8 +66,6 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
 
   const acuseCancelacionStatus = factura.acuse_cancelacion_status ?? null;
   const cancellationStatus = factura.cancellation_status ?? null;
-  const mostrarSustitutaCancelada =
-    !!factura.sustituida_por && factura.sustituida_por_ref?.estado === "Cancelada";
   const handleTimbrarRep = () => {
     if (pagoRepPendiente) timbrarRep.mutate(pagoRepPendiente.id);
   };
