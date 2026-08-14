@@ -32,9 +32,13 @@ export async function crearCotizacion(input: CreateCotizacionInput): Promise<Cot
   // Ola 10 · A11: la vigencia se calcula desde "hoy" en zona CDMX. Con
   // `toISOString()` cualquier alta después de las 18:00 hora de México
   // guardaba la fecha del día siguiente (la cotización vencía un día tarde).
+  // Ola 18: si el usuario capturó "Validez propuesta", ESA fecha es la
+  // vigencia (antes se usaba siempre hoy + días y el PDF mostraba otra fecha).
   const base = parseLocalMx(hoyMx());
   base.setUTCDate(base.getUTCDate() + input.vigencia_dias);
-  const payload = buildCotizacionInsertPayload(input, folio, isoUtcDay(base));
+  const fechaVigencia = input.validez_propuesta ?? isoUtcDay(base);
+  const payload = buildCotizacionInsertPayload(input, folio, fechaVigencia);
+
 
   const { data, error } = await supabase
     .from("cotizaciones")
