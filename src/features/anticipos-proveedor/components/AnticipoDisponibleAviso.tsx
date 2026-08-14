@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
 import { useAnticiposDisponibles } from "@/features/anticipos-proveedor/hooks/useAnticiposDisponibles";
+import { esMismoEmbarque } from "@/features/anticipos-proveedor/domain/ordenAnticiposPorEmbarque";
 import { AplicarAnticipoDesdeFacturaDialog } from "./AplicarAnticipoDesdeFacturaDialog";
 
 interface Props {
