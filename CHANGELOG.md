@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.623.0] - 2026-08-14
+- Conceptos de factura de proveedor con formato de invoice: nueva columna "Total" por línea (total línea + IVA + IEPS), pie de tabla que suma todas las columnas y caja de totales a la derecha (Subtotal → IVA → IEPS → Retenciones → TOTAL) en la moneda del documento.
+- Si el total de la factura no coincide con la suma de los conceptos (descuentos o conceptos faltantes en el CFDI) se muestra un aviso con la diferencia.
+- Las descripciones largas ya no se cortan a una línea (hasta dos líneas, con tooltip) y la tabla conserva scroll horizontal propio.
+- Mismo tratamiento en la vista previa de conceptos del CFDI al capturar la factura. Nuevas funciones puras `calcularResumenConceptos` / `totalLineaConImpuestos` con pruebas unitarias.
+
+
 ## [13.622.0] - 2026-08-14
 - Modal "Aplicar anticipo a esta factura": ahora muestra el desglose completo de la factura (subtotal, IVA, IEPS, retenciones, total, ya pagado, notas de crédito y saldo por pagar) junto al desglose del anticipo (monto, ya aplicado, disponible, monto a aplicar y saldo estimado después de aplicar). Antes sólo aparecía una cifra suelta en el encabezado, que se confundía con el subtotal sin IVA.
 - El saldo restante se recalcula en vivo al teclear el monto y avisa si excede el saldo o si la factura queda cubierta; cuando el anticipo está en otra moneda el resultado se marca como referencial (el servidor convierte al T/C oficial).
