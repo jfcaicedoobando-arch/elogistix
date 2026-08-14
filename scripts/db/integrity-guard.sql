@@ -110,6 +110,9 @@ with soft_tables as (
   join pg_namespace n on n.oid = c.relnamespace
   join pg_attribute a on a.attrelid = c.oid and a.attname = 'deleted_at' and a.attnum > 0
   where n.nspname = 'public' and c.relkind = 'r'
+    -- Dimensiones/catálogos: se unen sólo para mostrar el nombre, su borrado
+    -- lógico no debe desaparecer el documento financiero del reporte.
+    and c.relname not in ('clientes', 'proveedores')
 ),
 reportes as (
   -- Funciones y vistas de reporte financiero/antigüedad. Ampliar la lista al
@@ -137,8 +140,7 @@ reportes as (
 conteo as (
   select r.objeto,
          (select count(distinct s.relname) from soft_tables s
-           where r.def ~ ('\mpublic\.' || s.relname || '\M')
-              or r.def ~ ('\m' || s.relname || '\M')) as tablas_soft,
+           where r.def ~ ('(FROM|JOIN)\s+public\.' || s.relname || '\M')) as tablas_soft,
          (length(r.def) - length(replace(r.def, 'deleted_at', ''))) / length('deleted_at') as filtros
   from reportes r
 )
