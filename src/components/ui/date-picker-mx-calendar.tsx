@@ -5,6 +5,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { esDiaInhabilMx } from "@/lib/date/festivosMx";
 import { pickerIconClass } from "@/components/ui/picker-mx-shell";
 import { dateToIso, isoToDate, isoToDisplay } from "./date-picker-mx-helpers";
 
@@ -14,6 +15,8 @@ interface Props {
   max?: string;
   open: boolean;
   disabled?: boolean;
+  /** Resalta (sin deshabilitar) fines de semana y festivos oficiales. */
+  marcarInhabiles?: boolean;
   setOpen: (o: boolean) => void;
   onPick: (iso: string) => void;
   onClear: () => void;
@@ -21,10 +24,11 @@ interface Props {
   onCerrar?: () => void;
 }
 
+
 /** Botón + popover con Calendar embebido, extraído para respetar el
  *  límite Power-of-10 (≤200 líneas por archivo). */
 export function DatePickerMxCalendar({
-  value, min, max, open, disabled, setOpen, onPick, onClear, onCerrar,
+  value, min, max, open, disabled, marcarInhabiles, setOpen, onPick, onClear, onCerrar,
 }: Props) {
   const selectedDate = isoToDate(value);
   const minDate = min ? isoToDate(min) : undefined;
@@ -32,6 +36,7 @@ export function DatePickerMxCalendar({
   const dayDisabled: Array<{ before: Date } | { after: Date }> = [];
   if (minDate) dayDisabled.push({ before: minDate });
   if (maxDate) dayDisabled.push({ after: maxDate });
+
 
   const cerrar = () => {
     setOpen(false);
@@ -68,6 +73,9 @@ export function DatePickerMxCalendar({
           selected={selectedDate}
           defaultMonth={selectedDate ?? maxDate ?? minDate}
           disabled={dayDisabled.length ? dayDisabled : undefined}
+          modifiers={marcarInhabiles ? { inhabil: (d: Date) => esDiaInhabilMx(dateToIso(d)) } : undefined}
+          modifiersClassNames={marcarInhabiles ? { inhabil: "text-warning" } : undefined}
+
           onSelect={(d) => {
             if (!d) onClear();
             else onPick(dateToIso(d));

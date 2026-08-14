@@ -61,3 +61,13 @@ export const pickerClearClass =
 
 /** Clases del icono (X) del botón de limpiar. */
 export const pickerClearIconClass = "h-3.5 w-3.5";
+
+/**
+ * Clases del aviso ámbar (día inhábil). No es un error: la fecha se guarda.
+ * v13.614.0 — usa el token semántico `warning`, nunca un color hardcodeado.
+ */
+export const pickerAvisoClass = "text-xs text-warning";
+
+/** Ayuda de teclado que se muestra como `title` de los pickers con captura. */
+export const PICKER_AYUDA_TECLADO =
+  "T = hoy · + / - ajusta el segmento · ← → cambia de segmento · F4 abre el calendario";

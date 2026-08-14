@@ -6,9 +6,12 @@ import { useDatePickerMxValor } from "./date-picker-mx-valor";
 
 import { DatePickerMxCalendar } from "./date-picker-mx-calendar";
 import { manejarTeclaFecha } from "./date-picker-mx-keys";
+import { PATRON_FECHA } from "./date-picker-mx-segmentos";
+import { manejarAtajosSegmento, seleccionarSegmentoEnCursor } from "./date-picker-mx-teclado";
+import { motivoInhabilMx } from "@/lib/date/festivosMx";
 import {
-  MENSAJE_FECHA_INVALIDA, PLACEHOLDER_FECHA, pickerClearClass, pickerClearIconClass,
-  pickerErrorClass, pickerRootClass, pickerTriggerClass,
+  MENSAJE_FECHA_INVALIDA, PICKER_AYUDA_TECLADO, PLACEHOLDER_FECHA, pickerAvisoClass,
+  pickerClearClass, pickerClearIconClass, pickerErrorClass, pickerRootClass, pickerTriggerClass,
 } from "@/components/ui/picker-mx-shell";
 
 
@@ -29,6 +32,11 @@ interface DatePickerMxProps {
   name?: string;
   /** Enfoca el campo al montar (primer campo de un modal, p. ej.). */
   autoFocus?: boolean;
+  /**
+   * Muestra un aviso ámbar (sin bloquear) cuando la fecha cae en fin de semana
+   * o festivo oficial. Útil en fechas contables: pago, vencimiento, timbrado.
+   */
+  avisarInhabil?: boolean;
   "aria-label"?: string;
 }
 
@@ -44,11 +52,12 @@ interface DatePickerMxProps {
 export function DatePickerMx({
   value, onChange, placeholder = PLACEHOLDER_FECHA, className, title,
   disabled = false, readOnly = false, min, max, errorText, id, name,
-  autoFocus = false, "aria-label": ariaLabel,
+  autoFocus = false, avisarInhabil = false, "aria-label": ariaLabel,
 }: DatePickerMxProps) {
 
   const autoErrorId = useId();
   const errorId = id ? `${id}-error` : autoErrorId;
+  const avisoId = `${id ?? autoErrorId}-aviso`;
   const {
     text, invalid, open, setOpen, inputRef,
     commit, handleChange, handlePaste, clear, onPick, onCalendarClear,
@@ -56,13 +65,16 @@ export function DatePickerMx({
 
 
   const showError = invalid || !!errorText;
-  const describedBy = showError ? errorId : undefined;
+  const aviso = !showError && avisarInhabil && value ? motivoInhabilMx(value) : null;
+  const describedBy = [showError ? errorId : null, aviso ? avisoId : null]
+    .filter(Boolean).join(" ") || undefined;
 
   return (
     <div className={cn(pickerRootClass, className)}>
       <div
         role="group"
         aria-label={title}
+        title={title ?? PICKER_AYUDA_TECLADO}
         aria-disabled={disabled || undefined}
         className={cn(pickerTriggerClass({ showError, disabled }))}
       >
@@ -78,12 +90,25 @@ export function DatePickerMx({
           autoFocus={autoFocus}
           value={text}
           onChange={handleChange}
+          onFocus={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_FECHA)}
+          onClick={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_FECHA)}
           onKeyDown={(e) => {
-            manejarTeclaFecha(e, {
+            const consumida = manejarTeclaFecha(e, {
               open,
               setOpen,
               commit: () => commit(text),
               pendiente: text !== isoToDisplay(value),
+              disabled,
+              readOnly,
+            });
+            if (consumida) return;
+            manejarAtajosSegmento(e, {
+              patron: PATRON_FECHA,
+              base: value,
+              min,
+              max,
+              aplicar: onPick,
+              inputRef,
               disabled,
               readOnly,
             });
@@ -114,6 +139,7 @@ export function DatePickerMx({
 
         <DatePickerMxCalendar
           value={value}
+          marcarInhabiles={avisarInhabil}
           min={min}
           max={max}
           open={open}
@@ -125,9 +151,13 @@ export function DatePickerMx({
         />
       </div>
       {showError && (
-
         <span id={errorId} className={pickerErrorClass}>
           {errorText ?? MENSAJE_FECHA_INVALIDA}
+        </span>
+      )}
+      {aviso && (
+        <span id={avisoId} role="status" className={pickerAvisoClass}>
+          Día inhábil: {aviso}
         </span>
       )}
     </div>
