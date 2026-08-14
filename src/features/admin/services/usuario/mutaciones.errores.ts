@@ -25,10 +25,17 @@ const TRADUCCIONES: ReadonlyArray<{ patron: RegExp; mensaje: string }> = [
   },
 ];
 
-/** Aplica las traducciones conocidas; si no hay coincidencia devuelve el original. */
+/**
+ * Aplica las traducciones conocidas. Ola 13 · R4UX-04: ante no-coincidencia ya
+ * NO se devuelve el mensaje original del proveedor de identidad (llega en
+ * inglés); se envuelve con copy en español. El motivo original viaja como
+ * contexto para diagnóstico.
+ */
 export function traducirMensajeEdge(mensaje: string): string {
   const encontrada = TRADUCCIONES.find((t) => t.patron.test(mensaje));
-  return encontrada ? encontrada.mensaje : mensaje;
+  if (encontrada) return encontrada.mensaje;
+  console.warn("[traducirMensajeEdge] motivo no catalogado del proveedor de identidad:", mensaje);
+  return `El servicio de identidad rechazó la solicitud: ${mensaje}`;
 }
 
 function extraerDeCuerpo(texto: string): string | null {

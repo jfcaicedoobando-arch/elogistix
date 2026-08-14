@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fallóDirectorioUsuarios, fetchUsuariosOrganizacion } from "./listado";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { getAuthToken, resetRedirectUrl } from "./mutaciones.auth";
-import { errorDeEdgeFunction } from "./mutaciones.errores";
+import { errorDeEdgeFunction, traducirMensajeEdge } from "./mutaciones.errores";
 
 export interface CreateUserParams {
   email: string;
@@ -87,7 +87,9 @@ export async function createUserViaEdgeFunction(
   // El motivo real (p. ej. correo inválido) viaja en el cuerpo de la respuesta.
   if (res.error) throw await errorDeEdgeFunction(res.error, "No se pudo crear el usuario. Reintenta en unos minutos.");
   const body = res.data as CreateUserResponse;
-  if (body?.error) throw new Error(body.error);
+  // Ola 13 · R4FE-01: una respuesta 2xx con `body.error` también pasa por la
+  // capa de traducción es-MX; antes se mostraba crudo el texto en inglés.
+  if (body?.error) throw new Error(traducirMensajeEdge(body.error));
 
   const nuevoId = body?.user?.id;
   if (!nuevoId) {

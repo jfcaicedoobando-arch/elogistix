@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import { useProveedorMovimientos } from "@/features/proveedor/hooks/useProveedorMovimientos";
 import {
@@ -157,7 +157,7 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
             <div className="flex flex-wrap gap-x-6 gap-y-1 border-b px-4 py-3">
               {apertura.map((a) => (
                 <p key={a.moneda} className="text-xs text-muted-foreground">
-                  Saldo inicial {a.moneda} (antes del {desde}):{" "}
+                  Saldo inicial {a.moneda} (antes del {formatDate(desde)}):{" "}
                   <span className="font-semibold tabular-nums text-foreground">
                     {formatCurrency(a.saldo, a.moneda)}
                   </span>

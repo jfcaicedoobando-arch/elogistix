@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCreateUser } from "@/features/admin/hooks/usuario";
 import { useOrganizationsList } from "@/features/admin/hooks";
@@ -135,17 +135,16 @@ export default function NuevoUsuarioDialog({
           >
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={createUser.isPending}>
-            {createUser.isPending ? (
-              <>
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                {porInvitacion ? "Enviando…" : "Creando…"}
-              </>
-            ) : porInvitacion ? (
-              "Enviar invitación"
-            ) : (
-              "Crear usuario"
-            )}
+          {/* Ola 13 · R4UX-03: convención UX-11 — prop `loading` del Button del
+              DS (deshabilita, pone `aria-busy` y pinta el spinner). */}
+          <Button onClick={handleSubmit} loading={createUser.isPending}>
+            {createUser.isPending
+              ? porInvitacion
+                ? "Enviando…"
+                : "Creando…"
+              : porInvitacion
+                ? "Enviar invitación"
+                : "Crear usuario"}
           </Button>
         </>
       }
