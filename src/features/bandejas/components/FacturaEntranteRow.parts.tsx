@@ -4,10 +4,11 @@
  */
 import { StickyNote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
-import { entranteSinImporte } from "@/lib/domain/facturasEntrantesBuzon";
+import { importeEntrante } from "@/lib/domain/facturasEntrantesBuzon";
 import type { FacturaEntranteRow as Fila } from "@/features/cxp/services/facturasEntrantes";
 
 /** Proveedor + avisos de la fila (falta XML, CFDI ya capturado, nota). */
