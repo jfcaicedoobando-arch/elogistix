@@ -13,16 +13,12 @@ import {
 } from "@/features/expediente/domain/expediente";
 
 export {
-  DIAS_AVISO_VENCIMIENTO,
-  MAX_VIGENCIA_ANIOS,
   diasParaVencer,
   estadoVigencia,
   formatTamano,
   ultimoPorTipo,
 } from "@/features/expediente/domain/expediente";
 export type {
-  EstadoVigencia,
-  RenglonExpediente,
   ResumenExpediente,
 } from "@/features/expediente/domain/expediente";
 

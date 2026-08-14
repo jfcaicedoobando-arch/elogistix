@@ -144,5 +144,3 @@ export function useRefacturacion(facturaId: string | null, open: boolean) {
     cerrar,
   };
 }
-
-export type RefacturacionState = ReturnType<typeof useRefacturacion>;

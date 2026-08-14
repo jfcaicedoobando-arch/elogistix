@@ -24,7 +24,6 @@ export {
   cancelacionOriginalRechazada,
   facturaNuevaLista,
   originalFueraDeCirculacion,
-  pagosConRepVivo,
   repsEnVerificacion,
   tieneRepVivo,
 } from "@/features/facturacion/domain/refacturacionEstadoFiscal";
