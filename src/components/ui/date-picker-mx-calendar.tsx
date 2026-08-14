@@ -28,7 +28,7 @@ interface Props {
 /** Botón + popover con Calendar embebido, extraído para respetar el
  *  límite Power-of-10 (≤200 líneas por archivo). */
 export function DatePickerMxCalendar({
-  value, min, max, open, disabled, setOpen, onPick, onClear, onCerrar,
+  value, min, max, open, disabled, marcarInhabiles, setOpen, onPick, onClear, onCerrar,
 }: Props) {
   const selectedDate = isoToDate(value);
   const minDate = min ? isoToDate(min) : undefined;
@@ -36,6 +36,7 @@ export function DatePickerMxCalendar({
   const dayDisabled: Array<{ before: Date } | { after: Date }> = [];
   if (minDate) dayDisabled.push({ before: minDate });
   if (maxDate) dayDisabled.push({ after: maxDate });
+
 
   const cerrar = () => {
     setOpen(false);
