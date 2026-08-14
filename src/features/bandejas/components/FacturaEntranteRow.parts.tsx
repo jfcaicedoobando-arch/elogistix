@@ -91,21 +91,50 @@ export function MetaEntrante({ row }: { row: Fila }) {
 }
 
 /** Importe detectado del CFDI, alineado a la derecha. */
-export function ImporteEntrante({ row }: { row: Fila }) {
-  if (entranteSinImporte(row)) {
+export function ImporteEntrante({
+  row,
+  onAgregarImporte,
+}: {
+  row: Fila;
+  /** v13.618.0 — Abre la corrección para capturar el importe faltante. */
+  onAgregarImporte?: (row: Fila) => void;
+}) {
+  const importe = importeEntrante(row);
+
+  if (!importe) {
     return (
-      <div className="w-full shrink-0 text-left md:w-[128px] md:text-right">
-        <span className="text-xs text-muted-foreground">Sin importe</span>
+      <div className="flex w-full shrink-0 flex-col items-start gap-1 md:w-[128px] md:items-end">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="warning" size="sm">Sin importe</Badge>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            El documento llegó sin XML y quien lo subió no capturó el importe. Agrégalo para
+            poder priorizar y cotejar la captura.
+          </TooltipContent>
+        </Tooltip>
+        {onAgregarImporte && (
+          <Button
+            size="sm"
+            variant="link"
+            className="h-auto p-0 text-xs"
+            onClick={() => onAgregarImporte(row)}
+          >
+            Agregar importe
+          </Button>
+        )}
       </div>
     );
   }
 
-  const moneda = row.moneda_detectada ?? "MXN";
   return (
     <div className="w-full shrink-0 text-left md:w-[128px] md:text-right">
       <p className="truncate text-sm font-semibold tabular-nums">
-        {formatCurrency(Number(row.total_detectado), moneda)}
+        {formatCurrency(importe.monto, importe.moneda)}
       </p>
+      {importe.fuente === "declarado" && (
+        <p className="text-[11px] text-muted-foreground">Declarado por operaciones</p>
+      )}
     </div>
   );
 }
