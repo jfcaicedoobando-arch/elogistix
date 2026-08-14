@@ -19,7 +19,7 @@ export interface CtxAtajos {
   min?: string;
   max?: string;
   aplicar: (valor: string) => void;
-  inputRef: RefObject<HTMLInputElement>;
+  inputRef: RefObject<HTMLInputElement | null>;
   disabled?: boolean;
   readOnly?: boolean;
 }
