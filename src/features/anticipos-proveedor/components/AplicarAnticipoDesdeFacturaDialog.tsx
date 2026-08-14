@@ -86,7 +86,6 @@ export function AplicarAnticipoDesdeFacturaDialog({
   // Ola 9 · B5: parseo centralizado de montos tecleados.
   const montoNum = parseMonto(monto, NaN);
 
-  const monedaDifiere = Boolean(anticipo) && anticipo!.moneda !== monedaFactura;
   const desajuste = useMemo(
     () =>
       evaluarDesajusteEmbarque({
