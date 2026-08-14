@@ -157,22 +157,29 @@ reap_pid() {
 
 if [ "$have_wait_n" = "1" ]; then
   while [ "$remaining" -gt 0 ]; do
+    # Sólo esperamos PIDs pendientes: pasar uno ya cosechado hace que
+    # `wait -n` falle con 127 y aborte el loop (bug hasta v13.594.7).
+    pending_pids=()
+    for pid in "${T_PIDS[@]}"; do
+      idx="${T_INDEX_BY_PID[$pid]}"
+      [ "${T_EXITS[$idx]}" = "-1" ] && pending_pids+=("$pid")
+    done
+    [ "${#pending_pids[@]}" -gt 0 ] || break
     # wait -n -p PID (bash 5.1+) captura el PID que terminó. Fallback: buscar por kill -0.
     finished_pid=""
-    if wait -n -p finished_pid "${T_PIDS[@]}"; then
+    if wait -n -p finished_pid "${pending_pids[@]}"; then
       code=0
     else
       code=$?
     fi
     if [ -z "$finished_pid" ]; then
       # bash 5.0: sin -p. Buscar cuál murió.
-      for pid in "${T_PIDS[@]}"; do
-        idx="${T_INDEX_BY_PID[$pid]}"
-        [ "${T_EXITS[$idx]}" = "-1" ] || continue
+      for pid in "${pending_pids[@]}"; do
         if ! kill -0 "$pid" 2>/dev/null; then finished_pid=$pid; break; fi
       done
     fi
     [ -n "$finished_pid" ] || break
+
     reap_pid "$finished_pid" "$code"
     if [ "$FAIL_FAST" = "1" ] && [ -n "$first_fail" ] && [ "$remaining" -gt 0 ]; then
       echo "⛔ fail-fast: '$first_fail' falló → cancelando tareas restantes"
