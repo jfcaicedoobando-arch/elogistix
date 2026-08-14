@@ -11,6 +11,8 @@ import { DetailSkeleton } from "@/components/shared/skeletons";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { toTitleCase, formatCurrency } from "@/lib/formatters";
+import { leerFlagAutorizacion } from "@/features/cliente/domain/autorizacionCliente";
+import { BadgeClienteDeCasa } from "@/features/cliente/components/BadgeClienteDeCasa";
 
 interface Cliente {
   id: string;
@@ -22,6 +24,8 @@ interface Cliente {
   regimen_fiscal?: string | null;
   dias_credito?: number | null;
   limite_credito_mxn?: number | null;
+  requiere_autorizacion_cotizacion?: boolean | null;
+  requiere_autorizacion_proforma?: boolean | null;
 }
 
 interface Props {
@@ -35,6 +39,8 @@ interface Props {
  * Encabezado del detalle de cliente. v13.571.0 — homologado con proveedor:
  * acción primaria sólida (Editar) + menú "Más acciones", y badges de identidad
  * fiscal/crediticia junto al título.
+ * v13.624.1 — muestra el estatus de autorización (cliente de casa) para que el
+ * usuario confirme el cambio sin volver a abrir el modal de edición.
  */
 export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
   const navigate = useNavigate();
@@ -45,6 +51,12 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
   if (typeof cliente.limite_credito_mxn === "number" && cliente.limite_credito_mxn > 0) {
     badges.push(`Límite ${formatCurrency(cliente.limite_credito_mxn, "MXN")}`);
   }
+  const requiereCotizacion = leerFlagAutorizacion(cliente, "requiere_autorizacion_cotizacion");
+  const requiereProforma = leerFlagAutorizacion(cliente, "requiere_autorizacion_proforma");
+  const clienteDeCasa = !requiereCotizacion && !requiereProforma;
+  if (!clienteDeCasa && !requiereCotizacion) badges.push("Cotizaciones sin autorización del cliente");
+  if (!clienteDeCasa && !requiereProforma) badges.push("Proformas sin autorización del cliente");
+
 
   return (
     <DetailHeader
@@ -58,8 +70,9 @@ export function ClienteDetalleHeader({ cliente, canEdit, onEdit }: Props) {
         ) : undefined
       }
       badge={
-        badges.length > 0 ? (
+        badges.length > 0 || clienteDeCasa ? (
           <div className="flex flex-wrap items-center gap-2">
+            {clienteDeCasa && <BadgeClienteDeCasa tipo="cliente" />}
             {badges.map((b, i) => (
               <Badge key={b} variant={i === 0 ? "secondary" : "outline"} className="font-normal">
                 {b}

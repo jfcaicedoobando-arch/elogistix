@@ -76,6 +76,8 @@ export default function ClienteDetalle() {
           regimen_fiscal: cliente.regimen_fiscal,
           dias_credito: cliente.dias_credito,
           limite_credito_mxn: cliente.limite_credito_mxn,
+          requiere_autorizacion_cotizacion: leerFlagAutorizacion(cliente, "requiere_autorizacion_cotizacion"),
+          requiere_autorizacion_proforma: leerFlagAutorizacion(cliente, "requiere_autorizacion_proforma"),
         }}
         canEdit={canEdit}
         onBack={() => navigate("/clientes")}

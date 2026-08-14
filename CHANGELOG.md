@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.624.1] - 2026-08-14
+- Corregido el "parpadeo" al guardar en Editar cliente: los interruptores de autorización ya no se ven regresar a encendidos (el dato siempre se guardó bien; era el formulario que se repintaba con la versión anterior antes de cerrarse).
+- La ficha del cliente ahora muestra la etiqueta "Cliente de casa" cuando no requiere autorizar cotizaciones ni proformas, y etiquetas individuales si sólo una de las dos está apagada.
+
 ## [13.624.0] - 2026-08-14
 - Nuevo interruptor por cliente: "Requiere autorizar cotizaciones" y "Requiere autorizar proformas" (en Editar cliente). Para los clientes de casa se pueden apagar y así agilizar la operación; sólo administración o gerencia comercial puede cambiar esta política.
 - Cotizaciones de clientes de casa: se pueden aceptar/rechazar directamente desde Borrador o Solicitada (antes había que enviarlas primero). Se muestra la etiqueta "Cliente de casa" y sigue vigente la regla de que quien la creó no la puede aceptar.
