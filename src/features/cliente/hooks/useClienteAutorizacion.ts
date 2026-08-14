@@ -7,7 +7,6 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { qk } from "@/lib/query/queryKeys";
 
 export interface ClienteAutorizacion {
   requiereAutorizacionCotizacion: boolean;
@@ -53,7 +52,3 @@ export function useClienteAutorizacion(clienteId: string | null | undefined) {
     isLoading: query.isLoading,
   };
 }
-
-// `qk` se importa para mantener la convención de query keys centralizadas en
-// módulos nuevos; esta clave es local al hook por su granularidad.
-void qk;
