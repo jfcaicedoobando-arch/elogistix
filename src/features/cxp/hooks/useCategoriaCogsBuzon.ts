@@ -40,38 +40,41 @@ export function useCategoriaCogsBuzon({
   categorias, documentoId, expediente, abierto, categoriaActual, onCategoria,
 }: Args): CategoriaCogsBuzon {
   const [desbloqueada, setDesbloqueada] = useState(false);
-  const aplicadoPara = useRef<string | null>(null);
   const cogs = encontrarCategoriaCogs(categorias);
 
   const estado = useRef({ categoriaActual, onCategoria });
   estado.current = { categoriaActual, onCategoria };
 
+  /**
+   * v13.620.0 — Reconciliación continua: la autocarga del CFDI/PDF reemplaza
+   * TODO el formulario (incluida la categoría sugerida por la IA), así que un
+   * único disparo se perdía. Mientras el contador no desbloquee, cualquier
+   * reescritura del sistema vuelve a fijar COGS.
+   */
   useEffect(() => {
-    if (!abierto || !documentoId || !cogs) return;
-    if (aplicadoPara.current === documentoId) return;
-    aplicadoPara.current = documentoId;
-    // No pisamos una elección previa distinta hecha por el contador.
-    if (!estado.current.categoriaActual) estado.current.onCategoria(cogs.id);
-  }, [abierto, documentoId, cogs]);
+    if (!abierto || !documentoId || !cogs || desbloqueada) return;
+    if (estado.current.categoriaActual === cogs.id) return;
+    estado.current.onCategoria(cogs.id);
+  }, [abierto, documentoId, cogs, desbloqueada, categoriaActual]);
 
   useEffect(() => {
-    if (!abierto) {
-      aplicadoPara.current = null;
-      setDesbloqueada(false);
-    }
+    if (!abierto) setDesbloqueada(false);
   }, [abierto]);
+
+  // Cambiar de documento vuelve a poner el candado.
+  useEffect(() => { setDesbloqueada(false); }, [documentoId]);
 
   const desbloquear = useCallback(() => setDesbloqueada(true), []);
 
   if (!documentoId) return { bloqueada: false, desbloquear };
   if (!cogs) return { bloqueada: false, desbloquear, avisoSinCogs: AVISO_SIN_COGS };
 
-  const enCogs = categoriaActual === cogs.id;
   return {
-    bloqueada: !desbloqueada && enCogs,
+    bloqueada: !desbloqueada,
     motivo: expediente
       ? `Costo directo de embarque: el documento nació del expediente ${expediente}.`
       : "Costo directo de embarque: el documento nació de un embarque.",
     desbloquear,
   };
 }
+
