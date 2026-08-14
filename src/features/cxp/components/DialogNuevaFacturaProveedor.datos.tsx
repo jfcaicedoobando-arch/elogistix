@@ -31,6 +31,10 @@ interface DatosProps {
 export function ColumnaDatosFactura({
   ctl, categorias, herencia, sinCostoCapturado, entrante, categoriaCogs,
 }: DatosProps) {
+  // Embarque al que apunta la captura: el del buzón o el único vinculado.
+  const embarqueCruce = entrante?.embarqueId ?? embarqueIdUnico(ctl.vinculos);
+  const expedienteCruce = entrante?.expediente ?? null;
+
   return (
     <div className="space-y-5 min-w-0">
       <FacturaProveedorFormFields
