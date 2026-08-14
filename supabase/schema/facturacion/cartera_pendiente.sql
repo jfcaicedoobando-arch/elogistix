@@ -50,7 +50,7 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
     b.estado, b.cancellation_status
   FROM base b
   LEFT JOIN public.clientes c ON c.id = b.cliente_id
-  LEFT JOIN public.embarques e ON e.id = b.embarque_id
+  LEFT JOIN public.embarques e ON e.id = b.embarque_id AND e.deleted_at IS NULL
   WHERE (b.total - b.pagado - b.nc_aplicadas) > 0.005
     -- Ola 5 · RG4-13: sin filtro ad-hoc por org del cliente; RLS (SECURITY
     -- INVOKER) ya acota por la org de las filas, canon v3.
