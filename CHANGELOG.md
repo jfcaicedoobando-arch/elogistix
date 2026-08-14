@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.608.0] - 2026-08-14
+- Filtros estrictos de borrado lógico (`deleted_at IS NULL`) en los reportes financieros y de antigüedad: `libro_pagos` (JOIN a `facturas` y `proveedor_facturas`), `cartera_pendiente` y `proveedor_estado_cuenta*` (JOIN a `embarques`), `pnl_financiero_embarque` (embarque borrado ⇒ error), `estado_cuenta_bancario` y `conciliacion_resumen` (JOIN a `cuentas_bancarias`).
+- Vistas alineadas con el mismo criterio, conservando `security_invoker = on`: `v_pagos_rep_pendientes`, `v_proforma_factura_link`, `v_saldos_cuentas_bancarias`.
+- Espejos sincronizados (`cartera_pendiente`, `proveedor_estado_cuenta`, `proveedor_estado_cuenta_movimientos`) + migración de replay `20260824080000_ola14_soft_delete_reportes_replay.sql` para que una instalación limpia termine con el mismo cuerpo (`audit:replay-mirror` verde).
+- Nueva suite `supabase/tests/rls/test_rls_soft_delete_reportes.sql` (5 aserciones + 2 controles) registrada en el grupo `financiero` de CI.
+
+## [13.607.1] - 2026-08-14
+
+
 ## [13.607.1] - 2026-08-14
 - Ola 14 · Sprint 05 (cobertura): nueva suite `supabase/tests/rls/test_rls_refacturaciones_matriz.sql` (9 aserciones) que blinda R5BD-04 y R5BD-05: tesorero y ejecutivo_cobranza sin INSERT/UPDATE directo en `refacturaciones`, auxiliar_contable con escritura, SELECT intacto, aislamiento cross-tenant, FK colgante rechazada (23503) y contrato de la FK (`ON DELETE RESTRICT` + `NOT VALID`).
 - Suite registrada en el grupo `financiero` de `.github/workflows/rls-tests.yml` (el guardrail de matriz falla si una suite nueva no queda declarada).
