@@ -60,18 +60,14 @@ function listaErrores(errors: unknown): string[] {
  * Interpreta el body de un rechazo de FacturApi/SAT. Devuelve `null` si el
  * body no parece de facturación (para no secuestrar otros errores).
  */
-export function interpretarErrorFacturapi(body: unknown): FacturapiErrorInterpretado | null {
-  const { detail, status, mensaje } = leerDetail(body);
-  const codigoCrudo = str(detail.code);
-  const codigo = codigoCrudo
-    ?? extraerCodigoSatDeTexto(mensaje)
-    ?? extraerCodigoSatDeTexto(str(detail.message));
-  const info = buscarCodigoSat(codigo);
-  const errores = listaErrores(detail.errors);
-
-  if (!info && !mensaje && !codigo) return null;
-
-  const detalles: Record<string, unknown> = {
+function armarDetalles(
+  detail: FacturapiDetail,
+  codigo: string | null | undefined,
+  status: number | undefined,
+  mensaje: string | undefined,
+  errores: string[],
+): Record<string, unknown> {
+  return {
     codigoSat: codigo ?? null,
     status: status ?? null,
     campo: str(detail.path) ?? str(detail.location) ?? null,
@@ -79,6 +75,19 @@ export function interpretarErrorFacturapi(body: unknown): FacturapiErrorInterpre
     mensajeOriginal: mensaje ?? null,
     errores: errores.length > 0 ? errores : null,
   };
+}
+
+export function interpretarErrorFacturapi(body: unknown): FacturapiErrorInterpretado | null {
+  const { detail, status, mensaje } = leerDetail(body);
+  const codigo = str(detail.code)
+    ?? extraerCodigoSatDeTexto(mensaje)
+    ?? extraerCodigoSatDeTexto(str(detail.message));
+  const info = buscarCodigoSat(codigo);
+  const errores = listaErrores(detail.errors);
+
+  if (!info && !mensaje && !codigo) return null;
+
+  const detalles = armarDetalles(detail, codigo, status, mensaje, errores);
 
   if (info) {
     return {
@@ -96,6 +105,7 @@ export function interpretarErrorFacturapi(body: unknown): FacturapiErrorInterpre
     detalles,
   };
 }
+
 
 /**
  * Traduce un mensaje suelto de FacturApi/SAT (cuando sólo tenemos el texto,
