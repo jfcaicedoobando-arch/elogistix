@@ -35,6 +35,18 @@ const SAT_ENDPOINT = "https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaC
  */
 const SAT_FETCH_TIMEOUT_MS = 12_000;
 
+/**
+ * R4EF-04: timeout del SAT ⇒ 504 dedicado; el resto de errores de red ⇒ 502.
+ */
+function respuestaErrorSat(cors: Record<string, string>, e: unknown): Response {
+  const esTimeout = e instanceof DOMException &&
+    (e.name === "TimeoutError" || e.name === "AbortError");
+  if (esTimeout) {
+    return json(cors, { error: "sat_timeout", timeout_ms: SAT_FETCH_TIMEOUT_MS }, 504);
+  }
+  return json(cors, { error: "sat_unreachable", detail: (e as Error).message }, 502);
+}
+
 // Alias local con firma (cors, body, status) para conservar los callsites de este handler.
 const json = (cors: Record<string, string>, body: unknown, status = 200): Response =>
   _jsonResponse(body, status, cors);
