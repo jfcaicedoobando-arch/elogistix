@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.609.1] - 2026-08-14
+- CI: expediente del fixture de borrado lógico renombrado a `ELSDL00001` para cumplir el formato estándar (`rls-fixtures-expediente-format`).
+- Refactor `useRefacturacion`: consultas y invalidación de caches extraídas a `useRefacturacionQueries` (complejidad ciclomática 17 → dentro del límite).
+- FIX-H6-18: migración correctiva que re-aplica `REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE … TO authenticated, service_role` en `libro_pagos`, `estado_cuenta_bancario`, `conciliacion_resumen`, `pnl_financiero_embarque`, `proveedor_estado_cuenta`, `proveedor_estado_cuenta_movimientos`, `cxc_aging_clientes` y `cxp_aging_proveedores`; baseline de `audit:migrations` en `20260814164034` y candados agregados al replay `20260824080000`.
+
 ## [13.609.0] - 2026-08-14
 - Borrado lógico estricto (Fase 2): el Estado de Resultados anual (fuente facturas) ya no resta notas de crédito de clientes ni de proveedores cuya factura fue eliminada.
 - Antigüedad de clientes y proveedores: se refuerza el filtro `deleted_at IS NULL` en los cálculos internos de pagos y notas de crédito.

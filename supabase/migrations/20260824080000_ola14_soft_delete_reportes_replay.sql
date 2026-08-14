@@ -510,3 +510,14 @@ BEGIN
   );
 END;
 $function$;
+
+-- FIX-H6-18: candados de ejecución en el mismo archivo (regla H6).
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta(uuid) TO service_role;
+
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM anon;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO service_role;
