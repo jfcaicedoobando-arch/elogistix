@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.602.0] - 2026-08-14
+### Ola 13 · Sprint 08 — Retiro certificado de la sustitución motivo 01 del REP archivado (R4P-01, P2)
+- **Rama muerta eliminada.** `facturapi-cancelar-rep` aceptaba la bandera `cancelar_rep_anterior` para "cancelar el REP archivado sustituyéndolo por el vigente", pero ningún punto de la app la enviaba nunca (el hook siempre llamaba con 3 datos). Se retiró la bandera, la variable `cancelarAnterior` y las validaciones que sólo existían para ella: hoy la función rechaza de inmediato un REP ya cancelado y deja un solo camino real y probado (cancelar con motivo 02, timbrar el REP nuevo).
+- **Servicio y UI alineados.** `cancelarRep()` en `repFacturapi.ts` quedó con 3 argumentos y el tooltip de `PagoRepCell` ya no promete una cancelación "01" técnica: describe que el REP anterior queda archivado como antecedente.
+- **Test de certificación** en `supabase/functions/facturapi-cancelar-rep/index_test.ts`: no quedan rastros de la bandera obsoleta y los flujos vigentes (motivo 02 y motivo 01 con UUID sustituto) siguen intactos.
+- **Hueco de cobertura cerrado (R4BD-05).** Nueva suite `supabase/tests/rls/test_rls_proveedor_estado_cuenta_offset.sql`: verifica que `p_offset` avanza hacia atrás en el tiempo (páginas 1/2/3 sin traslape ni movimientos perdidos), que `hay_mas` se apaga al llegar al inicio, el aislamiento cross-tenant y los grants H6. Registrada en el grupo `operaciones` de `rls-tests`.
+
 ## [13.601.0] - 2026-08-14
 ### Ola 13 · Sprint 07 — Org guard en `saldo_factura_proveedor` (R4BD-02, P1)
 - **Fuga cross-tenant cerrada.** `public.saldo_factura_proveedor(uuid)` (SECURITY DEFINER) filtraba la factura sólo por `id` y `deleted_at`: cualquier usuario autenticado podía leer `total/pagado/nc_aplicada/saldo` de una factura de **otra organización** conociendo su UUID. Ahora exige `organization_id = current_user_org_id()` y aborta con `42501 LC_ORG_SIN_CONTEXTO` si no hay organización activa (patrón de las RPC hermanas del módulo de proveedores).

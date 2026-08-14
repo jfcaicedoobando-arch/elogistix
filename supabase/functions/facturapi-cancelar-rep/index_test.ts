@@ -35,3 +35,16 @@ Deno.test("cancelación repetida pendiente es idempotente y no vuelve a llamar a
   assert(guardIdx < cancelIdx, "el guard debe ejecutarse antes de solicitar otra cancelación");
   assertStringIncludes(src, "La solicitud de cancelación del REP ya está en verificación ante el SAT.");
 });
+
+Deno.test("R4P-01: la rama de sustitución 01 del REP archivado fue retirada", () => {
+  const bandera = ["cancelar", "rep", "anterior"].join("_");
+  assert(!src.includes(bandera), "no debe quedar el parámetro de la bandera retirada");
+  assert(!src.includes("cancelarAnterior"), "no debe quedar la variable cancelarAnterior");
+  assert(!src.includes("sin_rep_anterior"), "no debe quedar la rama de REP archivado");
+  // El archivo rep_cancelado_* lo mantiene facturapi-emitir-rep (claimRep):
+  // aquí ya no se lee ni se limpia.
+  assert(!src.includes("rep_cancelado_facturapi_id"), "cancelar-rep ya no toca el archivo rep_cancelado_*");
+  // La cancelación normal motivo 01 con UUID sustituto sigue vigente.
+  assertStringIncludes(src, "sustituye_uuid_requerido");
+  assertStringIncludes(src, "cancelPayload.substitution = sustituyeFacturapiId");
+});

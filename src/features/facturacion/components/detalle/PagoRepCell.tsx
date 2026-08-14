@@ -42,14 +42,15 @@ export function PagoRepCell({ pagoId, facturaId, estadoRep, serieRep, folioRep, 
     );
   }
   if (repCancelado) {
-    // Ola 12 · R3P-21: el pago puede re-timbrar su REP; el cancelado queda
-    // archivado para la relación de sustitución (motivo 01).
+    // Ola 13 · R4P-01: el pago puede re-timbrar su REP; el cancelado queda
+    // archivado como antecedente (trazabilidad), sin una segunda cancelación.
     return (
       <div className="flex items-center gap-1.5">
         <CfdiEstadoBadge tono="cancelada">REP cancelado</CfdiEstadoBadge>
         <Button
           variant="outline" size="icon" className="h-6 w-6"
-          title="Re-timbrar REP (sustituye al cancelado)" aria-label="Re-timbrar REP (sustituye al cancelado)"
+          title="Re-timbrar REP (el cancelado queda archivado como antecedente)"
+          aria-label="Re-timbrar REP (el cancelado queda archivado como antecedente)"
           disabled={timbrar.isPending}
           onClick={(e) => { e.stopPropagation(); timbrar.mutate(pagoId); }}
         >
