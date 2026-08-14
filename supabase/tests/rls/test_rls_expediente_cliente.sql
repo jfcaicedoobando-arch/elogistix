@@ -58,8 +58,12 @@ BEGIN
     (cli_a, 'Cliente EXP A', 'XAXX010101E00', 'expa@test.local', org_a),
     (cli_b, 'Cliente EXP B', 'XAXX010101E01', 'expb@test.local', org_b);
 
-  INSERT INTO public.proveedores(id, nombre, organization_id, tipo, categoria) VALUES
-    (prov_a, 'Proveedor EXP A', org_a, 'Nacional', 'General');
+  -- v13.600.1: `tipo`/`categoria` son enums (tipo_proveedor / categoria_proveedor)
+  -- y ambos son NULLABLE; la suite no valida esos campos, así que se omiten
+  -- para no acoplar el test a los labels vigentes del catálogo.
+  INSERT INTO public.proveedores(id, nombre, organization_id) VALUES
+    (prov_a, 'Proveedor EXP A', org_a);
+
 
   INSERT INTO public.cliente_documentos
     (id, organization_id, cliente_id, tipo, nombre, archivo) VALUES
