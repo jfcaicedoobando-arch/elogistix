@@ -7,15 +7,21 @@ import { Home } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
-  /** Documento al que aplica el aviso. */
-  tipo: "cotizacion" | "proforma";
+  /** Documento al que aplica el aviso ("cliente" = ficha del cliente). */
+  tipo: "cotizacion" | "proforma" | "cliente";
 }
 
+const TEXTOS: Record<Props["tipo"], string> = {
+  cotizacion:
+    "Este cliente no requiere autorizar cotizaciones: el equipo puede aceptarla internamente.",
+  proforma:
+    "Este cliente no requiere autorizar proformas: el equipo puede aprobarla internamente.",
+  cliente:
+    "Cliente de casa: no requiere autorización del cliente en cotizaciones ni proformas.",
+};
+
 export function BadgeClienteDeCasa({ tipo }: Props) {
-  const texto =
-    tipo === "cotizacion"
-      ? "Este cliente no requiere autorizar cotizaciones: el equipo puede aceptarla internamente."
-      : "Este cliente no requiere autorizar proformas: el equipo puede aprobarla internamente.";
+  const texto = TEXTOS[tipo];
   return (
     <Tooltip>
       <TooltipTrigger asChild>
