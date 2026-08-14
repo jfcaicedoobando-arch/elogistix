@@ -55,6 +55,94 @@ export function resolverPatchRep(
   return { outcome: "no_change", patch: {} };
 }
 
+type Json = (body: unknown, status?: number) => Response;
+type Supa = ReturnType<typeof createClient>;
+
+/** Valida método/sesión/pago y autorización. Devuelve el pago o una respuesta. */
+async function resolverPago(
+  req: Request,
+  json: Json,
+  supabase: Supa,
+  userId: string,
+): Promise<{ pago: LocalPago } | { resp: Response }> {
+  const body = (await req.json().catch(() => ({}))) as { pago_id?: string };
+  if (!body.pago_id) return { resp: json({ error: "pago_id_required" }, 400) };
+
+  const { data, error } = await supabase
+    .from("pagos_factura")
+    .select("id, organization_id, factura_id, facturapi_rep_id, estado_rep, rep_cancellation_status")
+    .eq("id", body.pago_id)
+    .maybeSingle();
+  if (error || !data) return { resp: json({ error: "pago_not_found" }, 404) };
+  const pago = data as LocalPago;
+  if (!pago.facturapi_rep_id || pago.facturapi_rep_id.startsWith("PENDING:")) {
+    return {
+      resp: json(
+        { error: "rep_no_timbrado", message: "Este pago no tiene un REP timbrado que consultar." },
+        409,
+      ),
+    };
+  }
+  if (!(await authorizeOrgRole(supabase, userId, pago.organization_id, ROLES_CONSULTA_FISCAL))) {
+    return { resp: json({ error: "forbidden" }, 403) };
+  }
+  return { pago };
+}
+
+/** Trae el REP remoto desde FacturApi. */
+async function traerRepRemoto(
+  json: Json,
+  supabase: Supa,
+  pago: LocalPago,
+): Promise<{ remote: RemoteRep } | { resp: Response }> {
+  const resolved = await getFacturapiClient(supabase, pago.organization_id);
+  if (!resolved.ok) {
+    return {
+      resp: json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status),
+    };
+  }
+  try {
+    const client = resolved.data.client as { invoices: { retrieve: (id: string) => Promise<unknown> } };
+    const remote = (await withFacturapiTimeout(
+      "invoices.retrieve",
+      client.invoices.retrieve(pago.facturapi_rep_id!),
+      15_000,
+    )) as RemoteRep;
+    return { remote };
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return { resp: json({ error: "facturapi_error", message: detail }, 502) };
+  }
+}
+
+/** Aplica el patch resuelto; devuelve el motivo si la BD lo rechaza. */
+async function sincronizarPago(
+  supabase: Supa,
+  pago: LocalPago,
+  user: { id: string; email?: string },
+  decision: { outcome: string; patch: Record<string, unknown> },
+): Promise<{ actualizado: boolean; errorGuardado: string | null }> {
+  if (decision.outcome === "no_change" || Object.keys(decision.patch).length === 0) {
+    return { actualizado: false, errorGuardado: null };
+  }
+  const { error: upErr } = await supabase
+    .from("pagos_factura")
+    .update(decision.patch)
+    .eq("id", pago.id);
+  // No silenciar: si un candado de BD impide sincronizar, el contador debe verlo.
+  if (upErr) return { actualizado: false, errorGuardado: upErr.message };
+  await registrarBitacoraEdge(supabase, {
+    organizationId: pago.organization_id,
+    usuarioId: user.id,
+    usuarioEmail: user.email,
+    modulo: "facturacion",
+    accion: "facturapi_rep_consulta_reconciliada",
+    entidadId: pago.id,
+    detalles: { via: "consulta_manual", outcome: decision.outcome, patch: decision.patch },
+  });
+  return { actualizado: true, errorGuardado: null };
+}
+
 async function handle(req: Request): Promise<Response> {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
@@ -71,62 +159,21 @@ async function handle(req: Request): Promise<Response> {
   const { data: userData, error: uErr } = await supabase.auth.getUser();
   if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
-  const body = (await req.json().catch(() => ({}))) as { pago_id?: string };
-  if (!body.pago_id) return json({ error: "pago_id_required" }, 400);
+  const resPago = await resolverPago(req, json, supabase, userData.user.id);
+  if ("resp" in resPago) return resPago.resp;
+  const { pago } = resPago;
 
-  const { data, error } = await supabase
-    .from("pagos_factura")
-    .select("id, organization_id, factura_id, facturapi_rep_id, estado_rep, rep_cancellation_status")
-    .eq("id", body.pago_id)
-    .maybeSingle();
-  if (error || !data) return json({ error: "pago_not_found" }, 404);
-  const pago = data as LocalPago;
-  if (!pago.facturapi_rep_id || pago.facturapi_rep_id.startsWith("PENDING:")) {
-    return json({ error: "rep_no_timbrado", message: "Este pago no tiene un REP timbrado que consultar." }, 409);
-  }
-
-  if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_CONSULTA_FISCAL))) {
-    return json({ error: "forbidden" }, 403);
-  }
-
-  const resolved = await getFacturapiClient(supabase, pago.organization_id);
-  if (!resolved.ok) {
-    return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
-  }
-  let remote: RemoteRep;
-  try {
-    const client = resolved.data.client as { invoices: { retrieve: (id: string) => Promise<unknown> } };
-    remote = await withFacturapiTimeout(
-      "invoices.retrieve",
-      client.invoices.retrieve(pago.facturapi_rep_id),
-      15_000,
-    ) as RemoteRep;
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    return json({ error: "facturapi_error", message: detail }, 502);
-  }
+  const resRemoto = await traerRepRemoto(json, supabase, pago);
+  if ("resp" in resRemoto) return resRemoto.resp;
+  const { remote } = resRemoto;
 
   const decision = resolverPatchRep(remote, pago, new Date().toISOString());
-  let actualizado = false;
-  let errorGuardado: string | null = null;
-  if (decision.outcome !== "no_change" && Object.keys(decision.patch).length > 0) {
-    const { error: upErr } = await supabase.from("pagos_factura").update(decision.patch).eq("id", pago.id);
-    if (upErr) {
-      // No silenciar: si un candado de BD impide sincronizar, el contador debe verlo.
-      errorGuardado = upErr.message;
-    } else {
-      actualizado = true;
-      await registrarBitacoraEdge(supabase, {
-        organizationId: pago.organization_id,
-        usuarioId: userData.user.id,
-        usuarioEmail: userData.user.email,
-        modulo: "facturacion",
-        accion: "facturapi_rep_consulta_reconciliada",
-        entidadId: pago.id,
-        detalles: { via: "consulta_manual", outcome: decision.outcome, patch: decision.patch },
-      });
-    }
-  }
+  const { actualizado, errorGuardado } = await sincronizarPago(
+    supabase,
+    pago,
+    { id: userData.user.id, email: userData.user.email },
+    decision,
+  );
 
   return json({
     ok: errorGuardado === null,

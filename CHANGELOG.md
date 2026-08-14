@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.594.5] - 2026-08-13
+- **Se corrigen los fallos de CI de calidad (Power of 10 y complejidad) del asistente de refacturación.**
+- `ConsultaRepsTable` ahora usa el componente estándar `DataTable`; se dividieron `useRefacturarWizard`, `refacturacionPasos`, `FacturaDetalleView` y las Edge Functions `facturapi-consultar` y `facturapi-consultar-rep` para respetar los límites de líneas y complejidad.
+
 ## [13.594.4] - 2026-08-13
 - **Se corrige el falso rojo del check "RLS tests result" en CI.** Cuando el commit no toca la base de datos, las suites RLS se omiten (skipped) y el job agregador las contaba como fallo.
 - Ahora `skipped` cuenta como válido y sólo `failure`/`cancelled` rompen el check; el paso de diagnóstico ya no imprime "no se pudo identificar el grupo" cuando en realidad nada falló.

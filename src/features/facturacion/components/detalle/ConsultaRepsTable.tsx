@@ -3,7 +3,7 @@
  * timbrado de la factura, incluidos los ya cancelados.
  */
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
 import type { ConsultarFacturapiRep } from "@/features/facturacion/services/facturapi";
@@ -16,6 +16,57 @@ function estadoLocal(rep: ConsultarFacturapiRep): string {
   return rep.estado_rep ?? "—";
 }
 
+const columnas = defineColumns<ConsultarFacturapiRep>([
+  {
+    id: "folio",
+    header: "Folio",
+    cell: ({ row }) => (
+      <div>
+        <div className="font-medium">{row.original.folio ?? "—"}</div>
+        {row.original.uuid && (
+          <div className="font-mono text-[11px] text-muted-foreground">{row.original.uuid}</div>
+        )}
+      </div>
+    ),
+  },
+  {
+    id: "fecha",
+    header: "Fecha",
+    cell: ({ row }) => (row.original.fecha_pago ? formatDate(row.original.fecha_pago) : "—"),
+  },
+  {
+    id: "monto",
+    header: "Monto",
+    meta: { align: "right" },
+    cell: ({ row }) =>
+      row.original.monto == null
+        ? "—"
+        : formatCurrency(row.original.monto, row.original.moneda ?? "MXN"),
+  },
+  {
+    id: "local",
+    header: "En Libre Carga",
+    cell: ({ row }) => (
+      <div className="flex flex-wrap gap-1">
+        <Badge variant="outline">{estadoLocal(row.original)}</Badge>
+        {row.original.reconciliado && <Badge variant="secondary">Reconciliado</Badge>}
+      </div>
+    ),
+  },
+  {
+    id: "sat",
+    header: "SAT",
+    cell: ({ row }) => (
+      <div>
+        <ConsultaSatBadge estatus={row.original.estatus_sat} />
+        {row.original.error && (
+          <div className="text-[11px] text-destructive mt-1">{row.original.error}</div>
+        )}
+      </div>
+    ),
+  },
+]);
+
 export function ConsultaRepsTable({ reps }: { reps: ConsultarFacturapiRep[] | undefined }) {
   if (!reps || reps.length === 0) return null;
   return (
@@ -23,43 +74,13 @@ export function ConsultaRepsTable({ reps }: { reps: ConsultarFacturapiRep[] | un
       <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase border-b">
         XML de los REP timbrados ({reps.length})
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Folio</TableHead>
-            <TableHead>Fecha</TableHead>
-            <TableHead className="text-right">Monto</TableHead>
-            <TableHead>En Libre Carga</TableHead>
-            <TableHead>SAT</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {reps.map((rep) => (
-            <TableRow key={rep.pago_id}>
-              <TableCell>
-                <div className="font-medium">{rep.folio ?? "—"}</div>
-                {rep.uuid && (
-                  <div className="font-mono text-[11px] text-muted-foreground">{rep.uuid}</div>
-                )}
-              </TableCell>
-              <TableCell>{rep.fecha_pago ? formatDate(rep.fecha_pago) : "—"}</TableCell>
-              <TableCell className="text-right">
-                {rep.monto == null ? "—" : formatCurrency(rep.monto, rep.moneda ?? "MXN")}
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="outline">{estadoLocal(rep)}</Badge>
-                  {rep.reconciliado && <Badge variant="secondary">Reconciliado</Badge>}
-                </div>
-              </TableCell>
-              <TableCell>
-                <ConsultaSatBadge estatus={rep.estatus_sat} />
-                {rep.error && <div className="text-[11px] text-destructive mt-1">{rep.error}</div>}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable
+        columns={columnas}
+        data={reps}
+        rowKey={(rep) => rep.pago_id}
+        density="compact"
+        tableClassName="w-full"
+      />
     </div>
   );
 }

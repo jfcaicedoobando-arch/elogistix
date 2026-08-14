@@ -4,7 +4,34 @@
  * Espejo en UI de los candados que ya aplica la base de datos
  * (`LC_REFACT_*`): aquí sólo se decide si el usuario puede avanzar y qué
  * explicación se le muestra, sin llamadas de red ni React.
+ *
+ * Los predicados fiscales viven en `refacturacionEstadoFiscal.ts` y se
+ * re-exportan aquí para no romper los imports existentes.
  */
+import {
+  cancelacionOriginalEnTramite,
+  cancelacionOriginalRechazada,
+  facturaNuevaLista,
+  originalFueraDeCirculacion,
+  pagosConRepVivo,
+  repsEnVerificacion,
+  type FacturaRefacturacion,
+  type PagoRefacturacion,
+} from "@/features/facturacion/domain/refacturacionEstadoFiscal";
+
+export {
+  cancelacionOriginalEnTramite,
+  cancelacionOriginalRechazada,
+  facturaNuevaLista,
+  originalFueraDeCirculacion,
+  pagosConRepVivo,
+  repsEnVerificacion,
+  tieneRepVivo,
+} from "@/features/facturacion/domain/refacturacionEstadoFiscal";
+export type {
+  FacturaRefacturacion,
+  PagoRefacturacion,
+} from "@/features/facturacion/domain/refacturacionEstadoFiscal";
 
 export const PASOS_REFACTURACION = [
   "Diagnóstico",
@@ -16,65 +43,11 @@ export const PASOS_REFACTURACION = [
 
 export const TOTAL_PASOS_REFACTURACION = PASOS_REFACTURACION.length;
 
-export interface PagoRefacturacion {
-  id: string;
-  fecha_pago: string;
-  monto: number;
-  moneda: string;
-  monto_aplicado_factura: number | null;
-  uuid_rep: string | null;
-  estado_rep: string | null;
-  rep_cancelado_en: string | null;
-  rep_cancellation_status: string | null;
-}
-
-export interface FacturaRefacturacion {
-  id: string;
-  numero: string;
-  estado: string;
-  uuid_fiscal: string | null;
-  /** Estatus del trámite de cancelación ante el SAT (FacturApi). */
-  cancellation_status?: string | null;
-}
-
-/** El pago tiene complemento de pago (REP) timbrado y sin cancelar. */
-export function tieneRepVivo(pago: PagoRefacturacion): boolean {
-  return Boolean(pago.uuid_rep) && !pago.rep_cancelado_en;
-}
-
-export function pagosConRepVivo(pagos: PagoRefacturacion[]): PagoRefacturacion[] {
-  return pagos.filter(tieneRepVivo);
-}
-
-/** La factura destino ya está timbrada y vigente: admite recibir el pago. */
-export function facturaNuevaLista(factura: FacturaRefacturacion | null): boolean {
-  if (!factura) return false;
-  if (!factura.uuid_fiscal) return false;
-  return !["Borrador", "Cancelada", "Sustituida"].includes(factura.estado);
-}
-
-/** La factura original ya salió de circulación fiscal. */
-export function originalFueraDeCirculacion(factura: FacturaRefacturacion | null): boolean {
-  if (!factura) return false;
-  return ["Cancelada", "Sustituida"].includes(factura.estado);
-}
-
-/** La cancelación del CFDI original ya se solicitó y está en manos del SAT. */
-export function cancelacionOriginalEnTramite(factura: FacturaRefacturacion | null): boolean {
-  if (!factura) return false;
-  if (originalFueraDeCirculacion(factura)) return false;
-  return ["pending", "verifying"].includes(factura.cancellation_status ?? "");
-}
-
-/** El SAT rechazó (o dejó expirar) la solicitud de cancelación del original. */
-export function cancelacionOriginalRechazada(factura: FacturaRefacturacion | null): boolean {
-  if (!factura) return false;
-  if (originalFueraDeCirculacion(factura)) return false;
-  return ["rejected", "expired"].includes(factura.cancellation_status ?? "");
-}
-
 export const AVISO_ORIGINAL_EN_VERIFICACION =
   "La cancelación del CFDI original está en verificación con el SAT. Puedes reasignar el pago porque el REP anterior ya está cancelado; la factura original quedará cancelada en automático cuando el SAT responda.";
+
+export const AVISO_REP_EN_VERIFICACION =
+  "La cancelación del REP está en verificación con el SAT. Puedes emitir la factura del nuevo receptor mientras tanto; el nuevo REP se timbra cuando el SAT libere la cancelación.";
 
 export interface ContextoPasos {
   casoAbierto: boolean;
@@ -95,7 +68,6 @@ export interface ContextoPasos {
   bloqueoPermiso?: string | null;
 }
 
-
 function bloqueoPaso1(ctx: ContextoPasos): string | null {
   if (ctx.casoAbierto) return null;
   if (!ctx.clienteDestinoId) return "Selecciona el cliente que debe recibir la factura.";
@@ -106,16 +78,6 @@ function bloqueoPaso1(ctx: ContextoPasos): string | null {
   }
   return null;
 }
-
-/** REPs vivos cuya cancelación está en verificación con el SAT. */
-export function repsEnVerificacion(pagos: PagoRefacturacion[]): PagoRefacturacion[] {
-  return pagosConRepVivo(pagos).filter((p) =>
-    ["pending", "verifying"].includes(p.rep_cancellation_status ?? ""),
-  );
-}
-
-export const AVISO_REP_EN_VERIFICACION =
-  "La cancelación del REP está en verificación con el SAT. Puedes emitir la factura del nuevo receptor mientras tanto; el nuevo REP se timbra cuando el SAT libere la cancelación.";
 
 function bloqueoPaso2(ctx: ContextoPasos): string | null {
   const vivos = pagosConRepVivo(ctx.pagos);
@@ -160,6 +122,13 @@ function bloqueoPaso5(ctx: ContextoPasos): string | null {
   return null;
 }
 
+const BLOQUEOS_POR_PASO: Record<number, (ctx: ContextoPasos) => string | null> = {
+  1: bloqueoPaso1,
+  2: bloqueoPaso2,
+  3: bloqueoPaso3,
+  4: bloqueoPaso4,
+  5: bloqueoPaso5,
+};
 
 /**
  * Motivo por el que el paso indicado NO puede completarse todavía.
@@ -167,13 +136,7 @@ function bloqueoPaso5(ctx: ContextoPasos): string | null {
  */
 export function bloqueoPaso(paso: number, ctx: ContextoPasos): string | null {
   if (ctx.bloqueoPermiso) return ctx.bloqueoPermiso;
-  if (paso === 1) return bloqueoPaso1(ctx);
-
-  if (paso === 2) return bloqueoPaso2(ctx);
-  if (paso === 3) return bloqueoPaso3(ctx);
-  if (paso === 4) return bloqueoPaso4(ctx);
-  if (paso === 5) return bloqueoPaso5(ctx);
-  return null;
+  return BLOQUEOS_POR_PASO[paso]?.(ctx) ?? null;
 }
 
 /**
@@ -189,13 +152,9 @@ export function avisoPaso(paso: number, ctx: ContextoPasos): string | null {
   return null;
 }
 
-
-
 /** Texto de la acción principal por paso. */
 export function etiquetaAccionPaso(paso: number, casoAbierto: boolean): string {
   if (paso === 1) return casoAbierto ? "Continuar" : "Abrir caso y continuar";
-  if (paso === 2) return "Continuar";
-  if (paso === 3) return "Continuar";
-  if (paso === 4) return "Continuar";
-  return "Reasignar pago y finalizar";
+  if (paso === 5) return "Reasignar pago y finalizar";
+  return "Continuar";
 }

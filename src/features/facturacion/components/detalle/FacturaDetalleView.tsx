@@ -5,9 +5,7 @@ import { FacturaDetalleActionsBar } from "@/features/facturacion/components/deta
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
 import { FacturaDetalleBody } from "@/features/facturacion/components/detalle/FacturaDetalleBody";
-import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
-import { CancelacionEnTramiteBanner } from "@/features/facturacion/components/detalle/CancelacionEnTramiteBanner";
-import { ClaimPendingBanner } from "@/features/facturacion/components/detalle/ClaimPendingBanner";
+import { FacturaDetalleBanners } from "@/features/facturacion/components/detalle/FacturaDetalleBanners";
 import { DocumentoDetalleShell } from "@/components/shared/documento/DocumentoDetalleShell";
 import { RefacturacionTrazabilidadSection } from "@/features/facturacion/components/refacturacion/RefacturacionTrazabilidadSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
@@ -68,8 +66,6 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
 
   const acuseCancelacionStatus = factura.acuse_cancelacion_status ?? null;
   const cancellationStatus = factura.cancellation_status ?? null;
-  const mostrarSustitutaCancelada =
-    !!factura.sustituida_por && factura.sustituida_por_ref?.estado === "Cancelada";
   const handleTimbrarRep = () => {
     if (pagoRepPendiente) timbrarRep.mutate(pagoRepPendiente.id);
   };
@@ -117,24 +113,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
             }
           />
         }
-        banners={
-          <>
-            <ClaimPendingBanner
-              facturaId={factura.id}
-              facturapiId={factura.facturapi_id ?? null}
-              facturapiClaimAt={factura.facturapi_claim_at ?? null}
-            />
-            {(cancellationStatus === "pending" || cancellationStatus === "verifying") && (
-              <CancelacionEnTramiteBanner estado={cancellationStatus} />
-            )}
-            {mostrarSustitutaCancelada && factura.sustituida_por && (
-              <SustitutaCanceladaBanner
-                sustitutaId={factura.sustituida_por}
-                sustitutaNumero={factura.sustituida_por_ref?.numero ?? null}
-              />
-            )}
-          </>
-        }
+        banners={<FacturaDetalleBanners factura={factura} />}
         rail={<FacturaBitacoraCard facturaId={factura.id} />}
       >
         <FacturaDetalleBody
