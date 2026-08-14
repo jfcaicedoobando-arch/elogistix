@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.603.0] - 2026-08-14
+- Ola 14 · Sprint 01 (higiene de release): nuevo guardrail `audit:no-env` que falla si un `.env` trae secretos server-side (service_role, contraseña de BD, tokens) o si aparece un `.env.*` sombra; registrado en `audit:all` y en el job de guardrails de CI.
+- `.env.example`: documentados los alias `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` que leen los scripts de tooling.
+- `supabase/schema/README.md`: sección "Regla de oro: las migraciones aplicadas son inmutables" con el runbook de `migration repair` (R5BD-01, `20260818090100`).
+- No se elimina el `.env` de la raíz: lo genera la plataforma y es obligatorio para el build de Vite; el guardrail vigila su contenido en lugar de su existencia.
+
 ## [13.602.1] - 2026-08-14
 ### Fix CI — suite RLS de paginación comparaba el folio equivocado
 - **Causa.** En `test_rls_proveedor_estado_cuenta_offset.sql` las aserciones leían `movimientos[].folio`, pero esa llave viene de `folio_interno` (lo genera un trigger como `FP-000123`), no del folio capturado del proveedor. Las páginas nunca coincidían con `S08-F4/S08-F5` y el grupo `operaciones` de `rls-tests` fallaba.

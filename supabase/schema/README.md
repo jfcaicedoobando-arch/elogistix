@@ -108,3 +108,27 @@ funciones más volátiles queda bajo revisión de código. Son complementarios.
 591 migraciones no se van a reescribir. La regla aplica **hacia adelante**: las
 próximas ediciones de estas 10 funciones deben pasar por aquí; el resto sigue
 viviendo solo en el historial de migraciones.
+
+## Regla de oro: las migraciones aplicadas son inmutables
+
+PROHIBIDO editar una migración que ya corrió en cualquier ambiente
+(staging/producción), SIN EXCEPCIÓN. El checksum queda registrado en
+`supabase_migrations` y editarla produce drift ("remote migration was
+modified") que exige `supabase migration repair` (precedente: R5BD-01,
+`20260818090100`, convertida en NO-OP en v13.602.1).
+
+Procedimiento único cuando una migración aplicada necesita corrección:
+
+1. Crear una migración NUEVA con timestamp POSTERIOR a todas las que tocan el
+   mismo objeto (verificar con `ls supabase/migrations | tail`).
+2. En el encabezado, citar la migración original y el motivo.
+3. Si la función tiene espejo en `supabase/schema/`, actualizarlo 1:1 (el
+   guardrail `audit:replay-mirror` falla si diverge).
+4. Nunca intercalar migraciones con timestamp ANTERIOR a la última definición
+   del objeto que redefinen (causa raíz de R5BD-01).
+
+Runbook de repair (lo ejecuta quien tiene acceso a producción, no el agente):
+`supabase migration repair --status applied 20260818090100` y luego
+`supabase migration list` para confirmar que no queda divergencia. Nunca
+`--status reverted`: la migración sí corrió y su efecto N23 (`direccion_totales`)
+está vivo en producción.
