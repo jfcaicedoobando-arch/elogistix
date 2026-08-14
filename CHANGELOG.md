@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.605.0] - 2026-08-14
+- Ola 14 · Sprint 03 (Edge P3): `invite-agente` / `invite-cliente` ya no devuelven el mensaje crudo de GoTrue/Postgres; usan el catálogo `mensajeSeguro` con códigos `LC_USUARIO_VINCULO_*` y el detalle queda sólo en `log.finish` (R5EF-01).
+- `facturapi-consultar-rep`: rate limit fail-closed por organización (10 consultas/min) vía `check_ratelimit`, con 503 `rate_limit_unavailable` + Sentry si el contador falla y 429 con mensaje al usuario (R5EF-02).
+- Mensajes genéricos al cliente en errores de PAC/SAT (`LC_SAT_NO_DISPONIBLE`, `LC_FACTURAPI_NO_DISPONIBLE`, `LC_FACTURAPI_DOC_NO_VERIFICABLE`); el detalle crudo va a `console.error`/Sentry (R5EF-03).
+- Nuevas pruebas Deno: `invitePortalesMensajes_test.ts`, `facturapi-consultar-rep/index_test.ts`, `facturapi-consultar/mensajesSeguros_test.ts` (26 casos verdes en el grupo).
+
+
 ## [13.604.0] - 2026-08-14
 - Ola 14 · Sprint 02 (toolchain P3): canario de performance sube el 3er umbral 30 → 60 ms (R5TC-01, flake ambiental de 38.29 ms en runner de 2 vCPU; aislado corre en 3-6 ms).
 - `eslint.config.js`: justificadas las exclusiones de `ComparativoConsistencia.tsx` y `RefacturacionPreviewSaldos.tsx` (comparativas read-only sobre `DetailTable`, DataTable no aplica) (R5TC-03a).
