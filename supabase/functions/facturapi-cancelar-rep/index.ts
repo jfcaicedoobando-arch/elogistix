@@ -57,23 +57,12 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
 
   const { data: pago, error: pErr } = await supabase
     .from("pagos_factura")
-    .select("id, organization_id, facturapi_rep_id, estado_rep, uuid_rep, rep_cancelado_facturapi_id, rep_cancelado_uuid, rep_cancellation_status")
+    .select("id, organization_id, facturapi_rep_id, estado_rep, uuid_rep, rep_cancellation_status")
     .eq("id", body.pago_id)
     .maybeSingle();
   if (pErr || !pago) return json({ error: "pago_not_found" }, 404);
   if (!pago.facturapi_rep_id) return json({ error: "no_timbrado_rep" }, 409);
-  // Ola 12 · R3P-21: con cancelar_rep_anterior=true se cancela el REP ARCHIVADO
-  // (cancelado antes con motivo 02) sustituyéndolo por el REP vigente.
-  const cancelarAnterior = body.cancelar_rep_anterior === true;
-  if (pago.estado_rep === "Cancelado" && !cancelarAnterior) return json({ error: "ya_cancelado" }, 409);
-  if (cancelarAnterior) {
-    if (!pago.rep_cancelado_facturapi_id) {
-      return json({ error: "sin_rep_anterior", message: "No hay un REP cancelado archivado para sustituir." }, 409);
-    }
-    if (body.motivo !== "01") {
-      return json({ error: "motivo_invalido", message: "La sustitución de un REP cancelado requiere motivo 01." }, 400);
-    }
-  }
+  if (pago.estado_rep === "Cancelado") return json({ error: "ya_cancelado" }, 409);
   if (!(await authorizeOrgRole(supabase, userData.user.id, pago.organization_id, ROLES_COBRANZA_FISCAL))) {
     return json({ error: "forbidden" }, 403);
   }
