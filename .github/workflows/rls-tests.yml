@@ -251,7 +251,7 @@ jobs:
       matrix:
         include:
           - grupo: aislamiento
-            suites: isolation org_scope anon_deny_all cross_tenant_mutations policy_linter
+            suites: isolation org_scope anon_deny_all cross_tenant_mutations policy_linter super_admin_planos
           - grupo: financiero
             suites: financiero financiero_critico rpc_financieras tablas_dinero_extra reportes_multi_tenant refacturaciones_matriz soft_delete_reportes
           - grupo: operaciones
