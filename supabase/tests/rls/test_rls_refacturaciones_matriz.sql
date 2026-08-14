@@ -63,11 +63,8 @@ BEGIN
     (org_a, u_auxiliar, 'auxiliar_contable'),
     (org_b, u_org_b,    'admin_org');
 
-  INSERT INTO public.user_roles(user_id, role) VALUES
-    (u_tesorero, 'tesorero'),
-    (u_cobranza, 'ejecutivo_cobranza'),
-    (u_auxiliar, 'auxiliar_contable'),
-    (u_org_b,    'admin_org');
+  -- No se siembra public.user_roles: estas policies resuelven el permiso por
+  -- organization_members y sólo consultan has_role para 'super_admin'.
 
   INSERT INTO public.clientes(id, organization_id, nombre) VALUES
     (cli_a,  org_a, 'Cliente Refact A'),
