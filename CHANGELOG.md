@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.614.0] - 2026-08-14
+- Captura rápida de fechas con teclado numérico en los tres pickers (`DatePickerMx`, `DateTimePickerMx`, `MonthPickerMx`): salto discreto entre segmentos (## / ## / ####) sin abrir el calendario.
+- Aceleradores: `T`/`H` = hoy (o mes en curso), `+`/`-` y flechas ajustan el segmento activo, `←`/`→` cambian de segmento, `Re Pág`/`Av Pág` mueven ±1 mes (con `Shift`, ±1 año), `F4` abre el calendario.
+- `DateTimePickerMx` y `MonthPickerMx` dejan de ser sólo botón-popover: ahora se teclean (`DD/MM/AAAA HH:MM` y `MM/AAAA`) con máscara dirigida por dígitos.
+- Aviso ámbar de día inhábil (no bloquea el guardado) con `avisarInhabil`: fines de semana y festivos oficiales calculados en código según art. 74 LFT, incluyendo transmisión de poder cada 6 años. Nuevo `src/lib/date/festivosMx.ts` y resaltado de días inhábiles en el calendario.
+- Tests: `pickerMxCapturaTeclado.test.ts` (festivos, máscaras y parseo de periodo/fecha-hora).
+
 ## [13.613.0] - 2026-08-14
 - Ola 16 · Vista previa del asistente de refacturación desacoplada de las cancelaciones pendientes del SAT: `refacturacion_simular_paso` ahora devuelve `pendientes[]` además de `bloqueos[]`.
 - Nuevo helper `public._refact_reps_bloqueantes(uuid)`: criterio único (mismo que la UI) para distinguir un REP vivo sin solicitud (bloquea) de uno en verificación `pending`/`verifying` (pendiente).
