@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.621.0] - 2026-08-14
+- Cruce anticipo ↔ factura de proveedor por embarque: al capturar la factura (buzón o manual) aparece un aviso no bloqueante cuando el expediente vinculado ya tiene anticipos con saldo a favor del mismo proveedor (`AvisoAnticipoEmbarque` + `useAnticiposDisponiblesPorEmbarque`). Sólo informa; no aplica nada automáticamente.
+- Al aplicar un anticipo desde el detalle de la factura, los anticipos del mismo expediente se ofrecen primero y se marcan "Mismo expediente" (`ordenarAnticiposPorEmbarque`, función pura con pruebas).
+- La tarjeta "Anticipos a proveedores de este embarque" (pestaña Costos) muestra cuánto de cada anticipo ya se cruzó con facturas del mismo embarque (`fetchAplicadoEnEmbarque`).
+- Nuevo filtro "Sólo sin embarque" en /compras/anticipos para detectar anticipos que quedaron sin expediente. El vínculo con embarque sigue siendo opcional.
+
 ## [13.620.0] - 2026-08-14
 - Bug corregido en captura desde el buzón CxP: la categoría contable no siempre quedaba en "Costo directo de embarque" (COGS). El candado se aplicaba una sola vez y la autocarga del CFDI/PDF reescribía el formulario con la categoría sugerida por la IA (o vacía), pisándolo.
 - `useCategoriaCogsBuzon` ahora reconcilia de forma continua: mientras el contador no use "Cambiar categoría", cualquier reescritura del sistema vuelve a fijar COGS y el selector se mantiene bloqueado.
