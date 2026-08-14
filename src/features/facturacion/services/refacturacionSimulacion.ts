@@ -38,7 +38,10 @@ export interface SimulacionPaso {
   crea: AccionSimulada[];
   reasigna: ReasignacionSimulada | null;
   saldos: SaldoSimulado[];
+  /** Impiden confirmar la etapa. */
   bloqueos: string[];
+  /** Trámites ya en manos del SAT: informan, no bloquean. */
+  pendientes: string[];
 }
 
 export async function simularPasoRefacturacion(
@@ -59,5 +62,8 @@ export async function simularPasoRefacturacion(
     reasigna: raw?.reasigna ?? null,
     saldos: raw?.saldos ?? [],
     bloqueos: raw?.bloqueos ?? [],
+    // Cachés en vuelo de la versión anterior no traen `pendientes`.
+    pendientes: raw?.pendientes ?? [],
   };
 }
+
