@@ -9,6 +9,9 @@
 --   T3. cartera_pendiente no arrastra el expediente de un embarque borrado.
 --   T4. pnl_financiero_embarque falla si el embarque está borrado.
 --   T5. estado_cuenta_bancario rechaza una cuenta bancaria borrada.
+--   T6. cxc_aging_clientes ignora la factura borrada y su cobro.
+--   T7. eerr_resumen_anual no resta la NC de una factura de cliente borrada.
+--   T8. eerr_resumen_anual no resta la NC de una factura de proveedor borrada.
 --
 -- Cómo ejecutarlo:
 --   psql "$DATABASE_URL" -f supabase/tests/rls/test_rls_soft_delete_reportes.sql
