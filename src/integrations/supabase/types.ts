@@ -8952,6 +8952,14 @@ export type Database = {
         Args: { p_org_id: string }
         Returns: undefined
       }
+      eliminar_pago_cliente: {
+        Args: { _motivo?: string; _pago_id: string }
+        Returns: Json
+      }
+      eliminar_pago_proveedor: {
+        Args: { _motivo?: string; _pago_id: string }
+        Returns: Json
+      }
       eliminar_proforma_rpc: { Args: { p_proforma_id: string }; Returns: Json }
       email_queue_dispatch: { Args: never; Returns: undefined }
       embarque_admin_pendientes_resumen: {

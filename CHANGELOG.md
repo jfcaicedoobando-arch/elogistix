@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.611.0] - 2026-08-14
+- Ola 15 · Eliminación de pagos atómica: nuevas RPC `public.eliminar_pago_cliente` y `public.eliminar_pago_proveedor` que hacen la baja del pago, la del movimiento bancario, el recálculo de costos y la bitácora en una sola transacción.
+- Movimientos importados del estado de cuenta ya no se borran al eliminar un pago: se desvinculan y regresan a "Pendiente" de conciliar.
+- Servicios `eliminarPagoFactura` y `eliminarPagoProveedor` migrados a las RPC (adiós a las 3 llamadas sueltas que podían dejar el banco descuadrado).
+- Guardrail de integridad `movimiento_vivo_con_pago_eliminado` en `scripts/db/integrity-guard.sql`.
+
 ## [13.610.0] - 2026-08-14
 - Ola 15 · T/C por fecha oficial: nuevo resolvedor `public.tc_para_documento(fecha, moneda, tc_doc, tc_emb)` y conversor `public.a_mxn_doc(...)` con la cascada CFDI → DOF de la fecha oficial → T/C del expediente.
 - `pnl_financiero_embarque`: cada factura de cliente, factura de proveedor, concepto y seguro se valúa con su propio tipo de cambio; se agregan los metadatos `tc_por_documento` y `excluidos_sin_tc` (los renglones sin T/C resoluble ya no se valúan en cero).

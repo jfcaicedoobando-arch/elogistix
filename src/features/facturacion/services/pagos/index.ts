@@ -1,11 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
-import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import {
-  crearMovimientoBancarioCobro,
-  eliminarMovimientoBancarioCobro,
-} from "@/features/facturacion/services/cobroFacturaMovimiento";
+import { crearMovimientoBancarioCobro } from "@/features/facturacion/services/cobroFacturaMovimiento";
 
 
 export type PagoFactura = Tables<"pagos_factura">;
@@ -154,13 +151,23 @@ function esErrorPagoConRepVivo(err: unknown): boolean {
   return /LC_PAGO_CON_REP_VIVO/.test(String(err ?? ""));
 }
 
-export async function eliminarPagoFactura(id: string): Promise<void> {
-  const { data: userData } = await supabase.auth.getUser();
+/** Resultado de la baja atómica de un cobro. */
+export interface EliminarPagoResult {
+  /** Movimientos bancarios generados por el sistema dados de baja. */
+  movimientosBaja: number;
+  /** Movimientos importados del banco que se desvincularon y quedaron pendientes. */
+  movimientosDesvinculados: number;
+  yaEliminado: boolean;
+}
 
-  // Defensa temprana: leemos uuid_rep + rep_cancelado_en para dar mensaje en
-  // español sin esperar el error del trigger (ahorra roundtrip y evita ruido
-  // en Sentry). El trigger BD `trg_pago_sin_rep_vivo` sigue siendo la fuente
-  // de verdad ante race conditions.
+/**
+ * Ola 15: la baja del pago, la del movimiento bancario y la bitácora ocurren
+ * dentro de una sola transacción en la RPC `eliminar_pago_cliente`. Antes eran
+ * tres llamadas sueltas y un fallo intermedio dejaba el banco descuadrado.
+ */
+export async function eliminarPagoFactura(id: string): Promise<EliminarPagoResult> {
+  // Defensa temprana: mensaje en español sin esperar el error de la BD (ahorra
+  // ruido en Sentry). La RPC sigue siendo la fuente de verdad ante carreras.
   const { data: pago } = await supabase
     .from("pagos_factura")
     .select("id, factura_id, uuid_rep, rep_cancelado_en")
@@ -170,25 +177,25 @@ export async function eliminarPagoFactura(id: string): Promise<void> {
     throw new PagoConRepVivoError(pago.uuid_rep);
   }
 
-  try {
-    await run(
-      supabase
-        .from("pagos_factura")
-        .update({ deleted_at: new Date().toISOString(), deleted_by: userData.user?.id ?? null })
-        .eq("id", id),
-    );
-  } catch (err) {
-    if (esErrorPagoConRepVivo(err)) {
+  const { data, error } = await supabase.rpc("eliminar_pago_cliente", {
+    _pago_id: id,
+  });
+  if (error) {
+    if (esErrorPagoConRepVivo(error)) {
       throw new PagoConRepVivoError(pago?.uuid_rep ?? null);
     }
-    throw err;
+    throw error;
   }
-  await eliminarMovimientoBancarioCobro(id, userData.user?.id ?? null);
-  await registrarActividad({
-    modulo: "facturacion",
-    accion: "eliminar_pago",
-    entidadId: pago?.factura_id ?? null,
-    detalles: { pago_id: id },
-  });
+  const res = (data ?? {}) as {
+    movimientos_baja?: number;
+    movimientos_desvinculados?: number;
+    ya_eliminado?: boolean;
+  };
+  return {
+    movimientosBaja: res.movimientos_baja ?? 0,
+    movimientosDesvinculados: res.movimientos_desvinculados ?? 0,
+    yaEliminado: res.ya_eliminado === true,
+  };
 }
+
 

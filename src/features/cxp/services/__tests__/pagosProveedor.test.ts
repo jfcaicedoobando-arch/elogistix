@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { listarPagosProveedor, registrarPagoProveedor, eliminarPagoProveedor as _eliminarPagoProveedor, PagoRequiereAprobacionError } from "../pagosProveedor";
+import { listarPagosProveedor, registrarPagoProveedor, eliminarPagoProveedor, PagoRequiereAprobacionError } from "../pagosProveedor";
 
 describe("pagosProveedor service", () => {
   beforeEach(() => {
@@ -90,6 +90,28 @@ describe("pagosProveedor service", () => {
     await expect(
       registrarPagoProveedor({ proveedor_factura_id: "f1" } as Parameters<typeof registrarPagoProveedor>[0], "u1"),
     ).rejects.toThrow("insert failed");
+  });
+
+  it("Ola 15 · eliminarPagoProveedor delega todo en la RPC atómica", async () => {
+    mock.setRpcResult("eliminar_pago_proveedor", {
+      data: { movimientos_baja: 0, movimientos_desvinculados: 1, costos_recalculados: 2, ya_eliminado: false },
+      error: null,
+    });
+    const r = await eliminarPagoProveedor("p1", "f1", "u1");
+    expect(r).toEqual({
+      movimientosBaja: 0,
+      movimientosDesvinculados: 1,
+      costosRecalculados: 2,
+      yaEliminado: false,
+    });
+    expect(mock.rpcCalls.some((c) => c.fn === "eliminar_pago_proveedor" && (c.args as { _pago_id: string })._pago_id === "p1")).toBe(true);
+    // Ningún UPDATE directo desde el cliente.
+    expect(mock.tableCalls.filter((c) => c.ops.includes("update"))).toHaveLength(0);
+  });
+
+  it("propaga el error de la RPC al eliminar un pago", async () => {
+    mock.setRpcResult("eliminar_pago_proveedor", { data: null, error: new Error("LC_SOD_VIOLATION") });
+    await expect(eliminarPagoProveedor("p1", "f1", "u1")).rejects.toThrow("LC_SOD_VIOLATION");
   });
 
 });
