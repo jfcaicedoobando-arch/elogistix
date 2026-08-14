@@ -156,8 +156,15 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    service_role`); los archivos originales quedan como legacy auditado. Los
  *    replays `20260824080000` / `20260824080100` sí incluyen el bloque y siguen
  *    dentro del alcance de la auditoría.
+ *  - post-FIX-H6-19: `20260814174632` (Ola 16) re-emitió las RPCs de papelera
+ *    y bitácora (`list_trash`, `list_trash_counts`, `restore_record`,
+ *    `purge_record`, `soft_delete_record`, `list_idempotency_log`) sin el
+ *    bloque REVOKE/GRANT en el mismo archivo. La migración correctiva
+ *    `20260814185046` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon`
+ *    + `GRANT EXECUTE … TO authenticated, service_role`); el archivo original
+ *    queda como legacy auditado.
  */
-const BASELINE = "20260814164034";
+const BASELINE = "20260814185046";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
