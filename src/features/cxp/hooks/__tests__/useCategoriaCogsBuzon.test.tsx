@@ -48,17 +48,41 @@ describe("useCategoriaCogsBuzon", () => {
     expect(onCategoria).toHaveBeenCalledWith("cogs");
   });
 
-  it("no pisa una elección manual previa del contador", () => {
+  // v13.620.0 — La autocarga del CFDI/PDF reescribe el formulario con la
+  // categoría sugerida por la IA; el candado debe corregirla de vuelta a COGS.
+  it("corrige la categoría que escribe la autocarga (IA) mientras esté bloqueada", () => {
     const onCategoria = vi.fn();
-    const { result } = renderHook(() =>
-      useCategoriaCogsBuzon({
-        categorias: CATS, documentoId: "doc-1", abierto: true,
-        categoriaActual: "adm", onCategoria,
-      }),
+    const { result, rerender } = renderHook(
+      (props: { categoriaActual: string }) =>
+        useCategoriaCogsBuzon({
+          categorias: CATS, documentoId: "doc-1", abierto: true,
+          categoriaActual: props.categoriaActual, onCategoria,
+        }),
+      { initialProps: { categoriaActual: "cogs" } },
     );
+    expect(onCategoria).not.toHaveBeenCalled();
+    rerender({ categoriaActual: "adm" }); // la IA pisó la categoría
+    expect(onCategoria).toHaveBeenCalledWith("cogs");
+    expect(result.current.bloqueada).toBe(true);
+  });
+
+  it("tras desbloquear respeta la elección manual del contador", () => {
+    const onCategoria = vi.fn();
+    const { result, rerender } = renderHook(
+      (props: { categoriaActual: string }) =>
+        useCategoriaCogsBuzon({
+          categorias: CATS, documentoId: "doc-1", abierto: true,
+          categoriaActual: props.categoriaActual, onCategoria,
+        }),
+      { initialProps: { categoriaActual: "cogs" } },
+    );
+    act(() => result.current.desbloquear());
+    onCategoria.mockClear();
+    rerender({ categoriaActual: "adm" });
     expect(onCategoria).not.toHaveBeenCalled();
     expect(result.current.bloqueada).toBe(false);
   });
+
 
   it("permite desbloquear el selector", () => {
     const { result } = renderHook(() =>
