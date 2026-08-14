@@ -3,8 +3,7 @@
  * el modal. Si llega un refetch del cliente con el modal abierto, lo editado
  * NO se debe perder (antes provocaba el "parpadeo" de los interruptores).
  */
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import DialogEditarCliente from "../DialogEditarCliente";
 
@@ -59,7 +58,7 @@ describe("DialogEditarCliente | reinicio del formulario", () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole("button", { name: /Guardar cambios/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Guardar cambios/i }));
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         requiere_autorizacion_cotizacion: false,
