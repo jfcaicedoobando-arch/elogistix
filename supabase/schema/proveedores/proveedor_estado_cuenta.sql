@@ -28,7 +28,7 @@ BEGIN
            c.fecha_vencimiento, c.created_at,
            e.id AS embarque_id, e.expediente, e.cliente_nombre
     FROM public.conceptos_costo c
-    LEFT JOIN public.embarques e ON e.id = c.embarque_id
+    LEFT JOIN public.embarques e ON e.id = c.embarque_id AND e.deleted_at IS NULL
     WHERE c.proveedor_id = p_proveedor_id
       AND c.organization_id = v_oid
       AND c.deleted_at IS NULL

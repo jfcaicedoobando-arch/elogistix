@@ -51,7 +51,7 @@ BEGIN
            pf.fecha_vencimiento, pf.moneda::text AS moneda, pf.total,
            pf.estado::text AS estado, pf.embarque_id, e.expediente
     FROM public.proveedor_facturas pf
-    LEFT JOIN public.embarques e ON e.id = pf.embarque_id
+    LEFT JOIN public.embarques e ON e.id = pf.embarque_id AND e.deleted_at IS NULL
     WHERE pf.proveedor_id = p_proveedor_id
       AND pf.organization_id = v_oid
       AND pf.deleted_at IS NULL
@@ -84,7 +84,7 @@ BEGIN
     SELECT a.id, a.fecha_anticipo, a.monto, a.moneda::text AS moneda,
            a.referencia, a.metodo_pago, a.embarque_id, e.expediente
     FROM public.anticipos_proveedor a
-    LEFT JOIN public.embarques e ON e.id = a.embarque_id
+    LEFT JOIN public.embarques e ON e.id = a.embarque_id AND e.deleted_at IS NULL
     WHERE a.proveedor_id = p_proveedor_id
       AND a.organization_id = v_oid
       AND a.deleted_at IS NULL
