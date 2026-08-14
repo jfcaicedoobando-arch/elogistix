@@ -9139,6 +9139,15 @@ export type Database = {
           nombre: string
         }[]
       }
+      fn_admin_platform_stats: {
+        Args: never
+        Returns: {
+          total_cotizaciones: number
+          total_embarques: number
+          total_orgs: number
+          total_users: number
+        }[]
+      }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
       generar_liquidacion_comision: {
         Args: {
