@@ -55,7 +55,13 @@ for f in "$DIST_DIR"/*.js; do
     # yoga-layout) y ya es lazy vía dynamic import en PdfPreview/descargarPdf.
     # No tiene split razonable: es un solo grafo de módulos del renderer.
     # Budget alineado al pin 4.5.1 (ver CHANGELOG v13.570.0, fuga de memoria en 4.6.0).
-    budget="${REACT_PDF_BUDGET_KB:-560}"
+    # Ola 14 · R5TC-03b: 560 → 600 KB. En v13.602.1 el chunk midió 554.63 KB
+    # gz (margen ~5 KB; en v13.583.2 era 539.7, ~15 KB/ola de crecimiento por
+    # plantillas PDF nuevas y minors del renderer). 600 KB da ~2-3 olas de
+    # colchón; si se rebasa, la acción es revisar el driver (deps nuevas del
+    # chunk), no volver a subir el límite a ciegas.
+    budget="${REACT_PDF_BUDGET_KB:-600}"
+
     label="lazy(react-pdf)"
 
   else
