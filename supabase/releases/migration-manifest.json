@@ -26475,7 +26475,8 @@
       "20260824040000_ola13_r4bd05_p_offset_desde_el_final.sql",
       "20260824050000_ola13_has_role_cliente.sql",
       "20260824060000_ola13_replay_lotes.sql",
-      "20260824060100_ola13_replay_rbd07.sql"
+      "20260824060100_ola13_replay_rbd07.sql",
+      "20260824070000_ola13_org_guard_saldo.sql"
     ]
   }
 }
