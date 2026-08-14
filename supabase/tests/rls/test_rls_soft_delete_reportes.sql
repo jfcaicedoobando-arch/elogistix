@@ -57,6 +57,9 @@ BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS SoftDelete A');
   INSERT INTO public.organization_members(organization_id, user_id, role)
   VALUES (org_a, u_admin, 'admin_org');
+  -- Las políticas SELECT usan `has_any_role` (tabla legacy `user_roles`).
+  INSERT INTO public.user_roles(user_id, role) VALUES (u_admin, 'admin_org')
+  ON CONFLICT DO NOTHING;
 
   INSERT INTO public.clientes(id, organization_id, nombre)
   VALUES (cli_a, org_a, 'Cliente SoftDelete');
