@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.595.0] - 2026-08-14
+- **Ola 13 · Sprint 01 (toolchain).**
+- R3TC-01 (re-fix): `poolOptions.forks` se movió a la raíz de `test` en `vitest.config.ts`. Vitest 3.2.4 crea el pool sólo desde la config global, así que `--expose-gc`, `maxForks` y `minForks` por fin aplican (sonda verificada: `typeof globalThis.gc === "function"` dentro del fork; canario `pdfLeak` con drift estable de 2.48 MB).
+- R4TC-01: se eliminaron los re-exports muertos (`DIAS_AVISO_VENCIMIENTO`, `MAX_VIGENCIA_ANIOS`, `EstadoVigencia`, `RenglonExpediente`) del shim `documentosProveedor.ts`, más dos exports muertos detectados por knip (`pagosConRepVivo` re-exportado y el tipo `RefacturacionState`). Knip queda sin advertencias.
+- R4TC-02: el canario de performance `queryTimeout` sube su budget de 50 a 80 ms (sin regresión de código; evita falsos rojos en runners de 2 vCPU).
+
 ## [13.594.7] - 2026-08-14
 - **`bun run ci:fast` ya no reporta rojo cuando todo pasa**: el runner esperaba PIDs ya cosechados y `wait -n` abortaba con 127, marcando el resto como "cancelado por fail-fast".
 - `ConsultaRepsTable` usa `TABLE_DENSITY.embebida` en lugar del literal `density="compact"` (regla de arquitectura de tablas).
