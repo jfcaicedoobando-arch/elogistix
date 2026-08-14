@@ -55,6 +55,8 @@ interface Props {
   onRechazar: (row: Fila) => void;
   /** v13.508.0 — Rescatar un documento rechazado por error. */
   onReactivar?: (row: Fila) => void;
+  /** v13.618.0 — Corregir datos declarados (p. ej. capturar el importe faltante). */
+  onCorregir?: (row: Fila) => void;
 }
 
 export function FacturaEntranteRow({
@@ -70,6 +72,7 @@ export function FacturaEntranteRow({
   onCrearFactura,
   onRechazar,
   onReactivar,
+  onCorregir,
 }: Props) {
   const antiguedad = antiguedadEntrante(row);
   const chips = chipsArchivosEntrante(row);
@@ -99,7 +102,10 @@ export function FacturaEntranteRow({
           <MetaEntrante row={row} />
         </button>
 
-        <ImporteEntrante row={row} />
+        <ImporteEntrante
+          row={row}
+          onAgregarImporte={!soloLectura && puedeProcesar ? onCorregir : undefined}
+        />
 
 
         <FacturaEntranteAcciones

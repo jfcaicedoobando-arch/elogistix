@@ -16,6 +16,8 @@ export interface AccionesEntrante {
   onCrearFactura: (row: Fila) => void;
   onRechazar: (row: Fila) => void;
   onReactivar?: (row: Fila) => void;
+  /** v13.618.0 — Corregir lo declarado al subir (importe, proveedor, conceptos). */
+  onCorregir?: (row: Fila) => void;
 }
 
 interface Props extends AccionesEntrante {
