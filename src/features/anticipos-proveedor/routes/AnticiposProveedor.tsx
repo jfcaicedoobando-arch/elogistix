@@ -29,6 +29,7 @@ export default function AnticiposProveedor() {
   const { canEditFinance } = usePermissions();
   const [estado, setEstado] = useState<string>("todos");
   const [proveedorId, setProveedorId] = useState<string>("todos");
+  const [soloSinEmbarque, setSoloSinEmbarque] = useState(false);
 
   const [openRegistrar, setOpenRegistrar] = useState(false);
   const [anticipoParaAplicar, setAnticipoParaAplicar] = useState<AnticipoProveedorRow | null>(null);
@@ -38,6 +39,7 @@ export default function AnticiposProveedor() {
   const { data, isLoading, isError, refetch } = useAnticiposProveedor({
     estado: estado === "todos" ? null : estado,
     proveedorId: proveedorId === "todos" ? null : proveedorId,
+    sinEmbarque: soloSinEmbarque,
   });
 
   const { data: proveedores = [] } = useProveedoresLite();
@@ -106,6 +108,23 @@ export default function AnticiposProveedor() {
                       {p.nombre}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-full md:w-64">
+              <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 block">
+                Vínculo con embarque
+              </label>
+              <Select
+                value={soloSinEmbarque ? "sin" : "todos"}
+                onValueChange={(v) => setSoloSinEmbarque(v === "sin")}
+              >
+                <SelectTrigger aria-label="Filtrar anticipos por vínculo con embarque">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="sin">Sólo sin embarque</SelectItem>
                 </SelectContent>
               </Select>
             </div>
