@@ -107,6 +107,11 @@ export const LC_CODE_MESSAGES_OPERATIVO: Record<string, string> = {
     "No puedes eliminar una proforma que ya fue facturada.",
   LC_PROFORMA_MONEDA_NO_SOPORTADA:
     "La moneda de la proforma aún no está soportada para conversión (usa MXN o USD).",
+  LC_PROFORMA_ELIMINADA: "Esta proforma fue eliminada y ya no puede modificarse.",
+  LC_PROFORMA_REQUIERE_AUTORIZACION:
+    "Este cliente sí requiere autorizar sus proformas: envíala y espera su respuesta.",
+  LC_TIPO_AUTORIZACION_INVALIDO:
+    "Tipo de autorización inválido: usa cotización o proforma.",
 
   // ── Genéricos ──────────────────────────────────────────────────────────
   LC_FORBIDDEN: "No tienes permisos para realizar esta acción.",

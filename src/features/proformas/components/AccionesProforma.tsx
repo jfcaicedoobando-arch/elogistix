@@ -9,10 +9,12 @@
  * - more: Ver embarque (drilldown al expediente).
  */
 import { useState } from "react";
-import {
-  Download, Ship, Receipt, Mail, CheckCircle2, XCircle, Link2, Eye,
-} from "lucide-react";
+import { Receipt } from "lucide-react";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
+import {
+  buildSecondaryItems,
+  buildMoreItems,
+} from "@/features/proformas/components/accionesProformaItems";
 import { EnviarProformaDialog } from "@/features/proformas/components/EnviarProformaDialog";
 import { RespuestaClienteManualDialog } from "@/features/proformas/components/RespuestaClienteManualDialog";
 import { AlertaLimiteCreditoDialog } from "@/features/proformas/components/AlertaLimiteCreditoDialog";
@@ -28,7 +30,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { resolverDiasCredito } from "@/features/proformas/domain/proformaDetalleHelpers";
 import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
 import { useAprobarProformaInterna } from "@/features/proformas/hooks/useAprobarProformaInterna";
-import { BadgeClienteDeCasa } from "@/features/cliente/components/BadgeClienteDeCasa";
+import { BadgeClienteDeCasa } from "@/components/shared/BadgeClienteDeCasa";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
@@ -130,12 +132,6 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     ? { id: "convertir", label: "Convertir a factura", icon: Receipt, onClick: onConvertir, loading: convirtiendo }
     : null;
 
-  const secondary: DetalleActionItem[] = [
-    { id: "pdf", label: "Descargar PDF", icon: Download, onClick: onDescargar, loading: cargando },
-  ];
-  if (!facturada) {
-    secondary.push({ id: "enviar", label: "Enviar al cliente", icon: Mail, onClick: () => setEnviarOpen(true) });
-  }
   // v13.624.0 — cliente de casa: aprobación interna en un clic (sin diálogo de
   // "respuesta del cliente", porque no hay respuesta que registrar).
   const puedeAprobarInterna =
@@ -143,51 +139,33 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     !facturada &&
     readEstadoCliente(proforma) === "pendiente" &&
     canResponderProformaManual;
-  if (puedeAprobarInterna) {
-    secondary.push({
-      id: "aprobar-interna",
-      label: "Aprobar internamente",
-      icon: CheckCircle2,
-      iconClassName: "text-success",
-      loading: aprobando,
-      onClick: () => aprobarInterna(proforma.id),
-    });
-  }
-  if (puedeResponder && !puedeAprobarInterna) {
-    secondary.push({
-      id: "aceptar", label: "Aceptar (manual)", icon: CheckCircle2, iconClassName: "text-success",
-      onClick: () => setManualOpen("aceptada"),
-    });
-    secondary.push({
-      id: "rechazar", label: "Rechazar (manual)", icon: XCircle, iconClassName: "text-destructive",
-      onClick: () => setManualOpen("rechazada"),
-    });
-  }
 
-  const more: DetalleActionItem[] = [];
+  const secondary = buildSecondaryItems({
+    facturada,
+    cargando,
+    aprobando,
+    puedeAprobarInterna,
+    puedeResponder,
+    onDescargar,
+    onEnviar: () => setEnviarOpen(true),
+    onAprobarInterna: () => aprobarInterna(proforma.id),
+    onAceptarManual: () => setManualOpen("aceptada"),
+    onRechazarManual: () => setManualOpen("rechazada"),
+  });
+
   // SAFE-CAST: columna pública generada al enviar la proforma; los tipos
   // generados aún no la incluyen.
   const tokenPublico = (proforma as unknown as { token_publico?: string | null }).token_publico ?? null;
-  if (tokenPublico) {
-    const rutaPortal = `/portal/proformas/${tokenPublico}`;
-    const ligaPortal = `${window.location.origin}${rutaPortal}`;
-    more.push({
-      id: "copiar-liga", label: "Copiar liga del portal", icon: Link2,
-      onClick: () => {
-        void navigator.clipboard.writeText(ligaPortal).then(
-          () => notifySuccess(undefined, { title: "Liga del portal copiada" }),
-          (err) => notifyError(undefined, { title: "No se pudo copiar la liga", error: err }),
-        );
-      },
-    });
-    more.push({ id: "ver-portal", label: "Ver como cliente", icon: Eye, href: rutaPortal });
-  }
-  if (proforma.embarque_id) {
-    more.push({
-      id: "embarque", label: "Ver embarque", icon: Ship,
-      href: `/embarques/${proforma.embarque_id}?tab=facturacion`,
-    });
-  }
+  const more = buildMoreItems({
+    tokenPublico,
+    embarqueId: proforma.embarque_id ?? null,
+    onCopiarLiga: (liga) => {
+      void navigator.clipboard.writeText(liga).then(
+        () => notifySuccess(undefined, { title: "Liga del portal copiada" }),
+        (err) => notifyError(undefined, { title: "No se pudo copiar la liga", error: err }),
+      );
+    },
+  });
 
   return (
     <div className="space-y-2">

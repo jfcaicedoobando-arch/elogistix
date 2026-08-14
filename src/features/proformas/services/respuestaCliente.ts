@@ -41,6 +41,12 @@ export async function actualizarEstadoClienteProforma(
   return data;
 }
 
+interface AceptacionInternaResult {
+  proforma_id: string;
+  estado_cliente: string;
+  sin_cambios: boolean;
+}
+
 /**
  * v13.624.0 — Aprobación interna para clientes de casa.
  *
@@ -49,16 +55,12 @@ export async function actualizarEstadoClienteProforma(
  */
 export async function aceptarProformaSinAutorizacion(
   proformaId: string,
-): Promise<{ proforma_id: string; estado_cliente: string; sin_cambios: boolean }> {
-  // SAFE-CAST: RPC creada por migración; los tipos generados aún no la reflejan.
-  const { data, error } = await (supabase.rpc as never as (
-    fn: string,
-    args: Record<string, unknown>,
-  ) => Promise<{
-    data: { proforma_id: string; estado_cliente: string; sin_cambios: boolean } | null;
-    error: { message: string } | null;
-  }>)("aceptar_proforma_sin_autorizacion", { p_proforma_id: proformaId });
+): Promise<AceptacionInternaResult> {
+  const { data, error } = await supabase.rpc("aceptar_proforma_sin_autorizacion", {
+    p_proforma_id: proformaId,
+  });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Respuesta vacía del servidor");
-  return data;
+  // SAFE-CAST: la RPC devuelve `jsonb`; se estrecha a la forma documentada.
+  return data as unknown as AceptacionInternaResult;
 }

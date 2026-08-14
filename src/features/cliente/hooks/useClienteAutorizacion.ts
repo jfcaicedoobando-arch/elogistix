@@ -6,13 +6,12 @@
  * autorización) para no habilitar botones por error.
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  obtenerAutorizacionCliente,
+  type ClienteAutorizacion,
+} from "@/features/cliente/services/autorizacionClienteService";
 
-export interface ClienteAutorizacion {
-  requiereAutorizacionCotizacion: boolean;
-  requiereAutorizacionProforma: boolean;
-  esClienteDeCasa: boolean;
-}
+export type { ClienteAutorizacion };
 
 const DEFAULT_AUTORIZACION: ClienteAutorizacion = {
   requiereAutorizacionCotizacion: true,
@@ -25,26 +24,7 @@ export function useClienteAutorizacion(clienteId: string | null | undefined) {
     queryKey: ["cliente-autorizacion", clienteId ?? "none"],
     enabled: !!clienteId,
     staleTime: 60_000,
-    queryFn: async (): Promise<ClienteAutorizacion> => {
-      const { data, error } = await supabase
-        .from("clientes")
-        // SAFE-CAST: columnas nuevas; los tipos generados aún no las incluyen.
-        .select("id, requiere_autorizacion_cotizacion, requiere_autorizacion_proforma" as never)
-        .eq("id", clienteId as string)
-        .maybeSingle();
-      if (error) throw new Error(error.message);
-      const row = (data ?? null) as unknown as {
-        requiere_autorizacion_cotizacion?: boolean | null;
-        requiere_autorizacion_proforma?: boolean | null;
-      } | null;
-      const cot = row?.requiere_autorizacion_cotizacion ?? true;
-      const pro = row?.requiere_autorizacion_proforma ?? true;
-      return {
-        requiereAutorizacionCotizacion: cot,
-        requiereAutorizacionProforma: pro,
-        esClienteDeCasa: !cot && !pro,
-      };
-    },
+    queryFn: () => obtenerAutorizacionCliente(clienteId as string),
   });
 
   return {
