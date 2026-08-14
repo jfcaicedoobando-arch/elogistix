@@ -34,6 +34,7 @@ DECLARE
   cli_a2 uuid := gen_random_uuid();
   cli_b uuid := gen_random_uuid();
   fac_a uuid := gen_random_uuid();
+  fac_a2 uuid := gen_random_uuid();  -- T3: `uq_refacturaciones_original_abierta`
   fac_b uuid := gen_random_uuid();
   caso_a uuid := gen_random_uuid();
   v_rows int;
@@ -73,6 +74,7 @@ BEGIN
 
   INSERT INTO public.facturas(id, organization_id, cliente_id, numero, moneda, subtotal, iva, total, estado) VALUES
     (fac_a, org_a, cli_a, 'S05-A-1', 'MXN', 1000, 160, 1160, 'Emitida'),
+    (fac_a2, org_a, cli_a, 'S05-A-2', 'MXN', 1000, 160, 1160, 'Emitida'),
     (fac_b, org_b, cli_b, 'S05-B-1', 'MXN', 1000, 160, 1160, 'Emitida');
 
   -- Caso existente de org A, creado como postgres para probar UPDATE/SELECT.
@@ -113,7 +115,8 @@ BEGIN
   PERFORM pg_temp.as_user(u_auxiliar);
   INSERT INTO public.refacturaciones
     (organization_id, factura_original_id, cliente_origen_id, cliente_destino_id, motivo)
-  VALUES (org_a, fac_a, cli_a, cli_a2, 'T3 auxiliar');
+  -- Usa otra factura: sólo puede haber un caso abierto por factura original.
+  VALUES (org_a, fac_a2, cli_a, cli_a2, 'T3 auxiliar');
   GET DIAGNOSTICS v_rows = ROW_COUNT;
   PERFORM pg_temp.assert(v_rows = 1, 'T3 auxiliar_contable NO pudo insertar');
 
