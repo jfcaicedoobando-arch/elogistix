@@ -26,6 +26,9 @@ import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { usePermissions } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { resolverDiasCredito } from "@/features/proformas/domain/proformaDetalleHelpers";
+import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
+import { useAprobarProformaInterna } from "@/features/proformas/hooks/useAprobarProformaInterna";
+import { BadgeClienteDeCasa } from "@/features/cliente/components/BadgeClienteDeCasa";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
@@ -68,6 +71,8 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   const { canEmitirFactura, canResponderProformaManual } = usePermissions();
   const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
   const validarLimite = useValidarLimiteCredito();
+  const { autorizacion } = useClienteAutorizacion(proforma.cliente_id ?? null);
+  const { aprobar: aprobarInterna, isPending: aprobando } = useAprobarProformaInterna();
 
   const { facturada, puedeConvertir, puedeResponder, mostrarHint } = computarFlags(
     proforma,
@@ -131,7 +136,24 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   if (!facturada) {
     secondary.push({ id: "enviar", label: "Enviar al cliente", icon: Mail, onClick: () => setEnviarOpen(true) });
   }
-  if (puedeResponder) {
+  // v13.624.0 — cliente de casa: aprobación interna en un clic (sin diálogo de
+  // "respuesta del cliente", porque no hay respuesta que registrar).
+  const puedeAprobarInterna =
+    !autorizacion.requiereAutorizacionProforma &&
+    !facturada &&
+    readEstadoCliente(proforma) === "pendiente" &&
+    canResponderProformaManual;
+  if (puedeAprobarInterna) {
+    secondary.push({
+      id: "aprobar-interna",
+      label: "Aprobar internamente",
+      icon: CheckCircle2,
+      iconClassName: "text-success",
+      loading: aprobando,
+      onClick: () => aprobarInterna(proforma.id),
+    });
+  }
+  if (puedeResponder && !puedeAprobarInterna) {
     secondary.push({
       id: "aceptar", label: "Aceptar (manual)", icon: CheckCircle2, iconClassName: "text-success",
       onClick: () => setManualOpen("aceptada"),
@@ -170,9 +192,12 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   return (
     <div className="space-y-2">
       <DetalleActionBar primary={primary} secondary={secondary} more={more} />
+      {!autorizacion.requiereAutorizacionProforma && <BadgeClienteDeCasa tipo="proforma" />}
       {mostrarHint && (
         <p className="text-xs text-muted-foreground">
-          Para facturar, el cliente debe aceptar la proforma.
+          {autorizacion.requiereAutorizacionProforma
+            ? "Para facturar, el cliente debe aceptar la proforma."
+            : "Este cliente no requiere autorización: aprueba la proforma internamente para facturarla."}
         </p>
       )}
       <EnviarProformaDialog open={enviarOpen} onOpenChange={setEnviarOpen} proforma={proforma} />

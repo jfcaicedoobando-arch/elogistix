@@ -881,6 +881,8 @@ export type Database = {
           nombre: string
           organization_id: string
           regimen_fiscal: string | null
+          requiere_autorizacion_cotizacion: boolean
+          requiere_autorizacion_proforma: boolean
           rfc: string
           sin_comision: boolean
           telefono: string
@@ -908,6 +910,8 @@ export type Database = {
           nombre: string
           organization_id?: string
           regimen_fiscal?: string | null
+          requiere_autorizacion_cotizacion?: boolean
+          requiere_autorizacion_proforma?: boolean
           rfc?: string
           sin_comision?: boolean
           telefono?: string
@@ -935,6 +939,8 @@ export type Database = {
           nombre?: string
           organization_id?: string
           regimen_fiscal?: string | null
+          requiere_autorizacion_cotizacion?: boolean
+          requiere_autorizacion_proforma?: boolean
           rfc?: string
           sin_comision?: boolean
           telefono?: string
@@ -7977,6 +7983,10 @@ export type Database = {
         Args: { p_cotizacion_id: string }
         Returns: Json
       }
+      aceptar_proforma_sin_autorizacion: {
+        Args: { p_proforma_id: string }
+        Returns: Json
+      }
       actividad_embarque: {
         Args: { p_embarque_id: string }
         Returns: {
@@ -8418,6 +8428,10 @@ export type Database = {
       clear_facturapi_api_key: {
         Args: { p_ambiente: string; p_org_id: string }
         Returns: undefined
+      }
+      cliente_requiere_autorizacion: {
+        Args: { p_cliente_id: string; p_tipo: string }
+        Returns: boolean
       }
       clientes_listado: {
         Args: {

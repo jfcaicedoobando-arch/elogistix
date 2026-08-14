@@ -22,6 +22,7 @@ import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseB
 import { AvisoConceptosDescartados } from "@/features/cotizacion/components/AvisoConceptosDescartados";
 import type { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
 
 type DetalleState = ReturnType<typeof useCotizacionDetalleState>;
 
@@ -62,6 +63,9 @@ export function CotizacionDetalleContenido({
   navigate, effectiveRole, envios, enviarOpen, setEnviarOpen,
 }: Props) {
   const { user } = useAuth();
+  const { autorizacion } = useClienteAutorizacion(
+    (cotizacion as { cliente_id?: string | null }).cliente_id ?? null,
+  );
   return (
     <>
       <CotizacionInactivaBanner
@@ -95,6 +99,7 @@ export function CotizacionDetalleContenido({
           rol={effectiveRole}
           creadaPor={(cotizacion as { created_by?: string | null }).created_by ?? null}
           usuarioActual={user?.id ?? null}
+          requiereAutorizacionCliente={autorizacion.requiereAutorizacionCotizacion}
         />
       )}
 

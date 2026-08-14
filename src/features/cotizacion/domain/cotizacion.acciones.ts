@@ -47,6 +47,12 @@ export function accionesCotizacionPermitidas(
   total: number,
   rol: AppRole | null | undefined,
   sod: ContextoSoDCotizacion = {},
+  /**
+   * v13.624.0 — "cliente de casa": cuando el cliente NO requiere autorizar
+   * cotizaciones, el equipo interno puede aceptarla/rechazarla desde
+   * "Borrador" o "Solicitada" sin esperar la respuesta del cliente.
+   */
+  requiereAutorizacionCliente = true,
 ): AccionesCotizacionPermitidas {
   const puedeGestionar = puedeGestionarCotizacion(rol);
   const tieneTotal = Number(total) > 0;
@@ -60,7 +66,10 @@ export function accionesCotizacionPermitidas(
   const bloqueadoPorSoD = esAutor && !exentoSoD;
 
   const enviar = puedeGestionar && tieneTotal && (estado === "Borrador" || estado === "Solicitada");
-  const aceptarRechazar = puedeGestionar && tieneTotal && estado === "Enviada";
+  const estadosAceptables = requiereAutorizacionCliente
+    ? ["Enviada"]
+    : ["Enviada", "Borrador", "Solicitada"];
+  const aceptarRechazar = puedeGestionar && tieneTotal && estadosAceptables.includes(estado);
 
   return {
     exportarPdf: true,

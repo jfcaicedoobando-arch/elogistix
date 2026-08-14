@@ -30,4 +30,8 @@ export interface ClienteFormData {
   limite_credito_mxn: number | null;
   /** v13.386.0 — cuenta directa: sus embarques no generan comisión por defecto. */
   sin_comision: boolean;
+  /** v13.624.0 — cliente de casa: ¿debe autorizar cotizaciones? */
+  requiere_autorizacion_cotizacion: boolean;
+  /** v13.624.0 — cliente de casa: ¿debe autorizar proformas? */
+  requiere_autorizacion_proforma: boolean;
 }

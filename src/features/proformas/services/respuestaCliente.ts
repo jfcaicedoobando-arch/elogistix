@@ -40,3 +40,25 @@ export async function actualizarEstadoClienteProforma(
   if (!data) throw new Error("Respuesta vacía del servidor");
   return data;
 }
+
+/**
+ * v13.624.0 — Aprobación interna para clientes de casa.
+ *
+ * La RPC valida en la base que el cliente realmente NO requiera autorización
+ * de proformas; si la requiere, lanza `LC_PROFORMA_REQUIERE_AUTORIZACION`.
+ */
+export async function aceptarProformaSinAutorizacion(
+  proformaId: string,
+): Promise<{ proforma_id: string; estado_cliente: string; sin_cambios: boolean }> {
+  // SAFE-CAST: RPC creada por migración; los tipos generados aún no la reflejan.
+  const { data, error } = await (supabase.rpc as never as (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => Promise<{
+    data: { proforma_id: string; estado_cliente: string; sin_cambios: boolean } | null;
+    error: { message: string } | null;
+  }>)("aceptar_proforma_sin_autorizacion", { p_proforma_id: proformaId });
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Respuesta vacía del servidor");
+  return data;
+}

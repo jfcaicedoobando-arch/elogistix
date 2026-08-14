@@ -7,6 +7,7 @@ import {
   CAPTURAR_MOVIMIENTO_BANCARIO,
 
   CERRAR_EMBARQUE,
+  CONFIGURAR_AUTORIZACION_CLIENTE,
   COTIZAR_SIN_DESGLOSE,
   ELIMINAR_EMBARQUE,
   EMITIR_FACTURA_CLIENTE,
@@ -66,6 +67,8 @@ export function usePermissions() {
   const canHandoffCotizacion = has(HANDOFF_COTIZACION, roleStr);
   const canResponderProformaManual = has(RESPONDER_PROFORMA_MANUAL, roleStr);
   const canEliminarEmbarque = has(ELIMINAR_EMBARQUE, roleStr);
+  // v13.624.0 — política de autorización del cliente ("cliente de casa").
+  const canConfigurarAutorizacionCliente = has(CONFIGURAR_AUTORIZACION_CLIENTE, roleStr);
 
   const canEdit = canEditOperations || canEditFinance;
   // R4BD-04: espejo de las policies del expediente (documentos y contactos).
@@ -105,5 +108,6 @@ export function usePermissions() {
     canHandoffCotizacion,
     canResponderProformaManual,
     canEliminarEmbarque,
+    canConfigurarAutorizacionCliente,
   };
 }

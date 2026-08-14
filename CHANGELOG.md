@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.624.0] - 2026-08-14
+- Nuevo interruptor por cliente: "Requiere autorizar cotizaciones" y "Requiere autorizar proformas" (en Editar cliente). Para los clientes de casa se pueden apagar y así agilizar la operación; sólo administración o gerencia comercial puede cambiar esta política.
+- Cotizaciones de clientes de casa: se pueden aceptar/rechazar directamente desde Borrador o Solicitada (antes había que enviarlas primero). Se muestra la etiqueta "Cliente de casa" y sigue vigente la regla de que quien la creó no la puede aceptar.
+- Proformas de clientes de casa: nuevo botón "Aprobar internamente" que las marca como aceptadas en un clic para poder facturarlas, dejando registro en la bitácora.
+- Los clientes nuevos siguen requiriendo autorización por omisión (no cambia nada para el resto de la cartera).
+
 ## [13.623.1] - 2026-08-14
 - Al intentar pasar un embarque a "Confirmado" sin los datos mínimos (peso, naviera, contenedores, etc.) ya no aparece un toast rojo de error con "Ver detalles"/requestId: ahora es un aviso informativo "Aún falta información para confirmar" con la lista de campos por capturar. El embarque sigue sin avanzar hasta completarlos.
 

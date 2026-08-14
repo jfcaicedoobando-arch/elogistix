@@ -18,6 +18,8 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { CondicionesCreditoSection } from "./CondicionesCreditoSection";
 import { ComisionClienteSection } from "./ComisionClienteSection";
+import { AutorizacionClienteSection } from "./AutorizacionClienteSection";
+import { usePermissions } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 
 interface ClienteData {
@@ -35,6 +37,8 @@ interface ClienteData {
   dias_credito: number | null;
   limite_credito_mxn: number | null;
   sin_comision: boolean;
+  requiere_autorizacion_cotizacion: boolean;
+  requiere_autorizacion_proforma: boolean;
 }
 
 interface Props {
@@ -73,6 +77,7 @@ function TextField({
 }
 
 export default function DialogEditarCliente({ open, onOpenChange, cliente, onSave, isSaving }: Props) {
+  const { canConfigurarAutorizacionCliente } = usePermissions();
   const [form, setForm] = useState<ClienteData>(cliente);
   const [csfFileName, setCsfFileName] = useState<string | null>(null);
   const [parsingCsf, setParsingCsf] = useState(false);
@@ -193,6 +198,12 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
       <CondicionesCreditoSection form={form} setForm={setForm} />
 
       <ComisionClienteSection form={form} setForm={setForm} />
+
+      <AutorizacionClienteSection
+        form={form}
+        setForm={setForm}
+        disabled={!canConfigurarAutorizacionCliente}
+      />
     </FormDialogShell>
   );
 }

@@ -95,3 +95,15 @@ export const ADJUNTAR_XML_FACTURA_ENTRANTE: readonly AppRole[] = [
   "contador",
   "auxiliar_contable",
 ];
+
+/**
+ * v13.624.0 — Cambiar la política de autorización del cliente
+ * (`requiere_autorizacion_cotizacion` / `requiere_autorizacion_proforma`).
+ * Es una decisión comercial/administrativa: no la toma operación ni captura.
+ */
+export const CONFIGURAR_AUTORIZACION_CLIENTE: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_comercial",
+];
