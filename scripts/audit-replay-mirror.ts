@@ -16,6 +16,11 @@
  * colapsados). Los REVOKE/GRANT del espejo no entran en la comparación.
  * Estático: no requiere BD; corre en cualquier job de CI.
  *
+ * Baseline: `scripts/audit-replay-mirror-baseline.json` lista las divergencias
+ * PREEXISTENTES al guardrail (deuda técnica de la misma clase, fuera del
+ * alcance del Sprint 06). Se reportan como advertencia; si una deja de
+ * divergir hay que borrarla del baseline (entrada muerta ⇒ exit 1).
+ *
  * Uso: `bun run audit:replay-mirror`. Exit 1 si algún espejo diverge de la
  * migración vigente (mayor timestamp) o si no existe migración que lo defina.
  */
@@ -27,6 +32,19 @@ const SCHEMA_DIR = path.join(ROOT, "supabase", "schema");
 const MIG_DIR = path.join(ROOT, "supabase", "migrations");
 /** `baseline.sql` es un dump completo del esquema, no una función canónica. */
 const EXENTOS = new Set<string>(["supabase/schema/baseline.sql"]);
+const BASELINE_FILE = path.join(ROOT, "scripts", "audit-replay-mirror-baseline.json");
+
+interface EntradaBaseline {
+  espejo: string;
+  funcion: string;
+  migracion_vigente: string;
+}
+
+const baseline = JSON.parse(fs.readFileSync(BASELINE_FILE, "utf-8")) as {
+  entradas: EntradaBaseline[];
+};
+const enBaseline = new Set(baseline.entradas.map((e) => `${e.espejo}::${e.funcion}`));
+const baselineUsado = new Set<string>();
 
 interface DefinicionFuncion {
   nombre: string;
@@ -130,8 +148,20 @@ for (const file of espejos) {
     }
     const esperado = defsEspejo.filter((d) => d.nombre === nombre).map((d) => d.cuerpo);
     const vigente = (cacheMig.get(mig) ?? []).filter((d) => d.nombre === nombre).map((d) => d.cuerpo);
+    const llave = `${rel}::${nombre}`;
     if (JSON.stringify(esperado) === JSON.stringify(vigente)) {
+      if (enBaseline.has(llave)) {
+        violaciones.push(
+          `  - ${llave}: ya NO diverge — bórrala de scripts/audit-replay-mirror-baseline.json (entrada muerta)`,
+        );
+        baselineUsado.add(llave);
+        continue;
+      }
       verificados++;
+      continue;
+    }
+    if (enBaseline.has(llave)) {
+      baselineUsado.add(llave);
       continue;
     }
     // Reporte: primer punto de divergencia sobre los cuerpos normalizados.
@@ -148,6 +178,14 @@ for (const file of espejos) {
   }
 }
 
+for (const llave of enBaseline) {
+  if (!baselineUsado.has(llave)) {
+    violaciones.push(
+      `  - ${llave}: entrada del baseline que ya no existe en el repo — bórrala de scripts/audit-replay-mirror-baseline.json`,
+    );
+  }
+}
+
 if (violaciones.length > 0) {
   console.error(
     "❌ Espejos que divergen de la migración de MAYOR timestamp que los define (replay roto — clase R4BD-01/R4BD-03):",
@@ -158,6 +196,9 @@ if (violaciones.length > 0) {
   );
   process.exit(1);
 }
+console.log(
+  `⚠️  ${enBaseline.size} divergencias preexistentes toleradas por baseline (deuda R4BD-01/R4BD-03).`,
+);
 console.log(
   `✅ audit:replay-mirror — ${verificados} funciones espejo == migración vigente (mayor timestamp) en ${espejos.length} archivos canónicos.`,
 );
