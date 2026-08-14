@@ -443,6 +443,11 @@ jobs:
       - name: Guard de estados - guard_estado_cotizacion (C5 + A3)
         run: $PSQL -f supabase/tests/guard_estado_cotizacion.sql
 
+      - name: Guard de vigencia - cotizaciones (Ola 18)
+        run: $PSQL -f supabase/tests/guard_cotizacion_vigencia.sql
+
+
+
       - name: Integridad transaccional - ola6 RPCs atomicas (A3, M3, M4, M15)
         run: $PSQL -f supabase/tests/ola6_transaccional.sql
 
