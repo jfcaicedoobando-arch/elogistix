@@ -215,16 +215,12 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   // Aceptada (inmediata o silencio positivo ya resuelto por FacturAPI).
   const { error: updErr } = await supabase
     .from("pagos_factura")
-    .update(cancelarAnterior
-      // R3P-21: sustitución 01 consumada — el archivo se limpia y el REP
-      // vigente queda como único REP del pago.
-      ? { rep_cancelado_facturapi_id: null, rep_cancelado_uuid: null }
-      : {
-          estado_rep: "Cancelado",
-          rep_cancellation_status: "accepted",
-          rep_cancelado_en: nowIso,
-          rep_motivo_cancel: body.motivo,
-        })
+    .update({
+      estado_rep: "Cancelado",
+      rep_cancellation_status: "accepted",
+      rep_cancelado_en: nowIso,
+      rep_motivo_cancel: body.motivo,
+    })
     .eq("id", pago.id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
