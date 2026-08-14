@@ -37,6 +37,7 @@ DECLARE
   pago_c_ok uuid := gen_random_uuid();
   pago_c_no uuid := gen_random_uuid();
   pago_p_no uuid := gen_random_uuid();
+  ncp_borr  uuid;
   v_libro   jsonb;
   v_count   int;
   v_exp     text;
