@@ -42,7 +42,19 @@ DECLARE
   v_valid boolean;
 BEGIN
   -- ── Seed (como postgres, bypass RLS) ─────────────────────────────────────
+  BEGIN
+    INSERT INTO auth.users(id, email) VALUES
+      (u_tesorero, 's05-tesorero@test.local'),
+      (u_cobranza, 's05-cobranza@test.local'),
+      (u_auxiliar, 's05-auxiliar@test.local'),
+      (u_org_b,    's05-orgb@test.local')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN
+    NULL;  -- CI sin GoTrue: los FK contra auth.users ya no existen.
+  END;
+
   INSERT INTO public.organizations(id, nombre) VALUES
+
     (org_a, 'RLS Refact A'), (org_b, 'RLS Refact B');
 
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
