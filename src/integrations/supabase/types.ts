@@ -5508,6 +5508,13 @@ export type Database = {
             referencedRelation: "pagos_factura_lote"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pagos_factura_refacturacion_fk"
+            columns: ["refacturacion_id"]
+            isOneToOne: false
+            referencedRelation: "refacturaciones"
+            referencedColumns: ["id"]
+          },
         ]
       }
       pagos_factura_lote: {

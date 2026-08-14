@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.607.0] - 2026-08-14
+- Ola 14 · Sprint 05 (BD P3): FK `pagos_factura_refacturacion_fk` (`pagos_factura.refacturacion_id` → `refacturaciones.id`, `ON DELETE RESTRICT`, `NOT VALID` con VALIDATE diferido tras saneo manual) (R5BD-05).
+- Policies INSERT/UPDATE de `refacturaciones` alineadas al set de `_assert_refacturador` (admin_org, admin, contador, auxiliar_contable del tenant + super_admin): tesorero y ejecutivo_cobranza ya no pueden escribir directo saltándose las validaciones SAT; SELECT intacto (R5BD-04).
+- 13 espejos nuevos en `supabase/schema/facturacion/` (refacturación completa + `cxc_aging_clientes` + `assert_factura_viva_para_pago`): 6 → 19 archivos, `audit:schema-functions` y `audit:replay-mirror` verdes sin entradas nuevas al baseline (R5BD-02).
+- Plan de saldo del baseline replay-mirror documentado en `docs/ola14-replay-mirror-saldo.md` + `_doc` del JSON: decisión por cada una de las 14 entradas y fecha compromiso de vaciado (cierre de la Ola 17) (R5BD-03).
+
 ## [13.606.0] - 2026-08-14
 - Ola 14 · Sprint 04 (Frontend/UX P3): `puedeRefacturarReceptor` ya no se ofrece con cancelación en trámite ante el SAT (`pending`/`verifying`), alineado con `puedeCancelarCfdi` y `puedeRegistrarPago` (R5FE-01) + 2 `it.each` nuevos.
 - Query keys del asistente de refacturación migradas al registry `queryKeys.facturacion` (caso, factura, simulación, consistencia, expediente, último caso) y `refrescar()` ahora invalida también consistencia, expediente y último caso (R5FE-02).
