@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.612.0] - 2026-08-14
+- Ola 16 · Separación de planos plataforma / tenant: el Super Admin ya no ve datos mezclados de todas las organizaciones. Nueva política RESTRICTIVE `Scope tenant activo super admin` en las 86 tablas de negocio con `organization_id`, apoyada en `public.rls_tenant_scope_ok()` + `public.org_scope()`.
+- Sin tenant seleccionado el Super Admin no ve ni escribe datos de negocio (fail-closed); con tenant seleccionado sólo ve ese tenant, aunque la consulta no filtre por organización.
+- Plano PLATAFORMA intacto y explícito: `app_logs`, `nav_events`, `provisioning_log`, `role_change_log`, `super_admin_org_activa`, `organization_members`, `client_users`, `agente_users` y `facturapi_webhook_eventos` siguen siendo globales para la consola `/admin`.
+- Papelera, bitácora de idempotencia y `restore_record` / `purge_record` / `soft_delete_record` re-emitidas con `org_scope()`: eluden RLS por ser SECURITY DEFINER, así que se acotaron a mano (`LC_ORG_FUERA_DE_SCOPE`).
+- Nuevas RPC de telemetría de plataforma `fn_admin_platform_stats` y `fn_admin_org_counts` (fail-closed a super admin) usadas por `stats.ts`: los KPIs de `/admin` ya no leen las tablas de negocio directo.
+- Guardrail de CI `tabla_negocio_sin_scope_tenant` en `scripts/db/integrity-guard.sql` + nueva suite `supabase/tests/rls/test_rls_super_admin_planos.sql` (registrada en el grupo `aislamiento`).
+
 ## [13.611.1] - 2026-08-14
 - CI · Suites RLS `soft_delete_reportes` y `refacturaciones_matriz` en verde: los fixtures fallaban por reglas de negocio, no por los reportes.
 - `soft_delete_reportes`: el proveedor ahora nace con categoría/tipo válidos, el embarque con `modo`/`tipo`, la factura de proveedor con categoría de presupuesto y aprobada, la nota de crédito avanza Borrador → Aprobada → Aplicada y el admin recibe su rol legacy (las políticas de SELECT lo exigen).
