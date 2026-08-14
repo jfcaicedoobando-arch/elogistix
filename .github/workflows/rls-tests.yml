@@ -735,7 +735,7 @@ jobs:
         # mano los grupos para saber cuál rompió. Aquí listamos los grupos
         # fallidos con su enlace directo, en el log y en el summary. El log de
         # cada suite individual queda en el artifact `rls-suite-logs-<grupo>`.
-        if: needs.rls-suites.result != 'success'
+        if: needs.rls-suites.result != 'success' && needs.rls-suites.result != 'skipped'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
