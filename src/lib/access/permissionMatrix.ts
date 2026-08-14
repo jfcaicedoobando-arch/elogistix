@@ -101,6 +101,7 @@ export {
   RESPONDER_PROFORMA_MANUAL,
   SUBIR_FACTURA_ENTRANTE_EMBARQUE,
   ADJUNTAR_XML_FACTURA_ENTRANTE,
+  CONFIGURAR_AUTORIZACION_CLIENTE,
 } from "./permissionMatrix.operaciones";
 
 export const hasRole = (list: readonly AppRole[], role: AppRole | null | undefined) =>
