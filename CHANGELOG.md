@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.624.3] - 2026-08-14
+- Corregidas las fallas de CI que dejó "Clientes de casa": permisos restrictivos en la función de aceptar versión de cotización, manifiesto de base de datos sincronizado, y separación de archivos grandes (proformas, cotizaciones y Editar cliente) para cumplir los límites de complejidad y tamaño.
+- La consulta de la política de autorización del cliente se movió a un servicio dedicado, respetando la arquitectura del proyecto. Sin cambios visibles para el usuario.
+
 ## [13.624.2] - 2026-08-14
 - Corregidas dos fallas de CI: el aviso de descuadre en conceptos de factura ahora usa el token semántico de advertencia (sin colores fijos) y se renombró un título de prueba duplicado.
 
