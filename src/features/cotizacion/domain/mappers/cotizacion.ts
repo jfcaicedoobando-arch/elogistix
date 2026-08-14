@@ -1,6 +1,8 @@
 import { format } from "date-fns";
+import { hoyMx, parseLocalMx } from "@/lib/date/mx";
 import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from '@/features/cotizacion/types';
 import type { CotizacionFormValues } from '@/features/cotizacion/types';
+
 
 /**
  * Construye el payload de datos generales (Paso 1) para crear/actualizar una cotización.
@@ -50,11 +52,19 @@ function coerceDate(v: unknown): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+/**
+ * Ola 18: días de vigencia = diferencia contra el día local MX, no contra
+ * `Date.now()` (que cambiaba el resultado según la hora de captura). Sólo es
+ * informativo: la fuente de verdad de la vigencia es `validez_propuesta` y el
+ * trigger `_cotizaciones_sync_vigencia` la sincroniza en BD.
+ */
 function vigenciaDias(validez?: Date): number {
   const d = coerceDate(validez);
   if (!d) return 15;
-  return Math.max(1, Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  const hoy = parseLocalMx(hoyMx()).getTime();
+  return Math.max(1, Math.round((d.getTime() - hoy) / (1000 * 60 * 60 * 24)));
 }
+
 
 function partesCliente(v: CotizacionFormValues, clientes: { id: string; nombre: string }[]) {
   const cliente = clientes.find((c) => c.id === v.clienteId);

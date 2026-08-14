@@ -14,6 +14,12 @@ export async function updateCotizacion(
 ): Promise<void> {
   parseOrThrow(cotizacionUpdateSchema, data, "No se pudo actualizar la cotización");
   const updatePayload = fromDb<CotizacionUpdate>({ ...data });
+  // Ola 18: la validez propuesta manda sobre la vigencia mostrada (detalle y
+  // PDF). Antes `fecha_vigencia` quedaba congelada en el cálculo del alta
+  // (emisión + 15 días) y divergía de la fecha capturada. El trigger
+  // `_cotizaciones_sync_vigencia` es la red de seguridad en BD.
+  if (data.validez_propuesta) updatePayload.fecha_vigencia = data.validez_propuesta;
+
   if (data.conceptos_venta) updatePayload.conceptos_venta = toDbJson(data.conceptos_venta);
   if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = toDbJson(data.dimensiones_lcl);
   if (data.dimensiones_aereas)

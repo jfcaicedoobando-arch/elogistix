@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.616.0] - 2026-08-14
+- Fix: la vigencia de la cotización (detalle y PDF) ya respeta la fecha capturada en "Validez propuesta". Antes se calculaba sólo al crear (emisión + 15 días) y no se recalculaba al capturar la validez después, por lo que el PDF mostraba una fecha distinta (caso COT-2026-0174: 21/08 capturado vs 29/08 impreso).
+- Nuevo trigger `public._cotizaciones_sync_vigencia`: si hay validez propuesta, ella define `fecha_vigencia` y `vigencia_dias` se deriva de la emisión; sin validez se mantiene el default de 15 días. Backfill de las 27 cotizaciones desalineadas.
+- `vigenciaDias()` deja de usar `Date.now()` (el resultado cambiaba según la hora de captura) y se calcula contra el día local MX.
+- El detalle ya no imprime "Validez propuesta" y "Vigencia" con fechas contradictorias.
+- Test: `supabase/tests/guard_cotizacion_vigencia.sql`.
+
+
+
 ## [13.615.0] - 2026-08-14
 - Ola 17 · Errores granulares: los fallos de base de datos ya se traducen a español por constraint y SQLSTATE (`23505` → "Ya existe un registro con este identificador", `23502` nombra el campo faltante, `22001` longitud, `22P02`/`22007` formato, `22003` límite numérico, `40001`/`40P01`/`57014` concurrencia y tiempo de espera).
 - Nuevo catálogo `pgConstraintMessages.ts`: folios (FP-XXXXXX), RFC de cliente/proveedor, refacturación abierta y contacto principal duplicado tienen mensaje de negocio propio.

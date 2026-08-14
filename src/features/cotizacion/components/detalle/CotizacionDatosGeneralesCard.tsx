@@ -65,7 +65,11 @@ function optionalRows(c: Cotizacion): Row[] {
   if (c.tiempo_transito_dias != null) rows.push({ label: "Tiempo de tránsito", value: `${c.tiempo_transito_dias} días` });
   if (c.frecuencia) rows.push({ label: "Frecuencia", value: c.frecuencia });
   if (c.ruta_texto) rows.push({ label: "Ruta", value: c.ruta_texto, title: c.ruta_texto, colSpan2: true });
-  if (c.validez_propuesta) rows.push({ label: "Validez propuesta", value: formatDate(c.validez_propuesta) });
+  // Ola 18: la validez propuesta ES la vigencia. Sólo se muestra aparte si por
+  // datos históricos difiere, para no imprimir dos fechas contradictorias.
+  if (c.validez_propuesta && c.validez_propuesta !== c.fecha_vigencia)
+    rows.push({ label: "Validez propuesta", value: formatDate(c.validez_propuesta) });
+
   if (c.tipo_movimiento) rows.push({ label: "Tipo de movimiento", value: c.tipo_movimiento });
   return rows;
 }
