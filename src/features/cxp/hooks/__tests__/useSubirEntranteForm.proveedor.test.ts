@@ -31,6 +31,10 @@ describe("useSubirEntranteForm — proveedor obligatorio", () => {
     expect(result.current.listo).toBe(false);
 
     act(() => result.current.marcarSinCosto(true));
+    // v13.618.0 — El importe declarado también es obligatorio.
+    expect(result.current.listo).toBe(false);
+
+    act(() => result.current.setMontoDeclarado(500));
     expect(result.current.listo).toBe(true);
   });
 
@@ -50,6 +54,12 @@ describe("useSubirEntranteForm — proveedor obligatorio", () => {
 
     expect(result.current.conceptosSeleccionados).toHaveLength(1);
     expect(result.current.sumaSugeridaPorMoneda).toEqual({ USD: 1000 });
+    expect(result.current.listo).toBe(false);
+
+    // v13.618.0 — "Usar la suma de lo marcado" copia el importe declarado.
+    act(() => result.current.setMonedaDeclarada("USD"));
+    act(() => result.current.usarSumaSugerida());
+    expect(result.current.montoDeclarado).toBe(1000);
     expect(result.current.listo).toBe(true);
   });
 
