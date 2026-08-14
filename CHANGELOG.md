@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.610.0] - 2026-08-14
+- Ola 15 · T/C por fecha oficial: nuevo resolvedor `public.tc_para_documento(fecha, moneda, tc_doc, tc_emb)` y conversor `public.a_mxn_doc(...)` con la cascada CFDI → DOF de la fecha oficial → T/C del expediente.
+- `pnl_financiero_embarque`: cada factura de cliente, factura de proveedor, concepto y seguro se valúa con su propio tipo de cambio; se agregan los metadatos `tc_por_documento` y `excluidos_sin_tc` (los renglones sin T/C resoluble ya no se valúan en cero).
+- `eerr_resumen_anual`: facturas, facturas de proveedor y notas de crédito usan el T/C del comprobante o el DOF de su fecha; los expedientes sin T/C capturado toman el DOF de su ETA. Se agrega la columna `excluidos_sin_tc`.
+- Nuevas RPC de apoyo: `backfill_tc_dof_documentos(_simulacion)` (regularización idempotente de históricos) y `tc_dof_cobertura_faltante()` (huecos del catálogo DOF).
+
+
 ## [13.609.1] - 2026-08-14
 - CI: expediente del fixture de borrado lógico renombrado a `ELSDL00001` para cumplir el formato estándar (`rls-fixtures-expediente-format`).
 - Refactor `useRefacturacion`: consultas y invalidación de caches extraídas a `useRefacturacionQueries` (complejidad ciclomática 17 → dentro del límite).
