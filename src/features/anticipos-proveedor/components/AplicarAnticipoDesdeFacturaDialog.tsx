@@ -24,14 +24,18 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { useAplicarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 import { parseMonto } from "@/lib/format/parseMonto";
+import {
+  AplicarAnticipoResumen,
+  type ImportesFactura,
+} from "@/features/anticipos-proveedor/components/AplicarAnticipoResumen";
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   facturaId: string;
   folioFactura: string;
-  saldoFactura: number;
-  monedaFactura: string;
+  /** Desglose completo de importes de la factura (subtotal → saldo por pagar). */
+  importes: ImportesFactura;
   anticipos: AnticipoProveedorRow[];
   /** Embarque de la factura, para avisar si no coincide con el del anticipo. */
   facturaEmbarqueId?: string | null;
@@ -40,10 +44,12 @@ interface Props {
 
 
 export function AplicarAnticipoDesdeFacturaDialog({
-  open, onOpenChange, facturaId, folioFactura, saldoFactura, monedaFactura, anticipos,
+  open, onOpenChange, facturaId, folioFactura, importes, anticipos,
   facturaEmbarqueId, facturaExpediente,
 }: Props) {
 
+  const saldoFactura = importes.saldo;
+  const monedaFactura = importes.moneda;
   const aplicar = useAplicarAnticipo();
   // Los anticipos del mismo expediente se ofrecen primero (cruce natural).
   const anticiposOrdenados = useMemo(
@@ -80,7 +86,6 @@ export function AplicarAnticipoDesdeFacturaDialog({
   // Ola 9 · B5: parseo centralizado de montos tecleados.
   const montoNum = parseMonto(monto, NaN);
 
-  const monedaDifiere = Boolean(anticipo) && anticipo!.moneda !== monedaFactura;
   const desajuste = useMemo(
     () =>
       evaluarDesajusteEmbarque({
@@ -130,10 +135,18 @@ export function AplicarAnticipoDesdeFacturaDialog({
       onOpenChange={handleOpenChange}
       icon={ArrowRightLeft}
       title="Aplicar anticipo a esta factura"
-      description={`Factura ${folioFactura} · saldo ${formatCurrency(saldoFactura, monedaFactura)}.`}
+      description={`Factura ${folioFactura} · revisa el desglose antes de aplicar.`}
       size="lg"
       footer={footer}
     >
+      <FormDialogSection title="Importes">
+        <AplicarAnticipoResumen
+          factura={importes}
+          anticipo={anticipo}
+          montoAplicar={Number.isFinite(montoNum) ? montoNum : 0}
+        />
+      </FormDialogSection>
+
       <FormDialogSection title="Anticipo a aplicar">
         <div className="space-y-1.5 md:col-span-2">
           <Label htmlFor="apl-anticipo">Anticipo con saldo a favor</Label>
@@ -159,7 +172,7 @@ export function AplicarAnticipoDesdeFacturaDialog({
           <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="apl-monto-f">Monto a aplicar</Label>
+          <Label htmlFor="apl-monto-f">Monto a aplicar (sobre el saldo por pagar)</Label>
           <Input
             id="apl-monto-f"
             type="number"
@@ -169,12 +182,6 @@ export function AplicarAnticipoDesdeFacturaDialog({
             onChange={(e) => setMonto(e.target.value)}
           />
         </div>
-        {monedaDifiere && (
-          <p className="text-xs text-muted-foreground md:col-span-2">
-            El anticipo está en {anticipo!.moneda} y la factura en {monedaFactura}. La conversión la realiza el
-            servidor al aplicar.
-          </p>
-        )}
         {desajuste.hayDesajuste && (
           <div className="md:col-span-2 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />

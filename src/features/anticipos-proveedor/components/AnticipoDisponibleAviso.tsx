@@ -10,13 +10,14 @@ import { formatCurrency } from "@/lib/formatters";
 import { useAnticiposDisponibles } from "@/features/anticipos-proveedor/hooks/useAnticiposDisponibles";
 import { esMismoEmbarque } from "@/features/anticipos-proveedor/domain/ordenAnticiposPorEmbarque";
 import { AplicarAnticipoDesdeFacturaDialog } from "./AplicarAnticipoDesdeFacturaDialog";
+import type { ImportesFactura } from "./AplicarAnticipoResumen";
 
 interface Props {
   proveedorId: string;
   facturaId: string;
   folioFactura: string;
-  saldoFactura: number;
-  monedaFactura: string;
+  /** Desglose completo de importes de la factura. */
+  importes: ImportesFactura;
   canEdit: boolean;
   /** Embarque de la factura, para avisar si no coincide con el del anticipo. */
   facturaEmbarqueId?: string | null;
@@ -24,10 +25,11 @@ interface Props {
 }
 
 export function AnticipoDisponibleAviso({
-  proveedorId, facturaId, folioFactura, saldoFactura, monedaFactura, canEdit,
+  proveedorId, facturaId, folioFactura, importes, canEdit,
   facturaEmbarqueId, facturaExpediente,
 }: Props) {
 
+  const saldoFactura = importes.saldo;
   const [open, setOpen] = useState(false);
   const { data: anticipos, porMoneda } = useAnticiposDisponibles(proveedorId);
 
@@ -78,8 +80,7 @@ export function AnticipoDisponibleAviso({
         onOpenChange={setOpen}
         facturaId={facturaId}
         folioFactura={folioFactura}
-        saldoFactura={saldoFactura}
-        monedaFactura={monedaFactura}
+        importes={importes}
         anticipos={anticipos}
         facturaEmbarqueId={facturaEmbarqueId}
         facturaExpediente={facturaExpediente}

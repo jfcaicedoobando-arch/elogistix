@@ -66,8 +66,17 @@ export function FacturaProveedorTabs({
             proveedorId={f.proveedor_id}
             facturaId={f.id}
             folioFactura={f.folio_proveedor || f.folio_interno}
-            saldoFactura={f.saldo}
-            monedaFactura={f.moneda}
+            importes={{
+              subtotal: f.subtotal,
+              iva: f.iva,
+              ieps: f.ieps,
+              retenciones: f.retenciones,
+              total: f.total,
+              pagado: f.pagado,
+              notasCredito: f.notas_credito,
+              saldo: f.saldo,
+              moneda: f.moneda,
+            }}
             canEdit={canEdit}
             facturaEmbarqueId={f.embarque_id}
             facturaExpediente={f.embarque_expediente}
