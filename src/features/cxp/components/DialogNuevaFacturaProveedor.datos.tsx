@@ -48,6 +48,14 @@ export function ColumnaDatosFactura({
         categoriaCogs={categoriaCogs}
       />
 
+      {ctl.values.provId && embarqueCruce && (
+        <AvisoAnticipoEmbarque
+          proveedorId={ctl.values.provId}
+          embarqueId={embarqueCruce}
+          expediente={expedienteCruce}
+        />
+      )}
+
       {herencia && ctl.values.provId && (
         <SugerenciasOperacionesBanda
           aplicados={herencia.aplicados}
