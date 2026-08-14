@@ -40,23 +40,25 @@ const FRIENDLY_ERROR_MESSAGES: Array<{ match: RegExp; message: string }> = [
   },
 ];
 
+/** Normaliza cualquier valor capturado a `{ raw, pgCode }`. */
+function leerCrudo(err: unknown): { raw: string; pgCode: string | null } {
+  const fallback = "Error desconocido";
+  if (err instanceof Error) return { raw: err.message || fallback, pgCode: null };
+  if (typeof err === "string") return { raw: err, pgCode: null };
+  if (!err || typeof err !== "object") return { raw: fallback, pgCode: null };
+  // PostgrestError u objetos similares (Supabase RPC, etc.) que NO heredan de Error
+  const e = err as { message?: unknown; details?: unknown; hint?: unknown; code?: unknown };
+  const pgCode = typeof e.code === "string" && e.code.length > 0 ? e.code : null;
+  const parts = [e.message, e.details, e.hint].filter(
+    (v): v is string => typeof v === "string" && v.length > 0,
+  );
+  if (parts.length > 0) return { raw: parts.join(" — "), pgCode };
+  return { raw: pgCode ? `Código ${pgCode}` : fallback, pgCode };
+}
+
 export function getErrorMessage(err: unknown): string {
-  let raw = "Error desconocido";
-  let pgCode: string | null = null;
-  if (err instanceof Error) {
-    raw = err.message || raw;
-  } else if (typeof err === "string") {
-    raw = err;
-  } else if (err && typeof err === "object") {
-    // PostgrestError u objetos similares (Supabase RPC, etc.) que NO heredan de Error
-    const e = err as { message?: unknown; details?: unknown; hint?: unknown; code?: unknown };
-    if (typeof e.code === "string" && e.code.length > 0) pgCode = e.code;
-    const parts = [e.message, e.details, e.hint].filter(
-      (v): v is string => typeof v === "string" && v.length > 0,
-    );
-    if (parts.length > 0) raw = parts.join(" — ");
-    else if (pgCode) raw = `Código ${pgCode}`;
-  }
+  const { raw, pgCode } = leerCrudo(err);
+
   // 1) Traducciones legacy con regex (factura_inmutable, etc.)
   for (const { match, message } of FRIENDLY_ERROR_MESSAGES) {
     if (match.test(raw)) return message;
