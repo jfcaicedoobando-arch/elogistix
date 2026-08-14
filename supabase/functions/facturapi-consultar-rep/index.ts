@@ -56,9 +56,7 @@ export function resolverPatchRep(
 }
 
 type Json = (body: unknown, status?: number) => Response;
-// SAFE-CAST: cliente Supabase con service key; el shape se conoce por construcción.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Supa = any;
+type Supa = ReturnType<typeof createClient>;
 
 /** Valida método/sesión/pago y autorización. Devuelve el pago o una respuesta. */
 async function resolverPago(
