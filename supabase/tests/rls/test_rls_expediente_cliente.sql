@@ -120,11 +120,19 @@ BEGIN
   SELECT count(*) INTO visible FROM public.cliente_documentos WHERE cliente_id = cli_b;
   PERFORM pg_temp.assert(visible = 0, 'viewer NO debe leer documentos de otra org');
 
-  -- ── 4. Bypass super_admin de lectura intacto ─────────────────────────────
+  -- ── 4. Super admin: lectura acotada al tenant activo (Ola 16) ────────────
+  -- El bypass global se retiró: `rls_tenant_scope_ok` limita al super admin a
+  -- la org que eligió en la consola de plataforma (`set_super_admin_org`).
   PERFORM pg_temp.as_user(super_u);
   SELECT count(*) INTO visible FROM public.cliente_documentos WHERE id = doc_a;
-  PERFORM pg_temp.assert(visible = 1, 'super_admin SÍ debe leer documentos de cualquier org (bypass intacto)');
+  PERFORM pg_temp.assert(visible = 0, 'super_admin SIN tenant activo no debe leer documentos de ninguna org');
+  PERFORM public.set_super_admin_org(org_a);
+  SELECT count(*) INTO visible FROM public.cliente_documentos WHERE id = doc_a;
+  PERFORM pg_temp.assert(visible = 1, 'super_admin con tenant A SÍ debe leer los documentos de A');
+  SELECT count(*) INTO visible FROM public.cliente_documentos WHERE cliente_id = cli_b;
+  PERFORM pg_temp.assert(visible = 0, 'FUGA: super_admin con tenant A vio documentos de B');
   PERFORM pg_temp.as_postgres();
+
 
   -- ── 5. admin_org SÍ puede INSERT/DELETE (control positivo) ───────────────
   PERFORM pg_temp.as_user(admin_a);

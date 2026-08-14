@@ -75,10 +75,13 @@ BEGIN
     (cli_a2, org_a, 'Cliente Refact A destino'),
     (cli_b,  org_b, 'Cliente Refact B');
 
-  INSERT INTO public.facturas(id, organization_id, cliente_id, numero, moneda, subtotal, iva, total, estado) VALUES
-    (fac_a, org_a, cli_a, 'S05-A-1', 'MXN', 1000, 160, 1160, 'Emitida'),
-    (fac_a2, org_a, cli_a, 'S05-A-2', 'MXN', 1000, 160, 1160, 'Emitida'),
-    (fac_b, org_b, cli_b, 'S05-B-1', 'MXN', 1000, 160, 1160, 'Emitida');
+  -- fac_a lleva UUID fiscal: T10-T12 le registran un REP y el guard
+  -- `LC_REP_FACTURA_SIN_TIMBRAR` exige factura timbrada.
+  INSERT INTO public.facturas(id, organization_id, cliente_id, numero, moneda, subtotal, iva, total, estado, uuid_fiscal) VALUES
+    (fac_a, org_a, cli_a, 'S05-A-1', 'MXN', 1000, 160, 1160, 'Emitida', gen_random_uuid()::text),
+    (fac_a2, org_a, cli_a, 'S05-A-2', 'MXN', 1000, 160, 1160, 'Emitida', NULL),
+    (fac_b, org_b, cli_b, 'S05-B-1', 'MXN', 1000, 160, 1160, 'Emitida', NULL);
+
 
   -- Caso existente de org A, creado como postgres para probar UPDATE/SELECT.
   INSERT INTO public.refacturaciones
@@ -191,7 +194,7 @@ BEGIN
 
   -- T12. Sin solicitud de cancelación el REP sí bloquea.
   PERFORM pg_temp.as_postgres();
-  UPDATE public.pagos_factura SET rep_cancellation_status = NULL WHERE id = pago_a;
+  UPDATE public.pagos_factura SET rep_cancellation_status = 'none' WHERE id = pago_a;
   PERFORM pg_temp.as_user(u_auxiliar);
   v_sim := public.refacturacion_simular_paso(caso_a, 2);
   PERFORM pg_temp.assert(v_sim -> 'bloqueos' @> '["LC_REFACT_REP_VIVO"]'::jsonb,
