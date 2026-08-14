@@ -7,6 +7,9 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./handlers.ts";
 import { resolveRedirectTo } from "./clientHandlers.ts";
+// Ola 14 · R5EF-01: mismo catálogo LC_* que inviteHandler.ts (R4EF-01); el
+// detalle crudo se conserva en log.finish(..., payload.error), no al cliente.
+import { mensajeSeguro } from "./errores.ts";
 
 declare const Deno: { env: { get(key: string): string | undefined } };
 
@@ -207,7 +210,11 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
     const reason = isPasswordMode ? "create_with_password_failed" : "invite_email_failed";
     const errPrefix = isPasswordMode ? "Error al crear cuenta del agente" : "Error al invitar agente";
     log.finish(500, reason, { organization_id, payload: { error: inviteResult.error } });
-    return errorResponse(`${errPrefix}: ${inviteResult.error}`, 500, cors);
+    return errorResponse(
+      mensajeSeguro(inviteResult.error, `${errPrefix}. Intenta de nuevo; si persiste, contacta a soporte.`),
+      500,
+      cors,
+    );
   }
   const { userId, isNew } = inviteResult;
 
@@ -221,7 +228,14 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
     );
   if (linkError) {
     log.finish(500, "link_failed", { organization_id, payload: { user_id: userId, error: linkError.message } });
-    return errorResponse(`Error al vincular agente: ${linkError.message}`, 500, cors);
+    return errorResponse(
+      mensajeSeguro(
+        linkError.message,
+        "LC_USUARIO_VINCULO_AGENTE_FALLIDO: No se pudo vincular el agente. Intenta de nuevo; si persiste, contacta a soporte.",
+      ),
+      500,
+      cors,
+    );
   }
 
   if (isPasswordMode) {

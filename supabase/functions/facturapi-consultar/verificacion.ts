@@ -112,13 +112,15 @@ export async function verificarXmlFactura(
       error: null,
     };
   } catch (err) {
+    // Ola 14 · R5EF-03: detalle al log, genérico al cliente.
+    console.error("facturapi-consultar verificarDocumento:", err instanceof Error ? err.message : err);
     return {
       ...CFDI_META_VACIO,
       disponible: false,
       estatus_sat: "Error",
       sat_detalle: "",
       diferencias: [],
-      error: err instanceof Error ? err.message : String(err),
+      error: "LC_FACTURAPI_DOC_NO_VERIFICABLE: No se pudo descargar o verificar el documento.",
     };
   }
 }
@@ -185,7 +187,12 @@ async function verificarRep(supabase: SupabaseMin, apiKey: string, p: PagoRow): 
       reconciliado,
     };
   } catch (err) {
-    return { ...base, estatus_sat: "Error", error: err instanceof Error ? err.message : String(err) };
+    console.error("facturapi-consultar verificarRep:", err instanceof Error ? err.message : err);
+    return {
+      ...base,
+      estatus_sat: "Error",
+      error: "LC_FACTURAPI_DOC_NO_VERIFICABLE: No se pudo descargar o verificar el documento.",
+    };
   }
 }
 
