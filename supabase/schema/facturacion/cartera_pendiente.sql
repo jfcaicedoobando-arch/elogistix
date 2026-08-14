@@ -1,5 +1,5 @@
 -- Fuente canónica de public.cartera_pendiente() (Ola 6 · O6-SCHEMA).
--- 1:1 con supabase/migrations/20260818090100_ola5_rg413_n23_cartera_direccion_canon.sql.
+-- 1:1 con supabase/migrations/20260813230758_55fd47bb-2d11-4849-9db5-14215387682a.sql.
 -- Firma vigente: 16 columnas (factura_id … cancellation_status). NO renombrar columnas de salida (42P13).
 -- v13.592.0: se agregó cancellation_status para excluir del cobro en lote las
 -- facturas con cancelación en trámite ante el SAT (LC_FACTURA_EN_CANCELACION).
