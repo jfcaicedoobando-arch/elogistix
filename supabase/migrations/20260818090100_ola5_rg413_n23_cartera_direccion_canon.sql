@@ -1,65 +1,15 @@
--- Ola 5 · RG4-13: quitar el filtro extra por org del CLIENTE añadido en
---   20260810203738 (no existía ni en el canon v3 ni en el spec). La función
---   es SECURITY INVOKER: RLS (habilitado en facturas, clientes, embarques,
---   pagos_factura, factura_notas_credito y cobranza_seguimiento) ya acota
---   por la org de las filas, igual que en v3.
--- Se conservan INTACTOS: firma RETURNS TABLE, N44 (NCs convertidas por
---   moneda/TC) y N9 (dias_vencido con signo).
-CREATE OR REPLACE FUNCTION public.cartera_pendiente()
-RETURNS TABLE(
-  factura_id uuid, numero text, cliente_id uuid, cliente_nombre text,
-  embarque_id uuid, expediente text,
-  fecha_emision date, fecha_vencimiento date, dias_vencido integer,
-  moneda text, total numeric, pagado numeric, saldo numeric,
-  ultimo_contacto date, estado text
-)
-LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
-  WITH base AS (
-    SELECT f.id, f.numero, f.cliente_id, f.embarque_id, f.fecha_emision,
-      f.fecha_vencimiento, f.moneda::text AS moneda, f.total,
-      f.estado::text AS estado, f.cliente_nombre, f.tipo_cambio AS factura_tc,
-      COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
-                 WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL),0) AS pagado,
-      COALESCE((SELECT SUM(
-                 CASE
-                   WHEN nc.moneda::text = f.moneda::text THEN nc.monto
-                   WHEN f.moneda::text = 'MXN' AND nc.moneda::text <> 'MXN' AND nc.tipo_cambio > 1
-                     THEN nc.monto * nc.tipo_cambio
-                   WHEN f.moneda::text <> 'MXN' AND nc.moneda::text = 'MXN' AND f.tipo_cambio > 1
-                     THEN nc.monto / f.tipo_cambio
-                   WHEN f.moneda::text <> 'MXN' AND nc.moneda::text <> 'MXN'
-                        AND f.moneda::text <> nc.moneda::text
-                        AND nc.tipo_cambio > 1 AND f.tipo_cambio > 1
-                     THEN (nc.monto * nc.tipo_cambio) / f.tipo_cambio
-                   ELSE NULL
-                 END)
-                FROM public.factura_notas_credito nc
-                 WHERE nc.factura_id=f.id AND nc.estado='Aplicada' AND nc.deleted_at IS NULL),0) AS nc_aplicadas
-    FROM public.facturas f
-    WHERE f.deleted_at IS NULL
-      AND f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
-  )
-  SELECT b.id, b.numero, b.cliente_id, COALESCE(c.nombre, b.cliente_nombre),
-    b.embarque_id, e.expediente,
-    b.fecha_emision, b.fecha_vencimiento,
-    (CURRENT_DATE - b.fecha_vencimiento)::int,
-    b.moneda, b.total, b.pagado,
-    (b.total - b.pagado - b.nc_aplicadas),
-    (SELECT MAX(cs.fecha) FROM public.cobranza_seguimiento cs WHERE cs.factura_id=b.id),
-    b.estado
-  FROM base b
-  LEFT JOIN public.clientes c ON c.id = b.cliente_id
-  LEFT JOIN public.embarques e ON e.id = b.embarque_id
-  WHERE (b.total - b.pagado - b.nc_aplicadas) > 0.005
-    -- Ola 5 · RG4-13: sin filtro ad-hoc por org del cliente; RLS (SECURITY
-    -- INVOKER) ya acota por la org de las filas, canon v3.
-  ORDER BY b.fecha_vencimiento ASC NULLS LAST
-  LIMIT 500
-$function$;
-
-REVOKE ALL ON FUNCTION public.cartera_pendiente() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.cartera_pendiente() FROM anon;
-GRANT EXECUTE ON FUNCTION public.cartera_pendiente() TO authenticated;
+-- Ola 5 · RG4-13 — NO-OP documentado (fix de drift, 2026-08-14).
+--
+-- Este bloque redefinía public.cartera_pendiente() con CREATE OR REPLACE y la
+-- firma de 15 columnas de salida (sin cancellation_status). En una base limpia
+-- la migración 20260813230758 (posterior en contenido, ANTERIOR en timestamp)
+-- ya crea la función con 16 columnas vía DROP + CREATE, así que este
+-- CREATE OR REPLACE abortaba con 42P13 ("cannot change return type").
+--
+-- El objetivo original de RG4-13 (quitar el filtro extra por org del cliente)
+-- ya está incluido en el cuerpo canónico de 20260813230758 y en
+-- supabase/schema/facturacion/cartera_pendiente.sql. Por eso aquí no se toca
+-- la función: sólo se conserva la parte de N23 (direccion_totales).
 
 -- Ola 5 · N23: direccion_totales excluye embarques Cancelado. El loader
 --   cliente del dashboard de Dirección ya los excluía, pero la RPC los
