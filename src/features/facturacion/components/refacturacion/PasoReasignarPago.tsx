@@ -121,7 +121,9 @@ export function PasoReasignarPago(props: Props) {
         </div>
         <NotaOrigenOrdenante auto={props.ordenanteAuto} />
         {props.bloqueoOrdenante && (
-          <p className="md:col-span-2 text-xs text-destructive">{props.bloqueoOrdenante}</p>
+          <p className="md:col-span-2 text-xs text-destructive" role="alert">
+            {props.bloqueoOrdenante}
+          </p>
         )}
       </FormDialogSection>
 

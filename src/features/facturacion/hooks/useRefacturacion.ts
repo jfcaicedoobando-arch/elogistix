@@ -24,9 +24,6 @@ import {
   type ReasignarPagoInput,
 } from "@/features/facturacion/services/refacturacion";
 
-const REFACT_KEY = (facturaId: string | null) => ["refacturacion", "caso", facturaId] as const;
-const REFACT_FACTURA_KEY = (id: string | null) => ["refacturacion", "factura", id] as const;
-
 function fail(title: string, error: Error) {
   notifyError(undefined, {
     title,
@@ -41,21 +38,21 @@ export function useRefacturacion(facturaId: string | null, open: boolean) {
   const [paso, setPaso] = useState(1);
 
   const casoQuery = useQuery({
-    queryKey: REFACT_KEY(facturaId),
+    queryKey: queryKeys.facturacion.refacturacionCaso(facturaId),
     queryFn: () => obtenerCasoRefacturacion(facturaId!),
     enabled: open && !!facturaId,
   });
   const caso: CasoRefacturacion | null = casoQuery.data ?? null;
 
   const facturaNuevaQuery = useQuery({
-    queryKey: REFACT_FACTURA_KEY(caso?.factura_nueva_id ?? null),
+    queryKey: queryKeys.facturacion.refacturacionFactura(caso?.factura_nueva_id ?? null),
     queryFn: () => obtenerEstadoFacturaRefacturacion(caso!.factura_nueva_id!),
     enabled: open && !!caso?.factura_nueva_id,
     refetchInterval: open && !!caso?.factura_nueva_id ? 15_000 : false,
   });
 
   const originalQuery = useQuery({
-    queryKey: REFACT_FACTURA_KEY(facturaId),
+    queryKey: queryKeys.facturacion.refacturacionFactura(facturaId),
     queryFn: () => obtenerEstadoFacturaRefacturacion(facturaId!),
     enabled: open && !!facturaId,
   });
@@ -71,12 +68,19 @@ export function useRefacturacion(facturaId: string | null, open: boolean) {
   }, [open, caso]);
 
   const refrescar = useCallback(() => {
-    qc.invalidateQueries({ queryKey: REFACT_KEY(facturaId) });
-    qc.invalidateQueries({ queryKey: ["refacturacion", "factura"] });
-    qc.invalidateQueries({ queryKey: ["refacturacion", "simulacion"] });
+    qc.invalidateQueries({ queryKey: queryKeys.facturacion.refacturacionCaso(facturaId) });
+    qc.invalidateQueries({ queryKey: queryKeys.facturacion.refacturacionFacturaPrefix() });
+    qc.invalidateQueries({ queryKey: queryKeys.facturacion.refacturacionSimulacionPrefix() });
+    // Ola 14 · R5FE-02: consistencia (stale 15 s), expediente y último caso
+    // (stale 60 s) también se invalidan; antes quedaban obsoletos tras mutar.
+    if (caso?.id) {
+      qc.invalidateQueries({ queryKey: queryKeys.facturacion.refacturacionConsistencia(caso.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.facturacion.refacturacionExpediente(caso.id) });
+    }
+    qc.invalidateQueries({ queryKey: queryKeys.facturacion.refacturacionUltimoCaso(facturaId) });
     qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
     if (facturaId) qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
-  }, [qc, facturaId]);
+  }, [qc, facturaId, caso?.id]);
 
   const abrir = useMutation({
     mutationFn: (input: AbrirCasoInput) => abrirCasoRefacturacion(input),

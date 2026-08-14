@@ -2,6 +2,7 @@
  * Consistencia fiscal del caso de refacturación (original vs. nueva vs. depósito).
  */
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import {
   validarConsistenciaRefacturacion,
   type ConsistenciaRefacturacion,
@@ -12,7 +13,7 @@ export function useRefacturacionConsistencia(
   enabled: boolean,
 ) {
   return useQuery<ConsistenciaRefacturacion>({
-    queryKey: ["refacturacion", "consistencia", casoId],
+    queryKey: queryKeys.facturacion.refacturacionConsistencia(casoId),
     enabled: enabled && !!casoId,
     queryFn: () => validarConsistenciaRefacturacion(casoId as string),
     staleTime: 15_000,

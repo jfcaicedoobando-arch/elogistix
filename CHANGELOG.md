@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.606.0] - 2026-08-14
+- Ola 14 · Sprint 04 (Frontend/UX P3): `puedeRefacturarReceptor` ya no se ofrece con cancelación en trámite ante el SAT (`pending`/`verifying`), alineado con `puedeCancelarCfdi` y `puedeRegistrarPago` (R5FE-01) + 2 `it.each` nuevos.
+- Query keys del asistente de refacturación migradas al registry `queryKeys.facturacion` (caso, factura, simulación, consistencia, expediente, último caso) y `refrescar()` ahora invalida también consistencia, expediente y último caso (R5FE-02).
+- Live regions en la feature de refacturación: bloqueos con `role="alert"`, avisos con `role="status" aria-live="polite"` y banner de cancelación en trámite anunciado como estado informativo (R5UX-01).
+
 ## [13.605.0] - 2026-08-14
 - Ola 14 · Sprint 03 (Edge P3): `invite-agente` / `invite-cliente` ya no devuelven el mensaje crudo de GoTrue/Postgres; usan el catálogo `mensajeSeguro` con códigos `LC_USUARIO_VINCULO_*` y el detalle queda sólo en `log.finish` (R5EF-01).
 - `facturapi-consultar-rep`: rate limit fail-closed por organización (10 consultas/min) vía `check_ratelimit`, con 503 `rate_limit_unavailable` + Sentry si el contador falla y 429 con mensaje al usuario (R5EF-02).
