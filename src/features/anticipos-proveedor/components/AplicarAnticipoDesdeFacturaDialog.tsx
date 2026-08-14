@@ -183,12 +183,6 @@ export function AplicarAnticipoDesdeFacturaDialog({
             onChange={(e) => setMonto(e.target.value)}
           />
         </div>
-        {monedaDifiere && (
-          <p className="text-xs text-muted-foreground md:col-span-2">
-            El anticipo está en {anticipo!.moneda} y la factura en {monedaFactura}. La conversión la realiza el
-            servidor al aplicar.
-          </p>
-        )}
         {desajuste.hayDesajuste && (
           <div className="md:col-span-2 flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
