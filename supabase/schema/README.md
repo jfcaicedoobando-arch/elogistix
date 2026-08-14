@@ -59,18 +59,18 @@ anteriores y no listadas arriba): `auditoria/costos_repetidos.sql`,
 (`factura_id … ultimo_contacto, estado`). Renombrarlas aborta la migración con
 42P13 (fue la causa de que `20260812090000` quedara como no-op, Ola 6 · RG4-1).
 
-## Altas Ola 12 — capturadas 1:1 desde las migraciones 2026-08-13
+## Altas Ola 12 — "Migración canónica" = la de MAYOR timestamp que define la función
 
 | Función | Dominio | Migración canónica |
 | --- | --- | --- |
-| `proveedor_estado_cuenta_movimientos` | `proveedores/` | Sprint 07 (R3BD-04, acumulativa sobre S04/S05) |
-| `proveedor_estado_cuenta` | `proveedores/` | Sprint 07 (R3BD-05/R3BD-06, acumulativa sobre S06) |
-| `proveedor_inteligencia` | `proveedores/` | Sprint 05 (R3P-17) |
-| `registrar_pago_proveedor_lote` | `cxp/` | Sprint 07 (R3BD-03) |
-| `a_mxn` | `proveedores/` | Sprint 10 (R3FE-01) |
-| `monto_pago_en_moneda_factura` | `proveedores/` | Sprint 10 (R3P-01/R3P-06) |
-| `saldo_factura_proveedor` | `proveedores/` | Sprint 10 (R3P-01) |
-| `proveedor_salud` | `proveedores/` | Sprint 10 (R3FE-01, KPIs valuados a MXN) |
+| `proveedor_estado_cuenta_movimientos` | `proveedores/` | `20260824040000_ola13_r4bd05_p_offset_desde_el_final` (Ola 13 · R4BD-05; re-emite la final `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` del Sprint 10) |
+| `proveedor_estado_cuenta` | `proveedores/` | `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` (Sprint 10, acumulativa final sobre S06/S07) |
+| `proveedor_inteligencia` | `proveedores/` | `20260813185523_e6bf7655-2ca8-4b9b-b5a3-2f2629662bea` (Sprint 09, final; conserva R3P-17) |
+| `registrar_pago_proveedor_lote` | `cxp/` | ⚠ Triple divergencia R4BD-01: este espejo = Sprint 09 (`20260813185523_e6bf7655-…`, con guards `LC_LOTE_TC_REQUERIDO`/`LC_LOTE_FACTURA_MONEDA`); el replay limpio produce `20260821030800_ola11_lotes_paridad` (timestamp posterior, SIN guards). **Fix de código en Sprint 06 (Ola 13); este renglón se actualiza ahí.** |
+| `a_mxn` | `proveedores/` | `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` (Sprint 10, R3FE-01) |
+| `monto_pago_en_moneda_factura` | `proveedores/` | `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` (Sprint 10, R3P-01/R3P-06) |
+| `saldo_factura_proveedor` | `proveedores/` | `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` (Sprint 10, R3P-01; el org guard R4BD-02 se añade en Sprint 06) |
+| `proveedor_salud` | `proveedores/` | `20260813190546_107ec903-2fa2-4ce8-bd3d-b869887d5b49` (Sprint 10, R3FE-01, KPIs valuados a MXN) |
 
 ## Flujo obligatorio a partir de 2026-07-23
 
