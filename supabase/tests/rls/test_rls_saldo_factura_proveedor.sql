@@ -105,7 +105,7 @@ BEGIN
     has_function_privilege('authenticated', 'public.saldo_factura_proveedor(uuid)', 'EXECUTE')
     AND has_function_privilege('service_role', 'public.saldo_factura_proveedor(uuid)', 'EXECUTE')
     AND NOT has_function_privilege('anon', 'public.saldo_factura_proveedor(uuid)', 'EXECUTE')
-    AND NOT has_function_privilege('PUBLIC', 'public.saldo_factura_proveedor(uuid)', 'EXECUTE'),
+    AND NOT has_function_privilege('public', 'public.saldo_factura_proveedor(uuid)', 'EXECUTE'),
     'T6: la matriz de grants H6 de saldo_factura_proveedor cambió');
 
   -- ── T7 · canónicas hermanas sin alterar ──────────────────────────────────
