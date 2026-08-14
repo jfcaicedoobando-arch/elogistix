@@ -65,7 +65,7 @@ BEGIN
 
   -- Embarque BORRADO: ningún reporte debe exponer su expediente ni su P&L.
   INSERT INTO public.embarques(id, organization_id, expediente, cliente_id, cliente_nombre, deleted_at)
-  VALUES (emb_a, org_a, 'SD-BORRADO-001', cli_a, 'Cliente SoftDelete', now());
+  VALUES (emb_a, org_a, 'ELSDL00001', cli_a, 'Cliente SoftDelete', now());
 
   -- Factura viva con saldo (cartera) ligada al embarque borrado.
   INSERT INTO public.facturas(id, organization_id, cliente_id, cliente_nombre, embarque_id,
