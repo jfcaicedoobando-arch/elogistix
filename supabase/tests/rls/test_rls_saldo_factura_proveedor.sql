@@ -27,6 +27,7 @@ DECLARE
   user_a uuid := gen_random_uuid();   -- miembro sólo de org A
   user_b uuid := gen_random_uuid();   -- miembro sólo de org B
   prov_b uuid := gen_random_uuid();
+  cat_b uuid := gen_random_uuid();   -- categoría de presupuesto (NOT NULL en proveedor_facturas)
   fac_b uuid := gen_random_uuid();        -- USD 10,000, pago con TC
   fac_b_sintc uuid := gen_random_uuid();  -- USD 10,000, pago sin TC
   fac_b_cancel uuid := gen_random_uuid(); -- USD 10,000, Cancelada
@@ -47,12 +48,15 @@ BEGIN
   INSERT INTO public.proveedores(id, nombre, organization_id, tipo, categoria) VALUES
     (prov_b, 'Proveedor Saldo B', org_b, 'Agente Aduanal', 'Logistico');
 
+  INSERT INTO public.presupuesto_categorias(id, organization_id, nombre) VALUES
+    (cat_b, org_b, 'S07 Fletes');
+
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
-     moneda, subtotal, iva, total, estado) VALUES
-    (fac_b, org_b, prov_b, 'Proveedor Saldo B', 'S07-F1', 'USD', 10000, 0, 10000, 'Vigente'),
-    (fac_b_sintc, org_b, prov_b, 'Proveedor Saldo B', 'S07-F2', 'USD', 10000, 0, 10000, 'Vigente'),
-    (fac_b_cancel, org_b, prov_b, 'Proveedor Saldo B', 'S07-F3', 'USD', 10000, 0, 10000, 'Cancelada');
+     categoria_presupuesto_id, moneda, subtotal, iva, total, estado) VALUES
+    (fac_b, org_b, prov_b, 'Proveedor Saldo B', 'S07-F1', cat_b, 'USD', 10000, 0, 10000, 'Vigente'),
+    (fac_b_sintc, org_b, prov_b, 'Proveedor Saldo B', 'S07-F2', cat_b, 'USD', 10000, 0, 10000, 'Vigente'),
+    (fac_b_cancel, org_b, prov_b, 'Proveedor Saldo B', 'S07-F3', cat_b, 'USD', 10000, 0, 10000, 'Cancelada');
 
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd) VALUES
