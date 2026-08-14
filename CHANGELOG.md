@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.624.2] - 2026-08-14
+- Corregidas dos fallas de CI: el aviso de descuadre en conceptos de factura ahora usa el token semántico de advertencia (sin colores fijos) y se renombró un título de prueba duplicado.
+
 ## [13.624.1] - 2026-08-14
 - Corregido el "parpadeo" al guardar en Editar cliente: los interruptores de autorización ya no se ven regresar a encendidos (el dato siempre se guardó bien; era el formulario que se repintaba con la versión anterior antes de cerrarse).
 - La ficha del cliente ahora muestra la etiqueta "Cliente de casa" cuando no requiere autorizar cotizaciones ni proformas, y etiquetas individuales si sólo una de las dos está apagada.
