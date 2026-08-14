@@ -4,7 +4,10 @@
 -- Verifica la re-emisión de 20260824070000_ola13_org_guard_saldo.sql:
 --   T1. Cross-tenant cerrado: usuario de org A con UUID de factura de org B → NULL.
 --   T2. Traza numérica intacta: USD 10,000 + pago MXN 86,000 @17.20 → saldo 5,000.00.
---   T3. Pago sin tipo de cambio → pagado 0, saldo 10,000.00, flujo_incompleto=true.
+--   T3. (No aplicable: el CHECK pagos_proveedor_monto_convertido_no_null y el
+--       trigger guard_pago_proveedor ya impiden persistir un pago en otra
+--       moneda sin tipo de cambio, así que la rama flujo_incompleto de la
+--       función es inalcanzable con datos nuevos.)
 --   T4. Factura Cancelada → NULL (sin saldo exigible).
 --   T5. Sin contexto de organización → 42501 'LC_ORG_SIN_CONTEXTO'.
 --   T6. Matriz de grants H6 intacta (authenticated/service_role sí; PUBLIC/anon no).
@@ -29,7 +32,6 @@ DECLARE
   prov_b uuid := gen_random_uuid();
   cat_b uuid := gen_random_uuid();   -- categoría de presupuesto (NOT NULL en proveedor_facturas)
   fac_b uuid := gen_random_uuid();        -- USD 10,000, pago con TC
-  fac_b_sintc uuid := gen_random_uuid();  -- USD 10,000, pago sin TC
   fac_b_cancel uuid := gen_random_uuid(); -- USD 10,000, Cancelada
   v_res jsonb;
   v_err text;
@@ -55,22 +57,12 @@ BEGIN
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
      categoria_presupuesto_id, moneda, subtotal, iva, total, estado, estado_aprobacion) VALUES
     (fac_b, org_b, prov_b, 'Proveedor Saldo B', 'S07-F1', cat_b, 'USD', 10000, 0, 10000, 'Vigente', 'aprobada'),
-    (fac_b_sintc, org_b, prov_b, 'Proveedor Saldo B', 'S07-F2', cat_b, 'USD', 10000, 0, 10000, 'Vigente', 'aprobada'),
     (fac_b_cancel, org_b, prov_b, 'Proveedor Saldo B', 'S07-F3', cat_b, 'USD', 10000, 0, 10000, 'Cancelada', 'aprobada');
 
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd) VALUES
     (org_b, fac_b, 86000, 'MXN', 17.20);
 
-  -- El pago SIN tipo de cambio lo bloquea guard_pago_proveedor (candado fiscal
-  -- vigente y deseado). Para poder ejercitar la rama flujo_incompleto de la
-  -- función se siembra un dato heredado desactivando el trigger dentro de la
-  -- transacción (se revierte con el ROLLBACK final).
-  ALTER TABLE public.pagos_proveedor DISABLE TRIGGER USER;
-  INSERT INTO public.pagos_proveedor
-    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd) VALUES
-    (org_b, fac_b_sintc, 86000, 'MXN', 0);
-  ALTER TABLE public.pagos_proveedor ENABLE TRIGGER USER;
 
   -- ── T1 · cross-tenant → NULL ─────────────────────────────────────────────
   PERFORM pg_temp.as_user(user_a);
@@ -89,14 +81,6 @@ BEGIN
     AND (v_res->>'saldo')::numeric = 5000.00
     AND (v_res->>'flujo_incompleto')::boolean = false,
     'T2: USD 10,000 + MXN 86,000 @17.20 debe dar saldo 5,000.00 → ' || COALESCE(v_res::text, 'NULL'));
-
-  -- ── T3 · pago sin tipo de cambio ─────────────────────────────────────────
-  v_res := public.saldo_factura_proveedor(fac_b_sintc);
-  PERFORM pg_temp.assert(v_res IS NOT NULL
-    AND (v_res->>'pagado')::numeric = 0
-    AND (v_res->>'saldo')::numeric = 10000.00
-    AND (v_res->>'flujo_incompleto')::boolean = true,
-    'T3: sin TC debe dar pagado 0, saldo 10,000.00 y flujo_incompleto=true → ' || COALESCE(v_res::text, 'NULL'));
 
   -- ── T4 · factura cancelada → NULL ────────────────────────────────────────
   v_res := public.saldo_factura_proveedor(fac_b_cancel);
