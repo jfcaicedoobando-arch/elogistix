@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.594.7] - 2026-08-14
+- **`bun run ci:fast` ya no reporta rojo cuando todo pasa**: el runner esperaba PIDs ya cosechados y `wait -n` abortaba con 127, marcando el resto como "cancelado por fail-fast".
+- `ConsultaRepsTable` usa `TABLE_DENSITY.embebida` en lugar del literal `density="compact"` (regla de arquitectura de tablas).
+- La Edge Function `facturapi-consultar-rep` queda declarada en la cobertura Sentry (wrapped) que exige la prueba de exhaustividad.
+
 ## [13.594.6] - 2026-08-14
 - **Se corrige el drift que impedía aplicar las migraciones en una base limpia** (`cannot change return type of existing function` en `cartera_pendiente()`).
 - La migración `20260818090100` ya no redefine `cartera_pendiente()` con la firma vieja de 15 columnas: ese bloque queda como no-op documentado y sólo conserva el ajuste de `direccion_totales` (N23). El cuerpo canónico vigente (16 columnas, con `cancellation_status`) lo crea `20260813230758`.
