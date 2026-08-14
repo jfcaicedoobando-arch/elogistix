@@ -9910,6 +9910,7 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: string[]
       }
+      rls_tenant_scope_ok: { Args: { _org: string }; Returns: boolean }
       rol_efectivo: {
         Args: { _org: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
