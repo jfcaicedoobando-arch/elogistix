@@ -60,8 +60,17 @@ BEGIN
 
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd) VALUES
-    (org_b, fac_b, 86000, 'MXN', 17.20),
+    (org_b, fac_b, 86000, 'MXN', 17.20);
+
+  -- El pago SIN tipo de cambio lo bloquea guard_pago_proveedor (candado fiscal
+  -- vigente y deseado). Para poder ejercitar la rama flujo_incompleto de la
+  -- función se siembra un dato heredado desactivando el trigger dentro de la
+  -- transacción (se revierte con el ROLLBACK final).
+  ALTER TABLE public.pagos_proveedor DISABLE TRIGGER USER;
+  INSERT INTO public.pagos_proveedor
+    (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd) VALUES
     (org_b, fac_b_sintc, 86000, 'MXN', 0);
+  ALTER TABLE public.pagos_proveedor ENABLE TRIGGER USER;
 
   -- ── T1 · cross-tenant → NULL ─────────────────────────────────────────────
   PERFORM pg_temp.as_user(user_a);
