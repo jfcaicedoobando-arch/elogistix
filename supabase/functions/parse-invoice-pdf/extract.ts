@@ -250,11 +250,17 @@ export function mapGeminiToCfdiShape(d: GeminiExtracted, categorias: Categoria[]
       // La IA devuelve `amount` como TOTAL de la línea, pero el sistema trata
       // `importe` como UNITARIO y lo multiplica por la cantidad. Sin normalizar,
       // una línea con cantidad > 1 se contaba dos veces (LC_CXP_DESCUADRE).
+      // v13.617.0: el PDF imprime el unitario a 2 decimales, así que con
+      // cantidades altas `unit_price × cantidad` no reproduce el total impreso.
+      // Cuando hay diferencia, el unitario autoritativo es `amount / cantidad`.
       conceptos: d.line_items.map((l) => {
         const cantidad = l.quantity && l.quantity > 0 ? l.quantity : 1;
-        const unitario = l.unit_price && l.unit_price > 0
-          ? l.unit_price
-          : l.amount / cantidad;
+        const total = l.amount > 0 ? l.amount : 0;
+        const impreso = l.unit_price && l.unit_price > 0 ? l.unit_price : 0;
+        const derivado = total > 0 ? total / cantidad : impreso;
+        const unitario = impreso > 0 && Math.abs(impreso * cantidad - total) <= 0.01
+          ? impreso
+          : derivado;
         return {
           descripcion: l.description,
           cantidad,
@@ -263,6 +269,7 @@ export function mapGeminiToCfdiShape(d: GeminiExtracted, categorias: Categoria[]
           ieps: 0,
         };
       }),
+
 
     },
     ai: {

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.617.0] - 2026-08-14
+- Fix `LC_CXP_DESCUADRE` (caso FP-000140, AGUNSA L&D): con cantidades altas el precio unitario redondeado a 2 decimales (51 × 17.38 = 886.38 vs subtotal 886.34) rompía el cuadre y bloqueaba la aprobación por 4 centavos.
+- `public._cxp_validar_aprobacion` ahora usa tolerancia `max(0.01, 0.005 × unidades)` en vez de un centavo fijo, y el mensaje del error incluye la tolerancia aplicada. Espejo en `supabase/schema/cxp/_cxp_validar_aprobacion.sql`.
+- `cuadreConceptos.ts` replica la misma tolerancia (`toleranciaCuadre`) para que el semáforo de captura y la base coincidan.
+- `parse-invoice-pdf`: cuando `unit_price × cantidad` no reproduce el total de la línea, el unitario se deriva del total (`amount / cantidad`) con 6 decimales, evitando el desfase de origen.
+- Mensaje de `LC_CXP_DESCUADRE` más accionable (precio unitario, cantidades, partidas sobrantes).
+
+
 ## [13.616.3] - 2026-08-14
 - Fix crítico: `src/constants/appVersion.ts` había quedado vacío, así que `APP_VERSION` era `undefined` y fallaban 3 shards de pruebas (`errorContextStore`, `reportCaughtError`, `exportOrg`) además de la telemetría de Sentry y los manifiestos de exportación. Restaurado.
 - Power of 10: dividí `pagosProveedor.ts` (208 líneas) y `facturacion/services/pagos/index.ts` (202) extrayendo las bajas atómicas a `pagoProveedorEliminar.ts` y `pagos/eliminarPago.ts`.
