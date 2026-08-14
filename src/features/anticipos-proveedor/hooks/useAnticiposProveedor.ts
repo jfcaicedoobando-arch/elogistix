@@ -20,8 +20,12 @@ function toRow(a: AnticipoConProveedor): AnticipoProveedorRow {
 
 export function useAnticiposProveedor(filtros: AnticiposFiltro = {}) {
   const key = useMemo(
-    () => ({ estado: filtros.estado ?? null, proveedorId: filtros.proveedorId ?? null }),
-    [filtros.estado, filtros.proveedorId],
+    () => ({
+      estado: filtros.estado ?? null,
+      proveedorId: filtros.proveedorId ?? null,
+      sinEmbarque: filtros.sinEmbarque ?? false,
+    }),
+    [filtros.estado, filtros.proveedorId, filtros.sinEmbarque],
   );
   const q = useQuery({
     queryKey: anticiposProveedorKeys.list(key),

@@ -35,6 +35,8 @@ export interface AnticiposFiltro {
   estado?: string | null;
   proveedorId?: string | null;
   embarqueId?: string | null;
+  /** Sólo anticipos que quedaron sin expediente vinculado. */
+  sinEmbarque?: boolean;
 }
 
 const ANTICIPO_SELECT =
@@ -65,6 +67,7 @@ export async function fetchAnticiposProveedor(
   if (filtros.estado) query = query.eq("estado", filtros.estado);
   if (filtros.proveedorId) query = query.eq("proveedor_id", filtros.proveedorId);
   if (filtros.embarqueId) query = query.eq("embarque_id", filtros.embarqueId);
+  if (filtros.sinEmbarque) query = query.is("embarque_id", null);
 
   // SAFE-CAST: unwrapOr devuelve el shape crudo de Supabase con las relaciones
   // embebidas `proveedores(nombre)` y `embarques(expediente)`; el tipo generado
@@ -124,4 +127,29 @@ export async function fetchAnticiposPorEmbarque(
   // SAFE-CAST: mismas joins embebidas que `fetchAnticiposProveedor`.
   const rows = (await unwrapOr(query, [])) as unknown as AnticipoRow[];
   return rows.map(mapRow);
+}
+
+/** Monto aplicado de cada anticipo a facturas del mismo embarque. */
+export async function fetchAplicadoEnEmbarque(
+  embarqueId: string,
+): Promise<Record<string, number>> {
+  if (!embarqueId) return {};
+  const query = supabase
+    .from("anticipos_aplicaciones")
+    .select("anticipo_id, monto_aplicado, proveedor_facturas:proveedor_factura_id ( embarque_id )")
+    .is("deleted_at", null);
+
+  // SAFE-CAST: la relación embebida `proveedor_facturas(embarque_id)` no está
+  // en los tipos generados; el reduce siguiente consume exactamente esta forma.
+  const rows = (await unwrapOr(query, [])) as unknown as Array<{
+    anticipo_id: string;
+    monto_aplicado: number;
+    proveedor_facturas: { embarque_id: string | null } | null;
+  }>;
+
+  return rows.reduce<Record<string, number>>((acc, r) => {
+    if (r.proveedor_facturas?.embarque_id !== embarqueId) return acc;
+    acc[r.anticipo_id] = (acc[r.anticipo_id] ?? 0) + Number(r.monto_aplicado);
+    return acc;
+  }, {});
 }
