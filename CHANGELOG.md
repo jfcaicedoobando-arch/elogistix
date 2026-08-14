@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.624.4] - 2026-08-14
+- Auditoría de migraciones al día: los permisos de la función que acepta versiones de cotización quedaron re-aplicados por migración correctiva y el baseline de la auditoría se movió a esa migración (FIX-H6-20).
+
 ## [13.624.3] - 2026-08-14
 - Corregidas las fallas de CI que dejó "Clientes de casa": permisos restrictivos en la función de aceptar versión de cotización, manifiesto de base de datos sincronizado, y separación de archivos grandes (proformas, cotizaciones y Editar cliente) para cumplir los límites de complejidad y tamaño.
 - La consulta de la política de autorización del cliente se movió a un servicio dedicado, respetando la arquitectura del proyecto. Sin cambios visibles para el usuario.
