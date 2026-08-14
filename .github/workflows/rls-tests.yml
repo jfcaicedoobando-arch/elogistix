@@ -255,7 +255,7 @@ jobs:
           - grupo: financiero
             suites: financiero financiero_critico rpc_financieras tablas_dinero_extra reportes_multi_tenant
           - grupo: operaciones
-            suites: operaciones crm_operacional soft_delete_rpcs storage_objects expediente_cliente saldo_factura_proveedor
+            suites: operaciones crm_operacional soft_delete_rpcs storage_objects expediente_cliente saldo_factura_proveedor proveedor_estado_cuenta_offset
           - grupo: roles
             suites: roles_no_admin roles_negocio rpc_por_rol rpc_smoke_roles rpc_provision_organization portal_intra_org
           - grupo: costeo
