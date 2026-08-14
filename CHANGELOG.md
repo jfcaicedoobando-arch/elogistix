@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.594.6] - 2026-08-14
+- **Se corrige el drift que impedía aplicar las migraciones en una base limpia** (`cannot change return type of existing function` en `cartera_pendiente()`).
+- La migración `20260818090100` ya no redefine `cartera_pendiente()` con la firma vieja de 15 columnas: ese bloque queda como no-op documentado y sólo conserva el ajuste de `direccion_totales` (N23). El cuerpo canónico vigente (16 columnas, con `cancellation_status`) lo crea `20260813230758`.
+
 ## [13.594.5] - 2026-08-13
 - **Se corrigen los fallos de CI de calidad (Power of 10 y complejidad) del asistente de refacturación.**
 - `ConsultaRepsTable` ahora usa el componente estándar `DataTable`; se dividieron `useRefacturarWizard`, `refacturacionPasos`, `FacturaDetalleView` y las Edge Functions `facturapi-consultar` y `facturapi-consultar-rep` para respetar los límites de líneas y complejidad.
