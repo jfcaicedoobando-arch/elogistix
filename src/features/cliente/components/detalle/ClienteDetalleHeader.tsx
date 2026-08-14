@@ -11,6 +11,8 @@ import { DetailSkeleton } from "@/components/shared/skeletons";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
 import { toTitleCase, formatCurrency } from "@/lib/formatters";
+import { leerFlagAutorizacion } from "@/features/cliente/domain/autorizacionCliente";
+import { BadgeClienteDeCasa } from "@/features/cliente/components/BadgeClienteDeCasa";
 
 interface Cliente {
   id: string;
