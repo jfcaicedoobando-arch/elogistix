@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.616.3] - 2026-08-14
+- Fix crítico: `src/constants/appVersion.ts` había quedado vacío, así que `APP_VERSION` era `undefined` y fallaban 3 shards de pruebas (`errorContextStore`, `reportCaughtError`, `exportOrg`) además de la telemetría de Sentry y los manifiestos de exportación. Restaurado.
+- Power of 10: dividí `pagosProveedor.ts` (208 líneas) y `facturacion/services/pagos/index.ts` (202) extrayendo las bajas atómicas a `pagoProveedorEliminar.ts` y `pagos/eliminarPago.ts`.
+
 ## [13.616.2] - 2026-08-14
 - CI verde: ESLint (complejidad 17 > 16) en `src/lib/errors/index.ts` y `facturapiError.ts` — extraje `leerCrudo()` y `armarDetalles()` sin cambiar comportamiento.
 - Test `crmToast`: ahora tolera el `id` de dedupe que agregó la Ola 17 a `notifySuccess/notifyInfo`.
