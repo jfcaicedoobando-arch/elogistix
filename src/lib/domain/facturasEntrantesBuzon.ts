@@ -5,6 +5,7 @@
  * La página sólo orquesta: todas las reglas viven aquí y están testeadas.
  */
 import { chipsArchivosEntrante, diasEnEspera, faltaXmlFiscal } from "@/lib/domain/facturasEntrantes";
+import { nombreDesdeEmail } from "@/lib/formatters/text";
 
 export type TonoAntiguedad = "neutral" | "info" | "warning" | "destructive";
 
@@ -21,7 +22,8 @@ export interface FilaBuzon {
   /** v13.618.0 — Importe que capturó operaciones al subir (documentos sin XML). */
   monto_declarado?: number | null;
   moneda_declarada?: string | null;
-  embarques?: { expediente: string | null } | null;
+  /** v13.619.0 — `operador`: correo del dueño del embarque. */
+  embarques?: { expediente: string | null; operador?: string | null } | null;
   proveedores?: { nombre: string | null; origen_proveedor?: string | null } | null;
 }
 
@@ -59,13 +61,16 @@ function normalizar(texto: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-/** Busca en proveedor, expediente, folio y nombre de archivo. */
+/** Busca en proveedor, expediente, operador, folio y nombre de archivo. */
 export function coincideBusquedaEntrante(row: FilaBuzon, termino: string): boolean {
   const q = normalizar(termino.trim());
   if (!q) return true;
   const campos = [
     row.proveedores?.nombre ?? "",
     row.embarques?.expediente ?? "",
+    // v13.619.0 — Se busca por correo crudo y por el nombre derivado.
+    row.embarques?.operador ?? "",
+    nombreDesdeEmail(row.embarques?.operador),
     row.folio_serie ?? "",
     row.nombre_archivo ?? "",
   ];

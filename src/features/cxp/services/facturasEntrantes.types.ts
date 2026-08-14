@@ -35,7 +35,8 @@ export interface FacturaEntranteRow {
   subido_por: string | null;
   capturado_por: string | null;
   created_at: string;
-  embarques?: { expediente: string | null } | null;
+  /** v13.619.0 — `operador`: correo de quien generó el embarque. */
+  embarques?: { expediente: string | null; operador?: string | null } | null;
   proveedores?: { nombre: string | null; origen_proveedor?: string | null } | null;
   /** v13.506.0 — Conceptos de costo sugeridos por el operador al subir. */
   embarque_facturas_entrantes_conceptos?: Array<{
@@ -58,7 +59,7 @@ export const SELECT_COLS_ENTRANTES =
   " monto_declarado, moneda_declarada, sin_costo_capturado," +
 
   " rechazo_motivo, subido_por, capturado_por, created_at," +
-  " embarques:embarque_id(expediente), proveedores:proveedor_id(nombre, origen_proveedor)," +
+  " embarques:embarque_id(expediente, operador), proveedores:proveedor_id(nombre, origen_proveedor)," +
   " proveedor_facturas:proveedor_factura_id(folio_interno, estado, total)," +
   " embarque_facturas_entrantes_conceptos(concepto_costo_id, monto_sugerido," +
   " conceptos_costo:concepto_costo_id(concepto, moneda))";
