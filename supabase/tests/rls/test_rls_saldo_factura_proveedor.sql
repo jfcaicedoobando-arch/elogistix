@@ -53,10 +53,10 @@ BEGIN
 
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
-     categoria_presupuesto_id, moneda, subtotal, iva, total, estado) VALUES
-    (fac_b, org_b, prov_b, 'Proveedor Saldo B', 'S07-F1', cat_b, 'USD', 10000, 0, 10000, 'Vigente'),
-    (fac_b_sintc, org_b, prov_b, 'Proveedor Saldo B', 'S07-F2', cat_b, 'USD', 10000, 0, 10000, 'Vigente'),
-    (fac_b_cancel, org_b, prov_b, 'Proveedor Saldo B', 'S07-F3', cat_b, 'USD', 10000, 0, 10000, 'Cancelada');
+     categoria_presupuesto_id, moneda, subtotal, iva, total, estado, estado_aprobacion) VALUES
+    (fac_b, org_b, prov_b, 'Proveedor Saldo B', 'S07-F1', cat_b, 'USD', 10000, 0, 10000, 'Vigente', 'aprobada'),
+    (fac_b_sintc, org_b, prov_b, 'Proveedor Saldo B', 'S07-F2', cat_b, 'USD', 10000, 0, 10000, 'Vigente', 'aprobada'),
+    (fac_b_cancel, org_b, prov_b, 'Proveedor Saldo B', 'S07-F3', cat_b, 'USD', 10000, 0, 10000, 'Cancelada', 'aprobada');
 
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, monto, moneda, tipo_cambio_usd) VALUES
