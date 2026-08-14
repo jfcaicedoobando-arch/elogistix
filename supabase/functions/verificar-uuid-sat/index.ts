@@ -270,13 +270,7 @@ async function processVerification(
     );
   } catch (e) {
     await captureEdgeException(e, { fn: "verificar-uuid-sat", extra: { id, tipo } });
-    // R4EF-04: timeout del SAT ⇒ 504 dedicado; el resto de red ⇒ 502.
-    const esTimeout = e instanceof DOMException &&
-      (e.name === "TimeoutError" || e.name === "AbortError");
-    if (esTimeout) {
-      return json(cors, { error: "sat_timeout", timeout_ms: SAT_FETCH_TIMEOUT_MS }, 504);
-    }
-    return json(cors, { error: "sat_unreachable", detail: (e as Error).message }, 502);
+    return respuestaErrorSat(cors, e);
   }
 
   const targetTable = tipo === "cxc" ? "facturas" : tipo === "cxp_nc" ? "proveedor_notas_credito" : "proveedor_facturas";
