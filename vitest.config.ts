@@ -71,25 +71,28 @@ const COMMON_TEST = {
   // runners ubuntu-24.04 de 4 vCPU/16 GB).
   isolate: true,
   fileParallelism: true,
-  // Ola 12 · R3TC-01: vitest 3.2.4 sólo honra estas claves dentro de
-  // `poolOptions.forks` (a primer nivel las ignoraba en silencio y
-  // `--expose-gc` nunca llegaba a los workers).
-  poolOptions: {
-    forks: {
-      singleFork: false,
-      maxForks: process.env.CI ? 2 : LOCAL_FORKS,
-      minForks: process.env.CI ? 1 : 2,
-      execArgv: process.env.CI
-        ? ["--max-old-space-size=8192", "--expose-gc"]
-        : ["--max-old-space-size=4096", "--expose-gc"],
-    },
-  },
   sequence: { shuffle: false },
 };
 
 export default defineConfig({
   plugins: [react()],
   test: {
+    // Ola 13 · R3TC-01 (re-fix): Vitest 3.2.4 crea el pool UNA sola vez desde
+    // la config GLOBAL (`createPool(this)`; `createForksPool` lee
+    // `vitest.config.poolOptions?.forks`). El fix de la Ola 12 dejó
+    // `poolOptions` dentro de COMMON_TEST, esparcido por proyecto, y nunca se
+    // consultaba: `--expose-gc` no llegaba a los forks y `maxForks`/`minForks`
+    // no aplicaban. En la raíz de `test` los proyectos heredan el pool.
+    poolOptions: {
+      forks: {
+        singleFork: false,
+        maxForks: process.env.CI ? 2 : LOCAL_FORKS,
+        minForks: process.env.CI ? 1 : 2,
+        execArgv: process.env.CI
+          ? ["--max-old-space-size=8192", "--expose-gc"]
+          : ["--max-old-space-size=4096", "--expose-gc"],
+      },
+    },
     projects: [
       {
         plugins: [react()],
