@@ -37,7 +37,10 @@ DECLARE
   v_libro   jsonb;
   v_count   int;
   v_exp     text;
+  v_num     numeric;
   v_hoy     date := CURRENT_DATE;
+  v_anio    int  := EXTRACT(year FROM CURRENT_DATE)::int;
+  v_mes     int  := EXTRACT(month FROM CURRENT_DATE)::int;
 BEGIN
   -- ── Seed (como postgres, bypass RLS) ─────────────────────────────────────
   BEGIN
@@ -154,8 +157,44 @@ BEGIN
       format('T5 estado_cuenta_bancario falló con un error inesperado: %s', SQLERRM));
   END;
 
+  -- ── T6. cxc_aging_clientes ignora factura borrada y su cobro ─────────────
+  -- Sólo la factura viva (1160) menos su cobro vivo (100) = 1060.
+  -- El cobro de 500 sobre la factura borrada NO debe restar aquí.
+  SELECT a.saldo_total INTO v_num
+  FROM public.cxc_aging_clientes(org_a, v_hoy) a
+  WHERE a.cliente_id = cli_a AND a.moneda = 'MXN';
+  PERFORM pg_temp.assert(v_num = 1060,
+    format('T6 cxc_aging_clientes devolvió saldo %s, esperaba 1060', v_num));
+
+  -- ── T7/T8. eerr_resumen_anual (fuente facturas) ──────────────────────────
   PERFORM pg_temp.as_postgres();
-  RAISE NOTICE 'OK — soft delete estricto en reportes: 5 aserciones + 2 controles';
+
+  -- NC aplicada sobre la factura de cliente BORRADA: no debe bajar ingresos.
+  INSERT INTO public.factura_notas_credito(organization_id, factura_id, folio, monto,
+                                           moneda, estado, fecha_emision)
+  VALUES (org_a, fac_borr, 'SD-NC-1', 500, 'MXN', 'Aplicada', v_hoy);
+
+  -- NC aplicada sobre la factura de proveedor BORRADA: no debe bajar costos.
+  INSERT INTO public.proveedor_notas_credito(organization_id, proveedor_factura_id, folio_nc,
+                                             fecha, monto, moneda, estado)
+  VALUES (org_a, pfac_borr, 'SD-NCP-1', v_hoy, 700, 'MXN', 'Aplicada');
+
+  PERFORM pg_temp.as_user(u_admin);
+
+  SELECT e.ingresos_mxn INTO v_num
+  FROM public.eerr_resumen_anual(v_anio, 'facturas') e
+  WHERE e.mes = v_mes;
+  PERFORM pg_temp.assert(v_num = 1160,
+    format('T7 eerr_resumen_anual reportó ingresos %s, esperaba 1160 (la NC de una factura borrada restó)', v_num));
+
+  SELECT e.costos_mxn INTO v_num
+  FROM public.eerr_resumen_anual(v_anio, 'facturas') e
+  WHERE e.mes = v_mes;
+  PERFORM pg_temp.assert(v_num = 0,
+    format('T8 eerr_resumen_anual reportó costos %s, esperaba 0 (factura de proveedor borrada y/o su NC entraron al reporte)', v_num));
+
+  PERFORM pg_temp.as_postgres();
+  RAISE NOTICE 'OK — soft delete estricto en reportes: 8 aserciones + 2 controles';
 END $$;
 
 ROLLBACK;

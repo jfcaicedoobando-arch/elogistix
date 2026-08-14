@@ -97,4 +97,56 @@ where f.deleted_at is null
     where nc.factura_id = f.id and nc.deleted_at is null and nc.estado = 'Aplicada'
   )
 
+union all
+
+-- 5) Reportes financieros que referencian tablas con borrado lógico y NO
+--    mencionan `deleted_at` tantas veces como tablas distintas referencian
+--    (Ola 14). Heurística deliberadamente simple: detecta el olvido del filtro
+--    en un reporte nuevo o re-emitido. No prueba que cada filtro esté en el
+--    JOIN correcto: eso lo cubre test_rls_soft_delete_reportes.sql.
+with soft_tables as (
+  select c.relname
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  join pg_attribute a on a.attrelid = c.oid and a.attname = 'deleted_at' and a.attnum > 0
+  where n.nspname = 'public' and c.relkind = 'r'
+),
+reportes as (
+  -- Funciones y vistas de reporte financiero/antigüedad. Ampliar la lista al
+  -- agregar un reporte nuevo (es el punto del guardrail).
+  select p.proname as objeto, pg_get_functiondef(p.oid) as def
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  join pg_language l on l.oid = p.prolang
+  where n.nspname = 'public'
+    and p.prokind = 'f'
+    and l.lanname in ('sql', 'plpgsql')
+    and p.proname in (
+      'libro_pagos', 'cartera_pendiente', 'cxc_aging_clientes', 'cxp_aging_proveedores',
+      'facturas_cartera_cliente', 'estado_cuenta_agregados', 'estado_cuenta_bancario',
+      'conciliacion_resumen', 'dashboard_facturacion_kpis', 'eerr_resumen_anual',
+      'pnl_financiero_embarque', 'proveedor_estado_cuenta', 'proveedor_estado_cuenta_movimientos'
+    )
+  union all
+  select c.relname, pg_get_viewdef(c.oid, true)
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'v'
+    and c.relname in ('v_pagos_rep_pendientes', 'v_proforma_factura_link', 'v_saldos_cuentas_bancarias')
+),
+conteo as (
+  select r.objeto,
+         (select count(distinct s.relname) from soft_tables s
+           where r.def ~ ('\mpublic\.' || s.relname || '\M')
+              or r.def ~ ('\m' || s.relname || '\M')) as tablas_soft,
+         (length(r.def) - length(replace(r.def, 'deleted_at', ''))) / length('deleted_at') as filtros
+  from reportes r
+)
+select 'reporte_sin_filtro_soft_delete',
+       c.objeto,
+       format('%s tabla(s) con deleted_at referenciadas vs %s menciones de deleted_at', c.tablas_soft, c.filtros)
+from conteo c
+where c.tablas_soft > c.filtros
+
 order by 1, 2;
+
