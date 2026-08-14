@@ -25,15 +25,20 @@ const TRADUCCIONES: ReadonlyArray<{ patron: RegExp; mensaje: string }> = [
   },
 ];
 
+/** Heurística mínima: ¿el motivo ya viene redactado en español (es-MX)? */
+const PISTAS_ES =
+  /[áéíóúñÁÉÍÓÚÑ¿¡]|\b(no|sin|ya|debe|error|usuario|organizaci|contrase|correo|permiso|inv[aá]lid|activa|encontrad|existe)/i;
+
 /**
- * Aplica las traducciones conocidas. Ola 13 · R4UX-04: ante no-coincidencia ya
- * NO se devuelve el mensaje original del proveedor de identidad (llega en
- * inglés); se envuelve con copy en español. El motivo original viaja como
- * contexto para diagnóstico.
+ * Aplica las traducciones conocidas. Ola 13 · R4UX-04: si el motivo no está
+ * catalogado y viene en inglés (del proveedor de identidad), se envuelve con
+ * copy en español; los mensajes que ya vienen en español (propios del backend)
+ * se conservan tal cual. El motivo original queda en consola para diagnóstico.
  */
 export function traducirMensajeEdge(mensaje: string): string {
   const encontrada = TRADUCCIONES.find((t) => t.patron.test(mensaje));
   if (encontrada) return encontrada.mensaje;
+  if (PISTAS_ES.test(mensaje)) return mensaje;
   console.warn("[traducirMensajeEdge] motivo no catalogado del proveedor de identidad:", mensaje);
   return `El servicio de identidad rechazó la solicitud: ${mensaje}`;
 }
