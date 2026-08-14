@@ -7,6 +7,7 @@ import { ProveedorSaludTab } from "../../components/ProveedorSaludTab";
 import { ProveedorEstadoCuentaTab } from "../../components/ProveedorEstadoCuentaTab";
 import { ProveedorDocumentosTab } from "../../components/ProveedorDocumentosTab";
 import { ProveedorContactosCard } from "../../components/ProveedorContactosCard";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import type { PartidaEstadoCuenta } from "@/features/proveedor/domain/estadoCuentaProveedor";
 
 interface Props {
@@ -93,7 +94,7 @@ export function ProveedorDetalleTabs({
         <ProveedorContactosCard
           proveedorId={proveedorId}
           organizationId={organizationId}
-          canEdit={canEdit}
+          canEdit={canEditExpediente}
         />
       </TabsContent>
 
@@ -102,7 +103,7 @@ export function ProveedorDetalleTabs({
           proveedorId={proveedorId}
           organizationId={organizationId}
           esNacional={esNacional}
-          canEdit={canEdit}
+          canEdit={canEditExpediente}
         />
       </TabsContent>
 

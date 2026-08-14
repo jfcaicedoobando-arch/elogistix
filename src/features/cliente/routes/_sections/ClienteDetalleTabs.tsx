@@ -14,6 +14,7 @@ import TablaContactos from "@/features/cliente/components/TablaContactos";
 import { ClienteDocumentosTab } from "@/features/cliente/components/ClienteDocumentosTab";
 import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
 import { ClienteCreditoCard } from "@/features/cliente/components/detalle/ClienteCreditoCard";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import type { EmbarqueCliente, CotizacionCliente } from "@/features/cliente/components/clienteColumns";
 import type { ContactoCliente } from "@/features/cliente/types/cliente";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -173,7 +174,7 @@ export function ClienteDetalleTabs({
           clienteId={cliente.id}
           organizationId={cliente.organization_id}
           conCredito={(cliente.dias_credito ?? 0) > 0}
-          canEdit={canEdit}
+          canEdit={canEditExpediente}
         />
       </TabsContent>
 
