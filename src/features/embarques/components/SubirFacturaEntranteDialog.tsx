@@ -136,6 +136,8 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
           costeadoPorMoneda={costos.data}
           cargandoCostos={costos.isLoading}
           proveedorElegido={Boolean(form.proveedor)}
+          sumaSugerida={form.sumaSugeridaPorMoneda[form.monedaDeclarada] ?? null}
+          onUsarSumaSugerida={form.usarSumaSugerida}
         />
       </FormDialogSection>
 
