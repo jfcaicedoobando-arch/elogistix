@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.616.1] - 2026-08-14
+- CI: verdes las 5 suites RLS (aislamiento, financiero, operaciones, roles, costeo). Los fixtures asumían reglas ya endurecidas: `super_admin` con bypass global (Ola 16 lo acotó al tenant activo vía `set_super_admin_org`), el rol legacy `admin` en `user_roles`, un REP sobre factura sin UUID fiscal y columnas hoy NOT NULL (`app_logs.fn`, `pagos_factura.rep_cancellation_status`).
+- `guard_cotizacion_vigencia.sql` ahora se ejecuta en el workflow `rls-tests` (antes existía pero nadie lo corría).
+
 ## [13.616.0] - 2026-08-14
 - Fix: la vigencia de la cotización (detalle y PDF) ya respeta la fecha capturada en "Validez propuesta". Antes se calculaba sólo al crear (emisión + 15 días) y no se recalculaba al capturar la validez después, por lo que el PDF mostraba una fecha distinta (caso COT-2026-0174: 21/08 capturado vs 29/08 impreso).
 - Nuevo trigger `public._cotizaciones_sync_vigencia`: si hay validez propuesta, ella define `fecha_vigencia` y `vigencia_dias` se deriva de la emisión; sin validez se mantiene el default de 15 días. Backfill de las 27 cotizaciones desalineadas.
