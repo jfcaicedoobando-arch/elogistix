@@ -171,5 +171,35 @@ where m.deleted_at is null
     )
   )
 
-order by 1, 2;
+union all
 
+-- 7) Ola 16: separación de planos plataforma / tenant. Toda tabla de negocio
+--    con `organization_id` debe tener la política RESTRICTIVE que acota al
+--    super admin al tenant activo (`public.rls_tenant_scope_ok`). Sin ella, un
+--    super admin vuelve a ver filas de TODAS las organizaciones en cualquier
+--    consulta que no filtre explícitamente por organización.
+select 'tabla_negocio_sin_scope_tenant',
+       c.relname::text,
+       format('la tabla %s no tiene la política RESTRICTIVE de tenant activo (Ola 16)', c.relname)
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+join pg_attribute a on a.attrelid = c.oid
+                   and a.attname = 'organization_id'
+                   and a.attnum > 0
+                   and not a.attisdropped
+where n.nspname = 'public'
+  and c.relkind = 'r'
+  -- Plano PLATAFORMA: telemetría y administración cross-tenant del dueño.
+  and c.relname not in (
+    'app_logs', 'nav_events', 'provisioning_log', 'role_change_log',
+    'super_admin_org_activa', 'organization_members', 'client_users',
+    'agente_users', 'facturapi_webhook_eventos'
+  )
+  and not exists (
+    select 1 from pg_policy p
+    where p.polrelid = c.oid
+      and p.polpermissive = false
+      and pg_get_expr(p.polqual, p.polrelid) like '%rls_tenant_scope_ok%'
+  )
+
+order by 1, 2;

@@ -9139,6 +9139,24 @@ export type Database = {
           nombre: string
         }[]
       }
+      fn_admin_org_counts: {
+        Args: { _org: string }
+        Returns: {
+          clientes: number
+          cotizaciones: number
+          embarques: number
+          miembros: number
+        }[]
+      }
+      fn_admin_platform_stats: {
+        Args: never
+        Returns: {
+          total_cotizaciones: number
+          total_embarques: number
+          total_orgs: number
+          total_users: number
+        }[]
+      }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
       generar_liquidacion_comision: {
         Args: {
@@ -9910,6 +9928,7 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: string[]
       }
+      rls_tenant_scope_ok: { Args: { _org: string }; Returns: boolean }
       rol_efectivo: {
         Args: { _org: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

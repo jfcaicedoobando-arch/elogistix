@@ -73,46 +73,55 @@ describe("services/admin/stats", () => {
     await expect(fetchAdminRecentOrgs()).rejects.toThrow();
   });
 
-  it("fetchAdminDashboardStats devuelve totales", async () => {
-    setTable("organizations", { data: null, count: 5, error: null });
-    setTable("organization_members", { data: null, count: 20, error: null });
-    setTable("embarques", { data: null, count: 100, error: null });
-    setTable("cotizaciones", { data: null, count: 50, error: null });
+  it("fetchAdminDashboardStats devuelve totales de la RPC de plataforma", async () => {
+    setRpc("fn_admin_platform_stats", {
+      data: [{ total_orgs: 5, total_users: 20, total_embarques: 100, total_cotizaciones: 50 }],
+      error: null,
+    });
     const r = await fetchAdminDashboardStats();
     expect(r).toEqual({ totalOrgs: 5, totalUsers: 20, totalEmbarques: 100, totalCotizaciones: 50 });
   });
 
-  it("fetchAdminDashboardStats trata count null como 0", async () => {
-    setTable("organizations", { data: null, error: null });
-    setTable("organization_members", { data: null, error: null });
-    setTable("embarques", { data: null, error: null });
-    setTable("cotizaciones", { data: null, error: null });
+  it("fetchAdminDashboardStats trata respuesta vacía como 0", async () => {
+    setRpc("fn_admin_platform_stats", { data: [], error: null });
     const r = await fetchAdminDashboardStats();
     expect(r.totalOrgs).toBe(0);
   });
 
-  it("countOrgMembers devuelve count", async () => {
-    setTable("organization_members", { data: null, count: 7, error: null });
+  it("fetchAdminDashboardStats propaga error", async () => {
+    setRpc("fn_admin_platform_stats", { data: null, error: { message: "x" } });
+    await expect(fetchAdminDashboardStats()).rejects.toThrow();
+  });
+
+  const setOrgCounts = () =>
+    setRpc("fn_admin_org_counts", {
+      data: [{ miembros: 7, embarques: 12, clientes: 3, cotizaciones: 9 }],
+      error: null,
+    });
+
+  it("countOrgMembers usa la RPC por organización", async () => {
+    setOrgCounts();
     expect(await countOrgMembers("o1")).toBe(7);
   });
 
-  it("countOrgEmbarques devuelve count", async () => {
-    setTable("embarques", { data: null, count: 12, error: null });
+  it("countOrgEmbarques usa la RPC por organización", async () => {
+    setOrgCounts();
     expect(await countOrgEmbarques("o1")).toBe(12);
   });
 
-  it("countOrgClientes devuelve count", async () => {
-    setTable("clientes", { data: null, count: 3, error: null });
+  it("countOrgClientes usa la RPC por organización", async () => {
+    setOrgCounts();
     expect(await countOrgClientes("o1")).toBe(3);
   });
 
-  it("countOrgCotizaciones devuelve count", async () => {
-    setTable("cotizaciones", { data: null, count: 9, error: null });
+  it("countOrgCotizaciones usa la RPC por organización", async () => {
+    setOrgCounts();
     expect(await countOrgCotizaciones("o1")).toBe(9);
   });
 
-  it("countByOrg propaga error", async () => {
-    setTable("organization_members", { data: null, error: { message: "x" } });
+  it("countOrgMembers propaga error", async () => {
+    setRpc("fn_admin_org_counts", { data: null, error: { message: "x" } });
     await expect(countOrgMembers("o1")).rejects.toThrow();
   });
 });
+
