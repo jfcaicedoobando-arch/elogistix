@@ -169,6 +169,10 @@ const CROSS_FEATURE_ALLOWLIST = [
   // Candidatos de promoción: cotizacion/utils/resolveTipoContenedorNombre
   // (5 consumidores cross, incl. src/pdf y src/generators) y
   // auditoria/utils/diffFields (4 consumidores en 3 features).
+  // v13.618.0 — El buzón maestro CxP reutiliza `CorregirDatosEntranteDialog`
+  // (vive en embarques/components/entrantes junto a sus 4 subcomponentes).
+  // Sale del allowlist cuando se promueva la familia `entrantes/` a shared.
+  "src/features/bandejas/components/BuzonEntrantesModales.tsx",
   "src/features/cliente/hooks/useClienteDetalleHandlers.ts",
   "src/features/embarques/components/contenedores/SeccionContenedoresReadonly.tsx",
   "src/features/embarques/components/tabResumen/RutaPorModo.tsx",
