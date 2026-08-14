@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.594.4] - 2026-08-13
+- **Se corrige el falso rojo del check "RLS tests result" en CI.** Cuando el commit no toca la base de datos, las suites RLS se omiten (skipped) y el job agregador las contaba como fallo.
+- Ahora `skipped` cuenta como válido y sólo `failure`/`cancelled` rompen el check; el paso de diagnóstico ya no imprime "no se pudo identificar el grupo" cuando en realidad nada falló.
+
 ## [13.594.3] - 2026-08-13
 - **Auditoría de la refacturación F1026 / F1027: se cierran dos huecos de trazabilidad.**
 - La proforma vuelve a apuntar a la factura viva al completar una refacturación (antes seguía ligada a la factura cancelada). Se corrigió PRO-2026-1018 → F1035.

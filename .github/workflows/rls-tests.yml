@@ -735,7 +735,7 @@ jobs:
         # mano los grupos para saber cuál rompió. Aquí listamos los grupos
         # fallidos con su enlace directo, en el log y en el summary. El log de
         # cada suite individual queda en el artifact `rls-suite-logs-<grupo>`.
-        if: needs.rls-suites.result != 'success'
+        if: needs.rls-suites.result != 'success' && needs.rls-suites.result != 'skipped'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
@@ -758,6 +758,9 @@ jobs:
       - name: Aggregate matrix result
         # Job único para usar como required check en branch protection,
         # evitando tener que listar los grupos individualmente.
+        # `skipped` es válido: ocurre cuando el commit no toca la base de datos
+        # y los filtros de ruta omiten las suites; sólo `failure`/`cancelled`
+        # deben romper el check.
         run: |
           suites="${{ needs.rls-suites.result }}"
           guards="${{ needs.rls-guards.result }}"
@@ -766,14 +769,17 @@ jobs:
           echo "rls-guards result: $guards"
           echo "schema-baseline result: $baseline"
           fail=0
-          [ "$suites" = "success" ] || fail=1
-          [ "$guards" = "success" ] || fail=1
-          [ "$baseline" = "success" ] || fail=1
+          for r in "$suites" "$guards" "$baseline"; do
+            case "$r" in
+              success|skipped) ;;
+              *) fail=1 ;;
+            esac
+          done
           if [ "$fail" = "1" ]; then
             echo "::error::Una o más suites RLS, guards conductuales o la baseline de esquema fallaron"
             exit 1
           fi
-          echo "✓ Suites RLS, guards conductuales y baseline de esquema en verde"
+          echo "✓ Suites RLS, guards conductuales y baseline de esquema en verde (o omitidas)"
 
 
 
