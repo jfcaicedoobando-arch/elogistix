@@ -82,6 +82,17 @@ describe("coincideBusquedaEntrante", () => {
   it("acepta todo cuando el término está vacío", () => {
     expect(coincideBusquedaEntrante(fila(), "   ")).toBe(true);
   });
+
+  // v13.619.0 — Operador del embarque: por correo y por nombre derivado.
+  it("encuentra por el operador del embarque", () => {
+    const row = fila({
+      embarques: { expediente: "ELIMP00295", operador: "valeria.zamora@elogistix.com" },
+    });
+    expect(coincideBusquedaEntrante(row, "valeria")).toBe(true);
+    expect(coincideBusquedaEntrante(row, "Valeria Zamora")).toBe(true);
+    expect(coincideBusquedaEntrante(row, "zamora@elogistix")).toBe(true);
+    expect(coincideBusquedaEntrante(row, "alan")).toBe(false);
+  });
 });
 
 describe("filtrarEntrantes", () => {
