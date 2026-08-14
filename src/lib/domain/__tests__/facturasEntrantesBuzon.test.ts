@@ -157,6 +157,31 @@ describe("entranteSinImporte", () => {
   it("trata el total en cero como importe faltante", () => {
     expect(entranteSinImporte(fila({ total_detectado: 0 }))).toBe(true);
   });
+
+  // v13.618.0 — Documentos sin XML: vale el monto que declaró operaciones.
+  it("no marca los documentos con monto declarado por operaciones", () => {
+    expect(
+      entranteSinImporte(fila({ total_detectado: null, monto_declarado: 980 })),
+    ).toBe(false);
+  });
+});
+
+describe("importeEntrante", () => {
+  it("prefiere el total del CFDI sobre el declarado", () => {
+    expect(
+      importeEntrante(fila({ total_detectado: 100, moneda_detectada: "USD", monto_declarado: 90 })),
+    ).toEqual({ monto: 100, moneda: "USD", fuente: "cfdi" });
+  });
+
+  it("usa el declarado cuando no hay CFDI", () => {
+    expect(
+      importeEntrante(fila({ monto_declarado: 90, moneda_declarada: "EUR" })),
+    ).toEqual({ monto: 90, moneda: "EUR", fuente: "declarado" });
+  });
+
+  it("regresa null cuando no hay ningún importe", () => {
+    expect(importeEntrante(fila())).toBeNull();
+  });
 });
 
 describe("chip sin_importe", () => {
