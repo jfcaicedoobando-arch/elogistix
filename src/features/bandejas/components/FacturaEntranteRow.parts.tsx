@@ -79,6 +79,7 @@ export function MetaEntrante({ row }: { row: Fila }) {
   return (
     <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
       <span className="shrink-0">{row.embarques?.expediente ?? "Sin expediente"}</span>
+      <OperadorEntrante correo={row.embarques?.operador ?? null} />
       {row.folio_serie && <span className="shrink-0">· Folio {row.folio_serie}</span>}
       <span className="shrink-0">· {fecha}</span>
       <Tooltip>
