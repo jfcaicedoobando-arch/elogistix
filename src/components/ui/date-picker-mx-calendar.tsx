@@ -73,6 +73,9 @@ export function DatePickerMxCalendar({
           selected={selectedDate}
           defaultMonth={selectedDate ?? maxDate ?? minDate}
           disabled={dayDisabled.length ? dayDisabled : undefined}
+          modifiers={marcarInhabiles ? { inhabil: (d: Date) => esDiaInhabilMx(dateToIso(d)) } : undefined}
+          modifiersClassNames={marcarInhabiles ? { inhabil: "text-warning" } : undefined}
+
           onSelect={(d) => {
             if (!d) onClear();
             else onPick(dateToIso(d));
