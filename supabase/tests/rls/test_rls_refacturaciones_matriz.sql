@@ -194,7 +194,7 @@ BEGIN
 
   -- T12. Sin solicitud de cancelación el REP sí bloquea.
   PERFORM pg_temp.as_postgres();
-  UPDATE public.pagos_factura SET rep_cancellation_status = NULL WHERE id = pago_a;
+  UPDATE public.pagos_factura SET rep_cancellation_status = 'none' WHERE id = pago_a;
   PERFORM pg_temp.as_user(u_auxiliar);
   v_sim := public.refacturacion_simular_paso(caso_a, 2);
   PERFORM pg_temp.assert(v_sim -> 'bloqueos' @> '["LC_REFACT_REP_VIVO"]'::jsonb,

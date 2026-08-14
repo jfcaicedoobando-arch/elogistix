@@ -65,8 +65,9 @@ BEGIN
     (emb_b, 'ELPLB00001', cli_b, 'CLI PLANOS B', org_b,
       'Marítimo', 'Importación', 'Confirmado', 'FOB', CURRENT_DATE + 5, CURRENT_DATE + 30);
 
-  INSERT INTO public.app_logs(organization_id, level, msg)
-  VALUES (org_a, 'error', 'log plano A'), (org_b, 'error', 'log plano B');
+  INSERT INTO public.app_logs(organization_id, level, fn, msg)
+  VALUES (org_a, 'error', 'rls-test', 'log plano A'),
+         (org_b, 'error', 'rls-test', 'log plano B');
 
   -- ==========================================================================
   -- 2) Super admin SIN tenant activo → fail-closed en tablas de negocio
