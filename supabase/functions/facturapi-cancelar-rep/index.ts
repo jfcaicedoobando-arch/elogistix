@@ -82,12 +82,8 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   // resolveSustitutaSnapshot de facturapi-cancelar). La UI captura el UUID;
   // aquí lo resolvemos al REP timbrado de ESTA organización.
   let sustituyeFacturapiId: string | undefined;
-  let objetivoFacturapiId: string = pago.facturapi_rep_id as string;
-  if (cancelarAnterior) {
-    // R3P-21: objetivo = REP cancelado archivado; sustituto = REP vigente.
-    objetivoFacturapiId = pago.rep_cancelado_facturapi_id as string;
-    sustituyeFacturapiId = pago.facturapi_rep_id as string;
-  } else if (body.motivo === "01") {
+  const objetivoFacturapiId: string = pago.facturapi_rep_id as string;
+  if (body.motivo === "01") {
     const { data: sustituto } = await supabase
       .from("pagos_factura")
       .select("id, facturapi_rep_id")
