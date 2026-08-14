@@ -64,7 +64,7 @@ BEGIN
 
   -- ── T1 · página 1 = los 2 más recientes ──────────────────────────────────
   v_res := public.proveedor_estado_cuenta_movimientos(prov_b, NULL, NULL, 2, 0);
-  SELECT array_agg(m->>'folio' ORDER BY m->>'fecha')
+  SELECT array_agg(m->>'referencia' ORDER BY m->>'fecha')
   INTO v_p1 FROM jsonb_array_elements(v_res->'movimientos') m;
   PERFORM pg_temp.assert((v_res->>'total_movimientos')::int = 5,
     'T1: total_movimientos debe ser 5, fue ' || COALESCE(v_res->>'total_movimientos', 'NULL'));
@@ -75,7 +75,7 @@ BEGIN
 
   -- ── T2 · página 2 = los anteriores, sin traslape ──────────────────────────
   v_res := public.proveedor_estado_cuenta_movimientos(prov_b, NULL, NULL, 2, 2);
-  SELECT array_agg(m->>'folio' ORDER BY m->>'fecha')
+  SELECT array_agg(m->>'referencia' ORDER BY m->>'fecha')
   INTO v_p2 FROM jsonb_array_elements(v_res->'movimientos') m;
   PERFORM pg_temp.assert(v_p2 = ARRAY['S08-F2', 'S08-F3'],
     'T2: la página 2 debe retroceder en el tiempo → ' || COALESCE(v_p2::text, 'NULL'));
@@ -86,7 +86,7 @@ BEGIN
 
   -- ── T3 · cobertura completa (sin movimientos perdidos) ────────────────────
   v_res := public.proveedor_estado_cuenta_movimientos(prov_b, NULL, NULL, 2, 4);
-  SELECT array_agg(m->>'folio' ORDER BY m->>'fecha')
+  SELECT array_agg(m->>'referencia' ORDER BY m->>'fecha')
   INTO v_p3 FROM jsonb_array_elements(v_res->'movimientos') m;
   v_todos := v_p1 || v_p2 || v_p3;
   PERFORM pg_temp.assert(
