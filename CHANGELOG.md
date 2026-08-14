@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.601.0] - 2026-08-14
+### Ola 13 · Sprint 07 — Org guard en `saldo_factura_proveedor` (R4BD-02, P1)
+- **Fuga cross-tenant cerrada.** `public.saldo_factura_proveedor(uuid)` (SECURITY DEFINER) filtraba la factura sólo por `id` y `deleted_at`: cualquier usuario autenticado podía leer `total/pagado/nc_aplicada/saldo` de una factura de **otra organización** conociendo su UUID. Ahora exige `organization_id = current_user_org_id()` y aborta con `42501 LC_ORG_SIN_CONTEXTO` si no hay organización activa (patrón de las RPC hermanas del módulo de proveedores).
+- **Facturas canceladas.** Se excluye `estado = 'Cancelada'` (sin saldo exigible), mismo criterio que `proveedor_estado_cuenta`, `proveedor_estado_cuenta_movimientos` y `proveedor_inteligencia`. Devuelve `NULL`, igual que inexistente/eliminada/ajena (no funciona como oráculo de existencia).
+- **Lógica numérica intacta:** USD 10,000 + pago MXN 86,000 @ 17.20 → saldo USD 5,000.00. Grants H6 re-afirmados (REVOKE PUBLIC/anon, GRANT authenticated/service_role).
+- Migración `20260824070000_ola13_org_guard_saldo.sql` y espejo `supabase/schema/proveedores/saldo_factura_proveedor.sql` actualizado 1:1.
+- Nueva suite `supabase/tests/rls/test_rls_saldo_factura_proveedor.sql` (cross-tenant, traza numérica, cancelada, sin contexto, grants y canónicas hermanas), añadida al grupo `operaciones` de `rls-tests`. Verificada rojo→verde contra la definición previa.
+
 ## [13.600.1] - 2026-08-14
 - **Fix CI (`rls-tests`, grupo `operaciones`).** La suite `test_rls_expediente_cliente` (Sprint 05) sembraba el proveedor con `tipo = 'Nacional'` / `categoria = 'General'`, valores que no existen en los enums `tipo_proveedor` / `categoria_proveedor`; en base limpia fallaba con `invalid input value for enum`. Ahora usa `'Agente Aduanal'` / `'Logistico'`, la única pareja que satisface `proveedores_categoria_check`.
 - Verificado localmente contra una base reconstruida desde cero (932 migraciones): las 5 suites del grupo `operaciones` y las 28 suites `test_rls_*` pasan en verde.

@@ -1,10 +1,6 @@
--- Canonical schema para public.saldo_factura_proveedor (Ola 12 · R3P-01, migración 20260823100100;
--- re-emitida con org guard en Ola 13 · Sprint 07 / R4BD-02, migración 20260824070000).
--- Saldo de una factura de proveedor en su propia moneda; NC sólo 'Aplicada'
--- y pagos convertidos con monto_pago_en_moneda_factura.
--- Org guard: 42501 'LC_ORG_SIN_CONTEXTO' sin contexto; la factura debe
--- pertenecer a la organización activa y no estar cancelada (NULL en otro caso,
--- igual que inexistente/eliminada/ajena → no es oráculo de existencia).
+-- Ola 13 · Sprint 07 (R4BD-02, P1 cross-tenant)
+-- Re-emisión completa de public.saldo_factura_proveedor con org guard y
+-- exclusión de facturas canceladas. Lógica numérica INTACTA.
 CREATE OR REPLACE FUNCTION public.saldo_factura_proveedor(p_factura_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -57,3 +53,8 @@ BEGIN
   );
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.saldo_factura_proveedor(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.saldo_factura_proveedor(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.saldo_factura_proveedor(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.saldo_factura_proveedor(uuid) TO service_role;
