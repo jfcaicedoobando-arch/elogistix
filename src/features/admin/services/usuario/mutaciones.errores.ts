@@ -25,10 +25,22 @@ const TRADUCCIONES: ReadonlyArray<{ patron: RegExp; mensaje: string }> = [
   },
 ];
 
-/** Aplica las traducciones conocidas; si no hay coincidencia devuelve el original. */
+/** Heurística mínima: ¿el motivo ya viene redactado en español (es-MX)? */
+const PISTAS_ES =
+  /[áéíóúñÁÉÍÓÚÑ¿¡]|\b(no|sin|ya|debe|error|usuario|organizaci|contrase|correo|permiso|inv[aá]lid|activa|encontrad|existe)/i;
+
+/**
+ * Aplica las traducciones conocidas. Ola 13 · R4UX-04: si el motivo no está
+ * catalogado y viene en inglés (del proveedor de identidad), se envuelve con
+ * copy en español; los mensajes que ya vienen en español (propios del backend)
+ * se conservan tal cual. El motivo original queda en consola para diagnóstico.
+ */
 export function traducirMensajeEdge(mensaje: string): string {
   const encontrada = TRADUCCIONES.find((t) => t.patron.test(mensaje));
-  return encontrada ? encontrada.mensaje : mensaje;
+  if (encontrada) return encontrada.mensaje;
+  if (PISTAS_ES.test(mensaje)) return mensaje;
+  console.warn("[traducirMensajeEdge] motivo no catalogado del proveedor de identidad:", mensaje);
+  return `El servicio de identidad rechazó la solicitud: ${mensaje}`;
 }
 
 function extraerDeCuerpo(texto: string): string | null {

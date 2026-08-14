@@ -60,6 +60,9 @@ export const EXTRA_STATUS_BADGES: Record<string, EstadoVisual["badge"]> = {
   Facturado: "bg-accent/15 text-accent border border-accent/30",
   "Facturado parcial": "bg-warning/15 text-warning border border-warning/30",
   Sobrefacturado: "bg-destructive/15 text-destructive border border-destructive/30",
+  // Ola 13 · R4UX-02: «Moneda mixta» (porción sin TC que no se compara) debe
+  // verse en tono de atención, no en el fallback muted del registry.
+  "Moneda mixta": "bg-warning/15 text-warning border border-warning/30",
   // Factura — estados derivados del ciclo SAT
   "En cancelación": "bg-warning/15 text-warning border border-warning/30",
   Sustituida: "bg-destructive/10 text-destructive border border-destructive/30",

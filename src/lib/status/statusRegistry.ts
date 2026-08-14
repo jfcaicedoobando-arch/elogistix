@@ -123,7 +123,7 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   ruta_maritima: ["Activa", "Por vencer", "Sin tarifa"],
   liquidacion: ["Pagado", "Pendiente"],
   anticipo_proveedor: ["disponible", "aplicado_parcial", "aplicado_total", "cancelado"],
-  conciliacion_costo: ["Pendiente", "Facturado parcial", "Facturado", "Sobrefacturado", "Pagado"],
+  conciliacion_costo: ["Pendiente", "Facturado parcial", "Facturado", "Sobrefacturado", "Pagado", "Moneda mixta"],
 };
 
 /** Overrides por dominio cuando el mismo string necesita otro label. */
