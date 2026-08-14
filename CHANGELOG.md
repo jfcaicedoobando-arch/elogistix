@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.613.0] - 2026-08-14
+- Ola 16 · Vista previa del asistente de refacturación desacoplada de las cancelaciones pendientes del SAT: `refacturacion_simular_paso` ahora devuelve `pendientes[]` además de `bloqueos[]`.
+- Nuevo helper `public._refact_reps_bloqueantes(uuid)`: criterio único (mismo que la UI) para distinguir un REP vivo sin solicitud (bloquea) de uno en verificación `pending`/`verifying` (pendiente).
+- Paso 4 considera `facturas.cancellation_status`: `pending`/`verifying` → `LC_REFACT_ORIGINAL_EN_VERIFICACION` (pendiente); `rejected`/`expired` → `LC_REFACT_ORIGINAL_CANCELACION_RECHAZADA` (bloqueo). Paso 5 sigue bloqueando con cualquier REP vivo (evita reportar el depósito dos veces).
+- UI: nuevo `RefacturacionPreviewCodigos.tsx` (rojo = bloqueo, ámbar = trámite en manos del SAT); el cliente tolera respuestas sin `pendientes`.
+- Tests: 2 casos nuevos en `refacturacionSimulacion.test.ts` y T10-T12 en `supabase/tests/rls/test_rls_refacturaciones_matriz.sql`. Espejos en `supabase/schema/facturacion/` y manifest sincronizado (946 migraciones).
+
 ## [13.612.0] - 2026-08-14
 - Ola 16 · Separación de planos plataforma / tenant: el Super Admin ya no ve datos mezclados de todas las organizaciones. Nueva política RESTRICTIVE `Scope tenant activo super admin` en las 86 tablas de negocio con `organization_id`, apoyada en `public.rls_tenant_scope_ok()` + `public.org_scope()`.
 - Sin tenant seleccionado el Super Admin no ve ni escribe datos de negocio (fail-closed); con tenant seleccionado sólo ve ese tenant, aunque la consulta no filtre por organización.
