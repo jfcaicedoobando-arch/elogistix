@@ -9,7 +9,7 @@ import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks/useEmbarqu
 import { useDocsFaltantesParaEstado } from "@/features/embarques/hooks/useDocsFaltantesParaEstado";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { useState, useCallback } from "react";
 import {
@@ -107,10 +107,11 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (siguiente === "Confirmado") {
       const faltantes = faltantesParaConfirmado(embarque, contenedores.length);
       if (faltantes.length > 0) {
-        notifyError(undefined, {
-          title: "Faltan datos para confirmar el embarque",
-          description: `Completa antes de pasar a Confirmado: ${faltantes.join(", ")}.`,
-          method: "HANDLE_AVANZAR_ESTADO_MINIMOS",
+        // No es un error del sistema: es captura pendiente. Tono informativo,
+        // sin "Ver detalles" ni requestId.
+        notifyWarning(undefined, {
+          title: "Aún falta información para confirmar",
+          description: `Captura estos datos y vuelve a intentar: ${faltantes.join(", ")}.`,
         });
         return;
       }

@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.623.1] - 2026-08-14
+- Al intentar pasar un embarque a "Confirmado" sin los datos mínimos (peso, naviera, contenedores, etc.) ya no aparece un toast rojo de error con "Ver detalles"/requestId: ahora es un aviso informativo "Aún falta información para confirmar" con la lista de campos por capturar. El embarque sigue sin avanzar hasta completarlos.
+
 ## [13.623.0] - 2026-08-14
 - Conceptos de factura de proveedor con formato de invoice: nueva columna "Total" por línea (total línea + IVA + IEPS), pie de tabla que suma todas las columnas y caja de totales a la derecha (Subtotal → IVA → IEPS → Retenciones → TOTAL) en la moneda del documento.
 - Si el total de la factura no coincide con la suma de los conceptos (descuentos o conceptos faltantes en el CFDI) se muestra un aviso con la diferencia.
