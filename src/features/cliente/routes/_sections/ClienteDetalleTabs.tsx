@@ -62,6 +62,7 @@ export function ClienteDetalleTabs({
   openEditContact,
   startDelete,
 }: Props) {
+  const { canEditExpediente } = usePermissions();
   return (
     <Tabs defaultValue="informacion">
       <TabsList>

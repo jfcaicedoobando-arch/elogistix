@@ -36,6 +36,7 @@ export function ProveedorDetalleTabs({
   partidas, partidasPendientes,
   isErrorEstadoCuenta, errorEstadoCuenta, refetchEstadoCuenta, isFetchingEstadoCuenta,
 }: Props) {
+  const { canEditExpediente } = usePermissions();
   const errorOperaciones = (
     <ErrorStateInline
       title="No pudimos cargar las operaciones del proveedor"
