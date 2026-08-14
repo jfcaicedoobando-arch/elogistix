@@ -1,23 +1,17 @@
-import { useEffect, useId, useMemo, useState } from "react";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useId, useState } from "react";
+import { Calendar as CalendarIcon, X } from "lucide-react";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
-  PLACEHOLDER_PERIODO, pickerClearClass, pickerClearIconClass, pickerErrorClass,
-  pickerIconClass, pickerRootClass, pickerTriggerClass,
+  PICKER_AYUDA_TECLADO, PLACEHOLDER_PERIODO, pickerClearClass, pickerClearIconClass,
+  pickerErrorClass, pickerIconClass, pickerRootClass, pickerTriggerClass,
 } from "@/components/ui/picker-mx-shell";
-
-const MESES_ES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-];
-const MESES_ES_SHORT = [
-  "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-  "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
-];
+import { PATRON_PERIODO } from "./date-picker-mx-segmentos";
+import { manejarAtajosSegmento, seleccionarSegmentoEnCursor } from "./date-picker-mx-teclado";
+import { MonthPickerMxPanel } from "./month-picker-mx-panel";
+import { useMonthPickerMxValor, ymADisplay } from "./month-picker-mx-valor";
 
 interface MonthPickerMxProps {
   /** Valor `YYYY-MM` (o vacío). */
@@ -33,12 +27,12 @@ interface MonthPickerMxProps {
 }
 
 /**
- * Selector de mes localizado en español (Mes AAAA).
- * Reemplaza al `<input type="month">` nativo.
+ * Selector de periodo localizado (captura `MM/AAAA` con teclado numérico).
  *
- * v13.389.3 — comparte trigger y estados (vacío / deshabilitado / error) con
- * `DatePickerMx` vía `picker-mx-shell`, y el año visible se resincroniza con
- * el valor controlado (antes se quedaba en el año de la primera apertura).
+ * v13.614.0 — antes era sólo un botón con popover: ahora el periodo se puede
+ * teclear y soporta los mismos aceleradores que `DatePickerMx`
+ * (`T` = mes en curso, `+`/`-` sobre el segmento activo, `←`/`→` para cambiar
+ * de segmento, `F4` para abrir la rejilla de meses).
  */
 export function MonthPickerMx({
   value, onChange, placeholder = PLACEHOLDER_PERIODO, className, title,
@@ -46,89 +40,121 @@ export function MonthPickerMx({
 }: MonthPickerMxProps) {
   const autoErrorId = useId();
   const errorId = id ? `${id}-error` : autoErrorId;
-  const showError = !!errorText;
+  const [open, setOpen] = useState(false);
+  const {
+    text, invalid, inputRef, commit, handleChange, emitir, limpiar,
+  } = useMonthPickerMxValor(value, onChange);
 
-  const parsed = useMemo(() => {
-    if (!value) return null;
-    const [y, m] = value.split("-").map(Number);
-    if (!y || !m) return null;
-    return { year: y, month: m };
-  }, [value]);
-
-  const [viewYear, setViewYear] = useState<number>(parsed?.year ?? new Date().getFullYear());
-
-  useEffect(() => {
-    if (parsed?.year) setViewYear(parsed.year);
-  }, [parsed?.year]);
-
-  const display = parsed ? `${MESES_ES[parsed.month - 1]} ${parsed.year}` : "";
-
-  const select = (monthIdx: number) => {
-    const mm = String(monthIdx + 1).padStart(2, "0");
-    onChange(`${viewYear}-${mm}`);
-  };
+  const showError = invalid || !!errorText;
 
   return (
     <div className={cn(pickerRootClass, className)}>
-      <Popover>
-        <PopoverTrigger asChild>
+      <div
+        role="group"
+        aria-label={title}
+        title={title ?? PICKER_AYUDA_TECLADO}
+        aria-disabled={disabled || undefined}
+        className={cn(pickerTriggerClass({ showError, disabled }))}
+      >
+        <input
+          ref={inputRef}
+          id={id}
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          value={text}
+          onChange={handleChange}
+          onFocus={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_PERIODO)}
+          onClick={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_PERIODO)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && open) {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpen(false);
+              return;
+            }
+            if (e.key === "F4" || (e.altKey && e.key === "ArrowDown")) {
+              e.preventDefault();
+              setOpen(!open);
+              return;
+            }
+            if (e.key === "Enter") {
+              commit(text);
+              if (text !== ymADisplay(value)) e.preventDefault();
+              return;
+            }
+            manejarAtajosSegmento(e, {
+              patron: PATRON_PERIODO,
+              modo: "periodo",
+              base: value,
+              aplicar: emitir,
+              inputRef,
+              disabled,
+            });
+          }}
+          onBlur={() => commit(text)}
+          placeholder="MM/AAAA"
+          disabled={disabled}
+          aria-label={id ? undefined : (title ?? placeholder)}
+          aria-invalid={showError || undefined}
+          aria-describedby={showError ? errorId : undefined}
+          maxLength={7}
+          className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+        />
+
+        {clearable && text && !disabled && (
           <button
             type="button"
-            id={id}
-            title={title}
-            disabled={disabled}
-            aria-invalid={showError || undefined}
-            aria-describedby={showError ? errorId : undefined}
-            className={cn(pickerTriggerClass({ showError, disabled, empty: !value }), "text-left")}
+            tabIndex={-1}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              limpiar();
+            }}
+            className={pickerClearClass}
+            aria-label="Limpiar periodo"
           >
-            <CalendarIcon className={pickerIconClass} />
-            <span className="flex-1 min-w-0 truncate">{display || placeholder}</span>
-            {clearable && value && !disabled && (
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onChange("");
-                }}
-                className={pickerClearClass}
-                aria-label="Limpiar periodo"
-              >
-                <X className={pickerClearIconClass} />
-              </span>
-            )}
+            <X className={pickerClearIconClass} />
           </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-64 p-3 pointer-events-auto" align="start">
-          <div className="flex items-center justify-between mb-2">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewYear((y) => y - 1)} aria-label="Año anterior">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <div className="text-sm font-medium">{viewYear}</div>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewYear((y) => y + 1)} aria-label="Año siguiente">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="grid grid-cols-3 gap-1">
-            {MESES_ES_SHORT.map((label, idx) => {
-              const isSelected = parsed?.year === viewYear && parsed?.month === idx + 1;
-              return (
-                <Button
-                  key={label}
-                  variant={isSelected ? "default" : "ghost"}
-                  size="sm"
-                  className="h-8 text-xs"
-                  onClick={() => select(idx)}
-                >
-                  {label}
-                </Button>
-              );
-            })}
-          </div>
-        </PopoverContent>
-      </Popover>
-      {showError && <span id={errorId} className={pickerErrorClass}>{errorText}</span>}
+        )}
+
+        <Popover
+          open={open}
+          onOpenChange={(o) => {
+            if (disabled) return;
+            setOpen(o);
+            if (!o) inputRef.current?.focus();
+          }}
+        >
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              tabIndex={-1}
+              disabled={disabled}
+              aria-label="Abrir selector de mes"
+              title="Abrir selector de mes (Alt + Flecha abajo)"
+              className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+            >
+              <CalendarIcon className={pickerIconClass} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3 pointer-events-auto" align="start">
+            <MonthPickerMxPanel
+              value={value}
+              onSelect={(ym) => {
+                emitir(ym);
+                setOpen(false);
+                inputRef.current?.focus();
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      {showError && (
+        <span id={errorId} className={pickerErrorClass}>
+          {errorText ?? "Periodo inválido. Usa MM/AAAA."}
+        </span>
+      )}
     </div>
   );
 }
