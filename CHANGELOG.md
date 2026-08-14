@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.620.0] - 2026-08-14
+- Bug corregido en captura desde el buzón CxP: la categoría contable no siempre quedaba en "Costo directo de embarque" (COGS). El candado se aplicaba una sola vez y la autocarga del CFDI/PDF reescribía el formulario con la categoría sugerida por la IA (o vacía), pisándolo.
+- `useCategoriaCogsBuzon` ahora reconcilia de forma continua: mientras el contador no use "Cambiar categoría", cualquier reescritura del sistema vuelve a fijar COGS y el selector se mantiene bloqueado.
+
+
 ## [13.619.0] - 2026-08-14
 - Buzón de facturas de proveedor: cada fila muestra el operador dueño del embarque (`· Op. Valeria Zamora`, derivado del correo con `nombreDesdeEmail`; correo completo en el tooltip) y "Op. sin asignar" cuando el embarque no tiene operador.
 - `SELECT_COLS_ENTRANTES` trae `embarques.operador` y la búsqueda del buzón (`coincideBusquedaEntrante`) ya encuentra por operador, tanto por correo como por nombre.
