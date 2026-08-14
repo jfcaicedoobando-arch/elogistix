@@ -4,7 +4,7 @@ import { getErrorMessage, translateLcCode, stripLcCode } from "@/lib/errors";
 describe("lcCodes", () => {
   it("traduce códigos LC_ conocidos", () => {
     expect(translateLcCode("LC_TRANSICION_INVALIDA: estado x")).toMatch(/otra sesión/);
-    expect(translateLcCode("PGRST: LC_CXP_DESCUADRE detalle")).toMatch(/no cuadran/);
+    expect(translateLcCode("PGRST: LC_CXP_DESCUADRE detalle")).toMatch(/no suman el subtotal/);
     expect(translateLcCode("LC_NO_EXISTE_XYZ")).toBeNull();
   });
 
