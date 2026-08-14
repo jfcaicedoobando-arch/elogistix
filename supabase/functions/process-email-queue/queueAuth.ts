@@ -3,6 +3,7 @@
  * Extraído del index.ts para reducir complejidad ciclomática.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+import { timingSafeEqual } from '../_shared/timingSafe.ts'
 
 declare const Deno: { env: { get(key: string): string | undefined } }
 
@@ -17,15 +18,6 @@ export interface QueueConfig {
   sendDelayMs: number
   ttlMinutes: Record<string, number>
   rateLimited: boolean
-}
-
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  }
-  return diff === 0
 }
 
 async function verifyServiceRoleToken(token: string, supabaseUrl: string): Promise<boolean> {

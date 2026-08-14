@@ -6,6 +6,7 @@ import { corsHeaders } from "../_shared/cors.ts"
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 import { parseRequest, corsResponse } from './validation.ts'
 import { getOrCreateUnsubscribeToken } from './unsubscribeToken.ts'
+import { timingSafeEqual } from '../_shared/timingSafe.ts'
 
 const SITE_NAME = "elogistix"
 const SENDER_DOMAIN = "notify.librecarga.com"
@@ -37,7 +38,8 @@ async function verifyServiceRoleOrFail(req: Request, env: EnvVars): Promise<Resp
   // Server-to-server only: compara directamente contra SUPABASE_SERVICE_ROLE_KEY.
   // Más estricto que validar `claims.role === 'service_role'` y evita fallas de
   // `getClaims()` cuando el JWT del service role no se puede verificar localmente.
-  if (token !== env.supabaseServiceKey) {
+  // R4EF-05: comparación constante en tiempo (patrón queueAuth.ts); antes `!==`.
+  if (!timingSafeEqual(token, env.supabaseServiceKey)) {
     return corsResponse({ error: 'Forbidden' }, 403)
   }
   return null

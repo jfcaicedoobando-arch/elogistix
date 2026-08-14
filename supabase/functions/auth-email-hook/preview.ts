@@ -5,6 +5,8 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { EMAIL_TEMPLATES, SITE_NAME } from './templates.ts'
+// REF-04/R4EF-05: comparación constante en tiempo, fuente única en _shared.
+import { timingSafeEqual } from '../_shared/timingSafe.ts'
 
 // Datos de muestra usados SÓLO en preview (nunca en envíos reales).
 // El correo de muestra usa un placeholder fijo (TLD .test, RFC 6761) para que
@@ -54,16 +56,6 @@ function previewJson(body: unknown, status: number): Response {
     status,
     headers: { ...previewCorsHeaders, 'Content-Type': 'application/json' },
   })
-}
-
-/** REF-04: comparación constante en tiempo (patrón process-email-queue/queueAuth.ts). */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  }
-  return diff === 0
 }
 
 export async function handlePreview(req: Request): Promise<Response> {

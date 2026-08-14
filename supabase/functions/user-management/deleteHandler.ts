@@ -4,6 +4,7 @@
  */
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
+import { mensajeSeguro } from "./errores.ts";
 
 export async function handleDelete(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
   const { cors, log, callerId, adminClient, body } = ctx;
@@ -60,7 +61,14 @@ export async function handleDelete(ctx: HandlerCtx, admin: AdminAccess): Promise
       user_id: callerId,
       payload: { target_user_id: user_id, error: deleteError.message },
     });
-    return errorResponse(deleteError.message, 400, cors);
+    return errorResponse(
+      mensajeSeguro(
+        deleteError.message,
+        "LC_USUARIO_BAJA_FALLIDA: No se pudo eliminar la cuenta en el proveedor de identidad.",
+      ),
+      400,
+      cors,
+    );
   }
 
   log.finish(200, "user_deleted", {
