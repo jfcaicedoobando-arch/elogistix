@@ -7947,6 +7947,16 @@ export type Database = {
         }
         Returns: number
       }
+      a_mxn_doc: {
+        Args: {
+          _fecha: string
+          _moneda: string
+          _monto: number
+          _tc_documento?: number
+          _tc_embarque?: number
+        }
+        Returns: number
+      }
       abrir_caso_refacturacion: {
         Args: {
           p_cliente_destino_id: string
@@ -8268,6 +8278,13 @@ export type Database = {
         Returns: {
           organization_id: string
           proformas_actualizadas: number
+        }[]
+      }
+      backfill_tc_dof_documentos: {
+        Args: { _simulacion?: boolean }
+        Returns: {
+          actualizados: number
+          tabla: string
         }[]
       }
       buscar_factura_proveedor_por_uuid: {
@@ -10025,6 +10042,15 @@ export type Database = {
           score: number
         }[]
       }
+      tc_dof_cobertura_faltante: {
+        Args: never
+        Returns: {
+          documento_id: string
+          fecha: string
+          moneda: string
+          tabla: string
+        }[]
+      }
       tc_dof_upsert_manual: {
         Args: { _eur?: number; _fecha: string; _usd: number }
         Returns: undefined
@@ -10037,6 +10063,18 @@ export type Database = {
           fuente: string
           origen: string
           usd_mxn: number
+        }[]
+      }
+      tc_para_documento: {
+        Args: {
+          _fecha: string
+          _moneda: string
+          _tc_documento?: number
+          _tc_embarque?: number
+        }
+        Returns: {
+          origen: string
+          tc: number
         }[]
       }
       transicion_embarque_valida: {
