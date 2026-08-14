@@ -40,6 +40,12 @@ export const LC_CODE_MESSAGES_REFACTURACION: Record<string, string> = {
   LC_REFACT_SIN_FACTURA_NUEVA: "Todavía no se ha generado la nueva factura del caso.",
   LC_REFACT_NUEVA_NO_TIMBRADA:
     "La nueva factura aún está en borrador o cancelada: tímbrala antes de continuar.",
+  LC_REFACT_REP_EN_VERIFICACION:
+    "La cancelación del complemento de pago (REP) está en verificación con el SAT: puedes continuar mientras responde.",
+  LC_REFACT_ORIGINAL_EN_VERIFICACION:
+    "La cancelación del CFDI original está en verificación con el SAT: puedes continuar mientras responde.",
+  LC_REFACT_ORIGINAL_CANCELACION_RECHAZADA:
+    "El SAT no aceptó (o dejó expirar) la cancelación del CFDI original: vuelve a solicitarla.",
   LC_REFACT_ORIGINAL_YA_CANCELADA:
     "La factura original ya está cancelada o sustituida: esta etapa ya quedó cubierta.",
   LC_REFACT_ORDENANTE_REQUERIDO:

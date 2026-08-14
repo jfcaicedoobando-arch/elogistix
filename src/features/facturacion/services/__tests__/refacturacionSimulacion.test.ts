@@ -64,4 +64,26 @@ describe("simularPasoRefacturacion", () => {
     const sim = await simularPasoRefacturacion("caso-1", 4);
     expect(sim.bloqueos).toContain("LC_REFACT_REP_VIVO");
   });
+
+  it("separa los trámites en verificación del SAT de los bloqueos reales", async () => {
+    rpc.mockResolvedValue({
+      data: {
+        bloqueos: [],
+        pendientes: ["LC_REFACT_REP_EN_VERIFICACION", "LC_REFACT_ORIGINAL_EN_VERIFICACION"],
+        saldos: [],
+      },
+      error: null,
+    });
+    const sim = await simularPasoRefacturacion("caso-1", 4);
+    expect(sim.bloqueos).toEqual([]);
+    expect(sim.pendientes).toContain("LC_REFACT_REP_EN_VERIFICACION");
+    expect(sim.pendientes).toContain("LC_REFACT_ORIGINAL_EN_VERIFICACION");
+  });
+
+  it("tolera respuestas antiguas sin la lista de pendientes", async () => {
+    rpc.mockResolvedValue({ data: { bloqueos: ["LC_REFACT_REP_VIVO"], saldos: [] }, error: null });
+    const sim = await simularPasoRefacturacion("caso-1", 2);
+    expect(sim.pendientes).toEqual([]);
+  });
 });
+
