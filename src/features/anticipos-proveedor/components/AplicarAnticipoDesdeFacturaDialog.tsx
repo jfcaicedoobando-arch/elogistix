@@ -49,7 +49,7 @@ export function AplicarAnticipoDesdeFacturaDialog({
 }: Props) {
 
   const saldoFactura = importes.saldo;
-  const monedaFactura = importes.moneda;
+  
   const aplicar = useAplicarAnticipo();
   // Los anticipos del mismo expediente se ofrecen primero (cruce natural).
   const anticiposOrdenados = useMemo(
