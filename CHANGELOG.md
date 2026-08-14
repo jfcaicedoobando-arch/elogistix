@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.596.0] - 2026-08-14
+- **Ola 13 · Sprint 02 (pulido UX/frontend, 5 ítems P3).**
+- R4UX-01: «Saldo inicial» del estado de cuenta de proveedor usa `formatDate` (dd/MM/yyyy) en lugar de la fecha ISO cruda, igual que la exportación CSV/PDF.
+- R4UX-02: «Moneda mixta» se registra en el dominio `conciliacion_costo` y en `statusExtras` con tono warning (antes caía al fallback muted).
+- R4UX-03: el botón de `NuevoUsuarioDialog` usa la prop `loading` del Button del DS (disabled + `aria-busy` + spinner) en vez del spinner manual.
+- R4UX-04: `traducirMensajeEdge` ya no muestra el texto en inglés del proveedor de identidad; envuelve el motivo con copy en español y lo registra en consola.
+- R4FE-01: una respuesta 2xx con `body.error` también pasa por la traducción es-MX al crear usuarios.
+
 ## [13.595.1] - 2026-08-14
 - **Revisión de errores de Sentry (4 issues abiertos).**
 - JAVASCRIPT-REACT-5A: "La factura tiene una solicitud de cancelación pendiente" se marca como validación esperada de FacturApi (`expected: true`) y deja de reportarse a Sentry; el aviso sigue visible al usuario.
