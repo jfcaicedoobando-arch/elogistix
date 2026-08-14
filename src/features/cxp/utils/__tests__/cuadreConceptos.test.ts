@@ -1,5 +1,33 @@
 import { describe, it, expect } from "vitest";
-import { calcularCuadreConceptos, sumarConceptos, totalLinea } from "../cuadreConceptos";
+import {
+  calcularCuadreConceptos,
+  sumarConceptos,
+  totalLinea,
+  toleranciaCuadre,
+} from "../cuadreConceptos";
+
+describe("toleranciaCuadre", () => {
+  it("es 1 centavo con cantidades unitarias", () => {
+    expect(toleranciaCuadre([{ monto: 100 }])).toBeCloseTo(0.01, 4);
+  });
+
+  it("crece medio centavo por unidad", () => {
+    expect(toleranciaCuadre([{ monto: 17.38, cantidad: 51 }])).toBeCloseTo(0.255, 4);
+  });
+
+  it("caso real FP-000140: 51 × 17.38 cuadra con subtotal 886.34", () => {
+    const r = calcularCuadreConceptos(886.34, [{ monto: 17.38, cantidad: 51 }]);
+    expect(r.estado).toBe("cuadrado");
+    expect(r.puedeAprobar).toBe(true);
+  });
+
+  it("sigue bloqueando errores reales de captura con cantidades altas", () => {
+    const r = calcularCuadreConceptos(886.34, [{ monto: 20, cantidad: 51 }]);
+    expect(r.estado).toBe("sobrante");
+    expect(r.puedeAprobar).toBe(false);
+  });
+});
+
 
 describe("cuadreConceptos", () => {
   it("marca sin_conceptos cuando la lista está vacía", () => {
