@@ -6,6 +6,7 @@ import { PreviaFacturaEntranteSheet } from "./PreviaFacturaEntranteSheet";
 import { MarcarCapturadaDialog } from "./MarcarCapturadaDialog";
 import { RechazarFacturaEntranteDialog } from "./RechazarFacturaEntranteDialog";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp";
+import { CorregirDatosEntranteDialog } from "@/features/embarques/components/entrantes/CorregirDatosEntranteDialog";
 import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
 
@@ -31,12 +32,16 @@ interface Props {
   onConfirmarRechazo: (motivo: string) => Promise<void>;
   entranteCaptura: EntranteParaCaptura | null;
   onCerrarCaptura: () => void;
+  /** v13.618.0 — Documento en corrección (importe faltante, proveedor, conceptos). */
+  aCorregir?: FacturaEntranteRow | null;
+  onCerrarCorregir?: () => void;
 }
 
 export function BuzonEntrantesModales({
   puedeProcesar, acciones, enPrevia, onCerrarPrevia, aCapturar, onCerrarCapturar,
   capturarPendiente, onConfirmarCapturada, aRechazar, onCerrarRechazar,
   rechazarPendiente, onConfirmarRechazo, entranteCaptura, onCerrarCaptura,
+  aCorregir = null, onCerrarCorregir,
 }: Props) {
   return (
     <>
@@ -72,6 +77,11 @@ export function BuzonEntrantesModales({
         onOpenChange={(v) => { if (!v) onCerrarRechazar(); }}
         pendiente={rechazarPendiente}
         onConfirm={onConfirmarRechazo}
+      />
+
+      <CorregirDatosEntranteDialog
+        row={aCorregir}
+        onOpenChange={(v) => { if (!v) onCerrarCorregir?.(); }}
       />
     </>
   );

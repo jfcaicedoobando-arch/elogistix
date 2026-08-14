@@ -44,6 +44,7 @@ export default function CxpBuzonEntrantes() {
   const [aRechazar, setARechazar] = useState<FacturaEntranteRow | null>(null);
   const [aCapturar, setACapturar] = useState<FacturaEntranteRow | null>(null);
   const [enPrevia, setEnPrevia] = useState<FacturaEntranteRow | null>(null);
+  const [aCorregir, setACorregir] = useState<FacturaEntranteRow | null>(null);
   const captura = useCapturaDesdeBuzon();
   const { q, setQ, chip, setChip, orden, setOrden, resumen, filtradas } =
     useBuzonEntrantesFiltros(pendientes);
@@ -68,6 +69,7 @@ export default function CxpBuzonEntrantes() {
     onCapturar: (row: FacturaEntranteRow) => { setEnPrevia(null); setACapturar(row); },
     onCrearFactura: (row: FacturaEntranteRow) => { setEnPrevia(null); void captura.iniciar(row); },
     onRechazar: (row: FacturaEntranteRow) => { setEnPrevia(null); setARechazar(row); },
+    onCorregir: (row: FacturaEntranteRow) => { setEnPrevia(null); setACorregir(row); },
   };
 
   return (
@@ -174,6 +176,8 @@ export default function CxpBuzonEntrantes() {
         }}
         entranteCaptura={captura.entrante}
         onCerrarCaptura={captura.cerrar}
+        aCorregir={aCorregir}
+        onCerrarCorregir={() => setACorregir(null)}
       />
 
       </CargaGuard>

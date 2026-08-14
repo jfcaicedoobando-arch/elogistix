@@ -6,6 +6,7 @@
  * bloqueo: el documento siempre se puede enviar al buzón.
  */
 import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import {
@@ -35,6 +36,9 @@ interface Props {
   costeadoPorMoneda: Readonly<Record<string, number>> | null | undefined;
   cargandoCostos: boolean;
   proveedorElegido: boolean;
+  /** v13.618.0 — Suma de los conceptos marcados en la moneda actual. */
+  sumaSugerida?: number | null;
+  onUsarSumaSugerida?: () => void;
 }
 
 function Aviso({
@@ -104,14 +108,18 @@ function MensajeCotejo({ monto, moneda, costeadoPorMoneda, cargandoCostos, prove
 }
 
 export function VerificacionMontoEntrante(props: Props) {
-  const { monto, moneda, onMonto, onMoneda, totalCfdi } = props;
+  const { monto, moneda, onMonto, onMoneda, totalCfdi, sumaSugerida, onUsarSumaSugerida } = props;
   const difiereCfdi = montoDifiereDelCfdi(monto, totalCfdi);
+  const falta = monto == null || monto <= 0;
+  const puedeCopiarSuma = Boolean(onUsarSumaSugerida && sumaSugerida && sumaSugerida > 0);
 
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
         <div className="space-y-1.5">
-          <Label htmlFor="entrante-monto">Monto de la factura</Label>
+          <Label htmlFor="entrante-monto">
+            Monto de la factura <span className="text-destructive">*</span>
+          </Label>
           <MoneyInput
             id="entrante-monto"
             value={monto}
@@ -134,6 +142,24 @@ export function VerificacionMontoEntrante(props: Props) {
           </Select>
         </div>
       </div>
+      {falta && (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs text-destructive">
+            Captura el importe: sin él contabilidad no puede priorizar ni cotejar el documento.
+          </p>
+          {puedeCopiarSuma && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={onUsarSumaSugerida}
+            >
+              Usar la suma de lo marcado ({formatCurrency(sumaSugerida ?? 0, moneda)})
+            </Button>
+          )}
+        </div>
+      )}
       {totalCfdi != null && !difiereCfdi && (
         <p className="text-xs text-muted-foreground">Leído del CFDI; puedes ajustarlo si hace falta.</p>
       )}

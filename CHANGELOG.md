@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.618.0] - 2026-08-14
+- Buzón CxP: las facturas sin XML (debit notes extranjeras) aparecían "sin importe" porque el buzón sólo leía `total_detectado` del CFDI e ignoraba el `monto_declarado` que captura operaciones. `importeEntrante()` ahora resuelve la cascada CFDI > declarado y la fila muestra el origen.
+- El importe declarado es obligatorio para enviar al buzón (y al corregir): `useSubirEntranteForm` / `useCorregirEntranteForm` ya no habilitan el envío sin monto > 0.
+- Nuevo atajo "Usar la suma de lo marcado" en `VerificacionMontoEntrante` para copiar la suma de los conceptos de costo seleccionados en la moneda elegida.
+- Rezago actual: los documentos sin importe muestran chip ámbar con acción "Agregar importe" que abre `CorregirDatosEntranteDialog` directamente desde `/compras/buzon`.
+
 ## [13.617.0] - 2026-08-14
 - Fix `LC_CXP_DESCUADRE` (caso FP-000140, AGUNSA L&D): con cantidades altas el precio unitario redondeado a 2 decimales (51 × 17.38 = 886.38 vs subtotal 886.34) rompía el cuadre y bloqueaba la aprobación por 4 centavos.
 - `public._cxp_validar_aprobacion` ahora usa tolerancia `max(0.01, 0.005 × unidades)` en vez de un centavo fijo, y el mensaje del error incluye la tolerancia aplicada. Espejo en `supabase/schema/cxp/_cxp_validar_aprobacion.sql`.

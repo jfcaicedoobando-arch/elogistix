@@ -109,6 +109,10 @@ export function CorregirDatosEntranteDialog({ row, onOpenChange }: Props) {
           costeadoPorMoneda={costos.data}
           cargandoCostos={costos.isLoading}
           proveedorElegido={Boolean(form.proveedor)}
+          sumaSugerida={form.conceptosSeleccionados
+            .filter((c) => c.moneda === form.monedaDeclarada)
+            .reduce((acc, c) => acc + c.monto, 0)}
+          onUsarSumaSugerida={form.usarSumaSugerida}
         />
       </FormDialogSection>
 
