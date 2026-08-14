@@ -1,3 +1,5 @@
+import { describe, it, expect } from "vitest";
+import { accionesCotizacionPermitidas } from "../cotizacion.acciones";
 
 describe("accionesCotizacionPermitidas — cliente de casa (v13.624.0)", () => {
   it("permite aceptar desde Borrador cuando el cliente no requiere autorización", () => {
