@@ -150,12 +150,23 @@ export function useSubirEntranteForm({ organizationId }: Args) {
     return totales;
   }, [conceptosSeleccionados]);
 
+  /**
+   * v13.618.0 — Documentos sin XML (debit notes extranjeras) llegaban sin
+   * importe; un clic copia la suma de los conceptos marcados en esa moneda.
+   */
+  const usarSumaSugerida = useCallback(() => {
+    const suma = sumaSugeridaPorMoneda[monedaDeclarada];
+    if (suma && suma > 0) setMontoDeclarado(Number(suma.toFixed(2)));
+  }, [sumaSugeridaPorMoneda, monedaDeclarada]);
+
   const metaUtil = useMemo(() => (meta ? metaCfdiUtil(meta) : false), [meta]);
   // Exige proveedor: un documento sin dueño obliga a contabilidad a adivinar.
   // Exige además decir a qué costo corresponde (o declarar que no corresponde).
+  // v13.618.0 — Sin importe el documento llega ciego a contabilidad: obligatorio.
   const listo = Boolean(
     (pdf || xml)
     && proveedor
+    && montoDeclarado != null && montoDeclarado > 0
     && !leyendoXml
     && !validarParejaEntrante({ pdf, xml })
     && (conceptosSeleccionados.length > 0 || sinCostoCapturado),
@@ -166,7 +177,7 @@ export function useSubirEntranteForm({ organizationId }: Args) {
     montoDeclarado, monedaDeclarada,
     conceptos, conceptosSeleccionados, sumaSugeridaPorMoneda, sinCostoCapturado,
     setProveedor: elegirProveedor, setNota, setError, setMontoDeclarado, setMonedaDeclarada,
-    toggleConcepto, setMontoConcepto, marcarSinCosto,
+    toggleConcepto, setMontoConcepto, marcarSinCosto, usarSumaSugerida,
     agregarArchivos, quitarPdf, quitarXml, limpiar,
   };
 }

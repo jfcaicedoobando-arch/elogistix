@@ -84,12 +84,24 @@ export function useCorregirEntranteForm(row: FacturaEntranteRow | null) {
     [conceptos],
   );
 
-  const listo = Boolean(proveedor && (conceptosSeleccionados.length > 0 || sinCostoCapturado));
+  const usarSumaSugerida = useCallback(() => {
+    const suma = conceptosSeleccionados
+      .filter((c) => c.moneda === monedaDeclarada)
+      .reduce((acc, c) => acc + c.monto, 0);
+    if (suma > 0) setMontoDeclarado(Number(suma.toFixed(2)));
+  }, [conceptosSeleccionados, monedaDeclarada]);
+
+  // v13.618.0 — El importe declarado es obligatorio también al corregir.
+  const listo = Boolean(
+    proveedor
+    && montoDeclarado != null && montoDeclarado > 0
+    && (conceptosSeleccionados.length > 0 || sinCostoCapturado),
+  );
 
   return {
     proveedor, montoDeclarado, monedaDeclarada, nota, sinCostoCapturado,
     conceptos, conceptosSeleccionados, listo,
     setProveedor: elegirProveedor, setMontoDeclarado, setMonedaDeclarada, setNota,
-    toggleConcepto, setMontoConcepto, marcarSinCosto,
+    toggleConcepto, setMontoConcepto, marcarSinCosto, usarSumaSugerida,
   };
 }
