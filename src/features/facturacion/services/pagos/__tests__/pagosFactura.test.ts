@@ -20,6 +20,8 @@ import {
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+  mock.resetResults();
   mock.getUser.mockReset();
   mock.getUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
 });
@@ -88,18 +90,17 @@ describe("services/pagos-factura", () => {
     await expect(registrarPagoFactura(INPUT as never)).rejects.toThrow();
   });
 
-  it("eliminarPagoFactura hace soft delete con deleted_by", async () => {
+  it("eliminarPagoFactura delega en la RPC atómica", async () => {
     mock.setTableResult("pagos_factura", { data: { id: "p1", uuid_rep: null, rep_cancelado_en: null }, error: null });
-    await eliminarPagoFactura("p1");
-    const updateCall = mock.tableCalls.find((c) => c.ops.includes("update"));
-    expect(updateCall).toBeDefined();
-    const payload = updateCall!.opArgs[updateCall!.ops.indexOf("update")]?.[0] as Record<string, unknown>;
-    expect(payload.deleted_by).toBe("user-1");
-    expect(typeof payload.deleted_at).toBe("string");
+    mock.setRpcResult("eliminar_pago_cliente", { data: { movimientos_baja: 1 }, error: null });
+    const r = await eliminarPagoFactura("p1");
+    expect(r.movimientosBaja).toBe(1);
+    expect(mock.rpcCalls.some((c) => c.fn === "eliminar_pago_cliente")).toBe(true);
   });
 
   it("eliminarPagoFactura propaga error", async () => {
     mock.setTableResult("pagos_factura", { data: null, error: { message: "x" } });
+    mock.setRpcResult("eliminar_pago_cliente", { data: null, error: { message: "x" } });
     await expect(eliminarPagoFactura("p1")).rejects.toThrow();
   });
 });

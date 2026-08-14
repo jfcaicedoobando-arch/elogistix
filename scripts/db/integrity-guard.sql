@@ -148,5 +148,28 @@ from (
 ) c
 where c.tablas_soft > c.filtros
 
+union all
+
+-- 6) Ola 15: movimiento bancario vivo apuntando a un pago ya eliminado. La RPC
+--    `eliminar_pago_cliente` / `eliminar_pago_proveedor` da de baja el
+--    movimiento generado por el sistema o lo desvincula (deja el FK en NULL y
+--    el estado en 'Pendiente'). Si aparece un renglón aquí, algo escribió
+--    fuera de esas RPCs y el banco quedó descuadrado.
+select 'movimiento_vivo_con_pago_eliminado',
+       m.id::text,
+       format('movimiento %s sigue vivo pero su pago (%s) está eliminado', m.id, coalesce(m.pago_factura_id, m.pago_proveedor_id))
+from public.bbva_movimientos m
+where m.deleted_at is null
+  and (
+    exists (
+      select 1 from public.pagos_factura pf
+      where pf.id = m.pago_factura_id and pf.deleted_at is not null
+    )
+    or exists (
+      select 1 from public.pagos_proveedor pp
+      where pp.id = m.pago_proveedor_id and pp.deleted_at is not null
+    )
+  )
+
 order by 1, 2;
 

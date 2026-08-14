@@ -5,12 +5,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import {
-  crearMovimientoBancarioPago,
-  eliminarMovimientoBancarioPago,
-} from "./pagoProveedorMovimiento";
+import { crearMovimientoBancarioPago } from "./pagoProveedorMovimiento";
 import { avisarMovimientoNoCreado } from "./pagoProveedorMovimientoAviso";
-import { detallesPagoRegistrado, detallesPagoEliminado } from "./pagoProveedorBitacora";
+import { detallesPagoRegistrado } from "./pagoProveedorBitacora";
 import type {
   PagoProveedor,
   PagoProveedorConMov,
@@ -161,23 +158,41 @@ export async function registrarPagoProveedor(
   return data as PagoProveedor;
 }
 
-export async function eliminarPagoProveedor(id: string, facturaId: string, userId: string | null) {
-  const { error } = await supabase
-    .from("pagos_proveedor")
-    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-    .eq("id", id);
-  if (error) throw error;
-  // R6-N1: el movimiento bancario vinculado se da de baja con el pago.
-  await eliminarMovimientoBancarioPago(id, userId);
-  await recalcularEstadoFactura(facturaId);
-
-  await registrarActividad({
-    modulo: "cxp",
-    accion: "eliminar_pago",
-    entidadId: facturaId,
-    detalles: detallesPagoEliminado(id, userId),
-  });
+/** Resultado de la baja atómica de un pago a proveedor. */
+export interface EliminarPagoProveedorResult {
+  movimientosBaja: number;
+  movimientosDesvinculados: number;
+  costosRecalculados: number;
+  yaEliminado: boolean;
 }
+
+/**
+ * Ola 15: baja del pago + movimiento bancario + recálculo de costos + bitácora
+ * en una sola transacción (`eliminar_pago_proveedor`). Los movimientos que
+ * vinieron del estado de cuenta importado no se borran: se desvinculan y
+ * regresan a "Pendiente" de conciliación.
+ */
+export async function eliminarPagoProveedor(
+  id: string,
+  _facturaId: string,
+  _userId: string | null,
+): Promise<EliminarPagoProveedorResult> {
+  const { data, error } = await supabase.rpc("eliminar_pago_proveedor", { _pago_id: id });
+  if (error) throw error;
+  const res = (data ?? {}) as {
+    movimientos_baja?: number;
+    movimientos_desvinculados?: number;
+    costos_recalculados?: number;
+    ya_eliminado?: boolean;
+  };
+  return {
+    movimientosBaja: res.movimientos_baja ?? 0,
+    movimientosDesvinculados: res.movimientos_desvinculados ?? 0,
+    costosRecalculados: res.costos_recalculados ?? 0,
+    yaEliminado: res.ya_eliminado === true,
+  };
+}
+
 
 /**
  * Fase N (v13.301.85): el recálculo del estado de la factura vive en un

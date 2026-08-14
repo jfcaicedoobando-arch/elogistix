@@ -23,7 +23,11 @@ const validInput = {
   forma_pago: "transferencia",
 };
 
-beforeEach(() => { mock.tableCalls.length = 0; });
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+  mock.resetResults();
+});
 
 describe("listarPagosFactura", () => {
   it("devuelve arreglo de pagos", async () => {
@@ -58,36 +62,55 @@ describe("registrarPagoFactura", () => {
 });
 
 describe("eliminarPagoFactura", () => {
-  it("hace soft-delete (update deleted_at) cuando no hay REP vivo", async () => {
+  it("Ola 15 · llama la RPC atómica y devuelve el resumen del banco", async () => {
     mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: null, rep_cancelado_en: null }, error: null });
-    await expect(eliminarPagoFactura("p-1")).resolves.toBeUndefined();
-    const ops = mock.tableCalls.flatMap((c) => c.ops);
-    expect(ops).toContain("update");
+    mock.setRpcResult("eliminar_pago_cliente", {
+      data: { movimientos_baja: 1, movimientos_desvinculados: 0, ya_eliminado: false },
+      error: null,
+    });
+    await expect(eliminarPagoFactura("p-1")).resolves.toEqual({
+      movimientosBaja: 1,
+      movimientosDesvinculados: 0,
+      yaEliminado: false,
+    });
+    expect(mock.rpcCalls.at(-1)).toEqual({ fn: "eliminar_pago_cliente", args: { _pago_id: "p-1" } });
+    // Ya no hay UPDATE directo desde el cliente: todo ocurre en la RPC.
+    const updates = mock.tableCalls.filter((c) => c.ops.includes("update"));
+    expect(updates).toHaveLength(0);
+  });
+
+  it("reporta el movimiento importado que quedó desvinculado", async () => {
+    mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: null, rep_cancelado_en: null }, error: null });
+    mock.setRpcResult("eliminar_pago_cliente", {
+      data: { movimientos_baja: 0, movimientos_desvinculados: 1, ya_eliminado: false },
+      error: null,
+    });
+    await expect(eliminarPagoFactura("p-1")).resolves.toMatchObject({ movimientosDesvinculados: 1 });
   });
 
   it("permite eliminar cuando el REP existe pero ya está cancelado", async () => {
     mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: "uuid-abc", rep_cancelado_en: "2026-01-01" }, error: null });
-    await expect(eliminarPagoFactura("p-1")).resolves.toBeUndefined();
+    mock.setRpcResult("eliminar_pago_cliente", { data: { movimientos_baja: 0 }, error: null });
+    await expect(eliminarPagoFactura("p-1")).resolves.toMatchObject({ yaEliminado: false });
   });
 
   it("R.5 · Bug 8 — bloquea eliminar cuando hay REP vivo (uuid_rep + rep_cancelado_en NULL)", async () => {
     mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: "uuid-abc", rep_cancelado_en: null }, error: null });
     await expect(eliminarPagoFactura("p-1")).rejects.toBeInstanceOf(PagoConRepVivoError);
-    // Verificamos que ni siquiera se intentó el update.
-    const updates = mock.tableCalls.filter((c) => c.ops.includes("update"));
-    expect(updates).toHaveLength(0);
+    // Verificamos que ni siquiera se intentó la RPC.
+    expect(mock.rpcCalls.filter((c) => c.fn === "eliminar_pago_cliente")).toHaveLength(0);
   });
 
-  it("R.5 · Bug 8 — mapea LC_PAGO_CON_REP_VIVO del trigger a PagoConRepVivoError", async () => {
-    // El SELECT devuelve error (data null), la defensa temprana lo ignora y
-    // procede al UPDATE, que también recibe el mismo error del trigger; el
-    // catch en el service debe traducirlo al error tipado.
-    mock.setTableResult("pagos_factura", { data: null, error: { message: "LC_PAGO_CON_REP_VIVO: no permitido" } });
+  it("R.5 · Bug 8 — mapea LC_PAGO_CON_REP_VIVO de la RPC a PagoConRepVivoError", async () => {
+    mock.setTableResult("pagos_factura", { data: null, error: { message: "sin datos" } });
+    mock.setRpcResult("eliminar_pago_cliente", { data: null, error: { message: "LC_PAGO_CON_REP_VIVO: no permitido" } });
     await expect(eliminarPagoFactura("p-1")).rejects.toBeInstanceOf(PagoConRepVivoError);
   });
 
   it("propaga errores genéricos de supabase al eliminar", async () => {
     mock.setTableResult("pagos_factura", { data: null, error: { message: "rls" } });
+    mock.setRpcResult("eliminar_pago_cliente", { data: null, error: { message: "rls" } });
     await expect(eliminarPagoFactura("p-1")).rejects.toThrow();
   });
 });
+
