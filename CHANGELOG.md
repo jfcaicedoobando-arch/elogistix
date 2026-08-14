@@ -1,6 +1,14 @@
 # Changelog
 
+## [13.599.0] - 2026-08-14
+- **Ola 13 · Sprint 05 (matriz de roles en expediente de cliente y contactos de proveedor).**
+- R4BD-04: las escrituras y borrados de `cliente_documentos`, `proveedor_contactos` y de la carpeta `clientes/` del bucket `documentos` ahora exigen la matriz `admin`/`admin_org`/`operador`/`contador`/`super_admin` (antes bastaba pertenecer a la organización). Lectura sin cambios: org-scoped, bypass `super_admin` y `deleted_at IS NULL` intactos.
+- Nueva suite `supabase/tests/rls/test_rls_expediente_cliente.sql` registrada en el grupo `operaciones` de `rls-tests.yml`.
+- UI alineada con la BD: nuevo `EXPEDIENTE_ESCRITURA` / `canEditExpediente`; las pestañas de documentos de cliente/proveedor y contactos de proveedor sólo muestran acciones de escritura a los roles que la BD permite (antes se mostraban botones que hubieran fallado con error de permisos).
+
+
 ## [13.598.0] - 2026-08-14
+
 - **Ola 13 · Sprint 04 (cobertura de ramas Ola 12 y menores de BD).**
 - R4EF-06: 5 suites Deno nuevas (22 casos) que cubren el marcado `verifying` de la rama 504 en cancelación de facturas, REP y notas de crédito; el dedupe fail-closed y stale-pending de `auth-email-hook` (primer test de la función); y la clasificación `error_timeout`/`error_network` del acuse con `AbortSignal`.
 - R4BD-05: `proveedor_estado_cuenta_movimientos` cuenta `p_offset` desde el final de la lista, así ya se pueden ver los movimientos más antiguos (antes cualquier `p_offset > 0` devolvía página vacía). Con `p_offset = 0` el resultado es idéntico al anterior.

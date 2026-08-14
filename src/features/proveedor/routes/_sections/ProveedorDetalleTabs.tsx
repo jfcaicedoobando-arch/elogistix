@@ -7,6 +7,7 @@ import { ProveedorSaludTab } from "../../components/ProveedorSaludTab";
 import { ProveedorEstadoCuentaTab } from "../../components/ProveedorEstadoCuentaTab";
 import { ProveedorDocumentosTab } from "../../components/ProveedorDocumentosTab";
 import { ProveedorContactosCard } from "../../components/ProveedorContactosCard";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import type { PartidaEstadoCuenta } from "@/features/proveedor/domain/estadoCuentaProveedor";
 
 interface Props {
@@ -15,7 +16,6 @@ interface Props {
   nombreFmt: string;
   rfc?: string | null;
   esNacional: boolean;
-  canEdit: boolean;
   partidas: PartidaEstadoCuenta[];
   partidasPendientes: number;
   /** R3FE-05: un fallo de `proveedor_estado_cuenta` no debe verse como "0". */
@@ -31,10 +31,11 @@ interface Props {
  * (`DetailTabLabel`) en todas las pestañas, no sólo en "Por facturar".
  */
 export function ProveedorDetalleTabs({
-  proveedorId, organizationId, nombreFmt, rfc, esNacional, canEdit,
+  proveedorId, organizationId, nombreFmt, rfc, esNacional,
   partidas, partidasPendientes,
   isErrorEstadoCuenta, errorEstadoCuenta, refetchEstadoCuenta, isFetchingEstadoCuenta,
 }: Props) {
+  const { canEditExpediente } = usePermissions();
   const errorOperaciones = (
     <ErrorStateInline
       title="No pudimos cargar las operaciones del proveedor"
@@ -93,7 +94,7 @@ export function ProveedorDetalleTabs({
         <ProveedorContactosCard
           proveedorId={proveedorId}
           organizationId={organizationId}
-          canEdit={canEdit}
+          canEdit={canEditExpediente}
         />
       </TabsContent>
 
@@ -102,7 +103,7 @@ export function ProveedorDetalleTabs({
           proveedorId={proveedorId}
           organizationId={organizationId}
           esNacional={esNacional}
-          canEdit={canEdit}
+          canEdit={canEditExpediente}
         />
       </TabsContent>
 

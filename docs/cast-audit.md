@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-07-29
+# Cast Audit — generado 2026-08-14
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **2570**
+Total de `as` casts detectados: **2997**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 776     | 30.2% |
-| LOW       | 1 | 124      | 4.8% |
-| MEDIUM    | 2 | 1669   | 64.9% |
-| HIGH      | 3 | 1     | 0.0% |
+| SAFE      | 0 | 892     | 29.8% |
+| LOW       | 1 | 147      | 4.9% |
+| MEDIUM    | 2 | 1958   | 65.3% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -36,23 +36,18 @@ Total de `as` casts detectados: **2570**
 | 5 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
 | 6 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
 | 7 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
-| 8 | `src/test/setup.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
-| 9 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
+| 8 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
+| 9 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
 | 10 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
 | 11 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 12 | `src/features/dashboard/direccion/services/loaders.ts` | 9 | 17 | 0 | 1 | 8 | 0 | 0 |
-| 13 | `src/features/costeo/services/navieraCondiciones.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 14 | `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.integration.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 15 | `src/features/cotizacion/services/revalidacion/index.ts` | 10 | 16 | 0 | 4 | 6 | 0 | 0 |
+| 12 | `src/test/setup.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 13 | `src/features/cotizacion/hooks/wizard/cotizacionDraftStorage.ts` | 9 | 17 | 0 | 1 | 8 | 0 | 0 |
+| 14 | `src/features/dashboard/direccion/services/loaders.ts` | 9 | 17 | 0 | 1 | 8 | 0 | 0 |
+| 15 | `src/features/costeo/services/navieraCondiciones.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/lib/domain/cotizacionDetalle.ts:47`
-
-```ts
-return { ...c, cantidad, precio_unitario: precio } as unknown as ConceptoVentaCotizacion;
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 

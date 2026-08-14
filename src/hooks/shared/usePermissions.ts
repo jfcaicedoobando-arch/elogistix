@@ -10,6 +10,7 @@ import {
   COTIZAR_SIN_DESGLOSE,
   ELIMINAR_EMBARQUE,
   EMITIR_FACTURA_CLIENTE,
+  EXPEDIENTE_ESCRITURA,
   OPERAR_REFACTURACION,
   FINANCE,
   FINANCE_VIEWERS,
@@ -67,6 +68,8 @@ export function usePermissions() {
   const canEliminarEmbarque = has(ELIMINAR_EMBARQUE, roleStr);
 
   const canEdit = canEditOperations || canEditFinance;
+  // R4BD-04: espejo de las policies del expediente (documentos y contactos).
+  const canEditExpediente = has(EXPEDIENTE_ESCRITURA, roleStr);
   const isAdmin = canAdminTenant;
   const isSuperAdmin = (role as AppRole) === "super_admin";
   const isOperador = roleStr === "operador" || roleStr === "coordinador_logistico";
@@ -74,6 +77,7 @@ export function usePermissions() {
 
   return {
     canEdit,
+    canEditExpediente,
     canEditCrm,
     isAdmin,
     isSuperAdmin,
