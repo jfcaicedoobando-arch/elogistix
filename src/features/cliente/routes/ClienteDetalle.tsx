@@ -12,6 +12,7 @@ import { useClienteDetalleController } from "@/features/cliente/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ClienteDetalleTabs } from "./_sections/ClienteDetalleTabs";
+import { leerFlagAutorizacion } from "@/features/cliente/domain/autorizacionCliente";
 /** Contactos secundarios + el contacto principal del perfil (si existe). */
 function contarContactos(secundarios: number, principal?: string | null): number {
   return secundarios + (principal && principal.trim() ? 1 : 0);
