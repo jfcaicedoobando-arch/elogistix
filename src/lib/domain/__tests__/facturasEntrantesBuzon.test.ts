@@ -7,6 +7,7 @@ import {
   antiguedadEntrante,
   coincideBusquedaEntrante,
   entranteSinImporte,
+  importeEntrante,
   entranteSinXml,
   etiquetaAntiguedad,
   filtrarEntrantes,
