@@ -1,6 +1,10 @@
--- Canonical schema para public.saldo_factura_proveedor (Ola 12 · R3P-01, migración 20260823100100).
+-- Canonical schema para public.saldo_factura_proveedor (Ola 12 · R3P-01, migración 20260823100100;
+-- re-emitida con org guard en Ola 13 · Sprint 07 / R4BD-02, migración 20260824070000).
 -- Saldo de una factura de proveedor en su propia moneda; NC sólo 'Aplicada'
 -- y pagos convertidos con monto_pago_en_moneda_factura.
+-- Org guard: 42501 'LC_ORG_SIN_CONTEXTO' sin contexto; la factura debe
+-- pertenecer a la organización activa y no estar cancelada (NULL en otro caso,
+-- igual que inexistente/eliminada/ajena → no es oráculo de existencia).
 CREATE OR REPLACE FUNCTION public.saldo_factura_proveedor(p_factura_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -8,14 +12,22 @@ STABLE SECURITY DEFINER
 SET search_path TO 'public'
 AS $function$
 DECLARE
+  v_oid uuid := public.current_user_org_id();
   v_f public.proveedor_facturas;
   v_pagado numeric;
   v_nc numeric;
   v_incompleto boolean;
 BEGIN
+  IF v_oid IS NULL THEN
+    RAISE EXCEPTION 'LC_ORG_SIN_CONTEXTO: no hay organización activa' USING ERRCODE = '42501';
+  END IF;
+
   SELECT * INTO v_f
   FROM public.proveedor_facturas
-  WHERE id = p_factura_id AND deleted_at IS NULL;
+  WHERE id = p_factura_id
+    AND deleted_at IS NULL
+    AND organization_id = v_oid
+    AND estado <> 'Cancelada';
 
   IF v_f.id IS NULL THEN
     RETURN NULL;
