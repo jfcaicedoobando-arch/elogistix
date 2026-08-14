@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.600.1] - 2026-08-14
+- **Fix CI (`rls-tests`, grupo `operaciones`).** La suite `test_rls_expediente_cliente` (Sprint 05) sembraba el proveedor con `tipo = 'Nacional'` / `categoria = 'General'`, valores que no existen en los enums `tipo_proveedor` / `categoria_proveedor`; en base limpia fallaba con `invalid input value for enum`. Ahora usa `'Agente Aduanal'` / `'Logistico'`, la única pareja que satisface `proveedores_categoria_check`.
+- Verificado localmente contra una base reconstruida desde cero (932 migraciones): las 5 suites del grupo `operaciones` y las 28 suites `test_rls_*` pasan en verde.
+
 ## [13.600.0] - 2026-08-14
 - **Ola 13 · Sprint 06 (re-aplicación de guards en replay + guardrail de CI).**
 - R4BD-01: nueva migración `20260824060000_ola13_replay_lotes.sql` re-emite `registrar_pago_proveedor_lote` con los guards `LC_LOTE_TC_REQUERIDO` y `LC_LOTE_FACTURA_MONEDA`, que se perdían en instalaciones limpias porque `20260821030800_ola11_lotes_paridad` tiene timestamp posterior.
