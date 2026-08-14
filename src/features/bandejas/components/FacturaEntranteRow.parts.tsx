@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
 import { importeEntrante } from "@/lib/domain/facturasEntrantesBuzon";
+import { nombreDesdeEmail } from "@/lib/formatters/text";
 import type { FacturaEntranteRow as Fila } from "@/features/cxp/services/facturasEntrantes";
 
 /** Proveedor + avisos de la fila (falta XML, CFDI ya capturado, nota). */
@@ -70,7 +71,23 @@ export function ProveedorEntrante({
   );
 }
 
-/** Expediente · folio · fecha de emisión · nombre de archivo (relegado). */
+/**
+ * v13.619.0 — Operador dueño del embarque: contabilidad sabe a quién preguntarle
+ * cuando falta un dato del documento. El correo completo va en el tooltip.
+ */
+function OperadorEntrante({ correo }: { correo: string | null }) {
+  if (!correo) return <span className="shrink-0 text-muted-foreground/70">· Op. sin asignar</span>;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="shrink-0">· Op. {nombreDesdeEmail(correo)}</span>
+      </TooltipTrigger>
+      <TooltipContent className="break-all">{correo}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** Expediente · operador · folio · fecha de emisión · nombre de archivo (relegado). */
 export function MetaEntrante({ row }: { row: Fila }) {
   const fecha = row.fecha_emision
     ? `Emitida ${formatDate(row.fecha_emision)}`
