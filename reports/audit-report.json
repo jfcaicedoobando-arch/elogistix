@@ -1,17 +1,17 @@
 {
-  "version": "13.328.2",
-  "generatedAt": "2026-07-29T07:27:13.784Z",
+  "version": "13.599.0",
+  "generatedAt": "2026-08-14T04:26:55.804Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": []
   },
   "casts": {
-    "total": 2567,
+    "total": 2995,
     "bySeverity": {
-      "SAFE": 776,
-      "LOW": 122,
-      "MEDIUM": 1669,
+      "SAFE": 890,
+      "LOW": 147,
+      "MEDIUM": 1958,
       "HIGH": 0,
       "CRITICAL": 0
     },
@@ -52,14 +52,14 @@
         "weight": 20
       },
       {
-        "file": "src/test/setup.ts",
-        "total": 10,
-        "weight": 20
-      },
-      {
         "file": "src/lib/mappers/genericPayloadMapper.ts",
         "total": 11,
         "weight": 19
+      },
+      {
+        "file": "src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx",
+        "total": 9,
+        "weight": 18
       },
       {
         "file": "src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx",
@@ -72,10 +72,10 @@
     "violations": []
   },
   "fromDb": {
-    "total": 46,
-    "conSchema": 6,
-    "sinSchema": 40,
-    "ratio": 0.13,
+    "total": 49,
+    "conSchema": 12,
+    "sinSchema": 37,
+    "ratio": 0.245,
     "porFeature": {
       "admin": 6,
       "auditoria": 1,
@@ -85,8 +85,7 @@
       "dashboard": 1,
       "embarques": 4,
       "operaciones": 1,
-      "portal": 2,
-      "proformas": 7,
+      "proformas": 6,
       "proveedor": 2,
       "lib": 1
     }

@@ -1,6 +1,6 @@
-# Audit Report — 13.328.2
+# Audit Report — 13.599.0
 
-Generado: 2026-07-29T07:27:13.784Z
+Generado: 2026-08-14T04:26:55.804Z
 
 ## Resumen
 
@@ -9,9 +9,9 @@ Generado: 2026-07-29T07:27:13.784Z
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
 | Power-of-10 (>200 líneas) | ✅ | 0 archivos |
-| Casts HIGH + CRITICAL | ✅ | 0 / 2567 |
+| Casts HIGH + CRITICAL | ✅ | 0 / 2995 |
 | Higiene de tests | ✅ | 0 violaciones |
-| Adopción zod en `fromDb` | ⚠️ | 6/46 validados (13%) |
+| Adopción zod en `fromDb` | ⚠️ | 12/49 validados (25%) |
 
 ## Arquitectura
 
@@ -26,13 +26,13 @@ Generado: 2026-07-29T07:27:13.784Z
 
 ## Casts
 
-Total: **2567** — HIGH: **0**, CRITICAL: **0**
+Total: **2995** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
-| SAFE | 776 |
-| LOW | 122 |
-| MEDIUM | 1669 |
+| SAFE | 890 |
+| LOW | 147 |
+| MEDIUM | 1958 |
 | HIGH | 0 |
 | CRITICAL | 0 |
 
@@ -47,25 +47,24 @@ Total: **2567** — HIGH: **0**, CRITICAL: **0**
 | 5 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 |
 | 6 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 11 | 20 |
 | 7 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 |
-| 8 | `src/test/setup.ts` | 10 | 20 |
-| 9 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
+| 8 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
+| 9 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 |
 | 10 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 |
 
 ## Boundaries de datos (`fromDb`)
 
-Call sites validados con zod: **6** de **46** (13%).
+Call sites validados con zod: **12** de **49** (25%).
 
 Casts crudos `fromDb<T>()` pendientes por feature:
 
 | Feature | Pendientes |
 |---|---:|
 | `cotizacion` | 8 |
-| `proformas` | 7 |
 | `admin` | 6 |
+| `proformas` | 6 |
 | `configuracion` | 4 |
 | `embarques` | 4 |
 | `catalogos` | 3 |
-| `portal` | 2 |
 | `proveedor` | 2 |
 | `auditoria` | 1 |
 | `dashboard` | 1 |
