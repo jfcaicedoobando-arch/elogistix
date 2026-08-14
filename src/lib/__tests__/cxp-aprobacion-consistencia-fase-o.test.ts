@@ -38,13 +38,17 @@ describe("Fase O — Validación de aprobación CxP", () => {
   });
 
   it("fija search_path a public", () => {
-    expect(sql).toMatch(/SET search_path = public/);
+    expect(sql).toMatch(/SET search_path (=|TO) '?public'?/);
   });
 
-  it("valida cuadre subtotal vs conceptos con tolerancia 0.01", () => {
+  it("valida cuadre subtotal vs conceptos con tolerancia por cantidad", () => {
     expect(sql).toMatch(/LC_CXP_DESCUADRE/);
-    expect(sql).toMatch(/> 0\.01/);
+    // v13.617.0: tolerancia = max(0.01, 0.005 × unidades) para absorber el
+    // redondeo del precio unitario del CFDI en cantidades altas.
+    expect(sql).toMatch(/GREATEST\(0\.01, 0\.005/);
+    expect(sql).toMatch(/> v_tolerancia/);
   });
+
 
   it("exige captura de conceptos antes de aprobar", () => {
     expect(sql).toMatch(/LC_CXP_SIN_CONCEPTOS/);
