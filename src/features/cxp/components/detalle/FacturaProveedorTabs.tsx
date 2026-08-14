@@ -42,7 +42,14 @@ export function FacturaProveedorTabs({
       id: "conceptos",
       label: "Conceptos",
       count: conceptos.length,
-      content: <ConceptosFacturaSection facturaId={f.id} moneda={f.moneda} />,
+      content: (
+        <ConceptosFacturaSection
+          facturaId={f.id}
+          moneda={f.moneda}
+          retenciones={f.retenciones}
+          total={f.total}
+        />
+      ),
     },
     {
       id: "fiscal",
