@@ -1,13 +1,28 @@
 -- ============================================================
--- Ola 13 · Sprint 04 · R4BD-05 (proveedor_estado_cuenta_movimientos):
--- p_offset se cuenta DESDE EL FINAL (antes empujaba la ventana hacia
--- adelante y los renglones viejos eran inalcanzables). 'hay_mas' = hay
--- renglones anteriores a la ventana.
--- Migración vigente: 20260824040000_ola13_r4bd05_p_offset_desde_el_final.sql,
--- acumulativa sobre la final de Ola 12 (20260813190546, Sprint 10) — conserva
+-- Ola 13 · Sprint 04 · R4BD-05 — proveedor_estado_cuenta_movimientos:
+-- semántica corregida de p_offset (offset DESDE EL FINAL de la lista
+-- cronológica ascendente).
+--
+-- Antes: v_offset_efectivo := GREATEST(v_total - v_limite, 0) + p_offset
+-- empujaba la ventana hacia ADELANTE: con total=2500 y límite=1000 los
+-- renglones 1-1500 eran inalcanzables y cualquier p_offset>0 devolvía página
+-- vacía. Latente: el frontend siempre pasa p_offset = 0.
+--
+-- Ahora: v_offset_efectivo := GREATEST(v_total - v_limite - p_offset, 0)
+--   p_offset = 0        → los p_limite más recientes (idéntico a hoy);
+--   p_offset = p_limite → la página inmediatamente anterior, y así.
+-- 'hay_mas' = v_offset_efectivo > 0 (hay renglones ANTERIORES a la ventana).
+--
+-- Re-emite la función COMPLETA (nunca se editan migraciones viejas).
+-- Acumulativa sobre la final de Ola 12 (20260813190546, Sprint 10): conserva
 -- R3FE-04, R3P-09, R3P-10, R3BD-04, R3FE-03, R3P-07/R3P-08 y R3P-06.
--- Espejo 1:1 obligatorio (lo verifica audit:schema-functions).
+-- Espejo 1:1: supabase/schema/proveedores/proveedor_estado_cuenta_movimientos.sql
 -- ============================================================
+
+-- Defensivo: la firma vieja de 3 argumentos ya se eliminó en 20260813165249;
+-- se mantiene el DROP por idempotencia del replay.
+DROP FUNCTION IF EXISTS public.proveedor_estado_cuenta_movimientos(uuid, date, date);
+
 CREATE OR REPLACE FUNCTION public.proveedor_estado_cuenta_movimientos(
   p_proveedor_id uuid,
   p_desde date DEFAULT NULL,
@@ -251,3 +266,9 @@ BEGIN
   );
 END;
 $function$;
+
+-- Hardening H6 conservado (mismas líneas que 20260813190546).
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) FROM anon;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.proveedor_estado_cuenta_movimientos(uuid, date, date, integer, integer) TO service_role;
