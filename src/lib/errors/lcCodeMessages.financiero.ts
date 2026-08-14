@@ -34,7 +34,10 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "No puedes vincular una factura de proveedor a un embarque cancelado.",
   LC_CXP_SIN_CONCEPTOS: "Captura al menos un concepto antes de aprobar la factura.",
   LC_CXP_DESCUADRE:
-    "Los conceptos no cuadran con el total de la factura. Revisa los importes antes de aprobar.",
+    "Los conceptos capturados no suman el subtotal de la factura. Revisa el precio " +
+    "unitario (captúralo con los decimales del CFDI) y las cantidades, o elimina las " +
+    "partidas que no correspondan.",
+
   LC_CXP_PAGADA_INMUTABLE:
     "La factura ya está pagada. Reversa los pagos antes de modificarla.",
   LC_CXP_REAPERTURA: "No se puede reabrir una factura de proveedor cerrada.",
