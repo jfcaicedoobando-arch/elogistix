@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { AlertCircle, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
