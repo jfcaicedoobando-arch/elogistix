@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.619.0] - 2026-08-14
+- Buzón de facturas de proveedor: cada fila muestra el operador dueño del embarque (`· Op. Valeria Zamora`, derivado del correo con `nombreDesdeEmail`; correo completo en el tooltip) y "Op. sin asignar" cuando el embarque no tiene operador.
+- `SELECT_COLS_ENTRANTES` trae `embarques.operador` y la búsqueda del buzón (`coincideBusquedaEntrante`) ya encuentra por operador, tanto por correo como por nombre.
+
 ## [13.618.0] - 2026-08-14
 - Buzón CxP: las facturas sin XML (debit notes extranjeras) aparecían "sin importe" porque el buzón sólo leía `total_detectado` del CFDI e ignoraba el `monto_declarado` que captura operaciones. `importeEntrante()` ahora resuelve la cascada CFDI > declarado y la fila muestra el origen.
 - El importe declarado es obligatorio para enviar al buzón (y al corregir): `useSubirEntranteForm` / `useCorregirEntranteForm` ya no habilitan el envío sin monto > 0.
