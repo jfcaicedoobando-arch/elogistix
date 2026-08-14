@@ -1,6 +1,13 @@
 # Changelog
 
+## [13.598.0] - 2026-08-14
+- **Ola 13 · Sprint 04 (cobertura de ramas Ola 12 y menores de BD).**
+- R4EF-06: 5 suites Deno nuevas (22 casos) que cubren el marcado `verifying` de la rama 504 en cancelación de facturas, REP y notas de crédito; el dedupe fail-closed y stale-pending de `auth-email-hook` (primer test de la función); y la clasificación `error_timeout`/`error_network` del acuse con `AbortSignal`.
+- R4BD-05: `proveedor_estado_cuenta_movimientos` cuenta `p_offset` desde el final de la lista, así ya se pueden ver los movimientos más antiguos (antes cualquier `p_offset > 0` devolvía página vacía). Con `p_offset = 0` el resultado es idéntico al anterior.
+- R4BD-06: el README de `supabase/schema/` cita las migraciones finales reales por archivo y marca la divergencia pendiente de `registrar_pago_proveedor_lote` (fix en Sprint 06).
+
 ## [13.597.0] - 2026-08-14
+
 - **Ola 13 · Sprint 03 (hardening de edge functions).**
 - R4EF-01: nuevo catálogo `user-management/errores.ts` con mensajes seguros `LC_USUARIO_*`; los textos crudos de GoTrue/Postgres ya no llegan al cliente (siguen en el log interno).
 - R4EF-02: el 409 por correo duplicado responde `LC_USUARIO_CORREO_NO_DISPONIBLE` sin hacer eco del correo (evita enumeración de cuentas).
