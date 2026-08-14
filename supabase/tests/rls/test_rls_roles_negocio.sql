@@ -208,18 +208,26 @@ BEGIN
   PERFORM pg_temp.assert(visible = 0, 'cobranza_a NO debe ver cobranza_seguimiento de org_b');
 
   -- ════════════════════════════════════════════════════════════════════════
-  -- SUPER_ADMIN (positivo) — ve datos de AMBAS orgs
+  -- SUPER_ADMIN (Ola 16) — ve UN tenant a la vez, el que tenga activo
   -- ════════════════════════════════════════════════════════════════════════
   PERFORM pg_temp.as_user(super_u);
+  PERFORM public.set_super_admin_org(org_a);
   SELECT count(*) INTO visible FROM public.facturas WHERE id IN (fac_a, fac_b);
-  PERFORM pg_temp.assert(visible = 2, format('super_admin debe ver ambas facturas, vio %s', visible));
+  PERFORM pg_temp.assert(visible = 1, format('super_admin con tenant A debe ver sólo la factura de A, vio %s', visible));
   SELECT count(*) INTO visible FROM public.cuentas_bancarias WHERE id IN (cuenta_a, cuenta_b);
-  PERFORM pg_temp.assert(visible = 2, format('super_admin debe ver ambas cuentas bancarias, vio %s', visible));
+  PERFORM pg_temp.assert(visible = 1, format('super_admin con tenant A debe ver sólo la cuenta de A, vio %s', visible));
   SELECT count(*) INTO visible FROM public.embarques WHERE id IN (emb_a, emb_b);
-  PERFORM pg_temp.assert(visible = 2, format('super_admin debe ver ambos embarques, vio %s', visible));
+  PERFORM pg_temp.assert(visible = 1, format('super_admin con tenant A debe ver sólo el embarque de A, vio %s', visible));
+
+  PERFORM public.set_super_admin_org(org_b);
+  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_b;
+  PERFORM pg_temp.assert(visible = 1, 'super_admin con tenant B debe ver la factura de B');
+  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a;
+  PERFORM pg_temp.assert(visible = 0, 'FUGA: super_admin con tenant B vio la factura de A');
 
   PERFORM pg_temp.as_postgres();
-  RAISE NOTICE '✓ test_rls_roles_negocio: 19 aserciones OK';
+  RAISE NOTICE '✓ test_rls_roles_negocio: 21 aserciones OK';
+
 END;
 $$;
 
