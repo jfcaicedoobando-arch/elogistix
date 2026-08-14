@@ -145,8 +145,19 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    permisos (`REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO
  *    authenticated, service_role`); el archivo original queda como legacy
  *    auditado.
+ *  - `20260814164034` — post-FIX-H6-18: `20260814161725` y `20260814163218`
+ *    (Ola 14, borrado lógico estricto en reportes) re-emitieron
+ *    `libro_pagos`, `estado_cuenta_bancario`, `conciliacion_resumen`,
+ *    `pnl_financiero_embarque`, `proveedor_estado_cuenta`,
+ *    `proveedor_estado_cuenta_movimientos`, `cxc_aging_clientes` y
+ *    `cxp_aging_proveedores` (SECURITY DEFINER) sin el bloque REVOKE/GRANT en
+ *    el mismo archivo. La migración correctiva `20260814164034` re-aplica los
+ *    permisos (`REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE … TO authenticated,
+ *    service_role`); los archivos originales quedan como legacy auditado. Los
+ *    replays `20260824080000` / `20260824080100` sí incluyen el bloque y siguen
+ *    dentro del alcance de la auditoría.
  */
-const BASELINE = "20260813025019";
+const BASELINE = "20260814164034";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
