@@ -109,6 +109,18 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   }
 }
 
+/**
+ * Ola 17 · Higiene de toasts: id estable para deduplicar toasts de
+ * éxito/aviso/info cuando el usuario da doble clic rápido. Si el call site no
+ * pasa `id`, se deriva de `method` (o del título) para que el segundo toast
+ * reemplace al primero en lugar de apilarse.
+ */
+function idDedupe(opts: InfoNotifyOptions, prefijo: string): string | number | undefined {
+  if (opts.id !== undefined) return opts.id;
+  const base = opts.method ?? opts.errorCode ?? opts.title;
+  return base ? `${prefijo}-${base}` : undefined;
+}
+
 /** Emite un toast de advertencia (no bloquea). Puede llevar "Ver detalles". */
 export function notifyWarning(
   _toast: AnyToastFn | undefined,
@@ -121,7 +133,7 @@ export function notifyWarning(
   sonnerToast.warning(opts.title, {
     description: sanitizeToastText(opts.description),
     duration: opts.persistent ? Infinity : opts.duration,
-    id: opts.id,
+    id: idDedupe(opts, "warn"),
     action,
   });
 }
@@ -138,7 +150,7 @@ export function notifySuccess(
   sonnerToast.success(opts.title, {
     description: sanitizeToastText(opts.description),
     duration: opts.persistent ? Infinity : opts.duration,
-    id: opts.id,
+    id: idDedupe(opts, "ok"),
     action,
   });
 }
@@ -155,7 +167,7 @@ export function notifyInfo(
   sonnerToast(opts.title, {
     description: sanitizeToastText(opts.description),
     duration: opts.persistent ? Infinity : opts.duration,
-    id: opts.id,
+    id: idDedupe(opts, "info"),
     action,
   });
 }

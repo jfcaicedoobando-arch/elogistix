@@ -6,6 +6,7 @@
  */
 import { translateLcCode, stripLcCode } from "./lcCodes";
 import { translatePostgresError } from "./pgErrorCodes";
+import { traducirMensajeSat } from "./facturapiError";
 
 export { translateLcCode, stripLcCode } from "./lcCodes";
 
@@ -65,6 +66,10 @@ export function getErrorMessage(err: unknown): string {
   //    "Ver detalles", nunca en el título del toast.
   const pg = translatePostgresError(raw, pgCode);
   if (pg) return pg;
+  // 2.5) Rechazos del SAT / FacturApi (301, 402, CFDI40147, …). Va antes del
+  //      catálogo LC y del fallback genérico de Edge Functions.
+  const sat = traducirMensajeSat(raw);
+  if (sat) return sat;
   // 3) Catálogo central LC_*
   const lc = translateLcCode(raw);
   if (lc) return lc;

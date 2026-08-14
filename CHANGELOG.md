@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.615.0] - 2026-08-14
+- Ola 17 · Errores granulares: los fallos de base de datos ya se traducen a español por constraint y SQLSTATE (`23505` → "Ya existe un registro con este identificador", `23502` nombra el campo faltante, `22001` longitud, `22P02`/`22007` formato, `22003` límite numérico, `40001`/`40P01`/`57014` concurrencia y tiempo de espera).
+- Nuevo catálogo `pgConstraintMessages.ts`: folios (FP-XXXXXX), RFC de cliente/proveedor, refacturación abierta y contacto principal duplicado tienen mensaje de negocio propio.
+- Rechazos del SAT/FacturApi interpretados con `satErrorCodes.ts` + `facturapiError.ts` (301 XML mal formado, 402 RFC no inscrito en el padrón, etc.). El servicio de facturación ahora antepone el mensaje traducido y adjunta código, campo y `logId` como detalles copiables para soporte.
+- Higiene de toasts: `notifySuccess`/`notifyWarning`/`notifyInfo` derivan un `id` estable, así el doble clic rápido ya no apila toasts duplicados.
+- Se eliminó el último `console.error` huérfano en `src/features` (portal de proformas y baja de correos ahora reportan a Sentry con `reportCaughtError`), con guardrail `no-orphan-console-error.test.ts`.
+- Mensajes amigables para `LC_ORG_FUERA_DE_SCOPE` y `LC_SOLO_SUPER_ADMIN` (cobertura LC_* en verde).
+- Tests: `erroresGranulares.test.ts` (23 casos) + dedupe de toasts en `appFeedback.test.ts`.
+
 ## [13.614.0] - 2026-08-14
 - Captura rápida de fechas con teclado numérico en los tres pickers (`DatePickerMx`, `DateTimePickerMx`, `MonthPickerMx`): salto discreto entre segmentos (## / ## / ####) sin abrir el calendario.
 - Aceleradores: `T`/`H` = hoy (o mes en curso), `+`/`-` y flechas ajustan el segmento activo, `←`/`→` cambian de segmento, `Re Pág`/`Av Pág` mueven ±1 mes (con `Shift`, ±1 año), `F4` abre el calendario.

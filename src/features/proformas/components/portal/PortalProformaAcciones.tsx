@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { COPY_ENLACE, COPY_PASOS, COPY_VALIDACION } from "@/lib/copy/publicoCopy";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 interface Props {
   submitting: boolean;
@@ -30,7 +31,8 @@ export function PortalProformaAcciones({ submitting, onResponder, error }: Props
       await onResponder(respuesta, motivo.trim());
     } catch (e) {
       // Superficie pública: nunca exponer `error.message` crudo al cliente.
-      console.error("[portal-proforma]", e);
+      // Ola 17: el diagnóstico va a Sentry, no a `console.error` huérfano.
+      reportCaughtError(e, { feature: "proformas", op: "portal_responder" });
       setLocalError(COPY_ENLACE.noDisponible);
     }
   }
