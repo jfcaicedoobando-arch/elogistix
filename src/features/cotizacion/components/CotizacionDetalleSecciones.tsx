@@ -10,6 +10,7 @@ import { RecotizarModal } from "@/features/cotizacion/components/versionado/Reco
 import { CrearEmbarqueConRevalidacion } from "@/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion";
 import { accionesCotizacionPermitidas } from "@/features/cotizacion/domain/cotizacion";
 import type { AppRole } from "@/types/appRole";
+import { BadgeClienteDeCasa } from "@/features/cliente/components/BadgeClienteDeCasa";
 
 
 
@@ -80,6 +81,8 @@ interface AccionesProps {
   creadaPor?: string | null;
   /** Q-04b — usuario autenticado. */
   usuarioActual?: string | null;
+  /** v13.624.0 — política del cliente: ¿requiere autorizar cotizaciones? */
+  requiereAutorizacionCliente?: boolean;
 }
 
 
@@ -144,14 +147,20 @@ export function CotizacionDetalleAcciones({
   estado, esProspecto, numContenedores, cotizacionId, version,
   tieneEmbarquesVinculados = false,
   onCambiarEstado, onAbrirConvertir, total, rol, creadaPor, usuarioActual,
+  requiereAutorizacionCliente = true,
 }: AccionesProps) {
   const [recotizarOpen, setRecotizarOpen] = useState(false);
-  const acciones = accionesCotizacionPermitidas(estado, total, rol, {
-    creadaPor,
-    usuarioActual,
-  });
+  const acciones = accionesCotizacionPermitidas(
+    estado,
+    total,
+    rol,
+    { creadaPor, usuarioActual },
+    requiereAutorizacionCliente,
+  );
   const esEnCaptura = estado === "Borrador" || estado === "Solicitada";
-  const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
+  const mostrarAceptarRechazar =
+    estado === "Borrador" || estado === "Enviada" ||
+    (estado === "Solicitada" && (acciones.aceptar || acciones.rechazar));
   const esAceptada = estado === "Aceptada";
   const mostrarCrearEmbarque = esAceptada && !esProspecto && !tieneEmbarquesVinculados;
   // Fase J v13.301.81: sólo se puede re-cotizar si aún no hay embarque generado.
@@ -159,7 +168,8 @@ export function CotizacionDetalleAcciones({
   const mostrarRecotizar = esAceptada && !tieneEmbarquesVinculados;
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-2">
+      {!requiereAutorizacionCliente && <BadgeClienteDeCasa tipo="cotizacion" />}
       {esEnCaptura && (
         <AccionesCaptura
           cotizacionId={cotizacionId}
@@ -169,7 +179,7 @@ export function CotizacionDetalleAcciones({
           total={total}
         />
       )}
-      {esBorradorOEnviada && <AccionesBorradorOEnviada onCambiarEstado={onCambiarEstado} puedeAceptar={acciones.aceptar} puedeRechazar={acciones.rechazar} />}
+      {mostrarAceptarRechazar && <AccionesBorradorOEnviada onCambiarEstado={onCambiarEstado} puedeAceptar={acciones.aceptar} puedeRechazar={acciones.rechazar} />}
       {esAceptada && esProspecto && (
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
