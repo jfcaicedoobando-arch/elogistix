@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.604.0] - 2026-08-14
+- Ola 14 · Sprint 02 (toolchain P3): canario de performance sube el 3er umbral 30 → 60 ms (R5TC-01, flake ambiental de 38.29 ms en runner de 2 vCPU; aislado corre en 3-6 ms).
+- `eslint.config.js`: justificadas las exclusiones de `ComparativoConsistencia.tsx` y `RefacturacionPreviewSaldos.tsx` (comparativas read-only sobre `DetailTable`, DataTable no aplica) (R5TC-03a).
+- `scripts/check-bundle-size.sh`: budget default de `react-pdf` 560 → 600 KB gz con la línea base documentada (554.63 KB medidos) (R5TC-03b).
+- Sin cambios funcionales en la app.
+
+
 ## [13.603.0] - 2026-08-14
 - Ola 14 · Sprint 01 (higiene de release): nuevo guardrail `audit:no-env` que falla si un `.env` trae secretos server-side (service_role, contraseña de BD, tokens) o si aparece un `.env.*` sombra; registrado en `audit:all` y en el job de guardrails de CI.
 - `.env.example`: documentados los alias `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` que leen los scripts de tooling.
