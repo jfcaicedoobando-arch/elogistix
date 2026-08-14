@@ -66,8 +66,12 @@ describe("Fase O — Validación de aprobación CxP", () => {
 
   it("revoca EXECUTE de PUBLIC/anon y otorga a authenticated + service_role", () => {
     expect(sql).toMatch(
-      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid\) FROM PUBLIC, anon/,
+      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid\) FROM PUBLIC/,
     );
+    expect(sql).toMatch(
+      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid\) FROM (PUBLIC, )?anon/,
+    );
+
     expect(sql).toMatch(
       /GRANT EXECUTE ON FUNCTION public\._cxp_validar_aprobacion\(uuid\) TO authenticated, service_role/,
     );
