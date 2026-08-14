@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.616.2] - 2026-08-14
+- CI verde: ESLint (complejidad 17 > 16) en `src/lib/errors/index.ts` y `facturapiError.ts` — extraje `leerCrudo()` y `armarDetalles()` sin cambiar comportamiento.
+- Test `crmToast`: ahora tolera el `id` de dedupe que agregó la Ola 17 a `notifySuccess/notifyInfo`.
+- H6: migración correctiva `FIX-H6-19` que re-aplica `REVOKE ALL … FROM PUBLIC, anon` + `GRANT EXECUTE … TO authenticated, service_role` a las 6 RPCs de papelera/bitácora re-emitidas en la Ola 16; baseline del auditor movido con la nota correspondiente. Manifest sincronizado (948 migraciones).
+
 ## [13.616.1] - 2026-08-14
 - CI: verdes las 5 suites RLS (aislamiento, financiero, operaciones, roles, costeo). Los fixtures asumían reglas ya endurecidas: `super_admin` con bypass global (Ola 16 lo acotó al tenant activo vía `set_super_admin_org`), el rol legacy `admin` en `user_roles`, un REP sobre factura sin UUID fiscal y columnas hoy NOT NULL (`app_logs.fn`, `pagos_factura.rep_cancellation_status`).
 - `guard_cotizacion_vigencia.sql` ahora se ejecuta en el workflow `rls-tests` (antes existía pero nadie lo corría).
