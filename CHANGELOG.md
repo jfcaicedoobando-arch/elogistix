@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.595.1] - 2026-08-14
+- **Revisión de errores de Sentry (4 issues abiertos).**
+- JAVASCRIPT-REACT-5A: "La factura tiene una solicitud de cancelación pendiente" se marca como validación esperada de FacturApi (`expected: true`) y deja de reportarse a Sentry; el aviso sigue visible al usuario.
+- JAVASCRIPT-REACT-59 (`COALESCE types moneda and text`), 55 (`BuzonDuplicadoError`) y 58 (`Edge Function returned a non-2xx`) ya estaban corregidos en código/base de datos (v13.589.4, v13.583.0): los eventos provienen de las releases publicadas 13.589.1 y 13.562.0. Se cierran en Sentry.
+
 ## [13.595.0] - 2026-08-14
 - **Ola 13 · Sprint 01 (toolchain).**
 - R3TC-01 (re-fix): `poolOptions.forks` se movió a la raíz de `test` en `vitest.config.ts`. Vitest 3.2.4 crea el pool sólo desde la config global, así que `--expose-gc`, `maxForks` y `minForks` por fin aplican (sonda verificada: `typeof globalThis.gc === "function"` dentro del fork; canario `pdfLeak` con drift estable de 2.48 MB).
