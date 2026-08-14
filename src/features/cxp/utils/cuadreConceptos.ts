@@ -26,7 +26,9 @@ export interface ResultadoCuadre {
   puedeAprobar: boolean;
 }
 
-const TOLERANCIA = 0.01;
+const TOLERANCIA_MINIMA = 0.01;
+/** Error máximo de redondeo por unidad: el precio unitario del CFDI viene a 2 decimales. */
+const TOLERANCIA_POR_UNIDAD = 0.005;
 
 /**
  * Total de una línea: importe **unitario** × cantidad (cantidad nula o 0 = 1).
@@ -45,6 +47,18 @@ export function sumarConceptos(conceptos: ReadonlyArray<ConceptoParaCuadre>): nu
   }, 0);
 }
 
+/**
+ * Tolerancia sensible a la cantidad (espejo de `_cxp_validar_aprobacion`):
+ * medio centavo por unidad, mínimo un centavo. Con 51 unidades a 17.38 el
+ * redondeo del unitario puede desviar hasta ~0.26 y no debe bloquear.
+ */
+export function toleranciaCuadre(conceptos: ReadonlyArray<ConceptoParaCuadre>): number {
+  const unidades = conceptos.reduce(
+    (acc, c) => acc + (c.cantidad && c.cantidad !== 0 ? Math.abs(c.cantidad) : 1),
+    0,
+  );
+  return Math.max(TOLERANCIA_MINIMA, TOLERANCIA_POR_UNIDAD * unidades);
+}
 
 export function calcularCuadreConceptos(
   subtotal: number,
@@ -57,7 +71,7 @@ export function calcularCuadreConceptos(
   if (conceptos.length === 0) {
     return { suma: 0, diferencia: subtotal, estado: "sin_conceptos", puedeAprobar: false };
   }
-  if (abs <= TOLERANCIA) {
+  if (abs <= toleranciaCuadre(conceptos)) {
     return { suma, diferencia: 0, estado: "cuadrado", puedeAprobar: true };
   }
   return {
@@ -67,3 +81,4 @@ export function calcularCuadreConceptos(
     puedeAprobar: false,
   };
 }
+
