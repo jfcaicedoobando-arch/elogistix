@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.602.1] - 2026-08-14
+### Fix CI — suite RLS de paginación comparaba el folio equivocado
+- **Causa.** En `test_rls_proveedor_estado_cuenta_offset.sql` las aserciones leían `movimientos[].folio`, pero esa llave viene de `folio_interno` (lo genera un trigger como `FP-000123`), no del folio capturado del proveedor. Las páginas nunca coincidían con `S08-F4/S08-F5` y el grupo `operaciones` de `rls-tests` fallaba.
+- **Corrección.** Las 3 aserciones ahora comparan `movimientos[].referencia`, que sí es el `folio_proveedor` sembrado por la prueba. Sin cambios en la función ni en la app.
+
 ## [13.602.0] - 2026-08-14
 ### Ola 13 · Sprint 08 — Retiro certificado de la sustitución motivo 01 del REP archivado (R4P-01, P2)
 - **Rama muerta eliminada.** `facturapi-cancelar-rep` aceptaba la bandera `cancelar_rep_anterior` para "cancelar el REP archivado sustituyéndolo por el vigente", pero ningún punto de la app la enviaba nunca (el hook siempre llamaba con 3 datos). Se retiró la bandera, la variable `cancelarAnterior` y las validaciones que sólo existían para ella: hoy la función rechaza de inmediato un REP ya cancelado y deja un solo camino real y probado (cancelar con motivo 02, timbrar el REP nuevo).
