@@ -98,9 +98,10 @@ BEGIN
 
   INSERT INTO public.proveedor_facturas(id, organization_id, proveedor_id, proveedor_nombre,
                                         folio_proveedor, moneda, subtotal, total, estado,
-                                        fecha_emision, categoria_presupuesto_id, deleted_at)
+                                        fecha_emision, estado_aprobacion,
+                                        categoria_presupuesto_id, deleted_at)
   VALUES (pfac_borr, org_a, prov_a, 'Proveedor SoftDelete',
-          'SD-PF-BORRADA', 'MXN', 1000, 1160, 'Vigente', v_hoy,
+          'SD-PF-BORRADA', 'MXN', 1000, 1160, 'Vigente', v_hoy, 'aprobada',
           (SELECT id FROM public.presupuesto_categorias
             WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1),
           now());
