@@ -66,8 +66,10 @@ export function CfdiConceptosPreview({ conceptos, moneda }: Props) {
               {conceptos.map((c, i) => (
                 <tr key={i} className="border-t odd:bg-background even:bg-muted/20 align-top">
                   <td className="px-2 py-1.5 text-muted-foreground">{i + 1}</td>
-                  <td className="px-2 py-1.5 max-w-[320px] line-clamp-2" title={c.descripcion}>
+                  <td className="px-2 py-1.5 max-w-[320px]" title={c.descripcion}>
+                    <span className="line-clamp-2">
                     {c.descripcion || <span className="text-muted-foreground">(Sin descripción)</span>}
+                    </span>
                   </td>
                   <td className="px-2 py-1.5 text-right">{lineas[i].cantidad}</td>
                   <td className="px-2 py-1.5 text-right">{formatCurrency(lineas[i].monto, moneda)}</td>
