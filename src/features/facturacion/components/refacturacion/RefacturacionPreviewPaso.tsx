@@ -2,11 +2,11 @@
  * Vista previa del resultado de la etapa activa: qué se cancela, qué se crea,
  * cómo se reasigna el pago y cómo quedan los saldos. Sólo lectura.
  */
-import { AlertTriangle, Ban, FilePlus2, Loader2, Repeat2 } from "lucide-react";
+import { Ban, FilePlus2, Loader2, Repeat2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { LC_CODE_MESSAGES_REFACTURACION } from "@/lib/errors/lcCodeMessages.refacturacion";
 import { useRefacturacionSimulacion } from "@/features/facturacion/hooks/useRefacturacionSimulacion";
 import type { AccionSimulada } from "@/features/facturacion/services/refacturacionSimulacion";
+import { RefacturacionPreviewCodigos } from "./RefacturacionPreviewCodigos";
 import { RefacturacionPreviewSaldos } from "./RefacturacionPreviewSaldos";
 
 interface Props {
