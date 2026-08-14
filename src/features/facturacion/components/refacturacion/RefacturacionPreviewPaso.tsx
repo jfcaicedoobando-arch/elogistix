@@ -116,19 +116,9 @@ export function RefacturacionPreviewPaso({ casoId, paso, activo }: Props) {
 
       <RefacturacionPreviewSaldos saldos={data.saldos} />
 
-      {data.bloqueos.length > 0 && (
-        <ul className="space-y-1">
-          {data.bloqueos.map((codigo) => (
-            <li
-              key={codigo}
-              className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs"
-            >
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 text-destructive" aria-hidden="true" />
-              <span>{LC_CODE_MESSAGES_REFACTURACION[codigo] ?? codigo}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <RefacturacionPreviewCodigos codigos={data.bloqueos} tono="bloqueo" />
+      <RefacturacionPreviewCodigos codigos={data.pendientes} tono="pendiente" />
+
     </section>
   );
 }
