@@ -107,6 +107,12 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         </TabsList>
 
         <TabsContent value="resumen" className="mt-4 space-y-4">
+          <CriteriosSalidaCard
+            oportunidadId={op.id}
+            etapaId={op.etapa_id}
+            etapaNombre={etapa?.nombre}
+            canEdit={canEdit}
+          />
           <DatosComercialesCard
             fields={[
               { label: "Vendedor", value: op.vendedor_email },
@@ -114,11 +120,15 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
               { label: "Cierre estimado", value: op.fecha_estimada_cierre },
               { label: "Origen", value: op.origen },
               { label: "Destino", value: op.destino },
+              { label: "Monto meta", value: op.monto_meta != null ? String(op.monto_meta) : null },
+              { label: "Fecha meta de cierre", value: op.fecha_meta_cierre },
+              { label: "Compromiso", value: op.compromiso_nota, colSpan: true },
               { label: "Notas", value: op.notas, colSpan: true },
             ]}
           />
           <OportunidadCotizacionesList oportunidadId={op.id} />
         </TabsContent>
+
 
         <TabsContent value="comunicacion" className="mt-4 space-y-4">
           {op.cliente_id && (
