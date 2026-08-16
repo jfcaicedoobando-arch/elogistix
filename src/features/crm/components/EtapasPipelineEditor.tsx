@@ -99,7 +99,7 @@ export default function EtapasPipelineEditor() {
           {etapas.map((e) => {
             const d = draft[e.id]; if (!d) return null;
             return (
-              <div key={e.id} className="grid grid-cols-13 gap-2 items-center p-2 border rounded">
+              <div key={e.id} className="grid grid-cols-[repeat(13,minmax(0,1fr))] gap-2 items-center p-2 border rounded">
                 <Input className="col-span-2" value={d.nombre} onChange={(ev) => set(e.id, { nombre: ev.target.value })} />
                 <Select value={d.tipo} onValueChange={(v) => set(e.id, { tipo: v as CrmEtapaTipo })}>
                   <SelectTrigger className="col-span-1"><SelectValue /></SelectTrigger>
