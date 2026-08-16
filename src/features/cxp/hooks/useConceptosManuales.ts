@@ -58,5 +58,9 @@ export function useConceptosManuales(): ConceptosManualesApi {
 
   const limpiar = useCallback(() => setConceptos([]), []);
 
-  return { conceptos, agregar, actualizar, eliminar, limpiar };
+  const reemplazar = useCallback((lista: ReadonlyArray<CfdiConceptoParsed>) => {
+    setConceptos(lista.map((c) => ({ ...c, key: nextKey() })));
+  }, []);
+
+  return { conceptos, agregar, actualizar, eliminar, limpiar, reemplazar };
 }
