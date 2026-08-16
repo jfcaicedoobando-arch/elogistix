@@ -2723,6 +2723,7 @@ export type Database = {
       crm_actividades: {
         Row: {
           asunto: string
+          contacto_efectivo: boolean
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -2738,11 +2739,13 @@ export type Database = {
           responsable_email: string
           responsable_id: string | null
           resultado: string
+          reunion_calificada: boolean
           tipo: Database["public"]["Enums"]["crm_actividad_tipo"]
           updated_at: string
         }
         Insert: {
           asunto: string
+          contacto_efectivo?: boolean
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -2758,11 +2761,13 @@ export type Database = {
           responsable_email?: string
           responsable_id?: string | null
           resultado?: string
+          reunion_calificada?: boolean
           tipo: Database["public"]["Enums"]["crm_actividad_tipo"]
           updated_at?: string
         }
         Update: {
           asunto?: string
+          contacto_efectivo?: boolean
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -2778,6 +2783,7 @@ export type Database = {
           responsable_email?: string
           responsable_id?: string | null
           resultado?: string
+          reunion_calificada?: boolean
           tipo?: Database["public"]["Enums"]["crm_actividad_tipo"]
           updated_at?: string
         }
@@ -3090,6 +3096,42 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_metas_actividad: {
+        Row: {
+          contactadas: number
+          cotizaciones: number
+          created_at: string
+          icp_validados: number
+          id: string
+          organization_id: string
+          periodo: string
+          reuniones: number
+          updated_at: string
+        }
+        Insert: {
+          contactadas?: number
+          cotizaciones?: number
+          created_at?: string
+          icp_validados?: number
+          id?: string
+          organization_id: string
+          periodo: string
+          reuniones?: number
+          updated_at?: string
+        }
+        Update: {
+          contactadas?: number
+          cotizaciones?: number
+          created_at?: string
+          icp_validados?: number
+          id?: string
+          organization_id?: string
+          periodo?: string
+          reuniones?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_motivos_perdida: {
         Row: {
           activa: boolean
@@ -3345,6 +3387,39 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           nombre?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_presupuesto_mensual: {
+        Row: {
+          anio: number
+          created_at: string
+          id: string
+          mes: number
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          anio: number
+          created_at?: string
+          id?: string
+          mes: number
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          anio?: number
+          created_at?: string
+          id?: string
+          mes?: number
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
           organization_id?: string
           updated_at?: string
         }
@@ -8947,6 +9022,30 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      crm_avance_actividad: {
+        Args: { p_desde: string; p_hasta: string }
+        Returns: {
+          contactos: number
+          contactos_efectivos: number
+          cotizaciones: number
+          reuniones_calificadas: number
+          vendedor_email: string
+        }[]
+      }
+      crm_embudo_conversion: {
+        Args: { p_desde: string; p_hasta: string }
+        Returns: {
+          conversion_desde_anterior: number
+          entradas: number
+          etapa_id: string
+          etapa_nombre: string
+          oportunidades: number
+          orden: number
+          ponderado: number
+          probabilidad_default: number
+          valor: number
+        }[]
       }
       crm_higiene_oportunidades: {
         Args: never
