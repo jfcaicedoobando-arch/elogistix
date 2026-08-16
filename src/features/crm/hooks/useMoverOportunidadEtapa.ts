@@ -72,7 +72,33 @@ export function resolverLimpiezaCierre(
   return patch;
 }
 
+/** Avisa (sin bloquear) si la etapa de origen deja criterios pendientes. */
+async function avisarCriteriosPendientes(
+  oportunidadId: string,
+  etapaNombre: string | undefined,
+): Promise<void> {
+  if (!etapaNombre) return;
+  try {
+    const [{ fetchAvanceCriterios }, { avisoCriteriosPendientes }, { notifyWarning }] =
+      await Promise.all([
+        import("@/features/crm/services/criteriosEtapa"),
+        import("@/features/crm/domain/criterios"),
+        import("@/lib/ui/appFeedback"),
+      ]);
+    const mapa = await fetchAvanceCriterios([oportunidadId]);
+    const aviso = avisoCriteriosPendientes(mapa.get(oportunidadId), etapaNombre);
+    if (aviso) {
+      notifyWarning(aviso, {
+        description: "Puedes continuar, pero el avance de la etapa quedará incompleto.",
+      });
+    }
+  } catch {
+    // El aviso es informativo: nunca debe impedir mover la oportunidad.
+  }
+}
+
 export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
+
   const mover = useMoverEtapaConAutomatizacion();
   const [proximoPaso, setProximoPaso] = useState<ProximoPasoTarget | null>(null);
 
