@@ -24,3 +24,4 @@ export * from "./forecast";
 
 export * from "./higiene";
 export * from "./metasPresupuesto";
+export * from './margen';
