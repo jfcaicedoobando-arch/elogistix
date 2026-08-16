@@ -87,6 +87,12 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
         | undefined;
       const probabilidad = resolverProbabilidad(op, etapaOrigen, prob);
 
+      // Disciplina de pipeline: avisar (sin bloquear) si la etapa de origen
+      // deja criterios de salida pendientes.
+      await avisarCriteriosPendientes(id, etapaOrigen?.nombre);
+
+
+
       try {
         await mover.mutateAsync({
           id,
