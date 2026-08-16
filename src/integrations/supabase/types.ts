@@ -10196,6 +10196,10 @@ export type Database = {
         Args: { p_conceptos: Json; p_documento_id: string }
         Returns: number
       }
+      reemplazar_conceptos_factura_proveedor: {
+        Args: { p_conceptos: Json; p_factura_id: string }
+        Returns: number
+      }
       refacturacion_expediente: { Args: { p_caso_id: string }; Returns: Json }
       refacturacion_set_paso: {
         Args: { p_caso_id: string; p_paso: number }
