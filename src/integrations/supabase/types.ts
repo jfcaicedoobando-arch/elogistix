@@ -2867,6 +2867,56 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_etapa_criterios: {
+        Row: {
+          activo: boolean
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          etapa_id: string
+          id: string
+          nombre: string
+          obligatorio: boolean
+          orden: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          etapa_id: string
+          id?: string
+          nombre: string
+          obligatorio?: boolean
+          orden?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          etapa_id?: string
+          id?: string
+          nombre?: string
+          obligatorio?: boolean
+          orden?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_etapa_criterios_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "crm_etapas_pipeline"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_etapas_pipeline: {
         Row: {
           activa: boolean
@@ -3198,11 +3248,60 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_oportunidad_criterios: {
+        Row: {
+          created_at: string
+          criterio_id: string
+          cumplido_at: string
+          cumplido_por: string | null
+          id: string
+          oportunidad_id: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criterio_id: string
+          cumplido_at?: string
+          cumplido_por?: string | null
+          id?: string
+          oportunidad_id: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criterio_id?: string
+          cumplido_at?: string
+          cumplido_por?: string | null
+          id?: string
+          oportunidad_id?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_oportunidad_criterios_criterio_id_fkey"
+            columns: ["criterio_id"]
+            isOneToOne: false
+            referencedRelation: "crm_etapa_criterios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidad_criterios_oportunidad_id_fkey"
+            columns: ["oportunidad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_oportunidades: {
         Row: {
           aduana_puerto: string | null
           cliente_id: string | null
           cliente_nombre: string
+          compromiso_nota: string | null
           cotizacion_ganadora_id: string | null
           created_at: string
           created_by: string | null
@@ -3215,6 +3314,7 @@ export type Database = {
           etapa_id: string
           fecha_cierre_real: string | null
           fecha_estimada_cierre: string | null
+          fecha_meta_cierre: string | null
           frecuencia: string | null
           id: string
           incoterm: string | null
@@ -3223,6 +3323,7 @@ export type Database = {
           modo: string
           moneda: string
           monto_estimado: number
+          monto_meta: number | null
           motivo_perdida_id: string | null
           nombre: string
           notas: string
@@ -3243,6 +3344,7 @@ export type Database = {
           aduana_puerto?: string | null
           cliente_id?: string | null
           cliente_nombre?: string
+          compromiso_nota?: string | null
           cotizacion_ganadora_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -3255,6 +3357,7 @@ export type Database = {
           etapa_id: string
           fecha_cierre_real?: string | null
           fecha_estimada_cierre?: string | null
+          fecha_meta_cierre?: string | null
           frecuencia?: string | null
           id?: string
           incoterm?: string | null
@@ -3263,6 +3366,7 @@ export type Database = {
           modo?: string
           moneda?: string
           monto_estimado?: number
+          monto_meta?: number | null
           motivo_perdida_id?: string | null
           nombre: string
           notas?: string
@@ -3283,6 +3387,7 @@ export type Database = {
           aduana_puerto?: string | null
           cliente_id?: string | null
           cliente_nombre?: string
+          compromiso_nota?: string | null
           cotizacion_ganadora_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -3295,6 +3400,7 @@ export type Database = {
           etapa_id?: string
           fecha_cierre_real?: string | null
           fecha_estimada_cierre?: string | null
+          fecha_meta_cierre?: string | null
           frecuencia?: string | null
           id?: string
           incoterm?: string | null
@@ -3303,6 +3409,7 @@ export type Database = {
           modo?: string
           moneda?: string
           monto_estimado?: number
+          monto_meta?: number | null
           motivo_perdida_id?: string | null
           nombre?: string
           notas?: string
@@ -9031,6 +9138,16 @@ export type Database = {
           cotizaciones: number
           reuniones_calificadas: number
           vendedor_email: string
+        }[]
+      }
+      crm_criterios_avance: {
+        Args: { p_oportunidad_ids: string[] }
+        Returns: {
+          cumplidos: number
+          etapa_id: string
+          obligatorios_pendientes: number
+          oportunidad_id: string
+          total: number
         }[]
       }
       crm_embudo_conversion: {

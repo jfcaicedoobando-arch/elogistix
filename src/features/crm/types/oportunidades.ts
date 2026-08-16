@@ -28,4 +28,9 @@ export type OportunidadInput = {
   notas?: string;
   vendedor_id?: string | null;
   vendedor_email?: string;
+  // Ola CRM: metas comerciales por oportunidad.
+  monto_meta?: number | null;
+  fecha_meta_cierre?: string | null;
+  compromiso_nota?: string | null;
 };
+

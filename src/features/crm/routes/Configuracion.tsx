@@ -9,6 +9,8 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import EtapasPipelineEditor from "@/features/crm/components/EtapasPipelineEditor";
+import CriteriosEtapaEditor from "@/features/crm/components/CriteriosEtapaEditor";
+
 import MotivosPerdidaEditor from "@/features/crm/components/MotivosPerdidaEditor";
 import PlantillasMensajeEditor from "@/features/crm/components/PlantillasMensajeEditor";
 import PresupuestoCrmEditor from "@/features/crm/components/PresupuestoCrmEditor";
@@ -35,7 +37,14 @@ export default function CrmConfiguracion() {
             <EtapasPipelineEditor />
           </AccordionContent>
         </AccordionItem>
+        <AccordionItem value="criterios" className="border rounded-md bg-card px-4">
+          <AccordionTrigger className="text-sm font-semibold">Criterios de salida por etapa</AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+            <CriteriosEtapaEditor />
+          </AccordionContent>
+        </AccordionItem>
         <AccordionItem value="motivos" className="border rounded-md bg-card px-4">
+
           <AccordionTrigger className="text-sm font-semibold">Motivos de pérdida</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <MotivosPerdidaEditor />

@@ -66,7 +66,15 @@ export const crm = {
     all: ['crm', 'etapas'] as const,
     todas: ['crm', 'etapas', 'all'] as const,
   },
+  criterios: {
+    all: ['crm', 'criterios'] as const,
+    byEtapa: (etapaId?: string) => ['crm', 'criterios', 'etapa', etapaId ?? 'todas'] as const,
+    cumplimiento: (oportunidadId: string) =>
+      ['crm', 'criterios', 'cumplimiento', oportunidadId] as const,
+    avance: (oportunidadIds: string[]) => ['crm', 'criterios', 'avance', oportunidadIds] as const,
+  },
   higiene: {
+
     all: ['crm', 'higiene'] as const,
     resumen: ['crm', 'higiene', 'resumen'] as const,
     oportunidades: ['crm', 'higiene', 'oportunidades'] as const,

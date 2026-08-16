@@ -72,7 +72,36 @@ export function resolverLimpiezaCierre(
   return patch;
 }
 
+/** Avisa (sin bloquear) si la etapa de origen deja criterios pendientes. */
+async function avisarCriteriosPendientes(
+  oportunidadId: string,
+  etapaNombre: string | undefined,
+): Promise<void> {
+  if (!etapaNombre) return;
+  try {
+    const [{ fetchAvanceCriterios }, { avisoCriteriosPendientes }, { notifyWarning }] =
+      await Promise.all([
+        import("@/features/crm/services/criteriosEtapa"),
+        import("@/features/crm/domain/criterios"),
+        import("@/lib/ui/appFeedback"),
+      ]);
+    const mapa = await fetchAvanceCriterios([oportunidadId]);
+    const aviso = avisoCriteriosPendientes(mapa.get(oportunidadId), etapaNombre);
+    if (aviso) {
+      notifyWarning(undefined, {
+        title: aviso,
+        description: "Puedes continuar, pero el avance de la etapa quedará incompleto.",
+        method: "HANDLE_MOVER",
+      });
+
+    }
+  } catch {
+    // El aviso es informativo: nunca debe impedir mover la oportunidad.
+  }
+}
+
 export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
+
   const mover = useMoverEtapaConAutomatizacion();
   const [proximoPaso, setProximoPaso] = useState<ProximoPasoTarget | null>(null);
 
@@ -86,6 +115,12 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
         | (CrmEtapaRow & { tipo?: string })
         | undefined;
       const probabilidad = resolverProbabilidad(op, etapaOrigen, prob);
+
+      // Disciplina de pipeline: avisar (sin bloquear) si la etapa de origen
+      // deja criterios de salida pendientes.
+      await avisarCriteriosPendientes(id, etapaOrigen?.nombre);
+
+
 
       try {
         await mover.mutateAsync({
