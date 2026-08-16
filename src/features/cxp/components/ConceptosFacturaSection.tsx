@@ -26,9 +26,20 @@ interface Props {
   /** Totales del documento para contrastar con la suma de las líneas. */
   retenciones?: number | null;
   total?: number | null;
+  /** Datos para habilitar la edición de conceptos (facturas manuales). */
+  edicion?: {
+    folio: string;
+    subtotal: number;
+    uuidFiscal: string | null;
+    archivoXmlUrl: string | null;
+    estado: string;
+    pagado: number;
+  };
 }
 
-export function ConceptosFacturaSection({ facturaId, moneda, retenciones, total }: Props) {
+export function ConceptosFacturaSection({
+  facturaId, moneda, retenciones, total, edicion,
+}: Props) {
   const { data: conceptos = [], isLoading } = useConceptosCfdiFactura(facturaId);
 
   return (
@@ -37,6 +48,18 @@ export function ConceptosFacturaSection({ facturaId, moneda, retenciones, total 
         title="Conceptos de la factura"
         icon={<FileText className="h-4 w-4" />}
         count={conceptos.length}
+        actions={edicion ? (
+          <EditarConceptosButton
+            facturaId={facturaId}
+            moneda={moneda}
+            folio={edicion.folio}
+            subtotal={edicion.subtotal}
+            uuidFiscal={edicion.uuidFiscal}
+            archivoXmlUrl={edicion.archivoXmlUrl}
+            estado={edicion.estado}
+            pagado={edicion.pagado}
+          />
+        ) : undefined}
       />
 
       {isLoading ? (
