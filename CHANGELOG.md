@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.626.0] - 2026-08-16
+- El embudo de oportunidades ahora tiene criterios de salida por etapa: se configuran en Configuración del CRM y aparecen como checklist en el detalle de cada oportunidad, con avance visible en su tarjeta del Kanban.
+- Al mover una oportunidad de etapa con criterios pendientes se muestra un aviso (no bloquea) indicando cuántos faltan y si alguno es obligatorio.
+- Cada oportunidad admite meta de monto, fecha meta de cierre y nota de compromiso; el Kanban muestra el avance vs meta, marca las metas vencidas y suma por columna estimado, meta y ponderado.
+- Nueva franja de resumen del pipeline con total estimado, meta y ponderado por probabilidad.
+
+
+
 ## [13.625.0] - 2026-08-16
 - CRM Hunter (Etapas 1-3): el perfil ICP del lead ahora se captura desde su ficha con barra de avance, y el módulo suma una pestaña nueva de "Higiene" con semáforo de oportunidades estancadas y cobertura de pipeline vs presupuesto.
 - Configuración del CRM incorpora el presupuesto comercial mensual y las metas de actividad por periodo (ICP validados, empresas contactadas, reuniones y cotizaciones).
