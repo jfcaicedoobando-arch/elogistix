@@ -4,7 +4,7 @@
  * super_admin, admin_org o gerente_comercial de la misma organización.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { registrarActividad } from "@/lib/services/bitacora";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export async function autorizarMargenOportunidad(input: {
   oportunidadId: string;
