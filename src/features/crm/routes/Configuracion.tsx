@@ -9,6 +9,8 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import EtapasPipelineEditor from "@/features/crm/components/EtapasPipelineEditor";
+import CriteriosEtapaEditor from "@/features/crm/components/CriteriosEtapaEditor";
+
 import MotivosPerdidaEditor from "@/features/crm/components/MotivosPerdidaEditor";
 import PlantillasMensajeEditor from "@/features/crm/components/PlantillasMensajeEditor";
 import PresupuestoCrmEditor from "@/features/crm/components/PresupuestoCrmEditor";
