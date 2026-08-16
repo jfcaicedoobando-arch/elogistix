@@ -17,6 +17,7 @@ import {
   type LineaConceptoResumen,
 } from "@/features/cxp/utils/resumenConceptos";
 import { ConceptosTotalesResumen } from "@/features/cxp/components/ConceptosTotalesResumen";
+import { EditarConceptosButton } from "@/features/cxp/components/EditarConceptosButton";
 
 import { useConceptosCfdiFactura, type ConceptoCfdiRow } from "@/features/cxp/hooks/useConceptosCfdiFactura";
 
