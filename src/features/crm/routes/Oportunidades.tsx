@@ -25,7 +25,8 @@ import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/compo
 import { useOportunidades, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
 import { useMoverOportunidadEtapa } from "@/features/crm/hooks/useMoverOportunidadEtapa";
 import { useUsuarios } from "@/features/admin/hooks/usuario";
-import { oportunidadesColumns, activosFiltros } from "./oportunidadesTable";
+import { oportunidadesColumns, siguienteActividadColumn, activosFiltros } from "./oportunidadesTable";
+import { useProximasActividades } from "@/features/crm/hooks/useProximasActividades";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -68,6 +69,15 @@ export default function Oportunidades() {
     etapas: etapas as CrmEtapaRow[],
     oportunidades: opsRaw,
   });
+
+  const { data: proximas } = useProximasActividades(
+    "oportunidad",
+    useMemo(() => ops.map((o) => o.id), [ops]),
+  );
+  const columnas = useMemo(
+    () => [...oportunidadesColumns, siguienteActividadColumn(proximas ?? new Map())],
+    [proximas],
+  );
 
   const activos = activosFiltros(filtros);
   const totalPipeline = ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0);
@@ -152,7 +162,7 @@ export default function Oportunidades() {
           <Card>
             <CardContent className="p-0">
               <DataTable
-                columns={oportunidadesColumns}
+                columns={columnas}
                 data={ops}
                 isLoading={isLoading}
                 emptyMessage="No hay oportunidades"
