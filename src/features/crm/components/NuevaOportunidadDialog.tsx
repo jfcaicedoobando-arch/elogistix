@@ -79,6 +79,8 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         monto_meta: form.monto_meta > 0 ? form.monto_meta : null,
         fecha_meta_cierre: form.fecha_meta_cierre || null,
         compromiso_nota: form.compromiso_nota || null,
+        margen_pct: form.margen_pct > 0 ? form.margen_pct : null,
+        riesgos_objeciones: form.riesgos_objeciones || null,
       };
 
       if (isEdit && oportunidad) {
