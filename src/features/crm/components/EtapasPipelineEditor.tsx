@@ -25,7 +25,7 @@ const TIPOS: CrmEtapaTipo[] = ["abierta", "ganada", "perdida"];
 interface RowState {
   nombre: string; tipo: CrmEtapaTipo; color: string;
   probabilidad_default: number; orden: number; activa: boolean;
-  crea_tarea_seguimiento: boolean; dias_seguimiento: number;
+  crea_tarea_seguimiento: boolean; dias_seguimiento: number; sla_dias: number;
 }
 
 function toState(e: CrmEtapaRow): RowState {
@@ -35,6 +35,7 @@ function toState(e: CrmEtapaRow): RowState {
     orden: e.orden, activa: e.activa,
     crea_tarea_seguimiento: e.crea_tarea_seguimiento ?? false,
     dias_seguimiento: e.dias_seguimiento ?? 3,
+    sla_dias: e.sla_dias ?? 7,
   };
 }
 
@@ -56,7 +57,8 @@ export default function EtapasPipelineEditor() {
       (orig.probabilidad_default ?? 0) !== d.probabilidad_default ||
       orig.orden !== d.orden || orig.activa !== d.activa ||
       (orig.crea_tarea_seguimiento ?? false) !== d.crea_tarea_seguimiento ||
-      (orig.dias_seguimiento ?? 3) !== d.dias_seguimiento
+      (orig.dias_seguimiento ?? 3) !== d.dias_seguimiento ||
+      (orig.sla_dias ?? 7) !== d.sla_dias
     );
   };
 
@@ -87,7 +89,8 @@ export default function EtapasPipelineEditor() {
         <CardTitle>Etapas del pipeline</CardTitle>
         <p className="text-xs text-muted-foreground">
           Configura nombre, tipo, probabilidad, color y orden. Activa "Crear tarea" para auto-generar
-          una tarea de seguimiento al mover una oportunidad a esta etapa.
+          una tarea de seguimiento al mover una oportunidad a esta etapa. "SLA" son los días sin
+          movimiento permitidos antes de marcar la oportunidad como vencida en Higiene.
         </p>
       </CardHeader>
       <CardContent>
@@ -96,7 +99,7 @@ export default function EtapasPipelineEditor() {
           {etapas.map((e) => {
             const d = draft[e.id]; if (!d) return null;
             return (
-              <div key={e.id} className="grid grid-cols-12 gap-2 items-center p-2 border rounded">
+              <div key={e.id} className="grid grid-cols-13 gap-2 items-center p-2 border rounded">
                 <Input className="col-span-2" value={d.nombre} onChange={(ev) => set(e.id, { nombre: ev.target.value })} />
                 <Select value={d.tipo} onValueChange={(v) => set(e.id, { tipo: v as CrmEtapaTipo })}>
                   <SelectTrigger className="col-span-1"><SelectValue /></SelectTrigger>
@@ -134,6 +137,12 @@ export default function EtapasPipelineEditor() {
                   disabled={!d.crea_tarea_seguimiento}
                   value={d.dias_seguimiento}
                   onChange={(ev) => set(e.id, { dias_seguimiento: Math.max(1, Math.min(30, Number(ev.target.value) || 1)) })}
+                />
+                <Input
+                  type="number" min={1} max={120} className="col-span-1"
+                  title="SLA de la etapa (días sin movimiento permitidos)"
+                  value={d.sla_dias}
+                  onChange={(ev) => set(e.id, { sla_dias: Math.max(1, Math.min(120, Number(ev.target.value) || 1)) })}
                 />
                 <Button
                   size="sm" className="col-span-1"
