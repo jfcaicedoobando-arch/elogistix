@@ -14,6 +14,7 @@ import {
   completitudIcp, toLeadIcpPatch, type LeadIcpSource,
 } from "@/features/crm/domain/leads/icp";
 import LeadIcpFields from "./LeadIcpFields";
+import LeadIcpContactoFields from "./LeadIcpContactoFields";
 
 interface Props {
   leadId: string;
