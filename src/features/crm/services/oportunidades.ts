@@ -10,7 +10,7 @@ export type { CrmOportunidadRow, Moneda, OportunidadInput } from "@/features/crm
 import type { CrmOportunidadRow, OportunidadInput } from "@/features/crm/types/oportunidades";
 
 const COLS =
-  "id, nombre, cliente_id, cliente_nombre, lead_id, vendedor_id, vendedor_email, etapa_id, monto_estimado, valor_real, moneda, probabilidad, fecha_estimada_cierre, fecha_cierre_real, motivo_perdida_id, modo, tipo_carga, origen, destino, notas, cotizacion_ganadora_id, embarque_ganador_id, created_at, updated_at";
+  "id, nombre, cliente_id, cliente_nombre, lead_id, vendedor_id, vendedor_email, etapa_id, monto_estimado, valor_real, moneda, probabilidad, fecha_estimada_cierre, fecha_cierre_real, motivo_perdida_id, modo, tipo_carga, origen, destino, notas, monto_meta, fecha_meta_cierre, compromiso_nota, cotizacion_ganadora_id, embarque_ganador_id, created_at, updated_at";
 
 export interface ListOportunidadesParams {
   search: string;
