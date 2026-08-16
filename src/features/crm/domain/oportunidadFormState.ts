@@ -22,6 +22,10 @@ export interface OportunidadFormState {
   notas: string;
   vendedor_id: string | null;
   vendedor_email: string;
+  // Ola CRM: metas por oportunidad (compromiso comercial).
+  monto_meta: number;
+  fecha_meta_cierre: string;
+  compromiso_nota: string;
 }
 
 export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
@@ -41,4 +45,8 @@ export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
   notas: "",
   vendedor_id: null,
   vendedor_email: "",
+  monto_meta: 0,
+  fecha_meta_cierre: "",
+  compromiso_nota: "",
 };
+
