@@ -16,7 +16,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
-import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { captureEdgeException, wrapEdgeHandler } from "../_shared/sentry.ts";
 import {
   extraerPublicacionDof as dofPublicacion,
   extraerUltimoTC as ultimoTC,
@@ -146,12 +146,23 @@ export async function leerTcDeTabla(fechaIso: string): Promise<Rates | null> {
   }
 }
 
-Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
+/**
+ * v13.624.6 — Blindaje del contrato de respuesta.
+ *
+ * Antes, cualquier excepción fuera del `try` principal (p. ej. `resolverFecha`
+ * con una URL/body raro, o el logger) escapaba del handler y salía como 500 sin
+ * cuerpo ni CORS: los flujos fiscales quedaban sin respuesta. Ahora el handler
+ * completo va dentro de un `try/catch` que reporta a Sentry y responde el
+ * contrato invariante con `es_fallback: true` (que los consumidores fiscales ya
+ * rechazan explícitamente), en vez de un 500 opaco.
+ */
+async function manejarExchangeRates(req: Request): Promise<Response> {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
   const log = createLogger(req, "exchange-rates");
   const { fecha, esHoy, key, fechaIso } = await resolverFecha(req);
+
 
   // Caché: "hoy" con TTL corto; históricas con TTL largo (son inmutables).
   if (esHoy && cacheHoyRef && cacheHoyRef.expiresAt > Date.now()) {
@@ -227,5 +238,16 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
     return jsonResponse(FALLBACK);
   } finally {
     clearTimeout(timer);
+  }
+}
+
+Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
+  try {
+    return await manejarExchangeRates(req);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(JSON.stringify({ level: "error", fn: "exchange-rates", msg: "unhandled", error: message }));
+    await captureEdgeException(err, { fn: "exchange-rates", status_code: 200 });
+    return jsonResponse(FALLBACK);
   }
 }));

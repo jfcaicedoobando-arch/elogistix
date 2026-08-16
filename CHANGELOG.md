@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.624.6] - 2026-08-15
+- El servicio de tipo de cambio (DOF) ya no puede responder con error 500: cualquier falla inesperada se reporta a Sentry y devuelve el contrato normal marcado como "fallback", que los flujos fiscales siguen rechazando. Antes, un error fuera del bloque protegido dejaba a facturas, notas de crédito y pagos sin respuesta.
+
 ## [13.624.5] - 2026-08-15
 - Prueba de guardrail del ciclo de cotización actualizada: ahora reconoce la bandera "Re-cotizar" declarada dentro del objeto de visibilidad tras la modularización. Sin cambios funcionales.
 
