@@ -2931,6 +2931,7 @@ export type Database = {
           orden: number
           organization_id: string
           probabilidad_default: number
+          sla_dias: number | null
           tipo: Database["public"]["Enums"]["crm_etapa_tipo"]
           updated_at: string
         }
@@ -2947,6 +2948,7 @@ export type Database = {
           orden?: number
           organization_id?: string
           probabilidad_default?: number
+          sla_dias?: number | null
           tipo?: Database["public"]["Enums"]["crm_etapa_tipo"]
           updated_at?: string
         }
@@ -2963,6 +2965,7 @@ export type Database = {
           orden?: number
           organization_id?: string
           probabilidad_default?: number
+          sla_dias?: number | null
           tipo?: Database["public"]["Enums"]["crm_etapa_tipo"]
           updated_at?: string
         }
@@ -3030,6 +3033,7 @@ export type Database = {
         Row: {
           aduana_puerto: string | null
           anios_establecida: number | null
+          cargo_contacto: string | null
           ciudad: string
           cliente_convertido_id: string | null
           consecuencia: string | null
@@ -3038,6 +3042,7 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           deleted_by: string | null
+          destino: string | null
           dolor_explicito: string | null
           email: string
           empresa: string
@@ -3054,6 +3059,7 @@ export type Database = {
           notas: string
           oportunidad_convertida_id: string | null
           organization_id: string
+          origen: string | null
           pais: string
           proveedor_actual: string | null
           rutas: string | null
@@ -3069,6 +3075,7 @@ export type Database = {
         Insert: {
           aduana_puerto?: string | null
           anios_establecida?: number | null
+          cargo_contacto?: string | null
           ciudad?: string
           cliente_convertido_id?: string | null
           consecuencia?: string | null
@@ -3077,6 +3084,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          destino?: string | null
           dolor_explicito?: string | null
           email?: string
           empresa: string
@@ -3093,6 +3101,7 @@ export type Database = {
           notas?: string
           oportunidad_convertida_id?: string | null
           organization_id?: string
+          origen?: string | null
           pais?: string
           proveedor_actual?: string | null
           rutas?: string | null
@@ -3108,6 +3117,7 @@ export type Database = {
         Update: {
           aduana_puerto?: string | null
           anios_establecida?: number | null
+          cargo_contacto?: string | null
           ciudad?: string
           cliente_convertido_id?: string | null
           consecuencia?: string | null
@@ -3116,6 +3126,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          destino?: string | null
           dolor_explicito?: string | null
           email?: string
           empresa?: string
@@ -3132,6 +3143,7 @@ export type Database = {
           notas?: string
           oportunidad_convertida_id?: string | null
           organization_id?: string
+          origen?: string | null
           pais?: string
           proveedor_actual?: string | null
           rutas?: string | null
@@ -3319,6 +3331,9 @@ export type Database = {
           id: string
           incoterm: string | null
           lead_id: string | null
+          margen_autorizado_at: string | null
+          margen_autorizado_por: string | null
+          margen_pct: number | null
           mercancia: string | null
           modo: string
           moneda: string
@@ -3331,6 +3346,7 @@ export type Database = {
           origen: string
           probabilidad: number
           proveedor_actual: string | null
+          riesgos_objeciones: string | null
           rutas: string | null
           tipo_carga: string
           ultimo_movimiento_at: string | null
@@ -3362,6 +3378,9 @@ export type Database = {
           id?: string
           incoterm?: string | null
           lead_id?: string | null
+          margen_autorizado_at?: string | null
+          margen_autorizado_por?: string | null
+          margen_pct?: number | null
           mercancia?: string | null
           modo?: string
           moneda?: string
@@ -3374,6 +3393,7 @@ export type Database = {
           origen?: string
           probabilidad?: number
           proveedor_actual?: string | null
+          riesgos_objeciones?: string | null
           rutas?: string | null
           tipo_carga?: string
           ultimo_movimiento_at?: string | null
@@ -3405,6 +3425,9 @@ export type Database = {
           id?: string
           incoterm?: string | null
           lead_id?: string | null
+          margen_autorizado_at?: string | null
+          margen_autorizado_por?: string | null
+          margen_pct?: number | null
           mercancia?: string | null
           modo?: string
           moneda?: string
@@ -3417,6 +3440,7 @@ export type Database = {
           origen?: string
           probabilidad?: number
           proveedor_actual?: string | null
+          riesgos_objeciones?: string | null
           rutas?: string | null
           tipo_carga?: string
           ultimo_movimiento_at?: string | null
@@ -9129,6 +9153,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      crm_autorizar_margen: {
+        Args: { _margen_pct: number; _oportunidad_id: string }
+        Returns: undefined
       }
       crm_avance_actividad: {
         Args: { p_desde: string; p_hasta: string }
