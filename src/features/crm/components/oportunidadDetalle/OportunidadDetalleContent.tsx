@@ -16,6 +16,8 @@ import { OportunidadKpisCards } from "./OportunidadKpisCards";
 import { OportunidadGanadaBanner } from "./OportunidadGanadaBanner";
 import { DatosComercialesCard } from "./DatosComercialesCard";
 import { ContactoRapidoCard } from "./ContactoRapidoCard";
+import { CriteriosSalidaCard } from "./CriteriosSalidaCard";
+
 import { useOportunidadDetalleActions } from "@/features/crm/hooks";
 import { useContactosCliente } from "@/features/cliente/hooks";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
