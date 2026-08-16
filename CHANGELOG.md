@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.624.7] - 2026-08-16
+- Se eliminó un cast innecesario en las acciones de proforma: el estado de autorización del cliente ya viene tipado desde la base de datos. Sin cambios funcionales.
+
 ## [13.624.6] - 2026-08-15
 - El servicio de tipo de cambio (DOF) ya no puede responder con error 500: cualquier falla inesperada se reporta a Sentry y devuelve el contrato normal marcado como "fallback", que los flujos fiscales siguen rechazando. Antes, un error fuera del bloque protegido dejaba a facturas, notas de crédito y pagos sin respuesta.
 
