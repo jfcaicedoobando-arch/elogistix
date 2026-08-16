@@ -14,6 +14,7 @@ import {
   completitudIcp, toLeadIcpPatch, type LeadIcpSource,
 } from "@/features/crm/domain/leads/icp";
 import LeadIcpFields from "./LeadIcpFields";
+import LeadIcpContactoFields from "./LeadIcpContactoFields";
 
 interface Props {
   leadId: string;
@@ -57,7 +58,10 @@ export default function LeadIcpCard({ leadId, lead, canEdit }: Props) {
         </div>
       </CardHeader>
       <CardContent>
-        <LeadIcpFields form={form} set={set} canEdit={canEdit} />
+        <div className="space-y-3">
+          <LeadIcpContactoFields form={form} set={set} canEdit={canEdit} />
+          <LeadIcpFields form={form} set={set} canEdit={canEdit} />
+        </div>
         {canEdit && (
           <div className="flex justify-end mt-4">
             <Button onClick={handleSave} disabled={!dirty} loading={actualizar.isPending}>

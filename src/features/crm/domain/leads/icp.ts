@@ -25,6 +25,9 @@ export interface LeadIcpForm {
   sector: string;
   sitio_web: string;
   anios_establecida: string;
+  cargo_contacto: string;
+  origen: string;
+  destino: string;
   mercancia: string;
   rutas: string;
   aduana_puerto: string;
@@ -43,6 +46,9 @@ export const EMPTY_LEAD_ICP_FORM: LeadIcpForm = {
   sector: "",
   sitio_web: "",
   anios_establecida: "",
+  cargo_contacto: "",
+  origen: "",
+  destino: "",
   mercancia: "",
   rutas: "",
   aduana_puerto: "",

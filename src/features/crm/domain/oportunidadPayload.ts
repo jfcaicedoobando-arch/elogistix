@@ -27,6 +27,7 @@ export function buildOportunidadInsertPayload(
     origen: "",
     destino: "",
     notas: "",
+    riesgos_objeciones: "",
     vendedor_email: user?.email ?? "",
   };
   const hasExplicitVendedor = input.vendedor_id !== undefined;

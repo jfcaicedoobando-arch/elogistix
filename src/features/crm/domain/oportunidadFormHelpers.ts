@@ -32,6 +32,8 @@ export function buildFromOportunidad(o: CrmOportunidadRow): OportunidadFormState
     monto_meta: Number(o.monto_meta ?? 0),
     fecha_meta_cierre: o.fecha_meta_cierre ?? "",
     compromiso_nota: o.compromiso_nota ?? "",
+    margen_pct: Number(o.margen_pct ?? 0),
+    riesgos_objeciones: o.riesgos_objeciones ?? "",
   };
 
 }

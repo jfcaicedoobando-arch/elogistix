@@ -29,3 +29,4 @@ export * from './useCrmSearch';
 export * from './useActualizarActividadNotas';
 export * from './useHigienePipeline';
 export * from './useLeadIcpForm';
+export * from './useAutorizarMargen';

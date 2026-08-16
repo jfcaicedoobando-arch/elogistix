@@ -41,7 +41,7 @@ export interface LeadsResultado {
 }
 
 export const LEAD_COLUMNS =
-  "id, empresa, contacto, email, telefono, ciudad, pais, fuente, estado, score, interes_modo, vendedor_id, vendedor_email, notas, oportunidad_convertida_id, cliente_convertido_id, created_at, updated_at, sector, sitio_web, anios_establecida, mercancia, rutas, aduana_puerto, incoterm, volumen, frecuencia, dolor_explicito, consecuencia, proveedor_actual, estatus_icp, motivo_nutricion, fecha_nutricion";
+  "id, empresa, contacto, email, telefono, ciudad, pais, fuente, estado, score, interes_modo, vendedor_id, vendedor_email, notas, oportunidad_convertida_id, cliente_convertido_id, created_at, updated_at, sector, sitio_web, anios_establecida, mercancia, rutas, aduana_puerto, incoterm, volumen, frecuencia, dolor_explicito, consecuencia, proveedor_actual, estatus_icp, motivo_nutricion, fecha_nutricion, cargo_contacto, origen, destino";
 
 export type LeadInput = {
   empresa: string;

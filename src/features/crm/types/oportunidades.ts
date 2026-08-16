@@ -32,5 +32,8 @@ export type OportunidadInput = {
   monto_meta?: number | null;
   fecha_meta_cierre?: string | null;
   compromiso_nota?: string | null;
+  // Mapeo CRM Hunter: margen esperado (%) y riesgos/objeciones.
+  margen_pct?: number | null;
+  riesgos_objeciones?: string | null;
 };
 

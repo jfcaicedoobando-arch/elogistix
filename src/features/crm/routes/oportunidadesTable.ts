@@ -6,6 +6,8 @@ import {
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 import type { OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import type { ProximaActividad } from "@/features/crm/hooks/useProximasActividades";
+import { formatFechaEs } from "@/lib/formatters/dates";
 
 export const oportunidadesColumns: ColumnDef<CrmOportunidadRow, unknown>[] = defineColumns<CrmOportunidadRow>([
   {
@@ -50,6 +52,30 @@ export const oportunidadesColumns: ColumnDef<CrmOportunidadRow, unknown>[] = def
     cell: ({ row }) => row.original.vendedor_email || "—",
   },
 ]);
+
+/**
+ * Columna "Siguiente actividad" (paridad con el CRM comercial en Excel):
+ * muestra el asunto y la fecha del pendiente más próximo por oportunidad.
+ */
+export function siguienteActividadColumn(
+  proximas: Map<string, ProximaActividad>,
+): ColumnDef<CrmOportunidadRow, unknown> {
+  return {
+    id: "siguiente_actividad",
+    header: "Siguiente actividad",
+    meta: {
+      width: COL_W.ruta,
+      className: "text-xs truncate hidden lg:table-cell",
+      headerClassName: "hidden lg:table-cell",
+    },
+    cell: ({ row }) => {
+      const a = proximas.get(row.original.id);
+      if (!a) return "Sin actividad";
+      const fecha = a.fecha_programada ? formatFechaEs(a.fecha_programada) : "sin fecha";
+      return `${a.asunto} · ${fecha}`;
+    },
+  } as ColumnDef<CrmOportunidadRow, unknown>;
+}
 
 export function activosFiltros(f: OportunidadesFiltros): number {
   let n = 0;
