@@ -16,7 +16,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
-import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { captureEdgeException, wrapEdgeHandler } from "../_shared/sentry.ts";
 import {
   extraerPublicacionDof as dofPublicacion,
   extraerUltimoTC as ultimoTC,
