@@ -48,6 +48,14 @@ export function FacturaProveedorTabs({
           moneda={f.moneda}
           retenciones={f.retenciones}
           total={f.total}
+          edicion={canEdit ? {
+            folio: f.folio_proveedor || f.folio_interno,
+            subtotal: f.subtotal,
+            uuidFiscal: f.uuid_fiscal,
+            archivoXmlUrl: f.archivo_xml_url,
+            estado: f.estado,
+            pagado: f.pagado,
+          } : undefined}
         />
       ),
     },
