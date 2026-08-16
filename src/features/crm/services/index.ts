@@ -22,3 +22,5 @@ export * from "./leads";
 export * from "./automatizacionesEtapa";
 export * from "./forecast";
 
+export * from "./higiene";
+export * from "./metasPresupuesto";

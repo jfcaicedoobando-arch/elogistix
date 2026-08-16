@@ -21,6 +21,7 @@ import { LeadLineageCard } from "@/features/crm/components/LineageCard";
 import ContactActions from "@/features/crm/components/ContactActions";
 import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
 import LeadDatosCard from "@/features/crm/components/leadDetalle/LeadDatosCard";
+import LeadIcpCard from "@/features/crm/components/leadDetalle/LeadIcpCard";
 import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderActions";
 import { useActualizarLead, useEliminarLead, useLead } from "@/features/crm/hooks";
 import { useLeadEditForm } from "@/features/crm/hooks";
@@ -135,6 +136,8 @@ export default function LeadDetalle() {
         isSaving={actualizar.isPending}
         onSave={handleSave}
       />
+
+      <LeadIcpCard leadId={lead.id} lead={lead} canEdit={canEdit} />
 
       <LeadLineageCard leadId={lead.id} />
 

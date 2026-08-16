@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DateTimePickerMx } from "@/components/ui/date-time-picker-mx";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -39,6 +40,8 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   const [asunto, setAsunto] = useState("");
   const [desc, setDesc] = useState("");
   const [fecha, setFecha] = useState("");
+  const [contactoEfectivo, setContactoEfectivo] = useState(false);
+  const [reunionCalificada, setReunionCalificada] = useState(false);
 
   const { data: leadsData } = useLeads({ pageSize: 100 });
   const { data: opsData } = useOportunidades({ pageSize: 200 });
@@ -55,6 +58,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
 
   const reset = () => {
     setAsunto(""); setDesc(""); setFecha("");
+    setContactoEfectivo(false); setReunionCalificada(false);
     if (!defaultEntidad) { setEntidadId(""); setEntidadTipo("oportunidad"); }
   };
 
@@ -69,6 +73,8 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         entidad_tipo: entidadTipo,
         entidad_id: entidadId,
         fecha_programada: fecha ? new Date(fecha).toISOString() : null,
+        contacto_efectivo: contactoEfectivo,
+        reunion_calificada: reunionCalificada,
       });
       crmToast.success("Actividad creada");
       reset();
@@ -149,6 +155,28 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       <div className="space-y-1">
         <Label>Descripción</Label>
         <Textarea rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} />
+      </div>
+      <div className="flex flex-col gap-2 pt-1">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="act-contacto-efectivo"
+            checked={contactoEfectivo}
+            onCheckedChange={(v) => setContactoEfectivo(v === true)}
+          />
+          <Label size="sm" htmlFor="act-contacto-efectivo" className="cursor-pointer">
+            Contacto efectivo (hablé con quien decide)
+          </Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="act-reunion-calificada"
+            checked={reunionCalificada}
+            onCheckedChange={(v) => setReunionCalificada(v === true)}
+          />
+          <Label size="sm" htmlFor="act-reunion-calificada" className="cursor-pointer">
+            Reunión calificada (con necesidad y presupuesto)
+          </Label>
+        </div>
       </div>
     </FormDialogShell>
   );

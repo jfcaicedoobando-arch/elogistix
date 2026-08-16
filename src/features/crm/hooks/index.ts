@@ -27,3 +27,5 @@ export * from './useNextBestActions';
 export * from './useUndoToast';
 export * from './useCrmSearch';
 export * from './useActualizarActividadNotas';
+export * from './useHigienePipeline';
+export * from './useLeadIcpForm';
