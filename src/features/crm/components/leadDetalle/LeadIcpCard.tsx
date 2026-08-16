@@ -30,7 +30,7 @@ export default function LeadIcpCard({ leadId, lead, canEdit }: Props) {
     try {
       await actualizar.mutateAsync({
         id: leadId,
-        patch: toLeadIcpPatch(form) as Parameters<typeof actualizar.mutateAsync>[0]["patch"],
+        patch: toLeadIcpPatch(form),
       });
       crmToast.success("Perfil ICP guardado");
     } catch (e) {
