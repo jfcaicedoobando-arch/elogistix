@@ -239,4 +239,15 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
   } finally {
     clearTimeout(timer);
   }
+}
+
+Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
+  try {
+    return await manejarExchangeRates(req);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(JSON.stringify({ level: "error", fn: "exchange-rates", msg: "unhandled", error: message }));
+    await captureEdgeException(err, { fn: "exchange-rates", status_code: 200 });
+    return jsonResponse(FALLBACK);
+  }
 }));
