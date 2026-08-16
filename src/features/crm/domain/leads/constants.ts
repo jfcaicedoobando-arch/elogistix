@@ -1,5 +1,5 @@
 import type { Database } from "@/integrations/supabase/types";
-import type { LeadIcpForm } from "./icp";
+import type { LeadIcpPatch } from "./icp";
 
 export type CrmLeadRow = Database["public"]["Tables"]["crm_leads"]["Row"];
 export type CrmLeadEstado = Database["public"]["Enums"]["crm_lead_estado"];
@@ -41,8 +41,7 @@ export interface LeadsResultado {
 }
 
 export const LEAD_COLUMNS =
-  "id, empresa, contacto, email, telefono, ciudad, pais, fuente, estado, score, interes_modo, vendedor_id, vendedor_email, notas, oportunidad_convertida_id, cliente_convertido_id, created_at, updated_at, " +
-  "sector, sitio_web, anios_establecida, mercancia, rutas, aduana_puerto, incoterm, volumen, frecuencia, dolor_explicito, consecuencia, proveedor_actual, estatus_icp, motivo_nutricion, fecha_nutricion";
+  "id, empresa, contacto, email, telefono, ciudad, pais, fuente, estado, score, interes_modo, vendedor_id, vendedor_email, notas, oportunidad_convertida_id, cliente_convertido_id, created_at, updated_at, sector, sitio_web, anios_establecida, mercancia, rutas, aduana_puerto, incoterm, volumen, frecuencia, dolor_explicito, consecuencia, proveedor_actual, estatus_icp, motivo_nutricion, fecha_nutricion";
 
 export type LeadInput = {
   empresa: string;
@@ -58,4 +57,4 @@ export type LeadInput = {
   notas?: string;
   vendedor_id?: string | null;
   vendedor_email?: string;
-} & Partial<Record<keyof LeadIcpForm, string | number | null>>;
+} & Partial<LeadIcpPatch>;

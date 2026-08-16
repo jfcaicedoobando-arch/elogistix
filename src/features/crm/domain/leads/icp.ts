@@ -74,7 +74,9 @@ export function toLeadIcpForm(row: LeadIcpSource | null | undefined): LeadIcpFor
 }
 
 /** Convierte el formulario a patch de BD ("" → null, años → número). */
-export type LeadIcpPatch = { [K in keyof LeadIcpForm]: string | number | null };
+export type LeadIcpPatch = {
+  [K in Exclude<keyof LeadIcpForm, "anios_establecida">]: string | null;
+} & { anios_establecida: number | null };
 
 export function toLeadIcpPatch(form: LeadIcpForm): LeadIcpPatch {
   const patch = {} as LeadIcpPatch;
