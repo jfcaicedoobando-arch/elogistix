@@ -2912,6 +2912,64 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_historial_etapas: {
+        Row: {
+          created_at: string
+          dias_en_etapa: number | null
+          etapa_destino_id: string
+          etapa_origen_id: string | null
+          id: string
+          oportunidad_id: string
+          organization_id: string
+          usuario_email: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dias_en_etapa?: number | null
+          etapa_destino_id: string
+          etapa_origen_id?: string | null
+          id?: string
+          oportunidad_id: string
+          organization_id: string
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dias_en_etapa?: number | null
+          etapa_destino_id?: string
+          etapa_origen_id?: string | null
+          id?: string
+          oportunidad_id?: string
+          organization_id?: string
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_historial_etapas_etapa_destino_id_fkey"
+            columns: ["etapa_destino_id"]
+            isOneToOne: false
+            referencedRelation: "crm_etapas_pipeline"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_historial_etapas_etapa_origen_id_fkey"
+            columns: ["etapa_origen_id"]
+            isOneToOne: false
+            referencedRelation: "crm_etapas_pipeline"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_historial_etapas_oportunidad_id_fkey"
+            columns: ["oportunidad_id"]
+            isOneToOne: false
+            referencedRelation: "crm_oportunidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_leads: {
         Row: {
           aduana_puerto: string | null
@@ -3111,6 +3169,7 @@ export type Database = {
           destino: string
           dolor_explicito: string | null
           embarque_ganador_id: string | null
+          etapa_desde_at: string | null
           etapa_id: string
           fecha_cierre_real: string | null
           fecha_estimada_cierre: string | null
@@ -3131,6 +3190,7 @@ export type Database = {
           proveedor_actual: string | null
           rutas: string | null
           tipo_carga: string
+          ultimo_movimiento_at: string | null
           updated_at: string
           valor_real: number | null
           vendedor_email: string
@@ -3149,6 +3209,7 @@ export type Database = {
           destino?: string
           dolor_explicito?: string | null
           embarque_ganador_id?: string | null
+          etapa_desde_at?: string | null
           etapa_id: string
           fecha_cierre_real?: string | null
           fecha_estimada_cierre?: string | null
@@ -3169,6 +3230,7 @@ export type Database = {
           proveedor_actual?: string | null
           rutas?: string | null
           tipo_carga?: string
+          ultimo_movimiento_at?: string | null
           updated_at?: string
           valor_real?: number | null
           vendedor_email?: string
@@ -3187,6 +3249,7 @@ export type Database = {
           destino?: string
           dolor_explicito?: string | null
           embarque_ganador_id?: string | null
+          etapa_desde_at?: string | null
           etapa_id?: string
           fecha_cierre_real?: string | null
           fecha_estimada_cierre?: string | null
@@ -3207,6 +3270,7 @@ export type Database = {
           proveedor_actual?: string | null
           rutas?: string | null
           tipo_carga?: string
+          ultimo_movimiento_at?: string | null
           updated_at?: string
           valor_real?: number | null
           vendedor_email?: string
@@ -8883,6 +8947,41 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      crm_higiene_oportunidades: {
+        Args: never
+        Returns: {
+          actividad_vencida: boolean
+          cliente_nombre: string
+          dias_sin_movimiento: number
+          estado_higiene: string
+          etapa_id: string
+          etapa_nombre: string
+          fecha_estimada_cierre: string
+          id: string
+          moneda: string
+          monto_estimado: number
+          nombre: string
+          probabilidad: number
+          proxima_actividad_at: string
+          registro_completo: boolean
+          sla_dias: number
+          ultimo_movimiento_at: string
+          vendedor_email: string
+        }[]
+      }
+      crm_higiene_pipeline: {
+        Args: never
+        Returns: {
+          abiertas: number
+          higiene_pct: number
+          pipeline_bruto: number
+          pipeline_ponderado: number
+          registros_completos: number
+          seguimiento_oportuno_pct: number
+          sin_actividad_programada: number
+          vencidas: number
+        }[]
       }
       current_agente_id: { Args: never; Returns: string }
       current_agente_org: { Args: never; Returns: string }
