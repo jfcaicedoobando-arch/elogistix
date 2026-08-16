@@ -10,7 +10,7 @@ export type CrmEtapaRow = Database["public"]["Tables"]["crm_etapas_pipeline"]["R
 export type CrmEtapaTipo = Database["public"]["Enums"]["crm_etapa_tipo"];
 
 const COLS =
-  "id, nombre, orden, tipo, color, probabilidad_default, activa, crea_tarea_seguimiento, dias_seguimiento, organization_id, created_at, updated_at";
+  "id, nombre, orden, tipo, color, probabilidad_default, activa, crea_tarea_seguimiento, dias_seguimiento, sla_dias, organization_id, created_at, updated_at";
 
 export async function fetchEtapasPipelineActivas(): Promise<CrmEtapaRow[]> {
   return unwrapOr(
@@ -41,6 +41,7 @@ export type EtapaPatch = Partial<
     | "activa"
     | "crea_tarea_seguimiento"
     | "dias_seguimiento"
+    | "sla_dias"
   >
 >;
 
