@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.627.1] - 2026-08-16
+- Seguridad: se revocó el acceso público a las funciones internas de disparador del CRM (cambio de etapa y toque de oportunidad); ahora sólo el sistema y usuarios autenticados pueden ejecutarlas.
+
+
 ## [13.627.0] - 2026-08-16
 - Mapeo del CRM comercial (Excel Hunter) al ERP: los leads ya guardan cargo del contacto, origen y destino dentro del perfil ICP.
 - Cada oportunidad admite margen esperado (%) y riesgos u objeciones; el detalle muestra una tarjeta "Margen y riesgo" donde gerencia comercial o administración autorizan el margen, con sello de quién y cuándo.
