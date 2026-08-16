@@ -29,7 +29,11 @@ export function buildFromOportunidad(o: CrmOportunidadRow): OportunidadFormState
     notas: o.notas ?? "",
     vendedor_id: o.vendedor_id ?? null,
     vendedor_email: o.vendedor_email ?? "",
+    monto_meta: Number(o.monto_meta ?? 0),
+    fecha_meta_cierre: o.fecha_meta_cierre ?? "",
+    compromiso_nota: o.compromiso_nota ?? "",
   };
+
 }
 
 export function buildEmptyForNueva(
