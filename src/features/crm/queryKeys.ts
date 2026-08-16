@@ -66,6 +66,22 @@ export const crm = {
     all: ['crm', 'etapas'] as const,
     todas: ['crm', 'etapas', 'all'] as const,
   },
+  higiene: {
+    all: ['crm', 'higiene'] as const,
+    resumen: ['crm', 'higiene', 'resumen'] as const,
+    oportunidades: ['crm', 'higiene', 'oportunidades'] as const,
+  },
+  embudoConversion: (desde: string, hasta: string) =>
+    ['crm', 'embudo-conversion', desde, hasta] as const,
+  avanceActividad: (desde: string, hasta: string) =>
+    ['crm', 'avance-actividad', desde, hasta] as const,
+  presupuesto: {
+    all: ['crm', 'presupuesto'] as const,
+    anio: (anio: number) => ['crm', 'presupuesto', anio] as const,
+  },
+  metas: {
+    all: ['crm', 'metas-actividad'] as const,
+  },
   motivos: {
     all: ['crm', 'motivos'] as const,
     list: (soloActivos: boolean) => ['crm', 'motivos', soloActivos] as const,
