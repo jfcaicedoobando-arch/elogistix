@@ -2914,76 +2914,121 @@ export type Database = {
       }
       crm_leads: {
         Row: {
+          aduana_puerto: string | null
+          anios_establecida: number | null
           ciudad: string
           cliente_convertido_id: string | null
+          consecuencia: string | null
           contacto: string
           created_at: string
           created_by: string | null
           deleted_at: string | null
           deleted_by: string | null
+          dolor_explicito: string | null
           email: string
           empresa: string
           estado: Database["public"]["Enums"]["crm_lead_estado"]
+          estatus_icp: string | null
+          fecha_nutricion: string | null
+          frecuencia: string | null
           fuente: Database["public"]["Enums"]["crm_lead_fuente"]
           id: string
+          incoterm: string | null
           interes_modo: string
+          mercancia: string | null
+          motivo_nutricion: string | null
           notas: string
           oportunidad_convertida_id: string | null
           organization_id: string
           pais: string
+          proveedor_actual: string | null
+          rutas: string | null
           score: number
+          sector: string | null
+          sitio_web: string | null
           telefono: string
           updated_at: string
           vendedor_email: string
           vendedor_id: string | null
+          volumen: string | null
         }
         Insert: {
+          aduana_puerto?: string | null
+          anios_establecida?: number | null
           ciudad?: string
           cliente_convertido_id?: string | null
+          consecuencia?: string | null
           contacto?: string
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          dolor_explicito?: string | null
           email?: string
           empresa: string
           estado?: Database["public"]["Enums"]["crm_lead_estado"]
+          estatus_icp?: string | null
+          fecha_nutricion?: string | null
+          frecuencia?: string | null
           fuente?: Database["public"]["Enums"]["crm_lead_fuente"]
           id?: string
+          incoterm?: string | null
           interes_modo?: string
+          mercancia?: string | null
+          motivo_nutricion?: string | null
           notas?: string
           oportunidad_convertida_id?: string | null
           organization_id?: string
           pais?: string
+          proveedor_actual?: string | null
+          rutas?: string | null
           score?: number
+          sector?: string | null
+          sitio_web?: string | null
           telefono?: string
           updated_at?: string
           vendedor_email?: string
           vendedor_id?: string | null
+          volumen?: string | null
         }
         Update: {
+          aduana_puerto?: string | null
+          anios_establecida?: number | null
           ciudad?: string
           cliente_convertido_id?: string | null
+          consecuencia?: string | null
           contacto?: string
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          dolor_explicito?: string | null
           email?: string
           empresa?: string
           estado?: Database["public"]["Enums"]["crm_lead_estado"]
+          estatus_icp?: string | null
+          fecha_nutricion?: string | null
+          frecuencia?: string | null
           fuente?: Database["public"]["Enums"]["crm_lead_fuente"]
           id?: string
+          incoterm?: string | null
           interes_modo?: string
+          mercancia?: string | null
+          motivo_nutricion?: string | null
           notas?: string
           oportunidad_convertida_id?: string | null
           organization_id?: string
           pais?: string
+          proveedor_actual?: string | null
+          rutas?: string | null
           score?: number
+          sector?: string | null
+          sitio_web?: string | null
           telefono?: string
           updated_at?: string
           vendedor_email?: string
           vendedor_id?: string | null
+          volumen?: string | null
         }
         Relationships: []
       }
@@ -3055,6 +3100,7 @@ export type Database = {
       }
       crm_oportunidades: {
         Row: {
+          aduana_puerto: string | null
           cliente_id: string | null
           cliente_nombre: string
           cotizacion_ganadora_id: string | null
@@ -3063,12 +3109,16 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           destino: string
+          dolor_explicito: string | null
           embarque_ganador_id: string | null
           etapa_id: string
           fecha_cierre_real: string | null
           fecha_estimada_cierre: string | null
+          frecuencia: string | null
           id: string
+          incoterm: string | null
           lead_id: string | null
+          mercancia: string | null
           modo: string
           moneda: string
           monto_estimado: number
@@ -3078,13 +3128,17 @@ export type Database = {
           organization_id: string
           origen: string
           probabilidad: number
+          proveedor_actual: string | null
+          rutas: string | null
           tipo_carga: string
           updated_at: string
           valor_real: number | null
           vendedor_email: string
           vendedor_id: string | null
+          volumen: string | null
         }
         Insert: {
+          aduana_puerto?: string | null
           cliente_id?: string | null
           cliente_nombre?: string
           cotizacion_ganadora_id?: string | null
@@ -3093,12 +3147,16 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           destino?: string
+          dolor_explicito?: string | null
           embarque_ganador_id?: string | null
           etapa_id: string
           fecha_cierre_real?: string | null
           fecha_estimada_cierre?: string | null
+          frecuencia?: string | null
           id?: string
+          incoterm?: string | null
           lead_id?: string | null
+          mercancia?: string | null
           modo?: string
           moneda?: string
           monto_estimado?: number
@@ -3108,13 +3166,17 @@ export type Database = {
           organization_id?: string
           origen?: string
           probabilidad?: number
+          proveedor_actual?: string | null
+          rutas?: string | null
           tipo_carga?: string
           updated_at?: string
           valor_real?: number | null
           vendedor_email?: string
           vendedor_id?: string | null
+          volumen?: string | null
         }
         Update: {
+          aduana_puerto?: string | null
           cliente_id?: string | null
           cliente_nombre?: string
           cotizacion_ganadora_id?: string | null
@@ -3123,12 +3185,16 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           destino?: string
+          dolor_explicito?: string | null
           embarque_ganador_id?: string | null
           etapa_id?: string
           fecha_cierre_real?: string | null
           fecha_estimada_cierre?: string | null
+          frecuencia?: string | null
           id?: string
+          incoterm?: string | null
           lead_id?: string | null
+          mercancia?: string | null
           modo?: string
           moneda?: string
           monto_estimado?: number
@@ -3138,11 +3204,14 @@ export type Database = {
           organization_id?: string
           origen?: string
           probabilidad?: number
+          proveedor_actual?: string | null
+          rutas?: string | null
           tipo_carga?: string
           updated_at?: string
           valor_real?: number | null
           vendedor_email?: string
           vendedor_id?: string | null
+          volumen?: string | null
         }
         Relationships: [
           {
