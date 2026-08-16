@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { EmptyState } from "@/components/shared/states/EmptyState";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatFechaEs } from "@/lib/formatters/dates";
 import {
@@ -26,9 +26,9 @@ export default function HigieneTabla({ filas }: Props) {
 
   if (ordenadas.length === 0) {
     return (
-      <EmptyState
-        title="Sin oportunidades abiertas"
-        description="Cuando el equipo registre oportunidades verás aquí su higiene y SLA."
+      <EmptyStateInline
+        message="Sin oportunidades abiertas"
+        hint="Cuando el equipo registre oportunidades verás aquí su higiene y SLA."
       />
     );
   }
