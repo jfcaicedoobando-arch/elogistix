@@ -88,9 +88,12 @@ async function avisarCriteriosPendientes(
     const mapa = await fetchAvanceCriterios([oportunidadId]);
     const aviso = avisoCriteriosPendientes(mapa.get(oportunidadId), etapaNombre);
     if (aviso) {
-      notifyWarning(aviso, {
+      notifyWarning(undefined, {
+        title: aviso,
         description: "Puedes continuar, pero el avance de la etapa quedará incompleto.",
+        method: "HANDLE_MOVER",
       });
+
     }
   } catch {
     // El aviso es informativo: nunca debe impedir mover la oportunidad.
