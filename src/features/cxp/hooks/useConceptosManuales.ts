@@ -34,6 +34,8 @@ export interface ConceptosManualesApi {
   ) => void;
   eliminar: (key: string) => void;
   limpiar: () => void;
+  /** Sustituye toda la lista (precarga al editar conceptos existentes). */
+  reemplazar: (conceptos: ReadonlyArray<CfdiConceptoParsed>) => void;
 }
 
 export function useConceptosManuales(): ConceptosManualesApi {
@@ -56,5 +58,9 @@ export function useConceptosManuales(): ConceptosManualesApi {
 
   const limpiar = useCallback(() => setConceptos([]), []);
 
-  return { conceptos, agregar, actualizar, eliminar, limpiar };
+  const reemplazar = useCallback((lista: ReadonlyArray<CfdiConceptoParsed>) => {
+    setConceptos(lista.map((c) => ({ ...c, key: nextKey() })));
+  }, []);
+
+  return { conceptos, agregar, actualizar, eliminar, limpiar, reemplazar };
 }
