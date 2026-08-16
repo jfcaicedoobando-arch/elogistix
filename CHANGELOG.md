@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.628.0] - 2026-08-16
+- Ya se pueden corregir los conceptos de una factura de proveedor **capturada a mano**: botón "Editar conceptos" en la pestaña Conceptos del detalle, con la misma captura del modal de alta y aviso de descuadre contra el subtotal.
+- El botón se deshabilita con explicación cuando la factura vino de un CFDI (XML/UUID), está cancelada o ya tiene pagos aplicados.
+- Si la factura estaba aprobada, al reemplazar los conceptos regresa a "Por aprobar" y se limpia el sello de aprobación. Todo cambio queda en la bitácora.
+
 ## [13.627.1] - 2026-08-16
 - Seguridad: se revocó el acceso público a las funciones internas de disparador del CRM (cambio de etapa y toque de oportunidad); ahora sólo el sistema y usuarios autenticados pueden ejecutarlas.
 
