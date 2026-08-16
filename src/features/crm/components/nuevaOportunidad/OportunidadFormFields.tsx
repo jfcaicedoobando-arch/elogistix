@@ -151,6 +151,28 @@ export default function OportunidadFormFields({
         <Label>Destino</Label>
         <Input value={form.destino} onChange={(e) => set("destino", e.target.value)} />
       </div>
+      <div className="space-y-1">
+        <Label htmlFor="op-monto-meta">Monto meta</Label>
+        <MoneyInput
+          id="op-monto-meta"
+          value={form.monto_meta}
+          currency={form.moneda}
+          onChange={(n: number) => set("monto_meta", n)}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label>Fecha meta de cierre</Label>
+        <DatePickerMx value={form.fecha_meta_cierre} onChange={(v) => set("fecha_meta_cierre", v)} className="w-full" />
+      </div>
+      <div className="sm:col-span-2 space-y-1">
+        <Label>Compromiso con el cliente</Label>
+        <Textarea
+          rows={2}
+          value={form.compromiso_nota}
+          onChange={(e) => set("compromiso_nota", e.target.value)}
+          placeholder="Ej. Enviar propuesta FCL Shanghái–Manzanillo antes del cierre de mes"
+        />
+      </div>
       <div className="sm:col-span-2">
         <VendedorSelect
           value={form.vendedor_id}
@@ -158,6 +180,7 @@ export default function OportunidadFormFields({
           onChange={(id, email) => setForm((f) => ({ ...f, vendedor_id: id, vendedor_email: email }))}
         />
       </div>
+
       <div className="sm:col-span-2 space-y-1">
         <Label>Notas</Label>
         <Textarea rows={3} value={form.notas} onChange={(e) => set("notas", e.target.value)} />
