@@ -35,7 +35,14 @@ export default function CrmConfiguracion() {
             <EtapasPipelineEditor />
           </AccordionContent>
         </AccordionItem>
+        <AccordionItem value="criterios" className="border rounded-md bg-card px-4">
+          <AccordionTrigger className="text-sm font-semibold">Criterios de salida por etapa</AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+            <CriteriosEtapaEditor />
+          </AccordionContent>
+        </AccordionItem>
         <AccordionItem value="motivos" className="border rounded-md bg-card px-4">
+
           <AccordionTrigger className="text-sm font-semibold">Motivos de pérdida</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <MotivosPerdidaEditor />
