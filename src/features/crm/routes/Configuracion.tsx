@@ -11,6 +11,8 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import EtapasPipelineEditor from "@/features/crm/components/EtapasPipelineEditor";
 import MotivosPerdidaEditor from "@/features/crm/components/MotivosPerdidaEditor";
 import PlantillasMensajeEditor from "@/features/crm/components/PlantillasMensajeEditor";
+import PresupuestoCrmEditor from "@/features/crm/components/PresupuestoCrmEditor";
+import MetasActividadEditor from "@/features/crm/components/MetasActividadEditor";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 
 export default function CrmConfiguracion() {
@@ -24,7 +26,7 @@ export default function CrmConfiguracion() {
       <PageHeader
         icon={<Settings className="h-6 w-6 text-primary" />}
         title="Configuración del CRM"
-        description="Etapas del pipeline, motivos de pérdida y plantillas de mensajes."
+        description="Etapas del pipeline, motivos de pérdida, presupuesto, metas de actividad y plantillas de mensajes."
       />
       <Accordion type="single" collapsible defaultValue="pipeline" className="w-full space-y-2">
         <AccordionItem value="pipeline" className="border rounded-md bg-card px-4">
@@ -37,6 +39,18 @@ export default function CrmConfiguracion() {
           <AccordionTrigger className="text-sm font-semibold">Motivos de pérdida</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <MotivosPerdidaEditor />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="presupuesto" className="border rounded-md bg-card px-4">
+          <AccordionTrigger className="text-sm font-semibold">Presupuesto comercial mensual</AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+            <PresupuestoCrmEditor />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="metas" className="border rounded-md bg-card px-4">
+          <AccordionTrigger className="text-sm font-semibold">Metas de actividad</AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+            <MetasActividadEditor />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="plantillas" className="border rounded-md bg-card px-4">

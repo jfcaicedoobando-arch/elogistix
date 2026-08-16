@@ -100,6 +100,7 @@ export const ROUTES = {
   CRM_OPORTUNIDADES: "/crm/oportunidades",
   CRM_ACTIVIDADES: "/crm/actividades",
   CRM_CONFIGURACION: "/crm/configuracion",
+  CRM_HIGIENE: "/crm/higiene",
 
   // Portal cliente
   PORTAL: "/portal",

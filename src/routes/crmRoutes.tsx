@@ -10,7 +10,7 @@ import { Fragment } from "react";
 import { Route, Navigate } from "react-router-dom";
 import {
   CrmDashboard, CrmMiDia, Leads, LeadDetalle,
-  Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion,
+  Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion, CrmHigiene,
 } from "./appRoutes.lazy";
 
 export const crmChildRoutes = (
@@ -22,6 +22,7 @@ export const crmChildRoutes = (
     <Route path="oportunidades" element={<Oportunidades />} />
     <Route path="oportunidades/:id" element={<OportunidadDetalle />} />
     <Route path="actividades" element={<ActividadesCrm />} />
+    <Route path="higiene" element={<CrmHigiene />} />
     <Route path="analitica" element={<AnaliticaCrm />} />
     <Route path="forecast" element={<Navigate to="/crm/analitica?tab=forecast" replace />} />
     <Route path="reportes" element={<Navigate to="/crm/analitica?tab=embudo" replace />} />
