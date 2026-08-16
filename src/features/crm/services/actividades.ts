@@ -63,6 +63,9 @@ export type CrearActividadInput = {
   fecha_programada?: string | null;
   duracion_min?: number | null;
   resultado?: string;
+  /** Calidad del contacto (hoja 04_Actividades del CRM Hunter). */
+  contacto_efectivo?: boolean;
+  reunion_calificada?: boolean;
 };
 
 export async function crearActividad(
