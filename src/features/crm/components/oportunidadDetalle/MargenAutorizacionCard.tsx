@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAutorizarMargen } from "@/features/crm/hooks/useAutorizarMargen";
 import { usePermissions } from "@/hooks/shared";
-import { formatDateTimeMx } from "@/lib/formatters/dates";
+import { formatFechaHora } from "@/lib/formatters/dates";
 
 interface Props {
   oportunidadId: string;
@@ -41,7 +41,7 @@ export function MargenAutorizacionCard({ oportunidadId, margenPct, autorizadoAt,
         <CardTitle className="text-base">Margen y riesgo</CardTitle>
         {autorizadoAt ? (
           <Badge variant="outline" className="gap-1">
-            <ShieldCheck className="h-3 w-3" /> Autorizado {formatDateTimeMx(autorizadoAt)}
+            <ShieldCheck className="h-3 w-3" /> Autorizado {formatFechaHora(autorizadoAt)}
           </Badge>
         ) : (
           <Badge variant="secondary">Sin autorizar</Badge>

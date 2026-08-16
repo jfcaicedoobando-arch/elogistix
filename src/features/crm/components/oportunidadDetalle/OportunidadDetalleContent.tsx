@@ -17,6 +17,7 @@ import { OportunidadGanadaBanner } from "./OportunidadGanadaBanner";
 import { DatosComercialesCard } from "./DatosComercialesCard";
 import { ContactoRapidoCard } from "./ContactoRapidoCard";
 import { CriteriosSalidaCard } from "./CriteriosSalidaCard";
+import { MargenAutorizacionCard } from "./MargenAutorizacionCard";
 
 import { useOportunidadDetalleActions } from "@/features/crm/hooks";
 import { useContactosCliente } from "@/features/cliente/hooks";
@@ -127,6 +128,12 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
               { label: "Compromiso", value: op.compromiso_nota, colSpan: true },
               { label: "Notas", value: op.notas, colSpan: true },
             ]}
+          />
+          <MargenAutorizacionCard
+            oportunidadId={op.id}
+            margenPct={op.margen_pct != null ? Number(op.margen_pct) : null}
+            autorizadoAt={op.margen_autorizado_at ?? null}
+            riesgos={op.riesgos_objeciones ?? null}
           />
           <OportunidadCotizacionesList oportunidadId={op.id} />
         </TabsContent>
