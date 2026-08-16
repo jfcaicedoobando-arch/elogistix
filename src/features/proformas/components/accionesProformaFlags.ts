@@ -3,15 +3,17 @@
  * Puro y testeable; extraído del componente (Power-of-10 ≤200 líneas).
  */
 import type { ProformaDetalleFull } from "@/features/proformas/services";
+import {
+  resolveEstadoCliente,
+  type EstadoClienteProforma,
+} from "@/features/proformas/domain/proformaClienteEstado";
 
-export type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
+export type EstadoCliente = EstadoClienteProforma;
 
 export function readEstadoCliente(p: ProformaDetalleFull): EstadoCliente {
-  // SAFE-CAST: columna nueva; los tipos generados aún no la incluyen.
-  const raw = (p as unknown as { estado_cliente?: string }).estado_cliente;
-  if (raw === "aceptada" || raw === "rechazada") return raw;
-  return "pendiente";
+  return resolveEstadoCliente(p.estado_cliente);
 }
+
 
 export function computarFlags(
   proforma: ProformaDetalleFull,
