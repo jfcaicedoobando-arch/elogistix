@@ -34,6 +34,8 @@ export interface ConceptosManualesApi {
   ) => void;
   eliminar: (key: string) => void;
   limpiar: () => void;
+  /** Sustituye toda la lista (precarga al editar conceptos existentes). */
+  reemplazar: (conceptos: ReadonlyArray<CfdiConceptoParsed>) => void;
 }
 
 export function useConceptosManuales(): ConceptosManualesApi {
