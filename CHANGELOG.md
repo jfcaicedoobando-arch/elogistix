@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.627.0] - 2026-08-16
+- Mapeo del CRM comercial (Excel Hunter) al ERP: los leads ya guardan cargo del contacto, origen y destino dentro del perfil ICP.
+- Cada oportunidad admite margen esperado (%) y riesgos u objeciones; el detalle muestra una tarjeta "Margen y riesgo" donde gerencia comercial o administración autorizan el margen, con sello de quién y cuándo.
+- Las etapas del pipeline permiten definir sus días de SLA y la Higiene del pipeline los usa para marcar oportunidades estancadas.
+- La tabla de oportunidades suma la columna "Siguiente actividad" con el pendiente más próximo, igual que el archivo del equipo comercial.
+
 ## [13.626.0] - 2026-08-16
 - El embudo de oportunidades ahora tiene criterios de salida por etapa: se configuran en Configuración del CRM y aparecen como checklist en el detalle de cada oportunidad, con avance visible en su tarjeta del Kanban.
 - Al mover una oportunidad de etapa con criterios pendientes se muestra un aviso (no bloquea) indicando cuántos faltan y si alguno es obligatorio.
