@@ -56,7 +56,9 @@ describe("Fase J — ciclo de cotización", () => {
       "../../../src/features/cotizacion/components/CotizacionDetalleSecciones.tsx",
     );
     const src = fs.readFileSync(tsxPath, "utf8");
-    expect(src).toMatch(/const\s+mostrarRecotizar\s*=\s*esAceptada\s*&&\s*!tieneEmbarquesVinculados/);
+    // v13.624.5 — la bandera puede declararse como `const` o como propiedad del
+    // objeto que devuelve `visibilidadAcciones` (refactor Power-of-10).
+    expect(src).toMatch(/mostrarRecotizar\s*[:=]\s*esAceptada\s*&&\s*!tieneEmbarquesVinculados/);
     expect(src).toMatch(/\{mostrarRecotizar\s*&&/);
   });
 });

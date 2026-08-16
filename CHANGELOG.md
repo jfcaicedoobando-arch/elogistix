@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.624.5] - 2026-08-15
+- Prueba de guardrail del ciclo de cotización actualizada: ahora reconoce la bandera "Re-cotizar" declarada dentro del objeto de visibilidad tras la modularización. Sin cambios funcionales.
+
+
 ## [13.624.4] - 2026-08-14
 - Auditoría de migraciones al día: los permisos de la función que acepta versiones de cotización quedaron re-aplicados por migración correctiva y el baseline de la auditoría se movió a esa migración (FIX-H6-20).
 
