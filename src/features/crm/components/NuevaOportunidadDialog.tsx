@@ -76,7 +76,11 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         notas: form.notas,
         vendedor_id: form.vendedor_id,
         vendedor_email: form.vendedor_email,
+        monto_meta: form.monto_meta > 0 ? form.monto_meta : null,
+        fecha_meta_cierre: form.fecha_meta_cierre || null,
+        compromiso_nota: form.compromiso_nota || null,
       };
+
       if (isEdit && oportunidad) {
         await actualizar.mutateAsync({ id: oportunidad.id, patch: payload });
         crmToast.success("Oportunidad actualizada");
