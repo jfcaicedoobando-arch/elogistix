@@ -17,11 +17,6 @@
       "migracion_vigente": "20260808204754_d5747ba4-5098-4e9c-af3a-c8ecc3809a03.sql"
     },
     {
-      "espejo": "supabase/schema/cxp/cancelar_factura_proveedor.sql",
-      "funcion": "cancelar_factura_proveedor",
-      "migracion_vigente": "20260811180602_c95f662a-8b97-4a2a-aa4b-7458be152bbf.sql"
-    },
-    {
       "espejo": "supabase/schema/embarques/avanzar_estado_embarque.sql",
       "funcion": "avanzar_estado_embarque",
       "migracion_vigente": "20260803214601_7236fed7-966a-498d-bda5-e71497866a69.sql"
@@ -55,11 +50,6 @@
       "espejo": "supabase/schema/operaciones/operaciones_stats.sql",
       "funcion": "operaciones_stats",
       "migracion_vigente": "20260811090000_ola4_n10_dashboards_borrador.sql"
-    },
-    {
-      "espejo": "supabase/schema/portal/portal_obtener_proforma_por_token.sql",
-      "funcion": "portal_obtener_proforma_por_token",
-      "migracion_vigente": "20260811231247_1fcb26c9-3053-442c-83af-87b39a381519.sql"
     },
     {
       "espejo": "supabase/schema/proformas/_convertir_proformas_insertar_conceptos.sql",
