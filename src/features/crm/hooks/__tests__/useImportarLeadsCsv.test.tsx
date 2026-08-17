@@ -12,6 +12,10 @@ vi.mock("@/features/crm/hooks", () => ({
   useCrearLeadsBulk: () => ({ mutateAsync, isPending: false }),
 }));
 
+vi.mock("@/features/crm/hooks/useLeadsDuplicados", () => ({
+  useDuplicadosLote: () => ({ coincidencias: [], isLoading: false, existentes: [] }),
+}));
+
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
