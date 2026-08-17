@@ -49,6 +49,9 @@ describe("CambiarPasswordDialog", () => {
     updateOwnPasswordMock.mockReset();
     sonnerErrorMock.mockReset();
     sonnerSuccessMock.mockReset();
+    // El dedupe de toasts (ventana de 4s) suprimiría mensajes idénticos entre
+    // casos, así que se limpia su estado en cada prueba.
+    resetToastDedupeState();
   });
 
   it("rechaza contraseña con menos de 8 caracteres", async () => {
