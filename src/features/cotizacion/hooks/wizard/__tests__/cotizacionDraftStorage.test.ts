@@ -64,6 +64,19 @@ describe("loadDraft (cotizacionDraftStorage)", () => {
     expect(window.localStorage.getItem(draftKey(USER))).toBeNull();
   });
 
+  it("VF-17: descarta y limpia un borrador con timestamp futuro (sesgo de reloj/TZ)", () => {
+    const futuro = { version: 3, savedAt: Date.now() + 60 * 60 * 1000, values: {} };
+    window.localStorage.setItem(draftKey(USER), JSON.stringify(futuro));
+    expect(loadDraft(USER)).toBeNull();
+    expect(window.localStorage.getItem(draftKey(USER))).toBeNull();
+  });
+
+  it("VF-17: acepta savedAt con sesgo de reloj menor a 5 min", () => {
+    const skewLeve = { version: 3, savedAt: Date.now() + 2 * 60 * 1000, values: { clienteId: "c-1" } };
+    window.localStorage.setItem(draftKey(USER), JSON.stringify(skewLeve));
+    expect(loadDraft(USER)).not.toBeNull();
+  });
+
   it("draft v3 completo: no agrega avisos de paso/costos, sólo el de MSDS", () => {
     const fresh = {
       version: 3,

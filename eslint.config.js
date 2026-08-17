@@ -849,6 +849,31 @@ export default tseslint.config(
           message:
             "No uses colores crudos en clases arbitrarias dentro de template literals. Usa tokens semánticos del tema.",
         },
+        {
+          // UX-16 — `text-[11px]` ≡ `text-label` (0.6875rem, Ola 8). El token
+          // ya existe en tailwind.config.ts; los 5 usos residuales se migraron.
+          selector: "Literal[value=/(^|\\s)text-\\[11px\\](\\s|$)/]",
+          message:
+            "UX-16: no uses `text-[11px]`. Usa el token `text-label` (0.6875rem) de la escala tipográfica.",
+        },
+        {
+          selector: "TemplateElement[value.raw=/(^|\\s)text-\\[11px\\](\\s|$)/]",
+          message:
+            "UX-16: no uses `text-[11px]` en template literals. Usa el token `text-label`.",
+        },
+        {
+          // UX-24 — z-index arbitrarios (z-[5], z-[60]…). Usa la escala
+          // semántica de tailwind.config.ts: z-sticky(5) < z-header(40) <
+          // z-overlay(50) < z-toast(60) < z-sentry(70).
+          selector: "Literal[value=/(^|\\s)(!?z)-\\[[0-9]+\\](\\s|$)/]",
+          message:
+            "UX-24: no uses z-index arbitrarios (z-[N]). Usa la escala semántica del tema: z-sticky, z-header, z-overlay, z-toast, z-sentry (tailwind.config.ts → zIndex).",
+        },
+        {
+          selector: "TemplateElement[value.raw=/(^|\\s)(!?z)-\\[[0-9]+\\](\\s|$)/]",
+          message:
+            "UX-24: no uses z-index arbitrarios (z-[N]) en template literals. Usa la escala semántica (z-sticky/z-header/z-overlay/z-toast/z-sentry).",
+        },
       ],
     },
   },
@@ -856,4 +881,59 @@ export default tseslint.config(
 
   // Bloque 2.3 (arquitectura): prohibir imports profundos cross-feature.
   ...crossFeatureOverrides,
+
+  {
+    // ─────────────────────────────────────────────────────────────────────
+    // Guardrail `no-legacy-estado-color` — UX-03 (design system).
+    //
+    // `getEstadoColor` (de `@/lib/ui/uiMappings`) es un wrapper LEGACY del
+    // patrón de badges de estado. El componente canónico es `StatusBadge`
+    // (src/components/shared/StatusBadge.tsx) sobre statusRegistry/estadoConfig.
+    // Baseline LEGACY abajo (18 archivos) en burn-down: al migrar un archivo
+    // a StatusBadge/getEstadoVisual, quítalo de la lista. NO agregar entradas
+    // nuevas. Este bloque va al final para que el override de
+    // `src/features/**` (que apaga `no-restricted-imports`) no lo neutralice.
+    // ─────────────────────────────────────────────────────────────────────
+    name: "no-legacy-estado-color",
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      // Implementación del wrapper legacy y su spec.
+      "src/lib/ui/uiMappings.ts",
+      "src/lib/ui/__tests__/**",
+      // ── ESTADO-COLOR-LEGACY (baseline UX-03 · burn-down) ────────────────
+      "src/features/auth/routes/TrackingPublico.tsx",
+      "src/features/embarques/components/tracking/TrackingPublicoEstatus.tsx",
+      "src/features/embarques/components/EmbarqueMobileCard.tsx",
+      "src/features/embarques/components/facturacion/HistorialFacturas.tsx",
+      "src/features/embarques/components/tabResumen/EmbarquesRelacionadosCard.tsx",
+      "src/features/embarques/components/EmbarqueStatusChip.tsx",
+      "src/features/dashboard/components/CargasActivasClienteCard.tsx",
+      "src/features/cotizacion/components/CotizacionDetalleEmbarques.tsx",
+      "src/features/cotizacion/components/detalle/CotizacionDetalleHeader.tsx",
+      "src/features/portal/routes/PortalEmbarqueDetalle.tsx",
+      "src/features/portal/routes/PortalFacturaDetalle.tsx",
+      "src/features/portal/routes/PortalEmbarques.tsx",
+      "src/features/portal/routes/PortalFacturas.tsx",
+      "src/features/portal/components/EmbarqueCard.tsx",
+      "src/features/portal/components/PortalCotizacionCard.tsx",
+      "src/features/portal/components/dashboard/PortalEmbarquesRecientesCard.tsx",
+      "src/features/portal/components/dashboard/PortalEstadoEmbarquesCard.tsx",
+      "src/features/portal/components/cotizacion/PortalCotizacionHeader.tsx",
+      // Tests pueden importar el helper para renders aislados.
+      "**/__tests__/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": ["error", {
+        paths: [
+          {
+            name: "@/lib/ui/uiMappings",
+            importNames: ["getEstadoColor"],
+            message: "UX-03: `getEstadoColor` está deprecado. Usa <StatusBadge estado={...} /> ('@/components/shared/StatusBadge') o `getEstadoVisual(estado).badge` de '@/lib/ui/estadoConfig'. Baseline legacy: bloque `no-legacy-estado-color` en eslint.config.js (burn-down, NO agregar entradas).",
+          },
+        ],
+      }],
+    },
+  },
 );

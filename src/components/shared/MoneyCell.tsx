@@ -31,7 +31,7 @@ export function MoneyCell({ label, value, fullValue, highlight, className }: Mon
         className,
       )}
     >
-      <p className="text-label font-medium uppercase tracking-wide text-muted-foreground truncate">
+      <p className="text-overline font-medium truncate">
         {label}
       </p>
       <p

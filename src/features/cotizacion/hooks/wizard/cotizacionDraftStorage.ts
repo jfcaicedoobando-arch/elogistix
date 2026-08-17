@@ -9,6 +9,8 @@ import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 const DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // 24 h
+/** VF-17: tolerancia de sesgo de reloj; un savedAt más allá es inválido. */
+const CLOCK_SKEW_MS = 5 * 60 * 1000; // 5 min
 export const DEBOUNCE_MS = 800;
 
 export const draftKey = (userId: string): string => `lc:cotizacion:draft:${userId || "anon"}`;
@@ -68,7 +70,13 @@ export function loadDraft(userId: string): StoredDraft | null {
     const versionRaw = bag.version;
     // Aceptamos v1/v2 (legacy, sin paso/costos) y v3 (completo).
     if (versionRaw !== 1 && versionRaw !== 2 && versionRaw !== 3) return null;
-    if (Date.now() - (bag.savedAt as number) > DRAFT_TTL_MS) {
+    const savedAtNum = bag.savedAt as number;
+    // VF-17: frescura del borrador — se descarta si expiró (>24 h) o si su
+    // timestamp está en el futuro más allá del sesgo de reloj (TZ/reloj
+    // desajustado generaba prompts fantasma de "guardado hace 2 min" en una
+    // sesión nueva). La clave ya es por usuario (`draftKey(userId)`).
+    const ahora = Date.now();
+    if (ahora - savedAtNum > DRAFT_TTL_MS || savedAtNum > ahora + CLOCK_SKEW_MS) {
       safeLocalStorage.removeItem(draftKey(userId));
       return null;
     }

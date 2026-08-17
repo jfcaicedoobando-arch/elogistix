@@ -34,7 +34,7 @@ function ChipVencimiento({ iso }: { iso: string | null }) {
   return (
     <div className="leading-tight">
       <p className="text-xs text-muted-foreground">{formatDate(iso)}</p>
-      <p className={cn("text-[11px]", vencida ? "text-destructive" : "text-muted-foreground")}>
+      <p className={cn("text-label", vencida ? "text-destructive" : "text-muted-foreground")}>
         {texto}
       </p>
     </div>
@@ -90,7 +90,7 @@ export function CobroLoteRenglon(p: Props) {
             Saldo
           </Button>
         </div>
-        {p.error && <p className="mt-1 text-right text-[11px] text-destructive">{p.error}</p>}
+        {p.error && <p className="mt-1 text-right text-label text-destructive">{p.error}</p>}
       </td>
       <td className="px-3 py-2 text-right">
         <div className="flex items-center justify-end gap-2">

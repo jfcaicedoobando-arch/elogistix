@@ -152,7 +152,7 @@ export function ImporteEntrante({
         {formatCurrency(importe.monto, importe.moneda)}
       </p>
       {importe.fuente === "declarado" && (
-        <p className="text-[11px] text-muted-foreground">Declarado por operaciones</p>
+        <p className="text-label text-muted-foreground">Declarado por operaciones</p>
       )}
     </div>
   );

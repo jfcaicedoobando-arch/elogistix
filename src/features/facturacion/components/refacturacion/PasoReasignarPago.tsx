@@ -2,7 +2,8 @@
  * Paso 5 — Reasignar el pago recibido a la nueva factura y registrar el
  * ordenante real (la empresa desde la que llegó el depósito).
  */
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Wallet } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -64,7 +65,7 @@ export function PasoReasignarPago(props: Props) {
         flat
       >
         {props.pagos.length === 0 && (
-          <p className="text-sm text-muted-foreground">No hay pagos vivos en la factura original.</p>
+          <EmptyStateInline icon={Wallet} message="No hay pagos vivos en la factura original." className="py-4" />
         )}
         <ul className="space-y-2">
           {props.pagos.map((p) => {

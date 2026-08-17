@@ -62,7 +62,7 @@ export function EjecutivoScoreCard({
         </div>
         <Progress value={score} className="h-2" />
         <p className="text-xs text-muted-foreground">{cfg.msg}</p>
-        <div className="grid grid-cols-3 gap-3 pt-1 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-center">
           <DrillKpi
             label="Críticos"
             value={porSeveridad.critico}

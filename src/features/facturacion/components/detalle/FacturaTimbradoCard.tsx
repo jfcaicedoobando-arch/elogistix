@@ -33,7 +33,7 @@ function labelDe(options: readonly { value: string; label: string }[], clave: st
 function Field({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
     <div className="min-w-0">
-      <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-overline font-medium">{label}</p>
       <div className={`text-sm font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
     </div>
   );
@@ -76,7 +76,7 @@ export function FacturaTimbradoCard(props: Props) {
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="md:col-span-2 min-w-0">
-            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Folio fiscal (UUID)</p>
+            <p className="text-overline font-medium">Folio fiscal (UUID)</p>
             <div className="flex items-center gap-1">
               <p className="font-mono text-sm truncate">{uuidFiscal}</p>
               <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={copiarUuid} aria-label="Copiar folio fiscal (UUID)">

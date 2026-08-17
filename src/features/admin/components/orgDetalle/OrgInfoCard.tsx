@@ -45,7 +45,7 @@ export function OrgInfoCard({
             >
               <Save className="h-3.5 w-3.5" /> Guardar
             </Button>
-            <Button variant="ghost" size="sm" onClick={onCancel}>
+            <Button variant="ghost" size="sm" onClick={onCancel} aria-label="Cancelar edición">
               <X className="h-3.5 w-3.5" />
             </Button>
           </div>

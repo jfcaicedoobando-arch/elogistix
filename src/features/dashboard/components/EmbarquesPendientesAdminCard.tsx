@@ -5,6 +5,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { PackageCheck, Anchor, Wallet, ChevronRight } from "lucide-react";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   enabled: boolean;
@@ -67,9 +68,11 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
           {isLoading ? (
             <ListSkeleton rows={3} />
           ) : items.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              No hay embarques pendientes 🎉
-            </p>
+            <EmptyStateInline
+              icon={PackageCheck}
+              message="No hay embarques pendientes"
+              className="py-4"
+            />
           ) : (
             <ul className="divide-y rounded-md border">
               {items.map((it) => (

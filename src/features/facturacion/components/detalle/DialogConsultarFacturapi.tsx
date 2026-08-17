@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useConsultarFacturapi } from "@/features/facturacion/hooks/useConsultarFacturapi";
 import { DialogConsultarFacturapiResult } from "./DialogConsultarFacturapiResult";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   facturaId: string | null;
@@ -28,7 +29,7 @@ export function DialogConsultarFacturapi({ facturaId, numero, open, onOpenChange
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className={`${dialogSize["3xl"]} ${scrollableDialog}`}>
         <DialogHeader>
           <DialogTitle>Estatus en FacturApi · {numero}</DialogTitle>
           <DialogDescription>

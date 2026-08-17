@@ -187,6 +187,17 @@ export default {
         // `shadow-[0_-8px_24px_-12px_rgba(0,0,0,.4)]` con negro literal.
         "sticky-top": "var(--shadow-sticky-top)",
       },
+      // UX-24 — Escala semántica de z-index. Los valores numéricos de Tailwind
+      // (z-10..z-50) siguen disponibles; los overlays NUEVOS deben usar estos
+      // nombres para evitar colisiones al tacto (historial: toast vs header,
+      // R-15.5). Orden: sticky(5) < header(40) < overlay(50) < toast(60) < sentry(70).
+      zIndex: {
+        sticky: "5",   // columnas sticky de DataTable
+        header: "40",  // header fijo / sidebar
+        overlay: "50", // diálogos, sheets, popovers (primitivas ui/)
+        toast: "60",   // toasts y banners sobre cualquier overlay
+        sentry: "70",  // widget de feedback/monitoreo por encima de todo
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

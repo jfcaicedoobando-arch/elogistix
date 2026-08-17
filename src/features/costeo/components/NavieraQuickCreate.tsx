@@ -12,6 +12,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useAdminNavieras } from "@/features/catalogos/hooks";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   /** Se invoca con el id de la naviera recién creada para seleccionarla. */
@@ -65,7 +66,7 @@ export function NavieraQuickCreate({ onCreada, variante = "inline", etiqueta }: 
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className={dialogSize.sm}>
           <DialogHeader>
             <DialogTitle>Nueva naviera</DialogTitle>
             <DialogDescription>

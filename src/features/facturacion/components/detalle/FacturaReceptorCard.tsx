@@ -45,7 +45,7 @@ function labelUsoCfdi(clave: string | null | undefined): string {
 function Row({ label, ok, value, missingLabel }: { label: string; ok: boolean; value: string; missingLabel: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-overline font-medium">
         {label}
       </p>
       <p className={`text-sm font-medium truncate flex items-center gap-1 ${ok ? "" : "text-destructive italic"}`}>

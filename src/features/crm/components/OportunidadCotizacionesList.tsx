@@ -55,6 +55,15 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
                     key={c.id}
                     className="border-b hover:bg-muted/50 cursor-pointer"
                     onClick={() => navigate(`/cotizaciones/${c.id}`)}
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Abrir cotización ${c.folio}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        navigate(`/cotizaciones/${c.id}`);
+                      }
+                    }}
                   >
                     <td className="py-1 font-medium">{c.folio}</td>
                     <td>

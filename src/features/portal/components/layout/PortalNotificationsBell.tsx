@@ -77,7 +77,7 @@ export function PortalNotificationsBell() {
                   <button
                     type="button"
                     onClick={() => onClick(n)}
-                    className={`w-full text-left px-3 py-2.5 hover:bg-muted transition-colors ${
+                    className={`w-full text-left px-3 py-2.5 hover:bg-muted/50 transition-colors ${
                       !n.leida_at ? "bg-accent/5" : ""
                     }`}
                   >

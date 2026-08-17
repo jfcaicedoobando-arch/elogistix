@@ -47,80 +47,97 @@ export function buildFacturaFormSchema(ctx: FacturaFormValidationContext) {
       notas: z.string(),
     })
     .superRefine((values, refCtx) => {
-      if (!values.provId) {
-        refCtx.addIssue({ code: "custom", path: ["provId"], message: "Selecciona un proveedor" });
-      }
-      if (!values.folio.trim()) {
-        refCtx.addIssue({ code: "custom", path: ["folio"], message: "Captura el folio del proveedor" });
-      }
-      // P1-2: sin fecha de emisión el índice único de la BD (proveedor + folio
-      // + fecha) no puede evaluarse y el 23505 llega crudo al toast.
-      if (!values.emision.trim()) {
-        refCtx.addIssue({
-          code: "custom",
-          path: ["emision"],
-          message: "La fecha de emisión es obligatoria",
-        });
-      }
-      if (!values.categoriaId) {
-        refCtx.addIssue({ code: "custom", path: ["categoriaId"], message: "Selecciona una categoría contable" });
-      }
-      // FE-06a: componentes no negativos. Sin esto, subtotal = -100 e iva = 200
-      // dan total = 100 y pasaban la única validación existente (total > 0).
-      const componentes: Array<[keyof typeof values, string, string]> = [
-        ["subtotal", values.subtotal, "El subtotal no puede ser negativo"],
-        ["iva", values.iva, "El IVA no puede ser negativo"],
-        ["ieps", values.ieps, "El IEPS no puede ser negativo"],
-        ["retenciones", values.retenciones, "Las retenciones no pueden ser negativas"],
-      ];
-      for (const [campo, texto, mensaje] of componentes) {
-        if (texto.trim() !== "" && Number(texto) < 0) {
-          refCtx.addIssue({ code: "custom", path: [campo], message: mensaje });
-        }
-      }
-      // FE-06b: aging coherente — el vencimiento no puede ser anterior a la emisión.
-      if (
-        values.emision.trim() && values.vencimiento.trim() &&
-        values.vencimiento < values.emision
-      ) {
-        refCtx.addIssue({
-          code: "custom",
-          path: ["vencimiento"],
-          message: "La fecha de vencimiento no puede ser anterior a la fecha de emisión",
-        });
-      }
-      // EC-18: aunque días de crédito ya está acotado, defensa extra sobre el
-      // vencimiento resultante cuando se captura/edita la fecha a mano.
-      if (values.emision.trim() && values.vencimiento.trim()) {
-        const emisionMs = Date.parse(`${values.emision}T00:00:00Z`);
-        const vencimientoMs = Date.parse(`${values.vencimiento}T00:00:00Z`);
-        const DIA_MS = 24 * 60 * 60 * 1000;
-        if (
-          Number.isFinite(emisionMs) && Number.isFinite(vencimientoMs) &&
-          (vencimientoMs - emisionMs) / DIA_MS > 366
-        ) {
-          refCtx.addIssue({
-            code: "custom",
-            path: ["vencimiento"],
-            message: "La fecha de vencimiento está demasiado lejos de la emisión",
-          });
-        }
-      }
-      if (ctx.total <= 0) {
-        refCtx.addIssue({ code: "custom", path: ["subtotal"], message: "El total debe ser mayor a 0" });
-      }
-      if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
-        refCtx.addIssue({ code: "custom", path: ["tc"], message: "Captura el tipo de cambio" });
-      }
-      // FE-06c: mismo tope que el módulo de pagos CxP (TC_MAX = 1000).
-      if (Number(values.tc) > 1000) {
-        refCtx.addIssue({
-          code: "custom",
-          path: ["tc"],
-          message: "El tipo de cambio no puede ser mayor a 1000",
-        });
-      }
+      validarObligatorios(values, refCtx);
+      validarImportes(values, refCtx, ctx);
+      validarFechas(values, refCtx);
+      validarTipoCambio(values, refCtx);
     });
+}
+
+/** Emisor de issues de zod acotado a lo que usan los validadores de abajo. */
+type RefCtx = { addIssue: (issue: { code: "custom"; path: string[]; message: string }) => void };
+type Valores = {
+  provId: string; folio: string; emision: string; vencimiento: string;
+  categoriaId: string; moneda: string; tc: string;
+  subtotal: string; iva: string; ieps: string; retenciones: string;
+};
+
+/** Campos que no pueden quedar vacíos. */
+function validarObligatorios(values: Valores, refCtx: RefCtx): void {
+  if (!values.provId) {
+    refCtx.addIssue({ code: "custom", path: ["provId"], message: "Selecciona un proveedor" });
+  }
+  if (!values.folio.trim()) {
+    refCtx.addIssue({ code: "custom", path: ["folio"], message: "Captura el folio del proveedor" });
+  }
+  // P1-2: sin fecha de emisión el índice único de la BD (proveedor + folio
+  // + fecha) no puede evaluarse y el 23505 llega crudo al toast.
+  if (!values.emision.trim()) {
+    refCtx.addIssue({ code: "custom", path: ["emision"], message: "La fecha de emisión es obligatoria" });
+  }
+  if (!values.categoriaId) {
+    refCtx.addIssue({ code: "custom", path: ["categoriaId"], message: "Selecciona una categoría contable" });
+  }
+}
+
+/**
+ * FE-06a: componentes no negativos. Sin esto, subtotal = -100 e iva = 200
+ * dan total = 100 y pasaban la única validación existente (total > 0).
+ */
+function validarImportes(values: Valores, refCtx: RefCtx, ctx: FacturaFormValidationContext): void {
+  const componentes: Array<[string, string, string]> = [
+    ["subtotal", values.subtotal, "El subtotal no puede ser negativo"],
+    ["iva", values.iva, "El IVA no puede ser negativo"],
+    ["ieps", values.ieps, "El IEPS no puede ser negativo"],
+    ["retenciones", values.retenciones, "Las retenciones no pueden ser negativas"],
+  ];
+  for (const [campo, texto, mensaje] of componentes) {
+    if (texto.trim() !== "" && Number(texto) < 0) {
+      refCtx.addIssue({ code: "custom", path: [campo], message: mensaje });
+    }
+  }
+  if (ctx.total <= 0) {
+    refCtx.addIssue({ code: "custom", path: ["subtotal"], message: "El total debe ser mayor a 0" });
+  }
+}
+
+/** FE-06b y EC-18: coherencia de emisión vs. vencimiento. */
+function validarFechas(values: Valores, refCtx: RefCtx): void {
+  if (!values.emision.trim() || !values.vencimiento.trim()) return;
+  if (values.vencimiento < values.emision) {
+    refCtx.addIssue({
+      code: "custom",
+      path: ["vencimiento"],
+      message: "La fecha de vencimiento no puede ser anterior a la fecha de emisión",
+    });
+  }
+  const emisionMs = Date.parse(`${values.emision}T00:00:00Z`);
+  const vencimientoMs = Date.parse(`${values.vencimiento}T00:00:00Z`);
+  const DIA_MS = 24 * 60 * 60 * 1000;
+  if (
+    Number.isFinite(emisionMs) && Number.isFinite(vencimientoMs) &&
+    (vencimientoMs - emisionMs) / DIA_MS > 366
+  ) {
+    refCtx.addIssue({
+      code: "custom",
+      path: ["vencimiento"],
+      message: "La fecha de vencimiento está demasiado lejos de la emisión",
+    });
+  }
+}
+
+/** Tipo de cambio obligatorio en divisa y acotado a TC_MAX = 1000 (FE-06c). */
+function validarTipoCambio(values: Valores, refCtx: RefCtx): void {
+  if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
+    refCtx.addIssue({ code: "custom", path: ["tc"], message: "Captura el tipo de cambio" });
+  }
+  if (Number(values.tc) > 1000) {
+    refCtx.addIssue({
+      code: "custom",
+      path: ["tc"],
+      message: "El tipo de cambio no puede ser mayor a 1000",
+    });
+  }
 }
 
 /**

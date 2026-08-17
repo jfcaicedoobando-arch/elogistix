@@ -30,7 +30,7 @@ export function Toaster() {
 
       // R-15.5: el header sticky (z-40) capturaba los clics sobre "Ver
       // detalles" y abría el org-switcher. Los toasts van por encima.
-      className="!z-[60] pointer-events-auto"
+      className="!z-toast pointer-events-auto"
       closeButton
       expand
       duration={4000}

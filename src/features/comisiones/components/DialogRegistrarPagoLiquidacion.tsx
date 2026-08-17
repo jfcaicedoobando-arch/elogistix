@@ -42,7 +42,7 @@ export function DialogRegistrarPagoLiquidacion({
       size="lg"
       headerAside={
         <div className="text-right">
-          <div className="text-label uppercase tracking-wide text-muted-foreground">Total a pagar</div>
+          <div className="text-overline">Total a pagar</div>
           <div className="text-sm font-semibold tabular-nums">{formatCurrency(Number(liq.total_mxn), "MXN")}</div>
         </div>
       }

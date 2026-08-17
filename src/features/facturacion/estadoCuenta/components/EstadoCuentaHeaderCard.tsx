@@ -21,7 +21,7 @@ interface Props {
 function Dato({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <div className="text-label uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-overline">{label}</div>
       <div className="text-sm font-medium tabular-nums whitespace-nowrap">{value}</div>
     </div>
   );

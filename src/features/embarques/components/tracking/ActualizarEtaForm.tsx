@@ -77,12 +77,13 @@ export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: 
             </p>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Fuente / Motivo</label>
+            <label htmlFor="actualizar-eta-fuente" className="text-sm font-medium">Fuente / Motivo</label>
             <Controller
               control={control}
               name="fuente"
               render={({ field }) => (
                 <Input
+                  id="actualizar-eta-fuente"
                   {...field}
                   placeholder="Ej. Portal Maersk, aviso del agente..."
                   maxLength={120}

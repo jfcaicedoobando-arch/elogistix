@@ -12,6 +12,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ToneBadge } from "@/components/shared/ToneBadge";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
 import type { FacturaCobranza } from "@/features/facturacion/services/cobranza";
 import type { CxcAgingRow } from "@/features/cxc/services/cxcAging";
@@ -128,7 +129,7 @@ export function CxcAgingDrillDownDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl p-0 gap-0 max-h-[90vh] overflow-y-auto">
+      <DialogContent className={`${dialogSize["4xl"]} p-0 gap-0 max-h-[90vh] overflow-y-auto`}>
         <TooltipProvider>
           <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle className="flex items-center gap-2 text-base">

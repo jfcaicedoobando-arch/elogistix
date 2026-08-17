@@ -46,6 +46,16 @@ export default function TablaFlujoSemanal({ semanas }: Props) {
                   <tr
                     className={`border-t cursor-pointer hover:bg-accent/10 ${rowBg}`}
                     onClick={() => toggle(s.semana_iso)}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isOpen}
+                    aria-label={`${isOpen ? "Colapsar" : "Expandir"} detalle de la semana ${s.semana_iso}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggle(s.semana_iso);
+                      }
+                    }}
                   >
                     <td className="px-3 py-2">
                       {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}

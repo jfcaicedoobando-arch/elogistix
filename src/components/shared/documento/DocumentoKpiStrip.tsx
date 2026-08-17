@@ -30,7 +30,7 @@ export function DocumentoKpiStrip({ kpis, className }: Props) {
     >
       {kpis.map((kpi) => (
         <div key={kpi.label} className="bg-card px-4 py-3">
-          <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-overline font-medium">
             {kpi.label}
           </p>
           <p className={cn("text-base font-semibold tabular-nums", TONE_CLASS[kpi.tone ?? "default"])}>
