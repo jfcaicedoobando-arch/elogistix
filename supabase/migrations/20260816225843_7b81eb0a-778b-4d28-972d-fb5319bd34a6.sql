@@ -17,6 +17,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.crm_etapa_criterios TO authentica
 GRANT ALL ON public.crm_etapa_criterios TO service_role;
 ALTER TABLE public.crm_etapa_criterios ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Tenant read crm_etapa_criterios" ON public.crm_etapa_criterios;
 CREATE POLICY "Tenant read crm_etapa_criterios" ON public.crm_etapa_criterios
   FOR SELECT TO authenticated
   USING (
@@ -24,6 +25,7 @@ CREATE POLICY "Tenant read crm_etapa_criterios" ON public.crm_etapa_criterios
     OR (SELECT has_role((SELECT auth.uid()), 'super_admin'::app_role))
   );
 
+DROP POLICY IF EXISTS "Staff CRUD crm_etapa_criterios" ON public.crm_etapa_criterios;
 CREATE POLICY "Staff CRUD crm_etapa_criterios" ON public.crm_etapa_criterios
   FOR ALL TO authenticated
   USING (
@@ -37,12 +39,13 @@ CREATE POLICY "Staff CRUD crm_etapa_criterios" ON public.crm_etapa_criterios
     AND (SELECT puede_escribir_cotizaciones((SELECT auth.uid())))
   );
 
+DROP POLICY IF EXISTS "Scope tenant activo super admin" ON public.crm_etapa_criterios;
 CREATE POLICY "Scope tenant activo super admin" ON public.crm_etapa_criterios
   AS RESTRICTIVE FOR ALL TO authenticated
   USING (rls_tenant_scope_ok(organization_id))
   WITH CHECK (rls_tenant_scope_ok(organization_id));
 
-CREATE INDEX idx_crm_etapa_criterios_etapa ON public.crm_etapa_criterios(etapa_id, orden) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_crm_etapa_criterios_etapa ON public.crm_etapa_criterios(etapa_id, orden) WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_crm_etapa_criterios_updated_at
   BEFORE UPDATE ON public.crm_etapa_criterios
@@ -65,6 +68,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.crm_oportunidad_criterios TO auth
 GRANT ALL ON public.crm_oportunidad_criterios TO service_role;
 ALTER TABLE public.crm_oportunidad_criterios ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Tenant read crm_oportunidad_criterios" ON public.crm_oportunidad_criterios;
 CREATE POLICY "Tenant read crm_oportunidad_criterios" ON public.crm_oportunidad_criterios
   FOR SELECT TO authenticated
   USING (
@@ -72,6 +76,7 @@ CREATE POLICY "Tenant read crm_oportunidad_criterios" ON public.crm_oportunidad_
     OR (SELECT has_role((SELECT auth.uid()), 'super_admin'::app_role))
   );
 
+DROP POLICY IF EXISTS "Staff CRUD crm_oportunidad_criterios" ON public.crm_oportunidad_criterios;
 CREATE POLICY "Staff CRUD crm_oportunidad_criterios" ON public.crm_oportunidad_criterios
   FOR ALL TO authenticated
   USING (
@@ -85,12 +90,13 @@ CREATE POLICY "Staff CRUD crm_oportunidad_criterios" ON public.crm_oportunidad_c
     AND (SELECT puede_escribir_cotizaciones((SELECT auth.uid())))
   );
 
+DROP POLICY IF EXISTS "Scope tenant activo super admin" ON public.crm_oportunidad_criterios;
 CREATE POLICY "Scope tenant activo super admin" ON public.crm_oportunidad_criterios
   AS RESTRICTIVE FOR ALL TO authenticated
   USING (rls_tenant_scope_ok(organization_id))
   WITH CHECK (rls_tenant_scope_ok(organization_id));
 
-CREATE INDEX idx_crm_oportunidad_criterios_op ON public.crm_oportunidad_criterios(oportunidad_id);
+CREATE INDEX IF NOT EXISTS idx_crm_oportunidad_criterios_op ON public.crm_oportunidad_criterios(oportunidad_id);
 
 CREATE TRIGGER trg_crm_oportunidad_criterios_updated_at
   BEFORE UPDATE ON public.crm_oportunidad_criterios
