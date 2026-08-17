@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.645.1] - 2026-08-17
+
+### Corrección CI
+- `PagosProgramadosTablas.tsx` agregado a la allowlist de `@/components/ui/table` (test de arquitectura + `eslint.config.js`): usa `<DataTable />` y sólo compone el pie de totales.
+
 ## [13.645.0] - 2026-08-17
 
 ### Parche 25 · Decisiones de producto (VT-10, VF-21, VF-20)
