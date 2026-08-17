@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.629.0] - 2026-08-17
+- Modal "Editar conceptos" de facturas de proveedor rediseñado: tabla con encabezados (Descripción, Cantidad, Precio, IVA, Unidad, Total línea), total por renglón en la misma fila y estado vacío con guía cuando no hay partidas.
+- Semáforo de cuadre en el encabezado del modal: "Cuadrado" en verde o "Faltan/Sobran $X" en ámbar, con la suma de líneas y el subtotal siempre visibles.
+- Nuevas ayudas de captura: duplicar línea, botón para calcular IVA 16% de la línea, formateo de importes al salir del campo, Enter para agregar otra partida y acción "Ajustar última línea" para cerrar la diferencia contra el subtotal.
+- Se resalta el renglón sospechoso (el de mayor importe) cuando la suma no cuadra. Las mismas mejoras aplican al modal de captura de factura de proveedor.
+
 ## [13.628.1] - 2026-08-16
 - Se pulió el modal "Editar conceptos" de facturas de proveedor: encabezados de columna (Descripción, Cantidad, Precio unitario, IVA, Unidad), campos con ancho legible (ya no se corta "Unidad"), cada partida en su propia tarjeta con su total de línea alineado y el resumen Suma/Subtotal compacto para que los botones no se desacomoden.
 
