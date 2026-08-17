@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.635.1] - 2026-08-17
+
+### Correcciones
+- CxP: el modal "Editar conceptos" ya no provoca un bucle de re-render ("Maximum update depth exceeded") al abrir la pestaña Conceptos de una factura capturada a mano. `useConceptosManuales` ahora memoiza el objeto que devuelve y `limpiar()` no crea un arreglo nuevo cuando ya está vacío.
+- Se corrige un comentario en `src/index.css` que rompía el build de CSS.
+
 ## [13.635.0] - 2026-08-17
 
 ### Visual y sistema de diseño (Patch 5)

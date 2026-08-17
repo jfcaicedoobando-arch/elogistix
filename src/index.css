@@ -60,8 +60,8 @@
     --sidebar-ring: 221 83% 53%;
 
     /* UX-01 (WCAG AA): estos tokens se usan como color de TEXTO en badges
-       (bg-*/15 + text-*) y barras. Luminosidad bajada para llegar a ≥4.5:1
-       sobre --background y sobre el fondo soft /15, manteniendo el matiz. */
+       (fondo suave al 15% + texto del token) y barras. Luminosidad bajada
+       para llegar a >=4.5:1 sobre el fondo, manteniendo el matiz. */
     --success: 152 68% 27%;
     --success-foreground: 0 0% 100%;
     --warning: 33 90% 30%;
