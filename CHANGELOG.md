@@ -1,5 +1,20 @@
 # Changelog
 
+## [13.639.0] - 2026-08-17
+
+### Listados, búsqueda y validaciones (Patches 9 y 10)
+- EC-03/EC-04: la bandeja "Por enviar" pagina la consulta de `factura_envios` con `.range()` (helper `fetchIdsConEnvioExitoso`); las facturas ya enviadas dejan de reaparecer y los conteos usan facturas distintas enviadas.
+- EC-05: `GlobalSearch` descarta respuestas fuera de orden con un token por request; el término viejo ya no sobrescribe al actual.
+- EC-14: la búsqueda de CRM propaga errores de sus sub-consultas para mostrar estado de falla en vez de "sin resultados".
+- EC-16: nueva migración que agrega tie-breaker `id DESC` a los `ORDER BY` de `embarques_listado`; el export deduplica por `id` entre páginas.
+- EC-17: nuevo helper `warnIfTruncated` avisa cuando un listado se corta por límite (facturas por timbrar/por enviar, catálogos, oportunidades).
+- EC-06: `sanitizeMoneyText` trata "50.000" como 50 mil (punto seguido de exactamente 3 dígitos = miles).
+- EC-08: anticipos con topes de monto (1e9), máximo 2 decimales, `TC_MAX` compartido y validación de fecha real (2000–2100).
+- EC-09: la probabilidad de oportunidad CRM se acota a 0–100 en el formulario y en `buildOportunidadInsertPayload`.
+- EC-10: `DialogSeguroForm` rechaza suma asegurada y deducible negativos; en altas exige suma asegurada mayor a 0.
+- EC-18: `diasCredito` de factura de proveedor entero 0–365 y aviso si el vencimiento queda a más de 366 días de la emisión.
+- EC-20: planes, seguridad global y tabulador de demoras de venta validan rangos con zod antes de guardar.
+
 ## [13.638.0] - 2026-08-17
 
 ### Precisión en pagos, idempotencia y candados (Patch 8)
