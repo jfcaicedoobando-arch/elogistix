@@ -83,8 +83,15 @@ export default function SeccionDestinatario({ clientes, complete }: Props) {
       </RadioGroup>
 
       {!esProspecto ? (
-        <FormField label="Cliente" required>
-          <Select value={clienteId} onValueChange={(v) => setValue("clienteId", v)}>
+        <FormField label="Cliente" required error={errors.clienteId?.message}>
+          <Select
+            value={clienteId}
+            onValueChange={(v) => {
+              setValue("clienteId", v, { shouldValidate: true, shouldDirty: true });
+              clearErrors("clienteId");
+            }}
+          >
+
             <SelectTrigger>
               <SelectValue placeholder="Seleccionar cliente" />
             </SelectTrigger>
