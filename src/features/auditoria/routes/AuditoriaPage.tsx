@@ -9,10 +9,9 @@ import { AuditoriaHallazgosTab } from "@/features/auditoria/components/Auditoria
 import { AuditoriaPorReglaTab } from "@/features/auditoria/components/AuditoriaPorReglaTab";
 import { useAuditoriaPageController } from "@/features/auditoria/hooks";
 import { useAuditoriaEjecutivo } from "@/features/auditoria/hooks";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import type { UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
 import { exportHallazgosCsv } from "@/features/auditoria/domain/csv";
-import { useDocumentTitle } from "@/hooks/shared";
 
 type TabId = "ejecutivo" | "tabla" | "por_regla";
 

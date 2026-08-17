@@ -9,12 +9,11 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
 import { useBitacora } from "@/hooks/shared";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
 import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { useDocumentTitle } from "@/hooks/shared";
 
 const MODULOS = MODULOS_BITACORA;
 
