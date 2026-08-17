@@ -1,55 +1,42 @@
 /**
- * Construcción del payload de guardado de una Oportunidad (v13.629.1).
- * Extraído de `NuevaOportunidadDialog` para bajar complejidad del handler.
+ * Construcción del payload de INSERT en `crm_oportunidades`.
+ * Módulo puro reutilizable por services/. No depende de hooks ni de Supabase.
  */
-import type { OportunidadFormState } from "@/features/crm/domain/oportunidadFormState";
+import type { OportunidadInput } from "@/features/crm/types/oportunidades";
+import type { AuthLite } from "@/features/crm/domain/leads/leadPayload";
 
-const opt = (v: number) => (v > 0 ? v : null);
-
-export function buildOportunidadPayload(form: OportunidadFormState, esGanada: boolean) {
-  return {
-    nombre: form.nombre,
-    cliente_id: form.cliente_id,
-    cliente_nombre: form.cliente_nombre,
-    etapa_id: form.etapa_id,
-    monto_estimado: form.monto_estimado,
-    moneda: form.moneda,
-    probabilidad: form.probabilidad,
-    fecha_estimada_cierre: form.fecha_estimada_cierre || null,
-    // B-034: solo se persisten cuando la etapa destino es "ganada".
-    ...(esGanada
-      ? {
-          fecha_cierre_real: form.fecha_cierre_real,
-          valor_real: form.valor_real > 0 ? form.valor_real : form.monto_estimado,
-        }
-      : {}),
-    modo: form.modo,
-    origen: form.origen,
-    destino: form.destino,
-    notas: form.notas,
-    vendedor_id: form.vendedor_id,
-    vendedor_email: form.vendedor_email,
-    monto_meta: opt(form.monto_meta),
-    fecha_meta_cierre: form.fecha_meta_cierre || null,
-    compromiso_nota: form.compromiso_nota || null,
-    margen_pct: opt(form.margen_pct),
-    riesgos_objeciones: form.riesgos_objeciones || null,
-  };
+function stripUndefined<T extends object>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const key in obj) {
+    if (obj[key] !== undefined) out[key] = obj[key];
+  }
+  return out;
 }
 
-/** Devuelve el mensaje de validación o `null` si el formulario es válido. */
-export function validarOportunidad(
-  form: OportunidadFormState,
-  esGanada: boolean,
-): { title: string; description?: string } | null {
-  if (!form.nombre.trim()) return { title: "Nombre es obligatorio" };
-  if (!form.etapa_id) return { title: "Selecciona una etapa" };
-  if (esGanada && !form.fecha_cierre_real) {
-    return {
-      title: "Captura la fecha de cierre real",
-      description:
-        "Una oportunidad ganada necesita su fecha de cierre para que el Resumen y el Leaderboard coincidan.",
-    };
-  }
-  return null;
+export function buildOportunidadInsertPayload(
+  input: OportunidadInput,
+  user: AuthLite | null,
+) {
+  const defaults = {
+    cliente_nombre: "",
+    monto_estimado: 0,
+    moneda: "MXN" as const,
+    probabilidad: 0,
+    modo: "",
+    tipo_carga: "",
+    origen: "",
+    destino: "",
+    notas: "",
+    riesgos_objeciones: "",
+    vendedor_email: user?.email ?? "",
+  };
+  const hasExplicitVendedor = input.vendedor_id !== undefined;
+  return {
+    ...defaults,
+    ...stripUndefined(input),
+    nombre: input.nombre,
+    etapa_id: input.etapa_id,
+    vendedor_id: hasExplicitVendedor ? input.vendedor_id : (user?.id ?? null),
+    created_by: user?.id ?? null,
+  };
 }
