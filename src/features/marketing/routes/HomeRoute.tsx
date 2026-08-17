@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 const Landing = lazy(() => import("./Landing"));
 
 export default function HomeRoute() {
-  const { user, effectiveRole, loading } = useAuth();
+  const { user, effectiveRole, loading, profileError } = useAuth();
 
   if (loading) {
     return (
@@ -22,10 +22,14 @@ export default function HomeRoute() {
     );
   }
 
-  if (user) {
+  // VT-03: sólo redirigimos cuando el perfil REALMENTE resolvió. Si falló por
+  // red, mandar a `/sin-acceso` dejaba al usuario sin ninguna pantalla útil
+  // (lockout total); en ese caso mostramos la landing pública.
+  if (user && !profileError) {
     // RG1: sin rol efectivo, `/inicio` nos rebotaría de vuelta aquí (bucle).
     return <Navigate to={effectiveRole ? "/inicio" : "/sin-acceso"} replace />;
   }
+
 
   return (
     <Suspense
