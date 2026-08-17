@@ -65,10 +65,14 @@ export default function Oportunidades() {
     });
   }, [opsRaw, filtros]);
 
-  const { handleMover, proximoPaso, cerrarProximoPaso } = useMoverOportunidadEtapa({
+  const {
+    handleMover, proximoPaso, cerrarProximoPaso,
+    perdidaPendiente, cerrarPerdida, confirmarPerdida, moviendo,
+  } = useMoverOportunidadEtapa({
     etapas: etapas as CrmEtapaRow[],
     oportunidades: opsRaw,
   });
+
 
   const { data: proximas } = useProximasActividades(
     "oportunidad",
