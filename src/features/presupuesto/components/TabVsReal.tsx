@@ -127,16 +127,8 @@ export function TabVsReal() {
         <CardSkeleton lines={8} />
       ) : (
         <>
-          {data.gastos_sin_tc_count > 0 && (
-            <Card className="border-warning/50">
-              <CardContent className="p-3 text-sm text-warning">
-                {pluralizar(data.gastos_sin_tc_count, "gasto")} en moneda extranjera{" "}
-                {data.gastos_sin_tc_count === 1 ? "no tiene" : "no tienen"} tipo de cambio capturado y{" "}
-                {data.gastos_sin_tc_count === 1 ? "quedó" : "quedaron"} fuera del real. Captura su tipo de cambio
-                para que se {data.gastos_sin_tc_count === 1 ? "refleje" : "reflejen"} aquí.
-              </CardContent>
-            </Card>
-          )}
+          {data.gastos_sin_tc_count > 0 && <AvisoGastosSinTc count={data.gastos_sin_tc_count} />}
+
           {sinPresupuestoGlobal && (
             <Card className="border-dashed">
               <CardContent className="p-3 text-sm text-muted-foreground">
