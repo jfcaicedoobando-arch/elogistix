@@ -60,7 +60,7 @@ export function PortalEmbarqueTimeline({ eventos: eventosCrudos }: Props) {
                         <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {formatDate(ev.fecha, "dd MMM yyyy, HH:mm")}
+                          {formatDate(ev.fecha, esSoloFecha ? "dd MMM yyyy" : "dd MMM yyyy, HH:mm")}
                         </span>
                       </div>
                       {ev.descripcion && <p className="text-sm text-foreground">{ev.descripcion}</p>}
