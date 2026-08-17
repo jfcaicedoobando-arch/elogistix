@@ -100,19 +100,24 @@ BEGIN
   -- `categoria_presupuesto_id` es NOT NULL: sembramos el catálogo canónico.
   PERFORM public.seed_presupuesto_categorias(org_a);
 
+  -- Se siembra VIVA y se borra DESPUÉS de registrar el pago: `guard_pago_proveedor`
+  -- (bloqueo de pagos a documentos en papelera) rechaza pagar una factura ya
+  -- borrada, y el escenario real es justamente pagar primero y borrar después.
   INSERT INTO public.proveedor_facturas(id, organization_id, proveedor_id, proveedor_nombre,
                                         folio_proveedor, moneda, subtotal, total, estado,
                                         fecha_emision, estado_aprobacion,
-                                        categoria_presupuesto_id, deleted_at)
+                                        categoria_presupuesto_id)
   VALUES (pfac_borr, org_a, prov_a, 'Proveedor SoftDelete',
           'SD-PF-BORRADA', 'MXN', 1000, 1160, 'Vigente', v_hoy, 'aprobada',
           (SELECT id FROM public.presupuesto_categorias
-            WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1),
-          now());
+            WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1));
 
   INSERT INTO public.pagos_proveedor(id, organization_id, proveedor_factura_id, fecha_pago,
                                      monto, moneda, tipo_cambio_usd, metodo_pago)
   VALUES (pago_p_no, org_a, pfac_borr, v_hoy, 700, 'MXN', 1, 'Transferencia');
+
+  UPDATE public.proveedor_facturas SET deleted_at = now() WHERE id = pfac_borr;
+
 
   -- Cuenta bancaria BORRADA.
   INSERT INTO public.cuentas_bancarias(id, organization_id, alias, banco, moneda,
