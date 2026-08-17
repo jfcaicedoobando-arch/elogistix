@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.642.1] - 2026-08-17
+
+### CI · suite RLS `soft_delete_reportes`
+- **fix(tests):** la fixture sembraba la factura de proveedor ya con `deleted_at` y luego intentaba registrarle un pago, pero el guard `guard_pago_proveedor` (parche 8) rechaza pagos a documentos en papelera (`LC_PAGO_PROV_FACTURA_NO_VIVA`), tumbando el grupo `financiero` completo. Ahora la factura nace viva, se registra el pago y se borra después — el orden real del negocio. Verificado en Postgres local con las 7 suites del grupo en verde.
+
 ## [13.642.0] - 2026-08-17
 
 ### Formatos, sidebar y navegación (Parches 17, 18 y 19)
