@@ -1,4 +1,5 @@
 /** Mutaciones del feature Anticipos a Proveedor — usan `useMutationWithFeedback`. */
+import { useRef } from "react";
 import { useMutationWithFeedback } from "@/hooks/shared";
 import { anticiposProveedorKeys } from "@/features/anticipos-proveedor/queryKeys";
 import { queryKeys } from "@/lib/query";
@@ -30,9 +31,16 @@ interface AplicarAnticipoVars {
 }
 
 export function useAplicarAnticipo() {
+  // BL-08: llave de idempotencia por intento de submit — un doble click o
+  // retry de React Query reenvía la MISMA llave y el servidor deduplica;
+  // al concluir con éxito se regenera para el siguiente submit.
+  const requestIdRef = useRef(crypto.randomUUID());
   return useMutationWithFeedback({
     mutationFn: (v: AplicarAnticipoVars) =>
-      aplicarAnticipo(v.anticipoId, v.facturaId, v.monto, v.fechaAplicacion),
+      aplicarAnticipo(v.anticipoId, v.facturaId, v.monto, v.fechaAplicacion, requestIdRef.current),
+    onSuccess: () => {
+      requestIdRef.current = crypto.randomUUID();
+    },
     // Ola 12 · R3P-02.
     invalidate: [anticiposProveedorKeys.all, queryKeys.cxp.all, queryKeys.proveedores.all],
     successTitle: "Anticipo aplicado a la factura",

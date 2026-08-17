@@ -35,6 +35,8 @@ export interface RegistrarPagoLoteInput {
   notas?: string;
   /** Ola 11 · RNF-05 (espejo RG4-5): importe real de la transferencia; debe cuadrar exacto con el reparto. */
   importe_recibido: number;
+  /** BL-02 (espejo RNF-01 de CxC): llave de idempotencia por intento de submit. */
+  request_id?: string | null;
   renglones: RenglonLote[];
 }
 

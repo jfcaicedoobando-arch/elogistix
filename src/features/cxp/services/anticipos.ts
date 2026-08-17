@@ -76,6 +76,8 @@ export async function aplicarAnticipo(
   facturaId: string,
   monto: number,
   fechaAplicacion?: string,
+  /** BL-08: llave de idempotencia por intento de submit (dedupe server-side). */
+  requestId?: string,
 ): Promise<AnticipoAplicacion> {
   assertUuid(anticipoId, "INVALID_ID");
   assertUuid(facturaId, "INVALID_ID");
@@ -87,6 +89,7 @@ export async function aplicarAnticipo(
     p_factura_id: facturaId,
     p_monto: monto,
     p_fecha_aplicacion: fechaAplicacion,
+    p_request_id: requestId ?? undefined,
   });
   if (error) throw mapApiError(error);
   // SAFE-CAST: RPC devuelve fila de anticipos_aplicaciones (validado por schema DB).

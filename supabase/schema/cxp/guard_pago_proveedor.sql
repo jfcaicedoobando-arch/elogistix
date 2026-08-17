@@ -1,6 +1,7 @@
 -- Fuente canónica de public.guard_pago_proveedor (dominio cxp).
--- Última migración que la define: 20260723223436 (H6, grants anclados;
--- cuerpo idéntico a FIX-R3-01 / 20260723220718).
+-- Última migración que la define: 20260825000200 (BL-03, guard
+-- LC_PAGO_PROV_FACTURA_NO_VIVA + bypass de updates de sólo metadatos,
+-- espejo FIX-63). Grants anclados (H6, migración 20260723223436).
 -- Regla: cualquier cambio a esta función debe actualizar este archivo
 -- en el mismo PR (ver supabase/schema/README.md).
 
@@ -14,16 +15,36 @@ DECLARE
   v_fact_moneda public.moneda;
   v_fact_tc     numeric;
   v_fact_total  numeric;
+  -- BL-03: estado y papelera de la factura para el guard de vida.
+  v_fact_estado public.estado_proveedor_factura;
+  v_fact_deleted timestamptz;
   v_ncs         numeric;
   v_pagos       numeric;
   v_saldo       numeric;
+  v_solo_metadatos boolean := false;
 BEGIN
   IF NEW.deleted_at IS NOT NULL THEN
     RETURN NEW;
   END IF;
 
-  SELECT moneda, tipo_cambio_usd, COALESCE(total,0)
-    INTO v_fact_moneda, v_fact_tc, v_fact_total
+  -- BL-03 (espejo FIX-63 de CxC): un UPDATE que NO toca el dinero (p. ej.
+  -- conciliación o notas) es mantenimiento documental, no un pago nuevo;
+  -- debe pasar aunque la factura se haya cancelado después.
+  IF TG_OP = 'UPDATE' THEN
+    v_solo_metadatos := (
+      NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
+      AND NEW.monto IS NOT DISTINCT FROM OLD.monto
+      AND NEW.moneda IS NOT DISTINCT FROM OLD.moneda
+      AND NEW.tipo_cambio_usd IS NOT DISTINCT FROM OLD.tipo_cambio_usd
+      AND OLD.deleted_at IS NULL
+    );
+    IF v_solo_metadatos THEN
+      RETURN NEW;
+    END IF;
+  END IF;
+
+  SELECT moneda, tipo_cambio_usd, COALESCE(total,0), estado, deleted_at
+    INTO v_fact_moneda, v_fact_tc, v_fact_total, v_fact_estado, v_fact_deleted
     FROM public.proveedor_facturas
     WHERE id = NEW.proveedor_factura_id
     FOR UPDATE;
@@ -31,6 +52,14 @@ BEGIN
   IF v_fact_moneda IS NULL THEN
     RAISE EXCEPTION 'LC_FACTURA_PROV_NO_ENCONTRADA: factura % no existe', NEW.proveedor_factura_id
       USING ERRCODE = 'P0002';
+  END IF;
+
+  -- BL-03: una factura Cancelada o en papelera no admite pagos (paridad CxC).
+  IF v_fact_estado = 'Cancelada'::public.estado_proveedor_factura
+     OR v_fact_deleted IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_PAGO_PROV_FACTURA_NO_VIVA: la factura de proveedor está % y no admite pagos',
+      CASE WHEN v_fact_deleted IS NOT NULL THEN 'en la papelera' ELSE 'Cancelada' END
+      USING ERRCODE = '23514';
   END IF;
 
   NEW.monto_en_moneda_factura := public.convertir_monto_pago_a_factura(

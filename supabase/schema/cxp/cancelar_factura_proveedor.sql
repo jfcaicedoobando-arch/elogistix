@@ -1,3 +1,10 @@
+-- Fuente canónica de public.cancelar_factura_proveedor (dominio cxp).
+-- Última migración que la define: 20260825000200 (BL-03, reset de
+-- estado_aprobacion='pendiente' al cancelar — permitido por
+-- trg_guard_aprobacion_proveedor_factura sin marca de sesión).
+-- Regla: cualquier cambio a esta función debe actualizar este archivo
+-- en el mismo PR (ver supabase/schema/README.md).
+
 CREATE OR REPLACE FUNCTION public.cancelar_factura_proveedor(p_factura_id uuid, p_motivo text)
  RETURNS void
  LANGUAGE plpgsql
@@ -70,6 +77,10 @@ BEGIN
          fecha_cancelacion = now(),
          motivo_cancelacion = btrim(p_motivo),
          cancelada_por = v_uid,
+         -- BL-03: una factura cancelada no puede conservar la aprobación;
+         -- sin este reset quedaba 'aprobada' y admitía pagos/anticipos en
+         -- cualquier path que sólo valide estado_aprobacion.
+         estado_aprobacion = 'pendiente'::public.estado_aprobacion_factura_proveedor,
          updated_at = now()
    WHERE id = p_factura_id;
 
