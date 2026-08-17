@@ -57,8 +57,10 @@ export function useCrearCriterioEtapa() {
     mutationFn: crearCriterioEtapa,
     onSuccess: invalidar,
     onError: (e) =>
-      notifyError(e, {
+      notifyError(undefined, {
         title: "No se pudo guardar el criterio",
+        description: e instanceof Error ? e.message : undefined,
+        error: e,
         method: "USE_CRITERIOS_ETAPA",
       }),
   });
@@ -70,8 +72,10 @@ export function useActualizarCriterioEtapa() {
     mutationFn: actualizarCriterioEtapa,
     onSuccess: invalidar,
     onError: (e) =>
-      notifyError(e, {
+      notifyError(undefined, {
         title: "No se pudo guardar el criterio",
+        description: e instanceof Error ? e.message : undefined,
+        error: e,
         method: "USE_CRITERIOS_ETAPA",
       }),
   });
@@ -84,8 +88,10 @@ export function useEliminarCriterioEtapa() {
     mutationFn: (id: string) => eliminarCriterioEtapa(id, user?.id ?? null),
     onSuccess: invalidar,
     onError: (e) =>
-      notifyError(e, {
+      notifyError(undefined, {
         title: "No se pudo guardar el criterio",
+        description: e instanceof Error ? e.message : undefined,
+        error: e,
         method: "USE_CRITERIOS_ETAPA",
       }),
   });
@@ -99,8 +105,10 @@ export function useMarcarCriterio(oportunidadId: string) {
       marcarCriterio({ ...input, oportunidadId, userId: user?.id ?? null }),
     onSuccess: invalidar,
     onError: (e) =>
-      notifyError(e, {
+      notifyError(undefined, {
         title: "No se pudo guardar el criterio",
+        description: e instanceof Error ? e.message : undefined,
+        error: e,
         method: "USE_CRITERIOS_ETAPA",
       }),
   });
