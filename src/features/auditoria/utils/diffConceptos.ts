@@ -3,6 +3,9 @@
  *
  * Extraído de `diffFields.ts` (regla Power of 10: ≤200 líneas por archivo).
  */
+import { formatCurrency, formatNumber } from "@/lib/formatters";
+
+
 
 export interface ConceptoLike {
   concepto?: string | null;
