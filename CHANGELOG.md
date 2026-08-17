@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.641.0] - 2026-08-17
+
+### Design system, layout y copy de backoffice (Parches 14, 15 y 16)
+- **Parche 14 (adopción del design system):** estados de error con botón "Reintentar" en 36 rutas que antes mostraban un "sin datos" engañoso al fallar la carga; nuevo `Spinner` con escala fija (inline/block/page) y normalización de spinners fuera de escala; KPIs con token `text-kpi`; sombras de marca (`shadow-overlay`/`shadow-raised`); `transition-all` reemplazado por transiciones dirigidas en 14 archivos de features.
+- **Parche 15 (layouts):** card "Gastos fijos cubiertos" ya no se corta a <1536px; card "Riesgo financiero pendiente" compacta cuando no hay fugas; "Margen por modo" muestra "—" y "Sin operaciones en el mes" en lugar de 0.0%; "Desempeño por operador" omite la gráfica apilada con un solo operador; scrollbar fino visible en tabs de embarque y menú lateral.
+- **Parche 16 (copy es-MX):** "Sentry" → "Monitoreo"; pantalla "Sin acceso" sin ruta cruda y con mensaje correcto para secciones internas de Libre Carga; "cuenta tenant" → "organización" y plan capitalizado; filtros de costeo "Aprobación:"/"Contenedor:"; Papelera sin "(soft delete)"; banner Incoterm sin espacio antes de ":".
+- Ajustes de integración: imports de `ErrorState` en 5 rutas, resolución manual de los conflictos de `AppSidebar.tsx` y `SinAccesoContent.tsx`, y prueba de `InvitarAgenteCredencialesView` acotada al botón de cierre del footer.
+
 ## [13.640.2] - 2026-08-17
 
 ### Corrección de CI (auditorías de migraciones)
