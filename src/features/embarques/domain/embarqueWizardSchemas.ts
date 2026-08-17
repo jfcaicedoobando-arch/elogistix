@@ -1,5 +1,5 @@
 /**
- * Esquemas de validación zod para el wizard "Nuevo Embarque".
+ * Esquemas de validación zod para el wizard "Nuevo embarque".
  * Cada paso tiene su propio schema para validar de forma incremental.
  *
  * Estándar de mensajes (v8.96.0):

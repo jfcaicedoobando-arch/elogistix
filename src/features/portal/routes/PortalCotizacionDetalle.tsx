@@ -15,6 +15,7 @@ import PortalCotizacionEstadoBanner from "@/features/portal/components/cotizacio
 import PortalCotizacionConfirmDialog from "@/features/portal/components/cotizacion/PortalCotizacionConfirmDialog";
 import DatosGeneralesCard from "@/features/portal/components/cotizacion/DatosGeneralesCard";
 import { AvisoConceptosDescartados } from "@/features/cotizacion/components/AvisoConceptosDescartados";
+import { formatCurrency } from "@/lib/formatters";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useDocumentTitle } from "@/hooks/shared";
@@ -127,6 +128,24 @@ export default function PortalCotizacionDetalle() {
           ivaUSD={ivaUSD}
           ivaMXN={ivaMXN}
         />
+      )}
+
+      {conceptosUSD.length === 0 && conceptosMXN.length === 0 && Number(cot.subtotal) > 0 && (
+        // VT-26: cotizaciones sin desglose de conceptos (legacy) mostraban el
+        // detalle sin ningún importe; se muestra al menos el total cotizado.
+        <Card>
+          <CardHeader>
+            <CardTitle>Total cotizado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-base font-bold tabular-nums">
+              {formatCurrency(Number(cot.subtotal), cot.moneda)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Monto total de la cotización. El desglose de conceptos no está disponible en esta cotización.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {cot.notas && (

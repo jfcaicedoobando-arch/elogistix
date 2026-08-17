@@ -137,15 +137,30 @@ export function TabProformas({ isInRange, estadoInicial }: {
             columns={columns}
             data={c.paginated}
             isLoading={c.isLoading}
-            emptyMessage="No hay proformas generadas"
+            emptyMessage={
+              // VF-23: el copy del empty state refleja el filtro de estado activo
+              // (bandeja "Por emitir" = ?estado=aceptada).
+              c.filtroEstado === "aceptada"
+                ? "Ninguna proforma aceptada pendiente de emitir"
+                : "No hay proformas generadas"
+            }
             emptyState={
               c.counts.todas > 0 && c.filtered.length === 0 ? (
+                c.filtroEstado === "aceptada" ? (
+                  <EmptyState
+                    icon={FileSpreadsheet}
+                    title="Ninguna proforma aceptada pendiente de emitir"
+                    description="Cuando un cliente acepte una proforma, aparecerá aquí lista para convertirse en factura."
+                    primaryAction={{ label: "Limpiar filtros", onClick: c.clearFiltros }}
+                  />
+                ) : (
                 <EmptyState
                   icon={FileSpreadsheet}
                   title="No hay proformas con estos filtros"
                   description="Ajusta o quita los filtros aplicados para ver el listado completo de proformas."
                   primaryAction={{ label: "Limpiar filtros", onClick: c.clearFiltros }}
                 />
+                )
               ) : undefined
             }
             rowKey={(p) => p.id}

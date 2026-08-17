@@ -31,7 +31,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
           <EmptyStateInline loading message="Cargando…" />
         ) : data.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Aún no se ha creado ninguna cotización para esta oportunidad. Usa el botón "Crear cotización" arriba.
+            Aún no se ha creado ninguna cotización para esta oportunidad. Usa el botón "Nueva cotización" arriba.
           </p>
         ) : (
           <div className="overflow-x-auto">

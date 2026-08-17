@@ -24,7 +24,9 @@ interface EmbarqueLike {
 
 export function usePortalDashboardKpis<E extends EmbarqueLike>(embarques: E[]) {
   const embarquesActivos = useMemo(
-    () => embarques.filter((e) => !["Cerrado", "Cancelado", "EIR", "Por liquidar"].includes(e.estado)),
+    // VT-25: "Entregado" tampoco es activo — el KPI "Embarques activos" lo
+    // contaba y contradecía el gráfico de distribución por estado.
+    () => embarques.filter((e) => !["Entregado", "Cerrado", "Cancelado", "EIR", "Por liquidar"].includes(e.estado)),
     [embarques],
   );
 

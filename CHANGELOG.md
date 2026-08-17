@@ -1,5 +1,24 @@
 # Changelog
 
+## [13.644.0] - 2026-08-17
+
+### Parche 22 · Reportes, portal y tesorería
+- Bandeja "Por emitir" de proformas: empty state específico ("Ninguna proforma aceptada pendiente de emitir").
+- Gráfica top clientes: eje Y más ancho (labels de 30 chars) y empty state cuando toda la utilidad del periodo es $0.
+- Margen 0% sin venta se muestra en badge neutral, ya no en rojo.
+- Portal: "Embarques activos" excluye Entregado, cotizaciones sin desglose muestran "Total cotizado" y el banner de rechazo incluye mailto de contacto.
+- Tesorería: el footer de pagos programados se renderiza en `<tfoot>` (fondo al 100%) y el folio ya no se parte en dos líneas.
+
+### Parche 23 · Datos y sitio público
+- Nueva migración `20260825001100_normalizar_razon_social_unicode`: `_normalizar_razon_social()` hace mayúsculas Unicode (collation ICU con fallback a `upper()`), evitando "BAJíO"/"PACíFICO" a futuro. Test SQL + test TS anti-mojibake.
+- Landing: KPI "3 minutos", badge de video "1:00" (antes "0:60") y "6 módulos" (antes 11).
+- Tesorería: se quita el sufijo "(USD)" redundante tras montos ya formateados con moneda.
+- Términos y condiciones: la fecha de última actualización sólo aparece cuando el contenido legal está aprobado.
+
+### Parche 24 · Copy y dedupe de componentes
+- `MobileFilterSheet` renombrado a `PortalFilterSheet` (uso exclusivo del portal) junto con su prueba y los tres call-sites.
+- Copy en mayúscula tipo oración en CTAs y wizards: "Nuevo embarque", "Nueva cotización", etc.
+
 ## [13.643.0] - 2026-08-17
 
 ### Parche 20 · Wizard de cotización (VF-09, VF-10, VF-16, VF-18, VF-19, VB-34)

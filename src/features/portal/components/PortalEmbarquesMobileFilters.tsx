@@ -1,9 +1,9 @@
 /**
  * Filtros mobile para la página de Mis Embarques del portal.
- * DRY Lote 8b: shell compartido en `MobileFilterSheet`.
+ * DRY Lote 8b: shell compartido en `PortalFilterSheet`.
  */
 import { Filter, Ship } from "lucide-react";
-import { MobileFilterSheet } from "@/components/shared/MobileFilterSheet";
+import { PortalFilterSheet } from "@/components/shared/PortalFilterSheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -37,7 +37,7 @@ export function PortalEmbarquesMobileFilters({
   };
 
   return (
-    <MobileFilterSheet
+    <PortalFilterSheet
       search={search}
       onSearchChange={onSearchChange}
       title="Filtros de embarques"
@@ -70,6 +70,6 @@ export function PortalEmbarquesMobileFilters({
           </SelectContent>
         </Select>
       </div>
-    </MobileFilterSheet>
+    </PortalFilterSheet>
   );
 }

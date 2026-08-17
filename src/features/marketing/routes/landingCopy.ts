@@ -23,8 +23,10 @@ export const PROOF_ESTANDARES = [
 export const PROOF_DISCLAIMER = "Libre Carga no es partner oficial de ninguna naviera. Sólo rastreamos sus embarques.";
 
 export const KPIS = [
-  { value: "Minutos", label: "para armar una cotización profesional" },
-  { value: "11", label: "módulos integrados en una sola plataforma" },
+  // VT-04: valor numérico hardcodeado (sin count-up dependiente de observers).
+  { value: "3", label: "minutos para armar una cotización profesional" },
+  // VT-06: cifra alineada con las cards de la sección "Seis módulos".
+  { value: "6", label: "módulos integrados en una sola plataforma" },
   { value: "CFDI 4.0", label: "con IVA dinámico y complementos SAT" },
 ] as const;
 

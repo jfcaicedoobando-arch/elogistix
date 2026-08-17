@@ -44,14 +44,14 @@ export default function NuevoEmbarque() {
     <FormProvider {...w.methods}>
       <CotizacionVinculadaProvider cotizacion={w.cotizacionVinculada}>
       <EmbarqueWizardLayout
-        title="Nuevo Embarque"
+        title="Nuevo embarque"
         subtitle="Completa los datos para registrar un embarque"
         steps={steps}
         currentStep={w.currentStep}
         setCurrentStep={w.setCurrentStep}
         totalSteps={4}
         isPending={w.isPending}
-        saveLabel="Crear Embarque"
+        saveLabel="Crear embarque"
         onBack={() => navigate("/embarques")}
         onFinish={w.handleFinish}
         validateStep={(step) => w.validateStep(step)}

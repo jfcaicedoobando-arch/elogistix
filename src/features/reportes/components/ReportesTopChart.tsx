@@ -17,6 +17,11 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
     if (data.length === 0) {
       return <p className="text-sm text-muted-foreground pt-10 text-center">Sin datos en el periodo seleccionado</p>;
     }
+    // VT-19: con todos los montos en $0 el eje X queda degenerado (tick único
+    // "$0"); se muestra empty state en lugar de la gráfica vacía.
+    if (data.every((d) => !d.profit)) {
+      return <p className="text-sm text-muted-foreground pt-10 text-center">Sin utilidad registrada en el periodo seleccionado</p>;
+    }
     return (
       <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ left: 10, right: 24, top: 5, bottom: 5 }}>
@@ -36,9 +41,10 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
               <YAxis
                 type="category"
                 dataKey="name"
-                width={170}
+                width={210}
                 tick={{ fontSize: 11 }}
-                tickFormatter={(v: string) => (v && v.length > 22 ? v.slice(0, 21) + "…" : v)}
+                // VT-19/VF-24: no truncar antes de ~30 chars; hay ancho de sobra.
+                tickFormatter={(v: string) => (v && v.length > 30 ? v.slice(0, 29) + "…" : v)}
               />
               <Tooltip formatter={(v: number) => formatCurrency(v, "USD")} />
               <Bar dataKey="profit" radius={[0, 4, 4, 0]}>

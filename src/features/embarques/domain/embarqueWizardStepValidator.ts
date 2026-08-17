@@ -1,5 +1,5 @@
 /**
- * Dispatcher de validación por paso del wizard "Nuevo Embarque".
+ * Dispatcher de validación por paso del wizard "Nuevo embarque".
  * Extraído de `useNuevoEmbarqueWizard` (11.14.0).
  *
  * `values` se tipa como `unknown` y se reinterpreta dentro porque la

@@ -99,7 +99,11 @@ export default function PortalCotizacionEstadoBanner({
         <AlertDescription className="text-destructive">
           <p className="font-medium">Tu respuesta fue registrada. Rechazaste esta cotización.</p>
           <p className="text-sm opacity-80 mt-0.5">
-            Si necesitas cambios, contacta al equipo de operaciones para generar una nueva propuesta.
+            Si necesitas cambios, contacta al equipo de operaciones para generar una nueva propuesta:{" "}
+            {/* VT-26: el banner pedía contactar sin dar el medio de contacto. */}
+            <a className="font-medium underline hover:no-underline" href="mailto:hola@librecarga.com">
+              hola@librecarga.com
+            </a>
           </p>
           {fechaRechazo && <FechaRespuesta label="Rechazada" fecha={fechaRechazo} />}
           {comentarioCliente && (

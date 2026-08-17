@@ -23,7 +23,7 @@ export function OportunidadDetalleAcciones({
         ) : (
           <ClipboardList className="h-4 w-4 mr-1" />
         )}
-        Crear cotización
+        Nueva cotización
       </Button>
       <Button size="sm" variant="outline" onClick={onEditar}>
         <Edit className="h-4 w-4 mr-1" /> Editar

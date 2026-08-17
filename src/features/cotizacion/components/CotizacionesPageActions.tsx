@@ -30,19 +30,19 @@ export function CotizacionesPageActions({
         <Download className="h-4 w-4 mr-2" /> Exportar CSV
       </Button>
       {/* v13.223.0 · Capa 3 Tranche A · 3.2: acciones secundarias primero,
-          primary (`Nueva Cotización`) pegado al borde derecho (Fitts's law). */}
+          primary (`Nueva cotización`) pegado al borde derecho (Fitts's law). */}
       {canEdit && (
         <Button
           variant="outline"
           onClick={() => (window.location.href = "/cotizaciones/nueva/tarifario")}
           className="hidden sm:inline-flex"
         >
-          <Plus className="h-4 w-4 mr-2" /> Nuevo Tarifario
+          <Plus className="h-4 w-4 mr-2" /> Nuevo tarifario
         </Button>
       )}
       {canEdit && (
         <Button onClick={onNueva} className="hidden sm:inline-flex">
-          <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
+          <Plus className="h-4 w-4 mr-2" /> Nueva cotización
         </Button>
       )}
       <DropdownMenu>
