@@ -142,4 +142,13 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "El proveedor del anticipo no coincide con el de la factura.",
   LC_ANTICIPO_PROVEEDOR_NO_EXISTE: "El proveedor del anticipo no existe.",
   LC_ANTICIPO_PROVEEDOR_OTRA_ORG: "El proveedor pertenece a otra organización.",
+  // Conceptos de facturas de proveedor (edición manual, v13.629.x).
+  LC_CONCEPTOS_FISCALES:
+    "Los conceptos vienen del XML del proveedor y no se pueden editar. Vuelve a cargar el XML si necesitas corregirlos.",
+  LC_CONCEPTOS_FORBIDDEN:
+    "No tienes permisos para editar los conceptos de esta factura.",
+  LC_FACTURA_CANCELADA: "La factura está cancelada: ya no se puede modificar.",
+  LC_FACTURA_CON_PAGOS:
+    "La factura ya tiene pagos registrados. Reversa los pagos antes de editar sus conceptos.",
+  LC_FACTURA_ELIMINADA: "La factura fue eliminada.",
 };
