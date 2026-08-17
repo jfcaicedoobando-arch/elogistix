@@ -83,7 +83,7 @@ export function usePaso1Handlers({
   const handleCotizarSinDesglose = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
-    if (err) { notifyError(undefined, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
+    if (err) { marcarErrorPaso1(err); return; }
     form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
     const esNueva = !cotizacionId;
     try {
