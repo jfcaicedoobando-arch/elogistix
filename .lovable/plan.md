@@ -1,46 +1,43 @@
-# Auditoría pre-release: Oleada 0 (bloqueantes) + Oleada 1 (pulido visual)
+# Cierre de la Oleada 1 (pulido visual) — remates pendientes
 
-## Qué confirmé en el código (antes de planear)
+Los bloqueantes (Oleada 0) ya quedaron: purga de caché al cerrar sesión y permiso de cotización para el rol vendedor.
 
-- **B-1 real:** `signOut` en `src/lib/contexts/AuthContext.tsx` sólo hace `clearLoginAudit`, bitácora, cierre de sesión y `resetProfile()`. No hay `queryClient.clear()` en el cierre de sesión (sólo existe en `main.tsx` al cambiar versión y en el cambio de organización del super admin). La caché del usuario anterior sobrevive al logout.
-- **B-2 real:** `permissionMatrix.ts` incluye `vendedor` para cotizaciones, pero la función SQL `public.puede_escribir_cotizaciones()` (migración `20260813003347…`) sólo admite `admin`, `operador`, `ejecutivo_pricing`, `gerente_comercial`, `super_admin`. El wizard hace INSERT directo, así que un vendedor recibe error de RLS al guardar.
+De la Oleada 1 ya está aplicado: tokens de contraste WCAG AA con prueba automática, copy inglés→español y typos visibles, `overflow-x-auto` en ~16 tablas, paginación oculta con una sola página, y la unificación del formato de moneda (negativos + código ISO, sin duplicar "MXN … MXN").
 
-## Oleada 0 — Bloqueantes (primero)
+Quedan cuatro frentes a medias. Este plan los cierra en ese orden.
 
-1. **Fuga de datos al cerrar sesión**
-   - Limpiar la caché de datos en `signOut` (`queryClient.clear()`), y también cuando entra un usuario distinto al que estaba cacheado (evento de sesión con otro `user.id`).
-   - Test unitario: tras `signOut`, la caché queda vacía.
+## 1. Toast de error global y pantalla /sin-acceso
 
-2. **El rol `vendedor` no puede crear cotizaciones**
-   - Migración que agrega `vendedor` a `public.puede_escribir_cotizaciones()` (decisión de producto: el vendedor sí debe poder cotizar; la matriz de permisos ya lo asume).
-   - Prueba SQL en `supabase/tests/` que verifique que la función acepta exactamente los roles de la matriz, para que la desincronización no regrese.
+- Rediseñar el toast de error: ancho mínimo cómodo, rejilla icono | contenido | acciones, un solo toast por mensaje (deduplicado) y sin acciones que no hacen nada.
+- Dejar de mostrar nombres crudos de columna en los errores de validación (p. ej. `descripcion_mercancia` → "Descripción de la mercancía") mediante un catálogo de etiquetas legibles.
+- Terminar la variante "no pudimos cargar tu perfil" de `/sin-acceso` con botón Reintentar, usando el indicador de error de perfil que ya se expone en el contexto de autenticación, y copy distinto cuando el usuario ya es administrador.
+- Pruebas: deduplicado del toast, catálogo de etiquetas, y la función que decide la variante de `/sin-acceso`.
 
-## Oleada 1 — Pulido visual de alto impacto (esfuerzo S)
+## 2. Fechas
 
-Agrupado por tema; todo es frontend/presentación salvo el punto de mojibake.
+- Corregir la etiqueta de mes desfasada del panel de Profit: derivar el nombre del mes de los valores numéricos año/mes, sin construir una fecha local y convertir zona horaria.
+- Barrido de fechas ISO sueltas en cotizaciones, tesorería y conciliación para dejar DD/MM/YYYY en toda la UI.
+- Prueba de la etiqueta de mes a partir de la clave `YYYY-MM`, más pruebas de moneda (negativos y no duplicación) que quedaron sin escribir.
 
-3. **Contraste WCAG AA** — oscurecer los tokens de estado (`--warning`, `--success`, `--state-*`, `--destructive`) en el CSS global para que pasen AA como texto. Un archivo, afecta cientos de badges.
-4. **Toast de error global** — ancho mínimo, rejilla icono | contenido | acciones, un solo toast por error, nunca mostrar nombres de columna crudos (p. ej. `descripcion_mercancia` → "Descripción de la mercancía").
-5. **`/sin-acceso`** — variante "no pudimos cargar tu perfil" con botón Reintentar cuando el fallo es de red, y no rebotar rutas públicas.
-6. **Moneda** — eliminar duplicados tipo "MXN 460,868.00 MXN", un único formato de negativos, `tabular-nums`; usar el componente de celda monetaria en las tablas ya migradas.
-7. **Fechas** — DD/MM/YYYY consistente y corregir la etiqueta de mes desfasada del panel de Profit (formatear desde la clave `YYYY-MM`, sin construir `Date` local).
-8. **Copy EN → ES** — "Forwarders", "Mis deals", "Revenue/Profit", "tenant", "soft delete", "Cockpit fiscal", "P&L"; y typos visibles ("Usar esta tarifa esta", "Conciliacion", "0:60", "CIF :", "(s)").
-9. **Títulos de pestaña por ruta** — cada pantalla con su `<title>` en español, sin el título de marketing ni "Iniciar sesión" después de entrar.
-10. **Estados vacíos** — gráficas con menos de 2 puntos muestran mensaje en vez de ejes vacíos; tablas vacías sin encabezado colgando.
-11. **Sidebar** — punto indicador cuando está colapsado y arreglo del corte a 1080 px.
-12. **Accesibilidad puntual** — `aria-label` en botones de sólo icono e inputs sin etiqueta; soporte de teclado en tarjetas clicables; descripción en diálogos de alerta.
-13. **Tablas** — ocultar paginación con una sola página, encabezado faltante en la columna "Neto", montos sin partirse en dos líneas, `overflow-x-auto` donde falta.
-14. **Limpieza** — retirar la ruta de vista previa de PDF en producción, borrar el placeholder muerto, `theme-color` según tema.
-15. **Landing / legales** — stat "Minutos" con valor, unificar el conteo de módulos, fecha real en términos.
-16. **Wizard de cotización** — validación inline en el campo con scroll al primer error y asterisco visible en los campos que bloquean el avance.
-17. **Mojibake en nombres de clientes** — corregir la función de mayúsculas del importador para que respete acentos y re-normalizar los nombres ya guardados; test anti-mojibake.
+## 3. Tablas, estados vacíos, gráficas y accesibilidad
 
-## Fuera de alcance de este plan
+- Encabezado faltante de la columna "Neto"; montos con `whitespace-nowrap` y `tabular-nums` para que no se partan en dos líneas.
+- Fila de TOTALES a ancho completo y hover unificado en las tablas hechas a mano.
+- Gráficas con menos de dos puntos muestran mensaje en vez de ejes vacíos; unidad "MXN" una sola vez en el eje.
+- Tablas vacías: usar el estado vacío estándar y no dejar el encabezado colgando.
+- Accesibilidad: `aria-label` en botones de sólo icono, descripción en diálogos de alerta, y soporte de teclado en tarjetas clicables.
+- Sidebar: punto indicador cuando está colapsado y arreglo del corte a 1080 px.
 
-Los majors de dinero (comisiones, guardas de facturas canceladas, idempotencia, EERR/PvsR con IVA, miles con punto) quedan para una Oleada 2 posterior al release, con su propio plan y pruebas.
+## 4. Wizard de cotización
+
+- Aclarar el denominador del contador "X de Y" del panel de progreso según el modo activo.
+- Borrador fantasma: mostrar el aviso de "restaurar borrador" sólo cuando el borrador tiene contenido real, corrigiendo la lista de claves ignoradas que hoy no coincide con los nombres de campo.
+- Completar asteriscos en los campos que bloquean el avance.
+- Pruebas del mapeo mensaje→campo y de la visibilidad del aviso de borrador.
 
 ## Notas técnicas
 
-- Se registra cada bloque en `CHANGELOG.md` con bump de `APP_VERSION`.
-- Ejecución por sub-bloques verificables: tipos, lint y pruebas después de cada tema, respetando el límite de 200 líneas por componente y el uso obligatorio de `FormDialogShell` y `docs/design-system.md`.
-- El cambio de tokens de color se valida con un check de contraste para evitar regresiones.
+- Todo es frontend/presentación; no se toca lógica de negocio ni base de datos.
+- Cada frente se cierra con `tsgo --noEmit` y la suite de pruebas de los archivos tocados antes de pasar al siguiente.
+- Se registra cada bloque en `CHANGELOG.md` con bump de `APP_VERSION`, respetando el límite de 200 líneas por componente y `docs/design-system.md`.
+- Los majors de dinero (comisiones, guardas de facturas canceladas, idempotencia, EERR/PvsR con IVA) siguen fuera de alcance: son Oleada 2 posterior al release.
