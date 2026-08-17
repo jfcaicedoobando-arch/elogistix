@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.640.1] - 2026-08-17
+
+### Corrección de CI (drift radar)
+- La migración `20260825000200_bl03_cxp_factura_cancelada_guards.sql` no cerraba con `;` el cuerpo de `cancelar_factura_proveedor`, así que el `REVOKE` siguiente se leía como parte de la función y la migración no aplicaba en una base limpia (`syntax error at or near "REVOKE"`). Se agregó el punto y coma en la migración y en su espejo `supabase/schema/cxp/cancelar_factura_proveedor.sql`.
+
 ## [13.640.0] - 2026-08-17
 
 ### Formularios, design system y accesibilidad (Patches 11, 12 y 13)
