@@ -8409,6 +8409,7 @@ export type Database = {
           p_factura_id: string
           p_fecha_aplicacion?: string
           p_monto: number
+          p_request_id?: string
         }
         Returns: {
           anticipo_id: string
