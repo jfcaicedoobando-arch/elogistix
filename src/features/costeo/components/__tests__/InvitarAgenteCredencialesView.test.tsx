@@ -49,7 +49,9 @@ describe("InvitarAgenteCredencialesView", () => {
   it("invoca onClose al hacer clic en 'Cerrar'", () => {
     const onClose = vi.fn();
     render(<InvitarAgenteCredencialesView email="x" password="y" onClose={onClose} />);
-    fireEvent.click(screen.getByRole("button", { name: /^cerrar$/i }));
+    // El diálogo aporta su propia "X" accesible como "Cerrar"; tomamos el botón del footer.
+    const cerrar = screen.getAllByRole("button", { name: /^cerrar$/i });
+    fireEvent.click(cerrar[cerrar.length - 1]);
     expect(onClose).toHaveBeenCalled();
   });
 
