@@ -35,5 +35,3 @@ export function AyudaPublicShell() {
     </div>
   );
 }
-
-export default AyudaPublicShell;

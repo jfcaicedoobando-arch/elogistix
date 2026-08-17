@@ -18,8 +18,6 @@ export const ICP_ESTATUS = [
   "Sin calificar", "Validado", "Nutrición", "Descartado",
 ] as const;
 
-export type IcpEstatus = (typeof ICP_ESTATUS)[number];
-
 /** Campos ICP editables (todos texto libre salvo la fecha de nutrición). */
 export interface LeadIcpForm {
   sector: string;

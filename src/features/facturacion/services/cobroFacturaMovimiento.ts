@@ -113,21 +113,3 @@ export async function crearMovimientoBancarioCobro(
   }
   return !error;
 }
-
-/** Baja lógica del movimiento vinculado cuando se elimina el cobro. */
-export async function eliminarMovimientoBancarioCobro(
-  pagoId: string,
-  userId: string | null,
-): Promise<void> {
-  await supabase
-    .from("bbva_movimientos")
-    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-    .eq("pago_factura_id", pagoId)
-    .eq("hash_dedupe", `cobro-${pagoId}`)
-    .is("deleted_at", null);
-  await registrarActividad({
-    modulo: "facturacion",
-    accion: "Eliminó movimiento bancario de cobro",
-    detalles: { pago_id: pagoId },
-  });
-}

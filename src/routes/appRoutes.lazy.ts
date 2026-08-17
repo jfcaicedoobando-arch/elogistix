@@ -10,7 +10,6 @@ export const Reportes = lazy(() => import("@/features/reportes/routes/Reportes")
 export const ReportesCartera = lazy(() => import("@/features/reportes/cartera/routes/ReportesCartera"));
 export const CierreMensual = lazy(() => import("@/features/reportes/routes/CierreMensual"));
 export const Bitacora = lazy(() => import("@/features/dashboard/routes/Bitacora"));
-export const Ayuda = lazy(() => import("@/features/dashboard/routes/Ayuda"));
 
 export const Papelera = lazy(() => import("@/features/admin/routes/Papelera"));
 export const Idempotencia = lazy(() => import("@/features/admin/routes/Idempotencia"));

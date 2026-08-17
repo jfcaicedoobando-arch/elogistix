@@ -15,13 +15,9 @@ export {
   fetchFacturasPorTimbrar,
   fetchFacturasPorEnviar,
   fetchPagosRepPendientes,
-  fetchIdsConEnvioExitoso,
   type FilaPorTimbrar,
   type FilaPorEnviar,
   type FilaRepPendiente,
 } from "./bandejasQueries";
 
-export {
-  fetchBandejaConteos,
-  type BandejaConteos,
-} from "./bandejasConteos";
+export { fetchBandejaConteos } from "./bandejasConteos";
