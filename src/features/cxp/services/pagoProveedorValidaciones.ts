@@ -68,7 +68,8 @@ const TOLERANCIA = 0.01;
 /** Tolerancia de redondeo para el cuadre de totales de la factura. */
 const TOLERANCIA_TOTALES = 0.05;
 const TC_MIN = 0.01;
-const TC_MAX = 1000;
+/** Cota superior de tipo de cambio aceptada en capturas (pagos, facturas, anticipos). */
+export const TC_MAX = 1000;
 
 /** ¿El texto tiene más de 2 decimales? (los centavos son el límite fiscal). */
 export function tieneMasDeDosDecimales(texto: string): boolean {

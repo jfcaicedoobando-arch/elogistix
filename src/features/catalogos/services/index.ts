@@ -6,7 +6,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { unwrapOr, run } from "@/lib/supabase/response";
+import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
 import { registrarActividad } from "@/services/bitacora/registrar";
+
+/** Límite defensivo de catálogos (PostgREST corta a max-rows sin avisar). */
+const LIMITE_CATALOGOS = 500;
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -54,9 +58,11 @@ export interface ExchangeRates {
 
 export async function fetchNavieras(includeInactive = false): Promise<Naviera[]> {
   // 12.34.0: .limit(500) defensivo (evita el cap silencioso de 1000 de PostgREST).
-  let query = supabase.from("navieras").select("*").order("name").limit(500);
+  let query = supabase.from("navieras").select("*").order("name").limit(LIMITE_CATALOGOS);
   if (!includeInactive) query = query.eq("activo", true);
-  return fromDb<Naviera[]>(await unwrapOr(query, []));
+  const rows = fromDb<Naviera[]>(await unwrapOr(query, []));
+  warnIfTruncated(rows, LIMITE_CATALOGOS, "catalogos.fetchNavieras");
+  return rows;
 }
 
 export async function insertNaviera(input: { code: string; name: string }): Promise<void> {
@@ -74,9 +80,11 @@ export async function deleteNaviera(id: string): Promise<void> {
 // ─── Puertos ─────────────────────────────────────────────────────────────────
 
 export async function fetchPuertos(includeInactive = false): Promise<Puerto[]> {
-  let query = supabase.from("puertos").select("*").order("country").order("name").limit(500);
+  let query = supabase.from("puertos").select("*").order("country").order("name").limit(LIMITE_CATALOGOS);
   if (!includeInactive) query = query.eq("activo", true);
-  return fromDb<Puerto[]>(await unwrapOr(query, []));
+  const rows = fromDb<Puerto[]>(await unwrapOr(query, []));
+  warnIfTruncated(rows, LIMITE_CATALOGOS, "catalogos.fetchPuertos");
+  return rows;
 }
 
 export async function insertPuerto(input: { code: string; name: string; country: string }): Promise<void> {
@@ -109,9 +117,11 @@ export async function deletePuerto(id: string): Promise<void> {
 // ─── Tipos de contenedor ─────────────────────────────────────────────────────
 
 export async function fetchTiposContenedor(includeInactive = false): Promise<TipoContenedor[]> {
-  let query = supabase.from("tipos_contenedor").select("*").order("name").limit(500);
+  let query = supabase.from("tipos_contenedor").select("*").order("name").limit(LIMITE_CATALOGOS);
   if (!includeInactive) query = query.eq("activo", true);
-  return fromDb<TipoContenedor[]>(await unwrapOr(query, []));
+  const rows = fromDb<TipoContenedor[]>(await unwrapOr(query, []));
+  warnIfTruncated(rows, LIMITE_CATALOGOS, "catalogos.fetchTiposContenedor");
+  return rows;
 }
 
 export async function insertTipoContenedor(input: { code: string; name: string }): Promise<void> {

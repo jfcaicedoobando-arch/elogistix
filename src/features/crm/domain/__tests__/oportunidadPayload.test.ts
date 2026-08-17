@@ -87,4 +87,17 @@ describe("buildOportunidadInsertPayload", () => {
     expect(out.origen).toBe("");
     expect(out.notas).toBe("");
   });
+
+  it("clampea la probabilidad al rango 0-100 (EC-09)", () => {
+    const alta = buildOportunidadInsertPayload(
+      { nombre: "Op E", etapa_id: "et1", probabilidad: 150 },
+      USER,
+    );
+    const baja = buildOportunidadInsertPayload(
+      { nombre: "Op F", etapa_id: "et1", probabilidad: -5 },
+      USER,
+    );
+    expect(alta.probabilidad).toBe(100);
+    expect(baja.probabilidad).toBe(0);
+  });
 });

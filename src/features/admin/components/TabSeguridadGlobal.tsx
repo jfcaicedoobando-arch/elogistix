@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { z } from "zod";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +19,15 @@ import {
  * v13.56.1 — Inicialización movida a `useEffect` para evitar mutar estado
  * en el cuerpo del render (anti-patrón React que dispara re-renders extra).
  */
+// EC-20: Number("") === 0 y los min/max HTML no bloquean tecleo manual;
+// sin esta validación se persistían políticas absurdas (0 intentos = bloqueo
+// total, longitud de contraseña 0, etc.).
+const seguridadPoliticasSchema = z.object({
+  longitudPassword: z.number().int().min(6).max(32),
+  expiracionSesion: z.number().int().min(1).max(720),
+  maxIntentos: z.number().int().min(3).max(20),
+});
+
 export default function TabSeguridadGlobal() {
   const config = useConfigGlobalCategoria("seguridad");
   const updateConfig = useUpdateConfiguracionGlobal();
@@ -45,6 +56,20 @@ export default function TabSeguridadGlobal() {
   }, [config, configPlataforma, initialized]);
 
   const handleGuardar = () => {
+    const parsed = seguridadPoliticasSchema.safeParse({
+      longitudPassword: Number(longitudPassword),
+      expiracionSesion: Number(expiracionSesion),
+      maxIntentos: Number(maxIntentos),
+    });
+    if (!parsed.success) {
+      notifyError(undefined, {
+        title: "Políticas de seguridad inválidas",
+        description:
+          "Revisa los valores: longitud de contraseña entre 6 y 32, expiración de sesión entre 1 y 720 horas e intentos de login entre 3 y 20.",
+        method: "FEATURES_ADMIN_COMPONENTS_TABSEGURIDADGLOBAL_SAVE",
+      });
+      return;
+    }
     updateConfig.mutate([
       { categoria: "seguridad", clave: "auto_confirmar_email", valor: autoConfirmar },
       { categoria: "seguridad", clave: "longitud_minima_password", valor: longitudPassword },

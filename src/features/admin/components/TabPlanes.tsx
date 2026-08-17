@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { z } from "zod";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
@@ -10,6 +12,15 @@ import { usePlanes, useUpdatePlan, type Plan } from "@/features/admin/hooks";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+
+// EC-20: los inputs type="number" no bloquean NaN/negativos al teclear; se
+// valida en el submit antes de persistir los límites del plan.
+const planEditSchema = z.object({
+  max_usuarios: z.number().int().min(1).max(100_000),
+  max_embarques_mes: z.number().int().min(1).max(1_000_000),
+  almacenamiento_mb: z.number().int().min(0).max(10_000_000),
+  precio_mensual: z.number().min(0).max(100_000_000),
+});
 
 export default function TabPlanes() {
   const { data: planes = [], isLoading } = usePlanes();
@@ -29,8 +40,23 @@ export default function TabPlanes() {
 
   const saveEdit = () => {
     if (!editingId) return;
+    const parsed = planEditSchema.safeParse({
+      max_usuarios: Number(editValues.max_usuarios),
+      max_embarques_mes: Number(editValues.max_embarques_mes),
+      almacenamiento_mb: Number(editValues.almacenamiento_mb),
+      precio_mensual: Number(editValues.precio_mensual),
+    });
+    if (!parsed.success) {
+      notifyError(undefined, {
+        title: "Valores del plan inválidos",
+        description:
+          "Revisa los límites del plan: usuarios y embarques deben ser enteros mayores a 0; almacenamiento y precio no pueden ser negativos.",
+        method: "FEATURES_ADMIN_COMPONENTS_TABPLANES_SAVE",
+      });
+      return;
+    }
     updatePlan.mutate(
-      { id: editingId, ...editValues },
+      { id: editingId, ...parsed.data },
       { onSuccess: () => setEditingId(null) }
     );
   };

@@ -98,6 +98,26 @@ describe("costeo/demorasVenta (extra)", () => {
     await expect(crearDemoraVenta(input)).rejects.toThrow("insert fail");
   });
 
+  it("07b — crearDemoraVenta: rechaza tramos inválidos sin tocar Supabase (EC-20)", async () => {
+    const valido: DemoraVentaTarifaInput = {
+      tipo_contenedor_id: "tc-1",
+      desde_dia: 5,
+      hasta_dia: 10,
+      monto_por_dia_usd: 10,
+      vigente_desde: "2026-01-01",
+      vigente_hasta: null,
+      notas: null,
+    };
+    await expect(
+      crearDemoraVenta({ ...valido, desde_dia: 10, hasta_dia: 5 }),
+    ).rejects.toThrow("día final");
+    await expect(crearDemoraVenta({ ...valido, desde_dia: 0 })).rejects.toThrow("día inicial");
+    await expect(
+      crearDemoraVenta({ ...valido, monto_por_dia_usd: -1 }),
+    ).rejects.toThrow("monto por día");
+    expect(mock.tableCalls).toHaveLength(0);
+  });
+
   it("08 — eliminarDemoraVenta: hace delete + eq con el id dado", async () => {
     mock.setTableResult(TABLE, { data: null, error: null });
     await eliminarDemoraVenta("abc-123");

@@ -10,6 +10,33 @@
 import { supabase } from "@/integrations/supabase/client";
 import { FECHA_INICIO_TIMBRADO_SISTEMA } from "@/features/facturacion/domain/facturaFlags";
 import { todayLocalISO } from "@/lib/date/today";
+import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
+
+const LIMITE_POR_TIMBRAR = 500;
+const LIMITE_TIMBRADAS = 1000;
+const ENVIOS_PAGE = 1000;
+
+/**
+ * EC-03: IDs de facturas con al menos un envío exitoso, paginando con
+ * `.range()` porque PostgREST corta a `max-rows` SIN error y un Set
+ * incompleto hacía reaparecer facturas ya enviadas en la bandeja.
+ * Devuelve un Set de DISTINCT factura_id (sirve también al conteo EC-04).
+ */
+async function fetchIdsConEnvioExitoso(orgId: string): Promise<Set<string>> {
+  const ids = new Set<string>();
+  for (let from = 0; ; from += ENVIOS_PAGE) {
+    const { data, error } = await supabase
+      .from("factura_envios")
+      .select("factura_id")
+      .eq("organization_id", orgId)
+      .eq("estado", "enviado")
+      .range(from, from + ENVIOS_PAGE - 1);
+    if (error) throw error;
+    for (const e of data ?? []) ids.add(e.factura_id);
+    if (!data || data.length < ENVIOS_PAGE) break;
+  }
+  return ids;
+}
 
 export interface FilaPorTimbrar {
   id: string;
@@ -53,8 +80,9 @@ export async function fetchFacturasPorTimbrar(orgId: string): Promise<FilaPorTim
     .is("deleted_at", null)
     .gte("fecha_emision", FECHA_INICIO_TIMBRADO_SISTEMA.slice(0, 10))
     .order("fecha_emision", { ascending: false })
-    .limit(500);
+    .limit(LIMITE_POR_TIMBRAR);
   if (error) throw error;
+  warnIfTruncated(data, LIMITE_POR_TIMBRAR, "facturacion.fetchFacturasPorTimbrar");
   return (data ?? []) as FilaPorTimbrar[];
 }
 
@@ -65,7 +93,7 @@ export async function fetchFacturasPorTimbrar(orgId: string): Promise<FilaPorTim
  * esperado es bajo.
  */
 export async function fetchFacturasPorEnviar(orgId: string): Promise<FilaPorEnviar[]> {
-  const [timbradasRes, enviosRes] = await Promise.all([
+  const [timbradasRes, enviadas] = await Promise.all([
     supabase
       .from("facturas")
       .select("id, numero, cliente_id, cliente_nombre, total, moneda, fecha_emision, uuid_fiscal")
@@ -74,16 +102,11 @@ export async function fetchFacturasPorEnviar(orgId: string): Promise<FilaPorEnvi
       .in("estado", ["Emitida", "Parcialmente pagada", "Pagada"])
       .is("deleted_at", null)
       .order("fecha_emision", { ascending: false })
-      .limit(1000),
-    supabase
-      .from("factura_envios")
-      .select("factura_id, estado")
-      .eq("organization_id", orgId)
-      .eq("estado", "enviado"),
+      .limit(LIMITE_TIMBRADAS),
+    fetchIdsConEnvioExitoso(orgId),
   ]);
   if (timbradasRes.error) throw timbradasRes.error;
-  if (enviosRes.error) throw enviosRes.error;
-  const enviadas = new Set((enviosRes.data ?? []).map((e) => e.factura_id));
+  warnIfTruncated(timbradasRes.data, LIMITE_TIMBRADAS, "facturacion.fetchFacturasPorEnviar");
   return ((timbradasRes.data ?? []) as FilaPorEnviar[]).filter((f) => !enviadas.has(f.id));
 }
 
@@ -132,7 +155,7 @@ export interface BandejaConteos {
  */
 export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos> {
   const hoy = todayLocalISO();
-  const [porTimbrar, timbradas, envios, porCobrar, vencidas, reps] = await Promise.all([
+  const [porTimbrar, timbradas, enviadasIds, porCobrar, vencidas, reps] = await Promise.all([
     supabase
       .from("facturas")
       .select("id", { count: "exact", head: true })
@@ -148,11 +171,7 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .not("uuid_fiscal", "is", null)
       .in("estado", ["Emitida", "Parcialmente pagada", "Pagada"])
       .is("deleted_at", null),
-    supabase
-      .from("factura_envios")
-      .select("factura_id", { count: "exact", head: true })
-      .eq("organization_id", orgId)
-      .eq("estado", "enviado"),
+    fetchIdsConEnvioExitoso(orgId),
     supabase
       .from("facturas")
       .select("id", { count: "exact", head: true })
@@ -174,10 +193,10 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .in("estado_rep", ["Pendiente", "Error"])
       .is("deleted_at", null),
   ]);
-  // "Por enviar" es una aproximación: (timbradas) − (envíos exitosos).
-  // Es exacto sólo si cada factura tiene ≤1 envío exitoso, lo cual es la
-  // regla de negocio hoy. Si eso cambia, mover el conteo a una vista SQL.
-  const porEnviar = Math.max(0, (timbradas.count ?? 0) - (envios.count ?? 0));
+  // EC-04: "Por enviar" = timbradas − DISTINCT factura_id con envío exitoso.
+  // Contar envíos crudos divergía de la lista cuando una factura se reenvía
+  // (existe historial en factura_envios): badge y bandeja se contradecían.
+  const porEnviar = Math.max(0, (timbradas.count ?? 0) - enviadasIds.size);
   return {
     porTimbrar: porTimbrar.count ?? 0,
     porEnviar,

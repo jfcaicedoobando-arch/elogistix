@@ -50,8 +50,12 @@ export default function Oportunidades() {
         .map((u) => ({ id: u.user_id, email: u.email })),
     [usuarios],
   );
-  const { data, isLoading } = useOportunidades({ search: debounced, pageSize: 500 });
+  const PAGE_SIZE = 500;
+  const { data, isLoading } = useOportunidades({ search: debounced, pageSize: PAGE_SIZE });
   const opsRaw = useMemo(() => data?.data ?? [], [data]);
+  // EC-17: la página dura de 500 no avisaba cuando el servidor tenía más.
+  const totalServidor = data?.count ?? opsRaw.length;
+  const listaTruncada = totalServidor > opsRaw.length;
 
   const ops = useMemo(() => {
     return opsRaw.filter((o) => {
@@ -95,6 +99,11 @@ export default function Oportunidades() {
         description="Pipeline de ventas por etapa con vista Kanban y tabla"
       />
       <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(totalPipeline)}`} />
+      {listaTruncada && (
+        <p className="text-label text-amber-600 dark:text-amber-400">
+          Mostrando las primeras {opsRaw.length} de {totalServidor} oportunidades; refina tu búsqueda o aplica filtros para ver el resto.
+        </p>
+      )}
 
       <Card>
         <CardContent className="p-3 space-y-3">

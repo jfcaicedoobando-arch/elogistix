@@ -28,6 +28,12 @@ export async function searchCrm(term: string): Promise<CrmSearchHit[]> {
       .is("deleted_at", null)
       .limit(6),
   ]);
+  // EC-14: propagar errores de sub-consultas; antes un fallo (RLS, red,
+  // timeout) se veía como "sin resultados" y el usuario duplicaba registros.
+  // GlobalSearch ya muestra su estado de fallo (`busquedaFallo`) al lanzar.
+  if (leadsRes.error) throw leadsRes.error;
+  if (opsRes.error) throw opsRes.error;
+  if (actsRes.error) throw actsRes.error;
   const hits: CrmSearchHit[] = [];
   for (const l of leadsRes.data ?? []) {
     hits.push({ kind: "lead", id: l.id, title: l.empresa, subtitle: l.contacto || l.email || "Lead" });

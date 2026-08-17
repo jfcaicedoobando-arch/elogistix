@@ -49,6 +49,21 @@ export default function CosteoDemorasVenta() {
     e.preventDefault();
     setIntentoEnvio(true);
     if (!form.tipo_contenedor_id || form.monto_por_dia_usd < 0) return;
+    // EC-20: tramos con días inválidos o invertidos (desde > hasta).
+    if (!Number.isInteger(form.desde_dia) || form.desde_dia < 1) {
+      notifyError(undefined, {
+        title: "Tramo inválido",
+        description: "El día inicial debe ser un entero mayor o igual a 1.",
+      });
+      return;
+    }
+    if (form.hasta_dia !== null && (!Number.isInteger(form.hasta_dia) || form.hasta_dia < form.desde_dia)) {
+      notifyError(undefined, {
+        title: "Tramo inválido",
+        description: "El día final debe ser un entero mayor o igual al día inicial (o quedar vacío).",
+      });
+      return;
+    }
     // B-096: impedir tramos solapados con los vigentes del mismo contenedor.
     const solapada = tarifas.find((t) =>
       t.tipo_contenedor_id === form.tipo_contenedor_id &&
