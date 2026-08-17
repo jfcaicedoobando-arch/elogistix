@@ -106,7 +106,7 @@ export default function Facturacion() {
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <PageHeader
             title="Facturación"
-            description="Cockpit fiscal: CFDI, complemento de pagos (REP) y cartera de clientes"
+            description="Panel fiscal: CFDI, complemento de pagos (REP) y cartera de clientes"
           />
           <div className="flex items-center gap-2 shrink-0">
             <PeriodoFiscalSelector

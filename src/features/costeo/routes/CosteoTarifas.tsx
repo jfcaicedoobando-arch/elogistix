@@ -37,7 +37,7 @@ export default function CosteoTarifas() {
     <PageContainer>
       <PageHeader
         title="Tarifas marítimas"
-        description="Matriz CN → MX por agente, naviera, ruta y contenedor. Moneda base: USD."
+        description="Matriz de tarifas por agente, naviera, ruta y contenedor. Moneda base: USD."
         actions={
           <Button
             onClick={s.nuevo}

@@ -61,7 +61,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
           <BrandLockup
             variant={collapsed ? "icon" : "horizontal"}
             size="sm"
-            subtitle={collapsed ? undefined : "Plataforma de Forwarders"}
+            subtitle={collapsed ? undefined : "Plataforma para agentes de carga"}
           />
         </div>
       </SidebarHeader>

@@ -140,7 +140,7 @@ export function ElegirButton({
         variant={esGanador ? "default" : "outline"}
         onClick={() => onElegir(row)}
       >
-        {selectLabel} {esGanador && "esta"}
+        {selectLabel}
       </Button>
     </div>
   );

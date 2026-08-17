@@ -12,8 +12,8 @@ import { usePermissions } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 const WIZARD_STEPS = [
   { num: 1, title: "Datos Generales" },
-  { num: 2, title: "Costos & P&L" },
-  { num: 3, title: "Cotización Cliente" },
+  { num: 2, title: "Costos y utilidad" },
+  { num: 3, title: "Cotización del cliente" },
   { num: 4, title: "Resumen" },
 ];
 
