@@ -84,6 +84,8 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
   // Aclara qué se cuenta en "X de Y": el denominador cambia según el modo
   // (marítimo agrega Tarifa/Flete), así que el texto lo explicita.
   const modoLabel = esMaritimo ? (esLcl ? " (marítimo LCL)" : " (marítimo)") : " (terrestre/aéreo)";
+  // VF-09/VF-19: el checklist dice qué falta y por qué cambia el denominador.
+  const faltantes = sections.filter((s) => !s.done).map((s) => s.label);
 
   const handleClick = (id: string) => {
     const el = document.getElementById(id);
@@ -99,6 +101,14 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
             {completas} de {total} secciones completas{modoLabel}
           </p>
           <Progress value={pct} className="h-1.5" />
+          {faltantes.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Falta: {faltantes.join(", ")}
+            </p>
+          )}
+          <p className="text-2xs text-muted-foreground">
+            El total de secciones varía según el modo de transporte.
+          </p>
         </div>
         <nav className="space-y-1">
           {sections.map((s) => {

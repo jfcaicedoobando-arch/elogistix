@@ -1,3 +1,5 @@
+import { ymMx } from "@/lib/date/mx";
+
 /** Devuelve YYYY-MM-DD del primer y último día del mes (year, month 1-12). */
 export function rangoMes(year: number, month: number): { desde: string; hasta: string } {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -56,7 +58,11 @@ export function generarMesesDisponibles(hoy = new Date()): {
   return out;
 }
 
-/** Mes actual en formato YYYY-MM. */
+/**
+ * Mes actual en formato YYYY-MM, en la zona de negocio America/Mexico_City.
+ * VF-07: con la TZ del navegador/servidor (p.ej. UTC+8) el cierre mensual
+ * titulaba "mes en curso" pero abría el mes equivocado.
+ */
 export function mesActualKey(hoy = new Date()): string {
-  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
+  return ymMx(hoy);
 }

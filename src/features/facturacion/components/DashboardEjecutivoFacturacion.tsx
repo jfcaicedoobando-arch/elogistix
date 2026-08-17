@@ -9,7 +9,7 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrencyCompact, formatFechaEs } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact, formatFechaEs } from "@/lib/formatters";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
 
@@ -74,28 +74,31 @@ export function DashboardEjecutivoFacturacion() {
           variant={listasTone === "warn" ? "warning" : "default"}
           valueTooltip="Proformas aceptadas por el cliente y sin factura emitida — listas para timbrar. Se convierten desde la bandeja 'Proformas listas'."
         />
+        {/* VF-05: montos completos con moneda en KPIs financieros; la
+            abreviatura "MXN 48.7K" convivía con montos completos en la misma
+            pantalla y se leía como inconsistencia de formato. */}
         <KpiCard
           label={facturado.label}
-          value={formatCurrencyCompact(facturadoMes, "MXN")}
+          value={formatCurrency(facturadoMes, "MXN")}
           variant={facturado.tone === "warn" ? "warning" : "default"}
           valueTooltip={facturado.hint}
         />
         <KpiCard
           label={`Cobrado en ${mes}`}
-          value={formatCurrencyCompact(cobradoMes, "MXN")}
+          value={formatCurrency(cobradoMes, "MXN")}
           variant="success"
           valueTooltip="Pagos aplicados a facturas durante el mes en curso, en MXN equivalente. Un cero significa que aún no se registran cobros este mes."
         />
         <KpiCard
           label="Saldo por cobrar"
-          value={formatCurrencyCompact(porCobrar, "MXN")}
+          value={formatCurrency(porCobrar, "MXN")}
           sublabel={sublabelUsd(cob.total_usd)}
           valueTooltip="Saldo total pendiente de cobro de todas las facturas vivas (no sólo del mes en curso). Las facturas en USD se muestran aparte para no mezclar monedas sin tipo de cambio."
         />
 
         <KpiCard
           label={`Vencido (${cob.facturas_vencidas})`}
-          value={formatCurrencyCompact(vencido, "MXN")}
+          value={formatCurrency(vencido, "MXN")}
           sublabel={sublabelUsd(cob.vencido_usd)}
           variant="destructive"
         />

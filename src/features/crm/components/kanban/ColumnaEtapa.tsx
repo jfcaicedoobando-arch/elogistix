@@ -34,9 +34,13 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
         <div className="text-xs text-muted-foreground">
           {totales.cantidad} · {fmtMxn(totales.estimado)}
         </div>
-        <div className="text-2xs text-muted-foreground">
-          Meta {fmtMxn(totales.meta)} · Ponderado {fmtMxn(totales.ponderado)}
-        </div>
+        {/* VF-22: en columna vacía "Meta MXN 0 · Ponderado MXN 0" era ruido
+            repetido bajo cada etapa; sólo se muestra cuando hay algo que medir. */}
+        {totales.cantidad > 0 && (
+          <div className="text-2xs text-muted-foreground">
+            Meta {fmtMxn(totales.meta)} · Ponderado {fmtMxn(totales.ponderado)}
+          </div>
+        )}
       </div>
       <div
         ref={setNodeRef}

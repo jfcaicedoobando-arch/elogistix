@@ -7,10 +7,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { type ColumnDef } from "@/components/shared/DataTable";
 import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 import { renderEstadoVigencia } from "./columnsParts/estadoVigenciaCell";
+import { formatFechaHora } from "@/lib/formatters";
 import {
   clientColumn,
   moneyColumn,
-  dateColumn,
   actionsColumn,
 } from "@/components/shared/dataTable/columnBuilders";
 import { Trash2, Copy } from "lucide-react";
@@ -64,7 +64,9 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       id: "ruta",
       header: "Origen → Destino",
       // Oculto en tableta (<xl) — la ruta se ve en el detalle.
-      meta: { width: COL_W.nombre, className: "text-xs max-w-[200px] hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      // VF-15: el tope de 200px truncaba "Shanghái → Manzanillo" habiendo
+      // ancho disponible; se amplía al peldaño canónico de ruta.
+      meta: { width: COL_W.ruta, className: "text-xs max-w-[320px] hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const r = row.original;
         const ruta = `${r.origen || "-"} → ${r.destino || "-"}`;
@@ -98,12 +100,18 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       cell: ({ row }) => renderEstadoVigencia(row.original),
     },
     {
-      ...dateColumn<CotizacionListItem>({
-        id: "fecha",
-        header: "Fecha",
-        accessor: (r) => r.created_at,
-        format: "dd/MM/yyyy HH:mm",
-      }),
+      id: "fecha",
+      header: "Fecha",
+      accessorFn: (r) => r.created_at ?? "",
+      enableSorting: true,
+      // VF-04: `formatDate` (date-fns) usa la TZ del navegador/servidor y el
+      // listado mostraba la hora del servidor. Se formatea con el formatter
+      // canónico TZ_MX, igual que "Mi día" de CRM.
+      cell: ({ row }) => (
+        <span className="tabular-nums whitespace-nowrap">
+          {row.original.created_at ? formatFechaHora(row.original.created_at) : "—"}
+        </span>
+      ),
       // Fecha oculta en tableta (<xl).
       meta: { width: COL_W.monto, className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },

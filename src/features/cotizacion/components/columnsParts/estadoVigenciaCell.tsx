@@ -23,16 +23,18 @@ function buildVigenciaNode(fechaVigencia: string, estado: string): ReactNode {
   // visual en la tabla sin ocultar los casos que requieren acción.
   // UIA-14: la vigencia también importa en "aceptada" (revalidación de tarifa);
   // sólo se oculta fuera de enviada/aceptada y con vencimiento lejano.
+  // VF-16: una cotización ya en operación/rechazada/finalizada no debe alarmar
+  // con "Vencida" en rojo — la vigencia dejó de ser accionable.
   const esAceptada = estado.toLowerCase() === "aceptada";
-  if (!esEnviada && !esAceptada && diffDias > 7) return null;
+  if (!esEnviada && !esAceptada) return null;
 
 
   if (diffDias < 0) {
-    return <span className="text-destructive font-medium">Vencida · {fechaStr}</span>;
+    return <span className="text-destructive">Vencida · {fechaStr}</span>;
   }
   if (diffDias <= 3) {
     const txt = diffDias === 0 ? "Vence hoy" : `Vence en ${diffDias}d`;
-    return <span className="text-warning font-medium">{txt} · {fechaStr}</span>;
+    return <span className="text-warning">{txt} · {fechaStr}</span>;
   }
   if (diffDias <= 7) {
     return <span className="text-warning">Vence en {diffDias}d · {fechaStr}</span>;
@@ -86,7 +88,7 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
           </Badge>
         )}
       </div>
-      {vigenciaNode && <span className="text-2xs whitespace-nowrap">{vigenciaNode}</span>}
+      {vigenciaNode && <span className="text-2xs whitespace-nowrap tabular-nums">{vigenciaNode}</span>}
     </div>
   );
 }

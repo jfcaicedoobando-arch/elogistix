@@ -117,7 +117,8 @@ export default function Compras() {
         />
         <KpiCard
           label="Vencido"
-          value={vencidoTotal > 0 ? formatCurrencyCompact(vencidoTotal, "MXN") : "$0"}
+          // VF-05: "$0" pelado no indicaba moneda; se formatea con el canon.
+          value={vencidoTotal > 0 ? formatCurrencyCompact(vencidoTotal, "MXN") : formatCurrency(0, "MXN")}
           sub={vencidoTotal > 0
             ? `${formatCurrencyCompact(kpis.vencido_mxn, "MXN")} · ${formatCurrencyCompact(kpis.vencido_usd, "USD")}`
             : "al corriente"}

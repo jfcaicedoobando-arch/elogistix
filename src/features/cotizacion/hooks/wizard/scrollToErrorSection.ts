@@ -56,6 +56,7 @@ export function scrollAndFocusSection(sectionId: string): void {
  */
 export type CampoErrorPaso1 =
   | "clienteId"
+  | "oportunidadId"
   | "prospectoEmpresa"
   | "prospectoContacto"
   | "modalidadEquipo"
@@ -64,9 +65,10 @@ export type CampoErrorPaso1 =
 
 export function campoParaErrorPaso1(mensaje: string): CampoErrorPaso1 | null {
   const m = mensaje.toLowerCase();
-  if (m.includes("selecciona un cliente")) return "clienteId";
+  if (m.includes("lead") || m.includes("oportunidad")) return "oportunidadId";
   if (m.includes("empresa del prospecto")) return "prospectoEmpresa";
   if (m.includes("contacto del prospecto")) return "prospectoContacto";
+  if (m.includes("selecciona un cliente")) return "clienteId";
   if (m.includes("modalidad de equipo")) return "modalidadEquipo";
   if (m.includes("punto de carga")) return "puntoIntermedio";
   if (m.includes("tarifa")) return "tarifaId";
