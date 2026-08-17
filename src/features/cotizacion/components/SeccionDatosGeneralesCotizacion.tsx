@@ -54,11 +54,15 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
       </FormField>
 
       {esTerrestre ? (
-        <FormField label="Modalidad de equipo" required>
+        <FormField label="Modalidad de equipo" required error={errors.modalidadEquipo?.message}>
           <Select
             value={watch("modalidadEquipo")}
-            onValueChange={v => setValue("modalidadEquipo", v, { shouldValidate: true, shouldDirty: true })}
+            onValueChange={v => {
+              setValue("modalidadEquipo", v, { shouldValidate: true, shouldDirty: true });
+              clearErrors("modalidadEquipo");
+            }}
           >
+
             <SelectTrigger><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
             <SelectContent>
               {MODALIDADES_EQUIPO_TERRESTRE.map(m => (
