@@ -89,5 +89,19 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
   LC_PAGO_DETALLE_SIN_ORG:
     "Tu usuario no tiene una organización activa para consultar el detalle del pago.",
   LC_PAGO_DETALLE_SIN_ACCESO: "No tienes permisos para ver el detalle de este pago.",
+  // ── BL02–BL15 · Idempotencia y candados de pagos ───────────────────────
+  LC_LOTE_EN_PROCESO:
+    "Este pago en lote ya está en proceso. Espera unos segundos y verifica el historial antes de reintentar.",
+  LC_LOTE_FACTURA_NO_VIVA:
+    "Una de las facturas del lote está cancelada o eliminada y no admite pagos. Retírala del reparto.",
+  LC_ANTICIPO_EN_PROCESO:
+    "Esta aplicación de anticipo ya está en proceso. Espera unos segundos y verifica antes de reintentar.",
+  LC_ANTICIPO_FACTURA_NO_VIVA:
+    "La factura está cancelada o eliminada y no admite aplicación de anticipos.",
+  LC_PAGO_PROGRAMADO_EN_PROCESO:
+    "Este pago programado ya está en proceso. Espera unos segundos y verifica antes de reintentar.",
+  LC_PAGO_PROV_FACTURA_NO_VIVA:
+    "La factura de proveedor está cancelada o eliminada y no admite pagos.",
+  LC_LIQUIDACION_EN_PROCESO:
+    "Esta liquidación ya está en proceso. Espera unos segundos y verifica antes de reintentar.",
 };
-
