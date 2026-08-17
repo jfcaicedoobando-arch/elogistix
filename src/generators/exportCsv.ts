@@ -18,10 +18,17 @@ export function exportToCsv(
 ) {
   const escape = (val: unknown): string => {
     const str = val == null ? "" : String(val);
-    return str.includes(",") || str.includes('"') || str.includes("\n")
-      ? `"${str.replace(/"/g, '""')}"`
-      : str;
+    // EC-07: CSV injection — Excel/LibreOffice ejecutan como fórmula las
+    // celdas que empiezan con = + - @ (o tab/CR). Se prefijan con "'" para
+    // neutralizarlas. Excepción: los valores numéricos (p. ej. montos
+    // negativos "-1234.50") se dejan intactos para no romper los reportes.
+    const esNumero = str.trim() !== "" && Number.isFinite(Number(str));
+    const safe = !esNumero && /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+    return safe.includes(",") || safe.includes('"') || safe.includes("\n")
+      ? `"${safe.replace(/"/g, '""')}"`
+      : safe;
   };
+
 
   const headerLine = headers.map((h) => escape(h.label)).join(",");
   const dataLines = rows.map((row) =>

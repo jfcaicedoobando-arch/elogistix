@@ -25,7 +25,11 @@ export async function listLeads(filtros: LeadFiltros): Promise<LeadsResultado> {
     .from("crm_leads")
     .select(LEAD_COLUMNS, { count: "exact" })
     .is("deleted_at", null)
-    .order(sortKey, { ascending: sortDir === "asc" });
+    .order(sortKey, { ascending: sortDir === "asc" })
+    // EC-02: desempate estable para paginación (importaciones por lote
+    // comparten `created_at`).
+    .order("id", { ascending: sortDir === "asc" });
+
 
   if (search.trim()) {
     q = q.or(orIlike(["empresa", "contacto", "email"], search));

@@ -64,3 +64,26 @@ describe("exportToCsv", () => {
     expect(descargarBlobSpy).toHaveBeenCalledWith(expect.any(Blob), "reporte-2026.csv");
   });
 });
+
+describe("exportToCsv · EC-07 CSV injection", () => {
+  const headers = [
+    { key: "nombre", label: "Nombre" },
+    { key: "monto", label: "Monto" },
+  ] as const;
+
+  it("neutraliza fórmulas con apóstrofo", async () => {
+    exportToCsv("t.csv", headers, [{ nombre: "=SUM(A1:A9)", monto: "@cmd" }]);
+    const [blob] = descargarBlobSpy.mock.calls[0];
+    const csv = await readBlobText(blob);
+    expect(csv).toContain("'=SUM(A1:A9)");
+    expect(csv).toContain("'@cmd");
+  });
+
+  it("no altera montos negativos", async () => {
+    exportToCsv("t.csv", headers, [{ nombre: "Ajuste", monto: -1234.5 }]);
+    const [blob] = descargarBlobSpy.mock.calls[0];
+    const csv = await readBlobText(blob);
+    expect(csv).toContain("-1234.5");
+    expect(csv).not.toContain("'-1234.5");
+  });
+});
