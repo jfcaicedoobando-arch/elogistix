@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
+import { pluralizar } from "@/lib/format/pluralizar";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReportePresupuestoDocument se carga dinámicamente en el handler.
 import { withOrgPrefix } from "@/lib/filenames";
@@ -129,8 +130,10 @@ export function TabVsReal() {
           {data.gastos_sin_tc_count > 0 && (
             <Card className="border-warning/50">
               <CardContent className="p-3 text-sm text-warning">
-                {data.gastos_sin_tc_count} gasto(s) en moneda extranjera no tienen tipo de cambio
-                capturado y quedaron fuera del real. Captura su TC para que se reflejen aquí.
+                {pluralizar(data.gastos_sin_tc_count, "gasto")} en moneda extranjera{" "}
+                {data.gastos_sin_tc_count === 1 ? "no tiene" : "no tienen"} tipo de cambio capturado y{" "}
+                {data.gastos_sin_tc_count === 1 ? "quedó" : "quedaron"} fuera del real. Captura su tipo de cambio
+                para que se {data.gastos_sin_tc_count === 1 ? "refleje" : "reflejen"} aquí.
               </CardContent>
             </Card>
           )}
