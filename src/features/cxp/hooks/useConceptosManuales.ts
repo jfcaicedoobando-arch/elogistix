@@ -6,7 +6,7 @@
  * un embarque: toda factura capturada manualmente quedaba sin partidas y la RPC
  * `aprobar_factura_proveedor` la rechazaba con `LC_CXP_SIN_CONCEPTOS`.
  */
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
 export interface ConceptoManual extends CfdiConceptoParsed {
@@ -86,12 +86,19 @@ export function useConceptosManuales(): ConceptosManualesApi {
     );
   }, []);
 
-  const limpiar = useCallback(() => setConceptos([]), []);
+  // Bail-out de identidad: sin esto, limpiar() crea un array nuevo en cada
+  // llamada y provoca re-render en bucle si se invoca desde un useEffect.
+  const limpiar = useCallback(() => setConceptos((prev) => (prev.length === 0 ? prev : [])), []);
 
   const reemplazar = useCallback((lista: ReadonlyArray<CfdiConceptoParsed>) => {
     setConceptos(lista.map((c) => ({ ...c, key: nextKey() })));
   }, []);
 
-  return { conceptos, agregar, actualizar, eliminar, duplicar, ajustarDiferencia, limpiar, reemplazar };
+  // Identidad estable del objeto devuelto: se consume como dependencia de
+  // useEffect en DialogEditarConceptosFactura.
+  return useMemo(
+    () => ({ conceptos, agregar, actualizar, eliminar, duplicar, ajustarDiferencia, limpiar, reemplazar }),
+    [conceptos, agregar, actualizar, eliminar, duplicar, ajustarDiferencia, limpiar, reemplazar],
+  );
 }
 
