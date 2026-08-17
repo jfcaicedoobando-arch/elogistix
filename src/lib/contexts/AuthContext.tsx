@@ -106,13 +106,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     syncSentryUser(buildSentryUserContext(user, profile, effectiveRole));
   }, [user, profile, effectiveRole]);
 
+  // EC-01: purga del caché de dominio cuando entra un usuario distinto sin
+  // que haya habido `signOut` explícito (pestaña compartida).
+  const queryClient = useQueryClient();
+  const prevUserIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const currentUserId = user?.id ?? null;
+    if (debePurgarPorCambioDeUsuario(lastEvent, prevUserIdRef.current, currentUserId)) {
+      purgeSessionCache(queryClient);
+    }
+    prevUserIdRef.current = currentUserId;
+  }, [user, lastEvent, queryClient]);
+
   const userId = user?.id;
   const signOut = useCallback(async () => {
     clearLoginAudit(userId);
     await registrarActividad({ modulo: "auth", accion: "Cerró sesión" });
     await signOutCurrentSession();
     resetProfile();
-  }, [userId, clearLoginAudit, resetProfile]);
+    // EC-01: no dejar datos del tenant saliente para el siguiente usuario.
+    purgeSessionCache(queryClient);
+  }, [userId, clearLoginAudit, resetProfile, queryClient]);
+
 
   const value = useMemo<AuthContextType>(
     () => ({
