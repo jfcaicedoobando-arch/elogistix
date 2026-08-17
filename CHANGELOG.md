@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.644.1] - 2026-08-17
+- Oportunidades: el aviso de lista truncada usa el token semántico `text-warning` en lugar del literal `text-amber-600` (corrige la prueba de arquitectura de literales de color en CI).
+
+
+
 ## [13.644.0] - 2026-08-17
 
 ### Parche 22 · Reportes, portal y tesorería
