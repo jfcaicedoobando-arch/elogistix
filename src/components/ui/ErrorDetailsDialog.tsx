@@ -33,7 +33,11 @@ export function ErrorDetailsDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) closeErrorReport(); }}>
-      <DialogContent className={dialogSize["3xl"]}>
+      {/* VT-02: el viewport del Toaster va en `!z-[60]`; con toasts encolados
+          un diálogo en z-50 quedaba por debajo y "Ver detalles" parecía no
+          abrir nada. Elevamos contenido y overlay por encima de esa capa. */}
+      <DialogContent className={cn(dialogSize["3xl"], "z-[70]")} overlayClassName="z-[70]">
+
         <DialogHeader>
           <DialogTitle>Detalles del error</DialogTitle>
           <DialogDescription>Muestra el detalle técnico del error ocurrido para facilitar su diagnóstico.</DialogDescription>
