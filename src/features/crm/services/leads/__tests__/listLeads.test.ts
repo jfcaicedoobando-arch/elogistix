@@ -21,7 +21,8 @@ const builder: Record<string, unknown> = {
     return builder;
   }),
   order: vi.fn((col: string, opts: { ascending: boolean }) => {
-    state.order = [col, opts];
+    // Sólo el primer .order() es el criterio principal; el segundo es el desempate por id.
+    state.order ??= [col, opts];
     return builder;
   }),
   or: vi.fn((v: string) => {
