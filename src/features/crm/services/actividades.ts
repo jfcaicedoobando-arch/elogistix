@@ -39,7 +39,11 @@ export async function listActividades(p: ListActividadesParams): Promise<{ data:
     .from("crm_actividades")
     .select(COLS, { count: "exact" })
     .is("deleted_at", null)
-    .order(sortKey, { ascending: sortDir === "asc", nullsFirst: false });
+    .order(sortKey, { ascending: sortDir === "asc", nullsFirst: false })
+    // EC-02: desempate estable para que la paginación no duplique ni omita
+    // filas cuando varias actividades comparten el mismo `sortKey`.
+    .order("id", { ascending: sortDir === "asc" });
+
   if (p.search.trim()) q = q.ilike("asunto", ilikePattern(p.search));
   if (p.tipo !== "todos") q = q.eq("tipo", p.tipo);
   if (p.estado === "pendientes") q = q.is("fecha_completada", null);
