@@ -35,7 +35,7 @@ const USER_CONTEXT_STALE_MS = 60_000;
 export function useAuthProfile(userId: string | null) {
   const queryClient = useQueryClient();
 
-  const { data, isLoading: profileLoading } = useQuery({
+  const { data, isLoading: profileLoading, isError: profileError } = useQuery({
     queryKey: queryKeys.auth.userContext(userId),
     enabled: !!userId,
     staleTime: USER_CONTEXT_STALE_MS,
@@ -76,5 +76,14 @@ export function useAuthProfile(userId: string | null) {
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.userContextAll });
   }, [userId, queryClient]);
 
-  return { profile, profileLoading: !!userId && profileLoading, reset, refresh };
+  return {
+    profile,
+    profileLoading: !!userId && profileLoading,
+    // Falla técnica al cargar perfil/rol (no un problema de permisos): la
+    // consumimos en `ProtectedRoute` para distinguir "sin rol" de "error de
+    // carga" en `/sin-acceso`.
+    profileError: !!userId && profileError,
+    reset,
+    refresh,
+  };
 }

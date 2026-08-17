@@ -1,5 +1,21 @@
 # Changelog
 
+## [13.631.0] - 2026-08-17
+
+### Oleada 0 (bloqueantes de la auditoría v13.627.1)
+- Purga de caché de sesión al cerrar sesión / cambiar de usuario (`purgeSessionCache.ts`), elimina la fuga de datos cross-tenant.
+- `public.puede_escribir_cotizaciones()` incluye al rol `vendedor` (fin del error 42501 al cotizar).
+
+### Oleada 1 (pulido visual y UX)
+- Contraste WCAG AA en tokens de estado, éxito, advertencia y buckets de aging.
+- Copy en español y typos corregidos en 8 componentes clave.
+- Formato de fechas y moneda unificado (`formatCurrency`, etiquetas de mes sin desfase de zona horaria).
+- Toasts de error con ancho mínimo, rejilla consistente, deduplicación y "Ver detalles" sólo cuando hay detalle.
+- Validación inline en el Paso 1 del wizard de cotización con scroll y foco al campo con falla.
+- Gráficas con estado vacío y unidad "MXN" una sola vez; columna "Neto" propia en flujo por monedas.
+- Sidebar: indicador de alertas en modo colapsado y scroll correcto en pantallas de 1080 px.
+- Tarjetas y filas clicables operables con teclado (`activableConTeclado`), más `aria-label` en botones de ícono.
+
 ## [13.630.0] - 2026-08-17
 - CRM Ola A (higiene): al mover una oportunidad a una etapa de pérdida ahora se pide obligatoriamente el motivo (con detalle opcional); la base de datos también lo exige, así no quedan pérdidas sin explicación.
 - Importación de leads desde CSV: detecta duplicados contra la cartera existente y dentro del propio archivo (por correo, teléfono a 10 dígitos y razón social normalizada). Los duplicados seguros se omiten y se avisa de los posibles.

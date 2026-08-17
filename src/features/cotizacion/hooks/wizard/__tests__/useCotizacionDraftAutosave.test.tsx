@@ -9,7 +9,10 @@ import {
   loadDraft,
   clearDraft,
   draftKey,
+  draftTieneContenido,
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
+import { COTIZACION_FORM_DEFAULTS } from "@/features/cotizacion/types/formDefaults";
+import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 
 const USER = "user-1";
 
@@ -211,5 +214,41 @@ describe("loadDraft — Q-12: restauración de paso y costos internos", () => {
       "El paso del asistente en el que ibas — se reinicia en el Paso 1",
       "Los costos internos capturados — tendrás que volver a agregarlos",
     ]);
+  });
+});
+
+
+describe("draftTieneContenido — gating del banner de restaurar borrador", () => {
+  it("es false con los valores por defecto y sin costos internos (borrador fantasma)", () => {
+    expect(draftTieneContenido(COTIZACION_FORM_DEFAULTS, [])).toBe(false);
+  });
+
+  it("ignora prospectoModo aunque tenga un default no-vacío ('nuevo')", () => {
+    const valores: CotizacionFormValues = { ...COTIZACION_FORM_DEFAULTS, prospectoModo: "vincular" };
+    expect(draftTieneContenido(valores, [])).toBe(false);
+  });
+
+  it("es true cuando hay costos internos aunque el resto esté vacío", () => {
+    expect(draftTieneContenido(COTIZACION_FORM_DEFAULTS, [
+      { id: "f1", concepto: "Flete", monto: 100 } as never,
+    ])).toBe(true);
+  });
+
+  it("es true cuando un campo string tiene contenido real", () => {
+    const valores: CotizacionFormValues = { ...COTIZACION_FORM_DEFAULTS, origen: "Shanghai" };
+    expect(draftTieneContenido(valores, [])).toBe(true);
+  });
+
+  it("es true cuando un campo numérico distinto de 0 fue capturado", () => {
+    const valores: CotizacionFormValues = { ...COTIZACION_FORM_DEFAULTS, pesoKg: 120 };
+    expect(draftTieneContenido(valores, [])).toBe(true);
+  });
+
+  it("es true cuando un arreglo (dimensiones) tiene elementos", () => {
+    const valores: CotizacionFormValues = {
+      ...COTIZACION_FORM_DEFAULTS,
+      dimensionesLCL: [{ largo: 1, ancho: 1, alto: 1, cantidad: 1 } as never],
+    };
+    expect(draftTieneContenido(valores, [])).toBe(true);
   });
 });

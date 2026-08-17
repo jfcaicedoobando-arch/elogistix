@@ -47,3 +47,28 @@ export function scrollAndFocusSection(sectionId: string): void {
     // sectionId malformado (SSR + strings del usuario).
   }
 }
+
+/**
+ * T-12 (auditoría v13.627.1): además del scroll a la sección, marcamos el
+ * campo concreto con `setError` para que el error se vea inline y no sólo en
+ * un toast que desaparece. Devuelve el nombre del campo RHF correspondiente
+ * al mensaje de `validatePaso1`, o `null` si el error no mapea a un campo.
+ */
+export type CampoErrorPaso1 =
+  | "clienteId"
+  | "prospectoEmpresa"
+  | "prospectoContacto"
+  | "modalidadEquipo"
+  | "puntoIntermedio"
+  | "tarifaId";
+
+export function campoParaErrorPaso1(mensaje: string): CampoErrorPaso1 | null {
+  const m = mensaje.toLowerCase();
+  if (m.includes("selecciona un cliente")) return "clienteId";
+  if (m.includes("empresa del prospecto")) return "prospectoEmpresa";
+  if (m.includes("contacto del prospecto")) return "prospectoContacto";
+  if (m.includes("modalidad de equipo")) return "modalidadEquipo";
+  if (m.includes("punto de carga")) return "puntoIntermedio";
+  if (m.includes("tarifa")) return "tarifaId";
+  return null;
+}

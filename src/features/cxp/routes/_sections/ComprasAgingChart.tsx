@@ -9,6 +9,8 @@ import { ArrowUpRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrencyCompact, formatCurrency } from "@/lib/formatters";
 import { CHART } from "@/lib/chartTokens";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { BarChart3 } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import type { CxpAgingTotals } from "@/features/cxp/services/cxpAging";
 
@@ -52,6 +54,9 @@ export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgi
         </Link>
       </CardHeader>
       <CardContent className="p-4 pt-2">
+        {total <= 0 ? (
+          <EmptyStateInline icon={BarChart3} message="No hay saldos pendientes para graficar." />
+        ) : (
         <div className="h-[220px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -82,6 +87,7 @@ export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgi
             </BarChart>
           </ResponsiveContainer>
         </div>
+        )}
       </CardContent>
     </Card>
   );

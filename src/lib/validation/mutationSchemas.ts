@@ -14,6 +14,7 @@
  *    para toasts) y conserva el ZodError original como `cause`.
  */
 import { z } from "zod";
+import { getFieldLabel } from "./fieldLabels";
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -22,8 +23,16 @@ export function parseOrThrow<T>(schema: z.ZodType<T>, value: unknown, contexto: 
   const result = schema.safeParse(value);
   if (result.success) return result.data;
   const first = result.error.issues[0];
-  const path = first?.path?.join(".");
-  const detalle = path ? `${path}: ${first.message}` : first?.message ?? "Datos inválidos.";
+  const message = first?.message ?? "Datos inválidos.";
+  const path = first?.path?.length ? first.path.join(".") : undefined;
+  // La mayoría de nuestros schemas ya incluyen su propia etiqueta legible en
+  // el mensaje (p. ej. "Nombre del cliente: requerido."); anteponer el path
+  // crudo de Zod duplicaba la etiqueta con el nombre técnico del campo
+  // (`descripcion_mercancia: Descripción de la mercancía: requerido.`).
+  // Sólo enriquecemos con la etiqueta del catálogo cuando el mensaje NO trae
+  // ya su propia etiqueta.
+  const yaTraeEtiqueta = /^.{2,60}:\s/.test(message);
+  const detalle = yaTraeEtiqueta || !path ? message : `${getFieldLabel(path)}: ${message}`;
   const err = new Error(`${contexto} — ${detalle}`);
   (err as Error & { cause?: unknown }).cause = result.error;
   throw err;

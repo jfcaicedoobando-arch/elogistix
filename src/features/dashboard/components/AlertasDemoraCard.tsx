@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import type { AlertaDemora } from "@/features/dashboard/hooks";
 import { toTitleCase } from "@/lib/formatters";
+import { activableConTeclado, FOCUS_RING } from "@/lib/ui/keyboardActivation";
 
 interface Props {
   alertas: AlertaDemora[];
@@ -39,8 +40,8 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
     return alertas.map((e) => (
             <div
               key={e.id}
-              onClick={() => navigate(`/embarques/${e.id}`)}
-              className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+              {...activableConTeclado(() => navigate(`/embarques/${e.id}`))}
+              className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors ${FOCUS_RING}`}
             >
               <div
                 className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-2xs font-bold text-primary-foreground ${

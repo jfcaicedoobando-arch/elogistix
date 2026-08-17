@@ -56,7 +56,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="h-16 border-b border-sidebar-border flex items-center px-4 py-0 group-data-[collapsible=icon]:px-2">
+      <SidebarHeader className="h-16 shrink-0 border-b border-sidebar-border flex items-center px-4 py-0 group-data-[collapsible=icon]:px-2">
         <div className={cn("flex items-center w-full", collapsed && "justify-center")}>
           <BrandLockup
             variant={collapsed ? "icon" : "horizontal"}
@@ -67,7 +67,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
-        <div className="px-2 mb-2 space-y-2">
+        <div className="px-2 mb-2 space-y-2 shrink-0">
           <OrgSwitcher collapsed={collapsed} />
           <OrgBadge collapsed={collapsed} />
         </div>
@@ -85,7 +85,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-3 space-y-2 group-data-[collapsible=icon]:p-2">
+      <SidebarFooter className="shrink-0 border-t border-sidebar-border p-3 space-y-2 group-data-[collapsible=icon]:p-2">
         {user && (
           <SidebarUserMenu
             email={user.email ?? ""}

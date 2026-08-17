@@ -7,6 +7,7 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import type { EstadoFiltro } from "@/features/dashboard/hooks";
+import { activableConTeclado, FOCUS_RING } from "@/lib/ui/keyboardActivation";
 
 export interface CargaCliente {
   clienteId: string;
@@ -53,9 +54,9 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
     <Tooltip delayDuration={300}>
       <TooltipTrigger asChild>
         <div
-          onClick={onClick}
+          {...activableConTeclado(onClick)}
           aria-label={ariaLabel}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer hover:bg-primary/5 transition-colors group"
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer hover:bg-primary/5 transition-colors group ${FOCUS_RING}`}
         >
           {/* Total — big number (suma exacta de los chips) */}
           <span className="text-2xl font-bold tabular-nums min-w-[2.5rem] text-right text-foreground">

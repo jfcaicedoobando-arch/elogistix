@@ -109,7 +109,15 @@ function SidebarGroupBlockBase({
                     active && "bg-sidebar-accent/10 text-sidebar-foreground font-semibold",
                   )}
                 >
-                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="relative shrink-0">
+                    <item.icon className="h-4 w-4" />
+                    {collapsed && badge > 0 && (
+                      <span
+                        aria-label={`${badge} alerta${pluralS(badge)} activa${pluralS(badge)}`}
+                        className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-destructive"
+                      />
+                    )}
+                  </span>
                   {!collapsed && <span className="flex-1 truncate">{item.title}</span>}
                   {badge > 0 && !collapsed && (
                     <Tooltip>

@@ -9,7 +9,9 @@ import {
   ResponsiveContainer, ComposedChart, Bar, Line, Area, XAxis, YAxis,
   Tooltip, Legend, CartesianGrid,
 } from "recharts";
-import { formatCurrencyCompact } from "@/lib/formatters/numbers";
+import { formatCompactNumber } from "@/lib/formatters/numbers";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { LineChart as LineChartIcon } from "lucide-react";
 import { computeForecast } from "@/features/dashboardEjecutivo/domain/forecast";
 import { ymMx } from "@/lib/date/mx";
 import type { PuntoEERR } from "@/features/dashboardEjecutivo/services";
@@ -35,18 +37,17 @@ export function ForecastMultiMesChart({ historico, mesesAdelante = 3 }: Props) {
       </CardHeader>
       <CardContent>
         {!suficiente ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">
-            Se requieren al menos 3 meses de historia para proyectar.
-          </p>
+          <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se requieren al menos 3 meses de historia para proyectar." />
         ) : (
           <div className="h-64">
+            <p className="text-2xs text-muted-foreground mb-1">MXN</p>
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="periodo" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCurrencyCompact(v, "MXN")} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCompactNumber(v)} />
                 <Tooltip
-                  formatter={(v: unknown) => (typeof v === "number" ? formatCurrencyCompact(v, "MXN") : "—")}
+                  formatter={(v: unknown) => (typeof v === "number" ? formatCompactNumber(v) : "—")}
                   contentStyle={{ fontSize: 12 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />

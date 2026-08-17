@@ -1,80 +1,87 @@
 /**
- * Pantalla `/sin-acceso` — RG1 (Ola 3).
+ * Pantalla `/sin-acceso` — RG1 (Ola 3) + UIA-04 + Frente 1 (error de carga).
  *
  * Antes, un usuario autenticado sin rol efectivo era rebotado de `/inicio` a
  * `/` y de `/` otra vez a `/inicio`, produciendo un bucle infinito de
  * redirecciones. Ahora ese caso aterriza aquí: una página estática, sin
  * `Navigate`, que explica la situación y ofrece cerrar sesión.
  *
- * UIA-04: `ProtectedRoute` también aterriza aquí a usuarios con rol válido
- * que intentan un módulo fuera de su permiso. Distinguimos ambos motivos vía
- * `location.state` para no decirle a alguien con rol asignado que su cuenta
- * "no tiene rol ni organización".
+ * Tres variantes (ver `resolveSinAccesoVariant`):
+ *  - "sin-rol-org": la cuenta no tiene rol ni organización.
+ *  - "permiso-modulo": el rol es válido pero no alcanza para el módulo.
+ *  - "error-carga": el perfil no cargó por una falla técnica → se ofrece
+ *    "Reintentar" como acción principal en vez de pedir intervención de un
+ *    administrador.
  */
-import { Link, useLocation } from "react-router-dom";
-import { ShieldAlert, LogOut, LifeBuoy, Home } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useLocation } from "react-router-dom";
+import { useState } from "react";
+import { ShieldAlert, AlertTriangle } from "lucide-react";
 import { Seo } from "@/components/shared/Seo";
-import { signOutCurrentSession } from "@/lib/auth/signOut";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
+import {
+  resolveSinAccesoVariant,
+  esRolAdministrador,
+} from "@/features/auth/utils/resolveSinAccesoVariant";
+import { SinAccesoMensaje, SinAccesoAcciones } from "@/features/auth/components/SinAccesoContent";
 
 interface SinAccesoState {
   motivo?: string;
   from?: string;
 }
 
+const COPY_POR_VARIANTE = {
+  "error-carga": { titulo: "No pudimos cargar tu cuenta", Icono: AlertTriangle },
+  "permiso-modulo": { titulo: "Sin acceso a este módulo", Icono: ShieldAlert },
+  "sin-rol-org": { titulo: "Sin acceso", Icono: ShieldAlert },
+} as const;
+
 export default function SinAcceso() {
   const { state } = useLocation();
-  const { effectiveRole } = useAuth();
-  const motivo = (state as SinAccesoState | null)?.motivo ?? "sin-rol-org";
+  const { effectiveRole, refreshProfile } = useAuth();
+  const [retrying, setRetrying] = useState(false);
+  const motivo = (state as SinAccesoState | null)?.motivo;
   const from = (state as SinAccesoState | null)?.from;
-  const esPermisoModulo = motivo === "permiso-modulo" && Boolean(effectiveRole);
+
+  const variant = resolveSinAccesoVariant({ motivo, effectiveRole });
+  const esAdministrador = esRolAdministrador(effectiveRole);
+  const { titulo, Icono } = COPY_POR_VARIANTE[variant];
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    try {
+      await refreshProfile();
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <Seo
-        title="Sin acceso · Libre Carga"
+        title={`${titulo} · Libre Carga`}
         description="Tu cuenta aún no tiene permisos asignados en Libre Carga."
-        ogTitle="Sin acceso · Libre Carga"
+        ogTitle={`${titulo} · Libre Carga`}
         ogDescription="Tu cuenta aún no tiene permisos asignados en Libre Carga."
       />
       <div className="max-w-md space-y-5 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-          <ShieldAlert className="h-8 w-8" aria-hidden />
+          <Icono className="h-8 w-8" aria-hidden />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Sin acceso</h1>
-        {esPermisoModulo ? (
-          <p className="text-sm text-muted-foreground">
-            Tu cuenta está activa con el rol <strong>{obtenerEtiquetaRol(effectiveRole)}</strong>,
-            pero ese rol no tiene permiso para entrar a este módulo
-            {from ? <> (<code>{from}</code>)</> : null}. Si crees que es un error, pide a un
-            administrador que ajuste tus permisos.
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Tu cuenta está activa, pero todavía no tiene un rol ni una organización
-            asignada. Pide a un administrador de tu empresa que te dé de alta para
-            poder entrar.
-          </p>
-        )}
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-          {esPermisoModulo && (
-            <Button asChild>
-              <Link to="/inicio">
-                <Home className="mr-2 h-4 w-4" aria-hidden /> Volver al inicio
-              </Link>
-            </Button>
-          )}
-          <Button variant="outline" asChild>
-            <Link to="/ayuda">
-              <LifeBuoy className="mr-2 h-4 w-4" aria-hidden /> Ver ayuda
-            </Link>
-          </Button>
-          <Button variant={esPermisoModulo ? "outline" : "default"} onClick={() => void signOutCurrentSession()}>
-            <LogOut className="mr-2 h-4 w-4" aria-hidden /> Cerrar sesión
-          </Button>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{titulo}</h1>
+        <SinAccesoMensaje
+          variant={variant}
+          effectiveRole={effectiveRole}
+          esAdministrador={esAdministrador}
+          from={from}
+        />
+        <SinAccesoAcciones
+          variant={variant}
+          effectiveRole={effectiveRole}
+          esAdministrador={esAdministrador}
+          from={from}
+          onRetry={() => void handleRetry()}
+          retrying={retrying}
+        />
       </div>
     </div>
   );

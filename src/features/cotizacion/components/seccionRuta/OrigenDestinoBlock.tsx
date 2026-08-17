@@ -27,7 +27,7 @@ export default function OrigenDestinoBlock({
         <Input value={watch("origen")} onChange={e => setValue("origen", e.target.value)} placeholder={placeholderOrigen} />
       </FormField>
       {conPuntoIntermedio && (
-        <FormField label="Punto de carga/descarga">
+        <FormField label="Punto de carga/descarga" required>
           <Input
             value={watch("puntoIntermedio")}
             onChange={e => setValue("puntoIntermedio", e.target.value, OPTS)}

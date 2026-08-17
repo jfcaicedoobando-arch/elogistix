@@ -38,6 +38,7 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
               <DetailTableHead className="whitespace-nowrap">Moneda</DetailTableHead>
               <DetailTableHead className="whitespace-nowrap text-right">Por cobrar</DetailTableHead>
               <DetailTableHead className="whitespace-nowrap text-right">Por pagar</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap text-right">Neto</DetailTableHead>
             </DetailTableRow>
           </TableHeader>
           <TableBody>
@@ -45,24 +46,21 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
               const neto = r.cobrar - r.pagar;
               return (
                 <DetailTableRow key={r.moneda}>
-                  <TableCell className="font-medium">
-                    {r.moneda}
-                    <span
-                      className={cn(
-                        "block text-xs font-normal tabular-nums",
-                        neto >= 0 ? "text-success" : "text-destructive",
-                      )}
-                    >
-                      Neto {formatCurrency(neto, r.moneda)}
-                    </span>
-                  </TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">{r.moneda}</TableCell>
                   <TableCell className="whitespace-nowrap text-right tabular-nums text-success">
                     {formatCurrency(r.cobrar, r.moneda)}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-right tabular-nums text-warning">
                     {formatCurrency(r.pagar, r.moneda)}
                   </TableCell>
-
+                  <TableCell
+                    className={cn(
+                      "whitespace-nowrap text-right tabular-nums font-medium",
+                      neto >= 0 ? "text-success" : "text-destructive",
+                    )}
+                  >
+                    {formatCurrency(neto, r.moneda)}
+                  </TableCell>
                 </DetailTableRow>
               );
             })}

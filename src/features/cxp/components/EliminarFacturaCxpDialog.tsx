@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
+  AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +66,9 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
               <h2 className="text-xl font-bold text-foreground leading-tight tracking-tight">
                 {paso2 ? "Confirmar eliminación" : `¿Eliminar la factura ${factura.folio_proveedor}?`}
               </h2>
+              <AlertDialogDescription className="sr-only">
+                Confirma la eliminación de la factura {factura.folio_proveedor}. Esta acción la envía a la papelera y puede restaurarse después.
+              </AlertDialogDescription>
               <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5">
                 <span className="px-2 py-0.5 bg-muted text-muted-foreground text-label font-bold tracking-wider rounded border border-border font-mono">
                   {factura.folio_interno}

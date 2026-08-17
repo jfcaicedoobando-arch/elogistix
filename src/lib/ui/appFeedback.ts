@@ -28,6 +28,7 @@ import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { shouldAttachDetails, buildDetailsAction } from "./appFeedback.details";
 import { shouldReportToSentry } from "./appFeedback.sentry";
 import { sanitizeToastText } from "./sanitizeToastText";
+import { computeToastDedupeKey, shouldSuppressDuplicateToast } from "./appFeedback.dedupe";
 import type { AnyToastFn, ErrorNotifyOptions, InfoNotifyOptions } from "./appFeedback.types";
 
 /** Q-08 · ids de los toasts de error vivos, para poder descartar SÓLO errores
@@ -75,17 +76,24 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   });
 
   const errorToastId = `err-${errorCode ?? phase ?? "generic"}`;
-  ERROR_TOAST_IDS.add(errorToastId);
-  sonnerToast.error(computedTitle, {
-    description,
-    // P-05: dedupe por código de error (reemplaza en vez de apilar) y
-    // auto-dismiss a 8s: los toasts persistentes tapaban los botones del header.
-    id: errorToastId,
-    duration: 8000,
-    // Q-08: si hay acción primaria (Reintentar), "Ver detalles" baja a secundaria.
-    action: action ?? { label: "Ver detalles", onClick: () => openErrorReport(debug) },
-    cancel: action ? { label: "Ver detalles", onClick: () => openErrorReport(debug) } : undefined,
-  });
+  const dedupeKey = computeToastDedupeKey("error", computedTitle, description);
+  if (!shouldSuppressDuplicateToast(dedupeKey)) {
+    ERROR_TOAST_IDS.add(errorToastId);
+    // "Ver detalles" sólo tiene sentido si hay algo que mostrar; si no,
+    // omitimos la acción en vez de dejar un botón que no hace nada.
+    const hayDetalle = shouldAttachDetails({ title: computedTitle, error, context, errorCode, method, payload, requestId });
+    const detallesAction = hayDetalle ? { label: "Ver detalles", onClick: () => openErrorReport(debug) } : undefined;
+    sonnerToast.error(computedTitle, {
+      description,
+      // P-05: dedupe por código de error (reemplaza en vez de apilar) y
+      // auto-dismiss a 8s: los toasts persistentes tapaban los botones del header.
+      id: errorToastId,
+      duration: 8000,
+      // Q-08: si hay acción primaria (Reintentar), "Ver detalles" baja a secundaria.
+      action: action ?? detallesAction,
+      cancel: action ? detallesAction : undefined,
+    });
+  }
 
   // 13.114.20 / 13.300.7 / 13.301.59: reportamos a Sentry sólo cuando hay error
   // real y no es autorización / validación esperada / fallo transitorio de red.
@@ -130,8 +138,11 @@ export function notifyWarning(
     ?? (shouldAttachDetails(opts)
       ? buildDetailsAction({ ...opts, titleFinal: opts.title })
       : undefined);
+  const descripcionSaneada = sanitizeToastText(opts.description);
+  const dedupeKey = computeToastDedupeKey("warning", opts.title, descripcionSaneada);
+  if (shouldSuppressDuplicateToast(dedupeKey)) return;
   sonnerToast.warning(opts.title, {
-    description: sanitizeToastText(opts.description),
+    description: descripcionSaneada,
     duration: opts.persistent ? Infinity : opts.duration,
     id: idDedupe(opts, "warn"),
     action,
@@ -147,8 +158,11 @@ export function notifySuccess(
     ?? (shouldAttachDetails(opts)
       ? buildDetailsAction({ ...opts, titleFinal: opts.title })
       : undefined);
+  const descripcionSaneada = sanitizeToastText(opts.description);
+  const dedupeKey = computeToastDedupeKey("success", opts.title, descripcionSaneada);
+  if (shouldSuppressDuplicateToast(dedupeKey)) return;
   sonnerToast.success(opts.title, {
-    description: sanitizeToastText(opts.description),
+    description: descripcionSaneada,
     duration: opts.persistent ? Infinity : opts.duration,
     id: idDedupe(opts, "ok"),
     action,
@@ -164,8 +178,11 @@ export function notifyInfo(
     ?? (shouldAttachDetails(opts)
       ? buildDetailsAction({ ...opts, titleFinal: opts.title })
       : undefined);
+  const descripcionSaneada = sanitizeToastText(opts.description);
+  const dedupeKey = computeToastDedupeKey("info", opts.title, descripcionSaneada);
+  if (shouldSuppressDuplicateToast(dedupeKey)) return;
   sonnerToast(opts.title, {
-    description: sanitizeToastText(opts.description),
+    description: descripcionSaneada,
     duration: opts.persistent ? Infinity : opts.duration,
     id: idDedupe(opts, "info"),
     action,

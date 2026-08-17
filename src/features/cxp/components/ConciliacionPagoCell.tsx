@@ -57,6 +57,7 @@ export function ConciliacionPagoCell({
             onClick={() => desvincular.mutate(movimiento.id)}
             disabled={desvincular.isPending}
             title="Desvincular movimiento"
+            aria-label="Desvincular movimiento"
           >
             {desvincular.isPending
               ? <Loader2 className="h-3 w-3 animate-spin" />

@@ -12,7 +12,7 @@ import { savePaso1 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { validatePaso1, vincularCrmTrasCrear } from "./handlePaso1Crm";
-import { scrollAndFocusSection, seccionParaErrorPaso1 } from "./scrollToErrorSection";
+import { scrollAndFocusSection, seccionParaErrorPaso1, campoParaErrorPaso1 } from "./scrollToErrorSection";
 
 
 interface Paso1Mutations {
@@ -37,10 +37,26 @@ export function usePaso1Handlers({
 }: Paso1Deps) {
   const { crearCotizacion, updateCotizacion, registrarActividad } = mutations;
 
+  /**
+   * T-12: un solo toast resumen + error inline en el campo culpable, con
+   * scroll/focus a su sección. Devuelve `true` si el paso 1 es inválido.
+   */
+  const marcarErrorPaso1 = useCallback((err: string): true => {
+    const campo = campoParaErrorPaso1(err);
+    if (campo) form.setError(campo, { type: "manual", message: err });
+    notifyError(undefined, {
+      title: campo ? "Revisa los campos marcados" : err,
+      description: campo ? err : undefined,
+    });
+    scrollAndFocusSection(seccionParaErrorPaso1(err));
+    return true;
+  }, [form]);
+
   const handlePaso1 = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
-    if (err) { notifyError(undefined, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
+    if (err) { marcarErrorPaso1(err); return; }
+
     const esNueva = !cotizacionId;
     try {
       const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
@@ -58,7 +74,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep, marcarErrorPaso1]);
 
   /**
    * Atajo "Cotizar sin desglose": guarda Paso 1 con `sin_desglose_costos = true`
@@ -67,7 +83,7 @@ export function usePaso1Handlers({
   const handleCotizarSinDesglose = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
-    if (err) { notifyError(undefined, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
+    if (err) { marcarErrorPaso1(err); return; }
     form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
     const esNueva = !cotizacionId;
     try {
@@ -92,7 +108,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1]);
 
   return { handlePaso1, handleCotizarSinDesglose };
 }
