@@ -8,7 +8,14 @@ vi.mock("sonner", () => {
   return { toast };
 });
 
+vi.mock("@/lib/ui/appFeedback", () => ({
+  notifyInfo: vi.fn(),
+  notifySuccess: vi.fn(),
+  notifyError: vi.fn(),
+}));
+
 import { toast } from "sonner";
+import { notifyInfo, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   agruparPorEmbarque,
   pluralS,
@@ -35,6 +42,8 @@ describe("vincularEmbarqueHelpers", () => {
   beforeEach(() => {
     (toast.info as ReturnType<typeof vi.fn>).mockClear();
     (toast.success as ReturnType<typeof vi.fn>).mockClear();
+    (notifyInfo as ReturnType<typeof vi.fn>).mockClear();
+    (notifySuccess as ReturnType<typeof vi.fn>).mockClear();
   });
 
   describe("pluralS", () => {
@@ -177,7 +186,7 @@ describe("vincularEmbarqueHelpers", () => {
         setUltima,
       });
       expect(setUltima).toHaveBeenCalledWith([]);
-      expect(toast.info).toHaveBeenCalled();
+      expect(notifyInfo).toHaveBeenCalled();
     });
   });
 
