@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.628.1] - 2026-08-16
+- Se pulió el modal "Editar conceptos" de facturas de proveedor: encabezados de columna (Descripción, Cantidad, Precio unitario, IVA, Unidad), campos con ancho legible (ya no se corta "Unidad"), cada partida en su propia tarjeta con su total de línea alineado y el resumen Suma/Subtotal compacto para que los botones no se desacomoden.
+
 ## [13.628.0] - 2026-08-16
 - Ya se pueden corregir los conceptos de una factura de proveedor **capturada a mano**: botón "Editar conceptos" en la pestaña Conceptos del detalle, con la misma captura del modal de alta y aviso de descuadre contra el subtotal.
 - El botón se deshabilita con explicación cuando la factura vino de un CFDI (XML/UUID), está cancelada o ya tiene pagos aplicados.
