@@ -168,6 +168,7 @@ export function TabVsReal() {
 
           <Card>
             <CardContent className="p-0">
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-xs text-muted-foreground">
                   <tr>
@@ -197,6 +198,7 @@ export function TabVsReal() {
                   )}
                 </tbody>
               </table>
+              </div>
             </CardContent>
           </Card>
         </>

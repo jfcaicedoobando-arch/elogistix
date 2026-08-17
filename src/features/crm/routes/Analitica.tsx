@@ -31,6 +31,7 @@ function ForecastPanel() {
         <Card>
           <CardHeader className="pb-2"><CardTitle>Por mes</CardTitle></CardHeader>
           <CardContent>
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="text-xs text-muted-foreground border-b">
                 <th className="text-left py-2">Mes</th><th className="text-right">Pipeline</th><th className="text-right">Ponderado</th><th className="text-right">Ganado</th><th className="text-right">#</th>
@@ -48,11 +49,13 @@ function ForecastPanel() {
                 {f.porMes.length === 0 && <tr><td colSpan={5} className="text-center text-muted-foreground py-4">Sin datos</td></tr>}
               </tbody>
             </table>
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle>Por vendedor</CardTitle></CardHeader>
           <CardContent>
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="text-xs text-muted-foreground border-b">
                 <th className="text-left py-2">Vendedor</th><th className="text-right">Pipeline</th><th className="text-right">Ponderado</th><th className="text-right">Ganado</th><th className="text-right">#</th>
@@ -70,6 +73,7 @@ function ForecastPanel() {
                 {f.porVendedor.length === 0 && <tr><td colSpan={5} className="text-center text-muted-foreground py-4">Sin datos</td></tr>}
               </tbody>
             </table>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -96,6 +100,7 @@ function EmbudoYPerdidas() {
       <Card>
         <CardHeader className="pb-2"><CardTitle>Conversión por fuente</CardTitle></CardHeader>
         <CardContent>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="text-xs text-muted-foreground border-b">
               <th className="text-left py-1">Fuente</th><th className="text-right">Total</th><th className="text-right">Conv.</th><th className="text-right">Tasa</th>
@@ -112,6 +117,7 @@ function EmbudoYPerdidas() {
               {r.porFuente.length === 0 && <tr><td colSpan={4} className="text-center text-muted-foreground py-2">Sin datos</td></tr>}
             </tbody>
           </table>
+          </div>
         </CardContent>
       </Card>
       <Card>

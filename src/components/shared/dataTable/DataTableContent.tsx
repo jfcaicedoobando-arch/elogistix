@@ -43,6 +43,10 @@ export function DataTableContent<T>(props: DataTableContentProps<T>) {
 
   const { ref: scrollRef, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
 
+  // VT-18: sin filas (y fuera de carga) el thead quedaba "flotando" sobre el
+  // empty state y parecía una tabla rota — se oculta hasta que haya datos.
+  const showHeader = isLoading || table.getRowModel().rows.length > 0;
+
   return (
     <div className="relative">
       <div
@@ -51,7 +55,9 @@ export function DataTableContent<T>(props: DataTableContentProps<T>) {
         className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]"
       >
         <Table className={tableClassName}>
-          <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
+          {showHeader && (
+            <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
+          )}
           <DataTableBody
             table={table}
             isLoading={isLoading}

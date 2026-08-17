@@ -76,6 +76,7 @@ export function TabCategorias() {
               Sin categorías. Crea las 6 por defecto (Nómina, Renta, Servicios, Marketing, Comisiones, Otros) o agrega manualmente.
             </p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs text-muted-foreground">
                 <tr>
@@ -115,6 +116,7 @@ export function TabCategorias() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </CardContent>
       </Card>

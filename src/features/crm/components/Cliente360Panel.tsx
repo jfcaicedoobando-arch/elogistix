@@ -43,6 +43,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
           {d.oportunidades.length === 0 ? (
             <p className="text-sm text-muted-foreground p-4">Sin oportunidades registradas.</p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-muted-foreground border-b">
@@ -67,6 +68,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </CardContent>
       </Card>

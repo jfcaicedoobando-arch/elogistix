@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.635.0] - 2026-08-17
+
+### Visual y sistema de diseño (Patch 5)
+- UX-01: tokens de estado (`--warning`, `--success`, `--state-llegada`, `--state-cerrado`, `--aging-1`, `--aging-2`) oscurecidos en modo claro para cumplir contraste WCAG AA (≥4.5:1) tanto sobre fondo blanco como sobre su fondo suave /15.
+- UX-05: scroll horizontal (`overflow-x-auto`) en 10 tablas sin contenedor (Tesorería, Presupuesto, Dashboard ejecutivo, CRM, Comisiones, Diagnóstico, Conciliación de compras).
+- VB-05: estado vacío en la gráfica de margen de 6 meses (Dirección) en lugar de ejes sin datos. VB-13 ya estaba cubierto.
+- VT-18: `DataTable` ya no muestra el encabezado cuando no hay filas y no está cargando (portal de documentos, embarques de agente, comisiones).
+- VB-41: punto indicador de alertas sobre el icono cuando el sidebar está colapsado.
+- UX-26 / UX-25: la ruta `/dev/pdf-preview/cotizacion/:id` sólo existe en desarrollo, se elimina `public/placeholder.svg` y `theme-color` ahora responde a `prefers-color-scheme`.
+
 ## [13.634.0] - 2026-08-17
 
 ### Copy e idioma es-MX (Patch 4)

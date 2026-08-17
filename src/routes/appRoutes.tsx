@@ -131,7 +131,8 @@ export const appRoutes = (
     <Route path="/cotizaciones/nueva/tarifario" element={guarded(COTIZACIONES_ROLES, <NuevaCotizacionInformativa />)} />
     <Route path="/cotizaciones/:id" element={guarded(COTIZACIONES_ROLES, <CotizacionDetalle />)} />
     <Route path="/cotizaciones/:id/editar" element={guarded(COTIZACIONES_ROLES, <EditarCotizacion />)} />
-    <Route path="/dev/pdf-preview/cotizacion/:id" element={guarded(COTIZACIONES_ROLES, <PdfPreviewCotizacion />)} />
+    {/* UX-26: preview de PDF sólo en dev (mismo patrón que /logo-preview); en producción cae al 404. */}
+    {import.meta.env.DEV && <Route path="/dev/pdf-preview/cotizacion/:id" element={guarded(COTIZACIONES_ROLES, <PdfPreviewCotizacion />)} />}
     <Route path="/reportes/rentabilidad" element={guarded(REPORTES_ROLES, <Reportes />)} />
     <Route path="/reportes/cierre-mensual" element={guarded(REPORTES_ROLES, <CierreMensual />)} />
     <Route path="/reportes/cartera" element={guarded(REPORTES_ROLES, <ReportesCartera />)} />

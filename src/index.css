@@ -59,17 +59,20 @@
     --sidebar-border: 214 32% 91%;
     --sidebar-ring: 221 83% 53%;
 
-    --success: 142 71% 45%;
+    /* UX-01 (WCAG AA): estos tokens se usan como color de TEXTO en badges
+       (bg-*/15 + text-*) y barras. Luminosidad bajada para llegar a ≥4.5:1
+       sobre --background y sobre el fondo soft /15, manteniendo el matiz. */
+    --success: 152 68% 27%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 33 90% 30%;
     --warning-foreground: 0 0% 100%;
     --info: 221 83% 53%;
     --info-foreground: 0 0% 100%;
 
     /* Tokens semánticos para estados de embarque (Llegada, En Proceso, Cerrado) */
-    --state-llegada: 199 89% 48%;
+    --state-llegada: 199 89% 31%;
     --state-en-proceso: 262 83% 58%;
-    --state-cerrado: 160 84% 39%;
+    --state-cerrado: 158 75% 26%;
 
     /* Estados operativos adicionales usados por estadoConfig — categóricos.
        Replican paletas Tailwind (cyan-500, violet-500, orange-500, indigo-500)
@@ -87,8 +90,10 @@
     /* Escala de aging para cartera vencida — 5 niveles de severidad ascendente.
        Ola 3B: usada por CobranzaBlock (5 buckets) y CarteraSection (4 buckets,
        usa 1/2/3/5 saltando el intermedio). */
-    --aging-1: 142 65% 45%;   /* verde — corriente / 0-15 días */
-    --aging-2: 38 92% 50%;    /* ámbar — 16-30 días */
+    /* UX-01 (WCAG AA): aging-1/2 también se usan como texto (text-aging-*),
+       misma calibración de luminosidad ≥4.5:1 que success/warning. */
+    --aging-1: 142 65% 27%;   /* verde — corriente / 0-15 días */
+    --aging-2: 36 88% 29%;    /* ámbar — 16-30 días */
     --aging-3: 25 95% 53%;    /* naranja — 31-60 días */
     --aging-4: 0 84% 60%;     /* rojo — 61-90 días */
     --aging-5: 0 74% 42%;     /* rojo oscuro — 90+ días */

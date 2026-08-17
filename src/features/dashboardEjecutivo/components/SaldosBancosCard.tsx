@@ -19,6 +19,7 @@ export function SaldosBancosCard({ cuentas }: Props) {
         {cuentas.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin cuentas activas.</p>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">
@@ -52,6 +53,7 @@ export function SaldosBancosCard({ cuentas }: Props) {
               )}
             </tfoot>
           </table>
+          </div>
         )}
       </CardContent>
     </Card>

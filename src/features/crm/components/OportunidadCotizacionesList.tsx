@@ -34,6 +34,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
             Aún no se ha creado ninguna cotización para esta oportunidad. Usa el botón "Crear cotización" arriba.
           </p>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-xs text-muted-foreground border-b">
@@ -86,6 +87,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </CardContent>
     </Card>
