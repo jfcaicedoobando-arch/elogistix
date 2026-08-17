@@ -4,16 +4,13 @@
 import { useEffect, useState } from "react";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCreateSeguro, useUpdateSeguro } from "@/features/embarques/hooks/useSegurosEmbarque";
-import type { MonedaSeguro, SeguroEmbarque, SeguroEmbarqueInput } from "@/features/embarques/services/seguros";
-import { notifyError } from "@/lib/ui/appFeedback";
+import type { SeguroEmbarque, SeguroEmbarqueInput } from "@/features/embarques/services/seguros";
 import { todayLocalISO } from "@/lib/date/today";
+import { validarSeguroForm } from "./seguroFormValidation";
+import { SeguroFormCamposPrincipales } from "./SeguroFormCamposPrincipales";
+import { SeguroFormCamposAdicionales } from "./SeguroFormCamposAdicionales";
 
 interface Props {
   open: boolean;
@@ -72,46 +69,7 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
     setForm((p) => ({ ...p, [k]: v }));
 
   const handleSubmit = async () => {
-    // B-056: antes estos guardas eran returns silenciosos — el submit "moría"
-    // sin toast ni mensaje inline. Ahora cada causa se dice explícitamente.
-    if (!form.aseguradora.trim() || !form.numero_poliza.trim()) {
-      return notifyError(undefined, {
-        title: "Faltan datos de la póliza",
-        description: "Aseguradora y número de póliza son obligatorios.",
-        method: "SEGURO_FORM_SUBMIT",
-      });
-    }
-    if (form.prima < 0) {
-      return notifyError(undefined, {
-        title: "Prima inválida",
-        description: "La prima no puede ser negativa.",
-        method: "SEGURO_FORM_SUBMIT",
-      });
-    }
-    // EC-10: misma guarda para los otros dos campos monetarios del seguro.
-    if (form.suma_asegurada < 0 || form.deducible < 0) {
-      return notifyError(undefined, {
-        title: "Montos inválidos",
-        description: "La suma asegurada y el deducible no pueden ser negativos.",
-        method: "SEGURO_FORM_SUBMIT",
-      });
-    }
-    // En altas (donde la póliza es obligatoria) la suma asegurada debe ser > 0;
-    // en edición se respetan registros históricos que pudieron quedar en 0.
-    if (!isEdit && form.suma_asegurada <= 0) {
-      return notifyError(undefined, {
-        title: "Suma asegurada requerida",
-        description: "Captura una suma asegurada mayor a cero.",
-        method: "SEGURO_FORM_SUBMIT",
-      });
-    }
-    if (form.vigencia_hasta < form.vigencia_desde) {
-      return notifyError(undefined, {
-        title: "Vigencia inválida",
-        description: "La vigencia final no puede ser anterior a la inicial.",
-        method: "SEGURO_FORM_SUBMIT",
-      });
-    }
+    if (!validarSeguroForm(form, isEdit)) return;
     if (isEdit && seguro) {
       await update.mutateAsync({ id: seguro.id, patch: form });
     } else {
@@ -136,85 +94,8 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
       }
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="seguro-aseguradora">Aseguradora *</Label>
-          <Input id="seguro-aseguradora" value={form.aseguradora} onChange={(e) => setField("aseguradora", e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="seguro-poliza">Número de póliza *</Label>
-          <Input id="seguro-poliza" value={form.numero_poliza} onChange={(e) => setField("numero_poliza", e.target.value)} />
-        </div>
-
-        <div>
-          <Label htmlFor="seguro-vigencia-desde">Vigencia desde *</Label>
-          <DatePickerMx id="seguro-vigencia-desde" value={form.vigencia_desde} onChange={(v) => setField("vigencia_desde", v)} className="w-full" />
-        </div>
-        <div>
-          <Label htmlFor="seguro-vigencia-hasta">Vigencia hasta *</Label>
-          <DatePickerMx id="seguro-vigencia-hasta" value={form.vigencia_hasta} onChange={(v) => setField("vigencia_hasta", v)} className="w-full" />
-          {form.vigencia_hasta < form.vigencia_desde && (
-            <p className="text-xs text-destructive mt-1">La vigencia final es anterior a la inicial.</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="seguro-moneda">Moneda</Label>
-          <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as MonedaSeguro)}>
-            <SelectTrigger id="seguro-moneda"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="MXN">MXN</SelectItem>
-              <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="EUR">EUR</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="seguro-prima">Prima (costo) *</Label>
-          <Input id="seguro-prima" type="number" min={0} step={0.01} value={form.prima}
-            onChange={(e) => setField("prima", Number(e.target.value))} />
-          {form.prima < 0 && (
-            <p className="text-xs text-destructive mt-1">La prima no puede ser negativa.</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="seguro-suma">Suma asegurada</Label>
-          <Input id="seguro-suma" type="number" min={0} step={0.01} value={form.suma_asegurada}
-            onChange={(e) => setField("suma_asegurada", Number(e.target.value))} />
-          {form.suma_asegurada < 0 && (
-            <p className="text-xs text-destructive mt-1">La suma asegurada no puede ser negativa.</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="seguro-deducible">Deducible</Label>
-          <Input id="seguro-deducible" type="number" min={0} step={0.01} value={form.deducible}
-            onChange={(e) => setField("deducible", Number(e.target.value))} />
-          {form.deducible < 0 && (
-            <p className="text-xs text-destructive mt-1">El deducible no puede ser negativo.</p>
-          )}
-        </div>
-
-        <div className="sm:col-span-2">
-          <Label htmlFor="seguro-cobertura">Cobertura</Label>
-          <Textarea id="seguro-cobertura" rows={2} value={form.cobertura_descripcion ?? ""}
-            onChange={(e) => setField("cobertura_descripcion", e.target.value || null)} />
-        </div>
-
-        <div>
-          <Label htmlFor="seguro-certificado">Certificado (URL)</Label>
-          <Input id="seguro-certificado" value={form.certificado_url ?? ""}
-            onChange={(e) => setField("certificado_url", e.target.value || null)} />
-        </div>
-        <div>
-          <Label htmlFor="seguro-contacto">Contacto</Label>
-          <Input id="seguro-contacto" value={form.contacto ?? ""} onChange={(e) => setField("contacto", e.target.value || null)} />
-        </div>
-
-        <div className="sm:col-span-2">
-          <Label htmlFor="seguro-notas">Notas</Label>
-          <Textarea id="seguro-notas" rows={2} value={form.notas ?? ""}
-            onChange={(e) => setField("notas", e.target.value || null)} />
-        </div>
+        <SeguroFormCamposPrincipales form={form} setField={setField} />
+        <SeguroFormCamposAdicionales form={form} setField={setField} />
       </div>
     </FormDialogShell>
   );

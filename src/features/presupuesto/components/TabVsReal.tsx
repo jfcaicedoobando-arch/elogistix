@@ -4,7 +4,7 @@
  * Fase J: sort por columna, filtro "solo excesos", barra + badge por fila.
  */
 import { useMemo, useState } from "react";
-import { FileText, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { KpiCard } from "@/components/shared/KpiCard";
@@ -14,94 +14,15 @@ import { Switch } from "@/components/ui/switch";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import { pluralizar } from "@/lib/format/pluralizar";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReportePresupuestoDocument se carga dinámicamente en el handler.
 import { withOrgPrefix } from "@/lib/filenames";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { usePdfExport } from "@/hooks/shared";
-import { VsRealFila } from "./VsRealFila";
-import type { FilaVsReal } from "@/features/presupuesto/services";
-
-type SortKey = "categoria" | "presupuesto" | "real" | "variacion" | "cumplimiento";
-type SortDir = "asc" | "desc";
-
-
-function ThSort({ label, active, dir, onClick, align = "left" }: {
-  label: string; active: boolean; dir: SortDir; onClick: () => void; align?: "left" | "right";
-}) {
-  const Icon = active ? (dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
-  return (
-    <th className={`px-3 py-2 ${align === "right" ? "text-right" : "text-left"}`}>
-      <button type="button" onClick={onClick} className="inline-flex items-center gap-1 hover:text-foreground">
-        {label} <Icon className="h-3 w-3" />
-      </button>
-    </th>
-  );
-}
-
-function ordenarFilas(filas: FilaVsReal[], key: SortKey, dir: SortDir): FilaVsReal[] {
-  const sign = dir === "asc" ? 1 : -1;
-  const cmp: Record<SortKey, (a: FilaVsReal, b: FilaVsReal) => number> = {
-    categoria: (a, b) => a.categoria_nombre.localeCompare(b.categoria_nombre, "es-MX"),
-    presupuesto: (a, b) => a.presupuesto_mxn - b.presupuesto_mxn,
-    real: (a, b) => a.real_mxn - b.real_mxn,
-    variacion: (a, b) => a.variacion_mxn - b.variacion_mxn,
-    cumplimiento: (a, b) => a.cumplimiento_pct - b.cumplimiento_pct,
-  };
-  return [...filas].sort((a, b) => cmp[key](a, b) * sign);
-}
-
-/** Aviso de gastos en moneda extranjera sin tipo de cambio (con concordancia es-MX). */
-function AvisoGastosSinTc({ count }: { count: number }) {
-  const uno = count === 1;
-  return (
-    <Card className="border-warning/50">
-      <CardContent className="p-3 text-sm text-warning">
-        {pluralizar(count, "gasto")} en moneda extranjera {uno ? "no tiene" : "no tienen"} tipo de cambio
-        capturado y {uno ? "quedó" : "quedaron"} fuera del real. Captura su tipo de cambio para que se{" "}
-        {uno ? "refleje" : "reflejen"} aquí.
-      </CardContent>
-    </Card>
-  );
-}
-
-
-/** Cuerpo de la tabla: filas o estado vacío según el filtro activo. */
-function VsRealCuerpo({
-  filas, soloExcesos, onQuitarFiltro,
-}: {
-  filas: ReturnType<typeof ordenarFilas>;
-  soloExcesos: boolean;
-  onQuitarFiltro: () => void;
-}) {
-  if (filas.length > 0) {
-    return (
-      <>
-        {filas.map((f, i) => (
-          <VsRealFila key={f.categoria_id} fila={f} striped={i % 2 === 1} />
-        ))}
-      </>
-    );
-  }
-  return (
-    <tr>
-      <td colSpan={5} className="px-3 py-8 text-center">
-        <p className="text-sm text-muted-foreground mb-3">
-          {soloExcesos
-            ? "Ninguna categoría excede el 110% este mes."
-            : "No hay categorías de presupuesto capturadas para este periodo."}
-        </p>
-        {soloExcesos && (
-          <Button variant="outline" size="sm" onClick={onQuitarFiltro}>
-            Quitar filtro "Solo excesos"
-          </Button>
-        )}
-      </td>
-    </tr>
-  );
-}
+import { ThSort } from "./VsRealSort";
+import { ordenarFilas, type SortKey, type SortDir } from "./vsRealSort";
+import { AvisoGastosSinTc, VsRealCuerpo } from "./VsRealCuerpo";
 
 export function TabVsReal() {
   const periodoCtl = usePeriodoMesUrl("periodo_vs_real");
