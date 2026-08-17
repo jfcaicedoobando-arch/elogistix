@@ -5,23 +5,20 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
-import { Plus, Trash2 } from "lucide-react";
+import { DataTable } from "@/components/shared/DataTable";
+import { Plus } from "lucide-react";
 import { useDemorasVenta, useDemorasVentaMutations } from "@/features/costeo/hooks/useDemorasVenta";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import type { DemoraVentaTarifaInput } from "@/features/costeo/services/demorasVenta";
-import { tramosSeSolapan, vigenciasSeSolapan } from "@/features/costeo/utils/demorasTramos";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { NuevaTarifaDemoraDialog } from "@/features/costeo/components/NuevaTarifaDemoraDialog";
 import { todayLocalISO } from "@/lib/date/today";
-import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
-import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { crearColumnasDemorasVenta } from "./CosteoDemorasVentaColumns";
+import { validarTramoDias, validarSinSolape } from "./costeoDemorasVentaValidacion";
 
 const today = () => todayLocalISO();
 const EMPTY: DemoraVentaTarifaInput = {
@@ -43,41 +40,14 @@ export default function CosteoDemorasVenta() {
   const [aEliminar, setAEliminar] = useState<string | null>(null);
   const [intentoEnvio, setIntentoEnvio] = useState(false);
 
-  type Tarifa = (typeof tarifas)[number];
   const tipoMap = useMemo(() => new Map(tipos.map((t) => [t.id, t.code || t.name])), [tipos]);
 
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
     setIntentoEnvio(true);
     if (!form.tipo_contenedor_id || form.monto_por_dia_usd < 0) return;
-    // EC-20: tramos con días inválidos o invertidos (desde > hasta).
-    if (!Number.isInteger(form.desde_dia) || form.desde_dia < 1) {
-      notifyError(undefined, {
-        title: "Tramo inválido",
-        description: "El día inicial debe ser un entero mayor o igual a 1.",
-      });
-      return;
-    }
-    if (form.hasta_dia !== null && (!Number.isInteger(form.hasta_dia) || form.hasta_dia < form.desde_dia)) {
-      notifyError(undefined, {
-        title: "Tramo inválido",
-        description: "El día final debe ser un entero mayor o igual al día inicial (o quedar vacío).",
-      });
-      return;
-    }
-    // B-096: impedir tramos solapados con los vigentes del mismo contenedor.
-    const solapada = tarifas.find((t) =>
-      t.tipo_contenedor_id === form.tipo_contenedor_id &&
-      tramosSeSolapan(t, form) &&
-      vigenciasSeSolapan(t.vigente_desde, t.vigente_hasta, form.vigente_desde, form.vigente_hasta),
-    );
-    if (solapada) {
-      notifyError(undefined, {
-        title: "El tramo se solapa con uno existente",
-        description: `Ya hay un tramo días ${solapada.desde_dia}–${solapada.hasta_dia ?? "∞"} para este contenedor en vigencias traslapadas. Ajusta el rango o la vigencia.`,
-      });
-      return;
-    }
+    if (!validarTramoDias(form)) return;
+    if (!validarSinSolape(tarifas, form)) return;
     await crear.mutateAsync(form);
     setForm(EMPTY);
     setIntentoEnvio(false);
@@ -86,71 +56,8 @@ export default function CosteoDemorasVenta() {
 
   const tipoInvalido = intentoEnvio && !form.tipo_contenedor_id;
 
-  const columns: ColumnDef<Tarifa, unknown>[] = useMemo(
-    () =>
-      defineColumns<Tarifa>([
-        {
-          id: "tipo",
-          header: "Tipo contenedor",
-          meta: { width: COL_W.nombre, className: "font-medium", sticky: true },
-          cell: ({ row }) => tipoMap.get(row.original.tipo_contenedor_id) ?? "—",
-        },
-        {
-          id: "desde",
-          header: "Desde día",
-          meta: { width: COL_W.fecha, align: "right", className: "tabular-nums" },
-          cell: ({ row }) => row.original.desde_dia,
-        },
-        {
-          id: "hasta",
-          header: "Hasta día",
-          meta: { width: COL_W.fecha, align: "right", className: "tabular-nums" },
-          cell: ({ row }) =>
-            row.original.hasta_dia ?? <span aria-label="sin límite">∞</span>,
-        },
-        {
-          ...moneyColumn<Tarifa>({
-            id: "monto",
-            header: "Monto/día USD",
-            accessor: (t) => Number(t.monto_por_dia_usd),
-            defaultCurrency: "USD",
-          }),
-          meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" },
-        },
-        {
-          ...dateColumn<Tarifa>({
-            id: "desde_vig",
-            header: rangoLabel("Vigencia", "desde"),
-            accessor: (t) => t.vigente_desde,
-          }),
-          meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
-        },
-        {
-          ...dateColumn<Tarifa>({
-            id: "hasta_vig",
-            header: rangoLabel("Vigencia", "hasta"),
-            accessor: (t) => t.vigente_hasta,
-          }),
-          meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
-        },
-        {
-          id: "acciones",
-          header: "",
-          meta: { width: COL_W.micro, align: "right" },
-          cell: ({ row }) => (
-            <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setAEliminar(row.original.id)}
-                aria-label="Eliminar tarifa de demoras"
-              >
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
-            </div>
-          ),
-        },
-      ]),
+  const columns = useMemo(
+    () => crearColumnasDemorasVenta(tipoMap, (id) => setAEliminar(id)),
     [tipoMap],
   );
 
@@ -172,7 +79,7 @@ export default function CosteoDemorasVenta() {
         <ListSkeleton rows={5} variant="table" />
       ) : (
         <Card>
-          <DataTable<Tarifa>
+          <DataTable
             columns={columns}
             data={tarifas}
             rowKey={(t) => t.id}

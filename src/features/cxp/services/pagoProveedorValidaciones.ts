@@ -6,8 +6,25 @@
  *  - `avisos`: incoherencias informativas que no bloquean (p. ej. IVA raro).
  *
  * Módulo puro (sin Supabase) para poder cubrirlo con pruebas unitarias.
+ * Las reglas individuales y los avisos viven en archivos hermanos.
  */
-import { formatCurrency } from "@/lib/formatters";
+import {
+  validarMonto,
+  validarFechas,
+  validarTipoCambio,
+  validarCuenta,
+  validarDiferenciaCambiaria,
+} from "./pagoProveedorReglas";
+import { calcularAvisosPago } from "./pagoProveedorAvisos";
+
+export { calcularAvisosPago } from "./pagoProveedorAvisos";
+export {
+  validarMonto,
+  validarFechas,
+  validarTipoCambio,
+  validarCuenta,
+  validarDiferenciaCambiaria,
+} from "./pagoProveedorReglas";
 
 export interface CuentaPagoInfo {
   id: string;
@@ -67,7 +84,6 @@ export interface ResultadoValidacionPago {
 const TOLERANCIA = 0.01;
 /** Tolerancia de redondeo para el cuadre de totales de la factura. */
 const TOLERANCIA_TOTALES = 0.05;
-const TC_MIN = 0.01;
 /** Cota superior de tipo de cambio aceptada en capturas (pagos, facturas, anticipos). */
 export const TC_MAX = 1000;
 
@@ -85,57 +101,6 @@ export function descuadreTotalesFactura(f: FacturaPagoInfo): number {
   const calculado = f.subtotal + f.iva + f.ieps - f.retenciones;
   const dif = calculado - f.total;
   return Math.abs(dif) <= TOLERANCIA_TOTALES ? 0 : dif;
-}
-
-function validarMonto(a: ValidarPagoInput): string | null {
-  if (!Number.isFinite(a.monto)) return "Captura un monto numérico válido";
-  if (a.monto <= 0) return "El monto debe ser mayor a 0";
-  if (tieneMasDeDosDecimales(a.montoTexto)) {
-    return "El monto no puede tener más de 2 decimales";
-  }
-  return null;
-}
-
-function validarFechas(a: ValidarPagoInput): string | null {
-  if (!a.fecha) return "Captura la fecha del pago";
-  if (a.fecha > a.hoy) return "La fecha del pago no puede ser futura";
-  if (a.factura?.fecha_emision && a.fecha < a.factura.fecha_emision) {
-    return "La fecha del pago no puede ser anterior a la fecha de emisión de la factura";
-  }
-  return null;
-}
-
-function validarTipoCambio(a: ValidarPagoInput, factura: FacturaPagoInfo): string | null {
-  if (a.bloqueadoPorTc) {
-    return `Captura un tipo de cambio válido para pagar en MXN una factura ${factura.moneda}`;
-  }
-  if (a.tcNum !== null && (a.tcNum < TC_MIN || a.tcNum > TC_MAX)) {
-    return `El tipo de cambio debe estar entre ${TC_MIN} y ${TC_MAX}`;
-  }
-  return null;
-}
-
-function validarCuenta(a: ValidarPagoInput): string | null {
-  if (a.requiereCuenta && !a.cuenta) {
-    return "Selecciona la cuenta bancaria de donde sale el pago";
-  }
-  if (a.cuenta && a.cuenta.moneda !== a.moneda) {
-    return `La cuenta seleccionada es en ${a.cuenta.moneda} y el pago es en ${a.moneda}`;
-  }
-  return null;
-}
-
-function validarDiferenciaCambiaria(a: ValidarPagoInput): string | null {
-  if (!a.esUsdPagadoEnMxn || a.diffMxnTexto.trim() === "") return null;
-  const diff = Number(a.diffMxnTexto);
-  if (!Number.isFinite(diff)) return "La diferencia cambiaria debe ser numérica";
-  if (tieneMasDeDosDecimales(a.diffMxnTexto)) {
-    return "La diferencia cambiaria no puede tener más de 2 decimales";
-  }
-  if (Math.abs(diff) > Math.abs(a.monto)) {
-    return "La diferencia cambiaria no puede ser mayor que el monto del pago";
-  }
-  return null;
 }
 
 /**
@@ -183,31 +148,4 @@ export function validarPagoProveedor(a: ValidarPagoInput): ResultadoValidacionPa
       ? `El monto excede el saldo pendiente (${factura.moneda})`
       : null);
   return { error, avisos };
-}
-
-
-/** Incoherencias informativas de IVA/totales que conviene mostrar al usuario. */
-export function calcularAvisosPago(a: ValidarPagoInput): string[] {
-  const f = a.factura;
-  if (!f) return [];
-  const avisos: string[] = [];
-  const descuadre = descuadreTotalesFactura(f);
-  if (descuadre !== 0) {
-    avisos.push(
-      `Los totales de la factura no cuadran: subtotal + IVA + IEPS − retenciones difiere del total en ${formatCurrency(descuadre, f.moneda)}. Revisa la captura antes de pagar.`,
-    );
-  }
-  if (f.subtotal > 0 && f.iva > 0) {
-    const tasa = (f.iva / f.subtotal) * 100;
-    const esperadas = [0, 8, 16];
-    if (!esperadas.some((t) => Math.abs(tasa - t) < 0.5)) {
-      avisos.push(
-        `El IVA de la factura equivale a ${tasa.toFixed(2)}% del subtotal (no es 0%, 8% ni 16%).`,
-      );
-    }
-  }
-  if (f.retenciones > f.subtotal) {
-    avisos.push("Las retenciones son mayores que el subtotal de la factura.");
-  }
-  return avisos;
 }
