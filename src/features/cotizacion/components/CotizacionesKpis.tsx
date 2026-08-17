@@ -5,7 +5,7 @@ interface Props {
   total: number;
   aceptadas: number;
   rechazadas: number;
-  tasa: number;
+  tasa: string;
 }
 
 /**
