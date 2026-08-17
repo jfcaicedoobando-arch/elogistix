@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.645.2] - 2026-08-17
+
+### Corrección (Sentry JAVASCRIPT-REACT-5B)
+- Descargar PDF/XML de un CFDI ya no devuelve 403 "forbidden" a roles operativos: nueva lista `ROLES_DESCARGA_CFDI` en `supabase/functions/_shared/auth.ts` (consulta fiscal + operador, coordinador_logistico, gerente_operaciones, gerente_visor), alineada con `FACTURACION_ROLES` de la UI. `facturapi-descargar` redeployada.
+
 ## [13.645.1] - 2026-08-17
 
 ### Corrección CI

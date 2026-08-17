@@ -18,7 +18,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
-import { authorizeOrgRole, authorizePortalCliente, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
+import { authorizeOrgRole, authorizePortalCliente, ROLES_DESCARGA_CFDI } from "../_shared/auth.ts";
 import { extractFacturapiMessage } from "../_shared/facturapiClient.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { buildFilename, type CfdiTipoDoc } from "../_shared/facturaFilename.ts";
@@ -210,7 +210,7 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   const target = await resolveTarget(supabase as Parameters<typeof resolveTarget>[0], body);
   if (!target.ok) return json(target.body, target.status);
   const autorizado =
-    (await authorizeOrgRole(supabase, userData.user.id, target.data.organizationId, ROLES_CONSULTA_FISCAL)) ||
+    (await authorizeOrgRole(supabase, userData.user.id, target.data.organizationId, ROLES_DESCARGA_CFDI)) ||
     // El cliente del portal ve sus propios CFDI (no es miembro de la org).
     (await authorizePortalCliente(supabase, userData.user.id, target.data.clienteId, target.data.organizationId));
   if (!autorizado) {
