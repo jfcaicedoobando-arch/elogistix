@@ -29,9 +29,14 @@ const isEventInsideSonnerToaster = (event: { target: EventTarget | null }): bool
   return !!target?.closest?.("[data-sonner-toaster]");
 };
 
-const DialogContent = ({ ref, className, children, onPointerDownOutside, onInteractOutside, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { ref?: React.Ref<React.ElementRef<typeof DialogPrimitive.Content>> }) => (
+const DialogContent = ({ ref, className, overlayClassName, children, onPointerDownOutside, onInteractOutside, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  ref?: React.Ref<React.ElementRef<typeof DialogPrimitive.Content>>;
+  /** VT-02: permite elevar el overlay junto con el contenido (p. ej. por encima del viewport de toasts en `z-[60]`). */
+  overlayClassName?: string;
+}) => (
   <DialogPortal>
-    <DialogOverlay />
+    <DialogOverlay className={overlayClassName} />
+
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
