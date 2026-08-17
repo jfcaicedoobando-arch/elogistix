@@ -5,6 +5,8 @@ import { Copy, Check, X } from "lucide-react";
 import { useErrorReport, closeErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import { formatReportMarkdown, formatReportJson } from "@/lib/ui/errorReport";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+
 import { toast as sonnerToast } from "sonner";
 
 /**
