@@ -11,8 +11,9 @@ import { formatCurrencyCompact } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import { estadoMeta, semaforoCriterios, type AvanceCriterios } from "@/features/crm/domain/criterios";
 import {
-  CriteriosRow, MetaRow, ProximaRow, formatProx,
+  CriteriosRow, MetaRow, ProximaRow,
 } from "@/features/crm/components/kanban/OportunidadCard.parts";
+import { formatProx } from "@/features/crm/domain/proximaActividadLabel";
 import type { ProximaActividad } from "@/features/crm/hooks";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 

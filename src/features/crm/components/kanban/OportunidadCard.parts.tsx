@@ -7,20 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters/dates";
 import { porcentajeCriterios, type AvanceCriterios } from "@/features/crm/domain/criterios";
-import type { ProximaActividad } from "@/features/crm/hooks";
 
 const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
-
-export function formatProx(prox: ProximaActividad | undefined): string {
-  if (!prox) return "Sin próxima acción";
-  if (!prox.fecha_programada) return prox.asunto;
-  const d = new Date(prox.fecha_programada);
-  const diff = Math.floor((d.getTime() - Date.now()) / 86_400_000);
-  if (diff < 0) return `Vencida · ${prox.asunto}`;
-  if (diff === 0) return `Hoy · ${prox.asunto}`;
-  if (diff === 1) return `Mañana · ${prox.asunto}`;
-  return `${formatFechaEs(prox.fecha_programada)} · ${prox.asunto}`;
-}
 
 export function CriteriosRow({
   avance,
