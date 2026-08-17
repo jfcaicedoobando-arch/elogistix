@@ -22,6 +22,8 @@ interface AuthContextType {
   organizationId: string | null;
   organization: CachedOrganization | null;
   loading: boolean;
+  /** Falla técnica al cargar perfil/rol (M9). Ver `resolveSinAccesoVariant`. */
+  profileError: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -35,6 +37,7 @@ const AuthContext = createContext<AuthContextType>({
   organizationId: null,
   organization: null,
   loading: true,
+  profileError: false,
   signOut: async () => {},
   refreshProfile: async () => {},
 });
@@ -47,7 +50,7 @@ export const useAuth = () => useContext(AuthContext);
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { user, session, loading: sessionLoading, lastEvent } = useAuthSession();
-  const { profile, profileLoading, reset: resetProfile, refresh: refreshProfile } = useAuthProfile(user?.id ?? null);
+  const { profile, profileLoading, profileError, reset: resetProfile, refresh: refreshProfile } = useAuthProfile(user?.id ?? null);
   const { clearLoginAudit } = useLoginAudit(user, lastEvent);
 
   // P-04: `loading` debe cubrir también la resolución del perfil/rol. Si sólo
@@ -119,10 +122,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       organizationId: profile.organizationId,
       organization: profile.organization,
       loading,
+      profileError,
       signOut,
       refreshProfile,
     }),
-    [user, session, profile, effectiveRole, loading, signOut, refreshProfile],
+    [user, session, profile, effectiveRole, loading, profileError, signOut, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -42,15 +42,25 @@ const getNumberFormatter = (min: number, max: number): Intl.NumberFormat => {
 };
 
 export const formatCurrency = (amount: number, currency: string = 'MXN'): string => {
-  const formatted = getCurrencyFormatter(currency).format(amount);
+  const raw = getCurrencyFormatter(currency).format(amount);
+  // Normaliza NBSP (Intl separa código/símbolo con U+00A0 para algunas monedas
+  // como USD/EUR) a espacio normal para output consistente entre monedas.
+  const formatted = raw.replace(/\u00a0/g, ' ');
   // Intl con MXN devuelve "$57,000.00" (sin código). Forzamos el prefijo "MXN " para
   // mantener consistencia con USD/EUR y evitar ambigüedad entre USD y MXN.
-  // B-053 (v13.320.40): capturar el signo negativo antes del símbolo para que
-  // negativos sean "MXN -8,000.00" en vez de "MXN -$8,000.00".
-  if (currency === 'MXN' && !formatted.startsWith('MXN')) {
-    return `MXN ${formatted.replace(/^(-?)\$\s?/, '$1')}`;
+  const conCodigo = currency === 'MXN' && !formatted.startsWith('MXN')
+    ? `MXN ${formatted.replace(/^(-?)\$\s?/, '$1')}`
+    : formatted;
+  // B-053 (v13.320.40): normaliza el signo negativo para TODAS las monedas
+  // (no sólo MXN) para que siempre sea "CODE -monto" y nunca "-CODE monto".
+  const match = conCodigo.match(/^(-)?([A-Z]{3})\s*(-)?\s*\$?\s?(.*)$/);
+  if (match) {
+    const signo = match[1] ?? match[3] ?? '';
+    const codigo = match[2];
+    const resto = match[4];
+    return signo ? `${codigo} -${resto}` : `${codigo} ${resto}`;
   }
-  return formatted;
+  return conCodigo;
 };
 
 /** Wrapper canónico para montos en USD (DRY: reemplaza `usdFormatter` locales del feature costeo). */

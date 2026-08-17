@@ -7,6 +7,7 @@ import {
   rangoMes,
   generarMesesDisponibles,
   mesActualKey,
+  labelMesDesdeKey,
   type FilaProyeccion,
 } from "../proyeccionFacturacion";
 
@@ -172,5 +173,25 @@ describe("mesActualKey", () => {
   });
   it("respeta la fecha cuando es posterior", () => {
     expect(mesActualKey(new Date(2026, 6, 10))).toBe("2026-07");
+  });
+});
+
+describe("labelMesDesdeKey", () => {
+  it("deriva la etiqueta directo de la clave YYYY-MM, sin pasar por Date", () => {
+    expect(labelMesDesdeKey("2026-01")).toBe("Enero 2026");
+    expect(labelMesDesdeKey("2026-12")).toBe("Diciembre 2026");
+  });
+
+  it("no se corre de mes aunque el runtime esté en una zona horaria distinta a México", () => {
+    const tzOriginal = process.env.TZ;
+    process.env.TZ = "Pacific/Kiritimati"; // UTC+14, el extremo opuesto a evitar falsos negativos
+    try {
+      // Enero: si se construyera con new Date(2026, 0, 1) + toLocaleDateString con TZ México,
+      // una zona horaria muy adelantada podría correr el mes mostrado al construir/leer el Date.
+      expect(labelMesDesdeKey("2026-01")).toBe("Enero 2026");
+      expect(labelMesDesdeKey("2025-12")).toBe("Diciembre 2025");
+    } finally {
+      process.env.TZ = tzOriginal;
+    }
   });
 });

@@ -20,7 +20,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles, inline = false }: ProtectedRouteProps) {
-  const { user, role, effectiveRole, organization, loading } = useAuth();
+  const { user, role, effectiveRole, organization, loading, profileError } = useAuth();
   const location = useLocation();
 
   const sinAcceso =
@@ -72,12 +72,15 @@ export function ProtectedRoute({ children, allowedRoles, inline = false }: Prote
   if (sinAcceso) {
     // RG1: antes íbamos a "/" y HomeRoute rebotaba a "/inicio" → bucle infinito.
     // UIA-04: distinguimos "sin rol/org" de "rol sin permiso para este módulo".
+    // Frente 1: si el rol/perfil no se resolvió por una falla técnica (no por
+    // falta de permisos), avisamos con el motivo "error-carga" para ofrecer
+    // "Reintentar" en vez de pedir que un admin dé de alta a la persona.
     return (
       <Navigate
         to="/sin-acceso"
         replace
         state={{
-          motivo: effectiveRole ? "permiso-modulo" : "sin-rol-org",
+          motivo: profileError ? "error-carga" : effectiveRole ? "permiso-modulo" : "sin-rol-org",
           from: location.pathname,
         }}
       />

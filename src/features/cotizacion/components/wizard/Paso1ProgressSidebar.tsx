@@ -81,6 +81,9 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
   const completas = sections.filter((s) => s.done).length;
   const total = sections.length;
   const pct = Math.round((completas / total) * 100);
+  // Aclara qué se cuenta en "X de Y": el denominador cambia según el modo
+  // (marítimo agrega Tarifa/Flete), así que el texto lo explicita.
+  const modoLabel = esMaritimo ? (esLcl ? " (marítimo LCL)" : " (marítimo)") : " (terrestre/aéreo)";
 
   const handleClick = (id: string) => {
     const el = document.getElementById(id);
@@ -93,7 +96,7 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
         <div className="space-y-1">
           <SectionHeading as="h3">Progreso del Paso 1</SectionHeading>
           <p className="text-xs text-muted-foreground">
-            {completas} de {total} completas
+            {completas} de {total} secciones completas{modoLabel}
           </p>
           <Progress value={pct} className="h-1.5" />
         </div>

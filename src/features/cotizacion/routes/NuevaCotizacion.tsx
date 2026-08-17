@@ -12,6 +12,7 @@ import {
   useCotizacionDraftAutosave,
   loadDraft,
   clearDraft,
+  draftTieneContenido,
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
 import { notifyWarning } from "@/lib/ui/appFeedback";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
@@ -72,7 +73,13 @@ export default function NuevaCotizacion() {
   });
 
   // P0 — Detectar borrador existente (re-evalúa cuando el userId async llega).
-  const draftDetectado = useMemo(() => (userId ? loadDraft(userId) : null), [userId]);
+  // Sólo se ofrece restaurar si el borrador realmente tiene algo capturado:
+  // sin esto, un draft "vacío" (valores por defecto) disparaba el banner igual.
+  const draftDetectado = useMemo(() => {
+    const draft = userId ? loadDraft(userId) : null;
+    if (!draft) return null;
+    return draftTieneContenido(draft.values, draft.costosInternos) ? draft : null;
+  }, [userId]);
   const [banderaBorrador, setBanderaBorrador] = useState(false);
   useEffect(() => {
     if (draftDetectado) setBanderaBorrador(true);
