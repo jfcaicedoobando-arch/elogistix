@@ -25,7 +25,11 @@ export async function listOportunidades(p: ListOportunidadesParams): Promise<{ d
     .from("crm_oportunidades")
     .select(COLS, { count: "exact" })
     .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    // EC-02: desempate estable para que la paginación no duplique ni omita
+    // filas cuando varias oportunidades comparten el mismo `created_at`.
+    .order("id", { ascending: false });
+
   if (p.search.trim()) {
     q = q.or(orIlike(["nombre", "cliente_nombre"], p.search));
   }
