@@ -108,6 +108,9 @@ const ALLOWLIST: readonly string[] = [
   "src/features/tesoreria/components/DetallePagoAplicaciones.tsx",
   // Tabla estática de 2 renglones (flujo por moneda) en dashboard de tesorería.
   "src/features/tesoreria/routes/_sections/TesoreriaFlujoMonedas.tsx",
+  // Pagos programados: usa <DataTable /> y sólo compone el pie de totales
+  // (TableRow/TableCell con colSpan) vía el slot `footer`.
+  "src/features/tesoreria/routes/_sections/PagosProgramadosTablas.tsx",
   // Refacturación: comparativos estáticos read-only dentro del asistente.
   "src/features/facturacion/components/refacturacion/ComparativoConsistencia.tsx",
   "src/features/facturacion/components/refacturacion/RefacturacionPreviewSaldos.tsx",

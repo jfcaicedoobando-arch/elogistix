@@ -734,6 +734,8 @@ export default tseslint.config(
       "src/features/tesoreria/components/DetallePagoAplicaciones.tsx",
       // Tabla estática de 2 renglones (flujo por moneda) en dashboard de tesorería.
       "src/features/tesoreria/routes/_sections/TesoreriaFlujoMonedas.tsx",
+      // Pagos programados: <DataTable /> + pie de totales (TableRow/TableCell con colSpan).
+      "src/features/tesoreria/routes/_sections/PagosProgramadosTablas.tsx",
       // Comparativas read-only "original vs nueva" / "antes → después" sobre
       // DetailTable (2 columnas, sin sort/paginación): DataTable no aplica.
       "src/features/facturacion/components/refacturacion/ComparativoConsistencia.tsx",
