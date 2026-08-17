@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default function SeccionDestinatario({ clientes, complete }: Props) {
-  const { watch, setValue } = useFormContext<CotizacionFormValues>();
+  const { watch, setValue, formState: { errors }, clearErrors } = useFormContext<CotizacionFormValues>();
   const esProspecto = watch("esProspecto");
   const clienteId = watch("clienteId");
   const prospectoModo = watch("prospectoModo");
