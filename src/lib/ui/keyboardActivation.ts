@@ -21,8 +21,8 @@ export function activableConTeclado(onActivate: () => void) {
       e.preventDefault();
       onActivate();
     },
-    className: undefined as string | undefined,
   };
+
 }
 
 /** Clases de anillo de foco para elementos activables por teclado. */
