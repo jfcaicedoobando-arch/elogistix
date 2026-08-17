@@ -7,6 +7,8 @@ import { useAuthSession } from "./auth/useAuthSession";
 import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
 import { signOutCurrentSession } from "@/lib/auth/signOut";
+import { purgeSessionCache, debePurgarPorCambioDeUsuario } from "@/lib/auth/purgeSessionCache";
+
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { fromDb } from "@/lib/supabase/cast";
 import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
