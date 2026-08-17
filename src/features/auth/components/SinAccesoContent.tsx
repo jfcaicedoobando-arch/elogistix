@@ -27,12 +27,17 @@ function useMensaje({ variant, effectiveRole, esAdministrador, from }: Omit<SinA
       : "No pudimos cargar los permisos de tu cuenta por un problema técnico (no es un tema de acceso). Reintenta en unos segundos.";
   }
   if (variant === "permiso-modulo") {
+    // VB-09: no exponemos la ruta cruda al usuario y, si es backoffice interno
+    // de Libre Carga (/admin*), no pedimos "habla con un administrador"
+    // (quien lo intenta suele ser ya administrador de su organización).
+    const esModuloInterno = Boolean(from?.startsWith("/admin"));
     return (
       <>
         Tu cuenta está activa con el rol <strong>{obtenerEtiquetaRol(effectiveRole)}</strong>,
-        pero ese rol no tiene permiso para entrar a este módulo
-        {from ? <> (<code>{from}</code>)</> : null}. Si crees que es un error, pide a un
-        administrador que ajuste tus permisos.
+        pero ese rol no tiene permiso para entrar a esta sección.{" "}
+        {esModuloInterno
+          ? "Esta sección es exclusiva del equipo de Libre Carga; si necesitas algo de aquí, contacta a soporte de Libre Carga."
+          : "Si crees que es un error, pide a un administrador que ajuste tus permisos."}
       </>
     );
   }

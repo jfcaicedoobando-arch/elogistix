@@ -4,13 +4,22 @@ import { Wallet } from "lucide-react";
 import { usePortalClientUsers } from "@/features/portal/hooks";
 import { EstadoCuentaModule } from "@/features/facturacion/estadoCuenta/components/EstadoCuentaModule";
 import { useDocumentTitle } from "@/hooks/shared";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function PortalEstadoCuenta() {
   useDocumentTitle('Estado de cuenta');
-  const { data: clientUsers = [], isLoading } = usePortalClientUsers();
+  const { data: clientUsers = [], isLoading, isError, refetch } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
 
   if (isLoading) return <PageSkeleton />;
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <ErrorState onRetry={() => void refetch()} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

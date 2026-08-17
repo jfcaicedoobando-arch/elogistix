@@ -61,7 +61,7 @@ export function ComentariosTab({ ctrl, revisionExistente }: Props) {
               disabled={!ctrl.comentario.trim() || ctrl.agregandoComentario}
             >
               {ctrl.agregandoComentario ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 "Agregar comentario"
               )}

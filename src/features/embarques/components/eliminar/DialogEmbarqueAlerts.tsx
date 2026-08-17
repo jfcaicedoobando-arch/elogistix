@@ -68,7 +68,7 @@ export function DialogEmbarqueVerificandoAlert({
             <div className="space-y-2 text-sm">
               {isLoading && (
                 <p className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                   Verificando documentos financieros asociados…
                 </p>
               )}

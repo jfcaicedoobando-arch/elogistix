@@ -93,7 +93,7 @@ export function UuidFiscalField({
             onClick={onVerify}
           >
             {isPending
-              ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
               : <ShieldCheck className="h-3 w-3 mr-1" />}
             Verificar en SAT
           </Button>

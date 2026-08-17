@@ -24,6 +24,7 @@ import { CartaGarantiaBadge } from "@/features/costeo/components/CartaGarantiaBa
 import type { CosteoNavieraCondicion } from "@/features/costeo/types/navieraCondicion";
 import { useDocumentTitle } from "@/hooks/shared";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -34,8 +35,8 @@ interface FilaNaviera {
 
 export default function AgenteGarantias() {
   useDocumentTitle('Carta Garantía y Demoras');
-  const { data: navieras = [], isLoading: loadingNav } = useNavierasCatalogo();
-  const { data: condiciones = [], isLoading: loadingCond } = useCondicionesNaviera();
+  const { data: navieras = [], isLoading: loadingNav, isError: errorNav, refetch: refetchNav } = useNavierasCatalogo();
+  const { data: condiciones = [], isLoading: loadingCond, isError: errorCond, refetch: refetchCond } = useCondicionesNaviera();
   const [seleccion, setSeleccion] = useState<FilaNaviera | null>(null);
 
   const filas: FilaNaviera[] = useMemo(() => {
@@ -119,6 +120,14 @@ export default function AgenteGarantias() {
         </p>
       </Card>
 
+      {errorNav || errorCond ? (
+        <ErrorState
+          onRetry={() => {
+            void refetchNav();
+            void refetchCond();
+          }}
+        />
+      ) : (
       <DataTable<FilaNaviera>
         columns={columns}
         data={filas}
@@ -128,6 +137,7 @@ export default function AgenteGarantias() {
         rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
         emptyMessage="Sin navieras configuradas."
       />
+      )}
 
 
       <FormDialogShell

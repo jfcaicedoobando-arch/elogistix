@@ -42,7 +42,7 @@ export function MarcarRevisadoDialog({ hallazgo, revisionExistente, open, onOpen
           disabled={ctrl.cargando}
           className="mr-auto text-destructive hover:text-destructive"
         >
-          {ctrl.desmarcando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Quitar marca"}
+          {ctrl.desmarcando ? <Loader2 className="h-4 w-4 animate-spin" /> : "Quitar marca"}
         </Button>
       )}
       <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={ctrl.cargando}>

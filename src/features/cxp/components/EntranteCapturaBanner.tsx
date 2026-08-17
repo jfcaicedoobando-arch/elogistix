@@ -35,7 +35,7 @@ export function EntranteCapturaBanner({ entrante, estado, mensaje }: Props) {
             {!entrante.xmlPath && <Badge variant="warning" size="xs">Sin XML</Badge>}
           </div>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            {estado === "cargando" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {estado === "cargando" && <Loader2 className="h-4 w-4 animate-spin" />}
             {estado === "listo" && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
             {estado === "error" && <AlertTriangle className="h-3.5 w-3.5 text-warning" />}
             {mensaje ?? TEXTOS[estado]}

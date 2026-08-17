@@ -74,7 +74,7 @@ function AdjuntoActions({
   onRemove?: AdjuntoRowProps["onRemove"];
 }) {
   const iconoAccion = isUploading
-    ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+    ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
     : adjunto
       ? <RefreshCcw className="h-3.5 w-3.5 mr-1" />
       : <Upload className="h-3.5 w-3.5 mr-1" />;

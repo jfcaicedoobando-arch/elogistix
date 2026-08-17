@@ -44,7 +44,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
               return (
                 <li key={step.key} className="flex items-center gap-3 relative">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border-2 shrink-0 z-10 transition-all ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border-2 shrink-0 z-10 transition-colors ${
                       isCompleted
                         ? "bg-accent border-accent text-accent-foreground"
                         : isCurrent
@@ -69,7 +69,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
           <div className="flex items-center justify-between relative">
             <div className="absolute top-5 left-0 right-0 h-0.5 bg-border" />
             <div
-              className="absolute top-5 left-0 h-0.5 bg-accent transition-all duration-500"
+              className="absolute top-5 left-0 h-0.5 bg-accent transition-[width] duration-500"
               style={{ width: `${progressPct}%` }}
             />
             {progressSteps.map((step, i) => {
@@ -78,7 +78,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
               return (
                 <div key={step.key} className="flex flex-col items-center relative z-10 flex-1">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border-2 transition-all ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border-2 transition-colors ${
                       isCompleted
                         ? "bg-accent border-accent text-accent-foreground"
                         : isCurrent

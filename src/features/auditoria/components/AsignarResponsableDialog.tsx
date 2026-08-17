@@ -90,7 +90,7 @@ export function AsignarResponsableDialog({
           <Button size="sm" onClick={() => ctrl.submit(false)} disabled={ctrl.cargando}>
             {ctrl.cargando ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                 Guardando...
               </>
             ) : ctrl.yaAsignado ? (

@@ -22,6 +22,7 @@ import { PortalProximosArribosCard } from "@/features/portal/components/dashboar
 import { PortalFacturacionPendienteCard } from "@/features/portal/components/dashboard/PortalFacturacionPendienteCard";
 import { PortalEmbarquesRecientesCard } from "@/features/portal/components/dashboard/PortalEmbarquesRecientesCard";
 import { useDocumentTitle } from "@/hooks/shared";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function PortalDashboard() {
   useDocumentTitle('Portal');
@@ -31,12 +32,12 @@ export default function PortalDashboard() {
   const { data: contactoName } = usePortalContactoNombre();
   const { data: orgName } = usePortalOrgName();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
-  const { data: embarques = [], isLoading: loadingEmb } = usePortalEmbarques(clienteIds);
-  const { data: cotizaciones = [], isLoading: loadingCot } = usePortalCotizaciones(clienteIds);
+  const { data: embarques = [], isLoading: loadingEmb, isError: errorEmb, refetch: refetchEmb } = usePortalEmbarques(clienteIds);
+  const { data: cotizaciones = [], isLoading: loadingCot, isError: errorCot, refetch: refetchCot } = usePortalCotizaciones(clienteIds);
   // B-068/B-076: la tarjeta de Facturación Pendiente se alimenta del MISMO
   // agregado que el estado de cuenta del portal — saldo real por moneda
   // (incluye Parcialmente pagada y resta pagos + notas de crédito).
-  const { kpis: kpisCobranza, isLoading: loadingFac } = useEstadoCuenta({
+  const { kpis: kpisCobranza, isLoading: loadingFac, isError: errorFac, refetch: refetchFac } = useEstadoCuenta({
     clienteIds,
     soloConSaldo: true,
   });
@@ -53,6 +54,16 @@ export default function PortalDashboard() {
 
   return (
     <div className="space-y-6">
+      {(errorEmb || errorCot || errorFac) && (
+        <ErrorState
+          className="mb-2"
+          onRetry={() => {
+            void refetchEmb();
+            void refetchCot();
+            void refetchFac();
+          }}
+        />
+      )}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           <PortalWelcomeCard clienteName={clienteName} contactoName={contactoName} orgName={orgName} />

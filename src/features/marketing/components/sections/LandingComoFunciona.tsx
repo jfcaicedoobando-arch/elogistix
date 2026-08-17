@@ -27,7 +27,7 @@ export function LandingComoFunciona() {
           />
           {PASOS.map((p) => (
             <div key={p.n} className="relative flex flex-col items-center text-center">
-              <div className="relative z-10 mb-4 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-raised)]">
+              <div className="relative z-10 mb-4 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-primary text-primary-foreground shadow-raised">
                 <span className="text-2xl font-bold tracking-tight">{p.n}</span>
               </div>
               <h3 className="mb-2 text-xl font-semibold tracking-tight text-foreground">

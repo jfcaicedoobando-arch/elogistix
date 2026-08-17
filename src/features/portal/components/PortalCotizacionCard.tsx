@@ -97,7 +97,7 @@ export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
 
 
   return (
-    <Card className="transition-all hover:shadow-raised hover:border-accent/30 focus-within:ring-2 focus-within:ring-accent/40 group">
+    <Card className="transition-[box-shadow,border-color] hover:shadow-raised hover:border-accent/30 focus-within:ring-2 focus-within:ring-accent/40 group">
       <Link
         to={`/portal/cotizaciones/${c.id}`}
         aria-label={`Ver cotización ${c.folio}`}

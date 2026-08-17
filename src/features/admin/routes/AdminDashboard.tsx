@@ -14,6 +14,7 @@ import {
 } from "@/features/admin/hooks";
 import { formatDate } from "@/lib/formatters";
 import { useDocumentTitle } from "@/hooks/shared";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 const AdminDashboardActivityChart = lazy(
   () => import("@/features/admin/components/AdminDashboardActivityChart"),
@@ -22,9 +23,9 @@ const AdminDashboardActivityChart = lazy(
 export default function AdminDashboard() {
   useDocumentTitle('Dashboard Super Admin');
   const navigate = useNavigate();
-  const { data: stats, isLoading } = useAdminDashboardStats();
-  const { data: activity = [], isLoading: loadingActivity } = useAdminOrgActivity();
-  const { data: recentOrgs = [], isLoading: loadingRecent } = useAdminRecentOrgs(5);
+  const { data: stats, isLoading, isError: errorStats, refetch: refetchStats } = useAdminDashboardStats();
+  const { data: activity = [], isLoading: loadingActivity, isError: errorActivity, refetch: refetchActivity } = useAdminOrgActivity();
+  const { data: recentOrgs = [], isLoading: loadingRecent, isError: errorRecent, refetch: refetchRecent } = useAdminRecentOrgs(5);
 
   const cards = [
     { title: "Organizaciones", value: stats?.totalOrgs ?? 0, icon: Building2, to: "/admin/organizaciones", tone: "text-primary", navigable: true },
@@ -37,6 +38,17 @@ export default function AdminDashboard() {
         title="Dashboard Super Admin"
         description="Resumen global de toda la plataforma."
       />
+
+      {(errorStats || errorActivity || errorRecent) && (
+        <ErrorState
+          className="mb-4"
+          onRetry={() => {
+            void refetchStats();
+            void refetchActivity();
+            void refetchRecent();
+          }}
+        />
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         {cards.map((card) => (

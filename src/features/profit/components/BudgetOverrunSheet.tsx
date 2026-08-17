@@ -32,7 +32,7 @@ function BarraCumplimiento({ pct }: { pct: number }) {
   const ancho = Math.min(100, Math.max(0, pct));
   return (
     <div className="h-2 rounded bg-muted overflow-hidden" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
-      <div className={cn("h-full transition-all", tono.bar)} style={{ width: `${ancho}%` }} />
+      <div className={cn("h-full transition-[width]", tono.bar)} style={{ width: `${ancho}%` }} />
     </div>
   );
 }

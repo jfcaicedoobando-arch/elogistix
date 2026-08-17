@@ -37,6 +37,7 @@ const FN_OPTIONS: { value: FnFilter; label: string }[] = [
 
 import { formatFechaHora } from "@/lib/formatters";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 const dtf = {
   format(d: Date): string {
     return formatFechaHora(d.toISOString(), {
@@ -50,7 +51,7 @@ export default function Idempotencia() {
   useDocumentTitle('Idempotencia');
   const { isAdmin } = usePermissions();
   const { toast } = useToast();
-  const { filtroFn, setFiltroFn, rows, isLoading, isFetching, refetch, totales } =
+  const { filtroFn, setFiltroFn, rows, isLoading, isFetching, isError, refetch, totales } =
     useIdempotenciaLog(isAdmin);
 
   if (!isAdmin) return <Navigate to="/" replace />;
@@ -134,15 +135,15 @@ export default function Idempotencia() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card><CardContent className="p-4">
           <div className="text-xs text-muted-foreground">Registros creados</div>
-          <div className="text-2xl font-semibold tabular-nums">{totales.totalCreados}</div>
+          <div className="text-kpi tabular-nums">{totales.totalCreados}</div>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <div className="text-xs text-muted-foreground">Respuestas cacheadas</div>
-          <div className="text-2xl font-semibold tabular-nums">{totales.totalCacheados}</div>
+          <div className="text-kpi tabular-nums">{totales.totalCacheados}</div>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <div className="text-xs text-muted-foreground">Duplicados bloqueados</div>
-          <div className="text-2xl font-semibold tabular-nums">{totales.totalDuplicadosBloqueados}</div>
+          <div className="text-kpi tabular-nums">{totales.totalDuplicadosBloqueados}</div>
         </CardContent></Card>
       </div>
 
@@ -160,6 +161,9 @@ export default function Idempotencia() {
 
       <Card>
         <CardContent className="p-0">
+          {isError ? (
+            <ErrorState className="m-4" onRetry={() => void refetch()} />
+          ) : (
           <DataTable
             columns={columns}
             data={rows}
@@ -168,6 +172,7 @@ export default function Idempotencia() {
             emptyMessage="Sin claves de idempotencia recientes"
             density={TABLE_DENSITY.listado}
           />
+          )}
         </CardContent>
       </Card>
     </PageContainer>

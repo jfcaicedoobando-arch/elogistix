@@ -33,7 +33,7 @@ function OrgInfoCardBase() {
           <Building2 className="h-5 w-5" /> Organización
         </CardTitle>
         <CardDescription>
-          Tu cuenta tenant en Libre Carga. Estos datos los administra el equipo
+          Tu organización en Libre Carga. Estos datos los administra el equipo
           de Libre Carga; comparte el ID si necesitas soporte.
         </CardDescription>
       </CardHeader>
@@ -45,7 +45,7 @@ function OrgInfoCardBase() {
         <div className="space-y-1">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">Plan</div>
           <div>
-            <Badge variant="secondary" className="font-normal">{organization.plan || "—"}</Badge>
+            <Badge variant="secondary" className="font-normal capitalize">{organization.plan || "—"}</Badge>
             {!organization.activo && (
               <Badge variant="destructive" className="ml-2 font-normal">Inactiva</Badge>
             )}

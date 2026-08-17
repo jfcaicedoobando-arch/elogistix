@@ -33,7 +33,7 @@ export function LandingDemo() {
           </p>
         </div>
 
-        <div className="relative mx-auto mt-10 aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-border bg-primary shadow-[var(--shadow-overlay)]">
+        <div className="relative mx-auto mt-10 aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-border bg-primary shadow-overlay">
           {!videoError ? (
             <video
               className="h-full w-full object-cover"

@@ -21,6 +21,7 @@ import { NuevaTarifaDemoraDialog } from "@/features/costeo/components/NuevaTarif
 import { todayLocalISO } from "@/lib/date/today";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 const today = () => todayLocalISO();
 const EMPTY: DemoraVentaTarifaInput = {
@@ -34,7 +35,7 @@ const EMPTY: DemoraVentaTarifaInput = {
 };
 
 export default function CosteoDemorasVenta() {
-  const { data: tarifas = [], isLoading } = useDemorasVenta();
+  const { data: tarifas = [], isLoading, isError, refetch } = useDemorasVenta();
   const { crear, eliminar } = useDemorasVentaMutations();
   const { data: tipos = [] } = useTiposContenedor();
   const [open, setOpen] = useState(false);
@@ -165,7 +166,9 @@ export default function CosteoDemorasVenta() {
         }
       />
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorState onRetry={() => void refetch()} />
+      ) : isLoading ? (
         <ListSkeleton rows={5} variant="table" />
       ) : (
         <Card>

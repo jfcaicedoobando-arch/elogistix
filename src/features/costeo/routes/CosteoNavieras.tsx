@@ -22,6 +22,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { NavieraQuickCreate } from "@/features/costeo/components/NavieraQuickCreate";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -31,8 +32,8 @@ interface FilaNaviera {
 }
 
 export default function CosteoNavieras() {
-  const { data: navieras = [], isLoading: loadingNav } = useNavierasCatalogo();
-  const { data: condiciones = [], isLoading: loadingCond } = useCondicionesNaviera();
+  const { data: navieras = [], isLoading: loadingNav, isError: errorNav, refetch: refetchNav } = useNavierasCatalogo();
+  const { data: condiciones = [], isLoading: loadingCond, isError: errorCond, refetch: refetchCond } = useCondicionesNaviera();
   const [seleccion, setSeleccion] = useState<FilaNaviera | null>(null);
 
   const filas: FilaNaviera[] = useMemo(() => {
@@ -46,6 +47,11 @@ export default function CosteoNavieras() {
   }, [navieras, condiciones]);
 
   const isLoading = loadingNav || loadingCond;
+  const isError = errorNav || errorCond;
+  const refetchAll = () => {
+    void refetchNav();
+    void refetchCond();
+  };
 
   const columns: ColumnDef<FilaNaviera, unknown>[] = useMemo(
     () =>
@@ -111,7 +117,9 @@ export default function CosteoNavieras() {
         actions={<NavieraQuickCreate variante="boton" onCreada={() => undefined} />}
       />
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorState onRetry={refetchAll} />
+      ) : isLoading ? (
         <ListSkeleton rows={6} variant="table" />
       ) : (
         <Card>

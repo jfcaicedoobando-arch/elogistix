@@ -35,7 +35,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const { data: embarque, isLoading } = useEmbarque(id);
+  const { data: embarque, isLoading, isError, refetch } = useEmbarque(id);
   const { data: conceptosVentaDb = [], isLoading: cargandoVenta } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCostoDb = [], isLoading: cargandoCosto } = useEmbarqueConceptosCosto(id);
   const { data: contenedoresDb = [], isLoading: cargandoContenedores } = useContenedoresEmbarque(id);
@@ -177,6 +177,8 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   return {
     embarque,
     isLoading: isLoading || cargandoVenta || cargandoCosto || cargandoContenedores,
+    isError,
+    refetch,
     methods,
     currentStep,
     setCurrentStep,

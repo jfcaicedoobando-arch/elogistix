@@ -14,6 +14,7 @@ import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
 import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 const MODULOS = MODULOS_BITACORA;
 
@@ -61,7 +62,7 @@ export default function Bitacora() {
 
   const fechaDesde = useMemo(() => calcularFechaDesde(rangoFiltro), [rangoFiltro]);
 
-  const { data, isLoading } = useBitacora({
+  const { data, isLoading, isError, refetch } = useBitacora({
     modulo: moduloFiltro === "todos" ? undefined : moduloFiltro,
     acciones,
     fechaDesde,
@@ -83,6 +84,9 @@ export default function Bitacora() {
   }
 
   function renderActividad() {
+    if (isError) {
+      return <ErrorState onRetry={() => void refetch()} />;
+    }
     if (isLoading) {
       return <ListSkeleton rows={8} />;
     }

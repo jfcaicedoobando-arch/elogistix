@@ -49,17 +49,26 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
         ) : (
           <ul className="mt-4 space-y-3">
             {porModo.map((m) => {
+              // VB-21: un modo sin ventas en el mes no tiene margen medible;
+              // mostrar "—" en vez de "0.0%" con barra vacía (desbalanceaba la card).
+              const sinOperaciones = m.venta_mxn === 0 && m.margen_pct === 0;
               const w = Math.min(100, (Math.abs(m.margen_pct) / maxModo) * 100);
               const color = m.margen_pct < 0 ? "bg-destructive" : "bg-primary";
               return (
                 <li key={m.modo}>
                   <div className="flex items-center justify-between text-sm">
                     <span>{m.modo}</span>
-                    <span className="tabular-nums font-medium">{m.margen_pct.toFixed(1)}%</span>
+                    <span className="tabular-nums font-medium">
+                      {sinOperaciones ? "—" : `${m.margen_pct.toFixed(1)}%`}
+                    </span>
                   </div>
-                  <div className="mt-1 h-2 rounded bg-muted overflow-hidden">
-                    <div className={`h-full ${color}`} style={{ width: `${w}%` }} />
-                  </div>
+                  {sinOperaciones ? (
+                    <p className="mt-1 text-xs text-muted-foreground">Sin operaciones en el mes</p>
+                  ) : (
+                    <div className="mt-1 h-2 rounded bg-muted overflow-hidden">
+                      <div className={`h-full ${color}`} style={{ width: `${w}%` }} />
+                    </div>
+                  )}
                 </li>
               );
             })}

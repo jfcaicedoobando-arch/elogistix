@@ -32,6 +32,7 @@ import { useProximasActividades } from "@/features/crm/hooks/useProximasActivida
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function Oportunidades() {
   useDocumentTitle('Oportunidades');
@@ -51,7 +52,7 @@ export default function Oportunidades() {
     [usuarios],
   );
   const PAGE_SIZE = 500;
-  const { data, isLoading } = useOportunidades({ search: debounced, pageSize: PAGE_SIZE });
+  const { data, isLoading, isError, refetch } = useOportunidades({ search: debounced, pageSize: PAGE_SIZE });
   const opsRaw = useMemo(() => data?.data ?? [], [data]);
   // EC-17: la página dura de 500 no avisaba cuando el servidor tenía más.
   const totalServidor = data?.count ?? opsRaw.length;
@@ -162,7 +163,9 @@ export default function Oportunidades() {
           <TabsTrigger value="tabla">Tabla</TabsTrigger>
         </TabsList>
         <TabsContent value="kanban" className="mt-4">
-          {isLoading ? (
+          {isError ? (
+            <ErrorState onRetry={() => void refetch()} />
+          ) : isLoading ? (
             <LoadingState label="Cargando oportunidades…" />
           ) : (
             <OportunidadKanban
@@ -176,6 +179,9 @@ export default function Oportunidades() {
         <TabsContent value="tabla" className="mt-4">
           <Card>
             <CardContent className="p-0">
+              {isError ? (
+                <ErrorState className="m-4" onRetry={() => void refetch()} />
+              ) : (
               <DataTable
                 columns={columnas}
                 data={ops}
@@ -185,6 +191,7 @@ export default function Oportunidades() {
                 rowKey={(o) => o.id}
                 density={TABLE_DENSITY.listado}
               />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

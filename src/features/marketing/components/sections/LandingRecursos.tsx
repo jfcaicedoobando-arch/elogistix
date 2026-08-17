@@ -46,7 +46,7 @@ export function LandingRecursos() {
           {RECURSOS.map((r) => (
             <Card
               key={r.id}
-              className="group relative overflow-hidden p-8 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-overlay)]"
+              className="group relative overflow-hidden p-8 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-overlay"
             >
               <div
                 aria-hidden="true"

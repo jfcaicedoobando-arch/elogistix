@@ -145,7 +145,7 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
         placeholder="Notas (opcional)"
         value={fila.notas || ""}
         onChange={e => onUpdate(gi, "notas", e.target.value)}
-        className="mt-1 text-xs h-8 resize-none focus:min-h-16 transition-all"
+        className="mt-1 text-xs h-8 resize-none focus:min-h-16 transition-[min-height]"
       />
     </div>
   );

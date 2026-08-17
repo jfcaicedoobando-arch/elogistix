@@ -34,6 +34,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { queryKeys } from "@/lib/query";
 import { baseActividadColumns, actividadActionColumn } from "./actividadesColumns";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 
 type ActividadesFilters = { tipo: string; estado: string; responsable: string } & Record<string, string>;
@@ -152,6 +153,9 @@ export default function Actividades() {
       />
       <Card>
         <CardContent className="p-0">
+          {list.error ? (
+            <ErrorState className="m-4" onRetry={() => void list.refetch()} />
+          ) : (
           <DataTable
             columns={columns}
             data={items}
@@ -168,6 +172,7 @@ export default function Actividades() {
               pageSizeLabels: { 500: "500" },
             }}
           />
+          )}
         </CardContent>
       </Card>
     </PageContainer>

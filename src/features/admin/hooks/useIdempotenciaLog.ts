@@ -22,7 +22,7 @@ export type FnFilter =
 export function useIdempotenciaLog(enabled: boolean) {
   const [filtroFn, setFiltroFn] = useState<FnFilter>("todos");
 
-  const { data, isLoading, isFetching, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.idempotenciaLog,
     queryFn: () => listIdempotencyLog(200, 0),
     enabled,
@@ -41,6 +41,7 @@ export function useIdempotenciaLog(enabled: boolean) {
     setFiltroFn,
     rows,
     isLoading,
+    isError,
     isFetching,
     refetch,
     totales: { totalCreados, totalCacheados, totalDuplicadosBloqueados },

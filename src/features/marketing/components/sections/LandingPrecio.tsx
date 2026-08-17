@@ -30,7 +30,7 @@ export function LandingPrecio() {
             aria-hidden="true"
             className="pointer-events-none absolute -inset-4 -z-10 rounded-3xl bg-accent/10 opacity-60 blur-2xl"
           />
-          <div className="overflow-hidden rounded-2xl border border-accent/40 bg-card shadow-[var(--shadow-overlay)]">
+          <div className="overflow-hidden rounded-2xl border border-accent/40 bg-card shadow-overlay">
             <div className="flex items-center justify-center gap-2 bg-primary px-8 py-3 text-center">
               <Sparkles className="h-4 w-4 text-accent" />
               <span className="text-xs font-semibold uppercase tracking-wider text-accent">

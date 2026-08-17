@@ -27,7 +27,7 @@ export const PORTAL_EMBARQUE_PROGRESS_STEPS: ProgressStep[] = [
  * estado visual, índice del paso actual, días hasta ETA y conteo de docs.
  */
 export function usePortalEmbarqueDetalleController(id: string | undefined) {
-  const { data: embarque, isLoading } = usePortalEmbarque(id);
+  const { data: embarque, isLoading, isError, refetch } = usePortalEmbarque(id);
   const { data: eventos = [] } = usePortalEventos(id);
   const { data: documentos = [] } = usePortalDocumentos(id);
 
@@ -72,6 +72,8 @@ export function usePortalEmbarqueDetalleController(id: string | undefined) {
   return {
     embarque,
     isLoading,
+    isError,
+    refetch,
     eventos,
     documentos,
     estadoVisual,

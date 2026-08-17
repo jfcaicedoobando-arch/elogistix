@@ -27,6 +27,20 @@ export function AuditoriaRiesgoFinancieroCard({ total, porRegla }: Props) {
     .filter(([, v]) => (v ?? 0) > 0)
     .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0));
 
+  // VB-14: sin fugas la card se veía como un rectángulo enorme vacío;
+  // se compacta usando sublabel y variante neutra.
+  if (items.length === 0) {
+    return (
+      <KpiCard
+        label="Riesgo financiero pendiente"
+        value={fmt(total)}
+        icon={TrendingDown}
+        variant={total > 0 ? "warning" : "default"}
+        sublabel="Sin fugas financieras detectadas en los embarques actuales."
+      />
+    );
+  }
+
   return (
     <KpiCard
       label="Riesgo financiero pendiente"
@@ -34,12 +48,7 @@ export function AuditoriaRiesgoFinancieroCard({ total, porRegla }: Props) {
       icon={TrendingDown}
       variant="warning"
     >
-      {items.length === 0 ? (
-        <p className="text-xs text-muted-foreground mt-2">
-          Sin fugas financieras detectadas en los embarques actuales.
-        </p>
-      ) : (
-        <div className="space-y-1 text-xs mt-2">
+      <div className="space-y-1 text-xs mt-2">
           {items.map(([regla, monto]) => (
             <div
               key={regla}
@@ -53,8 +62,7 @@ export function AuditoriaRiesgoFinancieroCard({ total, porRegla }: Props) {
               </span>
             </div>
           ))}
-        </div>
-      )}
+      </div>
     </KpiCard>
   );
 }

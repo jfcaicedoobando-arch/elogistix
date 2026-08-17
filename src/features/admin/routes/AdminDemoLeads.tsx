@@ -16,6 +16,7 @@ import { useToast, useDocumentTitle } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { todayLocalISO } from "@/lib/date/today";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 
 function toCsv(rows: DemoLead[]): string {
@@ -52,7 +53,7 @@ function toCsv(rows: DemoLead[]): string {
 export default function AdminDemoLeads() {
   useDocumentTitle('Leads de la demo');
   const { toast } = useToast();
-  const { data, isLoading } = useQuery({ queryKey: queryKeys.demoLeads.all, queryFn: fetchDemoLeads });
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: queryKeys.demoLeads.all, queryFn: fetchDemoLeads });
   const rows = data ?? [];
 
   const handleExport = () => {
@@ -86,7 +87,9 @@ export default function AdminDemoLeads() {
         }
       />
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorState onRetry={() => void refetch()} />
+      ) : isLoading ? (
         <EmptyStateInline loading message="Cargando…" />
       ) : rows.length === 0 ? (
         <Card>

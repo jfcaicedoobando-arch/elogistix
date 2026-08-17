@@ -18,7 +18,7 @@ export default function AvisoIncotermCIF({ incoterm }: { incoterm: string }) {
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
         <div className="space-y-1.5 text-sm">
           <p className="font-semibold text-foreground">
-            Embarque {incoterm}: flete y seguro contratados en origen
+            {`Embarque ${incoterm}: flete y seguro contratados en origen`}
           </p>
           <p className="text-muted-foreground">
             Bajo Incoterms® 2020 <strong>{incoterm}</strong>, el vendedor/shipper

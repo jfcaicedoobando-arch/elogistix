@@ -67,7 +67,7 @@ export function buildRepPendientesColumns(o: Opts) {
               aria-label={`Timbrar REP de la factura ${row.original.factura_numero}`}
             >
               {enProceso ? (
-                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <ReceiptText className="mr-2 h-3.5 w-3.5" />
               )}

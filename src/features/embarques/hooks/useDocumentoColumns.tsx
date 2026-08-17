@@ -69,7 +69,7 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                   input.click();
                 }}
               >
-                {uploadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Upload className="h-3.5 w-3.5 mr-1" />}
+                {uploadingDocId === doc.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
                 Subir
               </Button>
             )}
@@ -82,7 +82,7 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                 title={esNoAplica ? "Volver a marcar como pendiente" : "Marcar como no aplica para este embarque"}
               >
                 {togglingNoAplicaDocId === doc.id
-                  ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                  ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
                   : esNoAplica
                     ? <RotateCcw className="h-3.5 w-3.5 mr-1" />
                     : <Ban className="h-3.5 w-3.5 mr-1" />}
@@ -97,7 +97,7 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                   disabled={downloadingDocId === doc.id}
                   onClick={(e) => { e.stopPropagation(); onDownload(doc.archivo!, doc.id); }}
                 >
-                  {downloadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Download className="h-3.5 w-3.5 mr-1" />}
+                  {downloadingDocId === doc.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Download className="h-4 w-4 mr-1" />}
                   Descargar
                 </Button>
                 {canEdit && onDelete && (
@@ -108,7 +108,7 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                     disabled={deletingDocId === doc.id}
                     onClick={(e) => { e.stopPropagation(); onRequestDelete(doc); }}
                   >
-                    {deletingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+                    {deletingDocId === doc.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trash2 className="h-4 w-4 mr-1" />}
                     Eliminar
                   </Button>
                 )}

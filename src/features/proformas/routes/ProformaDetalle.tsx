@@ -22,17 +22,26 @@ import { buildKpisProforma } from "@/features/proformas/domain/proformaKpis";
 import { ProformaTabs } from "@/features/proformas/components/detalle/ProformaTabs";
 import { ProformaRail } from "@/features/proformas/components/detalle/ProformaRail";
 import { ProformaDetalleHeader } from "@/features/proformas/components/detalle/ProformaDetalleHeader";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 
 export default function ProformaDetalle() {
   const { id } = useParams<{ id: string }>();
-  const { data, isLoading } = useProformaDetalle(id);
+  const { data, isLoading, isError, refetch } = useProformaDetalle(id);
   useRegisterBreadcrumbLabel(id, data?.proforma.numero);
 
   if (isLoading) {
     return (
       <PageContainer>
         <LoadingState label="Cargando proforma…" />
+      </PageContainer>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageContainer>
+        <ErrorState onRetry={() => void refetch()} />
       </PageContainer>
     );
   }

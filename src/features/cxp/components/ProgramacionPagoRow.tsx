@@ -66,7 +66,7 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
           onClick={() => prog.mutate({ facturaId, fecha: valor })}
         >
           {prog.isPending
-            ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+            ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
             : null}
           Guardar
         </Button>

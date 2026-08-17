@@ -52,7 +52,7 @@ export function useCosteoTarifasPageState() {
     [estado, agenteId, tipoId, rutaIdFromUrl],
   );
 
-  const { data: tarifas = [], isLoading } = useCosteoTarifas(tarifaFilters);
+  const { data: tarifas = [], isLoading, isError, refetch } = useCosteoTarifas(tarifaFilters);
   const { eliminar } = useCosteoTarifaMutations();
 
   const tarifasFiltradas = useMemo(() => {
@@ -138,6 +138,8 @@ export function useCosteoTarifasPageState() {
     tarifas,
     tarifasFiltradas,
     isLoading,
+    isError,
+    refetch,
     pendientesCount,
     // filtros
     estado, setEstado,

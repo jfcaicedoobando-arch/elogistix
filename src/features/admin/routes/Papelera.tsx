@@ -16,11 +16,12 @@ import { usePapelera, type SoftTable, type TrashRow } from "@/features/admin/hoo
 import { TABLAS, GRUPOS } from "./papelera/tablas";
 import { buildPapeleraColumns } from "./papelera/columns";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function Papelera() {
   useDocumentTitle('Papelera');
   const { isAdmin } = usePermissions();
-  const { tabla, setTabla, rows, isLoading, counts, restore, purge } = usePapelera(isAdmin);
+  const { tabla, setTabla, rows, isLoading, isError, refetch, counts, restore, purge } = usePapelera(isAdmin);
   const [purgeTarget, setPurgeTarget] = useState<TrashRow | null>(null);
 
   const countByTable = useMemo(() => {
@@ -47,7 +48,7 @@ export default function Papelera() {
       <PageHeader
         icon={<Trash2 className="h-6 w-6" />}
         title="Papelera"
-        description="Registros eliminados (soft delete). Restaura o purga definitivamente. Al restaurar un embarque, sus contenedores, documentos, notas, eventos, facturas, seguros y conceptos se recuperan juntos."
+        description="Registros eliminados. Restaura o purga definitivamente. Al restaurar un embarque, sus contenedores, documentos, notas, eventos, facturas, seguros y conceptos se recuperan juntos."
       />
 
       <div className="flex items-center gap-3 flex-wrap">
@@ -88,6 +89,9 @@ export default function Papelera() {
 
       <Card>
         <CardContent className="p-0">
+          {isError ? (
+            <ErrorState className="m-4" onRetry={() => void refetch()} />
+          ) : (
           <DataTable
             columns={columns}
             data={rows}
@@ -96,6 +100,7 @@ export default function Papelera() {
             emptyMessage="La papelera está vacía"
             density={TABLE_DENSITY.listado}
           />
+          )}
         </CardContent>
       </Card>
 

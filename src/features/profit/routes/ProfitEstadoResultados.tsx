@@ -21,6 +21,7 @@ import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle"
 import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { usePdfExport } from "@/hooks/shared";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
@@ -95,7 +96,9 @@ export default function ProfitEstadoResultados() {
 
       <Card>
         <CardContent className="p-0">
-          {c.isLoading ? (
+          {c.isError ? (
+            <ErrorState className="m-4" onRetry={() => void c.refetch()} />
+          ) : c.isLoading ? (
             <div className="p-6"><ListSkeleton rows={4} /></div>
           ) : sinDatos || !data ? (
             <EmptyStateInline

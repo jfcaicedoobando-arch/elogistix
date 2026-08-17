@@ -102,7 +102,7 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, n
           disabled={loading || !puedeIntentar}
           title={!puedeIntentar ? "Espera al menos 3 minutos desde el intento de timbrado." : undefined}
         >
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
           Verificar y recuperar
         </Button>
       </AlertDescription>

@@ -90,7 +90,7 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
             <div className="w-24 h-2.5 rounded-full bg-secondary border border-border/40 overflow-hidden">
               {hasGlobal ? (
                 <div
-                  className="h-full rounded-full bg-primary transition-all min-w-[4px]"
+                  className="h-full rounded-full bg-primary transition-[width] min-w-[4px]"
                   style={{ width: `${pct}%` }}
                 />
               ) : null}

@@ -61,6 +61,8 @@ export function usePapelera(enabled: boolean) {
     setTabla,
     rows: query.data ?? [],
     isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
     counts: countsQuery.data ?? [],
     restore,
     purge,

@@ -69,7 +69,7 @@ export function MonedaImportesSection({
                   title="Consulta la Publicación DOF Banxico vigente en la fecha de emisión."
                 >
                   {dofLoading
-                    ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                     : <RefreshCw className="h-3 w-3 mr-1" />}
                   Obtener DOF
                 </Button>

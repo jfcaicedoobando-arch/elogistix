@@ -29,6 +29,7 @@ import { fetchExchangeRates } from "@/features/catalogos/services";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 
 function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }
@@ -38,7 +39,7 @@ export default function ComprasReportes() {
   const [desde, setDesde] = useState<string>(firstOfYear());
   const [hasta, setHasta] = useState<string>(today());
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: compras.reportes({ desde, hasta }),
     queryFn: () => fetchFacturasReporte(desde, hasta),
   });
@@ -140,6 +141,10 @@ export default function ComprasReportes() {
           </div>
         </CardContent>
       </Card>
+
+      {isError && (
+        <ErrorState className="mb-4" onRetry={() => void refetch()} />
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard label="Facturas en el período" value={String(numFacturas)} icon={TrendingUp} />
