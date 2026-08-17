@@ -9610,6 +9610,7 @@ export type Database = {
         Args: {
           p_organization_id: string
           p_periodo: string
+          p_request_id?: string
           p_vendedora_id: string
         }
         Returns: string
