@@ -15,11 +15,13 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.crm_presupuesto_mensual TO authen
 GRANT ALL ON public.crm_presupuesto_mensual TO service_role;
 ALTER TABLE public.crm_presupuesto_mensual ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Lectura presupuesto de la org" ON public.crm_presupuesto_mensual;
 CREATE POLICY "Lectura presupuesto de la org"
   ON public.crm_presupuesto_mensual FOR SELECT TO authenticated
   USING (organization_id = (SELECT public.current_user_org_id())
          OR (SELECT public.has_role((SELECT auth.uid()), 'super_admin'::public.app_role)));
 
+DROP POLICY IF EXISTS "Gerencia administra presupuesto" ON public.crm_presupuesto_mensual;
 CREATE POLICY "Gerencia administra presupuesto"
   ON public.crm_presupuesto_mensual FOR ALL TO authenticated
   USING (
@@ -43,6 +45,7 @@ CREATE POLICY "Gerencia administra presupuesto"
     )
   );
 
+DROP POLICY IF EXISTS "Scope tenant activo super admin" ON public.crm_presupuesto_mensual;
 CREATE POLICY "Scope tenant activo super admin"
   ON public.crm_presupuesto_mensual AS RESTRICTIVE FOR ALL TO authenticated
   USING (public.rls_tenant_scope_ok(organization_id))
@@ -70,11 +73,13 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.crm_metas_actividad TO authentica
 GRANT ALL ON public.crm_metas_actividad TO service_role;
 ALTER TABLE public.crm_metas_actividad ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Lectura metas de la org" ON public.crm_metas_actividad;
 CREATE POLICY "Lectura metas de la org"
   ON public.crm_metas_actividad FOR SELECT TO authenticated
   USING (organization_id = (SELECT public.current_user_org_id())
          OR (SELECT public.has_role((SELECT auth.uid()), 'super_admin'::public.app_role)));
 
+DROP POLICY IF EXISTS "Gerencia administra metas" ON public.crm_metas_actividad;
 CREATE POLICY "Gerencia administra metas"
   ON public.crm_metas_actividad FOR ALL TO authenticated
   USING (
@@ -98,6 +103,7 @@ CREATE POLICY "Gerencia administra metas"
     )
   );
 
+DROP POLICY IF EXISTS "Scope tenant activo super admin" ON public.crm_metas_actividad;
 CREATE POLICY "Scope tenant activo super admin"
   ON public.crm_metas_actividad AS RESTRICTIVE FOR ALL TO authenticated
   USING (public.rls_tenant_scope_ok(organization_id))

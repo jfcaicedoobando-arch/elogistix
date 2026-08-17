@@ -1,33 +1,23 @@
 /**
  * Tarjeta de oportunidad del Kanban: monto, probabilidad, próxima acción,
  * avance de criterios de salida y meta de monto/fecha.
+ *
+ * v13.629.1 — Las sub-filas viven en `OportunidadCard.parts.tsx`.
  */
 import { useDraggable } from "@dnd-kit/core";
-import { Calendar, CheckCircle2, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { formatFechaEs } from "@/lib/formatters/dates";
 import { todayLocalISO } from "@/lib/date/today";
+import { estadoMeta, semaforoCriterios, type AvanceCriterios } from "@/features/crm/domain/criterios";
 import {
-  estadoMeta, porcentajeCriterios, semaforoCriterios, type AvanceCriterios,
-} from "@/features/crm/domain/criterios";
+  CriteriosRow, MetaRow, ProximaRow,
+} from "@/features/crm/components/kanban/OportunidadCard.parts";
+import { formatProx } from "@/features/crm/domain/proximaActividadLabel";
 import type { ProximaActividad } from "@/features/crm/hooks";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
 const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
-
-export function formatProx(prox: ProximaActividad | undefined): string {
-  if (!prox) return "Sin próxima acción";
-  if (!prox.fecha_programada) return prox.asunto;
-  const d = new Date(prox.fecha_programada);
-  const diff = Math.floor((d.getTime() - Date.now()) / 86_400_000);
-  if (diff < 0) return `Vencida · ${prox.asunto}`;
-  if (diff === 0) return `Hoy · ${prox.asunto}`;
-  if (diff === 1) return `Mañana · ${prox.asunto}`;
-  return `${formatFechaEs(prox.fecha_programada)} · ${prox.asunto}`;
-}
 
 interface Props {
   op: CrmOportunidadRow;
@@ -44,7 +34,9 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
     opacity: isDragging ? 0.4 : 1,
     cursor: "grab",
   };
-  const vencida = proxima?.fecha_programada && new Date(proxima.fecha_programada) < new Date();
+  const vencida = Boolean(
+    proxima?.fecha_programada && new Date(proxima.fecha_programada) < new Date(),
+  );
   const semaforo = semaforoCriterios(avance);
   const meta = estadoMeta(
     {
@@ -80,42 +72,19 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
         </div>
 
         {semaforo !== "sin_criterios" && avance ? (
-          <div className="flex items-center gap-2 pt-1">
-            <Progress value={porcentajeCriterios(avance) * 100} className="h-1.5 flex-1" />
-            <span
-              className={`text-2xs flex items-center gap-1 ${
-                semaforo === "completo" ? "text-success" : "text-warning"
-              }`}
-            >
-              {semaforo === "completo" ? <CheckCircle2 className="h-3 w-3" /> : null}
-              {avance.cumplidos}/{avance.total}
-            </span>
-          </div>
+          <CriteriosRow avance={avance} completo={semaforo === "completo"} />
         ) : null}
 
         {meta.tieneMeta ? (
-          <div
-            className={`text-2xs flex items-center gap-1 ${
-              meta.metaVencida ? "text-destructive" : "text-muted-foreground"
-            }`}
-          >
-            <Target className="h-3 w-3 shrink-0" />
-            <span className="truncate">
-              {op.fecha_meta_cierre ? `Meta ${formatFechaEs(op.fecha_meta_cierre)}` : "Meta"}
-              {meta.avance != null ? ` · ${Math.round(meta.avance * 100)}% de ${fmtMxn(Number(op.monto_meta ?? 0))}` : ""}
-              {meta.metaVencida ? " · vencida" : ""}
-            </span>
-          </div>
+          <MetaRow
+            vencida={Boolean(meta.metaVencida)}
+            fechaMeta={op.fecha_meta_cierre ?? null}
+            avance={meta.avance ?? null}
+            montoMeta={Number(op.monto_meta ?? 0)}
+          />
         ) : null}
 
-        <div
-          className={`text-2xs flex items-center gap-1 truncate pt-1 border-t border-border/40 mt-1 ${
-            vencida ? "text-destructive" : "text-muted-foreground"
-          }`}
-        >
-          <Calendar className="h-3 w-3 shrink-0" />
-          <span className="truncate">{formatProx(proxima)}</span>
-        </div>
+        <ProximaRow texto={formatProx(proxima)} vencida={vencida} />
       </CardContent>
     </Card>
   );

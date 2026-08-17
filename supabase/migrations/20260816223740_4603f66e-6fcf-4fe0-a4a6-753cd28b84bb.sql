@@ -197,3 +197,9 @@ $$;
 
 REVOKE ALL ON FUNCTION public.crm_higiene_pipeline() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.crm_higiene_pipeline() TO authenticated, service_role;
+-- v13.629.1 (CI H6): endurecimiento de permisos de las funciones trigger
+-- SECURITY DEFINER creadas arriba (ya revocadas a anon en migración posterior).
+REVOKE ALL ON FUNCTION public._crm_registrar_cambio_etapa() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._crm_registrar_cambio_etapa() TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public._crm_actividad_toca_oportunidad() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._crm_actividad_toca_oportunidad() TO authenticated, service_role;

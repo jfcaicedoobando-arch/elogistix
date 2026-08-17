@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.629.1] - 2026-08-17
+- CI verde: mensajes en español para 7 códigos de error (conceptos fiscales, factura con pagos, cancelada, permisos de margen, oportunidad inexistente), avisos de error en los criterios de salida del CRM y migraciones del CRM endurecidas (índices/políticas idempotentes y permisos de las funciones internas).
+- Se simplificaron internamente la tarjeta del Kanban, el detalle de oportunidad y el alta de oportunidad (sin cambios visibles) para respetar los límites de complejidad del proyecto.
+
 ## [13.629.0] - 2026-08-17
 - Modal "Editar conceptos" de facturas de proveedor rediseñado: tabla con encabezados (Descripción, Cantidad, Precio, IVA, Unidad, Total línea), total por renglón en la misma fila y estado vacío con guía cuando no hay partidas.
 - Semáforo de cuadre en el encabezado del modal: "Cuadrado" en verde o "Faltan/Sobran $X" en ámbar, con la suma de líneas y el subtotal siempre visibles.
