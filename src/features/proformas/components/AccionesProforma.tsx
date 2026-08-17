@@ -47,7 +47,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   const [enviarOpen, setEnviarOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState<null | "aceptada" | "rechazada">(null);
   const [creditoAlerta, setCreditoAlerta] = useState<ValidarLimiteResultado | null>(null);
-  const { canEmitirFactura, canResponderProformaManual } = usePermissions();
+  const { canEmitirFactura, canResponderProformaManual, canEditarProforma } = usePermissions();
   const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
   const validarLimite = useValidarLimiteCredito();
   const { autorizacion } = useClienteAutorizacion(proforma.cliente_id ?? null);
@@ -123,6 +123,8 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     aprobando,
     puedeAprobarInterna,
     puedeResponder,
+    // VF-20: el vendedor (sólo lectura) no ve la acción de envío.
+    puedeEnviar: canEditarProforma,
     onDescargar,
     onEnviar: () => setEnviarOpen(true),
     onAprobarInterna: () => aprobarInterna(proforma.id),

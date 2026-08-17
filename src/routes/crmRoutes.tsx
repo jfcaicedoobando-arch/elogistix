@@ -24,7 +24,7 @@ export const crmChildRoutes = (
     <Route path="actividades" element={<ActividadesCrm />} />
     <Route path="higiene" element={<CrmHigiene />} />
     <Route path="analitica" element={<AnaliticaCrm />} />
-    <Route path="forecast" element={<Navigate to="/crm/analitica?tab=forecast" replace />} />
+    <Route path="forecast" element={<Navigate to="/crm/analitica" replace />} />
     <Route path="reportes" element={<Navigate to="/crm/analitica?tab=embudo" replace />} />
     <Route path="configuracion" element={<CrmConfiguracion />} />
   </Fragment>

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.645.0] - 2026-08-17
+
+### Parche 25 · Decisiones de producto (VT-10, VF-21, VF-20)
+- VT-10: el centro de ayuda `/ayuda` ahora es una ruta pública (nuevo `AyudaPublicShell` con cabecera mínima y enlace "Iniciar sesión"); el contenido del FAQ no cambia.
+- VF-21: `/crm/forecast` redirige a `/crm/analitica` (vista canónica) sin el query legacy `?tab=forecast`.
+- VF-20: el rol `vendedor` accede a `/proformas` y su detalle en SÓLO LECTURA. Nueva migración que añade `vendedor` a la policy de lectura de `proformas`; write/update/delete intactas. Nuevo `PROFORMAS_ESCRITURA` + `canEditarProforma` ocultan "Enviar al cliente" a roles sin escritura.
+
 ## [13.644.1] - 2026-08-17
 - Oportunidades: el aviso de lista truncada usa el token semántico `text-warning` en lugar del literal `text-amber-600` (corrige la prueba de arquitectura de literales de color en CI).
 

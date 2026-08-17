@@ -4,6 +4,7 @@
  */
 import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
+import { AyudaPublicShell } from "@/features/dashboard/components/AyudaPublicShell";
 
 const Login = lazy(() => import("@/features/auth/routes/Login"));
 const ResetPassword = lazy(() => import("@/features/auth/routes/ResetPassword"));
@@ -32,6 +33,8 @@ export const publicRoutes = (
     <Route path="/unsubscribe" element={<Unsubscribe />} />
     {/* UIB-07: vista QA del logo — sólo en dev; en producción cae al 404. */}
     {import.meta.env.DEV && <Route path="/logo-preview" element={<LogoPreview />} />}
+    {/* VT-10: el centro de ayuda (FAQ) es público. */}
+    <Route path="/ayuda" element={<AyudaPublicShell />} />
     <Route path="/legal/privacidad" element={<Privacidad />} />
     <Route path="/legal/terminos" element={<Terminos />} />
     <Route path="/legal/seguridad" element={<Seguridad />} />

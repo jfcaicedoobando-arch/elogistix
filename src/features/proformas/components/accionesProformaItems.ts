@@ -11,6 +11,8 @@ export interface SecondaryParams {
   aprobando: boolean;
   puedeAprobarInterna: boolean;
   puedeResponder: boolean;
+  /** VF-20: roles de sólo lectura (ej. vendedor) no ven "Enviar al cliente". */
+  puedeEnviar: boolean;
   onDescargar: () => void;
   onEnviar: () => void;
   onAprobarInterna: () => void;
@@ -22,7 +24,7 @@ export function buildSecondaryItems(p: SecondaryParams): DetalleActionItem[] {
   const items: DetalleActionItem[] = [
     { id: "pdf", label: "Descargar PDF", icon: Download, onClick: p.onDescargar, loading: p.cargando },
   ];
-  if (!p.facturada) {
+  if (!p.facturada && p.puedeEnviar) {
     items.push({ id: "enviar", label: "Enviar al cliente", icon: Mail, onClick: p.onEnviar });
   }
   if (p.puedeAprobarInterna) {

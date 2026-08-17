@@ -13,6 +13,20 @@ export const EMITIR_FACTURA_CLIENTE: readonly AppRole[] = [
   "contador",
 ];
 
+/**
+ * VF-20 — Escritura sobre proformas (enviar al cliente, convertir, registrar
+ * respuesta manual). Espejo de las policies RLS `Tenant write/update/delete
+ * proformas`. El vendedor tiene acceso de SÓLO LECTURA a `/proformas`
+ * (`PROFORMAS_READ_ROLES` en `roleRouteMatrix.ts`), por lo que NO aparece aquí.
+ */
+export const PROFORMAS_ESCRITURA: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "operador",
+  "contador",
+];
+
 export const CAPTURAR_FACTURA_PROVEEDOR: readonly AppRole[] = [
   "super_admin",
   "admin_org",

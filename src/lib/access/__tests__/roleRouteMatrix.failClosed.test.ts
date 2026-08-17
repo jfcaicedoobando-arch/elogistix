@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { hasRouteAccess, RUTAS_LIBRES } from "@/lib/access/roleRouteMatrix";
+import { PROFORMAS_ESCRITURA } from "@/lib/access/permissionMatrix";
 
 /**
  * M11 (Ola 4) — La matriz de rutas es fail-closed: una ruta desconocida se
@@ -35,5 +36,19 @@ describe("roleRouteMatrix · fail-closed", () => {
   it("sin rol nunca hay acceso a rutas de negocio", () => {
     expect(hasRouteAccess(null, "/embarques")).toBe(false);
     expect(hasRouteAccess(undefined, "/facturacion")).toBe(false);
+  });
+});
+
+describe("roleRouteMatrix · VF-20 proformas sólo lectura vendedor", () => {
+  it("el vendedor accede a /proformas", () => {
+    expect(hasRouteAccess("vendedor", "/proformas")).toBe(true);
+    expect(hasRouteAccess("vendedor", "/proformas?estado=aceptada")).toBe(true);
+  });
+
+  it("la escritura de proformas sigue excluyendo al vendedor", () => {
+    expect(PROFORMAS_ESCRITURA).not.toContain("vendedor");
+    expect(PROFORMAS_ESCRITURA).toEqual(
+      expect.arrayContaining(["super_admin", "admin_org", "admin", "operador", "contador"]),
+    );
   });
 });
