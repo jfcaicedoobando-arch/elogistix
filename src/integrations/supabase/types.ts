@@ -9384,6 +9384,7 @@ export type Database = {
           p_metodo_pago?: string
           p_monto: number
           p_referencia?: string
+          p_request_id?: string
         }
         Returns: Json
       }
@@ -10389,6 +10390,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"][]
       }
       run_auditoria_backfill_legacy: { Args: never; Returns: Json }
+      saldo_cuenta_bancaria: { Args: { p_cuenta_id: string }; Returns: number }
       saldo_factura: { Args: { p_factura_id: string }; Returns: number }
       saldo_factura_bruto: { Args: { p_factura_id: string }; Returns: number }
       saldo_factura_proveedor: { Args: { p_factura_id: string }; Returns: Json }
