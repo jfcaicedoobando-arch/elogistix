@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.640.2] - 2026-08-17
+
+### Corrección de CI (auditorías de migraciones)
+- H6: `avanzar_estado_embarque` se recreaba sin permisos explícitos en `20260817160935_*.sql` y `20260825000800_bl16_*.sql`; se agregaron `REVOKE ALL ... FROM PUBLIC/anon` y `GRANT EXECUTE` a `authenticated`/`service_role`.
+- Replay: la migración `20260821030800_ola11_lotes_paridad.sql` perdía el orden determinista de locks de `registrar_pago_cliente_lote` (riesgo de deadlock en cobros en lote concurrentes). Se re-emitió el espejo canónico en `20260825001000_bl18_cobro_lote_locks_deterministas.sql` y se borraron 2 entradas muertas del baseline (`cancelar_factura_proveedor`, `portal_obtener_proforma_por_token`).
+- Manifest: se regeneró `migration-manifest.json` con las 25 migraciones faltantes.
+
+
 ## [13.640.1] - 2026-08-17
 
 ### Corrección de CI (drift radar)
