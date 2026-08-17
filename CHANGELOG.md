@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.641.1] - 2026-08-17
+
+### Correcciones
+- **Pruebas SQL (CI):** los expedientes sembrados en `comision_cobrado_mxn.sql`, `ola4_n41_n44_n45.sql` y `ola4_n24_n27.sql` no cumplían el check `embarques_expediente_formato_valido` (`EL` + 3 letras + dígitos), lo que abortaba las suites financieras. Se renombraron a expedientes válidos (`ELOBL0101`, `ELOLA4441`, `ELNVA2401`, etc.).
+
 ## [13.641.0] - 2026-08-17
 
 ### Design system, layout y copy de backoffice (Parches 14, 15 y 16)
