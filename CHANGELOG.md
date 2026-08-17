@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.645.3] - 2026-08-17
+
+### Corrección CI
+- Power of 10: `src/lib/access/roleRouteMatrix.ts` (207 líneas) se divide en `roleRouteSets.ts` (conjuntos de roles y listas de rutas libres/plataforma) + la matriz y `hasRouteAccess`; se re-exporta todo para no romper imports existentes.
+- knip strict: se elimina código muerto (13 exports y 5 tipos sin uso) en CRM (`AVANCE_VACIO`, hooks/servicios de embudo y avance de actividad, `IcpEstatus`), CxP (`detallesPagoEliminado`, re-exports `validar*`, `EliminarPagoProveedorResult`), facturación (`eliminarMovimientoBancarioCobro`, re-exports de bandejas, `EliminarPagoResult`) y el export `default` duplicado de `AyudaPublicShell` + `Ayuda` en `appRoutes.lazy.ts`.
+
 ## [13.645.2] - 2026-08-17
 
 ### Corrección (Sentry JAVASCRIPT-REACT-5B)
