@@ -1,5 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { User, Session } from "@supabase/supabase-js";
+
 import type { AppRole } from "@/types/appRole";
 import { useAuthSession } from "./auth/useAuthSession";
 import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
