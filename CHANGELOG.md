@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.638.0] - 2026-08-17
+
+### Precisión en pagos, idempotencia y candados (Patch 8)
+- BL-12: los totales de conceptos de venta, cotizaciones (USD y MXN) y la suma de venta del P&L usan el canon `subtotalLinea`/`sumarSubtotales`; se elimina el drift de centavos entre UI y `numeric` de Postgres.
+- BL-14: `pagos_factura` y `pagos_proveedor` reciben `client_request_id uuid` con índice UNIQUE parcial; los diálogos de cobro (CxC) y pago (CxP) generan un UUID por apertura, de modo que un doble submit o reintento de red choca con 23505 traducido como pago duplicado.
+- BL-15: `guard_pago_proveedor` calcula la diferencia cambiaria también en el cruce pago USD → factura MXN (`monto × (TC_pago − TC_factura)`); `traducirErrorPagoProveedor` explica el cruce EUR no soportado (`LC_PAGO_CRUCE_NO_SOPORTADO`).
+- BL-16: `avanzar_estado_embarque` filtra `deleted_at IS NULL`; un embarque en papelera ya no avanza de estado ni consume folio de expediente.
+- BL-17(b): la nota "Tipos de cambio del embarque incompletos" de `calcular_comision_pago` se condiciona a las monedas realmente presentes en los conceptos (`v_req_usd`/`v_req_eur`), sin falsos positivos en embarques USD-only.
+- EC-12: el prellenado de pago de saldo total (CxC y CxP) redondea hacia arriba al centavo para saldar la factura; un residuo `0 < saldo ≤ 0.01` devuelve un error que dirige a «Cerrar sin pago» en vez de dejar la factura abierta en aging.
+
+
 ## [13.637.0] - 2026-08-17
 
 ### Reportes monetarios, EERR y portal público (Patch 7)
