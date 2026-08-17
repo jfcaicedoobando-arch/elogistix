@@ -110,8 +110,7 @@ BEGIN
        jsonb_build_object('motivo', btrim(p_motivo), 'ncs_canceladas', v_ncs_canceladas) || v_desvinculo);
   END IF;
 END;
-$function$
-
+$function$;
 
 REVOKE ALL ON FUNCTION public.cancelar_factura_proveedor(uuid, text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.cancelar_factura_proveedor(uuid, text) FROM anon;
