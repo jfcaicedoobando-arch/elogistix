@@ -4,14 +4,14 @@
  */
 export function ConceptosTablaHeader() {
   return (
-    <div className="hidden grid-cols-24 gap-2 px-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground md:grid">
-      <span className="col-span-8">Descripción</span>
-      <span className="col-span-2 text-right">Cant.</span>
-      <span className="col-span-4 text-right">Precio unit.</span>
-      <span className="col-span-3 text-right">IVA</span>
-      <span className="col-span-2">Unidad</span>
-      <span className="col-span-3 text-right">Total línea</span>
-      <span className="col-span-2" />
+    <div className="hidden items-center gap-2 px-2 text-2xs font-medium uppercase tracking-wide text-muted-foreground md:flex">
+      <span className="flex-1">Descripción</span>
+      <span className="w-16 text-right">Cant.</span>
+      <span className="w-24 text-right">Precio</span>
+      <span className="w-20 text-right">IVA</span>
+      <span className="w-16">Unidad</span>
+      <span className="w-24 text-right">Total línea</span>
+      <span className="w-16" />
     </div>
   );
 }
