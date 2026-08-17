@@ -21,6 +21,10 @@ import { useCrearActividad } from "@/features/crm/hooks";
 import { useOportunidadForm } from "@/features/crm/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import {
+  buildOportunidadFormPayload,
+  validarOportunidadForm,
+} from "@/features/crm/domain/oportunidadFormPayload";
 
 interface Props {
   open: boolean;
