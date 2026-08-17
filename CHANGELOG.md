@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.632.0] - 2026-08-17
+
+### UX de feedback y errores (Patch 2)
+- VB-33: un solo toast al guardar en el wizard de cotización (los hooks de crear/actualizar pasan a `silent`).
+- VT-03: la ruta pública "/" ya no manda a `/sin-acceso` cuando el perfil falla por red; se muestra la landing.
+- VT-02: `DialogContent` acepta `overlayClassName` y el diálogo "Detalles del error" sube a `z-[70]`, por encima de los toasts encolados.
+- VB-35: `offset.top` del Toaster de 72px a 112px para no tapar el indicador de pasos de los wizards.
+
+
+
 ## [13.631.1] - 2026-08-17
 
 ### Seguridad (Patch 1)

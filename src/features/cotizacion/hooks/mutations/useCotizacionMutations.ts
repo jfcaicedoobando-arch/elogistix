@@ -16,12 +16,16 @@ import { invalidatePortalMirrors } from '@/features/portal/hooks/invalidatePorta
 // creada/actualizada exitosamente") desde `useCotizacionWizardSteps`. Estos
 // hooks se disparan también en pasos intermedios (paso 1/2/3), así que no
 // deben auto-toastear success para no duplicar/contradecir mensajes.
+// VB-33: además, el wizard ya atrapa y notifica los errores con contexto
+// (sección + scroll al campo), así que estos dos hooks van en `silent` para
+// no emitir un segundo toast genérico del mismo fallo.
 export function useCreateCotizacion() {
   return useMutationWithFeedback({
     mutationFn: (input: CreateCotizacionInput) => svcCrear(input),
     invalidate: queryKeys.cotizaciones.all,
     errorTitle: "Error al crear cotización",
     errorMethod: "CREATE_COTIZACION",
+    silent: true,
   });
 }
 
@@ -33,12 +37,14 @@ export function useUpdateCotizacion() {
     invalidate: queryKeys.cotizaciones.all,
     errorTitle: "Error al actualizar cotización",
     errorMethod: "UPDATE_COTIZACION",
+    silent: true,
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(vars.id) });
       invalidatePortalMirrors(queryClient, { cotizacionId: vars.id });
     },
   });
 }
+
 
 export function useDeleteCotizacion() {
   return useMutationWithFeedback({
