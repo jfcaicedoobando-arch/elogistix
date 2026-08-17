@@ -43,7 +43,7 @@ export default function Tesoreria() {
     <PageContainer>
       <PageHeader
         title="Tesorería"
-        description={`Saldo bancario, cartera y flujo esperado · saldos al ${formatFechaEs(hoy)}`}
+        description={`Saldo bancario, cartera y flujo esperado · saldos al ${formatFechaEs(hoy, { day: "2-digit", month: "2-digit", year: "numeric" })}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={handlePdf} disabled={!data}>
