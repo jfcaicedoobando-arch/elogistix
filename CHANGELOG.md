@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.634.0] - 2026-08-17
+
+### Copy e idioma es-MX (Patch 4)
+- VF-06 / VT-21 / VF-24: anglicismos fuera de la interfaz — "Plataforma para agentes de carga" (sidebar), "Mis oportunidades" (CRM), "Costos y utilidad" y "Cotización del cliente" (wizard), "Panel fiscal" (Facturación), "Venta/Utilidad total USD" y "Top por utilidad" (Reportes), "Utilidad total" (PDF de rentabilidad) y pestaña "Utilidad" en el detalle de embarque. Se conservan ids lógicos (`mis-deals`, `value="pnl"`).
+- VF-08: se elimina el sufijo condicional que generaba "Usar esta tarifa esta" / "Elegir esta esta" en las tarjetas de tarifa; "Close" → "Cerrar" en diálogos y sheets (sr-only).
+- VB-06 / VT-16: `document.title` por ruta en Panel, Configuración, Auditoría operativa, Bitácora, Portal agente y Mi perfil.
+- VB-37: descripciones de Costeo sin geografía hardcodeada (rutas y matriz de tarifas).
+- VT-29: pluralización correcta con `pluralizar()` en el estado de cuenta del portal y en Presupuesto vs Real.
+- VT-15: breadcrumbs con etiquetas para Conciliación, Estado de cuenta, Pagos y Pagos programados.
+
 ## [13.633.0] - 2026-08-17
 
 ### Formatos de moneda y fecha (Patch 3)
