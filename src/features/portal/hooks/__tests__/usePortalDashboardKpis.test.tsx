@@ -8,11 +8,12 @@ const embarque = (overrides = {}) => ({
 });
 
 describe("usePortalDashboardKpis", () => {
-  it("filtra embarques activos (excluye Cerrado/Cancelado/EIR)", () => {
+  it("filtra embarques activos (excluye Entregado/Cerrado/Cancelado/EIR)", () => {
     const embarques = [
       embarque({ id: "e1", estado: "En Tránsito" }),
       embarque({ id: "e2", estado: "Cerrado" }),
       embarque({ id: "e3", estado: "Cancelado" }),
+      embarque({ id: "e4", estado: "Entregado" }),
     ];
     const { result } = renderHook(() => usePortalDashboardKpis(embarques));
     expect(result.current.embarquesActivos).toHaveLength(1);

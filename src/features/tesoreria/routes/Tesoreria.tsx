@@ -95,7 +95,7 @@ export default function Tesoreria() {
                   No hay tipo de cambio confiable: el saldo bancario total excluye{" "}
                   {Object.entries(data.saldos_por_moneda)
                     .filter(([moneda]) => moneda !== "MXN")
-                    .map(([moneda, monto]) => `${formatCurrency(monto, moneda)} (${moneda})`)
+                    .map(([moneda, monto]) => formatCurrency(monto, moneda))
                     .join(", ")}
                   .
                 </AlertDescription>

@@ -1,5 +1,5 @@
 /**
- * Catálogos del wizard "Nuevo Embarque" (clientes, proveedores, cotizaciones).
+ * Catálogos del wizard "Nuevo embarque" (clientes, proveedores, cotizaciones).
  *
  * P1-1: los catálogos alimentan los selects del paso 1 y 4. Si fallan, el
  * wizard debe decirlo y ofrecer reintento en lugar de mostrar listas vacías.

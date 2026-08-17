@@ -145,10 +145,10 @@ export default function NuevaCotizacion() {
       <CotizacionWizardLayout
         w={w}
         clientes={clientes}
-        title="Nueva Cotización"
+        title="Nueva cotización"
         subtitle="Completa los datos para crear una cotización"
         onBack={() => navigate("/cotizaciones")}
-        saveLabel="Guardar Cotización"
+        saveLabel="Guardar cotización"
         onFlushDraft={flushDraft}
       />
 

@@ -66,7 +66,7 @@ export default function TesoreriaFlujo() {
               <AlertDescription>
                 No hay tipo de cambio confiable: el flujo proyectado excluye{" "}
                 {Object.entries(data.excluido_por_moneda)
-                  .map(([moneda, monto]) => `${formatCurrency(monto, moneda)} (${moneda})`)
+                  .map(([moneda, monto]) => formatCurrency(monto, moneda))
                   .join(", ")}
                 .
               </AlertDescription>

@@ -1,5 +1,5 @@
 /**
- * Orquestador del submit de "Nuevo Embarque".
+ * Orquestador del submit de "Nuevo embarque".
  *
  * Encapsula la cadena:
  *   resolverExpediente → subirDocumentos → createEmbarque

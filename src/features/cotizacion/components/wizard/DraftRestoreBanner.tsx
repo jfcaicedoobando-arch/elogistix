@@ -1,6 +1,6 @@
 /**
  * Banner de restauración de borrador (P0 — v13.293.0).
- * Se muestra al entrar a "Nueva Cotización" si existe un borrador válido
+ * Se muestra al entrar a "Nueva cotización" si existe un borrador válido
  * (guardado hace <24 h) para el usuario actual.
  */
 import { useMemo } from "react";

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MobileFilterSheet } from "../MobileFilterSheet";
+import { PortalFilterSheet } from "../PortalFilterSheet";
 
-describe("MobileFilterSheet", () => {
+describe("PortalFilterSheet", () => {
   const baseProps = {
     search: "",
     onSearchChange: () => {},
@@ -13,9 +13,9 @@ describe("MobileFilterSheet", () => {
 
   it("renderiza search input y botón de filtros", () => {
     render(
-      <MobileFilterSheet {...baseProps}>
+      <PortalFilterSheet {...baseProps}>
         <div>campo</div>
-      </MobileFilterSheet>,
+      </PortalFilterSheet>,
     );
     expect(screen.getByPlaceholderText("Buscar...")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Filtros/i })).toBeInTheDocument();
@@ -24,9 +24,9 @@ describe("MobileFilterSheet", () => {
   it("propaga cambios del input de búsqueda", () => {
     const onSearchChange = vi.fn();
     render(
-      <MobileFilterSheet {...baseProps} onSearchChange={onSearchChange}>
+      <PortalFilterSheet {...baseProps} onSearchChange={onSearchChange}>
         <div />
-      </MobileFilterSheet>,
+      </PortalFilterSheet>,
     );
     fireEvent.change(screen.getByPlaceholderText("Buscar..."), { target: { value: "abc" } });
     expect(onSearchChange).toHaveBeenCalledWith("abc");
@@ -35,9 +35,9 @@ describe("MobileFilterSheet", () => {
   it("muestra badge con activeCount y habilita Limpiar cuando > 0", () => {
     const onClear = vi.fn();
     render(
-      <MobileFilterSheet {...baseProps} activeCount={2} onClear={onClear}>
+      <PortalFilterSheet {...baseProps} activeCount={2} onClear={onClear}>
         <div>x</div>
-      </MobileFilterSheet>,
+      </PortalFilterSheet>,
     );
     // Badge muestra el número
     expect(screen.getByText("2")).toBeInTheDocument();
@@ -45,9 +45,9 @@ describe("MobileFilterSheet", () => {
 
   it("respeta placeholder personalizado", () => {
     render(
-      <MobileFilterSheet {...baseProps} searchPlaceholder="Buscar factura...">
+      <PortalFilterSheet {...baseProps} searchPlaceholder="Buscar factura...">
         <div />
-      </MobileFilterSheet>,
+      </PortalFilterSheet>,
     );
     expect(screen.getByPlaceholderText("Buscar factura...")).toBeInTheDocument();
   });

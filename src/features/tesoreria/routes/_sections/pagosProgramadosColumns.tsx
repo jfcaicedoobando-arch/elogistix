@@ -44,7 +44,8 @@ export function buildPagosProgramadosColumns(abrirDialogoPago: (f: FacturaProgra
       id: "folio",
       header: "Folio",
       accessorFn: (r) => r.folio_proveedor ?? "",
-      meta: { width: COL_W.folio, className: "font-mono text-xs" },
+      // VT-30: nowrap — el folio "AAV-2026-1188" se rompía en dos líneas.
+      meta: { width: COL_W.folio, className: "font-mono text-xs whitespace-nowrap" },
     },
     {
       id: "fecha",

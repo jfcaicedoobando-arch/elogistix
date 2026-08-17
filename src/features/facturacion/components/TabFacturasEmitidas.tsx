@@ -172,7 +172,7 @@ export function TabFacturasEmitidas(p: Props) {
                 icon={Receipt}
                 title={p.search ? "No se encontraron facturas" : "Aún no hay facturas emitidas"}
                 description={p.search ? "Ajusta los filtros o busca con otro término." : "Las facturas emitidas desde embarques o proformas aparecerán aquí."}
-                primaryAction={!p.search && canEmitirFactura && p.onCreateNew ? { label: "Crear factura", onClick: p.onCreateNew } : undefined}
+                primaryAction={!p.search && canEmitirFactura && p.onCreateNew ? { label: "Nueva factura", onClick: p.onCreateNew } : undefined}
               />
             }
             rowKey={(f) => f.id}

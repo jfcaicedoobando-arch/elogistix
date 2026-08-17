@@ -15,6 +15,7 @@ import PortalCotizacionEstadoBanner from "@/features/portal/components/cotizacio
 import PortalCotizacionConfirmDialog from "@/features/portal/components/cotizacion/PortalCotizacionConfirmDialog";
 import DatosGeneralesCard from "@/features/portal/components/cotizacion/DatosGeneralesCard";
 import { AvisoConceptosDescartados } from "@/features/cotizacion/components/AvisoConceptosDescartados";
+import PortalCotizacionTotalCard from "@/features/portal/components/cotizacion/PortalCotizacionTotalCard";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useDocumentTitle } from "@/hooks/shared";
@@ -128,6 +129,12 @@ export default function PortalCotizacionDetalle() {
           ivaMXN={ivaMXN}
         />
       )}
+
+      <PortalCotizacionTotalCard
+        conceptosCount={conceptosUSD.length + conceptosMXN.length}
+        subtotal={cot.subtotal}
+        moneda={cot.moneda}
+      />
 
       {cot.notas && (
         <Card>

@@ -1,5 +1,5 @@
 /**
- * Validación del Paso 2 ("Ruta") del wizard de Nuevo Embarque.
+ * Validación del Paso 2 ("Ruta") del wizard de Nuevo embarque.
  * Extraído de `embarqueWizardSchemas.ts` para mantener cada archivo bajo el
  * límite Power-of-10 (≤200 líneas).
  */

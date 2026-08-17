@@ -1,9 +1,9 @@
 /**
  * Filtros mobile para la página de Mis Facturas del portal.
- * DRY Lote 8b: shell compartido en `MobileFilterSheet`.
+ * DRY Lote 8b: shell compartido en `PortalFilterSheet`.
  */
 import { Filter } from "lucide-react";
-import { MobileFilterSheet } from "@/components/shared/MobileFilterSheet";
+import { PortalFilterSheet } from "@/components/shared/PortalFilterSheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -26,7 +26,7 @@ export function PortalFacturasMobileFilters({
   const activeCount = filtroEstado !== "todos" ? 1 : 0;
 
   return (
-    <MobileFilterSheet
+    <PortalFilterSheet
       search={search}
       onSearchChange={onSearchChange}
       title="Filtros de facturas"
@@ -46,6 +46,6 @@ export function PortalFacturasMobileFilters({
           </SelectContent>
         </Select>
       </div>
-    </MobileFilterSheet>
+    </PortalFilterSheet>
   );
 }

@@ -54,7 +54,7 @@ export function LandingDemo() {
                 Estamos grabando el recorrido oficial. Mientras tanto, podemos darte una demo guiada en vivo.
               </p>
               <span className="rounded-full bg-primary-foreground/10 px-3 py-1 text-xs font-semibold text-primary-foreground/85">
-                0:60
+                1:00
               </span>
             </div>
           )}

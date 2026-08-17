@@ -27,7 +27,10 @@ export default function Terminos() {
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">Legal</p>
         <h1 className="text-4xl font-bold tracking-tight">Términos y condiciones</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Última actualización: 4 de junio de 2026</p>
+        {/* VT-09: sin fecha de actualización mientras el contenido sea placeholder. */}
+        {LEGAL_CONTENT_APPROVED && (
+          <p className="mt-2 text-sm text-muted-foreground">Última actualización: 4 de junio de 2026</p>
+        )}
 
         {LEGAL_CONTENT_APPROVED ? (
           <div className="prose prose-sm mt-8 max-w-none space-y-4 text-foreground/85">

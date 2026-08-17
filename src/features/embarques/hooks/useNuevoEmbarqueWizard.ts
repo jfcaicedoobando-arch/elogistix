@@ -1,5 +1,5 @@
 /**
- * Controller hook del wizard "Nuevo Embarque".
+ * Controller hook del wizard "Nuevo embarque".
  * Encapsula estado del wizard, validaciones, expediente y vinculación.
  *
  * Lógica pura → `lib/domain/embarqueWizard.ts`.

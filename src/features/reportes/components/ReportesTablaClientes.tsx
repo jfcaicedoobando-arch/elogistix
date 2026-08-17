@@ -27,7 +27,9 @@ interface Props {
   onSort: (field: SortField) => void;
 }
 
-const margenBadge = (m: number) => {
+const margenBadge = (m: number, venta = 0) => {
+  // VT-20: 0.0% con venta $0 no es una alarma — badge neutro (gris).
+  if (!venta) return <Badge variant="neutral">{m.toFixed(1)}%</Badge>;
   if (m >= MARGIN_THRESHOLDS.GOOD) return <Badge variant="success">{m.toFixed(1)}%</Badge>;
   if (m >= MARGIN_THRESHOLDS.WARN) return <Badge variant="warning">{m.toFixed(1)}%</Badge>;
   return <Badge variant="destructive">{m.toFixed(1)}%</Badge>;
@@ -45,7 +47,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
     { id: "venta_usd", header: "Venta USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.venta_usd, "USD") },
     { id: "costo_usd", header: "Costo USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.costo_usd, "USD") },
     { id: "profit_usd", header: "Utilidad USD", enableSorting: true, meta: { align: "right", className: "tabular-nums font-semibold" }, cell: ({ row }) => formatCurrency(row.original.profit_usd, "USD") },
-    { id: "margen", header: "Margen", enableSorting: true, meta: { align: "center" }, cell: ({ row }) => margenBadge(row.original.margen) },
+    { id: "margen", header: "Margen", enableSorting: true, meta: { align: "center" }, cell: ({ row }) => margenBadge(row.original.margen, row.original.venta_usd) },
   ]);
 
   return (
@@ -75,7 +77,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
                   <div className="text-xs text-muted-foreground mt-0.5">{c.total_embarques} embarques · Venta {formatCurrency(c.venta_usd, "USD")}</div>
                   <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">Utilidad: {formatCurrency(c.profit_usd, "USD")}</div>
                 </div>
-                {margenBadge(c.margen)}
+                {margenBadge(c.margen, c.venta_usd)}
               </div>
             )}
           />
