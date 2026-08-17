@@ -42705,7 +42705,7 @@
       "20260825000800_bl16_avanzar_estado_embarque_papelera.sql",
       "20260825000900_bl17_comision_nota_tc_requeridos.sql",
       "20260825001000_bl18_cobro_lote_locks_deterministas.sql",
-      "20260825001100_normalizar_razon_social_unicode.sql"
+      "20260817192153_7b3ea1d3-503c-4469-835f-eeca410b5dd5.sql"
     ]
   },
   "13.644.0": {
@@ -43696,7 +43696,7 @@
       "20260825000800_bl16_avanzar_estado_embarque_papelera.sql",
       "20260825000900_bl17_comision_nota_tc_requeridos.sql",
       "20260825001000_bl18_cobro_lote_locks_deterministas.sql",
-      "20260825001100_normalizar_razon_social_unicode.sql"
+      "20260817192153_7b3ea1d3-503c-4469-835f-eeca410b5dd5.sql"
     ]
   },
   "13.644.1": {
