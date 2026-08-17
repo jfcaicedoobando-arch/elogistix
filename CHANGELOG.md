@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.633.0] - 2026-08-17
+
+### Formatos de moneda y fecha (Patch 3)
+- VB-04 / VF-11 / VB-28: se elimina el código de moneda duplicado en Totales del periodo (Dirección), columna Total del aging CxP y KPI de Operaciones (label "Profit").
+- VT-08: el encabezado de Tesorería muestra la fecha de corte con día y mes de 2 dígitos (17/08/2026).
+- VT-27: la línea de tiempo del portal ya no muestra "00:00" en hitos de fecha pura.
+- UX-12: montos con separador de miles en el resumen de conceptos de auditoría y en la nota de flete LCL manual.
+- Se omite el FIX 2 del parche (signo antes del código ISO): el formateador global ya normaliza a "MXN -33,060.00" (decisión B-053) y aplicarlo sólo en Tesorería crearía dos formatos distintos. El FIX 3 (selector de mes) ya estaba corregido.
+
+
+
 ## [13.632.0] - 2026-08-17
 
 ### UX de feedback y errores (Patch 2)
