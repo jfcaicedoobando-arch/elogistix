@@ -49,78 +49,88 @@ export function ConceptosManualesSection({
       icon={<ListPlus className="h-3.5 w-3.5" />}
       title={`Conceptos de la factura (${conceptos.length})`}
     >
-      <p className="text-xs text-muted-foreground -mt-1">
-        Captura las partidas de la factura. El precio es <strong>unitario</strong>: el total de línea se
-        calcula como importe × cantidad y la suma de líneas debe cuadrar con el subtotal.
-        Sin conceptos la factura no se podrá aprobar ni pagar.
+      <p className="-mt-1 text-xs text-muted-foreground">
+        El precio es <strong>unitario</strong>: el total de línea es precio × cantidad y la suma debe
+        cuadrar con el subtotal. Sin conceptos la factura no se puede aprobar ni pagar.
       </p>
 
       {conceptos.length > 0 && (
         <div className="space-y-2">
+          <div className="hidden grid-cols-12 gap-2 px-1 text-2xs font-medium uppercase tracking-wide text-muted-foreground md:grid">
+            <span className="col-span-4">Descripción</span>
+            <span className="col-span-1 text-right">Cant.</span>
+            <span className="col-span-2 text-right">Precio unit.</span>
+            <span className="col-span-2 text-right">IVA</span>
+            <span className="col-span-2">Unidad</span>
+            <span className="col-span-1" />
+          </div>
+
           {conceptos.map((c) => (
             <div
               key={c.key}
               className={
                 c.key === keyResaltado
-                  ? "grid grid-cols-12 gap-2 items-center rounded-md ring-1 ring-destructive/50 bg-destructive/5 p-1.5"
-                  : "grid grid-cols-12 gap-2 items-center"
+                  ? "rounded-md border border-destructive/50 bg-destructive/5 p-2"
+                  : "rounded-md border border-border/60 p-2"
               }
             >
-
-              <Input
-                className="col-span-12 md:col-span-5 h-9"
-                placeholder="Descripción"
-                value={c.descripcion}
-                onChange={(e) => onActualizar(c.key, "descripcion", e.target.value)}
-                aria-label="Descripción del concepto"
-              />
-              <Input
-                className="col-span-3 md:col-span-1 h-9 text-right tabular-nums"
-                inputMode="decimal"
-                placeholder="Cant."
-                value={String(c.cantidad ?? 1)}
-                onChange={(e) => onActualizar(c.key, "cantidad", num(e.target.value))}
-                aria-label="Cantidad"
-              />
-              <Input
-                className="col-span-3 md:col-span-2 h-9 text-right tabular-nums"
-                inputMode="decimal"
-                placeholder="Precio unit."
-                value={String(c.importe ?? 0)}
-
-
-                onChange={(e) => onActualizar(c.key, "importe", num(e.target.value))}
-                aria-label="Precio unitario"
-              />
-              <Input
-                className="col-span-3 md:col-span-2 h-9 text-right tabular-nums"
-                inputMode="decimal"
-                placeholder="IVA"
-                value={String(c.iva ?? 0)}
-                onChange={(e) => onActualizar(c.key, "iva", num(e.target.value))}
-                aria-label="IVA del concepto"
-              />
-              <Input
-                className="col-span-2 md:col-span-1 h-9"
-                placeholder="Unidad"
-                value={c.clave_unidad ?? ""}
-                onChange={(e) => onActualizar(c.key, "clave_unidad", e.target.value)}
-                aria-label="Clave de unidad SAT"
-              />
-              <div className="col-span-1 flex justify-end">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                  onClick={() => onEliminar(c.key)}
-                  aria-label="Eliminar concepto"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              <div className="grid grid-cols-12 items-center gap-2">
+                <Input
+                  className="col-span-12 h-9 md:col-span-4"
+                  placeholder="Descripción"
+                  value={c.descripcion}
+                  onChange={(e) => onActualizar(c.key, "descripcion", e.target.value)}
+                  aria-label="Descripción del concepto"
+                />
+                <Input
+                  className="col-span-3 h-9 text-right tabular-nums md:col-span-1"
+                  inputMode="decimal"
+                  placeholder="Cant."
+                  value={String(c.cantidad ?? 1)}
+                  onChange={(e) => onActualizar(c.key, "cantidad", num(e.target.value))}
+                  aria-label="Cantidad"
+                />
+                <Input
+                  className="col-span-4 h-9 text-right tabular-nums md:col-span-2"
+                  inputMode="decimal"
+                  placeholder="Precio unit."
+                  value={String(c.importe ?? 0)}
+                  onChange={(e) => onActualizar(c.key, "importe", num(e.target.value))}
+                  aria-label="Precio unitario"
+                />
+                <Input
+                  className="col-span-3 h-9 text-right tabular-nums md:col-span-2"
+                  inputMode="decimal"
+                  placeholder="IVA"
+                  value={String(c.iva ?? 0)}
+                  onChange={(e) => onActualizar(c.key, "iva", num(e.target.value))}
+                  aria-label="IVA del concepto"
+                />
+                <Input
+                  className="col-span-8 h-9 md:col-span-2"
+                  placeholder="Unidad"
+                  value={c.clave_unidad ?? ""}
+                  onChange={(e) => onActualizar(c.key, "clave_unidad", e.target.value)}
+                  aria-label="Clave de unidad SAT"
+                />
+                <div className="col-span-4 flex justify-end md:col-span-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                    onClick={() => onEliminar(c.key)}
+                    aria-label="Eliminar concepto"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <p className="col-span-12 text-2xs text-muted-foreground text-right -mt-1">
-                Total línea: {formatCurrency((Number(c.importe) || 0) * (Number(c.cantidad) || 1), moneda)}
+              <p className="mt-1.5 text-right text-2xs text-muted-foreground">
+                Total línea:{" "}
+                <span className="font-medium tabular-nums text-foreground">
+                  {formatCurrency((Number(c.importe) || 0) * (Number(c.cantidad) || 1), moneda)}
+                </span>
               </p>
             </div>
           ))}
@@ -134,3 +144,4 @@ export function ConceptosManualesSection({
     </FormSection>
   );
 }
+

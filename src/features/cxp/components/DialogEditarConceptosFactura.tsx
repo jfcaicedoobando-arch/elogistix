@@ -78,17 +78,31 @@ export function DialogEditarConceptosFactura({
           loading={isPending}
           disabled={api.conceptos.length === 0}
           extra={
-            <span className="text-xs text-muted-foreground">
-              Suma: {formatCurrency(cuadre.suma, moneda)} · Subtotal: {formatCurrency(subtotal, moneda)}
-            </span>
+            <div className="text-2xs leading-tight text-muted-foreground">
+              <div className="whitespace-nowrap">
+                Suma:{" "}
+                <span className="font-medium tabular-nums text-foreground">
+                  {formatCurrency(cuadre.suma, moneda)}
+                </span>
+              </div>
+              <div className="whitespace-nowrap">
+                Subtotal:{" "}
+                <span className="font-medium tabular-nums text-foreground">
+                  {formatCurrency(subtotal, moneda)}
+                </span>
+              </div>
+            </div>
           }
         />
       }
     >
       {cuadre.estado !== "cuadrado" && api.conceptos.length > 0 && (
-        <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
-          La suma de líneas difiere del subtotal en {formatCurrency(Math.abs(cuadre.diferencia), moneda)}.
-          Puedes guardar, pero la factura no se podrá aprobar hasta que cuadre.
+        <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs leading-relaxed">
+          La suma de líneas difiere del subtotal en{" "}
+          <strong className="tabular-nums">
+            {formatCurrency(Math.abs(cuadre.diferencia), moneda)}
+          </strong>
+          . Puedes guardar, pero la factura no se podrá aprobar hasta que cuadre.
         </p>
       )}
       <ConceptosManualesSection
@@ -98,6 +112,7 @@ export function DialogEditarConceptosFactura({
         onActualizar={api.actualizar}
         onEliminar={api.eliminar}
       />
+
     </FormDialogShell>
   );
 }
