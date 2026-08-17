@@ -14,6 +14,8 @@ import {
   calcularTotalesLcl,
 } from "@/features/cotizacion/utils/calcularWMLcl";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { formatUSD } from "@/lib/formatters";
+
 
 export interface BuildCostosLCLManualArgs {
   lclFleteManual: LclFleteManual | undefined | null;
