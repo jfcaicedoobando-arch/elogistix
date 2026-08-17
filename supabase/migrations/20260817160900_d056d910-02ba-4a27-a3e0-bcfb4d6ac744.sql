@@ -1,0 +1,127 @@
+-- ============================================================
+-- BL-15 · guard_pago_proveedor: diferencia cambiaria también en el cruce
+-- pago USD → factura MXN (antes sólo MXN→USD; resultado cambiario CxP
+-- asimétrico e incompleto).
+--
+-- Cuerpo VERBATIM de la versión vigente (20260825000200, BL-03) salvo el
+-- bloque de `diferencia_cambiaria_mxn`. Misma firma, volatilidad,
+-- SECURITY DEFINER, search_path y grants anclados (H6).
+--
+-- Simetría del cálculo:
+--   · pago MXN / factura USD:  diff = monto_en_moneda_factura(USD)
+--                                × (TC_pago − TC_factura)   [ya existía]
+--   · pago USD / factura MXN:  diff = monto(USD)
+--                                × (TC_pago − TC_factura)   [NUEVO]
+-- En ambos casos es (cantidad en USD) × (desplazamiento del TC), en MXN.
+-- El cruce EUR sigue rechazado por `convertir_monto_pago_a_factura`
+-- (LC_PAGO_CRUCE_NO_SOPORTADO); el UI ya tiene mensaje propio.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.guard_pago_proveedor()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $function$
+DECLARE
+  v_fact_moneda public.moneda;
+  v_fact_tc     numeric;
+  v_fact_total  numeric;
+  -- BL-03: estado y papelera de la factura para el guard de vida.
+  v_fact_estado public.estado_proveedor_factura;
+  v_fact_deleted timestamptz;
+  v_ncs         numeric;
+  v_pagos       numeric;
+  v_saldo       numeric;
+  v_solo_metadatos boolean := false;
+BEGIN
+  IF NEW.deleted_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- BL-03 (espejo FIX-63 de CxC): un UPDATE que NO toca el dinero (p. ej.
+  -- conciliación o notas) es mantenimiento documental, no un pago nuevo;
+  -- debe pasar aunque la factura se haya cancelado después.
+  IF TG_OP = 'UPDATE' THEN
+    v_solo_metadatos := (
+      NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
+      AND NEW.monto IS NOT DISTINCT FROM OLD.monto
+      AND NEW.moneda IS NOT DISTINCT FROM OLD.moneda
+      AND NEW.tipo_cambio_usd IS NOT DISTINCT FROM OLD.tipo_cambio_usd
+      AND OLD.deleted_at IS NULL
+    );
+    IF v_solo_metadatos THEN
+      RETURN NEW;
+    END IF;
+  END IF;
+
+  SELECT moneda, tipo_cambio_usd, COALESCE(total,0), estado, deleted_at
+    INTO v_fact_moneda, v_fact_tc, v_fact_total, v_fact_estado, v_fact_deleted
+    FROM public.proveedor_facturas
+    WHERE id = NEW.proveedor_factura_id
+    FOR UPDATE;
+
+  IF v_fact_moneda IS NULL THEN
+    RAISE EXCEPTION 'LC_FACTURA_PROV_NO_ENCONTRADA: factura % no existe', NEW.proveedor_factura_id
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  -- BL-03: una factura Cancelada o en papelera no admite pagos (paridad CxC).
+  IF v_fact_estado = 'Cancelada'::public.estado_proveedor_factura
+     OR v_fact_deleted IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_PAGO_PROV_FACTURA_NO_VIVA: la factura de proveedor está % y no admite pagos',
+      CASE WHEN v_fact_deleted IS NOT NULL THEN 'en la papelera' ELSE 'Cancelada' END
+      USING ERRCODE = '23514';
+  END IF;
+
+  NEW.monto_en_moneda_factura := public.convertir_monto_pago_a_factura(
+    NEW.monto, NEW.moneda, NEW.tipo_cambio_usd, v_fact_moneda, v_fact_tc);
+
+  IF NEW.moneda = 'MXN'::public.moneda
+     AND v_fact_moneda = 'USD'::public.moneda
+     AND NEW.tipo_cambio_usd IS NOT NULL AND NEW.tipo_cambio_usd > 0
+     AND v_fact_tc IS NOT NULL AND v_fact_tc > 0 THEN
+    NEW.diferencia_cambiaria_mxn :=
+      ROUND(NEW.monto_en_moneda_factura * (NEW.tipo_cambio_usd - v_fact_tc), 2);
+  ELSIF NEW.moneda = 'USD'::public.moneda
+     AND v_fact_moneda = 'MXN'::public.moneda
+     AND NEW.tipo_cambio_usd IS NOT NULL AND NEW.tipo_cambio_usd > 0
+     AND v_fact_tc IS NOT NULL AND v_fact_tc > 0 THEN
+    -- BL-15: cruce inverso (pago USD → factura MXN). La pérdida/ganancia
+    -- cambiaria es (USD pagados) × (TC_pago − TC_factura), en MXN.
+    NEW.diferencia_cambiaria_mxn :=
+      ROUND(NEW.monto * (NEW.tipo_cambio_usd - v_fact_tc), 2);
+  ELSE
+    NEW.diferencia_cambiaria_mxn := NULL;
+  END IF;
+
+  -- Saldo disponible para ESTA fila (los demás pagos vivos ya se excluyen abajo).
+  SELECT COALESCE(SUM(monto),0) INTO v_ncs
+    FROM public.proveedor_notas_credito
+   WHERE proveedor_factura_id = NEW.proveedor_factura_id
+     AND deleted_at IS NULL
+     AND estado::text = 'Aplicada';
+
+  SELECT COALESCE(SUM(monto_en_moneda_factura),0) INTO v_pagos
+    FROM public.pagos_proveedor
+   WHERE proveedor_factura_id = NEW.proveedor_factura_id
+     AND deleted_at IS NULL
+     AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
+
+  v_saldo := v_fact_total - v_ncs - v_pagos;
+
+  -- Validación directa (válida para INSERT y UPDATE: v_pagos ya excluye NEW.id).
+  IF COALESCE(NEW.monto_en_moneda_factura,0) > v_saldo + 0.005 THEN
+    RAISE EXCEPTION
+      'LC_PAGO_EXCEDE_SALDO: pago % excede el saldo disponible % de la factura de proveedor',
+      round(COALESCE(NEW.monto_en_moneda_factura,0),2), round(v_saldo,2)
+      USING ERRCODE = '23514';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+-- Grants anclados (H6, migración 20260723223436):
+REVOKE ALL ON FUNCTION public.guard_pago_proveedor() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.guard_pago_proveedor() TO service_role;
