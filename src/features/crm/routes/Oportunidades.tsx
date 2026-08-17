@@ -190,6 +190,16 @@ export default function Oportunidades() {
         }
         onCreated={cerrarProximoPaso}
       />
+
+      {/* Ola A: motivo de pérdida obligatorio al cerrar como perdida. */}
+      <DialogMotivoPerdida
+        open={perdidaPendiente != null}
+        onOpenChange={(o) => { if (!o) cerrarPerdida(); }}
+        oportunidadNombre={perdidaPendiente?.nombre ?? ""}
+        loading={moviendo}
+        onConfirm={({ motivo_perdida_id }) => confirmarPerdida(motivo_perdida_id)}
+      />
     </PageContainer>
   );
 }
+
