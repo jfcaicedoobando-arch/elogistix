@@ -33,6 +33,7 @@ vi.mock("@/lib/diagnostics/errorDetailsStore", () => ({
 }));
 
 import { CambiarPasswordDialog } from "../CambiarPasswordDialog";
+import { resetToastDedupeState } from "@/lib/ui/appFeedback.dedupe";
 
 function renderDialog(onOpenChange = vi.fn()) {
   return {
