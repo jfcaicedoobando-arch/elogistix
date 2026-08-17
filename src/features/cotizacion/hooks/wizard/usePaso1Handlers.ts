@@ -74,7 +74,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep, marcarErrorPaso1]);
 
   /**
    * Atajo "Cotizar sin desglose": guarda Paso 1 con `sin_desglose_costos = true`
@@ -108,7 +108,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1]);
 
   return { handlePaso1, handleCotizarSinDesglose };
 }
