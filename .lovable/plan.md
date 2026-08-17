@@ -23,3 +23,7 @@ Aplicar el parche `patch-7-sql-reportes-eerr-portal.patch` (BL-06, BL-07, BL-09,
 - Verificación: `bunx vitest run` de los suites tocados (`vsReal.*`, `estadoResultados*`, `alertas`) + typecheck.
 - Riesgos residuales aceptados y documentados en el CHANGELOG: las notas de crédito (cliente y proveedor) se descuentan con IVA porque esas tablas no guardan subtotal; el EERR devengado sigue sin descontar NCs de proveedor (queda como follow-up).
 - Bump de `APP_VERSION` a `13.637.0` y entrada en `CHANGELOG.md`.
+
+## Corrección previa pendiente
+
+Hay un error de compilación heredado del parche 6 que se arregla primero: en `src/features/comisiones/services/liquidaciones.ts:44` se pasa `p.request_id ?? null` a `p_request_id`, cuyo tipo generado es `string | undefined`. Se cambia a `p.request_id`.
