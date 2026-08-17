@@ -45,7 +45,7 @@ export default function PortSelect({ value, onValueChange, placeholder = "Selecc
               {search.trim() ? (
                 <button
                   type="button"
-                  className="w-full px-2 py-1.5 text-sm text-left hover:bg-accent rounded cursor-pointer"
+                  className="w-full px-2 py-1.5 text-sm text-left hover:bg-muted/50 rounded cursor-pointer"
                   onClick={() => { onValueChange(search.trim()); setSearch(""); setOpen(false); }}
                 >
                   Usar "<span className="font-medium">{search.trim()}</span>"

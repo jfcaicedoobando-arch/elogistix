@@ -107,6 +107,8 @@ export const posicionCursor = (formateado: string, significativos: number): numb
 /** Texto inicial mostrado para un valor numérico del formulario. */
 export const valorANumeroTexto = (value: number | null | undefined): string => {
   if (value === null || value === undefined || !Number.isFinite(value)) return "";
-  if (value === 0) return "";
+  // EC-11: `0` es un valor capturado legítimo — se muestra "0" para
+  // distinguirlo de "sin capturar" (null/undefined → "").
+  if (value === 0) return "0";
   return formatMoneyDisplay(String(value));
 };

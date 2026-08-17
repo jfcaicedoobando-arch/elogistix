@@ -88,8 +88,8 @@ describe("cursor", () => {
 });
 
 describe("valorANumeroTexto", () => {
-  it("muestra vacío para 0, null y undefined (sin '0' pegajoso)", () => {
-    expect(valorANumeroTexto(0)).toBe("");
+  it("distingue 0 capturado (muestra '0') de null/undefined (vacío) — EC-11", () => {
+    expect(valorANumeroTexto(0)).toBe("0");
     expect(valorANumeroTexto(null)).toBe("");
     expect(valorANumeroTexto(undefined)).toBe("");
   });

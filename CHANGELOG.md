@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.640.0] - 2026-08-17
+
+### Formularios, design system y accesibilidad (Patches 11, 12 y 13)
+- EC-11: los importes distinguen `0` de vacío; rangos de fecha invertidos en reportes se auto-corrigen; "Por cobrar" incluye facturas sin vencimiento; se descartan borradores de cotización con fecha futura.
+- Design system: `getEstadoColor` queda deprecado con guardrail de ESLint, se unifica `.text-overline` y se prohíben tipografías y z-index arbitrarios.
+- Accesibilidad: filas clicables responden a Enter/Espacio, `aria-label` en es-MX para inputs y botones sin texto, y estados vacíos responsivos.
+- Complejidad: el esquema de factura de proveedor se divide en validadores (`validarObligatorios`, `validarImportes`, `validarFechas`, `validarTipoCambio`) y `TabVsReal` extrae `VsRealCuerpo`.
+- Pruebas: `CambiarPasswordDialog` limpia el dedupe de toasts entre casos (`resetToastDedupeState`).
+
 ## [13.639.0] - 2026-08-17
 
 ### Listados, búsqueda y validaciones (Patches 9 y 10)

@@ -167,10 +167,10 @@ export default function TabPlanes() {
         const p = row.original;
         return editingId === p.id ? (
           <div className="flex gap-1">
-            <Button size="sm" onClick={saveEdit} disabled={updatePlan.isPending}>
+            <Button size="sm" onClick={saveEdit} disabled={updatePlan.isPending} aria-label="Guardar plan">
               <Save className="h-3 w-3" />
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+            <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} aria-label="Cancelar edición">
               ✕
             </Button>
           </div>

@@ -25,7 +25,7 @@ const columnas = defineColumns<ConsultarFacturapiRep>([
       <div>
         <div className="font-medium">{row.original.folio ?? "—"}</div>
         {row.original.uuid && (
-          <div className="font-mono text-[11px] text-muted-foreground">{row.original.uuid}</div>
+          <div className="font-mono text-label text-muted-foreground">{row.original.uuid}</div>
         )}
       </div>
     ),
@@ -61,7 +61,7 @@ const columnas = defineColumns<ConsultarFacturapiRep>([
       <div>
         <ConsultaSatBadge estatus={row.original.estatus_sat} />
         {row.original.error && (
-          <div className="text-[11px] text-destructive mt-1">{row.original.error}</div>
+          <div className="text-label text-destructive mt-1">{row.original.error}</div>
         )}
       </div>
     ),

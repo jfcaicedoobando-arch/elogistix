@@ -4,6 +4,8 @@
  * conserva la tabla de pagos.
  */
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Wallet } from "lucide-react";
 import { HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
 import { PagoFila, type PagoRow } from "./DialogDetallePagosProveedor.fila";
 
@@ -20,9 +22,10 @@ export function PagosTable({ pagos, isLoading, canEdit, onEliminarPago, onEditar
   if (isLoading) return <ListSkeleton rows={3} />;
   if (pagos.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-8">
-        No hay pagos registrados para esta factura.
-      </p>
+      <EmptyStateInline
+        icon={Wallet}
+        message="No hay pagos registrados para esta factura."
+      />
     );
   }
   return (

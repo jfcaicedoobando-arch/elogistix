@@ -72,12 +72,12 @@ export function MarcarLlegadaForm({
             </p>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Ubicación / Puerto</label>
+            <label htmlFor="marcar-llegada-ubicacion" className="text-sm font-medium">Ubicación / Puerto</label>
             <Controller
               control={control}
               name="ubicacion"
               render={({ field }) => (
-                <Input {...field} placeholder="Puerto o punto de arribo" maxLength={120} disabled={isPending} />
+                <Input id="marcar-llegada-ubicacion" {...field} placeholder="Puerto o punto de arribo" maxLength={120} disabled={isPending} />
               )}
             />
             {errors.ubicacion && <p className="text-xs text-destructive">{errors.ubicacion.message}</p>}

@@ -104,7 +104,7 @@ export function DashboardEjecutivoFacturacion() {
       {tendencia.length > 0 && (
         <Card>
           <CardContent className="p-3">
-            <p className="text-label text-muted-foreground uppercase tracking-wide mb-2">
+            <p className="text-overline mb-2">
               Tendencia · Últimos 6 meses (MXN)
             </p>
             <div className="flex items-start gap-6">

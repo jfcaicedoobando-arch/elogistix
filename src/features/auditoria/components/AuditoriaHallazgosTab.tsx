@@ -25,7 +25,7 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
   if (c.isLoading) {
     return (
       <div className="space-y-4">
-        <ListSkeleton rows={3} variant="card" className="grid-cols-3" />
+        <ListSkeleton rows={3} variant="card" className="grid-cols-1 sm:grid-cols-3" />
         <ListSkeleton rows={6} />
       </div>
     );

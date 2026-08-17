@@ -59,6 +59,15 @@ export default function Cliente360Panel({ clienteId }: Props) {
                     key={o.id}
                     className="border-b hover:bg-muted/50 cursor-pointer"
                     onClick={() => navigate(`/crm/oportunidades/${o.id}`)}
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Abrir oportunidad ${o.nombre}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        navigate(`/crm/oportunidades/${o.id}`);
+                      }
+                    }}
                   >
                     <td className="py-2 px-3 font-medium">{o.nombre}</td>
                     <td className="text-right">{formatCurrencyCompact(Number(o.valor_real ?? o.monto_estimado ?? 0), o.moneda)}</td>

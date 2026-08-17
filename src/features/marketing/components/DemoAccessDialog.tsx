@@ -27,6 +27,7 @@ import { enterDemoMode } from "@/features/marketing/services/demoAccess";
 import { demoAccessSchema } from "@/features/marketing/lib/demoAccessSchema";
 import { ROUTES } from "@/constants/routes";
 import { mensajeAmigableDemo } from "@/features/marketing/services/demoErrorCopy";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   open: boolean;
@@ -95,7 +96,7 @@ export function DemoAccessDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => (!loading ? onOpenChange(v) : null)}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={dialogSize.md}>
         <DialogHeader>
           <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-accent/15 text-accent">
             <Sparkles className="h-5 w-5" />

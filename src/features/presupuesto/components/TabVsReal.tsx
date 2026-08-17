@@ -68,6 +68,41 @@ function AvisoGastosSinTc({ count }: { count: number }) {
 }
 
 
+/** Cuerpo de la tabla: filas o estado vacío según el filtro activo. */
+function VsRealCuerpo({
+  filas, soloExcesos, onQuitarFiltro,
+}: {
+  filas: ReturnType<typeof ordenarFilas>;
+  soloExcesos: boolean;
+  onQuitarFiltro: () => void;
+}) {
+  if (filas.length > 0) {
+    return (
+      <>
+        {filas.map((f, i) => (
+          <VsRealFila key={f.categoria_id} fila={f} striped={i % 2 === 1} />
+        ))}
+      </>
+    );
+  }
+  return (
+    <tr>
+      <td colSpan={5} className="px-3 py-8 text-center">
+        <p className="text-sm text-muted-foreground mb-3">
+          {soloExcesos
+            ? "Ninguna categoría excede el 110% este mes."
+            : "No hay categorías de presupuesto capturadas para este periodo."}
+        </p>
+        {soloExcesos && (
+          <Button variant="outline" size="sm" onClick={onQuitarFiltro}>
+            Quitar filtro "Solo excesos"
+          </Button>
+        )}
+      </td>
+    </tr>
+  );
+}
+
 export function TabVsReal() {
   const periodoCtl = usePeriodoMesUrl("periodo_vs_real");
   const { mesActual, setMesKey } = periodoCtl;
@@ -188,22 +223,11 @@ export function TabVsReal() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filasVisibles.length === 0 ? (
-                    <tr><td colSpan={5} className="px-3 py-8 text-center">
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {soloExcesos
-                          ? "Ninguna categoría excede el 110% este mes."
-                          : "No hay categorías de presupuesto capturadas para este periodo."}
-                      </p>
-                      {soloExcesos && (
-                        <Button variant="outline" size="sm" onClick={() => setSoloExcesos(false)}>
-                          Quitar filtro "Solo excesos"
-                        </Button>
-                      )}
-                    </td></tr>
-                  ) : (
-                    filasVisibles.map((f, i) => <VsRealFila key={f.categoria_id} fila={f} striped={i % 2 === 1} />)
-                  )}
+                  <VsRealCuerpo
+                    filas={filasVisibles}
+                    soloExcesos={soloExcesos}
+                    onQuitarFiltro={() => setSoloExcesos(false)}
+                  />
                 </tbody>
               </table>
               </div>

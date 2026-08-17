@@ -63,7 +63,7 @@ export function ColumnVisibilityMenu({ options, visibility, onToggle, onReset, i
             return (
               <label
                 key={opt.id}
-                className={`flex items-center gap-2 px-1.5 py-1 rounded-sm text-sm ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-accent"}`}
+                className={`flex items-center gap-2 px-1.5 py-1 rounded-sm text-sm ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-muted/50"}`}
               >
                 <Checkbox
                   checked={checked}

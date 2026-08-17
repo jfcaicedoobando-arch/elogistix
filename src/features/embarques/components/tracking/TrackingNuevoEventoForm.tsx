@@ -63,7 +63,7 @@ export function TrackingNuevoEventoForm({
           <button
             type="button"
             onClick={() => setModo("eta")}
-            className="flex items-start gap-3 rounded-lg border p-4 text-left hover:bg-accent transition-colors"
+            className="flex items-start gap-3 rounded-lg border p-4 text-left hover:bg-muted/50 transition-colors"
           >
             <CalendarClock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
@@ -76,7 +76,7 @@ export function TrackingNuevoEventoForm({
           <button
             type="button"
             onClick={() => setModo("llegada")}
-            className="flex items-start gap-3 rounded-lg border p-4 text-left hover:bg-accent transition-colors"
+            className="flex items-start gap-3 rounded-lg border p-4 text-left hover:bg-muted/50 transition-colors"
           >
             <Anchor className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>

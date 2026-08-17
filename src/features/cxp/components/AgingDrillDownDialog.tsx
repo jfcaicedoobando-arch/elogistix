@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import type { FacturaCxP } from "@/features/cxp/services";
@@ -103,7 +104,7 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
   return (
     <TooltipProvider delayDuration={150}>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col gap-0 p-0">
+        <DialogContent className={`${dialogSize["3xl"]} max-h-[90vh] flex flex-col gap-0 p-0`}>
           <DialogHeader className="px-6 pt-5 pb-4 border-b bg-muted/30 space-y-1">
             <div className="flex items-center gap-3 flex-wrap">
               <FileText className="h-5 w-5 text-accent" aria-hidden />

@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   open: boolean;
@@ -34,7 +35,7 @@ export function CotizacionSuccessDialog({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={dialogSize.md}>
         <DialogHeader>
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success/15 mb-2">
             <CheckCircle2 className="h-6 w-6 [color:hsl(var(--success))]" aria-hidden />

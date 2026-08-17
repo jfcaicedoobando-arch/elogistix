@@ -45,22 +45,22 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
           </div>
 
           <div className="flex flex-col">
-            <span className="text-label uppercase tracking-wide text-muted-foreground">Facturas</span>
+            <span className="text-overline">Facturas</span>
             <span className="font-semibold tabular-nums">{r.conteo}</span>
           </div>
 
           <div className="flex flex-col">
-            <span className="text-label uppercase tracking-wide text-muted-foreground">Subtotal MXN</span>
+            <span className="text-overline">Subtotal MXN</span>
             <span className="font-semibold tabular-nums">{formatCurrency(r.totalMxn, "MXN")}</span>
           </div>
 
           <div className="flex flex-col">
-            <span className="text-label uppercase tracking-wide text-muted-foreground">Subtotal USD</span>
+            <span className="text-overline">Subtotal USD</span>
             <span className="font-semibold tabular-nums">{formatCurrency(r.totalUsd, "USD")}</span>
           </div>
 
           <div className="flex flex-col">
-            <span className="text-label uppercase tracking-wide text-muted-foreground">
+            <span className="text-overline">
               MXN equivalente
             </span>
             <span className="font-semibold tabular-nums text-primary">
@@ -87,7 +87,7 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
 
           {r.conteoCanceladas > 0 && (
             <div className="flex flex-col">
-              <span className="text-label uppercase tracking-wide text-muted-foreground">Canceladas (excluidas)</span>
+              <span className="text-overline">Canceladas (excluidas)</span>
               <span className="font-semibold tabular-nums text-muted-foreground">{r.conteoCanceladas}</span>
             </div>
           )}

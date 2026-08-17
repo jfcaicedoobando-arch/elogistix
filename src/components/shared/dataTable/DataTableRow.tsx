@@ -16,9 +16,9 @@ import {
 import "./columnMeta";
 
 const STICKY_LEFT =
-  "sticky left-0 z-[5] bg-background [tr:nth-child(even)_&]:bg-muted/45 dark:[tr:nth-child(even)_&]:bg-muted/30 [tr:hover_&]:bg-primary/5 [tr[data-state=selected]_&]:bg-muted shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]";
+  "sticky left-0 z-sticky bg-background [tr:nth-child(even)_&]:bg-muted/45 dark:[tr:nth-child(even)_&]:bg-muted/30 [tr:hover_&]:bg-primary/5 [tr[data-state=selected]_&]:bg-muted shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]";
 const STICKY_RIGHT =
-  "sticky right-0 z-[5] bg-background [tr:nth-child(even)_&]:bg-muted/45 dark:[tr:nth-child(even)_&]:bg-muted/30 [tr:hover_&]:bg-primary/5 [tr[data-state=selected]_&]:bg-muted shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]";
+  "sticky right-0 z-sticky bg-background [tr:nth-child(even)_&]:bg-muted/45 dark:[tr:nth-child(even)_&]:bg-muted/30 [tr:hover_&]:bg-primary/5 [tr[data-state=selected]_&]:bg-muted shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]";
 
 interface Props<T> {
   row: Row<T>;

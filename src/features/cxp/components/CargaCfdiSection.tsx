@@ -49,6 +49,15 @@ export function CargaCfdiSection({
           )}
           <div
             onClick={() => xmlInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            aria-label="Cargar archivo XML del CFDI"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                xmlInputRef.current?.click();
+              }
+            }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();

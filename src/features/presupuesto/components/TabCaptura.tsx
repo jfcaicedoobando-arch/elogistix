@@ -106,6 +106,7 @@ export function TabCaptura({ anio, onAnioChange }: Props) {
                         <td key={mi} className="px-1 py-1">
                           <Input
                             type="number" step="100" min={0}
+                            aria-label={`Monto de ${c.nombre} para ${periodo}`}
                             className="h-7 text-right tabular-nums px-1"
                             value={val}
                             onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}

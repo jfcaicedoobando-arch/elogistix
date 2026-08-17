@@ -10,6 +10,7 @@ import { toTitleCase } from "@/lib/formatters";
 import type { SortField } from "@/features/reportes/components/ReportesTablaClientes";
 import { roundMoney } from "@/lib/financial/financialUtils";
 import { usePdfExport } from "@/hooks/shared";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 
 /**
  * Controller-hook que absorbe todo el estado, derivaciones y handlers de la
@@ -21,6 +22,32 @@ export function useReportesPageController() {
   const [fechaHasta, setFechaHasta] = useState<Date>(endOfMonth(now));
   const [modo, setModo] = useState("all");
   const [sortField, setSortField] = useState<SortField>("profit_usd");
+
+  // EC-13: nunca permitir un rango invertido (desde > hasta) — el RPC devolvería
+  // vacío indistinguible de un periodo sin operación y el PDF/CSV saldría con
+  // el rango invertido. Auto-corregimos el otro extremo y avisamos una vez.
+  const avisarRangoInvertido = () =>
+    notifyWarning(undefined, {
+      title: "Rango de fechas ajustado",
+      description: "La fecha «Desde» no puede ser posterior a «Hasta».",
+      id: "reportes-rango-fechas-invertido",
+    });
+
+  const handleFechaDesde = (d: Date) => {
+    setFechaDesde(d);
+    if (d > fechaHasta) {
+      setFechaHasta(endOfMonth(d));
+      avisarRangoInvertido();
+    }
+  };
+
+  const handleFechaHasta = (d: Date) => {
+    setFechaHasta(d);
+    if (d < fechaDesde) {
+      setFechaDesde(startOfMonth(d));
+      avisarRangoInvertido();
+    }
+  };
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const filtros = useMemo(
@@ -117,8 +144,8 @@ export function useReportesPageController() {
     fechaDesde,
     fechaHasta,
     modo,
-    setFechaDesde,
-    setFechaHasta,
+    setFechaDesde: handleFechaDesde,
+    setFechaHasta: handleFechaHasta,
     setModo,
     // datos
     kpis,

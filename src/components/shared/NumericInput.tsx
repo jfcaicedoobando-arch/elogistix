@@ -40,7 +40,9 @@ const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
       if (current !== value) setText(toText(value));
     }, [value]);
 
-    const regex = decimals ? /^\d*\.?\d*$/ : /^\d*$/;
+    // EC-11: acotar dígitos enteros (12) y decimales (4) para que `Number()`
+    // no pierda precisión en silencio (p. ej. 99999999999999999999 → 1e20).
+    const regex = decimals ? /^\d{0,12}(\.\d{0,4})?$/ : /^\d{0,12}$/;
 
     return (
       <Input

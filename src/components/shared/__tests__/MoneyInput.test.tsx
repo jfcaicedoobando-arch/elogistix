@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { MoneyInput } from "../MoneyInput";
 
-function Harness({ inicial = 0 }: { inicial?: number }) {
+function Harness({ inicial = 0 }: { inicial?: number | null }) {
   const [monto, setMonto] = useState(inicial);
   return (
     <>
@@ -17,8 +17,13 @@ const escribir = (input: HTMLElement, valor: string) =>
   fireEvent.change(input, { target: { value: valor } });
 
 describe("MoneyInput", () => {
-  it("no muestra un 0 pegajoso cuando el valor es 0", () => {
+  it("EC-11: distingue 0 capturado (muestra '0') de sin capturar (null → vacío)", () => {
     render(<Harness />);
+    expect(screen.getByLabelText("Importe")).toHaveValue("0");
+  });
+
+  it("valor null se muestra vacío (sin '0' pegajoso)", () => {
+    render(<Harness inicial={null} />);
     expect(screen.getByLabelText("Importe")).toHaveValue("");
   });
 

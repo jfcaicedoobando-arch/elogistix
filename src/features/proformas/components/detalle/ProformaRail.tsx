@@ -28,7 +28,7 @@ export function ProformaRail({ proformaId, fechaEmision, operador, timeline, env
         envios={envios}
       />
       <div className="mt-4 border-t pt-3">
-        <p className="mb-1 text-label font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="mb-1 text-overline font-medium">
           Actividad
         </p>
         <ProformaBitacoraCard bare proformaId={proformaId} />

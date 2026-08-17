@@ -178,7 +178,9 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .eq("organization_id", orgId)
       .in("estado", ["Emitida", "Parcialmente pagada"])
       .is("deleted_at", null)
-      .gte("fecha_vencimiento", hoy),
+      // EC-19: facturas sin fecha de vencimiento (import/migración o captura
+      // incompleta) no entraban a ninguna cubeta; se cuentan como "por cobrar".
+      .or(`fecha_vencimiento.is.null,fecha_vencimiento.gte.${hoy}`),
     supabase
       .from("facturas")
       .select("id", { count: "exact", head: true })
