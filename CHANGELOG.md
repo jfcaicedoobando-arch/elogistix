@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.642.0] - 2026-08-17
+
+### Formatos, sidebar y navegación (Parches 17, 18 y 19)
+- **Parche 17 (formatos):** nuevo formateador compartido `formatFechaHoraCorta` ("DD/MM/YYYY, HH:mm", 24 h, TZ_MX) usado en /auditoria (VB-12); vigencias de costeo con año completo (VB-38); constante compartida `PLACEHOLDER_VACIO` ("—") aplicada en embarques, BL Master, contenedor y dashboard (VB-20, VB-30); buscador de embarques más ancho para no truncar el placeholder (VB-29); icono de la alerta de login centrado verticalmente (VB-17).
+- **Parche 18 (sidebar, /usuarios y /configuracion):** el listado de usuarios devuelve `full_name` y lo usa como respaldo cuando el directorio no responde, con estado "Sin datos" (VB-15); contador "N activos" en vez de "N roles" (VB-16); el badge rojo de Embarques explica cuántos requieren atención (VB-19); encabezado "Datos de la Empresa" con icono, igual que "Organización" (VB-22); versión del pie del menú copiable con tooltip (VB-25); nombre del usuario en el menú lateral y portales (VB-42).
+- **Parche 19 (navegación y tesorería):** `PaginationControls` con `hideWhenSinglePage` para ocultar controles inútiles en Bitácora (VB-23); breadcrumb con raíz "Inicio" en pantallas de primer nivel (VB-24); banner explicativo al redirigir /embarques/nuevo a Cotizaciones (VB-36, extraído a `CotizacionesBannerOrigen`); columnas del libro de pagos con encabezados y tipo legible (VT-13).
+- **Nota:** el fix VT-12 (columna "Neto" con encabezado en "Flujo esperado 30 días") ya estaba aplicado en el código, por lo que se omitió ese trozo del parche 19.
+
 ## [13.641.1] - 2026-08-17
 
 ### Correcciones
