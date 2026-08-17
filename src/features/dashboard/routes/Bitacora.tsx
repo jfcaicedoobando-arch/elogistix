@@ -14,6 +14,7 @@ import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
 import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
+import { useDocumentTitle } from "@/hooks/shared";
 
 const MODULOS = MODULOS_BITACORA;
 
@@ -41,6 +42,7 @@ function calcularFechaDesde(valor: string): string | undefined {
 }
 
 export default function Bitacora() {
+  useDocumentTitle("Bitácora");
   const { isAdmin } = usePermissions();
   // R6-FIX3: la bitácora es global de la organización activa (no sólo del usuario).
   const { organizationId } = useOrganization();

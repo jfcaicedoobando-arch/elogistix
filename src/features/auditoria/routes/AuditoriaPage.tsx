@@ -12,10 +12,12 @@ import { useAuditoriaEjecutivo } from "@/features/auditoria/hooks";
 import { usePermissions } from "@/hooks/shared";
 import type { UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
 import { exportHallazgosCsv } from "@/features/auditoria/domain/csv";
+import { useDocumentTitle } from "@/hooks/shared";
 
 type TabId = "ejecutivo" | "tabla" | "por_regla";
 
 export default function Auditoria() {
+  useDocumentTitle("Auditoría operativa");
   const c = useAuditoriaPageController();
   const ejecutivo = useAuditoriaEjecutivo();
   const { isAdmin } = usePermissions();

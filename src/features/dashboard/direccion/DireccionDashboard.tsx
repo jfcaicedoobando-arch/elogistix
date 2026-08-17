@@ -16,8 +16,10 @@ import { CarteraSection } from "@/features/dashboard/direccion/components/Carter
 import { PulsoSection } from "@/features/dashboard/direccion/components/PulsoSection";
 import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function DireccionDashboard() {
+  useDocumentTitle("Panel");
   const { data, isLoading, error } = useDireccionKpis();
   const { data: totales, isLoading: totalesLoading, desdeIso } = useDireccionTotales();
 
