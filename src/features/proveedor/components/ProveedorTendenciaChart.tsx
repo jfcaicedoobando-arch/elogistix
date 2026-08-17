@@ -5,7 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from "recharts";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrency, formatCompactNumber } from "@/lib/formatters";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { LineChart as LineChartIcon } from "lucide-react";
 import { CHART } from "@/lib/chartTokens";
 import type { PuntoTendencia } from "@/features/proveedor/domain/inteligenciaProveedor";
 
@@ -19,7 +21,7 @@ function etiquetaMes(mes: string): string {
 }
 
 export function ProveedorTendenciaChart({ tendencia }: { tendencia: PuntoTendencia[] }) {
-  const hayDatos = tendencia.some((p) => p.comprometido > 0 || p.facturado > 0 || p.pagado > 0);
+  const hayDatos = tendencia.length >= 2 && tendencia.some((p) => p.comprometido > 0 || p.facturado > 0 || p.pagado > 0);
   const data = tendencia.map((p) => ({ ...p, etiqueta: etiquetaMes(p.mes) }));
   const totalComprometido = tendencia.reduce((acc, p) => acc + p.comprometido, 0);
   const totalFacturado = tendencia.reduce((acc, p) => acc + p.facturado, 0);
@@ -33,9 +35,10 @@ export function ProveedorTendenciaChart({ tendencia }: { tendencia: PuntoTendenc
           Últimos 12 meses, en pesos. El rezago entre las barras muestra qué tanto tarda el proveedor en facturar y qué tanto tardamos en pagarle.
         </p>
         {!hayDatos ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Sin movimientos en el período.</p>
+          <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se necesitan al menos 2 meses con movimientos." />
         ) : (
           <>
+          <p className="text-2xs text-muted-foreground mb-1">MXN</p>
           <div
             className="w-full h-72"
             role="img"
@@ -45,7 +48,7 @@ export function ProveedorTendenciaChart({ tendencia }: { tendencia: PuntoTendenc
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="etiqueta" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => formatCurrencyCompact(v, "MXN")} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => formatCompactNumber(v)} />
                 <Tooltip formatter={(v: number) => formatCurrency(v, "MXN")} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar name="Comprometido" dataKey="comprometido" fill={CHART.neutral} radius={[3, 3, 0, 0]} />

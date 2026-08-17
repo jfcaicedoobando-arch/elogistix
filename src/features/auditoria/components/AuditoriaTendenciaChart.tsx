@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { TrendingUp } from "lucide-react";
 import { useAuditoriaSnapshots } from "@/features/auditoria/hooks";
 
@@ -21,12 +22,13 @@ export function AuditoriaTendenciaChart() {
 
   function renderBody() {
     if (isLoading) return <ChartSkeleton height={192} />;
-    if (!data || data.length === 0) {
+    if (!data || data.length < 2) {
       return (
-        <div className="text-xs text-muted-foreground py-12 text-center">
-          Aún no hay snapshots históricos. Vuelve mañana para ver la primera
-          tendencia (se captura un snapshot por día automáticamente).
-        </div>
+        <EmptyStateInline
+          icon={TrendingUp}
+          message="No hay suficientes datos para graficar la tendencia."
+          hint="Se captura un snapshot por día automáticamente; vuelve mañana para ver la primera tendencia."
+        />
       );
     }
     return (

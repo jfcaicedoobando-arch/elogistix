@@ -3,7 +3,9 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
   ReferenceLine,
 } from "recharts";
-import { formatCurrencyCompact } from "@/lib/formatters/numbers";
+import { formatCompactNumber } from "@/lib/formatters/numbers";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { LineChart as LineChartIcon } from "lucide-react";
 import type { FlujoProyectado } from "@/features/tesoreria/services";
 
 interface Props {
@@ -22,14 +24,18 @@ export function MiniFlujoCard({ flujo }: Props) {
         <CardTitle>Flujo proyectado 4 semanas</CardTitle>
       </CardHeader>
       <CardContent>
+        {data.length < 2 ? (
+          <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se necesitan al menos 2 semanas." />
+        ) : (
         <div className="h-48">
+          <p className="text-2xs text-muted-foreground mb-1">MXN</p>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="semana" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCurrencyCompact(v, "MXN")} />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCompactNumber(v)} />
               <Tooltip
-                formatter={(v: number) => formatCurrencyCompact(v, "MXN")}
+                formatter={(v: number) => formatCompactNumber(v)}
                 contentStyle={{ fontSize: 12 }}
               />
               <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeDasharray="3 3" />
@@ -43,6 +49,7 @@ export function MiniFlujoCard({ flujo }: Props) {
             </LineChart>
           </ResponsiveContainer>
         </div>
+        )}
       </CardContent>
     </Card>
   );

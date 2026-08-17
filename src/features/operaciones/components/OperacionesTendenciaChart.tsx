@@ -13,12 +13,20 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from "recharts";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { LineChart as LineChartIcon } from "lucide-react";
 
 interface Props {
   data: Array<{ mes: string; creadas: number; llegadas: number }>;
 }
 
 export default function OperacionesTendenciaChart({ data }: Props) {
+  if (data.length < 2) {
+    return (
+      <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se necesitan al menos 2 meses." />
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
