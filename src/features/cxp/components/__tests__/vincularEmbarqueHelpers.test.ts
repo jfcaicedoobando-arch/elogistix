@@ -123,8 +123,8 @@ describe("vincularEmbarqueHelpers", () => {
   describe("notificarResumen", () => {
     it("info cuando no hay selección", () => {
       notificarResumen({ seleccion: [], descartadosPorMoneda: 0 }, 5);
-      expect(toast.info).toHaveBeenCalledOnce();
-      expect(toast.success).not.toHaveBeenCalled();
+      expect(notifyInfo).toHaveBeenCalledOnce();
+      expect(notifySuccess).not.toHaveBeenCalled();
     });
 
     it("success con partes combinadas (fuerte + dudosa + descarte + sin match)", () => {
@@ -138,7 +138,7 @@ describe("vincularEmbarqueHelpers", () => {
         },
         5,
       );
-      const call = (toast.success as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+      const call = ((notifySuccess as ReturnType<typeof vi.fn>).mock.calls[0][1] as { title: string }).title;
       expect(call).toContain("2 sugerencias");
       expect(call).toContain("1 dudosa");
       expect(call).toContain("1 descartada");
@@ -150,7 +150,7 @@ describe("vincularEmbarqueHelpers", () => {
         { seleccion: [{ fuerte: true } as never], descartadosPorMoneda: 0 },
         1,
       );
-      const call = (toast.success as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+      const call = ((notifySuccess as ReturnType<typeof vi.fn>).mock.calls[0][1] as { title: string }).title;
       expect(call).toBe("1 sugerencia aplicada");
     });
   });
