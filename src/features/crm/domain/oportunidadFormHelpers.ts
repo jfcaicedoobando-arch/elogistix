@@ -1,6 +1,9 @@
 /**
  * Helpers para construir estado inicial del formulario de Oportunidad.
  * Extraído de `useOportunidadForm.ts` para bajar complejidad de la arrow del useEffect.
+ *
+ * v13.629.1 — `buildFromOportunidad` se dividió en tres bloques puros
+ * (identidad, comercial, metas) para cumplir el límite de complejidad.
  */
 import type { CrmOportunidadRow, Moneda } from "@/features/crm/types/oportunidades";
 import type { User } from "@supabase/supabase-js";
@@ -11,31 +14,54 @@ interface Etapa {
   probabilidad_default: number;
 }
 
-export function buildFromOportunidad(o: CrmOportunidadRow): OportunidadFormState {
+function bloqueIdentidad(o: CrmOportunidadRow) {
   return {
     nombre: o.nombre,
     cliente_id: o.cliente_id ?? null,
     cliente_nombre: o.cliente_nombre ?? "",
     etapa_id: o.etapa_id,
+    vendedor_id: o.vendedor_id ?? null,
+    vendedor_email: o.vendedor_email ?? "",
+  };
+}
+
+function bloqueComercial(o: CrmOportunidadRow) {
+  return {
     monto_estimado: Number(o.monto_estimado ?? 0),
     moneda: (o.moneda as Moneda) ?? "MXN",
     probabilidad: o.probabilidad ?? 0,
     valor_real: Number(o.valor_real ?? 0),
     fecha_cierre_real: o.fecha_cierre_real ?? "",
     fecha_estimada_cierre: o.fecha_estimada_cierre ?? "",
+  };
+}
+
+function bloqueRuta(o: CrmOportunidadRow) {
+  return {
     modo: o.modo ?? "",
     origen: o.origen ?? "",
     destino: o.destino ?? "",
     notas: o.notas ?? "",
-    vendedor_id: o.vendedor_id ?? null,
-    vendedor_email: o.vendedor_email ?? "",
+  };
+}
+
+function bloqueMetas(o: CrmOportunidadRow) {
+  return {
     monto_meta: Number(o.monto_meta ?? 0),
     fecha_meta_cierre: o.fecha_meta_cierre ?? "",
     compromiso_nota: o.compromiso_nota ?? "",
     margen_pct: Number(o.margen_pct ?? 0),
     riesgos_objeciones: o.riesgos_objeciones ?? "",
   };
+}
 
+export function buildFromOportunidad(o: CrmOportunidadRow): OportunidadFormState {
+  return {
+    ...bloqueIdentidad(o),
+    ...bloqueComercial(o),
+    ...bloqueRuta(o),
+    ...bloqueMetas(o),
+  };
 }
 
 export function buildEmptyForNueva(
