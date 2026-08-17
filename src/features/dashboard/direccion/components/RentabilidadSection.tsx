@@ -22,6 +22,9 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="p-5 rounded-xl border border-border">
         <p className="text-sm font-medium">Margen bruto — últimos 6 meses</p>
+        {data.length === 0 ? (
+          <p className="mt-6 text-sm text-muted-foreground">Sin datos de margen en los últimos 6 meses.</p>
+        ) : (
         <div className="h-56 mt-4">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>
@@ -36,6 +39,7 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
             </BarChart>
           </ResponsiveContainer>
         </div>
+        )}
       </Card>
 
       <Card className="p-5 rounded-xl border border-border">

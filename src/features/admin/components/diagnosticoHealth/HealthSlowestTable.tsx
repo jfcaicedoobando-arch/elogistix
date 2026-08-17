@@ -37,6 +37,7 @@ export default function HealthSlowestTable({ loading, data }: Props) {
             Sin mediciones de latencia.
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="text-muted-foreground">
               <tr className="border-b">
@@ -57,6 +58,7 @@ export default function HealthSlowestTable({ loading, data }: Props) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </CardContent>
     </Card>

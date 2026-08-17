@@ -41,6 +41,7 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
           ) : liquidaciones.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground text-center">Sin liquidaciones registradas.</p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr className="text-left">
@@ -80,6 +81,7 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </CardContent>
       </Card>

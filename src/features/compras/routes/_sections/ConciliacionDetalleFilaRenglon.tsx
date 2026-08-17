@@ -86,6 +86,7 @@ function SubTablaPartidas({ fila }: { fila: FilaReconciliacion }) {
   return (
     <tr className="bg-muted/20">
       <td colSpan={8} className="px-3 py-2">
+        <div className="overflow-x-auto">
         <table className="w-full text-label">
           <thead className="text-muted-foreground">
             <tr>
@@ -118,6 +119,7 @@ function SubTablaPartidas({ fila }: { fila: FilaReconciliacion }) {
             })}
           </tbody>
         </table>
+        </div>
       </td>
     </tr>
   );

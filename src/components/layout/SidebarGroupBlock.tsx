@@ -119,6 +119,15 @@ function SidebarGroupBlockBase({
                     )}
                   </span>
                   {!collapsed && <span className="flex-1 truncate">{item.title}</span>}
+                  {/* VB-41: en el rail colapsado el badge numérico no cabe;
+                      se sustituye por un dot sobre la esquina del icono para
+                      no perder la señal de atención. */}
+                  {badge > 0 && collapsed && (
+                    <span
+                      aria-label={`${badge} alertas`}
+                      className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive"
+                    />
+                  )}
                   {badge > 0 && !collapsed && (
                     <Tooltip>
                       <TooltipTrigger asChild>
