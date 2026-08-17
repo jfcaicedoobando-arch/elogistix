@@ -12,7 +12,7 @@ import { savePaso1 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { validatePaso1, vincularCrmTrasCrear } from "./handlePaso1Crm";
-import { scrollAndFocusSection, seccionParaErrorPaso1 } from "./scrollToErrorSection";
+import { scrollAndFocusSection, seccionParaErrorPaso1, campoParaErrorPaso1 } from "./scrollToErrorSection";
 
 
 interface Paso1Mutations {
