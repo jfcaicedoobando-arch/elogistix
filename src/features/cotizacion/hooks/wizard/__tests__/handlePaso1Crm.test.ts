@@ -262,7 +262,7 @@ describe("vincularCrmTrasCrear", () => {
 
 // VF-09 / VB-34: mapeo de mensajes de validación a campos del form para
 // marcar el error inline (rojo bajo el control), no sólo por toast.
-describe("campoParaErrorPaso1", () => {
+describe("campoParaErrorPaso1 (reexport desde handlePaso1Crm)", () => {
   it("mapea 'Selecciona un cliente' a clienteId", () => {
     expect(campoParaErrorPaso1("Selecciona un cliente")).toBe("clienteId");
   });
