@@ -1,9 +1,21 @@
--- Fuente canónica de public.guard_pago_proveedor (dominio cxp).
--- Última migración que la define: 20260825000700 (BL-15, diferencia
--- cambiaria también en el cruce pago USD → factura MXN).
--- Grants anclados (H6, migración 20260723223436).
--- Regla: cualquier cambio a esta función debe actualizar este archivo
--- en el mismo PR (ver supabase/schema/README.md).
+-- ============================================================
+-- BL-15 · guard_pago_proveedor: diferencia cambiaria también en el cruce
+-- pago USD → factura MXN (antes sólo MXN→USD; resultado cambiario CxP
+-- asimétrico e incompleto).
+--
+-- Cuerpo VERBATIM de la versión vigente (20260825000200, BL-03) salvo el
+-- bloque de `diferencia_cambiaria_mxn`. Misma firma, volatilidad,
+-- SECURITY DEFINER, search_path y grants anclados (H6).
+--
+-- Simetría del cálculo:
+--   · pago MXN / factura USD:  diff = monto_en_moneda_factura(USD)
+--                                × (TC_pago − TC_factura)   [ya existía]
+--   · pago USD / factura MXN:  diff = monto(USD)
+--                                × (TC_pago − TC_factura)   [NUEVO]
+-- En ambos casos es (cantidad en USD) × (desplazamiento del TC), en MXN.
+-- El cruce EUR sigue rechazado por `convertir_monto_pago_a_factura`
+-- (LC_PAGO_CRUCE_NO_SOPORTADO); el UI ya tiene mensaje propio.
+-- ============================================================
 
 CREATE OR REPLACE FUNCTION public.guard_pago_proveedor()
 RETURNS trigger

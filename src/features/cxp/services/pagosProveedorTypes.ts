@@ -32,4 +32,6 @@ export interface RegistrarPagoProveedorInput {
   notas?: string;
   /** Si la factura es USD y se paga en MXN, esta es la diferencia respecto al TC original. */
   diferencia_cambiaria_mxn?: number | null;
+  /** BL-14: UUID por intento de submit; el UNIQUE parcial de BD absorbe retries duplicados. */
+  client_request_id?: string | null;
 }

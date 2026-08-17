@@ -96,6 +96,7 @@ function construirPayloadPago(
     cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
     notas: input.notas ?? "",
     diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? null,
+    client_request_id: input.client_request_id ?? null,
     created_by: userId,
   };
 }

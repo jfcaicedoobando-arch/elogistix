@@ -5,7 +5,7 @@
  * y se re-lee vía `useFacturaProveedor` para evitar mostrar saldo/estado stale
  * cuando el usuario acaba de aprobar/pagar en otra pestaña.
  */
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { notifySuccess } from "@/lib/ui/appFeedback";
@@ -44,6 +44,17 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
   );
   const factura = facturaFresca ?? facturaInput;
 
+  // BL-14: UUID por apertura del dialog; los reintentos del MISMO submit
+  // comparten el id y el UNIQUE parcial de `pagos_proveedor` absorbe el
+  // duplicado (retry de red / doble submit tras timeout).
+  const clientRequestIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (open && facturaId && !clientRequestIdRef.current) {
+      clientRequestIdRef.current = crypto.randomUUID();
+    }
+    if (!open) clientRequestIdRef.current = null;
+  }, [open, facturaId]);
+
   const registrar = useRegistrarPagoProveedor();
   const f = usePagoProveedorForm(factura, open);
   const noAprobada = !!factura && factura.estado_aprobacion !== "aprobada";
@@ -77,6 +88,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
         cuenta_bancaria_id: f.cuentaId || null,
         diferencia_cambiaria_mxn:
           f.esUsdPagadoEnMxn && f.diffMxn !== "" ? Number(f.diffMxn) : null,
+        client_request_id: clientRequestIdRef.current,
       });
       notifySuccess(undefined, { title: "Pago registrado" });
       onOpenChange(false);

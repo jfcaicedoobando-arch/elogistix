@@ -3,7 +3,7 @@
  * internos del wizard de cotización. Extraído de `cotizacion.ts` (Power-of-10).
  */
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
-import { calcularTotalConIVA } from "@/lib/financial/financialUtils";
+import { calcularTotalConIVA, subtotalLinea } from "@/lib/financial/financialUtils";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 export interface ConceptoVentaPrellenado {
@@ -43,7 +43,8 @@ export function buildConceptosFromCostos(
         ? tasaProducto! > 0
         : (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.concepto);
       const tasaAplicar = desdeCatalogo ? (tasaProducto as number) : tasaIva;
-      const subtotal = c.cantidad * c.precio_venta;
+      // BL-12: canon `subtotalLinea` (redondeo currency.js), no float crudo.
+      const subtotal = subtotalLinea(c.cantidad, c.precio_venta);
       return {
         descripcion: c.concepto,
         unidad_medida: c.unidad_medida,
@@ -67,7 +68,8 @@ export function buildConceptosFromCostos(
       // En MXN el default histórico es IVA general; sólo se apaga si el catálogo lo marca exento/tasa 0.
       const tieneIva = desdeCatalogo ? tasaProducto! > 0 : true;
       const tasaAplicar = desdeCatalogo ? (tasaProducto as number) : tasaIva;
-      const subtotal = c.cantidad * c.precio_venta;
+      // BL-12: canon `subtotalLinea` (redondeo currency.js), no float crudo.
+      const subtotal = subtotalLinea(c.cantidad, c.precio_venta);
       return {
         descripcion: c.concepto,
         unidad_medida: c.unidad_medida,

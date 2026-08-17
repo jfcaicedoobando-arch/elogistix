@@ -11,6 +11,8 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 import type { EmbarqueFormValues } from "./embarqueFromDb";
 import { emptyToNull } from "@/lib/mappers/_helpers";
+// BL-12: canon monetario — nunca `cantidad * precio` crudo (drift float).
+import { subtotalLinea } from "@/lib/financial/financialUtils";
 import {
   modoEmbarqueSchema,
   tipoOperacionSchema,
@@ -161,7 +163,7 @@ export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[])
       cantidad: v.cantidad,
       precio_unitario: v.precioUnitario,
       moneda: monedaSchema.parse(v.moneda),
-      total: v.cantidad * v.precioUnitario,
+      total: subtotalLinea(v.cantidad, v.precioUnitario),
       contenedor_id: v.contenedorId ?? null,
     }));
 }

@@ -81,16 +81,24 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   // deps vivas (objeto factura nuevo en cada refetch, saldo derivado de queries)
   // re-ejecutaban el efecto y borraban lo que el usuario ya había capturado.
   const initializedForRef = useRef<string | null>(null);
+  // BL-14: UUID por apertura del dialog; todos los reintentos del MISMO
+  // submit comparten el id y el UNIQUE parcial de BD absorbe el duplicado.
+  const clientRequestIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!open || !factura) {
       initializedForRef.current = null;
+      clientRequestIdRef.current = null;
       return;
     }
     if (initializedForRef.current === factura.id) return;
     initializedForRef.current = factura.id;
+    clientRequestIdRef.current = crypto.randomUUID();
     setValues({
       fecha: today(),
-      monto: saldo > 0 ? saldo.toFixed(2) : "",
+      // EC-12: redondeo hacia ARRIBA al centavo. Con `toFixed` (al más
+      // cercano) el prefill podía quedar 1 centavo por debajo del saldo y
+      // dejar un residuo impagable (la factura nunca quedaba saldada).
+      monto: saldo > 0 ? (Math.ceil((saldo - 1e-9) * 100) / 100).toFixed(2) : "",
       moneda: factura.moneda,
       formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
     });
@@ -137,6 +145,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       referencia: values.referencia,
       notas: values.notas,
       cuentaBancariaId: values.cuentaBancariaId || null,
+      clientRequestId: clientRequestIdRef.current,
       esPpdTimbrada,
     });
   };

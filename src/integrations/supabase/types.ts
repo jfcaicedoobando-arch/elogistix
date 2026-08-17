@@ -5691,6 +5691,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           cuenta_bancaria_id: string | null
+          client_request_id: string | null
           deleted_at: string | null
           deleted_by: string | null
           diferencia_cambiaria_mxn: number
@@ -5737,6 +5738,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           cuenta_bancaria_id?: string | null
+          client_request_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
@@ -5783,6 +5785,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           cuenta_bancaria_id?: string | null
+          client_request_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
@@ -5939,6 +5942,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           cuenta_bancaria_id: string | null
+          client_request_id: string | null
           deleted_at: string | null
           deleted_by: string | null
           diferencia_cambiaria_mxn: number | null
@@ -5963,6 +5967,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           cuenta_bancaria_id?: string | null
+          client_request_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number | null
@@ -5987,6 +5992,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           cuenta_bancaria_id?: string | null
+          client_request_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number | null
