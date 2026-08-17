@@ -41,67 +41,43 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const { form, setForm, set } = useOportunidadForm(open, oportunidad, etapas, user);
   const [autoActividad, setAutoActividad] = useState(true);
 
+  const etapaSel = etapas.find((e) => e.id === form.etapa_id);
+  const esGanada = (etapaSel as { tipo?: string } | undefined)?.tipo === "ganada";
+
+  const crearActividadSeguimiento = async (oportunidadId: string) => {
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+    manana.setHours(9, 0, 0, 0);
+    await crearActividad
+      .mutateAsync({
+        tipo: "tarea",
+        asunto: `Preparar propuesta: ${form.nombre}`,
+        descripcion: "Actividad creada automáticamente al alta de la oportunidad.",
+        entidad_tipo: "oportunidad",
+        entidad_id: oportunidadId,
+        fecha_programada: manana.toISOString(),
+      })
+      .catch(() => undefined);
+  };
+
   const handleSubmit = async () => {
-    if (!form.nombre.trim()) return notifyError(undefined, { title: "Nombre es obligatorio", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    if (!form.etapa_id) return notifyError(undefined, { title: "Selecciona una etapa", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    // B-034: etapa "ganada" exige fecha de cierre real; valor real por
-    // defecto = monto estimado (editable en el form).
-    const etapaSel = etapas.find((e) => e.id === form.etapa_id);
-    const esGanada = (etapaSel as { tipo?: string } | undefined)?.tipo === "ganada";
-    if (esGanada && !form.fecha_cierre_real) {
+    const invalido = validarOportunidadForm(form, esGanada);
+    if (invalido) {
       return notifyError(undefined, {
-        title: "Captura la fecha de cierre real",
-        description: "Una oportunidad ganada necesita su fecha de cierre para que el Resumen y el Leaderboard coincidan.",
-        method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED,
+        ...invalido,
+        method: "HANDLE_SUBMIT",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
     }
     try {
-      const payload = {
-        nombre: form.nombre,
-        cliente_id: form.cliente_id,
-        cliente_nombre: form.cliente_nombre,
-        etapa_id: form.etapa_id,
-        monto_estimado: form.monto_estimado,
-        moneda: form.moneda,
-        probabilidad: form.probabilidad,
-        fecha_estimada_cierre: form.fecha_estimada_cierre || null,
-        // B-034: solo se persisten cuando la etapa destino es "ganada".
-        ...(esGanada ? {
-          fecha_cierre_real: form.fecha_cierre_real,
-          valor_real: form.valor_real > 0 ? form.valor_real : form.monto_estimado,
-        } : {}),
-        modo: form.modo,
-        origen: form.origen,
-        destino: form.destino,
-        notas: form.notas,
-        vendedor_id: form.vendedor_id,
-        vendedor_email: form.vendedor_email,
-        monto_meta: form.monto_meta > 0 ? form.monto_meta : null,
-        fecha_meta_cierre: form.fecha_meta_cierre || null,
-        compromiso_nota: form.compromiso_nota || null,
-        margen_pct: form.margen_pct > 0 ? form.margen_pct : null,
-        riesgos_objeciones: form.riesgos_objeciones || null,
-      };
-
+      const payload = buildOportunidadFormPayload(form, esGanada);
       if (isEdit && oportunidad) {
         await actualizar.mutateAsync({ id: oportunidad.id, patch: payload });
         crmToast.success("Oportunidad actualizada");
         onSaved?.(oportunidad.id);
       } else {
         const r = await crear.mutateAsync(payload);
-        if (autoActividad) {
-          const manana = new Date();
-          manana.setDate(manana.getDate() + 1);
-          manana.setHours(9, 0, 0, 0);
-          await crearActividad.mutateAsync({
-            tipo: "tarea",
-            asunto: `Preparar propuesta: ${form.nombre}`,
-            descripcion: "Actividad creada automáticamente al alta de la oportunidad.",
-            entidad_tipo: "oportunidad",
-            entidad_id: r.id,
-            fecha_programada: manana.toISOString(),
-          }).catch(() => undefined);
-        }
+        if (autoActividad) await crearActividadSeguimiento(r.id);
         crmToast.success("Oportunidad creada");
         onSaved?.(r.id);
       }
