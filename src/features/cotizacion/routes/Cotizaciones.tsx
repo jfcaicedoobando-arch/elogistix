@@ -103,19 +103,12 @@ export default function Cotizaciones() {
       />
 
       <CotizacionesBannerOrigen />
-      <div className="space-y-2">
-        {/* VF-10: el periodo del KPI queda explícito para que no se compare
-            con el conteo de la tabla (que depende de los filtros activos). */}
-        <p className="text-xs font-medium text-muted-foreground">
-          KPIs de los últimos 30 días · no dependen de los filtros de la tabla
-        </p>
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard label="Total cotizaciones (30 días)" value={c.kpis.total} icon={BarChart3} variant="info" iconVariant="chip" />
-          <KpiCard label="Aceptadas" value={c.kpis.aceptadas} icon={CheckCircle} variant="success" iconVariant="chip" />
-          <KpiCard label="Rechazadas" value={c.kpis.rechazadas} icon={XCircle} variant="destructive" iconVariant="chip" />
-          <KpiCard label="Tasa de conversión" value={`${c.kpis.tasa}%`} icon={TrendingUp} variant="accent" iconVariant="chip" />
-        </div>
-      </div>
+      <CotizacionesKpis
+        total={c.kpis.total}
+        aceptadas={c.kpis.aceptadas}
+        rechazadas={c.kpis.rechazadas}
+        tasa={c.kpis.tasa}
+      />
 
       <Card>
         <CardContent className="p-4">
