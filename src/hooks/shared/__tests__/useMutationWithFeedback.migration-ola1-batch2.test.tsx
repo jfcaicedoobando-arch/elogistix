@@ -287,16 +287,15 @@ describe("useCotizacionMutations · migración ola1 batch 2", () => {
     expect(keys).toEqual(expect.arrayContaining([["cotizaciones", "cot1"]]));
   });
 
-  it("useUpdateCotizacion: error → notifyError con título específico", async () => {
+  // Patch 2 (v13.632.0): `useUpdateCotizacion` es `silent` — el autoguardado del
+  // wizard no debe lanzar toasts; el error se refleja en el estado de la mutación.
+  it("useUpdateCotizacion: error → silencioso (sin toast)", async () => {
     svcUpdateCot.mockRejectedValueOnce(new Error("y"));
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useUpdateCotizacion(), { wrapper: Wrapper });
     result.current.mutate({ id: "cot1", data: {} });
     await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(notifyError).toHaveBeenCalledWith(
-      undefined,
-      expect.objectContaining({ title: "Error al actualizar cotización", method: "UPDATE_COTIZACION" }),
-    );
+    expect(notifyError).not.toHaveBeenCalled();
   });
 });
 

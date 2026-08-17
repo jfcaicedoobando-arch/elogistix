@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { AuthProvider, useAuth } from "../AuthContext";
+import { createWrapper } from "@/test/utils/queryWrapper";
 
 vi.mock("../auth/useAuthSession", () => ({
   useAuthSession: () => ({ user: null, session: null, loading: false, lastEvent: null }),
@@ -20,7 +21,13 @@ vi.mock("@/lib/auth/authSnapshotBuilder", () => ({
   buildSentryUserContext: vi.fn(() => ({})),
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+// AuthProvider usa `useQueryClient` (purga EC-01): necesita QueryClientProvider.
+const QueryWrapper = createWrapper();
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryWrapper>
+    <AuthProvider>{children}</AuthProvider>
+  </QueryWrapper>
+);
 
 describe("AuthContext", () => {
   it("provee valores por defecto cuando no hay sesión", () => {
