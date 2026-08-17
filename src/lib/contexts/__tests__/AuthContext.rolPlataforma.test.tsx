@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { AuthProvider, useAuth } from "../AuthContext";
+import { createWrapper } from "@/test/utils/queryWrapper";
 
 /**
  * M1 (Ola 4) — `super_admin` es un rol de plataforma: si aparece como rol de
@@ -27,7 +28,13 @@ vi.mock("@/lib/auth/authSnapshotBuilder", () => ({
   buildSentryUserContext: vi.fn(() => ({})),
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+// AuthProvider usa `useQueryClient` (purga EC-01): necesita QueryClientProvider.
+const QueryWrapper = createWrapper();
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryWrapper>
+    <AuthProvider>{children}</AuthProvider>
+  </QueryWrapper>
+);
 
 describe("AuthContext · rol de plataforma no escalable desde la organización", () => {
   it("ignora orgRole='super_admin' y conserva el rol global", () => {

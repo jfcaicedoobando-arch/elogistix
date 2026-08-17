@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.642.2] - 2026-08-17
+- CI: agregados mensajes amigables para 7 códigos `LC_*` de idempotencia/candados de pagos (BL02–BL15) en `lcCodeMessages.tesoreria.ts`.
+- CI: pruebas de `AuthContext` envueltas en `QueryClientProvider` (el provider usa `useQueryClient` para la purga EC-01).
+- CI: ajustada la prueba de `useUpdateCotizacion` al comportamiento `silent` introducido en 13.632.0.
+
 ## [13.642.1] - 2026-08-17
 
 ### CI · suite RLS `soft_delete_reportes`
