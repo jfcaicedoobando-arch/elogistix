@@ -144,6 +144,17 @@ export const ROLES_CONSULTA_FISCAL: readonly string[] = [
   "super_admin", "admin_org", "admin", "contador",
   "tesorero", "auxiliar_contable", "ejecutivo_cobranza",
 ];
+/**
+ * Descarga de PDF/XML de un CFDI ya timbrado: es LECTURA del expediente y debe
+ * cubrir a todos los roles con acceso a `/facturacion` en la UI
+ * (`FACTURACION_ROLES` en `src/lib/access/roleRouteMatrix.ts`). Sin esta lista
+ * los roles operativos veían el botón de descarga y recibían 403 "forbidden".
+ * Mantener sincronizada con `FACTURACION_ROLES`.
+ */
+export const ROLES_DESCARGA_CFDI: readonly string[] = [
+  ...ROLES_CONSULTA_FISCAL,
+  "operador", "coordinador_logistico", "gerente_operaciones", "gerente_visor",
+];
 
 /**
  * FIX C2 (S5-02) + A13 (Ola 4) — Membresía + rol efectivo. Semántica:
