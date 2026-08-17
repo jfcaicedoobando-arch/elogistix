@@ -11,7 +11,7 @@ import {
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
 
 export default function SeccionDatosGeneralesCotizacion({ complete }: { complete?: boolean } = {}) {
-  const { watch, setValue } = useFormContext<CotizacionFormValues>();
+  const { watch, setValue, formState: { errors }, clearErrors } = useFormContext<CotizacionFormValues>();
   const modo = watch("modo");
   const tipo = watch("tipo");
   const esTerrestre = modo === "Terrestre";
