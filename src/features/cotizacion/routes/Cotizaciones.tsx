@@ -1,9 +1,9 @@
 import { useMemo, useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDuplicarCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";
-import { Plus, TrendingUp, CheckCircle, XCircle, BarChart3, AlertTriangle, Archive } from "lucide-react";
+import { Plus, AlertTriangle, Archive } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
-import { KpiCard } from "@/components/shared/KpiCard";
+import { CotizacionesKpis } from "@/features/cotizacion/components/CotizacionesKpis";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
