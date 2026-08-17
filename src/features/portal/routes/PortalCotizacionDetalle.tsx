@@ -15,7 +15,7 @@ import PortalCotizacionEstadoBanner from "@/features/portal/components/cotizacio
 import PortalCotizacionConfirmDialog from "@/features/portal/components/cotizacion/PortalCotizacionConfirmDialog";
 import DatosGeneralesCard from "@/features/portal/components/cotizacion/DatosGeneralesCard";
 import { AvisoConceptosDescartados } from "@/features/cotizacion/components/AvisoConceptosDescartados";
-import { formatCurrency } from "@/lib/formatters";
+import PortalCotizacionTotalCard from "@/features/portal/components/cotizacion/PortalCotizacionTotalCard";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useDocumentTitle } from "@/hooks/shared";
