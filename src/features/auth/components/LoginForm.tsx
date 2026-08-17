@@ -62,7 +62,13 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
   return (
     <form onSubmit={handleLogin} className="space-y-4" noValidate>
       {loginError && (
-        <Alert variant="destructive" role="alert">
+        <Alert
+          variant="destructive"
+          role="alert"
+          // VB-17: centra el icono verticalmente respecto al texto cuando
+          // el mensaje envuelve a dos líneas (default: icono fijo en top-4).
+          className="[&>svg]:top-1/2 [&>svg]:-translate-y-1/2"
+        >
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{loginError}</AlertDescription>
         </Alert>

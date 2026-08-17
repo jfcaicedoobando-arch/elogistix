@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase } from "@/lib/formatters";
+import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase, PLACEHOLDER_VACIO } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/features/dashboard/hooks";
 
@@ -54,14 +54,15 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     accessorFn: (e) => e.contenedor, enableSorting: true,
     sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.contenedor),
     meta: { className: "text-xs font-mono whitespace-nowrap" },
-    cell: ({ row }) => row.original.contenedor || <span className="text-muted-foreground">-</span>,
+    // VB-20/VB-30: placeholder vacío unificado (em dash), no guion ASCII.
+    cell: ({ row }) => row.original.contenedor || <span className="text-muted-foreground">{PLACEHOLDER_VACIO}</span>,
   },
   {
     id: "eta", header: "ETA",
     accessorFn: (e) => e.eta, enableSorting: true,
     sortingFn: sortByDate<EmbarqueMesSiguiente>((e) => e.eta),
     meta: { className: "text-xs" },
-    cell: ({ row }) => row.original.eta ? formatDate(row.original.eta) : "-",
+    cell: ({ row }) => row.original.eta ? formatDate(row.original.eta) : PLACEHOLDER_VACIO,
   },
   statusColumn<EmbarqueMesSiguiente>({
     id: "estado",

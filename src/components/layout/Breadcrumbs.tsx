@@ -118,19 +118,20 @@ function BreadcrumbsBase() {
       return [{ label: "Inicio", to: "/", isLast: true }];
     }
     let acc = "";
-    return parts.map((part, i) => {
+    const trail = parts.map((part) => {
       acc += `/${part}`;
       const known = SEGMENT_LABELS[part];
       const dynamic = dynamicLabels[part];
       // Para UUIDs aún no resueltos, mostrar "…" en vez del UUID truncado
       // (evita el flash visual de "009ba3b0-ab4b-…" mientras carga el detalle).
       const fallback = UUID_RE.test(part) ? "…" : formatDynamicSegment(part);
-      return {
-        label: known ?? dynamic ?? fallback,
-        to: acc,
-        isLast: i === parts.length - 1,
-      };
+      return { label: known ?? dynamic ?? fallback, to: acc };
     });
+    // VB-24: anteponer la raíz "Inicio" para que las páginas de primer nivel
+    // (p. ej. /bitacora, a donde redirige la ruta legacy /sistema/bitacora)
+    // no queden con una miga huérfana sin contexto de navegación.
+    const all = parts[0] === "inicio" ? trail : [{ label: "Inicio", to: "/inicio" }, ...trail];
+    return all.map((c, i) => ({ ...c, isLast: i === all.length - 1 }));
   }, [pathname, dynamicLabels]);
 
   return (

@@ -32,7 +32,9 @@ export default function NuevoEmbarque() {
   useEffect(() => {
     if (!llegaConCotizacion) {
       notifyError(undefined, { title: "Selecciona primero una cotización Aceptada para crear el embarque.", method: "FEATURES_EMBARQUES_ROUTES_NUEVOEMBARQUE_1" });
-      navigate("/cotizaciones", { replace: true });
+      // VB-36: el deep link /embarques/nuevo rebotaba a /cotizaciones sin
+      // contexto; el state alimenta un banner persistente en el listado.
+      navigate("/cotizaciones", { replace: true, state: { origen: "nuevo-embarque" } });
     }
   }, [llegaConCotizacion, navigate]);
 

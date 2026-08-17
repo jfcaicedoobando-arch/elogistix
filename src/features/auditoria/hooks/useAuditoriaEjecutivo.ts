@@ -7,7 +7,7 @@
  * 11.14.0: agregados puros extraídos a `lib/auditoria/ejecutivoAgregados`.
  */
 import { useMemo } from "react";
-import { formatFechaHora } from "@/lib/formatters/dates";
+import { formatFechaHoraCorta } from "@/lib/formatters/dates";
 import { useAuditoria } from "@/features/auditoria/hooks/useAuditoria";
 import {
   revisionKey,
@@ -93,7 +93,7 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
     );
 
     const generadoEn = data?.generated_at
-      ? formatFechaHora(data.generated_at)
+      ? formatFechaHoraCorta(data.generated_at)
       : null;
 
     return {

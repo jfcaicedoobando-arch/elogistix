@@ -33,6 +33,10 @@ interface UsuarioCellProps {
 /** Celda "Usuario": avatar + email + chip "Tú". */
 export function UsuarioCell({ user, isSelf }: UsuarioCellProps) {
   const unresolved = user.email === UNRESOLVED_EMAIL;
+  // VB-15: si el directorio de auth no resolvió el correo, mostramos el nombre
+  // completo de `user_metadata.full_name` como fallback en vez del placeholder.
+  const fallbackName = unresolved && user.full_name ? user.full_name : null;
+  const etiqueta = fallbackName ?? user.email;
   return (
     <div className="flex items-center gap-3">
       <Avatar className="h-8 w-8 shrink-0 md:h-9 md:w-9">
@@ -47,9 +51,15 @@ export function UsuarioCell({ user, isSelf }: UsuarioCellProps) {
               ? "italic font-normal text-muted-foreground truncate"
               : "font-medium truncate"
           }
+          title={etiqueta}
         >
-          {user.email}
+          {etiqueta}
         </span>
+        {fallbackName && (
+          <span className="text-2xs text-muted-foreground italic">
+            Correo no disponible
+          </span>
+        )}
         {isSelf && (
           <span className="text-2xs uppercase tracking-wide text-primary font-semibold">
             Tú
@@ -164,5 +174,7 @@ export function EstadoInvitacionCell({ estado }: { estado: EstadoInvitacion }) {
       </Tooltip>
     );
   }
-  return <span className="text-xs text-muted-foreground">—</span>;
+  // VB-15: placeholder más explícito que un guion cuando el estado es
+  // desconocido (p. ej. el directorio de auth no respondió).
+  return <span className="text-xs text-muted-foreground">Sin datos</span>;
 }

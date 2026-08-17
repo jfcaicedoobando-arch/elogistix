@@ -78,3 +78,10 @@ export const nombreDesdeEmail = (raw: string | null | undefined): string => {
 /** Extrae la primera parte de un nombre compuesto (antes de coma o guión largo) */
 export const shortName = (raw: string | null): string =>
   raw?.split(/[,—]/)[0].trim() || "-";
+
+/**
+ * Placeholder de dato vacío en tablas/detalle: em dash tipográfico (—).
+ * Constante compartida para no mezclar "-" (guion ASCII) con "—" entre
+ * pantallas (VB-30). Usar también en vez de hardcodear el literal "—".
+ */
+export const PLACEHOLDER_VACIO = "—";

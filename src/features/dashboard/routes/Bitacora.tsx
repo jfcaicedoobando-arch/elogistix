@@ -178,6 +178,8 @@ export default function Bitacora() {
         <CardContent>{renderActividad()}</CardContent>
       </Card>
 
+      {/* VB-23: con 1 solo registro (o cualquier total ≤ pageSize) la
+          paginación completa era ruido visual con botones inútiles. */}
       <PaginationControls
         page={pagina}
         totalPages={totalPaginas}
@@ -185,6 +187,7 @@ export default function Bitacora() {
         pageSize={limitePagina}
         onPageSizeChange={(s) => { setLimitePagina(s); setPagina(0); }}
         pageSizeOptions={[...OPCIONES_PAGINA]}
+        hideWhenSinglePage
       />
     </PageContainer>
   );

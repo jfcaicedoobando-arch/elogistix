@@ -108,7 +108,12 @@ export function UsuariosInternosTab() {
   );
   const usuariosFiltrados = useMemo(() => filtrarUsuarios(users, filtros), [users, filtros]);
 
-  const rolesPresentes = useMemo(() => new Set(users.map((u) => u.role)).size, [users]);
+  // VB-16: el contador muestra usuarios activos (accionable) en vez del
+  // número de roles distintos presentes.
+  const activos = useMemo(
+    () => users.filter((u) => u.estado === "activo").length,
+    [users],
+  );
 
   const columns = useUsuarioColumns({
     currentUserId: user?.id,
@@ -164,7 +169,7 @@ export function UsuariosInternosTab() {
         onFiltroEstadoChange={setFiltroEstado}
         totalFiltrados={usuariosFiltrados.length}
         total={users.length}
-        rolesPresentes={rolesPresentes}
+        activos={activos}
       />
 
       <div className="rounded-md border">

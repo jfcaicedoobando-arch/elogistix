@@ -77,11 +77,16 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { data: cxpPorPagar = 0 } = useCxpPorPagarCount();
   const { data: buzonPorCapturar = 0 } = useEntrantesPorCapturarCount();
   const embarquesAlertas = embarquesDemora + garantiasAtoradas + adminPendientes;
-  const embarquesHint = [
-    `${embarquesDemora} con demora`,
-    `${garantiasAtoradas} garantía(s) atorada(s)`,
-    `${adminPendientes} con administrativos pendientes`,
-  ].join(" · ");
+  // VB-19: el badge NO cuenta los embarques activos del encabezado de la
+  // pantalla, sino los que requieren atención; el tooltip lo dice explícito
+  // con el total primero y el desglose después.
+  const embarquesHint =
+    `${embarquesAlertas} embarque(s) requieren atención: ` +
+    [
+      `${embarquesDemora} con demora`,
+      `${garantiasAtoradas} garantía(s) atorada(s)`,
+      `${adminPendientes} con administrativos pendientes`,
+    ].join(" · ");
   const badgeCounts: BadgeCounts = {
     embarquesAlertas,
     facturasVencidas,

@@ -10,10 +10,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronUp, LogOut, Sun, Moon, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CambiarPasswordDialog } from "@/components/shared/dialogs/CambiarPasswordDialog";
 
 interface Props {
   email: string;
+  /** VB-42: nombre completo (user_metadata.full_name); si existe se muestra
+   *  como primer renglón y el email pasa a segundo renglón con tooltip. */
+  displayName?: string | null;
   initials: string;
   roleLabel: string;
   collapsed: boolean;
@@ -24,6 +28,7 @@ interface Props {
 
 export function SidebarUserMenu({
   email,
+  displayName,
   initials,
   roleLabel,
   collapsed,
@@ -55,9 +60,26 @@ export function SidebarUserMenu({
             {!collapsed && (
               <>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium text-sidebar-foreground truncate leading-tight">
-                    {email}
-                  </div>
+                  {displayName && (
+                    <div className="text-xs font-medium text-sidebar-foreground truncate leading-tight">
+                      {displayName}
+                    </div>
+                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={cn(
+                          "truncate leading-tight",
+                          displayName
+                            ? "text-2xs text-sidebar-foreground/65"
+                            : "text-xs font-medium text-sidebar-foreground",
+                        )}
+                      >
+                        {email}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">{email}</TooltipContent>
+                  </Tooltip>
                   {roleLabel && (
                     <div className="text-2xs text-sidebar-foreground/65 truncate">
                       {roleLabel}

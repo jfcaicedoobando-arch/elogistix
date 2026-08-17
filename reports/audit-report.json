@@ -1,54 +1,17 @@
 {
-  "version": "13.640.2",
-  "generatedAt": "2026-08-17T17:03:53.691Z",
+  "version": "13.641.1",
+  "generatedAt": "2026-08-17T18:04:23.212Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
-    "oversized": [
-      {
-        "file": "src/features/presupuesto/components/TabVsReal.tsx",
-        "lines": 241
-      },
-      {
-        "file": "src/features/crm/routes/Oportunidades.tsx",
-        "lines": 224
-      },
-      {
-        "file": "src/features/embarques/components/DialogSeguroForm.tsx",
-        "lines": 222
-      },
-      {
-        "file": "src/features/costeo/routes/CosteoDemorasVenta.tsx",
-        "lines": 214
-      },
-      {
-        "file": "src/features/cxp/services/pagoProveedorValidaciones.ts",
-        "lines": 214
-      },
-      {
-        "file": "src/features/facturacion/services/bandejas.ts",
-        "lines": 210
-      },
-      {
-        "file": "src/features/crm/hooks/useMoverOportunidadEtapa.ts",
-        "lines": 208
-      },
-      {
-        "file": "src/features/admin/components/TabPlanes.tsx",
-        "lines": 205
-      },
-      {
-        "file": "src/lib/validation/mutationSchemas.ts",
-        "lines": 204
-      }
-    ]
+    "oversized": []
   },
   "casts": {
-    "total": 3064,
+    "total": 3065,
     "bySeverity": {
       "SAFE": 918,
       "LOW": 148,
-      "MEDIUM": 1998,
+      "MEDIUM": 1999,
       "HIGH": 0,
       "CRITICAL": 0
     },

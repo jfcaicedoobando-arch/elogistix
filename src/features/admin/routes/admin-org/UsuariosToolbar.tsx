@@ -23,7 +23,9 @@ interface UsuariosToolbarProps {
   onFiltroRolChange: (v: string) => void;
   totalFiltrados: number;
   total: number;
-  rolesPresentes: number;
+  /** VB-16: usuarios con estado "activo" (reemplaza al conteo de roles,
+   *  que no comunicaba nada accionable). */
+  activos: number;
   /** U-06: filtro por estado de la cuenta. */
   filtroEstado: string;
   onFiltroEstadoChange: (v: string) => void;
@@ -40,7 +42,7 @@ export function UsuariosToolbar({
   onFiltroRolChange,
   totalFiltrados,
   total,
-  rolesPresentes,
+  activos,
   filtroEstado,
   onFiltroEstadoChange,
 }: UsuariosToolbarProps) {
@@ -92,7 +94,7 @@ export function UsuariosToolbar({
         <Users className="h-4 w-4" />
         <span>
           <strong className="text-foreground">{totalFiltrados}</strong> de {total} usuario
-          {total === 1 ? "" : "s"} · {rolesPresentes} rol{rolesPresentes === 1 ? "" : "es"}
+          {total === 1 ? "" : "s"} · {activos} activo{activos === 1 ? "" : "s"}
         </span>
       </div>
     </div>

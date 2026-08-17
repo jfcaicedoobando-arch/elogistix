@@ -4,6 +4,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { derivarEstadoContenedor } from "@/features/embarques/utils/estadoContenedorCell";
+import { PLACEHOLDER_VACIO } from "@/lib/formatters";
 
 export interface ContenedorInfo { count: number; primero: string; incompletos?: number }
 
@@ -24,7 +25,8 @@ export function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCel
   return (
     <span className="inline-flex items-center gap-1.5 flex-wrap">
       <span className="truncate max-w-[80px]" title={primero || (mostrarLcl ? "LCL · sin contenedor asignado" : "")}>
-        {primero || (mostrarLcl ? "—" : "-")}
+        {/* VB-30: placeholder vacío unificado (em dash) para LCL y resto. */}
+        {primero || PLACEHOLDER_VACIO}
       </span>
       {mostrarLcl && (
         <Badge variant="secondary" className="text-2xs px-1.5 py-0 h-4" title="LCL · sin contenedor asignado">LCL</Badge>

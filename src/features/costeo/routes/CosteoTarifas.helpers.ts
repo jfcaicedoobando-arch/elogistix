@@ -1,5 +1,5 @@
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
-import { formatUSD } from "@/lib/formatters";
+import { formatUSD, formatFechaEs } from "@/lib/formatters";
 import { diasHastaFecha } from "@/lib/date/dateOnly";
 
 /** Re-export para call-sites históricos (`usd(n)`). Delega en el canónico `formatUSD`. */
@@ -8,13 +8,16 @@ export const usd = formatUSD;
 export type EstadoFiltro = "vigente" | "vencida" | "reemplazada" | "todas";
 export type AprobacionFiltro = "todas" | "borrador" | "vigente" | "rechazada";
 
-const mesesCortos = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-
+/**
+ * VB-38: vigencia en formato único DD/MM/YYYY (antes "18/jul → 15/dic" sin
+ * año, mientras /costeo/rutas mostraba "15/12/2026" para el mismo dato).
+ */
 export function formatVigencia(desde: string, hasta: string): string {
   const fmt = (iso: string) => {
+    // ISO inválido → devolver el valor crudo (comportamiento previo).
     const [y, m, d] = iso.split("-").map(Number);
     if (!y || !m || !d) return iso;
-    return `${String(d).padStart(2, "0")}/${mesesCortos[m - 1]}`;
+    return formatFechaEs(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
   };
   return `${fmt(desde)} → ${fmt(hasta)}`;
 }

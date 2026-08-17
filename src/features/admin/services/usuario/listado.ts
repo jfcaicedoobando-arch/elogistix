@@ -14,6 +14,9 @@ export type EstadoInvitacion = "activo" | "pendiente" | "desconocido";
 export interface UserRow {
   user_id: string;
   email: string;
+  /** VB-15: nombre de `user_metadata.full_name`, usado como fallback visual
+   *  cuando el correo no pudo resolverse. `null` si no existe. */
+  full_name?: string | null;
   role: AppRole;
   created_at: string;
   /** "pendiente" = invitado pero nunca inició sesión / sin confirmar correo. */
@@ -37,6 +40,8 @@ interface ListUsersRow {
   created_at: string;
   last_sign_in_at?: string | null;
   email_confirmed_at?: string | null;
+  /** VB-15: la edge function expone `user_metadata.full_name` (opcional). */
+  full_name?: string | null;
 }
 
 /** Deriva el estado de invitación a partir de las señales de auth. */
@@ -107,6 +112,7 @@ export async function fetchUsuariosOrganizacion(orgId?: string | null): Promise<
   return members.map((m) => ({
     user_id: m.user_id,
     email: authMap[m.user_id]?.email || UNRESOLVED_EMAIL,
+    full_name: authMap[m.user_id]?.full_name ?? null,
     role: m.role as AppRole,
     created_at: authMap[m.user_id]?.created_at || m.created_at || "",
     estado: derivarEstado(authMap[m.user_id]),
