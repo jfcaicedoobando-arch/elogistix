@@ -76,7 +76,7 @@ export default function Oportunidades() {
       />
       <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(totalPipeline)}`} />
       {listaTruncada && (
-        <p className="text-label text-amber-600 dark:text-amber-400">
+        <p className="text-label text-warning">
           Mostrando las primeras {opsRaw.length} de {totalServidor} oportunidades; refina tu búsqueda o aplica filtros para ver el resto.
         </p>
       )}
