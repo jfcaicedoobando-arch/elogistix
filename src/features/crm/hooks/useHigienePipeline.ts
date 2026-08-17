@@ -8,16 +8,12 @@ import { getErrorMessage } from "@/lib/errors";
 import {
   fetchHigieneResumen,
   fetchHigieneOportunidades,
-  fetchEmbudoConversion,
-  fetchAvanceActividad,
   fetchPresupuestoAnio,
   upsertPresupuestoMes,
   fetchMetasActividad,
   upsertMetaActividad,
   type HigieneResumen,
   type HigieneOportunidad,
-  type EmbudoEtapa,
-  type AvanceActividad,
   type PresupuestoMes,
   type MetaActividad,
 } from "@/features/crm/services";
@@ -33,20 +29,6 @@ export function useHigieneOportunidades() {
   return useQuery<HigieneOportunidad[]>({
     queryKey: queryKeys.crm.higiene.oportunidades,
     queryFn: fetchHigieneOportunidades,
-  });
-}
-
-export function useEmbudoConversion(desde: string, hasta: string) {
-  return useQuery<EmbudoEtapa[]>({
-    queryKey: queryKeys.crm.embudoConversion(desde, hasta),
-    queryFn: () => fetchEmbudoConversion(desde, hasta),
-  });
-}
-
-export function useAvanceActividad(desde: string, hasta: string) {
-  return useQuery<AvanceActividad[]>({
-    queryKey: queryKeys.crm.avanceActividad(desde, hasta),
-    queryFn: () => fetchAvanceActividad(desde, hasta),
   });
 }
 

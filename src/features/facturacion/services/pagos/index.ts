@@ -133,7 +133,6 @@ export async function registrarPagoFactura(
 }
 
 export { PagoConRepVivoError, eliminarPagoFactura } from "./eliminarPago";
-export type { EliminarPagoResult } from "./eliminarPago";
 
 
 

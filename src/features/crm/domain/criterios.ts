@@ -11,12 +11,6 @@ export interface AvanceCriterios {
 
 export type SemaforoCriterios = "sin_criterios" | "completo" | "incompleto";
 
-export const AVANCE_VACIO: AvanceCriterios = {
-  total: 0,
-  cumplidos: 0,
-  obligatoriosPendientes: 0,
-};
-
 /** Semáforo de la tarjeta: verde completo, ámbar incompleto. */
 export function semaforoCriterios(avance: AvanceCriterios | undefined): SemaforoCriterios {
   if (!avance || avance.total === 0) return "sin_criterios";

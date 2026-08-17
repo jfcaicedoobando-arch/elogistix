@@ -11,8 +11,6 @@ import {
   type ClienteAutorizacion,
 } from "@/features/cliente/services/autorizacionClienteService";
 
-export type { ClienteAutorizacion };
-
 const DEFAULT_AUTORIZACION: ClienteAutorizacion = {
   requiereAutorizacionCotizacion: true,
   requiereAutorizacionProforma: true,

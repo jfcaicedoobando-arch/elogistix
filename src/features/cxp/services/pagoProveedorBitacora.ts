@@ -38,14 +38,6 @@ export function detallesPagoRegistrado(input: DetallesPagoRegistradoInput) {
   };
 }
 
-export function detallesPagoEliminado(pagoId: string, userId: string | null) {
-  return {
-    pago_id: pagoId,
-    deleted_by: userId,
-    movimiento_tesoreria: "dado_de_baja" as EstadoMovimientoTesoreria,
-  };
-}
-
 export interface DetallesPagoEditadoInput extends DetallesPagoRegistradoInput {
   montoAnterior: number;
   monedaAnterior: PagoProveedor["moneda"];

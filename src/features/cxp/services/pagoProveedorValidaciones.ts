@@ -18,14 +18,6 @@ import {
 import { calcularAvisosPago } from "./pagoProveedorAvisos";
 
 export { calcularAvisosPago } from "./pagoProveedorAvisos";
-export {
-  validarMonto,
-  validarFechas,
-  validarTipoCambio,
-  validarCuenta,
-  validarDiferenciaCambiaria,
-} from "./pagoProveedorReglas";
-
 export interface CuentaPagoInfo {
   id: string;
   moneda: string;

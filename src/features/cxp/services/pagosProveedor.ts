@@ -160,7 +160,6 @@ export async function registrarPagoProveedor(
 }
 
 export { eliminarPagoProveedor } from "./pagoProveedorEliminar";
-export type { EliminarPagoProveedorResult } from "./pagoProveedorEliminar";
 
 
 
