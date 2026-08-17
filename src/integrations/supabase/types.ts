@@ -9227,6 +9227,20 @@ export type Database = {
           vencidas: number
         }[]
       }
+      crm_leads_buscar_duplicados: {
+        Args: { p_claves: Json }
+        Returns: {
+          contacto: string
+          email: string
+          email_norm: string
+          empresa: string
+          empresa_norm: string
+          estado: Database["public"]["Enums"]["crm_lead_estado"]
+          id: string
+          telefono: string
+          telefono_norm: string
+        }[]
+      }
       current_agente_id: { Args: never; Returns: string }
       current_agente_org: { Args: never; Returns: string }
       current_agente_proveedor_id: { Args: never; Returns: string }

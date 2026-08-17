@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 import { useCrearActividad } from "@/features/crm/hooks";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
+import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
 interface Props {
@@ -103,6 +104,11 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       size="2xl"
       footer={footer}
     >
+      <AvisoLeadDuplicado
+        empresa={form.empresa}
+        email={form.email}
+        telefono={form.telefono}
+      />
       <NuevoLeadForm
         form={form}
         setForm={setForm}

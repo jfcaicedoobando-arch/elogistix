@@ -100,13 +100,22 @@ async function avisarCriteriosPendientes(
   }
 }
 
+export interface PerdidaPendiente {
+  id: string;
+  nombre: string;
+  etapaId: string;
+  prob: number;
+}
+
 export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
 
   const mover = useMoverEtapaConAutomatizacion();
   const [proximoPaso, setProximoPaso] = useState<ProximoPasoTarget | null>(null);
+  // Ola A: mover a una etapa "perdida" exige motivo (la BD lo valida también).
+  const [perdidaPendiente, setPerdidaPendiente] = useState<PerdidaPendiente | null>(null);
 
-  const handleMover = useCallback(
-    async (id: string, etapaId: string, prob: number) => {
+  const ejecutarMover = useCallback(
+    async (id: string, etapaId: string, prob: number, motivoPerdidaId?: string | null) => {
       const op = oportunidades.find((o) => o.id === id);
       const etapaPrev = op?.etapa_id;
       const probPrev = Number(op?.probabilidad ?? 0);
@@ -120,8 +129,6 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
       // deja criterios de salida pendientes.
       await avisarCriteriosPendientes(id, etapaOrigen?.nombre);
 
-
-
       try {
         await mover.mutateAsync({
           id,
@@ -130,6 +137,7 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
           ...resolverCierreGanada(etapaDestino, op),
           // Ola 4 · N49: limpiar cierre real / motivo al salir de ganada/perdida.
           ...resolverLimpiezaCierre(etapaDestino, etapaOrigen),
+          ...(motivoPerdidaId ? { motivo_perdida_id: motivoPerdidaId } : {}),
         });
         const { showUndoToast } = await import("@/features/crm/hooks/useUndoToast");
         showUndoToast("Etapa actualizada", async () => {
@@ -161,5 +169,39 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
     [etapas, oportunidades, mover],
   );
 
-  return { handleMover, proximoPaso, cerrarProximoPaso: () => setProximoPaso(null) };
+  const handleMover = useCallback(
+    async (id: string, etapaId: string, prob: number) => {
+      const etapaDestino = etapas.find((e) => e.id === etapaId) as
+        | (CrmEtapaRow & { tipo?: string })
+        | undefined;
+      const op = oportunidades.find((o) => o.id === id);
+      if (etapaDestino?.tipo === "perdida") {
+        setPerdidaPendiente({ id, nombre: op?.nombre ?? "la oportunidad", etapaId, prob });
+        return;
+      }
+      await ejecutarMover(id, etapaId, prob);
+    },
+    [etapas, oportunidades, ejecutarMover],
+  );
+
+  const confirmarPerdida = useCallback(
+    async (motivoPerdidaId: string) => {
+      const p = perdidaPendiente;
+      if (!p) return;
+      setPerdidaPendiente(null);
+      await ejecutarMover(p.id, p.etapaId, p.prob, motivoPerdidaId);
+    },
+    [perdidaPendiente, ejecutarMover],
+  );
+
+  return {
+    handleMover,
+    proximoPaso,
+    cerrarProximoPaso: () => setProximoPaso(null),
+    perdidaPendiente,
+    cerrarPerdida: () => setPerdidaPendiente(null),
+    confirmarPerdida,
+    moviendo: mover.isPending,
+  };
 }
+

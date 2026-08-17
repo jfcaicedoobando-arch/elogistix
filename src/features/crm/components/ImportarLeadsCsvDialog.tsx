@@ -18,8 +18,10 @@ interface Props {
 export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
   const {
     rows, fileName, validRows, errorCount, isPending,
+    duplicados, duplicadosCargando,
     reset, handleFile, handleImport,
   } = useImportarLeadsCsv({ onDone: () => onOpenChange(false) });
+
 
   const handleOpenChange = (v: boolean) => {
     if (!v) reset();
@@ -66,6 +68,8 @@ export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
         rows={rows}
         validCount={validRows.length}
         errorCount={errorCount}
+        duplicados={duplicados}
+        duplicadosCargando={duplicadosCargando}
       />
     </FormDialogShell>
   );

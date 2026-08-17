@@ -24,6 +24,8 @@ import NuevaActividadDialog from "@/features/crm/components/NuevaActividadDialog
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 import { useOportunidades, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
 import { useMoverOportunidadEtapa } from "@/features/crm/hooks/useMoverOportunidadEtapa";
+import { DialogMotivoPerdida } from "@/features/crm/components/DialogMotivoPerdida";
+
 import { useUsuarios } from "@/features/admin/hooks/usuario";
 import { oportunidadesColumns, siguienteActividadColumn, activosFiltros } from "./oportunidadesTable";
 import { useProximasActividades } from "@/features/crm/hooks/useProximasActividades";
@@ -65,10 +67,14 @@ export default function Oportunidades() {
     });
   }, [opsRaw, filtros]);
 
-  const { handleMover, proximoPaso, cerrarProximoPaso } = useMoverOportunidadEtapa({
+  const {
+    handleMover, proximoPaso, cerrarProximoPaso,
+    perdidaPendiente, cerrarPerdida, confirmarPerdida, moviendo,
+  } = useMoverOportunidadEtapa({
     etapas: etapas as CrmEtapaRow[],
     oportunidades: opsRaw,
   });
+
 
   const { data: proximas } = useProximasActividades(
     "oportunidad",
@@ -186,6 +192,16 @@ export default function Oportunidades() {
         }
         onCreated={cerrarProximoPaso}
       />
+
+      {/* Ola A: motivo de pérdida obligatorio al cerrar como perdida. */}
+      <DialogMotivoPerdida
+        open={perdidaPendiente != null}
+        onOpenChange={(o) => { if (!o) cerrarPerdida(); }}
+        oportunidadNombre={perdidaPendiente?.nombre ?? ""}
+        loading={moviendo}
+        onConfirm={({ motivo_perdida_id }) => confirmarPerdida(motivo_perdida_id)}
+      />
     </PageContainer>
   );
 }
+

@@ -1,10 +1,12 @@
 /**
  * Hook que orquesta el flujo de importación CSV de leads.
  * Extraído de `ImportarLeadsCsvDialog` en 11.60.0 (Bloque B2).
+ * v13.630.0 (Ola A): higiene — omite duplicados exactos y avisa de posibles.
  */
 import { useState, useMemo, useCallback } from "react";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { useCrearLeadsBulk } from "@/features/crm/hooks";
+import { useDuplicadosLote } from "@/features/crm/hooks/useLeadsDuplicados";
 import {
   parseLeadsCsv,
   mapLeadCsvRows,
@@ -35,15 +37,27 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
     setRows(mapLeadCsvRows(parseLeadsCsv(text)));
   }, []);
 
-  const validRows = useMemo(() => rows.filter((r) => !r.__error), [rows]);
-  const errorCount = rows.length - validRows.length;
+  const { coincidencias, isLoading: duplicadosCargando } = useDuplicadosLote(rows);
+
+  const validRows = useMemo(
+    () =>
+      rows.filter(
+        (r, i) => !r.__error && coincidencias[i]?.nivel !== "exacto",
+      ),
+    [rows, coincidencias],
+  );
+  const errorCount = rows.filter((r) => Boolean(r.__error)).length;
+  const duplicadosCount = coincidencias.filter((c) => c.nivel === "exacto").length;
 
   const handleImport = useCallback(async () => {
     try {
       const { inserted } = await crearBulk.mutateAsync(validRows);
+      const omitidas: string[] = [];
+      if (errorCount > 0) omitidas.push(`${errorCount} con errores`);
+      if (duplicadosCount > 0) omitidas.push(`${duplicadosCount} duplicadas`);
       notifySuccess(undefined, {
         title: `${inserted} leads importados`,
-        description: errorCount > 0 ? `${errorCount} filas omitidas por errores` : undefined,
+        description: omitidas.length > 0 ? `Omitidas: ${omitidas.join(" y ")}` : undefined,
       });
       reset();
       onDone();
@@ -55,13 +69,16 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
         method: "USE_IMPORTAR_LEADS_CSV",
       });
     }
-  }, [crearBulk, validRows, errorCount, reset, onDone]);
+  }, [crearBulk, validRows, errorCount, duplicadosCount, reset, onDone]);
 
   return {
     rows,
     fileName,
     validRows,
     errorCount,
+    duplicados: coincidencias,
+    duplicadosCargando,
+    duplicadosCount,
     isPending: crearBulk.isPending,
     reset,
     handleFile,
