@@ -33,9 +33,9 @@ BEGIN
 
   INSERT INTO public.embarques (id, organization_id, cliente_id, cliente_nombre, expediente, modo, tipo, eta, tipo_cambio_usd)
   VALUES
-    (v_emb1, v_org, v_cli, 'ACME SA', 'ELN24001', 'Marítimo'::public.modo_transporte,
+    (v_emb1, v_org, v_cli, 'ACME SA', 'ELNVA2401', 'Marítimo'::public.modo_transporte,
      'Importación'::public.tipo_operacion, CURRENT_DATE, 18.0),
-    (v_emb2, v_org, v_cli, 'Acme S.A.', 'ELN24002', 'Marítimo'::public.modo_transporte,
+    (v_emb2, v_org, v_cli, 'Acme S.A.', 'ELNVA2402', 'Marítimo'::public.modo_transporte,
      'Importación'::public.tipo_operacion, CURRENT_DATE, 18.0)
   ON CONFLICT (id) DO NOTHING;
 
