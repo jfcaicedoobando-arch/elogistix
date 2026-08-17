@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
+import { useDocumentTitle } from "@/hooks/shared";
 
 
 function getSaveButtonLabel(isSaving: boolean): string {
@@ -23,6 +24,7 @@ function getSaveButtonLabel(isSaving: boolean): string {
 const TABS_CON_GUARDAR = new Set(["empresa", "facturacion"]);
 
 export default function Configuracion() {
+  useDocumentTitle("Configuración");
   const { s, set, isLoading, isError, refetch, isSaving, isDirty, handleSave } = useConfiguracionState();
   const { effectiveRole } = useAuth();
   const esContador = effectiveRole === "contador";

@@ -13,8 +13,10 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function AgentePerfil() {
+  useDocumentTitle("Mi perfil");
   const { data: ctx } = useAgenteContext();
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);

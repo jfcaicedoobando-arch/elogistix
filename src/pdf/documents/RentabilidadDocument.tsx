@@ -58,7 +58,7 @@ export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clien
           {[
             { l: "Venta total", v: formatCurrency(kpis.total_venta_usd, "USD") },
             { l: "Costo total", v: formatCurrency(kpis.total_costo_usd, "USD") },
-            { l: "Profit total", v: formatCurrency(kpis.total_profit_usd, "USD") },
+            { l: "Utilidad total", v: formatCurrency(kpis.total_profit_usd, "USD") },
             { l: "Margen promedio", v: `${kpis.margen_promedio.toFixed(1)}%` },
           ].map((k) => (
             <View key={k.l} style={styles.kpiCard}>

@@ -1,6 +1,7 @@
 import { KpiCard } from "@/components/shared/KpiCard";
 import { AlertCircle, CircleDollarSign, PiggyBank } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
+import { pluralizar } from "@/lib/format/pluralizar";
 import type { KpisEstadoCuenta } from "../services/estadoCuentaAggregates";
 
 interface Props {
@@ -43,7 +44,7 @@ export function EstadoCuentaKpiCards({ kpis, loading }: Props) {
         sublabel={sublabel(
           adeudado.extra,
           kpis.facturasAdeudadas > 0
-            ? `${kpis.facturasAdeudadas} factura(s) con saldo`
+            ? `${pluralizar(kpis.facturasAdeudadas, "factura")} con saldo`
             : "Sin adeudos",
         )}
         icon={CircleDollarSign}
@@ -57,7 +58,7 @@ export function EstadoCuentaKpiCards({ kpis, loading }: Props) {
         sublabel={sublabel(
           vencido.extra,
           kpis.facturasVencidas > 0
-            ? `${kpis.facturasVencidas} factura(s) vencida(s)`
+            ? `${pluralizar(kpis.facturasVencidas, "factura")} ${kpis.facturasVencidas === 1 ? "vencida" : "vencidas"}`
             : "Al corriente",
         )}
         icon={AlertCircle}

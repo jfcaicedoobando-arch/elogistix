@@ -35,7 +35,7 @@ export function buildVistasGuardadas(ctx: VistaGuardadaCtx = {}): VistaGuardada[
     { id: "todas", label: "Todas", disponible: true, filtros: FILTROS_DEFAULT },
     {
       id: "mis-deals",
-      label: "Mis deals",
+      label: "Mis oportunidades",
       disponible: Boolean(ctx.userId),
       filtros: { ...FILTROS_DEFAULT, vendedorId: ctx.userId ?? "todos" },
     },

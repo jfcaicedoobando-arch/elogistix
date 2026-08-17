@@ -9,7 +9,7 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
 import { useBitacora } from "@/hooks/shared";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
 import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -41,6 +41,7 @@ function calcularFechaDesde(valor: string): string | undefined {
 }
 
 export default function Bitacora() {
+  useDocumentTitle("Bitácora");
   const { isAdmin } = usePermissions();
   // R6-FIX3: la bitácora es global de la organización activa (no sólo del usuario).
   const { organizationId } = useOrganization();

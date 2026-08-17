@@ -60,7 +60,7 @@ export default function CosteoRutas() {
       <PageContainer>
         <PageHeader
           title="Rutas marítimas"
-          description="Pares puerto China → puerto México disponibles para tarificar."
+          description="Pares de rutas marítimas disponibles para tarifar."
           actions={
             <Button onClick={() => setOpen(true)}>
               <Plus className="size-4 mr-2" />Nueva ruta

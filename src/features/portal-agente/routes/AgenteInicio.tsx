@@ -11,6 +11,7 @@ import { useAgenteContext, useAgenteTarifas, useAgenteEmbarques } from "@/featur
 import { ESTADOS_ACTIVOS } from "@/features/embarques/constants/embarqueConstants";
 import { ROUTES } from "@/constants/routes";
 import { todayLocalISO } from "@/lib/date/today";
+import { useDocumentTitle } from "@/hooks/shared";
 
 // B-087: "vigente" = aprobada + estado derivado vigente (no reemplazada) +
 // no vencida por fecha — mismo criterio que `get_top_tarifas` (FIX B-079).
@@ -18,6 +19,7 @@ const esVigenteReal = (t: { estado_aprobacion: string; estado: string; vigente_h
   t.estado_aprobacion === "vigente" && t.estado === "vigente" && t.vigente_hasta >= hoy;
 
 export default function AgenteInicio() {
+  useDocumentTitle("Portal agente");
   const { data: ctx } = useAgenteContext();
   const { data: tarifas = [] } = useAgenteTarifas();
   const { data: embarques = [] } = useAgenteEmbarques();

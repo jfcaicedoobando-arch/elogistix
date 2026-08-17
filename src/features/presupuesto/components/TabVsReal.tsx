@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
+import { pluralizar } from "@/lib/format/pluralizar";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReportePresupuestoDocument se carga dinámicamente en el handler.
 import { withOrgPrefix } from "@/lib/filenames";
@@ -51,6 +52,21 @@ function ordenarFilas(filas: FilaVsReal[], key: SortKey, dir: SortDir): FilaVsRe
   };
   return [...filas].sort((a, b) => cmp[key](a, b) * sign);
 }
+
+/** Aviso de gastos en moneda extranjera sin tipo de cambio (con concordancia es-MX). */
+function AvisoGastosSinTc({ count }: { count: number }) {
+  const uno = count === 1;
+  return (
+    <Card className="border-warning/50">
+      <CardContent className="p-3 text-sm text-warning">
+        {pluralizar(count, "gasto")} en moneda extranjera {uno ? "no tiene" : "no tienen"} tipo de cambio
+        capturado y {uno ? "quedó" : "quedaron"} fuera del real. Captura su tipo de cambio para que se{" "}
+        {uno ? "refleje" : "reflejen"} aquí.
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export function TabVsReal() {
   const periodoCtl = usePeriodoMesUrl("periodo_vs_real");
@@ -126,14 +142,8 @@ export function TabVsReal() {
         <CardSkeleton lines={8} />
       ) : (
         <>
-          {data.gastos_sin_tc_count > 0 && (
-            <Card className="border-warning/50">
-              <CardContent className="p-3 text-sm text-warning">
-                {data.gastos_sin_tc_count} gasto(s) en moneda extranjera no tienen tipo de cambio
-                capturado y quedaron fuera del real. Captura su TC para que se reflejen aquí.
-              </CardContent>
-            </Card>
-          )}
+          {data.gastos_sin_tc_count > 0 && <AvisoGastosSinTc count={data.gastos_sin_tc_count} />}
+
           {sinPresupuestoGlobal && (
             <Card className="border-dashed">
               <CardContent className="p-3 text-sm text-muted-foreground">

@@ -58,7 +58,7 @@ export function EmbarqueDetalleTabs({
           <TabsTrigger value="seguros" data-testid="tab-seguros" className="whitespace-nowrap">Seguros</TabsTrigger>
           <TabsTrigger value="facturacion" data-testid="tab-facturacion" className="whitespace-nowrap">Facturación</TabsTrigger>
           <TabsTrigger value="conciliacion" data-testid="tab-conciliacion" className="whitespace-nowrap">Conciliación</TabsTrigger>
-          <TabsTrigger value="pnl" data-testid="tab-pnl" className="whitespace-nowrap">P&amp;L</TabsTrigger>
+          <TabsTrigger value="pnl" data-testid="tab-pnl" className="whitespace-nowrap">Utilidad</TabsTrigger>
           <TabsTrigger value="cierre" data-testid="tab-cierre" className="whitespace-nowrap">Cierre</TabsTrigger>
           <TabsTrigger value="notas" data-testid="tab-notas" className="whitespace-nowrap">Notas y Actividad</TabsTrigger>
         </TabsList>

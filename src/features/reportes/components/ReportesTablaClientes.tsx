@@ -44,7 +44,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
     { id: "embarques", header: "Embarques", meta: { align: "center" }, cell: ({ row }) => row.original.total_embarques },
     { id: "venta_usd", header: "Venta USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.venta_usd, "USD") },
     { id: "costo_usd", header: "Costo USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.costo_usd, "USD") },
-    { id: "profit_usd", header: "Profit USD", enableSorting: true, meta: { align: "right", className: "tabular-nums font-semibold" }, cell: ({ row }) => formatCurrency(row.original.profit_usd, "USD") },
+    { id: "profit_usd", header: "Utilidad USD", enableSorting: true, meta: { align: "right", className: "tabular-nums font-semibold" }, cell: ({ row }) => formatCurrency(row.original.profit_usd, "USD") },
     { id: "margen", header: "Margen", enableSorting: true, meta: { align: "center" }, cell: ({ row }) => margenBadge(row.original.margen) },
   ]);
 
@@ -73,7 +73,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-sm truncate">{toTitleCase(c.cliente_nombre)}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">{c.total_embarques} embarques · Venta {formatCurrency(c.venta_usd, "USD")}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">Profit {formatCurrency(c.profit_usd, "USD")}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">Utilidad: {formatCurrency(c.profit_usd, "USD")}</div>
                 </div>
                 {margenBadge(c.margen)}
               </div>

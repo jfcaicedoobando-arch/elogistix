@@ -54,6 +54,10 @@ const SEGMENT_LABELS: Record<string, string> = {
   tesoreria: "Tesorería",
   cuentas: "Cuentas",
   flujo: "Flujo",
+  conciliacion: "Conciliación",
+  "estado-cuenta": "Estado de cuenta",
+  pagos: "Pagos",
+  "pagos-programados": "Pagos programados",
   cxp: "CxP",
   // Costeo
   costeo: "Costeo",

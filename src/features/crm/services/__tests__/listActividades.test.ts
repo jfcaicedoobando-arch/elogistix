@@ -17,7 +17,8 @@ const state: {
 const builder: Record<string, unknown> = {
   select: vi.fn().mockReturnThis(),
   order: vi.fn((col: string, opts: { ascending: boolean; nullsFirst: boolean }) => {
-    state.order = [col, opts];
+    // Sólo el primer .order() es el criterio principal; el segundo es el desempate por id.
+    state.order ??= [col, opts];
     return builder;
   }),
   ilike: vi.fn((col: string, v: string) => {
