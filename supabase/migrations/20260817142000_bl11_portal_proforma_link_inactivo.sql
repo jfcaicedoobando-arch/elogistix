@@ -1,10 +1,16 @@
--- Canonical schema para public.portal_obtener_proforma_por_token
--- Sincronizado en 13.320.2 (audit RPC columns).
---
--- Fix: antes se exponía una columna inexistente (`importe`) de la vista
--- `proforma_conceptos_consolidados`, que publica `total`. Se conserva el
--- nombre `importe` como clave de salida en el JSON del portal público para
--- no romper el contrato con el front.
+-- ============================================================
+-- BL-11: el portal público (`portal_obtener_proforma_por_token`) calculaba
+-- `v_estado_link` ('expirado'/'respondida') pero devolvía SIEMPRE la proforma
+-- completa (subtotal/iva/total, cliente, expediente) y todos los conceptos.
+-- Cualquiera con el UUID del link (correos reenviados, logs, historial)
+-- podía leer los datos financieros después de expirado el plazo o de que el
+-- cliente ya respondió. Ahora, cuando el link no está 'activo', se devuelve
+-- sólo `estado_link` + el número de la proforma (dato mínimo para que la UI
+-- muestre el estado), sin montos, conceptos ni datos del cliente.
+-- Sin cambio de firma ni de grants. ACUMULATIVA sobre la versión canónica
+-- (supabase/schema/portal/portal_obtener_proforma_por_token.sql).
+-- ============================================================
+
 CREATE OR REPLACE FUNCTION public.portal_obtener_proforma_por_token(p_token uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -29,8 +35,7 @@ BEGIN
     v_estado_link := 'activo';
   END IF;
 
-  -- BL-11 (migración 20260817142000): link no vigente → no exponer montos,
-  -- conceptos ni datos del cliente; sólo el estado y el número.
+  -- BL-11: link no vigente → no exponer montos, conceptos ni datos del cliente.
   IF v_estado_link <> 'activo' THEN
     RETURN jsonb_build_object(
       'estado_link', v_estado_link,
@@ -75,3 +80,7 @@ BEGIN
     'conceptos', v_conceptos
   );
 END $function$;
+
+-- Grants vigentes (20260702150453): reafirmados tras recrear la función.
+REVOKE ALL ON FUNCTION public.portal_obtener_proforma_por_token(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.portal_obtener_proforma_por_token(uuid) TO anon, authenticated;

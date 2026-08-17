@@ -47,7 +47,10 @@ export function ingresosDeFacturas(
     out.ventas.push({
       embarque_id: id,
       descripcion: "Facturación",
-      total: Number(f.total),
+      // BL-06: base SIN IVA, alineada con la fuente por conceptos
+      // (`conceptos_venta.total` no incluye IVA). Antes se usaba `f.total`
+      // (con IVA) e inflaba ingresos ~16%.
+      total: Number(f.subtotal),
       moneda: String(f.moneda),
     });
   }
@@ -91,7 +94,8 @@ export function costosDeProveedorFacturas(
     out.costos.push({
       embarque_id: id,
       concepto: "Facturas de proveedor",
-      monto: Number(pf.total),
+      // BL-06: base SIN IVA (el IVA acreditable no es costo operativo).
+      monto: Number(pf.subtotal),
       moneda: String(pf.moneda),
     });
   }

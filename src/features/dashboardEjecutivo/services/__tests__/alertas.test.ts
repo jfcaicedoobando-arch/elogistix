@@ -59,6 +59,7 @@ const presupuesto = (filas: ResumenVsReal["filas"] = []): ResumenVsReal => {
     variacion_neta_mxn: 0,
     categorias_en_exceso: excedidas.length,
     gastos_sin_tc_count: 0,
+    real_truncado: false,
     top_exceso: [...excedidas].sort((a, b) => b.variacion_mxn - a.variacion_mxn).slice(0, 5),
   };
 };

@@ -3,9 +3,7 @@
  * Sin autenticación. Permite al cliente aceptar o rechazar la proforma.
  */
 import { useParams } from "react-router-dom";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Clock, AlertTriangle, FileSpreadsheet } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, FileSpreadsheet } from "lucide-react";
 import { Seo } from "@/components/shared/Seo";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 
@@ -22,25 +20,6 @@ function fechaMx(iso: string | null | undefined): string {
   if (!iso) return "—";
   const s = formatFechaHora(iso, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   return s === "-" ? "—" : s;
-}
-
-type ProformaData = NonNullable<NonNullable<ReturnType<typeof usePortalProforma>["data"]>["proforma"]>;
-
-function AlertaRespondida({ proforma }: { proforma: ProformaData }) {
-  const aceptada = proforma.estado_cliente === "aceptada";
-  const descripcion = aceptada
-    ? `Aceptada el ${fechaMx(proforma.aceptada_at)}. Gracias por tu confirmación.`
-    : `Rechazada el ${fechaMx(proforma.rechazada_at)}.${proforma.motivo_rechazo ? ` Motivo: ${proforma.motivo_rechazo}` : ""}`;
-  return (
-    <Alert>
-      {aceptada ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-destructive" />}
-      <AlertTitle className="flex items-center gap-2">
-        Proforma {proforma.estado_cliente}
-        <Badge variant={aceptada ? "default" : "destructive"}>{proforma.estado_cliente}</Badge>
-      </AlertTitle>
-      <AlertDescription>{descripcion}</AlertDescription>
-    </Alert>
-  );
 }
 
 type PortalState = ReturnType<typeof usePortalProforma>;
@@ -89,9 +68,21 @@ function ContenidoPortal({ state }: { state: PortalState }) {
     );
   }
 
+  // BL-11: con el link no vigente el backend ya no devuelve montos, conceptos
+  // ni datos del cliente; se muestra sólo el estado del enlace.
+  if (data.estado_link === "respondida") {
+    return (
+      <AvisoAccionable
+        icon={<CheckCircle2 className="h-5 w-5" />}
+        titulo="Esta proforma ya fue respondida"
+        descripcion={`La proforma ${data.proforma.numero ?? ""} ya registró una respuesta. Si necesitas revisarla de nuevo, solicita un nuevo enlace.`}
+        pasos={COPY_PASOS.enlaceInvalido}
+      />
+    );
+  }
+
   return (
     <>
-      {data.estado_link === "respondida" && <AlertaRespondida proforma={data.proforma} />}
       <PortalProformaResumen proforma={data.proforma} conceptos={data.conceptos} />
       {data.estado_link === "activo" && (
         <PortalProformaAcciones submitting={submitting} onResponder={responder} error={null} />

@@ -11,7 +11,8 @@ import type { EmbarqueER } from "@/features/profit/domain/estadoResultados";
 export interface FacturaRow {
   id: string;
   expediente: string | null;
-  total: number;
+  /** BL-06: base sin IVA para el EERR devengado (total incluye IVA). */
+  subtotal: number;
   moneda: string;
   fecha_emision: string;
   tipo_cambio: number | null;
@@ -21,7 +22,9 @@ export interface NotaCreditoRow {
   monto: number;
   moneda: string;
   factura_id: string;
-  updated_at: string;
+  /** BL-10: fecha de negocio inmutable (DATE) para ubicar la NC en el mes;
+   *  `updated_at` movía el reconocimiento retroactivamente con cualquier UPDATE. */
+  fecha_emision: string;
   /** Ola 9 · M6: TC propio de la NC para no revaluar con el TC del mes. */
   tipo_cambio: number | null;
 }
@@ -29,7 +32,8 @@ export interface NotaCreditoRow {
 export interface ProveedorFacturaRow {
   id: string;
   embarque_id: string | null;
-  total: number;
+  /** BL-06: base sin IVA para el EERR devengado (total incluye IVA). */
+  subtotal: number;
   moneda: string;
   fecha_emision: string;
   tipo_cambio_usd: number | null;
@@ -47,7 +51,7 @@ export function mapFacturaRows(data: unknown): FacturaRow[] {
   return ((data ?? []) as RawRow[]).map((r) => ({
     id: str(r.id),
     expediente: nullableStr(r.expediente),
-    total: num(r.total),
+    subtotal: num(r.subtotal),
     moneda: str(r.moneda),
     fecha_emision: str(r.fecha_emision),
     tipo_cambio: nullableNum(r.tipo_cambio),
@@ -59,7 +63,7 @@ export function mapNotaCreditoRows(data: unknown): NotaCreditoRow[] {
     monto: num(r.monto),
     moneda: str(r.moneda),
     factura_id: str(r.factura_id),
-    updated_at: str(r.updated_at),
+    fecha_emision: str(r.fecha_emision),
     tipo_cambio: r.tipo_cambio == null ? null : num(r.tipo_cambio),
   }));
 }
@@ -68,7 +72,7 @@ export function mapProveedorFacturaRows(data: unknown): ProveedorFacturaRow[] {
   return ((data ?? []) as RawRow[]).map((r) => ({
     id: str(r.id),
     embarque_id: nullableStr(r.embarque_id),
-    total: num(r.total),
+    subtotal: num(r.subtotal),
     moneda: str(r.moneda),
     fecha_emision: str(r.fecha_emision),
     tipo_cambio_usd: nullableNum(r.tipo_cambio_usd),

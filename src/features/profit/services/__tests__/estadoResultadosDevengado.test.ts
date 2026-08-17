@@ -99,6 +99,39 @@ describe("estadoResultadosDevengado service", () => {
     expect(res.emb.some((e: any) => e.tipo_cambio_eur === 1)).toBe(false);
   });
 
+  it("BL-06: ingresos y costos devengados usan subtotal (sin IVA), no total", async () => {
+    mock.setTableResult("facturas", {
+      data: [{ id: "f1", expediente: null, subtotal: 1000, total: 1160, moneda: "MXN", fecha_emision: "2024-01-10", tipo_cambio: 1 }],
+      error: null,
+    });
+    mock.setTableResult("factura_notas_credito", { data: [], error: null });
+    mock.setTableResult("proveedor_facturas", {
+      data: [{ id: "pf1", embarque_id: null, subtotal: 500, total: 580, moneda: "MXN", fecha_emision: "2024-01-10", tipo_cambio_usd: null }],
+      error: null,
+    });
+    mock.setTableResult("embarques", { data: [], error: null });
+
+    const res: any = await fetchEstadoResultadosDevengado({ organizationId: null, year: 2024, month: 1 });
+
+    expect(res.v[0].total).toBe(1000);
+    expect(res.c[0].monto).toBe(500);
+  });
+
+  it("BL-10: las NCs se filtran por fecha_emision (no updated_at)", async () => {
+    mock.setTableResult("facturas", { data: [], error: null });
+    mock.setTableResult("factura_notas_credito", { data: [], error: null });
+    mock.setTableResult("proveedor_facturas", { data: [], error: null });
+
+    await fetchEstadoResultadosDevengado({ organizationId: null, year: 2024, month: 1 });
+
+    const ncCall = mock.tableCalls.find((c) => c.table === "factura_notas_credito");
+    const gteIdx = ncCall?.ops.indexOf("gte") ?? -1;
+    const lteIdx = ncCall?.ops.indexOf("lte") ?? -1;
+    expect(gteIdx).toBeGreaterThanOrEqual(0);
+    expect((ncCall!.opArgs[gteIdx] as [string, string])[0]).toBe("fecha_emision");
+    expect((ncCall!.opArgs[lteIdx] as [string, string])[0]).toBe("fecha_emision");
+  });
+
   it("maneja errores de supabase", async () => {
     mock.setTableResult("facturas", { data: null, error: { message: "db-fail" } });
     await expect(fetchEstadoResultadosDevengado({ organizationId: null, year: 2024, month: 1 })).rejects.toThrow("db-fail");

@@ -1,14 +1,15 @@
 -- ============================================================
--- Ola 11 · RBD-08: los pagos individuales del cobro en lote se insertaban
--- con pagos_factura.tipo_cambio = 1 duro aunque el lote capturaba TC. En
--- USD/EUR eso subestima monto_cobrado_mxn en calcular_comision_pago (rama
--- v_tc_pago = 1 ⇒ monto extranjero contado como MXN). Ahora se guarda el
--- TC del lote (v_tc) cuando la moneda es extranjera; en MXN se conserva 1.
--- Es seguro porque desde RFE-03 (20260821030200) la RPC exige v_tc > 0
--- para moneda extranjera (LC_COBRO_LOTE_TC_REQUERIDO).
--- ACUMULATIVA: incluye RFE-02/RNF-03 (fecha), RFE-03 (TC requerido),
--- RNF-01 (idempotencia) y RNF-02 (cuadre exacto). Sincroniza la fuente
--- canónica (1:1). Sin backfill de históricos en esta migración.
+-- BL-13: el loop de validación de `registrar_pago_cliente_lote` tomaba los
+-- locks `FOR UPDATE` en el orden del arreglo `renglones` del payload (orden
+-- del cliente). Dos lotes concurrentes que comparten facturas en orden
+-- distinto (típico: dos tesoreros cobrando al mismo cliente) se bloqueaban
+-- en orden cruzado → deadlock 40P01 y rollback. Ahora el loop itera el
+-- payload ordenado por `factura_id` (uuid), de modo que todos los lotes
+-- adquieren los locks en el mismo orden global y el ciclo de espera desaparece.
+-- ACUMULATIVA: copia 1:1 de la fuente canónica
+-- (supabase/schema/facturacion/registrar_pago_cliente_lote.sql, Ola 11
+-- RBD-08) con el único cambio del ORDER BY en el loop de locks.
+-- Sin cambio de firma: (p_payload jsonb). Grants vigentes reafirmados abajo.
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb)
@@ -126,9 +127,11 @@ BEGIN
   END IF;
 
   -- Validación de renglones: tenancy, cliente, moneda y saldo real por factura.
-  -- BL-13 (migración 20260817143000): los locks FOR UPDATE se toman en orden
-  -- determinista (factura_id), no en el orden del payload; dos lotes
-  -- concurrentes con las mismas facturas en orden distinto hacían deadlock.
+  -- BL-13: los locks FOR UPDATE se toman en orden determinista (factura_id),
+  -- no en el orden del payload del cliente. Dos lotes concurrentes que
+  -- comparten facturas en orden distinto se bloqueaban en orden cruzado
+  -- (deadlock 40P01). El orden por uuid es total y compartido por todos los
+  -- lotes, eliminando el ciclo de espera.
   FOR v_renglon IN
     SELECT r FROM jsonb_array_elements(COALESCE(p_payload->'renglones','[]'::jsonb)) AS r
     ORDER BY (r->>'factura_id')::uuid
@@ -251,16 +254,8 @@ BEGIN
 END;
 $function$;
 
--- FIX-H6-12: REVOKE/GRANT explícitos tras recrear una SECURITY DEFINER.
+-- Grants vigentes (FIX-H6-12): reafirmados tras recrear la SECURITY DEFINER.
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM anon;
 GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO service_role;-- ============================================================
--- Ola 11 · RNF-06 (espejo RG4-6 de CxC): una misma factura no puede
--- aparecer dos veces en el reparto del lote CxP — dos renglones a la
--- misma factura pasaban el chequeo individual y podían sobre-aplicar el
--- pago (sólo fallaban si la suma excedía el saldo). Mismo chequeo que
--- LC_COBRO_LOTE_FACTURA_DUPLICADA. El guard RG4-12 (lote duplicado en
--- 10 min) es del lado cliente (pagoProveedorLote.ts), igual que en CxC.
--- ACUMULATIVA: incluye RFE-02/RNF-03 (fecha) y RNF-05 (importe + cuadre).
--- Sin cambio de firma: (p_payload jsonb).
+GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO service_role;

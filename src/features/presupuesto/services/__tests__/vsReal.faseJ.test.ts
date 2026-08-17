@@ -42,13 +42,13 @@ describe("vsReal · Fase J derivados", () => {
     mock.setTableResult("proveedor_facturas", {
       data: [
         // c1: 1500 real / 1000 pres = 150% → excede
-        { categoria_presupuesto_id: "c1", total: 1500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
+        { categoria_presupuesto_id: "c1", subtotal: 1500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
         // c3: 3300 / 3000 = 110% → NO excede (umbral es estrictamente >110)
-        { categoria_presupuesto_id: "c3", total: 3200, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
+        { categoria_presupuesto_id: "c3", subtotal: 3200, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
         // c4: 5000 / 1000 = 500% → excede
-        { categoria_presupuesto_id: "c4", total: 5000, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
+        { categoria_presupuesto_id: "c4", subtotal: 5000, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
         // c7 sin presupuesto: aunque tenga real, no cuenta
-        { categoria_presupuesto_id: "c7", total: 999, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
+        { categoria_presupuesto_id: "c7", subtotal: 999, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
       ],
       error: null,
     });
@@ -61,10 +61,10 @@ describe("vsReal · Fase J derivados", () => {
   it("top_exceso ordena por variacion_mxn desc y limita a 5", async () => {
     mock.setTableResult("proveedor_facturas", {
       data: [
-        { categoria_presupuesto_id: "c1", total: 1500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" }, // var +500
-        { categoria_presupuesto_id: "c4", total: 5000, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" }, // var +4000
-        { categoria_presupuesto_id: "c5", total: 2000, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" }, // var +1000
-        { categoria_presupuesto_id: "c6", total: 1200, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" }, // var +700
+        { categoria_presupuesto_id: "c1", subtotal: 1500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" }, // var +500
+        { categoria_presupuesto_id: "c4", subtotal: 5000, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" }, // var +4000
+        { categoria_presupuesto_id: "c5", subtotal: 2000, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" }, // var +1000
+        { categoria_presupuesto_id: "c6", subtotal: 1200, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" }, // var +700
       ],
       error: null,
     });
@@ -78,7 +78,7 @@ describe("vsReal · Fase J derivados", () => {
   it("top_exceso vacío cuando ninguna categoría excede", async () => {
     mock.setTableResult("proveedor_facturas", {
       data: [
-        { categoria_presupuesto_id: "c1", total: 500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
+        { categoria_presupuesto_id: "c1", subtotal: 500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-15" },
       ],
       error: null,
     });
