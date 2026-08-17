@@ -13,6 +13,7 @@ vi.mock("sonner", () => {
 
 import { toast as sonnerToast } from "sonner";
 import { notifyError, notifyWarning, notifySuccess, isAuthorizationError } from "../appFeedback";
+import { resetToastDedupeState } from "../appFeedback.dedupe";
 
 const reportCaughtErrorMock = vi.fn();
 vi.mock("@/lib/observability/reportCaughtError", () => ({
@@ -26,6 +27,7 @@ const m = sonnerToast as unknown as {
 };
 
 beforeEach(() => {
+  resetToastDedupeState();
   m.error.mockClear();
   m.success.mockClear();
   m.warning.mockClear();
