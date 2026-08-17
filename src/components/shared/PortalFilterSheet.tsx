@@ -20,7 +20,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter,
 } from "@/components/ui/sheet";
 
-interface MobileFilterSheetProps {
+interface PortalFilterSheetProps {
   search: string;
   onSearchChange: (v: string) => void;
   searchPlaceholder?: string;
@@ -30,7 +30,7 @@ interface MobileFilterSheetProps {
   children: ReactNode;
 }
 
-export function MobileFilterSheet({
+export function PortalFilterSheet({
   search,
   onSearchChange,
   searchPlaceholder = "Buscar...",
@@ -38,7 +38,7 @@ export function MobileFilterSheet({
   activeCount,
   onClear,
   children,
-}: MobileFilterSheetProps) {
+}: PortalFilterSheetProps) {
   const [open, setOpen] = useState(false);
 
   return (
