@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.630.0] - 2026-08-17
+- CRM Ola A (higiene): al mover una oportunidad a una etapa de pérdida ahora se pide obligatoriamente el motivo (con detalle opcional); la base de datos también lo exige, así no quedan pérdidas sin explicación.
+- Importación de leads desde CSV: detecta duplicados contra la cartera existente y dentro del propio archivo (por correo, teléfono a 10 dígitos y razón social normalizada). Los duplicados seguros se omiten y se avisa de los posibles.
+- Alta manual de lead: aviso en vivo si el prospecto ya existe, indicando con qué empresa/contacto coincide.
+
 ## [13.629.1] - 2026-08-17
 - CI verde: mensajes en español para 7 códigos de error (conceptos fiscales, factura con pagos, cancelada, permisos de margen, oportunidad inexistente), avisos de error en los criterios de salida del CRM y migraciones del CRM endurecidas (índices/políticas idempotentes y permisos de las funciones internas).
 - Se simplificaron internamente la tarjeta del Kanban, el detalle de oportunidad y el alta de oportunidad (sin cambios visibles) para respetar los límites de complejidad del proyecto.
