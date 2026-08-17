@@ -37,6 +37,8 @@ export function Toaster() {
           toast: [
             "group toast rounded-lg px-4 py-3 gap-3 backdrop-blur-sm shadow-xl",
             "bg-card text-card-foreground border border-border",
+            // Ancho mínimo consistente + rejilla icono | contenido | acciones.
+            "!min-w-[360px] !grid !grid-cols-[auto_1fr] !items-start !gap-x-3",
             // Borde izquierdo semántico por severidad (Sonner emite data-type).
             "data-[type=error]:border-l-4 data-[type=error]:border-l-destructive",
             "data-[type=success]:border-l-4 data-[type=success]:border-l-[hsl(var(--success))]",

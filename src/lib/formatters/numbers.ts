@@ -82,6 +82,12 @@ export const formatCurrencySafe = (value: unknown, currency: string = "MXN"): st
  * Usa `Intl.NumberFormat` con `notation: "compact"` para evitar truncamiento
  * tipo "USD 1,234,5…" en columnas angostas.
  */
+/** Número compacto sin símbolo de moneda, para ejes de gráficas donde la unidad ya se indica una sola vez. */
+export const formatCompactNumber = (amount: number): string => {
+  const safe = Number.isFinite(amount) ? amount : 0;
+  return getCompactFormatter("compact:1").format(safe);
+};
+
 export const formatCurrencyCompact = (amount: number, currency: string = "MXN"): string => {
   const safe = Number.isFinite(amount) ? amount : 0;
   const formatted = getCompactFormatter("compact:1").format(safe);
