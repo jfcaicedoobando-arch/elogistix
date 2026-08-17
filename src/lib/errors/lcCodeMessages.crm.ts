@@ -7,4 +7,6 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "La oportunidad ya no existe o pertenece a otra organización.",
   LC_SIN_PERMISO_AUTORIZAR_MARGEN:
     "Sólo gerencia comercial o administración pueden autorizar el margen de una oportunidad.",
+  LC_MOTIVO_PERDIDA_REQUERIDO:
+    "Indica el motivo de pérdida para cerrar la oportunidad como perdida.",
 };
