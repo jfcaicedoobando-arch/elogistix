@@ -5688,10 +5688,10 @@ export type Database = {
       pagos_factura: {
         Row: {
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
+          client_request_id: string | null
           created_at: string
           created_by: string | null
           cuenta_bancaria_id: string | null
-          client_request_id: string | null
           deleted_at: string | null
           deleted_by: string | null
           diferencia_cambiaria_mxn: number
@@ -5735,10 +5735,10 @@ export type Database = {
         }
         Insert: {
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
+          client_request_id?: string | null
           created_at?: string
           created_by?: string | null
           cuenta_bancaria_id?: string | null
-          client_request_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
@@ -5782,10 +5782,10 @@ export type Database = {
         }
         Update: {
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
+          client_request_id?: string | null
           created_at?: string
           created_by?: string | null
           cuenta_bancaria_id?: string | null
-          client_request_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
@@ -5939,10 +5939,10 @@ export type Database = {
       }
       pagos_proveedor: {
         Row: {
+          client_request_id: string | null
           created_at: string
           created_by: string | null
           cuenta_bancaria_id: string | null
-          client_request_id: string | null
           deleted_at: string | null
           deleted_by: string | null
           diferencia_cambiaria_mxn: number | null
@@ -5964,10 +5964,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_request_id?: string | null
           created_at?: string
           created_by?: string | null
           cuenta_bancaria_id?: string | null
-          client_request_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number | null
@@ -5989,10 +5989,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_request_id?: string | null
           created_at?: string
           created_by?: string | null
           cuenta_bancaria_id?: string | null
-          client_request_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number | null
