@@ -42,6 +42,13 @@ export const FACTURACION_ROLES: AppRole[] = [
   ...ADMINS, "contador", "tesorero", "ejecutivo_cobranza", "operador",
   "coordinador_logistico", "gerente_operaciones", "gerente_visor",
 ];
+/**
+ * VF-20 — El vendedor consulta `/proformas` en SÓLO LECTURA (da seguimiento
+ * comercial a las proformas de sus clientes). La escritura sigue restringida:
+ * las policies RLS de `proformas` (write/update/delete) no incluyen `vendedor`
+ * y los controles de edición de la UI se ocultan vía `usePermissions`.
+ */
+export const PROFORMAS_READ_ROLES: AppRole[] = [...FACTURACION_ROLES, "vendedor"];
 export const CLIENTES_ROLES: AppRole[] = [
   ...ADMINS, "vendedor", "customer_service", "viewer", "operador", "coordinador_logistico",
   "ejecutivo_pricing", "contador", "ejecutivo_cobranza", ...GERENTES,
@@ -116,7 +123,7 @@ export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.fre
   "/embarques/nuevo": EMBARQUES_ROLES,
   "/facturacion": FACTURACION_ROLES,
   "/facturacion/por-emitir": FACTURACION_ROLES,
-  "/proformas": FACTURACION_ROLES,
+  "/proformas": PROFORMAS_READ_ROLES,
   "/compras": COMPRAS_HUB_ROLES,
   "/compras/por-capturar": COMPRAS_POR_CAPTURAR_ROLES,
   "/compras/buzon": COMPRAS_POR_CAPTURAR_ROLES,

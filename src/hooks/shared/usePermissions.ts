@@ -19,6 +19,7 @@ import {
   OPERATIONS,
   OVERRIDE_TARIFA_PRICING,
   PAGAR_PROVEEDOR,
+  PROFORMAS_ESCRITURA,
   REGISTRAR_COBRO,
   RESPONDER_PROFORMA_MANUAL,
   SALES,
@@ -66,6 +67,8 @@ export function usePermissions() {
   const canCerrarEmbarque = has(CERRAR_EMBARQUE, roleStr);
   const canHandoffCotizacion = has(HANDOFF_COTIZACION, roleStr);
   const canResponderProformaManual = has(RESPONDER_PROFORMA_MANUAL, roleStr);
+  // VF-20: espejo UI de las policies RLS de escritura en `proformas`.
+  const canEditarProforma = has(PROFORMAS_ESCRITURA, roleStr);
   const canEliminarEmbarque = has(ELIMINAR_EMBARQUE, roleStr);
   // v13.624.0 — política de autorización del cliente ("cliente de casa").
   const canConfigurarAutorizacionCliente = has(CONFIGURAR_AUTORIZACION_CLIENTE, roleStr);
@@ -107,6 +110,7 @@ export function usePermissions() {
     canCerrarEmbarque,
     canHandoffCotizacion,
     canResponderProformaManual,
+    canEditarProforma,
     canEliminarEmbarque,
     canConfigurarAutorizacionCliente,
   };

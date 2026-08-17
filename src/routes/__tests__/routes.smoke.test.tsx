@@ -55,6 +55,8 @@ describe("routes/publicRoutes", () => {
     expect(paths).toContain("/login");
     expect(paths).toContain("/reset-password");
     expect(paths).toContain("/tracking/:token");
+    // VT-10: el centro de ayuda (FAQ) es público.
+    expect(paths).toContain("/ayuda");
     expect(paths).toContain("/legal/privacidad");
     expect(paths).toContain("/legal/terminos");
     expect(paths).toContain("*"); // 404 fallback

@@ -99,7 +99,8 @@ describe("routes/appRoutes — paths críticos presentes", () => {
     "/cotizaciones/:id", "/cotizaciones/:id/editar",
     "/dev/pdf-preview/cotizacion/:id",
     "/reportes", "/reportes/rentabilidad", "/rentabilidad",
-    "/ayuda", "/sentry", "/crm", "/bitacora",
+    // VT-10: "/ayuda" se movió a publicRoutes (ruta pública, sin Layout).
+    "/sentry", "/crm", "/bitacora",
     "/papelera", "/idempotencia", "/auditoria", "/usuarios", "/configuracion",
   ];
 

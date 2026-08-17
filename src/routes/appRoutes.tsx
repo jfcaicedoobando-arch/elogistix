@@ -17,7 +17,7 @@ import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
 import type { AppRole } from "@/types/appRole";
 import {
-  Dashboard, Operaciones, Reportes, ReportesCartera, CierreMensual, Bitacora, Ayuda,
+  Dashboard, Operaciones, Reportes, ReportesCartera, CierreMensual, Bitacora,
   Papelera, Idempotencia, Auditoria, SentryDiagnostico,
   Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
   Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, CotizacionPlantillas, PdfPreviewCotizacion,
@@ -41,7 +41,7 @@ const guarded = (roles: AppRole[], element: ReactNode) => (
 import {
   FINANCE_READ_ROLES, TESORERIA_READ_ROLES, PROFIT_READ_ROLES,
   COMPRAS_READ_ROLES, EMBARQUES_ROLES, COTIZACIONES_ROLES,
-  FACTURACION_ROLES, CLIENTES_ROLES, COSTEO_ROLES, COMISIONES_ROLES, REPORTES_ROLES,
+  FACTURACION_ROLES, PROFORMAS_READ_ROLES, CLIENTES_ROLES, COSTEO_ROLES, COMISIONES_ROLES, REPORTES_ROLES,
   CRM_ROLES, BITACORA_ROLES, PROVEEDORES_ROLES,
   DASHBOARD_DIRECCION_ROLES, CARTERA_ROLES, COMPRAS_POR_CAPTURAR_ROLES, COMPRAS_POR_PAGAR_ROLES,
   SENTRY_ROLES, PAPELERA_ROLES, IDEMPOTENCIA_ROLES, AUDITORIA_ROLES, USUARIOS_ROLES, CONFIGURACION_ROLES,
@@ -65,8 +65,10 @@ export const appRoutes = (
     <Route path="/embarques/:id/editar" element={guarded(EMBARQUES_ROLES, <EditarEmbarque />)} />
     <Route path="/facturacion" element={guarded(FACTURACION_ROLES, <Facturacion />)} />
     <Route path="/facturacion/:id" element={guarded(FACTURACION_ROLES, <FacturaDetalle />)} />
-    <Route path="/proformas" element={guarded(FACTURACION_ROLES, <ProformasListado />)} />
-    <Route path="/proformas/:id" element={guarded(FACTURACION_ROLES, <ProformaDetalle />)} />
+    {/* VF-20: el vendedor consulta proformas en sólo lectura (escritura sigue
+        restringida por RLS y por los guards de permiso de la UI). */}
+    <Route path="/proformas" element={guarded(PROFORMAS_READ_ROLES, <ProformasListado />)} />
+    <Route path="/proformas/:id" element={guarded(PROFORMAS_READ_ROLES, <ProformaDetalle />)} />
 
     {/* ── Módulo Compras (v13.175.0 — rediseño Ola A) ────────────────── */}
     <Route path="/compras" element={guarded(COMPRAS_READ_ROLES, <Compras />)} />
@@ -138,7 +140,7 @@ export const appRoutes = (
     <Route path="/reportes/cartera" element={guarded(REPORTES_ROLES, <ReportesCartera />)} />
     <Route path="/reportes" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
-    <Route path="/ayuda" element={<Ayuda />} />
+    {/* VT-10: /ayuda se movió a `publicRoutes` (acceso anónimo, layout público). */}
     <Route path="/sentry" element={guarded(SENTRY_ROLES, <SentryDiagnostico />)} />
     <Route path="/crm" element={guarded(CRM_ROLES, <CrmLayout />)}>{crmChildRoutes}</Route>
     <Route path="/bitacora" element={guarded(BITACORA_ROLES, <Bitacora />)} />
