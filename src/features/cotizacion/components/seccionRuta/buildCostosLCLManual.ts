@@ -57,10 +57,11 @@ export function buildCostosLCLManual({
   const ventaTotal = calcularFleteVentaLCL(wmFacturable, tarifaWM, minimo, markup);
   const aplicaMinimo = tarifaWM * wmFacturable < minimo;
 
-  const detalleWm = `W/M facturable ${wmFacturable} @ USD ${tarifaWM.toFixed(2)}`;
+  const detalleWm = `W/M facturable ${wmFacturable} @ ${formatUSD(tarifaWM)}`;
   const nota = aplicaMinimo
-    ? `Auto-cargado desde Flete LCL manual — ${detalleWm} (aplica mínimo USD ${minimo.toFixed(2)})`
+    ? `Auto-cargado desde Flete LCL manual — ${detalleWm} (aplica mínimo ${formatUSD(minimo)})`
     : `Auto-cargado desde Flete LCL manual — ${detalleWm}`;
+
 
   return [
     {
