@@ -1,11 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { differenceInCalendarDays } from "date-fns";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, PLACEHOLDER_VACIO } from "@/lib/formatters";
 
 export function FechaConOriginal({ actual, original }: { actual: string | null; original: string | null | undefined }) {
-  if (!actual && !original) return <>-</>;
-  const actualLabel = actual ? formatDate(actual) : "-";
+  // VB-30: placeholder vacío unificado (em dash).
+  if (!actual && !original) return <>{PLACEHOLDER_VACIO}</>;
+  const actualLabel = actual ? formatDate(actual) : PLACEHOLDER_VACIO;
   if (!original || !actual || original === actual) {
     return <>{actualLabel}</>;
   }

@@ -8,7 +8,7 @@ import {
 } from "@/components/shared/dataTable/columnBuilders";
 import { calcularEstadoEmbarque } from "@/features/embarques/hooks";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
-import { getOrigen, getDestino, shortName } from "@/lib/formatters";
+import { getOrigen, getDestino, shortName, PLACEHOLDER_VACIO } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPageHelpers";
@@ -78,7 +78,8 @@ export function buildEmbarqueColumns({
       header: "BL Master",
       // Oculto en tableta (<xl) — el detalle del embarque muestra el BL.
       meta: { width: COL_W.folio, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => row.original.bl_master || "-",
+      // VB-30: placeholder vacío unificado (em dash), como el detalle.
+      cell: ({ row }) => row.original.bl_master || PLACEHOLDER_VACIO,
     },
     {
       id: "contenedor",

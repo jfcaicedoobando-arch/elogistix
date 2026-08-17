@@ -12,7 +12,6 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Seo } from "@/components/shared/Seo";
 import { pluralizar } from "@/lib/format/pluralizar";
-
 import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
@@ -23,6 +22,7 @@ import { EstadoSelect, ClienteSelect } from "@/features/cotizacion/components/Co
 import { CotizacionesPageActions } from "@/features/cotizacion/components/CotizacionesPageActions";
 import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -102,6 +102,7 @@ export default function Cotizaciones() {
         }
       />
 
+      <CotizacionesBannerOrigen />
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground">KPIs · Últimos 30 días</p>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">

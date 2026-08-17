@@ -20,8 +20,8 @@ describe("usd", () => {
 });
 
 describe("formatVigencia", () => {
-  it("formatea vigencia DD/mes → DD/mes", () => {
-    expect(formatVigencia("2026-07-01", "2026-08-15")).toBe("01/jul → 15/ago");
+  it("formatea vigencia DD/MM/YYYY → DD/MM/YYYY (VB-38, formato único)", () => {
+    expect(formatVigencia("2026-07-01", "2026-08-15")).toBe("01/07/2026 → 15/08/2026");
   });
   it("devuelve raw si el ISO es inválido", () => {
     expect(formatVigencia("bad", "2026-08-15")).toContain("bad");

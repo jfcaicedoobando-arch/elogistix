@@ -5,6 +5,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import {
   TIPO_PAGO_LABELS, esEntrada,
@@ -16,12 +17,37 @@ const TIPO_CLASE: Record<PagoLibro["tipo"], string> = {
   pago: "bg-primary/10 text-primary border-primary/20",
   anticipo: "bg-warning/10 text-warning border-warning/20",
 };
-
 const TIPO_CORTO: Record<PagoLibro["tipo"], string> = {
   cobro: "Cobro",
   pago: "Pago",
   anticipo: "Anticipo",
 };
+
+/**
+ * VT-28: el libro de pagos mostraba la clave SAT cruda ("03") en la columna
+ * Método. Mapeamos los códigos más comunes a etiquetas cortas y, para el
+ * resto, reutilizamos el catálogo SAT quitando el prefijo "NN - ".
+ * Valores ya textuales (p. ej. "Transferencia" de pagos programados) pasan tal cual.
+ */
+const METODO_PAGO_LABELS_CORTOS: Record<string, string> = {
+  "01": "Efectivo",
+  "02": "Cheque",
+  "03": "Transferencia",
+  "04": "Tarjeta de crédito",
+  "28": "Tarjeta de débito",
+  "30": "Aplicación de anticipos",
+  "99": "Por definir",
+};
+
+function etiquetaMetodoPago(metodo: string | null): string {
+  if (!metodo) return "—";
+  const corto = METODO_PAGO_LABELS_CORTOS[metodo];
+  if (corto) return corto;
+  if (/^\d{2}$/.test(metodo)) {
+    return labelDeCatalogo(FORMAS_PAGO_SAT, metodo, metodo).replace(/^\d{2} - /, "");
+  }
+  return metodo;
+}
 
 function EstadoRep({ pago }: { pago: PagoLibro }) {
   if (pago.tipo !== "cobro") return <span className="text-2xs text-muted-foreground">N/A</span>;
@@ -101,7 +127,12 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       accessorFn: (p) => p.metodo_pago ?? "",
       cell: ({ row }) => (
         <div className="max-w-[160px]">
-          <span className="block truncate text-xs">{row.original.metodo_pago ?? "—"}</span>
+          <span
+            className="block truncate text-xs"
+            title={labelDeCatalogo(FORMAS_PAGO_SAT, row.original.metodo_pago, row.original.metodo_pago ?? undefined)}
+          >
+            {etiquetaMetodoPago(row.original.metodo_pago)}
+          </span>
           {row.original.referencia ? (
             <span className="block truncate text-2xs text-muted-foreground">
               Ref. {row.original.referencia}
@@ -124,10 +155,11 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       id: "monto",
       header: "Monto",
       accessorFn: (p) => p.monto,
-      meta: { align: "right" },
+      // VT-28: min-width + nowrap para que "MXN" y la cifra no envuelvan en 2 líneas.
+      meta: { align: "right", width: "w-32 min-w-[8rem]" },
       cell: ({ row }) => (
         <span
-          className={`tabular-nums ${esEntrada(row.original) ? "text-success" : "text-destructive"}`}
+          className={`whitespace-nowrap tabular-nums ${esEntrada(row.original) ? "text-success" : "text-destructive"}`}
         >
           {formatCurrency(row.original.monto, row.original.moneda)}
         </span>

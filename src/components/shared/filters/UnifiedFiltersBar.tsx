@@ -44,7 +44,9 @@ export function UnifiedFiltersBar({
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex flex-wrap items-center gap-2">
-        <div className="min-w-0 flex-1 sm:max-w-xs">
+        {/* VB-29: max-w-sm (384px) para que placeholders largos tipo
+            "Buscar por expediente, cliente o mercancía…" no se trunquen. */}
+        <div className="min-w-0 flex-1 sm:max-w-sm">
           <SearchInput
             value={search}
             onChange={onSearchChange}

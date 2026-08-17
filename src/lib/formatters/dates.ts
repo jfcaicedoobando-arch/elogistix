@@ -131,3 +131,25 @@ export function formatFechaLarga(
     return String(date);
   }
 }
+
+/**
+ * Fecha + hora corta numérica unificada: "dd/MM/yyyy, HH:mm" (24 h, TZ_MX).
+ * Formato corto canónico para metadatos tipo "Reporte generado" (VB-12):
+ * `dateStyle: "short"` de es-MX recorta el año a 2 dígitos ("16/08/26"), lo
+ * que se mezclaba con el resto de la app ("17/08/2026").
+ */
+export function formatFechaHoraCorta(iso: string | null | undefined): string {
+  if (!iso) return "-";
+  try {
+    const d = new Date(iso);
+    const fecha = d.toLocaleDateString("es-MX", withTz({
+      day: "2-digit", month: "2-digit", year: "numeric",
+    }));
+    const hora = d.toLocaleTimeString("es-MX", withTz({
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    }));
+    return `${fecha}, ${hora}`;
+  } catch {
+    return iso;
+  }
+}

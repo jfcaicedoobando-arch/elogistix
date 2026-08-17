@@ -1,3 +1,4 @@
+import { Building } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +17,10 @@ export default function TabEmpresa({ nombre, setNombre, subtitulo, setSubtitulo,
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Datos de la Empresa</CardTitle>
+        {/* VB-22: mismo patrón de encabezado que "Organización" (icono + título). */}
+        <CardTitle className="flex items-center gap-2">
+          <Building className="h-5 w-5" /> Datos de la Empresa
+        </CardTitle>
         <CardDescription>Información que aparece en el sistema y futuros documentos PDF</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">

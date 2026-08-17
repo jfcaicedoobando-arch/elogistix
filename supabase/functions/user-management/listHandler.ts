@@ -18,6 +18,8 @@ interface AuthUserRow {
   created_at: string;
   last_sign_in_at: string | null;
   email_confirmed_at: string | null;
+  /** VB-15: permite a la UI mostrar el nombre aunque el correo falle. */
+  full_name: string | null;
 }
 
 export async function resolveOrgScope(
@@ -70,12 +72,14 @@ async function listarTodosLosUsuarios(
       last_sign_in_at?: string | null;
       email_confirmed_at?: string | null;
       confirmed_at?: string | null;
+      user_metadata?: { full_name?: string | null } | null;
     }>;
     for (const u of pageUsers) {
       baseRows.push({
         id: u.id,
         email: u.email ?? "",
         created_at: u.created_at,
+        full_name: u.user_metadata?.full_name ?? null,
         // Q-05b: permiten distinguir "Invitación pendiente" de "Activo".
         last_sign_in_at: u.last_sign_in_at ?? null,
         email_confirmed_at: u.email_confirmed_at ?? u.confirmed_at ?? null,

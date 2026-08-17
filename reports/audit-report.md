@@ -1,6 +1,6 @@
-# Audit Report — 13.640.2
+# Audit Report — 13.641.1
 
-Generado: 2026-08-17T17:03:53.691Z
+Generado: 2026-08-17T18:04:23.212Z
 
 ## Resumen
 
@@ -8,8 +8,8 @@ Generado: 2026-08-17T17:03:53.691Z
 |---|---|---|
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
-| Power-of-10 (>200 líneas) | ❌ | 9 archivos |
-| Casts HIGH + CRITICAL | ✅ | 0 / 3064 |
+| Power-of-10 (>200 líneas) | ✅ | 0 archivos |
+| Casts HIGH + CRITICAL | ✅ | 0 / 3065 |
 | Higiene de tests | ✅ | 0 violaciones |
 | Adopción zod en `fromDb` | ⚠️ | 12/49 validados (25%) |
 
@@ -22,25 +22,17 @@ Generado: 2026-08-17T17:03:53.691Z
 ✅ Ninguno
 
 ### Archivos productivos > 200 líneas
--  241  `src/features/presupuesto/components/TabVsReal.tsx`
--  224  `src/features/crm/routes/Oportunidades.tsx`
--  222  `src/features/embarques/components/DialogSeguroForm.tsx`
--  214  `src/features/costeo/routes/CosteoDemorasVenta.tsx`
--  214  `src/features/cxp/services/pagoProveedorValidaciones.ts`
--  210  `src/features/facturacion/services/bandejas.ts`
--  208  `src/features/crm/hooks/useMoverOportunidadEtapa.ts`
--  205  `src/features/admin/components/TabPlanes.tsx`
--  204  `src/lib/validation/mutationSchemas.ts`
+✅ Ninguno
 
 ## Casts
 
-Total: **3064** — HIGH: **0**, CRITICAL: **0**
+Total: **3065** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
 | SAFE | 918 |
 | LOW | 148 |
-| MEDIUM | 1998 |
+| MEDIUM | 1999 |
 | HIGH | 0 |
 | CRITICAL | 0 |
 
@@ -85,4 +77,4 @@ Casts crudos `fromDb<T>()` pendientes por feature:
 
 ---
 
-_Estado general: ⚠️ Revisar violaciones arriba._
+_Estado general: ✅ Baseline arquitectónico limpio._

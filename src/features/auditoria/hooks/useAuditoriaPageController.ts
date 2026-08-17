@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatFechaHora } from "@/lib/formatters/dates";
+import { formatFechaHoraCorta } from "@/lib/formatters/dates";
 import {
   AUDITORIA_QUERY_KEY,
   useAuditoria,
@@ -71,7 +71,7 @@ export function useAuditoriaPageController() {
   };
 
   const generadoEn = data?.generated_at
-    ? formatFechaHora(data.generated_at)
+    ? formatFechaHoraCorta(data.generated_at)
     : null;
 
   return {

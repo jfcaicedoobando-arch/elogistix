@@ -24,6 +24,12 @@ interface PaginationControlsProps {
   pageSizeLabels?: Record<number, string>;
   /** Total de registros; si se pasa, muestra el rango "1–20 de 134". */
   total?: number;
+  /**
+   * VB-23: si es `true` y todo cabe en una sola página (total ≤ pageSize),
+   * no se renderiza nada — los botones Anterior/Siguiente serían ruido visual.
+   * Por defecto `false` para no cambiar el comportamiento de listados existentes.
+   */
+  hideWhenSinglePage?: boolean;
 }
 
 const DEFAULT_OPTIONS = [10, 20, 50];
@@ -31,9 +37,9 @@ const DEFAULT_OPTIONS = [10, 20, 50];
 export default function PaginationControls({
   page, totalPages, onPageChange,
   pageSize, onPageSizeChange, pageSizeOptions = DEFAULT_OPTIONS,
-  pageSizeLabels, total,
+  pageSizeLabels, total, hideWhenSinglePage = false,
 }: PaginationControlsProps) {
-  if (totalPages <= 1 && !onPageSizeChange) return null;
+  if (totalPages <= 1 && (hideWhenSinglePage || !onPageSizeChange)) return null;
 
   const ultima = Math.max(totalPages, 1) - 1;
   const enPrimera = page <= 0;

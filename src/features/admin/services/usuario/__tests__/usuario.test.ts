@@ -51,6 +51,20 @@ describe("services/usuario", () => {
     expect(r[0].role).toBe("admin");
   });
 
+  it("fetchUsuariosOrganizacion expone full_name del directorio auth (VB-15)", async () => {
+    mock.setTableResult("organization_members", {
+      data: [{ user_id: "u1", role: "admin", created_at: "2026-01-01" }],
+      error: null,
+    });
+    mock.invoke.mockResolvedValue({
+      data: [{ id: "u1", email: "", created_at: "2026-02-01", full_name: "Admin Demo" }],
+      error: null,
+    });
+    const r = await fetchUsuariosOrganizacion("org-1");
+    expect(r[0].email).toBe(UNRESOLVED_EMAIL);
+    expect(r[0].full_name).toBe("Admin Demo");
+  });
+
   it("fetchUsuariosOrganizacion usa UNRESOLVED_EMAIL si edge falla", async () => {
     mock.setTableResult("organization_members", {
       data: [{ user_id: "u1", role: "admin", created_at: "2026-01-01" }],

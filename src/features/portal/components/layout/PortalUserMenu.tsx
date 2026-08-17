@@ -17,9 +17,15 @@ interface Props {
   clienteName?: string | null;
   email?: string | null;
   onSignOut: () => void;
+  /**
+   * VT-17: ruta del enlace "Mi perfil". Por defecto apunta al portal cliente
+   * (`ROUTES.PORTAL_PERFIL`); el portal agente pasa `ROUTES.AGENTE_PERFIL`.
+   * Extensión retro-compatible: los consumidores existentes no cambian.
+   */
+  perfilRoute?: string;
 }
 
-export function PortalUserMenu({ initials, clienteName, email, onSignOut }: Props) {
+export function PortalUserMenu({ initials, clienteName, email, onSignOut, perfilRoute = ROUTES.PORTAL_PERFIL }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -47,7 +53,7 @@ export function PortalUserMenu({ initials, clienteName, email, onSignOut }: Prop
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to={ROUTES.PORTAL_PERFIL}>
+          <Link to={perfilRoute}>
             <UserIcon className="h-4 w-4 mr-2" /> Mi perfil
           </Link>
         </DropdownMenuItem>

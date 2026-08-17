@@ -13,6 +13,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCopyText } from "@/hooks/shared";
 import { APP_VERSION } from "@/constants/appVersion";
 import { OrgSwitcher } from "@/components/layout/OrgSwitcher";
 import { OrgBadge } from "@/components/layout/OrgBadge";
@@ -53,6 +55,14 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
 
   const userInitials = computeUserInitials(user?.email ?? undefined);
   const roleLabel = computeRoleLabel(effectiveRole);
+  // VB-25: la versión del pie es copiable (útil al levantar tickets de soporte).
+  const copy = useCopyText();
+  const copiarVersion = () =>
+    void copy(`v${APP_VERSION}`, {
+      successMessage: `Versión v${APP_VERSION} copiada`,
+      errorTitle: "No se pudo copiar la versión",
+      method: "AppSidebar.copiarVersion",
+    });
 
   return (
     <Sidebar collapsible="icon">
@@ -89,6 +99,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
         {user && (
           <SidebarUserMenu
             email={user.email ?? ""}
+            displayName={(user.user_metadata?.full_name as string | undefined) ?? null}
             initials={userInitials}
             roleLabel={roleLabel}
             collapsed={collapsed}
@@ -98,9 +109,21 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
           />
         )}
         {!collapsed && (
-          <div className="text-label text-sidebar-foreground/55 tabular-nums px-1">
-            v{APP_VERSION}
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={copiarVersion}
+                aria-label={`Versión ${APP_VERSION}, clic para copiar`}
+                className="text-label text-sidebar-foreground/55 tabular-nums px-1 transition-colors hover:text-sidebar-foreground cursor-copy"
+              >
+                v{APP_VERSION}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              Versión {APP_VERSION} · clic para copiar
+            </TooltipContent>
+          </Tooltip>
         )}
       </SidebarFooter>
     </Sidebar>

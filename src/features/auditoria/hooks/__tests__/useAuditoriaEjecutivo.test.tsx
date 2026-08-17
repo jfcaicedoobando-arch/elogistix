@@ -244,7 +244,7 @@ describe("useAuditoriaEjecutivo", () => {
   it("formatea generadoEn en es-MX cuando hay reporte", () => {
     setMocks([]);
     const { result } = renderHook(() => useAuditoriaEjecutivo());
-    // Formato es-MX corto: "DD/MM/YY, HH:MM a.m./p.m."
-    expect(result.current.generadoEn).toMatch(/^\d{1,2}\/\d{1,2}\/\d{2},\s+\d{1,2}:\d{2}\s+(a\.?\s?m\.?|p\.?\s?m\.?)/i);
+    // VB-12: formato corto unificado "DD/MM/YYYY, HH:MM" (24 h, TZ_MX).
+    expect(result.current.generadoEn).toMatch(/^\d{2}\/\d{2}\/\d{4},\s+\d{2}:\d{2}$/);
   });
 });

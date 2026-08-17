@@ -17,6 +17,7 @@ import { PortalBreadcrumbsBar } from "@/features/portal/components/layout/Portal
 import type { PortalCrumb } from "@/features/portal/components/layout/PortalBreadcrumbsBar";
 import { useBreadcrumbLabels } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { ROUTES } from "@/constants/routes";
 
 const NAV = [
   { label: "Inicio", href: "/agente", icon: LayoutDashboard },
@@ -142,6 +143,9 @@ export default function AgenteLayout() {
               clienteName={ctx?.agenteNombre ?? null}
               email={user?.email ?? null}
               onSignOut={handleSignOut}
+              // VT-17: sin esta prop "Mi perfil" apuntaba al portal cliente
+              // (/portal/perfil) y el guard de cliente rebotaba al agente.
+              perfilRoute={ROUTES.AGENTE_PERFIL}
             />
           </div>
         </div>
