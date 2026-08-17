@@ -7,6 +7,7 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { formatDate, toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import type { ProximoArribo } from "@/features/dashboard/hooks";
+import { activableConTeclado, FOCUS_RING } from "@/lib/ui/keyboardActivation";
 
 interface Props {
   arribos: ProximoArribo[];
@@ -40,8 +41,8 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
     return arribos.map((e) => (
       <div
         key={e.id}
-        onClick={() => navigate(`/embarques/${e.id}`)}
-        className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+        {...activableConTeclado(() => navigate(`/embarques/${e.id}`))}
+        className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors ${FOCUS_RING}`}
       >
         <div className="shrink-0 h-9 w-9 rounded-full bg-warning/15 flex items-center justify-center">
           <Clock className="h-4 w-4 text-warning" />
