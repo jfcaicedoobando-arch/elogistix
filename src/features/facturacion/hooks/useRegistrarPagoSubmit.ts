@@ -29,6 +29,8 @@ interface SubmitArgs {
   notas: string;
   /** Cuenta donde entró el dinero; `null` = no registrar movimiento bancario. */
   cuentaBancariaId?: string | null;
+  /** BL-14: idempotencia de submit (UNIQUE parcial en `pagos_factura`). */
+  clientRequestId?: string | null;
   esPpdTimbrada: boolean;
 }
 
@@ -94,6 +96,7 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
         referencia: args.referencia,
         notas: args.notas,
         cuenta_bancaria_id: args.cuentaBancariaId ?? null,
+        client_request_id: args.clientRequestId ?? null,
       });
       registrarActividad.mutate({
         accion: "crear",

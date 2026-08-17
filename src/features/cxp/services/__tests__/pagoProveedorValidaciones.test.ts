@@ -86,6 +86,12 @@ describe("pagoProveedorValidaciones", () => {
     expect(validarPagoProveedor(base({ factura: { ...factura, saldo: 0 } })).error).toMatch(/saldo/);
   });
 
+  it("EC-12: residuo de redondeo (≤ $0.01) dirige al cierre explícito, no a un pago impagable", () => {
+    const r = validarPagoProveedor(base({ factura: { ...factura, saldo: 0.01 } }));
+    expect(r.error).toMatch(/residuo de redondeo/);
+    expect(r.error).toMatch(/Cerrar sin pago/);
+  });
+
   it("detecta descuadre de totales e IVA fuera de tasa", () => {
     const mala = { ...factura, iva: 100 };
     expect(descuadreTotalesFactura(mala)).not.toBe(0);

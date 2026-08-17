@@ -1,6 +1,13 @@
--- Fuente canónica de public.avanzar_estado_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+-- ============================================================
+-- BL-16 · avanzar_estado_embarque: no operar sobre embarques en papelera.
+-- El SELECT inicial no filtraba `deleted_at IS NULL` (a diferencia de
+-- `cerrar_embarque` vía `validar_cierre_embarque`): un embarque
+-- soft-deleted podía seguir avanzando de estado, consumir folio de
+-- expediente (`generar_expediente`) y escribir notas/eventos/bitácora.
+--
+-- Cuerpo VERBATIM de la versión vigente salvo el SELECT inicial.
+-- Misma firma, volatilidad, SECURITY DEFINER y search_path.
+-- ============================================================
 
 CREATE OR REPLACE FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
@@ -85,5 +92,4 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$
- name:avanzar_estado_embarque schema:public;
+$function$;

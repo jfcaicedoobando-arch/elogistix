@@ -29,6 +29,12 @@ export interface RegistrarPagoInput {
    * cobro sólo entra al banco al importar/conciliar el estado de cuenta.
    */
   cuenta_bancaria_id?: string | null;
+  /**
+   * BL-14: UUID generado por el dialog por intento de submit. La columna
+   * tiene índice UNIQUE parcial: un retry de red con el mismo UUID choca
+   * (23505) en vez de duplicar el cobro.
+   */
+  client_request_id?: string | null;
 }
 
 export async function listarPagosFactura(facturaId: string): Promise<PagoFactura[]> {
@@ -82,6 +88,7 @@ export async function registrarPagoFactura(
         notas: input.notas ?? "",
         diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? 0,
         cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
+        client_request_id: input.client_request_id ?? null,
         created_by,
       })
       .select("id")

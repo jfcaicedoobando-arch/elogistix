@@ -66,9 +66,14 @@ export function usePrefillMontoPago(args: {
   useEffect(() => {
     if (!open || facturaId == null || facturaSaldo == null || pagoEditarId) return;
     if (esUsdPagadoEnMxn && tcNum) {
-      setMonto((facturaSaldo * tcNum).toFixed(2));
+      // EC-12: redondeo hacia ARRIBA al centavo. `toFixed` (al más cercano)
+      // podía dejar un residuo de ≤ $0.01 en la moneda de la factura que
+      // después ya no se podía pagar → factura eternamente abierta. El
+      // exceso (< 1 centavo MXN / TC) cabe en la tolerancia del guard de BD
+      // (+0.005) y la factura queda saldada.
+      setMonto((Math.ceil((facturaSaldo * tcNum - 1e-9) * 100) / 100).toFixed(2));
     } else if (!esUsdPagadoEnMxn && moneda === facturaMoneda) {
-      setMonto(facturaSaldo.toFixed(2));
+      setMonto((Math.ceil((facturaSaldo - 1e-9) * 100) / 100).toFixed(2));
     }
   }, [
     esUsdPagadoEnMxn, moneda, facturaId, facturaSaldo, facturaMoneda, tcNum, open,

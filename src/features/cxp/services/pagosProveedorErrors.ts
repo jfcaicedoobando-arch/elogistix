@@ -43,6 +43,12 @@ const REGLAS: Regla[] = [
     e.message && e.message.includes("LC_PAGO_TC_REQUERIDO")
       ? "El pago está en una moneda distinta a la de la cuenta y no tiene tipo de cambio registrado. Edita el pago, captura el TC y vuelve a regenerar el movimiento."
       : null,
+  // BL-15: el cruce con EUR no está soportado por convertir_monto_pago_a_factura;
+  // mensaje propio en vez del 22023 crudo.
+  (e) =>
+    e.message && e.message.includes("LC_PAGO_CRUCE_NO_SOPORTADO")
+      ? "Ese cruce de monedas no está soportado (los pagos con EUR sólo se pueden registrar en la misma moneda de la factura). Registra el pago en la moneda de la factura."
+      : null,
   (e) =>
     e.code === "LC_PAGO_SIN_APROBACION" || (e.message && e.message.includes("LC_PAGO_SIN_APROBACION"))
       ? "La factura debe estar aprobada antes de registrar pagos."

@@ -156,8 +156,21 @@ export function validarPagoProveedor(a: ValidarPagoInput): ResultadoValidacionPa
     return { error: "La factura debe estar aprobada antes de registrar pagos", avisos };
   }
   const disponible = saldoDisponiblePago(a);
-  if (disponible <= TOLERANCIA) {
+  if (disponible <= 0) {
     return { error: "La factura no tiene saldo pendiente", avisos };
+  }
+  // EC-12: un residuo de redondeo (≤ $0.01) ya no es pagable con el flujo
+  // normal (el prefill y el guard de BD operan a centavos) y dejaba la
+  // factura eternamente abierta en aging. Se bloquea el pago y se dirige al
+  // cierre explícito existente ("Cerrar sin pago" en el detalle), que marca
+  // la factura como pagada con motivo de ajuste.
+  if (disponible <= TOLERANCIA) {
+    return {
+      error:
+        "La factura sólo tiene un residuo de redondeo (≤ $0.01). " +
+        "Ciérrala con «Cerrar sin pago» desde el detalle para marcarla como pagada.",
+      avisos,
+    };
   }
   const error =
     validarMonto(a) ??
