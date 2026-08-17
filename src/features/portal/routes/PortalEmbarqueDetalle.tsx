@@ -21,6 +21,7 @@ import { usePortalEmbarqueDetalleController } from "@/features/embarques/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useDocumentTitle } from "@/hooks/shared";
 import { useVolver } from "@/hooks/shared/useVolver";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();
@@ -28,6 +29,8 @@ export default function PortalEmbarqueDetalle() {
   const {
     embarque,
     isLoading,
+    isError,
+    refetch,
     eventos,
     documentos,
     estadoVisual,
@@ -42,6 +45,14 @@ export default function PortalEmbarqueDetalle() {
 
   if (isLoading) {
     return <DetailSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <ErrorState onRetry={() => void refetch()} />
+      </div>
+    );
   }
 
   if (!embarque) {

@@ -42,7 +42,7 @@ export function GlobalSearchCargando() {
       data-testid="global-search-cargando"
     >
       <span className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         Buscando…
       </span>
       {[0, 1, 2].map((i) => (

@@ -22,7 +22,7 @@ import {
 } from "@/features/auditoria/domain/core";
 
 export function useAuditoriaPageController() {
-  const { data, isLoading, isFetching } = useAuditoria();
+  const { data, isLoading, isFetching, isError, refetch } = useAuditoria();
   const { data: revisiones } = useAuditoriaRevisiones();
   const queryClient = useQueryClient();
 
@@ -77,6 +77,8 @@ export function useAuditoriaPageController() {
   return {
     data,
     isLoading,
+    isError,
+    refetch,
     isFetching,
     hallazgos,
     hallazgosVisibles,

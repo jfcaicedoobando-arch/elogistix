@@ -14,12 +14,14 @@ import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
 function ForecastPanel() {
-  const { data, isLoading } = useForecast();
+  const { data, isLoading, isError, refetch } = useForecast();
   const f = data ?? { porMes: [], porVendedor: [], totalPipeline: 0, totalPonderado: 0, totalGanado: 0 };
+  if (isError) return <ErrorState onRetry={() => void refetch()} />;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -82,8 +84,9 @@ function ForecastPanel() {
 }
 
 function EmbudoYPerdidas() {
-  const { data, isLoading } = useReportesCRM();
+  const { data, isLoading, isError, refetch } = useReportesCRM();
   const r = data ?? { embudo: [], porFuente: [], motivosPerdida: [] };
+  if (isError) return <ErrorState onRetry={() => void refetch()} />;
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <Card>

@@ -1,6 +1,6 @@
-# Audit Report — 13.607.1
+# Audit Report — 13.640.2
 
-Generado: 2026-08-14T16:00:40.697Z
+Generado: 2026-08-17T17:03:53.691Z
 
 ## Resumen
 
@@ -8,8 +8,8 @@ Generado: 2026-08-14T16:00:40.697Z
 |---|---|---|
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
-| Power-of-10 (>200 líneas) | ✅ | 0 archivos |
-| Casts HIGH + CRITICAL | ✅ | 0 / 3001 |
+| Power-of-10 (>200 líneas) | ❌ | 9 archivos |
+| Casts HIGH + CRITICAL | ✅ | 0 / 3064 |
 | Higiene de tests | ✅ | 0 violaciones |
 | Adopción zod en `fromDb` | ⚠️ | 12/49 validados (25%) |
 
@@ -22,17 +22,25 @@ Generado: 2026-08-14T16:00:40.697Z
 ✅ Ninguno
 
 ### Archivos productivos > 200 líneas
-✅ Ninguno
+-  241  `src/features/presupuesto/components/TabVsReal.tsx`
+-  224  `src/features/crm/routes/Oportunidades.tsx`
+-  222  `src/features/embarques/components/DialogSeguroForm.tsx`
+-  214  `src/features/costeo/routes/CosteoDemorasVenta.tsx`
+-  214  `src/features/cxp/services/pagoProveedorValidaciones.ts`
+-  210  `src/features/facturacion/services/bandejas.ts`
+-  208  `src/features/crm/hooks/useMoverOportunidadEtapa.ts`
+-  205  `src/features/admin/components/TabPlanes.tsx`
+-  204  `src/lib/validation/mutationSchemas.ts`
 
 ## Casts
 
-Total: **3001** — HIGH: **0**, CRITICAL: **0**
+Total: **3064** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
-| SAFE | 896 |
-| LOW | 147 |
-| MEDIUM | 1958 |
+| SAFE | 918 |
+| LOW | 148 |
+| MEDIUM | 1998 |
 | HIGH | 0 |
 | CRITICAL | 0 |
 
@@ -45,11 +53,11 @@ Total: **3001** — HIGH: **0**, CRITICAL: **0**
 | 3 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 |
 | 4 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 14 | 26 |
 | 5 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 |
-| 6 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 11 | 20 |
-| 7 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 |
-| 8 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
-| 9 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 |
-| 10 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 |
+| 6 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 |
+| 7 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
+| 8 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 |
+| 9 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 |
+| 10 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 |
 
 ## Boundaries de datos (`fromDb`)
 
@@ -77,4 +85,4 @@ Casts crudos `fromDb<T>()` pendientes por feature:
 
 ---
 
-_Estado general: ✅ Baseline arquitectónico limpio._
+_Estado general: ⚠️ Revisar violaciones arriba._

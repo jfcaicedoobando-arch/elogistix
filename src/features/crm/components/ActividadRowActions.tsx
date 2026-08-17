@@ -55,13 +55,13 @@ export default function ActividadRowActions({ actividad }: Props) {
               title="Marcar como completada"
             >
               {completar.isPending
-                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ? <Loader2 className="h-4 w-4 animate-spin" />
                 : <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="ghost" className="h-7 px-2" disabled={posponer.isPending} title="Posponer">
-                  {posponer.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Clock className="h-3.5 w-3.5" />}
+                  {posponer.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>

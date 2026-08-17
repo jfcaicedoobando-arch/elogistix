@@ -71,7 +71,7 @@ function EstadoBarSegment({ estado, count, pct }: { estado: string; count: numbe
   return (
     <div
       {...nav}
-      className={cn(nav.className, getEstadoBarColor(estado), "transition-all hover:opacity-80 rounded-sm")}
+      className={cn(nav.className, getEstadoBarColor(estado), "transition-opacity hover:opacity-80 rounded-sm")}
       style={{ width: `${pct}%` }}
       title={`${estado}: ${count}`}
     />

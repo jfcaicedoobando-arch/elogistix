@@ -67,15 +67,19 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Gráfico resumen general */}
+        {/* Gráfico resumen general.
+            VB-26: con un solo operador la barra apilada ocupa todo el ancho
+            (1400px) sin aportar comparativa; se omite y queda la card-resumen. */}
+        {operadores.length > 1 && (
         <div>
           <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-            Comparativa de carga de trabajo
+            Comparativa de carga de trabajo (incluye embarques finalizados)
           </p>
           <Suspense fallback={<ChartSkeleton height={320} />}>
             <DesempenoOperadoresChart data={chartData} />
           </Suspense>
         </div>
+        )}
 
 
         {/* Tarjetas por operador */}

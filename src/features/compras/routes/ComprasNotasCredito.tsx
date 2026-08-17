@@ -27,6 +27,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 type EstadoFiltro = "todos" | NotaCreditoRow["estado"];
@@ -45,7 +46,7 @@ export default function ComprasNotasCredito() {
   const [estado, setEstado] = useState<EstadoFiltro>("todos");
   const [search, setSearch] = useState("");
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: compras.notasCreditoGlobal({ desde, hasta, moneda, estado, search }),
     queryFn: () =>
       listarNotasCreditoGlobal({
@@ -155,6 +156,9 @@ export default function ComprasNotasCredito() {
 
       <Card>
         <CardContent className="p-0">
+          {isError ? (
+            <ErrorState className="m-4" onRetry={() => void refetch()} />
+          ) : (
           <DataTable
             columns={columns}
             data={rows}
@@ -165,6 +169,7 @@ export default function ComprasNotasCredito() {
             rowKey={(r) => r.id}
             density={TABLE_DENSITY.embebida}
           />
+          )}
         </CardContent>
       </Card>
     </PageContainer>

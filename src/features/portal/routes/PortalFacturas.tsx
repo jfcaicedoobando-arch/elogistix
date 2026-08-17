@@ -13,12 +13,13 @@ import { PortalFacturasMobileFilters } from "@/features/portal/components/factur
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks/shared";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function PortalFacturas() {
   useDocumentTitle('Mis Facturas');
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
-  const { data: facturas = [], isLoading } = usePortalFacturas(clienteIds);
+  const { data: facturas = [], isLoading, isError, refetch } = usePortalFacturas(clienteIds);
   const [search, setSearch] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
 
@@ -43,6 +44,14 @@ export default function PortalFacturas() {
 
   if (isLoading) {
     return <PageSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <ErrorState onRetry={() => void refetch()} />
+      </div>
+    );
   }
 
   return (
@@ -97,7 +106,7 @@ export default function PortalFacturas() {
             // Emitida/Parcialmente pagada ya vencida se muestra "Vencida".
             const estadoVisible = resolverEstadoFacturaCliente(f.estado, f.fecha_vencimiento);
             return (
-            <Card key={f.id} className="transition-all hover:shadow-raised hover:border-accent/40 focus-within:ring-2 focus-within:ring-accent/40">
+            <Card key={f.id} className="transition-[box-shadow,border-color] hover:shadow-raised hover:border-accent/40 focus-within:ring-2 focus-within:ring-accent/40">
               <Link
                 to={`/portal/facturas/${f.id}`}
                 aria-label={`Ver factura ${f.numero}`}

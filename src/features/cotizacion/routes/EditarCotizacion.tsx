@@ -15,6 +15,7 @@ import type { CotizacionRow } from "@/features/cotizacion/hooks";
 import type { CostoCotizacion } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { esEstadoEditableEnWizard } from "@/features/cotizacion/domain/estadosEditables";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 
 export default function EditarCotizacion() {
@@ -24,12 +25,20 @@ export default function EditarCotizacion() {
   const { user } = useAuth();
   const { canEdit } = usePermissions();
   const { data: clientes = [] } = useClientesForSelect();
-  const { data: cotizacion, isLoading } = useCotizacion(id);
+  const { data: cotizacion, isLoading, isError, refetch } = useCotizacion(id);
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
   const { data: costos, isLoading: costosLoading } = useCotizacionCostos(id);
 
   if (isLoading || costosLoading) {
     return <PageContainer><DetailSkeleton sections={1} /></PageContainer>;
+  }
+
+  if (isError) {
+    return (
+      <PageContainer>
+        <ErrorState onRetry={() => void refetch()} />
+      </PageContainer>
+    );
   }
 
   if (!cotizacion || !canEdit || !esEstadoEditableEnWizard(cotizacion.estado)) {

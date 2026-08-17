@@ -66,7 +66,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className="px-2 py-4 [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-foreground)/0.3)_transparent]">
         <div className="px-2 mb-2 space-y-2 shrink-0">
           <OrgSwitcher collapsed={collapsed} />
           <OrgBadge collapsed={collapsed} />

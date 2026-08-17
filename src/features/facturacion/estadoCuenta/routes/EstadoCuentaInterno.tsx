@@ -7,10 +7,11 @@ import { EstadoCuentaModule } from "../components/EstadoCuentaModule";
 import { EstadoCuentaHeaderCard } from "../components/EstadoCuentaHeaderCard";
 import { useClienteFichaEstadoCuenta } from "../hooks/useClienteFichaEstadoCuenta";
 import { useEstadoCuentaDateRange } from "../hooks/useEstadoCuentaDateRange";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function EstadoCuentaInterno() {
   const { clienteId = "" } = useParams<{ clienteId: string }>();
-  const { data: ficha, isLoading } = useClienteFichaEstadoCuenta(clienteId || undefined);
+  const { data: ficha, isLoading, isError, refetch } = useClienteFichaEstadoCuenta(clienteId || undefined);
   const { desde, hasta } = useEstadoCuentaDateRange("30d");
   const volver = useVolver(`/clientes/${clienteId}`);
 
@@ -23,6 +24,10 @@ export default function EstadoCuentaInterno() {
         title="Estado de cuenta"
         subtitle="Movimientos, saldos y anticipos del cliente."
       />
+
+      {isError && (
+        <ErrorState className="mb-4" onRetry={() => void refetch()} />
+      )}
 
       <EstadoCuentaModule
         clienteIds={clienteId ? [clienteId] : []}

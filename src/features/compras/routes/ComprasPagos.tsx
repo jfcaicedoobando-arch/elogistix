@@ -30,6 +30,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 
@@ -48,7 +49,7 @@ export default function ComprasPagos() {
   const [metodoPago, setMetodoPago] = useState<string>("todos");
   const [search, setSearch] = useState("");
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: compras.pagosGlobal({ desde, hasta, moneda, metodoPago, search }),
     queryFn: () =>
       listarPagosProveedorGlobal({
@@ -159,6 +160,9 @@ export default function ComprasPagos() {
 
       <Card>
         <CardContent className="p-0">
+          {isError ? (
+            <ErrorState className="m-4" onRetry={() => void refetch()} />
+          ) : (
           <DataTable
             columns={columns}
             data={rows}
@@ -169,6 +173,7 @@ export default function ComprasPagos() {
             rowKey={(r) => r.id}
             density={TABLE_DENSITY.embebida}
           />
+          )}
         </CardContent>
       </Card>
     </PageContainer>

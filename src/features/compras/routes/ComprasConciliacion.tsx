@@ -27,6 +27,7 @@ import {
 import { buildConciliacionColumns } from "./_sections/conciliacionColumns";
 import { ConciliacionDetalleSheet } from "./_sections/ConciliacionDetalleSheet";
 import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 type EstadoFiltro = EstadoConciliacion | "todos";
 type MonedaFiltro = "todas" | "MXN" | "USD";
@@ -37,7 +38,7 @@ export default function ComprasConciliacion() {
   const [search, setSearch] = useState("");
   const [detalle, setDetalle] = useState<EmbarqueConciliacion | null>(null);
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: compras.conciliacionEmbarques({ estado, moneda, search }),
     queryFn: () =>
       listarConciliacionEmbarques({
@@ -117,6 +118,9 @@ export default function ComprasConciliacion() {
             </div>
           </div>
 
+          {isError ? (
+            <ErrorState onRetry={() => void refetch()} />
+          ) : (
           <DataTable
             columns={columns}
             data={rows}
@@ -126,6 +130,7 @@ export default function ComprasConciliacion() {
             onRowClick={(row) => setDetalle(row)}
             stickyHeader
           />
+          )}
         </CardContent>
       </Card>
 

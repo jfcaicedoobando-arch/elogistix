@@ -11,6 +11,7 @@ import { NuevaOrganizacionDialog } from "@/features/admin/components/NuevaOrgani
 import { buildAdminOrganizacionesColumns } from "@/features/admin/components/AdminOrganizacionesColumns";
 import { useDocumentTitle } from "@/hooks/shared";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function AdminOrganizaciones() {
   useDocumentTitle('Organizaciones');
@@ -42,6 +43,9 @@ export default function AdminOrganizaciones() {
       />
 
       <div className="rounded-md border">
+        {data.isError ? (
+          <ErrorState className="m-4" onRetry={() => void data.refetch()} />
+        ) : (
         <DataTable
           columns={columns}
           data={data.filtered}
@@ -51,6 +55,7 @@ export default function AdminOrganizaciones() {
           density={TABLE_DENSITY.listado}
           getRowHref={(o) => `/admin/organizaciones/${o.id}`}
         />
+        )}
       </div>
 
       <NuevaOrganizacionDialog

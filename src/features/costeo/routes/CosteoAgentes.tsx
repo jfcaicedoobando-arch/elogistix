@@ -19,6 +19,7 @@ import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAl
 import { CosteoAgentesTable, type AgenteRow } from "@/features/costeo/components/CosteoAgentesTable";
 import { CosteoAgenteFormDialog } from "@/features/costeo/components/CosteoAgenteFormDialog";
 import { InvitarAgentePortalDialog } from "@/features/costeo/components/InvitarAgentePortalDialog";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 const EMPTY: CosteoAgenteInput = {
   nombre: "",
@@ -31,7 +32,7 @@ const EMPTY: CosteoAgenteInput = {
 };
 
 export default function CosteoAgentes() {
-  const { data: agentes = [], isLoading } = useCosteoAgentes();
+  const { data: agentes = [], isLoading, isError, refetch } = useCosteoAgentes();
   const { crear, actualizar, eliminar } = useCosteoAgenteMutations();
   const { data: proveedores = [] } = useProveedoresAgente();
   const [open, setOpen] = useState(false);
@@ -118,6 +119,9 @@ export default function CosteoAgentes() {
         </CardContent>
       </Card>
 
+      {isError ? (
+        <ErrorState onRetry={() => void refetch()} />
+      ) : (
       <CosteoAgentesTable
         agentes={agentesFiltrados}
         isLoading={isLoading}
@@ -125,6 +129,7 @@ export default function CosteoAgentes() {
         onEliminar={setAEliminar}
         onInvitarPortal={(a) => setInvitarAgente(a)}
       />
+      )}
 
       <CosteoAgenteFormDialog
         open={open}

@@ -15,7 +15,7 @@ export function Kpi({ label, value, tone = "default", emphasis = false, hint }: 
     : "text-foreground";
   return (
     <div className={cn(
-      "min-w-0 rounded-lg border bg-card p-3 short:p-2.5 transition-all",
+      "min-w-0 rounded-lg border bg-card p-3 short:p-2.5 transition-[box-shadow,border-color]",
       emphasis && "ring-2 ring-accent/30 border-accent/30",
     )}>
       <p className="text-2xs font-bold uppercase tracking-tight text-muted-foreground mb-1 truncate">

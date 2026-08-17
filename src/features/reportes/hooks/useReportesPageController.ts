@@ -59,7 +59,7 @@ export function useReportesPageController() {
     [fechaDesde, fechaHasta, modo],
   );
 
-  const { clientes, kpis, isLoading } = useRentabilidadClientes(filtros);
+  const { clientes, kpis, isLoading, isError, refetch } = useRentabilidadClientes(filtros);
   const { isExporting: isExportingPdf, run: runPdfExport } = usePdfExport({
     successTitle: "Reporte PDF descargado",
     method: "REPORTES_RENTABILIDAD_EXPORT_PDF",
@@ -150,6 +150,8 @@ export function useReportesPageController() {
     // datos
     kpis,
     isLoading,
+    isError,
+    refetch,
     sorted,
     top10,
     // tabla

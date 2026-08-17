@@ -21,6 +21,7 @@ import {
   toInitial,
 } from "./_sections/agenteTarifasColumns";
 import { todayLocalISO } from "@/lib/date/today";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 type Filter = "todas" | "borrador" | "vigente" | "rechazada";
 
@@ -39,7 +40,7 @@ interface EditorState {
 }
 
 export default function AgenteTarifas() {
-  const { data: tarifas = [], isLoading } = useAgenteTarifas();
+  const { data: tarifas = [], isLoading, isError, refetch } = useAgenteTarifas();
   const [filtro, setFiltro] = useState<Filter>("todas");
   const [editor, setEditor] = useState<EditorState>({ open: false, modo: "crear" });
 
@@ -111,6 +112,9 @@ export default function AgenteTarifas() {
         </TabsList>
       </Tabs>
 
+      {isError ? (
+        <ErrorState onRetry={() => void refetch()} />
+      ) : (
       <DataTable<AgenteTarifaRow>
         columns={columns}
         data={filtradas}
@@ -118,6 +122,7 @@ export default function AgenteTarifas() {
         isLoading={isLoading}
         emptyMessage="No hay tarifas para este filtro."
       />
+      )}
 
 
       <AgenteTarifaForm

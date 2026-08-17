@@ -12,6 +12,7 @@ import { useAuditoriaEjecutivo } from "@/features/auditoria/hooks";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import type { UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
 import { exportHallazgosCsv } from "@/features/auditoria/domain/csv";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 type TabId = "ejecutivo" | "tabla" | "por_regla";
 
@@ -97,7 +98,11 @@ export default function Auditoria() {
         </TabsContent>
 
         <TabsContent value="tabla" className="mt-0 space-y-4">
-          <AuditoriaHallazgosTab c={c} drillFilters={drillFilters} tablaKey={tablaKey} />
+          {c.isError ? (
+            <ErrorState onRetry={() => void c.refetch()} />
+          ) : (
+            <AuditoriaHallazgosTab c={c} drillFilters={drillFilters} tablaKey={tablaKey} />
+          )}
         </TabsContent>
 
         <TabsContent value="por_regla" className="mt-0">

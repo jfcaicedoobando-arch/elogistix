@@ -85,7 +85,7 @@ const Button = ({
       aria-busy={loading || undefined}
       {...props}
     >
-      {loading ? <Loader2 className="animate-spin" aria-hidden /> : null}
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
       {children}
     </button>
   );

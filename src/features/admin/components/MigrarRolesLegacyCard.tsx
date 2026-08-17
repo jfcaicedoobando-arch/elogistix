@@ -73,7 +73,7 @@ export function MigrarRolesLegacyCard() {
 
         {preview.isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground text-xs">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Calculando registros afectados…
+            <Loader2 className="h-4 w-4 animate-spin" /> Calculando registros afectados…
           </div>
         ) : preview.isError ? (
           <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">

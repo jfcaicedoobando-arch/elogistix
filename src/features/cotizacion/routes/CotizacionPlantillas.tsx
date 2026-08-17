@@ -24,13 +24,14 @@ import { EditarPlantillaDialog } from "@/features/cotizacion/components/plantill
 import { PlantillasTabla } from "@/features/cotizacion/components/plantillas/PlantillasTabla";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 type FiltroVis = "todos" | PlantillaVisibilidad;
 
 export default function CotizacionPlantillas() {
   const navigate = useNavigate();
   const { organizationId } = useOrgActiva();
-  const { data: plantillas = [], isLoading } = useCotizacionPlantillas(organizationId);
+  const { data: plantillas = [], isLoading, isError, refetch } = useCotizacionPlantillas(organizationId);
   const eliminar = useEliminarPlantilla();
 
   const [busqueda, setBusqueda] = useState("");
@@ -103,7 +104,9 @@ export default function CotizacionPlantillas() {
             </span>
           </div>
 
-          {isLoading ? (
+          {isError ? (
+            <ErrorState onRetry={() => void refetch()} />
+          ) : isLoading ? (
             <ListSkeleton variant="card" rows={3} />
           ) : filtradas.length === 0 ? (
             <div className="text-sm text-muted-foreground py-12 text-center space-y-2">

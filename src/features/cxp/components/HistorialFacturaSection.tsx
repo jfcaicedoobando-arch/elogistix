@@ -130,7 +130,7 @@ export function HistorialFacturaSection({ facturaId }: Props) {
         <>
           {isFetching && (
             <div className="mb-2 flex items-center gap-1.5 text-label italic text-muted-foreground">
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               <span>Actualizando…</span>
             </div>
           )}

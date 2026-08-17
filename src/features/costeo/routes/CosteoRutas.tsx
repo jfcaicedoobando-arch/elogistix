@@ -23,11 +23,12 @@ import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAl
 import { RutaFormDialog } from "@/features/costeo/components/RutaFormDialog";
 import { CosteoRutasTable } from "@/features/costeo/components/CosteoRutasTable";
 import { computeRutaEstado, type RutaEstadoMeta } from "@/features/costeo/utils/rutaEstado";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 type FiltroEstado = "todas" | RutaEstadoMeta["key"];
 
 export default function CosteoRutas() {
-  const { data: rutas = [], isLoading } = useCosteoRutas();
+  const { data: rutas = [], isLoading, isError, refetch } = useCosteoRutas();
   const { crear, eliminar } = useCosteoRutaMutations();
   const [open, setOpen] = useState(false);
   const [aEliminar, setAEliminar] = useState<string | null>(null);
@@ -104,12 +105,16 @@ export default function CosteoRutas() {
           )}
         </Card>
 
+        {isError ? (
+          <ErrorState onRetry={() => void refetch()} />
+        ) : (
         <CosteoRutasTable
           rutasOrdenadas={rutasOrdenadas}
           isLoading={isLoading}
           totalRutas={rutas.length}
           onEliminar={(id) => setAEliminar(id)}
         />
+        )}
 
         <RutaFormDialog open={open} onOpenChange={setOpen} crear={crear} rutas={rutas} />
 

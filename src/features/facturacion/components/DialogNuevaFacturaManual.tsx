@@ -99,7 +99,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
               className="resize-none"
             />
           </FormDialogSection>
-          <div className="rounded-lg bg-primary text-primary-foreground p-6 shadow-md flex flex-col justify-center gap-3">
+          <div className="rounded-lg bg-primary text-primary-foreground p-6 shadow-raised flex flex-col justify-center gap-3">
             <div className="flex justify-between text-sm opacity-80">
               <span>Subtotal</span>
               <span className="tabular-nums">{formatCurrency(totales.subtotal, fiscal.moneda)}</span>

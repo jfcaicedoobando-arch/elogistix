@@ -15,6 +15,7 @@ import ReportesKpiCards from "@/features/reportes/components/ReportesKpiCards";
 import ReportesTablaClientes from "@/features/reportes/components/ReportesTablaClientes";
 import { useReportesPageController } from "@/features/reportes/hooks/useReportesPageController";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI de la página.
 const ReportesTopChart = lazy(() => import("@/features/reportes/components/ReportesTopChart"));
@@ -29,6 +30,8 @@ export default function Reportes() {
     setModo,
     kpis,
     isLoading,
+    isError,
+    refetch,
     sorted,
     top10,
     sortField,
@@ -88,6 +91,10 @@ export default function Reportes() {
         onFechaHastaChange={setFechaHasta}
         onModoChange={setModo}
       />
+
+      {isError && (
+        <ErrorState className="mb-4" onRetry={() => void refetch()} />
+      )}
 
       <ReportesKpiCards kpis={kpis} isLoading={isLoading} />
 

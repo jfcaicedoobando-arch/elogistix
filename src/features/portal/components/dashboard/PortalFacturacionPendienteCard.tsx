@@ -37,10 +37,10 @@ export function PortalFacturacionPendienteCard({ montos, total, vencidas, classN
             <>
               {/* B-076: nunca sumar monedas distintas — un total por moneda. */}
               {montos.mxn > 0 && (
-                <p className="text-3xl font-bold">{formatCurrency(montos.mxn, "MXN")}</p>
+                <p className="text-kpi">{formatCurrency(montos.mxn, "MXN")}</p>
               )}
               {montos.usd > 0 && (
-                <p className={montos.mxn > 0 ? "text-xl font-bold mt-0.5" : "text-3xl font-bold"}>
+                <p className={montos.mxn > 0 ? "text-lg font-semibold mt-0.5" : "text-kpi"}>
                   {formatCurrency(montos.usd, "USD")}
                 </p>
               )}

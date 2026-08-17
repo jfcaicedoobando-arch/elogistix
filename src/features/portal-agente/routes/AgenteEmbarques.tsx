@@ -11,12 +11,13 @@ import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingF
 import { Ship } from "lucide-react";
 import { useAgenteEmbarques } from "@/features/portal-agente/hooks";
 import { useDocumentTitle } from "@/hooks/shared";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 type EmbarqueAgente = ReturnType<typeof useAgenteEmbarques>["data"] extends readonly (infer U)[] | undefined ? U : never;
 
 export default function AgenteEmbarques() {
   useDocumentTitle('Mis Embarques');
-  const { data: embarques = [], isLoading } = useAgenteEmbarques();
+  const { data: embarques = [], isLoading, isError, refetch } = useAgenteEmbarques();
 
   const columns = useMemo<ColumnDef<EmbarqueAgente, unknown>[]>(
     () => defineColumns<EmbarqueAgente>([
@@ -85,6 +86,9 @@ export default function AgenteEmbarques() {
         description="Embarques donde figuras como agente de carga. Sólo lectura — sin datos comerciales del cliente final."
       />
 
+      {isError ? (
+        <ErrorState onRetry={() => void refetch()} />
+      ) : (
       <DataTable<EmbarqueAgente>
         columns={columns}
         data={embarques}
@@ -92,6 +96,7 @@ export default function AgenteEmbarques() {
         isLoading={isLoading}
         emptyMessage="Aún no hay embarques asignados a tu agente."
       />
+      )}
 
     </div>
   );

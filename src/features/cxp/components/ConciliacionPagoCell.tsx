@@ -60,7 +60,7 @@ export function ConciliacionPagoCell({
             aria-label="Desvincular movimiento"
           >
             {desvincular.isPending
-              ? <Loader2 className="h-3 w-3 animate-spin" />
+              ? <Loader2 className="h-4 w-4 animate-spin" />
               : <Link2Off className="h-3 w-3" />}
           </Button>
         )}
@@ -121,7 +121,7 @@ export function ConciliacionPagoCell({
                       disabled={vincular.isPending}
                     >
                       {vincular.isPending
-                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
                         : "Vincular"}
                     </Button>
                   </div>

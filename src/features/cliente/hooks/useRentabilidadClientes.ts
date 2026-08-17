@@ -18,7 +18,7 @@ import type { RentabilidadCliente } from "@/types/rentabilidad";
  * client-side a partir de `profit_por_cliente`.
  */
 export function useRentabilidadClientes(filtros: FiltrosRentabilidad) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.reportes.rentabilidadClientes(filtros),
     queryFn: () => fetchReportesResumen(filtros),
   });
@@ -33,5 +33,5 @@ export function useRentabilidadClientes(filtros: FiltrosRentabilidad) {
     [data],
   );
 
-  return { clientes, kpis, isLoading };
+  return { clientes, kpis, isLoading, isError, refetch };
 }

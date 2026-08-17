@@ -64,7 +64,7 @@ export function RefacturacionPreviewPaso({ casoId, paso, activo }: Props) {
   if (isFetching && !data) {
     return (
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         Calculando la vista previa del resultado…
       </p>
     );

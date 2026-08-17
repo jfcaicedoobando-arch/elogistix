@@ -106,7 +106,7 @@ export function VincularEmbarqueSection({
   if (isLoading) {
     return (
       <div className="rounded-lg border bg-muted/30 px-4 py-3 flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="h-3 w-3 animate-spin" /> Buscando costos pendientes de este proveedor…
+        <Loader2 className="h-4 w-4 animate-spin" /> Buscando costos pendientes de este proveedor…
       </div>
     );
   }

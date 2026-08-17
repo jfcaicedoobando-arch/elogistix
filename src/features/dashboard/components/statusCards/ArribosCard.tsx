@@ -105,7 +105,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
   return (
     <div className="rounded-lg border bg-card">
       <CardContent className="p-4">
-        <div className="flex flex-col xl:flex-row xl:items-center gap-4">
+        <div className="flex flex-col 2xl:flex-row 2xl:items-center gap-4">
           <div className="flex items-center gap-2 shrink-0">
             <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-primary/80">
               <CalendarDays className="h-4 w-4 text-primary-foreground" />
@@ -154,7 +154,10 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
             </KpiStrip>
           </div>
 
-          <div className="flex flex-col gap-0.5 xl:w-48 shrink-0">
+          {/* VB-07: el bloque de cobertura quedaba truncado al borde derecho;
+              se le da ancho mínimo con el % siempre visible y, bajo 1536px,
+              pasa a su propia fila a ancho completo. */}
+          <div className="flex flex-col gap-0.5 w-full 2xl:w-56 2xl:min-w-56 shrink-0">
             <InfoHint
               widthClass="w-[min(280px,calc(100vw-2rem))]"
               trigger={

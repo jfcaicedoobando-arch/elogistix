@@ -32,7 +32,7 @@ export function LandingPortal() {
         </div>
 
         {/* Mockup del portal con tabs */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-overlay)]">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-overlay">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -23,6 +23,7 @@ const steps = [
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function EditarEmbarque() {
   const { id } = useParams();
@@ -31,7 +32,7 @@ export default function EditarEmbarque() {
   const { canEdit } = usePermissions();
   const volver = useVolver("/embarques");
   const {
-    embarque, isLoading, methods, currentStep, setCurrentStep,
+    embarque, isLoading, isError, refetch, methods, currentStep, setCurrentStep,
     clientes, proveedoresDb, contactos, selectedCliente,
     handleMsdsUpload, handleSave, isPending, navigate, conceptosForm,
     cotizacionVinculada, cotizacionesAceptadas,
@@ -66,6 +67,14 @@ export default function EditarEmbarque() {
           </SkeletonGroup>
         </div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageContainer>
+        <ErrorState onRetry={() => void refetch()} />
+      </PageContainer>
     );
   }
 

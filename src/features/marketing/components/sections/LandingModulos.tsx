@@ -40,7 +40,7 @@ export function LandingModulos() {
             return (
               <Card
                 key={m.title}
-                className="group relative overflow-hidden p-8 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-overlay)]"
+                className="group relative overflow-hidden p-8 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-overlay"
               >
                 <div
                   aria-hidden="true"
@@ -76,7 +76,7 @@ export function LandingModulos() {
             return (
               <Card
                 key={m.title}
-                className="group p-6 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-overlay)]"
+                className="group p-6 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-overlay"
               >
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-accent-foreground">
                   <Icon className="h-5 w-5" />

@@ -24,6 +24,7 @@ import {
   DEFAULT_ESTADO,
   type ViewMode,
 } from "./useCosteoTarifasPageState";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function CosteoTarifas() {
   const s = useCosteoTarifasPageState();
@@ -31,7 +32,7 @@ export default function CosteoTarifas() {
   const { data: tipos = [] } = useTiposContenedor();
 
   const showList = !s.isLoading && s.tarifasFiltradas.length > 0;
-  const showEmpty = !s.isLoading && s.tarifasFiltradas.length === 0;
+  const showEmpty = !s.isLoading && !s.isError && s.tarifasFiltradas.length === 0;
 
   return (
     <PageContainer>
@@ -134,7 +135,9 @@ export default function CosteoTarifas() {
         </div>
       )}
 
-      {showEmpty ? (
+      {s.isError ? (
+        <ErrorState onRetry={() => void s.refetch()} />
+      ) : showEmpty ? (
         <Card>
           <TarifasEmptyState
             hasActiveFilters={s.hasActiveFilters}

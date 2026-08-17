@@ -14,6 +14,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { formatFechaLarga } from "@/lib/formatters/dates";
 import { useDocumentTitle } from "@/hooks/shared";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function MiDia() {
   useDocumentTitle('Mi día');
@@ -27,6 +28,10 @@ export default function MiDia() {
         description="Actividades y seguimientos pendientes para hoy"
       />
       <CrmSubheader context={`Mi día · ${hoy}`} />
+
+      {vm.isError && (
+        <ErrorState className="mb-4" onRetry={() => void vm.refetch()} />
+      )}
 
       <section className="space-y-3">
         <SectionHeading variant="overline">Hoy</SectionHeading>

@@ -100,7 +100,7 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
           value={c.notas || ''}
           onChange={e => actualizar(i, 'notas', e.target.value)}
           placeholder="Notas (opcional)"
-          className="h-8 text-xs text-muted-foreground resize-none focus:h-16 transition-all"
+          className="h-8 text-xs text-muted-foreground resize-none focus:h-16 transition-[height]"
           rows={1}
         />
       </div>

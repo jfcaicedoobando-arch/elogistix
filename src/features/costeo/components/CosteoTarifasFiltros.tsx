@@ -63,7 +63,7 @@ export function CosteoTarifasFiltros({
 
       <Select value={aprobacion} onValueChange={(v) => onAprobacionChange(v as AprobacionFiltro)}>
         <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por aprobación">
-          <span className="text-xs text-muted-foreground">Aprob:</span>
+          <span className="text-xs text-muted-foreground">Aprobación:</span>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -102,7 +102,7 @@ export function CosteoTarifasFiltros({
 
       <Select value={tipoId} onValueChange={onTipoChange}>
         <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por contenedor">
-          <span className="text-xs text-muted-foreground">Cont:</span>
+          <span className="text-xs text-muted-foreground">Contenedor:</span>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

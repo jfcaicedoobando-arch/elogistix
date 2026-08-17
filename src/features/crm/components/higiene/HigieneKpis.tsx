@@ -17,7 +17,7 @@ function Kpi({ label, value, hint }: { label: string; value: string; hint?: stri
     <Card>
       <CardContent className="pt-6">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-2xl font-semibold mt-1">{value}</p>
+        <p className="text-kpi mt-1">{value}</p>
         {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
       </CardContent>
     </Card>
@@ -33,7 +33,7 @@ export default function HigieneKpis({ resumen, cobertura, presupuestoMes }: Prop
       <Card>
         <CardContent className="pt-6">
           <p className="text-xs text-muted-foreground">Higiene del pipeline</p>
-          <p className="text-2xl font-semibold mt-1">{higienePct}%</p>
+          <p className="text-kpi mt-1">{higienePct}%</p>
           <Progress value={higienePct} className="mt-2" />
           <p className="text-xs text-muted-foreground mt-1">
             {resumen.registros_completos} de {resumen.abiertas} oportunidades completas
@@ -43,7 +43,7 @@ export default function HigieneKpis({ resumen, cobertura, presupuestoMes }: Prop
       <Card>
         <CardContent className="pt-6">
           <p className="text-xs text-muted-foreground">Seguimiento oportuno</p>
-          <p className="text-2xl font-semibold mt-1">{seguimientoPct}%</p>
+          <p className="text-kpi mt-1">{seguimientoPct}%</p>
           <Progress value={seguimientoPct} className="mt-2" />
           <p className="text-xs text-muted-foreground mt-1">
             {resumen.vencidas} fuera de SLA · {resumen.sin_actividad_programada} sin próxima actividad

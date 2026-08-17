@@ -19,10 +19,11 @@ import PortalFacturaPagosCard from "@/features/portal/components/factura/PortalF
 
 import { useDocumentTitle } from "@/hooks/shared";
 import { useVolver } from "@/hooks/shared/useVolver";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 export default function PortalFacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const volver = useVolver(ROUTES.PORTAL_FACTURAS);
-  const { data: factura, isLoading } = usePortalFactura(id);
+  const { data: factura, isLoading, isError, refetch } = usePortalFactura(id);
   useRegisterBreadcrumbLabel(id, factura?.numero);
   useDocumentTitle(factura ? `Factura · ${factura.numero}` : "Factura");
 
@@ -34,6 +35,14 @@ export default function PortalFacturaDetalle() {
 
   if (isLoading) {
     return <DetailSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <ErrorState onRetry={() => void refetch()} />
+      </div>
+    );
   }
 
   if (!factura) {
@@ -71,7 +80,7 @@ export default function PortalFacturaDetalle() {
         trailing={
           <div className="text-right shrink-0">
             <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-2xl font-bold tabular-nums text-accent">
+            <p className="text-kpi tabular-nums text-accent">
               {formatCurrency(factura.total, factura.moneda)}
             </p>
           </div>

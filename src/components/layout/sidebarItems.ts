@@ -92,7 +92,7 @@ export const SIDEBAR_CRM_ITEMS: SidebarItem[] = [
 export const SIDEBAR_SISTEMA_ITEMS: SidebarItem[] = [
   { title: "Auditoría operativa", url: "/auditoria", icon: ShieldAlert },
   { title: "Bitácora", url: "/bitacora", icon: ScrollText },
-  { title: "Sentry", url: "/sentry", icon: Bug },
+  { title: "Monitoreo", url: "/sentry", icon: Bug },
   { title: "Ayuda", url: "/ayuda", icon: HelpCircle },
 ];
 

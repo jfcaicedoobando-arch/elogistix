@@ -32,6 +32,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { queryKeys } from "@/lib/query";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 interface LeadsFilters extends Record<string, string> {
   estado: string;
@@ -130,6 +131,9 @@ export default function Leads() {
 
       <Card>
         <CardContent className="p-0">
+          {list.error ? (
+            <ErrorState className="m-4" onRetry={() => void list.refetch()} />
+          ) : (
           <ResponsiveDataTable
             columns={columns}
             data={leads}
@@ -157,6 +161,7 @@ export default function Leads() {
               pageSizeLabels: { 500: "500" },
             }}
           />
+          )}
         </CardContent>
       </Card>
     </PageContainer>

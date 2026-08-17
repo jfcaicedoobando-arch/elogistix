@@ -11,7 +11,7 @@ export function useAdminOrganizacionesController() {
   const [planFilter, setPlanFilter] = useState("todos");
   const [estadoFilter, setEstadoFilter] = useState("todos");
 
-  const { data: orgs = [], isLoading } = useAdminOrganizations();
+  const { data: orgs = [], isLoading, isError, refetch } = useAdminOrganizations();
   const createOrg = useCreateOrganization();
 
   const planes = useMemo(() => uniqueSorted(orgs, (o) => o.plan), [orgs]);
@@ -50,7 +50,7 @@ export function useAdminOrganizacionesController() {
       setPlanFilter,
       setEstadoFilter,
     },
-    data: { orgs, filtered, planes, isLoading },
+    data: { orgs, filtered, planes, isLoading, isError, refetch },
     createOrg: { mutate: handleCreate, isPending: createOrg.isPending },
   };
 }

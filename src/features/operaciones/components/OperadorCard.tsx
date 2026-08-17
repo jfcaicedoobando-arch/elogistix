@@ -77,7 +77,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
               </div>
               <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full transition-all"
+                  className="h-full rounded-full transition-[width]"
                   style={{
                     width: `${pct}%`,
                     backgroundColor: ESTADO_COLOR[estado],

@@ -9,7 +9,7 @@
  * mostramos un estado accionable con botón "Reintentar".
  */
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@/components/shared/Spinner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -86,7 +86,7 @@ export function LoadingState({
         className,
       )}
     >
-      <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
+      <Spinner size="block" />
       {label ? <span className="text-sm">{label}</span> : null}
     </div>
   );

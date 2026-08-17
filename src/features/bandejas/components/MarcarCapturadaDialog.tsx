@@ -87,7 +87,7 @@ export function MarcarCapturadaDialog({
               <SelectContent>
                 {candidatas.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
-                    <span className="truncate">
+                    <span className="truncate tabular-nums">
                       {etiquetaFacturaVinculable(f)} · {formatCurrency(f.total, f.moneda)}
                       {f.fecha_emision ? ` · ${formatDate(f.fecha_emision)}` : ""}
                     </span>
