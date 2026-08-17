@@ -84,7 +84,7 @@ BEGIN
 
   -- ---- N44: factura USD 10,000 con NC en MXN 5,000 ----
   INSERT INTO public.embarques (id, organization_id, expediente, cliente_id, modo, tipo)
-  VALUES ('c2222221-1111-1111-1111-111111111111', v_org, 'ELOL4N44', v_cli,
+  VALUES ('c2222221-1111-1111-1111-111111111111', v_org, 'ELOLA4441', v_cli,
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   ON CONFLICT (id) DO NOTHING;
 
@@ -93,7 +93,7 @@ BEGIN
     subtotal, iva, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado
   ) VALUES (
     'c3333331-1111-1111-1111-111111111111', 'OLA4-N44-01', 'c2222221-1111-1111-1111-111111111111',
-    'ELOL4N44', v_cli, 'Cliente Ola4 N41', 10000, 0, 10000, 'USD'::public.moneda, 17,
+    'ELOLA4441', v_cli, 'Cliente Ola4 N41', 10000, 0, 10000, 'USD'::public.moneda, 17,
     v_hoy, v_hoy + interval '15 day', 'Emitida'::public.estado_factura
   ) ON CONFLICT (id) DO NOTHING;
 
@@ -108,7 +108,7 @@ BEGIN
 
   -- ---- N45: embarque con ETA el mes siguiente y única factura Sustituida ----
   INSERT INTO public.embarques (id, organization_id, expediente, cliente_id, modo, tipo, eta)
-  VALUES ('c5555551-1111-1111-1111-111111111111', v_org, 'ELOL4N45', v_cli,
+  VALUES ('c5555551-1111-1111-1111-111111111111', v_org, 'ELOLA4451', v_cli,
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
           (date_trunc('month', v_hoy) + interval '1 month' + interval '5 day')::date)
   ON CONFLICT (id) DO NOTHING;
@@ -118,14 +118,14 @@ BEGIN
     subtotal, iva, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado
   ) VALUES (
     'c6666661-1111-1111-1111-111111111111', 'OLA4-N45-01', 'c5555551-1111-1111-1111-111111111111',
-    'ELOL4N45', v_cli, 'Cliente Ola4 N41', 1000, 0, 1000, 'MXN'::public.moneda, 1,
+    'ELOLA4451', v_cli, 'Cliente Ola4 N41', 1000, 0, 1000, 'MXN'::public.moneda, 1,
     v_hoy, v_hoy + interval '15 day', 'Sustituida'::public.estado_factura
   ) ON CONFLICT (id) DO NOTHING;
 
   -- Segundo embarque del mes siguiente, SIN factura Sustituida (control):
   -- factura vigente 'Emitida' -> debe seguir contando como facturado.
   INSERT INTO public.embarques (id, organization_id, expediente, cliente_id, modo, tipo, eta)
-  VALUES ('c5555552-2222-2222-2222-222222222222', v_org, 'ELOL4N45B', v_cli,
+  VALUES ('c5555552-2222-2222-2222-222222222222', v_org, 'ELOLA4452', v_cli,
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
           (date_trunc('month', v_hoy) + interval '1 month' + interval '6 day')::date)
   ON CONFLICT (id) DO NOTHING;
@@ -135,7 +135,7 @@ BEGIN
     subtotal, iva, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado
   ) VALUES (
     'c6666662-2222-2222-2222-222222222222', 'OLA4-N45-02', 'c5555552-2222-2222-2222-222222222222',
-    'ELOL4N45B', v_cli, 'Cliente Ola4 N41', 1000, 0, 1000, 'MXN'::public.moneda, 1,
+    'ELOLA4452', v_cli, 'Cliente Ola4 N41', 1000, 0, 1000, 'MXN'::public.moneda, 1,
     v_hoy, v_hoy + interval '15 day', 'Emitida'::public.estado_factura
   ) ON CONFLICT (id) DO NOTHING;
 

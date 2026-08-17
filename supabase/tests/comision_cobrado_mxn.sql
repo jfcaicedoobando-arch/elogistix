@@ -38,11 +38,11 @@ BEGIN
 
   -- Embarque con TC USD 19 (fallback si el documento no tuviera TC).
   INSERT INTO public.embarques (id, organization_id, expediente, cliente_id, modo, tipo, tipo_cambio_usd)
-  VALUES (v_e1, v_org, 'ELOBL01A', v_cli,
+  VALUES (v_e1, v_org, 'ELOBL0101', v_cli,
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion, 19)
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.embarques (id, organization_id, expediente, cliente_id, modo, tipo)
-  VALUES (v_e2, v_org, 'ELOBL01B', v_cli,
+  VALUES (v_e2, v_org, 'ELOBL0102', v_cli,
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   ON CONFLICT (id) DO NOTHING;
 
