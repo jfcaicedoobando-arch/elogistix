@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.631.1] - 2026-08-17
+
+### Seguridad (Patch 1)
+- EC-01: `signOut` y el cambio de usuario en la misma pestaña ahora purgan todo el caché de consultas (`purgeSessionCache.ts`), cerrando la fuga cross-tenant.
+- EC-07: el exportador CSV neutraliza fórmulas (`= + - @`, tab/CR) sin alterar montos negativos.
+- EC-02: paginación estable en leads, actividades y oportunidades del CRM (desempate por `id`).
+- Prueba SQL de regresión `test_puede_escribir_cotizaciones_vendedor.sql` (VF-03, ya aplicado en la base).
+
+
+
 ## [13.631.0] - 2026-08-17
 
 ### Oleada 0 (bloqueantes de la auditoría v13.627.1)
