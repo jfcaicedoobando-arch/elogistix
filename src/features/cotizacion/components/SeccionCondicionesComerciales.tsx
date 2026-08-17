@@ -20,7 +20,6 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, Lock } from "lucide-react";
 import { WizardSection } from "@/components/shared/WizardSection";
-import { PLACEHOLDER_FECHA } from "@/components/ui/picker-mx-shell";
 import { FormField } from "@/components/shared/FormField";
 import SeguroBlock from "./seccionRuta/SeguroBlock";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
@@ -100,7 +99,8 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
           )}
         </FormField>
 
-        <FormField label="Validez de la propuesta">
+        {/* VF-09: la validez bloquea la sección en marítimo → se marca con `*`. */}
+        <FormField label="Validez de la propuesta" required>
           <Popover open={openValidez} onOpenChange={setOpenValidez}>
             <PopoverTrigger asChild>
               <Button
@@ -112,7 +112,8 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : PLACEHOLDER_FECHA}
+                {/* VF-18: es botón-calendario (no acepta tecleo); el placeholder "DD/MM/AAAA" sugería lo contrario. */}
+                {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Selecciona una fecha"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">

@@ -5,14 +5,35 @@
  * `savePaso1` y vinculación CRM tras crear.
  */
 import { useCallback } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { Path, UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { CreateCotizacionInput, CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
 import { savePaso1 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { validatePaso1, vincularCrmTrasCrear } from "./handlePaso1Crm";
+import { validatePaso1, vincularCrmTrasCrear, campoParaPathSchemaPaso1 } from "./handlePaso1Crm";
 import { scrollAndFocusSection, seccionParaErrorPaso1, campoParaErrorPaso1 } from "./scrollToErrorSection";
+
+/**
+ * VF-09: los campos requeridos del borrador que `validatePaso1` no cubre
+ * (modo/tipo/incoterm/descripción/origen/destino) fallan en el schema al
+ * guardar; se marcan inline además de mostrar el toast.
+ */
+function marcarErroresGuardadoPaso1(
+  form: UseFormReturn<CotizacionFormValues>,
+  e: unknown,
+): void {
+  const issues = (e as { cause?: { issues?: { path?: unknown[]; message?: string }[] } })?.cause?.issues;
+  if (!Array.isArray(issues)) return;
+  for (const issue of issues) {
+    const campo = campoParaPathSchemaPaso1(String(issue.path?.[0] ?? ""));
+    if (campo && issue.message) {
+      form.setError(campo as Path<CotizacionFormValues>, { type: "validate", message: issue.message });
+    }
+  }
+}
+
+
 
 
 interface Paso1Mutations {
@@ -66,6 +87,7 @@ export function usePaso1Handlers({
       }
       setCurrentStep(2);
     } catch (e: unknown) {
+      marcarErroresGuardadoPaso1(form, e);
       notifyError(undefined, {
         title: "Error al guardar datos generales",
         description: getErrorMessage(e),
@@ -100,6 +122,7 @@ export function usePaso1Handlers({
       });
       setCurrentStep(3);
     } catch (e: unknown) {
+      marcarErroresGuardadoPaso1(form, e);
       notifyError(undefined, {
         title: "Error al guardar cotización",
         description: getErrorMessage(e),

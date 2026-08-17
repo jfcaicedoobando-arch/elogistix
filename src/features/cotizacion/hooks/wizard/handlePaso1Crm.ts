@@ -72,6 +72,34 @@ export function validatePaso1(v: CotizacionFormValues): string | null {
   return validateCliente(v) ?? validateProspecto(v) ?? validateTerrestre(v) ?? validateMaritimo(v);
 }
 
+// ── Validación inline (VF-09 / VB-34) ────────────────────────────────────────
+
+/**
+ * Mapea un mensaje de `validatePaso1` al campo del form que debe marcarse en
+ * rojo. La implementación vive en `scrollToErrorSection` (única fuente de
+ * verdad); aquí se reexporta para el API público del Paso 1.
+ */
+export { campoParaErrorPaso1 } from "./scrollToErrorSection";
+
+/**
+ * Mapea el `path` de un issue del schema de mutación (`mutationSchemas.ts`)
+ * al campo del form del Paso 1. Los campos requeridos del borrador que no
+ * cubre `validatePaso1` (modo/tipo/incoterm/descripción/origen/destino)
+ * fallan al guardar; así se marcan inline además del toast.
+ */
+export function campoParaPathSchemaPaso1(path: string): string | null {
+  const map: Record<string, string> = {
+    cliente_nombre: "clienteId",
+    modo: "modo",
+    tipo: "tipo",
+    incoterm: "incoterm",
+    descripcion_mercancia: "descripcionMercancia",
+    origen: "origen",
+    destino: "destino",
+  };
+  return map[path] ?? null;
+}
+
 /**
  * Intenta vincular/crear la oportunidad CRM para la cotización recién creada.
  * Falla suave: no rompe el flujo si CRM falla, sólo notifica.

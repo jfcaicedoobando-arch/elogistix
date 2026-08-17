@@ -19,10 +19,13 @@ export const FIELD_SURFACE_CLASS =
   "w-full rounded-md border border-input bg-background px-3 py-2 shadow-sm";
 
 /** Estados interactivos: hover, anillo de foco y deshabilitado. */
+// VB-34: los controles con `aria-invalid` (error de validación inline) se
+// dibujan con borde/anillo destructivo, no con el azul de foco.
 export const FIELD_STATE_CLASS =
   "ring-offset-background transition-colors placeholder:text-muted-foreground " +
   "hover:border-ring/40 focus-visible:outline-none focus-visible:ring-2 " +
   "focus-visible:ring-ring/40 focus-visible:ring-offset-0 focus-visible:border-ring " +
+  "aria-invalid:border-destructive aria-invalid:focus-visible:ring-destructive/40 " +
   "disabled:cursor-not-allowed disabled:opacity-50";
 
 /**
@@ -33,6 +36,7 @@ export const FIELD_STATE_RADIX_CLASS =
   "ring-offset-background transition-colors placeholder:text-muted-foreground " +
   "hover:border-ring/40 focus:outline-none focus:ring-2 focus:ring-ring/40 " +
   "focus:ring-offset-0 focus:border-ring " +
+  "aria-invalid:border-destructive aria-invalid:focus:ring-destructive/40 " +
   "disabled:cursor-not-allowed disabled:opacity-50";
 
 /**

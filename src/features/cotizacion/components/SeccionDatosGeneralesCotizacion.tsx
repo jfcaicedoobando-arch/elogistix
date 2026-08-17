@@ -38,15 +38,15 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
   // Layout: 3 columnas estándar; en terrestre quitamos Incoterm y agregamos Modalidad.
   return (
     <WizardSection title="Datos Generales" columns={3} complete={complete}>
-      <FormField label="Modo de Transporte" required>
-        <Select value={modo} onValueChange={v => setValue("modo", v, { shouldValidate: true, shouldDirty: true })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+      <FormField label="Modo de transporte" required error={errors.modo?.message}>
+        <Select value={modo} onValueChange={v => { setValue("modo", v, { shouldValidate: true, shouldDirty: true }); clearErrors("modo"); }}>
+          <SelectTrigger aria-invalid={!!errors.modo}><SelectValue /></SelectTrigger>
           <SelectContent>{MODOS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
         </Select>
       </FormField>
-      <FormField label="Tipo de Operación" required>
-        <Select value={tipo} onValueChange={v => setValue("tipo", v, { shouldValidate: true, shouldDirty: true })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+      <FormField label="Tipo de operación" required error={errors.tipo?.message}>
+        <Select value={tipo} onValueChange={v => { setValue("tipo", v, { shouldValidate: true, shouldDirty: true }); clearErrors("tipo"); }}>
+          <SelectTrigger aria-invalid={!!errors.tipo}><SelectValue /></SelectTrigger>
           <SelectContent>
             {tiposDisponibles.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
           </SelectContent>
@@ -62,8 +62,7 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
               clearErrors("modalidadEquipo");
             }}
           >
-
-            <SelectTrigger><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
+            <SelectTrigger aria-invalid={!!errors.modalidadEquipo}><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
             <SelectContent>
               {MODALIDADES_EQUIPO_TERRESTRE.map(m => (
                 <SelectItem key={m} value={m}>{m}</SelectItem>
@@ -72,9 +71,9 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
           </Select>
         </FormField>
       ) : (
-        <FormField label="Incoterm" required>
-          <Select value={watch("incoterm")} onValueChange={v => setValue("incoterm", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+        <FormField label="Incoterm" required error={errors.incoterm?.message}>
+          <Select value={watch("incoterm")} onValueChange={v => { setValue("incoterm", v); clearErrors("incoterm"); }}>
+            <SelectTrigger aria-invalid={!!errors.incoterm}><SelectValue /></SelectTrigger>
             <SelectContent>{INCOTERMS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
           </Select>
         </FormField>

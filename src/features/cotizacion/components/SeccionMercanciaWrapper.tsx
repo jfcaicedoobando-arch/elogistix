@@ -3,6 +3,7 @@ import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/shared/FormField";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -23,39 +24,38 @@ export default function SeccionMercanciaWrapper({
   msdsFile, setMsdsFile,
   children,
 }: Props) {
-  const { watch, setValue } = useFormContext<CotizacionFormValues>();
+  const { watch, setValue, clearErrors, formState: { errors } } = useFormContext<CotizacionFormValues>();
   const tipoCarga = watch("tipoCarga");
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label>Tipo de Carga</Label>
+        <FormField label="Tipo de carga" required>
           <Select value={tipoCarga} onValueChange={v => setValue("tipoCarga", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{TIPOS_CARGA.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
           </Select>
-        </div>
-        <div>
-          <Label>Sector Económico</Label>
+        </FormField>
+        <FormField label="Sector económico">
           <Select value={watch("sectorEconomico")} onValueChange={v => setValue("sectorEconomico", v)}>
             <SelectTrigger><SelectValue placeholder="Seleccionar sector" /></SelectTrigger>
             <SelectContent>{SECTORES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
-        </div>
+        </FormField>
       </div>
 
       {/* B-035: descripción real de la mercancía (antes se persistía el sector). */}
-      <div>
-        <Label>
-          Descripción de la Mercancía <span className="text-destructive">*</span>
-        </Label>
+      {/* VF-18: asterisco con el patrón estándar de FormField (sin espacio manual). */}
+      <FormField label="Descripción de la mercancía" required error={errors.descripcionMercancia?.message}>
         <Input
           value={watch("descripcionMercancia")}
-          onChange={e => setValue("descripcionMercancia", e.target.value, { shouldValidate: true, shouldDirty: true })}
+          onChange={e => {
+            setValue("descripcionMercancia", e.target.value, { shouldValidate: true, shouldDirty: true });
+            clearErrors("descripcionMercancia");
+          }}
           placeholder="Ej. Pallets de refacciones automotrices"
         />
-      </div>
+      </FormField>
 
       {children}
 

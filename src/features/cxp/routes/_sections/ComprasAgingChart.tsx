@@ -24,6 +24,12 @@ const TONE_HEX: Record<Bucket["tone"], string> = {
   critical: CHART.destructive,
 };
 
+/** Número compacto sin moneda para los ticks del eje Y (misma escala que formatCurrencyCompact). */
+const fmtTickCompacto = new Intl.NumberFormat("es-MX", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
 
 export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgingTotals; moneda?: string }) {
   const data: Bucket[] = [
@@ -67,8 +73,10 @@ export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgi
                 stroke="hsl(var(--muted-foreground))"
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => formatCurrencyCompact(Number(v), moneda)}
-                width={60}
+                // VF-05: la moneda ya va en el título ("Antigüedad de saldos ·
+                // MXN"); repetirla en cada tick del eje Y ensuciaba la gráfica.
+                tickFormatter={(v) => fmtTickCompacto.format(Number(v))}
+                width={48}
               />
               <RTooltip
                 cursor={{ fill: "hsl(var(--muted) / 0.4)" }}

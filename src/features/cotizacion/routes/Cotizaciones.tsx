@@ -7,7 +7,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Seo } from "@/components/shared/Seo";
@@ -104,9 +104,13 @@ export default function Cotizaciones() {
 
       <CotizacionesBannerOrigen />
       <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">KPIs · Últimos 30 días</p>
+        {/* VF-10: el periodo del KPI queda explícito para que no se compare
+            con el conteo de la tabla (que depende de los filtros activos). */}
+        <p className="text-xs font-medium text-muted-foreground">
+          KPIs de los últimos 30 días · no dependen de los filtros de la tabla
+        </p>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard label="Total cotizaciones" value={c.kpis.total} icon={BarChart3} variant="info" iconVariant="chip" />
+          <KpiCard label="Total cotizaciones (30 días)" value={c.kpis.total} icon={BarChart3} variant="info" iconVariant="chip" />
           <KpiCard label="Aceptadas" value={c.kpis.aceptadas} icon={CheckCircle} variant="success" iconVariant="chip" />
           <KpiCard label="Rechazadas" value={c.kpis.rechazadas} icon={XCircle} variant="destructive" iconVariant="chip" />
           <KpiCard label="Tasa de conversión" value={`${c.kpis.tasa}%`} icon={TrendingUp} variant="accent" iconVariant="chip" />
@@ -156,7 +160,8 @@ export default function Cotizaciones() {
                   <div className="font-semibold text-sm truncate">{r.folio}</div>
                   <div className="text-xs text-muted-foreground truncate mt-0.5">{r.cliente_nombre ?? ""}</div>
                   <div className="text-label text-muted-foreground mt-0.5">
-                    {r.created_at ? formatDate(r.created_at) : ""}
+                    {/* VF-04: fecha en TZ de negocio (America/Mexico_City). */}
+                    {r.created_at ? formatFechaEs(r.created_at) : ""}
                     {typeof r.subtotal === "number" ? ` · ${formatCurrency(r.subtotal, r.moneda ?? "USD")}` : ""}
                   </div>
                 </div>

@@ -91,8 +91,7 @@ export default function SeccionDestinatario({ clientes, complete }: Props) {
               clearErrors("clienteId");
             }}
           >
-
-            <SelectTrigger>
+            <SelectTrigger aria-invalid={!!errors.clienteId}>
               <SelectValue placeholder="Seleccionar cliente" />
             </SelectTrigger>
             <SelectContent>

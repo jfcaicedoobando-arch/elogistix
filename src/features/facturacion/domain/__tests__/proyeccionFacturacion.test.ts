@@ -169,10 +169,17 @@ describe("generarMesesDisponibles", () => {
 
 describe("mesActualKey", () => {
   it("devuelve la fecha indicada en formato YYYY-MM", () => {
-    expect(mesActualKey(new Date(2025, 0, 1))).toBe("2025-01");
+    // Mediodía UTC: la misma fecha en CDMX sin importar la TZ del runner.
+    expect(mesActualKey(new Date("2025-01-15T12:00:00Z"))).toBe("2025-01");
   });
   it("respeta la fecha cuando es posterior", () => {
-    expect(mesActualKey(new Date(2026, 6, 10))).toBe("2026-07");
+    expect(mesActualKey(new Date("2026-07-10T12:00:00Z"))).toBe("2026-07");
+  });
+  it("VF-07: se ancla a America/Mexico_City, no a la TZ del runner", () => {
+    // Medianoche UTC del 1o de agosto sigue siendo 31 de julio en CDMX.
+    expect(mesActualKey(new Date("2026-08-01T04:00:00Z"))).toBe("2026-07");
+    // Mediodía UTC del 1o de agosto ya es agosto en CDMX.
+    expect(mesActualKey(new Date("2026-08-01T12:00:00Z"))).toBe("2026-08");
   });
 });
 

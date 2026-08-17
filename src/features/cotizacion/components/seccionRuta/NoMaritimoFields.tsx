@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { FormField } from "@/components/shared/FormField";
-import { PLACEHOLDER_FECHA } from "@/components/ui/picker-mx-shell";
 import { TransitoField, FclLclFields } from "./TarifaFields";
 import SeguroBlock from "./SeguroBlock";
 import type { TarifaCtx } from "./overrideHelpers";
@@ -59,7 +58,8 @@ export default function NoMaritimoFields({ ctx, tarifaCtx, tarifaHasta }: Props)
           <PopoverTrigger asChild>
             <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !validezPropuesta && "text-muted-foreground")}>
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : PLACEHOLDER_FECHA}
+              {/* VF-18: es botón-calendario (no acepta tecleo); el placeholder "DD/MM/AAAA" sugería lo contrario. */}
+              {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Selecciona una fecha"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">

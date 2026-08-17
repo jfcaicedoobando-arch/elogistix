@@ -29,8 +29,11 @@ vi.mock("@/lib/ui/appFeedback", () => ({
 }));
 vi.mock("@/lib/supabase/cast", () => ({ fromDb: <T,>(x: T) => x }));
 vi.mock("../handlePaso1Crm", () => ({
-  validatePaso1: (v: { clienteId?: string }) => (v.clienteId ? null : "Falta cliente"),
+  validatePaso1: (v: { clienteId?: string }) => (v.clienteId ? null : "Selecciona un cliente"),
   vincularCrmTrasCrear: vi.fn().mockResolvedValue(undefined),
+  campoParaErrorPaso1: (mensaje: string) =>
+    mensaje.toLowerCase().includes("cliente") ? "clienteId" : null,
+  campoParaPathSchemaPaso1: () => null,
 }));
 
 import { useCotizacionWizardSteps } from "../useCotizacionWizardSteps";
@@ -72,11 +75,13 @@ beforeEach(() => { vi.clearAllMocks(); savePaso1.mockResolvedValue("cot-1"); sav
 describe("useCotizacionWizardSteps", () => {
   it("handleSiguiente paso 1: si validatePaso1 falla, notifyError y no avanza", async () => {
     const { deps } = makeDeps({
-      form: { getValues: () => ({ clienteId: "", esProspecto: false }) } as never,
+      form: { getValues: () => ({ clienteId: "", esProspecto: false }), setError: vi.fn() } as never,
     });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
-    expect(notifyError).toHaveBeenCalledWith(undefined, { title: "Falta cliente" });
+    expect(notifyError).toHaveBeenCalledWith(undefined, expect.objectContaining({ description: "Selecciona un cliente" }));
+    // VF-09/VB-34: además del toast, el campo queda marcado inline.
+    expect(deps.form.setError).toHaveBeenCalledWith("clienteId", expect.objectContaining({ message: "Selecciona un cliente" }));
     expect(savePaso1).not.toHaveBeenCalled();
   });
 

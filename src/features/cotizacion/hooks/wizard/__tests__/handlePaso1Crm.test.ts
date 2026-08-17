@@ -35,6 +35,8 @@ const notifyErrorMock = vi.fn();
 vi.mock("@/lib/ui/appFeedback", () => ({ notifyError: (...args: unknown[]) => notifyErrorMock(...args) }));
 
 import {
+  campoParaErrorPaso1,
+  campoParaPathSchemaPaso1,
   validateCliente,
   validateProspecto,
   validateTerrestre,
@@ -255,5 +257,46 @@ describe("vincularCrmTrasCrear", () => {
         context: { cotizacionId: "cot-3" },
       }),
     );
+  });
+});
+
+// VF-09 / VB-34: mapeo de mensajes de validación a campos del form para
+// marcar el error inline (rojo bajo el control), no sólo por toast.
+describe("campoParaErrorPaso1", () => {
+  it("mapea 'Selecciona un cliente' a clienteId", () => {
+    expect(campoParaErrorPaso1("Selecciona un cliente")).toBe("clienteId");
+  });
+
+  it("mapea errores de prospecto a sus campos", () => {
+    expect(campoParaErrorPaso1("Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'")).toBe("oportunidadId");
+    expect(campoParaErrorPaso1("Ingresa el nombre de la empresa del prospecto")).toBe("prospectoEmpresa");
+    expect(campoParaErrorPaso1("Ingresa el nombre del contacto del prospecto")).toBe("prospectoContacto");
+  });
+
+  it("mapea errores terrestres y marítimos", () => {
+    expect(campoParaErrorPaso1("Selecciona la modalidad de equipo")).toBe("modalidadEquipo");
+    expect(campoParaErrorPaso1("Captura el punto de carga/descarga")).toBe("puntoIntermedio");
+    expect(campoParaErrorPaso1("Vincula o crea una tarifa marítima antes de continuar (Paso 1 → Tarifa marítima vinculada).")).toBe("tarifaId");
+  });
+
+  it("devuelve null para mensajes sin campo asociado", () => {
+    expect(campoParaErrorPaso1("Error inesperado")).toBeNull();
+  });
+});
+
+describe("campoParaPathSchemaPaso1", () => {
+  it("mapea paths del schema de mutación a campos del form", () => {
+    expect(campoParaPathSchemaPaso1("modo")).toBe("modo");
+    expect(campoParaPathSchemaPaso1("tipo")).toBe("tipo");
+    expect(campoParaPathSchemaPaso1("incoterm")).toBe("incoterm");
+    expect(campoParaPathSchemaPaso1("descripcion_mercancia")).toBe("descripcionMercancia");
+    expect(campoParaPathSchemaPaso1("cliente_nombre")).toBe("clienteId");
+    expect(campoParaPathSchemaPaso1("origen")).toBe("origen");
+    expect(campoParaPathSchemaPaso1("destino")).toBe("destino");
+  });
+
+  it("devuelve null para paths no mapeados", () => {
+    expect(campoParaPathSchemaPaso1("subtotal")).toBeNull();
+    expect(campoParaPathSchemaPaso1("")).toBeNull();
   });
 });

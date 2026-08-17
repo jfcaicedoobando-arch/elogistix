@@ -104,15 +104,15 @@ export const SIDEBAR_ADMIN_ITEMS: SidebarItem[] = [
 ];
 
 export const SIDEBAR_SUPER_ADMIN_ITEMS: SidebarItem[] = [
-  { title: "Panel Admin", url: "/admin", icon: Building2 },
+  { title: "Panel admin", url: "/admin", icon: Building2 },
 ];
 
 export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
-  { title: "Comparador Top 3", url: "/costeo/buscar", icon: Search },
+  { title: "Comparador top 3", url: "/costeo/buscar", icon: Search },
   { title: "Catálogo de tarifas", url: "/costeo/tarifas", icon: Calculator },
   { title: "Rutas CN → MX", url: "/costeo/rutas", icon: Route },
   { title: "Agentes", url: "/costeo/agentes", icon: Users },
-  { title: "Navieras (Condiciones)", url: "/costeo/navieras", icon: Anchor },
+  { title: "Navieras (condiciones)", url: "/costeo/navieras", icon: Anchor },
   { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Timer },
 ];
 

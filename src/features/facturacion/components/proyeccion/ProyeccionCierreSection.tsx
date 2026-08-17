@@ -50,7 +50,7 @@ export function ProyeccionCierreSection({ k, mesLabel }: Props) {
           <CierreCard
             tone="success"
             icon={CheckCircle2}
-            titulo="✓ Facturado"
+            titulo="Facturado"
             embarques={k.facturados}
             lineas={[
               { label: "USD", value: formatCurrency(k.ventaFacturadaUsd, "USD"), emphasis: true },
@@ -60,7 +60,7 @@ export function ProyeccionCierreSection({ k, mesLabel }: Props) {
           <CierreCard
             tone="warning"
             icon={Clock}
-            titulo="⏳ Pendiente de facturar"
+            titulo="Pendiente de facturar"
             embarques={k.pendientes}
             lineas={[
               { label: "USD", value: formatCurrency(k.ventaPendienteUsd, "USD"), emphasis: true },
@@ -70,7 +70,7 @@ export function ProyeccionCierreSection({ k, mesLabel }: Props) {
           <CierreCard
             tone="info"
             icon={TrendingUp}
-            titulo="📈 Proyectado (total del mes)"
+            titulo="Proyectado (total del mes)"
             embarques={k.totalExpedientes}
             lineas={[
               { label: "Venta USD", value: formatCurrency(k.ventaProyUsd, "USD") },
