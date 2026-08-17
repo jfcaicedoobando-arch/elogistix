@@ -738,6 +738,10 @@ export default tseslint.config(
       // DetailTable (2 columnas, sin sort/paginación): DataTable no aplica.
       "src/features/facturacion/components/refacturacion/ComparativoConsistencia.tsx",
       "src/features/facturacion/components/refacturacion/RefacturacionPreviewSaldos.tsx",
+      // CRM: editores con inputs por celda y tabla de higiene read-only compacta.
+      "src/features/crm/components/MetasActividadEditor.tsx",
+      "src/features/crm/components/PresupuestoCrmEditor.tsx",
+      "src/features/crm/components/higiene/HigieneTabla.tsx",
 
       // Tests pueden importar primitivas para renders aislados.
       "**/__tests__/**",

@@ -111,6 +111,10 @@ const ALLOWLIST: readonly string[] = [
   // Refacturación: comparativos estáticos read-only dentro del asistente.
   "src/features/facturacion/components/refacturacion/ComparativoConsistencia.tsx",
   "src/features/facturacion/components/refacturacion/RefacturacionPreviewSaldos.tsx",
+  // CRM: editores con inputs por celda y tabla de higiene read-only compacta.
+  "src/features/crm/components/MetasActividadEditor.tsx",
+  "src/features/crm/components/PresupuestoCrmEditor.tsx",
+  "src/features/crm/components/higiene/HigieneTabla.tsx",
 ];
 
 describe("architecture — no raw @/components/ui/table imports", () => {

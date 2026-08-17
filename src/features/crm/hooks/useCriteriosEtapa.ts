@@ -3,6 +3,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { crm } from "@/features/crm/queryKeys";
 import {
   fetchCriteriosPorEtapa,
@@ -55,6 +56,11 @@ export function useCrearCriterioEtapa() {
   return useMutation({
     mutationFn: crearCriterioEtapa,
     onSuccess: invalidar,
+    onError: (e) =>
+      notifyError(e, {
+        title: "No se pudo guardar el criterio",
+        method: "USE_CRITERIOS_ETAPA",
+      }),
   });
 }
 
@@ -63,6 +69,11 @@ export function useActualizarCriterioEtapa() {
   return useMutation({
     mutationFn: actualizarCriterioEtapa,
     onSuccess: invalidar,
+    onError: (e) =>
+      notifyError(e, {
+        title: "No se pudo guardar el criterio",
+        method: "USE_CRITERIOS_ETAPA",
+      }),
   });
 }
 
@@ -72,6 +83,11 @@ export function useEliminarCriterioEtapa() {
   return useMutation({
     mutationFn: (id: string) => eliminarCriterioEtapa(id, user?.id ?? null),
     onSuccess: invalidar,
+    onError: (e) =>
+      notifyError(e, {
+        title: "No se pudo guardar el criterio",
+        method: "USE_CRITERIOS_ETAPA",
+      }),
   });
 }
 
@@ -82,5 +98,10 @@ export function useMarcarCriterio(oportunidadId: string) {
     mutationFn: (input: { criterioId: string; cumplido: boolean }) =>
       marcarCriterio({ ...input, oportunidadId, userId: user?.id ?? null }),
     onSuccess: invalidar,
+    onError: (e) =>
+      notifyError(e, {
+        title: "No se pudo guardar el criterio",
+        method: "USE_CRITERIOS_ETAPA",
+      }),
   });
 }
