@@ -29,7 +29,13 @@ export function buildFacturaFormSchema(ctx: FacturaFormValidationContext) {
       provNombre: z.string(),
       folio: z.string(),
       emision: z.string(),
-      diasCredito: z.number(),
+      // EC-18: era el único numérico sin límites; 99999 días recalculaba el
+      // vencimiento a fechas absurdas (año 2299) y distorsionaba el aging.
+      diasCredito: z
+        .number()
+        .int({ message: "Los días de crédito deben ser un número entero" })
+        .min(0, { message: "Los días de crédito no pueden ser negativos" })
+        .max(365, { message: "Los días de crédito no pueden ser mayores a 365" }),
       vencimiento: z.string(),
       moneda: z.string(),
       tc: z.string(),
@@ -82,6 +88,23 @@ export function buildFacturaFormSchema(ctx: FacturaFormValidationContext) {
           path: ["vencimiento"],
           message: "La fecha de vencimiento no puede ser anterior a la fecha de emisión",
         });
+      }
+      // EC-18: aunque días de crédito ya está acotado, defensa extra sobre el
+      // vencimiento resultante cuando se captura/edita la fecha a mano.
+      if (values.emision.trim() && values.vencimiento.trim()) {
+        const emisionMs = Date.parse(`${values.emision}T00:00:00Z`);
+        const vencimientoMs = Date.parse(`${values.vencimiento}T00:00:00Z`);
+        const DIA_MS = 24 * 60 * 60 * 1000;
+        if (
+          Number.isFinite(emisionMs) && Number.isFinite(vencimientoMs) &&
+          (vencimientoMs - emisionMs) / DIA_MS > 366
+        ) {
+          refCtx.addIssue({
+            code: "custom",
+            path: ["vencimiento"],
+            message: "La fecha de vencimiento está demasiado lejos de la emisión",
+          });
+        }
       }
       if (ctx.total <= 0) {
         refCtx.addIssue({ code: "custom", path: ["subtotal"], message: "El total debe ser mayor a 0" });

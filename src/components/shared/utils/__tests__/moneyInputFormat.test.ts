@@ -27,6 +27,17 @@ describe("sanitizeMoneyText", () => {
     expect(sanitizeMoneyText("1,234")).toBe("1234");
   });
 
+  it("trata el punto como miles cuando le siguen exactamente 3 dígitos", () => {
+    expect(sanitizeMoneyText("50.000")).toBe("50000");
+    expect(sanitizeMoneyText("1.234")).toBe("1234");
+  });
+
+  it("conserva el punto decimal en los demás casos", () => {
+    expect(sanitizeMoneyText("50.00")).toBe("50.00");
+    expect(sanitizeMoneyText("1.2345")).toBe("1.23");
+    expect(sanitizeMoneyText("1.234,56")).toBe("1.23");
+  });
+
   it("recorta a 2 decimales", () => {
     expect(sanitizeMoneyText("10.9999")).toBe("10.99");
   });

@@ -31,9 +31,12 @@ export function buildOportunidadInsertPayload(
     vendedor_email: user?.email ?? "",
   };
   const hasExplicitVendedor = input.vendedor_id !== undefined;
+  const merged = { ...defaults, ...stripUndefined(input) };
   return {
-    ...defaults,
-    ...stripUndefined(input),
+    ...merged,
+    // EC-09: defensa final contra el CHECK (probabilidad BETWEEN 0 AND 100) —
+    // la UI clampea, pero cualquier otra vía de captura pasa por aquí.
+    probabilidad: Math.max(0, Math.min(100, Number(merged.probabilidad) || 0)),
     nombre: input.nombre,
     etapa_id: input.etapa_id,
     vendedor_id: hasExplicitVendedor ? input.vendedor_id : (user?.id ?? null),

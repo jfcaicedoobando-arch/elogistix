@@ -32,4 +32,24 @@ describe("registrarAnticipoSchema", () => {
   it("rechaza montos no positivos", () => {
     expect(registrarAnticipoSchema.safeParse({ ...base, monto: 0 }).success).toBe(false);
   });
+
+  it("rechaza montos con más de 2 decimales o fuera de tope", () => {
+    expect(registrarAnticipoSchema.safeParse({ ...base, monto: 100.005 }).success).toBe(false);
+    expect(registrarAnticipoSchema.safeParse({ ...base, monto: 1e15 }).success).toBe(false);
+    expect(registrarAnticipoSchema.safeParse({ ...base, monto: 1234.56 }).success).toBe(true);
+  });
+
+  it("acota el tipo de cambio (TC_MAX = 1000, mismo tope que pagos CxP)", () => {
+    const usd = { ...base, moneda: "USD" as const };
+    expect(registrarAnticipoSchema.safeParse({ ...usd, tipoCambioUsd: 5000 }).success).toBe(false);
+    expect(registrarAnticipoSchema.safeParse({ ...usd, tipoCambioUsd: 18.5 }).success).toBe(true);
+  });
+
+  it("exige formato de fecha AAAA-MM-DD y año razonable", () => {
+    expect(registrarAnticipoSchema.safeParse({ ...base, fechaAnticipo: "ayer" }).success).toBe(false);
+    expect(registrarAnticipoSchema.safeParse({ ...base, fechaAnticipo: "06/08/2026" }).success).toBe(false);
+    expect(registrarAnticipoSchema.safeParse({ ...base, fechaAnticipo: "2026-13-01" }).success).toBe(false);
+    expect(registrarAnticipoSchema.safeParse({ ...base, fechaAnticipo: "22026-08-06" }).success).toBe(false);
+    expect(registrarAnticipoSchema.safeParse({ ...base, fechaAnticipo: "2026-08-06" }).success).toBe(true);
+  });
 });

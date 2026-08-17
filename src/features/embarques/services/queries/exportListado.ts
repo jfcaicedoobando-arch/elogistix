@@ -23,6 +23,11 @@ export async function fetchEmbarquesParaExport(
   f: EmbarquesParaExportFilters,
 ): Promise<EmbarqueRow[]> {
   const out: EmbarqueRow[] = [];
+  // EC-16: la exportación pagina sobre datos vivos; un insert concurrente
+  // desplaza las páginas siguientes y duplicaba filas en el CSV. La RPC ya
+  // ordena de forma determinista (tie-breaker id); aquí se deduplica por id
+  // como defensa ante el desplazamiento residual entre páginas.
+  const vistos = new Set<string>();
   let page = 0;
   let total = Infinity;
 
@@ -38,7 +43,11 @@ export async function fetchEmbarquesParaExport(
     // Validación runtime: schema con .passthrough() detecta cambios de shape
     // antes de generar un CSV corrupto.
     embarqueListRowsSchema.parse(data);
-    out.push(...data);
+    for (const row of data) {
+      if (vistos.has(row.id)) continue;
+      vistos.add(row.id);
+      out.push(row);
+    }
     if (data.length < EXPORT_PAGE) break;
     page++;
   }

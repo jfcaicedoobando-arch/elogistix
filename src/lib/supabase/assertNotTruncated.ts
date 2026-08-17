@@ -8,6 +8,7 @@
  * incorrecta. La política del ERP es fail-visible: lanzar, y que la UI
  * muestre el error en vez del total equivocado.
  */
+import { notifyWarning } from "@/lib/ui/appFeedback";
 
 export class ResultadoTruncadoError extends Error {
   readonly code = "LC_RESULTADO_TRUNCADO" as const;
@@ -21,6 +22,32 @@ export class ResultadoTruncadoError extends Error {
         `(RPC) o pagina con .range(); nunca sumes dinero sobre un subconjunto.`,
     );
     this.name = "ResultadoTruncadoError";
+  }
+}
+
+/**
+ * Variante NO bloqueante de `assertNotTruncated` para listados de trabajo
+ * (bandejas, catálogos, selects) donde cortar la respuesta no corrompe un
+ * cálculo de dinero pero sí puede ocultar registros: muestra un aviso
+ * "mostrando los primeros N; refina tu búsqueda" en vez de lanzar.
+ *
+ * Uso:
+ *   const { data, error } = await query.limit(LIMITE);
+ *   if (error) throw error;
+ *   warnIfTruncated(data, LIMITE, "modulo.consulta");
+ */
+export function warnIfTruncated(
+  rows: readonly unknown[] | null | undefined,
+  limite: number,
+  contexto: string,
+): void {
+  if (limite > 0 && (rows?.length ?? 0) >= limite) {
+    notifyWarning(undefined, {
+      title: "Lista posiblemente incompleta",
+      description:
+        `Mostrando los primeros ${limite} registros de '${contexto}'; ` +
+        "refina tu búsqueda o aplica filtros para ver el resto.",
+    });
   }
 }
 

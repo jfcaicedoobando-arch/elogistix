@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useDeferredValue, useMemo } from "react";
+import { useEffect, useState, useCallback, useDeferredValue, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import {
@@ -46,18 +46,25 @@ export function GlobalSearch() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
+  // EC-05: token por request para descartar respuestas viejas que resuelven
+  // fuera de orden (race condition: término viejo sobrescribía al actual).
+  const requestIdRef = useRef(0);
+
   const buscar = useCallback(async (terminoBusqueda: string) => {
+    const requestId = ++requestIdRef.current;
     setBuscando(true);
     try {
       const items = await search(terminoBusqueda, 5);
+      if (requestId !== requestIdRef.current) return;
       setResults(items);
       setBusquedaFallo(false);
     } catch {
+      if (requestId !== requestIdRef.current) return;
       // R7-FIX1: un fallo de red no debe verse igual que "sin resultados".
       setResults([]);
       setBusquedaFallo(true);
     } finally {
-      setBuscando(false);
+      if (requestId === requestIdRef.current) setBuscando(false);
     }
   }, [search]);
 

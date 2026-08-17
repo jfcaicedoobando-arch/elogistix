@@ -88,6 +88,23 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
         method: "SEGURO_FORM_SUBMIT",
       });
     }
+    // EC-10: misma guarda para los otros dos campos monetarios del seguro.
+    if (form.suma_asegurada < 0 || form.deducible < 0) {
+      return notifyError(undefined, {
+        title: "Montos inválidos",
+        description: "La suma asegurada y el deducible no pueden ser negativos.",
+        method: "SEGURO_FORM_SUBMIT",
+      });
+    }
+    // En altas (donde la póliza es obligatoria) la suma asegurada debe ser > 0;
+    // en edición se respetan registros históricos que pudieron quedar en 0.
+    if (!isEdit && form.suma_asegurada <= 0) {
+      return notifyError(undefined, {
+        title: "Suma asegurada requerida",
+        description: "Captura una suma asegurada mayor a cero.",
+        method: "SEGURO_FORM_SUBMIT",
+      });
+    }
     if (form.vigencia_hasta < form.vigencia_desde) {
       return notifyError(undefined, {
         title: "Vigencia inválida",
@@ -164,11 +181,17 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
           <Label htmlFor="seguro-suma">Suma asegurada</Label>
           <Input id="seguro-suma" type="number" min={0} step={0.01} value={form.suma_asegurada}
             onChange={(e) => setField("suma_asegurada", Number(e.target.value))} />
+          {form.suma_asegurada < 0 && (
+            <p className="text-xs text-destructive mt-1">La suma asegurada no puede ser negativa.</p>
+          )}
         </div>
         <div>
           <Label htmlFor="seguro-deducible">Deducible</Label>
           <Input id="seguro-deducible" type="number" min={0} step={0.01} value={form.deducible}
             onChange={(e) => setField("deducible", Number(e.target.value))} />
+          {form.deducible < 0 && (
+            <p className="text-xs text-destructive mt-1">El deducible no puede ser negativo.</p>
+          )}
         </div>
 
         <div className="sm:col-span-2">

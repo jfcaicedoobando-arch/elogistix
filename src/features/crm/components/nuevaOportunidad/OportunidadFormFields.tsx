@@ -113,8 +113,13 @@ export default function OportunidadFormFields({
         <Input
           type="number" min={0} max={100}
           value={form.probabilidad}
-          onChange={(e) => set("probabilidad", Number(e.target.value))}
+          // EC-09: min/max HTML no clampean escritura manual; sin el clamp el
+          // guardado explotaba contra el CHECK (probabilidad BETWEEN 0 AND 100).
+          onChange={(e) => set("probabilidad", Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
         />
+        {(form.probabilidad < 0 || form.probabilidad > 100) && (
+          <p className="text-xs text-destructive mt-1">La probabilidad debe estar entre 0 y 100.</p>
+        )}
       </div>
       <div className="space-y-1">
         <Label>Fecha estimada cierre</Label>

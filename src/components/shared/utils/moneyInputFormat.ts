@@ -35,6 +35,13 @@ export const sanitizeMoneyText = (raw: string, allowNegative = false): string =>
   if (s.includes(".")) {
     const sinMiles = s.replace(/,/g, "");
     const [entero, ...resto] = sinMiles.split(".");
+    // EC-06: heurística simétrica a la de la coma — en es-MX es común pegar
+    // montos con punto de miles ("50.000" = 50,000). Un único "." seguido de
+    // exactamente 3 dígitos y sin otra marca decimal se trata como separador
+    // de miles; de otro modo sigue siendo punto decimal.
+    if (resto.length === 1 && resto[0].length === 3 && !s.includes(",") && entero !== "") {
+      return `${signo}${entero}${resto[0]}`;
+    }
     return `${signo}${entero}.${resto.join("").slice(0, 2)}`;
   }
 

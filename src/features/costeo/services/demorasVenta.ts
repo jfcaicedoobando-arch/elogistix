@@ -27,6 +27,20 @@ export async function fetchDemorasVenta(): Promise<DemoraVentaTarifa[]> {
 }
 
 export async function crearDemoraVenta(input: DemoraVentaTarifaInput): Promise<void> {
+  // EC-20: defensa en la mutación — la UI valida, pero cualquier otra vía de
+  // captura pasa por aquí. Evita tramos invertidos o días no enteros.
+  if (!Number.isInteger(input.desde_dia) || input.desde_dia < 1) {
+    throw new Error("El día inicial del tramo debe ser un entero mayor o igual a 1.");
+  }
+  if (
+    input.hasta_dia !== null &&
+    (!Number.isInteger(input.hasta_dia) || input.hasta_dia < input.desde_dia)
+  ) {
+    throw new Error("El día final del tramo debe ser un entero mayor o igual al día inicial.");
+  }
+  if (!(input.monto_por_dia_usd >= 0)) {
+    throw new Error("El monto por día no puede ser negativo.");
+  }
   await run(supabase.from("costeo_demoras_venta_tarifa").insert(input));
   await registrarActividad({
     modulo: "costeo",
