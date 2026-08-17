@@ -24,7 +24,9 @@ function MonedasList({ montos }: { montos: Record<string, number> }) {
     <ul className="mt-1 space-y-0.5">
       {entradas.map(([moneda, monto]) => (
         <li key={moneda} className="text-sm tabular-nums">
-          {formatCurrency(Number(monto), moneda)} <span className="text-muted-foreground">{moneda}</span>
+          {/* VB-04: formatCurrency ya incluye el código ISO; no repetirlo como sufijo. */}
+          {formatCurrency(Number(monto), moneda)}
+
         </li>
       ))}
     </ul>

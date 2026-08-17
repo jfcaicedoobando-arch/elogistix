@@ -104,8 +104,8 @@ describe("diffFields.extra", () => {
     const r = diffConceptos(before, after);
     expect(r.modificados).toBe(1);
     expect(r.detalle[0].tipo).toBe("modificado");
-    expect(r.detalle[0].antes).toBe("100.00 USD");
-    expect(r.detalle[0].despues).toBe("200.00 USD");
+    expect(r.detalle[0].antes).toBe("USD 100.00");
+    expect(r.detalle[0].despues).toBe("USD 200.00");
   });
 
   it("diffConceptos: sin cambios cuando listas son idénticas", () => {

@@ -3,6 +3,9 @@
  *
  * Extraído de `diffFields.ts` (regla Power of 10: ≤200 líneas por archivo).
  */
+import { formatCurrency, formatNumber } from "@/lib/formatters";
+
+
 
 export interface ConceptoLike {
   concepto?: string | null;
@@ -40,8 +43,11 @@ function montoTotal(c: ConceptoLike): number {
 }
 
 function resumen(c: ConceptoLike): string {
-  return `${montoTotal(c).toFixed(2)} ${c.moneda ?? ""}`.trim();
+  // UX-12: formato monetario canónico (separador de miles + código ISO).
+  const total = montoTotal(c);
+  return c.moneda ? formatCurrency(total, c.moneda) : formatNumber(total, { decimals: 2 });
 }
+
 
 function nombreOf(c: ConceptoLike): string {
   return (c.concepto ?? c.descripcion ?? "").trim();

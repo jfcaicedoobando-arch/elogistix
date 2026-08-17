@@ -75,7 +75,9 @@ export function buildCxpAgingColumns(): ColumnDef<CxpAgingRow, unknown>[] {
       accessorKey: "saldo_total",
       cell: ({ row }) => (
         <span className="tabular-nums font-semibold">
-          {formatCurrency(row.original.saldo_total, row.original.moneda)} {row.original.moneda}
+          {/* VF-11: formatCurrency ya incluye el código ISO; no repetirlo como sufijo. */}
+          {formatCurrency(row.original.saldo_total, row.original.moneda)}
+
         </span>
       ),
       enableSorting: true, meta: { align: "right" },

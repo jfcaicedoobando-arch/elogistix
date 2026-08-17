@@ -72,7 +72,7 @@ describe("diffConceptos", () => {
     const after = [{ concepto: "Flete", monto: 150, moneda: "USD", proveedor_id: "p1" }];
     const out = diffConceptos(before, after);
     expect(out.modificados).toBe(1);
-    expect(out.detalle[0]).toMatchObject({ tipo: "modificado", antes: "100.00 USD", despues: "150.00 USD" });
+    expect(out.detalle[0]).toMatchObject({ tipo: "modificado", antes: "USD 100.00", despues: "USD 150.00" });
   });
 
   it("uses precio_unitario * cantidad when monto is absent", () => {
@@ -80,7 +80,7 @@ describe("diffConceptos", () => {
     const after = [{ descripcion: "Flete", cantidad: 3, precio_unitario: 50, moneda: "USD" }];
     const out = diffConceptos(before, after);
     expect(out.modificados).toBe(1);
-    expect(out.detalle[0].despues).toBe("150.00 USD");
+    expect(out.detalle[0].despues).toBe("USD 150.00");
   });
 
   it("matches case-insensitively and trims concept name", () => {

@@ -43,7 +43,13 @@ export function PortalEmbarqueTimeline({ eventos: eventosCrudos }: Props) {
             <div className="space-y-6">
               {eventos.map((ev, i) => {
                 const EventIcon = ICONO_EVENTO_LUCIDE[ev.tipo] ?? FileText;
+                // VT-27: los hitos de fecha pura (p.ej. Zarpe) no tienen hora real;
+                // no mostrar el "00:00" fantasma.
+                const esSoloFecha =
+                  /^\d{4}-\d{2}-\d{2}$/.test(ev.fecha) ||
+                  formatDate(ev.fecha, "HH:mm") === "00:00";
                 return (
+
                   <div key={ev.id} className="relative pl-10">
                     <div className={`absolute left-2.5 top-1 h-3.5 w-3.5 rounded-full border-2 border-background transition-colors ${
                       i === 0 ? "bg-accent ring-4 ring-accent/20" : "bg-muted-foreground/40"
@@ -54,7 +60,7 @@ export function PortalEmbarqueTimeline({ eventos: eventosCrudos }: Props) {
                         <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {formatDate(ev.fecha, "dd MMM yyyy, HH:mm")}
+                          {formatDate(ev.fecha, esSoloFecha ? "dd MMM yyyy" : "dd MMM yyyy, HH:mm")}
                         </span>
                       </div>
                       {ev.descripcion && <p className="text-sm text-foreground">{ev.descripcion}</p>}
