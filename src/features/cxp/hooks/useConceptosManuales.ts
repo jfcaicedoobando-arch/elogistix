@@ -33,9 +33,20 @@ export interface ConceptosManualesApi {
     valor: CfdiConceptoParsed[K],
   ) => void;
   eliminar: (key: string) => void;
+  /** Clona un renglón y lo inserta justo debajo (captura repetitiva). */
+  duplicar: (key: string) => void;
+  /**
+   * Reparte `diferencia` (subtotal − suma) en el importe unitario del renglón
+   * indicado para cerrar el descuadre sin recalcular a mano.
+   */
+  ajustarDiferencia: (key: string, diferencia: number) => void;
   limpiar: () => void;
   /** Sustituye toda la lista (precarga al editar conceptos existentes). */
   reemplazar: (conceptos: ReadonlyArray<CfdiConceptoParsed>) => void;
+}
+
+function redondear2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 export function useConceptosManuales(): ConceptosManualesApi {
@@ -56,11 +67,31 @@ export function useConceptosManuales(): ConceptosManualesApi {
     setConceptos((prev) => prev.filter((c) => c.key !== key));
   }, []);
 
+  const duplicar = useCallback((key: string) => {
+    setConceptos((prev) => {
+      const i = prev.findIndex((c) => c.key === key);
+      if (i < 0) return prev;
+      const copia: ConceptoManual = { ...prev[i], key: nextKey() };
+      return [...prev.slice(0, i + 1), copia, ...prev.slice(i + 1)];
+    });
+  }, []);
+
+  const ajustarDiferencia = useCallback((key: string, diferencia: number) => {
+    setConceptos((prev) =>
+      prev.map((c) => {
+        if (c.key !== key) return c;
+        const cantidad = c.cantidad && c.cantidad !== 0 ? c.cantidad : 1;
+        return { ...c, importe: redondear2((Number(c.importe) || 0) + diferencia / cantidad) };
+      }),
+    );
+  }, []);
+
   const limpiar = useCallback(() => setConceptos([]), []);
 
   const reemplazar = useCallback((lista: ReadonlyArray<CfdiConceptoParsed>) => {
     setConceptos(lista.map((c) => ({ ...c, key: nextKey() })));
   }, []);
 
-  return { conceptos, agregar, actualizar, eliminar, limpiar, reemplazar };
+  return { conceptos, agregar, actualizar, eliminar, duplicar, ajustarDiferencia, limpiar, reemplazar };
 }
+
