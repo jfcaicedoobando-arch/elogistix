@@ -108,6 +108,7 @@ export function ColumnaDocumento({
         onAgregar={ctl.conceptosManuales.agregar}
         onActualizar={ctl.conceptosManuales.actualizar}
         onEliminar={ctl.conceptosManuales.eliminar}
+        onDuplicar={ctl.conceptosManuales.duplicar}
       />
 
       {sinPartidas && (modoBuzon || ctl.mode !== "manual") && (
