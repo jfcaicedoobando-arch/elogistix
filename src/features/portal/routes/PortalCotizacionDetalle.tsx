@@ -130,23 +130,11 @@ export default function PortalCotizacionDetalle() {
         />
       )}
 
-      {conceptosUSD.length === 0 && conceptosMXN.length === 0 && Number(cot.subtotal) > 0 && (
-        // VT-26: cotizaciones sin desglose de conceptos (legacy) mostraban el
-        // detalle sin ningún importe; se muestra al menos el total cotizado.
-        <Card>
-          <CardHeader>
-            <CardTitle>Total cotizado</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-base font-bold tabular-nums">
-              {formatCurrency(Number(cot.subtotal), cot.moneda)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Monto total de la cotización. El desglose de conceptos no está disponible en esta cotización.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <PortalCotizacionTotalCard
+        conceptosCount={conceptosUSD.length + conceptosMXN.length}
+        subtotal={cot.subtotal}
+        moneda={cot.moneda}
+      />
 
       {cot.notas && (
         <Card>
