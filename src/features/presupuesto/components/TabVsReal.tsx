@@ -53,6 +53,21 @@ function ordenarFilas(filas: FilaVsReal[], key: SortKey, dir: SortDir): FilaVsRe
   return [...filas].sort((a, b) => cmp[key](a, b) * sign);
 }
 
+/** Aviso de gastos en moneda extranjera sin tipo de cambio (con concordancia es-MX). */
+function AvisoGastosSinTc({ count }: { count: number }) {
+  const uno = count === 1;
+  return (
+    <Card className="border-warning/50">
+      <CardContent className="p-3 text-sm text-warning">
+        {pluralizar(count, "gasto")} en moneda extranjera {uno ? "no tiene" : "no tienen"} tipo de cambio
+        capturado y {uno ? "quedó" : "quedaron"} fuera del real. Captura su tipo de cambio para que se{" "}
+        {uno ? "refleje" : "reflejen"} aquí.
+      </CardContent>
+    </Card>
+  );
+}
+
+
 export function TabVsReal() {
   const periodoCtl = usePeriodoMesUrl("periodo_vs_real");
   const { mesActual, setMesKey } = periodoCtl;
