@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.636.0] - 2026-08-17
+
+### Dinero, CxP y comisiones (Patch 6)
+- BL-01: `calcular_comision_pago` ahora valúa el monto cobrado en MXN desde la moneda de la **factura** con el tipo de cambio del documento (antes inflaba hasta ~19x en 3 de 4 cruces de moneda).
+- BL-02: `registrar_pago_proveedor_lote` acepta `request_id` e idempotencia; un doble envío ya no duplica lote, pagos ni el cargo bancario conciliado.
+- BL-03: una factura de proveedor **Cancelada** o en papelera ya no admite pagos (individual y lote) ni anticipos; al cancelar, `estado_aprobacion` vuelve a `pendiente`.
+- BL-04: nueva función `saldo_cuenta_bancaria()` con el canon de saldo (ignora movimientos borrados y previos a `fecha_saldo_inicial`); `ejecutar_pago_programado` la usa y acepta `p_request_id`.
+- BL-05: índice único `uq_liquidaciones_comision_org_vendedora_periodo` + `p_request_id` en `generar_liquidacion_comision`; la UI de Comisiones muestra un mensaje claro ante duplicado (23505).
+- BL-08: `aplicar_anticipo_a_factura` acepta `p_request_id` y devuelve la aplicación original en un reintento.
+
 ## [13.635.1] - 2026-08-17
 
 ### Correcciones

@@ -437,6 +437,12 @@ jobs:
       - name: Conversion de moneda - convertir_monto_pago_a_factura
         run: $PSQL -f supabase/tests/convertir_monto_pago.sql
 
+      - name: Comisiones - monto_cobrado_mxn 4 cuadrantes de moneda (BL-01)
+        run: $PSQL -f supabase/tests/comision_cobrado_mxn.sql
+
+      - name: CxP guard - pago sobre factura Cancelada/papelera bloqueado (BL-03)
+        run: $PSQL -f supabase/tests/cxp_guard_factura_cancelada.sql
+
       - name: Guard de estados - guard_estado_factura
         run: $PSQL -f supabase/tests/guard_estado_factura.sql
 

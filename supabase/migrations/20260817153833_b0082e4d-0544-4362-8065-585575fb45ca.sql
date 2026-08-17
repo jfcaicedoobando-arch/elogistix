@@ -1,9 +1,25 @@
--- Fuente canónica de public.registrar_pago_proveedor_lote (dominio cxp).
--- Última migración que la define: 20260825000200 (BL-03, guard de vida por
--- renglón; ACUMULATIVA sobre 20260825000100 BL-02 idempotencia, que a su vez
--- re-emite el cuerpo final de Ola 12 vía 20260824060000).
--- Regla: cualquier cambio a esta función debe actualizar este archivo
--- en el mismo PR (ver supabase/schema/README.md).
+-- ============================================================
+-- BL-02 · registrar_pago_proveedor_lote sin llave de idempotencia
+-- (asimetría con CxC): un doble submit (doble click con red lenta,
+-- reintento del navegador, retry de React Query) insertaba dos lotes, dos
+-- juegos de pagos_proveedor y dos cargos conciliados en bbva_movimientos;
+-- el guard de sobrepago NO lo detiene si el total del lote ≤ saldo de cada
+-- factura.
+--
+-- Fix (espejo de RNF-01 en registrar_pago_cliente_lote,
+-- supabase/schema/facturacion/registrar_pago_cliente_lote.sql:35,58,243):
+--   · request_id opcional en el payload (uuid);
+--   · idempotency_claim al entrar e idempotency_store al salir;
+--   · reintento con la misma llave → misma respuesta (lote_id), sin
+--     duplicar pagos ni el movimiento bancario.
+--
+-- ACUMULATIVA: cuerpo VERBATIM de la versión vigente
+-- (20260824060000_ola13_replay_lotes.sql, que re-emite el final de Ola 12
+-- con R3BD-02/R3BD-03) + los tres bloques BL-02 marcados. Sin cambio de
+-- firma (p_payload jsonb) ni de grants. El hook del lote
+-- (src/features/cxp/hooks/usePagoLoteState.ts) genera el UUID por apertura
+-- del diálogo y lo envía en el payload.
+-- ============================================================
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_proveedor_lote(p_payload jsonb)
 RETURNS uuid
@@ -37,8 +53,6 @@ DECLARE
   v_fecha_emision date;
   -- Ola 12 · R3BD-03: moneda de la factura para el guard de paridad.
   v_moneda_factura public.moneda;
-  -- BL-03: estado de la factura para el guard de vida.
-  v_estado_factura public.estado_proveedor_factura;
   v_n int := 0;
   v_email text;
 BEGIN
@@ -134,9 +148,7 @@ BEGIN
     -- Ola 11 · RFE-02/RNF-03: el SELECT sirve doble — valida que la factura
     -- exista/sea del proveedor y trae fecha_emision para el guard de fecha.
     -- Ola 12 · R3BD-03: también trae la moneda para el guard de paridad.
-    -- BL-03: también trae el estado para el guard de vida (paridad CxC).
-    SELECT pf.fecha_emision, pf.moneda, pf.estado
-      INTO v_fecha_emision, v_moneda_factura, v_estado_factura
+    SELECT pf.fecha_emision, pf.moneda INTO v_fecha_emision, v_moneda_factura
     FROM public.proveedor_facturas pf
     WHERE pf.id = (v_renglon->>'factura_id')::uuid
       AND pf.deleted_at IS NULL
@@ -145,13 +157,6 @@ BEGIN
 
     IF v_fecha_emision IS NULL THEN
       RAISE EXCEPTION 'LC_LOTE_FACTURA_INVALIDA: Una de las facturas no existe o no pertenece al proveedor seleccionado.';
-    END IF;
-
-    -- BL-03: una factura Cancelada no admite pagos (el guard de aprobación
-    -- no basta: cancelar_factura_proveedor conservaba estado_aprobacion).
-    IF v_estado_factura = 'Cancelada'::public.estado_proveedor_factura THEN
-      RAISE EXCEPTION 'LC_LOTE_FACTURA_NO_VIVA: Una de las facturas del lote está Cancelada y no admite pagos; retírala del reparto.'
-        USING ERRCODE = '42501';
     END IF;
 
     -- Ola 12 · R3BD-03 (paridad CxC): la factura debe ser de la moneda del

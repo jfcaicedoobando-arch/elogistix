@@ -55,6 +55,10 @@ export function usePagoLoteState(a: Args) {
   const [cuentaId, setCuentaId] = useState("");
   const [notas, setNotas] = useState("");
   const [renglones, setRenglones] = useState<RenglonLote[]>([]);
+  // BL-02 (espejo RNF-01 de CxC): llave de idempotencia del lote; se
+  // regenera al abrir el diálogo para que cada intento de submit sea
+  // distinguible y los reintentos del MISMO submit deduplique en servidor.
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
 
   // Al abrir: importe sugerido = saldo total, reparto FIFO por vencimiento.
   useEffect(() => {
@@ -66,6 +70,7 @@ export function usePagoLoteState(a: Args) {
     setCuentaId("");
     setNotas("");
     setRenglones(repartirFifo(a.facturas, saldoTotal).renglones);
+    setRequestId(crypto.randomUUID());
   }, [a.open, a.facturas, a.proveedorOrigen, saldoTotal]);
 
   const { tcDof, tcAplicable, tcBloqueado } = useTcLotePago(a.open, a.moneda, fecha);
@@ -114,6 +119,7 @@ export function usePagoLoteState(a: Args) {
         // Ola 11 · RNF-05 (espejo RG4-5): el importe de la transferencia viaja a
         // la RPC; la validación exacta también vive en la función.
         importe_recibido: totalNum,
+        request_id: requestId,
         renglones,
       });
     } catch {

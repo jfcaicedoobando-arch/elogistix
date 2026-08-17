@@ -28,6 +28,8 @@ export interface GenerarLiquidacionParams {
   vendedora_id: string;
   periodo: string;
   organization_id: string;
+  /** BL-05: llave de idempotencia por intento de submit (evita liquidaciones duplicadas). */
+  request_id?: string;
 }
 
 // Decisión: la generación/pago de liquidaciones de comisión se registra bajo
@@ -39,6 +41,7 @@ export async function generarLiquidacion(p: GenerarLiquidacionParams): Promise<s
       p_vendedora_id: p.vendedora_id,
       p_periodo: p.periodo,
       p_organization_id: p.organization_id,
+      p_request_id: p.request_id ?? null,
     }),
   );
   const id = data as string;

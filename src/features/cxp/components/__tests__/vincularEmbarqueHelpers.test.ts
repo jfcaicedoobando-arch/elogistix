@@ -8,7 +8,14 @@ vi.mock("sonner", () => {
   return { toast };
 });
 
+vi.mock("@/lib/ui/appFeedback", () => ({
+  notifyInfo: vi.fn(),
+  notifySuccess: vi.fn(),
+  notifyError: vi.fn(),
+}));
+
 import { toast } from "sonner";
+import { notifyInfo, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   agruparPorEmbarque,
   pluralS,
@@ -35,6 +42,8 @@ describe("vincularEmbarqueHelpers", () => {
   beforeEach(() => {
     (toast.info as ReturnType<typeof vi.fn>).mockClear();
     (toast.success as ReturnType<typeof vi.fn>).mockClear();
+    (notifyInfo as ReturnType<typeof vi.fn>).mockClear();
+    (notifySuccess as ReturnType<typeof vi.fn>).mockClear();
   });
 
   describe("pluralS", () => {
@@ -114,8 +123,8 @@ describe("vincularEmbarqueHelpers", () => {
   describe("notificarResumen", () => {
     it("info cuando no hay selección", () => {
       notificarResumen({ seleccion: [], descartadosPorMoneda: 0 }, 5);
-      expect(toast.info).toHaveBeenCalledOnce();
-      expect(toast.success).not.toHaveBeenCalled();
+      expect(notifyInfo).toHaveBeenCalledOnce();
+      expect(notifySuccess).not.toHaveBeenCalled();
     });
 
     it("success con partes combinadas (fuerte + dudosa + descarte + sin match)", () => {
@@ -129,7 +138,7 @@ describe("vincularEmbarqueHelpers", () => {
         },
         5,
       );
-      const call = (toast.success as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+      const call = ((notifySuccess as ReturnType<typeof vi.fn>).mock.calls[0][1] as { title: string }).title;
       expect(call).toContain("2 sugerencias");
       expect(call).toContain("1 dudosa");
       expect(call).toContain("1 descartada");
@@ -141,7 +150,7 @@ describe("vincularEmbarqueHelpers", () => {
         { seleccion: [{ fuerte: true } as never], descartadosPorMoneda: 0 },
         1,
       );
-      const call = (toast.success as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+      const call = ((notifySuccess as ReturnType<typeof vi.fn>).mock.calls[0][1] as { title: string }).title;
       expect(call).toBe("1 sugerencia aplicada");
     });
   });
@@ -177,7 +186,7 @@ describe("vincularEmbarqueHelpers", () => {
         setUltima,
       });
       expect(setUltima).toHaveBeenCalledWith([]);
-      expect(toast.info).toHaveBeenCalled();
+      expect(notifyInfo).toHaveBeenCalled();
     });
   });
 
