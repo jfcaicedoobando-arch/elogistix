@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
-import { Edit, ClipboardList, Loader2, Target, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailHeader } from "@/components/shared/DetailHeader";
@@ -10,14 +9,12 @@ import { usePermissions } from "@/hooks/shared";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
 import ComentariosOportunidad from "@/features/crm/components/ComentariosOportunidad";
-import OportunidadCotizacionesList from "@/features/crm/components/OportunidadCotizacionesList";
 import { OportunidadLineageCard } from "@/features/crm/components/LineageCard";
 import { OportunidadKpisCards } from "./OportunidadKpisCards";
 import { OportunidadGanadaBanner } from "./OportunidadGanadaBanner";
-import { DatosComercialesCard } from "./DatosComercialesCard";
 import { ContactoRapidoCard } from "./ContactoRapidoCard";
-import { CriteriosSalidaCard } from "./CriteriosSalidaCard";
-import { MargenAutorizacionCard } from "./MargenAutorizacionCard";
+import { OportunidadDetalleAcciones } from "./OportunidadDetalleAcciones";
+import { OportunidadResumenTab } from "./OportunidadResumenTab";
 
 import { useOportunidadDetalleActions } from "@/features/crm/hooks";
 import { useContactosCliente } from "@/features/cliente/hooks";
@@ -73,18 +70,12 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         badge={etapa ? <Badge variant="outline">{etapa.nombre}</Badge> : undefined}
         subtitle={op.cliente_nombre || "Sin cliente"}
         trailing={canEdit ? (
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" onClick={actions.crearCotizacion} disabled={actions.crearCotPending}>
-              {actions.crearCotPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ClipboardList className="h-4 w-4 mr-1" />}
-              Crear cotización
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-              <Edit className="h-4 w-4 mr-1" /> Editar
-            </Button>
-            <Button size="sm" variant="destructive" onClick={() => setDelOpen(true)}>
-              <Trash2 className="h-4 w-4 mr-1" /> Eliminar
-            </Button>
-          </div>
+          <OportunidadDetalleAcciones
+            crearCotizacion={actions.crearCotizacion}
+            crearCotPending={actions.crearCotPending}
+            onEditar={() => setEditOpen(true)}
+            onEliminar={() => setDelOpen(true)}
+          />
         ) : undefined}
       />
 
@@ -110,32 +101,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         </TabsList>
 
         <TabsContent value="resumen" className="mt-4 space-y-4">
-          <CriteriosSalidaCard
-            oportunidadId={op.id}
-            etapaId={op.etapa_id}
-            etapaNombre={etapa?.nombre}
-            canEdit={canEdit}
-          />
-          <DatosComercialesCard
-            fields={[
-              { label: "Vendedor", value: op.vendedor_email },
-              { label: "Modo", value: op.modo },
-              { label: "Cierre estimado", value: op.fecha_estimada_cierre },
-              { label: "Origen", value: op.origen },
-              { label: "Destino", value: op.destino },
-              { label: "Monto meta", value: op.monto_meta != null ? String(op.monto_meta) : null },
-              { label: "Fecha meta de cierre", value: op.fecha_meta_cierre },
-              { label: "Compromiso", value: op.compromiso_nota, colSpan: true },
-              { label: "Notas", value: op.notas, colSpan: true },
-            ]}
-          />
-          <MargenAutorizacionCard
-            oportunidadId={op.id}
-            margenPct={op.margen_pct != null ? Number(op.margen_pct) : null}
-            autorizadoAt={op.margen_autorizado_at ?? null}
-            riesgos={op.riesgos_objeciones ?? null}
-          />
-          <OportunidadCotizacionesList oportunidadId={op.id} />
+          <OportunidadResumenTab op={op} etapaNombre={etapa?.nombre} canEdit={canEdit} />
         </TabsContent>
 
 
