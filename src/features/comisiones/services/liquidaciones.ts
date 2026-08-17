@@ -41,7 +41,7 @@ export async function generarLiquidacion(p: GenerarLiquidacionParams): Promise<s
       p_vendedora_id: p.vendedora_id,
       p_periodo: p.periodo,
       p_organization_id: p.organization_id,
-      p_request_id: p.request_id ?? null,
+      p_request_id: p.request_id,
     }),
   );
   const id = data as string;

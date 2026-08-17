@@ -19,40 +19,43 @@ describe("mapFacturaRows", () => {
   });
   it("mapea campos y nulables", () => {
     const out = mapFacturaRows([
-      { id: "f1", expediente: null, total: "150.5", moneda: "MXN", fecha_emision: "2026-06-01", tipo_cambio: null },
+      { id: "f1", expediente: null, subtotal: "150.5", moneda: "MXN", fecha_emision: "2026-06-01", tipo_cambio: null },
     ]);
     expect(out[0]).toEqual({
-      id: "f1", expediente: null, total: 150.5, moneda: "MXN", fecha_emision: "2026-06-01", tipo_cambio: null,
+      id: "f1", expediente: null, subtotal: 150.5, moneda: "MXN", fecha_emision: "2026-06-01", tipo_cambio: null,
     });
   });
-  it("convierte total inválido a 0 (no NaN)", () => {
-    const out = mapFacturaRows([{ id: "f2", total: "NaN", moneda: "USD", fecha_emision: "2026-06-01" }]);
-    expect(out[0].total).toBe(0);
+  it("convierte subtotal inválido a 0 (no NaN)", () => {
+    const out = mapFacturaRows([{ id: "f2", subtotal: "NaN", moneda: "USD", fecha_emision: "2026-06-01" }]);
+    expect(out[0].subtotal).toBe(0);
   });
 });
 
 describe("mapNotaCreditoRows", () => {
   it("mapea filas básicas", () => {
     const out = mapNotaCreditoRows([
-      { monto: 25, moneda: "MXN", factura_id: "f1", updated_at: "2026-06-10T00:00:00Z" },
+      { monto: 25, moneda: "MXN", factura_id: "f1", fecha_emision: "2026-06-10" },
     ]);
     expect(out).toHaveLength(1);
     expect(out[0].monto).toBe(25);
     expect(out[0].factura_id).toBe("f1");
+    // BL-10: se usa fecha_emision (inmutable), no updated_at.
+    expect(out[0].fecha_emision).toBe("2026-06-10");
   });
 });
 
 describe("mapProveedorFacturaRows", () => {
   it("conserva embarque_id null y tipo_cambio_usd null", () => {
     const out = mapProveedorFacturaRows([
-      { id: "p1", embarque_id: null, total: 99, moneda: "MXN", fecha_emision: "2026-06-01", tipo_cambio_usd: null },
+      { id: "p1", embarque_id: null, subtotal: 99, moneda: "MXN", fecha_emision: "2026-06-01", tipo_cambio_usd: null },
     ]);
     expect(out[0].embarque_id).toBeNull();
     expect(out[0].tipo_cambio_usd).toBeNull();
+    expect(out[0].subtotal).toBe(99);
   });
   it("coerce tipo_cambio_usd numérico", () => {
     const out = mapProveedorFacturaRows([
-      { id: "p2", embarque_id: "e1", total: 50, moneda: "USD", fecha_emision: "2026-06-01", tipo_cambio_usd: "17.5" },
+      { id: "p2", embarque_id: "e1", subtotal: 50, moneda: "USD", fecha_emision: "2026-06-01", tipo_cambio_usd: "17.5" },
     ]);
     expect(out[0].tipo_cambio_usd).toBe(17.5);
     expect(out[0].embarque_id).toBe("e1");

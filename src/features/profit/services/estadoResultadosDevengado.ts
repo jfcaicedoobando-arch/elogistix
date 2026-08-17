@@ -75,7 +75,8 @@ async function loadEmbarquesPorExpedientes(exps: string[]): Promise<Map<string, 
 async function fetchFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<FacturaRow[]> {
   let q = supabase
     .from("facturas")
-    .select("id, expediente, total, moneda, fecha_emision, tipo_cambio")
+    // BL-06: `subtotal` (sin IVA) en lugar de `total` (con IVA).
+    .select("id, expediente, subtotal, moneda, fecha_emision, tipo_cambio")
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
     // Excluye Cancelada y Sustituida: ambas dejan de ser CFDI vigentes y no
@@ -89,10 +90,15 @@ async function fetchFacturasMes(orgId: string | null, desde: string, hasta: stri
 async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: string): Promise<NotaCreditoRow[]> {
   let q = supabase
     .from("factura_notas_credito")
-    .select("monto, moneda, factura_id, updated_at, tipo_cambio")
+    // BL-10: ubicar la NC por su `fecha_emision` (DATE de negocio, inmutable),
+    // no por `updated_at`: cualquier UPDATE posterior movía el reconocimiento a
+    // otro mes y las fronteras naive T00:00:00/T23:59:59 se interpretaban en
+    // UTC, desplazando 6 h las NCs de fin de mes (TZ MX). El rango YYYY-MM-DD
+    // viene de `rangoMes`, igual que facturas.
+    .select("monto, moneda, factura_id, fecha_emision, tipo_cambio")
     .eq("estado", "Aplicada")
-    .gte("updated_at", `${desde}T00:00:00`)
-    .lte("updated_at", `${hasta}T23:59:59`)
+    .gte("fecha_emision", desde)
+    .lte("fecha_emision", hasta)
     .is("deleted_at", null);
   if (orgId) q = q.eq("organization_id", orgId);
   return mapNotaCreditoRows(await unwrapOr(q, []));
@@ -101,7 +107,8 @@ async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: 
 async function fetchProveedorFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<ProveedorFacturaRow[]> {
   let q = supabase
     .from("proveedor_facturas")
-    .select("id, embarque_id, total, moneda, fecha_emision, tipo_cambio_usd")
+    // BL-06: `subtotal` (sin IVA) en lugar de `total` (con IVA).
+    .select("id, embarque_id, subtotal, moneda, fecha_emision, tipo_cambio_usd")
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
     .neq("estado", "Cancelada")

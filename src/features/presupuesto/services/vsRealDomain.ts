@@ -30,12 +30,26 @@ export interface ResumenVsReal {
    * del comparativo y se reportan aquí para que la UI lo advierta.
    */
   gastos_sin_tc_count: number;
+  /**
+   * BL-07: true cuando alguna fuente del real tocó su límite de filas
+   * (facturas/NCs/liquidaciones) y el comparativo puede estar subestimado.
+   * La UI debe advertirlo (antes el truncamiento era silencioso).
+   */
+  real_truncado: boolean;
 }
 
 export type PresupRow = { categoria_id: string; periodo: string; monto_mxn: number | string };
 export type CxpRow = {
   categoria_presupuesto_id: string | null;
-  total: number | string;
+  /** BL-07: base SIN IVA; los presupuestos se capturan como gasto neto. */
+  subtotal: number | string;
+  moneda: string | null;
+  tipo_cambio_usd: number | string | null;
+};
+/** BL-07: NC de proveedor aplicada (monto + TC heredado de la factura padre). */
+export type NcCxPRow = {
+  categoria_presupuesto_id: string | null;
+  monto: number | string;
   moneda: string | null;
   tipo_cambio_usd: number | string | null;
 };
@@ -68,7 +82,7 @@ export function agregarGastosCxP(rows: CxpRow[]): GastosAgregados {
   let sinTc = 0;
   for (const g of rows) {
     if (!g.categoria_presupuesto_id) continue;
-    const monto = Number(g.total);
+    const monto = Number(g.subtotal);
     const esMxn = (g.moneda ?? "MXN").toUpperCase() === "MXN";
     const tc = Number(g.tipo_cambio_usd ?? 0);
     if (!esMxn && !(tc > 0)) {
@@ -83,6 +97,36 @@ export function agregarGastosCxP(rows: CxpRow[]): GastosAgregados {
     );
   }
   return { porCategoria, sinTc };
+}
+
+/**
+ * BL-07: descuenta las NCs de proveedor aplicadas en el periodo del real por
+ * categoría (misma conversión y criterio sin-TC que `agregarGastosCxP`).
+ * Devuelve cuántas NCs quedaron fuera por falta de TC (cuentan en
+ * `gastos_sin_tc_count` como la contraparte: no poder valuar tampoco debe
+ * pasar desapercibido).
+ */
+export function restarNotasCreditoCxP(
+  rows: NcCxPRow[],
+  porCategoria: Map<string, number>,
+): number {
+  let sinTc = 0;
+  for (const nc of rows) {
+    if (!nc.categoria_presupuesto_id) continue;
+    const monto = Number(nc.monto);
+    const esMxn = (nc.moneda ?? "MXN").toUpperCase() === "MXN";
+    const tc = Number(nc.tipo_cambio_usd ?? 0);
+    if (!esMxn && !(tc > 0)) {
+      sinTc += 1;
+      continue;
+    }
+    const mxn = esMxn ? monto : monto * tc;
+    porCategoria.set(
+      nc.categoria_presupuesto_id,
+      (porCategoria.get(nc.categoria_presupuesto_id) ?? 0) - mxn,
+    );
+  }
+  return sinTc;
 }
 
 export function aplicarLiquidacionesComisiones(

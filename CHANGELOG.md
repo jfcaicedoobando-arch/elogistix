@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.637.0] - 2026-08-17
+
+### Reportes monetarios, EERR y portal público (Patch 7)
+- BL-06: el Estado de Resultados devengado suma **subtotales** (sin IVA) de facturas de venta y de proveedor, alineado con la fuente por conceptos.
+- BL-07: Presupuesto vs Real usa subtotales, descuenta notas de crédito de proveedor **Aplicadas** y avisa cuando el real alcanzó el límite de filas consultadas (`real_truncado`).
+- BL-09: `cerrar_embarque` recalcula las comisiones devengadas con nota de pendiente antes de marcarlas definitivas; un fallo individual deja WARNING y no aborta el cierre (`comisiones_recalculadas` en la respuesta).
+- BL-10: las notas de crédito del EERR devengado se ubican por `fecha_emision` (no por `updated_at`), sin reconocimiento retroactivo ni frontera UTC.
+- BL-11: `portal_obtener_proforma_por_token` con liga expirada o respondida ya no expone montos, conceptos ni datos del cliente; el portal muestra sólo el estado.
+- BL-13: `registrar_pago_cliente_lote` toma los locks `FOR UPDATE` ordenados por `factura_id`, eliminando el deadlock 40P01 entre lotes concurrentes.
+- Residual documentado: las notas de crédito (cliente y proveedor) se descuentan con IVA por falta de columna subtotal; el EERR devengado aún no descuenta NCs de proveedor.
+
+
 ## [13.636.0] - 2026-08-17
 
 ### Dinero, CxP y comisiones (Patch 6)

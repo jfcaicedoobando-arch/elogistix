@@ -29,8 +29,8 @@ describe("fetchPresupuestoVsReal — categorías huérfanas (Fase 3)", () => {
   it("gasto con categoría inactiva se recupera en fila '__huerfanas__'", async () => {
     mock.setTableResult("proveedor_facturas", {
       data: [
-        { categoria_presupuesto_id: "cat-inactiva", total: 1234, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-01" },
-        { categoria_presupuesto_id: "cat-fletes", total: 500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-05" },
+        { categoria_presupuesto_id: "cat-inactiva", subtotal: 1234, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-01" },
+        { categoria_presupuesto_id: "cat-fletes", subtotal: 500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-05" },
       ],
       error: null,
     });
@@ -44,7 +44,7 @@ describe("fetchPresupuestoVsReal — categorías huérfanas (Fase 3)", () => {
   it("sin huérfanos NO agrega la fila sintética", async () => {
     mock.setTableResult("proveedor_facturas", {
       data: [
-        { categoria_presupuesto_id: "cat-fletes", total: 500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-05" },
+        { categoria_presupuesto_id: "cat-fletes", subtotal: 500, moneda: "MXN", tipo_cambio_usd: null, fecha_emision: "2026-06-05" },
       ],
       error: null,
     });

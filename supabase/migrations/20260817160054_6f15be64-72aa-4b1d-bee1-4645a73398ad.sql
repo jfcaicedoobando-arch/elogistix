@@ -1,16 +1,3 @@
--- ============================================================
--- Ola 11 · RBD-08: los pagos individuales del cobro en lote se insertaban
--- con pagos_factura.tipo_cambio = 1 duro aunque el lote capturaba TC. En
--- USD/EUR eso subestima monto_cobrado_mxn en calcular_comision_pago (rama
--- v_tc_pago = 1 ⇒ monto extranjero contado como MXN). Ahora se guarda el
--- TC del lote (v_tc) cuando la moneda es extranjera; en MXN se conserva 1.
--- Es seguro porque desde RFE-03 (20260821030200) la RPC exige v_tc > 0
--- para moneda extranjera (LC_COBRO_LOTE_TC_REQUERIDO).
--- ACUMULATIVA: incluye RFE-02/RNF-03 (fecha), RFE-03 (TC requerido),
--- RNF-01 (idempotencia) y RNF-02 (cuadre exacto). Sincroniza la fuente
--- canónica (1:1). Sin backfill de históricos en esta migración.
--- ============================================================
-
 CREATE OR REPLACE FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -25,13 +12,11 @@ DECLARE
   v_fecha date := COALESCE((p_payload->>'fecha_pago')::date, CURRENT_DATE);
   v_moneda public.moneda := (p_payload->>'moneda')::public.moneda;
   v_tc numeric := NULLIF(p_payload->>'tipo_cambio_usd','')::numeric;
-  -- Ola 5 · RG4-5: importe real recibido del cliente (nuevo en el payload).
   v_importe numeric := NULLIF(p_payload->>'importe_recibido','')::numeric;
   v_forma text := COALESCE(NULLIF(TRIM(p_payload->>'forma_pago'), ''), '03');
   v_referencia text := COALESCE(NULLIF(TRIM(p_payload->>'referencia'), ''), '');
   v_cuenta_id uuid := NULLIF(p_payload->>'cuenta_bancaria_id','')::uuid;
   v_notas text := COALESCE(p_payload->>'notas','');
-  -- Ola 11 · RNF-01: llave de idempotencia del cliente (opcional).
   v_request_id uuid := NULLIF(p_payload->>'request_id','')::uuid;
   v_cached jsonb;
   v_resp jsonb;
@@ -53,8 +38,6 @@ BEGIN
     RAISE EXCEPTION 'No autenticado' USING ERRCODE = '42501';
   END IF;
 
-  -- Ola 11 · RNF-01: reclamo atómico de la llave. Reintento del mismo
-  -- submit → respuesta almacenada; ejecución aún en vuelo → rechazo claro.
   v_cached := public.idempotency_claim(v_request_id, 'registrar_pago_cliente_lote');
   IF v_cached IS NOT NULL THEN
     IF COALESCE((v_cached->>'__idempotency_pending')::boolean, false) THEN
@@ -87,13 +70,11 @@ BEGIN
     RAISE EXCEPTION 'LC_COBRO_LOTE_CLIENTE_OTRA_ORG: El cliente pertenece a otra organización.';
   END IF;
 
-  -- Ola 11 · RFE-02/RNF-03: misma regla que el cobro individual (FE-03).
   IF v_fecha > CURRENT_DATE THEN
     RAISE EXCEPTION 'LC_COBRO_LOTE_FECHA_FUTURA: La fecha del cobro no puede ser futura.'
       USING ERRCODE = '42501';
   END IF;
 
-  -- Ola 11 · RFE-03 (patrón FE-01): lote extranjero sin TC no se registra.
   IF v_moneda <> 'MXN'::public.moneda AND (v_tc IS NULL OR v_tc <= 0) THEN
     RAISE EXCEPTION 'LC_COBRO_LOTE_TC_REQUERIDO: No hay tipo de cambio disponible para un cobro en %; reintenta cuando el servicio de tipos de cambio responda.', v_moneda
       USING ERRCODE = '42501';
@@ -114,7 +95,6 @@ BEGIN
     END IF;
   END IF;
 
-  -- Ola 5 · RG4-6: una misma factura no puede aparecer dos veces.
   IF EXISTS (
     SELECT 1
     FROM jsonb_array_elements(COALESCE(p_payload->'renglones','[]'::jsonb)) AS r
@@ -125,10 +105,8 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
-  -- Validación de renglones: tenancy, cliente, moneda y saldo real por factura.
-  -- BL-13 (migración 20260817143000): los locks FOR UPDATE se toman en orden
-  -- determinista (factura_id), no en el orden del payload; dos lotes
-  -- concurrentes con las mismas facturas en orden distinto hacían deadlock.
+  -- BL-13: los locks FOR UPDATE se toman en orden determinista (factura_id),
+  -- no en el orden del payload del cliente, para evitar deadlocks 40P01.
   FOR v_renglon IN
     SELECT r FROM jsonb_array_elements(COALESCE(p_payload->'renglones','[]'::jsonb)) AS r
     ORDER BY (r->>'factura_id')::uuid
@@ -160,7 +138,6 @@ BEGIN
       RAISE EXCEPTION 'LC_COBRO_LOTE_FACTURA_INVALIDA: Una de las facturas no existe, no es del cliente seleccionado o está en otra moneda.';
     END IF;
 
-    -- Ola 11 · RFE-02/RNF-03: no cobros anteriores a la emisión (aging/REP).
     IF v_fecha < v_fecha_emision THEN
       RAISE EXCEPTION 'LC_COBRO_LOTE_FECHA_PREVIA_EMISION: La fecha del cobro es anterior a la emisión de una de las facturas del lote.'
         USING ERRCODE = '42501';
@@ -178,13 +155,10 @@ BEGIN
     RAISE EXCEPTION 'LC_COBRO_LOTE_MINIMO_FACTURAS: Un cobro en lote requiere al menos dos facturas.';
   END IF;
 
-  -- Ola 5 · RG4-5: el reparto debe cuadrar EXACTAMENTE con el importe recibido.
   IF v_importe IS NULL OR v_importe <= 0 THEN
     RAISE EXCEPTION 'LC_COBRO_LOTE_IMPORTE_REQUERIDO: Captura el importe recibido del cliente.'
       USING ERRCODE = '42501';
   END IF;
-  -- Ola 11 · RNF-02: exacto tras ROUND a 2 decimales (antes tolerancia 0.01,
-  -- discrepante con los 0.009 del cliente y con el mensaje "EXACTO").
   IF ROUND(v_importe, 2) IS DISTINCT FROM ROUND(v_total, 2) THEN
     RAISE EXCEPTION 'LC_COBRO_LOTE_IMPORTE_NO_CUADRA: El reparto (%) no cuadra con el importe recibido (%); no se permite sobrante sin asignar.', v_total, v_importe
       USING ERRCODE = '42501';
@@ -206,9 +180,6 @@ BEGIN
       (organization_id, factura_id, fecha_pago, monto, moneda, tipo_cambio,
        monto_aplicado_factura, forma_pago, referencia, notas, created_by, lote_id)
     VALUES
-      -- Ola 11 · RBD-08: el pago individual guarda el TC del lote en moneda
-      -- extranjera (garantizado > 0 por LC_COBRO_LOTE_TC_REQUERIDO); en MXN
-      -- se conserva 1 como antes.
       (v_org, v_factura_id, v_fecha, v_monto, v_moneda,
        CASE WHEN v_moneda = 'MXN'::public.moneda THEN 1 ELSE v_tc END,
        v_monto, v_forma, v_referencia, v_notas, v_uid, v_lote_id)
@@ -244,23 +215,12 @@ BEGIN
   END;
 
   v_resp := jsonb_build_object('lote_id', v_lote_id, 'monto_total', v_total, 'pagos', v_pagos);
-  -- Ola 11 · RNF-01: almacena la respuesta para los reintentos con la
-  -- misma llave (no-op cuando request_id viene NULL).
   PERFORM public.idempotency_store(v_request_id, v_resp);
   RETURN v_resp;
 END;
 $function$;
 
--- FIX-H6-12: REVOKE/GRANT explícitos tras recrear una SECURITY DEFINER.
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM anon;
 GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO service_role;-- ============================================================
--- Ola 11 · RNF-06 (espejo RG4-6 de CxC): una misma factura no puede
--- aparecer dos veces en el reparto del lote CxP — dos renglones a la
--- misma factura pasaban el chequeo individual y podían sobre-aplicar el
--- pago (sólo fallaban si la suma excedía el saldo). Mismo chequeo que
--- LC_COBRO_LOTE_FACTURA_DUPLICADA. El guard RG4-12 (lote duplicado en
--- 10 min) es del lado cliente (pagoProveedorLote.ts), igual que en CxC.
--- ACUMULATIVA: incluye RFE-02/RNF-03 (fecha) y RNF-05 (importe + cuadre).
--- Sin cambio de firma: (p_payload jsonb).
+GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO service_role;

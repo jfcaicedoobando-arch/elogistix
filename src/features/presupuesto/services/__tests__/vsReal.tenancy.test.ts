@@ -18,7 +18,8 @@ describe("fetchPresupuestoVsReal — tenancy", () => {
 
   it("aplica organization_id en proveedor_facturas y liquidaciones_comision", async () => {
     await fetchPresupuestoVsReal("2026-06", "org-c");
-    for (const table of ["proveedor_facturas", "liquidaciones_comision"]) {
+    // BL-07: incluye la nueva fuente de NCs de proveedor.
+    for (const table of ["proveedor_facturas", "proveedor_notas_credito", "liquidaciones_comision"]) {
       const call = mock.tableCalls.find((c) => c.table === table);
       expect(call, `sin llamada a ${table}`).toBeDefined();
       const eqCalls = call!.ops
@@ -33,7 +34,7 @@ describe("fetchPresupuestoVsReal — tenancy", () => {
 
   it("omite filtro cuando orgId es null", async () => {
     await fetchPresupuestoVsReal("2026-06", null);
-    for (const table of ["proveedor_facturas", "liquidaciones_comision"]) {
+    for (const table of ["proveedor_facturas", "proveedor_notas_credito", "liquidaciones_comision"]) {
       const call = mock.tableCalls.find((c) => c.table === table);
       const eqCalls = call!.ops
         .map((op, i) => ({ op, args: call!.opArgs[i] }))

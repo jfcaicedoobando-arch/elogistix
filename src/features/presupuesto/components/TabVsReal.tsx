@@ -142,6 +142,14 @@ export function TabVsReal() {
         <CardSkeleton lines={8} />
       ) : (
         <>
+          {data.real_truncado && (
+            <Card className="border-warning/50">
+              <CardContent className="p-3 text-sm text-warning">
+                El real de este periodo alcanzó el límite de filas consultadas y puede estar
+                incompleto. Refina el periodo o contacta a soporte para un corte exacto.
+              </CardContent>
+            </Card>
+          )}
           {data.gastos_sin_tc_count > 0 && <AvisoGastosSinTc count={data.gastos_sin_tc_count} />}
 
           {sinPresupuestoGlobal && (
