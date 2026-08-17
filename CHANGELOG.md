@@ -1,5 +1,21 @@
 # Changelog
 
+## [13.643.0] - 2026-08-17
+
+### Parche 20 · Wizard de cotización (VF-09, VF-10, VF-16, VF-18, VF-19, VB-34)
+- Validación inline en el Paso 1: los campos que rechaza el esquema del borrador (modo, tipo, incoterm, descripción, origen, destino, cliente) se marcan en rojo al guardar y se limpian al corregir.
+- Tokens de campo compartidos: los controles con `aria-invalid` se dibujan con borde/anillo destructivo.
+- Checklist lateral del Paso 1 indica qué secciones faltan; "Validez de la propuesta" ahora lleva asterisco (bloquea en marítimo).
+- KPI del listado renombrado a "Total cotizaciones (30 días)" con nota de que no depende de los filtros de la tabla.
+- El subtexto "Vencida" sólo aparece en estados accionables (enviada/aceptada), ya no en "En operación".
+- `campoParaErrorPaso1` queda con una sola implementación (`scrollToErrorSection`), reexportada desde `handlePaso1Crm`.
+
+### Parche 21 · Formato en ventas y finanzas
+- Copy en mayúscula tipo oración en el menú lateral (Panel admin, Comparador top 3, Navieras (condiciones)).
+- Números alineados (`tabular-nums`) en columnas y gráficas de cotizaciones, compras, facturación y Kanban CRM.
+- Etiquetas de meses de proyección de cierre en zona México (`ymMx`).
+- KPIs de cotizaciones extraídos a `CotizacionesKpis.tsx` para mantener la regla de 200 líneas.
+
 ## [13.642.2] - 2026-08-17
 - CI: agregados mensajes amigables para 7 códigos `LC_*` de idempotencia/candados de pagos (BL02–BL15) en `lcCodeMessages.tesoreria.ts`.
 - CI: pruebas de `AuthContext` envueltas en `QueryClientProvider` (el provider usa `useQueryClient` para la purga EC-01).
