@@ -75,18 +75,20 @@ export function EmbarqueAnticipoPicker({ value, expediente, onChange }: Props) {
       {lista.length > 0 && (
         <div className="max-h-48 space-y-1.5 overflow-y-auto">
           {lista.map((e) => (
-            <button
+            <Button
               key={e.embarque_id}
               type="button"
+              variant="ghost"
+              aria-label={`Seleccionar embarque ${e.expediente ?? e.embarque_id.slice(0, 8)}`}
               onClick={() => onChange(e.embarque_id, e.expediente ?? null)}
-              className="w-full rounded-md border bg-background px-3 py-2 text-left transition-colors hover:border-accent hover:bg-accent/5"
+              className="h-auto w-full justify-start whitespace-normal rounded-md border bg-background px-3 py-2 text-left font-normal transition-colors hover:border-accent hover:bg-accent/5"
             >
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-mono font-medium">{e.expediente ?? "—"}</span>
                 <span className="truncate text-muted-foreground">· {e.cliente_nombre ?? "Sin cliente"}</span>
                 {e.estado && <Badge variant="secondary" className="ml-auto text-xs">{e.estado}</Badge>}
               </div>
-            </button>
+            </Button>
           ))}
         </div>
       )}

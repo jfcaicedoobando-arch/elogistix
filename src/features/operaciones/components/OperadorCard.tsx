@@ -51,14 +51,15 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
           const pct = totalDesglose > 0 ? (count / totalDesglose) * 100 : 0;
           const interactive = count > 0;
           return (
-            <button
+            <Button
               key={estado}
               type="button"
+              variant="ghost"
               disabled={!interactive}
               onClick={() => interactive && setEstadoAbierto(estado)}
-              className={`w-full text-left space-y-0.5 rounded-md px-1.5 py-1 -mx-1.5 transition-colors ${
+              className={`flex h-auto w-full flex-col items-stretch justify-start whitespace-normal text-left font-normal space-y-0.5 rounded-md px-1.5 py-1 -mx-1.5 transition-colors ${
                 interactive
-                  ? "hover:bg-muted/60 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  ? "hover:bg-muted/60 cursor-pointer"
                   : "opacity-60 cursor-default"
               }`}
               aria-label={interactive ? `Ver ${count} embarques en ${ESTADO_LABEL[estado]}` : `Sin embarques en ${ESTADO_LABEL[estado]}`}
@@ -85,7 +86,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
                   }}
                 />
               </div>
-            </button>
+            </Button>
           );
         })}
       </div>

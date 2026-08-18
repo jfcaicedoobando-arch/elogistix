@@ -60,14 +60,16 @@ export function CargaPdfIaSection({ categorias, onParsed, pdfReady }: Props) {
             <FileText className="h-4 w-4 text-primary" />
             <span className="font-medium">{pdf.name}</span>
             <span className="text-muted-foreground">({(pdf.size / 1024).toFixed(1)} KB)</span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={(e) => { e.stopPropagation(); setPdf(null); }}
-              className="ml-2 text-muted-foreground hover:text-foreground"
+              className="ml-2 h-7 w-7 text-muted-foreground hover:text-foreground"
               aria-label="Quitar PDF"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">

@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/hooks/shared";
 import { useCrmProspectoSearch, type ProspectoMatch } from "@/features/crm/hooks";
 
@@ -44,10 +45,11 @@ export function BuscadorProspectos({ onSelect }: Props) {
         <ul className="max-h-60 overflow-auto rounded-md border bg-background divide-y">
           {items.map((m) => (
             <li key={`${m.kind}-${m.id}`}>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => onSelect(m)}
-                className="flex w-full items-start gap-3 px-3 py-2 text-left hover:bg-muted/60"
+                className="flex h-auto w-full items-start justify-start gap-3 whitespace-normal rounded-none px-3 py-2 text-left font-normal hover:bg-muted/60"
               >
                 <Badge
                   variant="outline"
@@ -66,7 +68,7 @@ export function BuscadorProspectos({ onSelect }: Props) {
                     {m.etapaNombre ? ` · ${m.etapaNombre}` : ""}
                   </p>
                 </div>
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
