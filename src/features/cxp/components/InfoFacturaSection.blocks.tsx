@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters/dates";
 import { formatCurrency } from "@/lib/formatters";
 import { Field, UuidFiscalField } from "./InfoFacturaSection.parts";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 function EmbarqueValor({ f }: { f: FacturaCxP }) {
@@ -40,9 +41,7 @@ function VencimientoValor({ f }: { f: FacturaCxP }) {
 export function FechasCreditoBlock({ f }: { f: FacturaCxP }) {
   return (
     <div className="space-y-1">
-      <h4 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Fechas y crédito
-      </h4>
+      <SectionHeading as="h3" variant="overline">Fechas y crédito</SectionHeading>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
         <Field
           label="Fecha de expedición"
@@ -75,9 +74,7 @@ export function DesgloseFiscalBlock({ f }: { f: FacturaCxP }) {
   );
   return (
     <div className="space-y-1">
-      <h4 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Desglose fiscal
-      </h4>
+      <SectionHeading as="h3" variant="overline">Desglose fiscal</SectionHeading>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
         <Field label="Subtotal" value={mono(f.subtotal)} />
         <Field label="IVA" value={mono(f.iva)} />
@@ -103,9 +100,7 @@ export function ReferenciasFiscalesBlock({
 }) {
   return (
     <div className="space-y-1">
-      <h4 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Referencias fiscales
-      </h4>
+      <SectionHeading as="h3" variant="overline">Referencias fiscales</SectionHeading>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
         <Field label="Categoría contable" value={f.categoria_nombre} />
         <Field label="RFC proveedor" value={f.rfc_proveedor} mono />

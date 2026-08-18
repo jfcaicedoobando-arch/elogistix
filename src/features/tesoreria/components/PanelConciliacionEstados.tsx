@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { Candidato } from "@/features/tesoreria/services/sugerirCandidatos";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 export function EstadoConciliado({
   tienePago,
@@ -77,9 +78,9 @@ export function ListaCandidatos({
   return (
     <>
       <div>
-        <h4 className="text-xs font-semibold mb-2 text-muted-foreground">
+        <SectionHeading as="h3" variant="overline" className="mb-2">
           Candidatos (±$1, ±5 días)
-        </h4>
+        </SectionHeading>
         {isLoading ? <CardSkeleton lines={2} showHeader={false} /> : null}
         {!isLoading && candidatos.length === 0 ? (
           <p className="text-xs text-muted-foreground">
