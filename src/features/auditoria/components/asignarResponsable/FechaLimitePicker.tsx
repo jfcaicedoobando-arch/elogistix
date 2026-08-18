@@ -28,7 +28,7 @@ export function FechaLimitePicker({ fechaLimite, onChange }: Props) {
           >
             <CalendarIcon className="mr-2 h-3.5 w-3.5" />
             {fechaLimite
-              ? format(fechaLimite, "dd/MM/yyyy", { locale: es })
+              ? formatFechaDia(fechaLimite)
               : "Sin fecha límite"}
           </Button>
         </PopoverTrigger>

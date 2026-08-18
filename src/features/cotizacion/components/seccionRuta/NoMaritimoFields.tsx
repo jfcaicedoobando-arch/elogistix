@@ -59,7 +59,7 @@ export default function NoMaritimoFields({ ctx, tarifaCtx, tarifaHasta }: Props)
             <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !validezPropuesta && "text-muted-foreground")}>
               <CalendarIcon className="mr-2 h-4 w-4" />
               {/* VF-18: es botón-calendario (no acepta tecleo); el placeholder "DD/MM/AAAA" sugería lo contrario. */}
-              {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Selecciona una fecha"}
+              {validezPropuesta ? formatFechaDia(validezPropuesta) : "Selecciona una fecha"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">

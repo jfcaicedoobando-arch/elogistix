@@ -47,7 +47,7 @@ export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
   return (
     <tr className="hover:bg-muted/30 transition-colors">
       <td className="px-4 py-3 whitespace-nowrap text-foreground">
-        {format(new Date(p.fecha_pago + "T00:00:00"), "dd/MM/yyyy")}
+        {formatFechaDia(p.fecha_pago)}
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-col">

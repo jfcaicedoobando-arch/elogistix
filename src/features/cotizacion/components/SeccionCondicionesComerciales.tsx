@@ -113,7 +113,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {/* VF-18: es botón-calendario (no acepta tecleo); el placeholder "DD/MM/AAAA" sugería lo contrario. */}
-                {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Selecciona una fecha"}
+                {validezPropuesta ? formatFechaDia(validezPropuesta) : "Selecciona una fecha"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -132,7 +132,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
           </Popover>
           {tarifaHasta && (
             <p className="text-xs text-muted-foreground mt-1">
-              Máximo {format(tarifaHasta, "dd/MM/yyyy")} según la tarifa vinculada.
+              Máximo {formatFechaDia(tarifaHasta)} según la tarifa vinculada.
             </p>
           )}
         </FormField>

@@ -163,10 +163,16 @@ export function formatFechaHoraCorta(iso: string | null | undefined): string {
  * @param fallback texto cuando la fecha es nula o no parseable (default "—").
  */
 export function formatFechaDia(
-  iso: string | null | undefined,
+  valor: string | Date | null | undefined,
   fallback = "—",
 ): string {
-  if (!iso) return fallback;
+  if (!valor) return fallback;
+  if (valor instanceof Date) {
+    return Number.isNaN(valor.getTime())
+      ? fallback
+      : formatFechaDia(valor.toISOString(), fallback);
+  }
+  const iso = valor;
   const s = formatFechaEs(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
   // `formatFechaEs` devuelve el ISO crudo cuando no pudo parsearlo.
   if (!s || s === "-" || s === iso) return fallback;

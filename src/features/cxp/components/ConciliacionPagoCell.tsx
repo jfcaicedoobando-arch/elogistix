@@ -47,7 +47,7 @@ export function ConciliacionPagoCell({
         </ToneBadge>
 
         <div className="flex flex-col text-label text-muted-foreground min-w-0">
-          <span className="tabular-nums">{format(new Date(movimiento.fecha + "T00:00:00"), "dd/MM/yyyy")} · {formatCurrency(Number(movimiento.cargo), "MXN")}</span>
+          <span className="tabular-nums">{formatFechaDia(movimiento.fecha)} · {formatCurrency(Number(movimiento.cargo), "MXN")}</span>
           {movimiento.referencia && <span className="truncate">Ref: {movimiento.referencia}</span>}
         </div>
         {!disabled && (
@@ -102,7 +102,7 @@ export function ConciliacionPagoCell({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium tabular-nums">
-                        {format(new Date(m.fecha + "T00:00:00"), "dd/MM/yyyy")} · {formatCurrency(m.cargo, "MXN")}
+                        {formatFechaDia(m.fecha)} · {formatCurrency(m.cargo, "MXN")}
                       </p>
                       {m.concepto && (
                         <p className="text-label text-muted-foreground truncate">{m.concepto}</p>

@@ -56,7 +56,7 @@ export function NotaCreditoFila({
   return (
     <tr className="hover:bg-muted/30">
       <td className="px-3 py-2 font-mono text-xs">{n.folio_nc}</td>
-      <td className="px-3 py-2">{format(new Date(n.fecha + "T00:00:00"), "dd/MM/yyyy")}</td>
+      <td className="px-3 py-2">{formatFechaDia(n.fecha)}</td>
       <td className="px-3 py-2 text-muted-foreground">{n.motivo}</td>
       <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</td>
       <td className="px-3 py-2 text-center"><NcEstadoBadge estado={n.estado} /></td>

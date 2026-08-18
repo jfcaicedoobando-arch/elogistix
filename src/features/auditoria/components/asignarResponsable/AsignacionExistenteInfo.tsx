@@ -35,7 +35,7 @@ export function AsignacionExistenteInfo({ revisionExistente }: Props) {
         <div>
           <span className="text-muted-foreground">Fecha límite:</span>{" "}
           <span className="tabular-nums">
-            {format(new Date(`${revisionExistente.fecha_limite}T00:00:00`), "dd/MM/yyyy")}
+            {formatFechaDia(revisionExistente.fecha_limite)}
           </span>
         </div>
       )}
