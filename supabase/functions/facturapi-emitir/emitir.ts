@@ -30,6 +30,8 @@ export interface FacturaRow {
   embarque_id?: string | null;
   expediente?: string | null;
   referencia_bl?: string | null;
+  subtotal?: number | string | null;
+  total?: number | string | null;
 }
 
 interface ClienteRow { id: string; nombre: string; rfc?: string | null; codigo_postal?: string | null; regimen_fiscal?: string | null; uso_cfdi_default?: string | null }
