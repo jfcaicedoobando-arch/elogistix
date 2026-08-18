@@ -123,19 +123,35 @@ BEGIN
     'regla','facturas_entrantes_evidencia','ok',v_ok,
     'detalle', jsonb_build_object('proveedores_sin_evidencia', v_prov_sin_evidencia, 'proveedores', v_prov_nombres)));
 
+  -- N-BL-01: el pagado CxP se convierte a la moneda de la factura con
+  -- monto_pago_en_moneda_factura (antes sumaba pp.monto en crudo: una factura
+  -- USD pagada en MXN inflaba el pagado ~19x y permitía cerrar con CxP
+  -- pendiente). Fail-closed consistente con saldo_factura_proveedor: un pago
+  -- sin tipo de cambio con moneda distinta se EXCLUYE del pagado (nunca 1:1
+  -- silencioso) y se reporta en pagos_sin_tipo_cambio.
   WITH agg AS (
     SELECT COALESCE(pf.moneda,'MXN') AS moneda, COALESCE(SUM(pf.total),0) AS total,
-      COALESCE(SUM((SELECT COALESCE(SUM(pp.monto),0) FROM pagos_proveedor pp
+      COALESCE(SUM((SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(
+          pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text)),0)
+        FROM pagos_proveedor pp
         WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL)),0) AS pagado,
       COUNT(*) FILTER (WHERE pf.total > COALESCE((
-        SELECT SUM(pp.monto) FROM pagos_proveedor pp
-        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL),0) + 0.01) AS facturas_pendientes
+        SELECT SUM(public.monto_pago_en_moneda_factura(
+          pp.monto, pp.moneda::text, pp.tipo_cambio_usd, pf.moneda::text))
+        FROM pagos_proveedor pp
+        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL),0) + 0.01) AS facturas_pendientes,
+      COUNT(*) FILTER (WHERE EXISTS (
+        SELECT 1 FROM pagos_proveedor pp
+        WHERE pp.proveedor_factura_id=pf.id AND pp.deleted_at IS NULL
+          AND pp.moneda::text <> COALESCE(pf.moneda::text,'MXN')
+          AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)) AS pagos_sin_tipo_cambio
     FROM proveedor_facturas pf
     WHERE pf.embarque_id=p_embarque_id AND pf.deleted_at IS NULL AND pf.estado<>'Cancelada'
     GROUP BY COALESCE(pf.moneda,'MXN'))
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'moneda',moneda,'total',total,'pagado',pagado,
-      'saldo',GREATEST(total-pagado,0),'facturas_pendientes',facturas_pendientes
+      'saldo',GREATEST(total-pagado,0),'facturas_pendientes',facturas_pendientes,
+      'pagos_sin_tipo_cambio',pagos_sin_tipo_cambio
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(total-pagado,0)),0)
   INTO v_cxp_por_moneda, v_cxp_saldo FROM agg;
   -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
