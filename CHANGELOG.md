@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.653.3] - 2026-08-18
+
+### Arranque blindado — el DOM ya no puede quedar en blanco sin explicación
+- Nuevo `renderBootstrapFallback` (`src/lib/bootstrap/`): si el montaje raíz de React lanza antes del primer render (p. ej. un proveedor de contexto que falla al inicializar), en lugar de dejar `div#root` vacío se pinta una pantalla de recuperación en es-MX con el detalle del error y botón "Recargar". Usa sólo tokens semánticos del design system.
+- `src/main.tsx` envuelve `createRoot(...).render(...)` en `try/catch` conectado a ese fallback.
+- Diagnóstico del reporte `preview_dom_blank`: se verificó en navegador real (1280px y 555px) que la app monta (~73.6k caracteres en `#root`) y se mantiene estable a los 3/8/14 s, sin bucles de recarga; el DOM vacío correspondía al iframe del editor, no a un crash de la app. El `RangeError: Incorrect locale information provided` observado proviene de `@tanstack/query-devtools` (sólo dev, navegador sin idioma configurado) y no afecta producción.
+- Pruebas nuevas para el fallback de arranque.
+
 ## [13.653.2] - 2026-08-18
 
 ### Preview estable — sin bucle tardío de recarga
