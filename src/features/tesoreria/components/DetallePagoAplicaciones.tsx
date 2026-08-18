@@ -5,6 +5,7 @@
 import { Link } from "react-router-dom";
 import { Table, TableBody, TableHeader, TableCell } from "@/components/ui/table";
 import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
   rutaAplicacion, saldoAplicacion, totalAplicado, type AplicacionPago,
@@ -14,7 +15,7 @@ export function BloqueAplicaciones({ aplicaciones }: { aplicaciones: AplicacionP
   if (aplicaciones.length === 0) {
     return (
       <section className="space-y-2">
-        <h3 className="text-sm font-semibold">Aplicado a</h3>
+        <SectionHeading as="h3" variant="subsection">Aplicado a</SectionHeading>
         <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
           Todavía no se aplica a ninguna factura. Aplícalo desde el detalle de la factura del proveedor.
         </p>
@@ -24,14 +25,17 @@ export function BloqueAplicaciones({ aplicaciones }: { aplicaciones: AplicacionP
 
   return (
     <section className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">
-          Aplicado a {aplicaciones.length === 1 ? "1 factura" : `${aplicaciones.length} facturas`}
-        </h3>
-        <span className="text-xs text-muted-foreground tabular-nums">
-          Total aplicado {formatCurrency(totalAplicado(aplicaciones), aplicaciones[0].moneda)}
-        </span>
-      </div>
+      <SectionHeading
+        as="h3"
+        variant="subsection"
+        actions={
+          <span className="text-xs text-muted-foreground tabular-nums">
+            Total aplicado {formatCurrency(totalAplicado(aplicaciones), aplicaciones[0].moneda)}
+          </span>
+        }
+      >
+        Aplicado a {aplicaciones.length === 1 ? "1 factura" : `${aplicaciones.length} facturas`}
+      </SectionHeading>
       <div className="rounded-md border">
         <Table>
           <TableHeader>

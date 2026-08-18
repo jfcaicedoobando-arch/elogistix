@@ -4,6 +4,7 @@
  * v13.384.0 — El mapa de "no aplica" se calcula con TODOS los checks (Card).
  */
 import { Badge } from "@/components/ui/badge";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { CierreCheckItem } from "./CierreCheckItem";
 import type { GrupoCierre } from "@/features/embarques/utils/cierreCheckOrden";
 
@@ -30,14 +31,17 @@ export function CierreChecklistFase({
 
   return (
     <section className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-overline font-semibold">
-          {grupo.fase.numero}. {grupo.fase.titulo}
-        </h3>
-        <Badge variant={completa && !informativo ? "secondary" : "outline"} className="text-2xs">
-          {okCount}/{total}
-        </Badge>
-      </div>
+      <SectionHeading
+        as="h3"
+        variant="overline"
+        actions={
+          <Badge variant={completa && !informativo ? "secondary" : "outline"} className="text-2xs">
+            {okCount}/{total}
+          </Badge>
+        }
+      >
+        {grupo.fase.numero}. {grupo.fase.titulo}
+      </SectionHeading>
       <ul className="space-y-2">
         {grupo.checks.map((c) => (
           <CierreCheckItem
