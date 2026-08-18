@@ -10,6 +10,8 @@ import { Receipt, CheckCircle2, Clock } from "lucide-react";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
+import { useExchangeRates } from "@/features/catalogos/hooks";
+import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 
 interface Props {
   totalFacturado: number;
