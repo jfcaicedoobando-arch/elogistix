@@ -19,6 +19,7 @@ import {
 } from "./lib/errors/dynamicImportError";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/query/queryClient";
+import { renderBootstrapFallback } from "./lib/bootstrap/renderBootstrapFallback";
 
 const previousVersion = getStoredAppVersion();
 if (previousVersion !== APP_VERSION) {
