@@ -1,10 +1,4 @@
--- Fuente canónica de public.adjuntar_xml_factura_entrante(...) (Ola 11 · RNF-08).
--- 1:1 con supabase/migrations/20260813031300_1f4a2b81-412f-49fb-b8dc-5fa802409b9b.sql.
--- La política "Autor edita facturas entrantes pendientes" exige
--- subido_por = auth.uid() OR admin, así que contabilidad — que SÍ conserva
--- "adjuntar XML faltante" — era rechazada con 42501 después de subir el archivo
--- a Storage. Esta RPC aplica la matriz de roles del plan de permisos contables.
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+-- BUG-18: validaciones server-side mínimas de los metadatos CFDI declarados por el cliente (formato UUID fiscal, total > 0) + TODO de re-parseo server-side.
 
 CREATE OR REPLACE FUNCTION public.adjuntar_xml_factura_entrante(
   p_documento_id uuid,

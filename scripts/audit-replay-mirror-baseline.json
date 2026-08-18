@@ -17,11 +17,6 @@
       "migracion_vigente": "20260808204754_d5747ba4-5098-4e9c-af3a-c8ecc3809a03.sql"
     },
     {
-      "espejo": "supabase/schema/embarques/avanzar_estado_embarque.sql",
-      "funcion": "avanzar_estado_embarque",
-      "migracion_vigente": "20260803214601_7236fed7-966a-498d-bda5-e71497866a69.sql"
-    },
-    {
       "espejo": "supabase/schema/embarques/crear_embarque_borrador_core.sql",
       "funcion": "crear_embarque_borrador_core",
       "migracion_vigente": "20260727175258_295ae563-e224-4072-9e4a-133355024b9c.sql"
@@ -42,24 +37,10 @@
       "migracion_vigente": "20260725184833_cefe9d2d-98b6-47f0-ba83-0e49fc225e06.sql"
     },
     {
-      "espejo": "supabase/schema/facturacion/saldo_factura.sql",
-      "funcion": "saldo_factura",
-      "migracion_vigente": "20260729212159_b105c21b-e439-4490-a542-650535ef37ef.sql"
-    },
-    {
       "espejo": "supabase/schema/operaciones/operaciones_stats.sql",
       "funcion": "operaciones_stats",
       "migracion_vigente": "20260811090000_ola4_n10_dashboards_borrador.sql"
-    },
-    {
-      "espejo": "supabase/schema/proformas/_convertir_proformas_insertar_conceptos.sql",
-      "funcion": "_convertir_proformas_insertar_conceptos",
-      "migracion_vigente": "20260723162453_4c28b04d-852f-49bf-97cc-87d668090cc3.sql"
-    },
-    {
-      "espejo": "supabase/schema/proformas/convertir_proformas_a_factura.sql",
-      "funcion": "convertir_proformas_a_factura",
-      "migracion_vigente": "20260729164301_129478b9-0232-46b8-b1e1-3cf3c17e2b57.sql"
     }
   ]
 }
+

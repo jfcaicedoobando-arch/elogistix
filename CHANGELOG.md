@@ -1,5 +1,26 @@
 # Changelog
 
+## [13.652.0] - 2026-08-18
+
+### Ola D · Bloque P2 — bugs de dinero (BUG-10, 11, 13, 15, 17, 18)
+- **BUG-10 · Cambio de estado del embarque a prueba de doble clic**: `avanzar_estado_embarque` bloquea la fila (`FOR UPDATE`) y sólo actualiza si el estado no cambió; si dos personas lo intentan a la vez, la segunda recibe `LC_ESTADO_CONCURRENTE` en lugar de duplicar notas y eventos.
+- **BUG-11 · Cotizaciones en moneda no soportada**: `cotizacion_totales_conceptos` lanza `LC_COTIZACION_MONEDA_NO_SOPORTADA` (antes un concepto en EUR sumaba 0 en silencio) y valida cantidades/precios negativos y tasas de IVA fuera de [0,1].
+- **BUG-13 · Cierre de embarque multi-moneda**: los checks `cxp_pagada` y `cxc_cobrada` evalúan el umbral de 0.01 **por moneda**; ya no se compensa un saldo pendiente en USD con MXN.
+- **BUG-15 · Tolerancia de sobrepago unificada a medio centavo (0.005)**: en la RPC `registrar_pago_cliente_lote` y en el frontend (`TOLERANCIA_CENTAVOS`, cobro en lote CxC y pago en lote CxP). Antes 0.009 en RPC/UI vs 0.005 en el trigger: la app aceptaba importes que el servidor rechazaba después.
+- **BUG-17 · Cuadre al facturar proformas**: el total de cada renglón se guarda redondeado a 2 decimales y el subtotal/IVA/total de la factura se recalculan desde esos totales (antes desde `cantidad * precio_unitario`, que podía diferir por centavos y romper el timbrado).
+- **BUG-18 · Buzón de facturas**: `adjuntar_xml_factura_entrante` valida en el servidor el formato del UUID fiscal (`LC_XML_UUID_INVALIDO`) y que el total detectado sea mayor a cero (`LC_XML_TOTAL_INVALIDO`).
+- **BUG-01 (P0) · Cobertura**: pruebas Deno en `facturapi-emitir` que verifican el filtro `deleted_at IS NULL` en conceptos, el 422 `sin_conceptos` y que el cuadre de subtotal se evalúe ANTES de llamar al SAT.
+- **SQL-00 · Guardrail `audit:replay-mirror`**: eliminadas del baseline las entradas que ya no divergen (`saldo_factura`, `avanzar_estado_embarque`, `validar_cierre_embarque`, `registrar_pago_cliente_lote`, funciones de proformas) y normalizados los pies de los espejos afectados.
+
+### Ola D · UI-03 / VIS-06 — marca y avatares
+- Un solo azul corporativo: `src/pdf/theme/tokens.ts` usa el `#1B3A5D` de `--primary` y un acento de la misma familia (`#33588E`), con guardrail de arquitectura que falla si vuelve a divergir. Contraste AAA verificado.
+- Iniciales de usuario centralizadas en `getUserInitials` (`src/lib/formatters/initials.ts`), usada por sidebar y portales de cliente y agente; sin imágenes placeholder.
+
+### Ola D · Pruebas de bordes de dinero (EC-01 a EC-04)
+- Nuevas pruebas: filtro de periodo en comisiones devengadas, fail-closed de moneda en movimientos de cobro y pago (no se asume MXN ni se duplica el movimiento), escapado de `_`/`%` en búsquedas ILIKE (CRM, proveedores, CxP) y camino de error de `monedaDeCuenta` en sugerencia de candidatos de conciliación.
+
+
+
 ## [13.650.0] - 2026-08-18
 
 ### Ola C · UI-02 — un solo estado vacío reutilizable en toda la app

@@ -13,8 +13,11 @@ import { todayLocalISO } from "@/lib/date/today";
  * Tolerancia de centavos usada en las comparaciones contra SALDO (cálculo
  * flotante). Ola 11 · RNF-02: el CUADRE importe/reparto ya no usa
  * tolerancia — es exacto tras round2, igual que la RPC.
+ * BUG-15 (Ola D): 0.005 = medio centavo, idéntico a la RPC
+ * `registrar_pago_cliente_lote` y al trigger `tg_pago_factura_no_sobrepago`;
+ * antes 0.009 aquí dejaba pasar importes que el servidor rechazaba.
  */
-export const TOLERANCIA_CENTAVOS = 0.009;
+export const TOLERANCIA_CENTAVOS = 0.005;
 
 /**
  * Ola 11 · RFE-02/RNF-03: misma regla de fecha que el cobro individual

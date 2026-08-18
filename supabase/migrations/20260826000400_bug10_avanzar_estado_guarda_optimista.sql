@@ -1,6 +1,4 @@
--- Fuente canónica de public.avanzar_estado_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+-- BUG-10: SELECT con FOR UPDATE y UPDATE con WHERE estado = v_estado_actual (guarda optimista). Cierra la entrada del baseline audit-replay-mirror.
 
 CREATE OR REPLACE FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb

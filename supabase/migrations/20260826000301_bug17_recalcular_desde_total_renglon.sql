@@ -1,6 +1,4 @@
--- Fuente canónica de public.convertir_proformas_a_factura
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+-- BUG-17 (2/2): subtotal/IVA de la factura se recalculan desde el total guardado del renglón. Cierra la entrada del baseline audit-replay-mirror.
 
 CREATE OR REPLACE FUNCTION public.convertir_proformas_a_factura(p_proforma_ids uuid[], p_serie_id uuid, p_metodo_pago text, p_forma_pago text, p_uso_cfdi text, p_dias_credito integer DEFAULT NULL::integer, p_notas text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS SETOF facturas

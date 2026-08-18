@@ -1,7 +1,4 @@
--- Fuente canónica de public._convertir_proformas_insertar_conceptos (helper privado).
--- Extraído en Item 3.2 de arquitectura (v13.309.10) para des-duplicar los 4 bloques
--- de inserción de conceptos_factura desde proforma_conceptos_consolidados o conceptos_venta.
--- Ver supabase/schema/README.md.
+-- BUG-17 (1/2): el total del renglón no consolidado se guarda redondeado a 2 decimales. Cierra la entrada del baseline audit-replay-mirror.
 
 CREATE OR REPLACE FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda moneda)
  RETURNS void

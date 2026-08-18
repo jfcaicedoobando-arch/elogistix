@@ -99,7 +99,7 @@ function errorRenglonesLote(
     }
     vistos.add(r.factura_id);
     const f = facturas.find((x) => x.factura_id === r.factura_id);
-    if (f && r.monto > round2(f.saldo) + 0.009) {
+    if (f && r.monto > round2(f.saldo) + 0.005) {
       return `El importe asignado a la factura ${f.folio_proveedor ?? ""} excede su saldo.`;
     }
   }

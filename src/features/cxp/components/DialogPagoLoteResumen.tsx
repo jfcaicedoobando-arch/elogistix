@@ -18,10 +18,10 @@ interface Props {
 export function DialogPagoLoteResumen(p: Props) {
   const liquidadas = p.facturas.filter((f) => {
     const monto = p.renglones.find((r) => r.factura_id === f.factura_id)?.monto ?? 0;
-    return monto > 0 && f.saldo - monto <= 0.009;
+    return monto > 0 && f.saldo - monto <= 0.005;
   }).length;
   const conMonto = p.renglones.filter((r) => r.monto > 0).length;
-  const sobrante = p.sinAsignar > 0.009;
+  const sobrante = p.sinAsignar > 0.005;
 
   return (
     <div className="space-y-1">

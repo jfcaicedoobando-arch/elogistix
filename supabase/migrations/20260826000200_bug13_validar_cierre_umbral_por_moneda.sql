@@ -1,7 +1,5 @@
--- Fuente canónica de public.validar_cierre_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
--- v13.381.1: paso 1 incluye costos sin proveedor; paso 2 falla con buzón vacío + costos sin factura.
+-- BUG-13: cxp_pagada y cxc_cobrada evalúan el umbral 0.01 POR moneda (antes sumaban saldos multi-moneda en crudo). Espejo 1:1 actualizado en el mismo PR.
+
 CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
