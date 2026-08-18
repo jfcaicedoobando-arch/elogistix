@@ -20,6 +20,7 @@ import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
 import { factorEntreMonedas } from "@/lib/financial/convertir";
+import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
 import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 
 interface Factura {
@@ -108,7 +109,9 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
 
   const montoNum = Number(values.monto) || 0;
   const montoAplicado = convertirAMonedaFactura(montoNum, values.moneda, factura.moneda, rates);
-  const excede = montoAplicado > saldo + 0.01;
+  // BUG-15: tolerancia canónica de sobrepago (medio centavo) compartida con
+  // CobroLoteRenglon — antes aquí era 0.01 y allá 0.009.
+  const excede = montoAplicado > saldo + TOLERANCIA_SOBREPAGO;
   const tipoCambio = montoNum > 0 ? montoAplicado / montoNum : 1;
   // FE-01 / UIA-01: cross-moneda sin TC confiable (factorEntreMonedas === null,
   // p. ej. exchange-rates caído) → bloqueamos el submit en vez de dejar el
