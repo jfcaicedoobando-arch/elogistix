@@ -37,11 +37,6 @@
       "migracion_vigente": "20260725184833_cefe9d2d-98b6-47f0-ba83-0e49fc225e06.sql"
     },
     {
-      "espejo": "supabase/schema/facturacion/saldo_factura.sql",
-      "funcion": "saldo_factura",
-      "migracion_vigente": "20260729212159_b105c21b-e439-4490-a542-650535ef37ef.sql"
-    },
-    {
       "espejo": "supabase/schema/operaciones/operaciones_stats.sql",
       "funcion": "operaciones_stats",
       "migracion_vigente": "20260811090000_ola4_n10_dashboards_borrador.sql"
