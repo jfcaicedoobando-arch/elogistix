@@ -65,7 +65,12 @@ export function derivarEstadoPago(a: {
   // FE-01 / UIA-01: cross-moneda sin TC confiable (factorEntreMonedas === null,
   // p. ej. exchange-rates caído) → bloqueamos el submit en vez de dejar el
   // insert reventar contra CHECK (tipo_cambio > 0) con un 23514 crudo.
+  // EC-10: si el TC disponible es el respaldo operativo (esFallback) y el cobro
+  // requiere conversión, también bloqueamos: un REP timbrado con TC estimado es
+  // un error fiscal, no sólo de visualización.
+  const tcRespaldo = a.monedaPago !== a.monedaFactura && a.rates?.esFallback === true;
   const tcBloqueado =
+    tcRespaldo ||
     factorEntreMonedas(a.monedaPago, a.monedaFactura, {
       usd: a.rates?.usdMxn,
       eur: a.rates?.eurMxn,
@@ -78,6 +83,7 @@ export function derivarEstadoPago(a: {
     tipoCambio,
     excede,
     tcBloqueado,
+    tcRespaldo,
     errorFecha,
     invalido: montoNum <= 0 || excede || tcBloqueado || errorFecha !== null,
   };
