@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.661.0] - 2026-08-18
+
+### UI-06 — Encabezados de sección canónicos (`SectionHeading`)
+- 26 archivos del ERP migraron sus títulos de bloque (`text-sm/base/lg font-semibold` a mano) a `<SectionHeading>` con la variante correcta (`section`, `subsection`, `overline`), conservando iconos, contadores y acciones: CxP (8), Tesorería (4), embarques (3), proveedor (3), anticipos, cartera, admin/usuarios, refacturación, notificaciones y auditoría.
+- Los primitivos `FormDialogSection` y `DocumentoSectionTitle` ahora delegan en `SectionHeading`, así que decenas de pantallas heredan la misma escala sin tocarlas.
+- Nuevo guardrail `src/__tests__/architecture/section-heading-canonical.test.ts`: falla si un `<h2>/<h3>/<h4>` vuelve a llevar `font-semibold` por `className`. Excluye el sitio público (`features/marketing`, `features/legal`) y declara 4 encabezados de estado (vacío, error, elección de organización) como deuda que sólo puede decrecer.
+
+
+
 ## [13.660.0] - 2026-08-18
 
 ### PERF — Ejecución del plan de rendimiento (hallazgos #1 a #4)
