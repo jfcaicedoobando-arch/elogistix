@@ -1,12 +1,16 @@
 /**
  * Tokens visuales para documentos @react-pdf/renderer.
- * Paleta corporativa (primary #0F4C81) y tipografías built-in (0 KB extra).
+ * Paleta corporativa alineada con la app y tipografías built-in (0 KB extra).
+ *
+ * Fuente de verdad: src/index.css
+ *   primary ≈ hsl(216 47% 20%) → #1B2E4B  (--primary)
+ *   accent  ≈ hsl(221 83% 53%) → #2463EB  (--accent, modo claro)
  */
 
 export const COLORS = {
-  primary: "#0F4C81",
+  primary: "#1B2E4B",
   primaryFg: "#FFFFFF",
-  accent: "#2563EB",
+  accent: "#2463EB",
   ink: "#1A1A2E",
   muted: "#475569",
   mutedLight: "#94A3B8",
@@ -24,7 +28,7 @@ export const COLORS = {
   infoBg: "#DBEAFE",
   infoFg: "#1E3A8A",
   // legacy alias para compatibilidad con código existente
-  primaryDark: "#0F4C81",
+  primaryDark: "#1B2E4B",
 } as const;
 
 /** Fuentes built-in (sin Font.register: 0 KB de fonts adicionales). */
