@@ -2,8 +2,7 @@
  * Helpers puros para `GrupoCostosProveedor` (extraídos para respetar el
  * límite de 200 líneas por archivo — Power of 10).
  */
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { formatFechaDia } from "@/lib/formatters";
 import type {
   FilaReconciliacion,
   FacturaVinculada,

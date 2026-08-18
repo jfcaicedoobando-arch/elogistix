@@ -12,6 +12,7 @@ import { useMutation } from "@tanstack/react-query";
 import { fetchExchangeRates } from "@/features/catalogos/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { todayLocalISO } from "@/lib/date/today";
+import { formatFechaDia } from "@/lib/formatters";
 
 export type MonedaTc = "USD" | "EUR";
 
