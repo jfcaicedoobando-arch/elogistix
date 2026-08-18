@@ -13,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useEtapasPipeline } from "@/features/crm/hooks";
@@ -34,6 +35,10 @@ export default function CriteriosEtapaEditor() {
 
   const [nombre, setNombre] = useState("");
   const [obligatorio, setObligatorio] = useState(true);
+  // UX-13: el borrado pide confirmación y queda deshabilitado durante la mutación.
+  const [criterioAEliminar, setCriterioAEliminar] = useState<{ id: string; nombre: string } | null>(
+    null,
+  );
 
   const handleAgregar = async () => {
     if (!nombre.trim() || !etapaSel) {
@@ -99,7 +104,8 @@ export default function CriteriosEtapaEditor() {
               size="icon"
               variant="ghost"
               aria-label={`Eliminar criterio ${c.nombre}`}
-              onClick={() => eliminar.mutate(c.id)}
+              disabled={eliminar.isPending}
+              onClick={() => setCriterioAEliminar({ id: c.id, nombre: c.nombre })}
             >
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
@@ -129,6 +135,32 @@ export default function CriteriosEtapaEditor() {
           <Plus className="h-4 w-4 mr-1" /> Agregar
         </Button>
       </div>
+
+      <ConfirmActionDialog
+        open={!!criterioAEliminar}
+        onOpenChange={(open) => {
+          if (!open) setCriterioAEliminar(null);
+        }}
+        title="Eliminar criterio"
+        description={
+          <>
+            Se eliminará el criterio <strong>{criterioAEliminar?.nombre}</strong> de la etapa. Las
+            oportunidades dejarán de exigirlo para avanzar.
+          </>
+        }
+        confirmLabel="Eliminar"
+        variant="destructive"
+        isPending={eliminar.isPending}
+        onConfirm={async () => {
+          if (!criterioAEliminar) return;
+          try {
+            await eliminar.mutateAsync(criterioAEliminar.id);
+            setCriterioAEliminar(null);
+          } catch {
+            // El onError del hook ya notifica; el diálogo queda abierto para reintentar.
+          }
+        }}
+      />
     </div>
   );
 }

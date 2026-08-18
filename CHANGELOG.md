@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.654.1] - 2026-08-18
+
+### FE-13 / UX-13 — Doble-submit en CRM
+- `ActividadTimeline`: "Marcar completada" se deshabilita mientras corre la mutación (antes un doble clic la disparaba dos veces).
+- `CriteriosEtapaEditor`: eliminar un criterio ahora pasa por `ConfirmActionDialog` (destructivo) y el botón se bloquea durante la mutación.
+
 ## [13.654.0] - 2026-08-18
 
 ### FE-14 / FE-16 — Redondeo canónico de dinero (centavos alineados con la base de datos)

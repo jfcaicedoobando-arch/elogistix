@@ -91,6 +91,8 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
                       size="sm"
                       variant="ghost"
                       className="h-6 px-2 text-2xs"
+                      // UX-13: sin disabled, doble clic disparaba la mutación dos veces.
+                      disabled={completar.isPending}
                       onClick={() => completar.mutateAsync({ id: a.id })}
                     >
                       <Check className="h-3 w-3 mr-1" /> Marcar completada
