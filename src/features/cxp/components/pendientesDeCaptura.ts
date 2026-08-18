@@ -8,7 +8,7 @@
  * el importe no cuadra con lo que declaró operaciones y no hay costos vinculados.
  */
 import type { FacturaFormValues } from "@/features/cxp/types";
-import { cotejarMontoDeclarado } from "@/lib/domain/montoDeclarado";
+import { cotejarMontoDeclarado } from "@/features/cxp/domain/montoDeclarado";
 
 export interface PendientesCapturaArgs {
   values: FacturaFormValues;

@@ -9,7 +9,7 @@ import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from 
 import { GrupoConceptosContenedor } from "./GrupoConceptosContenedor";
 import { ResumenConceptosVentaTotales } from "./ResumenConceptosVentaTotales";
 import { EstadoConceptoBadge, type EstadoConcepto } from "./estadoConceptoBadge";
-import { agruparPorContenedor } from "@/lib/domain/conceptosPorContenedor";
+import { agruparPorContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";

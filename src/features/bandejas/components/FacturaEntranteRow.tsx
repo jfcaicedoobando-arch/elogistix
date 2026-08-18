@@ -20,7 +20,7 @@ import {
   antiguedadEntrante,
   entranteSinXml,
   type TonoAntiguedad,
-} from "@/lib/domain/facturasEntrantesBuzon";
+} from "@/features/bandejas/domain/facturasEntrantesBuzon";
 import type { FacturaEntranteRow as Fila } from "@/features/cxp/services";
 
 const BARRA_TONO: Record<TonoAntiguedad, string> = {

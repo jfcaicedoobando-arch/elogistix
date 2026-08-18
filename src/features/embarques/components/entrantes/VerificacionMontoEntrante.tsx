@@ -22,7 +22,7 @@ import { MONEDAS_ENTRANTE } from "@/features/embarques/components/entrantes/mone
 import {
   cotejarMontoFacturado,
   montoDifiereDelCfdi,
-} from "@/lib/domain/montoEntranteCotejo";
+} from "@/features/embarques/domain/montoEntranteCotejo";
 
 
 interface Props {

@@ -17,7 +17,7 @@ import {
   ORDENES_BUZON,
   type ChipBuzon,
   type OrdenBuzon,
-} from "@/lib/domain/facturasEntrantesBuzon";
+} from "@/features/bandejas/domain/facturasEntrantesBuzon";
 
 interface Props {
   q: string;

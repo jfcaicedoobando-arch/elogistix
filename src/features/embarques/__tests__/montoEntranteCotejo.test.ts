@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   cotejarMontoFacturado,
   montoDifiereDelCfdi,
-} from "@/lib/domain/montoEntranteCotejo";
+} from "@/features/embarques/domain/montoEntranteCotejo";
 
 describe("cotejarMontoFacturado", () => {
   it("sin monto o sin costos devuelve sin_datos", () => {

@@ -16,7 +16,7 @@ import {
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { esBorradorVacio, esBorradorSinConceptos } from "@/features/embarques/components/facturacion/esBorradorVacio";
 import { calcularEstadosConceptos } from "@/features/embarques/components/facturacion/estadoConceptoBadge";
-import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
+import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<"embarques">;

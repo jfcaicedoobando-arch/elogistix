@@ -2,7 +2,7 @@
  * v13.507.0 — Cotejo entre lo que declaró operaciones y lo capturado.
  */
 import { describe, it, expect } from "vitest";
-import { cotejarMontoDeclarado } from "@/lib/domain/montoDeclarado";
+import { cotejarMontoDeclarado } from "@/features/cxp/domain/montoDeclarado";
 
 describe("cotejarMontoDeclarado", () => {
   it("sin datos cuando no hay monto declarado", () => {

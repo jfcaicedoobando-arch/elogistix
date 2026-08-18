@@ -6,7 +6,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
+import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 
 interface Props {
