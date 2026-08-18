@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.647.0] - 2026-08-18
+
+### Auditoría v1 — Ola B (UX)
+- UX-02: la ruta canónica de Cobranza es `/cobranza`; `/cartera` redirige conservando filtros y el menú ya no mezcla los nombres "Cartera" y "Cobranza".
+- UX-03: migas de pan con nombres de negocio (Cobranza, Por capturar, Notas de crédito, Antigüedad, Buzón de facturas, Refacturación).
+- UX-06: cancelar una nota de crédito de proveedor ahora pide confirmación explícita antes de mover el saldo.
+- UX-08: los botones de icono de notas de crédito (aprobar, aplicar, cancelar, XML, PDF) llevan `aria-label`.
+
 ## [13.646.0] - 2026-08-18
 
 ### Auditoría v1 — Etapas 1 a 4 (P0/P1 financieros)
