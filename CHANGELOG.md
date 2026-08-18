@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.658.0] - 2026-08-18
+
+### EC-10 (cierre) — Aviso de T/C de respaldo en las pantallas pendientes
+- Tesorería: el badge deja de decir "TC DOF" cuando el valor es el respaldo; ahora muestra "T/C estimado · no oficial" en tono de advertencia, más `TipoCambioFallbackBanner`.
+- Bandejas · Cartera: los equivalentes en MXN se marcan "(T/C estimado)" con tooltip y la pantalla muestra el banner.
+- Detalle de proveedor: aviso cuando los totales multi-moneda se convierten con T/C de respaldo.
+- Compras · Reportes: banner en la página y nota de que el orden del Top 10 es estimado cuando hay partidas en USD.
+- Dashboard Ejecutivo: ya contaba con alerta visible propia (`tcEsFallback`); sin cambios.
+- Nueva suite `ec10-tc-respaldo-avisos.test.tsx` (7 pruebas): el aviso aparece con `esFallback` y desaparece con T/C oficial.
+
 ## [13.657.0] - 2026-08-18
 
 ### EC-10 — El tipo de cambio de respaldo ya no se usa como oficial
