@@ -9,6 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import type { TarifaRecargoInput } from "@/features/costeo/services/tarifas";
 
 const CONCEPTOS = ["BAF", "LSS", "ISPS", "THC Origen", "Cargos en Origen", "Cargos en Destino", "Otro"];
@@ -39,9 +40,7 @@ export function TarifaRecargosEditor({ value, onChange }: Props) {
       </div>
 
       {value.length === 0 && (
-        <p className="text-xs text-muted-foreground italic">
-          Sin recargos. Sólo se cobrará el flete base.
-        </p>
+        <EmptyStateInline message="Sin recargos. Sólo se cobrará el flete base." className="py-3" />
       )}
 
       {value.map((r, i) => (

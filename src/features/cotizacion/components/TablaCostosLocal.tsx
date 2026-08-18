@@ -6,6 +6,7 @@ import { ProfitBadge } from "@/components/shared/ProfitBadge";
 import type { FilaCostoLocal } from "./SeccionCostosInternosPLUnificado";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
 import { FilaCostoLocalRow } from "./costosLocal/FilaCostoLocalRow";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 function getGlobalIndex(filas: { moneda: string }[], moneda: string, localIdx: number) {
   let count = 0;
@@ -44,9 +45,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
       <CardContent>
         <div className="border rounded-md overflow-x-auto">
           {filasMoneda.length === 0 && (
-            <div className="text-center text-muted-foreground py-6 text-sm">
-              Sin costos. Haz clic en "Agregar" para comenzar.
-            </div>
+            <EmptyStateInline message='Sin costos. Haz clic en "Agregar" para comenzar.' className="py-6" />
           )}
           {filasMoneda.map((fila, idx) => (
             <FilaCostoLocalRow

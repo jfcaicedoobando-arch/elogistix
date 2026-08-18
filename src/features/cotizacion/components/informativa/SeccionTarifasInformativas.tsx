@@ -5,7 +5,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Tags } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { MODOS } from "@/constants/wizardConstants";
 import {
   MODALIDADES_EQUIPO_TERRESTRE,
@@ -112,8 +113,8 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
           );
         })}
         {tarifas.length === 0 && (
-          <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded">
-            No hay tarifas. Agrega al menos una.
+          <div className="border border-dashed rounded">
+            <EmptyStateInline icon={Tags} message="No hay tarifas. Agrega al menos una." className="py-4" />
           </div>
         )}
       </div>

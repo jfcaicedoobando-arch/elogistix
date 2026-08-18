@@ -1,4 +1,5 @@
 import { Bell, Check } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,9 +69,7 @@ export function NotificacionesPopover() {
         </div>
         <div className="max-h-96 overflow-y-auto">
           {notificaciones.length === 0 ? (
-            <div className="px-3 py-8 text-center text-xs text-muted-foreground">
-              Sin notificaciones
-            </div>
+            <EmptyStateInline icon={Bell} message="Sin notificaciones" className="py-8" />
           ) : (
             <ul className="divide-y">
               {notificaciones.map((n) => (

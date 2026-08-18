@@ -18,6 +18,8 @@ import { NuevaTarifaDemoraDialog } from "@/features/costeo/components/NuevaTarif
 import { todayLocalISO } from "@/lib/date/today";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { crearColumnasDemorasVenta } from "./CosteoDemorasVentaColumns";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Timer } from "lucide-react";
 import { validarTramoDias, validarSinSolape } from "./costeoDemorasVentaValidacion";
 
 const today = () => todayLocalISO();
@@ -84,9 +86,7 @@ export default function CosteoDemorasVenta() {
             data={tarifas}
             rowKey={(t) => t.id}
             emptyState={
-              <div className="p-6 text-center text-muted-foreground">
-                Sin tarifas. Crea la primera.
-              </div>
+              <EmptyStateInline icon={Timer} message="Sin tarifas. Crea la primera." className="py-6" />
             }
           />
         </Card>
