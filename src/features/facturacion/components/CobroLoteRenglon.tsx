@@ -44,7 +44,8 @@ function ChipVencimiento({ iso }: { iso: string | null }) {
 
 export function CobroLoteRenglon(p: Props) {
   const queda = Math.max(0, Math.round((p.factura.saldo - p.monto) * 100) / 100);
-  const liquidada = p.monto > 0 && queda <= 0.005;
+  // BUG-15: tolerancia canónica (medio centavo), igual que DialogRegistrarPago.
+  const liquidada = p.monto > 0 && queda <= TOLERANCIA_SOBREPAGO;
   const parcial = p.monto > 0 && !liquidada;
 
   return (
