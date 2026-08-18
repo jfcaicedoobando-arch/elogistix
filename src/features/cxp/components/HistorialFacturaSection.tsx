@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { DocumentoRailCard } from "@/components/shared/documento/DocumentoRailCard";
 import { cn } from "@/lib/utils";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
 import { getErrorMessage } from "@/lib/errors";
@@ -123,9 +124,7 @@ export function HistorialFacturaSection({ facturaId }: Props) {
           </Button>
         </div>
       ) : eventos.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">
-          Sin eventos registrados aún.
-        </p>
+        <EmptyStateInline icon={Circle} message="Sin eventos registrados aún." className="py-4" />
       ) : (
         <>
           {isFetching && (

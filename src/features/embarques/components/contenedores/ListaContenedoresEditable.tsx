@@ -12,6 +12,8 @@ import {
   type ContenedorBorrador,
 } from "@/features/embarques/types/contenedor";
 import { FilaContenedor } from "./FilaContenedor";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { PackageOpen } from "lucide-react";
 
 const SOFT_CAP = 50;
 
@@ -62,8 +64,12 @@ export function ListaContenedoresEditable({
   return (
     <div className="space-y-3">
       {value.length === 0 ? (
-        <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Sin contenedores. Agrega el primero para continuar.
+        <div className="rounded-md border border-dashed border-border">
+          <EmptyStateInline
+            icon={PackageOpen}
+            message="Sin contenedores. Agrega el primero para continuar."
+            className="py-6"
+          />
         </div>
       ) : (
         value.map((row, idx) => (

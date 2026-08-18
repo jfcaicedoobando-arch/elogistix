@@ -13,6 +13,7 @@ import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { formatNumber } from "@/lib/formatters";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { PackageOpen } from "lucide-react";
 
 interface Props {
   embarqueId: string;
@@ -79,8 +80,12 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
             Error al cargar: {getErrorMessage(error)}
           </p>
         ) : lista.length === 0 ? (
-          <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            Aún no hay contenedores capturados para este embarque.
+          <div className="rounded-md border border-dashed border-border">
+            <EmptyStateInline
+              icon={PackageOpen}
+              message="Aún no hay contenedores capturados para este embarque."
+              className="py-6"
+            />
           </div>
         ) : (
           <div className="space-y-3">

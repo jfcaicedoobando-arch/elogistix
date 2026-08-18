@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight, PartyPopper, Receipt } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { AgingBuckets } from "@/features/dashboard/finance/hooks/useFinanceDashboard";
@@ -52,9 +53,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0
         {loading ? (
           <Skeleton className="h-20 w-full" />
         ) : totalAging === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Sin saldo vencido 🎉
-          </p>
+          <EmptyStateInline icon={PartyPopper} message="Sin saldo vencido 🎉" className="py-4" />
         ) : (
           <div className="grid grid-cols-5 gap-2">
             {AGING_LABELS.map(({ key, label, tone }) => {
@@ -93,9 +92,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0
           {loading ? (
             <ListSkeleton rows={4} />
           ) : facturasVencidas.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              Sin facturas vencidas
-            </p>
+            <EmptyStateInline icon={Receipt} message="Sin facturas vencidas" className="py-4" />
           ) : (
             <ul className="divide-y rounded-md border">
               {facturasVencidas.map((f) => (

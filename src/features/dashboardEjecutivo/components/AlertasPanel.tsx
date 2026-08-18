@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { AlertCircle, AlertTriangle, Info, ShieldCheck } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { AlertaEjecutiva, SeveridadAlerta } from "@/features/dashboardEjecutivo/services";
 
@@ -28,7 +29,7 @@ export function AlertasPanel({ alertas }: Props) {
       </CardHeader>
       <CardContent>
         {alertas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin alertas activas.</p>
+          <EmptyStateInline icon={ShieldCheck} message="Sin alertas activas." className="py-4" />
         ) : (
           <ul className="space-y-3">
             {alertas.map((a) => {

@@ -15,6 +15,8 @@ import { useCuentasBancarias } from "@/features/tesoreria";
 import { BitacoraTesoreriaFila } from "./BitacoraTesoreriaSection.fila";
 import { BitacoraTesoreriaToolbar } from "./BitacoraTesoreriaToolbar";
 import { BitacoraTesoreriaExportButtons } from "./BitacoraTesoreriaExportButtons";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Landmark, FilterX } from "lucide-react";
 import { filasBitacoraExport } from "@/features/cxp/services/bitacoraTesoreriaExport";
 import {
   FILTROS_BITACORA_TESORERIA_INICIALES,
@@ -108,13 +110,21 @@ export function BitacoraTesoreriaSection({
       )}
 
       {entradas.length === 0 ? (
-        <p className="text-xs text-muted-foreground rounded-md border border-dashed px-3 py-4 text-center">
-          Aún no hay movimientos de tesorería para esta factura.
-        </p>
+        <div className="rounded-md border border-dashed">
+          <EmptyStateInline
+            icon={Landmark}
+            message="Aún no hay movimientos de tesorería para esta factura."
+            className="py-4"
+          />
+        </div>
       ) : vacioPorFiltros ? (
-        <p className="text-xs text-muted-foreground rounded-md border border-dashed px-3 py-4 text-center">
-          Ningún movimiento coincide con los filtros seleccionados.
-        </p>
+        <div className="rounded-md border border-dashed">
+          <EmptyStateInline
+            icon={FilterX}
+            message="Ningún movimiento coincide con los filtros seleccionados."
+            className="py-4"
+          />
+        </div>
       ) : (
         <ul className="divide-y rounded-md border">
           {visibles.map((e) => (

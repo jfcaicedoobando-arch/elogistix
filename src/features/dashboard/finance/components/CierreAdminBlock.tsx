@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, FileWarning } from "lucide-react";
+import { ArrowRight, FileWarning, PartyPopper } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { EmbarquesPendientesAdminCard } from "@/features/dashboard/components/EmbarquesPendientesAdminCard";
 
@@ -34,9 +35,7 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
           {loading ? (
             <Skeleton className="h-24 w-full" />
           ) : huecoTotal === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">
-              Sin huecos de facturación 🎉
-            </p>
+            <EmptyStateInline icon={PartyPopper} message="Sin huecos de facturación 🎉" className="py-6" />
           ) : (
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-2 text-center">
