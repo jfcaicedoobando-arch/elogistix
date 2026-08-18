@@ -11,7 +11,8 @@ describe("formatFechaSegura", () => {
   });
 
   it("acepta objetos Date", () => {
-    expect(formatFechaSegura(new Date("2026-01-02T03:04:05Z"), "dd/MM/yyyy")).toBe("02/01/2026");
+    // Mediodía UTC: mismo día calendario en cualquier zona de trabajo.
+    expect(formatFechaSegura(new Date("2026-01-02T12:00:00Z"), "dd/MM/yyyy")).toBe("02/01/2026");
   });
 
   it("devuelve el fallback con valores nulos o vacíos", () => {
