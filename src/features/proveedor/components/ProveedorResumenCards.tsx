@@ -76,6 +76,11 @@ export function ProveedorResumenCards({
 
       {(variasMonedas || monedasSinTc.length > 0) && (
         <div className="text-xs text-muted-foreground">
+          {tcEstimado && (
+            <span className="text-warning">
+              Equivalente calculado con T/C estimado (no oficial) ·{" "}
+            </span>
+          )}
           {variasMonedas && (
             <span>
               Desglose nativo:{" "}
