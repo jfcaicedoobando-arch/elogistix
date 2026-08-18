@@ -12,6 +12,10 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTabsParam } from "@/hooks/shared/useTabsParam";
+
+/** Pestañas válidas del buzón (UX-04). */
+const BUZON_TABS = ["pendientes", "capturadas", "rechazadas"] as const;
 import { notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { type ChipBuzon } from "@/lib/domain/facturasEntrantesBuzon";
@@ -37,7 +41,8 @@ export default function CxpBuzonEntrantes() {
   const rechazar = useRechazarFacturaEntrante();
   const capturar = useCapturarFacturaEntrante();
   const reactivar = useReactivarFacturaEntrante();
-  const [tab, setTab] = useState("pendientes");
+  // UX-04: pestaña persistida en ?tab=.
+  const { activeTab: tab, setActiveTab: setTab } = useTabsParam(BUZON_TABS, "pendientes");
   const capturadas = useFacturasEntrantesPorEstado("capturada", tab === "capturadas");
   const rechazadas = useFacturasEntrantesPorEstado("rechazada", tab === "rechazadas");
 

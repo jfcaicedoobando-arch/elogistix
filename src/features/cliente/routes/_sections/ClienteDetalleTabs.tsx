@@ -15,9 +15,16 @@ import { ClienteDocumentosTab } from "@/features/cliente/components/ClienteDocum
 import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
 import { ClienteCreditoCard } from "@/features/cliente/components/detalle/ClienteCreditoCard";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useTabsParam } from "@/hooks/shared/useTabsParam";
 import type { EmbarqueCliente, CotizacionCliente } from "@/features/cliente/components/clienteColumns";
 import type { ContactoCliente } from "@/features/cliente/types/cliente";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+
+/** Pestañas válidas del detalle de cliente (UX-04: persistidas en ?tab=). */
+const CLIENTE_TABS = [
+  "informacion", "embarques", "cotizaciones", "estado_cuenta",
+  "documentos", "crm", "portal",
+] as const;
 
 /** Sólo los campos del cliente que consumen las pestañas (evita acoplarse a la fila completa). */
 interface ClienteTabsData {
@@ -63,8 +70,10 @@ export function ClienteDetalleTabs({
   startDelete,
 }: Props) {
   const { canEditExpediente } = usePermissions();
+  // UX-04: la pestaña vive en la URL (?tab=) para que sobreviva a recargas y deep-links.
+  const { activeTab, setActiveTab } = useTabsParam(CLIENTE_TABS, "informacion");
   return (
-    <Tabs defaultValue="informacion">
+    <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList>
         <TabsTrigger value="informacion">Información</TabsTrigger>
         <TabsTrigger value="embarques">

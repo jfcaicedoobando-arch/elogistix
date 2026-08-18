@@ -10,18 +10,24 @@ import { AuditoriaPorReglaTab } from "@/features/auditoria/components/AuditoriaP
 import { useAuditoriaPageController } from "@/features/auditoria/hooks";
 import { useAuditoriaEjecutivo } from "@/features/auditoria/hooks";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
+import { useTabsParam } from "@/hooks/shared/useTabsParam";
 import type { UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
 import { exportHallazgosCsv } from "@/features/auditoria/domain/csv";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
-type TabId = "ejecutivo" | "tabla" | "por_regla";
+const AUDITORIA_TABS = ["ejecutivo", "tabla", "por_regla"] as const;
+type TabId = (typeof AUDITORIA_TABS)[number];
 
 export default function Auditoria() {
   useDocumentTitle("Auditoría operativa");
   const c = useAuditoriaPageController();
   const ejecutivo = useAuditoriaEjecutivo();
   const { isAdmin } = usePermissions();
-  const [tab, setTab] = useState<TabId>(isAdmin ? "ejecutivo" : "tabla");
+  // UX-04: pestaña persistida en ?tab= (sobrevive recargas y deep-links).
+  const { activeTab: tab, setActiveTab: setTab } = useTabsParam<TabId>(
+    AUDITORIA_TABS,
+    isAdmin ? "ejecutivo" : "tabla",
+  );
   const [drillFilters, setDrillFilters] = useState<UseHallazgosTablaStateOptions>({});
   const [tablaKey, setTablaKey] = useState(0);
 
@@ -45,7 +51,7 @@ export default function Auditoria() {
 
   return (
     <PageContainer>
-      <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)}>
+      <Tabs value={tab} onValueChange={setTab}>
         <PageHeader
           icon={<ShieldAlert className="h-6 w-6" />}
           title="Auditoría operativa"
