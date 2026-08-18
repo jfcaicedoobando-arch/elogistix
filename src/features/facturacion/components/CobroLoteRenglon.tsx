@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
 import { diasHastaFecha } from "@/lib/date/dateOnly";
 import { cn } from "@/lib/utils";
 import type { FacturaCobroCandidata } from "@/features/facturacion/services/pagoClienteLote";
