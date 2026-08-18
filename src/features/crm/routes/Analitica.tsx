@@ -16,7 +16,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { Filter, ThumbsDown } from "lucide-react";
+import { BarChart3, Filter, ThumbsDown } from "lucide-react";
 
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
@@ -50,7 +50,7 @@ function ForecastPanel() {
                     <td className="text-right">{b.count}</td>
                   </tr>
                 ))}
-                {f.porMes.length === 0 && <tr><td colSpan={5} className="text-center text-muted-foreground py-4">Sin datos</td></tr>}
+                {f.porMes.length === 0 && <tr><td colSpan={5}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></td></tr>}
               </tbody>
             </table>
             </div>
@@ -74,7 +74,7 @@ function ForecastPanel() {
                     <td className="text-right">{b.count}</td>
                   </tr>
                 ))}
-                {f.porVendedor.length === 0 && <tr><td colSpan={5} className="text-center text-muted-foreground py-4">Sin datos</td></tr>}
+                {f.porVendedor.length === 0 && <tr><td colSpan={5}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></td></tr>}
               </tbody>
             </table>
             </div>
@@ -119,7 +119,7 @@ function EmbudoYPerdidas() {
                   <td className="text-right tabular-nums">{f.tasa.toFixed(1)}%</td>
                 </tr>
               ))}
-              {r.porFuente.length === 0 && <tr><td colSpan={4} className="text-center text-muted-foreground py-2">Sin datos</td></tr>}
+              {r.porFuente.length === 0 && <tr><td colSpan={4}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></td></tr>}
             </tbody>
           </table>
           </div>

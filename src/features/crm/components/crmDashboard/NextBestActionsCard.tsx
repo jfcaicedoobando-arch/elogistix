@@ -1,6 +1,7 @@
 import { ArrowRight, Sparkles, UserPlus, Target, AlarmClock, ClipboardList, ListChecks } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import type { NbaIcono, NbaItem } from "@/features/crm/domain/nextBestActions";
 
 const ICONS: Record<NbaIcono, typeof UserPlus> = {
@@ -28,9 +29,7 @@ export function NextBestActionsCard({ items, isLoading }: Props) {
         {isLoading ? (
           <p className="text-sm text-muted-foreground py-3">Calculando…</p>
         ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Todo al día. No hay acciones urgentes ahora.
-          </p>
+          <EmptyStateInline icon={Target} message="Todo al día. No hay acciones urgentes ahora." />
         ) : (
           <ul className="divide-y">
             {items.map((it) => {

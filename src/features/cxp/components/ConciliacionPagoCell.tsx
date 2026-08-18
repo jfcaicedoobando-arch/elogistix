@@ -5,7 +5,8 @@
  *
  * v13.190.0 · Ola 2 · Item 3
  */
-import { CheckCircle2, Link2, Link2Off, Loader2 } from "lucide-react";
+import { ArrowLeftRight, CheckCircle2, Link2, Link2Off, Loader2 } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -87,13 +88,13 @@ export function ConciliacionPagoCell({
         </div>
         <div className="max-h-72 overflow-y-auto">
           {candidatos.isLoading ? (
-            <div className="p-4 text-center text-xs text-muted-foreground">
-              <Loader2 className="h-4 w-4 mx-auto animate-spin mb-1" /> Buscando…
-            </div>
+            <EmptyStateInline loading message="Buscando…" density="compact" />
           ) : (candidatos.data ?? []).length === 0 ? (
-            <p className="p-4 text-center text-xs text-muted-foreground">
-              No hay movimientos que coincidan.
-            </p>
+            <EmptyStateInline
+              icon={ArrowLeftRight}
+              message="No hay movimientos que coincidan."
+              density="compact"
+            />
           ) : (
             <ul className="divide-y">
               {(candidatos.data ?? []).map((m) => (

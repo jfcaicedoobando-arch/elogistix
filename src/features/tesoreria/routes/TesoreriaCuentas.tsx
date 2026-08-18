@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { useTesoreriaCuentasController } from "@/features/tesoreria/hooks/useTesoreriaCuentasController";
 import { useSaldosCuentas } from "@/features/tesoreria/hooks/useTesoreriaCuentas";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -66,8 +67,13 @@ export default function TesoreriaCuentas() {
           {null}
         </AsyncBoundary>
       ) : cuentas.length === 0 ? (
-        <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">
-          {canAdminCuentasBancarias ? "Aún no hay cuentas. Crea la primera." : "Aún no hay cuentas registradas."}
+        <Card><CardContent className="p-6">
+          <EmptyStateInline
+            icon={Landmark}
+            message={canAdminCuentasBancarias ? "Aún no hay cuentas." : "Aún no hay cuentas registradas."}
+            hint={canAdminCuentasBancarias ? "Crea la primera cuenta bancaria para comenzar la conciliación." : undefined}
+            action={canAdminCuentasBancarias ? { label: "Nueva cuenta", onClick: () => setOpen(true) } : undefined}
+          />
         </CardContent></Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
