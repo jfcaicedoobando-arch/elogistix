@@ -1,47 +1,22 @@
 /**
  * Lógica de negocio de `facturapi-emitir` extraída para que `index.ts` cumpla
  * con el límite de líneas y funciones. No contiene routing ni HTTP.
+ * La carga del contexto fiscal vive en `contexto.ts`.
  */
 import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError, type FacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
-  FACTURAPI_BASE, buildFacturapiPayload, validateContext,
+  FACTURAPI_BASE, buildFacturapiPayload,
   type FacturaContext,
 } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
+import type { Claim, FacturaRow, UserIdentity } from "./types.ts";
 
-export interface FacturaRow {
-  id: string;
-  numero?: string | null;
-  serie?: string | null;
-  estado?: string | null;
-  moneda?: string | null;
-  tipo_cambio?: number | string | null;
-  uso_cfdi?: string | null;
-  forma_pago?: string | null;
-  metodo_pago?: string | null;
-  cliente_id: string;
-  rfc_cliente?: string | null;
-  organization_id: string;
-  facturapi_id?: string | null;
-  sustituye_a?: string | null;
-  embarque_id?: string | null;
-  expediente?: string | null;
-  referencia_bl?: string | null;
-  subtotal?: number | string | null;
-  total?: number | string | null;
-}
+export type { Claim, FacturaRow } from "./types.ts";
+export { cargarContexto } from "./contexto.ts";
 
-interface ClienteRow { id: string; nombre: string; rfc?: string | null; codigo_postal?: string | null; regimen_fiscal?: string | null; uso_cfdi_default?: string | null }
-interface ConceptoRow {
-  descripcion: string; cantidad: number | string; precio_unitario: number | string;
-  clave_sat?: string | null; clave_unidad?: string | null; tipo_iva?: string | null;
-  tasa_iva_aplicada?: number | string | null; tasa_ret_isr?: number | string | null; tasa_ret_iva?: number | string | null;
-}
-interface UserIdentity { id: string; email?: string | null }
-export interface Claim { claimTag: string; claimAt: string; release: () => Promise<void> }
 interface EmitirInput { supabase: SupabaseClient; facturapi: FacturapiClient; apiKey: string; ambiente: string; ctx: FacturaContext; factura: FacturaRow; facturaId: string; user: UserIdentity; claim: Claim }
 
 export async function loadFactura(supabase: SupabaseClient, facturaId: string): Promise<FacturaRow | Response> {
