@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_envio_sin_oportunidad() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._cotizaciones_bloquear_envio_sin_oportunidad() TO service_role;
