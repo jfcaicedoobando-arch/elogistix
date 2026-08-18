@@ -9,6 +9,7 @@ import { useMemo, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { useDocumentTitle } from "@/hooks/shared";
 import { DataTable } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
@@ -30,6 +31,7 @@ import { LibroPagosKpis } from "./_sections/LibroPagosKpis";
 import { LibroPagosExportButtons } from "./_sections/LibroPagosExportButtons";
 
 export default function TesoreriaPagos() {
+  useDocumentTitle("Tesorería · Pagos");
   const { data: cuentasRaw = [] } = useCuentasBancarias();
   const [rango, setRango] = useState<RangoPagos>(() => rangoMesPagos());
   const [filtros, setFiltros] = useState<FiltrosLibroPagos>(FILTROS_LIBRO_PAGOS_INICIALES);

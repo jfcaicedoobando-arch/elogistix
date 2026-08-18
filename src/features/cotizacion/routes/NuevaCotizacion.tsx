@@ -20,6 +20,7 @@ import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard
 import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
 import { PlantillaSelectorPaso1 } from "@/features/cotizacion/components/wizard/PlantillaSelectorPaso1";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 
 
@@ -123,13 +124,14 @@ export default function NuevaCotizacion() {
   return (
     <>
       {banderaBorrador && draftDetectado && (
-        <div className="max-w-6xl mx-auto pt-4">
+        <PageContainer noSpacing className="max-w-6xl pt-4">
+          {/* UI-08: wrapper estándar PageContainer (antes div ad-hoc max-w-6xl). */}
           <DraftRestoreBanner
             savedAt={draftDetectado.savedAt}
             onRestore={handleRestore}
             onDiscard={handleDiscard}
           />
-        </div>
+        </PageContainer>
       )}
 
       {/* P2 (v13.295.0) — Empezar desde plantilla (sólo paso 1, sin cotización guardada). */}

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.655.0] - 2026-08-18
+
+### Pulido UI/UX (UI-07, UI-08, UX-15, UX-16)
+- UI-07: `HomeRoute` y `Onboarding` muestran `PageSkeleton` en vez de un spinner `Loader2` a pantalla completa.
+- UI-08: el banner de restaurar borrador en Nueva Cotización usa `PageContainer` en lugar de un `div` ad-hoc (gana padding lateral responsivo en móvil).
+- UX-15: título de pestaña con `useDocumentTitle` en Cartera, Reportes y Tesorería · Pagos.
+- UX-16: en Configuración > Navieras el botón "Agregar" se deshabilita si falta Código o Nombre (antes el clic no hacía nada y sin aviso).
+
 ## [13.654.1] - 2026-08-18
 
 ### FE-13 / UX-13 — Doble-submit en CRM

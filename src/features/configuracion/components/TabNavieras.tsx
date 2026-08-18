@@ -84,7 +84,13 @@ export default function TabNavieras() {
             <Label>Nombre</Label>
             <Input className="w-64" placeholder="Maersk Line" value={nuevoName} onChange={(e) => setNuevoName(e.target.value)} />
           </div>
-          <Button size="sm" onClick={handleAgregar} disabled={agregarNaviera.isPending}>
+          {/* UX-16: sin campos completos el submit fallaba en silencio (early
+              return de handleAgregar); ahora el botón se deshabilita. */}
+          <Button
+            size="sm"
+            onClick={handleAgregar}
+            disabled={agregarNaviera.isPending || !nuevoCode.trim() || !nuevoName.trim()}
+          >
             <Plus className="h-4 w-4 mr-1" /> Agregar
           </Button>
         </div>

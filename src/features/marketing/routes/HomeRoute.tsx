@@ -5,19 +5,20 @@
  * `/inicio` hacia `/portal` o `/admin` respectivamente.)
  */
 import { Navigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { PageSkeleton } from "@/components/shared/skeletons/PageSkeleton";
 
 const Landing = lazy(() => import("./Landing"));
 
 export default function HomeRoute() {
   const { user, effectiveRole, loading, profileError } = useAuth();
 
+  // UI-07: skeleton en lugar de spinner de página.
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-screen items-center justify-center p-6">
+        <PageSkeleton className="w-full max-w-3xl" />
       </div>
     );
   }
@@ -34,8 +35,8 @@ export default function HomeRoute() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex h-screen items-center justify-center p-6">
+          <PageSkeleton className="w-full max-w-3xl" />
         </div>
       }
     >
