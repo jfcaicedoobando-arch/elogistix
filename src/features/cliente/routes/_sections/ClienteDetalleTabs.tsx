@@ -116,61 +116,14 @@ export function ClienteDetalleTabs({
         />
       </TabsContent>
 
-      <TabsContent value="embarques" className="mt-4">
-        <DetailTabSection title="Embarques del cliente" count={embarquesCliente.length}>
-          <DataTable
-            columns={embarqueColumns}
-            data={embarquesCliente}
-            isLoading={loadingEmbarques}
-            emptyState={
-              <div className="p-6">
-                <EmptyState
-                  icon={Ship}
-                  title="Sin embarques registrados"
-                  description="Los embarques se generan al confirmar una cotización de este cliente."
-                />
-              </div>
-            }
-            getRowHref={(e) => `/embarques/${e.id}`}
-            rowKey={(e) => e.id}
-            density={TABLE_DENSITY.embebida}
-          />
-        </DetailTabSection>
-      </TabsContent>
+      <ClienteDetalleTablasTabs
+        canEdit={canEdit}
+        embarquesCliente={embarquesCliente}
+        loadingEmbarques={loadingEmbarques}
+        cotizacionesCliente={cotizacionesCliente}
+        loadingCotizaciones={loadingCotizaciones}
+      />
 
-      <TabsContent value="cotizaciones" className="mt-4">
-        <DetailTabSection
-          title="Cotizaciones del cliente"
-          count={cotizacionesCliente.length}
-          actions={
-            canEdit ? (
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/cotizaciones/nueva">
-                  <Plus className="h-4 w-4 mr-1" /> Nueva cotización
-                </Link>
-              </Button>
-            ) : undefined
-          }
-        >
-          <DataTable
-            columns={cotizacionColumns}
-            data={cotizacionesCliente}
-            isLoading={loadingCotizaciones}
-            emptyState={
-              <div className="p-6">
-                <EmptyState
-                  icon={ClipboardList}
-                  title="Sin cotizaciones registradas"
-                  description="Cotiza una ruta para este cliente y aparecerá aquí."
-                />
-              </div>
-            }
-            getRowHref={(c) => `/cotizaciones/${c.id}`}
-            rowKey={(c) => c.id}
-            density={TABLE_DENSITY.embebida}
-          />
-        </DetailTabSection>
-      </TabsContent>
 
       {/* Homologación con proveedor: el estado de cuenta vive dentro de la ficha,
           además de conservar su ruta dedicada para impresión/compartir. */}
