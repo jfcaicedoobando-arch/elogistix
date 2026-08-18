@@ -10,5 +10,4 @@
 export {
   CartaGarantiaBadge,
   default,
-  type CartaGarantiaBadgeProps,
 } from "@/features/cotizacion/components/CartaGarantiaBadge";
