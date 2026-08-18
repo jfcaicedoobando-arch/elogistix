@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, CheckCircle2 } from "lucide-react";
+import { Plus, CheckCircle2, Receipt } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -39,7 +39,7 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
               <EmptyStateInline loading message="Cargando…" />
             </div>
           ) : liquidaciones.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground text-center">Sin liquidaciones registradas.</p>
+            <EmptyStateInline icon={Receipt} message="Sin liquidaciones registradas." />
           ) : (
             <div className="overflow-x-auto">
             <table className="w-full text-sm">

@@ -1,6 +1,7 @@
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { ArrowDownCircle, FileMinus2 } from "lucide-react";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   factura: FacturaEstadoCuenta;
@@ -11,8 +12,8 @@ export function EstadoCuentaRowExpanded({ factura }: Props) {
 
   if (pagos.length === 0 && notas_credito.length === 0) {
     return (
-      <div className="p-4 text-sm text-muted-foreground bg-muted/30">
-        Sin pagos ni notas de crédito aplicadas.
+      <div className="bg-muted/30">
+        <EmptyStateInline icon={FileMinus2} message="Sin pagos ni notas de crédito aplicadas." className="py-4" />
       </div>
     );
   }

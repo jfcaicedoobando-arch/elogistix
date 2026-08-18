@@ -1,7 +1,8 @@
 /**
  * Línea de tiempo del caso de refacturación: qué pasó, cuándo y quién lo hizo.
  */
-import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, History } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatFechaHoraTexto } from "@/lib/formatters";
 import { nombreDesdeEmail } from "@/lib/formatters/text";
 import { PASOS_REFACTURACION } from "@/features/facturacion/domain/refacturacionPasos";
@@ -22,9 +23,11 @@ const COLOR: Record<SeveridadEvento, string> = {
 export function RefacturacionTimeline({ eventos }: { eventos: EventoRefacturacion[] }) {
   if (eventos.length === 0) {
     return (
-      <p className="py-3 text-sm text-muted-foreground">
-        Aún no hay movimientos registrados en este caso.
-      </p>
+      <EmptyStateInline
+        icon={History}
+        message="Aún no hay movimientos registrados en este caso."
+        className="py-3"
+      />
     );
   }
 

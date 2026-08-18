@@ -20,6 +20,8 @@ import { FacturaPagosTabla } from "./FacturaPagosTabla";
 import { FacturaPagosHeader } from "./FacturaPagosHeader";
 import { FacturaEstadoInconsistenteAlert } from "./FacturaEstadoInconsistenteAlert";
 import { esEstadoInconsistente } from "./facturaEstadoInconsistente";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Receipt } from "lucide-react";
 
 interface Props {
   facturaId: string;
@@ -86,9 +88,11 @@ export function FacturaPagosSection({
           {isLoading ? (
             <ListSkeleton rows={3} />
           ) : pagos.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              Aún no se han registrado pagos para esta factura.
-            </p>
+            <EmptyStateInline
+              icon={Receipt}
+              message="Aún no se han registrado pagos para esta factura."
+              className="py-4"
+            />
           ) : (
             <FacturaPagosTabla
               pagos={pagos}
