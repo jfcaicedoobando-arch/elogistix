@@ -23,12 +23,17 @@ import { TesoreriaKpis } from "./_sections/TesoreriaKpis";
 import { TesoreriaFlujoMonedas } from "./_sections/TesoreriaFlujoMonedas";
 import { TesoreriaFlujoChart } from "./_sections/TesoreriaFlujoChart";
 import { TesoreriaTopCartera } from "./_sections/TesoreriaTopCartera";
+import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { useExchangeRates } from "@/features/catalogos/hooks";
 
 export default function Tesoreria() {
   const { data, isLoading, isError, refetch } = useResumenTesoreria();
   const pendientesQ = useMovimientosPendientes();
   const pendientes = pendientesQ.data ?? 0;
   const hoy = todayLocalISO();
+  // EC-10: `esFallback` es la única señal que distingue TC oficial de respaldo.
+  const { data: rates } = useExchangeRates();
+  const tcEstimado = rates?.esFallback === true;
 
   const handlePdf = async () => {
     if (!data) return;
