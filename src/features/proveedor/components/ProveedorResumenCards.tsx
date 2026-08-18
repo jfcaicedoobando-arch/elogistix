@@ -41,9 +41,13 @@ export function ProveedorResumenCards({
       : 0;
   const monedasNativas = Object.entries(porMoneda).filter(([, monto]) => monto !== 0);
   const variasMonedas = monedasNativas.length > 1;
+  // EC-10: los totales se convierten a MXN; avisar si el T/C es de respaldo.
+  const { data: rates } = useExchangeRates();
+  const tcEstimado = rates?.esFallback === true && variasMonedas;
 
   return (
     <div className="space-y-3">
+      {variasMonedas ? <TipoCambioFallbackBanner /> : null}
       <KpiStrip desktopCols={3}>
         <KpiCard
           label="Total costeado"
