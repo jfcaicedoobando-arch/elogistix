@@ -21,7 +21,7 @@ const ROOT = resolve(__dirname, "../../..");
 
 /** Definición local de un formateador de fecha (function o const arrow). */
 const DEFINE_FORMATTER =
-  /(?:function|const)\s+(?:fmt|format|formatear)[A-Za-z]*Fecha[A-Za-z]*\s*[(:=]/;
+  /(?:function|const)\s+(?:fmt|format|formatear)Fecha[A-Za-z]*\s*[(:=]/;
 
 /** Llamadas crudas de formato: bypasean TZ_MX y el fallback canónico. */
 const RAW_FORMAT = /\.toLocaleDateString\(|\bformat\(\s*[^,]+,\s*["']dd\/MM\/yyyy["']/;
