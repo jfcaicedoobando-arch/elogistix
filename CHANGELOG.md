@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.670.0] - 2026-08-18
+
+### Ola 5 · UX-09 — `<Input>` con etiqueta accesible (28 campos)
+- Un `<Input>` sin `id` ligado a su `<Label htmlFor>` (ni `aria-label`) se anuncia como "cuadro de edición" y nada más: como un archivero con cajones sin etiqueta. Se migraron los formularios más visibles a `FormField` (`@/components/shared/FormField`), que genera el `id` con `useId`, liga `htmlFor` y conecta el error con `aria-describedby`.
+- Admin: `TabSeguridadGlobal.tsx` (4), `NuevaOrganizacionDialog.tsx` (3, el `Select` de administrador quedó con `Label htmlFor="nueva-org-owner"` + `SelectTrigger id`), `TabPlanesColumns.tsx` (4 inputs de edición en celdas → `aria-label` por columna).
+- Configuración: `TabNavieras.tsx` (2), `TabPuertos.tsx` (3), `TabTiposContenedor.tsx` (2), `TabTipoCambioDof.tsx` (2), `TabOperaciones.tsx` (2), `TabEmpresa.tsx` (5) y `wizard/PasoApiKeys.tsx` (1, label compuesto → `aria-label`).
+- Sin cambios de comportamiento: mismos textos y layout; las ayudas pasan de `<p>` a la prop `hint`.
+- Patrón para el resto: (1) etiqueta visible → `FormField`; (2) control sin etiqueta visible (tablas, toolbars) → `aria-label`; (3) etiqueta compuesta o control que no es el primer hijo → `Label htmlFor` + `id` explícito kebab-case.
+
+### Ola 5b · Tooling a11y — guardrail contra regresiones
+- Nuevo bloque `a11y-input-label` en `eslint.config.js`: `no-restricted-syntax` con selector esquery que marca `<Input>` sin `id` ni `aria-label`, exceptuando los que ya están envueltos en `FormField`.
+- Nivel **warn** y scoped a `src/features/**` a propósito: hay deuda legacy (167 avisos hoy, 203 antes de la Ola 5) y en "error" el lint fallaría de inmediato. Burn-down documentado en el bloque: al llegar a 0, subir a "error" y ampliar a `src/**`.
+- `eslint-plugin-jsx-a11y` no está instalado; cuando se instale, sustituir el guardrail por `jsx-a11y/control-has-associated-label`.
+
 ## [13.669.0] - 2026-08-18
 
 ### Ola 7 · N-UI-01 — Un solo `CartaGarantiaBadge`
