@@ -11,7 +11,7 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import type { NotaEmbarqueRow } from "@/features/embarques/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { ActividadTimeline } from "@/features/embarques/components/ActividadTimeline";
+import { ActividadFeedTimeline } from "@/features/embarques/components/ActividadFeedTimeline";
 import { ActividadFiltros } from "@/features/embarques/components/ActividadFiltros";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { MessageSquare } from "lucide-react";
@@ -109,7 +109,7 @@ export function TabNotas({ embarqueId, expediente }: Props) {
         ) : items.length === 0 ? (
           <EmptyStateInline icon={MessageSquare} message="Sin actividad registrada" className="py-8" />
         ) : (
-          <ActividadTimeline grupos={grupos} />
+          <ActividadFeedTimeline grupos={grupos} />
         )}
       </CardContent>
     </Card>
