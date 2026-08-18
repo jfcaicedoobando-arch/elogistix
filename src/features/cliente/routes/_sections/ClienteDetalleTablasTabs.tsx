@@ -85,5 +85,3 @@ export function ClienteDetalleTablasTabs({
     </>
   );
 }
-
-export default ClienteDetalleTablasTabs;

@@ -117,5 +117,3 @@ export function FacturapiApiKeyRow({ orgId, ambiente, last4, label, prefijo }: A
     </div>
   );
 }
-
-export default FacturapiApiKeyRow;

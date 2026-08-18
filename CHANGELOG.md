@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.652.5] - 2026-08-18
+
+### CI verde — cobertura de códigos LC_* y exports limpios
+- `src/lib/errors/lcCodeMessages.operativo.ts`: añadidos mensajes amigables para `LC_COTIZACION_MONEDA_NO_SOPORTADA`, `LC_ESTADO_CONCURRENTE`, `LC_XML_UUID_INVALIDO` y `LC_XML_TOTAL_INVALIDO` (Ola D).
+- `ClienteDetalleTablasTabs.tsx` y `FacturapiApiKeyRow.tsx`: eliminado `export default` duplicado, dejando sólo el export nombrado que consumen sus padres. `lint:unused:strict` vuelve a pasar.
+
 ## [13.652.4] - 2026-08-18
 
 ### Power of 10 — archivos productivos ≤200 líneas
