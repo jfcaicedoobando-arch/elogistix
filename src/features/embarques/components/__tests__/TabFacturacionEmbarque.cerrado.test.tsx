@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { TabFacturacion } from "../TabFacturacion";
+import { TabFacturacionEmbarque } from "../TabFacturacionEmbarque";
 import type { Tables } from "@/types/db";
 
 vi.mock("@/features/catalogos/hooks", () => ({ useTasaIVA: () => 0.16 }));
@@ -36,11 +36,11 @@ vi.mock("../facturacion/DialogEliminarProforma", () => ({ DialogEliminarProforma
 
 const embarqueBase = { id: "e1", estado: "En Tránsito" } as unknown as Tables<"embarques">;
 
-describe("TabFacturacion — embarque cerrado", () => {
+describe("TabFacturacionEmbarque — embarque cerrado", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("permite editar cuando el embarque no está cerrado", () => {
-    render(<TabFacturacion facturas={[]} canEdit embarque={embarqueBase} />);
+    render(<TabFacturacionEmbarque facturas={[]} canEdit embarque={embarqueBase} />);
     expect(screen.getByTestId("resumen")).toHaveTextContent("true");
     expect(screen.getByTestId("historial")).toHaveTextContent("true");
     expect(screen.queryByText("Embarque cerrado")).toBeNull();
