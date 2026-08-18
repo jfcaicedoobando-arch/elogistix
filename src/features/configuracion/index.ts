@@ -5,7 +5,7 @@
  * `admin` (consola de plataforma) reutiliza estas piezas SOLO por este barril;
  * `configuracion` nunca importa de `admin` (ver admin-configuracion-cycle.test.ts).
  */
-export { useConfiguracionByOrg, useConfiguracionState, useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "./hooks";
+export { parseConfigSafe, plataformaConfigSchema, seguridadConfigSchema, useConfiguracionByOrg, useConfiguracionState, useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "./hooks";
 export { agruparConfigPorCategoria } from "./domain/configuracion";
 export { default as TabEmpresa } from "./components/TabEmpresa";
 export { default as TabFacturacion } from "./components/TabFacturacion";
