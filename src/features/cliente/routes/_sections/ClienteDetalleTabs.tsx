@@ -1,24 +1,18 @@
-import { Link } from "react-router-dom";
-import { Plus, Ship, ClipboardList } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DetailTabSection } from "@/components/shared/DetailTabSection";
 import { DetailTabLabel } from "@/components/shared/DetailTabLabel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TabPortalCliente from "@/features/cliente/components/TabPortalCliente";
 import Cliente360Panel from "@/features/crm/components/Cliente360Panel";
-import EmptyState from "@/components/empty/EmptyState";
-import { DataTable } from "@/components/shared/DataTable";
 import { EstadoCuentaModule } from "@/features/facturacion/estadoCuenta/components/EstadoCuentaModule";
-import { embarqueColumns, cotizacionColumns } from "@/features/cliente/components/clienteColumns";
 import TablaContactos from "@/features/cliente/components/TablaContactos";
 import { ClienteDocumentosTab } from "@/features/cliente/components/ClienteDocumentosTab";
 import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
 import { ClienteCreditoCard } from "@/features/cliente/components/detalle/ClienteCreditoCard";
+import { ClienteDetalleTablasTabs } from "@/features/cliente/routes/_sections/ClienteDetalleTablasTabs";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useTabsParam } from "@/hooks/shared/useTabsParam";
 import type { EmbarqueCliente, CotizacionCliente } from "@/features/cliente/components/clienteColumns";
 import type { ContactoCliente } from "@/features/cliente/types/cliente";
-import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+
 
 /** Pestañas válidas del detalle de cliente (UX-04: persistidas en ?tab=). */
 const CLIENTE_TABS = [
