@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CierreChecklistFase } from "./CierreChecklistFase";
 import { agruparChecksPorFase } from "@/features/embarques/utils/cierreCheckOrden";
 import { calcularReglasNoAplica } from "@/features/embarques/utils/cierreCheckNoAplica";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ClipboardList } from "lucide-react";
 
 
 export interface CierreCheck {
@@ -49,7 +51,7 @@ export function CierreChecklistCard({ isLoading, checks, embarqueId, expediente,
         )}
         {isLoading && <p className="text-sm text-muted-foreground">Validando…</p>}
         {!isLoading && checks.length === 0 && (
-          <p className="text-sm text-muted-foreground">Sin datos.</p>
+          <EmptyStateInline icon={ClipboardList} message="Sin datos." className="py-4" />
         )}
         <div className="space-y-4">
           {agruparChecksPorFase(checks).map((grupo) => (

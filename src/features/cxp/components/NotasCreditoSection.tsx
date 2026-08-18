@@ -4,7 +4,7 @@
  * UX-06 — cancelar una NC pide confirmación explícita porque mueve el saldo.
  */
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, FileMinus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import {
@@ -13,6 +13,7 @@ import {
 import { DialogNotaCreditoProveedor } from "./DialogNotaCreditoProveedor";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { NotaCreditoFila } from "./NotaCreditoFila";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { getFacturaSignedUrl } from "@/services/storage/facturas";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { Tables } from "@/integrations/supabase/types";
@@ -58,7 +59,7 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
       {isLoading ? (
         <div className="p-3"><ListSkeleton rows={2} /></div>
       ) : notas.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-6">Sin notas de crédito registradas.</p>
+        <EmptyStateInline icon={FileMinus2} message="Sin notas de crédito registradas." />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

@@ -12,6 +12,7 @@ import { DetailTableRow } from "@/components/shared/DetailTable";
 import { Button } from "@/components/ui/button";
 import { Inbox } from "lucide-react";
 import { EstadoCuentaTableHead } from "./EstadoCuentaTableHead";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { EstadoCuentaGrupoMoneda } from "./EstadoCuentaGrupoMoneda";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
@@ -34,12 +35,11 @@ interface Props {
 
 function Vacio() {
   return (
-    <div className="py-16 text-center">
-      <Inbox className="mx-auto mb-2 h-10 w-10 text-muted-foreground/50" />
-      <p className="text-sm text-muted-foreground">
-        Sin movimientos con los filtros seleccionados.
-      </p>
-    </div>
+    <EmptyStateInline
+      icon={Inbox}
+      message="Sin movimientos con los filtros seleccionados."
+      className="py-16"
+    />
   );
 }
 

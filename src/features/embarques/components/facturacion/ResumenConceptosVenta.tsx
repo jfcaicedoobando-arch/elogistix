@@ -13,6 +13,7 @@ import { agruparPorContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
@@ -108,12 +109,11 @@ export function ResumenConceptosVenta({
       </CardHeader>
       <CardContent className="p-0">
         {conceptos.length === 0 ? (
-          <div className="p-8 text-center">
-            <Receipt className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No hay conceptos de venta registrados. Agrega conceptos en la pestaña Costos.
-            </p>
-          </div>
+          <EmptyStateInline
+            icon={Receipt}
+            message="No hay conceptos de venta registrados. Agrega conceptos en la pestaña Costos."
+            className="py-8"
+          />
         ) : (
           <>
             {multiContenedor && agrupacion ? (

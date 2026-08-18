@@ -15,6 +15,7 @@ import {
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useNotasCreditoRecientes, type EstadoNotaCredito } from "@/features/facturacion/hooks";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Receipt } from "lucide-react";
 
 const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
   Borrador: "bg-muted text-muted-foreground",
@@ -97,7 +98,7 @@ export function NotasCreditoRecientes() {
             {isLoading ? (
               <EmptyStateInline loading message="Cargando…" />
             ) : filtradas.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">No hay notas de crédito que coincidan.</p>
+              <EmptyStateInline icon={Receipt} message="No hay notas de crédito que coincidan." className="py-4" />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

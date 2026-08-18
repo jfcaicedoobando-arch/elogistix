@@ -5,7 +5,7 @@
  * viven en /crm/mi-dia. El desglose completo (motivos de pérdida, conversión
  * por fuente, tablas largas) sigue en /crm/analitica.
  */
-import { Activity, Target, TrendingUp, Trophy, Users } from "lucide-react";
+import { Activity, Filter, Target, TrendingUp, Trophy, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -60,7 +60,7 @@ function EmbudoCard() {
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : embudo.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin oportunidades aún.</p>
+          <EmptyStateInline icon={Filter} message="Sin oportunidades aún." />
         ) : (
           <ul className="space-y-2">
             {embudo.map((e) => {
@@ -97,7 +97,7 @@ function ForecastMesCard() {
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : porMes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin datos para los próximos meses.</p>
+          <EmptyStateInline icon={TrendingUp} message="Sin datos para los próximos meses." />
         ) : (
           <table className="w-full text-sm">
             <thead>

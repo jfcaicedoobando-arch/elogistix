@@ -30,9 +30,11 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Aún no se ha creado ninguna cotización para esta oportunidad. Usa el botón "Nueva cotización" arriba.
-          </p>
+          <EmptyStateInline
+            icon={ClipboardList}
+            message="Aún no se ha creado ninguna cotización para esta oportunidad."
+            hint='Usa el botón "Nueva cotización" arriba.'
+          />
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full text-sm">

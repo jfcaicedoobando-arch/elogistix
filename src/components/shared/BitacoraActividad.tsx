@@ -1,6 +1,8 @@
 import type { EntradaBitacora } from "@/hooks/shared";
 import { FilaEntrada } from "./bitacora/FilaEntrada";
 import { VirtualTimeline } from "./bitacora/VirtualTimeline";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { History } from "lucide-react";
 
 interface Props {
   actividades: EntradaBitacora[];
@@ -20,9 +22,7 @@ export function BitacoraActividad({
 }: Props) {
   if (actividades.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-6">
-        Sin actividad registrada
-      </p>
+      <EmptyStateInline icon={History} message="Sin actividad registrada" className="py-6" />
     );
   }
 

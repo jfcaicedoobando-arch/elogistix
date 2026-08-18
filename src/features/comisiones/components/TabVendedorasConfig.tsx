@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Save } from "lucide-react";
+import { Plus, Save, Users, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   useVendedorasConfig, useUpsertVendedoraConfig, useUpdateVendedoraConfig,
   useEmbarquesSinVendedora, useAsignarVendedoraEmbarque,
 } from "@/features/comisiones/hooks";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface VendedoraOpt { id: string; nombre: string }
 
@@ -96,7 +97,7 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
         </div>
 
         {configs.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin vendedoras configuradas.</p>
+          <EmptyStateInline icon={Users} message="Sin vendedoras configuradas." />
         ) : (
           <div className="space-y-2">
             {configs.map((c) => {
@@ -145,7 +146,7 @@ function SeccionEmbarquesSinAsignar({ vendedoras }: { vendedoras: VendedoraOpt[]
       </CardHeader>
       <CardContent>
         {embarques.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Todos los embarques tienen vendedora asignada.</p>
+          <EmptyStateInline icon={CheckCircle2} message="Todos los embarques tienen vendedora asignada." />
         ) : (
           <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
             {embarques.map((e) => (

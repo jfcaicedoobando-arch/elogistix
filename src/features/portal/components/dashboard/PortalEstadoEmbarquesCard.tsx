@@ -1,10 +1,11 @@
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, PackageSearch } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getEstadoBarColor } from "@/lib/ui/uiMappings";
 import { pluralS } from "@/lib/formatters";
 import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 import { cn } from "@/lib/utils";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   total: number;
@@ -22,9 +23,7 @@ export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
       </CardHeader>
       <CardContent className="space-y-3">
         {total === 0 && (
-          <p className="text-xs text-muted-foreground text-center py-6">
-            Sin embarques activos por ahora.
-          </p>
+          <EmptyStateInline icon={PackageSearch} message="Sin embarques activos por ahora." className="py-6" />
         )}
         {distribucion.map(([estado, count]) => (
           <EstadoLegendRow key={estado} estado={estado} count={count} />

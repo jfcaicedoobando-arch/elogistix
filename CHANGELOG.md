@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.650.0] - 2026-08-18
+
+### Ola C · UI-02 — un solo estado vacío reutilizable en toda la app
+- Todas las listas, secciones, tarjetas y gráficas sin datos usan ahora el componente reutilizable `EmptyStateInline` (icono + mensaje + pista opcional), en lugar de párrafos `text-muted-foreground` escritos a mano en cada pantalla.
+- Migrados ~65 estados vacíos en CRM (timeline, Cliente 360, comentarios, motivos de pérdida, plantillas, kanban, analítica y dashboard), CxP y Compras (bitácora de tesorería, historial de factura, notas de crédito, tarjetas del dashboard, reportes y top proveedores), Anticipos de proveedor, Auditoría, Comisiones, Dashboards (dirección, finanzas, ejecutivo, operaciones y admin/diagnóstico), Embarques (facturas entrantes, notas, cierre, contenedores, conceptos de venta, proforma y tracking público), Facturación (bitácora, pagos, notas de crédito, refacturación y estado de cuenta), Portal del cliente, Costeo, Cotización, Bitácora de actividad y el popover de notificaciones.
+- Se conservaron los textos exactos de cada mensaje (los tests de UI los asertan) y se respetaron los placeholders de campo/celda ("Sin folio", "Sin fecha", "Sin embarque"), que no son estados vacíos de vista.
+- `EmptyState` (versión de página completa con acción sugerida) sigue siendo el canon para vistas completas sin datos; `EmptyStateInline` para bloques internos.
+
 ## [13.649.0] - 2026-08-18
 
 ### Ola C · UI-01 — `StatusBadge` como único badge de estado en embarques y facturas

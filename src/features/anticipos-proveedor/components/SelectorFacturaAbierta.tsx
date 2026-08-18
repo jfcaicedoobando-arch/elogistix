@@ -3,6 +3,8 @@ import { useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/formatters";
 import { useFacturasAbiertasProveedor } from "@/features/anticipos-proveedor/hooks/useFacturasAbiertasProveedor";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { FileX } from "lucide-react";
 
 interface Props {
   proveedorId: string | null;
@@ -37,7 +39,7 @@ export function SelectorFacturaAbierta({ proveedorId, value, onChange }: Props) 
       </SelectTrigger>
       <SelectContent>
         {options.length === 0 && !isLoading && (
-          <div className="px-3 py-2 text-xs text-muted-foreground">Sin facturas abiertas para este proveedor.</div>
+          <EmptyStateInline icon={FileX} message="Sin facturas abiertas para este proveedor." className="py-2" />
         )}
         {options.map((f) => (
           <SelectItem key={f.id} value={f.id}>

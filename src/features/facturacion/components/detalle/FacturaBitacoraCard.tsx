@@ -7,6 +7,8 @@ import { DocumentoRailCard } from "@/components/shared/documento/DocumentoRailCa
 import { useFacturaHistorial } from "@/features/facturacion/hooks/useFacturaHistorial";
 import { formatDate } from "@/lib/formatters";
 import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { History } from "lucide-react";
 
 
 interface Props {
@@ -50,9 +52,7 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
           No se pudo cargar el historial de esta factura.
         </p>
       ) : entradas.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">
-          Sin eventos registrados para esta factura.
-        </p>
+        <EmptyStateInline icon={History} message="Sin eventos registrados para esta factura." className="py-4" />
       ) : (
         <ul className="divide-y">
           {entradas.map((e) => {

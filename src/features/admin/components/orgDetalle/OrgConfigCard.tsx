@@ -29,7 +29,7 @@ export function OrgConfigCard({ loading, totalItems, grouped }: OrgConfigCardPro
       <CardContent>
         {loading && <EmptyStateInline loading message="Cargando…" className="py-4" />}
         {!loading && totalItems === 0 && (
-          <p className="text-sm text-muted-foreground">Sin configuración personalizada.</p>
+          <EmptyStateInline icon={Settings} message="Sin configuración personalizada." className="py-4" />
         )}
         {Object.entries(grouped).map(([categoria, items]) => (
           <div key={categoria} className="mb-4 space-y-2">

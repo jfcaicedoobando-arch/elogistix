@@ -3,7 +3,7 @@
  * cotización, último embarque y timeline de actividades.
  */
 import { useNavigate } from "react-router-dom";
-import { Briefcase, ClipboardList, Ship } from "lucide-react";
+import { Briefcase, ClipboardList, FileText, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
         </CardHeader>
         <CardContent className="p-0">
           {d.oportunidades.length === 0 ? (
-            <p className="text-sm text-muted-foreground p-4">Sin oportunidades registradas.</p>
+            <EmptyStateInline icon={Briefcase} message="Sin oportunidades registradas." />
           ) : (
             <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -97,7 +97,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
                 <div className="text-muted-foreground">{formatCurrencyCompact(Number(d.ultimaCotizacion.subtotal ?? 0), "MXN")}</div>
                 <Button size="sm" variant="ghost" onClick={() => navigate(`/cotizaciones/${d.ultimaCotizacion!.id}`)}>Ver cotización</Button>
               </div>
-            ) : <p className="text-sm text-muted-foreground">Sin cotizaciones.</p>}
+            ) : <EmptyStateInline icon={FileText} message="Sin cotizaciones." />}
           </CardContent>
         </Card>
 
@@ -114,7 +114,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => navigate(`/embarques/${d.ultimoEmbarque!.id}`)}>Ver embarque</Button>
               </div>
-            ) : <p className="text-sm text-muted-foreground">Sin embarques.</p>}
+            ) : <EmptyStateInline icon={Ship} message="Sin embarques." />}
           </CardContent>
         </Card>
       </div>

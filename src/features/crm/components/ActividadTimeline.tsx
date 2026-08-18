@@ -2,7 +2,7 @@
  * ActividadTimeline — timeline + alta rápida de actividades polimórficas.
  */
 import { useState } from "react";
-import { Activity, Check, Loader2, Plus } from "lucide-react";
+import { Activity, Check, History, Loader2, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import {
   useActividades, useCrearActividad, useCompletarActividad,
   ACTIVIDAD_TIPOS, type CrmActividadTipo, type CrmEntidadTipo,
 } from "@/features/crm/hooks";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {
@@ -71,7 +72,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
         </div>
 
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Sin actividades registradas</p>
+          <EmptyStateInline icon={History} message="Sin actividades registradas" />
         ) : (
           <ul className="space-y-2">
             {items.map((a) => (

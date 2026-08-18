@@ -10,6 +10,8 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EntrantesCardHeader } from "@/features/embarques/components/entrantes/EntrantesCardHeader";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Inbox } from "lucide-react";
 import { EntrantesConfirmDialogs } from "@/features/embarques/components/entrantes/EntrantesConfirmDialogs";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -105,9 +107,11 @@ export function TabFacturasEntrantes({ embarqueId, canEdit }: Props) {
         <CardContent className="space-y-2">
           {isLoading && <Skeleton className="h-24 w-full" />}
           {!isLoading && filas.length === 0 && (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              Aún no hay facturas de proveedor en el buzón de este embarque.
-            </p>
+            <EmptyStateInline
+              icon={Inbox}
+              message="Aún no hay facturas de proveedor en el buzón de este embarque."
+              className="py-6"
+            />
           )}
           {filas.map((row) => (
             <FacturaEntranteItem

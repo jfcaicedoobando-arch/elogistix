@@ -2,6 +2,8 @@
  * Sección Riesgo y cartera: antigüedad por bucket + concentración top 5.
  */
 import { Card } from "@/components/ui/card";
+import { Users } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { BucketAntiguedad, TopCliente } from "@/features/dashboard/direccion/services/tipos";
 
@@ -53,7 +55,7 @@ export function CarteraSection({ antiguedad, topClientes }: { antiguedad: Bucket
           <p className="text-sm text-muted-foreground tabular-nums">{totalPct.toFixed(1)}% del margen</p>
         </div>
         {topClientes.length === 0 ? (
-          <p className="mt-6 text-sm text-muted-foreground">Sin datos del mes.</p>
+          <EmptyStateInline icon={Users} message="Sin datos del mes." className="py-6" />
         ) : (
           <ol className="mt-4 space-y-2">
             {topClientes.map((c, i) => (

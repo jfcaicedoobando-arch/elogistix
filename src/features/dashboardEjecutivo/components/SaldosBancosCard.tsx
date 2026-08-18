@@ -1,4 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Landmark } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { ResumenCuenta } from "@/features/tesoreria/services";
 
@@ -17,7 +19,7 @@ export function SaldosBancosCard({ cuentas }: Props) {
       </CardHeader>
       <CardContent className="space-y-2">
         {cuentas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin cuentas activas.</p>
+          <EmptyStateInline icon={Landmark} message="Sin cuentas activas." className="py-4" />
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full text-sm">

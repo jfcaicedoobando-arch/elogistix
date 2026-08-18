@@ -1,4 +1,5 @@
 import { Clock } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
@@ -34,7 +35,7 @@ export function ActividadesHoyCard({ items }: { items: Actividad[] }) {
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Sin actividades programadas hoy</p>
+          <EmptyStateInline icon={Clock} message="Sin actividades programadas hoy" />
         ) : (
           <ul className="space-y-1.5">
             {items.map((a) => (

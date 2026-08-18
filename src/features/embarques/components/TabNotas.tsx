@@ -14,6 +14,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { ActividadTimeline } from "@/features/embarques/components/ActividadTimeline";
 import { ActividadFiltros } from "@/features/embarques/components/ActividadFiltros";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { MessageSquare } from "lucide-react";
 
 interface Props {
   notas: NotaEmbarqueRow[];
@@ -106,7 +107,7 @@ export function TabNotas({ embarqueId, expediente }: Props) {
             </Button>
           </div>
         ) : items.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Sin actividad registrada</p>
+          <EmptyStateInline icon={MessageSquare} message="Sin actividad registrada" className="py-8" />
         ) : (
           <ActividadTimeline grupos={grupos} />
         )}

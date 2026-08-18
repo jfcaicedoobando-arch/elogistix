@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from "react";
 import { TrendingDown } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
@@ -77,9 +78,11 @@ export function DialogMotivoPerdida({
             </SelectContent>
           </Select>
           {motivos.length === 0 && (
-            <p className="text-xs text-muted-foreground">
-              No hay motivos activos. Agrégalos en Configuración del CRM.
-            </p>
+            <EmptyStateInline
+              icon={TrendingDown}
+              message="No hay motivos activos. Agrégalos en Configuración del CRM."
+              className="py-3"
+            />
           )}
         </div>
         <div className="space-y-1.5">

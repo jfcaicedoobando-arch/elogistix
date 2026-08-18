@@ -2,12 +2,13 @@
  * Editor de motivos de pérdida (activar/desactivar + crear).
  */
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import {
   useMotivosPerdida, useActualizarMotivoPerdida, useCrearMotivoPerdida,
 } from "@/features/crm/hooks";
@@ -52,7 +53,7 @@ export default function MotivosPerdidaEditor() {
               <Switch checked={m.activa} onCheckedChange={(v) => toggle(m.id, v)} aria-label={m.activa ? `Desactivar motivo ${m.nombre}` : `Activar motivo ${m.nombre}`} />
             </div>
           ))}
-          {motivos.length === 0 && <p className="text-xs text-muted-foreground">Sin motivos configurados.</p>}
+          {motivos.length === 0 && <EmptyStateInline icon={TrendingDown} message="Sin motivos configurados." className="py-3" />}
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 const reglaToTab: Record<ReglaAuditoria, string> = {
   docs_faltantes: "documentos",
@@ -89,11 +90,7 @@ export function HallazgoTabla({ hallazgos }: Props) {
   ]);
 
   if (hallazgos.length === 0) {
-    return (
-      <div className="text-sm text-muted-foreground py-8 text-center">
-        Sin hallazgos en esta categoría.
-      </div>
-    );
+    return <EmptyStateInline icon={ShieldCheck} message="Sin hallazgos en esta categoría." />;
   }
 
   return (

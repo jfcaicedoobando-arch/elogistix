@@ -4,11 +4,12 @@
  * proveedores y link "Ver todas" en Últimas facturas.
  */
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Wallet, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/lib/utils";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 export interface ProveedorSaldoRow {
   proveedor_id: string;
@@ -31,7 +32,7 @@ export function TopProveedoresCard({ rows }: { rows: ProveedorSaldoRow[] }) {
       </CardHeader>
       <CardContent className="p-0">
         {rows.length === 0 ? (
-          <p className="p-4 text-sm text-muted-foreground">Sin saldos pendientes.</p>
+          <EmptyStateInline icon={Wallet} message="Sin saldos pendientes." className="py-4" />
         ) : (
           <ul className="divide-y">
             {rows.map((p) => {
@@ -83,7 +84,7 @@ export function UltimasFacturasCard({ rows }: { rows: FacturaCapturadaRow[] }) {
       </CardHeader>
       <CardContent className="p-0">
         {rows.length === 0 ? (
-          <p className="p-4 text-sm text-muted-foreground">Aún no hay facturas capturadas.</p>
+          <EmptyStateInline icon={FileText} message="Aún no hay facturas capturadas." className="py-4" />
         ) : (
           <ul className="divide-y">
             {rows.map((f) => (

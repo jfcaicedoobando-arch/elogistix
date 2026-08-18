@@ -5,6 +5,8 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
+import { ShieldCheck } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Row {
   fn: string;
@@ -26,9 +28,7 @@ export default function HealthTopErrorsChart({ loading, data }: Props) {
         {loading ? (
           <ChartSkeleton height={176} />
         ) : data.length === 0 ? (
-          <div className="text-xs text-muted-foreground py-10 text-center">
-            Sin errores en el rango seleccionado.
-          </div>
+          <EmptyStateInline icon={ShieldCheck} message="Sin errores en el rango seleccionado." className="py-10" />
         ) : (
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={data} layout="vertical" margin={{ left: 8 }}>

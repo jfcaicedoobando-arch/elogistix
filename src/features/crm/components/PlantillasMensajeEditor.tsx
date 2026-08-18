@@ -106,7 +106,7 @@ export default function PlantillasMensajeEditor() {
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : data.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-4 text-center">Sin plantillas todavía</div>
+          <EmptyStateInline icon={MessageSquare} message="Sin plantillas todavía" />
         ) : (
           <ul className="space-y-2">
             {data.map((p) => (

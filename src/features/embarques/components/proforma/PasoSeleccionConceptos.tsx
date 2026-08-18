@@ -5,6 +5,8 @@ import {
   ConceptoRow, TotalesProformaBox, ProformaFooterFields,
 } from "./PasoSeleccionConceptos.parts";
 import { buildContenedorLabelMap } from "./PasoSeleccionConceptos.helpers";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ListFilter } from "lucide-react";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
@@ -96,9 +98,7 @@ export function PasoSeleccionConceptos({
             );
           })}
           {conceptosVisibles.length === 0 && (
-            <div className="p-6 text-center text-sm text-muted-foreground">
-              No hay conceptos en este filtro.
-            </div>
+            <EmptyStateInline icon={ListFilter} message="No hay conceptos en este filtro." className="py-6" />
           )}
         </div>
       </div>

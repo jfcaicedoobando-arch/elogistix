@@ -8,6 +8,7 @@ import { formatDate, toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import type { ProximoArribo } from "@/features/dashboard/hooks";
 import { activableConTeclado, FOCUS_RING } from "@/lib/ui/keyboardActivation";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   arribos: ProximoArribo[];
@@ -33,9 +34,7 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
     }
     if (arribos.length === 0) {
       return (
-        <p className="text-sm text-muted-foreground text-center py-6">
-          Sin arribos próximos
-        </p>
+        <EmptyStateInline icon={CalendarClock} message="Sin arribos próximos" className="py-6" />
       );
     }
     return arribos.map((e) => (

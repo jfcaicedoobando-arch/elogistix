@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { History } from "lucide-react";
 import { formatFechaHora } from "@/lib/formatters";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 export interface CierreLogEntry {
   id: string;
@@ -30,7 +31,7 @@ export function CierreHistorialCard({ log }: { log: CierreLogEntry[] }) {
       </CardHeader>
       <CardContent>
         {log.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin movimientos.</p>
+          <EmptyStateInline icon={History} message="Sin movimientos." className="py-4" />
         ) : (
           <ul className="space-y-2">
             {log.map((entry) => (
