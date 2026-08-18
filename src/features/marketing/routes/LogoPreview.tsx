@@ -14,39 +14,39 @@ type Tone = "light" | "muted" | "navy" | "accent" | "image";
 const SURFACES: Array<{ id: Tone; label: string; className: string; textClass: string; subClass: string }> = [
   {
     id: "light",
-    label: "Fondo claro (#FFFFFF)",
-    className: "bg-white",
-    textClass: "text-[#0B1B3A]",
-    subClass: "text-slate-500",
+    label: "Fondo claro (superficie base)",
+    className: "bg-background",
+    textClass: "text-foreground",
+    subClass: "text-muted-foreground",
   },
   {
     id: "muted",
-    label: "Fondo gris suave (#F1F5F9)",
-    className: "bg-slate-100",
-    textClass: "text-[#0B1B3A]",
-    subClass: "text-slate-500",
+    label: "Fondo gris suave (muted)",
+    className: "bg-muted",
+    textClass: "text-foreground",
+    subClass: "text-muted-foreground",
   },
   {
     id: "navy",
     label: "Fondo navy (landing actual)",
-    className: "bg-[#0B1B3A]",
-    textClass: "text-white",
-    subClass: "text-slate-300",
+    className: "bg-primary",
+    textClass: "text-primary-foreground",
+    subClass: "text-primary-foreground/70",
   },
   {
     id: "accent",
-    label: "Fondo accent azul",
-    className: "bg-[#2563EB]",
-    textClass: "text-white",
-    subClass: "text-blue-100",
+    label: "Fondo accent",
+    className: "bg-accent",
+    textClass: "text-accent-foreground",
+    subClass: "text-accent-foreground/80",
   },
   {
     id: "image",
     label: "Sobre imagen / degradado",
     className:
-      "bg-[radial-gradient(circle_at_30%_20%,#1e3a8a,transparent_60%),radial-gradient(circle_at_80%_70%,#0ea5e9,transparent_55%),linear-gradient(135deg,#0B1B3A,#1e293b)]",
-    textClass: "text-white",
-    subClass: "text-slate-200",
+      "bg-[radial-gradient(circle_at_30%_20%,hsl(var(--accent)/0.55),transparent_60%),radial-gradient(circle_at_80%_70%,hsl(var(--accent)/0.35),transparent_55%),linear-gradient(135deg,hsl(var(--primary)),hsl(var(--primary)/0.75))]",
+    textClass: "text-primary-foreground",
+    subClass: "text-primary-foreground/80",
   },
 ];
 
@@ -54,8 +54,8 @@ type StateKey = "default" | "hover" | "active";
 
 const STATES: Array<{ id: StateKey; label: string; ring: string; scale: string }> = [
   { id: "default", label: "Default", ring: "ring-border/40", scale: "scale-100" },
-  { id: "hover", label: "Hover (ring acento)", ring: "ring-2 ring-[#2563EB]/60", scale: "scale-[1.03]" },
-  { id: "active", label: "Active (pressed)", ring: "ring-2 ring-[#2563EB]", scale: "scale-[0.97]" },
+  { id: "hover", label: "Hover (ring acento)", ring: "ring-2 ring-accent/60", scale: "scale-[1.03]" },
+  { id: "active", label: "Active (pressed)", ring: "ring-2 ring-accent", scale: "scale-[0.97]" },
 ];
 
 function Lockup({
@@ -75,7 +75,7 @@ function Lockup({
   return (
     <div className={`inline-flex items-center gap-2.5 transition-transform ${sub.scale}`}>
       <span
-        className={`flex ${boxSize} shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-sm ring-1 ${sub.ring}`}
+        className={`flex ${boxSize} shrink-0 items-center justify-center overflow-hidden rounded-xl bg-card p-1 shadow-sm ring-1 ${sub.ring}`}
       >
         <img src="/librecarga-logo.webp" alt="" className="h-full w-full object-contain" />
       </span>
@@ -133,7 +133,7 @@ export default function LogoPreview() {
               key={s.id}
               className={`overflow-hidden rounded-2xl border border-border/40 ${s.className}`}
             >
-              <div className="flex items-center justify-between border-b border-white/10 px-5 py-2.5">
+              <div className="flex items-center justify-between border-b border-border/40 px-5 py-2.5">
                 <span className={`text-xs font-medium uppercase tracking-wider ${s.subClass}`}>
                   {s.label}
                 </span>
