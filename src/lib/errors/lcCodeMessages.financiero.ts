@@ -151,4 +151,15 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_FACTURA_CON_PAGOS:
     "La factura ya tiene pagos registrados. Reversa los pagos antes de editar sus conceptos.",
   LC_FACTURA_ELIMINADA: "La factura fue eliminada.",
+  // Auditoría v1 — Ola A (folios, notas de crédito y cancelación CxP).
+  LC_CONCEPTOS_YA_ASIGNADOS:
+    "Uno o más conceptos ya están en otra proforma o factura. Refresca la pantalla y vuelve a intentar.",
+  LC_CXP_CANCELAR_FORBIDDEN:
+    "Sólo un rol financiero (admin, contador, auxiliar contable o tesorero) puede cancelar una factura de proveedor.",
+  LC_NC_MONEDA_SIN_TC:
+    "No hay tipo de cambio para convertir la nota de crédito a la moneda de la factura. Captura el T/C y vuelve a intentar.",
+  LC_NC_TRANSICION_INVALIDA:
+    "Ese cambio de estado de la nota de crédito no está permitido.",
+  LC_NC_UUID_REQUERIDO:
+    "La nota de crédito necesita su UUID fiscal (CFDI de egreso) antes de timbrarse o aplicarse.",
 };
