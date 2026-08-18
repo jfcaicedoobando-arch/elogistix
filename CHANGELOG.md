@@ -1,6 +1,16 @@
 # Changelog
 
+## [13.665.0] - 2026-08-18
+
+### Roles de organización que no otorgaban permisos (RLS 42501)
+- Causa: `public.has_role()` lee sólo `public.user_roles`, pero los roles se administran en `public.organization_members`. 10 de 19 membresías no tenían espejo, así que esos usuarios operaban sin permisos efectivos (p. ej. una KAM `vendedor` no podía guardar el Paso 1 de una cotización: *new row violates row-level security policy for table "cotizaciones"*).
+- Nuevo trigger `public._sync_user_roles_desde_membership()` en `organization_members` (INSERT / UPDATE OF role / DELETE): mantiene el espejo en `user_roles` al día. Nunca espeja roles de plataforma (`super_admin`) ni legacy (`admin`, `operador`, `viewer`), y no pisa roles `super_admin`/`cliente` existentes. `REVOKE ALL` a PUBLIC/anon/authenticated (H6/FIX-45).
+- Backfill idempotente: las 10 membresías sin espejo quedaron sincronizadas; el conteo de huérfanas es 0.
+- Nueva prueba `supabase/tests/roles_membership_mirror.sql` (5 casos, incluida la invariante global de cero huérfanas), registrada en el workflow `rls-tests`.
+- Sin cambios de frontend: `has_role`, `puede_escribir_cotizaciones` y las políticas de `cotizaciones` quedan intactas.
+
 ## [13.664.0] - 2026-08-18
+
 
 ### Prospectos: captura única y vínculo obligatorio con el CRM
 - Paso 1 del wizard incluye "Datos fiscales (opcional)" (RFC, dirección, ciudad, estado, C.P.): se guardan en el lead del CRM y precargan el alta de cliente al convertir el prospecto, evitando la doble captura.
