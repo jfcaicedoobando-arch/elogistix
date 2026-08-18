@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.653.0] - 2026-08-18
+
+### FE-15 / BUG-15 — tolerancia de sobrepago unificada
+- Nuevo `src/lib/financial/toleranciaPago.ts` con `TOLERANCIA_SOBREPAGO = 0.005` (medio centavo).
+- `DialogRegistrarPago.tsx` deja de usar `0.01` y `CobroLoteRenglon.tsx` deja el literal suelto: ambos usan la constante compartida.
+- Pruebas nuevas de casos frontera (sobrepago de 1 centavo bloqueado, redondeo de medio centavo tolerado).
+
+
 ## [13.652.6] - 2026-08-18
 
 ### Power of 10 — catálogo LC_* operativo dividido
