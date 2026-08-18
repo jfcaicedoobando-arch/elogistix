@@ -11,6 +11,7 @@ import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
+import { ProveedorNotaMonedas } from "@/features/proveedor/components/ProveedorNotaMonedas";
 import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 
 interface Props {
@@ -74,7 +75,7 @@ export function ProveedorResumenCards({
         />
       </KpiStrip>
 
-      <NotaMonedas
+      <ProveedorNotaMonedas
         monedasNativas={monedasNativas}
         monedasSinTc={monedasSinTc}
         tcEstimado={tcEstimado}
