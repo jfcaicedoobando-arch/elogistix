@@ -943,7 +943,7 @@ export default tseslint.config(
       "no-restricted-syntax": ["warn",
         {
           selector:
-            "JSXOpeningElement[name.name='Input']:not(:has(JSXAttribute[name.name='id'])):not(:has(JSXAttribute[name.name='aria-label']))",
+            "JSXOpeningElement[name.name='Input']:not(:has(JSXAttribute[name.name='id'])):not(:has(JSXAttribute[name.name='aria-label'])):not(JSXElement[openingElement.name.name='FormField'] > JSXElement > JSXOpeningElement)",
           message:
             "a11y: <Input> requiere `id` (con <Label htmlFor={id}>) o `aria-label`; lo más simple es envolverlo en <FormField label=\"...\">. Ver bloque `a11y-input-label` en eslint.config.js.",
         },
