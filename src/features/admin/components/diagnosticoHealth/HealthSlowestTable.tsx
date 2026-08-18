@@ -5,6 +5,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { formatNumber } from "@/lib/formatters";
+import { Gauge } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Row {
   fn: string;
@@ -33,9 +35,7 @@ export default function HealthSlowestTable({ loading, data }: Props) {
         {loading ? (
           <ListSkeleton rows={5} />
         ) : data.length === 0 ? (
-          <div className="text-xs text-muted-foreground py-10 text-center">
-            Sin mediciones de latencia.
-          </div>
+          <EmptyStateInline icon={Gauge} message="Sin mediciones de latencia." className="py-10" />
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full text-xs">

@@ -30,6 +30,7 @@ import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 
 function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }
@@ -162,9 +163,7 @@ export default function ComprasReportes() {
         </CardHeader>
         <CardContent>
           {evolucion.length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              Sin datos para graficar.
-            </div>
+            <EmptyStateInline icon={TrendingUp} message="Sin datos para graficar." className="py-4" />
           ) : (
             <div className="w-full h-[280px]">
               <ResponsiveContainer>

@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { Building2, Users, ArrowRight } from "lucide-react";
+import { Building2, Users, ArrowRight, BarChart3, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -15,6 +15,7 @@ import {
 import { formatDate } from "@/lib/formatters";
 import { useDocumentTitle } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 const AdminDashboardActivityChart = lazy(
   () => import("@/features/admin/components/AdminDashboardActivityChart"),
@@ -74,8 +75,8 @@ export default function AdminDashboard() {
                 <ChartSkeleton height={260} />
               </div>
             ) : activity.length === 0 ? (
-              <div className="h-[260px] flex items-center justify-center text-sm text-muted-foreground">
-                Sin datos disponibles.
+              <div className="h-[260px] flex items-center justify-center">
+                <EmptyStateInline icon={BarChart3} message="Sin datos disponibles." />
               </div>
             ) : (
               <Suspense fallback={<ChartSkeleton height={260} />}>
@@ -94,7 +95,7 @@ export default function AdminDashboard() {
             {loadingRecent ? (
               <ListSkeleton rows={4} />
             ) : recentOrgs.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">Aún no hay organizaciones.</p>
+              <EmptyStateInline icon={Building} message="Aún no hay organizaciones." className="py-6" />
             ) : (
               recentOrgs.map((o) => (
                 <button key={o.id} onClick={() => navigate(`/admin/organizaciones/${o.id}`)}

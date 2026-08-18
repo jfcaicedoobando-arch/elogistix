@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
 import { useAnticiposDisponibles } from "@/features/anticipos-proveedor/hooks/useAnticiposDisponibles";
 import { RegistrarAnticipoDialog } from "./RegistrarAnticipoDialog";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   proveedorId: string;
@@ -34,11 +35,12 @@ export function ProveedorAnticiposCard({ proveedorId, proveedorNombre, canEdit }
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Cargando anticipos…</p>
+            <EmptyStateInline loading message="Cargando anticipos…" className="py-2" />
           ) : anticipos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Sin anticipos pendientes de aplicar. Registra uno cuando el proveedor pida el pago antes de la factura.
-            </p>
+            <EmptyStateInline
+              icon={HandCoins}
+              message="Sin anticipos pendientes de aplicar. Registra uno cuando el proveedor pida el pago antes de la factura."
+            />
           ) : (
             <>
               <div className="flex flex-wrap gap-4">

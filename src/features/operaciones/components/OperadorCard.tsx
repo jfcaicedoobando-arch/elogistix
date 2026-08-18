@@ -1,6 +1,7 @@
 import { memo, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { User, ChevronRight } from "lucide-react";
+import { User, ChevronRight, Users } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import type { OperadorData, EstadoUiKey } from "@/features/operaciones/hooks";
 import { ESTADOS_KEYS } from "@/features/operaciones/hooks";
 import { ESTADO_COLOR, ESTADO_ICON, ESTADO_LABEL, ESTADO_TOOLTIP } from "./desempenoVisuals";
@@ -95,7 +96,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
           Clientes
         </p>
         {operador.clientesDesglose.length === 0 ? (
-          <p className="text-label text-muted-foreground italic">Sin clientes activos</p>
+          <EmptyStateInline icon={Users} message="Sin clientes activos" className="py-2" />
         ) : (
           <>
             <ul className="space-y-0.5 max-h-56 overflow-y-auto">

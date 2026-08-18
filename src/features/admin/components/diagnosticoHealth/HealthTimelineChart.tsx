@@ -6,6 +6,8 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { CHART } from "@/lib/chartTokens";
+import { Activity } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 
 export interface TimelinePoint {
@@ -30,9 +32,7 @@ export default function HealthTimelineChart({ loading, data }: Props) {
         {loading ? (
           <ChartSkeleton height={176} />
         ) : data.length === 0 ? (
-          <div className="text-xs text-muted-foreground py-12 text-center">
-            Sin datos en el rango seleccionado.
-          </div>
+          <EmptyStateInline icon={Activity} message="Sin datos en el rango seleccionado." className="py-12" />
         ) : (
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={data}>

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, CircleDashed, FileText } from "lucide-react";
 import type { TrackingPublicoDocumento } from "@/features/embarques/services/tracking";
 import { AvisoAccionable } from "@/components/shared/states/AvisoAccionable";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   documentos: TrackingPublicoDocumento[];
@@ -59,7 +60,7 @@ export function TrackingPublicoDocumentos({ documentos }: Props) {
                 Recibidos ({recibidos.length})
               </p>
               {recibidos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aún no recibimos ningún documento.</p>
+                <EmptyStateInline icon={CheckCircle2} message="Aún no recibimos ningún documento." className="py-4" />
               ) : (
                 <ul>{recibidos.map((d) => <Fila key={d.nombre} doc={d} />)}</ul>
               )}
@@ -70,9 +71,11 @@ export function TrackingPublicoDocumentos({ documentos }: Props) {
                 Faltantes ({faltantes.length})
               </p>
               {faltantes.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Tenemos completo el expediente de esta etapa.
-                </p>
+                <EmptyStateInline
+                  icon={CircleDashed}
+                  message="Tenemos completo el expediente de esta etapa."
+                  className="py-4"
+                />
               ) : (
                 <>
                   <ul>{faltantes.map((d) => <Fila key={d.nombre} doc={d} />)}</ul>

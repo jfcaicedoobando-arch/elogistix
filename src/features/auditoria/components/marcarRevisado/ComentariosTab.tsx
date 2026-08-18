@@ -6,6 +6,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import type { useMarcarRevisadoController } from "@/features/auditoria/hooks";
 import type { AuditoriaRevision } from "@/features/auditoria/types";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { MessageSquare, MessageSquareOff } from "lucide-react";
 
 interface Props {
   ctrl: ReturnType<typeof useMarcarRevisadoController>;
@@ -16,18 +17,18 @@ export function ComentariosTab({ ctrl, revisionExistente }: Props) {
   return (
     <TabsContent value="comentarios" className="space-y-3 mt-2">
       {!revisionExistente ? (
-        <div className="text-xs text-muted-foreground py-6 text-center">
-          Primero asigna o marca el hallazgo para abrir un hilo de comentarios.
-        </div>
+        <EmptyStateInline
+          icon={MessageSquareOff}
+          message="Primero asigna o marca el hallazgo para abrir un hilo de comentarios."
+          className="py-6"
+        />
       ) : (
         <>
           <div className="h-48 overflow-y-auto border rounded-md p-2">
             {ctrl.loadingComentarios ? (
               <EmptyStateInline loading message="Cargando…" className="py-2" />
             ) : !ctrl.comentarios || ctrl.comentarios.length === 0 ? (
-              <div className="text-xs text-muted-foreground text-center py-6">
-                Aún no hay comentarios.
-              </div>
+              <EmptyStateInline icon={MessageSquare} message="Aún no hay comentarios." className="py-6" />
             ) : (
               <div className="space-y-2">
                 {ctrl.comentarios.map((c) => (

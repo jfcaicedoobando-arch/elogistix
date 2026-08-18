@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { Users } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import type { OperadorData } from "@/features/operaciones/hooks";
 import { useDesempenoChartData } from "@/features/operaciones/hooks";
@@ -47,9 +48,7 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground py-8 text-center">
-            Sin datos de operadores
-          </p>
+          <EmptyStateInline icon={Users} message="Sin datos de operadores" className="py-8" />
         </CardContent>
       </Card>
     );
