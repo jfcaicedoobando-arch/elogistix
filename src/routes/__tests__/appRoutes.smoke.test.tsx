@@ -87,7 +87,7 @@ describe("routes/appRoutes — paths críticos presentes", () => {
     "/compras/aging", "/compras/reportes", "/compras/conciliacion",
     // Legacy redirects (preservan querystring)
     "/cxp", "/cxp/por-capturar", "/cxp/por-pagar", "/proveedores", "/proveedores/:id",
-    "/cartera",
+    "/cobranza",
     "/tesoreria", "/tesoreria/cuentas", "/tesoreria/conciliacion", "/tesoreria/flujo",
     "/comisiones",
     "/costeo", "/costeo/tarifas", "/costeo/buscar", "/costeo/rutas",
@@ -126,7 +126,7 @@ describe("routes/appRoutes — gates de rol", () => {
     ["/compras/reportes", FINANCE_READ_ROLES],
     ["/compras/conciliacion", COMPRAS_READ_ROLES],
     ["/compras/por-pagar", ["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"]],
-    ["/cartera", ["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor", "gerente_comercial"]],
+    ["/cobranza", ["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor", "gerente_comercial"]],
     ["/tesoreria", TESORERIA_READ_ROLES],
     ["/tesoreria/cuentas", TESORERIA_READ_ROLES],
     ["/tesoreria/conciliacion", TESORERIA_READ_ROLES],
