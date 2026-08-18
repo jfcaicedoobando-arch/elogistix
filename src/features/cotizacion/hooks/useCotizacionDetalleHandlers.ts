@@ -58,14 +58,16 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     }
   };
 
-  const abrirDialogConvertir = () => {
+  /** Precarga contacto + datos fiscales del lead: el vendedor no recaptura nada. */
+  const abrirDialogConvertir = async () => {
     if (!cotizacion) return;
+    const fiscales = await fetchDatosFiscalesProspecto(cotizacion.oportunidad_id ?? null);
     setClienteForm({
       nombre: cotizacion.prospecto_empresa || '',
       contacto: cotizacion.prospecto_contacto || '',
       email: cotizacion.prospecto_email || '',
       telefono: cotizacion.prospecto_telefono || '',
-      rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
+      ...fiscales,
     });
     setShowConvertir(true);
   };
