@@ -18,6 +18,18 @@ const FEATURES = join(ROOT, "src", "features");
 /** Valores válidos de `<CardContent density="...">` (otra escala, otro componente). */
 const CARD_DENSITIES = new Set(["default", "compact", "tight", "flush"]);
 
+/** Componentes con su propia escala de densidad (no son tablas). */
+const NO_TABLA = /^(Card(Content|Header|Footer)?|EmptyStateInline|ErrorStateInline)$/;
+
+/** Etiqueta JSX abierta a la que pertenece la prop de la línea `i`. */
+function tagDeLaProp(lines: readonly string[], i: number): string {
+  for (let j = i; j >= 0 && j > i - 12; j -= 1) {
+    const m = lines[j].match(/<([A-Za-z][A-Za-z0-9]*)\b/);
+    if (m) return m[1];
+  }
+  return "";
+}
+
 function archivos(): string[] {
   return [...walk(FEATURES, { excludeFileRe: /\.(test|spec)\.tsx?$/ })];
 }
@@ -31,11 +43,13 @@ describe("Densidad de tablas — un solo token", () => {
       lines.forEach((line, i) => {
         const m = line.match(/density="(compact|comfortable)"/);
         if (!m) return;
-        // `<CardContent density="compact">` es otra escala legítima.
-        if (/Card(Content|Header|Footer)?\b/.test(line) && CARD_DENSITIES.has(m[1])) return;
+        // `<CardContent density="compact">` y los estados inline son otra escala.
+        const tag = /<[A-Za-z]/.test(line) ? (line.match(/<([A-Za-z][A-Za-z0-9]*)\b/)?.[1] ?? "") : tagDeLaProp(lines, i);
+        if (NO_TABLA.test(tag) && CARD_DENSITIES.has(m[1])) return;
         violaciones.push(`  ${rel}:${i + 1} → ${m[0]}`);
       });
     }
+
     expect(
       violaciones,
       "Usa TABLE_DENSITY.listado (páginas de listado) o TABLE_DENSITY.embebida\n" +
