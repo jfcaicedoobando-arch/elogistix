@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.666.2] - 2026-08-18
+
+### FIX-45 · `anon` sin EXECUTE en trigger de cotizaciones
+- `public._cotizaciones_bloquear_envio_sin_oportunidad()` se creó sin revocar EXECUTE, rompiendo la whitelist `fix45_anon_execute_whitelist.sql`.
+- Migración: `REVOKE ALL ... FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE ... TO service_role` (el trigger corre como dueño, no necesita grants de usuario).
+
+
 ## [13.666.1] - 2026-08-18
 
 ### Suite RLS · Fixtures idempotentes en `user_roles`
