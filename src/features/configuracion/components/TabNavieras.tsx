@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/shared/FormField";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -76,14 +76,12 @@ export default function TabNavieras() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2 items-end">
-          <div className="space-y-1">
-            <Label>Código</Label>
+          <FormField label="Código" className="space-y-1">
             <Input className="w-28" placeholder="MAERSK" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Nombre</Label>
+          </FormField>
+          <FormField label="Nombre" className="space-y-1">
             <Input className="w-64" placeholder="Maersk Line" value={nuevoName} onChange={(e) => setNuevoName(e.target.value)} />
-          </div>
+          </FormField>
           {/* UX-16: sin campos completos el submit fallaba en silencio (early
               return de handleAgregar); ahora el botón se deshabilita. */}
           <Button

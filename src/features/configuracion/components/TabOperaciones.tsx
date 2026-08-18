@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/shared/FormField";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { useConfigValue, useUpdateConfiguracion } from "@/features/configuracion/hooks/useConfiguracion";
@@ -57,36 +57,32 @@ export default function TabOperaciones() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
-          <div className="space-y-2 p-3 rounded-lg border">
-            <Label className="text-sm font-medium">Umbral de alerta (%)</Label>
-            <p className="text-xs text-muted-foreground">
-              A partir de este % la varianza se marca como <strong>alerta</strong>.
-            </p>
-            <Input
+          <div className="p-3 rounded-lg border">
+            <FormField label="Umbral de alerta (%)" hint="A partir de este % la varianza se marca como alerta">
+              <Input
               type="number"
               min={0}
               max={100}
               step={0.5}
               value={alertaPct}
               onChange={(e) => setAlertaPct(Number(e.target.value))}
-              className="w-28"
-            />
+                className="w-28"
+              />
+            </FormField>
           </div>
 
-          <div className="space-y-2 p-3 rounded-lg border">
-            <Label className="text-sm font-medium">Umbral crítico (%)</Label>
-            <p className="text-xs text-muted-foreground">
-              A partir de este % la varianza se marca como <strong>crítica</strong>.
-            </p>
-            <Input
+          <div className="p-3 rounded-lg border">
+            <FormField label="Umbral crítico (%)" hint="A partir de este % la varianza se marca como crítica">
+              <Input
               type="number"
               min={0}
               max={100}
               step={0.5}
               value={criticaPct}
               onChange={(e) => setCriticaPct(Number(e.target.value))}
-              className="w-28"
-            />
+                className="w-28"
+              />
+            </FormField>
           </div>
         </div>
 

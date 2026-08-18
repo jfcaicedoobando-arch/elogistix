@@ -4,6 +4,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/shared/FormField";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -104,41 +105,43 @@ export default function TabSeguridadGlobal() {
             <Switch checked={registroPublico} onCheckedChange={setRegistroPublico} />
           </div>
 
-          <div className="space-y-2 p-3 rounded-lg border">
-            <Label className="text-sm font-medium">Longitud mínima de contraseña</Label>
-            <Input
-              type="number"
-              min={6}
-              max={32}
-              value={longitudPassword}
-              onChange={(e) => setLongitudPassword(Number(e.target.value))}
-              className="w-24"
-            />
+          <div className="p-3 rounded-lg border">
+            <FormField label="Longitud mínima de contraseña">
+              <Input
+                type="number"
+                min={6}
+                max={32}
+                value={longitudPassword}
+                onChange={(e) => setLongitudPassword(Number(e.target.value))}
+                className="w-24"
+              />
+            </FormField>
           </div>
 
-          <div className="space-y-2 p-3 rounded-lg border">
-            <Label className="text-sm font-medium">Expiración de sesión (horas)</Label>
-            <Input
-              type="number"
-              min={1}
-              max={720}
-              value={expiracionSesion}
-              onChange={(e) => setExpiracionSesion(Number(e.target.value))}
-              className="w-24"
-            />
+          <div className="p-3 rounded-lg border">
+            <FormField label="Expiración de sesión (horas)">
+              <Input
+                type="number"
+                min={1}
+                max={720}
+                value={expiracionSesion}
+                onChange={(e) => setExpiracionSesion(Number(e.target.value))}
+                className="w-24"
+              />
+            </FormField>
           </div>
 
-          <div className="space-y-2 p-3 rounded-lg border">
-            <Label className="text-sm font-medium">Intentos máximos de login</Label>
-            <p className="text-xs text-muted-foreground">Antes de bloquear temporalmente la cuenta</p>
-            <Input
-              type="number"
-              min={3}
-              max={20}
-              value={maxIntentos}
-              onChange={(e) => setMaxIntentos(Number(e.target.value))}
-              className="w-24"
-            />
+          <div className="p-3 rounded-lg border">
+            <FormField label="Intentos máximos de login" hint="Antes de bloquear temporalmente la cuenta">
+              <Input
+                type="number"
+                min={3}
+                max={20}
+                value={maxIntentos}
+                onChange={(e) => setMaxIntentos(Number(e.target.value))}
+                className="w-24"
+              />
+            </FormField>
           </div>
         </div>
 
@@ -146,10 +149,10 @@ export default function TabSeguridadGlobal() {
 
         <div>
           <h3 className="text-sm font-medium mb-2">Contacto de soporte</h3>
-          <div className="space-y-2 p-3 rounded-lg border max-w-md">
-            <Label className="text-sm font-medium">Email de soporte</Label>
-            <p className="text-xs text-muted-foreground">Dirección de contacto para soporte técnico de la plataforma</p>
-            <Input value={emailSoporte} onChange={(e) => setEmailSoporte(e.target.value)} placeholder="soporte@librecarga.com" type="email" />
+          <div className="p-3 rounded-lg border max-w-md">
+            <FormField label="Email de soporte" hint="Dirección de contacto para soporte técnico de la plataforma">
+              <Input value={emailSoporte} onChange={(e) => setEmailSoporte(e.target.value)} placeholder="soporte@librecarga.com" type="email" />
+            </FormField>
           </div>
         </div>
 
