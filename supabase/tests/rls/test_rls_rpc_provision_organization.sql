@@ -96,7 +96,8 @@ BEGIN
     (super_a, 'super_admin'),
     (admin_a, 'admin_org'),
     (operador_a, 'coordinador_logistico'),
-    (viewer_a, 'customer_service');
+    (viewer_a, 'customer_service')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
   -- plano_a a propósito NO tiene rol.
 
   -- ════════════════════════════════════════════════════════════════════════

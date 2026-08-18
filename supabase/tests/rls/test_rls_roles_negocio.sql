@@ -61,7 +61,8 @@ BEGIN
     (tesorero_a, 'tesorero'),
     (auxiliar_a, 'auxiliar_contable'),
     (cobranza_a, 'ejecutivo_cobranza'),
-    (super_u,    'super_admin');
+    (super_u,    'super_admin')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
     (cli_a, 'Cli Roles A', 'XAXX010101000', 'a@test.local', org_a),
@@ -110,7 +111,8 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format('INSERT INTO public.user_roles(user_id, role) VALUES (%L, %L)', vendedor_a, 'super_admin'),
     'vendedor_a NO debe poder auto-asignarse super_admin'
-  );
+  )
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   -- ════════════════════════════════════════════════════════════════════════
   -- CONTADOR (org_a) — puede leer financiero de su org, NO otra org

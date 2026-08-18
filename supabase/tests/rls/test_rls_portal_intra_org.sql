@@ -43,7 +43,8 @@ BEGIN
   INSERT INTO public.user_roles(user_id, role) VALUES
     (admin_a, 'admin_org'),
     (portal_a, 'cliente'),
-    (portal_b, 'cliente');
+    (portal_b, 'cliente')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
     (cli_a, 'Cliente Portal A', 'XAXX010101000', 'a@test.local', org_a),

@@ -40,7 +40,8 @@ BEGIN
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
     (org_a, admin_a, 'admin_org');
   INSERT INTO public.user_roles(user_id, role) VALUES
-    (admin_a, 'admin_org'), (agente_x, 'agente_carga');
+    (admin_a, 'admin_org'), (agente_x, 'agente_carga')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
     (cli_a, 'Cli Smoke Rol', 'XAXX010101000', 'smoke-rol@test.local', org_a);
   INSERT INTO public.cotizaciones(

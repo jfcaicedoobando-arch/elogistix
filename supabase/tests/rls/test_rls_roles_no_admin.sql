@@ -50,7 +50,8 @@ BEGIN
     (admin_a, 'admin_org'),
     (viewer_a, 'customer_service'),
     (operador_a, 'coordinador_logistico'),
-    (cli_user, 'cliente');
+    (cli_user, 'cliente')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
     (cli_a, 'Cliente NA A', 'XAXX010101000', 'a@test.local', org_a),
@@ -185,7 +186,8 @@ BEGIN
       operador_a, 'super_admin'
     ),
     'operador_a NO debe poder auto-asignarse super_admin via user_roles'
-  );
+  )
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
 
   -- ════════════════════════════════════════════════════════════════════════

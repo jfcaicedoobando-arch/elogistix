@@ -67,7 +67,8 @@ BEGIN
     (u_admin_a, 'admin_org'),
     (u_conta_a, 'contador'),
     (u_cs_a,    'customer_service'),
-    (u_conta_b, 'contador');
+    (u_conta_b, 'contador')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   INSERT INTO public.proveedores(
     id, organization_id, nombre, rfc, contacto, email, telefono,

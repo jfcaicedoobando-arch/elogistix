@@ -42,7 +42,8 @@ BEGIN
     (org_a, user_a, 'admin_org'), (org_b, user_b, 'admin_org');
 
   INSERT INTO public.user_roles(user_id, role) VALUES
-    (user_a, 'admin_org'), (user_b, 'admin_org');
+    (user_a, 'admin_org'), (user_b, 'admin_org')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   INSERT INTO public.proveedores(id, nombre, organization_id, tipo, categoria) VALUES
     (prov_b, 'Proveedor Offset B', org_b, 'Agente Aduanal', 'Logistico');
