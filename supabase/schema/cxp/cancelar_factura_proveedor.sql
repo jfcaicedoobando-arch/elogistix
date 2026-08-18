@@ -121,14 +121,25 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-DECLARE v_uid uuid := auth.uid();
+DECLARE
+  v_uid uuid := auth.uid();
+  v_rol public.app_role;
+  -- Roles financieros autorizados a cancelar una factura de proveedor.
+  c_permitidos public.app_role[] := ARRAY[
+    'admin', 'super_admin', 'admin_org', 'contador', 'auxiliar_contable', 'tesorero'
+  ]::public.app_role[];
 BEGIN
   IF NEW.estado IS NOT DISTINCT FROM OLD.estado THEN RETURN NEW; END IF;
   IF NEW.estado <> 'Cancelada'::public.estado_proveedor_factura THEN RETURN NEW; END IF;
   -- Procesos del sistema (crons, edge functions) siguen operando.
   IF v_uid IS NULL OR auth.role() = 'service_role' THEN RETURN NEW; END IF;
 
-  IF NOT (public.has_role(v_uid, 'admin'::app_role)
+  -- El rol vive en organization_members (rol_efectivo); user_roles es el fallback
+  -- para roles de plataforma. Sólo mirar has_role bloqueaba a admin_org legítimos.
+  v_rol := public.rol_efectivo(v_uid, NEW.organization_id);
+
+  IF NOT (v_rol = ANY (c_permitidos)
+          OR public.has_role(v_uid, 'admin'::app_role)
           OR public.has_role(v_uid, 'super_admin'::app_role)
           OR public.has_role(v_uid, 'admin_org'::app_role)
           OR public.has_role(v_uid, 'contador'::app_role)
