@@ -1,9 +1,8 @@
--- Fuente canónica de public.cancelar_factura_proveedor (dominio cxp).
--- Última migración que la define: 20260825000200 (BL-03, reset de
--- estado_aprobacion='pendiente' al cancelar — permitido por
--- trg_guard_aprobacion_proveedor_factura sin marca de sesión).
--- Regla: cualquier cambio a esta función debe actualizar este archivo
--- en el mismo PR (ver supabase/schema/README.md).
+-- Fuente canónica de public.cancelar_factura_proveedor.
+-- v13.646.0 (BUG-06, auditoría 2026-08-18): el permiso ya NO vive dentro de la
+-- RPC sino en el trigger trg_cxp_cancelacion_rol_financiero sobre
+-- public.proveedor_facturas, para que sea independiente del orden de migraciones
+-- y aplique a cualquier ruta que intente dejar la factura en 'Cancelada'.
 
 CREATE OR REPLACE FUNCTION public.cancelar_factura_proveedor(p_factura_id uuid, p_motivo text)
  RETURNS void
@@ -112,7 +111,40 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.cancelar_factura_proveedor(uuid, text) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.cancelar_factura_proveedor(uuid, text) FROM anon;
-GRANT EXECUTE ON FUNCTION public.cancelar_factura_proveedor(uuid, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.cancelar_factura_proveedor(uuid, text) TO service_role;
+REVOKE ALL ON FUNCTION public.cancelar_factura_proveedor(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.cancelar_factura_proveedor(uuid, text) TO authenticated, service_role;
+
+-- BUG-06 (auditoría 2026-08-18): el permiso vive en la tabla, no en la RPC.
+CREATE OR REPLACE FUNCTION public.guard_cxp_cancelacion_rol_financiero()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE v_uid uuid := auth.uid();
+BEGIN
+  IF NEW.estado IS NOT DISTINCT FROM OLD.estado THEN RETURN NEW; END IF;
+  IF NEW.estado <> 'Cancelada'::public.estado_proveedor_factura THEN RETURN NEW; END IF;
+  -- Procesos del sistema (crons, edge functions) siguen operando.
+  IF v_uid IS NULL OR auth.role() = 'service_role' THEN RETURN NEW; END IF;
+
+  IF NOT (public.has_role(v_uid, 'admin'::app_role)
+          OR public.has_role(v_uid, 'super_admin'::app_role)
+          OR public.has_role(v_uid, 'admin_org'::app_role)
+          OR public.has_role(v_uid, 'contador'::app_role)
+          OR public.has_role(v_uid, 'auxiliar_contable'::app_role)
+          OR public.has_role(v_uid, 'tesorero'::app_role)) THEN
+    RAISE EXCEPTION 'LC_CXP_CANCELAR_FORBIDDEN: tu rol no puede cancelar facturas de proveedor.'
+      USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.guard_cxp_cancelacion_rol_financiero() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.guard_cxp_cancelacion_rol_financiero() TO authenticated, service_role;
+
+DROP TRIGGER IF EXISTS trg_cxp_cancelacion_rol_financiero ON public.proveedor_facturas;
+CREATE TRIGGER trg_cxp_cancelacion_rol_financiero
+  BEFORE UPDATE OF estado ON public.proveedor_facturas
+  FOR EACH ROW
