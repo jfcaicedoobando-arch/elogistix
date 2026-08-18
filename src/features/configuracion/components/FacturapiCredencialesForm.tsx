@@ -19,6 +19,7 @@ import {
   useProbarFacturapiConexion,
 } from "@/features/configuracion/hooks/useFacturapiCredenciales";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 type Props = {
   orgId: string;
@@ -40,6 +41,8 @@ function ApiKeyRow({
   orgId, ambiente, last4, label, prefijo,
 }: { orgId: string; ambiente: FacturapiAmbiente; last4: string | null; label: string; prefijo: string }) {
   const [valor, setValor] = useState("");
+  // UX-07: quitar una API key es destructivo (rompe el timbrado) → confirmación.
+  const [confirmarQuitar, setConfirmarQuitar] = useState(false);
   const setKey = useSetFacturapiApiKey(orgId);
   const clearKey = useClearFacturapiApiKey(orgId);
   const probar = useProbarFacturapiConexion(orgId);
@@ -81,7 +84,12 @@ function ApiKeyRow({
           )}
         </Label>
         {cargada && (
-          <Button type="button" size="sm" variant="ghost" onClick={() => clearKey.mutate(ambiente)} disabled={clearKey.isPending}>
+          <Button
+            type="button" size="sm" variant="ghost"
+            onClick={() => setConfirmarQuitar(true)}
+            disabled={clearKey.isPending}
+            aria-label={`Quitar la API key de ${label}`}
+          >
             <Trash2 className="h-3.5 w-3.5 mr-1" /> Quitar
           </Button>
         )}
@@ -107,6 +115,19 @@ function ApiKeyRow({
       <p className="text-label text-muted-foreground">
         La key se guarda cifrada en el servidor. Aquí sólo ves los últimos 4 dígitos.
       </p>
+      <ConfirmActionDialog
+        open={confirmarQuitar}
+        onOpenChange={setConfirmarQuitar}
+        title={`¿Quitar la API key de ${label}?`}
+        description="Mientras no cargues una key nueva no podrás timbrar facturas en este ambiente. Esta acción no se puede deshacer."
+        confirmLabel="Quitar la key"
+        variant="destructive"
+        isPending={clearKey.isPending}
+        onConfirm={() => {
+          clearKey.mutate(ambiente);
+          setConfirmarQuitar(false);
+        }}
+      />
     </div>
   );
 }

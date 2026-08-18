@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.647.2] - 2026-08-18
+
+### Auditoría v1 — cierre de UX-07 y UX-04
+- UX-07: quitar una API key de FacturApi (formulario y wizard) ahora pide confirmación destructiva y el botón tiene `aria-label`.
+- UX-04: las pestañas de detalle de Cliente, Auditoría operativa y Buzón de facturas se persisten en la URL (`?tab=`), así sobreviven a recargas y permiten deep-links.
+- Se restauró `src/constants/appVersion.ts` (quedó vacío y rompía el typecheck).
+
 ## [13.647.1] - 2026-08-18
 
 ### Validación de Olas A y B
