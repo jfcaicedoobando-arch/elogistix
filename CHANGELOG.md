@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.669.0] - 2026-08-18
+
+### Ola 7 · N-UI-01 — Un solo `CartaGarantiaBadge`
+- Existían dos componentes homónimos para el mismo dato (uno sólido de una palabra en Costeo/Portal del agente, otro informativo con iconos en Cotizaciones). Queda la variante informativa como única implementación, aceptando `{tarifa}` o `{tieneCarta, vigenteHasta, navieraNombre?}`; el módulo de costeo sólo re-exporta, así que ningún import cambió. Analogía: eran dos semáforos en el mismo cruce y al cambiar uno el otro quedaba mintiendo.
+- Las fechas ahora usan el formateador canónico `formatFechaDia` (DD/MM/YYYY, TZ_MX) en lugar del ISO crudo.
+- Cambio visible: en Costeo → Navieras y Portal del agente → Garantías el badge muestra icono, fecha y el aviso "se cobrará depósito".
+- `TODO(shared)`: mover el componente a `src/components/shared` cuando el ownership lo permita.
+- Test nuevo: `CartaGarantiaBadge.test.tsx` (4 estados × 2 formas de props + formato de fecha).
+
+### Ola 6 · Marca (UI-03/UI-16)
+- `src/pdf/theme/tokens.ts`: `primary` `#0F4C81`→`#1B2E4B` y `accent` `#2563EB`→`#2463EB` (equivalentes exactos de `--primary: 216 47% 20%` y `--accent: 221 83% 53%` en `src/index.css`, ahora citada como fuente de verdad). Los PDFs quedan con el mismo azul que la pantalla.
+- `package.json`: `name` `vite_react_shadcn_ts` → `libre-carga`.
+- `LogoPreview.tsx`: hex y clases crudas reemplazadas por tokens semánticos (`bg-background`/`bg-card`/`bg-muted`, `bg-primary`, `bg-accent`, `text-*-foreground`, `ring-accent`) y el degradado reescrito con `hsl(var(--primary))`/`hsl(var(--accent))`. Mismo propósito de QA, sin hex en etiquetas.
+
 ## [13.668.0] - 2026-08-18
 
 ### Ola 3 · Copy "Cartera" → "Cobranza"
