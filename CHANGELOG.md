@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.667.0] - 2026-08-18
+
+### Ola 2 · EC-07/EC-08/EC-09 — fechas seguras, promesas con catch y realtime por tenant
+- **EC-07** `formatFechaSegura` (nuevo `src/lib/formatters/datesSegura.ts`, separado para respetar Power-of-10 #4): valida con `isValid` antes de formatear y devuelve `—`. Migrados `papelera/columns.tsx` (se elimina el adaptador `dtf` con `toISOString()`), `Idempotencia.tsx`, `AlertasSistemaPanel.tsx` y `AsignacionExistenteInfo.tsx`. Analogía: antes una fecha corrupta era un foco fundido que apagaba toda la casa; ahora sólo ese foco queda apagado.
+- **EC-08** promesas sin `catch`: descarga de MSDS (`MercanciaInfoGrid.tsx`) con `try/catch` + `notifyError`, `ResetPassword.tsx` ya no queda en spinner infinito, y `proformas/services/destinatarios.ts` propaga errores de PostgREST con límite defensivo de 200 filas.
+- **EC-09** realtime CxP: `subscribeEntrantesBuzon(organizationId, onChange)` usa canal y `filter: organization_id=eq.<org>`; `useEntrantesPorCapturarCount` no se suscribe sin organización activa.
+
+### Ola 8 · Test estructural de respaldo PERMISSIVE (PERF-01)
+- Nueva suite `supabase/tests/rls/test_rls_restrictive_perf01_permissive_backup.sql`: toda tabla con RESTRICTIVE del patrón PERF-01 (`rls_tenant_scope_ok` + corto-circuito `has_role('super_admin')`) debe tener al menos una PERMISSIVE con filtro tenant/rol, salvo whitelist documentada. Evita que una tabla quede ilegible para `authenticated`.
+
+### Tests
+- Nuevo `dates.segura.test.ts` (6 casos) y `facturasEntrantesRealtime.test.ts` actualizado al canal por organización.
+- `useCotizacionDetalleHandlers.test.tsx` estaba rojo: faltaba mockear `fetchDatosFiscalesProspecto`, `tieneCostosCargados` y `notifyWarning`, y `abrirDialogConvertir` ahora es `async`.
+
 ## [13.666.2] - 2026-08-18
 
 ### FIX-45 · `anon` sin EXECUTE en trigger de cotizaciones

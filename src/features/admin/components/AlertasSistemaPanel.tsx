@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { AlertTriangle, Check, BellOff } from "lucide-react";
 import { useAlertasSistemaList, useAcknowledgeAlerta } from "@/features/admin/hooks";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+// EC-07: `formatFechaSegura` evita RangeError si `created_at` viene inválido.
+import { formatFechaSegura } from "@/lib/formatters";
 
 const severityVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   info: "secondary",
@@ -63,7 +63,7 @@ export default function AlertasSistemaPanel() {
                       </Badge>
                       <span className="text-xs text-muted-foreground">{a.source}</span>
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(a.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
+                        {formatFechaSegura(a.created_at, "dd/MM/yyyy HH:mm")}
                       </span>
                       {ack && <Badge variant="secondary" className="text-2xs">Reconocida</Badge>}
                     </div>

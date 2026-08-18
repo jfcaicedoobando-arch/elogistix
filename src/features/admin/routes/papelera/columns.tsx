@@ -2,7 +2,7 @@ import { RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { TrashRow } from "@/features/admin/hooks";
-import { dtf } from "./tablas";
+import { formatFechaSegura } from "@/lib/formatters";
 
 interface BuildColumnsParams {
   onRestore: (id: string) => void;
@@ -20,7 +20,7 @@ export function buildPapeleraColumns({ onRestore, onPurgeTarget, isBusy }: Build
     {
       id: "deleted_at",
       header: "Eliminado",
-      cell: ({ row }) => <span className="text-sm text-muted-foreground">{dtf.format(new Date(row.original.deleted_at))}</span>,
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatFechaSegura(row.original.deleted_at, "dd/MM/yyyy HH:mm")}</span>,
     },
     {
       id: "deleted_by_email",
