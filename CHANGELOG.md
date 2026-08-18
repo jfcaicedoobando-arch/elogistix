@@ -9,9 +9,9 @@
 - Guardrail nuevo `src/__tests__/architecture/fechas-formateador-canonico.test.ts`: falla el CI si un módulo define su propio formateador de fecha o llama `toLocaleDateString` / `format(..., "dd/MM/yyyy")` fuera de `src/lib`.
 - Tests nuevos de contrato para `formatFechaDia`.
 
-### Fix — suites RLS `financiero_critico` y `soft_delete_reportes`
-
 ## [13.647.5] - 2026-08-18
+
+### Fix — suites RLS `financiero_critico` y `soft_delete_reportes`
 - Los fixtures creaban notas de crédito de cliente directamente en estado `Aplicada` sin `uuid_fiscal`, así que el trigger `trg_nc_cliente_transicion` (BUG-05) abortaba la suite con `LC_NC_UUID_REQUERIDO`.
 - `test_rls_soft_delete_reportes.sql`: la NC nace `Aplicada` con `uuid_fiscal` de prueba.
 - `test_rls_financiero_critico.sql`: la aserción de RLS ahora usa estado `Borrador` (el estado es irrelevante para la prueba de aislamiento).
