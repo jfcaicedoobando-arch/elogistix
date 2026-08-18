@@ -65,6 +65,8 @@ export function ProspectoSection({
       ) : (
         <FormularioNuevoProspecto />
       )}
+
+      <ProspectoDatosFiscales />
     </div>
   );
 }
