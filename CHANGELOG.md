@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.652.4] - 2026-08-18
+
+### Power of 10 — archivos productivos ≤200 líneas
+- `FacturapiCredencialesForm.tsx` (211 → 105): la fila de captura de API key se movió a `FacturapiApiKeyRow.tsx`.
+- `ClienteDetalleTabs.tsx` (201 → 147): las pestañas tabulares (embarques y cotizaciones) se movieron a `ClienteDetalleTablasTabs.tsx`.
+
 ## [13.652.3] - 2026-08-18
 
 ### H6 — permisos explícitos en las funciones de la Ola D
