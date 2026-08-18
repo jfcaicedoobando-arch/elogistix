@@ -7,6 +7,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
 import { requiereEquivalente } from "@/features/bandejas/domain/carteraFx";
 import { formatNativos } from "@/features/bandejas/domain/carteraFormat";
+import { useExchangeRates } from "@/features/catalogos/hooks";
+import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 
 interface Equivalente {
   totalMxn: number;
