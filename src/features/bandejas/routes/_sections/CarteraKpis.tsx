@@ -73,6 +73,7 @@ export function CarteraKpis(p: Props) {
           <Equivalencia saldos={p.vencidoNativo} eq={p.eqVencido} />
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
