@@ -15,6 +15,7 @@ import {
   useSetFacturapiApiKey,
   useClearFacturapiApiKey,
 } from "@/features/configuracion/hooks/useFacturapiCredenciales";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 interface KeyRowProps {
   orgId: string;
@@ -27,6 +28,8 @@ interface KeyRowProps {
 
 function KeyRow({ orgId, ambiente, last4, label, prefijo, activo }: KeyRowProps) {
   const [valor, setValor] = useState("");
+  // UX-07: confirmación antes de borrar la key (rompe el timbrado del ambiente).
+  const [confirmarQuitar, setConfirmarQuitar] = useState(false);
   const setKey = useSetFacturapiApiKey(orgId);
   const clearKey = useClearFacturapiApiKey(orgId);
   const cargada = !!last4;
@@ -70,8 +73,9 @@ function KeyRow({ orgId, ambiente, last4, label, prefijo, activo }: KeyRowProps)
             type="button"
             size="sm"
             variant="ghost"
-            onClick={() => clearKey.mutate(ambiente)}
+            onClick={() => setConfirmarQuitar(true)}
             disabled={clearKey.isPending}
+            aria-label={`Quitar la ${label}`}
           >
             <Trash2 className="h-3.5 w-3.5 mr-1" /> Quitar
           </Button>
@@ -96,6 +100,19 @@ function KeyRow({ orgId, ambiente, last4, label, prefijo, activo }: KeyRowProps)
           )}
         </Button>
       </div>
+      <ConfirmActionDialog
+        open={confirmarQuitar}
+        onOpenChange={setConfirmarQuitar}
+        title={`¿Quitar la ${label}?`}
+        description="Mientras no cargues una key nueva no podrás timbrar facturas en este ambiente. Esta acción no se puede deshacer."
+        confirmLabel="Quitar la key"
+        variant="destructive"
+        isPending={clearKey.isPending}
+        onConfirm={() => {
+          clearKey.mutate(ambiente);
+          setConfirmarQuitar(false);
+        }}
+      />
     </div>
   );
 }
