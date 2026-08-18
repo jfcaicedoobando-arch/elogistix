@@ -74,29 +74,12 @@ export function ProveedorResumenCards({
         />
       </KpiStrip>
 
-      {(variasMonedas || monedasSinTc.length > 0) && (
-        <div className="text-xs text-muted-foreground">
-          {tcEstimado && (
-            <span className="text-warning">
-              Equivalente calculado con T/C estimado (no oficial) ·{" "}
-            </span>
-          )}
-          {variasMonedas && (
-            <span>
-              Desglose nativo:{" "}
-              {monedasNativas
-                .map(([mon, monto]) => formatCurrency(monto, mon))
-                .join(" · ")}
-            </span>
-          )}
-          {monedasSinTc.length > 0 && (
-            <span className="text-warning">
-              {variasMonedas ? " · " : ""}
-              {monedasSinTc.join(", ")} sin tipo de cambio: no se incluye en el equivalente
-            </span>
-          )}
-        </div>
-      )}
+      <NotaMonedas
+        monedasNativas={monedasNativas}
+        monedasSinTc={monedasSinTc}
+        tcEstimado={tcEstimado}
+      />
+
 
       {totalFacturado > 0 && (
         <div className="space-y-1.5">
