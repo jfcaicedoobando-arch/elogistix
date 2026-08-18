@@ -5,7 +5,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import CrearMiembroOrgDialog from "@/features/admin/components/CrearMiembroOrgDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { OrgHeader } from "@/features/admin/components/orgDetalle/OrgHeader";
-import { OrgInfoCard } from "@/features/admin/components/orgDetalle/OrgInfoCard";
+import { OrgDatosGeneralesCard } from "@/features/admin/components/orgDetalle/OrgDatosGeneralesCard";
 import { OrgMembersCard } from "@/features/admin/components/orgDetalle/OrgMembersCard";
 import { OrgConfigCard } from "@/features/admin/components/orgDetalle/OrgConfigCard";
 import { useAdminOrgDetalle } from "@/features/admin/hooks";
@@ -58,7 +58,7 @@ export default function AdminOrgDetalle() {
         <KpiCard label="Cotizaciones" value={cotizacionCount} icon={ClipboardList} variant="destructive" iconVariant="chip" />
       </div>
 
-      <OrgInfoCard
+      <OrgDatosGeneralesCard
         org={org}
         planes={planes}
         editing={editing} setEditing={setEditing}

@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/formatters";
 
 interface PlanOption { id: string; nombre: string; activo: boolean }
 
-interface OrgInfoCardProps {
+interface OrgDatosGeneralesCardProps {
   org: { nombre: string; rfc: string | null; plan: string | null; created_at: string | null };
   planes: PlanOption[];
   editing: boolean;
@@ -21,11 +21,11 @@ interface OrgInfoCardProps {
   onCancel: () => void;
 }
 
-export function OrgInfoCard({
+export function OrgDatosGeneralesCard({
   org, planes, editing, setEditing,
   editNombre, setEditNombre, editRfc, setEditRfc, editPlan, setEditPlan,
   savePending, onSave, onCancel,
-}: OrgInfoCardProps) {
+}: OrgDatosGeneralesCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
