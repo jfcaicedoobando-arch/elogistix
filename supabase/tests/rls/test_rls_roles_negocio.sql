@@ -111,8 +111,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format('INSERT INTO public.user_roles(user_id, role) VALUES (%L, %L)', vendedor_a, 'super_admin'),
     'vendedor_a NO debe poder auto-asignarse super_admin'
-  )
-    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
+  );
 
   -- ════════════════════════════════════════════════════════════════════════
   -- CONTADOR (org_a) — puede leer financiero de su org, NO otra org

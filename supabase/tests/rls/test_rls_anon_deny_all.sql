@@ -87,8 +87,7 @@ BEGIN
       gen_random_uuid(), 'super_admin'
     ),
     'anon NO debe poder INSERT en user_roles (escalada catastrófica)'
-  )
-    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
+  );
 
   PERFORM pg_temp.as_postgres();
   RAISE NOTICE '✓ test_rls_anon_deny_all: sweep OK sobre % tablas + 2 INSERT bloqueados', array_length(sensitive, 1);

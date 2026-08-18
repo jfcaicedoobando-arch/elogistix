@@ -186,8 +186,7 @@ BEGIN
       operador_a, 'super_admin'
     ),
     'operador_a NO debe poder auto-asignarse super_admin via user_roles'
-  )
-    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
+  );
 
 
   -- ════════════════════════════════════════════════════════════════════════
