@@ -78,13 +78,18 @@ export default function Tesoreria() {
       >
         {data ? (
           <>
+            {/* EC-10: el respaldo operativo (17.25) NO es TC oficial; el badge
+                no debe decir "TC DOF" ni verse informativo cuando lo estamos usando. */}
+            <TipoCambioFallbackBanner />
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <Badge variant={data.tipo_cambio_usd ? "info" : "secondary"}>
-                {data.tipo_cambio_usd
-                  ? `TC DOF $${data.tipo_cambio_usd.toFixed(4)}${
-                      data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""
-                    }`
-                  : "TC DOF no disponible"}
+              <Badge variant={tcEstimado ? "warning" : data.tipo_cambio_usd ? "info" : "secondary"}>
+                {tcEstimado
+                  ? `T/C estimado $${(data.tipo_cambio_usd ?? 0).toFixed(4)} · no oficial`
+                  : data.tipo_cambio_usd
+                    ? `TC DOF $${data.tipo_cambio_usd.toFixed(4)}${
+                        data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""
+                      }`
+                    : "TC DOF no disponible"}
               </Badge>
             </div>
 
