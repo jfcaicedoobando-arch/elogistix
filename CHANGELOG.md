@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.673.0] - 2026-08-18
+
+### Auditoría de arquitectura — punto 1: frontera pública del feature CxP
+- **Superficie pública real:** CxP se importaba desde 40 archivos de otros features "por la ventana" (rutas internas como `@/features/cxp/services/facturasEntrantes`). Ahora todo entra por la puerta: barril raíz `@/features/cxp` y sub-barriles `services` / `hooks` / `types` / `queryKeys` / `permissions`.
+- **Barriles ampliados:** se expusieron 14 servicios y 11 hooks que ya se consumían de fuera, más `ProveedorCombobox`, `cxpColumns` y las partes de `DialogDetallePagosProveedor` en el barril raíz.
+- **Imports unificados:** se fusionaron los imports duplicados resultantes en 5 archivos (sidebar, Compras por aprobar, buzón, entrantes de embarque).
+- **Guardrail:** `feature-barrel-surface.test.ts` ahora enforza `cxp` junto a `tesoreria` y `proformas`; cualquier deep import nuevo hacia estos features falla la suite. Analogía: antes cada feature era una casa sin puerta principal y los vecinos entraban por cualquier ventana; ahora solo hay recepción.
+
 ## [13.672.0] - 2026-08-18
 
 ### Auditoría de arquitectura — punto 3 (duplicados) y mensajes LC_* del CRM
