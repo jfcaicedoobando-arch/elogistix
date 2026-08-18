@@ -6,6 +6,7 @@ import { Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { useExchangeRates } from "@/features/catalogos/hooks";
 
 export interface TopProveedorRow {
   nombre: string;
