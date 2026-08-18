@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/lib/formatters";
+import { calcularIVA, TASA_IVA } from "@/lib/financial/financialUtils";
 import { parseMonto } from "@/lib/format/parseMonto";
 import { totalLinea } from "@/features/cxp/utils/cuadreConceptos";
 import type { ConceptoManual } from "@/features/cxp/hooks/useConceptosManuales";
@@ -49,7 +50,10 @@ export function ConceptoLineaRow({
   const total = totalLinea({ monto: Number(c.importe) || 0, cantidad: c.cantidad });
 
   const aplicarIva16 = () => {
-    const iva = Math.round(total * 0.16 * 100) / 100;
+    // BUG-14: redondeo canónico (half away from zero, igual que Postgres);
+    // el modelo CfdiConceptoParsed no guarda tasa por renglón, así que este
+    // botón aplica la tasa general declarada en TASA_IVA.
+    const iva = calcularIVA(total, TASA_IVA);
     setIvaTxt(fmt2(iva));
     onActualizar(c.key, "iva", iva);
   };

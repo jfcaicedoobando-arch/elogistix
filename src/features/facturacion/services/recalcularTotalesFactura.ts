@@ -35,8 +35,11 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
       tasa = tipo ? (resolverTasa(tipo) ?? 0) : 0;
     }
     iva += calcularIVA(importe, tasa);
-    retIsr += importe * Number(c.tasa_ret_isr ?? 0);
-    retIva += importe * Number(c.tasa_ret_iva ?? 0);
+    // BUG-16: las retenciones se redondean por línea (como el IVA); acumular
+    // el float crudo y redondear al final podía dejar la factura 1 centavo
+    // descuadrada contra el trigger de la BD.
+    retIsr += roundMoney(importe * Number(c.tasa_ret_isr ?? 0));
+    retIva += roundMoney(importe * Number(c.tasa_ret_iva ?? 0));
   }
   const r = roundMoney;
   const subtotalR = r(subtotal);
