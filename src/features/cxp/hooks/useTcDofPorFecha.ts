@@ -75,8 +75,8 @@ export function useTcDofPorFecha(onTc: (r: TcDofResult) => void) {
         notifySuccess(undefined, {
           title: `TC DOF ${r.moneda}: ${r.tipoCambio}`,
           description: r.fechaAplicada
-            ? `Publicación DOF vigente al ${formatFechaEs(args.fecha)} (FIX ${formatFechaEs(r.fechaAplicada)}).`
-            : `Consulta para emisión ${formatFechaEs(args.fecha)}.`,
+            ? `Publicación DOF vigente al ${formatFechaIsoEstricta(args.fecha)} (FIX ${formatFechaIsoEstricta(r.fechaAplicada)}).`
+            : `Consulta para emisión ${formatFechaIsoEstricta(args.fecha)}.`,
         });
       }
     },

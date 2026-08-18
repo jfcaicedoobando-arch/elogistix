@@ -6,7 +6,7 @@
  * que calculaban "hace X min/h/días" cada una a su manera.
  */
 
-import { formatFechaEs } from "@/lib/formatters";
+import { formatFechaDia } from "@/lib/formatters";
 
 const MINUTO_MS = 60_000;
 const HORA_MS = 60 * MINUTO_MS;

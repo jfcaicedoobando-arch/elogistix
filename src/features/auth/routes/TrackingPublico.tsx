@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import { getOrigen, getDestino, formatFechaEs } from "@/lib/formatters";
+import { getOrigen, getDestino, formatFechaDia } from "@/lib/formatters";
 import { labelNaviera } from "@/lib/formatters/carrierLabels";
 import { Ship } from "lucide-react";
 import { type TrackingPublicoData } from "@/features/embarques/services/tracking";
@@ -83,8 +83,8 @@ export default function TrackingPublico() {
             <CardContent className="text-sm space-y-1">
               <p><strong>Origen:</strong> {getOrigen(e)}</p>
               <p><strong>Destino:</strong> {getDestino(e)}</p>
-              <p><strong>ETD:</strong> {fechaDia(e.etd)}</p>
-              <p><strong>ETA:</strong> {fechaDia(e.eta)}</p>
+              <p><strong>ETD:</strong> {formatFechaDia(e.etd)}</p>
+              <p><strong>ETA:</strong> {formatFechaDia(e.eta)}</p>
             </CardContent>
           </Card>
           <Card>
