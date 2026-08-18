@@ -8,9 +8,15 @@ import { formatDate } from "@/lib/formatters";
 export function vigenciaPlus30(fechaEmision: string | null | undefined): string {
   if (!fechaEmision) return "—";
   try {
-    const d = new Date(fechaEmision);
+    // EC-06: `fecha_emision` es date-only; "T00:00:00" lo ancla a medianoche
+    // LOCAL. El `toISOString().substring(0,10)` posterior devolvía el día UTC
+    // (un día menos entre 18:00–23:59 CDMX); con anclaje local se formatea
+    // directo con date-fns.
+    const d = new Date(`${fechaEmision.substring(0, 10)}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return "—";
     d.setDate(d.getDate() + 30);
-    return formatDate(d.toISOString().substring(0, 10));
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return formatDate(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
   } catch {
     return "—";
   }

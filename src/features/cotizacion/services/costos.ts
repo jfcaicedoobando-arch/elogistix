@@ -6,6 +6,7 @@ import type { CostoCotizacion } from "@/features/cotizacion/types";
 import { fromDbChecked } from "@/lib/supabase/cast";
 import { costosCotizacionDbSchema } from "./readSchemas";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 export async function fetchCotizacionCostos(
   cotizacionId: string,
@@ -13,8 +14,11 @@ export async function fetchCotizacionCostos(
   const { data, error } = await supabase
     .from("cotizacion_costos")
     .select("*")
-    .eq("cotizacion_id", cotizacionId);
+    .eq("cotizacion_id", cotizacionId)
+    // EC-05: límite defensivo sobre partidas de costo de una cotización.
+    .limit(500);
   if (error) throw error;
+  assertNotTruncated(data, 500, "cotizacion.costos");
   // M2: valida montos/identidad en el boundary de dinero antes del dominio.
   return fromDbChecked<CostoCotizacion[]>(data ?? [], costosCotizacionDbSchema);
 }

@@ -22,6 +22,9 @@ import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { usePdfExport } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+// EC-10: el EERR devengado valúa filas sin embarque con `tcFallbackDof`
+// (estadoResultadosTc), que puede caer al TC de respaldo 17.25/18.5.
+import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
@@ -61,6 +64,8 @@ export default function ProfitEstadoResultados() {
         description="P&G mensual por modo de transporte basado en ETA del embarque"
         tabs={<ProfitSubNav />}
       />
+
+      <TipoCambioFallbackBanner />
 
 
       <Card>

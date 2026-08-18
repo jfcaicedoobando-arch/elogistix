@@ -4,7 +4,7 @@
  * chip-folio inline + dot de estado + KPI grid con énfasis en Saldo.
  */
 import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatTipoCambio } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { Kpi } from "./DialogDetallePagosProveedor.parts";
 import { EstadoAprobacionDot } from "./EstadoAprobacionDot";
@@ -47,7 +47,7 @@ export function PagoFacturaHeaderInfo({ factura }: { factura: FacturaCxP }) {
           value={factura.moneda}
           hint={
             factura.tipo_cambio_usd > 0 && factura.moneda !== "MXN"
-              ? `TC ${factura.tipo_cambio_usd.toFixed(2)}`
+              ? `TC ${formatTipoCambio(factura.tipo_cambio_usd)}`
               : undefined
           }
         />

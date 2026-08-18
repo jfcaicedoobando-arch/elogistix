@@ -45,7 +45,9 @@ function buildVigenciaNode(fechaVigencia: string, estado: string): ReactNode {
 function isTarifaVencida(estado: string, vigHasta: string | null | undefined): boolean {
   if (!vigHasta) return false;
   if (estado.toLowerCase() !== "aceptada") return false;
-  return new Date(vigHasta) < new Date(todayLocalISO());
+  // EC-06: ambos valores son date-only ("YYYY-MM-DD"); compararlos como
+  // strings ISO evita el parseo a medianoche UTC y el desfase CDMX.
+  return vigHasta < todayLocalISO();
 }
 
 /**

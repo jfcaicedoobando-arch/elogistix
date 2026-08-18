@@ -59,6 +59,16 @@ export function useTcDofPorFecha(onTc: (r: TcDofResult) => void) {
         throw new Error("Fecha de emisión inválida o futura");
       }
       const rates = await fetchExchangeRates(fecha);
+      // EC-10: si la edge no respondió, `fetchExchangeRates` devuelve el
+      // respaldo operativo (17.25/18.5, NO fiscal). Aplicarlo como "TC DOF"
+      // a una factura de proveedor valúa la deuda con un número estimado y
+      // el toast de éxito lo haría pasar por oficial → se rechaza y el
+      // usuario captura el TC manualmente.
+      if (rates.esFallback) {
+        throw new Error(
+          "Tipo de cambio de respaldo: Banxico no está disponible. Captura el TC manualmente o reintenta más tarde.",
+        );
+      }
       const tipoCambio = moneda === "USD" ? rates.usdMxn : rates.eurMxn;
       if (!tipoCambio || tipoCambio <= 0) {
         throw new Error(`Banxico no devolvió TC para ${moneda} en ${fecha}`);

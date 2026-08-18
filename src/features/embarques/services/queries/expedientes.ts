@@ -2,6 +2,7 @@
  * Queries de expedientes activos por cliente (agrupación por folio expediente).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 export interface ExpedienteCliente {
   expediente: string;
@@ -22,8 +23,11 @@ export async function fetchExpedientesCliente(
   if (!opts.incluirCerrados) {
     query = query.neq("estado", "Cerrado");
   }
-  const { data, error } = await query;
+  // EC-05: límite defensivo sobre embarques del cliente antes de agrupar.
+  const LIMITE = 1000;
+  const { data, error } = await query.limit(LIMITE);
   if (error) throw error;
+  assertNotTruncated(data, LIMITE, "embarques.expedientesCliente");
   const map = new Map<string, ExpedienteCliente>();
   for (const row of data ?? []) {
     if (!row.expediente) continue;

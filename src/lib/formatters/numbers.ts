@@ -107,6 +107,15 @@ export const formatNumber = (
   return suffix ? `${formatted} ${suffix}` : formatted;
 };
 
+/**
+ * Formatea un tipo de cambio con 4 decimales (precisión usada por SAT/Banxico).
+ * Devuelve "—" para valores no finitos o <= 0.
+ */
+export const formatTipoCambio = (tc: number | null | undefined): string => {
+  if (tc === null || tc === undefined || !Number.isFinite(tc) || tc <= 0) return "—";
+  return getNumberFormatter(4, 4).format(tc);
+};
+
 /** Sufijo de pluralización mexicana ("" para 1, "s" para cualquier otro). */
 export const pluralS = (n: number): string => (n === 1 ? "" : "s");
 

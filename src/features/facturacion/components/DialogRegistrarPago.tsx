@@ -177,6 +177,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
           excede={excede}
           saldo={saldo}
           tcBloqueado={tcBloqueado}
+          tcRespaldo={tcRespaldo}
           errorFecha={errorFecha}
         />
       </form>

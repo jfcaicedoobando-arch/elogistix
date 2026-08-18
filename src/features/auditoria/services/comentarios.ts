@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaComentario } from "@/features/auditoria/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
 export async function fetchComentariosByRevision(
   revisionId: string,
@@ -9,8 +10,11 @@ export async function fetchComentariosByRevision(
     .from("auditoria_comentarios")
     .select("*")
     .eq("revision_id", revisionId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    // EC-05: límite defensivo sobre comentarios de una revisión.
+    .limit(500);
   if (error) throw error;
+  assertNotTruncated(data, 500, "auditoria.comentarios");
   return (data ?? []) as AuditoriaComentario[];
 }
 
