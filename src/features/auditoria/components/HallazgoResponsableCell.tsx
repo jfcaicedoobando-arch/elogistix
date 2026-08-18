@@ -5,6 +5,7 @@
  * Ola 4 · N29: un hallazgo revisado NO se reasigna desde la tabla (reasignarlo
  * lo reabriría, ver `revisiones.ts`); se muestra como texto plano.
  */
+import { formatFechaDia } from "@/lib/formatters";
 import { format } from "date-fns";
 import { AlertTriangle, UserCheck, UserPlus } from "lucide-react";
 

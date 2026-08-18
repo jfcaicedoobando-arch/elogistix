@@ -1,3 +1,4 @@
+import { formatFechaDia } from "@/lib/formatters";
 import { useMemo } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { FormField } from "@/components/shared/FormField";
 import { TransitoField, FclLclFields } from "./TarifaFields";

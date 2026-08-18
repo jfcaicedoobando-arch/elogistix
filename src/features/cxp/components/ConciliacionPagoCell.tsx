@@ -5,12 +5,11 @@
  *
  * v13.190.0 · Ola 2 · Item 3
  */
-import { format } from "date-fns";
 import { CheckCircle2, Link2, Link2Off, Loader2 } from "lucide-react";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { useConciliacionPagoCellController } from "@/features/cxp/hooks/useConciliacionPagoCellController";
 
 interface MovimientoVinculado {

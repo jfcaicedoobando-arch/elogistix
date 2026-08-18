@@ -1,3 +1,4 @@
+import { formatFechaDia } from "@/lib/formatters";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import type { AuditoriaRevision } from "@/features/auditoria/types";

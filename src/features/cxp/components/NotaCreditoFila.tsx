@@ -4,12 +4,11 @@
  * UX-06/UX-08 — los botones de icono llevan `aria-label` y la cancelación
  * delega en el confirmador del contenedor.
  */
-import { format } from "date-fns";
 import { Check, X, ShieldCheck, FileText, FileDigit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { NcSatBadge } from "./NcSatBadge";
 import type { Tables } from "@/integrations/supabase/types";
 

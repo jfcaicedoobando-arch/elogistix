@@ -3,10 +3,9 @@
  * Extraída para mantener el archivo de sections ≤ 200 líneas.
  * v13.190.0 · Ola 2 · Item 3 — muestra el estado de conciliación bancaria.
  */
-import { format } from "date-fns";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { ConciliacionPagoCell } from "./ConciliacionPagoCell";
 
 export interface PagoRow {
