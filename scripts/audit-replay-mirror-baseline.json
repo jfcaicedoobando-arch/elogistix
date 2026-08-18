@@ -45,16 +45,7 @@
       "espejo": "supabase/schema/operaciones/operaciones_stats.sql",
       "funcion": "operaciones_stats",
       "migracion_vigente": "20260811090000_ola4_n10_dashboards_borrador.sql"
-    },
-    {
-      "espejo": "supabase/schema/proformas/_convertir_proformas_insertar_conceptos.sql",
-      "funcion": "_convertir_proformas_insertar_conceptos",
-      "migracion_vigente": "20260723162453_4c28b04d-852f-49bf-97cc-87d668090cc3.sql"
-    },
-    {
-      "espejo": "supabase/schema/proformas/convertir_proformas_a_factura.sql",
-      "funcion": "convertir_proformas_a_factura",
-      "migracion_vigente": "20260729164301_129478b9-0232-46b8-b1e1-3cf3c17e2b57.sql"
     }
   ]
 }
+
