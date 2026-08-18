@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { BarChart3 } from "lucide-react";
 import {
   clasificarComparativo,
   MIN_OPS_COMPARATIVO,
@@ -52,9 +54,10 @@ export function ProveedorComparativoCard({ comparativo, tipoProveedor }: Props) 
         </SectionHeading>
 
         {filas.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Aún no hay comparaciones con muestra suficiente.
-          </p>
+          <EmptyStateInline
+            icon={BarChart3}
+            message="Aún no hay comparaciones con muestra suficiente."
+          />
         ) : (
           <ul className="divide-y">
             {filas.map((f) => (

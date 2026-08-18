@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { cn } from "@/lib/utils";
 import { PdfObjectViewer } from "@/components/shared/PdfObjectViewer";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { FileText } from "lucide-react";
 
 export interface DocumentPreviewDialogProps {
   open: boolean;
@@ -63,8 +65,8 @@ export function DocumentPreviewDialog({
               <PdfObjectViewer url={url} title={title} className="h-[70vh] w-full" />
             )
           ) : (
-            <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
-              No hay documento para previsualizar.
+            <div className="flex h-full items-center justify-center p-8">
+              <EmptyStateInline icon={FileText} message="No hay documento para previsualizar." />
             </div>
           )}
         </div>

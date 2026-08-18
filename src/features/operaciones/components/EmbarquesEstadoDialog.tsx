@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertTriangle } from "lucide-react";
+import { Search, AlertTriangle, Ship } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+
 import { nombreDesdeEmail } from "@/lib/formatters";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/features/operaciones/hooks";
@@ -90,9 +92,12 @@ export function EmbarquesEstadoDialog({ open, onOpenChange, operador, estado, bu
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-10">
-          {items.length === 0 ? "Sin embarques en este estado." : "No hay coincidencias."}
-        </p>
+        <EmptyStateInline
+          icon={items.length === 0 ? Ship : Search}
+          message={items.length === 0 ? "Sin embarques en este estado." : "No hay coincidencias."}
+          hint={items.length === 0 ? undefined : "Prueba con otro expediente o cliente."}
+        />
+
       ) : (
         <ul className="divide-y divide-border">
           {filtered.map((e) => (

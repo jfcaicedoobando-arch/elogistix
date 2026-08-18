@@ -16,11 +16,12 @@
  *  - CTA "Crear concepto": alta rápida sin salir del wizard.
  */
 import { useState } from "react";
-import { Check, ChevronsUpDown, AlertTriangle, PenLine, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, AlertTriangle, PenLine, Plus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { useProductosCatalogo, type ProductoCatalogo } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
@@ -137,10 +138,12 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
             <CommandInput placeholder="Buscar producto…" value={search} onValueChange={setSearch} />
             <CommandList>
               {vacio ? (
-                <div className="p-3 text-sm text-muted-foreground">
-                  No hay productos activos en el catálogo. Da de alta productos en{" "}
-                  <b>Configuración → Facturación → Catálogo de productos y servicios</b> o usa el botón de abajo.
-                </div>
+                <EmptyStateInline
+                  icon={Package}
+                  message="No hay productos activos en el catálogo."
+                  hint="Da de alta productos en Configuración → Facturación, o usa el botón de abajo."
+                  density="compact"
+                />
               ) : (
                 <>
                   <CommandEmpty className="p-0">

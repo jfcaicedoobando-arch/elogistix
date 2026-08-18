@@ -10,6 +10,7 @@ import {
 import { calcularSaldoFacturaPortal } from "@/features/portal/services";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { CheckCircle2, Clock, FileText, FileCode2, Receipt } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   facturaId: string;
@@ -42,9 +43,10 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
         {isLoading || loadingNc ? (
           <ListSkeleton rows={2} />
         ) : pagos.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
-            Aún no se han registrado pagos para esta factura.
-          </p>
+          <EmptyStateInline
+            icon={Receipt}
+            message="Aún no se han registrado pagos para esta factura."
+          />
         ) : (
           <ul className="divide-y">
             {pagos.map((p) => {

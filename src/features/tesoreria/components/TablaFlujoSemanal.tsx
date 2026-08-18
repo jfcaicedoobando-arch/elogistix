@@ -6,6 +6,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { Card, CardContent } from "@/components/ui/card";
 import type { SemanaFlujo } from "@/features/tesoreria/services";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props { semanas: SemanaFlujo[] }
@@ -99,7 +100,7 @@ function DetalleListas({ s }: { s: SemanaFlujo }) {
           Entradas
         </SectionHeading>
         {s.detalle_entradas.length === 0 ? (
-          <p className="text-muted-foreground italic">Sin movimientos.</p>
+          <EmptyStateInline message="Sin movimientos." density="compact" className="py-2" />
         ) : (
           <ul className="space-y-0.5">
             {s.detalle_entradas.map((d) => (
@@ -116,7 +117,7 @@ function DetalleListas({ s }: { s: SemanaFlujo }) {
           Salidas
         </SectionHeading>
         {s.detalle_salidas.length === 0 ? (
-          <p className="text-muted-foreground italic">Sin movimientos.</p>
+          <EmptyStateInline message="Sin movimientos." density="compact" className="py-2" />
         ) : (
           <ul className="space-y-0.5">
             {s.detalle_salidas.map((d) => (

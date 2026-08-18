@@ -3,8 +3,10 @@
  * `ArribosCard.tsx` ≤200 líneas (Power of 10).
  */
 import { Fragment } from "react";
+import { Ship } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import type { ArribosEsteMes } from "./ArribosCard";
 
 export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
@@ -116,9 +118,12 @@ export function CoberturaTooltipContent({
         <span className="tabular-nums font-medium text-right">{formatCurrency(gastos, "MXN")}</span>
       </div>
       {sinGastos ? (
-        <p className="text-label text-muted-foreground italic border-t pt-1.5">
-          Aún no hay gastos fijos capturados este mes.
-        </p>
+        <EmptyStateInline
+          icon={Ship}
+          message="Aún no hay gastos fijos capturados este mes."
+          density="compact"
+          className="border-t pt-1.5"
+        />
       ) : perdida ? (
         <p className="text-label text-destructive border-t pt-1.5">
           Pérdida proyectada: aún no cubres nada de los gastos fijos.

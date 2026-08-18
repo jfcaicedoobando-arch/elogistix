@@ -2,6 +2,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency } from "@/lib/formatters";
 import { CHART_SERIES as CHART_COLORS } from "@/lib/chartTokens";
 
@@ -15,12 +16,12 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
   function renderBody() {
     if (isLoading) return <ChartSkeleton height={300} />;
     if (data.length === 0) {
-      return <p className="text-sm text-muted-foreground pt-10 text-center">Sin datos en el periodo seleccionado</p>;
+      return <EmptyStateInline icon={BarChart3} message="Sin datos en el periodo seleccionado" />;
     }
     // VT-19: con todos los montos en $0 el eje X queda degenerado (tick único
     // "$0"); se muestra empty state en lugar de la gráfica vacía.
     if (data.every((d) => !d.profit)) {
-      return <p className="text-sm text-muted-foreground pt-10 text-center">Sin utilidad registrada en el periodo seleccionado</p>;
+      return <EmptyStateInline icon={BarChart3} message="Sin utilidad registrada en el periodo seleccionado" />;
     }
     return (
       <ResponsiveContainer width="100%" height="100%">

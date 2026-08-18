@@ -2,12 +2,13 @@
  * Buscador con debounce de leads/oportunidades existentes.
  */
 import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { Search, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/hooks/shared";
 import { useCrmProspectoSearch, type ProspectoMatch } from "@/features/crm/hooks";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   onSelect: (m: ProspectoMatch) => void;
@@ -32,15 +33,20 @@ export function BuscadorProspectos({ onSelect }: Props) {
         />
       </div>
       {debounced.length < 2 ? (
-        <p className="text-xs text-muted-foreground">
-          Escribe al menos 2 caracteres para buscar.
-        </p>
+        <EmptyStateInline
+          icon={Search}
+          message="Escribe al menos 2 caracteres para buscar."
+          density="compact"
+        />
       ) : isFetching ? (
-        <p className="text-xs text-muted-foreground">Buscando…</p>
+        <EmptyStateInline loading message="Buscando…" density="compact" />
       ) : items.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
-          Sin resultados. Cambia el modo a "Crear nuevo prospecto" para registrarlo.
-        </p>
+        <EmptyStateInline
+          icon={Building2}
+          message="Sin resultados."
+          hint='Cambia el modo a "Crear nuevo prospecto" para registrarlo.'
+          density="compact"
+        />
       ) : (
         <ul className="max-h-60 overflow-auto rounded-md border bg-background divide-y">
           {items.map((m) => (
