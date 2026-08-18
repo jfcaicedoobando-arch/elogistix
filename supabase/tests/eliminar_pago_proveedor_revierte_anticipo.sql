@@ -21,8 +21,12 @@ BEGIN
   VALUES ('TEST ANTICIPO REV', 'TAR000000XX0', 'basico', true)
   RETURNING id INTO v_org;
 
-  INSERT INTO auth.users (id, email) VALUES (v_uid, 'anticipo-rev@test.mx')
-  ON CONFLICT (id) DO NOTHING;
+  BEGIN
+    INSERT INTO auth.users (id, email) VALUES (v_uid, 'anticipo-rev@test.mx')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN
+    NULL; -- entorno sin permisos sobre auth (pooler sin rol GoTrue).
+  END;
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'tesorero'::public.app_role) ON CONFLICT DO NOTHING;
   -- es_escritor_financiero() consulta user_roles, no organization_members.
@@ -112,7 +116,11 @@ BEGIN
   DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
   DELETE FROM public.organizations WHERE id = v_org;
   DELETE FROM public.user_roles WHERE user_id = v_uid;
-  DELETE FROM auth.users WHERE id = v_uid;
+  BEGIN
+    DELETE FROM auth.users WHERE id = v_uid;
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
 
   RAISE NOTICE 'OK: eliminar_pago_proveedor revierte el anticipo y el estado de la factura (BUG-07).';
 END $$;

@@ -20,10 +20,14 @@ BEGIN
   VALUES ('TEST CXP ROL FIN', 'TCF000000XX0', 'basico', true)
   RETURNING id INTO v_org;
 
-  INSERT INTO auth.users (id, email) VALUES (v_uid_venta, 'rolfin-venta@test.mx')
-  ON CONFLICT (id) DO NOTHING;
-  INSERT INTO auth.users (id, email) VALUES (v_uid_fin, 'rolfin-fin@test.mx')
-  ON CONFLICT (id) DO NOTHING;
+  BEGIN
+    INSERT INTO auth.users (id, email) VALUES (v_uid_venta, 'rolfin-venta@test.mx')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO auth.users (id, email) VALUES (v_uid_fin, 'rolfin-fin@test.mx')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN
+    NULL; -- entorno sin permisos sobre auth (pooler sin rol GoTrue).
+  END;
 
   -- Miembro de la org con rol NO financiero.
   INSERT INTO public.organization_members (organization_id, user_id, role)
@@ -94,7 +98,11 @@ BEGIN
   DELETE FROM public.organization_members WHERE organization_id = v_org;
   DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
   DELETE FROM public.organizations WHERE id = v_org;
-  DELETE FROM auth.users WHERE id IN (v_uid_venta, v_uid_fin);
+  BEGIN
+    DELETE FROM auth.users WHERE id IN (v_uid_venta, v_uid_fin);
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
 
   RAISE NOTICE 'OK: sólo un rol financiero puede cancelar una factura de proveedor (BUG-06).';
 END $$;
