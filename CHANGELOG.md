@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.659.0] - 2026-08-18
+
+### UI-15 — Moneda explícita en importes y pipeline del CRM en pesos reales
+- Embarques · Tab Costos: los KPIs Total Venta/Costo/Utilidad pasan `'MXN'` explícito (ya venían convertidos por `totalEnMxn`).
+- CRM · Higiene: `crm_higiene_pipeline` convertía sumando MXN con USD/EUR sin mirar `moneda`; ahora convierte cada oportunidad a pesos con el T/C DOF vigente y devuelve `tc_fecha` y `tc_estimado`. La tarjeta avisa "(T/C estimado)" cuando falta T/C publicado.
+- CRM · Oportunidades: el pipeline del subencabezado se calcula con `sumarPipelineMxn` (nuevo helper en `crm/domain/pipelineMoneda.ts`) en lugar de sumar montos de monedas distintas; avisa "(T/C estimado)" con T/C de respaldo.
+- CRM · Presupuesto: el total anual se muestra por moneda cuando el año tiene monedas mezcladas.
+- Nuevo guardrail `formatcurrency-moneda-explicita.test.ts`: falla si un call-site de features financieros omite la moneda. Nuevas pruebas de `sumarPipelineMxn` (5).
+- EC-10, EC-06 y UX-12 (documentos re-subidos) ya estaban cerrados en 13.657.0/13.658.0; sin cambios.
+
 ## [13.658.0] - 2026-08-18
 
 ### EC-10 (cierre) — Aviso de T/C de respaldo en las pantallas pendientes
