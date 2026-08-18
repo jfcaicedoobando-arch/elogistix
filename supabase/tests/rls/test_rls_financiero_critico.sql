@@ -180,12 +180,14 @@ BEGIN
   PERFORM pg_temp.as_postgres();
 
   -- TEST 6: factura_notas_credito aislamiento
+  -- BUG-05: el trigger trg_nc_cliente_transicion exige folio fiscal (UUID) para
+  -- que una NC nazca o quede en estado 'Aplicada'.
   INSERT INTO public.factura_notas_credito(
     id, organization_id, factura_id, folio, motivo, descripcion, monto, moneda,
-    tipo_cambio, estado, fecha_emision
+    tipo_cambio, estado, fecha_emision, uuid_fiscal
   ) VALUES (
     nc_a, org_a, fac_a, 'NC-A-001', 'Descuento', 'Ajuste', 100, 'MXN',
-    1, 'Aplicada', CURRENT_DATE
+    1, 'Aplicada', CURRENT_DATE, '22222222-2222-2222-2222-222222222222'
   );
 
   PERFORM pg_temp.as_user(user_b);
