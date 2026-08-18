@@ -19,9 +19,7 @@ import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
-import { factorEntreMonedas } from "@/lib/financial/convertir";
-import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
-import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
+import { derivarEstadoPago } from "./registrarPagoDerivados";
 
 interface Factura {
   id: string;
@@ -42,17 +40,6 @@ interface Props {
   factura: Factura | null;
 }
 
-function convertirAMonedaFactura(
-  monto: number, monedaPago: string, monedaFactura: string,
-  rates: { usdMxn: number; eurMxn: number } | undefined,
-): number {
-  // FIX C6: el factor sale del canon único (MXN como puente). Sin TC confiable
-  // devuelve null y aquí se traduce a 0: nunca se trata USD/EUR como MXN.
-  const factor = factorEntreMonedas(monedaPago, monedaFactura, {
-    usd: rates?.usdMxn, eur: rates?.eurMxn,
-  });
-  return factor === null ? 0 : monto * factor;
-}
 
 const today = () => todayLocalISO();
 
