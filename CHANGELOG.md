@@ -1,6 +1,12 @@
 # Changelog
 
+## [13.647.4] - 2026-08-18
+
+### Fix — re-emisión del candado de cancelación de CxP
+- `guard_cxp_cancelacion_rol_financiero` se re-emite en una migración posterior (con `DROP`/`CREATE TRIGGER` incluidos) para que ninguna base reconstruida quede con la variante vieja que sólo consultaba `user_roles`. Verificado en BD: la función activa usa `public.rol_efectivo(uid, organization_id)`.
+
 ## [13.647.3] - 2026-08-18
+
 
 ### Fix — cancelación de facturas de proveedor (LC_CXP_CANCELAR_FORBIDDEN)
 - `guard_cxp_cancelacion_rol_financiero` ahora resuelve el rol con `public.rol_efectivo(uid, organization_id)` y deja `has_role` como fallback de plataforma. Antes sólo miraba `user_roles`, así que un `admin_org` (rol que vive en `organization_members`) recibía "tu rol no puede cancelar facturas de proveedor" y el test `cxp_cancelacion_libera_embarque.sql` fallaba.
