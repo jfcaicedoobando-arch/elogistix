@@ -68,7 +68,7 @@ describe("architecture — estados vacíos inline canónicos (UI-02)", () => {
     ).toEqual([]);
   });
 
-  it("no hay entradas obsoletas en la deuda declarada", () => {
+  it("no hay entradas obsoletas en la deuda de estados vacíos", () => {
     const stale: string[] = [];
     for (const rel of RAW_EMPTY_DEBT) {
       try {
