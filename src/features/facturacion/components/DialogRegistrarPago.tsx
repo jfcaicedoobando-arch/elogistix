@@ -20,6 +20,7 @@ import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
 import { factorEntreMonedas } from "@/lib/financial/convertir";
+import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
 import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 
 interface Factura {
