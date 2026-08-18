@@ -169,8 +169,19 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `20260814224500` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon`
  *    + `GRANT EXECUTE … TO authenticated, service_role`); el archivo original
  *    queda como legacy auditado.
+ *  - `20260826000700` — post-FIX-H6-21 (Ola D): `20260826000200` (BUG-13
+ *    umbral de cierre por moneda), `20260826000300` / `20260826000301`
+ *    (BUG-17 totales por renglón), `20260826000400` (BUG-10 guarda optimista)
+ *    y `20260826000600` (BUG-15 tolerancia de sobrepago) re-emitieron
+ *    `validar_cierre_embarque`, `_convertir_proformas_insertar_conceptos`,
+ *    `convertir_proformas_a_factura`, `avanzar_estado_embarque` y
+ *    `registrar_pago_cliente_lote` (SECURITY DEFINER) sin el bloque
+ *    REVOKE/GRANT en el mismo archivo. La migración correctiva
+ *    `20260826000700` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon`
+ *    + `GRANT EXECUTE … TO authenticated, service_role`); los archivos
+ *    originales quedan como legacy auditado.
  */
-const BASELINE = "20260814224500";
+const BASELINE = "20260826000700";
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
