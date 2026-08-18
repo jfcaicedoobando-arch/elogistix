@@ -22,7 +22,7 @@ vi.mock("@/features/cxp/hooks", () => ({
     isRunning: false,
     progreso: null,
   }),
-  useSodAprobacion: () => ({ puedeAprobar: () => true, motivo: null }),
+  useSodAprobacion: () => ({ idsBloqueados: () => new Set<string>(), motivo: () => null }),
 }));
 vi.mock("@/hooks/shared", () => ({
   usePermissions: () => ({ canEdit: true }),
