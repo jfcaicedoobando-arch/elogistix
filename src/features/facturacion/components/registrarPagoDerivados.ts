@@ -9,6 +9,8 @@ import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago
 export interface RatesTc {
   usdMxn: number;
   eurMxn: number;
+  /** EC-10: true cuando el TC viene del respaldo operativo (no fiscal). */
+  esFallback?: boolean;
 }
 
 export function convertirAMonedaFactura(
@@ -32,6 +34,8 @@ export interface DerivadosPago {
   tipoCambio: number;
   excede: boolean;
   tcBloqueado: boolean;
+  /** EC-10: conversión cross-moneda apoyada en el TC de respaldo. */
+  tcRespaldo: boolean;
   errorFecha: string | null;
   invalido: boolean;
 }
