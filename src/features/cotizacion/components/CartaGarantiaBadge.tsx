@@ -16,7 +16,7 @@
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, ShieldAlert, ShieldX, ShieldQuestion } from "lucide-react";
 import { calcularEstadoCartaGarantia } from "@/features/costeo/types/navieraCondicion";
-import { formatFechaSegura } from "@/lib/formatters/datesSegura";
+import { formatFechaDia } from "@/lib/formatters/dates";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
 interface PropsTarifa {
@@ -59,7 +59,7 @@ function resolverDatos(props: CartaGarantiaBadgeProps): {
 export function CartaGarantiaBadge(props: CartaGarantiaBadgeProps) {
   const { tieneCarta, vigenteHasta, navieraNombre } = resolverDatos(props);
   const estado = calcularEstadoCartaGarantia(tieneCarta, vigenteHasta);
-  const fecha = formatFechaSegura(vigenteHasta);
+  const fecha = formatFechaDia(vigenteHasta);
   const naviera = navieraNombre ? ` (${navieraNombre})` : "";
 
   if (estado === "sin_carta") {
