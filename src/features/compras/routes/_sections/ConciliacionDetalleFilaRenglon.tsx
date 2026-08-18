@@ -28,16 +28,18 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
       <tr className="border-t hover:bg-muted/30">
         <td className="p-2 align-top">
           {tienePartidas ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={onToggle}
               aria-label={expandido ? "Ocultar partidas" : "Ver partidas"}
-              className="text-muted-foreground hover:text-foreground"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
             >
               {expandido
                 ? <ChevronDown className="h-3.5 w-3.5" />
                 : <ChevronRight className="h-3.5 w-3.5" />}
-            </button>
+            </Button>
           ) : null}
         </td>
         <td className="p-2 align-top">

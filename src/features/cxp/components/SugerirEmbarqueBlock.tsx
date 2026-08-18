@@ -124,11 +124,13 @@ export function SugerirEmbarqueBlock({
             </p>
           )}
           {lista.map((e) => (
-            <button
+            <Button
               key={e.embarque_id}
               type="button"
+              variant="ghost"
+              aria-label={`Vincular embarque ${e.expediente ?? e.embarque_id.slice(0, 8)}`}
               onClick={() => handlePick(e)}
-              className="w-full text-left rounded-md border bg-background px-3 py-2 hover:border-accent hover:bg-accent/5 transition-colors"
+              className="h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal rounded-md border bg-background px-3 py-2 text-left font-normal hover:border-accent hover:bg-accent/5 transition-colors"
             >
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-mono font-medium">{e.expediente ?? "—"}</span>
@@ -139,7 +141,7 @@ export function SugerirEmbarqueBlock({
                 <span className="text-accent">{e.match_tipo}</span>
                 {e.eta && <span>· ETA {formatFechaEs(e.eta)}</span>}
               </div>
-            </button>
+            </Button>
           ))}
         </div>
       )}

@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -60,10 +61,13 @@ export function NotasCreditoRecientes() {
   return (
     <Card>
       <CardContent className="p-0">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => setOpen((v) => !v)}
-          className="w-full flex items-center justify-between p-3 hover:bg-muted/30"
+          aria-expanded={open}
+          aria-label="Mostrar u ocultar notas de crédito recientes"
+          className="h-auto w-full flex items-center justify-between whitespace-normal rounded-none p-3 font-normal hover:bg-muted/30"
         >
           <div className="flex items-center gap-3">
             <span className="font-medium text-sm">Notas de crédito recientes</span>
@@ -75,7 +79,7 @@ export function NotasCreditoRecientes() {
             ))}
           </div>
           {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
+        </Button>
 
         {open && (
           <div className="border-t">

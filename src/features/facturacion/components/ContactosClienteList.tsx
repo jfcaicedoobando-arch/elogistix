@@ -5,6 +5,7 @@
  */
 import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { ContactoEnvio } from "@/features/facturacion/hooks/useContactosClienteParaEnvio";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
@@ -16,10 +17,13 @@ interface ContactoItemProps {
 
 function ContactoItem({ contacto: c, seleccionado, onPick }: ContactoItemProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      aria-label={`Usar contacto ${c.nombre ?? c.email}`}
+      aria-pressed={seleccionado}
       onClick={() => onPick(c.email)}
-      className={`text-left rounded-md border px-3 py-2 text-xs transition-colors ${
+      className={`flex h-auto w-full flex-col items-stretch justify-start whitespace-normal text-left rounded-md border px-3 py-2 text-xs font-normal transition-colors ${
         seleccionado ? "border-primary bg-primary/5" : "border-border hover:bg-muted"
       }`}
     >
@@ -36,7 +40,7 @@ function ContactoItem({ contacto: c, seleccionado, onPick }: ContactoItemProps) 
         )}
       </div>
       <div className="text-muted-foreground mt-0.5 truncate">{c.email}</div>
-    </button>
+    </Button>
   );
 }
 

@@ -80,13 +80,16 @@ export function CargaCfdiSection({
                 <FileText className="h-4 w-4 text-primary" />
                 <span className="font-medium">{xml.name}</span>
                 <span className="text-muted-foreground">({(xml.size / 1024).toFixed(1)} KB)</span>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Quitar XML"
                   onClick={(e) => { e.stopPropagation(); setXml(null); }}
-                  className="ml-2 text-muted-foreground hover:text-foreground"
+                  className="ml-2 h-7 w-7 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">
@@ -110,13 +113,16 @@ export function CargaCfdiSection({
               {pdf ? `PDF: ${pdf.name}` : "Adjuntar PDF (opcional)"}
             </Button>
             {pdf && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Quitar PDF"
                 onClick={() => setPdf(null)}
-                className="text-muted-foreground hover:text-foreground"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             )}
           </div>
 

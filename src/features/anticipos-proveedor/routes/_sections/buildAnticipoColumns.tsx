@@ -34,16 +34,18 @@ function EmbarqueCell({ row }: { row: AnticipoProveedorRow }) {
     return <span className="text-xs italic text-muted-foreground">Sin embarque</span>;
   }
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      aria-label={`Ver embarque ${row.embarque_expediente ?? row.embarque_id.slice(0, 8)}`}
       onClick={(e) => {
         e.stopPropagation();
         navigate(`/embarques/${row.embarque_id}`);
       }}
-      className="font-mono text-sm text-accent hover:underline"
+      className="h-auto p-0 font-mono text-sm font-normal text-accent hover:bg-transparent hover:underline"
     >
       {row.embarque_expediente ?? row.embarque_id.slice(0, 8)}
-    </button>
+    </Button>
   );
 }
 

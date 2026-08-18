@@ -126,20 +126,26 @@ export default function AdminDemoLeads() {
                   <td className="px-3 py-2">{r.empresa}</td>
                   <td className="px-3 py-2">
                     <div className="flex flex-col gap-0.5 text-xs">
-                      <button
-                        className="flex items-center gap-1 text-left hover:text-accent"
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        aria-label={`Copiar email ${r.email}`}
+                        className="h-auto justify-start gap-1 p-0 text-left font-normal hover:bg-transparent hover:text-accent"
                         onClick={() => copy(r.email)}
                       >
                         <Copy className="h-3 w-3" />
                         {r.email}
-                      </button>
-                      <button
-                        className="flex items-center gap-1 text-left hover:text-accent"
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        aria-label={`Copiar teléfono ${formatPhoneMx(r.telefono_e164)}`}
+                        className="h-auto justify-start gap-1 p-0 text-left font-normal hover:bg-transparent hover:text-accent"
                         onClick={() => copy(r.telefono_e164)}
                       >
                         <Copy className="h-3 w-3" />
                         {formatPhoneMx(r.telefono_e164)}
-                      </button>
+                      </Button>
                     </div>
                   </td>
                   <td className="px-3 py-2 text-xs text-muted-foreground">
