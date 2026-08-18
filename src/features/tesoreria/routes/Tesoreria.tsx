@@ -9,7 +9,6 @@ import { Wallet, ArrowRight, FileText, TrendingUp, AlertTriangle } from "lucide-
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useMovimientosPendientes, useResumenTesoreria } from "@/features/tesoreria/hooks";
-import { formatCurrency } from "@/lib/formatters";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReporteTesoreriaDocument se carga dinámicamente en el handler.
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -23,6 +22,7 @@ import { TesoreriaKpis } from "./_sections/TesoreriaKpis";
 import { TesoreriaFlujoMonedas } from "./_sections/TesoreriaFlujoMonedas";
 import { TesoreriaFlujoChart } from "./_sections/TesoreriaFlujoChart";
 import { TesoreriaTopCartera } from "./_sections/TesoreriaTopCartera";
+import { TesoreriaTcAvisos } from "./_sections/TesoreriaTcAvisos";
 import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 
