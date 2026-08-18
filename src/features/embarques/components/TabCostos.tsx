@@ -43,9 +43,12 @@ export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, ma
     id ? (contenedorLabelById.get(id) ?? 'General') : <span className="text-muted-foreground">General</span>;
 
   const kpis = [
-    { label: 'Total Venta', value: formatCurrency(totalVenta), color: '' },
-    { label: 'Total Costo', value: formatCurrency(totalCosto), color: '' },
-    { label: 'Utilidad', value: formatCurrency(utilidad), color: utilidad >= 0 ? 'text-success' : 'text-destructive' },
+    // UI-15: los KPIs de useEmbarqueFinancials ya vienen convertidos a MXN
+    // (computeEmbarqueKpis → totalEnMxn); la moneda se pasa explícita para no
+    // depender del default de formatCurrency.
+    { label: 'Total Venta', value: formatCurrency(totalVenta, 'MXN'), color: '' },
+    { label: 'Total Costo', value: formatCurrency(totalCosto, 'MXN'), color: '' },
+    { label: 'Utilidad', value: formatCurrency(utilidad, 'MXN'), color: utilidad >= 0 ? 'text-success' : 'text-destructive' },
     { label: 'Margen', value: `${margen.toFixed(1)}%`, color: margen >= 0 ? 'text-success' : 'text-destructive' },
   ];
 
