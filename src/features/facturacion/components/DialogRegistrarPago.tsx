@@ -94,21 +94,18 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
 
   if (!factura) return null;
 
-  const montoNum = Number(values.monto) || 0;
-  const montoAplicado = convertirAMonedaFactura(montoNum, values.moneda, factura.moneda, rates);
-  // BUG-15: tolerancia canónica de sobrepago (medio centavo) compartida con
-  // CobroLoteRenglon — antes aquí era 0.01 y allá 0.009.
-  const excede = montoAplicado > saldo + TOLERANCIA_SOBREPAGO;
-  const tipoCambio = montoNum > 0 ? montoAplicado / montoNum : 1;
-  // FE-01 / UIA-01: cross-moneda sin TC confiable (factorEntreMonedas === null,
-  // p. ej. exchange-rates caído) → bloqueamos el submit en vez de dejar el
-  // insert reventar contra CHECK (tipo_cambio > 0) con un 23514 crudo.
-  const tcBloqueado = factorEntreMonedas(values.moneda, factura.moneda, {
-    usd: rates?.usdMxn, eur: rates?.eurMxn,
-  }) === null;
-  // FE-03 / UIA-06: fecha futura o anterior a la emisión distorsiona REP y aging.
-  const errorFecha = validarFechaPago(values.fecha, today(), factura.fechaEmision);
-  const invalido = montoNum <= 0 || excede || tcBloqueado || errorFecha !== null;
+  const { montoNum, montoAplicado, tipoCambio, excede, tcBloqueado, errorFecha, invalido } =
+    derivarEstadoPago({
+      monto: values.monto,
+      monedaPago: values.moneda,
+      fecha: values.fecha,
+      hoy: today(),
+      monedaFactura: factura.moneda,
+      fechaEmision: factura.fechaEmision,
+      saldo,
+      rates,
+    });
+
   const esPpdTimbrada = factura.metodoPago === "PPD" && !!factura.uuidFiscal;
 
   const handleChange = <K extends keyof PagoFormValues>(k: K, v: PagoFormValues[K]) =>
