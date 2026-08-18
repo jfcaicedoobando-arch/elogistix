@@ -15,6 +15,8 @@ const {
   sincronizarEtapaMock, propagarConversionMock,
   notifyErrorMock, notifySuccessMock,
   registrarActividadMutate,
+  fetchDatosFiscalesMock,
+  tieneCostosCargadosMock,
   supabaseCountRef,
 } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
@@ -27,6 +29,8 @@ const {
   notifyErrorMock: vi.fn(),
   notifySuccessMock: vi.fn(),
   registrarActividadMutate: vi.fn(),
+  fetchDatosFiscalesMock: vi.fn(),
+  tieneCostosCargadosMock: vi.fn(),
   supabaseCountRef: { value: 1 } as { value: number },
 }));
 
@@ -53,9 +57,18 @@ vi.mock("@/features/crm/services/vincularCotizacion", () => ({
   sincronizarEtapaPorEstadoCotizacion: (...a: unknown[]) => sincronizarEtapaMock(...a),
   propagarConversionProspectoCRM: (...a: unknown[]) => propagarConversionMock(...a),
 }));
+// Servicios de apoyo: el hook los llama al abrir el diálogo y al crear
+// borrador; sin mock pegan al cliente Supabase falso y revientan el render.
+vi.mock("@/features/cotizacion/services/datosFiscalesProspecto", () => ({
+  fetchDatosFiscalesProspecto: (...a: unknown[]) => fetchDatosFiscalesMock(...a),
+}));
+vi.mock("@/features/cotizacion/services/candadoCostos", () => ({
+  tieneCostosCargados: (...a: unknown[]) => tieneCostosCargadosMock(...a),
+}));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: notifyErrorMock,
   notifySuccess: notifySuccessMock,
+  notifyWarning: vi.fn(),
 }));
 
 import { useCotizacionDetalleHandlers } from "../useCotizacionDetalleHandlers";
@@ -68,7 +81,12 @@ const cot = (over: Record<string, unknown> = {}) => ({
   // SAFE-CAST: shape mínimo de CotizacionRow requerido por el hook
 } as unknown as Parameters<typeof useCotizacionDetalleHandlers>[0]);
 
-beforeEach(() => { vi.clearAllMocks(); supabaseCountRef.value = 1; });
+beforeEach(() => {
+  vi.clearAllMocks();
+  supabaseCountRef.value = 1;
+  fetchDatosFiscalesMock.mockResolvedValue({});
+  tieneCostosCargadosMock.mockResolvedValue(true);
+});
 
 describe("useCotizacionDetalleHandlers", () => {
   it("handleCambiarEstado actualiza estado y sincroniza etapa CRM", async () => {
@@ -90,9 +108,9 @@ describe("useCotizacionDetalleHandlers", () => {
     expect(notifyErrorMock).not.toHaveBeenCalled();
   });
 
-  it("abrirDialogConvertir pre-llena clienteForm con datos del prospecto", () => {
+  it("abrirDialogConvertir pre-llena clienteForm con datos del prospecto", async () => {
     const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
-    act(() => result.current.abrirDialogConvertir());
+    await act(async () => { await result.current.abrirDialogConvertir(); });
     expect(result.current.showConvertir).toBe(true);
     expect(result.current.clienteForm).toMatchObject({
       nombre: "ACME", contacto: "Juan", email: "j@acme.mx", telefono: "555",
@@ -111,7 +129,7 @@ describe("useCotizacionDetalleHandlers", () => {
     convertirProspectoMutateAsync.mockResolvedValue({ id: "cli-1", nombre: "ACME SA" });
     propagarConversionMock.mockResolvedValue(undefined);
     const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
-    act(() => result.current.abrirDialogConvertir());
+    await act(async () => { await result.current.abrirDialogConvertir(); });
     await act(async () => { await result.current.handleConvertir(); });
     expect(convertirProspectoMutateAsync).toHaveBeenCalledWith({
       cotizacionId: "cot-1",
