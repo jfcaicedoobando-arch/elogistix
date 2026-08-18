@@ -26,13 +26,23 @@ interface Props {
 
 
 function Equivalencia({ saldos, eq }: { saldos: SaldosPorMonedaCartera; eq: Equivalente }) {
+  // EC-10: el equivalente en MXN puede venir del respaldo operativo (no fiscal).
+  const { data: rates } = useExchangeRates();
+  const estimado = rates?.esFallback === true;
   if (!requiereEquivalente(saldos)) return null;
   return (
     <div
       className="text-xs text-muted-foreground mt-1"
-      title={eq.facturasSinTc > 0 ? `${eq.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
+      title={
+        estimado
+          ? "Convertido con tipo de cambio de respaldo (no oficial): úsalo sólo como referencia."
+          : eq.facturasSinTc > 0
+            ? `${eq.facturasSinTc} moneda(s) sin tipo de cambio`
+            : undefined
+      }
     >
       ≈ {formatCurrency(eq.totalMxn, "MXN")} equivalente
+      {estimado && <span className="ml-1 text-warning">(T/C estimado)</span>}
       {eq.facturasSinTc > 0 && <span className="ml-1">({eq.facturasSinTc} sin TC)</span>}
     </div>
   );
@@ -40,6 +50,8 @@ function Equivalencia({ saldos, eq }: { saldos: SaldosPorMonedaCartera; eq: Equi
 
 export function CarteraKpis(p: Props) {
   return (
+    <div className="space-y-3">
+    <TipoCambioFallbackBanner />
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card>
         <CardHeader className="pb-2"><CardTitle>Facturas en foco</CardTitle></CardHeader>
