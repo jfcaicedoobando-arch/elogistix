@@ -94,5 +94,4 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$
- name:avanzar_estado_embarque schema:public;
+$function$;
