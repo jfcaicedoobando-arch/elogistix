@@ -1,6 +1,15 @@
 # Changelog
 
+## [13.662.0] - 2026-08-18
+
+### UI-02 — Estados vacíos inline canónicos (`EmptyStateInline`)
+- 22 archivos migraron sus bloques "No hay… / Aún no… / Sin datos" pintados a mano (div/p centrado con paddings py-4/py-6/py-8 inconsistentes) a `<EmptyStateInline>`: cotización (3), costeo (2), CRM (2), admin (2), tesorería (2), catálogos, CxP, reportes, dashboard, operaciones, proveedor, portal, proformas, configuración y el diálogo compartido de previsualización.
+- `EmptyStateInline` gana dos props opcionales: `action` (CTA con ruta interna o handler) y `density="compact"` para popovers, tooltips y celdas de tabla. Sin cambios para los 102 usos existentes.
+- Los bloques que en realidad eran errores (bitácora de proformas) pasaron a `ErrorStateInline`; los avisos condicionales de "no hay cuentas en {moneda}" dentro de formularios se dejaron como aviso de campo y ahora usan el token `text-warning`.
+- Nuevo guardrail `src/__tests__/architecture/empty-state-inline-canonical.test.ts` con deuda declarada de 1 archivo (sparkline de 24px). El guardrail de densidad de tablas ahora distingue la prop `density` de los estados inline.
+
 ## [13.661.0] - 2026-08-18
+
 
 ### UI-06 — Encabezados de sección canónicos (`SectionHeading`)
 - 26 archivos del ERP migraron sus títulos de bloque (`text-sm/base/lg font-semibold` a mano) a `<SectionHeading>` con la variante correcta (`section`, `subsection`, `overline`), conservando iconos, contadores y acciones: CxP (8), Tesorería (4), embarques (3), proveedor (3), anticipos, cartera, admin/usuarios, refacturación, notificaciones y auditoría.
