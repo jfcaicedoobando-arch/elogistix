@@ -123,6 +123,23 @@ interface BaseContexto {
   conceptos: FacturaContext["conceptos"];
 }
 
+/**
+ * BUG-01: el payload que se manda al SAT debe cuadrar con la cabecera guardada.
+ * Si la suma de los conceptos vigentes se separa más de $1 del subtotal de la
+ * factura, algo quedó desincronizado (conceptos borrados, edición a medias) y
+ * preferimos NO timbrar.
+ */
+function validarCuadreSubtotal(conceptos: ConceptoRow[], factura: FacturaRow): Response | null {
+  const subtotalHeader = factura.subtotal != null ? Number(factura.subtotal) : null;
+  if (subtotalHeader == null || !Number.isFinite(subtotalHeader)) return null;
+  const suma = conceptos.reduce((acc, c) => acc + Number(c.cantidad) * Number(c.precio_unitario), 0);
+  if (Math.abs(suma - subtotalHeader) <= 1) return null;
+  return jsonResponse({
+    error: "subtotal_descuadrado",
+    message: `Los conceptos vigentes suman ${suma.toFixed(2)} pero la factura tiene un subtotal de ${subtotalHeader.toFixed(2)}. Revisa los conceptos antes de timbrar.`,
+  }, 422);
+}
+
 async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, factura: FacturaRow): Promise<BaseContexto | Response> {
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")
