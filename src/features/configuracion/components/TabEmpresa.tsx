@@ -24,26 +24,21 @@ export default function TabEmpresa({ nombre, setNombre, subtitulo, setSubtitulo,
         <CardDescription>Información que aparece en el sistema y futuros documentos PDF</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Nombre comercial</Label>
+        <FormField label="Nombre comercial">
           <Input value={nombre} onChange={(e) => setNombre(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label>Subtítulo / Giro</Label>
+        </FormField>
+        <FormField label="Subtítulo / Giro">
           <Input value={subtitulo} onChange={(e) => setSubtitulo(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label>RFC</Label>
+        </FormField>
+        <FormField label="RFC">
           <Input value={rfc} onChange={(e) => setRfc(e.target.value)} placeholder="XAXX010101000" />
-        </div>
-        <div className="space-y-2">
-          <Label>Email de contacto</Label>
+        </FormField>
+        <FormField label="Email de contacto">
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label>Teléfono</Label>
+        </FormField>
+        <FormField label="Teléfono">
           <Input value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-        </div>
+        </FormField>
         <div className="space-y-2 md:col-span-2">
           <Label>Dirección fiscal</Label>
           <Textarea value={direccion} onChange={(e) => setDireccion(e.target.value)} rows={2} />

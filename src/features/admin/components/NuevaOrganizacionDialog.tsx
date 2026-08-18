@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormField } from "@/components/shared/FormField";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useNuevaOrganizacionUsuarios } from "@/features/admin/hooks/useNuevaOrganizacionUsuarios";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -53,36 +54,36 @@ export function NuevaOrganizacionDialog({
       }
     >
       <FormDialogSection flat>
-        <div className="space-y-1.5">
-          <Label>Nombre *</Label>
+        <FormField label="Nombre" required>
           <Input
             value={nombre}
             onChange={(e) => onNombreChange(e.target.value)}
             placeholder="Nombre de la empresa"
           />
-        </div>
-        <div className="space-y-1.5">
-          <Label>RFC</Label>
+        </FormField>
+        <FormField label="RFC" hint="opcional">
           <Input
             value={rfc}
             onChange={(e) => onRfcChange(e.target.value)}
             placeholder="RFC (opcional)"
           />
-        </div>
+        </FormField>
         <div className="space-y-1.5">
-          <Label>Administrador inicial *</Label>
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por correo…"
-            disabled={isLoading}
-          />
+          <Label htmlFor="nueva-org-owner">Administrador inicial *</Label>
+          <FormField label="Buscar usuario" className="space-y-1.5">
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por correo…"
+              disabled={isLoading}
+            />
+          </FormField>
           <Select
             value={ownerUserId || undefined}
             onValueChange={onOwnerUserIdChange}
             disabled={isLoading}
           >
-            <SelectTrigger>
+            <SelectTrigger id="nueva-org-owner">
               <SelectValue placeholder={isLoading ? "Cargando usuarios…" : "Selecciona un usuario"} />
             </SelectTrigger>
             <SelectContent>

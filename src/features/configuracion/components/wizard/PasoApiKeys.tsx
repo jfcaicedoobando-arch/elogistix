@@ -85,6 +85,7 @@ function KeyRow({ orgId, ambiente, last4, label, prefijo, activo }: KeyRowProps)
         <Input
           type="password"
           autoComplete="off"
+          aria-label={label}
           placeholder={cargada ? "Pega una nueva key para reemplazar" : `${prefijo}…`}
           value={valor}
           onChange={(e) => setValor(e.target.value)}

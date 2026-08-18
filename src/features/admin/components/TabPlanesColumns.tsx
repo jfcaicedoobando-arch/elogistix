@@ -54,6 +54,7 @@ export function buildPlanesColumns({
           <Input
             type="number"
             className="w-20 text-right"
+            aria-label="Máx. usuarios"
             value={editValues.max_usuarios ?? 0}
             onChange={(e) => setEditValues({ ...editValues, max_usuarios: Number(e.target.value) })}
           />
@@ -72,6 +73,7 @@ export function buildPlanesColumns({
           <Input
             type="number"
             className="w-24 text-right"
+            aria-label="Máx. embarques por mes"
             value={editValues.max_embarques_mes ?? 0}
             onChange={(e) => setEditValues({ ...editValues, max_embarques_mes: Number(e.target.value) })}
           />
@@ -90,6 +92,7 @@ export function buildPlanesColumns({
           <Input
             type="number"
             className="w-24 text-right"
+            aria-label="Almacenamiento (MB)"
             value={editValues.almacenamiento_mb ?? 0}
             onChange={(e) => setEditValues({ ...editValues, almacenamiento_mb: Number(e.target.value) })}
           />
@@ -108,6 +111,7 @@ export function buildPlanesColumns({
           <Input
             type="number"
             className="w-24 text-right"
+            aria-label="Precio mensual"
             value={editValues.precio_mensual ?? 0}
             onChange={(e) => setEditValues({ ...editValues, precio_mensual: Number(e.target.value) })}
           />

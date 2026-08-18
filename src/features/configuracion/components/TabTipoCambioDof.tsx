@@ -109,14 +109,12 @@ export default function TabTipoCambioDof() {
             <Label>Fecha</Label>
             <DatePickerMx className="w-40" value={fecha} onChange={setFecha} />
           </div>
-          <div className="space-y-1">
-            <Label>USD / MXN</Label>
+          <FormField label="USD / MXN" className="space-y-1">
             <Input className="w-32" inputMode="decimal" placeholder="17.4312" value={usd} onChange={(e) => setUsd(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>EUR / MXN (opcional)</Label>
+          </FormField>
+          <FormField label="EUR / MXN" hint="opcional" className="space-y-1">
             <Input className="w-32" inputMode="decimal" placeholder="19.9389" value={eur} onChange={(e) => setEur(e.target.value)} />
-          </div>
+          </FormField>
           <Button size="sm" onClick={handleGuardar} disabled={upsert.isPending || !usd}>
             <Save className="h-4 w-4 mr-1" /> Guardar captura manual
           </Button>
