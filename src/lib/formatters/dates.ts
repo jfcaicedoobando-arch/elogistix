@@ -153,3 +153,22 @@ export function formatFechaHoraCorta(iso: string | null | undefined): string {
     return iso;
   }
 }
+
+/**
+ * Ola C · UI-04 — Fecha "sólo día" en el canon de la app: `dd/MM/yyyy`, TZ_MX.
+ * Es el único formateador que deben usar los módulos (`src/features`, `src/pdf`);
+ * antes cada pantalla repetía `formatFechaEs(iso, { day, month, year })` con
+ * fallbacks distintos ("—", "s/f", "").
+ *
+ * @param fallback texto cuando la fecha es nula o no parseable (default "—").
+ */
+export function formatFechaDia(
+  iso: string | null | undefined,
+  fallback = "—",
+): string {
+  if (!iso) return fallback;
+  const s = formatFechaEs(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
+  // `formatFechaEs` devuelve el ISO crudo cuando no pudo parsearlo.
+  if (!s || s === "-" || s === iso) return fallback;
+  return s;
+}
