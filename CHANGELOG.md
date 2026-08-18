@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.656.0] - 2026-08-18
+
+### UI-12 — Botones nativos de acción migrados a `ui/Button`
+- 15 `<button>` nativos en 12 archivos (Leads demo, anticipos de proveedor, conciliación de compras, buscador de prospectos, cargas de CFDI/XML/PDF en CxP, notas de crédito, contactos de cliente, tarjeta de operador) ahora usan el componente `Button`: foco por teclado, tap targets y estado deshabilitado consistentes.
+- Se añadió `type="button"` y `aria-label` donde faltaban; se conservó cada `onClick` y `stopPropagation`.
+
 ## [13.655.0] - 2026-08-18
 
 ### Pulido UI/UX (UI-07, UI-08, UX-15, UX-16)
