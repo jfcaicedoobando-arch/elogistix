@@ -2,6 +2,7 @@
  * Sub-componentes de `HallazgosFiltros` extraídos para mantener el archivo
  * principal ≤200 LOC (Power of 10).
  */
+import { es } from "date-fns/locale";
 import { formatFechaDia } from "@/lib/formatters";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
