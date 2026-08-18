@@ -34,6 +34,11 @@ function partesCliente(d: CotizacionInitialData) {
     prospectoContacto: d.prospecto_contacto ?? "",
     prospectoEmail: d.prospecto_email ?? "",
     prospectoTelefono: d.prospecto_telefono ?? "",
+    prospectoRfc: "",
+    prospectoDireccion: "",
+    prospectoCiudad: "",
+    prospectoEntidadFederativa: "",
+    prospectoCp: "",
   };
 }
 

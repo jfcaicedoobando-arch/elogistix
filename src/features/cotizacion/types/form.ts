@@ -32,6 +32,12 @@ export interface CotizacionFormValues {
   prospectoContacto: string;
   prospectoEmail: string;
   prospectoTelefono: string;
+  /** Datos fiscales opcionales del prospecto (se guardan en el lead del CRM). */
+  prospectoRfc: string;
+  prospectoDireccion: string;
+  prospectoCiudad: string;
+  prospectoEntidadFederativa: string;
+  prospectoCp: string;
   modo: string;
   tipo: string;
   incoterm: string;

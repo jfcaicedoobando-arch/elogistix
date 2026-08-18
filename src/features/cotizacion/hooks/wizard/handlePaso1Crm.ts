@@ -122,6 +122,11 @@ export async function vincularCrmTrasCrear(
         contacto: values.prospectoContacto,
         email: values.prospectoEmail,
         telefono: values.prospectoTelefono,
+        rfc: values.prospectoRfc,
+        direccion: values.prospectoDireccion,
+        ciudad: values.prospectoCiudad,
+        entidadFederativa: values.prospectoEntidadFederativa,
+        cp: values.prospectoCp,
       },
       user,
     });

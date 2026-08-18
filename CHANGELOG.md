@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.664.0] - 2026-08-18
+
+### Prospectos: captura única y vínculo obligatorio con el CRM
+- Paso 1 del wizard incluye "Datos fiscales (opcional)" (RFC, dirección, ciudad, estado, C.P.): se guardan en el lead del CRM y precargan el alta de cliente al convertir el prospecto, evitando la doble captura.
+- `vincularOCrearOportunidadParaCotizacion` pasa a una sola llamada transaccional a `crm_vincular_cotizacion` (lead + oportunidad + `cotizaciones.oportunidad_id` en una transacción); ya no quedan cotizaciones huérfanas por fallas a la mitad. Se eliminaron los helpers sueltos de dedupe/etapa/update.
+- Nuevo aviso `CotizacionSinOportunidadBanner` con botón "Vincular al CRM" para regularizar cotizaciones de prospecto sin oportunidad; el envío queda bloqueado por la base de datos (`LC_COT_SIN_OPORTUNIDAD`, con mensaje amigable en el catálogo LC).
+
+
 ## [13.663.1] - 2026-08-18
 
 ### Auditoría de embarques vacía por "permission denied" (42501)
