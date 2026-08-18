@@ -5,7 +5,8 @@
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, AlertTriangle, PlugZap, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, PlugZap, Loader2, FlaskConical } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import type {
   FacturapiAmbiente,
   ProbarConexionResult,
@@ -99,9 +100,7 @@ export function PasoProbar({ ambiente, resultado, probando, onProbar }: Props) {
       )}
 
       {!resultado && !probando && (
-        <p className="text-label text-muted-foreground text-center">
-          Aún no has probado la conexión.
-        </p>
+        <EmptyStateInline icon={FlaskConical} message="Aún no has probado la conexión." />
       )}
     </div>
   );

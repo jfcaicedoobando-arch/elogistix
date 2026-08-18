@@ -8,6 +8,8 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { useProformaBitacora } from "@/features/proformas/hooks/useProformaBitacora";
 import { formatDate } from "@/lib/formatters";
 import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
 interface Props {
   proformaId: string;
@@ -25,13 +27,12 @@ export function ProformaBitacoraCard({ proformaId, bare }: Props) {
       {isLoading ? (
           <ListSkeleton rows={3} />
         ) : isError ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
-            No se pudo cargar la actividad de esta proforma.
-          </p>
+          <ErrorStateInline
+            title="No se pudo cargar la actividad"
+            message="No se pudo cargar la actividad de esta proforma."
+          />
         ) : entradas.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
-            Sin movimientos registrados.
-          </p>
+          <EmptyStateInline icon={History} message="Sin movimientos registrados." />
         ) : (
           <ul className="divide-y">
             {entradas.map((e) => {

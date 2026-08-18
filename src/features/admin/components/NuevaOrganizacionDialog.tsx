@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useNuevaOrganizacionUsuarios } from "@/features/admin/hooks/useNuevaOrganizacionUsuarios";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   open: boolean;
@@ -89,7 +90,11 @@ export function NuevaOrganizacionDialog({
                 <SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>
               ))}
               {filtered.length === 0 && !isLoading && (
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">Sin resultados</div>
+                <EmptyStateInline
+                  icon={Building2}
+                  message="Sin resultados."
+                  density="compact"
+                />
               )}
             </SelectContent>
           </Select>

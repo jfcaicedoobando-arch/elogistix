@@ -3,7 +3,7 @@
  * Sólo accesible a super_admin (RLS filtra a nivel BD).
  */
 import { useQuery } from "@tanstack/react-query";
-import { Users2, Copy } from "lucide-react";
+import { Users2, Copy, Inbox } from "lucide-react";
 import { fetchDemoLeads, type DemoLead } from "@/features/admin/services/demoLeads";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -93,8 +93,12 @@ export default function AdminDemoLeads() {
         <EmptyStateInline loading message="Cargando…" />
       ) : rows.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            Aún no hay leads. Cuando alguien pruebe la demo desde la landing aparecerá aquí.
+          <CardContent className="py-4">
+            <EmptyStateInline
+              icon={Inbox}
+              message="Aún no hay leads."
+              hint="Cuando alguien pruebe la demo desde la landing aparecerá aquí."
+            />
           </CardContent>
         </Card>
       ) : (

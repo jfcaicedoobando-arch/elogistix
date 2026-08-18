@@ -4,13 +4,14 @@
  * "Crear naviera" en vez de un select vacío sin salida.
  */
 import { useState } from "react";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { NavieraFormDialog } from "@/components/shared/NavieraFormDialog";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   value: string | null;
@@ -48,17 +49,23 @@ export function NavieraSelect({ value, onSelect, placeholder = "Selecciona navie
             {!vacio && <CommandInput placeholder="Buscar naviera…" />}
             <CommandList>
               {vacio ? (
-                <div className="p-3 space-y-2 text-sm text-muted-foreground" data-testid="naviera-select-empty">
-                  No hay navieras activas en el catálogo.
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => { setOpen(false); setCreando(true); }}
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1.5" /> Crear naviera
-                  </Button>
+                <div data-testid="naviera-select-empty">
+                  <EmptyStateInline
+                    icon={Ship}
+                    message="No hay navieras activas en el catálogo."
+                    density="compact"
+                  />
+                  <div className="px-3 pb-3">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => { setOpen(false); setCreando(true); }}
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1.5" /> Crear naviera
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <>
