@@ -1,17 +1,9 @@
 /**
- * N-UI-01 (Ola 7) · ÚNICA implementación del badge de carta garantía.
+ * Badge compartido de carta garantía (única implementación).
  *
- * Antes había dos componentes con el mismo nombre y propósito: éste (outline +
- * iconos, informativo) y el de `features/costeo/components` (badge sólido de
- * una palabra). Se conserva esta variante y el módulo de costeo ahora sólo
- * re-exporta, para que los call-sites no cambien sus imports.
- *
- * Acepta dos formas de props:
+ * Consumido por cotización, costeo y portal-agente. Acepta dos formas de props:
  *  - `{ tarifa }` (cotización, desde `TopTarifaRow`).
  *  - `{ tieneCarta, vigenteHasta, navieraNombre? }` (costeo / portal-agente).
- *
- * TODO(shared): mover a `src/components/shared` y apuntar ambos features ahí
- * cuando el ownership de ese directorio lo permita.
  */
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, ShieldAlert, ShieldX, ShieldQuestion } from "lucide-react";

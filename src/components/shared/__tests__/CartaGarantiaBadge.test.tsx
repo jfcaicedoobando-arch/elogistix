@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { CartaGarantiaBadge } from "@/features/cotizacion/components/CartaGarantiaBadge";
+import { CartaGarantiaBadge } from "@/components/shared/CartaGarantiaBadge";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
 const HOY = new Date();
