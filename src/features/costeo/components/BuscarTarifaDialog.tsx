@@ -4,7 +4,7 @@
  * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
 import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, FileSearch, MapPinned } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
@@ -15,6 +15,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { TarifaResultCard } from "./TarifaResultCard";
 import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import type { TopTarifaRow } from "@/features/costeo/types";
@@ -50,13 +51,14 @@ function ResultadosBody({
 }: ResultadosBodyProps) {
   if (!origen || !destino || !tipo) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-8">
-        Selecciona origen, destino y tipo de contenedor para ver tarifas.
-      </p>
+      <EmptyStateInline
+        icon={MapPinned}
+        message="Selecciona origen, destino y tipo de contenedor para ver tarifas."
+      />
     );
   }
   if (isFetching) {
-    return <p className="text-sm text-muted-foreground text-center py-8">Buscando…</p>;
+    return <EmptyStateInline loading message="Buscando…" />;
   }
   if (error) {
     return (
@@ -69,10 +71,11 @@ function ResultadosBody({
   }
   if (tarifas.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-8">
-        No hay tarifas vigentes para esta combinación. Captura una nueva en
-        "Tarifas marítimas".
-      </p>
+      <EmptyStateInline
+        icon={FileSearch}
+        message="No hay tarifas vigentes para esta combinación."
+        hint='Captura una nueva en "Tarifas marítimas".'
+      />
     );
   }
   const meta = computeRankingMeta(tarifas);

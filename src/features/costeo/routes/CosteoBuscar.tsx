@@ -20,6 +20,8 @@ import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { LoadingState } from "@/components/shared/states/LoadingState";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { FileSearch, MapPinned } from "lucide-react";
 import { todayLocalISO } from "@/lib/date/today";
 
 export default function CosteoBuscar() {
@@ -109,17 +111,23 @@ export default function CosteoBuscar() {
       </Card>
 
       {!origen || !destino || !tipo ? (
-        <Card className="p-8 text-center text-muted-foreground">
-          Selecciona ruta y tipo de contenedor para ver las tarifas vigentes.
+        <Card>
+          <EmptyStateInline
+            icon={MapPinned}
+            message="Selecciona ruta y tipo de contenedor para ver las tarifas vigentes."
+          />
         </Card>
       ) : isFetching ? (
         <Card>
           <LoadingState label="Buscando tarifas…" />
         </Card>
       ) : tarifas.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">
-          No hay tarifas vigentes para esta combinación. Captura una nueva en
-          "Tarifas marítimas".
+        <Card>
+          <EmptyStateInline
+            icon={FileSearch}
+            message="No hay tarifas vigentes para esta combinación."
+            hint='Captura una nueva en "Tarifas marítimas".'
+          />
         </Card>
       ) : (
         (() => {
