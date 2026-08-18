@@ -44,8 +44,8 @@ export async function vincularOCrearOportunidadParaCotizacion(
       entidad_federativa: input.prospecto.entidadFederativa ?? "",
       cp: input.prospecto.cp ?? "",
     },
-    p_lead_id: input.leadId || null,
-    p_oportunidad_id: input.oportunidadId || null,
+    p_lead_id: input.leadId || undefined,
+    p_oportunidad_id: input.oportunidadId || undefined,
   });
   if (error) throw error;
 

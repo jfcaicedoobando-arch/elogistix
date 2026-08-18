@@ -13,6 +13,12 @@ export interface ProspectoData {
   contacto: string;
   email: string;
   telefono: string;
+  /** Datos fiscales opcionales capturados en el Paso 1 (viajan al lead). */
+  rfc?: string;
+  direccion?: string;
+  ciudad?: string;
+  entidadFederativa?: string;
+  cp?: string;
 }
 
 export function buildOpNombre(empresa: string, folio?: string): string {
