@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.653.1] - 2026-08-18
+
+### Preview estable — el bump de versión ya no reinicia el dev server
+- `vite.config.ts` dejó de importar `APP_VERSION`: ahora lee la versión con `readAppVersion()` (`scripts/lib/readAppVersion.ts`, lectura por `fs` + regex). Antes ese import volvía `src/constants/appVersion.ts` dependencia de la configuración de Vite y cada bump disparaba `server restarted`, abortando imports dinámicos (`Failed to fetch dynamically imported module` en Dashboard/Facturación/Cotizaciones y `404 /@vite/client`) y dejando el preview embebido en blanco.
+- El release de Sentry en producción mantiene el formato `libre-carga@<versión>`; si no puede leerse el archivo cae a `unknown` sin romper el build.
+- Pruebas nuevas para `readAppVersion` (versión vigente y fallback).
+
+
 ## [13.653.0] - 2026-08-18
 
 ### FE-15 / BUG-15 — tolerancia de sobrepago unificada
