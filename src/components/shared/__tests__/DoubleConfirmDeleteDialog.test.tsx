@@ -131,4 +131,29 @@ describe("<DoubleConfirmDeleteDialog />", () => {
     await Promise.resolve();
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
+
+  it("N-EC-02: si onConfirm rechaza NO cierra el diálogo ni deja rejection suelto", async () => {
+    const onConfirm = vi.fn().mockRejectedValue(new Error("boom"));
+    const onOpenChange = vi.fn();
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <DoubleConfirmDeleteDialog
+        open
+        onOpenChange={onOpenChange}
+        entityName="registro"
+        onConfirm={onConfirm}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+    fireEvent.change(screen.getByPlaceholderText("ELIMINAR"), {
+      target: { value: "ELIMINAR" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /eliminar definitivamente/i }));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(errSpy).toHaveBeenCalled();
+    errSpy.mockRestore();
+  });
 });
