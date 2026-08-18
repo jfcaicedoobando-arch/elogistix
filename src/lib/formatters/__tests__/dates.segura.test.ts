@@ -28,7 +28,7 @@ describe("formatFechaSegura", () => {
     expect(formatFechaSegura("0000-00-00T00:00:00Z", "dd/MM/yyyy HH:mm")).toBe("—");
   });
 
-  it("respeta un fallback personalizado", () => {
+  it("respeta un fallback personalizado en formatFechaSegura", () => {
     expect(formatFechaSegura(null, "dd/MM/yyyy", "s/f")).toBe("s/f");
   });
 
