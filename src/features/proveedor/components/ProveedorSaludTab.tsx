@@ -5,7 +5,7 @@
  */
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
-import { useProveedorSalud } from "@/features/cxp/hooks/useProveedorSalud";
+import { useProveedorSalud } from "@/features/cxp/hooks";
 import { useProveedorInteligencia } from "@/features/proveedor/hooks/useProveedorInteligencia";
 import { ProveedorSaludKpis } from "./ProveedorSaludKpis";
 import { ProveedorScorecardCards } from "./ProveedorScorecardCards";

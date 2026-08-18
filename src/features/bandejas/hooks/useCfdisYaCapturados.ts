@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   buscarFacturasPorUuidsFiscales,
   type FacturaPorUuid,
-} from "@/features/cxp/services/uuidsCapturados";
+} from "@/features/cxp/services";
 import { normalizarUuidFiscal } from "@/lib/domain/uuidFiscal";
 import { cxp as cxpKeys } from "@/features/cxp/queryKeys";
 

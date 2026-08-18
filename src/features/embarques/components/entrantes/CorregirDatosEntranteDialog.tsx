@@ -9,8 +9,7 @@ import { PencilLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { useCorregirDatosEntrante } from "@/features/cxp/hooks/useCorregirDatosEntrante";
-import { useCorregirEntranteForm } from "@/features/cxp/hooks/useCorregirEntranteForm";
+import { useCorregirDatosEntrante, useCorregirEntranteForm } from "@/features/cxp/hooks";
 import {
   useConceptosProveedorEmbarque,
   useCostosProveedorEmbarque,
@@ -19,7 +18,7 @@ import { ConceptosSugeridosEntrante } from "@/features/embarques/components/entr
 import { NotaContabilidadCampo } from "@/features/embarques/components/entrantes/NotaContabilidadCampo";
 import { SeccionProveedorEntrante } from "@/features/embarques/components/entrantes/SeccionProveedorEntrante";
 import { VerificacionMontoEntrante } from "@/features/embarques/components/entrantes/VerificacionMontoEntrante";
-import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 interface Props {
   row: FacturaEntranteRow | null;

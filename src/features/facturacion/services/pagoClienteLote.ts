@@ -8,7 +8,7 @@
  * Espejo del pago en lote a proveedor (`pagoProveedorLote.ts`).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { round2 } from "@/features/cxp/services/pagoProveedorLote";
+import { round2 } from "@/features/cxp/services";
 import {
   errorCuadre,
   errorFacturaDuplicada,

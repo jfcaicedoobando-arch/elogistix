@@ -15,7 +15,7 @@ import {
   type Anticipo,
   type AnticipoAplicacion,
   type RegistrarAnticipoInput,
-} from "@/features/cxp/services/anticipos";
+} from "@/features/cxp/services";
 
 export {
   registrarAnticipo,

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FacturaEntranteRow } from "@/features/bandejas/components/FacturaEntranteRow";
 import { useCfdisYaCapturados } from "@/features/bandejas/hooks/useCfdisYaCapturados";
-import type { FacturaEntranteRow as Fila } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow as Fila } from "@/features/cxp/services";
 
 export interface AccionesEntrante {
   onVer: (row: Fila) => void;

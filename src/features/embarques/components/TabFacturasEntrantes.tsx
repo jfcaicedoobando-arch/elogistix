@@ -30,9 +30,9 @@ import {
   useEliminarFacturaEntrante,
   useFacturasEntrantes,
   useReactivarFacturaEntrante,
-} from "@/features/cxp/hooks/useFacturasEntrantes";
+} from "@/features/cxp/hooks";
 
-import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services";
 import { SubirFacturaEntranteDialog } from "@/features/embarques/components/SubirFacturaEntranteDialog";
 import { CorregirDatosEntranteDialog } from "@/features/embarques/components/entrantes/CorregirDatosEntranteDialog";
 import { FacturaEntranteItem } from "@/features/embarques/components/entrantes/FacturaEntranteItem";

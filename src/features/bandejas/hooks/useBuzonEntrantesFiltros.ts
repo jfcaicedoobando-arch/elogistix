@@ -9,7 +9,7 @@ import {
   type ChipBuzon,
   type OrdenBuzon,
 } from "@/lib/domain/facturasEntrantesBuzon";
-import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 export function useBuzonEntrantesFiltros(pendientes: FacturaEntranteRow[]) {
   const [q, setQ] = useState("");

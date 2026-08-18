@@ -7,9 +7,8 @@
  */
 import { useCallback, useState } from "react";
 import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
-import { validarCapturaEntrante } from "@/features/cxp/services/capturaEntrante";
-import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
-import { mapearConceptosSugeridos } from "@/features/cxp/services/facturasEntrantesConceptos";
+import { validarCapturaEntrante, mapearConceptosSugeridos } from "@/features/cxp/services";
+import type { FacturaEntranteRow } from "@/features/cxp/services";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
 
 function aEntranteParaCaptura(row: FacturaEntranteRow): EntranteParaCaptura {

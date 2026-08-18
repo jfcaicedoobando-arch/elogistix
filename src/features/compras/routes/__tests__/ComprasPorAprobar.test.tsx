@@ -12,6 +12,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 vi.mock("@/features/cxp/hooks", () => ({
   useFacturasCxP: vi.fn(() => ({ data: [], isLoading: false, kpis: {} })),
+  useAprobarFacturasLote: () => ({
+    aprobar: vi.fn(),
+    isRunning: false,
+    progreso: null,
+  }),
+  useVerificarSatLote: () => ({
+    verificar: vi.fn(),
+    isRunning: false,
+    progreso: null,
+  }),
+  useSodAprobacion: () => ({ idsBloqueados: () => new Set<string>(), motivo: () => null }),
 }));
 vi.mock("@/hooks/shared", () => ({
   usePermissions: () => ({ canEdit: true }),

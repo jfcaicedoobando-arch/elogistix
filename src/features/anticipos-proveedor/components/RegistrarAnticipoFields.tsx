@@ -6,7 +6,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { ProveedorCombobox } from "@/features/cxp/components/ProveedorCombobox";
+import { ProveedorCombobox } from "@/features/cxp";
 import { formatCurrency } from "@/lib/formatters";
 import { type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
 import { EmbarqueAnticipoPicker } from "./EmbarqueAnticipoPicker";

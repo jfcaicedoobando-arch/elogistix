@@ -140,7 +140,7 @@ import {
   useAplicarNotaCredito,
   useAprobarNotaCredito,
   useCancelarNotaCredito,
-} from "@/features/cxp/hooks/useNotasCreditoProveedor";
+} from "@/features/cxp/hooks";
 import { useCosteoTarifaMutations } from "@/features/costeo/hooks/useCosteoTarifas";
 
 function makeWrapper() {

@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import {
   urlPreviaFacturaEntrante,
   type FacturaEntranteRow,
-} from "@/features/cxp/services/facturasEntrantes";
+} from "@/features/cxp/services";
 import {
   PreviaAcciones,
   PreviaBadges,

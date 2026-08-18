@@ -20,10 +20,10 @@ import { walk, relPath } from "../../../scripts/lib/walk";
 const ROOT = process.cwd();
 
 /** Features con barrel raíz enforceado por este test. */
-const BARRELED_FEATURES = ["tesoreria", "proformas"] as const;
+const BARRELED_FEATURES = ["tesoreria", "proformas", "cxp"] as const;
 
 /** Subcapas permitidas como barrel (1 segmento). */
-const ALLOWED_SUBLAYER = /^(services|hooks|domain|types|queryKeys)$/;
+const ALLOWED_SUBLAYER = /^(services|hooks|domain|types|queryKeys|permissions)$/;
 
 /**
  * Baseline de deep imports externos ya existentes (burn-down, mismo

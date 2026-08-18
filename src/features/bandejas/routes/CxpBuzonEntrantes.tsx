@@ -27,8 +27,8 @@ import {
   useFacturasEntrantesPorEstado,
   useReactivarFacturaEntrante,
   useRechazarFacturaEntrante,
-} from "@/features/cxp/hooks/useFacturasEntrantes";
-import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+} from "@/features/cxp/hooks";
+import { abrirFacturaEntrante, type FacturaEntranteRow } from "@/features/cxp/services";
 import { FacturasEntrantesToolbar } from "@/features/bandejas/components/FacturasEntrantesToolbar";
 import { FacturasEntrantesLista } from "@/features/bandejas/components/FacturasEntrantesLista";
 import { useBuzonEntrantesFiltros } from "@/features/bandejas/hooks/useBuzonEntrantesFiltros";

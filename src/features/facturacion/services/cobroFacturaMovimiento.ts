@@ -10,7 +10,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
-import { cargoEnMonedaCuenta } from "@/features/cxp/services/pagoProveedorMovimiento";
+import { cargoEnMonedaCuenta } from "@/features/cxp/services";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { logger } from "@/lib/observability/logger";
 

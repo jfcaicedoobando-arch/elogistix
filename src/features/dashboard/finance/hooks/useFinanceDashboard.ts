@@ -9,7 +9,7 @@ import { useResumenTesoreria } from "@/features/tesoreria/hooks";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useHuecoFacturacion } from "@/features/facturacion/hooks/useHuecoFacturacion";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
-import { esFacturaPorPagar } from "@/features/cxp/services/cxpPorPagarFiltro";
+import { esFacturaPorPagar } from "@/features/cxp/services";
 import { aMxn } from "@/lib/financial/convertir";
 
 export interface AgingBuckets {

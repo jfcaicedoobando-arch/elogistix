@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 import { CUBETA_LABELS, type CubetaAging } from "@/lib/aging/buckets";
 import type { CxcAgingRow } from "@/features/cxc/services/cxcAging";
-import { Kpi } from "@/features/cxp/components/DialogDetallePagosProveedor.parts";
+import { Kpi } from "@/features/cxp";
 
 const CUBETA_CHIPS: Array<{ value: CubetaAging | "todas"; label: string }> = [
   { value: "todas", label: "Todas" },

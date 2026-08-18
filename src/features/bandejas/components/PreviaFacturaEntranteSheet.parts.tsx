@@ -13,7 +13,7 @@ import { PdfObjectViewer } from "@/components/shared/PdfObjectViewer";
 import { formatDate } from "@/lib/formatters/dates";
 import { antiguedadEntrante, entranteSinXml } from "@/lib/domain/facturasEntrantesBuzon";
 import { etiquetaEstadoEntrante, varianteEstadoEntrante } from "@/lib/domain/facturasEntrantes";
-import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 function DatoLinea({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (

@@ -3,9 +3,7 @@ import { useAuditoriaCount } from "@/features/auditoria/hooks";
 import { useAlertasPendingCount } from "@/features/admin/hooks";
 import { useActividadesVencidasCount } from "@/features/crm/hooks/useCrmDashboard";
 import { useSidebarAlerts } from "@/hooks/layout/useSidebarAlerts";
-import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
-import { useCxpPorPagarCount } from "@/features/cxp/hooks/useCxpPorPagarCount";
-import { useEntrantesPorCapturarCount } from "@/features/cxp/hooks/useEntrantesPorCapturarCount";
+import { useCxpPendientesAprobacion, useCxpPorPagarCount, useEntrantesPorCapturarCount } from "@/features/cxp/hooks";
 import {
   SIDEBAR_CRM_ITEMS,
   SIDEBAR_SISTEMA_ITEMS,
