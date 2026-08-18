@@ -57,10 +57,17 @@ export default function ResetPassword() {
     const sub = subscribeToAuthChanges((event) => {
       if (event === "PASSWORD_RECOVERY") setValidSession(true);
     });
-    getCurrentSession().then((session) => {
-      if (session) setValidSession(true);
-      setReady(true);
-    });
+    getCurrentSession()
+      .then((session) => {
+        if (session) setValidSession(true);
+        setReady(true);
+      })
+      .catch((err: unknown) => {
+        // EC-08: sin este catch la pantalla quedaba en spinner infinito
+        // (setReady nunca corría) si getCurrentSession rechazaba.
+        setError(translateAuthError(err instanceof Error ? err.message : null));
+        setReady(true);
+      });
     return () => {
       sub.unsubscribe();
     };

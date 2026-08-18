@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, FileDown } from "lucide-react";
 import { getSignedUrl } from "@/services/storage";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
@@ -72,8 +73,18 @@ export function MercanciaInfoGrid({ cotizacion }: { cotizacion: Cot }) {
           <Button
             variant="link" size="sm" className="p-0 h-auto text-sm"
             onClick={async () => {
-              const url = await getSignedUrl(cotizacion.msds_archivo!);
-              window.open(url, '_blank');
+              // EC-08: sin try/catch un fallo de storage quedaba como promesa
+              // rechazada sin manejar y el usuario no veía nada.
+              try {
+                const url = await getSignedUrl(cotizacion.msds_archivo!);
+                window.open(url, '_blank');
+              } catch (error) {
+                notifyError(undefined, {
+                  title: "No se pudo descargar el MSDS",
+                  error,
+                  method: "COTIZACION_MERCANCIA_MSDS_1",
+                });
+              }
             }}
           >
             <FileDown className="h-3 w-3 mr-1" /> Descargar
