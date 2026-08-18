@@ -717,7 +717,6 @@ export default tseslint.config(
       // Sub-tablas read-only estáticas (sin sort/paginación) — no requieren DataTable.
       "src/features/cotizacion/components/seccionMercancia/DimensionesLCLTable.tsx",
       "src/features/cotizacion/components/seccionMercancia/DimensionesAereasTable.tsx",
-      "src/features/embarques/components/tabResumen/EmbarquesRelacionadosCard.tsx",
       "src/features/embarques/components/pnl/PnlProveedoresTable.tsx",
       "src/features/embarques/components/pnl/PnlComparativaTable.tsx",
       // Estado de cuenta: filas expandibles con sub-rows (pagos + notas de crédito),
@@ -891,7 +890,7 @@ export default tseslint.config(
     // `getEstadoColor` (de `@/lib/ui/uiMappings`) es un wrapper LEGACY del
     // patrón de badges de estado. El componente canónico es `StatusBadge`
     // (src/components/shared/StatusBadge.tsx) sobre statusRegistry/estadoConfig.
-    // Baseline LEGACY abajo (18 archivos) en burn-down: al migrar un archivo
+    // Baseline LEGACY abajo (3 archivos, Ola C · UI-01) en burn-down: al migrar un archivo
     // a StatusBadge/getEstadoVisual, quítalo de la lista. NO agregar entradas
     // nuevas. Este bloque va al final para que el override de
     // `src/features/**` (que apaga `no-restricted-imports`) no lo neutralice.
@@ -903,23 +902,8 @@ export default tseslint.config(
       "src/lib/ui/uiMappings.ts",
       "src/lib/ui/__tests__/**",
       // ── ESTADO-COLOR-LEGACY (baseline UX-03 · burn-down) ────────────────
-      "src/features/auth/routes/TrackingPublico.tsx",
-      "src/features/embarques/components/tracking/TrackingPublicoEstatus.tsx",
-      "src/features/embarques/components/EmbarqueMobileCard.tsx",
-      "src/features/embarques/components/facturacion/HistorialFacturas.tsx",
-      "src/features/embarques/components/tabResumen/EmbarquesRelacionadosCard.tsx",
-      "src/features/embarques/components/EmbarqueStatusChip.tsx",
-      "src/features/dashboard/components/CargasActivasClienteCard.tsx",
-      "src/features/cotizacion/components/CotizacionDetalleEmbarques.tsx",
       "src/features/cotizacion/components/detalle/CotizacionDetalleHeader.tsx",
-      "src/features/portal/routes/PortalEmbarqueDetalle.tsx",
-      "src/features/portal/routes/PortalFacturaDetalle.tsx",
-      "src/features/portal/routes/PortalEmbarques.tsx",
-      "src/features/portal/routes/PortalFacturas.tsx",
-      "src/features/portal/components/EmbarqueCard.tsx",
       "src/features/portal/components/PortalCotizacionCard.tsx",
-      "src/features/portal/components/dashboard/PortalEmbarquesRecientesCard.tsx",
-      "src/features/portal/components/dashboard/PortalEstadoEmbarquesCard.tsx",
       "src/features/portal/components/cotizacion/PortalCotizacionHeader.tsx",
       // Tests pueden importar el helper para renders aislados.
       "**/__tests__/**",
