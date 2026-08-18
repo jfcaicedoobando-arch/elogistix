@@ -39,11 +39,8 @@ const LITERAL_COLOR = /(?<![\w-])(?:text|bg|border|ring|from|to|via)-(?:red|gree
  * en un lote posterior. Todo nuevo hallazgo debe agregarse aquí explícitamente
  * y documentarse en `.lovable/plan.md`.
  */
-const ALLOWLIST: readonly string[] = [
-  // Marketing/landing: preview interno del logo, no forma parte del ERP.
-  // Se mantiene con paleta cruda intencionalmente (simula lienzos de marca fijos).
-  "src/features/marketing/routes/LogoPreview.tsx",
-];
+// LogoPreview quedó tokenizado en la Ola 6 (v13.669.0): ya no requiere excepción.
+const ALLOWLIST: readonly string[] = [];
 
 
 describe("architecture — no legacy tailwind color literals", () => {

@@ -19,9 +19,7 @@ import type {
   ConceptoFacturaRow,
   TipoIvaConcepto,
 } from "@/features/facturacion/services/conceptosFacturaCrud";
-import type { Database } from "@/integrations/supabase/types";
-
-type Moneda = Database["public"]["Enums"]["moneda"];
+import type { Moneda } from "@/features/facturacion/types";
 
 const TIPO_IVA_LABEL: Record<TipoIvaConcepto, string> = {
   gravado_16: "IVA 16%",

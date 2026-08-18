@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, fraccionAPorcentaje } from "@/lib/formatters";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 
 
@@ -25,7 +25,7 @@ export default function ResumenTotalesCotizacion({
 }: Props) {
   // R6-FIX2: la tasa nunca se escribe a mano; sale del helper central.
   const tasaIva = useTasaIVA();
-  const tasaPct = `${Math.round(tasaIva * 100)}%`;
+  const tasaPct = `${fraccionAPorcentaje(tasaIva)}%`;
   const hayDesglose = ivaUSD !== undefined || ivaMXN !== undefined;
   const monedasConIva = hayDesglose
     ? [

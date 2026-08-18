@@ -11,9 +11,7 @@ import { useFacturaConceptosEditorController } from "@/features/facturacion/hook
 import { useDirtyGuard } from "@/hooks/shared/useDirtyGuard";
 import { ConceptoRow, NuevoRow } from "./FacturaConceptosEditorRows";
 import type { ConceptoFacturaRow } from "@/features/facturacion/services/conceptosFacturaCrud";
-import type { Database } from "@/integrations/supabase/types";
-
-type Moneda = Database["public"]["Enums"]["moneda"];
+import type { Moneda } from "@/features/facturacion/types";
 
 interface Props {
   facturaId: string;

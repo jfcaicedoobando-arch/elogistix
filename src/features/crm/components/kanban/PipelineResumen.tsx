@@ -2,7 +2,7 @@
  * Franja de resumen del pipeline: total estimado, meta y ponderado por probabilidad.
  */
 import { TrendingUp, Target, Scale } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, porcentajeEntero } from "@/lib/formatters";
 import { totalesEtapa } from "@/features/crm/domain/criterios";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
@@ -12,7 +12,7 @@ interface Props {
 
 export default function PipelineResumen({ oportunidades }: Props) {
   const t = totalesEtapa(oportunidades);
-  const cumplimiento = t.meta > 0 ? Math.round((t.estimado / t.meta) * 100) : null;
+  const cumplimiento = porcentajeEntero(t.estimado, t.meta);
 
   const items = [
     { icon: TrendingUp, label: "Estimado", valor: formatCurrency(t.estimado, "MXN") },

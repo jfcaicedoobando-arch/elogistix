@@ -13,3 +13,8 @@ export type {
   TablesUpdate,
   Enums,
 } from "@/integrations/supabase/types";
+
+import type { Enums } from "@/integrations/supabase/types";
+
+/** Moneda del catálogo compartido (MXN/USD/EUR). Alias de dominio. */
+export type Moneda = Enums<"moneda">;

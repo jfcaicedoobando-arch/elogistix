@@ -11,9 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Motivo = Tables<"factura_notas_credito">["motivo"];
+import type { MotivoNotaCredito as Motivo } from "@/features/facturacion/types";
 
 const MOTIVOS: { value: Motivo; label: string }[] = [
   { value: "Devolucion", label: "Devolución" },

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.671.0] - 2026-08-18
+
+### Auditoría de arquitectura — puntos 2, 4 y 9 aplicados
+- **Reglas de negocio fuera de la UI (punto 4):** `RegistrarAnticipoDialog` tenía tres `useEffect` con política de negocio (sugerir T/C, autoseleccionar cuenta por moneda) y la conversión a MXN inline. Se extrajeron a funciones puras en `anticipos-proveedor/domain/registrarAnticipoPolicy.ts` (`tcSugeridoParaMoneda`, `debeSugerirTc`, `resolverCuentaBancaria`, `equivalenteMxnAnticipo`) y al hook `useRegistrarAnticipoDefaults`. El diálogo ahora solo captura y renderiza. +12 pruebas.
+- **UI desacoplada del esquema (punto 2):** 16 componentes derivaban tipos de `@/integrations/supabase/types` (p. ej. `Tables<"factura_notas_credito">["motivo"]`), así que renombrar una columna rompía la pantalla. Se crearon alias de dominio: `features/facturacion/types`, `features/cxp/types/notasCredito.ts`, `features/embarques/types/tracking.ts`, `features/presupuesto/types.ts` y `Moneda` en `@/types/db`. Nuevo guardrail `src/__tests__/architecture/ui-no-supabase-types.test.ts` con baseline 0.
+- **Porcentajes y moneda unificados (punto 9):** el % de cumplimiento se calculaba de tres formas distintas. Se agregaron `porcentajeEntero`, `fraccionAPorcentaje` y `formatCurrencyEntero` a `@/lib/formatters` y se migraron `PipelineResumen`, `OportunidadCard.parts`, `CrmDashboard`, `ResumenTotalesCotizacion` y `AuditoriaRiesgoFinancieroCard`.
+- **Higiene:** la allowlist de `no-legacy-color-literals` quedó vacía (`LogoPreview` ya está tokenizado desde v13.669.0), lo que destrabó la suite de arquitectura.
+
 ## [13.670.0] - 2026-08-18
 
 ### Ola 5 · UX-09 — `<Input>` con etiqueta accesible (28 campos)

@@ -17,9 +17,7 @@ import { NotaCreditoFila } from "./NotaCreditoFila";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { getFacturaSignedUrl } from "@/services/storage/facturas";
 import { notifyError } from "@/lib/ui/appFeedback";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Moneda = Tables<"proveedor_notas_credito">["moneda"];
+import type { MonedaNotaCreditoProveedor as Moneda } from "@/features/cxp/types";
 
 interface Props {
   facturaId: string;

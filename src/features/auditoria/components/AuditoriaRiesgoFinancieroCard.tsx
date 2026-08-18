@@ -5,7 +5,7 @@
 import { TrendingDown } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
-import { formatCurrency } from "@/lib/formatters/numbers";
+import { formatCurrencyEntero } from "@/lib/formatters/numbers";
 
 interface Props {
   total: number;
@@ -19,8 +19,7 @@ const reglaLabel: Partial<Record<ReglaAuditoria, string>> = {
 };
 
 /** Riesgo financiero se muestra sin decimales para ahorrar espacio en la tarjeta. */
-const fmt = (n: number): string =>
-  formatCurrency(Math.round(n), "MXN").replace(/\.00$/, "");
+const fmt = (n: number): string => formatCurrencyEntero(n, "MXN");
 
 export function AuditoriaRiesgoFinancieroCard({ total, porRegla }: Props) {
   const items = Object.entries(porRegla)

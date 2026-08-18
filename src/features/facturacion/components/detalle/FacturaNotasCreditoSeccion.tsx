@@ -13,12 +13,10 @@ import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviar
 import { DialogCancelarNotaCredito } from "@/features/facturacion/components/DialogCancelarNotaCredito";
 import { useTimbrarNotaCredito, useCancelarNotaCredito } from "@/features/facturacion/hooks/useNotaCreditoFacturapi";
 import { FacturaNotasCreditoTable } from "./FacturaNotasCreditoTable";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Moneda } from "@/features/facturacion/types";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ClaimPendingBanner } from "./ClaimPendingBanner";
 import { parseConceptosSugeridos } from "./facturaNotasCreditoConceptos";
-
-type Moneda = Tables<"facturas">["moneda"];
 
 interface Props {
   facturaId: string;

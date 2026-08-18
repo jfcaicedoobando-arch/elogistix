@@ -7,9 +7,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
-import type { Tables } from "@/integrations/supabase/types";
-
-type EmbarqueContenedor = Tables<'embarque_contenedores'>;
+import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 
 interface Props {
   contenedores: EmbarqueContenedor[];
