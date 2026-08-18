@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.654.0] - 2026-08-18
+
+### FE-14 / FE-16 — Redondeo canónico de dinero (centavos alineados con la base de datos)
+- `ConceptoLineaRow`: el botón "Aplicar IVA 16%" usa `calcularIVA(total, TASA_IVA)` en lugar de `Math.round(n*100)/100`.
+- `useConceptosManuales`: `redondear2` ahora es `roundMoney` (half away from zero, igual que `ROUND(numeric, 2)`).
+- `pagoDiferenciaCambiaria`: la diferencia cambiaria (que puede ser negativa) se redondea con `roundMoney`.
+- `recalcularTotalesFactura`: las retenciones ISR/IVA se redondean por línea, como ya se hacía con el IVA, evitando descuadres de 1 centavo contra el trigger de la BD.
+
 ## [13.653.3] - 2026-08-18
 
 ### Arranque blindado — el DOM ya no puede quedar en blanco sin explicación

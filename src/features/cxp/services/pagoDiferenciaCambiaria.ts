@@ -7,6 +7,8 @@
  *
  * Positiva = se pagaron más pesos que los provisionados (pérdida cambiaria).
  */
+import { roundMoney } from "@/lib/financial/financialUtils";
+
 export function sugerirDiferenciaCambiaria(a: {
   montoEnMonedaFactura: number;
   tcPago: number | null;
@@ -15,5 +17,8 @@ export function sugerirDiferenciaCambiaria(a: {
   const { montoEnMonedaFactura, tcPago, tcFactura } = a;
   if (!tcPago || !tcFactura || tcPago <= 0 || tcFactura <= 0) return null;
   if (!Number.isFinite(montoEnMonedaFactura) || montoEnMonedaFactura <= 0) return null;
-  return Math.round(montoEnMonedaFactura * (tcPago - tcFactura) * 100) / 100;
+  // BUG-14: la diferencia cambiaria puede salir negativa (ganancia); el
+  // redondeo canónico half-away-from-zero coincide con ROUND() de Postgres,
+  // mientras que Math.round divergía en .5 negativos.
+  return roundMoney(montoEnMonedaFactura * (tcPago - tcFactura));
 }

@@ -8,6 +8,7 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export interface ConceptoManual extends CfdiConceptoParsed {
   /** Key estable para React (evita re-montar inputs al editar — ver Q-07). */
@@ -45,9 +46,10 @@ export interface ConceptosManualesApi {
   reemplazar: (conceptos: ReadonlyArray<CfdiConceptoParsed>) => void;
 }
 
-function redondear2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
+// BUG-14: el redondeo canónico es `roundMoney` (half away from zero, igual
+// que ROUND(numeric, 2) de Postgres). `Math.round(n*100)/100` diverge en
+// negativos (ej. −2.505 → −2.50 aquí vs −2.51 en la BD).
+const redondear2 = roundMoney;
 
 export function useConceptosManuales(): ConceptosManualesApi {
   const [conceptos, setConceptos] = useState<ConceptoManual[]>([]);
