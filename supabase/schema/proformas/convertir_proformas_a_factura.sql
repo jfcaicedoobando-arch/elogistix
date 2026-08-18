@@ -249,6 +249,4 @@ BEGIN
 
   RETURN QUERY SELECT * FROM public.facturas WHERE id = ANY(v_factura_ids);
 END;
-$function$
-
-;
+$function$;

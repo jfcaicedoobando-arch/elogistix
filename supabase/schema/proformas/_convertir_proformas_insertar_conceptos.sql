@@ -60,6 +60,4 @@ BEGIN
       AND cv.deleted_at IS NULL;
   END IF;
 END;
-$function$
-
-;
+$function$;
