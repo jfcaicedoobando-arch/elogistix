@@ -1,5 +1,18 @@
 # Changelog
 
+## [13.668.0] - 2026-08-18
+
+### Ola 3 · Copy "Cartera" → "Cobranza"
+- `/cobranza` ya titula "Cobranza" (título del navegador y encabezado) y el dashboard ejecutivo dice "Cobranza vencida (>30d)" / "Cobranza vencida" en el drilldown. No se tocaron rutas, archivos ni identificadores de datos (`kpis.cartera_vencida_mxn` sigue igual).
+
+### Ola 3b · Migas "Por aprobar" / "Por pagar"
+- `Breadcrumbs.tsx`: los segmentos `por-aprobar` y `por-pagar` ya tienen etiqueta propia; antes se mostraban con guion ("Por-aprobar").
+
+### Ola 4 · N-EC-02 — `await onConfirm()` sin catch en diálogos base
+- `ConfirmActionDialog` y `DoubleConfirmDeleteDialog` envuelven `onConfirm()` en `try/catch` con `console.error`; en el de doble confirmación el cierre sólo ocurre en éxito, así que un fallo ya no deja el modal atorado y el usuario puede reintentar. Analogía: el cinturón dejó de depender de que el conductor se acuerde de ponérselo — ahora lo trae el coche.
+- Tests nuevos: `ConfirmActionDialog.test.tsx` (2 casos) y un caso de rechazo en `DoubleConfirmDeleteDialog.test.tsx`.
+- Fuera de alcance (tienen su propio `await onConfirm` inline): `EliminarFacturaCxpDialog`, `RechazarFacturaEntranteDialog`, `MarcarCapturadaDialog`, `CancelarEmbarqueDialog`, `ReasonDialog`.
+
 ## [13.667.0] - 2026-08-18
 
 ### Ola 2 · EC-07/EC-08/EC-09 — fechas seguras, promesas con catch y realtime por tenant

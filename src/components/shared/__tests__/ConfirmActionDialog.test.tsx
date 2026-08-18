@@ -92,4 +92,23 @@ describe("<ConfirmActionDialog />", () => {
     );
     expect(screen.queryByText("Oculto")).not.toBeInTheDocument();
   });
+
+  it("N-EC-02: captura el rechazo de onConfirm y lo registra en consola", async () => {
+    const onConfirm = vi.fn().mockRejectedValue(new Error("boom"));
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <ConfirmActionDialog
+        open
+        onOpenChange={() => {}}
+        title="¿Confirmar acción?"
+        onConfirm={onConfirm}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /confirmar/i }));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(errSpy).toHaveBeenCalled();
+    errSpy.mockRestore();
+  });
 });

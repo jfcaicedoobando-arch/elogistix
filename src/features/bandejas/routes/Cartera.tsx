@@ -33,7 +33,7 @@ import { useDocumentTitle } from "@/hooks/shared";
 
 
 export default function Cartera() {
-  useDocumentTitle("Cartera");
+  useDocumentTitle("Cobranza");
   const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [loteOpen, setLoteOpen] = useState(false);
@@ -68,7 +68,7 @@ export default function Cartera() {
   return (
     <PageContainer>
       <PageHeader
-        title="Cartera"
+        title="Cobranza"
         description="Facturas vencidas y por vencer en los próximos 7 días. Cambia el filtro de urgencia para ver toda la cartera."
       />
       {canRegistrarCobro && (

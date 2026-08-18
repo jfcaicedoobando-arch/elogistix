@@ -93,7 +93,14 @@ export function ConfirmActionDialog({
             disabled={isPending || confirmDisabled}
             onClick={async (e) => {
               e.preventDefault();
-              await onConfirm();
+              // N-EC-02: red de seguridad. Los callers suelen envolver
+              // `mutateAsync` en try/catch (el hook notifica), pero si alguno
+              // propaga, evitamos una promesa rechazada suelta.
+              try {
+                await onConfirm();
+              } catch (err) {
+                console.error("[ConfirmActionDialog] onConfirm rechazó:", err);
+              }
             }}
           >
             {isPending ? (
