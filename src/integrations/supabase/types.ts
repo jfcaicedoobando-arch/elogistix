@@ -3048,6 +3048,7 @@ export type Database = {
           dolor_explicito: string | null
           email: string
           empresa: string
+          entidad_federativa: string
           estado: Database["public"]["Enums"]["crm_lead_estado"]
           estatus_icp: string | null
           fecha_nutricion: string | null
@@ -3093,6 +3094,7 @@ export type Database = {
           dolor_explicito?: string | null
           email?: string
           empresa: string
+          entidad_federativa?: string
           estado?: Database["public"]["Enums"]["crm_lead_estado"]
           estatus_icp?: string | null
           fecha_nutricion?: string | null
@@ -3138,6 +3140,7 @@ export type Database = {
           dolor_explicito?: string | null
           email?: string
           empresa?: string
+          entidad_federativa?: string
           estado?: Database["public"]["Enums"]["crm_lead_estado"]
           estatus_icp?: string | null
           fecha_nutricion?: string | null
