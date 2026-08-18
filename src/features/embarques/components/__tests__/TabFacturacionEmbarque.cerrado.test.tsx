@@ -49,7 +49,7 @@ describe("TabFacturacionEmbarque — embarque cerrado", () => {
 
   it("bloquea la edición y muestra aviso cuando el embarque está Cerrado", () => {
     render(
-      <TabFacturacion
+      <TabFacturacionEmbarque
         facturas={[]}
         canEdit
         embarque={{ ...embarqueBase, estado: "Cerrado" } as Tables<"embarques">}
