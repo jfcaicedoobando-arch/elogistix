@@ -45,7 +45,8 @@ import {
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
 export const SIDEBAR_DASHBOARD_ITEMS: SidebarItem[] = [
-  { title: "Principal", url: "/", icon: LayoutDashboard },
+  // UX-01: la ruta real del tablero es /inicio; con "/" nunca se marcaba activo.
+  { title: "Principal", url: "/inicio", icon: LayoutDashboard },
   { title: "Operaciones", url: "/operaciones", icon: Workflow },
 ];
 
@@ -56,7 +57,8 @@ export const SIDEBAR_VENTAS_ITEMS: SidebarItem[] = [
   { title: "Facturación", url: "/facturacion", icon: Receipt },
   { title: "Por emitir", url: "/proformas?estado=aceptada", icon: FileClock },
   { title: "Proformas", url: "/proformas", icon: FileSpreadsheet },
-  { title: "Cobranza", url: "/cartera", icon: HandCoins },
+  // UX-02: un solo nombre visible para el módulo ("Cobranza") y una sola ruta.
+  { title: "Cobranza", url: "/cobranza", icon: HandCoins },
   { title: "Antigüedad CxC", url: "/cobranza/aging", icon: LayoutList },
   { title: "Comisiones", url: "/comisiones", icon: Percent },
   { title: "Clientes", url: "/clientes", icon: Building2 },

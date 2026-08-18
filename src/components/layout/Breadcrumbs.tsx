@@ -20,7 +20,15 @@ const SEGMENT_LABELS: Record<string, string> = {
   agentes: "Agentes",
   facturacion: "Facturación",
   proformas: "Proformas",
-  cartera: "Cartera",
+  // UX-02/UX-03: nombres de negocio, no segmentos crudos.
+  cartera: "Cobranza",
+  cobranza: "Cobranza",
+  "por-capturar": "Por capturar",
+  "notas-credito": "Notas de crédito",
+  aging: "Antigüedad",
+  anticipos: "Anticipos",
+  "buzon-facturas": "Buzón de facturas",
+  refacturacion: "Refacturación",
   operaciones: "Operaciones",
 
   reportes: "Reportes",

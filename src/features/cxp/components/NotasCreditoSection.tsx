@@ -16,6 +16,7 @@ import {
   useNotasCreditoFactura, useAplicarNotaCredito, useAprobarNotaCredito, useCancelarNotaCredito,
 } from "@/features/cxp/hooks/useNotasCreditoProveedor";
 import { DialogNotaCreditoProveedor } from "./DialogNotaCreditoProveedor";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { NcSatBadge } from "./NcSatBadge";
 import { getFacturaSignedUrl } from "@/services/storage/facturas";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -59,6 +60,7 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
   const aprobar = useAprobarNotaCredito(facturaId);
   const cancelar = useCancelarNotaCredito(facturaId);
   const [openNueva, setOpenNueva] = useState(false);
+  const [ncACancelar, setNcACancelar] = useState<{ id: string; folio: string } | null>(null);
 
   return (
     <div className="border rounded-md">
@@ -162,9 +164,10 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
                       <Button
                         size="sm" variant="ghost"
                         className="h-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => cancelar.mutate(n.id)}
+                        onClick={() => setNcACancelar({ id: n.id, folio: n.folio_nc || "s/folio" })}
                         disabled={cancelar.isPending}
                         title="Cancelar"
+                        aria-label={`Cancelar nota de crédito ${n.folio_nc}`}
                       >
                         <X className="h-3.5 w-3.5" />
                       </Button>
@@ -183,6 +186,27 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
         facturaId={facturaId}
         monedaFactura={monedaFactura}
         saldoFactura={saldoFactura}
+      />
+
+      {/* UX-06: cancelar una NC afecta el saldo del proveedor; se confirma. */}
+      <ConfirmActionDialog
+        open={!!ncACancelar}
+        onOpenChange={(o) => !o && setNcACancelar(null)}
+        title="¿Cancelar la nota de crédito?"
+        description={
+          <>
+            La nota <strong>{ncACancelar?.folio}</strong> dejará de reducir el saldo de esta
+            factura. Esta acción no se puede revertir.
+          </>
+        }
+        confirmLabel="Sí, cancelar NC"
+        variant="destructive"
+        isPending={cancelar.isPending}
+        onConfirm={async () => {
+          if (!ncACancelar) return;
+          await cancelar.mutateAsync(ncACancelar.id);
+          setNcACancelar(null);
+        }}
       />
     </div>
   );

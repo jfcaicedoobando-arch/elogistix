@@ -43,30 +43,56 @@ async function contextoFactura(
   };
 }
 
+/**
+ * EC-02 — Fail-closed: si la consulta falla no asumimos "MXN". Devolver una
+ * moneda equivocada abonaría un cobro en USD como si fueran pesos.
+ */
 async function monedaDeCuenta(cuentaId: string): Promise<string | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("cuentas_bancarias")
     .select("moneda")
     .eq("id", cuentaId)
     .maybeSingle();
+  if (error) throw error;
   return data?.moneda ?? null;
 }
 
-/** `true` si ya existe un movimiento vivo ligado a este cobro (evita duplicar). */
+/**
+ * `true` si ya existe un movimiento vivo ligado a este cobro (evita duplicar).
+ * EC-02 — un fallo de red/RLS ya NO se interpreta como "no existe": se propaga
+ * para que el llamador no inserte un segundo movimiento por el mismo cobro.
+ */
 async function yaExiste(pagoId: string): Promise<boolean> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("bbva_movimientos")
     .select("id")
     .eq("pago_factura_id", pagoId)
     .is("deleted_at", null)
     .limit(1);
+  if (error) throw error;
   return (data?.length ?? 0) > 0;
 }
 
-/** Inserta el abono bancario del cobro. Devuelve `true` si se creó. */
+/**
+ * Inserta el abono bancario del cobro. Devuelve `true` si se creó.
+ * Nunca lanza hacia afuera: ante cualquier fallo se registra y se omite el
+ * movimiento (mejor faltar un movimiento que duplicar dinero en el banco).
+ */
 export async function crearMovimientoBancarioCobro(
   input: MovimientoCobroInput,
 ): Promise<boolean> {
+  try {
+    return await insertarMovimientoCobro(input);
+  } catch (e) {
+    logger.warn("Cobro no abonado al banco: fallo al verificar el movimiento", {
+      pagoId: input.pagoId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+    return false;
+  }
+}
+
+async function insertarMovimientoCobro(input: MovimientoCobroInput): Promise<boolean> {
   if (await yaExiste(input.pagoId)) return false;
   const [ctx, monedaCuenta] = await Promise.all([
     contextoFactura(input.facturaId),

@@ -31,14 +31,19 @@ function normalizaMoneda(v: unknown): MonedaSoportada {
   return m === "USD" || m === "EUR" ? m : "MXN";
 }
 
-/** Moneda de la cuenta bancaria del movimiento (default MXN si no se resuelve). */
+/**
+ * Moneda de la cuenta bancaria del movimiento.
+ * EC-04 — si la lectura falla ya NO se asume "MXN": eso permitía auto-conciliar
+ * un movimiento en USD contra un pago en pesos por el mismo número.
+ */
 export async function monedaDeCuenta(cuentaBancariaId: string | null): Promise<MonedaSoportada> {
   if (!cuentaBancariaId) return "MXN";
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("cuentas_bancarias")
     .select("moneda")
     .eq("id", cuentaBancariaId)
     .maybeSingle();
+  if (error) throw error;
   return normalizaMoneda(data?.moneda);
 }
 

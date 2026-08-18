@@ -2,6 +2,7 @@
  * Helpers compartidos del módulo `vincularCotizacion`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { escapeIlike } from "@/lib/search/ilike";
 import { fetchEtapasPipelineActivas } from "@/features/crm/services/etapas";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
@@ -29,7 +30,9 @@ export async function findLeadIdByEmail(email: string): Promise<string | null> {
   const { data, error } = await supabase
     .from("crm_leads")
     .select("id")
-    .ilike("email", normalizado)
+    // EC-03: `_` y `%` son comodines en ILIKE; se escapan para comparar exacto
+    // (sin escapar, "juan_perez@x.com" podía ligarse al lead "juanXperez@x.com").
+    .ilike("email", escapeIlike(normalizado))
     .is("deleted_at", null)
     .order("created_at", { ascending: true })
     .limit(1)
