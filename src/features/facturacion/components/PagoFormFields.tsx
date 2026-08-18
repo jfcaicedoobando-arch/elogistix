@@ -103,7 +103,7 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
           </SelectContent>
         </Select>
         {cuentasCompatibles.length === 0 && (
-          <p className="text-label text-muted-foreground">
+          <p className="text-label text-warning">
             No hay cuentas bancarias en {values.moneda}. Registra el cobro y concílialo después.
           </p>
         )}

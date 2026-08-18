@@ -79,7 +79,7 @@ export function RegistrarAnticipoPagoFields({
           <p className="text-xs text-destructive">{errors.cuentaBancariaId.message}</p>
         )}
         {sinCuentas && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-warning">
             No hay cuentas activas en {moneda}. Créala en Tesorería → Cuentas.
           </p>
         )}
