@@ -32,8 +32,16 @@ const EXCLUDED_PREFIXES: readonly string[] = [
   "src/pdf/",
 ];
 
-/** Deuda declarada — sólo puede decrecer. */
-const RAW_EMPTY_DEBT: readonly string[] = [];
+/**
+ * Deuda declarada — sólo puede decrecer.
+ * `DashboardEjecutivoFacturacionMiniSerie`: el "Sin datos" vive dentro de un
+ * sparkline de 24px de alto; `EmptyStateInline` (icono + texto centrado) no cabe
+ * en ese espacio.
+ */
+const RAW_EMPTY_DEBT: readonly string[] = [
+  "src/features/facturacion/components/DashboardEjecutivoFacturacionMiniSerie.tsx",
+];
+
 
 function tsxFiles(): string[] {
   return walk(join(ROOT, "src"), {
