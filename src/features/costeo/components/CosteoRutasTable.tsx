@@ -15,18 +15,11 @@ import { AlertTriangle, ExternalLink, Trash2 } from "lucide-react";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import { formatFechaEs } from "@/lib/formatters/dates";
+import { formatFechaDia } from "@/lib/formatters/dates";
 import {
   computeRutaEstado, diasParaExpirar, DIAS_POR_VENCER, type RutaEstadoMeta,
 } from "@/features/costeo/utils/rutaEstado";
 
-
-function formatFecha(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return formatFechaEs(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
-}
 
 interface RutaRow {
   id: string;
@@ -109,7 +102,7 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
           return (
             <span className={porVencer ? "text-destructive font-medium" : "text-muted-foreground"}>
               {porVencer && <AlertTriangle className="inline size-3.5 mr-1" />}
-              {formatFecha(ruta.proxima_expiracion)}
+              {formatFechaDia(ruta.proxima_expiracion)}
             </span>
           );
         },
@@ -121,7 +114,7 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
         sortingFn: sortByDate((f) => f.ruta.ultima_actualizacion_tarifa),
         enableSorting: true,
         meta: { className: "text-sm text-muted-foreground" },
-        cell: ({ row }) => formatFecha(row.original.ruta.ultima_actualizacion_tarifa),
+        cell: ({ row }) => formatFechaDia(row.original.ruta.ultima_actualizacion_tarifa),
       },
       statusColumn<FilaRuta>({
         id: "estado",

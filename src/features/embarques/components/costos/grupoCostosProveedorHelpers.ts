@@ -93,8 +93,7 @@ export function peorEstadoPago(facturas: FacturaVinculada[]): string | null {
   return peor ? peor.charAt(0).toUpperCase() + peor.slice(1) : null;
 }
 
+/** Ola C · UI-04: delega en el formateador canónico; conserva el fallback "s/f". */
 export function fmtFecha(iso: string | null): string {
-  if (!iso) return "s/f";
-  try { return format(new Date(iso), "dd/MM/yyyy", { locale: es }); }
-  catch { return iso; }
+  return iso ? formatFechaDia(iso, iso) : "s/f";
 }

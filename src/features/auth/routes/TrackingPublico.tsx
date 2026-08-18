@@ -24,12 +24,6 @@ function transporteLabel(e: TrackingPublicoData["embarque"]): string {
   return e.aerolinea || e.transportista || "—";
 }
 
-// RUX-04: canon de fecha de la app (dd/MM/yyyy), anclado a mediodía UTC.
-function fechaDia(iso: string | null): string {
-  if (!iso) return "—";
-  const f = formatFechaEs(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
-  return f === "-" ? "—" : f;
-}
 
 export default function TrackingPublico() {
   const { token } = useParams<{ token: string }>();

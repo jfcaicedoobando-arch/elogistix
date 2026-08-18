@@ -37,11 +37,14 @@ export function isFechaEmisionValida(fecha: string): boolean {
   return true;
 }
 
-/** Formatea `YYYY-MM-DD` como `DD/MM/YYYY` para mensajes en UI. */
-export function formatFechaEs(iso?: string): string {
+/**
+ * Ola C · UI-04: se eliminó el formateador local (colisionaba de nombre con el
+ * de `@/lib/formatters`). Este wrapper sólo añade la validación ISO estricta
+ * que los mensajes del hook necesitan (cadena vacía si no es `YYYY-MM-DD`).
+ */
+export function formatFechaIsoEstricta(iso?: string): string {
   if (!iso || !ISO_RE.test(iso)) return "";
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
+  return formatFechaDia(iso, "");
 }
 
 /**

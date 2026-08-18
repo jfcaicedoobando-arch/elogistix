@@ -44,5 +44,5 @@ export function formatRelativo(fecha: string | Date, ahora: Date = new Date()): 
   const dias = Math.floor(diffMs / DIA_MS);
   if (dias < 7) return `hace ${dias} días`;
 
-  return formatFechaEs(fechaObj.toISOString(), { day: "2-digit", month: "2-digit", year: "numeric" });
+  return formatFechaDia(fechaObj.toISOString());
 }
