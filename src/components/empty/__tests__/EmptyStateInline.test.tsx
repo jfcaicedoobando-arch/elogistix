@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Ship } from "lucide-react";
 import { EmptyStateInline } from "../EmptyStateInline";
@@ -12,10 +11,10 @@ describe("EmptyStateInline", () => {
     expect(screen.getByText("Crea el primero.")).toBeInTheDocument();
   });
 
-  it("renderiza CTA con handler", async () => {
+  it("renderiza CTA con handler", () => {
     const onClick = vi.fn();
     render(<EmptyStateInline message="Sin cuentas." action={{ label: "Crear cuenta", onClick }} />);
-    await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
+    fireEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
