@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.653.2] - 2026-08-18
+
+### Preview estable — sin bucle tardío de recarga
+- La guarda de recuperación de chunks ya no se borra inmediatamente en `window.load`; ahora exige 8 segundos de estabilidad. Antes un import dinámico que fallaba 1–3 segundos después podía recargar indefinidamente el iframe: la app aparecía brevemente y luego desaparecía.
+- Si el segundo intento también falla, la aplicación conserva el fallback de error en vez de repetir la recarga y dejar el preview en blanco.
+
+
 ## [13.653.1] - 2026-08-18
 
 ### Preview estable — el bump de versión ya no reinicia el dev server

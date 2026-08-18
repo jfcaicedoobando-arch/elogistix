@@ -51,8 +51,12 @@ window.addEventListener("error", (event) => {
   tryReloadForChunkError();
 });
 
+// No liberar la guarda apenas termina `load`: las rutas React.lazy y los
+// módulos diferidos suelen resolverse después. Si uno falla a los 1–3 s,
+// limpiar aquí provocaba un bucle de recargas (la app aparecía y desaparecía).
+// Ocho segundos sin fallos indican que el grafo de módulos ya quedó estable.
 window.addEventListener("load", () => {
-  clearChunkReloadFlag();
+  window.setTimeout(clearChunkReloadFlag, 8_000);
 });
 
 /**
