@@ -21,7 +21,7 @@ import {
   entranteSinXml,
   type TonoAntiguedad,
 } from "@/lib/domain/facturasEntrantesBuzon";
-import type { FacturaEntranteRow as Fila } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow as Fila } from "@/features/cxp/services";
 
 const BARRA_TONO: Record<TonoAntiguedad, string> = {
   neutral: "bg-muted",

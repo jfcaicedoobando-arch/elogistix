@@ -6,7 +6,7 @@
 import { formatDate } from "@/lib/formatters/dates";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { diasEnEspera } from "@/lib/domain/facturasEntrantes";
-import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 const Linea = ({ children }: { children: React.ReactNode }) => (
   <p className="text-xs text-muted-foreground">{children}</p>

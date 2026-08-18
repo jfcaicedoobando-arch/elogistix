@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
 import { importeEntrante } from "@/lib/domain/facturasEntrantesBuzon";
 import { nombreDesdeEmail } from "@/lib/formatters/text";
-import type { FacturaEntranteRow as Fila } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow as Fila } from "@/features/cxp/services";
 
 /** Proveedor + avisos de la fila (falta XML, CFDI ya capturado, nota). */
 export function ProveedorEntrante({

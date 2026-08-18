@@ -5,7 +5,7 @@
 import { useRef } from "react";
 import { FileCode2, FileText, PencilLine, RotateCcw, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 function AdjuntarXmlButton({ onSelect }: { onSelect: (xml: File) => void }) {
   const inputXml = useRef<HTMLInputElement>(null);

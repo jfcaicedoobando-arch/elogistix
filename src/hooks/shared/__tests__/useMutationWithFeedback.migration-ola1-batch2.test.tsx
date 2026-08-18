@@ -93,7 +93,7 @@ const crearNc = vi.fn();
 const aplicarNc = vi.fn();
 const aprobarNc = vi.fn();
 const cancelarNc = vi.fn();
-vi.mock("@/features/cxp/services/proveedorNotasCredito", () => ({
+vi.mock("@/features/cxp/services", () => ({
   crearNotaCreditoProveedor: (...a: unknown[]) => crearNc(...a),
   aplicarNotaCredito: (...a: unknown[]) => aplicarNc(...a),
   aprobarNotaCredito: (...a: unknown[]) => aprobarNc(...a),
@@ -140,7 +140,7 @@ import {
   useAplicarNotaCredito,
   useAprobarNotaCredito,
   useCancelarNotaCredito,
-} from "@/features/cxp/hooks/useNotasCreditoProveedor";
+} from "@/features/cxp/hooks";
 import { useCosteoTarifaMutations } from "@/features/costeo/hooks/useCosteoTarifas";
 
 function makeWrapper() {

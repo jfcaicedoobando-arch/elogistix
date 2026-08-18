@@ -16,8 +16,8 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
-import { useFacturasVinculablesEntrante } from "@/features/cxp/hooks/useFacturasVinculablesEntrante";
-import { etiquetaFacturaVinculable } from "@/features/cxp/services/facturasVinculablesEntrante";
+import { useFacturasVinculablesEntrante } from "@/features/cxp/hooks";
+import { etiquetaFacturaVinculable } from "@/features/cxp/services";
 
 interface Props {
   open: boolean;

@@ -4,7 +4,7 @@
  * Se separa de `pagoClienteLote.ts` para respetar el límite de 200 líneas y la
  * complejidad máxima (Power of 10): `validarCobroLote` sólo orquesta.
  */
-import { round2 } from "@/features/cxp/services/pagoProveedorLote";
+import { round2 } from "@/features/cxp/services";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
 import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 import { todayLocalISO } from "@/lib/date/today";

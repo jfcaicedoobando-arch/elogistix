@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { FacturaEntranteRow as Fila } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow as Fila } from "@/features/cxp/services";
 
 interface Props {
   row: Fila;

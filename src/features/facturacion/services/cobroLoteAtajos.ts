@@ -2,7 +2,7 @@
  * Atajos puros de reparto del cobro en lote de cliente.
  * Sin estado ni React: se prueban de forma aislada.
  */
-import { round2 } from "@/features/cxp/services/pagoProveedorLote";
+import { round2 } from "@/features/cxp/services";
 import { TOLERANCIA_CENTAVOS } from "./cobroLoteValidaciones";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
 

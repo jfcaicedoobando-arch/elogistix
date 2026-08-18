@@ -22,7 +22,7 @@ import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { DataTable } from "@/components/shared/DataTable";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
-import { useProgramarPagoLote } from "@/features/cxp/hooks/useProgramarPagoLote";
+import { useProgramarPagoLote } from "@/features/cxp/hooks";
 import { todayLocalISO } from "@/lib/date/today";
 import { CxpPorPagarFiltersBar } from "@/features/bandejas/components/CxpPorPagarFiltersBar";
 import { usePermissions } from "@/hooks/shared/usePermissions";

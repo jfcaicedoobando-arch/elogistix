@@ -1,6 +1,6 @@
 /** Esquema y catálogos del formulario "Registrar anticipo a proveedor". */
 import { z } from "zod";
-import { TC_MAX } from "@/features/cxp/services/pagoProveedorValidaciones";
+import { TC_MAX } from "@/features/cxp/services";
 
 /** EC-08: tope razonable para el monto de un anticipo capturado por UI. */
 const MONTO_MAX = 1_000_000_000;

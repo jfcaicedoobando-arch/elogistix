@@ -12,7 +12,7 @@ import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { ConceptoCostoEmbarque } from "@/features/embarques/services";
-import type { ConceptoSugeridoSeleccion } from "@/features/cxp/hooks/useSubirEntranteForm";
+import type { ConceptoSugeridoSeleccion } from "@/features/cxp/hooks";
 
 interface Props {
   conceptos: readonly ConceptoCostoEmbarque[] | undefined;

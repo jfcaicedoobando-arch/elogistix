@@ -14,7 +14,7 @@ import {
 } from "@/lib/domain/facturasEntrantes";
 import { MetaEntrante } from "@/features/embarques/components/entrantes/MetaEntrante";
 import { AccionesEntrante } from "@/features/embarques/components/entrantes/AccionesEntrante";
-import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 interface Props {
   row: FacturaEntranteRow;

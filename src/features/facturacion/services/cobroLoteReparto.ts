@@ -5,7 +5,7 @@
  * Se separó de `pagoClienteLote.ts` para respetar el límite de 200 líneas
  * (Power of 10). Funciones puras: no tocan la base ni el DOM.
  */
-import { round2 } from "@/features/cxp/services/pagoProveedorLote";
+import { round2 } from "@/features/cxp/services";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
 
 /**

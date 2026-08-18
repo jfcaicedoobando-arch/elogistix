@@ -5,3 +5,6 @@
 export { DialogNuevaFacturaProveedor } from "./components/DialogNuevaFacturaProveedor";
 export { DialogPagoLoteProveedor } from "./components/DialogPagoLoteProveedor";
 export type { OrigenProveedor } from "./components/pagoProveedorHelpers";
+export * from "./components/ProveedorCombobox";
+export * from "./components/cxpColumns";
+export * from "./components/DialogDetallePagosProveedor.parts";

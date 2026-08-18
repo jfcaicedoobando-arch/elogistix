@@ -6,8 +6,8 @@
  * porque la RPC `aprobar_factura_proveedor` las rechaza con `LC_SOD_VIOLATION`.
  */
 import { useMemo } from "react";
-import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
-import { useSodAprobacion } from "@/features/cxp/hooks/useSodAprobacion";
+import { buildCxPColumns } from "@/features/cxp";
+import { useSodAprobacion } from "@/features/cxp/hooks";
 import { SOD_MOTIVO_CAPTURA_PROPIA } from "@/features/cxp/permissions";
 import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
 import type { FacturaCxP } from "@/features/cxp/services";

@@ -7,7 +7,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import type { SaludProveedor } from "@/features/cxp/services/proveedorSalud";
+import type { SaludProveedor } from "@/features/cxp/services";
 
 function semaforoToneFromPct(pct: number | null): "good" | "warn" | "bad" {
   if (pct == null) return "warn";

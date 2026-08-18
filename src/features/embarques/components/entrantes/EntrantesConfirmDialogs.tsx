@@ -5,7 +5,7 @@
  * "Devolver a por capturar" (rescata un documento rechazado por error).
  */
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import type { FacturaEntranteRow } from "@/features/cxp/services/facturasEntrantes";
+import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 interface Props {
   aEliminar: FacturaEntranteRow | null;
