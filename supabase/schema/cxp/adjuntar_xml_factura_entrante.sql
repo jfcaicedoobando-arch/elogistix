@@ -43,6 +43,23 @@ BEGIN
     RAISE EXCEPTION 'LC_FORBIDDEN: sin permiso para adjuntar XML al buzón';
   END IF;
 
+  -- BUG-18: los metadatos del CFDI llegan parseados desde el cliente y no se
+  -- pueden recomputar en SQL puro (el XML vive en Storage; la referencia del
+  -- parseo es la edge function `parse-cfdi-xml`). Validaciones mínimas
+  -- server-side: formato del UUID fiscal y total positivo.
+  -- TODO(BUG-18): validación fuerte — descargar el XML de Storage y re-parsear
+  -- server-side (edge `parse-cfdi-xml` o pg_net + http) comparando UUID, RFC
+  -- emisor y total contra lo declarado por el cliente antes de aceptarlos.
+  IF p_uuid_fiscal IS NOT NULL
+     AND p_uuid_fiscal !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+    RAISE EXCEPTION 'LC_XML_UUID_INVALIDO: el UUID fiscal no tiene formato UUID válido'
+      USING ERRCODE = '23514';
+  END IF;
+  IF p_total_detectado IS NOT NULL AND p_total_detectado <= 0 THEN
+    RAISE EXCEPTION 'LC_XML_TOTAL_INVALIDO: el total detectado debe ser mayor a cero'
+      USING ERRCODE = '23514';
+  END IF;
+
   -- Check-then-act cerrado: rol, organización y estado dentro del UPDATE.
   UPDATE public.embarque_facturas_entrantes
      SET xml_path = p_xml_path,

@@ -39,7 +39,9 @@ BEGIN
       tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
     )
     SELECT p_factura_id, cv.descripcion, cv.cantidad, cv.precio_unitario,
-           cv.moneda, cv.cantidad * cv.precio_unitario, p_org,
+           -- BUG-17: el total del renglón se guarda redondeado a 2 decimales,
+           -- igual que en la rama consolidada (pcc.total ya viene redondeado).
+           cv.moneda, ROUND(cv.cantidad * cv.precio_unitario, 2), p_org,
            COALESCE(public.resolver_clave_sat(p_org, cv.descripcion), '78101800'),
            CASE
              WHEN cv.tasa_iva_aplicada IS NULL AND cv.aplica_iva = false THEN 'exento'
