@@ -166,7 +166,10 @@ BEGIN
         USING ERRCODE = '42501';
     END IF;
 
-    IF v_monto > ROUND(v_saldo, 2) + 0.009 THEN
+    -- BUG-15: tolerancia unificada con el trigger tg_pago_factura_no_sobrepago
+    -- (0.005 = medio centavo). Antes 0.009 aquí y 0.005 en el trigger: la RPC
+    -- aceptaba sobrepagos que el trigger luego rechazaba.
+    IF v_monto > ROUND(v_saldo, 2) + 0.005 THEN
       RAISE EXCEPTION 'LC_COBRO_LOTE_EXCEDE_SALDO: El importe aplicado a una factura excede su saldo pendiente.';
     END IF;
 

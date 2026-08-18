@@ -138,7 +138,12 @@ BEGIN
       'saldo',GREATEST(total-pagado,0),'facturas_pendientes',facturas_pendientes
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(total-pagado,0)),0)
   INTO v_cxp_por_moneda, v_cxp_saldo FROM agg;
-  v_ok := (v_cxp_saldo <= 0.01); v_puede := v_puede AND v_ok;
+  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
+  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
+  v_ok := NOT EXISTS (
+    SELECT 1 FROM jsonb_array_elements(v_cxp_por_moneda) m
+    WHERE (m->>'saldo')::numeric > 0.01);
+  v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxp_pagada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxp_por_moneda, 'saldo_total', v_cxp_saldo)));
@@ -177,7 +182,12 @@ BEGIN
       'saldo',GREATEST(saldo,0),'facturas_pendientes',facturas_pendientes
     ) ORDER BY moneda),'[]'::jsonb), COALESCE(SUM(GREATEST(saldo,0)),0)
   INTO v_cxc_por_moneda, v_cxc_saldo FROM agg;
-  v_ok := (v_cxc_saldo <= 0.01); v_puede := v_puede AND v_ok;
+  -- BUG-13: el umbral se evalúa POR moneda; sumar saldos de monedas distintas
+  -- mezcla unidades y puede pasar con USD pendiente compensado con MXN.
+  v_ok := NOT EXISTS (
+    SELECT 1 FROM jsonb_array_elements(v_cxc_por_moneda) m
+    WHERE (m->>'saldo')::numeric > 0.01);
+  v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','cxc_cobrada','ok',v_ok,
     'detalle', jsonb_build_object('por_moneda', v_cxc_por_moneda, 'saldo_total', v_cxc_saldo,

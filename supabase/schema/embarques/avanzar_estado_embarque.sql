@@ -24,7 +24,8 @@ BEGIN
   -- BL-16: misma frase que cerrar_embarque — la papelera no avanza.
   SELECT organization_id, fecha_llegada_real, estado, expediente, tipo
     INTO v_org_id, v_flr, v_estado_actual, v_expediente, v_tipo
-  FROM embarques WHERE id = p_embarque_id AND deleted_at IS NULL;
+  FROM embarques WHERE id = p_embarque_id AND deleted_at IS NULL
+  FOR UPDATE;
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Embarque no encontrado'; END IF;
   PERFORM public._assert_writer(v_org_id);
 
@@ -71,9 +72,17 @@ BEGIN
     END IF;
   END IF;
 
+  -- BUG-10: guarda optimista — el FOR UPDATE del SELECT inicial bloquea la
+  -- fila, pero se conserva el predicado de estado como segunda línea de
+  -- defensa ante re-lecturas (READ COMMITTED re-evalúa tras el lock).
   UPDATE embarques
      SET estado = p_nuevo_estado::estado_embarque, updated_at = now()
-   WHERE id = p_embarque_id;
+   WHERE id = p_embarque_id
+     AND estado = v_estado_actual;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_ESTADO_CONCURRENTE: el embarque cambió de estado durante la transición'
+      USING ERRCODE = '40001';
+  END IF;
 
   INSERT INTO notas_embarque (embarque_id, contenido, tipo, usuario, organization_id)
   VALUES (p_embarque_id, 'Estado cambiado a "' || p_nuevo_estado || '"', 'cambio_estado'::tipo_nota, p_usuario_email, v_org_id);

@@ -139,9 +139,11 @@ BEGIN
       v_factura_mxn_id, p_proforma_ids, v_org, v_first.es_consolidada, 'MXN'::public.moneda
     );
 
+    -- BUG-17: recalcular desde el `total` guardado del renglón (pcc.total en
+    -- consolidadas), no desde cantidad*precio_unitario que puede diverger.
     SELECT
-      COALESCE(SUM(cantidad * precio_unitario), 0),
-      COALESCE(SUM(cantidad * precio_unitario * COALESCE(tasa_iva_aplicada, 0)), 0)
+      COALESCE(SUM(total), 0),
+      COALESCE(SUM(total * COALESCE(tasa_iva_aplicada, 0)), 0)
     INTO v_subtotal_mxn, v_iva_mxn
     FROM public.conceptos_factura
     WHERE factura_id = v_factura_mxn_id AND deleted_at IS NULL;
@@ -199,9 +201,11 @@ BEGIN
       v_factura_usd_id, p_proforma_ids, v_org, v_first.es_consolidada, 'USD'::public.moneda
     );
 
+    -- BUG-17: recalcular desde el `total` guardado del renglón (pcc.total en
+    -- consolidadas), no desde cantidad*precio_unitario que puede diverger.
     SELECT
-      COALESCE(SUM(cantidad * precio_unitario), 0),
-      COALESCE(SUM(cantidad * precio_unitario * COALESCE(tasa_iva_aplicada, 0)), 0)
+      COALESCE(SUM(total), 0),
+      COALESCE(SUM(total * COALESCE(tasa_iva_aplicada, 0)), 0)
     INTO v_subtotal_usd, v_iva_usd
     FROM public.conceptos_factura
     WHERE factura_id = v_factura_usd_id AND deleted_at IS NULL;
