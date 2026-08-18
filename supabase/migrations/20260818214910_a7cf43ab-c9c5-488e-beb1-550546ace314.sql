@@ -1,10 +1,11 @@
--- Fuente canónica de public.validar_cierre_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
--- v13.381.1: paso 1 incluye costos sin proveedor; paso 2 falla con buzón vacío + costos sin factura.
--- N-BL-01 (v13.666.0): pagado CxP convertido a la moneda de la factura con
--- monto_pago_en_moneda_factura; fail-closed (pago sin TC se excluye y se reporta
--- en pagos_sin_tipo_cambio), consistente con saldo_factura_proveedor.
+-- N-BL-01: validar_cierre_embarque sumaba pagos_proveedor.monto EN CRUDO en el
+-- pagado CxP (subconsultas del bloque cxp_pagada). Una factura USD pagada en MXN
+-- inflaba el pagado ~19x -> saldo subestimado -> cierre permitido con CxP
+-- pendiente. Se convierte con public.monto_pago_en_moneda_factura (mismo patron
+-- que saldo_factura_proveedor) y fail-closed: pago en moneda distinta sin tipo
+-- de cambio se EXCLUYE del pagado (nunca 1:1 silencioso) y se reporta en
+-- detalle.por_moneda[].pagos_sin_tipo_cambio. Conserva el umbral por moneda
+-- de BUG-13 y los demas checks vigentes. Espejo 1:1 actualizado en el mismo PR.
 CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -254,3 +255,6 @@ BEGIN
 
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
 END $function$;
+
+REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.validar_cierre_embarque(uuid) TO authenticated, service_role;

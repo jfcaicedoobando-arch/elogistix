@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.666.0] - 2026-08-18
+
+### N-BL-01 · Cierre de embarque con CxP multi-moneda (fail-open)
+- `public.validar_cierre_embarque` sumaba `pagos_proveedor.monto` **en crudo** en el bloque `cxp_pagada`: una factura de 500 USD "pagada" con 500 MXN quedaba con saldo 0 y `puede_cerrar=true` con ~473.68 USD realmente pendientes.
+- El pagado CxP ahora se convierte con `public.monto_pago_en_moneda_factura(pp.monto, pp.moneda, pp.tipo_cambio_usd, pf.moneda)` en ambas subconsultas (`pagado` y `facturas_pendientes`), mismo patrón que `saldo_factura_proveedor`. Se conserva el umbral 0.01 por moneda (BUG-13) y todos los demás checks.
+- **Fail-closed:** un pago en moneda distinta sin `tipo_cambio_usd` se excluye del pagado (nunca 1:1 silencioso) y se reporta en `detalle.por_moneda[].pagos_sin_tipo_cambio`; el cierre queda bloqueado hasta capturar el T/C.
+- `REVOKE ALL ... FROM PUBLIC, anon` + `GRANT EXECUTE ... TO authenticated, service_role` (H6/FIX-45). Espejo canónico `supabase/schema/embarques/validar_cierre_embarque.sql` actualizado 1:1.
+- Nueva prueba `supabase/tests/validar_cierre_cxp_conversion_moneda.sql`: regresión USD/MXN, fail-closed sin T/C y control positivo (9,500 MXN @19 = 500 USD sí salda).
+
 ## [13.665.0] - 2026-08-18
 
 ### Roles de organización que no otorgaban permisos (RLS 42501)
