@@ -29,9 +29,11 @@ import { DialogCobroLoteCliente } from "@/features/facturacion/components/Dialog
 import { derivarLoteCobro, hayEnTramiteCancelacion } from "./_sections/carteraLote";
 import { CarteraSelectionBar } from "./_sections/CarteraSelectionBar";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useDocumentTitle } from "@/hooks/shared";
 
 
 export default function Cartera() {
+  useDocumentTitle("Cartera");
   const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [loteOpen, setLoteOpen] = useState(false);

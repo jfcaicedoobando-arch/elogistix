@@ -19,9 +19,7 @@ import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
-import { factorEntreMonedas } from "@/lib/financial/convertir";
-import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
-import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
+import { derivarEstadoPago } from "./registrarPagoDerivados";
 
 interface Factura {
   id: string;
@@ -42,17 +40,6 @@ interface Props {
   factura: Factura | null;
 }
 
-function convertirAMonedaFactura(
-  monto: number, monedaPago: string, monedaFactura: string,
-  rates: { usdMxn: number; eurMxn: number } | undefined,
-): number {
-  // FIX C6: el factor sale del canon único (MXN como puente). Sin TC confiable
-  // devuelve null y aquí se traduce a 0: nunca se trata USD/EUR como MXN.
-  const factor = factorEntreMonedas(monedaPago, monedaFactura, {
-    usd: rates?.usdMxn, eur: rates?.eurMxn,
-  });
-  return factor === null ? 0 : monto * factor;
-}
 
 const today = () => todayLocalISO();
 
@@ -107,21 +94,18 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
 
   if (!factura) return null;
 
-  const montoNum = Number(values.monto) || 0;
-  const montoAplicado = convertirAMonedaFactura(montoNum, values.moneda, factura.moneda, rates);
-  // BUG-15: tolerancia canónica de sobrepago (medio centavo) compartida con
-  // CobroLoteRenglon — antes aquí era 0.01 y allá 0.009.
-  const excede = montoAplicado > saldo + TOLERANCIA_SOBREPAGO;
-  const tipoCambio = montoNum > 0 ? montoAplicado / montoNum : 1;
-  // FE-01 / UIA-01: cross-moneda sin TC confiable (factorEntreMonedas === null,
-  // p. ej. exchange-rates caído) → bloqueamos el submit en vez de dejar el
-  // insert reventar contra CHECK (tipo_cambio > 0) con un 23514 crudo.
-  const tcBloqueado = factorEntreMonedas(values.moneda, factura.moneda, {
-    usd: rates?.usdMxn, eur: rates?.eurMxn,
-  }) === null;
-  // FE-03 / UIA-06: fecha futura o anterior a la emisión distorsiona REP y aging.
-  const errorFecha = validarFechaPago(values.fecha, today(), factura.fechaEmision);
-  const invalido = montoNum <= 0 || excede || tcBloqueado || errorFecha !== null;
+  const { montoNum, montoAplicado, tipoCambio, excede, tcBloqueado, errorFecha, invalido } =
+    derivarEstadoPago({
+      monto: values.monto,
+      monedaPago: values.moneda,
+      fecha: values.fecha,
+      hoy: today(),
+      monedaFactura: factura.moneda,
+      fechaEmision: factura.fechaEmision,
+      saldo,
+      rates,
+    });
+
   const esPpdTimbrada = factura.metodoPago === "PPD" && !!factura.uuidFiscal;
 
   const handleChange = <K extends keyof PagoFormValues>(k: K, v: PagoFormValues[K]) =>

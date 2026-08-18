@@ -12,7 +12,8 @@ import { Seo } from "@/components/shared/Seo";
 import { completeOnboarding } from "@/features/onboarding/services/completeOnboarding";
 import { OnboardingForm } from "@/features/onboarding/components/OnboardingForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Building2 } from "lucide-react";
+import { Building2 } from "lucide-react";
+import { PageSkeleton } from "@/components/shared/skeletons/PageSkeleton";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { ROUTES } from "@/constants/routes";
@@ -34,8 +35,9 @@ export default function Onboarding() {
 
   if (loading) {
     return (
-      <div className="flex h-dvh items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-dvh items-center justify-center p-6">
+        {/* UI-07: skeleton en lugar de spinner de página. */}
+        <PageSkeleton className="w-full max-w-3xl" />
       </div>
     );
   }

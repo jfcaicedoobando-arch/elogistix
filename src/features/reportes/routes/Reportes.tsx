@@ -16,11 +16,13 @@ import ReportesTablaClientes from "@/features/reportes/components/ReportesTablaC
 import { useReportesPageController } from "@/features/reportes/hooks/useReportesPageController";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { useDocumentTitle } from "@/hooks/shared";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI de la página.
 const ReportesTopChart = lazy(() => import("@/features/reportes/components/ReportesTopChart"));
 
 export default function Reportes() {
+  useDocumentTitle("Reportes");
   const {
     fechaDesde,
     fechaHasta,
