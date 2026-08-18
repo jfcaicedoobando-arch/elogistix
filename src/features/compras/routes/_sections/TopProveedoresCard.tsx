@@ -21,12 +21,22 @@ interface Props {
 }
 
 export function TopProveedoresCard({ isLoading, rows }: Props) {
+  // EC-10: el ranking ordena por equivalente en MXN; si el T/C es de respaldo
+  // (17.25 operativo, no fiscal) el orden es estimado y hay que decirlo.
+  const { data: rates } = useExchangeRates();
+  const hayUsd = rows.some((r) => r.usd > 0);
+  const tcEstimado = rates?.esFallback === true && hayUsd;
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building2 className="h-4 w-4 text-accent" /> Top 10 proveedores por gasto
         </CardTitle>
+        {tcEstimado ? (
+          <p className="text-xs text-warning">
+            Orden calculado con tipo de cambio estimado (no oficial): úsalo sólo como referencia.
+          </p>
+        ) : null}
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
