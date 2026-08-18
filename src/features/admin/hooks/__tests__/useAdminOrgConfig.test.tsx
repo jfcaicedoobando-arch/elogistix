@@ -2,14 +2,14 @@ import { renderHook } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useAdminOrgConfig } from "../useAdminOrgConfig";
 
-vi.mock("@/features/configuracion/hooks/useConfiguracionOrg", () => ({
+vi.mock("@/features/configuracion", () => ({
   useConfiguracionByOrg: vi.fn(() => ({
     data: [{ categoria: "general", clave: "test", valor: "val" }],
     isLoading: false,
   })),
 }));
 
-vi.mock("@/features/configuracion/domain/configuracion", () => ({
+vi.mock("@/features/configuracion", () => ({
   agruparConfigPorCategoria: vi.fn(() => ({ general: [{ clave: "test", valor: "val" }] })),
 }));
 

@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Building2 } from "lucide-react";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { useConfiguracionByOrg } from "@/features/configuracion/hooks";
+import { useConfiguracionByOrg } from "@/features/configuracion";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 
