@@ -24,10 +24,20 @@ export default function PresupuestoCrmEditor() {
   const guardar = useGuardarPresupuestoMes();
   const [borrador, setBorrador] = useState<Record<number, string>>({});
 
-  const totalAnual = useMemo(
-    () => data.reduce((acc, fila) => acc + Number(fila.monto ?? 0), 0),
-    [data],
-  );
+  // UI-15: la tabla admite MXN/USD/EUR; si hay monedas mezcladas se muestra un
+  // total por moneda en vez de una sola cifra rotulada como pesos.
+  const totalesPorMoneda = useMemo(() => {
+    const acc = new Map<string, number>();
+    for (const fila of data) {
+      const moneda = (fila.moneda ?? "MXN").toUpperCase();
+      acc.set(moneda, (acc.get(moneda) ?? 0) + Number(fila.monto ?? 0));
+    }
+    return [...acc.entries()];
+  }, [data]);
+
+  const totalAnualTexto = totalesPorMoneda.length === 0
+    ? formatCurrency(0, "MXN")
+    : totalesPorMoneda.map(([moneda, monto]) => formatCurrency(monto, moneda)).join(" · ");
 
   const montoDe = (mes: number) => {
     if (borrador[mes] !== undefined) return borrador[mes];
@@ -59,7 +69,7 @@ export default function PresupuestoCrmEditor() {
           />
         </div>
         <p className="text-sm text-muted-foreground pb-2">
-          Total anual capturado: <span className="font-medium">{formatCurrency(totalAnual)}</span>
+          Total anual capturado: <span className="font-medium">{totalAnualTexto}</span>
         </p>
       </div>
 

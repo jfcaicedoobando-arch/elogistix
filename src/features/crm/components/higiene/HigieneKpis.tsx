@@ -52,15 +52,19 @@ export default function HigieneKpis({ resumen, cobertura, presupuestoMes }: Prop
       </Card>
       <Kpi
         label="Pipeline ponderado"
-        value={formatCurrency(resumen.pipeline_ponderado)}
-        hint={`Bruto ${formatCurrency(resumen.pipeline_bruto)}`}
+        value={formatCurrency(resumen.pipeline_ponderado, "MXN")}
+        hint={`Bruto ${formatCurrency(resumen.pipeline_bruto, "MXN")}${
+          // UI-15: el pipeline se convierte a MXN con el T/C DOF vigente; si
+          // faltó T/C para alguna moneda extranjera, la cifra es estimada.
+          resumen.tc_estimado ? " · (T/C estimado)" : ""
+        }`}
       />
       <Kpi
         label="Cobertura vs presupuesto"
         value={cobertura === null ? "Sin presupuesto" : `${(cobertura * 100).toFixed(0)}%`}
         hint={
           presupuestoMes > 0
-            ? `Meta del mes ${formatCurrency(presupuestoMes)}`
+            ? `Meta del mes ${formatCurrency(presupuestoMes, "MXN")}`
             : "Captura el presupuesto en Configuración del CRM"
         }
       />

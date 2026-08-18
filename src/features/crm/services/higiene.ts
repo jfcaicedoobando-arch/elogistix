@@ -16,6 +16,10 @@ export interface HigieneResumen {
   sin_actividad_programada: number;
   pipeline_bruto: number;
   pipeline_ponderado: number;
+  /** UI-15: fecha del T/C DOF usado para convertir el pipeline a MXN. */
+  tc_fecha: string | null;
+  /** UI-15: true si quedaron montos en moneda extranjera sin T/C publicado. */
+  tc_estimado: boolean;
 }
 
 export interface HigieneOportunidad {
@@ -47,6 +51,8 @@ const RESUMEN_VACIO: HigieneResumen = {
   sin_actividad_programada: 0,
   pipeline_bruto: 0,
   pipeline_ponderado: 0,
+  tc_fecha: null,
+  tc_estimado: false,
 };
 
 export async function fetchHigieneResumen(): Promise<HigieneResumen> {

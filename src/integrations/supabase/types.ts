@@ -9231,6 +9231,8 @@ export type Database = {
           registros_completos: number
           seguimiento_oportuno_pct: number
           sin_actividad_programada: number
+          tc_estimado: boolean
+          tc_fecha: string
           vencidas: number
         }[]
       }

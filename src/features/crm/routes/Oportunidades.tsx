@@ -10,6 +10,8 @@ import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable } from "@/components/shared/DataTable";
 import { useDebounce, useDocumentTitle } from "@/hooks/shared";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { useExchangeRates } from "@/features/catalogos/hooks";
+import { sumarPipelineMxn } from "@/features/crm/domain/pipelineMoneda";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import OportunidadesFiltersSection from "@/features/crm/components/OportunidadesFiltersSection";
@@ -36,6 +38,7 @@ export default function Oportunidades() {
   const debounced = useDebounce(search, 300);
 
   const { data: etapas = [] } = useEtapasPipeline();
+  const { data: tc } = useExchangeRates();
   const { data: usuarios = [] } = useUsuarios();
   const vendedores = useVendedoresDisponibles(usuarios);
   const PAGE_SIZE = 500;
@@ -66,7 +69,11 @@ export default function Oportunidades() {
   );
 
   const activos = activosFiltros(filtros);
-  const totalPipeline = ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0);
+  // UI-15: el pipeline mezcla MXN/USD/EUR; se convierte a pesos antes de sumar.
+  const pipelineMxn = useMemo(
+    () => sumarPipelineMxn(ops.map((o) => ({ monto: o.monto_estimado, moneda: o.moneda })), tc),
+    [ops, tc],
+  );
 
   return (
     <PageContainer>
@@ -74,7 +81,7 @@ export default function Oportunidades() {
         title="Oportunidades"
         description="Pipeline de ventas por etapa con vista Kanban y tabla"
       />
-      <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(totalPipeline)}`} />
+      <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
       {listaTruncada && (
         <p className="text-label text-warning">
           Mostrando las primeras {opsRaw.length} de {totalServidor} oportunidades; refina tu búsqueda o aplica filtros para ver el resto.
