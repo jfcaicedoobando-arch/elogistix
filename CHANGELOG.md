@@ -1,6 +1,17 @@
 # Changelog
 
+## [13.663.0] - 2026-08-18
+
+### BUG-12 — El barrido de facturas vencidas por fin marca facturas
+- Causa raíz: `public.marcar_facturas_vencidas()` filtraba su `UPDATE` por contexto de usuario (`service_role` / `super_admin` / `current_user_org_id()`). Bajo `pg_cron` no hay sesión (`auth.uid()`, `auth.role()` y `current_user_org_id()` nulos), así que el predicado era falso para toda fila: el job `marcar_facturas_vencidas_diario` corría `succeeded` cada día marcando **cero** facturas y la cartera vencida quedaba subestimada para siempre.
+- El barrido pasa a ser una tarea de plataforma sin filtro de tenant (`SECURITY DEFINER`), compara contra la fecha de negocio MX (`now() AT TIME ZONE 'America/Mexico_City'`) en vez de `CURRENT_DATE` (UTC, ver EC-06), y sólo mueve `Emitida → Vencida`: `Parcialmente pagada` conserva su estado para no oscilar contra `recalcular_estado_factura`.
+- Cada corrida registra el conteo en `app_logs` (`fn = 'marcar_facturas_vencidas'`) para monitoreo. Cron re-agendado a `5 6 * * *` (00:05 MX) de forma idempotente y backfill ejecutado en la migración.
+- `REVOKE ALL` a `PUBLIC`/`anon`/`authenticated` y `GRANT EXECUTE` sólo a `service_role` (H6 / FIX-45).
+- Nueva prueba SQL `supabase/tests/bug12_marcar_facturas_vencidas.sql` (6 casos: marcado sin sesión como pg_cron, vigentes y papelera intactas, parcialmente pagada intacta, idempotencia y recálculo a `Pagada` tras el pago) registrada en el workflow `rls-tests`.
+- Sin cambios de frontend ni en reportes: cartera y antigüedad ya filtran por `fecha_vencimiento` y aceptan `('Emitida','Vencida','Parcialmente pagada')`; lo que se corrige son las bandejas y badges que filtran `estado = 'Vencida'`.
+
 ## [13.662.0] - 2026-08-18
+
 
 ### UI-02 — Estados vacíos inline canónicos (`EmptyStateInline`)
 - 22 archivos migraron sus bloques "No hay… / Aún no… / Sin datos" pintados a mano (div/p centrado con paddings py-4/py-6/py-8 inconsistentes) a `<EmptyStateInline>`: cotización (3), costeo (2), CRM (2), admin (2), tesorería (2), catálogos, CxP, reportes, dashboard, operaciones, proveedor, portal, proformas, configuración y el diálogo compartido de previsualización.
