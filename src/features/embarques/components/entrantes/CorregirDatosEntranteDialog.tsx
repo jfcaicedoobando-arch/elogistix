@@ -9,8 +9,7 @@ import { PencilLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { useCorregirDatosEntrante } from "@/features/cxp/hooks";
-import { useCorregirEntranteForm } from "@/features/cxp/hooks";
+import { useCorregirDatosEntrante, useCorregirEntranteForm } from "@/features/cxp/hooks";
 import {
   useConceptosProveedorEmbarque,
   useCostosProveedorEmbarque,

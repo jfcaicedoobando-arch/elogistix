@@ -12,8 +12,7 @@ import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { useSubirFacturaEntrante } from "@/features/cxp/hooks";
-import { useSubirEntranteForm } from "@/features/cxp/hooks";
+import { useSubirFacturaEntrante, useSubirEntranteForm } from "@/features/cxp/hooks";
 import {
   useConceptosProveedorEmbarque,
   useCostosProveedorEmbarque,
