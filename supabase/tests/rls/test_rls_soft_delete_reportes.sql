@@ -194,9 +194,11 @@ BEGIN
   PERFORM pg_temp.as_postgres();
 
   -- NC aplicada sobre la factura de cliente BORRADA: no debe bajar ingresos.
+  -- El trigger BUG-05 exige folio fiscal (UUID) para nacer/quedar 'Aplicada'.
   INSERT INTO public.factura_notas_credito(organization_id, factura_id, folio, monto,
-                                           moneda, estado, fecha_emision)
-  VALUES (org_a, fac_borr, 'SD-NC-1', 500, 'MXN', 'Aplicada', v_hoy);
+                                           moneda, estado, fecha_emision, uuid_fiscal)
+  VALUES (org_a, fac_borr, 'SD-NC-1', 500, 'MXN', 'Aplicada', v_hoy,
+          '11111111-1111-1111-1111-111111111111');
 
   -- NC aplicada sobre la factura de proveedor BORRADA: no debe bajar costos.
   -- El trigger de transición exige nacer en Borrador y avanzar por pasos.
