@@ -97,13 +97,14 @@ BEGIN
     v_hoy, v_hoy + interval '15 day', 'Emitida'::public.estado_factura
   ) ON CONFLICT (id) DO NOTHING;
 
+  -- BUG-05: una NC 'Aplicada' exige folio fiscal (UUID) timbrado.
   INSERT INTO public.factura_notas_credito (
     id, organization_id, factura_id, folio, motivo, descripcion, monto, moneda,
-    tipo_cambio, estado, fecha_emision
+    tipo_cambio, estado, fecha_emision, uuid_fiscal
   ) VALUES (
     'c4444441-1111-1111-1111-111111111111', v_org, 'c3333331-1111-1111-1111-111111111111',
     'NC-OLA4-N44-01', 'Otro', 'NC en otra moneda', 5000, 'MXN'::public.moneda, 1,
-    'Aplicada', v_hoy
+    'Aplicada', v_hoy, '33333333-3333-3333-3333-333333333333'
   ) ON CONFLICT (id) DO NOTHING;
 
   -- ---- N45: embarque con ETA el mes siguiente y única factura Sustituida ----
