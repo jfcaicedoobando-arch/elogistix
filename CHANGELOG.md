@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.652.3] - 2026-08-18
+
+### H6 — permisos explícitos en las funciones de la Ola D
+- Nueva migración `20260826000700`: `REVOKE ALL ... FROM PUBLIC, anon` + `GRANT EXECUTE ... TO authenticated, service_role` para `validar_cierre_embarque`, `_convertir_proformas_insertar_conceptos`, `convertir_proformas_a_factura`, `avanzar_estado_embarque` y `registrar_pago_cliente_lote`, que se re-emitieron en la Ola D sin el bloque canónico.
+- `scripts/audit-migrations.ts`: baseline al `20260826000700` con la nota FIX-H6-21 documentando los archivos legacy.
+- `migration-manifest.json` regenerado.
+
 ## [13.652.2] - 2026-08-18
 
 ### Fixtures de prueba alineados con BUG-05 (NC exige folio fiscal)
