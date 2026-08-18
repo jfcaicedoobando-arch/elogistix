@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.647.3] - 2026-08-18
+
+### Fix — cancelación de facturas de proveedor (LC_CXP_CANCELAR_FORBIDDEN)
+- `guard_cxp_cancelacion_rol_financiero` ahora resuelve el rol con `public.rol_efectivo(uid, organization_id)` y deja `has_role` como fallback de plataforma. Antes sólo miraba `user_roles`, así que un `admin_org` (rol que vive en `organization_members`) recibía "tu rol no puede cancelar facturas de proveedor" y el test `cxp_cancelacion_libera_embarque.sql` fallaba.
+
 ## [13.647.2] - 2026-08-18
 
 ### Auditoría v1 — cierre de UX-07 y UX-04
