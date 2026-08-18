@@ -21,9 +21,9 @@ const OFICIAL = { data: { usdMxn: 18.9123, eurMxn: 20.5, esFallback: false } };
 
 const carteraProps = {
   totalFacturas: 2,
-  saldosNativos: { MXN: 1000, USD: 500, EUR: 0 },
+  saldosNativos: { MXN: 1000, USD: 500, EUR: 0, otras: {} },
   vencidasCount: 1,
-  vencidoNativo: { MXN: 0, USD: 500, EUR: 0 },
+  vencidoNativo: { MXN: 0, USD: 500, EUR: 0, otras: {} },
   eqTotal: { totalMxn: 9625, facturasSinTc: 0 },
   eqVencido: { totalMxn: 8625, facturasSinTc: 0 },
 };
