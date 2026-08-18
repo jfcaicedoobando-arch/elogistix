@@ -7,9 +7,6 @@ vi.mock("@/features/configuracion", () => ({
     data: [{ categoria: "general", clave: "test", valor: "val" }],
     isLoading: false,
   })),
-}));
-
-vi.mock("@/features/configuracion", () => ({
   agruparConfigPorCategoria: vi.fn(() => ({ general: [{ clave: "test", valor: "val" }] })),
 }));
 
