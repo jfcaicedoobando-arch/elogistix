@@ -16,6 +16,7 @@ import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/feature
 import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
 import { VersionesCotizacionCard } from "@/features/cotizacion/components/detalle/VersionesCotizacionCard";
 import { CotizacionInactivaBanner } from "@/features/cotizacion/components/detalle/CotizacionInactivaBanner";
+import { CotizacionSinOportunidadBanner } from "@/features/cotizacion/components/detalle/CotizacionSinOportunidadBanner";
 import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "@/features/cotizacion/routes/detalle/CotizacionDetalleCards";
 import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner";
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
@@ -100,6 +101,19 @@ export function CotizacionDetalleContenido({
           creadaPor={(cotizacion as { created_by?: string | null }).created_by ?? null}
           usuarioActual={user?.id ?? null}
           requiereAutorizacionCliente={autorizacion.requiereAutorizacionCotizacion}
+        />
+      )}
+
+      {cotizacion.es_prospecto && !cotizacion.oportunidad_id && (
+        <CotizacionSinOportunidadBanner
+          cotizacionId={cotizacion.id}
+          folio={cotizacion.folio}
+          modoTransporte={cotizacion.modo_transporte}
+          empresa={cotizacion.prospecto_empresa}
+          contacto={cotizacion.prospecto_contacto}
+          email={cotizacion.prospecto_email}
+          telefono={cotizacion.prospecto_telefono}
+          canEdit={canEdit}
         />
       )}
 
